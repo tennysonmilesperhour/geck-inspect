@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Gecko, User, BreedingPlan } from '@/entities/all';
 import { Loader2, Users, Search, ZoomIn, ZoomOut, GitBranch, Heart, Users2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -73,6 +74,7 @@ const UnknownCardNode = ({ size = 'normal' }) => {
 
 
 export default function Lineage() {
+    const location = useLocation();
     const [myGeckos, setMyGeckos] = useState([]);
     const [allGeckosMap, setAllGeckosMap] = useState({});
     const [allBreedingPlans, setAllBreedingPlans] = useState([]);
@@ -118,6 +120,16 @@ export default function Lineage() {
     useEffect(() => {
         fetchAllData();
     }, [fetchAllData]);
+
+    // Auto-select gecko from URL parameter
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const geckoIdFromUrl = params.get('geckoId');
+        
+        if (geckoIdFromUrl && allGeckosMap[geckoIdFromUrl] && !isLoading) {
+            handleSelectGecko(geckoIdFromUrl);
+        }
+    }, [location.search, allGeckosMap, isLoading]);
 
     const getLineageFor = useCallback(async (geckoId, generations = 3, currentGen = 1) => {
         if (currentGen > generations || !geckoId) {

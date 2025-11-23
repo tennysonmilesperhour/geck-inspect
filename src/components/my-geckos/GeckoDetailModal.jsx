@@ -1,10 +1,11 @@
-
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { WeightRecord, BreedingPlan, Egg, Gecko } from '@/entities/all';
+import { WeightRecord, BreedingPlan, Egg, Gecko, UserFollow, Notification } from '@/entities/all';
 import { format } from 'date-fns';
-import { X, Plus, Trash2, LineChart, Loader2, Award, GitBranch, Calendar, Baby, Users, FileText, Edit } from 'lucide-react';
+import { X, Plus, Trash2, LineChart, Loader2, Award, GitBranch, Calendar, Baby, Users, FileText, Edit, Eye, EyeOff } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +22,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, all
   const [newWeight, setNewWeight] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isGeneratingCert, setIsGeneratingCert] = useState(false);
+  const [isPublic, setIsPublic] = useState(gecko?.is_public ?? true);
 
   useEffect(() => {
     const fetchDetailedData = async () => {
@@ -100,6 +102,16 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, all
       } catch (error) {
         console.error('Failed to delete weight record:', error);
       }
+    }
+  };
+
+  const handleTogglePublic = async (checked) => {
+    try {
+      await Gecko.update(gecko.id, { is_public: checked });
+      setIsPublic(checked);
+      if (onUpdate) onUpdate();
+    } catch (error) {
+      console.error('Failed to update public status:', error);
     }
   };
 
@@ -222,6 +234,23 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, all
                 )}
               </div>
 
+              {/* Public Display Toggle */}
+              <div className="bg-slate-800 p-4 rounded-lg">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    {isPublic ? <Eye className="w-4 h-4 text-emerald-400" /> : <EyeOff className="w-4 h-4 text-slate-500" />}
+                    <Label className="text-slate-300 cursor-pointer">Public Display</Label>
+                  </div>
+                  <Switch
+                    checked={isPublic}
+                    onCheckedChange={handleTogglePublic}
+                  />
+                </div>
+                <p className="text-xs text-slate-500 mt-2">
+                  {isPublic ? 'Visible in your public profile' : 'Hidden from public view'}
+                </p>
+              </div>
+
               {/* Action Buttons */}
               <div className="space-y-3">
                 <Button
@@ -333,15 +362,54 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, all
                             <span className="text-slate-300 font-medium">
                               Paired with: {partner?.name || 'Unknown'}
                             </span>
-                            <Badge variant={breeding.status === 'Successful' ? 'default' : 'secondary'} className="mt-2 sm:mt-0">
-                              {breeding.status}
-                            </Badge>
+                            <div className="flex items-center gap-2 mt-2 sm:mt-0">
+                              <Badge variant={breeding.status === 'Successful' ? 'default' : 'secondary'}>
+                                {breeding.status}
+                              </Badge>
+                              {breeding.is_public && (
+                                <Badge variant="outline" className="text-emerald-400 border-emerald-400">
+                                  Public
+                                </Badge>
+                              )}
+                            </div>
                           </div>
                           {breeding.pairing_date && (
                             <p className="text-slate-400 text-sm">
                               Paired: {format(new Date(breeding.pairing_date), 'PPP')}
                             </p>
                           )}
+                          <div className="flex items-center justify-between mt-2">
+                            <Label className="text-xs text-slate-500">Public Display</Label>
+                            <Switch
+                              checked={breeding.is_public}
+                              onCheckedChange={async (checked) => {
+                                try {
+                                  await BreedingPlan.update(breeding.id, { is_public: checked });
+                                  const updated = await Promise.allSettled([
+                                    WeightRecord.filter({ gecko_id: gecko.id }, '-record_date'),
+                                    BreedingPlan.filter({ 
+                                      $or: [
+                                        { sire_id: gecko.id },
+                                        { dam_id: gecko.id }
+                                      ]
+                                    }, '-created_date'),
+                                    gecko.sex === 'Female' ? Egg.filter({ 
+                                      breeding_plan_id: { $in: await BreedingPlan.filter({ dam_id: gecko.id }).then(plans => plans.map(p => p.id)) }
+                                    }, '-lay_date') : Promise.resolve([]),
+                                    Gecko.filter({
+                                      $or: [
+                                        { sire_id: gecko.id },
+                                        { dam_id: gecko.id }
+                                      ]
+                                    }, '-hatch_date')
+                                  ]);
+                                  setBreedingHistory(updated[1].status === 'fulfilled' ? updated[1].value : []);
+                                } catch (error) {
+                                  console.error('Failed to update breeding plan:', error);
+                                }
+                              }}
+                            />
+                          </div>
                         </div>
                       );
                     })}

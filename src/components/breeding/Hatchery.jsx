@@ -113,8 +113,8 @@ export default function Hatchery() {
     };
 
     const handleEggClick = (egg) => {
-        if (egg.gecko_id) {
-            // Navigate to lineage page with the gecko
+        if (egg.status === 'Hatched' && egg.gecko_id) {
+            // Navigate to lineage page with the hatched gecko auto-selected
             window.location.href = createPageUrl(`Lineage?geckoId=${egg.gecko_id}`);
         } else {
             // Navigate to lineage of parents

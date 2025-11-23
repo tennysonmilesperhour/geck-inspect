@@ -1,14 +1,20 @@
 import React, { useState, useEffect } from 'react';
-import { User, Gecko } from '@/entities/all';
+import { User, Gecko, UserFollow, Notification } from '@/entities/all';
 import { useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Loader2, Users, MapPin, Link as LinkIcon } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Loader2, Users, MapPin, Link as LinkIcon, UserPlus, UserMinus } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 import GeckoCard from '../components/my-geckos/GeckoCard';
 
 export default function PublicProfile() {
     const location = useLocation();
+    const { toast } = useToast();
     const [profileUser, setProfileUser] = useState(null);
     const [userGeckos, setUserGeckos] = useState([]);
+    const [currentUser, setCurrentUser] = useState(null);
+    const [isFollowing, setIsFollowing] = useState(false);
+    const [followRecord, setFollowRecord] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -26,20 +32,33 @@ export default function PublicProfile() {
                     return;
                 }
                 
-                const currentUser = await User.me().catch(() => null);
+                const loggedInUser = await User.me().catch(() => null);
+                setCurrentUser(loggedInUser);
                 
                 // Using User.filter as a more robust way to fetch the user data
                 const users = await User.filter({ id: userId });
                 const user = users && users.length > 0 ? users[0] : null;
 
                 // Check if profile is private (unless current user is admin)
-                if (!user || (!user.profile_public && currentUser?.role !== 'admin')) {
+                if (!user || (!user.profile_public && loggedInUser?.role !== 'admin')) {
                      setError("This profile is private or does not exist.");
                      setIsLoading(false);
                      return;
                 }
                 
                 setProfileUser(user);
+
+                // Check if current user is following this profile
+                if (loggedInUser && loggedInUser.email !== user.email) {
+                    const followRecords = await UserFollow.filter({
+                        follower_email: loggedInUser.email,
+                        following_email: user.email
+                    });
+                    if (followRecords.length > 0) {
+                        setIsFollowing(true);
+                        setFollowRecord(followRecords[0]);
+                    }
+                }
                 
                 // Fetch user's public geckos (or all if current user is admin)
                 const geckoFilter = currentUser?.role === 'admin' 
@@ -57,6 +76,41 @@ export default function PublicProfile() {
 
         fetchProfileData();
     }, [location.search]);
+
+    const handleFollowToggle = async () => {
+        if (!currentUser) {
+            toast({ title: "Login required", description: "Please log in to follow users" });
+            return;
+        }
+
+        try {
+            if (isFollowing && followRecord) {
+                await UserFollow.delete(followRecord.id);
+                setIsFollowing(false);
+                setFollowRecord(null);
+                toast({ title: "Unfollowed", description: `You've unfollowed ${profileUser.full_name}` });
+            } else {
+                const newFollow = await UserFollow.create({
+                    follower_email: currentUser.email,
+                    following_email: profileUser.email
+                });
+                setIsFollowing(true);
+                setFollowRecord(newFollow);
+                
+                await Notification.create({
+                    user_email: profileUser.email,
+                    type: 'announcement',
+                    content: `${currentUser.full_name} is now following you!`,
+                    link: `/PublicProfile?userId=${currentUser.id}`
+                });
+                
+                toast({ title: "Following!", description: `You're now following ${profileUser.full_name}` });
+            }
+        } catch (error) {
+            console.error('Failed to toggle follow:', error);
+            toast({ title: "Error", description: "Failed to update follow status", variant: "destructive" });
+        }
+    };
 
     if (isLoading) {
         return <div className="flex justify-center items-center h-screen bg-slate-950"><Loader2 className="w-16 h-16 text-emerald-500 animate-spin" /></div>;
@@ -97,6 +151,18 @@ export default function PublicProfile() {
                                 </p>
                             )}
                         </div>
+                        {currentUser && currentUser.email !== profileUser.email && (
+                            <Button
+                                onClick={handleFollowToggle}
+                                className={isFollowing ? 'bg-slate-700 hover:bg-slate-600' : 'bg-emerald-600 hover:bg-emerald-700'}
+                            >
+                                {isFollowing ? (
+                                    <><UserMinus className="w-4 h-4 mr-2" /> Unfollow</>
+                                ) : (
+                                    <><UserPlus className="w-4 h-4 mr-2" /> Follow</>
+                                )}
+                            </Button>
+                        )}
                     </div>
                 </div>
                  <div className="block sm:hidden mt-6 min-w-0 flex-1">

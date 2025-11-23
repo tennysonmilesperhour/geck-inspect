@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { User, Gecko, WeightRecord } from '@/entities/all';
-import { PlusCircle, Loader2, Search, Users, Grid3x3, List, ArrowUpDown } from 'lucide-react';
+import { PlusCircle, Loader2, Search, Users, Grid3x3, List, ArrowUpDown, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -8,6 +8,7 @@ import GeckoCard from '../components/my-geckos/GeckoCard';
 import GeckoForm from '../components/my-geckos/GeckoForm';
 import CSVImportModal from '../components/my-geckos/CSVImportModal';
 import GeckoDetailModal from '../components/my-geckos/GeckoDetailModal';
+import GeckoFilters from '../components/my-geckos/GeckoFilters';
 import { toast } from '@/components/ui/use-toast';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
@@ -88,6 +89,13 @@ export default function MyGeckosPage() {
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [viewMode, setViewMode] = useState('card'); // 'card' or 'list'
     const [sortBy, setSortBy] = useState('date_added'); // sorting option
+    const [filters, setFilters] = useState({
+        sexes: [],
+        statuses: [],
+        traits: [],
+        weightMin: '',
+        weightMax: ''
+    });
 
     // Enhanced loadGeckos with caching and rate limiting
     // Now uses `user` from state and is dependent on it.
@@ -280,6 +288,41 @@ export default function MyGeckosPage() {
         }
     };
 
+    const applyFilters = (geckosToFilter) => {
+        let result = [...geckosToFilter];
+
+        // Filter by sex
+        if (filters.sexes.length > 0) {
+            result = result.filter(g => filters.sexes.includes(g.sex));
+        }
+
+        // Filter by status
+        if (filters.statuses.length > 0) {
+            result = result.filter(g => filters.statuses.includes(g.status));
+        }
+
+        // Filter by weight range
+        if (filters.weightMin) {
+            const min = parseFloat(filters.weightMin);
+            result = result.filter(g => g.weight_grams && g.weight_grams >= min);
+        }
+        if (filters.weightMax) {
+            const max = parseFloat(filters.weightMax);
+            result = result.filter(g => g.weight_grams && g.weight_grams <= max);
+        }
+
+        // Filter by traits (must have ALL selected traits)
+        if (filters.traits.length > 0) {
+            result = result.filter(g => {
+                if (!g.morphs_traits) return false;
+                const morphsLower = g.morphs_traits.toLowerCase();
+                return filters.traits.every(trait => morphsLower.includes(trait.toLowerCase()));
+            });
+        }
+
+        return result;
+    };
+
     const getSortedGeckos = (geckosToSort) => {
         const sorted = [...geckosToSort];
         
@@ -287,45 +330,89 @@ export default function MyGeckosPage() {
             case 'name':
                 return sorted.sort((a, b) => a.name.localeCompare(b.name));
             case 'date_added':
-                // Assuming created_date is a string that can be converted to Date
                 return sorted.sort((a, b) => new Date(b.created_date).getTime() - new Date(a.created_date).getTime());
-            case 'hatch_date':
+            case 'hatch_date_newest':
                 return sorted.sort((a, b) => {
                     if (!a.hatch_date && !b.hatch_date) return 0;
-                    if (!a.hatch_date) return 1; // Undefined hatch_date comes last
-                    if (!b.hatch_date) return -1; // Undefined hatch_date comes last
+                    if (!a.hatch_date) return 1;
+                    if (!b.hatch_date) return -1;
                     return new Date(b.hatch_date).getTime() - new Date(a.hatch_date).getTime();
+                });
+            case 'hatch_date_oldest':
+                return sorted.sort((a, b) => {
+                    if (!a.hatch_date && !b.hatch_date) return 0;
+                    if (!a.hatch_date) return 1;
+                    if (!b.hatch_date) return -1;
+                    return new Date(a.hatch_date).getTime() - new Date(b.hatch_date).getTime();
                 });
             case 'status':
                 const statusOrder = ['Proven', 'Ready to Breed', 'Future Breeder', 'Holdback', 'For Sale', 'Pet', 'Sold'];
                 return sorted.sort((a, b) => {
                     const aIndex = statusOrder.indexOf(a.status);
                     const bIndex = statusOrder.indexOf(b.status);
-                    // Handle cases where status might not be in the predefined order, push them to end.
                     if (aIndex === -1 && bIndex === -1) return a.status.localeCompare(b.status);
                     if (aIndex === -1) return 1;
                     if (bIndex === -1) return -1;
                     return aIndex - bIndex;
                 });
-            case 'weight':
+            case 'weight_heaviest':
                 return sorted.sort((a, b) => {
-                    if (a.weight_grams === undefined && b.weight_grams === undefined) return 0;
-                    if (a.weight_grams === undefined) return 1; // Undefined weight comes last
-                    if (b.weight_grams === undefined) return -1; // Undefined weight comes last
-                    return b.weight_grams - a.weight_grams;
+                    const aWeight = a.weight_grams || 0;
+                    const bWeight = b.weight_grams || 0;
+                    return bWeight - aWeight;
+                });
+            case 'weight_lightest':
+                return sorted.sort((a, b) => {
+                    const aWeight = a.weight_grams || Infinity;
+                    const bWeight = b.weight_grams || Infinity;
+                    if (aWeight === Infinity && bWeight === Infinity) return 0;
+                    if (aWeight === Infinity) return 1;
+                    if (bWeight === Infinity) return -1;
+                    return aWeight - bWeight;
+                });
+            case 'sex':
+                return sorted.sort((a, b) => {
+                    const sexOrder = { 'Male': 0, 'Female': 1, 'Unsexed': 2 };
+                    return (sexOrder[a.sex] || 3) - (sexOrder[b.sex] || 3);
                 });
             default:
                 return sorted;
         }
     };
 
-    const filteredAndSortedGeckos = getSortedGeckos(
-        geckos.filter(gecko =>
-            gecko.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            gecko.gecko_id_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            gecko.morphs_traits?.toLowerCase().includes(searchTerm.toLowerCase())
-        )
+    const handleClearFilters = () => {
+        setFilters({
+            sexes: [],
+            statuses: [],
+            traits: [],
+            weightMin: '',
+            weightMax: ''
+        });
+    };
+
+    const searchFiltered = geckos.filter(gecko =>
+        gecko.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        gecko.gecko_id_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        gecko.morphs_traits?.toLowerCase().includes(searchTerm.toLowerCase())
     );
+    
+    const filteredAndSortedGeckos = getSortedGeckos(applyFilters(searchFiltered));
+
+    if (!user && !isLoading) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-screen bg-slate-950 text-white p-8">
+                <Users className="w-16 h-16 mb-4 text-emerald-500" />
+                <h2 className="text-2xl font-bold mb-2">My Gecko Collection</h2>
+                <p className="text-slate-400 mb-6 max-w-md text-center">
+                    Create an account to start managing your gecko collection, track breeding plans, and more.
+                </p>
+                <Button onClick={() => User.login()} className="bg-emerald-600 hover:bg-emerald-700">
+                    <UserPlus className="w-5 h-5 mr-2" />
+                    Sign Up / Login
+                </Button>
+            </div>
+        );
+    }
 
     return (
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
@@ -358,6 +445,12 @@ export default function MyGeckosPage() {
                         />
                     </div>
 
+                    <GeckoFilters 
+                        filters={filters}
+                        onFiltersChange={setFilters}
+                        onClearFilters={handleClearFilters}
+                    />
+
                     {/* View Controls */}
                     <div className="flex flex-wrap items-center gap-4 justify-between">
                         <div className="flex items-center gap-2">
@@ -370,9 +463,12 @@ export default function MyGeckosPage() {
                                 <SelectContent className="bg-slate-900 border-slate-700 text-slate-100">
                                     <SelectItem value="date_added">Date Added (Newest)</SelectItem>
                                     <SelectItem value="name">Name (A-Z)</SelectItem>
-                                    <SelectItem value="hatch_date">Hatch Date (Newest)</SelectItem>
+                                    <SelectItem value="hatch_date_newest">Hatch Date (Newest)</SelectItem>
+                                    <SelectItem value="hatch_date_oldest">Hatch Date (Oldest)</SelectItem>
+                                    <SelectItem value="sex">Sex</SelectItem>
                                     <SelectItem value="status">Status</SelectItem>
-                                    <SelectItem value="weight">Weight (Heaviest)</SelectItem>
+                                    <SelectItem value="weight_heaviest">Weight (Heaviest)</SelectItem>
+                                    <SelectItem value="weight_lightest">Weight (Lightest)</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
