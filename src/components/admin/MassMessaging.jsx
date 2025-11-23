@@ -73,6 +73,9 @@ export default function MassMessaging() {
 
         setIsSending(true);
         try {
+            // Get current admin user
+            const currentAdmin = await User.me();
+            
             // Fetch all users
             const allUsers = await User.list();
             
@@ -97,9 +100,9 @@ export default function MassMessaging() {
             let sentCount = 0;
             for (const user of targetUsers) {
                 try {
-                    // Create direct message
+                    // Create direct message using current admin's email
                     await DirectMessage.create({
-                        sender_email: 'admin@geckinspect.com',
+                        sender_email: currentAdmin.email,
                         recipient_email: user.email,
                         content: `**${subject}**\n\n${content}`,
                         message_type: 'system'
