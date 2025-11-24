@@ -25,6 +25,7 @@ import Lineage from './pages/Lineage';
 import TrainModel from './pages/TrainModel';
 import Training from './pages/Training';
 import BreederConsultant from './pages/BreederConsultant';
+import AuthPortal from './pages/AuthPortal';
 import __Layout from './Layout.jsx';
 
 
@@ -56,6 +57,7 @@ export const PAGES = {
     "TrainModel": TrainModel,
     "Training": Training,
     "BreederConsultant": BreederConsultant,
+    "AuthPortal": AuthPortal,
 }
 
 export const pagesConfig = {

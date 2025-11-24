@@ -265,8 +265,8 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, all
                   )}
                 </Button>
                 
-                <Link to={createPageUrl(`Lineage?gecko=${gecko.id}`)}>
-                  <Button variant="outline" className="w-full">
+                <Link to={createPageUrl(`Lineage?geckoId=${gecko.id}`)}>
+                  <Button variant="outline" className="w-full border-slate-600 hover:bg-slate-800">
                     <GitBranch className="w-4 h-4 mr-2" />
                     View Lineage Tree
                   </Button>
