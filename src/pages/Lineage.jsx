@@ -434,6 +434,70 @@ export default function Lineage() {
                     )}
                 </div>
             </main>
+            
+            {/* Placeholder Edit Modal */}
+            <Dialog open={!!editingPlaceholder} onOpenChange={() => setEditingPlaceholder(null)}>
+                <DialogContent className="bg-slate-900 border-slate-700 text-slate-200">
+                    <DialogHeader>
+                        <DialogTitle>Edit Parent Info: {editingPlaceholder?.name || 'Unknown'}</DialogTitle>
+                    </DialogHeader>
+                    <div className="space-y-4">
+                        <div>
+                            <Label>Name</Label>
+                            <Input
+                                value={placeholderForm.name}
+                                onChange={e => setPlaceholderForm({...placeholderForm, name: e.target.value})}
+                                placeholder="Parent gecko name"
+                                className="bg-slate-800 border-slate-600"
+                            />
+                        </div>
+                        <div>
+                            <Label>Image URL (optional)</Label>
+                            <Input
+                                value={placeholderForm.image_url}
+                                onChange={e => setPlaceholderForm({...placeholderForm, image_url: e.target.value})}
+                                placeholder="https://..."
+                                className="bg-slate-800 border-slate-600"
+                            />
+                        </div>
+                        <div>
+                            <Label>Breeder Name</Label>
+                            <Input
+                                value={placeholderForm.breeder_name}
+                                onChange={e => setPlaceholderForm({...placeholderForm, breeder_name: e.target.value})}
+                                placeholder="Where this gecko came from"
+                                className="bg-slate-800 border-slate-600"
+                            />
+                        </div>
+                        <div>
+                            <Label>Breeder Website/Profile</Label>
+                            <Input
+                                value={placeholderForm.breeder_website}
+                                onChange={e => setPlaceholderForm({...placeholderForm, breeder_website: e.target.value})}
+                                placeholder="https://..."
+                                className="bg-slate-800 border-slate-600"
+                            />
+                        </div>
+                        <div>
+                            <Label>Notes</Label>
+                            <Textarea
+                                value={placeholderForm.notes}
+                                onChange={e => setPlaceholderForm({...placeholderForm, notes: e.target.value})}
+                                placeholder="Additional information..."
+                                className="bg-slate-800 border-slate-600"
+                            />
+                        </div>
+                    </div>
+                    <DialogFooter>
+                        <Button variant="outline" onClick={() => setEditingPlaceholder(null)} className="border-slate-600">
+                            Cancel
+                        </Button>
+                        <Button onClick={handleSavePlaceholder} className="bg-emerald-600 hover:bg-emerald-700">
+                            Save
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }
