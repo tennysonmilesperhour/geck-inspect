@@ -183,16 +183,6 @@ export default function Lineage() {
         fetchAllData();
     }, [fetchAllData]);
 
-    // Auto-select gecko from URL parameter
-    useEffect(() => {
-        const params = new URLSearchParams(location.search);
-        const geckoIdFromUrl = params.get('geckoId');
-        
-        if (geckoIdFromUrl && allGeckosMap[geckoIdFromUrl] && !isLoading && geckoIdFromUrl !== selectedGeckoId) {
-            handleSelectGecko(geckoIdFromUrl);
-        }
-    }, [location.search, allGeckosMap, isLoading, handleSelectGecko, selectedGeckoId]);
-
     const getLineageFor = useCallback(async (geckoId, generations = 3, currentGen = 1) => {
         if (currentGen > generations || !geckoId) {
             return null;
@@ -261,6 +251,16 @@ export default function Lineage() {
         
         setIsLoadingLineage(false);
     }, [getLineageFor, allGeckosMap, allBreedingPlans]);
+
+    // Auto-select gecko from URL parameter
+    useEffect(() => {
+        const params = new URLSearchParams(location.search);
+        const geckoIdFromUrl = params.get('geckoId');
+        
+        if (geckoIdFromUrl && allGeckosMap[geckoIdFromUrl] && !isLoading && geckoIdFromUrl !== selectedGeckoId) {
+            handleSelectGecko(geckoIdFromUrl);
+        }
+    }, [location.search, allGeckosMap, isLoading, handleSelectGecko, selectedGeckoId]);
 
     const handleEditPlaceholder = (gecko, parentType) => {
         const key = `${gecko.geckoId}_${parentType}`;
