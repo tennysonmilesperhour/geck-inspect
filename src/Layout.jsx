@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
+import { base44 } from '@/api/base44Client';
 import { GeckoImage } from "@/entities/GeckoImage";
 import { User } from "@/entities/User";
 import { Gecko } from "@/entities/Gecko";
@@ -282,17 +283,17 @@ function LayoutContent({ children, currentPageName }) {
   useEffect(() => {
     let errorCount = 0;
     const MAX_ERRORS = 3;
-    
+
     if (user && user.email) {
       const fetchUnread = async () => {
         try {
           const cacheKey = `notifications_${user.email}`;
           let unreadNotifications = dataCache.get(cacheKey);
-          
+
           if (!unreadNotifications && dataCache.canMakeRequest(cacheKey) && errorCount < MAX_ERRORS) {
             dataCache.markRequestMade(cacheKey);
             unreadNotifications = await retryApiCall(() => 
-              Notification.filter({ user_email: user.email, is_read: false })
+              base44.entities.Notification.filter({ user_email: user.email, is_read: false })
             );
             if (unreadNotifications) {
               dataCache.set(cacheKey, unreadNotifications);
@@ -331,20 +332,20 @@ function LayoutContent({ children, currentPageName }) {
   useEffect(() => {
     let errorCount = 0;
     const MAX_ERRORS = 3;
-    
+
     if (user && user.email) {
       const fetchUnreadMessages = async () => {
         try {
           const cacheKey = `unread_messages_count_${user.email}`;
           let cachedCount = dataCache.get(cacheKey);
-          
+
           if (cachedCount !== null) {
             setUnreadMessages(cachedCount);
             errorCount = 0; // Reset error count on cache hit
           } else if (dataCache.canMakeRequest(cacheKey) && errorCount < MAX_ERRORS) {
             dataCache.markRequestMade(cacheKey);
             const unread = await retryApiCall(() =>
-              DirectMessage.filter({ recipient_email: user.email, is_read: false })
+              base44.entities.DirectMessage.filter({ recipient_email: user.email, is_read: false })
             );
             setUnreadMessages(unread.length);
             dataCache.set(cacheKey, unread.length);
@@ -385,7 +386,7 @@ function LayoutContent({ children, currentPageName }) {
         if (!configs && dataCache.canMakeRequest('page_configs')) {
           try {
             dataCache.markRequestMade('page_configs');
-            configs = await retryApiCall(() => PageConfig.list());
+            configs = await retryApiCall(() => base44.entities.PageConfig.list());
             if (configs) {
               dataCache.set('page_configs', configs);
               setPageConfigs(configs);
@@ -403,7 +404,7 @@ function LayoutContent({ children, currentPageName }) {
         if (!currentUser && dataCache.canMakeRequest('current_user')) {
           try {
             dataCache.markRequestMade('current_user');
-            currentUser = await retryApiCall(() => User.me());
+            currentUser = await retryApiCall(() => base44.auth.me());
             if (currentUser) {
               dataCache.set('current_user', currentUser);
               setUser(currentUser);
@@ -429,11 +430,11 @@ function LayoutContent({ children, currentPageName }) {
           if (!userContributions && dataCache.canMakeRequest(`user_contributions_${currentUser.email}`)) {
             try {
               dataCache.markRequestMade(`user_contributions_${currentUser.email}`);
-              
+
               const results = await Promise.allSettled([
-                retryApiCall(() => Gecko.filter({ created_by: currentUser.email })),
-                retryApiCall(() => GeckoImage.filter({ created_by: currentUser.email })),
-                retryApiCall(() => ForumPost.filter({ created_by: currentUser.email }))
+                retryApiCall(() => base44.entities.Gecko.filter({ created_by: currentUser.email })),
+                retryApiCall(() => base44.entities.GeckoImage.filter({ created_by: currentUser.email })),
+                retryApiCall(() => base44.entities.ForumPost.filter({ created_by: currentUser.email }))
               ]);
 
               userContributions = {
@@ -465,7 +466,7 @@ function LayoutContent({ children, currentPageName }) {
         if (!images && dataCache.canMakeRequest('gecko_images')) {
           try {
             dataCache.markRequestMade('gecko_images');
-            images = await retryApiCall(() => GeckoImage.list());
+            images = await retryApiCall(() => base44.entities.GeckoImage.list());
             if (images) {
               dataCache.set('gecko_images', images);
             }
