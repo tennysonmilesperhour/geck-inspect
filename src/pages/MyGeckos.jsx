@@ -1,5 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { User, Gecko, WeightRecord } from '@/entities/all';
+import { base44 } from '@/api/base44Client';
 import { PlusCircle, Loader2, Search, Users, Grid3x3, List, ArrowUpDown, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -168,17 +169,12 @@ export default function MyGeckosPage() {
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const currentUser = await retryWithBackoff(async () => User.me());
+                const currentUser = await retryWithBackoff(async () => base44.auth.me());
                 setUser(currentUser);
             } catch (error) {
                 console.error("Failed to load initial user:", error);
-                if (error.response?.status === 429) {
-                    toast({
-                        title: "Rate Limit",
-                        description: "Too many requests. Please wait a moment and refresh the page.",
-                        variant: "destructive",
-                    });
-                }
+                setUser(null);
+                setIsLoading(false);
             }
         };
         fetchUser();

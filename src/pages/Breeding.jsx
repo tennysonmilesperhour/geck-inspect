@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense } from 'react';
 import { Gecko, BreedingPlan, Egg, User } from '@/entities/all';
+import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -838,7 +839,12 @@ export default function BreedingPage() {
     const loadData = async () => {
         setIsLoading(true);
         try {
-            const user = await User.me();
+            const user = await base44.auth.me();
+            if (!user) {
+                // User not authenticated, show login portal
+                setIsLoading(false);
+                return;
+            }
             const [geckosData, plansData] = await Promise.all([
                 Gecko.filter({ created_by: user.email }),
                 BreedingPlan.filter({ created_by: user.email }, '-created_date')
@@ -995,6 +1001,16 @@ export default function BreedingPage() {
         if (activeTab === 'archive' && expandedPlanId === 'all_archive') return true;
         return expandedPlanId === planId;
     };
+    
+    // Show login portal if not authenticated
+    if (!isLoading && geckos.length === 0 && breedingPlans.length === 0) {
+        const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
+        return (
+            <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center"><Loader2 className="w-12 h-12 text-emerald-500 animate-spin" /></div>}>
+                <LoginPortal requiredFeature="Breeding Management" />
+            </Suspense>
+        );
+    }
 
     return (
         <div className="p-4 md:p-8 bg-slate-950 min-h-screen">
