@@ -502,24 +502,15 @@ function LayoutContent({ children, currentPageName }) {
   const handleLogin = async () => {
     try {
       const currentUrl = window.location.href;
-      await User.loginWithRedirect(currentUrl);
-      // The page will reload after a successful redirect, so no further action here.
+      await base44.auth.redirectToLogin(currentUrl);
     } catch (error) {
-      console.error("Login with redirect failed:", error);
-      // Fallback to regular login if redirect fails or is not supported
-      try {
-        await User.login();
-        dataCache.clearAll(); // Clear cache for fresh data after traditional login
-        window.location.reload(); // Force reload if traditional login doesn't
-      } catch (fallbackError) {
-        console.error("Fallback login also failed:", fallbackError);
-      }
+      console.error("Login failed:", error);
     }
   };
 
   const handleLogout = async () => {
     try {
-      await User.logout();
+      await base44.auth.logout();
       setUser(null);
       setUserLevel(null);
       setImageLevel(null);
@@ -527,7 +518,7 @@ function LayoutContent({ children, currentPageName }) {
       dataCache.clearAll();
       setUnreadNotificationsCount(0);
       setUnreadMessages(0);
-      window.location.reload(); // Reload page after logout for full state reset
+      window.location.reload();
     } catch (error) {
       console.error("Logout failed:", error);
     }
