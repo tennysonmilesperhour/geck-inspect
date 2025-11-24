@@ -1,18 +1,60 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Gecko, User, BreedingPlan } from '@/entities/all';
-import { Loader2, Users, Search, ZoomIn, ZoomOut, GitBranch, Heart, Users2 } from 'lucide-react';
+import { Gecko, User, BreedingPlan, LineagePlaceholder } from '@/entities/all';
+import { Loader2, Users, Search, ZoomIn, ZoomOut, GitBranch, Heart, Users2, Edit2, Plus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
 } from "@/components/ui/select";
+import { base44 } from '@/api/base44Client';
 import _ from 'lodash';
+
+// Placeholder card for missing parents
+const PlaceholderCardNode = ({ parentName, placeholderData, onEdit, size = 'normal' }) => {
+    const cardSize = size === 'tiny' ? 'w-24 h-32' : size === 'small' ? 'w-32 h-40' : 'w-40 h-48';
+    const nameSize = size === 'tiny' ? 'text-[11px]' : size === 'small' ? 'text-xs' : 'text-sm';
+    const hasData = placeholderData && (placeholderData.image_url || placeholderData.breeder_name);
+    
+    return (
+        <Card
+            className={`flex-shrink-0 relative transition-all duration-300 overflow-hidden ${cardSize} bg-slate-800/50 border-2 border-dashed border-slate-600 hover:border-emerald-500 cursor-pointer`}
+            onClick={onEdit}
+        >
+            <div className="w-full h-full bg-slate-700 flex items-center justify-center relative">
+                {placeholderData?.image_url ? (
+                    <img src={placeholderData.image_url} alt={parentName} className="w-full h-full object-cover" />
+                ) : (
+                    <Users className="w-12 h-12 text-slate-500" />
+                )}
+                <div className="absolute top-2 right-2">
+                    <div className="bg-black/60 rounded-full p-1">
+                        <Edit2 className="w-3 h-3 text-white" />
+                    </div>
+                </div>
+            </div>
+            
+            <div className="absolute bottom-0 left-0 right-0 p-1.5 bg-gradient-to-t from-black/80 to-transparent">
+                <h4 className={`font-bold ${nameSize} text-slate-300 leading-tight truncate`}>
+                    {parentName || 'Unknown'}
+                </h4>
+                {hasData && placeholderData.breeder_name && (
+                    <p className="text-[10px] text-slate-400 truncate">
+                        From: {placeholderData.breeder_name}
+                    </p>
+                )}
+            </div>
+        </Card>
+    );
+};
 
 // A more robust GeckoCardNode that can be reused
 const GeckoCardNode = ({ gecko, onNodeClick, isSelected, size = 'normal', isFaded = false, className = '' }) => {
@@ -78,6 +120,7 @@ export default function Lineage() {
     const [myGeckos, setMyGeckos] = useState([]);
     const [allGeckosMap, setAllGeckosMap] = useState({});
     const [allBreedingPlans, setAllBreedingPlans] = useState([]);
+    const [placeholders, setPlaceholders] = useState({});
     
     const [selectedGeckoId, setSelectedGeckoId] = useState(null);
     const [lineage, setLineage] = useState({});
@@ -90,14 +133,25 @@ export default function Lineage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [scale, setScale] = useState(1);
     const mainContentRef = useRef(null);
+    
+    // Placeholder editing
+    const [editingPlaceholder, setEditingPlaceholder] = useState(null);
+    const [placeholderForm, setPlaceholderForm] = useState({
+        name: '',
+        image_url: '',
+        breeder_name: '',
+        breeder_website: '',
+        notes: ''
+    });
 
     const fetchAllData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const currentUser = await User.me();
-            const [userGeckos, allVisibleGeckos] = await Promise.all([
+            const currentUser = await base44.auth.me();
+            const [userGeckos, allVisibleGeckos, userPlaceholders] = await Promise.all([
                 Gecko.filter({ created_by: currentUser.email }),
-                Gecko.list()
+                Gecko.list(),
+                LineagePlaceholder.filter({ created_by: currentUser.email }).catch(() => [])
             ]);
             
             // Fetch breeding plans safely
@@ -111,6 +165,14 @@ export default function Lineage() {
             setMyGeckos(userGeckos);
             setAllGeckosMap(_.keyBy(allVisibleGeckos, 'id'));
             setAllBreedingPlans(breedingPlans);
+            
+            // Index placeholders by gecko_id and parent_type
+            const placeholderMap = {};
+            userPlaceholders.forEach(p => {
+                const key = `${p.gecko_id}_${p.parent_type}`;
+                placeholderMap[key] = p;
+            });
+            setPlaceholders(placeholderMap);
         } catch (error) {
             console.error("Failed to load initial data:", error);
         }
@@ -138,10 +200,34 @@ export default function Lineage() {
         const gecko = allGeckosMap[geckoId];
         if (!gecko) return null;
 
-        const [sire, dam] = await Promise.all([
-            getLineageFor(gecko.sire_id, generations, currentGen + 1),
-            getLineageFor(gecko.dam_id, generations, currentGen + 1)
-        ]);
+        // Build sire and dam - either from collection or from names
+        let sire = null;
+        let dam = null;
+        
+        if (gecko.sire_id) {
+            sire = await getLineageFor(gecko.sire_id, generations, currentGen + 1);
+        } else if (gecko.sire_name) {
+            // Create placeholder object for display
+            sire = { 
+                name: gecko.sire_name, 
+                isPlaceholder: true, 
+                geckoId: gecko.id,
+                parentType: 'sire'
+            };
+        }
+        
+        if (gecko.dam_id) {
+            dam = await getLineageFor(gecko.dam_id, generations, currentGen + 1);
+        } else if (gecko.dam_name) {
+            // Create placeholder object for display
+            dam = { 
+                name: gecko.dam_name, 
+                isPlaceholder: true, 
+                geckoId: gecko.id,
+                parentType: 'dam'
+            };
+        }
+        
         return { ...gecko, sire, dam };
     }, [allGeckosMap]);
 
@@ -173,12 +259,74 @@ export default function Lineage() {
         setIsLoadingLineage(false);
     }, [getLineageFor, allGeckosMap, allBreedingPlans]);
 
+    const handleEditPlaceholder = (gecko, parentType) => {
+        const key = `${gecko.geckoId}_${parentType}`;
+        const existing = placeholders[key];
+        
+        setEditingPlaceholder({ geckoId: gecko.geckoId, parentType, name: gecko.name });
+        setPlaceholderForm({
+            name: gecko.name || '',
+            image_url: existing?.image_url || '',
+            breeder_name: existing?.breeder_name || '',
+            breeder_website: existing?.breeder_website || '',
+            notes: existing?.notes || ''
+        });
+    };
+
+    const handleSavePlaceholder = async () => {
+        if (!editingPlaceholder) return;
+        
+        try {
+            const key = `${editingPlaceholder.geckoId}_${editingPlaceholder.parentType}`;
+            const existing = placeholders[key];
+            
+            const data = {
+                gecko_id: editingPlaceholder.geckoId,
+                parent_type: editingPlaceholder.parentType,
+                name: placeholderForm.name || editingPlaceholder.name,
+                image_url: placeholderForm.image_url,
+                breeder_name: placeholderForm.breeder_name,
+                breeder_website: placeholderForm.breeder_website,
+                notes: placeholderForm.notes
+            };
+            
+            if (existing) {
+                await LineagePlaceholder.update(existing.id, data);
+            } else {
+                await LineagePlaceholder.create(data);
+            }
+            
+            // Refresh placeholders
+            await fetchAllData();
+            setEditingPlaceholder(null);
+        } catch (error) {
+            console.error("Failed to save placeholder:", error);
+        }
+    };
+
     const renderGeneration = (gecko, generation) => {
         if (!gecko) {
             return <UnknownCardNode size={generation >= 2 ? 'small' : 'normal'} />;
         }
         
         const cardSize = generation >= 2 ? 'small' : 'normal';
+        
+        // Handle placeholder parents
+        if (gecko.isPlaceholder) {
+            const key = `${gecko.geckoId}_${gecko.parentType}`;
+            const placeholderData = placeholders[key];
+            
+            return (
+                <div className="flex items-center">
+                    <PlaceholderCardNode 
+                        parentName={gecko.name}
+                        placeholderData={placeholderData}
+                        onEdit={() => handleEditPlaceholder(gecko, gecko.parentType)}
+                        size={cardSize}
+                    />
+                </div>
+            );
+        }
 
         return (
             <div className="flex items-center">

@@ -399,18 +399,11 @@ export default function MyGeckosPage() {
     const filteredAndSortedGeckos = getSortedGeckos(applyFilters(searchFiltered));
 
     if (!user && !isLoading) {
+        const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
         return (
-            <div className="flex flex-col items-center justify-center min-h-screen bg-slate-950 text-white p-8">
-                <Users className="w-16 h-16 mb-4 text-emerald-500" />
-                <h2 className="text-2xl font-bold mb-2">My Gecko Collection</h2>
-                <p className="text-slate-400 mb-6 max-w-md text-center">
-                    Create an account to start managing your gecko collection, track breeding plans, and more.
-                </p>
-                <Button onClick={() => User.login()} className="bg-emerald-600 hover:bg-emerald-700">
-                    <UserPlus className="w-5 h-5 mr-2" />
-                    Sign Up / Login
-                </Button>
-            </div>
+            <React.Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center"><Loader2 className="w-12 h-12 text-emerald-500 animate-spin" /></div>}>
+                <LoginPortal requiredFeature="My Gecko Collection" />
+            </React.Suspense>
         );
     }
 
