@@ -188,10 +188,10 @@ export default function Lineage() {
         const params = new URLSearchParams(location.search);
         const geckoIdFromUrl = params.get('geckoId');
         
-        if (geckoIdFromUrl && allGeckosMap[geckoIdFromUrl] && !isLoading) {
+        if (geckoIdFromUrl && allGeckosMap[geckoIdFromUrl] && !isLoading && geckoIdFromUrl !== selectedGeckoId) {
             handleSelectGecko(geckoIdFromUrl);
         }
-    }, [location.search, allGeckosMap, isLoading]);
+    }, [location.search, allGeckosMap, isLoading, handleSelectGecko, selectedGeckoId]);
 
     const getLineageFor = useCallback(async (geckoId, generations = 3, currentGen = 1) => {
         if (currentGen > generations || !geckoId) {
@@ -200,32 +200,35 @@ export default function Lineage() {
         const gecko = allGeckosMap[geckoId];
         if (!gecko) return null;
 
-        // Build sire and dam - either from collection or from names
+        // Build sire and dam - either from collection, from names, or as unknown placeholders
         let sire = null;
         let dam = null;
         
-        if (gecko.sire_id) {
-            sire = await getLineageFor(gecko.sire_id, generations, currentGen + 1);
-        } else if (gecko.sire_name) {
-            // Create placeholder object for display
-            sire = { 
-                name: gecko.sire_name, 
-                isPlaceholder: true, 
-                geckoId: gecko.id,
-                parentType: 'sire'
-            };
-        }
-        
-        if (gecko.dam_id) {
-            dam = await getLineageFor(gecko.dam_id, generations, currentGen + 1);
-        } else if (gecko.dam_name) {
-            // Create placeholder object for display
-            dam = { 
-                name: gecko.dam_name, 
-                isPlaceholder: true, 
-                geckoId: gecko.id,
-                parentType: 'dam'
-            };
+        if (currentGen < generations) {
+            // Always show parent slots up to max generations
+            if (gecko.sire_id) {
+                sire = await getLineageFor(gecko.sire_id, generations, currentGen + 1);
+            } else {
+                // Create placeholder for sire (with name if available, otherwise "Unknown")
+                sire = { 
+                    name: gecko.sire_name || 'Unknown', 
+                    isPlaceholder: true, 
+                    geckoId: gecko.id,
+                    parentType: 'sire'
+                };
+            }
+            
+            if (gecko.dam_id) {
+                dam = await getLineageFor(gecko.dam_id, generations, currentGen + 1);
+            } else {
+                // Create placeholder for dam (with name if available, otherwise "Unknown")
+                dam = { 
+                    name: gecko.dam_name || 'Unknown', 
+                    isPlaceholder: true, 
+                    geckoId: gecko.id,
+                    parentType: 'dam'
+                };
+            }
         }
         
         return { ...gecko, sire, dam };
@@ -324,6 +327,7 @@ export default function Lineage() {
                         onEdit={() => handleEditPlaceholder(gecko, gecko.parentType)}
                         size={cardSize}
                     />
+                    {/* Placeholders don't show their own lineage */}
                 </div>
             );
         }
@@ -339,12 +343,12 @@ export default function Lineage() {
                            <div className="absolute left-0 top-0 h-[2px] w-4 bg-slate-600"></div>
                           <div className="absolute left-0 bottom-0 h-[2px] w-4 bg-slate-600"></div>
                         </div>
+                        <div className="flex flex-col gap-2 md:gap-4">
+                            {gecko.sire && renderGeneration(gecko.sire, generation + 1)}
+                            {gecko.dam && renderGeneration(gecko.dam, generation + 1)}
+                        </div>
                     </>
                 )}
-                <div className="flex flex-col gap-2 md:gap-4">
-                    {gecko.sire && renderGeneration(gecko.sire, generation + 1)}
-                    {gecko.dam && renderGeneration(gecko.dam, generation + 1)}
-                </div>
             </div>
         );
     };
