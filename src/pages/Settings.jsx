@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { User } from '@/entities/User';
 import { ExpertVerificationRequest } from '@/entities/ExpertVerificationRequest';
@@ -45,6 +44,8 @@ const notificationTypes = [
     { key: 'level_up', label: 'Level Up & Achievements', description: 'When you earn new badges or reach milestones' },
     { key: 'expert_status', label: 'Expert Status Updates', description: 'Changes to your expert verification status' },
     { key: 'new_message', label: 'New Messages', description: 'When you receive direct messages from other users' },
+    { key: 'new_follower', label: 'New Followers', description: 'When someone starts following you' },
+    { key: 'following_activity', label: 'Following Activity', description: 'When breeders you follow list new geckos or breeding plans' },
     { key: 'gecko_of_day', label: 'Gecko of the Day', description: 'When your gecko photo is selected as featured' },
     { key: 'forum_replies', label: 'Forum Activity', description: 'Replies to your forum posts and comments' },
     { key: 'breeding_updates', label: 'Breeding Updates', description: 'Updates about your breeding plans and outcomes' },

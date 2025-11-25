@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Notification } from '@/entities/Notification';
 import { User } from '@/entities/User';
@@ -18,7 +17,10 @@ const notificationIcons = {
     new_reply: <MessageSquare className="w-5 h-5 text-indigo-500" />,
     new_message: <Bell className="w-5 h-5 text-pink-500" />,
     announcement: <Bell className="w-5 h-5 text-red-500" />,
-    gecko_of_the_day_selection: <Star className="w-5 h-5 text-yellow-500" />
+    gecko_of_the_day_selection: <Star className="w-5 h-5 text-yellow-500" />,
+    new_follower: <UserIcon className="w-5 h-5 text-emerald-500" />,
+    new_gecko_listing: <Star className="w-5 h-5 text-blue-500" />,
+    new_breeding_plan: <Star className="w-5 h-5 text-purple-500" />
 };
 
 const notificationColors = {
@@ -30,7 +32,10 @@ const notificationColors = {
     new_reply: "bg-indigo-100 text-indigo-800",
     new_message: "bg-pink-100 text-pink-800",
     announcement: "bg-red-100 text-red-800",
-    gecko_of_the_day_selection: "bg-yellow-100 text-yellow-800"
+    gecko_of_the_day_selection: "bg-yellow-100 text-yellow-800",
+    new_follower: "bg-emerald-100 text-emerald-800",
+    new_gecko_listing: "bg-blue-100 text-blue-800",
+    new_breeding_plan: "bg-purple-100 text-purple-800"
 };
 
 export default function NotificationsPage() {
