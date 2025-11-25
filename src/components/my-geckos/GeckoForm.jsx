@@ -1,8 +1,8 @@
-
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Gecko, UserActivity } from '@/entities/all';
 import { UploadFile } from '@/integrations/Core';
+import { notifyFollowersNewGecko } from '@/components/notifications/NotificationService';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -365,6 +365,11 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         points: 5,
                         related_entity_id: savedGecko.id
                     });
+                    
+                    // Notify followers if gecko is public
+                    if (savedGecko.is_public !== false) {
+                        notifyFollowersNewGecko(savedGecko, currentUser.email, currentUser.full_name).catch(console.error);
+                    }
                 }
             } else {
                 savedGecko = await Gecko.update(gecko.id, dataToSave);
