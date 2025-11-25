@@ -1,6 +1,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { Gecko, BreedingPlan, Egg, User } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
+import { notifyFollowersNewBreedingPlan } from '@/components/notifications/NotificationService';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -864,10 +865,11 @@ export default function BreedingPage() {
         }
         try {
             // Auto-generate breeding_id if not provided
+            const sire = geckos.find(g => g.id === newPlan.sire_id);
+            const dam = geckos.find(g => g.id === newPlan.dam_id);
+            
             let breedingId = newPlan.breeding_id;
             if (!breedingId) {
-                const sire = geckos.find(g => g.id === newPlan.sire_id);
-                const dam = geckos.find(g => g.id === newPlan.dam_id);
                 const sireCode = sire?.gecko_id_code || 'UNK';
                 const damCode = dam?.gecko_id_code || 'UNK';
                 breedingId = `${sireCode}x${damCode}`;
@@ -878,7 +880,14 @@ export default function BreedingPage() {
                 breeding_id: breedingId,
                 breeding_season: newPlan.breeding_season || getCurrentSeason()
             };
-            await BreedingPlan.create(planData);
+            const createdPlan = await BreedingPlan.create(planData);
+            
+            // Notify followers if plan is public
+            if (createdPlan.is_public) {
+                const currentUser = await base44.auth.me();
+                notifyFollowersNewBreedingPlan(createdPlan, sire, dam, currentUser.email, currentUser.full_name).catch(console.error);
+            }
+            
             setIsModalOpen(false);
             setNewPlan({
                 sire_id: '',
