@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { User, Gecko, UserFollow, Notification } from '@/entities/all';
+import { notifyNewFollower } from '@/components/notifications/NotificationService';
 import { useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
