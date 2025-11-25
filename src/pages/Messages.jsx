@@ -1,6 +1,6 @@
-
 import React, { useState, useEffect } from 'react';
 import { DirectMessage, User } from '@/entities/all';
+import { notifyNewMessage } from '@/components/notifications/NotificationService';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -126,11 +126,15 @@ export default function MessagesPage() {
 
         setIsSending(true);
         try {
+            const messageContent = newMessage.trim();
             const message = await DirectMessage.create({
                 sender_email: currentUser.email,
                 recipient_email: selectedConversation.email,
-                content: newMessage.trim()
+                content: messageContent
             });
+            
+            // Notify recipient of new message
+            await notifyNewMessage(selectedConversation.email, currentUser.email, currentUser.full_name, messageContent);
 
             // Update conversations
             setConversations(prev => {

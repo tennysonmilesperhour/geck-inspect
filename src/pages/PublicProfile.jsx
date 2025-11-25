@@ -98,12 +98,8 @@ export default function PublicProfile() {
                 setIsFollowing(true);
                 setFollowRecord(newFollow);
                 
-                await Notification.create({
-                    user_email: profileUser.email,
-                    type: 'announcement',
-                    content: `${currentUser.full_name} is now following you!`,
-                    link: `/PublicProfile?userId=${currentUser.id}`
-                });
+                // Notify the user they have a new follower
+                await notifyNewFollower(profileUser.email, currentUser.email, currentUser.full_name);
                 
                 toast({ title: "Following!", description: `You're now following ${profileUser.full_name}` });
             }
