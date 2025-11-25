@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { User, DirectMessage, Notification } from '@/entities/all';
+import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
@@ -74,7 +75,7 @@ export default function MassMessaging() {
         setIsSending(true);
         try {
             // Get current admin user
-            const currentAdmin = await User.me();
+            const currentAdmin = await base44.auth.me();
             
             // Fetch all users
             const allUsers = await User.list();

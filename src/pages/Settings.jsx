@@ -37,7 +37,10 @@ const initialFormData = {
     email_notification_types: [],
     calendar_alerts_enabled: true,
     calendar_alert_types: [],
-    palm_street_sync_enabled: false
+    palm_street_sync_enabled: false,
+    email_on_new_follower: false,
+    email_on_new_message: false,
+    email_on_following_activity: false
 };
 
 const notificationTypes = [
@@ -102,6 +105,9 @@ export default function SettingsPage() {
                         calendar_alerts_enabled: currentUser.calendar_alerts_enabled !== false,
                         calendar_alert_types: currentUser.calendar_alert_types || ['egg_lay_estimate', 'hatch_estimate', 'breeding_reminders'],
                         palm_street_sync_enabled: currentUser.palm_street_sync_enabled || false,
+                        email_on_new_follower: currentUser.email_on_new_follower || false,
+                        email_on_new_message: currentUser.email_on_new_message || false,
+                        email_on_following_activity: currentUser.email_on_following_activity || false,
                     });
 
                     const existingRequests = await ExpertVerificationRequest.filter({ user_email: currentUser.email });
@@ -406,10 +412,17 @@ export default function SettingsPage() {
                 <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
                     <CardHeader><CardTitle className="text-slate-100 flex items-center gap-2"><Mail className="w-5 h-5"/>Email Notifications</CardTitle></CardHeader>
                     <CardContent className="space-y-6">
-                        {renderSwitch('email-enabled', 'Enable Email Notifications', null, formData.email_notifications_enabled, (checked) => handleChange('email_notifications_enabled', checked))}
+                        {renderSwitch('email-enabled', 'Enable Email Notifications', 'Master toggle for all email notifications', formData.email_notifications_enabled, (checked) => handleChange('email_notifications_enabled', checked))}
                         {formData.email_notifications_enabled && (
                             <div className="space-y-3">
-                                {notificationTypes.map(notifType => renderNotificationSwitch(notifType, formData.email_notification_types.includes(notifType.key), () => toggleArrayItem('email_notification_types', notifType.key)))}
+                                <p className="text-sm text-slate-400 mb-2">Choose which events trigger email alerts:</p>
+                                {renderSwitch('email-new-follower', 'Email on New Follower', 'Get an email when someone starts following you', formData.email_on_new_follower, (checked) => handleChange('email_on_new_follower', checked))}
+                                {renderSwitch('email-new-message', 'Email on New Message', 'Get an email when you receive a direct message', formData.email_on_new_message, (checked) => handleChange('email_on_new_message', checked))}
+                                {renderSwitch('email-following-activity', 'Email on Following Activity', 'Get an email when breeders you follow list new geckos or breeding plans', formData.email_on_following_activity, (checked) => handleChange('email_on_following_activity', checked))}
+                                <div className="border-t border-slate-700 pt-4 mt-4">
+                                    <p className="text-sm text-slate-400 mb-2">In-app notification preferences:</p>
+                                    {notificationTypes.map(notifType => renderNotificationSwitch(notifType, formData.email_notification_types.includes(notifType.key), () => toggleArrayItem('email_notification_types', notifType.key)))}
+                                </div>
                             </div>
                         )}
                     </CardContent>
