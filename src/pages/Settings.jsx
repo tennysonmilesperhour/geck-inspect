@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from 'react';
 import { User } from '@/entities/User';
-import { ExpertVerificationRequest } from '@/entities/ExpertVerificationRequest';
 import { UploadFile } from '@/integrations/Core';
 import { useToast } from "@/components/ui/use-toast";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -11,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import {
-  Settings, Upload, Save, Globe, Eye, X, Plus, Camera, Mail, Award, CheckCircle, Clock, Calendar, Loader2
+  Settings, Upload, Save, Globe, Eye, X, Plus, Camera, Mail, Calendar, Loader2
 } from 'lucide-react';
 
 const initialFormData = {
@@ -68,10 +67,6 @@ export default function SettingsPage() {
     const [formData, setFormData] = useState(initialFormData);
     const [isSaving, setIsSaving] = useState(false);
     const [newSpecialty, setNewSpecialty] = useState('');
-    const [expertRequest, setExpertRequest] = useState(null);
-    const [showExpertRequestForm, setShowExpertRequestForm] = useState(false);
-    const [expertRequestText, setExpertRequestText] = useState('');
-    const [isSubmittingRequest, setIsSubmittingRequest] = useState(false);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -109,11 +104,6 @@ export default function SettingsPage() {
                         email_on_new_message: currentUser.email_on_new_message || false,
                         email_on_following_activity: currentUser.email_on_following_activity || false,
                     });
-
-                    const existingRequests = await ExpertVerificationRequest.filter({ user_email: currentUser.email });
-                    if (existingRequests.length > 0) {
-                        setExpertRequest(existingRequests.sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0]);
-                    }
                 }
             } catch (error) {
                 console.error("Failed to load user data:", error);
@@ -171,30 +161,6 @@ export default function SettingsPage() {
             toast({ title: "Save Failed", description: "Could not save your settings. Please try again.", variant: "destructive" });
         }
         setIsSaving(false);
-    };
-
-    const handleExpertRequest = async () => {
-        if (!expertRequestText.trim() || !user) return;
-
-        setIsSubmittingRequest(true);
-        try {
-            const requestData = {
-                user_email: user.email,
-                user_name: user.full_name,
-                experience_description: expertRequestText.trim(),
-                status: 'pending'
-            };
-
-            const newRequest = await ExpertVerificationRequest.create(requestData);
-            setExpertRequest(newRequest);
-            setShowExpertRequestForm(false);
-            setExpertRequestText('');
-            toast({ title: "Request Submitted", description: "Your expert verification request has been sent for review." });
-        } catch (error) {
-            console.error('Failed to submit expert request:', error);
-            toast({ title: "Submission Failed", description: "Could not submit your request.", variant: "destructive" });
-        }
-        setIsSubmittingRequest(false);
     };
 
     const renderSwitch = (id, label, description, checked, onCheckedChange) => (
@@ -264,52 +230,6 @@ export default function SettingsPage() {
                     <p className="text-lg text-slate-400">Manage your profile, privacy settings, and account preferences.</p>
                 </div>
                 
-                {/* All Cards will use the new theme */}
-                <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
-                    <CardHeader>
-                        <CardTitle className="text-slate-100 flex items-center gap-2"><Award className="w-5 h-5 text-yellow-400" />Expert Verification</CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        {user.is_expert ? (
-                             <div className="flex items-center gap-2 text-green-400"><CheckCircle /> You are a verified expert.</div>
-                        ) : expertRequest ? (
-                            <div className="space-y-4">
-                                <div className="flex items-center gap-2">
-                                    {expertRequest.status === 'pending' && <><Clock className="w-5 h-5 text-yellow-400" /><Badge className="bg-yellow-900/50 text-yellow-300 border-yellow-500/30">Request Pending</Badge></>}
-                                    {expertRequest.status === 'approved' && <><CheckCircle className="w-5 h-5 text-green-400" /><Badge className="bg-green-900/50 text-green-300 border-green-500/30">Approved</Badge></>}
-                                    {expertRequest.status === 'denied' && <><X className="w-5 h-5 text-red-400" /><Badge className="bg-red-900/50 text-red-300 border-red-500/30">Request Denied</Badge></>}
-                                </div>
-                                <div>
-                                    <Label className="text-slate-300">Your Request:</Label>
-                                    <p className="text-sm text-slate-400 bg-slate-800 p-3 rounded-lg mt-1">{expertRequest.experience_description}</p>
-                                </div>
-                                {expertRequest.admin_response && (
-                                    <div>
-                                        <Label className="text-slate-300">Admin Response:</Label>
-                                        <p className="text-sm text-slate-400 bg-slate-800 p-3 rounded-lg mt-1">{expertRequest.admin_response}</p>
-                                    </div>
-                                )}
-                                {(expertRequest.status === 'denied' || showExpertRequestForm) && (
-                                     <div className="space-y-4 pt-4">
-                                        <Textarea placeholder="Describe your experience..." value={expertRequestText} onChange={(e) => setExpertRequestText(e.target.value)} className="bg-slate-800 border-slate-600 text-slate-100 min-h-32" />
-                                        <div className="flex gap-2">
-                                            <Button onClick={handleExpertRequest} disabled={isSubmittingRequest} className="bg-emerald-600 hover:bg-emerald-700">{isSubmittingRequest ? <><Loader2 className="w-4 h-4 mr-2 animate-spin"/>Submitting...</> : 'Submit New Request'}</Button>
-                                            {expertRequest.status === 'denied' && <Button variant="outline" onClick={() => setShowExpertRequestForm(false)}>Cancel</Button>}
-                                        </div>
-                                    </div>
-                                )}
-                                {expertRequest.status !== 'denied' && !showExpertRequestForm && <Button variant="link" onClick={() => setShowExpertRequestForm(true)}>Submit a new request</Button>}
-                            </div>
-                        ) : (
-                             <div className="space-y-4">
-                                 <p className="text-slate-400">Expert users can verify gecko classifications to improve the AI. Describe your experience to apply.</p>
-                                 <Textarea placeholder="Describe your experience with crested gecko morphs, breeding history, years of experience, etc..." value={expertRequestText} onChange={(e) => setExpertRequestText(e.target.value)} className="bg-slate-800 border-slate-600 text-slate-100 min-h-32" />
-                                 <Button onClick={handleExpertRequest} disabled={!expertRequestText.trim() || isSubmittingRequest} className="bg-emerald-600 hover:bg-emerald-700">{isSubmittingRequest ? <><Loader2 className="w-4 h-4 mr-2 animate-spin"/>Submitting...</> : 'Request Expert Verification'}</Button>
-                             </div>
-                        )}
-                    </CardContent>
-                </Card>
-
                 <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
                     <CardHeader>
                         <CardTitle className="text-slate-100">Profile Photos</CardTitle>

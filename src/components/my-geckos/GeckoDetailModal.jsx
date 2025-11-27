@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { WeightRecord, BreedingPlan, Egg, Gecko, UserFollow, Notification } from '@/entities/all';
+import { WeightRecord, BreedingPlan, Egg, Gecko, GeckoEvent } from '@/entities/all';
 import { format } from 'date-fns';
-import { X, Plus, Trash2, LineChart, Loader2, Award, GitBranch, Calendar, Baby, Users, FileText, Edit, Eye, EyeOff } from 'lucide-react';
+import { X, Plus, Trash2, LineChart, Loader2, Award, GitBranch, Calendar, Baby, Users, FileText, Edit, Eye, EyeOff, History } from 'lucide-react';
+import EventTracker from './EventTracker';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -18,11 +19,22 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, all
   const [breedingHistory, setBreedingHistory] = useState([]);
   const [eggHistory, setEggHistory] = useState([]);
   const [offspring, setOffspring] = useState([]);
+  const [eventHistory, setEventHistory] = useState([]);
   const [showAddWeight, setShowAddWeight] = useState(false);
   const [newWeight, setNewWeight] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isGeneratingCert, setIsGeneratingCert] = useState(false);
   const [isPublic, setIsPublic] = useState(gecko?.is_public ?? true);
+
+  const loadEventHistory = async () => {
+    if (!gecko) return;
+    try {
+      const events = await GeckoEvent.filter({ gecko_id: gecko.id }, '-event_date');
+      setEventHistory(events);
+    } catch (error) {
+      console.error('Failed to load event history:', error);
+    }
+  };
 
   useEffect(() => {
     const fetchDetailedData = async () => {
@@ -30,7 +42,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, all
       
       setIsLoading(true);
       try {
-        const [weights, breedings, eggs, children] = await Promise.allSettled([
+        const [weights, breedings, eggs, children, events] = await Promise.allSettled([
           WeightRecord.filter({ gecko_id: gecko.id }, '-record_date'),
           BreedingPlan.filter({ 
             $or: [
@@ -46,13 +58,15 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, all
               { sire_id: gecko.id },
               { dam_id: gecko.id }
             ]
-          }, '-hatch_date')
+          }, '-hatch_date'),
+          GeckoEvent.filter({ gecko_id: gecko.id }, '-event_date')
         ]);
 
         setWeightRecords(weights.status === 'fulfilled' ? weights.value : []);
         setBreedingHistory(breedings.status === 'fulfilled' ? breedings.value : []);
         setEggHistory(eggs.status === 'fulfilled' ? eggs.value : []);
         setOffspring(children.status === 'fulfilled' ? children.value : []);
+        setEventHistory(events.status === 'fulfilled' ? events.value : []);
       } catch (error) {
         console.error('Failed to fetch detailed gecko data:', error);
       } finally {
@@ -253,6 +267,14 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, all
 
               {/* Action Buttons */}
               <div className="space-y-3">
+                <div className="flex gap-2">
+                  <EventTracker 
+                    entityId={gecko.id} 
+                    entityType="gecko" 
+                    EventEntity={GeckoEvent}
+                    onEventAdded={loadEventHistory}
+                  />
+                </div>
                 <Button
                   onClick={() => handleGenerateCertificate('lineage')}
                   disabled={isGeneratingCert}
@@ -420,8 +442,50 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, all
               </div>
             </div>
 
-            {/* Right Column: Parentage, Offspring, Eggs */}
+            {/* Right Column: Event History, Parentage, Offspring, Eggs */}
             <div className="space-y-6">
+              {/* Event History */}
+              <div>
+                <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
+                  <History className="w-5 h-5" />
+                  Event History
+                </h3>
+                {eventHistory.length > 0 ? (
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {eventHistory.map(event => {
+                      const eventIcons = {
+                        shed: '🦎',
+                        feeding: '🍽️',
+                        defecation: '💩',
+                        cage_cleaning: '🧹',
+                        bug_feeding: '🦗',
+                        custom: '✏️'
+                      };
+                      return (
+                        <div key={event.id} className="bg-slate-800 p-3 rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">{eventIcons[event.event_type] || '📋'}</span>
+                              <span className="text-slate-200 font-medium text-sm capitalize">
+                                {event.event_type === 'custom' ? event.custom_event_name : event.event_type.replace('_', ' ')}
+                              </span>
+                            </div>
+                            <span className="text-slate-400 text-xs">
+                              {format(new Date(event.event_date), 'MMM d, yyyy h:mm a')}
+                            </span>
+                          </div>
+                          {event.notes && (
+                            <p className="text-slate-400 text-xs mt-1">{event.notes}</p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-slate-400 text-center py-4 text-sm">No events recorded yet.</p>
+                )}
+              </div>
+
               {/* Parentage */}
               <div>
                 <h3 className="text-lg font-semibold text-slate-100 mb-4">Parentage</h3>
