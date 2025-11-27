@@ -4,6 +4,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Eye, Edit, Calendar, DollarSign, Sparkles, Weight } from 'lucide-react';
 import { format } from 'date-fns';
+import EventTracker from './EventTracker';
+import { GeckoEvent } from '@/entities/all';
 
 const DEFAULT_GECKO_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
 
@@ -90,9 +92,16 @@ export default function GeckoCard({ gecko, weightRecords = [], onView, onEdit })
       </div>
 
       <CardContent className="p-3 space-y-2">
-        <h3 className="font-bold text-base sm:text-lg text-slate-100 truncate">
-          {gecko.name}
-        </h3>
+        <div className="flex items-center justify-between">
+          <h3 className="font-bold text-base sm:text-lg text-slate-100 truncate">
+            {gecko.name}
+          </h3>
+          <EventTracker 
+            entityId={gecko.id} 
+            entityType="gecko" 
+            EventEntity={GeckoEvent}
+          />
+        </div>
         {gecko.gecko_id_code && (
           <p className="text-xs text-slate-400 font-medium truncate">
             ID: <span className="font-mono bg-slate-800 px-1.5 py-0.5 rounded">{gecko.gecko_id_code}</span>
