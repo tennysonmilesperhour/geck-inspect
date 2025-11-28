@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import ReptileCard from '../components/other-reptiles/ReptileCard';
 import ReptileForm from '../components/other-reptiles/ReptileForm';
+import ReptileDetailModal from '../components/other-reptiles/ReptileDetailModal';
 import { toast } from '@/components/ui/use-toast';
 import { AnimatePresence, motion } from 'framer-motion';
 
