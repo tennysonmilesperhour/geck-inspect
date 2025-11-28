@@ -169,18 +169,16 @@ export default function ReptileCard({ reptile, onView, onEdit, onFeedingComplete
                     {/* Status badge and Fed button stacked */}
                     {reptile.feeding_reminder_enabled && feedingStatus.status !== 'none' && (
                         <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
-                            {getStatusBadge() && (
-                                <div className={`${
-                                    feedingStatus.status === 'ok' ? 'bg-emerald-900/50 text-emerald-400' :
-                                    feedingStatus.status === 'due' || feedingStatus.status === 'overdue_minor' ? 'bg-yellow-900/50 text-yellow-400' :
-                                    feedingStatus.status === 'overdue_orange' ? 'bg-orange-900/50 text-orange-400' :
-                                    'bg-red-900/50 text-red-400'
-                                } px-2 py-1 rounded-full text-xs font-bold`}>
-                                    {feedingStatus.status === 'ok' ? `Feed in ${feedingStatus.daysUntil}d` :
-                                     feedingStatus.status === 'due' ? 'Feeding Day!' :
-                                     `${feedingStatus.daysOverdue}d overdue${feedingStatus.status === 'overdue_red' ? '!' : ''}`}
-                                </div>
-                            )}
+                            <div className={`${
+                                feedingStatus.status === 'ok' ? 'bg-emerald-900/50 text-emerald-400' :
+                                feedingStatus.status === 'due' || feedingStatus.status === 'overdue_minor' ? 'bg-yellow-900/50 text-yellow-400' :
+                                feedingStatus.status === 'overdue_orange' ? 'bg-orange-900/50 text-orange-400' :
+                                'bg-red-900/50 text-red-400'
+                            } px-2 py-1 rounded-full text-xs font-bold`}>
+                                {feedingStatus.status === 'ok' ? `Feed in ${feedingStatus.daysUntil}d` :
+                                 feedingStatus.status === 'due' ? 'Feeding Day!' :
+                                 `${feedingStatus.daysOverdue}d overdue${feedingStatus.status === 'overdue_red' ? '!' : ''}`}
+                            </div>
                             {needsFeeding && (
                                 <Button
                                     size="sm"
