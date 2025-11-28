@@ -99,8 +99,8 @@ export default function ReptileCard({ reptile, onView, onEdit, onFeedingComplete
                 />
                 
                 <div className="absolute top-2 left-2 flex items-center gap-2">
-                    <span className={`${getSexColor(reptile.sex)} text-3xl font-bold drop-shadow-lg bg-black/30 rounded-full w-10 h-10 flex items-center justify-center`}>
-                        {getSexIcon(reptile.sex)}
+                    <span className={`${getSexColor(reptile.sex)} text-3xl font-bold drop-shadow-lg`}>
+                      {getSexIcon(reptile.sex)}
                     </span>
                 </div>
 

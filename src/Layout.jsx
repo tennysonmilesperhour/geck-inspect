@@ -243,11 +243,7 @@ function LayoutContent({ children, currentPageName }) {
 
   useEffect(() => {
     const logoUrl = window.APP_LOGO_URL;
-    if (logoUrl && logoUrl !== 'undefined' && logoUrl !== '') {
-      setAppLogo(logoUrl);
-    } else {
-      setAppLogo('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png');
-    }
+    setAppLogo('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png');
   }, []);
 
   useEffect(() => {
