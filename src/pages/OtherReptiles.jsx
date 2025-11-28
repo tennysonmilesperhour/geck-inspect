@@ -190,6 +190,19 @@ export default function OtherReptilesPage() {
                                 />
                             )}
                         </AnimatePresence>
+
+                        {isDetailModalOpen && selectedReptile && (
+                            <ReptileDetailModal
+                                reptile={selectedReptile}
+                                onClose={handleCloseDetailModal}
+                                onUpdate={loadReptiles}
+                                onEdit={(reptile) => {
+                                    setIsDetailModalOpen(false);
+                                    setSelectedReptile(reptile);
+                                    setIsFormOpen(true);
+                                }}
+                            />
+                        )}
                     </>
                 )}
             </div>
