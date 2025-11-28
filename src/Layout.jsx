@@ -246,7 +246,7 @@ function LayoutContent({ children, currentPageName }) {
     if (logoUrl && logoUrl !== 'undefined' && logoUrl !== '') {
       setAppLogo(logoUrl);
     } else {
-      setAppLogo('https://i.imgur.com/gfaW2Yg.png');
+      setAppLogo('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png');
     }
   }, []);
 
@@ -1305,7 +1305,7 @@ function LayoutContent({ children, currentPageName }) {
                       className="h-8 w-8 object-contain rounded-lg"
                       onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src = 'https://i.imgur.com/gfaW2Yg.png';
+                        e.target.src = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png';
                       }}
                     />
                   )}

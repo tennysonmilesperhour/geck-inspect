@@ -66,7 +66,7 @@ export default function GeckoCard({ gecko, weightRecords = [], onView, onEdit })
         />
         
         <div className="absolute top-2 left-2 flex items-center gap-2">
-          <span className={`${getSexColor(gecko.sex)} text-3xl font-bold drop-shadow-lg bg-black/30 rounded-full w-10 h-10 flex items-center justify-center`}>
+          <span className={`${getSexColor(gecko.sex)} text-3xl font-bold drop-shadow-lg`}>
             {getSexIcon(gecko.sex)}
           </span>
         </div>
