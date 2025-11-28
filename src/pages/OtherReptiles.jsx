@@ -17,6 +17,7 @@ export default function OtherReptilesPage() {
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [selectedReptile, setSelectedReptile] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
+    const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
 
     const loadReptiles = useCallback(async () => {
         if (!user) return;
