@@ -58,7 +58,13 @@ export default function OtherReptilesPage() {
 
     const handleView = (reptile) => {
         setSelectedReptile(reptile);
-        setIsFormOpen(true);
+        setIsDetailModalOpen(true);
+    };
+
+    const handleCloseDetailModal = () => {
+        setIsDetailModalOpen(false);
+        setSelectedReptile(null);
+        loadReptiles();
     };
 
     const handleDelete = async (reptileId) => {
