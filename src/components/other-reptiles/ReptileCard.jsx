@@ -64,38 +64,19 @@ export default function ReptileCard({ reptile, onView, onEdit, onFeedingComplete
             case 'ok':
                 return 'border-emerald-500 shadow-emerald-500/20 shadow-lg';
             case 'due':
-                return 'border-yellow-500 shadow-[0_0_25px_rgba(234,179,8,0.5)] animate-glow-slow';
+                return 'border-yellow-400 shadow-[0_0_40px_rgba(250,204,21,0.8)] animate-glow-feeding';
             case 'overdue_minor':
-                return 'border-yellow-500 shadow-[0_0_25px_rgba(234,179,8,0.5)] animate-glow-slow';
+                return 'border-yellow-500 shadow-[0_0_30px_rgba(234,179,8,0.6)] animate-glow-slow';
             case 'overdue_orange':
-                return 'border-orange-500 shadow-[0_0_30px_rgba(249,115,22,0.6)] animate-glow-slow';
+                return 'border-orange-500 shadow-[0_0_35px_rgba(249,115,22,0.7)] animate-glow-slow';
             case 'overdue_red':
-                return 'border-red-500 shadow-[0_0_35px_rgba(239,68,68,0.7)] animate-glow-slow';
+                return 'border-red-500 shadow-[0_0_40px_rgba(239,68,68,0.8)] animate-glow-slow';
             default:
                 return 'border-slate-700';
         }
     };
 
-    const getStatusBadge = () => {
-        if (!reptile.feeding_reminder_enabled || feedingStatus.status === 'none') return null;
 
-        const badges = {
-            ok: { bg: 'bg-emerald-900/50', text: 'text-emerald-400', label: `Feed in ${feedingStatus.daysUntil}d` },
-            due: { bg: 'bg-yellow-900/50', text: 'text-yellow-400', label: 'Feeding Day!' },
-            overdue_minor: { bg: 'bg-yellow-900/50', text: 'text-yellow-400', label: `${feedingStatus.daysOverdue}d overdue` },
-            overdue_orange: { bg: 'bg-orange-900/50', text: 'text-orange-400', label: `${feedingStatus.daysOverdue}d overdue` },
-            overdue_red: { bg: 'bg-red-900/50', text: 'text-red-400', label: `${feedingStatus.daysOverdue}d overdue!` },
-        };
-
-        const badge = badges[feedingStatus.status];
-        if (!badge) return null;
-
-        return (
-            <div className={`absolute top-2 right-2 ${badge.bg} ${badge.text} px-2 py-1 rounded-full text-xs font-bold`}>
-                {badge.label}
-            </div>
-        );
-    };
 
     const handleQuickFed = async () => {
         setIsSaving(true);
@@ -156,6 +137,19 @@ export default function ReptileCard({ reptile, onView, onEdit, onFeedingComplete
                 .animate-glow-slow {
                     animation: glow-slow 4s ease-in-out infinite;
                 }
+                @keyframes glow-feeding {
+                    0%, 100% { 
+                        opacity: 1;
+                        box-shadow: 0 0 40px rgba(250,204,21,0.8), 0 0 60px rgba(250,204,21,0.4);
+                    }
+                    50% { 
+                        opacity: 0.7;
+                        box-shadow: 0 0 20px rgba(250,204,21,0.5), 0 0 30px rgba(250,204,21,0.2);
+                    }
+                }
+                .animate-glow-feeding {
+                    animation: glow-feeding 3s ease-in-out infinite;
+                }
             `}</style>
             <Card className={`gecko-card group overflow-hidden border-2 transition-all duration-300 ${getBorderClass()}`}>
                 <div className="relative">
@@ -172,18 +166,32 @@ export default function ReptileCard({ reptile, onView, onEdit, onFeedingComplete
                         </span>
                     </div>
 
-                    {getStatusBadge()}
-
-                    {/* Fed button - visible when needs feeding */}
-                    {needsFeeding && (
-                        <Button
-                            size="sm"
-                            onClick={(e) => { e.stopPropagation(); setShowFedModal(true); }}
-                            className="absolute bottom-2 left-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg text-xs h-8 px-3"
-                        >
-                            <Utensils className="w-4 h-4 mr-1" />
-                            Fed
-                        </Button>
+                    {/* Status badge and Fed button stacked */}
+                    {reptile.feeding_reminder_enabled && feedingStatus.status !== 'none' && (
+                        <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
+                            {getStatusBadge() && (
+                                <div className={`${
+                                    feedingStatus.status === 'ok' ? 'bg-emerald-900/50 text-emerald-400' :
+                                    feedingStatus.status === 'due' || feedingStatus.status === 'overdue_minor' ? 'bg-yellow-900/50 text-yellow-400' :
+                                    feedingStatus.status === 'overdue_orange' ? 'bg-orange-900/50 text-orange-400' :
+                                    'bg-red-900/50 text-red-400'
+                                } px-2 py-1 rounded-full text-xs font-bold`}>
+                                    {feedingStatus.status === 'ok' ? `Feed in ${feedingStatus.daysUntil}d` :
+                                     feedingStatus.status === 'due' ? 'Feeding Day!' :
+                                     `${feedingStatus.daysOverdue}d overdue${feedingStatus.status === 'overdue_red' ? '!' : ''}`}
+                                </div>
+                            )}
+                            {needsFeeding && (
+                                <Button
+                                    size="sm"
+                                    onClick={(e) => { e.stopPropagation(); setShowFedModal(true); }}
+                                    className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-lg text-xs h-7 px-3"
+                                >
+                                    <Utensils className="w-3 h-3 mr-1" />
+                                    Fed
+                                </Button>
+                            )}
+                        </div>
                     )}
 
                     <div className="absolute bottom-2 right-2 flex gap-1 sm:gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
