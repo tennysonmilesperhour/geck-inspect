@@ -26,8 +26,8 @@ export default function LikedGeckosPage() {
                 }
                 setCurrentUser(user);
 
-                // Get user's likes
-                const userLikes = await MarketplaceLike.filter({ user_email: user.email });
+                // Get user's likes (filter by created_by since that's how RLS works)
+                const userLikes = await MarketplaceLike.list();
                 setLikes(userLikes);
 
                 if (userLikes.length === 0) {

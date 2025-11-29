@@ -129,21 +129,26 @@ export default function MarketplaceBuyPage() {
     const handleToggleLike = async (geckoId) => {
         if (!currentUser) return;
         
-        if (likedGeckoIds.has(geckoId)) {
-            // Unlike
-            const likes = await MarketplaceLike.filter({ gecko_id: geckoId, user_email: currentUser.email });
-            if (likes.length > 0) {
-                await MarketplaceLike.delete(likes[0].id);
+        try {
+            if (likedGeckoIds.has(geckoId)) {
+                // Unlike - find and delete the like
+                const likes = await MarketplaceLike.filter({ gecko_id: geckoId });
+                const myLike = likes.find(l => l.user_email === currentUser.email || l.created_by === currentUser.email);
+                if (myLike) {
+                    await MarketplaceLike.delete(myLike.id);
+                }
+                setLikedGeckoIds(prev => {
+                    const newSet = new Set(prev);
+                    newSet.delete(geckoId);
+                    return newSet;
+                });
+            } else {
+                // Like
+                await MarketplaceLike.create({ gecko_id: geckoId, user_email: currentUser.email });
+                setLikedGeckoIds(prev => new Set([...prev, geckoId]));
             }
-            setLikedGeckoIds(prev => {
-                const newSet = new Set(prev);
-                newSet.delete(geckoId);
-                return newSet;
-            });
-        } else {
-            // Like
-            await MarketplaceLike.create({ gecko_id: geckoId, user_email: currentUser.email });
-            setLikedGeckoIds(prev => new Set([...prev, geckoId]));
+        } catch (error) {
+            console.error("Failed to toggle like:", error);
         }
     };
     
