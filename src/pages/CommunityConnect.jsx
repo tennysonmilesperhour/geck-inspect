@@ -278,6 +278,7 @@ export default function CommunityConnectPage() {
     const [currentUser, setCurrentUser] = useState(null);
     const [following, setFollowing] = useState([]);
     const [geckoCounts, setGeckoCounts] = useState({});
+    const [geckoCoverImages, setGeckoCoverImages] = useState({});
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [locationFilter, setLocationFilter] = useState('');
