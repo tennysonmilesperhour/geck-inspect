@@ -10,8 +10,54 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import {
-  Settings, Upload, Save, Globe, Eye, X, Plus, Camera, Mail, Calendar, Loader2
+  Settings, Upload, Save, Globe, Eye, X, Plus, Camera, Mail, Calendar, Loader2, Search
 } from 'lucide-react';
+
+// Looking For Section Component
+function LookingForSection({ formData, handleChange }) {
+    const [newItem, setNewItem] = React.useState('');
+    
+    const addItem = () => {
+        if (newItem.trim() && !formData.looking_for.includes(newItem.trim())) {
+            handleChange('looking_for', [...formData.looking_for, newItem.trim()]);
+            setNewItem('');
+        }
+    };
+    
+    const removeItem = (item) => {
+        handleChange('looking_for', formData.looking_for.filter(i => i !== item));
+    };
+    
+    return (
+        <div className="space-y-3">
+            <Label className="text-slate-300 flex items-center gap-2">
+                <Search className="w-4 h-4" />
+                Looking For (morphs/traits you want to acquire)
+            </Label>
+            <div className="flex gap-2">
+                <Input 
+                    value={newItem} 
+                    onChange={(e) => setNewItem(e.target.value)} 
+                    placeholder="Add morph or trait you're looking for..." 
+                    onKeyPress={(e) => e.key === 'Enter' && addItem()} 
+                    className="bg-slate-800 border-slate-600 text-slate-100" 
+                />
+                <Button onClick={addItem} type="button" className="bg-purple-600 hover:bg-purple-700">
+                    <Plus className="w-4 h-4" />
+                </Button>
+            </div>
+            <div className="flex flex-wrap gap-2">
+                {formData.looking_for.map((item) => (
+                    <Badge key={item} className="flex items-center gap-1 bg-purple-900/50 text-purple-200 border-purple-600">
+                        {item}
+                        <button onClick={() => removeItem(item)}><X className="w-3 h-3" /></button>
+                    </Badge>
+                ))}
+            </div>
+            <p className="text-xs text-slate-500">These will be displayed on your public profile in Community Connect</p>
+        </div>
+    );
+}
 
 const initialFormData = {
     bio: '',
