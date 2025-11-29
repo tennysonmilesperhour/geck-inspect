@@ -27,6 +27,7 @@ import Training from './pages/Training';
 import BreederConsultant from './pages/BreederConsultant';
 import AuthPortal from './pages/AuthPortal';
 import OtherReptiles from './pages/OtherReptiles';
+import CommunityConnect from './pages/CommunityConnect';
 import __Layout from './Layout.jsx';
 
 
@@ -60,6 +61,7 @@ export const PAGES = {
     "BreederConsultant": BreederConsultant,
     "AuthPortal": AuthPortal,
     "OtherReptiles": OtherReptiles,
+    "CommunityConnect": CommunityConnect,
 }
 
 export const pagesConfig = {

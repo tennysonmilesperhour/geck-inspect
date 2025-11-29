@@ -140,11 +140,11 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit 
                     <div className="grid lg:grid-cols-2 gap-8">
                         {/* Left Column: Basic Info & Image */}
                         <div className="space-y-6">
-                            <div className="aspect-video w-full rounded-lg overflow-hidden">
+                            <div className="w-full rounded-lg overflow-hidden">
                                 <img 
                                     src={reptile.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'} 
                                     alt={reptile.name} 
-                                    className="w-full h-full object-cover"
+                                    className="w-full h-auto object-contain max-h-80"
                                 />
                             </div>
                             

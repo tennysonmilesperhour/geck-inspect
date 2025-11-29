@@ -200,11 +200,11 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, all
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Left Column: Basic Info & Image */}
             <div className="space-y-6">
-              <div className="aspect-video w-full rounded-lg overflow-hidden">
+              <div className="w-full rounded-lg overflow-hidden">
                 <img 
                   src={gecko.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'} 
                   alt={gecko.name} 
-                  className="w-full h-full object-cover"
+                  className="w-full h-auto object-contain max-h-80"
                 />
               </div>
               
