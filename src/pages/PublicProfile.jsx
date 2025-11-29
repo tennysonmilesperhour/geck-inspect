@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
-import { User, Gecko, UserFollow, Notification } from '@/entities/all';
+import { User, Gecko, UserFollow, Notification, BreedingPlan } from '@/entities/all';
 import { notifyNewFollower } from '@/components/notifications/NotificationService';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Loader2, Users, MapPin, Link as LinkIcon, UserPlus, UserMinus } from 'lucide-react';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Loader2, Users, MapPin, Link as LinkIcon, UserPlus, UserMinus, ShoppingCart, GitBranch, Heart } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { createPageUrl } from '@/utils';
 import GeckoCard from '../components/my-geckos/GeckoCard';
 
 export default function PublicProfile() {
@@ -13,6 +15,10 @@ export default function PublicProfile() {
     const { toast } = useToast();
     const [profileUser, setProfileUser] = useState(null);
     const [userGeckos, setUserGeckos] = useState([]);
+    const [forSaleGeckos, setForSaleGeckos] = useState([]);
+    const [breedingGeckos, setBreedingGeckos] = useState([]);
+    const [collectionGeckos, setCollectionGeckos] = useState([]);
+    const [breedingPlans, setBreedingPlans] = useState([]);
     const [currentUser, setCurrentUser] = useState(null);
     const [isFollowing, setIsFollowing] = useState(false);
     const [followRecord, setFollowRecord] = useState(null);
@@ -26,8 +32,9 @@ export default function PublicProfile() {
             try {
                 const params = new URLSearchParams(location.search);
                 const userId = params.get('userId');
+                const userEmail = params.get('email');
 
-                if (!userId) {
+                if (!userId && !userEmail) {
                     setError("No user specified.");
                     setIsLoading(false);
                     return;
@@ -36,13 +43,19 @@ export default function PublicProfile() {
                 const loggedInUser = await User.me().catch(() => null);
                 setCurrentUser(loggedInUser);
                 
-                // Using User.filter as a more robust way to fetch the user data
-                const users = await User.filter({ id: userId });
-                const user = users && users.length > 0 ? users[0] : null;
+                // Fetch user by ID or email
+                let user = null;
+                if (userId) {
+                    const users = await User.filter({ id: userId });
+                    user = users && users.length > 0 ? users[0] : null;
+                } else if (userEmail) {
+                    const users = await User.filter({ email: userEmail });
+                    user = users && users.length > 0 ? users[0] : null;
+                }
 
-                // Check if profile is private (unless current user is admin)
-                if (!user || (!user.profile_public && loggedInUser?.role !== 'admin')) {
-                     setError("This profile is private or does not exist.");
+                // Profiles are public by default now
+                if (!user) {
+                     setError("This profile does not exist.");
                      setIsLoading(false);
                      return;
                 }
@@ -61,12 +74,18 @@ export default function PublicProfile() {
                     }
                 }
                 
-                // Fetch user's public geckos (or all if current user is admin)
-                const geckoFilter = currentUser?.role === 'admin' 
-                    ? { created_by: user.email }
-                    : { created_by: user.email, is_public: true };
-                const geckos = await Gecko.filter(geckoFilter);
+                // Fetch user's public geckos
+                const geckos = await Gecko.filter({ created_by: user.email, is_public: true });
                 setUserGeckos(geckos);
+                
+                // Categorize geckos
+                setForSaleGeckos(geckos.filter(g => g.status === 'For Sale'));
+                setBreedingGeckos(geckos.filter(g => ['Ready to Breed', 'Proven', 'Future Breeder'].includes(g.status)));
+                setCollectionGeckos(geckos.filter(g => !['For Sale', 'Ready to Breed', 'Proven', 'Future Breeder', 'Sold'].includes(g.status)));
+                
+                // Fetch public breeding plans
+                const plans = await BreedingPlan.filter({ created_by: user.email, is_public: true }).catch(() => []);
+                setBreedingPlans(plans);
 
             } catch (err) {
                 console.error("Error fetching public profile:", err);
@@ -179,6 +198,12 @@ export default function PublicProfile() {
                         <CardHeader><CardTitle className="text-slate-200">About</CardTitle></CardHeader>
                         <CardContent>
                             <p className="text-slate-300">{profileUser.bio || 'No bio provided.'}</p>
+                            {(profileUser.city || profileUser.state_province || profileUser.country) && (
+                                <p className="text-sm text-slate-400 flex items-center gap-1 mt-3">
+                                    <MapPin className="w-4 h-4" />
+                                    {[profileUser.city, profileUser.state_province, profileUser.country].filter(Boolean).join(', ')}
+                                </p>
+                            )}
                             {profileUser.website_url && (
                                 <a href={profileUser.website_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-emerald-400 hover:text-emerald-300 mt-4">
                                     <LinkIcon className="w-4 h-4" />
@@ -189,19 +214,67 @@ export default function PublicProfile() {
                     </Card>
                 </div>
                 <div className="md:col-span-2">
-                    <h2 className="text-2xl font-bold text-slate-100 mb-4">Public Collection ({userGeckos.length})</h2>
-                    {userGeckos.length > 0 ? (
-                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                            {userGeckos.map(gecko => (
-                                <GeckoCard key={gecko.id} gecko={gecko} onEdit={() => {}} onDelete={() => {}} onCardClick={() => {}} isPublicView={true}/>
-                            ))}
-                        </div>
-                    ) : (
-                        <div className="text-center py-12 bg-slate-800 rounded-lg">
-                            <Users className="w-12 h-12 mx-auto text-slate-500 mb-4"/>
-                            <p className="text-slate-400">This user has not made any geckos public yet.</p>
-                        </div>
-                    )}
+                    <Tabs defaultValue="for-sale" className="w-full">
+                        <TabsList className="grid w-full grid-cols-3 mb-6 bg-slate-800">
+                            <TabsTrigger value="for-sale" className="data-[state=active]:bg-orange-600">
+                                <ShoppingCart className="w-4 h-4 mr-2" />
+                                For Sale ({forSaleGeckos.length})
+                            </TabsTrigger>
+                            <TabsTrigger value="breeders" className="data-[state=active]:bg-pink-600">
+                                <GitBranch className="w-4 h-4 mr-2" />
+                                Breeders ({breedingGeckos.length})
+                            </TabsTrigger>
+                            <TabsTrigger value="collection" className="data-[state=active]:bg-blue-600">
+                                <Heart className="w-4 h-4 mr-2" />
+                                Collection ({collectionGeckos.length})
+                            </TabsTrigger>
+                        </TabsList>
+
+                        <TabsContent value="for-sale">
+                            {forSaleGeckos.length > 0 ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {forSaleGeckos.map(gecko => (
+                                        <GeckoCard key={gecko.id} gecko={gecko} onEdit={() => {}} onDelete={() => {}} onCardClick={() => {}} isPublicView={true}/>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-12 bg-slate-800 rounded-lg">
+                                    <ShoppingCart className="w-12 h-12 mx-auto text-slate-500 mb-4"/>
+                                    <p className="text-slate-400">No geckos currently for sale.</p>
+                                </div>
+                            )}
+                        </TabsContent>
+
+                        <TabsContent value="breeders">
+                            {breedingGeckos.length > 0 ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {breedingGeckos.map(gecko => (
+                                        <GeckoCard key={gecko.id} gecko={gecko} onEdit={() => {}} onDelete={() => {}} onCardClick={() => {}} isPublicView={true}/>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-12 bg-slate-800 rounded-lg">
+                                    <GitBranch className="w-12 h-12 mx-auto text-slate-500 mb-4"/>
+                                    <p className="text-slate-400">No public breeders listed.</p>
+                                </div>
+                            )}
+                        </TabsContent>
+
+                        <TabsContent value="collection">
+                            {collectionGeckos.length > 0 ? (
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                    {collectionGeckos.map(gecko => (
+                                        <GeckoCard key={gecko.id} gecko={gecko} onEdit={() => {}} onDelete={() => {}} onCardClick={() => {}} isPublicView={true}/>
+                                    ))}
+                                </div>
+                            ) : (
+                                <div className="text-center py-12 bg-slate-800 rounded-lg">
+                                    <Users className="w-12 h-12 mx-auto text-slate-500 mb-4"/>
+                                    <p className="text-slate-400">No public collection geckos.</p>
+                                </div>
+                            )}
+                        </TabsContent>
+                    </Tabs>
                 </div>
             </div>
         </div>
