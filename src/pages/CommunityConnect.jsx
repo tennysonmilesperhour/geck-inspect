@@ -34,12 +34,12 @@ function BreederCard({ breeder, currentUser, isFollowing, onFollow, onUnfollow, 
                     />
                 </div>
             )}
-            <CardContent className={`p-4 ${cardCover ? '-mt-8 relative' : ''}`}>
+            <CardContent className={`p-4 ${cardCover ? '-mt-10 relative' : ''}`}>
                 <div className="flex items-start gap-4">
                     <img 
                         src={breeder.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(breeder.full_name || 'User')}&background=10b981&color=fff`}
                         alt={breeder.full_name}
-                        className={`w-16 h-16 rounded-full object-cover border-2 border-emerald-500/30 ${cardCover ? 'ring-4 ring-slate-900' : ''}`}
+                        className={`w-20 h-20 rounded-lg object-cover border-2 border-emerald-500/30 flex-shrink-0 ${cardCover ? 'ring-4 ring-slate-900' : ''}`}
                     />
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
@@ -399,6 +399,27 @@ export default function CommunityConnectPage() {
             breeder.region?.toLowerCase().includes(locationLower);
         
         return matchesSearch && matchesLocation;
+    }).sort((a, b) => {
+        // Sort by: 1) has geckos for sale, 2) has breeding projects, 3) alphabetical
+        const aCount = geckoCounts[a.email] || { selling: 0, breeding: 0, keeping: 0 };
+        const bCount = geckoCounts[b.email] || { selling: 0, breeding: 0, keeping: 0 };
+        
+        // Priority 1: Those with geckos for sale
+        if (aCount.selling > 0 && bCount.selling === 0) return -1;
+        if (bCount.selling > 0 && aCount.selling === 0) return 1;
+        
+        // Priority 2: Those with breeding projects
+        if (aCount.breeding > 0 && bCount.breeding === 0) return -1;
+        if (bCount.breeding > 0 && aCount.breeding === 0) return 1;
+        
+        // Priority 3: By number of geckos for sale
+        if (aCount.selling !== bCount.selling) return bCount.selling - aCount.selling;
+        
+        // Priority 4: By number of breeding projects
+        if (aCount.breeding !== bCount.breeding) return bCount.breeding - aCount.breeding;
+        
+        // Default: alphabetical
+        return (a.full_name || '').localeCompare(b.full_name || '');
     });
 
     return (
