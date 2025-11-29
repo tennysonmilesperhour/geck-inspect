@@ -619,10 +619,10 @@ function LayoutContent({ children, currentPageName }) {
             };
 
             const iconMap = {
-              BarChart3, Search, Layers, FlaskConical, BookOpen, Heart, MessageSquare,
-              Database, ShoppingCart, Users, GitBranch, Upload, Shield
-            };
-            const IconComponent = iconMap[item.icon] || Database;
+                                BarChart3, Search, Layers, FlaskConical, BookOpen, Heart, MessageSquare,
+                                Database, ShoppingCart, Users, GitBranch, Upload, Shield, HeartHandshake
+                              };
+                              const IconComponent = iconMap[item.icon] || Database;
             
             return (
               <Link
