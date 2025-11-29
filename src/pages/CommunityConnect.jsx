@@ -294,18 +294,9 @@ export default function CommunityConnectPage() {
                 
                 setCurrentUser(user);
                 
-                // Filter to only public profiles
-                const publicBreeders = allUsers.filter(u => u.is_public_profile);
-                setBreeders(publicBreeders);
-                
-                // Get following list if logged in
-                if (user) {
-                    const userFollows = await UserFollow.filter({ follower_email: user.email });
-                    setFollowing(userFollows.map(f => f.following_email));
-                }
-                
-                // Calculate gecko counts per user
+                // Calculate gecko counts and cover images per user
                 const counts = {};
+                const coverImages = {};
                 allGeckos.forEach(gecko => {
                     if (!counts[gecko.created_by]) {
                         counts[gecko.created_by] = { selling: 0, breeding: 0, keeping: 0 };
@@ -317,8 +308,28 @@ export default function CommunityConnectPage() {
                     } else {
                         counts[gecko.created_by].keeping++;
                     }
+                    // Save first gecko image as potential cover
+                    if (!coverImages[gecko.created_by] && gecko.image_urls?.length > 0) {
+                        coverImages[gecko.created_by] = gecko.image_urls[0];
+                    }
                 });
                 setGeckoCounts(counts);
+                setGeckoCoverImages(coverImages);
+                
+                // Show users who have: is_public_profile=true OR have public geckos OR profile_public=true
+                const usersWithPublicGeckos = Object.keys(counts);
+                const publicBreeders = allUsers.filter(u => 
+                    u.is_public_profile === true || 
+                    u.profile_public === true ||
+                    usersWithPublicGeckos.includes(u.email)
+                );
+                setBreeders(publicBreeders);
+                
+                // Get following list if logged in
+                if (user) {
+                    const userFollows = await UserFollow.filter({ follower_email: user.email });
+                    setFollowing(userFollows.map(f => f.following_email));
+                }
                 
             } catch (error) {
                 console.error("Failed to load community data:", error);
