@@ -448,6 +448,7 @@ export default function CommunityConnectPage() {
                                         onFollow={handleFollow}
                                         onUnfollow={handleUnfollow}
                                         geckoCounts={geckoCounts}
+                                        coverImage={geckoCoverImages[breeder.email]}
                                     />
                                 ))}
                             </div>
