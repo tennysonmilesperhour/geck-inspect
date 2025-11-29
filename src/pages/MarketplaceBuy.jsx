@@ -1,25 +1,38 @@
-
 import React, { useState, useEffect } from 'react';
-import { Gecko, User } from '@/entities/all';
+import { Gecko, User, MarketplaceLike } from '@/entities/all';
+import { base44 } from '@/api/base44Client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, DollarSign, Users, MapPin, MessageSquare } from 'lucide-react';
+import { Search, DollarSign, Users, MapPin, MessageSquare, Heart } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import MessageUserButton from '../components/ui/MessageUserButton';
 
 // Marketplace-specific Gecko Card
-const MarketplaceGeckoCard = ({ gecko, owner, currentUser }) => {
+const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike }) => {
     return (
         <Card className="overflow-hidden group-hover:shadow-lg transition-shadow duration-300 h-full flex flex-col bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-sage-200 dark:border-sage-700">
-            <div className="aspect-square w-full overflow-hidden">
+            <div className="aspect-square w-full overflow-hidden relative">
                 <img
                     src={gecko.image_urls?.[0] || `https://ui-avatars.com/api/?name=${gecko.name.charAt(0)}&background=random`}
                     alt={gecko.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
+                {currentUser && (
+                    <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={(e) => {
+                            e.stopPropagation();
+                            onToggleLike(gecko.id);
+                        }}
+                        className={`absolute top-2 right-2 bg-black/50 hover:bg-black/70 ${isLiked ? 'text-pink-500' : 'text-white'}`}
+                    >
+                        <Heart className={`w-5 h-5 ${isLiked ? 'fill-pink-500' : ''}`} />
+                    </Button>
+                )}
             </div>
             <CardContent className="p-4 flex-grow flex flex-col">
                 <h3 className="font-semibold text-lg truncate text-sage-900 dark:text-sage-100">{gecko.name}</h3>
@@ -71,6 +84,7 @@ export default function MarketplaceBuyPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentUser, setCurrentUser] = useState(null);
+    const [likedGeckoIds, setLikedGeckoIds] = useState(new Set());
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -79,14 +93,20 @@ export default function MarketplaceBuyPage() {
             try {
                 const [forSaleGeckos, loggedInUser] = await Promise.all([
                     Gecko.filter({ status: 'For Sale', is_public: true }, "-updated_date"),
-                    User.me().catch(() => null) // Attempt to fetch current user, handle if not logged in
+                    base44.auth.me().catch(() => null)
                 ]);
 
                 setCurrentUser(loggedInUser);
                 
+                // Fetch user's likes if logged in
+                if (loggedInUser) {
+                    const userLikes = await MarketplaceLike.filter({ user_email: loggedInUser.email });
+                    setLikedGeckoIds(new Set(userLikes.map(l => l.gecko_id)));
+                }
+                
                 const ownerEmails = [...new Set(forSaleGeckos.map(g => g.created_by))];
                 
-                if (ownerEmails.length > 0) { // Only fetch owners if there are geckos with owners
+                if (ownerEmails.length > 0) {
                     const ownerData = await User.filter({ email: { $in: ownerEmails } });
                     const ownersMap = ownerData.reduce((acc, user) => {
                         acc[user.email] = user;
@@ -94,7 +114,7 @@ export default function MarketplaceBuyPage() {
                     }, {});
                     setOwners(ownersMap);
                 } else {
-                    setOwners({}); // No geckos, so no owners
+                    setOwners({});
                 }
 
                 setGeckos(forSaleGeckos);
@@ -105,6 +125,27 @@ export default function MarketplaceBuyPage() {
         };
         fetchData();
     }, []);
+
+    const handleToggleLike = async (geckoId) => {
+        if (!currentUser) return;
+        
+        if (likedGeckoIds.has(geckoId)) {
+            // Unlike
+            const likes = await MarketplaceLike.filter({ gecko_id: geckoId, user_email: currentUser.email });
+            if (likes.length > 0) {
+                await MarketplaceLike.delete(likes[0].id);
+            }
+            setLikedGeckoIds(prev => {
+                const newSet = new Set(prev);
+                newSet.delete(geckoId);
+                return newSet;
+            });
+        } else {
+            // Like
+            await MarketplaceLike.create({ gecko_id: geckoId, user_email: currentUser.email });
+            setLikedGeckoIds(prev => new Set([...prev, geckoId]));
+        }
+    };
     
     const handleViewDetails = (geckoId) => {
         navigate(createPageUrl(`GeckoDetail?id=${geckoId}`));
@@ -142,7 +183,13 @@ export default function MarketplaceBuyPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                         {filteredGeckos.map(gecko => (
                            <div key={gecko.id} onClick={() => handleViewDetails(gecko.id)} className="cursor-pointer group">
-                               <MarketplaceGeckoCard gecko={gecko} owner={owners[gecko.created_by]} currentUser={currentUser} />
+                               <MarketplaceGeckoCard 
+                                   gecko={gecko} 
+                                   owner={owners[gecko.created_by]} 
+                                   currentUser={currentUser}
+                                   isLiked={likedGeckoIds.has(gecko.id)}
+                                   onToggleLike={handleToggleLike}
+                               />
                            </div>
                         ))}
                     </div>
