@@ -18,17 +18,28 @@ import { createPageUrl } from '@/utils';
 import { formatDistanceToNow } from 'date-fns';
 
 // Breeder Card Component
-function BreederCard({ breeder, currentUser, isFollowing, onFollow, onUnfollow, geckoCounts }) {
+function BreederCard({ breeder, currentUser, isFollowing, onFollow, onUnfollow, geckoCounts, coverImage }) {
     const counts = geckoCounts[breeder.email] || { selling: 0, breeding: 0, keeping: 0 };
+    const cardCover = breeder.cover_image_url || coverImage;
     
     return (
-        <Card className="bg-slate-900 border-slate-700 hover:border-emerald-500/50 transition-all">
-            <CardContent className="p-4">
+        <Card className="bg-slate-900 border-slate-700 hover:border-emerald-500/50 transition-all overflow-hidden">
+            {/* Cover Image */}
+            {cardCover && (
+                <div className="h-24 w-full overflow-hidden">
+                    <img 
+                        src={cardCover}
+                        alt="Cover"
+                        className="w-full h-full object-cover"
+                    />
+                </div>
+            )}
+            <CardContent className={`p-4 ${cardCover ? '-mt-8 relative' : ''}`}>
                 <div className="flex items-start gap-4">
                     <img 
                         src={breeder.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(breeder.full_name || 'User')}&background=10b981&color=fff`}
                         alt={breeder.full_name}
-                        className="w-16 h-16 rounded-full object-cover border-2 border-emerald-500/30"
+                        className={`w-16 h-16 rounded-full object-cover border-2 border-emerald-500/30 ${cardCover ? 'ring-4 ring-slate-900' : ''}`}
                     />
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
