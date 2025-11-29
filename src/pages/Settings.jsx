@@ -277,12 +277,24 @@ export default function SettingsPage() {
                     <CardContent className="space-y-6">
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <Label htmlFor="breeder_name" className="text-slate-300">Breeder/Business Name</Label>
-                                <Input id="breeder_name" value={formData.breeder_name} onChange={(e) => handleChange('breeder_name', e.target.value)} placeholder="Optional" className="bg-slate-800 border-slate-600 text-slate-100" />
+                                <Label htmlFor="business_name" className="text-slate-300">Business Name</Label>
+                                <Input id="business_name" value={formData.business_name} onChange={(e) => handleChange('business_name', e.target.value)} placeholder="Your breeder/business name" className="bg-slate-800 border-slate-600 text-slate-100" />
                             </div>
                             <div>
-                                <Label htmlFor="location" className="text-slate-300">Location</Label>
-                                <Input id="location" value={formData.location} onChange={(e) => handleChange('location', e.target.value)} placeholder="City, State/Country" className="bg-slate-800 border-slate-600 text-slate-100" />
+                                <Label htmlFor="city" className="text-slate-300">City</Label>
+                                <Input id="city" value={formData.city} onChange={(e) => handleChange('city', e.target.value)} placeholder="Your city" className="bg-slate-800 border-slate-600 text-slate-100" />
+                            </div>
+                            <div>
+                                <Label htmlFor="state_province" className="text-slate-300">State/Province</Label>
+                                <Input id="state_province" value={formData.state_province} onChange={(e) => handleChange('state_province', e.target.value)} placeholder="Your state or province" className="bg-slate-800 border-slate-600 text-slate-100" />
+                            </div>
+                            <div>
+                                <Label htmlFor="country" className="text-slate-300">Country</Label>
+                                <Input id="country" value={formData.country} onChange={(e) => handleChange('country', e.target.value)} placeholder="Your country" className="bg-slate-800 border-slate-600 text-slate-100" />
+                            </div>
+                            <div>
+                                <Label htmlFor="region" className="text-slate-300">Region</Label>
+                                <Input id="region" value={formData.region} onChange={(e) => handleChange('region', e.target.value)} placeholder="e.g., Northeast, Europe" className="bg-slate-800 border-slate-600 text-slate-100" />
                             </div>
                         </div>
                         <div>
