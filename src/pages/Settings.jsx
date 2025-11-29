@@ -320,6 +320,7 @@ export default function SettingsPage() {
                                 ))}
                             </div>
                         </div>
+                        <LookingForSection formData={formData} handleChange={handleChange} />
                     </CardContent>
                 </Card>
 
