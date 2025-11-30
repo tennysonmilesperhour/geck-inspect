@@ -64,13 +64,19 @@ export default function PublicProfile() {
 
                 // Check if current user is following this profile
                 if (loggedInUser && loggedInUser.email !== user.email) {
-                    const followRecords = await UserFollow.filter({
-                        follower_email: loggedInUser.email,
-                        following_email: user.email
-                    });
-                    if (followRecords.length > 0) {
-                        setIsFollowing(true);
-                        setFollowRecord(followRecords[0]);
+                    try {
+                        // RLS allows reading where follower_email matches current user
+                        const allFollows = await UserFollow.list();
+                        const existingFollow = allFollows.find(f => 
+                            f.follower_email === loggedInUser.email && 
+                            f.following_email === user.email
+                        );
+                        if (existingFollow) {
+                            setIsFollowing(true);
+                            setFollowRecord(existingFollow);
+                        }
+                    } catch (err) {
+                        console.error("Error checking follow status:", err);
                     }
                 }
                 
@@ -110,6 +116,20 @@ export default function PublicProfile() {
                 setFollowRecord(null);
                 toast({ title: "Unfollowed", description: `You've unfollowed ${profileUser.full_name}` });
             } else {
+                // Check if already following to prevent duplicates
+                const allFollows = await UserFollow.list();
+                const existingFollow = allFollows.find(f => 
+                    f.follower_email === currentUser.email && 
+                    f.following_email === profileUser.email
+                );
+                
+                if (existingFollow) {
+                    setIsFollowing(true);
+                    setFollowRecord(existingFollow);
+                    toast({ title: "Already Following", description: `You're already following ${profileUser.full_name}` });
+                    return;
+                }
+                
                 const newFollow = await UserFollow.create({
                     follower_email: currentUser.email,
                     following_email: profileUser.email
@@ -118,7 +138,11 @@ export default function PublicProfile() {
                 setFollowRecord(newFollow);
                 
                 // Notify the user they have a new follower
-                await notifyNewFollower(profileUser.email, currentUser.email, currentUser.full_name);
+                try {
+                    await notifyNewFollower(profileUser.email, currentUser.email, currentUser.full_name);
+                } catch (notifyErr) {
+                    console.error("Failed to send follow notification:", notifyErr);
+                }
                 
                 toast({ title: "Following!", description: `You're now following ${profileUser.full_name}` });
             }
