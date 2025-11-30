@@ -339,8 +339,11 @@ export default function CommunityConnectPage() {
                 
                 // Get following list if logged in
                 if (user) {
-                    const userFollows = await UserFollow.filter({ follower_email: user.email });
-                    setFollowing(userFollows.map(f => f.following_email));
+                    const userFollows = await UserFollow.list();
+                    const followingEmails = userFollows
+                        .filter(f => f.follower_email === user.email)
+                        .map(f => f.following_email);
+                    setFollowing(followingEmails);
                 }
                 
             } catch (error) {
@@ -354,6 +357,18 @@ export default function CommunityConnectPage() {
     const handleFollow = async (email) => {
         if (!currentUser) return;
         try {
+            // Check if already following
+            const allFollows = await UserFollow.list();
+            const existingFollow = allFollows.find(f => 
+                f.follower_email === currentUser.email && 
+                f.following_email === email
+            );
+            
+            if (existingFollow) {
+                setFollowing([...following, email]);
+                return;
+            }
+            
             await UserFollow.create({
                 follower_email: currentUser.email,
                 following_email: email
@@ -367,12 +382,13 @@ export default function CommunityConnectPage() {
     const handleUnfollow = async (email) => {
         if (!currentUser) return;
         try {
-            const followRecord = await UserFollow.filter({
-                follower_email: currentUser.email,
-                following_email: email
-            });
-            if (followRecord.length > 0) {
-                await UserFollow.delete(followRecord[0].id);
+            const allFollows = await UserFollow.list();
+            const followRecord = allFollows.find(f => 
+                f.follower_email === currentUser.email && 
+                f.following_email === email
+            );
+            if (followRecord) {
+                await UserFollow.delete(followRecord.id);
                 setFollowing(following.filter(e => e !== email));
             }
         } catch (error) {

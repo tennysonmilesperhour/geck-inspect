@@ -1,7 +1,7 @@
 import * as React from "react"
 
 const TOAST_LIMIT = 1
-const TOAST_REMOVE_DELAY = 3000
+const TOAST_REMOVE_DELAY = 2000
 
 const actionTypes = {
   ADD_TOAST: "ADD_TOAST",
@@ -121,10 +121,10 @@ function toast({ ...props }) {
     },
   })
 
-  // Auto dismiss after 3 seconds
+  // Auto dismiss after 2 seconds
   setTimeout(() => {
     dismiss()
-  }, props.duration || 3000)
+  }, props.duration || 2000)
 
   return {
     id: id,
