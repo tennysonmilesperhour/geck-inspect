@@ -1150,12 +1150,12 @@ function LayoutContent({ children, currentPageName }) {
               {user ? (
                 <div className="flex items-center gap-3">
                   <Link to={createPageUrl('MyProfile')}>
-                    <img 
-                      src={user.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name)}&background=84A98C&color=fff`} 
-                      alt="User avatar" 
-                      className="w-8 h-8 rounded-full object-cover"
-                    />
-                  </Link>
+                      <img 
+                        src={user.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name)}&background=84A98C&color=fff`} 
+                        alt="User avatar" 
+                        className="w-8 h-8 rounded-lg object-cover"
+                      />
+                    </Link>
                   <div className="flex-1">
                     <Link to={createPageUrl('MyProfile')} className="font-medium text-sage-800 text-sm">{user.full_name}</Link>
                     <p className="text-xs text-sage-600">{user.email}</p>
@@ -1313,12 +1313,12 @@ function LayoutContent({ children, currentPageName }) {
                 {user ? (
                   <div className="flex items-center gap-3">
                     <Link to={createPageUrl('MyProfile')}>
-                      <img
-                        src={user.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name)}&background=84A98C&color=fff`}
-                        alt="User avatar"
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
-                    </Link>
+                          <img
+                            src={user.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name)}&background=84A98C&color=fff`}
+                            alt="User avatar"
+                            className="w-8 h-8 rounded-lg object-cover"
+                          />
+                        </Link>
                     <div className="flex-1">
                       <Link to={createPageUrl('MyProfile')} className="font-medium text-sage-800 dark:text-sage-700 text-sm">{user.full_name}</Link>
                       <p className="text-xs text-sage-600 dark:text-sage-500">{user.email}</p>

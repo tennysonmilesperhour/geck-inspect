@@ -51,7 +51,7 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                         >
                             <img 
                                 src={owner?.profile_image_url || `https://ui-avatars.com/api/?name=${owner?.full_name?.charAt(0)}&background=random`} 
-                                className="w-6 h-6 rounded-full group-hover:opacity-80 transition-opacity" 
+                                className="w-6 h-6 rounded-lg group-hover:opacity-80 transition-opacity" 
                                 alt={owner?.full_name}
                             />
                             <span className="truncate group-hover:underline">{owner?.full_name || 'Breeder'}</span>

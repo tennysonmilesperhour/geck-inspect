@@ -5,7 +5,7 @@ import { useLocation, Link } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Users, MapPin, Link as LinkIcon, UserPlus, UserMinus, ShoppingCart, GitBranch, Heart } from 'lucide-react';
+import { Loader2, Users, MapPin, Globe, UserPlus, UserMinus, ShoppingCart, GitBranch, Heart, Instagram, Facebook, Youtube } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { createPageUrl } from '@/utils';
 import GeckoCard from '../components/my-geckos/GeckoCard';
@@ -152,7 +152,7 @@ export default function PublicProfile() {
                 <div className="-mt-12 sm:-mt-16 sm:flex sm:items-end sm:space-x-5 relative z-10">
                     <div className="flex">
                         <img 
-                            className="h-24 w-24 rounded-full ring-4 ring-slate-950 sm:h-32 sm:w-32 object-cover" 
+                            className="h-24 w-24 rounded-lg ring-4 ring-slate-950 sm:h-32 sm:w-32 object-cover" 
                             src={profileUser.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileUser.full_name)}&background=84A98C&color=fff`}
                             alt={profileUser.full_name}
                         />
@@ -196,19 +196,52 @@ export default function PublicProfile() {
                 <div className="md:col-span-1 space-y-6">
                     <Card className="bg-slate-900 border-slate-700">
                         <CardHeader><CardTitle className="text-slate-200">About</CardTitle></CardHeader>
-                        <CardContent>
+                        <CardContent className="space-y-4">
                             <p className="text-slate-300">{profileUser.bio || 'No bio provided.'}</p>
                             {(profileUser.city || profileUser.state_province || profileUser.country) && (
-                                <p className="text-sm text-slate-400 flex items-center gap-1 mt-3">
+                                <p className="text-sm text-slate-400 flex items-center gap-1">
                                     <MapPin className="w-4 h-4" />
                                     {[profileUser.city, profileUser.state_province, profileUser.country].filter(Boolean).join(', ')}
                                 </p>
                             )}
-                            {profileUser.website_url && (
-                                <a href={profileUser.website_url} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 text-emerald-400 hover:text-emerald-300 mt-4">
-                                    <LinkIcon className="w-4 h-4" />
-                                    <span>{profileUser.website_url.replace(/https?:\/\//, '')}</span>
-                                </a>
+                            {(profileUser.website_url || profileUser.instagram_handle || profileUser.facebook_url || profileUser.youtube_url || profileUser.tiktok_handle) && (
+                                <div className="flex flex-wrap gap-2 pt-2">
+                                    {profileUser.website_url && (
+                                        <a href={profileUser.website_url} target="_blank" rel="noopener noreferrer">
+                                            <Button size="sm" variant="outline" className="border-slate-600 hover:bg-slate-700">
+                                                <Globe className="w-4 h-4" />
+                                            </Button>
+                                        </a>
+                                    )}
+                                    {profileUser.instagram_handle && (
+                                        <a href={`https://instagram.com/${profileUser.instagram_handle}`} target="_blank" rel="noopener noreferrer">
+                                            <Button size="sm" variant="outline" className="border-pink-500/50 hover:bg-pink-500/20 text-pink-400">
+                                                <Instagram className="w-4 h-4" />
+                                            </Button>
+                                        </a>
+                                    )}
+                                    {profileUser.facebook_url && (
+                                        <a href={profileUser.facebook_url} target="_blank" rel="noopener noreferrer">
+                                            <Button size="sm" variant="outline" className="border-blue-500/50 hover:bg-blue-500/20 text-blue-400">
+                                                <Facebook className="w-4 h-4" />
+                                            </Button>
+                                        </a>
+                                    )}
+                                    {profileUser.youtube_url && (
+                                        <a href={profileUser.youtube_url} target="_blank" rel="noopener noreferrer">
+                                            <Button size="sm" variant="outline" className="border-red-500/50 hover:bg-red-500/20 text-red-400">
+                                                <Youtube className="w-4 h-4" />
+                                            </Button>
+                                        </a>
+                                    )}
+                                    {profileUser.tiktok_handle && (
+                                        <a href={`https://tiktok.com/@${profileUser.tiktok_handle}`} target="_blank" rel="noopener noreferrer">
+                                            <Button size="sm" variant="outline" className="border-slate-500/50 hover:bg-slate-500/20 text-slate-300">
+                                                <span className="font-bold text-sm">TT</span>
+                                            </Button>
+                                        </a>
+                                    )}
+                                </div>
                             )}
                         </CardContent>
                     </Card>
@@ -247,10 +280,48 @@ export default function PublicProfile() {
 
                         <TabsContent value="breeders">
                             {breedingGeckos.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {breedingGeckos.map(gecko => (
-                                        <GeckoCard key={gecko.id} gecko={gecko} onEdit={() => {}} onDelete={() => {}} onCardClick={() => {}} isPublicView={true}/>
-                                    ))}
+                                <div className="space-y-8">
+                                    {/* Males Section */}
+                                    {breedingGeckos.filter(g => g.sex === 'Male').length > 0 && (
+                                        <div>
+                                            <h3 className="text-lg font-semibold text-blue-400 mb-4 flex items-center gap-2">
+                                                <span className="text-2xl">♂</span> Males ({breedingGeckos.filter(g => g.sex === 'Male').length})
+                                            </h3>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                                {breedingGeckos.filter(g => g.sex === 'Male').map(gecko => (
+                                                    <GeckoCard key={gecko.id} gecko={gecko} onEdit={() => {}} onDelete={() => {}} onCardClick={() => {}} isPublicView={true}/>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                    
+                                    {/* Females Section */}
+                                    {breedingGeckos.filter(g => g.sex === 'Female').length > 0 && (
+                                        <div>
+                                            <h3 className="text-lg font-semibold text-pink-400 mb-4 flex items-center gap-2">
+                                                <span className="text-2xl">♀</span> Females ({breedingGeckos.filter(g => g.sex === 'Female').length})
+                                            </h3>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                                {breedingGeckos.filter(g => g.sex === 'Female').map(gecko => (
+                                                    <GeckoCard key={gecko.id} gecko={gecko} onEdit={() => {}} onDelete={() => {}} onCardClick={() => {}} isPublicView={true}/>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+                                    
+                                    {/* Unsexed Section */}
+                                    {breedingGeckos.filter(g => g.sex === 'Unsexed').length > 0 && (
+                                        <div>
+                                            <h3 className="text-lg font-semibold text-slate-400 mb-4 flex items-center gap-2">
+                                                <span className="text-2xl">?</span> Unsexed ({breedingGeckos.filter(g => g.sex === 'Unsexed').length})
+                                            </h3>
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                                {breedingGeckos.filter(g => g.sex === 'Unsexed').map(gecko => (
+                                                    <GeckoCard key={gecko.id} gecko={gecko} onEdit={() => {}} onDelete={() => {}} onCardClick={() => {}} isPublicView={true}/>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
                                 </div>
                             ) : (
                                 <div className="text-center py-12 bg-slate-800 rounded-lg">
