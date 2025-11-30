@@ -923,25 +923,35 @@ function LayoutContent({ children, currentPageName }) {
           }
 
           .notification-badge {
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            color: white;
-            border-radius: 50%;
-            width: 18px;
-            height: 18px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            font-weight: 700;
-            border: 2px solid var(--gecko-dark);
-            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
-            animation: pulse-notification 2s infinite;
-          }
+                            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+                            color: white;
+                            border-radius: 50%;
+                            width: 18px;
+                            height: 18px;
+                            display: flex;
+                            align-items: center;
+                            justify-content: center;
+                            font-size: 10px;
+                            font-weight: 700;
+                            border: 2px solid var(--gecko-dark);
+                            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
+                            animation: pulse-notification 2s infinite;
+                          }
 
-          @keyframes pulse-notification {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.1); }
-          }
+                          @keyframes pulse-notification {
+                            0%, 100% { transform: scale(1); }
+                            50% { transform: scale(1.1); }
+                          }
+
+                          /* Toast fade out animation */
+                          [data-state="closed"] {
+                            animation: toast-fade-out 0.3s ease-out forwards;
+                          }
+
+                          @keyframes toast-fade-out {
+                            from { opacity: 1; transform: translateY(0); }
+                            to { opacity: 0; transform: translateY(-10px); }
+                          }
 
           .gecko-card {
             background: rgba(6, 95, 70, 0.4);
