@@ -33,17 +33,36 @@ export default function MassMessaging() {
     const generateUpdateAnnouncement = async () => {
         setIsGenerating(true);
         try {
-            const prompt = `Generate a professional platform update announcement for "Geck Inspect", a crested gecko breeding and identification platform. 
-            
-            Create an update that covers recent improvements and new features. The announcement should be:
-            - Professional but friendly in tone
-            - Highlight key improvements to the platform
-            - Thank the community for their engagement
-            - Mention new features like improved AI identification, breeding tools, marketplace enhancements, etc.
-            - Keep it under 500 words
-            - Include a call to action encouraging users to explore the new features
-            
-            Format it as a complete announcement with a subject line and body content.`;
+            // Real changelog of recent features implemented
+            const recentChanges = `
+Recent platform updates that were actually implemented:
+
+1. MARKETPLACE LIKES - Users can now like/favorite geckos in the marketplace and view them in a dedicated "Liked Geckos" gallery accessible from the sidebar.
+
+2. PUBLIC PROFILES ENHANCED - User profiles now display geckos organized into three tabs: "For Sale", "Breeders" (separated by male/female), and "Collection".
+
+3. SOCIAL MEDIA BUTTONS - Profile pages now show social media links as icon buttons (Instagram, Facebook, YouTube, TikTok, Website) instead of text links.
+
+4. COMMUNITY CONNECT IMPROVEMENTS - Breeder directory now prioritizes users with geckos for sale, then those with active breeding projects. Profile pictures are now square throughout the app.
+
+5. FOLLOW SYSTEM - Users can follow breeders to stay updated on their activity. Following persists across sessions and syncs between profile and community pages.
+
+6. NOTIFICATION IMPROVEMENTS - Toast notifications now disappear after 2 seconds with a smoother experience.
+`;
+
+            const prompt = `Generate a professional platform update announcement for "Geck Inspect" users based on these REAL changes that were actually implemented:
+
+${recentChanges}
+
+Create a user-friendly announcement that:
+- Is professional but friendly in tone
+- Lists ONLY the features mentioned above as bullet points
+- Does NOT make up any features that aren't listed
+- Thanks the community briefly
+- Keeps it concise (under 300 words)
+- Focuses on how these features benefit users
+
+Format as a subject line and body content with bullet points for the features.`;
 
             const response = await InvokeLLM({
                 prompt,
