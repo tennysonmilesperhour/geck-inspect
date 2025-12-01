@@ -39,10 +39,10 @@ export default function DonationsPage() {
                     <CardContent className="space-y-4">
                         <div className="text-lg text-sage-700 dark:text-sage-300">
                             <p className="mb-4">
-                                <strong>Geck Inspect will always be free to use.</strong> This is my promise to the crested gecko community. It's a passion project built in my spare time.
+                                <strong>Geck Inspect will always be priced to be easily accessible to all.</strong> This is my promise to the crested gecko community. It's a passion project built in my spare time.
                             </p>
                             <p className="mb-4">
-                                I believe that knowledge about these amazing creatures should be accessible to everyone, whether you're a first-time owner or a seasoned breeder. No paywalls, no premium tiers, no hidden costs.
+                                I believe that knowledge about these amazing creatures should be accessible to everyone, whether you're a first-time owner or a seasoned breeder.
                             </p>
                             <p>
                                 Your donations help me cover hosting costs, improve the AI models, and add new features that benefit everyone in our community.

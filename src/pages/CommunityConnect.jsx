@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { User, Gecko, UserFollow, ForumCategory, ForumPost } from '@/entities/all';
+import { User, Gecko, UserFollow, ForumCategory, ForumPost, UserActivity } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,7 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import { 
     Search, Users, MapPin, Globe, ShoppingCart, GitBranch, Heart, 
     UserPlus, UserCheck, ExternalLink, MessageSquare, ThumbsUp, Eye, 
-    PlusCircle, Pin, Loader2 
+    PlusCircle, Pin, Loader2, Rss, Activity
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -284,6 +284,136 @@ function ForumTab() {
     );
 }
 
+// Following Feed Component
+function FollowingFeed({ currentUser, following, allUsers }) {
+    const [activities, setActivities] = useState([]);
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchActivities = async () => {
+            if (!currentUser || following.length === 0) {
+                setIsLoading(false);
+                return;
+            }
+            
+            try {
+                // Get recent activities from users we follow
+                const allActivities = await UserActivity.list('-created_date', 50);
+                const followingActivities = allActivities.filter(a => 
+                    following.includes(a.user_email)
+                );
+                setActivities(followingActivities.slice(0, 20));
+            } catch (error) {
+                console.error("Failed to load activities:", error);
+            }
+            setIsLoading(false);
+        };
+        fetchActivities();
+    }, [currentUser, following]);
+
+    const getActivityIcon = (type) => {
+        switch(type) {
+            case 'new_gecko': return '🦎';
+            case 'new_post': return '📝';
+            case 'new_comment': return '💬';
+            case 'ai_training': return '🤖';
+            case 'new_breeding_plan': return '💕';
+            case 'gecko_for_sale': return '🏷️';
+            default: return '⭐';
+        }
+    };
+
+    const getActivityText = (type) => {
+        switch(type) {
+            case 'new_gecko': return 'added a new gecko';
+            case 'new_post': return 'created a forum post';
+            case 'new_comment': return 'commented on a post';
+            case 'ai_training': return 'contributed to AI training';
+            case 'new_breeding_plan': return 'started a new breeding plan';
+            case 'gecko_for_sale': return 'listed a gecko for sale';
+            default: return 'was active';
+        }
+    };
+
+    const getUserName = (email) => {
+        const user = allUsers.find(u => u.email === email);
+        return user?.full_name || email.split('@')[0];
+    };
+
+    if (!currentUser) {
+        return (
+            <Card className="bg-slate-900 border-slate-700">
+                <CardContent className="py-8 text-center">
+                    <Users className="w-12 h-12 mx-auto text-slate-500 mb-4" />
+                    <p className="text-slate-400">Log in to see updates from breeders you follow.</p>
+                </CardContent>
+            </Card>
+        );
+    }
+
+    if (following.length === 0) {
+        return (
+            <Card className="bg-slate-900 border-slate-700">
+                <CardContent className="py-8 text-center">
+                    <UserPlus className="w-12 h-12 mx-auto text-slate-500 mb-4" />
+                    <p className="text-slate-400">You're not following anyone yet.</p>
+                    <p className="text-slate-500 text-sm mt-2">Follow some breeders to see their activity here!</p>
+                </CardContent>
+            </Card>
+        );
+    }
+
+    if (isLoading) {
+        return (
+            <div className="flex items-center justify-center py-12">
+                <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+            </div>
+        );
+    }
+
+    return (
+        <Card className="bg-slate-900 border-slate-700">
+            <CardHeader>
+                <CardTitle className="text-slate-100 flex items-center gap-2">
+                    <Activity className="w-5 h-5 text-emerald-400" />
+                    Recent Activity from People You Follow
+                </CardTitle>
+            </CardHeader>
+            <CardContent>
+                {activities.length > 0 ? (
+                    <div className="space-y-3">
+                        {activities.map((activity) => (
+                            <div key={activity.id} className="flex items-start gap-3 p-3 bg-slate-800 rounded-lg hover:bg-slate-700/50 transition-colors">
+                                <span className="text-xl">{getActivityIcon(activity.activity_type)}</span>
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-slate-300 text-sm">
+                                        <Link 
+                                            to={createPageUrl(`PublicProfile?email=${encodeURIComponent(activity.user_email)}`)}
+                                            className="font-semibold text-emerald-400 hover:text-emerald-300"
+                                        >
+                                            {getUserName(activity.user_email)}
+                                        </Link>
+                                        {' '}{getActivityText(activity.activity_type)}
+                                    </p>
+                                    <p className="text-xs text-slate-500 mt-1">
+                                        {formatDistanceToNow(new Date(activity.created_date), { addSuffix: true })}
+                                    </p>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                ) : (
+                    <div className="text-center py-8 text-slate-400">
+                        <Rss className="w-12 h-12 mx-auto text-slate-500 mb-4" />
+                        <p>No recent activity from people you follow.</p>
+                        <p className="text-sm text-slate-500 mt-2">Check back later for updates!</p>
+                    </div>
+                )}
+            </CardContent>
+        </Card>
+    );
+}
+
 export default function CommunityConnectPage() {
     const [breeders, setBreeders] = useState([]);
     const [currentUser, setCurrentUser] = useState(null);
@@ -485,6 +615,17 @@ export default function CommunityConnectPage() {
                     </TabsList>
 
                     <TabsContent value="breeders">
+                        {/* Following Feed Section */}
+                        {currentUser && following.length > 0 && (
+                            <div className="mb-8">
+                                <FollowingFeed 
+                                    currentUser={currentUser} 
+                                    following={following} 
+                                    allUsers={breeders}
+                                />
+                            </div>
+                        )}
+
                         {/* Search and Filters */}
                         <div className="flex flex-col md:flex-row gap-4 mb-6">
                             <div className="relative flex-1">
