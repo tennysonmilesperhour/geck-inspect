@@ -69,8 +69,8 @@ const initialFormData = {
     business_name: '',
     profile_image_url: '',
     cover_image_url: '',
-    profile_public: false,
-    is_public_profile: false,
+    profile_public: true,
+    is_public_profile: true,
     show_username_on_images: true,
     allow_profile_clicks: true,
     website_url: '',
@@ -86,13 +86,13 @@ const initialFormData = {
     phone_contact: '',
     business_address: '',
     email_notifications_enabled: true,
-    email_notification_types: [],
+    email_notification_types: ['level_up', 'expert_status', 'new_message', 'new_follower', 'following_activity', 'gecko_of_day', 'forum_replies', 'breeding_updates', 'announcements'],
     calendar_alerts_enabled: true,
-    calendar_alert_types: [],
+    calendar_alert_types: ['egg_lay_estimate', 'hatch_estimate', 'breeding_reminders', 'weight_check_reminders'],
     palm_street_sync_enabled: false,
-    email_on_new_follower: false,
-    email_on_new_message: false,
-    email_on_following_activity: false
+    email_on_new_follower: true,
+    email_on_new_message: true,
+    email_on_following_activity: true
 };
 
 const notificationTypes = [
@@ -139,8 +139,8 @@ export default function SettingsPage() {
                         business_name: currentUser.business_name || '',
                         profile_image_url: currentUser.profile_image_url || '',
                         cover_image_url: currentUser.cover_image_url || '',
-                        profile_public: currentUser.profile_public || false,
-                        is_public_profile: currentUser.is_public_profile || false,
+                        profile_public: currentUser.profile_public !== false, // Default true
+                        is_public_profile: currentUser.is_public_profile !== false, // Default true
                         show_username_on_images: currentUser.show_username_on_images !== false,
                         allow_profile_clicks: currentUser.allow_profile_clicks !== false,
                         website_url: currentUser.website_url || '',
@@ -156,13 +156,13 @@ export default function SettingsPage() {
                         phone_contact: currentUser.phone_contact || '',
                         business_address: currentUser.business_address || '',
                         email_notifications_enabled: currentUser.email_notifications_enabled !== false,
-                        email_notification_types: currentUser.email_notification_types || ['level_up', 'expert_status', 'new_message', 'gecko_of_day', 'announcements'],
+                        email_notification_types: currentUser.email_notification_types || ['level_up', 'expert_status', 'new_message', 'new_follower', 'following_activity', 'gecko_of_day', 'forum_replies', 'breeding_updates', 'announcements'],
                         calendar_alerts_enabled: currentUser.calendar_alerts_enabled !== false,
-                        calendar_alert_types: currentUser.calendar_alert_types || ['egg_lay_estimate', 'hatch_estimate', 'breeding_reminders'],
+                        calendar_alert_types: currentUser.calendar_alert_types || ['egg_lay_estimate', 'hatch_estimate', 'breeding_reminders', 'weight_check_reminders'],
                         palm_street_sync_enabled: currentUser.palm_street_sync_enabled || false,
-                        email_on_new_follower: currentUser.email_on_new_follower || false,
-                        email_on_new_message: currentUser.email_on_new_message || false,
-                        email_on_following_activity: currentUser.email_on_following_activity || false,
+                        email_on_new_follower: currentUser.email_on_new_follower !== false, // Default true
+                        email_on_new_message: currentUser.email_on_new_message !== false, // Default true
+                        email_on_following_activity: currentUser.email_on_following_activity !== false, // Default true
                     });
                 }
             } catch (error) {
