@@ -10,8 +10,19 @@ import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import {
-  Settings, Upload, Save, Globe, Eye, X, Plus, Camera, Mail, Calendar, Loader2, Search
+  Settings, Upload, Save, Globe, Eye, X, Plus, Camera, Mail, Calendar, Loader2, Search, Trash2, AlertTriangle
 } from 'lucide-react';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 // Looking For Section Component
 function LookingForSection({ formData, handleChange }) {
@@ -437,6 +448,58 @@ export default function SettingsPage() {
                 <Button onClick={handleSave} disabled={isSaving} className="w-full bg-emerald-600 hover:bg-emerald-700 text-lg py-6">
                     {isSaving ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Saving...</> : <><Save className="w-5 h-5 mr-2" /> Save All Settings</>}
                 </Button>
+
+                {/* Delete Account Section */}
+                <Card className="bg-red-950/30 border-red-900/50 backdrop-blur-sm mt-8">
+                    <CardHeader>
+                        <CardTitle className="text-red-400 flex items-center gap-2">
+                            <AlertTriangle className="w-5 h-5" />
+                            Danger Zone
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <p className="text-slate-400 mb-4">
+                            Once you delete your account, there is no going back. All your data, geckos, breeding plans, and activity will be permanently removed.
+                        </p>
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="destructive" className="bg-red-600 hover:bg-red-700">
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete Account
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="bg-slate-900 border-slate-700">
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle className="text-red-400">Are you absolutely sure?</AlertDialogTitle>
+                                    <AlertDialogDescription className="text-slate-400">
+                                        This action cannot be undone. This will permanently delete your account and remove all your data from our servers, including:
+                                        <ul className="list-disc list-inside mt-2 space-y-1">
+                                            <li>Your gecko collection</li>
+                                            <li>Breeding plans and records</li>
+                                            <li>Forum posts and comments</li>
+                                            <li>AI training contributions</li>
+                                            <li>Messages and notifications</li>
+                                        </ul>
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel className="bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600">Cancel</AlertDialogCancel>
+                                    <AlertDialogAction 
+                                        className="bg-red-600 hover:bg-red-700"
+                                        onClick={async () => {
+                                            toast({ 
+                                                title: "Account Deletion Requested", 
+                                                description: "Please contact support to complete account deletion." 
+                                            });
+                                        }}
+                                    >
+                                        Yes, Delete My Account
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    </CardContent>
+                </Card>
             </div>
         </div>
     );

@@ -428,16 +428,16 @@ export default function CommunityConnectPage() {
         const fetchData = async () => {
             setIsLoading(true);
             try {
-                const [user, allUsers, allGeckos] = await Promise.all([
-                    base44.auth.me().catch(() => null),
-                    User.list(),
-                    Gecko.list() // Get all geckos (RLS will filter to public ones)
-                ]);
-
+                // Fetch user first
+                const user = await base44.auth.me().catch(() => null);
                 setCurrentUser(user);
 
+                // Fetch users and geckos separately with error handling
+                const allUsers = await User.list().catch(() => []);
+                const allGeckos = await Gecko.list().catch(() => []);
+
                 // Filter to public geckos only
-                const publicGeckos = allGeckos.filter(g => g.is_public === true);
+                const publicGeckos = (allGeckos || []).filter(g => g.is_public === true);
 
                 // Calculate gecko counts and cover images per user
                 const counts = {};
@@ -462,25 +462,28 @@ export default function CommunityConnectPage() {
                 setGeckoCoverImages(coverImages);
 
                 // Show ALL users - they can all be displayed since defaults are now public
-                // But prioritize those with public geckos
-                const usersWithPublicGeckos = Object.keys(counts);
-                const publicBreeders = allUsers.filter(u => 
+                const publicBreeders = (allUsers || []).filter(u => 
                     u.is_public_profile !== false && // Not explicitly set to false
                     u.profile_public !== false // Not explicitly set to false
                 );
-                setBreeders(publicBreeders.length > 0 ? publicBreeders : allUsers);
+                setBreeders(publicBreeders);
 
                 // Get following list if logged in
                 if (user) {
-                    const userFollows = await UserFollow.list();
-                    const followingEmails = userFollows
-                        .filter(f => f.follower_email === user.email)
-                        .map(f => f.following_email);
-                    setFollowing(followingEmails);
+                    try {
+                        const userFollows = await UserFollow.list();
+                        const followingEmails = (userFollows || [])
+                            .filter(f => f.follower_email === user.email)
+                            .map(f => f.following_email);
+                        setFollowing(followingEmails);
+                    } catch (e) {
+                        console.log("Could not load follows");
+                    }
                 }
 
             } catch (error) {
                 console.error("Failed to load community data:", error);
+                setBreeders([]);
             }
             setIsLoading(false);
         };

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, DollarSign, Users, MapPin, MessageSquare, Heart } from 'lucide-react';
+import { Search, DollarSign, Users, MapPin, MessageSquare, Heart, Loader2 } from 'lucide-react';
 import { useNavigate, Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import MessageUserButton from '../components/ui/MessageUserButton';
@@ -91,34 +91,42 @@ export default function MarketplaceBuyPage() {
         const fetchData = async () => {
             setIsLoading(true);
             try {
-                // Get all geckos then filter - more reliable than compound filter
-                const [allGeckos, loggedInUser] = await Promise.all([
-                    Gecko.list("-updated_date"),
-                    base44.auth.me().catch(() => null)
-                ]);
+                // Fetch user first (non-blocking)
+                const loggedInUser = await base44.auth.me().catch(() => null);
+                setCurrentUser(loggedInUser);
+
+                // Get all geckos
+                const allGeckos = await Gecko.list("-updated_date").catch(() => []);
 
                 // Filter to public for-sale geckos
-                const forSaleGeckos = allGeckos.filter(g => 
+                const forSaleGeckos = (allGeckos || []).filter(g => 
                     g.status === 'For Sale' && g.is_public === true
                 );
-
-                setCurrentUser(loggedInUser);
                 
-                // Fetch user's likes if logged in
+                // Fetch user's likes if logged in (non-blocking)
                 if (loggedInUser) {
-                    const userLikes = await MarketplaceLike.filter({ user_email: loggedInUser.email });
-                    setLikedGeckoIds(new Set(userLikes.map(l => l.gecko_id)));
+                    try {
+                        const userLikes = await MarketplaceLike.filter({ user_email: loggedInUser.email });
+                        setLikedGeckoIds(new Set(userLikes.map(l => l.gecko_id)));
+                    } catch (e) {
+                        console.log("Could not load likes");
+                    }
                 }
                 
                 const ownerEmails = [...new Set(forSaleGeckos.map(g => g.created_by))];
                 
                 if (ownerEmails.length > 0) {
-                    const ownerData = await User.filter({ email: { $in: ownerEmails } });
-                    const ownersMap = ownerData.reduce((acc, user) => {
-                        acc[user.email] = user;
-                        return acc;
-                    }, {});
-                    setOwners(ownersMap);
+                    try {
+                        const ownerData = await User.filter({ email: { $in: ownerEmails } });
+                        const ownersMap = (ownerData || []).reduce((acc, user) => {
+                            acc[user.email] = user;
+                            return acc;
+                        }, {});
+                        setOwners(ownersMap);
+                    } catch (e) {
+                        console.log("Could not load owners");
+                        setOwners({});
+                    }
                 } else {
                     setOwners({});
                 }
@@ -126,6 +134,7 @@ export default function MarketplaceBuyPage() {
                 setGeckos(forSaleGeckos);
             } catch (error) {
                 console.error("Failed to fetch marketplace data:", error);
+                setGeckos([]);
             }
             setIsLoading(false);
         };
@@ -189,7 +198,9 @@ export default function MarketplaceBuyPage() {
                 </div>
 
                 {isLoading ? (
-                    <p className="text-center text-emerald-400">Loading geckos...</p>
+                    <div className="flex items-center justify-center py-20">
+                        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+                    </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                         {filteredGeckos.map(gecko => (

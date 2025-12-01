@@ -826,7 +826,7 @@ function LayoutContent({ children, currentPageName }) {
             pointer-events: none;
           }
 
-          .dark button,
+          .dark button:not([data-state]),
           .dark .bg-gray-100,
           .dark .bg-gray-200,
           .dark .bg-slate-100,
@@ -837,6 +837,56 @@ function LayoutContent({ children, currentPageName }) {
             backdrop-filter: blur(10px);
             transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             font-weight: 500;
+          }
+
+          /* Fix Switch and Toggle visibility */
+          .dark [data-state="checked"],
+          .dark [data-state="unchecked"] {
+            opacity: 1 !important;
+          }
+
+          .dark [role="switch"] {
+            background: rgba(100, 116, 139, 0.8) !important;
+            border: 1px solid rgba(148, 163, 184, 0.4) !important;
+          }
+
+          .dark [role="switch"][data-state="checked"] {
+            background: var(--gecko-accent) !important;
+            border-color: var(--gecko-accent) !important;
+          }
+
+          .dark [role="switch"] span,
+          .dark [role="switch"] > span {
+            background: white !important;
+          }
+
+          /* Fix Select/Dropdown visibility */
+          .dark [role="combobox"],
+          .dark [data-radix-popper-content-wrapper] [role="listbox"],
+          .dark [cmdk-list],
+          .dark select {
+            background: rgba(30, 41, 59, 0.95) !important;
+            border: 1px solid rgba(134, 239, 172, 0.3) !important;
+            color: var(--gecko-text) !important;
+          }
+
+          .dark [role="option"],
+          .dark [cmdk-item] {
+            color: var(--gecko-text) !important;
+          }
+
+          .dark [role="option"]:hover,
+          .dark [role="option"][data-highlighted],
+          .dark [cmdk-item]:hover,
+          .dark [cmdk-item][data-selected] {
+            background: rgba(16, 185, 129, 0.2) !important;
+          }
+
+          .dark [data-radix-select-viewport],
+          .dark [data-radix-popper-content-wrapper] {
+            background: rgba(30, 41, 59, 0.98) !important;
+            border: 1px solid rgba(134, 239, 172, 0.3) !important;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
           }
 
           .dark button:hover,
