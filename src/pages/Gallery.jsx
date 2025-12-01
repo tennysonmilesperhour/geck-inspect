@@ -28,10 +28,12 @@ export default function Gallery() {
         const fetchAllData = async () => {
             setIsLoading(true);
             try {
-                const [allImages, allUsers] = await Promise.all([
-                    GeckoImage.list('-created_date'),
-                    User.list()
-                ]);
+                // GeckoImage has public read RLS, so this should work for everyone
+                const allImages = await GeckoImage.list('-created_date');
+                const allUsers = await User.list().catch(() => []);
+                
+                console.log(`Gallery loaded ${allImages.length} images`);
+                
                 setImages(allImages);
                 setUsers(allUsers);
                 // Initial filter and display setup
