@@ -84,10 +84,11 @@ export default function PublicProfile() {
                 const geckos = await Gecko.filter({ created_by: user.email, is_public: true });
                 setUserGeckos(geckos);
                 
-                // Categorize geckos
+                // Categorize geckos - geckos can appear in multiple categories
                 setForSaleGeckos(geckos.filter(g => g.status === 'For Sale'));
                 setBreedingGeckos(geckos.filter(g => ['Ready to Breed', 'Proven', 'Future Breeder'].includes(g.status)));
-                setCollectionGeckos(geckos.filter(g => !['For Sale', 'Ready to Breed', 'Proven', 'Future Breeder', 'Sold'].includes(g.status)));
+                // Collection shows ALL geckos except sold ones
+                setCollectionGeckos(geckos.filter(g => g.status !== 'Sold'));
                 
                 // Fetch public breeding plans
                 const plans = await BreedingPlan.filter({ created_by: user.email, is_public: true }).catch(() => []);

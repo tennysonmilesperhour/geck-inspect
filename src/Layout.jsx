@@ -1222,38 +1222,17 @@ function LayoutContent({ children, currentPageName }) {
                 </Button>
               </Link>
 
-              <div className="px-3 py-2 space-y-2">
-                {isLoading ? (
-                  <div className="animate-pulse">
-                    <div className="h-4 bg-sage-200 rounded mb-2"></div>
-                    <div className="h-2 bg-sage-200 rounded mb-2"></div>
-                    <div className="h-3 bg-sage-200 rounded"></div>
-                  </div>
-                ) : (
-                  <>
-                        {currentMilestone && (
-                          <Alert className="mb-2 border-green-200 bg-green-50 dark:bg-sage-100 dark:border-sage-300 p-2">
-                            <Award className="h-4 w-4" />
-                            <AlertDescription className="text-green-700 dark:text-sage-600 text-xs">
-                              🎉 {currentMilestone.title} achieved! {currentMilestone.description}
-                            </AlertDescription>
-                          </Alert>
-                        )}
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-sage-600">Training Progress</span>
-                          <span className="font-bold text-sage-700">{imageCount.toLocaleString()}</span>
-                        </div>
-                        <div className="w-full bg-sage-200 rounded-full h-2 overflow-hidden gecko-progress">
-                          <div className="h-full bg-gradient-to-r from-sage-500 to-earth-400 transition-all duration-500" style={{ width: `${progressPercent}%` }}></div>
-                        </div>
-                        <div className="text-xs text-sage-500">
-                          {nextMilestone ?
-                            `${imageCount.toLocaleString()} / ${goalCount.toLocaleString()} to ${nextMilestone.title}` :
-                            "All milestones achieved! 🏆"
-                          }
-                        </div>
-                  </>
-                )}
+              <div className="px-3 py-2">
+                <Link to={createPageUrl("Subscription")} className="block">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="w-full justify-start text-sage-600 hover:text-sage-700 border-sage-300 text-sm"
+                  >
+                    <Star className="w-4 h-4 mr-2" />
+                    Manage Subscription
+                  </Button>
+                </Link>
               </div>
 
               {user ?
@@ -1384,38 +1363,17 @@ function LayoutContent({ children, currentPageName }) {
                     </Button>
                   </Link>
 
-                  <div className="px-3 py-2 space-y-2">
-                    {isLoading ? (
-                      <div className="animate-pulse">
-                        <div className="h-4 bg-sage-200 rounded mb-2"></div>
-                        <div className="h-2 bg-sage-200 rounded mb-2"></div>
-                        <div className="h-3 bg-sage-200 rounded"></div>
-                      </div>
-                    ) : (
-                      <>
-                        {currentMilestone && (
-                          <Alert className="mb-2 border-green-200 bg-green-50 dark:bg-sage-100 dark:border-sage-300 p-2">
-                            <Award className="h-4 w-4" />
-                            <AlertDescription className="text-green-700 dark:text-sage-600 text-xs">
-                              🎉 {currentMilestone.title} achieved! {currentMilestone.description}
-                            </AlertDescription>
-                          </Alert>
-                        )}
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="text-sage-600 dark:text-sage-500">Training Progress</span>
-                          <span className="font-bold text-sage-700 dark:text-sage-600">{imageCount.toLocaleString()}</span>
-                        </div>
-                        <div className="w-full bg-sage-200 rounded-full h-2 overflow-hidden gecko-progress">
-                          <div className="h-full bg-gradient-to-r from-sage-500 to-earth-400 transition-all duration-500" style={{ width: `${progressPercent}%` }}></div>
-                        </div>
-                        <div className="text-xs text-sage-500 dark:text-sage-400">
-                          {nextMilestone ?
-                            `${imageCount.toLocaleString()} / ${goalCount.toLocaleString()} to ${nextMilestone.title}` :
-                            "All milestones achieved! 🏆"
-                          }
-                        </div>
-                      </>
-                    )}
+                  <div className="px-3 py-2">
+                    <Link to={createPageUrl("Subscription")} className="block">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-sage-600 hover:text-sage-700 border-sage-300 text-sm"
+                      >
+                        <Star className="w-4 h-4 mr-2" />
+                        Manage Subscription
+                      </Button>
+                    </Link>
                   </div>
 
                   {user ?

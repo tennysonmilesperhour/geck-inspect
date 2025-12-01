@@ -29,6 +29,7 @@ import AuthPortal from './pages/AuthPortal';
 import OtherReptiles from './pages/OtherReptiles';
 import CommunityConnect from './pages/CommunityConnect';
 import LikedGeckos from './pages/LikedGeckos';
+import Subscription from './pages/Subscription';
 import __Layout from './Layout.jsx';
 
 
@@ -64,6 +65,7 @@ export const PAGES = {
     "OtherReptiles": OtherReptiles,
     "CommunityConnect": CommunityConnect,
     "LikedGeckos": LikedGeckos,
+    "Subscription": Subscription,
 }
 
 export const pagesConfig = {
