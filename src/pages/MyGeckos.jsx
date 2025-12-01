@@ -13,6 +13,7 @@ import GeckoFilters from '../components/my-geckos/GeckoFilters';
 import { toast } from '@/components/ui/use-toast';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
+import PlanLimitModal, { checkPlanLimit, getGeckoLimit } from '../components/subscription/PlanLimitChecker';
 
 // Enhanced cache specifically for MyGeckos page
 class MyGeckosCache {
@@ -97,6 +98,7 @@ export default function MyGeckosPage() {
         weightMin: '',
         weightMax: ''
     });
+    const [showUpgradeModal, setShowUpgradeModal] = useState(false);
 
     // Enhanced loadGeckos with caching and rate limiting
     // Now uses `user` from state and is dependent on it.
@@ -415,7 +417,17 @@ export default function MyGeckosPage() {
                         <Button variant="outline" className="border-slate-600 hover:bg-slate-800" onClick={() => setIsImportModalOpen(true)}>
                             Import from CSV
                         </Button>
-                        <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={() => { setSelectedGecko(null); setIsFormOpen(true); setIsDetailModalOpen(false); }}>
+                        <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={() => { 
+                            // Check plan limit before adding
+                            const limit = getGeckoLimit(user);
+                            if (geckos.length >= limit) {
+                                setShowUpgradeModal(true);
+                                return;
+                            }
+                            setSelectedGecko(null); 
+                            setIsFormOpen(true); 
+                            setIsDetailModalOpen(false); 
+                        }}>
                             <PlusCircle className="w-5 h-5 mr-2" />
                             Add Gecko
                         </Button>
@@ -647,6 +659,14 @@ export default function MyGeckosPage() {
                         onEdit={handleEdit}
                     />
                 )}
+
+                {/* Plan Limit Modal */}
+                <PlanLimitModal
+                    isOpen={showUpgradeModal}
+                    onClose={() => setShowUpgradeModal(false)}
+                    limitType="geckos"
+                    currentCount={geckos.length}
+                />
             </div>
         </div>
     );
