@@ -1,9 +1,11 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
+import { User } from '@/entities/all';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Check, Sparkles, Users, GitBranch, Calendar, TrendingUp } from 'lucide-react';
+import { Check, Sparkles, Users, GitBranch, Calendar, TrendingUp, CheckCircle, Loader2 } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 const MEMBERSHIP_TIERS = [
   {
@@ -58,6 +60,27 @@ const MEMBERSHIP_TIERS = [
 
 export default function LoginPortal({ requiredFeature = null }) {
   const [billingCycle, setBillingCycle] = useState('monthly');
+  const [currentUser, setCurrentUser] = useState(null);
+  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
+  const [selectedTier, setSelectedTier] = useState(null);
+  const [isSaving, setIsSaving] = useState(false);
+  const { toast } = useToast();
+
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const user = await base44.auth.me();
+        setCurrentUser(user);
+        if (user?.membership_tier) {
+          setSelectedTier(user.membership_tier);
+        }
+      } catch (error) {
+        // Not logged in
+      }
+      setIsCheckingAuth(false);
+    };
+    checkAuth();
+  }, []);
 
   const handleLogin = async () => {
     try {
@@ -69,8 +92,37 @@ export default function LoginPortal({ requiredFeature = null }) {
   };
 
   const handleSelectTier = async (tier) => {
-    // For now, just login - payment integration would go here
-    await handleLogin();
+    if (!currentUser) {
+      // Not logged in, redirect to login
+      await handleLogin();
+      return;
+    }
+
+    // User is logged in, save their tier selection
+    setIsSaving(true);
+    try {
+      await base44.auth.updateMe({
+        membership_tier: tier.id,
+        membership_billing_cycle: tier.price === 0 ? null : billingCycle
+      });
+      
+      setSelectedTier(tier.id);
+      toast({ 
+        title: "Plan Selected!", 
+        description: tier.price === 0 
+          ? "You're now on the Free plan. Enjoy!" 
+          : `You've selected the ${tier.name} plan. Payment integration coming soon!`
+      });
+      
+      // Reload the page to refresh the app state
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+    } catch (error) {
+      console.error("Failed to save tier:", error);
+      toast({ title: "Error", description: "Failed to save your selection.", variant: "destructive" });
+    }
+    setIsSaving(false);
   };
 
   return (
@@ -165,13 +217,24 @@ export default function LoginPortal({ requiredFeature = null }) {
 
                   <Button
                     onClick={() => handleSelectTier(tier)}
+                    disabled={isSaving}
                     className={`w-full ${
-                      tier.popular 
-                        ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700' 
-                        : 'bg-slate-700 hover:bg-slate-600'
+                      selectedTier === tier.id
+                        ? 'bg-green-600 hover:bg-green-700'
+                        : tier.popular 
+                          ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700' 
+                          : 'bg-slate-700 hover:bg-slate-600'
                     }`}
                   >
-                    {tier.price === 0 ? 'Start Free' : 'Get Started'}
+                    {isSaving ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : selectedTier === tier.id ? (
+                      <><CheckCircle className="w-4 h-4 mr-2" /> Current Plan</>
+                    ) : currentUser ? (
+                      tier.price === 0 ? 'Select Free Plan' : 'Select Plan'
+                    ) : (
+                      tier.price === 0 ? 'Start Free' : 'Get Started'
+                    )}
                   </Button>
                 </CardContent>
               </Card>
@@ -180,15 +243,28 @@ export default function LoginPortal({ requiredFeature = null }) {
         </div>
 
         <div className="text-center">
-          <p className="text-slate-400 text-sm">
-            Already have an account?{' '}
-            <button 
-              onClick={handleLogin}
-              className="text-emerald-400 hover:text-emerald-300 underline"
-            >
-              Log in here
-            </button>
-          </p>
+          {currentUser ? (
+            <p className="text-slate-400 text-sm">
+              Logged in as <span className="text-emerald-400">{currentUser.full_name || currentUser.email}</span>
+              {' • '}
+              <button 
+                onClick={() => window.location.reload()}
+                className="text-emerald-400 hover:text-emerald-300 underline"
+              >
+                Continue to app
+              </button>
+            </p>
+          ) : (
+            <p className="text-slate-400 text-sm">
+              Already have an account?{' '}
+              <button 
+                onClick={handleLogin}
+                className="text-emerald-400 hover:text-emerald-300 underline"
+              >
+                Log in here
+              </button>
+            </p>
+          )}
         </div>
       </div>
     </div>

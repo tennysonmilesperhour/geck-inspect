@@ -837,23 +837,31 @@ export default function BreedingPage() {
         loadData();
     }, []);
 
+    const [user, setUser] = useState(null);
+    const [authChecked, setAuthChecked] = useState(false);
+
     const loadData = async () => {
         setIsLoading(true);
         try {
-            const user = await base44.auth.me();
-            if (!user) {
-                // User not authenticated, show login portal
+            const currentUser = await base44.auth.me();
+            setUser(currentUser);
+            setAuthChecked(true);
+            
+            if (!currentUser) {
+                // User not authenticated
                 setIsLoading(false);
                 return;
             }
+            
             const [geckosData, plansData] = await Promise.all([
-                Gecko.filter({ created_by: user.email }),
-                BreedingPlan.filter({ created_by: user.email }, '-created_date')
+                Gecko.filter({ created_by: currentUser.email }),
+                BreedingPlan.filter({ created_by: currentUser.email }, '-created_date')
             ]);
             setGeckos(geckosData);
             setBreedingPlans(plansData.sort((a,b) => new Date(b.created_date) - new Date(a.created_date)));
         } catch (error) {
             console.error("Failed to load breeding data:", error);
+            setAuthChecked(true);
         }
         setIsLoading(false);
     };
@@ -1012,7 +1020,7 @@ export default function BreedingPage() {
     };
     
     // Show login portal if not authenticated
-    if (!isLoading && geckos.length === 0 && breedingPlans.length === 0) {
+    if (authChecked && !user) {
         const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
         return (
             <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center"><Loader2 className="w-12 h-12 text-emerald-500 animate-spin" /></div>}>
