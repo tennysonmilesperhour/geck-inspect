@@ -301,15 +301,18 @@ export default function CommunityConnectPage() {
                 const [user, allUsers, allGeckos] = await Promise.all([
                     base44.auth.me().catch(() => null),
                     User.list(),
-                    Gecko.filter({ is_public: true })
+                    Gecko.list() // Get all geckos (RLS will filter to public ones)
                 ]);
-                
+
                 setCurrentUser(user);
-                
+
+                // Filter to public geckos only
+                const publicGeckos = allGeckos.filter(g => g.is_public === true);
+
                 // Calculate gecko counts and cover images per user
                 const counts = {};
                 const coverImages = {};
-                allGeckos.forEach(gecko => {
+                publicGeckos.forEach(gecko => {
                     if (!counts[gecko.created_by]) {
                         counts[gecko.created_by] = { selling: 0, breeding: 0, keeping: 0 };
                     }
@@ -327,16 +330,16 @@ export default function CommunityConnectPage() {
                 });
                 setGeckoCounts(counts);
                 setGeckoCoverImages(coverImages);
-                
-                // Show users who have: is_public_profile=true OR have public geckos OR profile_public=true
+
+                // Show ALL users - they can all be displayed since defaults are now public
+                // But prioritize those with public geckos
                 const usersWithPublicGeckos = Object.keys(counts);
                 const publicBreeders = allUsers.filter(u => 
-                    u.is_public_profile === true || 
-                    u.profile_public === true ||
-                    usersWithPublicGeckos.includes(u.email)
+                    u.is_public_profile !== false && // Not explicitly set to false
+                    u.profile_public !== false // Not explicitly set to false
                 );
-                setBreeders(publicBreeders);
-                
+                setBreeders(publicBreeders.length > 0 ? publicBreeders : allUsers);
+
                 // Get following list if logged in
                 if (user) {
                     const userFollows = await UserFollow.list();
@@ -345,7 +348,7 @@ export default function CommunityConnectPage() {
                         .map(f => f.following_email);
                     setFollowing(followingEmails);
                 }
-                
+
             } catch (error) {
                 console.error("Failed to load community data:", error);
             }

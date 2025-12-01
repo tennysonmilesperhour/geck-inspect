@@ -91,10 +91,16 @@ export default function MarketplaceBuyPage() {
         const fetchData = async () => {
             setIsLoading(true);
             try {
-                const [forSaleGeckos, loggedInUser] = await Promise.all([
-                    Gecko.filter({ status: 'For Sale', is_public: true }, "-updated_date"),
+                // Get all geckos then filter - more reliable than compound filter
+                const [allGeckos, loggedInUser] = await Promise.all([
+                    Gecko.list("-updated_date"),
                     base44.auth.me().catch(() => null)
                 ]);
+
+                // Filter to public for-sale geckos
+                const forSaleGeckos = allGeckos.filter(g => 
+                    g.status === 'For Sale' && g.is_public === true
+                );
 
                 setCurrentUser(loggedInUser);
                 
