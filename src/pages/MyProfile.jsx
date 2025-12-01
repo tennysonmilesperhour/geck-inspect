@@ -419,7 +419,7 @@ export default function MyProfile() {
                         </TabsList>
 
                         <TabsContent value="overview" className="space-y-6">
-                            {isEditing && (
+                            {isEditing ? (
                                 <Card className="bg-slate-900 border-slate-700">
                                     <CardHeader>
                                         <CardTitle className="text-slate-100">Edit Profile Information</CardTitle>
@@ -485,8 +485,8 @@ export default function MyProfile() {
                                         </div>
                                     </CardContent>
                                 </Card>
-                            )}
-
+                            ) : (
+                            <>
                             {/* Achievement Progress */}
                             <Card className="bg-slate-900 border-slate-700">
                                 <CardHeader>
@@ -669,6 +669,8 @@ export default function MyProfile() {
                                     )}
                                 </TabsContent>
                             </Tabs>
+                            </>
+                            )}
                         </TabsContent>
 
                         <TabsContent value="settings" className="space-y-6">
@@ -799,47 +801,6 @@ export default function MyProfile() {
                                                 onCheckedChange={(checked) => handleSettingChange('calendar_alerts_enabled', checked)}
                                             />
                                         </div>
-                                    </div>
-                                </CardContent>
-                            </Card>
-
-                            {/* Display Preferences */}
-                            <Card className="bg-slate-900 border-slate-700">
-                                <CardHeader>
-                                    <CardTitle className="text-slate-100">Display Preferences</CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-6">
-                                    <div>
-                                        <Label className="text-slate-200 font-medium">Public Title Preference</Label>
-                                        <p className="text-sm text-slate-400 mb-3">Which achievement to show on your public profile</p>
-                                        <Select value={editData.public_title_preference} onValueChange={(value) => handleSettingChange('public_title_preference', value)}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select a title" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="none">None</SelectItem>
-                                                <SelectItem value="collection">Collection Level</SelectItem>
-                                                <SelectItem value="ai_training">AI Training Level</SelectItem>
-                                                <SelectItem value="community">Community Level</SelectItem>
-                                                <SelectItem value="breeding">Breeding Level</SelectItem>
-                                            </SelectContent>
-                                        </Select>
-                                    </div>
-
-                                    <div>
-                                        <Label className="text-slate-200 font-medium">Sidebar Badge Preference</Label>
-                                        <p className="text-sm text-slate-400 mb-3">Which achievement badge to show in the sidebar</p>
-                                        <Select value={editData.sidebar_badge_preference} onValueChange={(value) => handleSettingChange('sidebar_badge_preference', value)}>
-                                            <SelectTrigger>
-                                                <SelectValue placeholder="Select a badge" />
-                                            </SelectTrigger>
-                                            <SelectContent>
-                                                <SelectItem value="collection">Collection Badge</SelectItem>
-                                                <SelectItem value="ai_training">AI Training Badge</SelectItem>
-                                                <SelectItem value="community">Community Badge</SelectItem>
-                                                <SelectItem value="breeding">Breeding Badge</SelectItem>
-                                            </SelectContent>
-                                        </Select>
                                     </div>
                                 </CardContent>
                             </Card>

@@ -1222,18 +1222,16 @@ function LayoutContent({ children, currentPageName }) {
                 </Button>
               </Link>
 
-              <div className="px-3 py-2">
-                <Link to={createPageUrl("Subscription")} className="block">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full justify-start text-sage-600 hover:text-sage-700 border-sage-300 text-sm"
-                  >
-                    <Star className="w-4 h-4 mr-2" />
-                    Manage Subscription
-                  </Button>
-                </Link>
-              </div>
+              <Link to={createPageUrl("Subscription")} className="block">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start text-sage-600 hover:text-sage-700 border-sage-300 text-sm"
+                >
+                  <Star className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span className="truncate">Subscription</span>
+                </Button>
+              </Link>
 
               {user ?
                 <div className="space-y-2">
@@ -1363,18 +1361,16 @@ function LayoutContent({ children, currentPageName }) {
                     </Button>
                   </Link>
 
-                  <div className="px-3 py-2">
-                    <Link to={createPageUrl("Subscription")} className="block">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full justify-start text-sage-600 hover:text-sage-700 border-sage-300 text-sm"
-                      >
-                        <Star className="w-4 h-4 mr-2" />
-                        Manage Subscription
-                      </Button>
-                    </Link>
-                  </div>
+                  <Link to={createPageUrl("Subscription")} className="block">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="w-full justify-start text-sage-600 hover:text-sage-700 border-sage-300 text-sm"
+                    >
+                      <Star className="w-4 h-4 mr-2 flex-shrink-0" />
+                      <span className="truncate">Subscription</span>
+                    </Button>
+                  </Link>
 
                   {user ?
                     <div className="space-y-2">
