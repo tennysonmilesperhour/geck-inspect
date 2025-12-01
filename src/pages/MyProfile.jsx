@@ -1,13 +1,12 @@
-
 import React, { useState, useEffect } from 'react';
-import { User, Gecko, GeckoImage, ForumPost, ForumComment, DirectMessage, Notification, MorphReferenceImage, UserBadge, UserActivity } from '@/entities/all';
+import { User, Gecko, GeckoImage, ForumPost, ForumComment, DirectMessage, Notification, MorphReferenceImage, UserBadge, UserActivity, BreedingPlan } from '@/entities/all';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Camera, MapPin, Link as LinkIcon, Calendar, Users, MessageSquare, Image as ImageIcon, Heart, Edit, Save, X, Loader2, Upload, Star } from 'lucide-react';
+import { Camera, MapPin, Link as LinkIcon, Calendar, Users, MessageSquare, Image as ImageIcon, Heart, Edit, Save, X, Loader2, Upload, Star, ShoppingCart, GitBranch, Globe, Instagram, Facebook, Youtube } from 'lucide-react';
 import { UploadFile } from '@/integrations/Core';
 import { useToast } from "@/components/ui/use-toast";
 import { Switch } from "@/components/ui/switch";
@@ -15,6 +14,9 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
 import { format } from 'date-fns';
+import GeckoCard from '../components/my-geckos/GeckoCard';
+import { createPageUrl } from '@/utils';
+import { Link } from 'react-router-dom';
 
 const USER_LEVELS = [
   { geckos: 1, title: "New Collector", badge: "🥚" }, { geckos: 2, title: "Gecko Keeper", badge: "🦎" },
@@ -115,7 +117,13 @@ export default function MyProfile() {
     
     const [editData, setEditData] = useState({});
     const [userBadges, setUserBadges] = useState([]);
-    const [recentActivity, setRecentActivity] = useState([]);
+    
+    // Gecko collections for overview display
+    const [userGeckos, setUserGeckos] = useState([]);
+    const [forSaleGeckos, setForSaleGeckos] = useState([]);
+    const [breedingGeckos, setBreedingGeckos] = useState([]);
+    const [collectionGeckos, setCollectionGeckos] = useState([]);
+    const [breedingPlans, setBreedingPlans] = useState([]);
 
     const syncEditData = (currentUser) => {
         if (!currentUser) return;
@@ -146,14 +154,22 @@ export default function MyProfile() {
                 setUser(currentUser);
                 syncEditData(currentUser);
 
-                // Load user badges and recent activity
-                const [badges, activity] = await Promise.all([
+                // Load user badges and geckos
+                const [badges, geckos, plans] = await Promise.all([
                     UserBadge.filter({ user_email: currentUser.email }),
-                    UserActivity.filter({ user_email: currentUser.email }, '-created_date', 20)
+                    Gecko.filter({ created_by: currentUser.email }),
+                    BreedingPlan.filter({ created_by: currentUser.email }).catch(() => [])
                 ]);
                 
                 setUserBadges(badges);
-                setRecentActivity(activity);
+                setUserGeckos(geckos);
+                setBreedingPlans(plans);
+                
+                // Categorize geckos - geckos can appear in multiple categories
+                setForSaleGeckos(geckos.filter(g => g.status === 'For Sale'));
+                setBreedingGeckos(geckos.filter(g => ['Ready to Breed', 'Proven', 'Future Breeder'].includes(g.status)));
+                // Collection shows ALL geckos except sold ones
+                setCollectionGeckos(geckos.filter(g => g.status !== 'Sold'));
 
                 // Load stats with heavy rate limit protection
                 const loadStatsWithFallback = async () => {
@@ -397,9 +413,8 @@ export default function MyProfile() {
                 {/* Tabs */}
                 <div className="mt-8">
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                        <TabsList className="grid w-full grid-cols-3 bg-slate-800">
+                        <TabsList className="grid w-full grid-cols-2 bg-slate-800">
                             <TabsTrigger value="overview" className="data-[state=active]:bg-slate-700">Overview</TabsTrigger>
-                            <TabsTrigger value="activity" className="data-[state=active]:bg-slate-700">Activity</TabsTrigger>
                             <TabsTrigger value="settings" className="data-[state=active]:bg-slate-700">Settings</TabsTrigger>
                         </TabsList>
 
@@ -524,75 +539,136 @@ export default function MyProfile() {
                                 </Card>
                             )}
 
-                            {/* Stats Grid */}
-                            <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
-                                <Card className="bg-slate-900 border-slate-700">
-                                    <CardContent className="p-6 text-center">
-                                        <Users className="w-8 h-8 text-emerald-500 mx-auto mb-2" />
-                                        <div className="text-2xl font-bold text-slate-100">{userStats.geckos}</div>
-                                        <p className="text-xs text-slate-400">Geckos</p>
-                                    </CardContent>
-                                </Card>
-                                <Card className="bg-slate-900 border-slate-700">
-                                    <CardContent className="p-6 text-center">
-                                        <ImageIcon className="w-8 h-8 text-blue-500 mx-auto mb-2" />
-                                        <div className="text-2xl font-bold text-slate-100">{userStats.images}</div>
-                                        <p className="text-xs text-slate-400">Images</p>
-                                    </CardContent>
-                                </Card>
-                                <Card className="bg-slate-900 border-slate-700">
-                                    <CardContent className="p-6 text-center">
-                                        <MessageSquare className="w-8 h-8 text-purple-500 mx-auto mb-2" />
-                                        <div className="text-2xl font-bold text-slate-100">{userStats.forumPosts}</div>
-                                        <p className="text-xs text-slate-400">Posts</p>
-                                    </CardContent>
-                                </Card>
-                                <Card className="bg-slate-900 border-slate-700">
-                                    <CardContent className="p-6 text-center">
-                                        <Heart className="w-8 h-8 text-red-500 mx-auto mb-2" />
-                                        <div className="text-2xl font-bold text-slate-100">{userStats.morphSubmissions}</div>
-                                        <p className="text-xs text-slate-400">Contributions</p>
-                                    </CardContent>
-                                </Card>
-                            </div>
-                        </TabsContent>
-
-                        <TabsContent value="activity" className="space-y-6">
+                            {/* About Section */}
                             <Card className="bg-slate-900 border-slate-700">
-                                <CardHeader>
-                                    <CardTitle className="text-slate-100">Recent Activity</CardTitle>
-                                </CardHeader>
-                                <CardContent>
-                                    {recentActivity.length > 0 ? (
-                                        <div className="space-y-4">
-                                            {recentActivity.map((activity) => (
-                                                <div key={activity.id} className="flex items-start gap-3 p-3 bg-slate-800 rounded-lg">
-                                                    <div className="w-2 h-2 bg-emerald-500 rounded-full mt-2"></div>
-                                                    <div className="flex-1">
-                                                        <p className="text-slate-300 text-sm">
-                                                            {activity.activity_type === 'new_gecko' && '🦎 Added a new gecko to collection'}
-                                                            {activity.activity_type === 'new_post' && '📝 Created a forum post'}
-                                                            {activity.activity_type === 'new_comment' && '💬 Commented on a post'}
-                                                            {activity.activity_type === 'ai_training' && '🤖 Contributed to AI training'}
-                                                            {activity.activity_type === 'ai_visualizer_use' && '🎨 Used morph visualizer'}
-                                                            {activity.activity_type === 'like_gecko' && '❤️ Liked a gecko photo'}
-                                                            {/* Add more activity types as needed */}
-                                                        </p>
-                                                        <p className="text-xs text-slate-500 mt-1">
-                                                            {format(new Date(activity.created_date), 'PPp')} • +{activity.points} points
-                                                        </p>
-                                                    </div>
-                                                </div>
-                                            ))}
-                                        </div>
-                                    ) : (
-                                        <div className="text-center py-8 text-slate-400">
-                                            <p>No recent activity yet.</p>
-                                            <p className="text-sm mt-2">Start using the platform to see your activity here!</p>
+                                <CardHeader><CardTitle className="text-slate-200">About</CardTitle></CardHeader>
+                                <CardContent className="space-y-4">
+                                    <p className="text-slate-300">{user.bio || 'No bio provided.'}</p>
+                                    {(user.city || user.state_province || user.country) && (
+                                        <p className="text-sm text-slate-400 flex items-center gap-1">
+                                            <MapPin className="w-4 h-4" />
+                                            {[user.city, user.state_province, user.country].filter(Boolean).join(', ')}
+                                        </p>
+                                    )}
+                                    {(user.website_url || user.instagram_handle || user.facebook_url || user.youtube_url || user.tiktok_handle) && (
+                                        <div className="flex flex-wrap gap-2 pt-2">
+                                            {user.website_url && (
+                                                <a href={user.website_url} target="_blank" rel="noopener noreferrer">
+                                                    <Button size="sm" variant="outline" className="border-slate-600 hover:bg-slate-700">
+                                                        <Globe className="w-4 h-4" />
+                                                    </Button>
+                                                </a>
+                                            )}
+                                            {user.instagram_handle && (
+                                                <a href={`https://instagram.com/${user.instagram_handle}`} target="_blank" rel="noopener noreferrer">
+                                                    <Button size="sm" variant="outline" className="border-pink-500/50 hover:bg-pink-500/20 text-pink-400">
+                                                        <Instagram className="w-4 h-4" />
+                                                    </Button>
+                                                </a>
+                                            )}
+                                            {user.facebook_url && (
+                                                <a href={user.facebook_url} target="_blank" rel="noopener noreferrer">
+                                                    <Button size="sm" variant="outline" className="border-blue-500/50 hover:bg-blue-500/20 text-blue-400">
+                                                        <Facebook className="w-4 h-4" />
+                                                    </Button>
+                                                </a>
+                                            )}
+                                            {user.youtube_url && (
+                                                <a href={user.youtube_url} target="_blank" rel="noopener noreferrer">
+                                                    <Button size="sm" variant="outline" className="border-red-500/50 hover:bg-red-500/20 text-red-400">
+                                                        <Youtube className="w-4 h-4" />
+                                                    </Button>
+                                                </a>
+                                            )}
                                         </div>
                                     )}
                                 </CardContent>
                             </Card>
+
+                            {/* Gecko Collections Tabs */}
+                            <Tabs defaultValue="collection" className="w-full">
+                                <TabsList className="grid w-full grid-cols-3 mb-6 bg-slate-800">
+                                    <TabsTrigger value="for-sale" className="data-[state=active]:bg-orange-600">
+                                        <ShoppingCart className="w-4 h-4 mr-2" />
+                                        For Sale ({forSaleGeckos.length})
+                                    </TabsTrigger>
+                                    <TabsTrigger value="breeders" className="data-[state=active]:bg-pink-600">
+                                        <GitBranch className="w-4 h-4 mr-2" />
+                                        Breeders ({breedingGeckos.length})
+                                    </TabsTrigger>
+                                    <TabsTrigger value="collection" className="data-[state=active]:bg-blue-600">
+                                        <Heart className="w-4 h-4 mr-2" />
+                                        Collection ({collectionGeckos.length})
+                                    </TabsTrigger>
+                                </TabsList>
+
+                                <TabsContent value="for-sale">
+                                    {forSaleGeckos.length > 0 ? (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                            {forSaleGeckos.map(gecko => (
+                                                <GeckoCard key={gecko.id} gecko={gecko} onEdit={() => {}} onDelete={() => {}} onCardClick={() => {}} isPublicView={true}/>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-12 bg-slate-800 rounded-lg">
+                                            <ShoppingCart className="w-12 h-12 mx-auto text-slate-500 mb-4"/>
+                                            <p className="text-slate-400">No geckos currently for sale.</p>
+                                        </div>
+                                    )}
+                                </TabsContent>
+
+                                <TabsContent value="breeders">
+                                    {breedingGeckos.length > 0 ? (
+                                        <div className="space-y-8">
+                                            {breedingGeckos.filter(g => g.sex === 'Male').length > 0 && (
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-blue-400 mb-4 flex items-center gap-2">
+                                                        <span className="text-2xl">♂</span> Males ({breedingGeckos.filter(g => g.sex === 'Male').length})
+                                                    </h3>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                                        {breedingGeckos.filter(g => g.sex === 'Male').map(gecko => (
+                                                            <GeckoCard key={gecko.id} gecko={gecko} onEdit={() => {}} onDelete={() => {}} onCardClick={() => {}} isPublicView={true}/>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                            
+                                            {breedingGeckos.filter(g => g.sex === 'Female').length > 0 && (
+                                                <div>
+                                                    <h3 className="text-lg font-semibold text-pink-400 mb-4 flex items-center gap-2">
+                                                        <span className="text-2xl">♀</span> Females ({breedingGeckos.filter(g => g.sex === 'Female').length})
+                                                    </h3>
+                                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                                        {breedingGeckos.filter(g => g.sex === 'Female').map(gecko => (
+                                                            <GeckoCard key={gecko.id} gecko={gecko} onEdit={() => {}} onDelete={() => {}} onCardClick={() => {}} isPublicView={true}/>
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-12 bg-slate-800 rounded-lg">
+                                            <GitBranch className="w-12 h-12 mx-auto text-slate-500 mb-4"/>
+                                            <p className="text-slate-400">No breeders listed.</p>
+                                        </div>
+                                    )}
+                                </TabsContent>
+
+                                <TabsContent value="collection">
+                                    {collectionGeckos.length > 0 ? (
+                                        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                            {collectionGeckos.map(gecko => (
+                                                <GeckoCard key={gecko.id} gecko={gecko} onEdit={() => {}} onDelete={() => {}} onCardClick={() => {}} isPublicView={true}/>
+                                            ))}
+                                        </div>
+                                    ) : (
+                                        <div className="text-center py-12 bg-slate-800 rounded-lg">
+                                            <Users className="w-12 h-12 mx-auto text-slate-500 mb-4"/>
+                                            <p className="text-slate-400">No geckos in collection.</p>
+                                        </div>
+                                    )}
+                                </TabsContent>
+                            </Tabs>
                         </TabsContent>
 
                         <TabsContent value="settings" className="space-y-6">
