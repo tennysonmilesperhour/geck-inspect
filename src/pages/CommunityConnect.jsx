@@ -419,23 +419,46 @@ export default function CommunityConnectPage() {
         
         return matchesSearch && matchesLocation;
     }).sort((a, b) => {
-        // Sort by: 1) has geckos for sale, 2) has breeding projects, 3) alphabetical
         const aCount = geckoCounts[a.email] || { selling: 0, breeding: 0, keeping: 0 };
         const bCount = geckoCounts[b.email] || { selling: 0, breeding: 0, keeping: 0 };
+        const aTotalGeckos = aCount.selling + aCount.breeding + aCount.keeping;
+        const bTotalGeckos = bCount.selling + bCount.breeding + bCount.keeping;
         
-        // Priority 1: Those with geckos for sale
+        // Priority 1: Users with ANY geckos above those with none
+        if (aTotalGeckos > 0 && bTotalGeckos === 0) return -1;
+        if (bTotalGeckos > 0 && aTotalGeckos === 0) return 1;
+        
+        // Priority 2: Among users with no geckos, sort by profile completeness
+        if (aTotalGeckos === 0 && bTotalGeckos === 0) {
+            const aHasProfileImage = !!a.profile_image_url;
+            const bHasProfileImage = !!b.profile_image_url;
+            const aHasCoverImage = !!a.cover_image_url;
+            const bHasCoverImage = !!b.cover_image_url;
+            
+            // Users with profile image above those without
+            if (aHasProfileImage && !bHasProfileImage) return -1;
+            if (bHasProfileImage && !aHasProfileImage) return 1;
+            
+            // Users with cover image above those without
+            if (aHasCoverImage && !bHasCoverImage) return -1;
+            if (bHasCoverImage && !aHasCoverImage) return 1;
+            
+            return (a.full_name || '').localeCompare(b.full_name || '');
+        }
+        
+        // Priority 3: Among users with geckos, sort by for sale first
         if (aCount.selling > 0 && bCount.selling === 0) return -1;
         if (bCount.selling > 0 && aCount.selling === 0) return 1;
         
-        // Priority 2: Those with breeding projects
+        // Priority 4: Those with breeding projects
         if (aCount.breeding > 0 && bCount.breeding === 0) return -1;
         if (bCount.breeding > 0 && aCount.breeding === 0) return 1;
         
-        // Priority 3: By number of geckos for sale
+        // Priority 5: By number of geckos for sale
         if (aCount.selling !== bCount.selling) return bCount.selling - aCount.selling;
         
-        // Priority 4: By number of breeding projects
-        if (aCount.breeding !== bCount.breeding) return bCount.breeding - aCount.breeding;
+        // Priority 6: By total geckos
+        if (aTotalGeckos !== bTotalGeckos) return bTotalGeckos - aTotalGeckos;
         
         // Default: alphabetical
         return (a.full_name || '').localeCompare(b.full_name || '');
