@@ -231,7 +231,8 @@ export default function Lineage() {
         let sire = null;
         let dam = null;
         
-        if (currentGen <= maxGenerations) {
+        // Always get parents if we're not at max generation yet
+        if (currentGen < maxGenerations) {
             if (gecko.sire_id) {
                 sire = await getLineageFor(gecko.sire_id, maxGenerations, currentGen + 1);
             } else {
@@ -398,16 +399,17 @@ export default function Lineage() {
             );
         }
 
-        const hasParents = gecko.sire || gecko.dam;
+        // For real geckos, always show both parent slots if we're not at max generation
+        const shouldShowParents = generation < generations;
 
         return (
             <div className="flex flex-col items-center">
-                {/* Parents Row (above) - only show if we haven't reached max generation */}
-                {hasParents && generation < generations && (
+                {/* Parents Row (above) - always show both parent slots */}
+                {shouldShowParents && (
                     <>
                         <div className="flex gap-2 md:gap-4">
-                            {renderVerticalTree(gecko.sire || { name: 'Unknown', isPlaceholder: true, geckoId: gecko.id, parentType: 'sire' }, generation + 1)}
-                            {renderVerticalTree(gecko.dam || { name: 'Unknown', isPlaceholder: true, geckoId: gecko.id, parentType: 'dam' }, generation + 1)}
+                            {renderVerticalTree(gecko.sire || { name: gecko.sire_name || 'Unknown', isPlaceholder: true, geckoId: gecko.id, parentType: 'sire' }, generation + 1)}
+                            {renderVerticalTree(gecko.dam || { name: gecko.dam_name || 'Unknown', isPlaceholder: true, geckoId: gecko.id, parentType: 'dam' }, generation + 1)}
                         </div>
                         {/* Connecting lines */}
                         <div className="flex items-center justify-center w-full">

@@ -874,9 +874,9 @@ function LayoutContent({ children, currentPageName }) {
           [role="listbox"],
           [data-radix-select-content],
           [data-radix-select-viewport] {
-            background: #1e293b !important;
-            background-color: #1e293b !important;
-            border: 1px solid #475569 !important;
+            background: rgba(6, 78, 59, 0.95) !important;
+            background-color: rgba(6, 78, 59, 0.95) !important;
+            border: 1px solid #059669 !important;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8) !important;
             z-index: 99999 !important;
           }
@@ -887,7 +887,7 @@ function LayoutContent({ children, currentPageName }) {
           .dark [data-radix-collection-item],
           [role="option"],
           [data-radix-collection-item] {
-            color: #e2e8f0 !important;
+            color: #d1fae5 !important;
             background: transparent !important;
           }
 
@@ -905,19 +905,26 @@ function LayoutContent({ children, currentPageName }) {
           [role="option"][data-state="checked"],
           [data-radix-collection-item]:hover,
           [data-radix-collection-item][data-highlighted] {
-            background: #10b981 !important;
-            background-color: #10b981 !important;
+            background: #047857 !important;
+            background-color: #047857 !important;
             color: white !important;
           }
 
-          /* Fix SelectTrigger visibility */
+          /* Fix SelectTrigger visibility - use consistent emerald theme */
           .dark [data-radix-select-trigger],
           .dark button[role="combobox"],
           [data-radix-select-trigger],
           button[role="combobox"] {
-            background: #1e293b !important;
-            border: 1px solid #475569 !important;
-            color: #e2e8f0 !important;
+            background: rgba(6, 78, 59, 0.8) !important;
+            border: 1px solid #059669 !important;
+            color: #d1fae5 !important;
+          }
+
+          .dark [data-radix-select-trigger]:hover,
+          .dark button[role="combobox"]:hover,
+          [data-radix-select-trigger]:hover,
+          button[role="combobox"]:hover {
+            background: rgba(4, 120, 87, 0.9) !important;
           }
 
           /* Fix all buttons to be visible */
