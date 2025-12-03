@@ -672,7 +672,7 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
                     </div>
                     <AlertDialog>
                         <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="sm" className="text-xs">
+                            <Button variant="destructive" size="sm" className="text-xs h-8">
                                 <Trash2 size={14} className="mr-1" /> Delete
                             </Button>
                         </AlertDialogTrigger>

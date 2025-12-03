@@ -44,8 +44,8 @@ export default function GalleryFilters({ filters, onFilterChange }) {
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-300 flex items-center"><ListFilter className="w-4 h-4 mr-2"/>Primary Morph</label>
                     <Select value={filters.primary_morph} onValueChange={value => handleFilterChange('primary_morph', value)}>
-                        <SelectTrigger className="bg-slate-700 border-slate-600 text-slate-200"><SelectValue /></SelectTrigger>
-                        <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
+                        <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100 hover:bg-slate-700 focus:ring-emerald-500"><SelectValue /></SelectTrigger>
+                        <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
                             <SelectItem value="all">All Morphs</SelectItem>
                             {options.morphs.map(morph => <SelectItem key={morph} value={morph}>{formatLabel(morph)}</SelectItem>)}
                         </SelectContent>
@@ -54,8 +54,8 @@ export default function GalleryFilters({ filters, onFilterChange }) {
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-300 flex items-center"><ListFilter className="w-4 h-4 mr-2"/>Base Color</label>
                     <Select value={filters.base_color} onValueChange={value => handleFilterChange('base_color', value)}>
-                        <SelectTrigger className="bg-slate-700 border-slate-600 text-slate-200"><SelectValue /></SelectTrigger>
-                        <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
+                        <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100 hover:bg-slate-700 focus:ring-emerald-500"><SelectValue /></SelectTrigger>
+                        <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
                             <SelectItem value="all">All Colors</SelectItem>
                             {options.colors.map(color => <SelectItem key={color} value={color}>{formatLabel(color)}</SelectItem>)}
                         </SelectContent>
@@ -64,8 +64,8 @@ export default function GalleryFilters({ filters, onFilterChange }) {
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-300 flex items-center"><SortAsc className="w-4 h-4 mr-2"/>Sort By</label>
                     <Select value={filters.sort} onValueChange={value => handleFilterChange('sort', value)}>
-                        <SelectTrigger className="bg-slate-700 border-slate-600 text-slate-200"><SelectValue /></SelectTrigger>
-                        <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
+                        <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100 hover:bg-slate-700 focus:ring-emerald-500"><SelectValue /></SelectTrigger>
+                        <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
                             <SelectItem value="-created_date">Newest</SelectItem>
                             <SelectItem value="created_date">Oldest</SelectItem>
                         </SelectContent>
@@ -74,7 +74,7 @@ export default function GalleryFilters({ filters, onFilterChange }) {
                 <div className="space-y-2">
                     <Popover>
                         <PopoverTrigger asChild>
-                            <Button variant="outline" className="w-full bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600">
+                            <Button variant="outline" className="w-full h-10 bg-slate-800 border-slate-600 text-slate-100 hover:bg-slate-700">
                                 <SlidersHorizontal className="w-4 h-4 mr-2"/>
                                 Secondary Traits
                                 {filters.secondary_traits.length > 0 && ` (${filters.secondary_traits.length})`}

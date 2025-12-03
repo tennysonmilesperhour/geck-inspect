@@ -351,6 +351,34 @@ export default function Lineage() {
             const key = `${gecko.geckoId}_${gecko.parentType}`;
             const placeholderData = placeholders[key];
             
+            // For placeholders, show their own unknown parents if we're not at max generation
+            if (generation < 3) {
+                return (
+                    <div className="flex flex-col items-center">
+                        {/* Placeholder's unknown parents */}
+                        <div className="flex gap-2 md:gap-4">
+                            <UnknownCardNode size="tiny" />
+                            <UnknownCardNode size="tiny" />
+                        </div>
+                        {/* Connecting lines */}
+                        <div className="flex items-center justify-center w-full">
+                            <div className="h-4 w-px bg-slate-600"></div>
+                        </div>
+                        <div className="flex items-center justify-center">
+                            <div className="w-1/4 h-px bg-slate-600"></div>
+                            <div className="h-4 w-px bg-slate-600"></div>
+                            <div className="w-1/4 h-px bg-slate-600"></div>
+                        </div>
+                        <PlaceholderCardNode 
+                            parentName={gecko.name}
+                            placeholderData={placeholderData}
+                            onEdit={() => handleEditPlaceholder(gecko, gecko.parentType)}
+                            size={cardSize}
+                        />
+                    </div>
+                );
+            }
+            
             return (
                 <PlaceholderCardNode 
                     parentName={gecko.name}

@@ -217,8 +217,8 @@ export default function ReptileCard({ reptile, onView, onEdit, onFeedingComplete
                 </div>
 
             <CardContent className="p-3 space-y-2">
-                <div className="flex items-center justify-between">
-                    <h3 className="font-bold text-base sm:text-lg text-slate-100 truncate">
+                <div className="flex items-center justify-between gap-2 min-h-[28px]">
+                    <h3 className="font-bold text-base sm:text-lg text-slate-100 truncate flex-1">
                         {reptile.name}
                     </h3>
                     <EventTracker 
