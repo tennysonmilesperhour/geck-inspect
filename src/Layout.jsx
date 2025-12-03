@@ -1122,8 +1122,10 @@ function LayoutContent({ children, currentPageName }) {
           }
 
           .sidebar-nav-item:hover {
-            background: var(--gecko-hover);
+            background: rgba(16, 185, 129, 0.15);
             transform: translateX(4px);
+            color: var(--gecko-primary);
+            box-shadow: 0 0 15px rgba(134, 239, 172, 0.15);
           }
 
           .gecko-progress {

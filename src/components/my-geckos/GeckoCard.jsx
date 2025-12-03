@@ -93,16 +93,14 @@ export default function GeckoCard({ gecko, weightRecords = [], onView, onEdit })
 
       <CardContent className="p-3 space-y-2">
         <div className="flex items-center justify-between gap-2">
-          <h3 className="font-bold text-base sm:text-lg text-slate-100 truncate flex-1">
+          <h3 className="font-bold text-base sm:text-lg text-slate-100 truncate flex-1 leading-8">
             {gecko.name}
           </h3>
-          <div className="flex-shrink-0">
-            <EventTracker 
-              entityId={gecko.id} 
-              entityType="gecko" 
-              EventEntity={GeckoEvent}
-            />
-          </div>
+          <EventTracker 
+            entityId={gecko.id} 
+            entityType="gecko" 
+            EventEntity={GeckoEvent}
+          />
         </div>
         {gecko.gecko_id_code && (
           <p className="text-xs text-slate-400 font-medium truncate">
