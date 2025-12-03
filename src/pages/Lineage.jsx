@@ -221,7 +221,7 @@ export default function Lineage() {
         fetchAllData();
     }, [fetchAllData]);
 
-    // Build lineage tree recursively
+    // Build lineage tree recursively - always create both sire and dam for each generation
     const getLineageFor = useCallback(async (geckoId, maxGen, currentGen = 1) => {
         if (currentGen > maxGen || !geckoId) {
             return null;
@@ -232,26 +232,30 @@ export default function Lineage() {
         let sire = null;
         let dam = null;
         
-        // Get parents if we're not at the last generation
+        // Always create both parents if we're not at the last generation
         if (currentGen < maxGen) {
-            if (gecko.sire_id) {
+            // Handle sire
+            if (gecko.sire_id && allGeckosMap[gecko.sire_id]) {
                 sire = await getLineageFor(gecko.sire_id, maxGen, currentGen + 1);
             }
+            // If no real sire found, create placeholder
             if (!sire) {
                 sire = { 
-                    name: gecko.sire_name || 'Unknown', 
+                    name: gecko.sire_name || 'Unknown Sire', 
                     isPlaceholder: true, 
                     geckoId: gecko.id,
                     parentType: 'sire'
                 };
             }
             
-            if (gecko.dam_id) {
+            // Handle dam
+            if (gecko.dam_id && allGeckosMap[gecko.dam_id]) {
                 dam = await getLineageFor(gecko.dam_id, maxGen, currentGen + 1);
             }
+            // If no real dam found, create placeholder
             if (!dam) {
                 dam = { 
-                    name: gecko.dam_name || 'Unknown', 
+                    name: gecko.dam_name || 'Unknown Dam', 
                     isPlaceholder: true, 
                     geckoId: gecko.id,
                     parentType: 'dam'
@@ -431,8 +435,6 @@ export default function Lineage() {
         g.gecko_id_code?.toLowerCase().includes(searchTerm.toLowerCase())
     );
 
-    const hasMatesOrOffspring = mates.length > 0 || offspring.length > 0;
-
     return (
         <div className="flex flex-col h-screen bg-slate-950 text-slate-200 overflow-hidden">
             <header className="p-3 md:p-4 border-b border-slate-700 flex-shrink-0 z-20 bg-slate-950/80 backdrop-blur-sm">
@@ -510,54 +512,53 @@ export default function Lineage() {
                             <Loader2 className="w-12 h-12 text-emerald-500 animate-spin" />
                         </div>
                     ) : selectedGeckoId && lineage?.id ? (
-                        <div className="flex flex-col gap-8">
-                            {/* Main content area */}
-                            <div className="flex flex-col md:flex-row gap-8 items-start">
-                                {/* Mates/Offspring sidebar - horizontal row aligned */}
-                                {hasMatesOrOffspring && (
-                                    <div className="md:w-36 flex-shrink-0 flex flex-row md:flex-col gap-4">
-                                        {mates.length > 0 && (
-                                            <div className="bg-emerald-950/50 rounded-lg p-3 border border-emerald-800 flex-1">
-                                                <h2 className="text-sm font-bold mb-3 flex items-center justify-center gap-1 text-pink-400">
-                                                    <Heart className="w-4 h-4" /> Mates
-                                                </h2>
-                                                <div className="flex md:flex-col items-center justify-center gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
-                                                    {mates.map(mate => (
-                                                        <GeckoCardNode 
-                                                            key={mate.id} 
-                                                            gecko={mate} 
-                                                            onNodeClick={handleSelectGecko} 
-                                                            size="small"
-                                                        />
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
-                                        {offspring.length > 0 && (
-                                            <div className="bg-emerald-950/50 rounded-lg p-3 border border-emerald-800 flex-1">
-                                                <h2 className="text-sm font-bold mb-3 flex items-center justify-center gap-1 text-blue-400">
-                                                    <Users2 className="w-4 h-4" /> Offspring
-                                                </h2>
-                                                <div className="flex md:flex-col items-center justify-center gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
-                                                    {offspring.map(child => (
-                                                        <GeckoCardNode 
-                                                            key={child.id} 
-                                                            gecko={child} 
-                                                            onNodeClick={handleSelectGecko} 
-                                                            size="small"
-                                                        />
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        )}
+                        <div className="flex flex-col md:flex-row gap-8">
+                            {/* Mates Column (Left) */}
+                            <div className="md:w-36 flex-shrink-0 order-2 md:order-1">
+                                {mates.length > 0 && (
+                                    <div className="bg-emerald-950/50 rounded-lg p-3 border border-emerald-800">
+                                        <h2 className="text-sm font-bold mb-3 flex items-center justify-center gap-1 text-pink-400">
+                                            <Heart className="w-4 h-4" /> Mates
+                                        </h2>
+                                        <div className="flex md:flex-col items-center justify-center gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
+                                            {mates.map(mate => (
+                                                <GeckoCardNode 
+                                                    key={mate.id} 
+                                                    gecko={mate} 
+                                                    onNodeClick={handleSelectGecko} 
+                                                    size="small"
+                                                />
+                                            ))}
+                                        </div>
                                     </div>
                                 )}
+                            </div>
 
-                                {/* Main Lineage Tree */}
-                                <div className="flex-1 flex flex-col items-center">
-                                    <h2 className="text-lg font-bold mb-4 text-emerald-400">Ancestry</h2>
-                                    {renderTree(lineage, 1)}
-                                </div>
+                            {/* Main Lineage Tree (Center) */}
+                            <div className="flex-1 flex flex-col items-center order-1 md:order-2">
+                                <h2 className="text-lg font-bold mb-4 text-emerald-400">Ancestry</h2>
+                                {renderTree(lineage, 1)}
+                            </div>
+
+                            {/* Offspring Column (Right) */}
+                            <div className="md:w-36 flex-shrink-0 order-3">
+                                {offspring.length > 0 && (
+                                    <div className="bg-emerald-950/50 rounded-lg p-3 border border-emerald-800">
+                                        <h2 className="text-sm font-bold mb-3 flex items-center justify-center gap-1 text-blue-400">
+                                            <Users2 className="w-4 h-4" /> Offspring
+                                        </h2>
+                                        <div className="flex md:flex-col items-center justify-center gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
+                                            {offspring.map(child => (
+                                                <GeckoCardNode 
+                                                    key={child.id} 
+                                                    gecko={child} 
+                                                    onNodeClick={handleSelectGecko} 
+                                                    size="small"
+                                                />
+                                            ))}
+                                        </div>
+                                    </div>
+                                )}
                             </div>
                         </div>
                     ) : (

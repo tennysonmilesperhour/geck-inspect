@@ -918,6 +918,10 @@ function LayoutContent({ children, currentPageName }) {
             background: rgba(6, 78, 59, 0.8) !important;
             border: 1px solid #059669 !important;
             color: #d1fae5 !important;
+            display: inline-flex !important;
+            align-items: center !important;
+            justify-content: space-between !important;
+            vertical-align: middle !important;
           }
 
           .dark [data-radix-select-trigger]:hover,
@@ -925,6 +929,13 @@ function LayoutContent({ children, currentPageName }) {
           [data-radix-select-trigger]:hover,
           button[role="combobox"]:hover {
             background: rgba(4, 120, 87, 0.9) !important;
+          }
+
+          /* Force consistent alignment for all form controls */
+          .dark input,
+          .dark [data-radix-select-trigger],
+          .dark button[role="combobox"] {
+            vertical-align: middle !important;
           }
 
           /* Fix all buttons to be visible */
