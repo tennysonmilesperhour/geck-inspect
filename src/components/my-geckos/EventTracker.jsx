@@ -93,7 +93,7 @@ export default function EventTracker({ entityId, entityType = 'gecko', onEventAd
                     <Button 
                         size="sm" 
                         variant="outline" 
-                        className="border-emerald-600 text-emerald-400 hover:bg-emerald-900/20 h-8 bg-slate-800"
+                        className="border-emerald-600 text-emerald-400 hover:bg-emerald-900/30 h-7 bg-slate-800/80 px-2"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <Plus className="w-3 h-3 mr-1" />

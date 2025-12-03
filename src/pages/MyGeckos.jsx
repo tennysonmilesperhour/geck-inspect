@@ -442,7 +442,7 @@ export default function MyGeckosPage() {
                             placeholder="Search by name, ID, or morph..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 bg-slate-900 border-slate-700 text-white"
+                            className="pl-10 h-10 bg-slate-800 border-slate-600 text-slate-100"
                         />
                     </div>
 
@@ -458,18 +458,18 @@ export default function MyGeckosPage() {
                             <ArrowUpDown className="w-4 h-4 text-slate-400" />
                             <span className="text-sm text-slate-400">Sort by:</span>
                             <Select value={sortBy} onValueChange={setSortBy}>
-                                <SelectTrigger className="w-48 bg-slate-900 border-slate-700 text-slate-100 hover:bg-slate-800 focus:ring-emerald-500 focus:ring-1">
+                                <SelectTrigger className="w-48 h-10 bg-slate-800 border-slate-600 text-slate-100 hover:bg-slate-700 focus:ring-emerald-500 focus:ring-1">
                                     <SelectValue placeholder="Sort by" />
                                 </SelectTrigger>
-                                <SelectContent className="bg-slate-900 border-slate-700 text-slate-100">
-                                    <SelectItem value="date_added">Date Added (Newest)</SelectItem>
-                                    <SelectItem value="name">Name (A-Z)</SelectItem>
-                                    <SelectItem value="hatch_date_newest">Hatch Date (Newest)</SelectItem>
-                                    <SelectItem value="hatch_date_oldest">Hatch Date (Oldest)</SelectItem>
-                                    <SelectItem value="sex">Sex</SelectItem>
-                                    <SelectItem value="status">Status</SelectItem>
-                                    <SelectItem value="weight_heaviest">Weight (Heaviest)</SelectItem>
-                                    <SelectItem value="weight_lightest">Weight (Lightest)</SelectItem>
+                                <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
+                                    <SelectItem value="date_added" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Date Added (Newest)</SelectItem>
+                                    <SelectItem value="name" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Name (A-Z)</SelectItem>
+                                    <SelectItem value="hatch_date_newest" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Hatch Date (Newest)</SelectItem>
+                                    <SelectItem value="hatch_date_oldest" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Hatch Date (Oldest)</SelectItem>
+                                    <SelectItem value="sex" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Sex</SelectItem>
+                                    <SelectItem value="status" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Status</SelectItem>
+                                    <SelectItem value="weight_heaviest" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Weight (Heaviest)</SelectItem>
+                                    <SelectItem value="weight_lightest" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Weight (Lightest)</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
