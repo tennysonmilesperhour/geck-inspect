@@ -263,10 +263,10 @@ export default function ReptileCard({ reptile, onView, onEdit, onFeedingComplete
                     <div>
                         <Label className="text-slate-300">Prey Type</Label>
                         <Select value={preyType} onValueChange={setPreyType}>
-                            <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-100">
+                            <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100 hover:bg-slate-700 focus:ring-emerald-500">
                                 <SelectValue placeholder="Select prey type (optional)" />
                             </SelectTrigger>
-                            <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-50">
+                            <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
                                 <SelectItem value="mouse_pinky">Mouse - Pinky</SelectItem>
                                 <SelectItem value="mouse_fuzzy">Mouse - Fuzzy</SelectItem>
                                 <SelectItem value="mouse_hopper">Mouse - Hopper</SelectItem>

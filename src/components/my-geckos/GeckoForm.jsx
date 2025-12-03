@@ -470,7 +470,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                     onChange={(e) => setHatchYear(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
                                 />
                                 <Select value={hatchMonth} onValueChange={setHatchMonth}>
-                                    <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-100">
+                                    <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100 hover:bg-slate-700 focus:ring-emerald-500">
                                         <SelectValue placeholder="Month" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
@@ -491,7 +491,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         <div>
                             <Label htmlFor="sex">Sex *</Label>
                             <Select value={formData.sex} onValueChange={(v) => handleChange('sex', v)}>
-                                <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-100"><SelectValue /></SelectTrigger>
+                                <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100 hover:bg-slate-700 focus:ring-emerald-500"><SelectValue /></SelectTrigger>
                                 <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
                                     <SelectItem value="Unsexed" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Unsexed</SelectItem>
                                     <SelectItem value="Male" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Male</SelectItem>
@@ -554,7 +554,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         <div>
                             <Label htmlFor="status">Status</Label>
                             <Select value={formData.status} onValueChange={(v) => handleChange('status', v)} disabled={isForSale}>
-                                <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-100"><SelectValue /></SelectTrigger>
+                                <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100 hover:bg-slate-700 focus:ring-emerald-500"><SelectValue /></SelectTrigger>
                                 <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
                                     <SelectItem value="Pet" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Pet</SelectItem>
                                     <SelectItem value="Future Breeder" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Future Breeder</SelectItem>
