@@ -44,44 +44,44 @@ export default function GalleryFilters({ filters, onFilterChange }) {
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-300 flex items-center"><ListFilter className="w-4 h-4 mr-2"/>Primary Morph</label>
                     <Select value={filters.primary_morph} onValueChange={value => handleFilterChange('primary_morph', value)}>
-                        <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100 hover:bg-slate-700 focus:ring-emerald-500"><SelectValue /></SelectTrigger>
-                        <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
-                            <SelectItem value="all">All Morphs</SelectItem>
-                            {options.morphs.map(morph => <SelectItem key={morph} value={morph}>{formatLabel(morph)}</SelectItem>)}
+                        <SelectTrigger className="h-10 bg-emerald-950 border-emerald-700 text-emerald-100 hover:bg-emerald-900 focus:ring-emerald-500"><SelectValue /></SelectTrigger>
+                        <SelectContent className="bg-emerald-950 border-emerald-700 text-emerald-100 z-[99999]">
+                            <SelectItem value="all" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">All Morphs</SelectItem>
+                            {options.morphs.map(morph => <SelectItem key={morph} value={morph} className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">{formatLabel(morph)}</SelectItem>)}
                         </SelectContent>
                     </Select>
                 </div>
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-300 flex items-center"><ListFilter className="w-4 h-4 mr-2"/>Base Color</label>
                     <Select value={filters.base_color} onValueChange={value => handleFilterChange('base_color', value)}>
-                        <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100 hover:bg-slate-700 focus:ring-emerald-500"><SelectValue /></SelectTrigger>
-                        <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
-                            <SelectItem value="all">All Colors</SelectItem>
-                            {options.colors.map(color => <SelectItem key={color} value={color}>{formatLabel(color)}</SelectItem>)}
+                        <SelectTrigger className="h-10 bg-emerald-950 border-emerald-700 text-emerald-100 hover:bg-emerald-900 focus:ring-emerald-500"><SelectValue /></SelectTrigger>
+                        <SelectContent className="bg-emerald-950 border-emerald-700 text-emerald-100 z-[99999]">
+                            <SelectItem value="all" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">All Colors</SelectItem>
+                            {options.colors.map(color => <SelectItem key={color} value={color} className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">{formatLabel(color)}</SelectItem>)}
                         </SelectContent>
                     </Select>
                 </div>
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-300 flex items-center"><SortAsc className="w-4 h-4 mr-2"/>Sort By</label>
                     <Select value={filters.sort} onValueChange={value => handleFilterChange('sort', value)}>
-                        <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100 hover:bg-slate-700 focus:ring-emerald-500"><SelectValue /></SelectTrigger>
-                        <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
-                            <SelectItem value="-created_date">Newest</SelectItem>
-                            <SelectItem value="created_date">Oldest</SelectItem>
+                        <SelectTrigger className="h-10 bg-emerald-950 border-emerald-700 text-emerald-100 hover:bg-emerald-900 focus:ring-emerald-500"><SelectValue /></SelectTrigger>
+                        <SelectContent className="bg-emerald-950 border-emerald-700 text-emerald-100 z-[99999]">
+                            <SelectItem value="-created_date" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Newest</SelectItem>
+                            <SelectItem value="created_date" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Oldest</SelectItem>
                         </SelectContent>
                     </Select>
                 </div>
                 <div className="space-y-2">
                     <Popover>
                         <PopoverTrigger asChild>
-                            <Button variant="outline" className="w-full h-10 bg-slate-800 border-slate-600 text-slate-100 hover:bg-slate-700">
+                            <Button variant="outline" className="w-full h-10 bg-emerald-950 border-emerald-700 text-emerald-100 hover:bg-emerald-900">
                                 <SlidersHorizontal className="w-4 h-4 mr-2"/>
                                 Secondary Traits
                                 {filters.secondary_traits.length > 0 && ` (${filters.secondary_traits.length})`}
                                 <ChevronDown className="w-4 h-4 ml-auto" />
                             </Button>
                         </PopoverTrigger>
-                        <PopoverContent className="w-64 p-0 bg-slate-800 border-slate-600 text-slate-200">
+                        <PopoverContent className="w-64 p-0 bg-emerald-950 border-emerald-700 text-emerald-100">
                             <div className="p-4 max-h-64 overflow-y-auto space-y-2">
                                 {options.traits.map(trait => (
                                     <div key={trait} className="flex items-center space-x-2">

@@ -1122,10 +1122,10 @@ function LayoutContent({ children, currentPageName }) {
           }
 
           .sidebar-nav-item:hover {
-            background: rgba(16, 185, 129, 0.25);
+            background: rgba(16, 185, 129, 0.35) !important;
             transform: translateX(4px);
-            color: var(--gecko-primary);
-            box-shadow: 0 0 20px rgba(134, 239, 172, 0.3), inset 0 0 10px rgba(134, 239, 172, 0.1);
+            color: var(--gecko-primary) !important;
+            box-shadow: 0 0 25px rgba(134, 239, 172, 0.4), inset 0 0 15px rgba(134, 239, 172, 0.15) !important;
           }
 
           .gecko-progress {

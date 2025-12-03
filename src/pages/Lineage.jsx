@@ -140,6 +140,7 @@ export default function Lineage() {
     
     const [searchTerm, setSearchTerm] = useState('');
     const [scale, setScale] = useState(1);
+    const [generations, setGenerations] = useState(3);
     const mainContentRef = useRef(null);
     
     // Touch/pinch zoom state
@@ -220,8 +221,8 @@ export default function Lineage() {
         fetchAllData();
     }, [fetchAllData]);
 
-    const getLineageFor = useCallback(async (geckoId, generations = 3, currentGen = 1) => {
-        if (currentGen > generations || !geckoId) {
+    const getLineageFor = useCallback(async (geckoId, maxGenerations = 3, currentGen = 1) => {
+        if (currentGen > maxGenerations || !geckoId) {
             return null;
         }
         const gecko = allGeckosMap[geckoId];
@@ -230,9 +231,9 @@ export default function Lineage() {
         let sire = null;
         let dam = null;
         
-        if (currentGen < generations) {
+        if (currentGen < maxGenerations) {
             if (gecko.sire_id) {
-                sire = await getLineageFor(gecko.sire_id, generations, currentGen + 1);
+                sire = await getLineageFor(gecko.sire_id, maxGenerations, currentGen + 1);
             } else {
                 sire = { 
                     name: gecko.sire_name || 'Unknown', 
@@ -243,7 +244,7 @@ export default function Lineage() {
             }
             
             if (gecko.dam_id) {
-                dam = await getLineageFor(gecko.dam_id, generations, currentGen + 1);
+                dam = await getLineageFor(gecko.dam_id, maxGenerations, currentGen + 1);
             } else {
                 dam = { 
                     name: gecko.dam_name || 'Unknown', 
@@ -268,7 +269,7 @@ export default function Lineage() {
         setIsLoadingLineage(true);
         setSelectedGeckoId(geckoId);
         
-        const lineageData = await getLineageFor(geckoId, 3);
+        const lineageData = await getLineageFor(geckoId, generations);
         setLineage(lineageData || {});
 
         const foundOffspring = Object.values(allGeckosMap).filter(g => g.sire_id === geckoId || g.dam_id === geckoId);
@@ -283,7 +284,7 @@ export default function Lineage() {
         setMates(foundMates);
         
         setIsLoadingLineage(false);
-    }, [getLineageFor, allGeckosMap, allBreedingPlans]);
+    }, [getLineageFor, allGeckosMap, allBreedingPlans, generations]);
 
     useEffect(() => {
         const params = new URLSearchParams(location.search);
@@ -352,7 +353,7 @@ export default function Lineage() {
             const placeholderData = placeholders[key];
             
             // For placeholders, show their own unknown parents if we're not at max generation
-            if (generation < 3) {
+            if (generation < generations) {
                 return (
                     <div className="flex flex-col items-center">
                         {/* Placeholder's unknown parents */}
@@ -362,12 +363,12 @@ export default function Lineage() {
                         </div>
                         {/* Connecting lines */}
                         <div className="flex items-center justify-center w-full">
-                            <div className="h-4 w-px bg-slate-600"></div>
+                            <div className="h-4 w-px bg-emerald-700"></div>
                         </div>
                         <div className="flex items-center justify-center">
-                            <div className="w-1/4 h-px bg-slate-600"></div>
-                            <div className="h-4 w-px bg-slate-600"></div>
-                            <div className="w-1/4 h-px bg-slate-600"></div>
+                            <div className="w-1/4 h-px bg-emerald-700"></div>
+                            <div className="h-4 w-px bg-emerald-700"></div>
+                            <div className="w-1/4 h-px bg-emerald-700"></div>
                         </div>
                         <PlaceholderCardNode 
                             parentName={gecko.name}
@@ -402,12 +403,12 @@ export default function Lineage() {
                         </div>
                         {/* Connecting lines */}
                         <div className="flex items-center justify-center w-full">
-                            <div className="h-4 w-px bg-slate-600"></div>
+                            <div className="h-4 w-px bg-emerald-700"></div>
                         </div>
                         <div className="flex items-center justify-center">
-                            <div className="w-1/4 h-px bg-slate-600"></div>
-                            <div className="h-4 w-px bg-slate-600"></div>
-                            <div className="w-1/4 h-px bg-slate-600"></div>
+                            <div className="w-1/4 h-px bg-emerald-700"></div>
+                            <div className="h-4 w-px bg-emerald-700"></div>
+                            <div className="w-1/4 h-px bg-emerald-700"></div>
                         </div>
                     </>
                 )}
@@ -438,29 +439,40 @@ export default function Lineage() {
                     </div>
                     <div className="flex items-center gap-2 w-full md:w-auto">
                         <div className="relative flex-grow md:flex-grow-0">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400" />
                             <Input
                                 type="text" 
                                 placeholder="Search..." 
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-9 bg-slate-800 border-slate-600 w-full md:w-48 text-slate-100 h-10"
+                                className="pl-9 bg-emerald-950 border-emerald-700 w-full md:w-48 text-emerald-100 h-10 focus:border-emerald-500 focus:ring-emerald-500"
                             />
                         </div>
                         <Select onValueChange={handleSelectGecko} value={selectedGeckoId || ''}>
-                            <SelectTrigger className="w-full md:w-[200px] bg-slate-800 border-slate-600 text-slate-100 h-10">
+                            <SelectTrigger className="w-full md:w-[200px] bg-emerald-950 border-emerald-700 text-emerald-100 h-10 hover:bg-emerald-900 focus:ring-emerald-500">
                                 <SelectValue placeholder="Select gecko" />
                             </SelectTrigger>
-                            <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
+                            <SelectContent className="bg-emerald-950 border-emerald-700 text-emerald-100 z-[99999]">
                                 {isLoading ? (
-                                    <div className="flex items-center justify-center p-2"><Loader2 className="animate-spin w-4 h-4 mr-2" /> Loading...</div>
+                                    <div className="flex items-center justify-center p-2 text-emerald-300"><Loader2 className="animate-spin w-4 h-4 mr-2" /> Loading...</div>
                                 ) : (
                                     filteredSelectableGeckos.map(gecko => (
-                                        <SelectItem key={gecko.id} value={gecko.id} className="text-slate-100 focus:bg-emerald-600 focus:text-white">
+                                        <SelectItem key={gecko.id} value={gecko.id} className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">
                                             {gecko.name} ({gecko.gecko_id_code || 'No ID'})
                                         </SelectItem>
                                     ))
                                 )}
+                            </SelectContent>
+                        </Select>
+                        <Select value={generations.toString()} onValueChange={(v) => setGenerations(parseInt(v))}>
+                            <SelectTrigger className="w-24 bg-emerald-950 border-emerald-700 text-emerald-100 h-10 hover:bg-emerald-900 focus:ring-emerald-500">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-emerald-950 border-emerald-700 text-emerald-100 z-[99999]">
+                                <SelectItem value="2" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">2 Gen</SelectItem>
+                                <SelectItem value="3" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">3 Gen</SelectItem>
+                                <SelectItem value="4" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">4 Gen</SelectItem>
+                                <SelectItem value="5" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">5 Gen</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -498,11 +510,11 @@ export default function Lineage() {
                             {/* Mates Column (Left on desktop, top on mobile) */}
                             <div className="md:w-32 flex-shrink-0 order-2 md:order-1">
                                 {mates.length > 0 && (
-                                    <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-700">
-                                        <h2 className="text-sm font-bold mb-3 flex items-center gap-1 text-pink-400">
+                                    <div className="bg-emerald-950/50 rounded-lg p-3 border border-emerald-800">
+                                        <h2 className="text-sm font-bold mb-3 flex items-center justify-center gap-1 text-pink-400">
                                             <Heart className="w-4 h-4" /> Mates
                                         </h2>
-                                        <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
+                                        <div className="flex md:flex-col items-center gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
                                             {mates.map(mate => (
                                                 <GeckoCardNode 
                                                     key={mate.id} 
@@ -525,11 +537,11 @@ export default function Lineage() {
                             {/* Offspring Column (Right on desktop, bottom on mobile) */}
                             <div className="md:w-32 flex-shrink-0 order-3">
                                 {offspring.length > 0 && (
-                                    <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-700">
-                                        <h2 className="text-sm font-bold mb-3 flex items-center gap-1 text-blue-400">
+                                    <div className="bg-emerald-950/50 rounded-lg p-3 border border-emerald-800">
+                                        <h2 className="text-sm font-bold mb-3 flex items-center justify-center gap-1 text-blue-400">
                                             <Users2 className="w-4 h-4" /> Offspring
                                         </h2>
-                                        <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
+                                        <div className="flex md:flex-col items-center gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
                                             {offspring.map(child => (
                                                 <GeckoCardNode 
                                                     key={child.id} 

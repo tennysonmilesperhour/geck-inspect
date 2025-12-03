@@ -653,44 +653,44 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
                     </>
                 )}
 
-                <CardFooter className="bg-slate-800/50 p-3 flex flex-wrap gap-2 justify-between">
-                    <div className="flex gap-2 flex-wrap">
-                        <Button variant="outline" size="sm" className="border-slate-600 hover:bg-slate-800 text-xs" onClick={() => onToggleExpanded(plan.id)}>
+                <CardFooter className="bg-emerald-950/50 p-3 flex flex-wrap gap-2 justify-between items-center">
+                    <div className="flex gap-2 flex-wrap items-center">
+                        <Button variant="outline" size="sm" className="border-emerald-700 hover:bg-emerald-900 text-xs h-8 text-emerald-300" onClick={() => onToggleExpanded(plan.id)}>
                             {isExpanded ? <><ChevronUp size={14} className="mr-1" /> Collapse</> : <><ChevronDown size={14} className="mr-1" /> Expand</>}
                         </Button>
                         {showArchiveButton && (
                             <Button
                                 variant="outline"
                                 size="sm"
-                                className="border-yellow-600 text-yellow-600 hover:bg-yellow-900/20 text-xs"
+                                className="border-yellow-600 text-yellow-500 hover:bg-yellow-900/20 text-xs h-8"
                                 onClick={() => onPlanArchive(plan.id, !plan.archived)}
                             >
                                 {plan.archived ? <ArchiveRestore size={14} className="mr-1" /> : <Archive size={14} className="mr-1" />}
                                 {plan.archived ? 'Unarchive' : 'Archive'}
                             </Button>
                         )}
+                        <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm" className="text-xs h-8">
+                                    <Trash2 size={14} className="mr-1" /> Delete
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="bg-emerald-950 border-emerald-700">
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle className="text-emerald-100">Are you sure?</AlertDialogTitle>
+                                    <AlertDialogDescription className="text-emerald-300">
+                                        This will permanently delete this breeding plan and all associated eggs. This action cannot be undone.
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel className="bg-emerald-900 text-emerald-200 border-emerald-700">Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={() => onPlanDelete(plan.id)} className="bg-red-600 hover:bg-red-700">
+                                        Delete
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
                     </div>
-                    <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                            <Button variant="destructive" size="sm" className="text-xs h-8">
-                                <Trash2 size={14} className="mr-1" /> Delete
-                            </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="bg-slate-900 border-slate-700">
-                            <AlertDialogHeader>
-                                <AlertDialogTitle className="text-slate-100">Are you sure?</AlertDialogTitle>
-                                <AlertDialogDescription className="text-slate-400">
-                                    This will permanently delete this breeding plan and all associated eggs. This action cannot be undone.
-                                </AlertDialogDescription>
-                            </AlertDialogHeader>
-                            <AlertDialogFooter>
-                                <AlertDialogCancel className="bg-slate-800 text-slate-300 border-slate-600">Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={() => onPlanDelete(plan.id)} className="bg-red-600 hover:bg-red-700">
-                                    Delete
-                                </AlertDialogAction>
-                            </AlertDialogFooter>
-                        </AlertDialogContent>
-                    </AlertDialog>
                 </CardFooter>
             </Card>
 

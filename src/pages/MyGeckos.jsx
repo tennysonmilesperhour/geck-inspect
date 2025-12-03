@@ -455,21 +455,21 @@ export default function MyGeckosPage() {
                     {/* View Controls */}
                     <div className="flex flex-wrap items-center gap-4 justify-between">
                         <div className="flex items-center gap-2">
-                            <ArrowUpDown className="w-4 h-4 text-slate-400" />
-                            <span className="text-sm text-slate-400">Sort by:</span>
+                            <ArrowUpDown className="w-4 h-4 text-emerald-400" />
+                            <span className="text-sm text-emerald-400 leading-10">Sort by:</span>
                             <Select value={sortBy} onValueChange={setSortBy}>
-                                <SelectTrigger className="w-48 h-10 bg-slate-800 border-slate-600 text-slate-100 hover:bg-slate-700 focus:ring-emerald-500 focus:ring-1">
+                                <SelectTrigger className="w-48 h-10 bg-emerald-950 border-emerald-700 text-emerald-100 hover:bg-emerald-900 focus:ring-emerald-500 focus:ring-1">
                                     <SelectValue placeholder="Sort by" />
                                 </SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
-                                    <SelectItem value="date_added" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Date Added (Newest)</SelectItem>
-                                    <SelectItem value="name" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Name (A-Z)</SelectItem>
-                                    <SelectItem value="hatch_date_newest" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Hatch Date (Newest)</SelectItem>
-                                    <SelectItem value="hatch_date_oldest" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Hatch Date (Oldest)</SelectItem>
-                                    <SelectItem value="sex" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Sex</SelectItem>
-                                    <SelectItem value="status" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Status</SelectItem>
-                                    <SelectItem value="weight_heaviest" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Weight (Heaviest)</SelectItem>
-                                    <SelectItem value="weight_lightest" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Weight (Lightest)</SelectItem>
+                                <SelectContent className="bg-emerald-950 border-emerald-700 text-emerald-100 z-[99999]">
+                                    <SelectItem value="date_added" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Date Added (Newest)</SelectItem>
+                                    <SelectItem value="name" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Name (A-Z)</SelectItem>
+                                    <SelectItem value="hatch_date_newest" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Hatch Date (Newest)</SelectItem>
+                                    <SelectItem value="hatch_date_oldest" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Hatch Date (Oldest)</SelectItem>
+                                    <SelectItem value="sex" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Sex</SelectItem>
+                                    <SelectItem value="status" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Status</SelectItem>
+                                    <SelectItem value="weight_heaviest" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Weight (Heaviest)</SelectItem>
+                                    <SelectItem value="weight_lightest" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Weight (Lightest)</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>

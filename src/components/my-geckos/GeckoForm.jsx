@@ -470,13 +470,13 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                     onChange={(e) => setHatchYear(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
                                 />
                                 <Select value={hatchMonth} onValueChange={setHatchMonth}>
-                                    <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100 hover:bg-slate-700 focus:ring-emerald-500">
+                                    <SelectTrigger className="h-10 bg-emerald-950 border-emerald-700 text-emerald-100 hover:bg-emerald-900 focus:ring-emerald-500">
                                         <SelectValue placeholder="Month" />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
-                                        <SelectItem value="none" className="text-slate-100 focus:bg-emerald-600 focus:text-white">None</SelectItem>
+                                    <SelectContent className="bg-emerald-950 border-emerald-700 text-emerald-100 z-[99999]">
+                                        <SelectItem value="none" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">None</SelectItem>
                                         {MONTHS.map(m => (
-                                            <SelectItem key={m.value} value={m.value} className="text-slate-100 focus:bg-emerald-600 focus:text-white">{m.label}</SelectItem>
+                                            <SelectItem key={m.value} value={m.value} className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">{m.label}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
@@ -491,11 +491,11 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         <div>
                             <Label htmlFor="sex">Sex *</Label>
                             <Select value={formData.sex} onValueChange={(v) => handleChange('sex', v)}>
-                                <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100 hover:bg-slate-700 focus:ring-emerald-500"><SelectValue /></SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
-                                    <SelectItem value="Unsexed" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Unsexed</SelectItem>
-                                    <SelectItem value="Male" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Male</SelectItem>
-                                    <SelectItem value="Female" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Female</SelectItem>
+                                <SelectTrigger className="h-10 bg-emerald-950 border-emerald-700 text-emerald-100 hover:bg-emerald-900 focus:ring-emerald-500"><SelectValue /></SelectTrigger>
+                                <SelectContent className="bg-emerald-950 border-emerald-700 text-emerald-100 z-[99999]">
+                                    <SelectItem value="Unsexed" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Unsexed</SelectItem>
+                                    <SelectItem value="Male" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Male</SelectItem>
+                                    <SelectItem value="Female" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Female</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -554,15 +554,15 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         <div>
                             <Label htmlFor="status">Status</Label>
                             <Select value={formData.status} onValueChange={(v) => handleChange('status', v)} disabled={isForSale}>
-                                <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100 hover:bg-slate-700 focus:ring-emerald-500"><SelectValue /></SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
-                                    <SelectItem value="Pet" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Pet</SelectItem>
-                                    <SelectItem value="Future Breeder" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Future Breeder</SelectItem>
-                                    <SelectItem value="Holdback" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Holdback</SelectItem>
-                                    <SelectItem value="Ready to Breed" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Ready to Breed</SelectItem>
-                                    <SelectItem value="Proven" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Proven</SelectItem>
-                                    <SelectItem value="For Sale" className="text-slate-100 focus:bg-emerald-600 focus:text-white">For Sale</SelectItem>
-                                    <SelectItem value="Sold" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Sold</SelectItem>
+                                <SelectTrigger className="h-10 bg-emerald-950 border-emerald-700 text-emerald-100 hover:bg-emerald-900 focus:ring-emerald-500"><SelectValue /></SelectTrigger>
+                                <SelectContent className="bg-emerald-950 border-emerald-700 text-emerald-100 z-[99999]">
+                                    <SelectItem value="Pet" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Pet</SelectItem>
+                                    <SelectItem value="Future Breeder" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Future Breeder</SelectItem>
+                                    <SelectItem value="Holdback" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Holdback</SelectItem>
+                                    <SelectItem value="Ready to Breed" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Ready to Breed</SelectItem>
+                                    <SelectItem value="Proven" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Proven</SelectItem>
+                                    <SelectItem value="For Sale" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">For Sale</SelectItem>
+                                    <SelectItem value="Sold" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Sold</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -680,40 +680,36 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     )}
                 </form>
 
-                <CardFooter className="flex-shrink-0 mt-auto bg-slate-900/80 backdrop-blur-sm border-t border-slate-800 p-4 flex justify-between items-center">
-                    <div>
-                        {gecko && onDelete && (
-                             <AlertDialog>
-                                <AlertDialogTrigger asChild>
-                                    <Button variant="destructive" size="sm">
-                                        <Trash2 className="w-4 h-4 mr-2" />
-                                        Delete
-                                    </Button>
-                                </AlertDialogTrigger>
-                                <AlertDialogContent>
-                                    <AlertDialogHeader>
-                                        <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
-                                        <AlertDialogDescription>
-                                            This action cannot be undone. This will permanently delete <strong>{gecko.name}</strong> and all associated records (weights, pairings, etc.).
-                                        </AlertDialogDescription>
-                                    </AlertDialogHeader>
-                                    <AlertDialogFooter>
-                                        <AlertDialogCancel>Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={handleDeleteConfirm}>
-                                            Yes, Delete Gecko
-                                        </AlertDialogAction>
-                                    </AlertDialogFooter>
-                                </AlertDialogContent>
-                            </AlertDialog>
-                        )}
-                    </div>
-                    <div className="flex gap-4">
-                        <Button variant="outline" onClick={onCancel}>Cancel</Button>
-                        <Button onClick={handleSave} disabled={isSaving} className="bg-emerald-600 hover:bg-emerald-700">
-                            {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                            {getSaveButtonText()}
-                        </Button>
-                    </div>
+                <CardFooter className="flex-shrink-0 mt-auto bg-emerald-950/80 backdrop-blur-sm border-t border-emerald-800 p-4 flex justify-end items-center gap-4">
+                    {gecko && onDelete && (
+                         <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                                <Button variant="destructive" size="sm" className="h-10">
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete
+                                </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="bg-emerald-950 border-emerald-700">
+                                <AlertDialogHeader>
+                                    <AlertDialogTitle className="text-emerald-100">Are you absolutely sure?</AlertDialogTitle>
+                                    <AlertDialogDescription className="text-emerald-300">
+                                        This action cannot be undone. This will permanently delete <strong>{gecko.name}</strong> and all associated records (weights, pairings, etc.).
+                                    </AlertDialogDescription>
+                                </AlertDialogHeader>
+                                <AlertDialogFooter>
+                                    <AlertDialogCancel className="bg-emerald-900 text-emerald-200 border-emerald-700">Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700">
+                                        Yes, Delete Gecko
+                                    </AlertDialogAction>
+                                </AlertDialogFooter>
+                            </AlertDialogContent>
+                        </AlertDialog>
+                    )}
+                    <Button variant="outline" onClick={onCancel} className="h-10 border-emerald-700 text-emerald-300 hover:bg-emerald-900">Cancel</Button>
+                    <Button onClick={handleSave} disabled={isSaving} className="bg-emerald-600 hover:bg-emerald-700 h-10">
+                        {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                        {getSaveButtonText()}
+                    </Button>
                 </CardFooter>
             </Card>
 
