@@ -12,14 +12,23 @@ import MessageUserButton from '../components/ui/MessageUserButton';
 
 // Marketplace-specific Gecko Card
 const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike }) => {
+    const getSexIcon = (sex) => sex === 'Male' ? '♂' : sex === 'Female' ? '♀' : '?';
+    const getSexColor = (sex) => sex === 'Male' ? 'text-blue-400' : sex === 'Female' ? 'text-pink-400' : 'text-gray-400';
+
     return (
-        <Card className="overflow-hidden group-hover:shadow-lg transition-shadow duration-300 h-full flex flex-col bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-sage-200 dark:border-sage-700">
+        <Card className="overflow-hidden group-hover:shadow-lg transition-shadow duration-300 h-full flex flex-col bg-slate-800/80 backdrop-blur-sm border-slate-700">
             <div className="aspect-square w-full overflow-hidden relative">
                 <img
                     src={gecko.image_urls?.[0] || `https://ui-avatars.com/api/?name=${gecko.name.charAt(0)}&background=random`}
                     alt={gecko.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                 />
+                {/* Sex icon in top left */}
+                <div className="absolute top-2 left-2">
+                    <span className={`${getSexColor(gecko.sex)} text-3xl font-bold drop-shadow-lg`}>
+                        {getSexIcon(gecko.sex)}
+                    </span>
+                </div>
                 {currentUser && (
                     <Button
                         size="icon"
@@ -35,15 +44,15 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                 )}
             </div>
             <CardContent className="p-4 flex-grow flex flex-col">
-                <h3 className="font-semibold text-lg truncate text-sage-900 dark:text-sage-100">{gecko.name}</h3>
-                <p className="text-sm text-green-600 font-bold flex items-center gap-1">
+                <h3 className="font-semibold text-lg truncate text-slate-100">{gecko.name}</h3>
+                <p className="text-sm text-green-500 font-bold flex items-center gap-1">
                     <DollarSign className="w-4 h-4" />
                     {gecko.asking_price ? `$${gecko.asking_price}` : 'Inquire for price'}
                 </p>
-                <p className="text-xs text-sage-500 dark:text-sage-400 mt-1 line-clamp-2">{gecko.morphs_traits}</p>
+                <p className="text-xs text-slate-400 mt-1 line-clamp-2">{gecko.morphs_traits}</p>
                 
                 <div className="mt-auto pt-4 space-y-3">
-                    <div className="flex items-center gap-2 text-sm text-sage-600 dark:text-sage-300">
+                    <div className="flex items-center gap-2 text-sm text-slate-300">
                         <Link 
                             to={createPageUrl(`PublicProfile?userId=${owner?.id}`)}
                             onClick={(e) => e.stopPropagation()}
@@ -58,7 +67,7 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                         </Link>
                     </div>
                     {owner?.location && (
-                        <div className="flex items-center gap-1 text-xs text-sage-500 dark:text-sage-400">
+                        <div className="flex items-center gap-1 text-xs text-slate-400">
                             <MapPin className="w-3 h-3" />
                             <span>{owner.location}</span>
                         </div>

@@ -71,36 +71,38 @@ export default function GeckoCard({ gecko, weightRecords = [], onView, onEdit })
           </span>
         </div>
 
-        <div className="absolute bottom-2 right-2 flex gap-1 sm:gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+        <div className="absolute bottom-2 right-2 flex gap-1 sm:gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300">
           <Button
             size="sm"
             onClick={handleViewClick}
-            className="bg-blue-600/90 hover:bg-blue-700 text-white font-semibold shadow-lg backdrop-blur-sm text-xs h-8 px-2 sm:px-4"
+            className="bg-blue-600/90 hover:bg-blue-700 text-white font-semibold shadow-lg backdrop-blur-sm text-xs h-8 w-8 sm:w-auto sm:px-3"
           >
-            <Eye className="w-4 h-4 sm:mr-2" />
-            <span className="hidden sm:inline">View</span>
+            <Eye className="w-4 h-4" />
+            <span className="hidden sm:inline sm:ml-1">View</span>
           </Button>
           <Button
             size="sm"
             onClick={handleEditClick}
-            className="bg-white/90 hover:bg-white text-gray-900 font-semibold shadow-lg backdrop-blur-sm text-xs h-8 px-2 sm:px-4"
+            className="bg-white/90 hover:bg-white text-gray-900 font-semibold shadow-lg backdrop-blur-sm text-xs h-8 w-8 sm:w-auto sm:px-3"
           >
-            <Edit className="w-4 h-4 sm:mr-2" />
-            <span className="hidden sm:inline">Edit</span>
+            <Edit className="w-4 h-4" />
+            <span className="hidden sm:inline sm:ml-1">Edit</span>
           </Button>
         </div>
       </div>
 
       <CardContent className="p-3 space-y-2">
-        <div className="flex items-center justify-between">
-          <h3 className="font-bold text-base sm:text-lg text-slate-100 truncate">
+        <div className="flex items-center justify-between gap-2">
+          <h3 className="font-bold text-base sm:text-lg text-slate-100 truncate flex-1">
             {gecko.name}
           </h3>
-          <EventTracker 
-            entityId={gecko.id} 
-            entityType="gecko" 
-            EventEntity={GeckoEvent}
-          />
+          <div className="flex-shrink-0">
+            <EventTracker 
+              entityId={gecko.id} 
+              entityType="gecko" 
+              EventEntity={GeckoEvent}
+            />
+          </div>
         </div>
         {gecko.gecko_id_code && (
           <p className="text-xs text-slate-400 font-medium truncate">

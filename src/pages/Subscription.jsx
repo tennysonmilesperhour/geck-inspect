@@ -18,7 +18,7 @@ const MEMBERSHIP_TIERS = [
       'Basic breeding tracking',
       'Public profile',
       'Community forum access',
-      'AI morph identification'
+      'AI morph identification (coming soon)'
     ],
     color: 'from-gray-600 to-gray-700',
     icon: Users
@@ -51,7 +51,7 @@ const MEMBERSHIP_TIERS = [
       'Advanced calendar system',
       'Marketplace sync (MorphMarket, Palm Street)',
       'Custom breeding analytics',
-      'Priority AI training access',
+      'Priority AI training access (coming soon)',
       'White-label certificates'
     ],
     color: 'from-purple-600 to-indigo-600',

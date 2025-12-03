@@ -18,10 +18,12 @@ import {
 import { base44 } from '@/api/base44Client';
 import _ from 'lodash';
 
+const DEFAULT_GECKO_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
+
 // Placeholder card for missing parents
 const PlaceholderCardNode = ({ parentName, placeholderData, onEdit, size = 'normal' }) => {
-    const cardSize = size === 'tiny' ? 'w-20 h-24' : size === 'small' ? 'w-24 h-28' : 'w-28 h-32';
-    const nameSize = size === 'tiny' ? 'text-[9px]' : size === 'small' ? 'text-[10px]' : 'text-xs';
+    const cardSize = size === 'tiny' ? 'w-24 h-28' : size === 'small' ? 'w-28 h-32' : 'w-36 h-44';
+    const nameSize = size === 'tiny' ? 'text-[10px]' : size === 'small' ? 'text-xs' : 'text-sm';
     const hasData = placeholderData && (placeholderData.image_url || placeholderData.breeder_name);
     
     return (
@@ -30,24 +32,24 @@ const PlaceholderCardNode = ({ parentName, placeholderData, onEdit, size = 'norm
             onClick={onEdit}
         >
             <div className="w-full h-full bg-slate-700 flex items-center justify-center relative">
-                {placeholderData?.image_url ? (
-                    <img src={placeholderData.image_url} alt={parentName} className="w-full h-full object-cover" />
-                ) : (
-                    <Users className="w-8 h-8 text-slate-500" />
-                )}
+                <img 
+                    src={placeholderData?.image_url || DEFAULT_GECKO_IMAGE} 
+                    alt={parentName || 'Unknown'} 
+                    className="w-full h-full object-cover opacity-60"
+                />
                 <div className="absolute top-1 right-1">
-                    <div className="bg-black/60 rounded-full p-0.5">
-                        <Edit2 className="w-2.5 h-2.5 text-white" />
+                    <div className="bg-black/60 rounded-full p-1">
+                        <Edit2 className="w-3 h-3 text-white" />
                     </div>
                 </div>
             </div>
             
-            <div className="absolute bottom-0 left-0 right-0 p-1 bg-gradient-to-t from-black/80 to-transparent">
+            <div className="absolute bottom-0 left-0 right-0 p-1.5 bg-gradient-to-t from-black/80 to-transparent">
                 <h4 className={`font-bold ${nameSize} text-slate-300 leading-tight truncate`}>
                     {parentName || 'Unknown'}
                 </h4>
                 {hasData && placeholderData.breeder_name && (
-                    <p className="text-[8px] text-slate-400 truncate">
+                    <p className="text-[9px] text-slate-400 truncate">
                         From: {placeholderData.breeder_name}
                     </p>
                 )}
@@ -64,9 +66,9 @@ const GeckoCardNode = ({ gecko, onNodeClick, isSelected, size = 'normal', isFade
     const hasImage = gecko.image_urls && gecko.image_urls.length > 0;
     
     const sizes = {
-        tiny: { card: 'w-20 h-24', name: 'text-[9px]', id: 'text-[8px]', icon: 'w-5 h-5' },
-        small: { card: 'w-24 h-28', name: 'text-[10px]', id: 'text-[9px]', icon: 'w-6 h-6' },
-        normal: { card: 'w-28 h-32', name: 'text-xs', id: 'text-[10px]', icon: 'w-8 h-8' },
+        tiny: { card: 'w-24 h-28', name: 'text-[10px]', id: 'text-[9px]', icon: 'w-6 h-6' },
+        small: { card: 'w-28 h-32', name: 'text-xs', id: 'text-[10px]', icon: 'w-8 h-8' },
+        normal: { card: 'w-36 h-44', name: 'text-sm', id: 'text-xs', icon: 'w-10 h-10' },
     };
     const { card: cardSize, name: nameTextSize, id: idTextSize, icon: iconSize } = sizes[size] || sizes.normal;
     
@@ -79,11 +81,11 @@ const GeckoCardNode = ({ gecko, onNodeClick, isSelected, size = 'normal', isFade
             onClick={(e) => { e.stopPropagation(); onNodeClick(gecko.id); }}
         >
             <div className="w-full h-full bg-slate-700 flex items-center justify-center">
-                {hasImage ? (
-                    <img src={gecko.image_urls[0]} alt={gecko.name} className="w-full h-full object-cover" />
-                ) : (
-                    <Users className={`${iconSize} text-slate-500`} />
-                )}
+                <img 
+                    src={hasImage ? gecko.image_urls[0] : DEFAULT_GECKO_IMAGE} 
+                    alt={gecko.name} 
+                    className="w-full h-full object-cover" 
+                />
             </div>
             
             <div className="absolute bottom-0 left-0 right-0 p-1 bg-gradient-to-t from-black/80 to-transparent">
@@ -105,11 +107,17 @@ const GeckoCardNode = ({ gecko, onNodeClick, isSelected, size = 'normal', isFade
 
 // Simplified UnknownCard
 const UnknownCardNode = ({ size = 'normal' }) => {
-    const cardSize = size === 'tiny' ? 'w-20 h-24' : size === 'small' ? 'w-24 h-28' : 'w-28 h-32';
+    const cardSize = size === 'tiny' ? 'w-24 h-28' : size === 'small' ? 'w-28 h-32' : 'w-36 h-44';
     return (
-        <div className={`flex-shrink-0 flex flex-col items-center justify-center bg-slate-800/50 border-2 border-dashed border-slate-600 rounded-lg ${cardSize}`}>
-            <Users className={`${size === 'tiny' ? 'w-5 h-5' : 'w-6 h-6'} text-slate-500 mb-1`} />
-            <span className="text-[10px] text-slate-500">Unknown</span>
+        <div className={`flex-shrink-0 relative overflow-hidden bg-slate-800/50 border-2 border-dashed border-slate-600 rounded-lg ${cardSize}`}>
+            <img 
+                src={DEFAULT_GECKO_IMAGE} 
+                alt="Unknown" 
+                className="w-full h-full object-cover opacity-50" 
+            />
+            <div className="absolute bottom-0 left-0 right-0 p-1.5 bg-gradient-to-t from-black/80 to-transparent">
+                <span className="text-xs text-slate-400">Unknown</span>
+            </div>
         </div>
     );
 };
@@ -408,14 +416,14 @@ export default function Lineage() {
                                 placeholder="Search..." 
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-9 bg-slate-800 border-slate-600 w-full md:w-48 text-slate-100"
+                                className="pl-9 bg-slate-800 border-slate-600 w-full md:w-48 text-slate-100 h-10"
                             />
                         </div>
                         <Select onValueChange={handleSelectGecko} value={selectedGeckoId || ''}>
-                            <SelectTrigger className="w-full md:w-[200px] bg-slate-800 border-slate-600 text-slate-100">
+                            <SelectTrigger className="w-full md:w-[200px] bg-slate-800 border-slate-600 text-slate-100 h-10">
                                 <SelectValue placeholder="Select gecko" />
                             </SelectTrigger>
-                            <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[9999]">
+                            <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
                                 {isLoading ? (
                                     <div className="flex items-center justify-center p-2"><Loader2 className="animate-spin w-4 h-4 mr-2" /> Loading...</div>
                                 ) : (
