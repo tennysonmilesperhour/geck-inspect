@@ -918,10 +918,6 @@ function LayoutContent({ children, currentPageName }) {
             background: rgba(6, 78, 59, 0.8) !important;
             border: 1px solid #059669 !important;
             color: #d1fae5 !important;
-            display: inline-flex !important;
-            align-items: center !important;
-            justify-content: space-between !important;
-            vertical-align: middle !important;
           }
 
           .dark [data-radix-select-trigger]:hover,
@@ -931,11 +927,25 @@ function LayoutContent({ children, currentPageName }) {
             background: rgba(4, 120, 87, 0.9) !important;
           }
 
-          /* Force consistent alignment for all form controls */
-          .dark input,
-          .dark [data-radix-select-trigger],
-          .dark button[role="combobox"] {
-            vertical-align: middle !important;
+          /* Force all flex row items to align center on cross-axis */
+          .flex.items-center {
+            align-items: center !important;
+          }
+
+          /* Ensure buttons and selects have consistent box model */
+          button,
+          [data-radix-select-trigger],
+          input {
+            box-sizing: border-box !important;
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+          }
+
+          /* Fix flex container alignment */
+          .flex.gap-2,
+          .flex.gap-3,
+          .flex.gap-4 {
+            align-items: center !important;
           }
 
           /* Fix all buttons to be visible */

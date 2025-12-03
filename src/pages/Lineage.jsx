@@ -391,9 +391,72 @@ export default function Lineage() {
         );
     };
 
+    // Render placeholder with its own unknown parents
+    const renderPlaceholderWithParents = (placeholder, generation, maxGen) => {
+        const cardSize = getCardSize(generation);
+        const key = `${placeholder.geckoId}_${placeholder.parentType}`;
+        const placeholderData = placeholders[key];
+        
+        // If we need to show more generations, add unknown parents above
+        if (generation < maxGen) {
+            return (
+                <div className="flex flex-col items-center">
+                    {/* Unknown grandparents */}
+                    <div className="flex gap-2 md:gap-4">
+                        <div className="flex flex-col items-center">
+                            {renderPlaceholderWithParents(
+                                { name: 'Unknown', isPlaceholder: true, geckoId: placeholder.geckoId, parentType: 'sire' },
+                                generation + 1,
+                                maxGen
+                            )}
+                        </div>
+                        <div className="flex flex-col items-center">
+                            {renderPlaceholderWithParents(
+                                { name: 'Unknown', isPlaceholder: true, geckoId: placeholder.geckoId, parentType: 'dam' },
+                                generation + 1,
+                                maxGen
+                            )}
+                        </div>
+                    </div>
+                    {/* Connecting lines */}
+                    <div className="flex items-center justify-center w-full">
+                        <div className="h-4 w-px bg-emerald-700"></div>
+                    </div>
+                    <div className="flex items-center justify-center">
+                        <div className="w-1/4 h-px bg-emerald-700"></div>
+                        <div className="h-4 w-px bg-emerald-700"></div>
+                        <div className="w-1/4 h-px bg-emerald-700"></div>
+                    </div>
+                    {/* This placeholder */}
+                    <PlaceholderCardNode 
+                        parentName={placeholder.name}
+                        placeholderData={placeholderData}
+                        onEdit={() => handleEditPlaceholder(placeholder, placeholder.parentType)}
+                        size={cardSize}
+                    />
+                </div>
+            );
+        }
+        
+        // At max generation, just show the placeholder
+        return (
+            <PlaceholderCardNode 
+                parentName={placeholder.name}
+                placeholderData={placeholderData}
+                onEdit={() => handleEditPlaceholder(placeholder, placeholder.parentType)}
+                size={cardSize}
+            />
+        );
+    };
+
     // Render the tree recursively - parents above, child below
     const renderTree = (gecko, generation) => {
         if (!gecko) return null;
+        
+        // Handle placeholders - they need their own parent tree
+        if (gecko.isPlaceholder) {
+            return renderPlaceholderWithParents(gecko, generation, generations);
+        }
         
         const hasSire = gecko.sire;
         const hasDam = gecko.dam;
