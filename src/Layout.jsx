@@ -860,54 +860,85 @@ function LayoutContent({ children, currentPageName }) {
             background: white !important;
           }
 
-          /* Fix Select/Dropdown visibility */
-          .dark [role="combobox"],
-          .dark [data-radix-popper-content-wrapper] [role="listbox"],
-          .dark [cmdk-list],
-          .dark select {
-            background: rgba(30, 41, 59, 0.98) !important;
-            border: 1px solid rgba(134, 239, 172, 0.3) !important;
-            color: var(--gecko-text) !important;
+          /* GLOBAL FIX: All Select/Dropdown/Menu visibility */
+          [data-radix-popper-content-wrapper] {
+            z-index: 99999 !important;
+          }
+
+          .dark [role="listbox"],
+          .dark [data-radix-select-content],
+          .dark [data-radix-select-viewport],
+          .dark [data-radix-menu-content],
+          .dark [data-radix-dropdown-menu-content],
+          .dark [role="menu"],
+          [role="listbox"],
+          [data-radix-select-content],
+          [data-radix-select-viewport] {
+            background: #1e293b !important;
+            background-color: #1e293b !important;
+            border: 1px solid #475569 !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8) !important;
+            z-index: 99999 !important;
           }
 
           .dark [role="option"],
           .dark [cmdk-item],
-          .dark [role="menuitem"] {
-            color: var(--gecko-text) !important;
+          .dark [role="menuitem"],
+          .dark [data-radix-collection-item],
+          [role="option"],
+          [data-radix-collection-item] {
+            color: #e2e8f0 !important;
+            background: transparent !important;
           }
 
           .dark [role="option"]:hover,
           .dark [role="option"][data-highlighted],
+          .dark [role="option"][data-state="checked"],
           .dark [cmdk-item]:hover,
           .dark [cmdk-item][data-selected],
           .dark [role="menuitem"]:hover,
-          .dark [role="menuitem"][data-highlighted] {
-            background: rgba(16, 185, 129, 0.2) !important;
+          .dark [role="menuitem"][data-highlighted],
+          .dark [data-radix-collection-item]:hover,
+          .dark [data-radix-collection-item][data-highlighted],
+          [role="option"]:hover,
+          [role="option"][data-highlighted],
+          [role="option"][data-state="checked"],
+          [data-radix-collection-item]:hover,
+          [data-radix-collection-item][data-highlighted] {
+            background: #10b981 !important;
+            background-color: #10b981 !important;
+            color: white !important;
           }
 
-          .dark [data-radix-select-viewport],
-          .dark [data-radix-popper-content-wrapper],
-          .dark [data-radix-menu-content],
-          .dark [role="menu"] {
-            background: rgba(30, 41, 59, 0.98) !important;
-            border: 1px solid rgba(134, 239, 172, 0.3) !important;
-            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
-            z-index: 9999 !important;
+          /* Fix SelectTrigger visibility */
+          .dark [data-radix-select-trigger],
+          .dark button[role="combobox"],
+          [data-radix-select-trigger],
+          button[role="combobox"] {
+            background: #1e293b !important;
+            border: 1px solid #475569 !important;
+            color: #e2e8f0 !important;
           }
 
-          /* Ensure dropdown menus and popovers are always visible */
-          [data-radix-popper-content-wrapper] {
-            z-index: 9999 !important;
+          /* Fix all buttons to be visible */
+          .dark button,
+          button {
+            opacity: 1 !important;
+            visibility: visible !important;
           }
 
-          .dark [data-state="open"] > [data-radix-collection-item] {
-            background: rgba(30, 41, 59, 0.98) !important;
-          }
-
-          /* Mobile-specific button visibility */
-          @media (max-width: 640px) {
-            .dark button {
+          /* Mobile-specific: ensure all interactive elements visible */
+          @media (max-width: 768px) {
+            button,
+            [role="button"],
+            [data-radix-select-trigger] {
               opacity: 1 !important;
+              visibility: visible !important;
+            }
+
+            /* Force dropdown content above everything on mobile */
+            [data-radix-popper-content-wrapper] {
+              z-index: 999999 !important;
             }
           }
 

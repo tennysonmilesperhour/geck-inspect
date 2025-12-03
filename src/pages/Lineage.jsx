@@ -20,8 +20,8 @@ import _ from 'lodash';
 
 // Placeholder card for missing parents
 const PlaceholderCardNode = ({ parentName, placeholderData, onEdit, size = 'normal' }) => {
-    const cardSize = size === 'tiny' ? 'w-24 h-32' : size === 'small' ? 'w-32 h-40' : 'w-40 h-48';
-    const nameSize = size === 'tiny' ? 'text-[11px]' : size === 'small' ? 'text-xs' : 'text-sm';
+    const cardSize = size === 'tiny' ? 'w-20 h-24' : size === 'small' ? 'w-24 h-28' : 'w-28 h-32';
+    const nameSize = size === 'tiny' ? 'text-[9px]' : size === 'small' ? 'text-[10px]' : 'text-xs';
     const hasData = placeholderData && (placeholderData.image_url || placeholderData.breeder_name);
     
     return (
@@ -33,21 +33,21 @@ const PlaceholderCardNode = ({ parentName, placeholderData, onEdit, size = 'norm
                 {placeholderData?.image_url ? (
                     <img src={placeholderData.image_url} alt={parentName} className="w-full h-full object-cover" />
                 ) : (
-                    <Users className="w-12 h-12 text-slate-500" />
+                    <Users className="w-8 h-8 text-slate-500" />
                 )}
-                <div className="absolute top-2 right-2">
-                    <div className="bg-black/60 rounded-full p-1">
-                        <Edit2 className="w-3 h-3 text-white" />
+                <div className="absolute top-1 right-1">
+                    <div className="bg-black/60 rounded-full p-0.5">
+                        <Edit2 className="w-2.5 h-2.5 text-white" />
                     </div>
                 </div>
             </div>
             
-            <div className="absolute bottom-0 left-0 right-0 p-1.5 bg-gradient-to-t from-black/80 to-transparent">
+            <div className="absolute bottom-0 left-0 right-0 p-1 bg-gradient-to-t from-black/80 to-transparent">
                 <h4 className={`font-bold ${nameSize} text-slate-300 leading-tight truncate`}>
                     {parentName || 'Unknown'}
                 </h4>
                 {hasData && placeholderData.breeder_name && (
-                    <p className="text-[10px] text-slate-400 truncate">
+                    <p className="text-[8px] text-slate-400 truncate">
                         From: {placeholderData.breeder_name}
                     </p>
                 )}
@@ -56,7 +56,7 @@ const PlaceholderCardNode = ({ parentName, placeholderData, onEdit, size = 'norm
     );
 };
 
-// A more robust GeckoCardNode that can be reused
+// GeckoCardNode component
 const GeckoCardNode = ({ gecko, onNodeClick, isSelected, size = 'normal', isFaded = false, className = '' }) => {
     if (!gecko) {
         return <UnknownCardNode size={size} />;
@@ -64,9 +64,9 @@ const GeckoCardNode = ({ gecko, onNodeClick, isSelected, size = 'normal', isFade
     const hasImage = gecko.image_urls && gecko.image_urls.length > 0;
     
     const sizes = {
-        tiny: { card: 'w-24 h-32', name: 'text-[11px]', id: 'text-[9px]', icon: 'w-6 h-6' },
-        small: { card: 'w-32 h-40', name: 'text-xs', id: 'text-[10px]', icon: 'w-8 h-8' },
-        normal: { card: 'w-40 h-48', name: 'text-sm', id: 'text-xs', icon: 'w-12 h-12' },
+        tiny: { card: 'w-20 h-24', name: 'text-[9px]', id: 'text-[8px]', icon: 'w-5 h-5' },
+        small: { card: 'w-24 h-28', name: 'text-[10px]', id: 'text-[9px]', icon: 'w-6 h-6' },
+        normal: { card: 'w-28 h-32', name: 'text-xs', id: 'text-[10px]', icon: 'w-8 h-8' },
     };
     const { card: cardSize, name: nameTextSize, id: idTextSize, icon: iconSize } = sizes[size] || sizes.normal;
     
@@ -86,8 +86,8 @@ const GeckoCardNode = ({ gecko, onNodeClick, isSelected, size = 'normal', isFade
                 )}
             </div>
             
-            <div className="absolute bottom-0 left-0 right-0 p-1.5 bg-gradient-to-t from-black/80 to-transparent">
-                <div className="flex items-center gap-1">
+            <div className="absolute bottom-0 left-0 right-0 p-1 bg-gradient-to-t from-black/80 to-transparent">
+                <div className="flex items-center gap-0.5">
                     <h4 className={`font-bold ${nameTextSize} text-white leading-tight truncate drop-shadow-md`}>
                         {gecko.name}
                     </h4>
@@ -105,11 +105,11 @@ const GeckoCardNode = ({ gecko, onNodeClick, isSelected, size = 'normal', isFade
 
 // Simplified UnknownCard
 const UnknownCardNode = ({ size = 'normal' }) => {
-    const cardSize = size === 'tiny' ? 'w-24 h-32' : size === 'small' ? 'w-32 h-40' : 'w-40 h-48';
+    const cardSize = size === 'tiny' ? 'w-20 h-24' : size === 'small' ? 'w-24 h-28' : 'w-28 h-32';
     return (
         <div className={`flex-shrink-0 flex flex-col items-center justify-center bg-slate-800/50 border-2 border-dashed border-slate-600 rounded-lg ${cardSize}`}>
-            <Users className={`${size === 'tiny' ? 'w-6 h-6' : 'w-8 h-8'} text-slate-500 mb-2`} />
-            <span className="text-xs text-slate-500">Unknown</span>
+            <Users className={`${size === 'tiny' ? 'w-5 h-5' : 'w-6 h-6'} text-slate-500 mb-1`} />
+            <span className="text-[10px] text-slate-500">Unknown</span>
         </div>
     );
 };
@@ -134,6 +134,10 @@ export default function Lineage() {
     const [scale, setScale] = useState(1);
     const mainContentRef = useRef(null);
     
+    // Touch/pinch zoom state
+    const [initialDistance, setInitialDistance] = useState(null);
+    const [initialScale, setInitialScale] = useState(1);
+    
     // Placeholder editing
     const [editingPlaceholder, setEditingPlaceholder] = useState(null);
     const [placeholderForm, setPlaceholderForm] = useState({
@@ -143,6 +147,33 @@ export default function Lineage() {
         breeder_website: '',
         notes: ''
     });
+
+    // Pinch-to-zoom handlers
+    const handleTouchStart = (e) => {
+        if (e.touches.length === 2) {
+            const dist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            setInitialDistance(dist);
+            setInitialScale(scale);
+        }
+    };
+
+    const handleTouchMove = (e) => {
+        if (e.touches.length === 2 && initialDistance) {
+            const dist = Math.hypot(
+                e.touches[0].clientX - e.touches[1].clientX,
+                e.touches[0].clientY - e.touches[1].clientY
+            );
+            const newScale = Math.min(2, Math.max(0.3, initialScale * (dist / initialDistance)));
+            setScale(newScale);
+        }
+    };
+
+    const handleTouchEnd = () => {
+        setInitialDistance(null);
+    };
 
     const fetchAllData = useCallback(async () => {
         setIsLoading(true);
@@ -154,7 +185,6 @@ export default function Lineage() {
                 LineagePlaceholder.filter({ created_by: currentUser.email }).catch(() => [])
             ]);
             
-            // Fetch breeding plans safely
             let breedingPlans = [];
             try {
                 breedingPlans = await BreedingPlan.filter({ created_by: currentUser.email });
@@ -166,7 +196,6 @@ export default function Lineage() {
             setAllGeckosMap(_.keyBy(allVisibleGeckos, 'id'));
             setAllBreedingPlans(breedingPlans);
             
-            // Index placeholders by gecko_id and parent_type
             const placeholderMap = {};
             userPlaceholders.forEach(p => {
                 const key = `${p.gecko_id}_${p.parent_type}`;
@@ -190,16 +219,13 @@ export default function Lineage() {
         const gecko = allGeckosMap[geckoId];
         if (!gecko) return null;
 
-        // Build sire and dam - either from collection, from names, or as unknown placeholders
         let sire = null;
         let dam = null;
         
         if (currentGen < generations) {
-            // Always show parent slots up to max generations
             if (gecko.sire_id) {
                 sire = await getLineageFor(gecko.sire_id, generations, currentGen + 1);
             } else {
-                // Create placeholder for sire (with name if available, otherwise "Unknown")
                 sire = { 
                     name: gecko.sire_name || 'Unknown', 
                     isPlaceholder: true, 
@@ -211,7 +237,6 @@ export default function Lineage() {
             if (gecko.dam_id) {
                 dam = await getLineageFor(gecko.dam_id, generations, currentGen + 1);
             } else {
-                // Create placeholder for dam (with name if available, otherwise "Unknown")
                 dam = { 
                     name: gecko.dam_name || 'Unknown', 
                     isPlaceholder: true, 
@@ -252,7 +277,6 @@ export default function Lineage() {
         setIsLoadingLineage(false);
     }, [getLineageFor, allGeckosMap, allBreedingPlans]);
 
-    // Auto-select gecko from URL parameter
     useEffect(() => {
         const params = new URLSearchParams(location.search);
         const geckoIdFromUrl = params.get('geckoId');
@@ -299,7 +323,6 @@ export default function Lineage() {
                 await LineagePlaceholder.create(data);
             }
             
-            // Refresh placeholders
             await fetchAllData();
             setEditingPlaceholder(null);
         } catch (error) {
@@ -307,12 +330,13 @@ export default function Lineage() {
         }
     };
 
-    const renderGeneration = (gecko, generation) => {
+    // Vertical tree rendering - parents above, child below
+    const renderVerticalTree = (gecko, generation) => {
         if (!gecko) {
-            return <UnknownCardNode size={generation >= 2 ? 'small' : 'normal'} />;
+            return <UnknownCardNode size={generation >= 2 ? 'tiny' : 'small'} />;
         }
         
-        const cardSize = generation >= 2 ? 'small' : 'normal';
+        const cardSize = generation === 1 ? 'normal' : generation === 2 ? 'small' : 'tiny';
         
         // Handle placeholder parents
         if (gecko.isPlaceholder) {
@@ -320,35 +344,45 @@ export default function Lineage() {
             const placeholderData = placeholders[key];
             
             return (
-                <div className="flex items-center">
-                    <PlaceholderCardNode 
-                        parentName={gecko.name}
-                        placeholderData={placeholderData}
-                        onEdit={() => handleEditPlaceholder(gecko, gecko.parentType)}
-                        size={cardSize}
-                    />
-                    {/* Placeholders don't show their own lineage */}
-                </div>
+                <PlaceholderCardNode 
+                    parentName={gecko.name}
+                    placeholderData={placeholderData}
+                    onEdit={() => handleEditPlaceholder(gecko, gecko.parentType)}
+                    size={cardSize}
+                />
             );
         }
 
+        const hasParents = gecko.sire || gecko.dam;
+
         return (
-            <div className="flex items-center">
-                <GeckoCardNode gecko={gecko} onNodeClick={handleSelectGecko} isSelected={selectedGeckoId === gecko.id} size={cardSize} />
-                {(gecko.sire || gecko.dam) && (
+            <div className="flex flex-col items-center">
+                {/* Parents Row (above) */}
+                {hasParents && (
                     <>
-                        <div className="w-4 md:w-8 border-t-2 border-slate-600"></div>
-                        <div className="flex flex-col gap-2 md:gap-4 relative">
-                          <div className="absolute left-0 top-1/2 -translate-y-1/2 h-full w-[2px] bg-slate-600"></div>
-                           <div className="absolute left-0 top-0 h-[2px] w-4 bg-slate-600"></div>
-                          <div className="absolute left-0 bottom-0 h-[2px] w-4 bg-slate-600"></div>
+                        <div className="flex gap-2 md:gap-4">
+                            {gecko.sire && renderVerticalTree(gecko.sire, generation + 1)}
+                            {gecko.dam && renderVerticalTree(gecko.dam, generation + 1)}
                         </div>
-                        <div className="flex flex-col gap-2 md:gap-4">
-                            {gecko.sire && renderGeneration(gecko.sire, generation + 1)}
-                            {gecko.dam && renderGeneration(gecko.dam, generation + 1)}
+                        {/* Connecting lines */}
+                        <div className="flex items-center justify-center w-full">
+                            <div className="h-4 w-px bg-slate-600"></div>
+                        </div>
+                        <div className="flex items-center justify-center">
+                            <div className="w-1/4 h-px bg-slate-600"></div>
+                            <div className="h-4 w-px bg-slate-600"></div>
+                            <div className="w-1/4 h-px bg-slate-600"></div>
                         </div>
                     </>
                 )}
+                
+                {/* Current Gecko */}
+                <GeckoCardNode 
+                    gecko={gecko} 
+                    onNodeClick={handleSelectGecko} 
+                    isSelected={selectedGeckoId === gecko.id} 
+                    size={cardSize} 
+                />
             </div>
         );
     };
@@ -360,79 +394,124 @@ export default function Lineage() {
 
     return (
         <div className="flex flex-col h-screen bg-slate-950 text-slate-200 overflow-hidden">
-            <header className="p-4 border-b border-slate-700 flex-shrink-0 z-20 bg-slate-950/80 backdrop-blur-sm">
-                <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-4">
-                     <div>
-                        <h1 className="text-2xl font-bold text-slate-100">Gecko Lineage Viewer</h1>
-                        <p className="text-slate-400">Select a gecko to view its family tree, mates, and offspring.</p>
+            <header className="p-3 md:p-4 border-b border-slate-700 flex-shrink-0 z-20 bg-slate-950/80 backdrop-blur-sm">
+                <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
+                    <div className="text-center md:text-left">
+                        <h1 className="text-xl md:text-2xl font-bold text-slate-100">Gecko Lineage</h1>
+                        <p className="text-slate-400 text-sm hidden md:block">Select a gecko to view its family tree</p>
                     </div>
-                     <div className="flex items-center gap-4 w-full md:w-auto">
-                        <div className="relative flex-grow">
-                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <div className="flex items-center gap-2 w-full md:w-auto">
+                        <div className="relative flex-grow md:flex-grow-0">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                             <Input
-                                type="text" placeholder="Search your geckos..." value={searchTerm}
+                                type="text" 
+                                placeholder="Search..." 
+                                value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-9 bg-slate-800 border-slate-600 w-full md:w-64"
+                                className="pl-9 bg-slate-800 border-slate-600 w-full md:w-48 text-slate-100"
                             />
                         </div>
                         <Select onValueChange={handleSelectGecko} value={selectedGeckoId || ''}>
-                            <SelectTrigger className="w-full md:w-[250px] bg-slate-800 border-slate-600">
-                                <SelectValue placeholder="Select a gecko" />
+                            <SelectTrigger className="w-full md:w-[200px] bg-slate-800 border-slate-600 text-slate-100">
+                                <SelectValue placeholder="Select gecko" />
                             </SelectTrigger>
-                            <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
+                            <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[9999]">
                                 {isLoading ? (
                                     <div className="flex items-center justify-center p-2"><Loader2 className="animate-spin w-4 h-4 mr-2" /> Loading...</div>
                                 ) : (
                                     filteredSelectableGeckos.map(gecko => (
-                                        <SelectItem key={gecko.id} value={gecko.id}>{gecko.name} ({gecko.gecko_id_code})</SelectItem>
+                                        <SelectItem key={gecko.id} value={gecko.id} className="text-slate-100 focus:bg-emerald-600 focus:text-white">
+                                            {gecko.name} ({gecko.gecko_id_code || 'No ID'})
+                                        </SelectItem>
                                     ))
                                 )}
                             </SelectContent>
                         </Select>
-                     </div>
+                    </div>
                 </div>
             </header>
-            <main ref={mainContentRef} className="flex-1 overflow-auto relative">
-                 <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
-                    <Button size="icon" variant="outline" onClick={() => setScale(s => Math.max(0.5, s - 0.1))}><ZoomOut className="w-4 h-4" /></Button>
-                    <span className="bg-slate-900/80 px-3 py-1 rounded-md text-sm font-mono">{Math.round(scale * 100)}%</span>
-                    <Button size="icon" variant="outline" onClick={() => setScale(s => Math.min(1.5, s + 0.1))}><ZoomIn className="w-4 h-4" /></Button>
+            
+            <main 
+                ref={mainContentRef} 
+                className="flex-1 overflow-auto relative touch-none"
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+            >
+                {/* Zoom controls */}
+                <div className="absolute top-4 right-4 z-10 flex items-center gap-2">
+                    <Button size="icon" variant="outline" onClick={() => setScale(s => Math.max(0.3, s - 0.1))} className="bg-slate-800 border-slate-600">
+                        <ZoomOut className="w-4 h-4" />
+                    </Button>
+                    <span className="bg-slate-800 px-3 py-1 rounded-md text-sm font-mono border border-slate-600">{Math.round(scale * 100)}%</span>
+                    <Button size="icon" variant="outline" onClick={() => setScale(s => Math.min(2, s + 0.1))} className="bg-slate-800 border-slate-600">
+                        <ZoomIn className="w-4 h-4" />
+                    </Button>
                 </div>
                 
-                <div className="p-8 min-h-full min-w-max" style={{ transform: `scale(${scale})`, transformOrigin: 'top left' }}>
+                <div 
+                    className="p-4 md:p-8 min-h-full" 
+                    style={{ transform: `scale(${scale})`, transformOrigin: 'top center' }}
+                >
                     {isLoadingLineage ? (
-                         <div className="w-full h-full flex items-center justify-center"><Loader2 className="w-12 h-12 text-emerald-500 animate-spin" /></div>
+                        <div className="w-full h-full flex items-center justify-center pt-20">
+                            <Loader2 className="w-12 h-12 text-emerald-500 animate-spin" />
+                        </div>
                     ) : selectedGeckoId && lineage?.id ? (
-                        <div className="space-y-12">
-                            {/* Ancestor Tree */}
-                            <div className="flex">
-                                {renderGeneration(lineage, 1)}
-                            </div>
-                            {/* Mates and Offspring */}
-                            <div className="space-y-8 pt-8 border-t-2 border-slate-700">
+                        <div className="flex flex-col md:flex-row gap-8">
+                            {/* Mates Column (Left on desktop, top on mobile) */}
+                            <div className="md:w-32 flex-shrink-0 order-2 md:order-1">
                                 {mates.length > 0 && (
-                                     <div>
-                                        <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Heart/> Mates ({mates.length})</h2>
-                                        <div className="flex gap-4 overflow-x-auto pb-4">
-                                            {mates.map(mate => <GeckoCardNode key={mate.id} gecko={mate} onNodeClick={handleSelectGecko} size="small"/>)}
+                                    <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-700">
+                                        <h2 className="text-sm font-bold mb-3 flex items-center gap-1 text-pink-400">
+                                            <Heart className="w-4 h-4" /> Mates
+                                        </h2>
+                                        <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
+                                            {mates.map(mate => (
+                                                <GeckoCardNode 
+                                                    key={mate.id} 
+                                                    gecko={mate} 
+                                                    onNodeClick={handleSelectGecko} 
+                                                    size="small"
+                                                />
+                                            ))}
                                         </div>
                                     </div>
                                 )}
+                            </div>
+
+                            {/* Main Lineage Tree (Center) */}
+                            <div className="flex-1 flex flex-col items-center order-1 md:order-2">
+                                <h2 className="text-lg font-bold mb-4 text-emerald-400">Ancestry</h2>
+                                {renderVerticalTree(lineage, 1)}
+                            </div>
+
+                            {/* Offspring Column (Right on desktop, bottom on mobile) */}
+                            <div className="md:w-32 flex-shrink-0 order-3">
                                 {offspring.length > 0 && (
-                                     <div>
-                                        <h2 className="text-xl font-bold mb-4 flex items-center gap-2"><Users2/> Offspring ({offspring.length})</h2>
-                                         <div className="flex gap-4 overflow-x-auto pb-4">
-                                            {offspring.map(child => <GeckoCardNode key={child.id} gecko={child} onNodeClick={handleSelectGecko} size="small"/>)}
+                                    <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-700">
+                                        <h2 className="text-sm font-bold mb-3 flex items-center gap-1 text-blue-400">
+                                            <Users2 className="w-4 h-4" /> Offspring
+                                        </h2>
+                                        <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
+                                            {offspring.map(child => (
+                                                <GeckoCardNode 
+                                                    key={child.id} 
+                                                    gecko={child} 
+                                                    onNodeClick={handleSelectGecko} 
+                                                    size="small"
+                                                />
+                                            ))}
                                         </div>
                                     </div>
                                 )}
                             </div>
                         </div>
                     ) : (
-                         <div className="w-full h-full flex items-center justify-center text-slate-500 fixed inset-0">
+                        <div className="w-full flex items-center justify-center pt-20">
                             <div className="text-center">
                                 <GitBranch className="w-16 h-16 mx-auto text-slate-600 mb-4" />
-                                <p className="text-lg">Select a gecko from the dropdown to begin exploring lineages.</p>
+                                <p className="text-lg text-slate-500">Select a gecko to view lineage</p>
                             </div>
                         </div>
                     )}
@@ -441,54 +520,54 @@ export default function Lineage() {
             
             {/* Placeholder Edit Modal */}
             <Dialog open={!!editingPlaceholder} onOpenChange={() => setEditingPlaceholder(null)}>
-                <DialogContent className="bg-slate-900 border-slate-700 text-slate-200">
+                <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 z-[9999]">
                     <DialogHeader>
                         <DialogTitle>Edit Parent Info: {editingPlaceholder?.name || 'Unknown'}</DialogTitle>
                     </DialogHeader>
                     <div className="space-y-4">
                         <div>
-                            <Label>Name</Label>
+                            <Label className="text-slate-300">Name</Label>
                             <Input
                                 value={placeholderForm.name}
                                 onChange={e => setPlaceholderForm({...placeholderForm, name: e.target.value})}
                                 placeholder="Parent gecko name"
-                                className="bg-slate-800 border-slate-600"
+                                className="bg-slate-800 border-slate-600 text-slate-100"
                             />
                         </div>
                         <div>
-                            <Label>Image URL (optional)</Label>
+                            <Label className="text-slate-300">Image URL (optional)</Label>
                             <Input
                                 value={placeholderForm.image_url}
                                 onChange={e => setPlaceholderForm({...placeholderForm, image_url: e.target.value})}
                                 placeholder="https://..."
-                                className="bg-slate-800 border-slate-600"
+                                className="bg-slate-800 border-slate-600 text-slate-100"
                             />
                         </div>
                         <div>
-                            <Label>Breeder Name</Label>
+                            <Label className="text-slate-300">Breeder Name</Label>
                             <Input
                                 value={placeholderForm.breeder_name}
                                 onChange={e => setPlaceholderForm({...placeholderForm, breeder_name: e.target.value})}
                                 placeholder="Where this gecko came from"
-                                className="bg-slate-800 border-slate-600"
+                                className="bg-slate-800 border-slate-600 text-slate-100"
                             />
                         </div>
                         <div>
-                            <Label>Breeder Website/Profile</Label>
+                            <Label className="text-slate-300">Breeder Website/Profile</Label>
                             <Input
                                 value={placeholderForm.breeder_website}
                                 onChange={e => setPlaceholderForm({...placeholderForm, breeder_website: e.target.value})}
                                 placeholder="https://..."
-                                className="bg-slate-800 border-slate-600"
+                                className="bg-slate-800 border-slate-600 text-slate-100"
                             />
                         </div>
                         <div>
-                            <Label>Notes</Label>
+                            <Label className="text-slate-300">Notes</Label>
                             <Textarea
                                 value={placeholderForm.notes}
                                 onChange={e => setPlaceholderForm({...placeholderForm, notes: e.target.value})}
                                 placeholder="Additional information..."
-                                className="bg-slate-800 border-slate-600"
+                                className="bg-slate-800 border-slate-600 text-slate-100"
                             />
                         </div>
                     </div>

@@ -93,14 +93,14 @@ export default function EventTracker({ entityId, entityType = 'gecko', onEventAd
                     <Button 
                         size="sm" 
                         variant="outline" 
-                        className="border-emerald-600 text-emerald-400 hover:bg-emerald-900/20 h-8"
+                        className="border-emerald-600 text-emerald-400 hover:bg-emerald-900/20 h-8 bg-slate-800"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <Plus className="w-3 h-3 mr-1" />
                         Event
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-slate-800 border-slate-600 z-50" onClick={(e) => e.stopPropagation()}>
+                <DropdownMenuContent className="bg-slate-800 border-slate-600 z-[99999]" onClick={(e) => e.stopPropagation()}>
                     {EVENT_TYPES.map((type) => (
                         <DropdownMenuItem
                             key={type.value}
@@ -108,7 +108,7 @@ export default function EventTracker({ entityId, entityType = 'gecko', onEventAd
                                 e.stopPropagation();
                                 handleSelectType(type.value);
                             }}
-                            className="text-slate-200 hover:bg-slate-700 cursor-pointer"
+                            className="text-slate-200 hover:bg-emerald-600 hover:text-white cursor-pointer focus:bg-emerald-600 focus:text-white"
                         >
                             {type.label}
                         </DropdownMenuItem>

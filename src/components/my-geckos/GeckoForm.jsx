@@ -470,13 +470,13 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                     onChange={(e) => setHatchYear(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
                                 />
                                 <Select value={hatchMonth} onValueChange={setHatchMonth}>
-                                    <SelectTrigger>
+                                    <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-100">
                                         <SelectValue placeholder="Month" />
                                     </SelectTrigger>
-                                    <SelectContent>
-                                        <SelectItem value="none">None</SelectItem>
+                                    <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
+                                        <SelectItem value="none" className="text-slate-100 focus:bg-emerald-600 focus:text-white">None</SelectItem>
                                         {MONTHS.map(m => (
-                                            <SelectItem key={m.value} value={m.value}>{m.label}</SelectItem>
+                                            <SelectItem key={m.value} value={m.value} className="text-slate-100 focus:bg-emerald-600 focus:text-white">{m.label}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
@@ -491,11 +491,11 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         <div>
                             <Label htmlFor="sex">Sex *</Label>
                             <Select value={formData.sex} onValueChange={(v) => handleChange('sex', v)}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Unsexed">Unsexed</SelectItem>
-                                    <SelectItem value="Male">Male</SelectItem>
-                                    <SelectItem value="Female">Female</SelectItem>
+                                <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-100"><SelectValue /></SelectTrigger>
+                                <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
+                                    <SelectItem value="Unsexed" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Unsexed</SelectItem>
+                                    <SelectItem value="Male" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Male</SelectItem>
+                                    <SelectItem value="Female" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Female</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -554,15 +554,15 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         <div>
                             <Label htmlFor="status">Status</Label>
                             <Select value={formData.status} onValueChange={(v) => handleChange('status', v)} disabled={isForSale}>
-                                <SelectTrigger><SelectValue /></SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="Pet">Pet</SelectItem>
-                                    <SelectItem value="Future Breeder">Future Breeder</SelectItem>
-                                    <SelectItem value="Holdback">Holdback</SelectItem>
-                                    <SelectItem value="Ready to Breed">Ready to Breed</SelectItem>
-                                    <SelectItem value="Proven">Proven</SelectItem>
-                                    <SelectItem value="For Sale">For Sale</SelectItem>
-                                    <SelectItem value="Sold">Sold</SelectItem>
+                                <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-100"><SelectValue /></SelectTrigger>
+                                <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
+                                    <SelectItem value="Pet" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Pet</SelectItem>
+                                    <SelectItem value="Future Breeder" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Future Breeder</SelectItem>
+                                    <SelectItem value="Holdback" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Holdback</SelectItem>
+                                    <SelectItem value="Ready to Breed" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Ready to Breed</SelectItem>
+                                    <SelectItem value="Proven" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Proven</SelectItem>
+                                    <SelectItem value="For Sale" className="text-slate-100 focus:bg-emerald-600 focus:text-white">For Sale</SelectItem>
+                                    <SelectItem value="Sold" className="text-slate-100 focus:bg-emerald-600 focus:text-white">Sold</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
