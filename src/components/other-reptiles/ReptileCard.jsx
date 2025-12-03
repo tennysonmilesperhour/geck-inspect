@@ -22,6 +22,7 @@ export default function ReptileCard({ reptile, onView, onEdit, onFeedingComplete
     const [showFedModal, setShowFedModal] = useState(false);
     const [preyType, setPreyType] = useState('');
     const [preyWeight, setPreyWeight] = useState('');
+    const [preyCount, setPreyCount] = useState('1');
     const [isSaving, setIsSaving] = useState(false);
 
     const primaryImage = reptile.image_urls && reptile.image_urls.length > 0 
@@ -83,8 +84,9 @@ export default function ReptileCard({ reptile, onView, onEdit, onFeedingComplete
         try {
             const today = new Date().toISOString().split('T')[0];
             
-            // Create feeding event
+            // Create feeding event with prey count
             const notes = [
+                preyCount && preyCount !== '1' && `Qty: ${preyCount}`,
                 preyType && `Prey: ${preyType}`,
                 preyWeight && `Weight: ${preyWeight}g`
             ].filter(Boolean).join(', ');
@@ -102,6 +104,7 @@ export default function ReptileCard({ reptile, onView, onEdit, onFeedingComplete
             setShowFedModal(false);
             setPreyType('');
             setPreyWeight('');
+            setPreyCount('1');
             
             if (onFeedingComplete) {
                 onFeedingComplete(reptile.id);
@@ -192,7 +195,8 @@ export default function ReptileCard({ reptile, onView, onEdit, onFeedingComplete
                         </div>
                     )}
 
-                    <div className="absolute bottom-2 right-2 flex gap-1 sm:gap-2 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                    {/* Always visible buttons on mobile, hover on desktop */}
+                    <div className="absolute bottom-2 right-2 flex gap-1 sm:gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300">
                         <Button
                             size="sm"
                             onClick={(e) => { e.stopPropagation(); onView(reptile); }}
@@ -246,12 +250,23 @@ export default function ReptileCard({ reptile, onView, onEdit, onFeedingComplete
                 </DialogHeader>
                 <div className="space-y-4 py-4">
                     <div>
+                        <Label className="text-slate-300">Number of Prey Items</Label>
+                        <Input
+                            type="number"
+                            min="1"
+                            value={preyCount}
+                            onChange={(e) => setPreyCount(e.target.value)}
+                            placeholder="1"
+                            className="bg-slate-800 border-slate-600 text-slate-100"
+                        />
+                    </div>
+                    <div>
                         <Label className="text-slate-300">Prey Type</Label>
                         <Select value={preyType} onValueChange={setPreyType}>
-                            <SelectTrigger className="bg-slate-800 border-slate-600">
+                            <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-100">
                                 <SelectValue placeholder="Select prey type (optional)" />
                             </SelectTrigger>
-                            <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
+                            <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-50">
                                 <SelectItem value="mouse_pinky">Mouse - Pinky</SelectItem>
                                 <SelectItem value="mouse_fuzzy">Mouse - Fuzzy</SelectItem>
                                 <SelectItem value="mouse_hopper">Mouse - Hopper</SelectItem>
@@ -279,7 +294,7 @@ export default function ReptileCard({ reptile, onView, onEdit, onFeedingComplete
                             value={preyWeight}
                             onChange={(e) => setPreyWeight(e.target.value)}
                             placeholder="Optional"
-                            className="bg-slate-800 border-slate-600"
+                            className="bg-slate-800 border-slate-600 text-slate-100"
                         />
                     </div>
                 </div>

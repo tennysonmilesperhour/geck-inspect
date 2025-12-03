@@ -98,11 +98,47 @@ export default function OtherReptilesPage() {
         }
     };
 
-    const filteredReptiles = reptiles.filter(reptile =>
-        reptile.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        reptile.species?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        reptile.morph?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    // Helper function to calculate feeding priority for sorting
+    const getFeedingPriority = (reptile) => {
+        if (!reptile.feeding_reminder_enabled || !reptile.last_fed_date) {
+            return { priority: 3, daysUntil: Infinity }; // No feeding tracking - lowest priority
+        }
+
+        const lastFed = new Date(reptile.last_fed_date);
+        const today = new Date();
+        const daysSinceLastFed = Math.floor((today - lastFed) / (1000 * 60 * 60 * 24));
+        const daysUntilNextFeed = (reptile.feeding_interval_days || 7) - daysSinceLastFed;
+
+        if (daysUntilNextFeed < 0) {
+            // Overdue - highest priority (sort by most overdue first)
+            return { priority: 0, daysUntil: daysUntilNextFeed };
+        } else if (daysUntilNextFeed <= 1) {
+            // Due today or tomorrow - second priority
+            return { priority: 1, daysUntil: daysUntilNextFeed };
+        } else {
+            // Not due yet - sort by soonest to latest
+            return { priority: 2, daysUntil: daysUntilNextFeed };
+        }
+    };
+
+    const filteredReptiles = reptiles
+        .filter(reptile =>
+            reptile.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            reptile.species?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            reptile.morph?.toLowerCase().includes(searchTerm.toLowerCase())
+        )
+        .sort((a, b) => {
+            const aPriority = getFeedingPriority(a);
+            const bPriority = getFeedingPriority(b);
+            
+            // First sort by priority group
+            if (aPriority.priority !== bPriority.priority) {
+                return aPriority.priority - bPriority.priority;
+            }
+            
+            // Within same priority, sort by days until next feed
+            return aPriority.daysUntil - bPriority.daysUntil;
+        });
 
     if (!user && !isLoading) {
         const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
