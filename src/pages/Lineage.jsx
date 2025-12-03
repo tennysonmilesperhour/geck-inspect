@@ -231,7 +231,7 @@ export default function Lineage() {
         let sire = null;
         let dam = null;
         
-        if (currentGen < maxGenerations) {
+        if (currentGen <= maxGenerations) {
             if (gecko.sire_id) {
                 sire = await getLineageFor(gecko.sire_id, maxGenerations, currentGen + 1);
             } else {
@@ -342,18 +342,26 @@ export default function Lineage() {
     // Vertical tree rendering - parents above, child below
     const renderVerticalTree = (gecko, generation) => {
         if (!gecko) {
-            return <UnknownCardNode size={generation >= 2 ? 'tiny' : 'small'} />;
+            return <UnknownCardNode size={generations >= 4 ? 'tiny' : generation >= 2 ? 'tiny' : 'small'} />;
         }
         
-        const cardSize = generation === 1 ? 'normal' : generation === 2 ? 'small' : 'tiny';
+        // Adjust card sizes based on total generations and current generation
+        let cardSize;
+        if (generations >= 4) {
+            cardSize = generation === 1 ? 'small' : 'tiny';
+        } else {
+            cardSize = generation === 1 ? 'normal' : generation === 2 ? 'small' : 'tiny';
+        }
         
-        // Handle placeholder parents
+        // Handle placeholder parents - ALWAYS show parents if not at max generation
         if (gecko.isPlaceholder) {
             const key = `${gecko.geckoId}_${gecko.parentType}`;
             const placeholderData = placeholders[key];
             
-            // For placeholders, show their own unknown parents if we're not at max generation
-            if (generation < generations) {
+            // Show this placeholder's parents if we haven't reached max generation
+            const shouldShowParents = generation < generations;
+            
+            if (shouldShowParents) {
                 return (
                     <div className="flex flex-col items-center">
                         {/* Placeholder's unknown parents */}
@@ -394,12 +402,12 @@ export default function Lineage() {
 
         return (
             <div className="flex flex-col items-center">
-                {/* Parents Row (above) */}
-                {hasParents && (
+                {/* Parents Row (above) - only show if we haven't reached max generation */}
+                {hasParents && generation < generations && (
                     <>
                         <div className="flex gap-2 md:gap-4">
-                            {gecko.sire && renderVerticalTree(gecko.sire, generation + 1)}
-                            {gecko.dam && renderVerticalTree(gecko.dam, generation + 1)}
+                            {renderVerticalTree(gecko.sire || { name: 'Unknown', isPlaceholder: true, geckoId: gecko.id, parentType: 'sire' }, generation + 1)}
+                            {renderVerticalTree(gecko.dam || { name: 'Unknown', isPlaceholder: true, geckoId: gecko.id, parentType: 'dam' }, generation + 1)}
                         </div>
                         {/* Connecting lines */}
                         <div className="flex items-center justify-center w-full">
@@ -445,19 +453,19 @@ export default function Lineage() {
                                 placeholder="Search..." 
                                 value={searchTerm}
                                 onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-9 bg-emerald-950 border-emerald-700 w-full md:w-48 text-emerald-100 h-10 focus:border-emerald-500 focus:ring-emerald-500"
+                                className="pl-9 bg-emerald-900/80 border-emerald-600 w-full md:w-48 text-emerald-100 h-10 focus:border-emerald-500 focus:ring-emerald-500"
                             />
                         </div>
                         <Select onValueChange={handleSelectGecko} value={selectedGeckoId || ''}>
-                            <SelectTrigger className="w-full md:w-[200px] bg-emerald-950 border-emerald-700 text-emerald-100 h-10 hover:bg-emerald-900 focus:ring-emerald-500">
+                            <SelectTrigger className="w-full md:w-[200px] bg-emerald-900/80 border-emerald-600 text-emerald-100 h-10 hover:bg-emerald-800 focus:ring-emerald-500">
                                 <SelectValue placeholder="Select gecko" />
                             </SelectTrigger>
-                            <SelectContent className="bg-emerald-950 border-emerald-700 text-emerald-100 z-[99999]">
+                            <SelectContent className="bg-emerald-900/95 border-emerald-600 text-emerald-100 z-[99999]">
                                 {isLoading ? (
                                     <div className="flex items-center justify-center p-2 text-emerald-300"><Loader2 className="animate-spin w-4 h-4 mr-2" /> Loading...</div>
                                 ) : (
                                     filteredSelectableGeckos.map(gecko => (
-                                        <SelectItem key={gecko.id} value={gecko.id} className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">
+                                        <SelectItem key={gecko.id} value={gecko.id} className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">
                                             {gecko.name} ({gecko.gecko_id_code || 'No ID'})
                                         </SelectItem>
                                     ))
@@ -465,14 +473,14 @@ export default function Lineage() {
                             </SelectContent>
                         </Select>
                         <Select value={generations.toString()} onValueChange={(v) => setGenerations(parseInt(v))}>
-                            <SelectTrigger className="w-24 bg-emerald-950 border-emerald-700 text-emerald-100 h-10 hover:bg-emerald-900 focus:ring-emerald-500">
+                            <SelectTrigger className="w-24 bg-emerald-900/80 border-emerald-600 text-emerald-100 h-10 hover:bg-emerald-800 focus:ring-emerald-500">
                                 <SelectValue />
                             </SelectTrigger>
-                            <SelectContent className="bg-emerald-950 border-emerald-700 text-emerald-100 z-[99999]">
-                                <SelectItem value="2" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">2 Gen</SelectItem>
-                                <SelectItem value="3" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">3 Gen</SelectItem>
-                                <SelectItem value="4" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">4 Gen</SelectItem>
-                                <SelectItem value="5" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">5 Gen</SelectItem>
+                            <SelectContent className="bg-emerald-900/95 border-emerald-600 text-emerald-100 z-[99999]">
+                                <SelectItem value="2" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">2 Gen</SelectItem>
+                                <SelectItem value="3" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">3 Gen</SelectItem>
+                                <SelectItem value="4" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">4 Gen</SelectItem>
+                                <SelectItem value="5" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">5 Gen</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

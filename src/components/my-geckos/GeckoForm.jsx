@@ -470,13 +470,13 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                     onChange={(e) => setHatchYear(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
                                 />
                                 <Select value={hatchMonth} onValueChange={setHatchMonth}>
-                                    <SelectTrigger className="h-10 bg-emerald-950 border-emerald-700 text-emerald-100 hover:bg-emerald-900 focus:ring-emerald-500">
+                                    <SelectTrigger className="h-10 bg-emerald-900/80 border-emerald-600 text-emerald-100 hover:bg-emerald-800 focus:ring-emerald-500">
                                         <SelectValue placeholder="Month" />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-emerald-950 border-emerald-700 text-emerald-100 z-[99999]">
-                                        <SelectItem value="none" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">None</SelectItem>
+                                    <SelectContent className="bg-emerald-900/95 border-emerald-600 text-emerald-100 z-[99999]">
+                                        <SelectItem value="none" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">None</SelectItem>
                                         {MONTHS.map(m => (
-                                            <SelectItem key={m.value} value={m.value} className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">{m.label}</SelectItem>
+                                            <SelectItem key={m.value} value={m.value} className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">{m.label}</SelectItem>
                                         ))}
                                     </SelectContent>
                                 </Select>
@@ -491,11 +491,11 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         <div>
                             <Label htmlFor="sex">Sex *</Label>
                             <Select value={formData.sex} onValueChange={(v) => handleChange('sex', v)}>
-                                <SelectTrigger className="h-10 bg-emerald-950 border-emerald-700 text-emerald-100 hover:bg-emerald-900 focus:ring-emerald-500"><SelectValue /></SelectTrigger>
-                                <SelectContent className="bg-emerald-950 border-emerald-700 text-emerald-100 z-[99999]">
-                                    <SelectItem value="Unsexed" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Unsexed</SelectItem>
-                                    <SelectItem value="Male" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Male</SelectItem>
-                                    <SelectItem value="Female" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Female</SelectItem>
+                                <SelectTrigger className="h-10 bg-emerald-900/80 border-emerald-600 text-emerald-100 hover:bg-emerald-800 focus:ring-emerald-500"><SelectValue /></SelectTrigger>
+                                <SelectContent className="bg-emerald-900/95 border-emerald-600 text-emerald-100 z-[99999]">
+                                    <SelectItem value="Unsexed" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">Unsexed</SelectItem>
+                                    <SelectItem value="Male" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">Male</SelectItem>
+                                    <SelectItem value="Female" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">Female</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
