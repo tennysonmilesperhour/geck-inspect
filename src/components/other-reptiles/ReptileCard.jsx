@@ -217,16 +217,18 @@ export default function ReptileCard({ reptile, onView, onEdit, onFeedingComplete
                 </div>
 
             <CardContent className="p-3 space-y-2">
-                <div className="flex items-center justify-between gap-2 min-h-[28px]">
-                    <h3 className="font-bold text-base sm:text-lg text-slate-100 truncate flex-1">
+                <div className="flex items-center justify-between gap-2">
+                    <h3 className="font-bold text-base sm:text-lg text-emerald-100 truncate flex-1 leading-7">
                         {reptile.name}
                     </h3>
-                    <EventTracker 
-                        entityId={reptile.id} 
-                        entityType="reptile" 
-                        EventEntity={ReptileEvent}
-                        onEventAdded={handleEventAdded}
-                    />
+                    <div className="flex-shrink-0">
+                        <EventTracker 
+                            entityId={reptile.id} 
+                            entityType="reptile" 
+                            EventEntity={ReptileEvent}
+                            onEventAdded={handleEventAdded}
+                        />
+                    </div>
                 </div>
                 
                 <p className="text-xs text-slate-400 truncate">
@@ -263,10 +265,10 @@ export default function ReptileCard({ reptile, onView, onEdit, onFeedingComplete
                     <div>
                         <Label className="text-slate-300">Prey Type</Label>
                         <Select value={preyType} onValueChange={setPreyType}>
-                            <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100 hover:bg-slate-700 focus:ring-emerald-500">
+                            <SelectTrigger className="h-10 bg-emerald-900/80 border-emerald-600 text-emerald-100 hover:bg-emerald-800 focus:ring-emerald-500">
                                 <SelectValue placeholder="Select prey type (optional)" />
                             </SelectTrigger>
-                            <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
+                            <SelectContent className="bg-emerald-900/95 border-emerald-600 text-emerald-100 z-[99999]">
                                 <SelectItem value="mouse_pinky">Mouse - Pinky</SelectItem>
                                 <SelectItem value="mouse_fuzzy">Mouse - Fuzzy</SelectItem>
                                 <SelectItem value="mouse_hopper">Mouse - Hopper</SelectItem>

@@ -261,18 +261,18 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete }) {
 
     return (
         <CardContent className="border-t border-slate-700 p-4 md:p-6">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-3">
-                 <div className="flex flex-wrap gap-2 w-full sm:w-auto">
-                    <Button variant="outline" size="sm" className="border-slate-600 hover:bg-slate-800 flex-1 sm:flex-none" onClick={() => setIsEditModalOpen(true)}>
-                        <Edit size={14} className="mr-2"/> Edit Plan
-                    </Button>
-                    <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 flex-1 sm:flex-none" onClick={() => handleAddNewEggs(1)}>
-                        <PlusCircle size={14} className="mr-2" /> Add 1 Egg
-                    </Button>
-                     <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 flex-1 sm:flex-none" onClick={() => handleAddNewEggs(2)}>
-                        <PlusCircle size={14} className="mr-2" /> Add 2 Eggs
-                    </Button>
-                 </div>
+            <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-3">
+                <div className="flex flex-wrap gap-2 w-full sm:w-auto items-center">
+                   <Button variant="outline" size="sm" className="border-emerald-700 hover:bg-emerald-900 flex-1 sm:flex-none h-9 text-emerald-300" onClick={() => setIsEditModalOpen(true)}>
+                       <Edit size={14} className="mr-2"/> Edit Plan
+                   </Button>
+                   <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 flex-1 sm:flex-none h-9" onClick={() => handleAddNewEggs(1)}>
+                       <PlusCircle size={14} className="mr-2" /> Add 1 Egg
+                   </Button>
+                    <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 flex-1 sm:flex-none h-9" onClick={() => handleAddNewEggs(2)}>
+                       <PlusCircle size={14} className="mr-2" /> Add 2 Eggs
+                   </Button>
+                </div>
             </div>
 
             {isLoading ? (

@@ -554,15 +554,15 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         <div>
                             <Label htmlFor="status">Status</Label>
                             <Select value={formData.status} onValueChange={(v) => handleChange('status', v)} disabled={isForSale}>
-                                <SelectTrigger className="h-10 bg-emerald-950 border-emerald-700 text-emerald-100 hover:bg-emerald-900 focus:ring-emerald-500"><SelectValue /></SelectTrigger>
-                                <SelectContent className="bg-emerald-950 border-emerald-700 text-emerald-100 z-[99999]">
-                                    <SelectItem value="Pet" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Pet</SelectItem>
-                                    <SelectItem value="Future Breeder" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Future Breeder</SelectItem>
-                                    <SelectItem value="Holdback" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Holdback</SelectItem>
-                                    <SelectItem value="Ready to Breed" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Ready to Breed</SelectItem>
-                                    <SelectItem value="Proven" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Proven</SelectItem>
-                                    <SelectItem value="For Sale" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">For Sale</SelectItem>
-                                    <SelectItem value="Sold" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-800">Sold</SelectItem>
+                                <SelectTrigger className="h-10 bg-emerald-900/80 border-emerald-600 text-emerald-100 hover:bg-emerald-800 focus:ring-emerald-500"><SelectValue /></SelectTrigger>
+                                <SelectContent className="bg-emerald-900/95 border-emerald-600 text-emerald-100 z-[99999]">
+                                    <SelectItem value="Pet" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">Pet</SelectItem>
+                                    <SelectItem value="Future Breeder" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">Future Breeder</SelectItem>
+                                    <SelectItem value="Holdback" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">Holdback</SelectItem>
+                                    <SelectItem value="Ready to Breed" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">Ready to Breed</SelectItem>
+                                    <SelectItem value="Proven" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">Proven</SelectItem>
+                                    <SelectItem value="For Sale" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">For Sale</SelectItem>
+                                    <SelectItem value="Sold" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">Sold</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>

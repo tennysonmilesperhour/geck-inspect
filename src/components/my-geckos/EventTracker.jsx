@@ -93,14 +93,14 @@ export default function EventTracker({ entityId, entityType = 'gecko', onEventAd
                     <Button 
                         size="sm" 
                         variant="outline" 
-                        className="border-emerald-600 text-emerald-400 hover:bg-emerald-800 h-7 bg-emerald-950 px-2"
+                        className="border-emerald-600 text-emerald-400 hover:bg-emerald-800 h-7 bg-emerald-900/80 px-2"
                         onClick={(e) => e.stopPropagation()}
                     >
                         <Plus className="w-3 h-3 mr-1" />
                         Event
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-emerald-950 border-emerald-700 z-[99999]" onClick={(e) => e.stopPropagation()}>
+                <DropdownMenuContent className="bg-emerald-900/95 border-emerald-600 z-[99999]" onClick={(e) => e.stopPropagation()}>
                     {EVENT_TYPES.map((type) => (
                         <DropdownMenuItem
                             key={type.value}
