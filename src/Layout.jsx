@@ -865,28 +865,50 @@ function LayoutContent({ children, currentPageName }) {
           .dark [data-radix-popper-content-wrapper] [role="listbox"],
           .dark [cmdk-list],
           .dark select {
-            background: rgba(30, 41, 59, 0.95) !important;
+            background: rgba(30, 41, 59, 0.98) !important;
             border: 1px solid rgba(134, 239, 172, 0.3) !important;
             color: var(--gecko-text) !important;
           }
 
           .dark [role="option"],
-          .dark [cmdk-item] {
+          .dark [cmdk-item],
+          .dark [role="menuitem"] {
             color: var(--gecko-text) !important;
           }
 
           .dark [role="option"]:hover,
           .dark [role="option"][data-highlighted],
           .dark [cmdk-item]:hover,
-          .dark [cmdk-item][data-selected] {
+          .dark [cmdk-item][data-selected],
+          .dark [role="menuitem"]:hover,
+          .dark [role="menuitem"][data-highlighted] {
             background: rgba(16, 185, 129, 0.2) !important;
           }
 
           .dark [data-radix-select-viewport],
-          .dark [data-radix-popper-content-wrapper] {
+          .dark [data-radix-popper-content-wrapper],
+          .dark [data-radix-menu-content],
+          .dark [role="menu"] {
             background: rgba(30, 41, 59, 0.98) !important;
             border: 1px solid rgba(134, 239, 172, 0.3) !important;
             box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5) !important;
+            z-index: 9999 !important;
+          }
+
+          /* Ensure dropdown menus and popovers are always visible */
+          [data-radix-popper-content-wrapper] {
+            z-index: 9999 !important;
+          }
+
+          .dark [data-state="open"] > [data-radix-collection-item] {
+            background: rgba(30, 41, 59, 0.98) !important;
+          }
+
+          /* Mobile-specific button visibility */
+          @media (max-width: 640px) {
+            .dark button {
+              opacity: 1 !important;
+            }
           }
 
           .dark button:hover,

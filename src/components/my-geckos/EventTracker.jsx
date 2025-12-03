@@ -100,7 +100,7 @@ export default function EventTracker({ entityId, entityType = 'gecko', onEventAd
                         Event
                     </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-slate-800 border-slate-600" onClick={(e) => e.stopPropagation()}>
+                <DropdownMenuContent className="bg-slate-800 border-slate-600 z-50" onClick={(e) => e.stopPropagation()}>
                     {EVENT_TYPES.map((type) => (
                         <DropdownMenuItem
                             key={type.value}
