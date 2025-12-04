@@ -325,7 +325,7 @@ export default function MyProfile() {
                                 type="file"
                                 accept="image/*"
                                 onChange={(e) => handleImageUpload(e.target.files[0], 'cover')}
-                                className="hidden"
+                                className="sr-only"
                                 disabled={isUploading}
                             />
                         </label>
@@ -343,7 +343,7 @@ export default function MyProfile() {
                             src={user.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name)}&background=84A98C&color=fff`}
                             alt={user.full_name}
                         />
-                        <label className="absolute inset-0 flex items-center justify-center cursor-pointer">
+                        <label className="absolute inset-0 flex items-center justify-center cursor-pointer rounded-full overflow-hidden">
                             <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
                                 <Camera className="w-6 h-6 text-white" />
                             </div>
@@ -351,7 +351,7 @@ export default function MyProfile() {
                                 type="file"
                                 accept="image/*"
                                 onChange={(e) => handleImageUpload(e.target.files[0], 'profile')}
-                                className="hidden"
+                                className="sr-only"
                                 disabled={isUploading}
                             />
                         </label>

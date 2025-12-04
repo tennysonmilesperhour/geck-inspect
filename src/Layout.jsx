@@ -910,7 +910,7 @@ function LayoutContent({ children, currentPageName }) {
             color: white !important;
           }
 
-          /* Fix SelectTrigger visibility - use consistent emerald theme */
+          /* Fix SelectTrigger visibility - use consistent dark emerald theme */
           .dark [data-radix-select-trigger],
           .dark button[role="combobox"],
           [data-radix-select-trigger],
@@ -918,6 +918,7 @@ function LayoutContent({ children, currentPageName }) {
             background: rgba(6, 78, 59, 0.8) !important;
             border: 1px solid #059669 !important;
             color: #d1fae5 !important;
+            font-size: 0.875rem !important;
           }
 
           .dark [data-radix-select-trigger]:hover,
@@ -925,6 +926,11 @@ function LayoutContent({ children, currentPageName }) {
           [data-radix-select-trigger]:hover,
           button[role="combobox"]:hover {
             background: rgba(4, 120, 87, 0.9) !important;
+          }
+
+          /* Hide file input text that shows "Choose file No file chosen" */
+          input[type="file"]:not(.sr-only) {
+            display: none !important;
           }
 
           /* CRITICAL: Force permanent vertical alignment for all interactive elements */

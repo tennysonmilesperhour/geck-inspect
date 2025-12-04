@@ -200,18 +200,18 @@ export default function ReptileCard({ reptile, onView, onEdit, onFeedingComplete
                         <Button
                             size="sm"
                             onClick={(e) => { e.stopPropagation(); onView(reptile); }}
-                            className="bg-blue-600/90 hover:bg-blue-700 text-white font-semibold shadow-lg backdrop-blur-sm text-xs h-8 px-2 sm:px-4"
+                            className="bg-blue-600/90 hover:bg-blue-700 text-white font-semibold shadow-lg backdrop-blur-sm text-xs h-8 w-8 sm:w-auto sm:px-3"
                         >
-                            <Eye className="w-4 h-4 sm:mr-2" />
-                            <span className="hidden sm:inline">View</span>
+                            <Eye className="w-4 h-4" />
+                            <span className="hidden sm:inline sm:ml-1">View</span>
                         </Button>
                         <Button
                             size="sm"
                             onClick={(e) => { e.stopPropagation(); onEdit(reptile); }}
-                            className="bg-white/90 hover:bg-white text-gray-900 font-semibold shadow-lg backdrop-blur-sm text-xs h-8 px-2 sm:px-4"
+                            className="bg-white/90 hover:bg-white text-gray-900 font-semibold shadow-lg backdrop-blur-sm text-xs h-8 w-8 sm:w-auto sm:px-3"
                         >
-                            <Edit className="w-4 h-4 sm:mr-2" />
-                            <span className="hidden sm:inline">Edit</span>
+                            <Edit className="w-4 h-4" />
+                            <span className="hidden sm:inline sm:ml-1">Edit</span>
                         </Button>
                     </div>
                 </div>

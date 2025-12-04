@@ -684,7 +684,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     {gecko && onDelete && (
                          <AlertDialog>
                             <AlertDialogTrigger asChild>
-                                <Button variant="destructive" size="sm" className="h-10">
+                                <Button variant="destructive" className="h-10">
                                     <Trash2 className="w-4 h-4 mr-2" />
                                     Delete
                                 </Button>
