@@ -30,7 +30,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { format, addDays, addMonths } from 'date-fns';
 import { generateCalendarEvent } from '@/functions/generateCalendarEvent';
 
-function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete }) {
+function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulationModal, onOpenEggCheckModal }) {
     const [eggs, setEggs] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -262,14 +262,20 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete }) {
     return (
         <CardContent className="border-t border-slate-700 p-4 md:p-6">
             <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-3">
-                <div className="flex flex-wrap gap-2 w-full sm:w-auto items-center">
-                   <Button variant="outline" size="sm" className="border-emerald-700 hover:bg-emerald-900 flex-1 sm:flex-none h-9 text-emerald-300" onClick={() => setIsEditModalOpen(true)}>
+                <div className="flex flex-wrap gap-2 w-full sm:w-auto items-center justify-end ml-auto">
+                   <Button variant="outline" size="sm" className="border-slate-600 hover:bg-slate-800 h-9" onClick={onOpenCopulationModal}>
+                       Record Copulation
+                   </Button>
+                   <Button variant="outline" size="sm" className="border-emerald-600 text-emerald-400 hover:bg-emerald-900/20 h-9" onClick={onOpenEggCheckModal}>
+                       {plan.egg_check_day ? 'Edit' : 'Set'} Egg Check
+                   </Button>
+                   <Button variant="outline" size="sm" className="border-emerald-700 hover:bg-emerald-900 h-9 text-emerald-300" onClick={() => setIsEditModalOpen(true)}>
                        <Edit size={14} className="mr-2"/> Edit Plan
                    </Button>
-                   <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 flex-1 sm:flex-none h-9" onClick={() => handleAddNewEggs(1)}>
+                   <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 h-9" onClick={() => handleAddNewEggs(1)}>
                        <PlusCircle size={14} className="mr-2" /> Add 1 Egg
                    </Button>
-                    <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 flex-1 sm:flex-none h-9" onClick={() => handleAddNewEggs(2)}>
+                    <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 h-9" onClick={() => handleAddNewEggs(2)}>
                        <PlusCircle size={14} className="mr-2" /> Add 2 Eggs
                    </Button>
                 </div>
@@ -394,7 +400,7 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete }) {
     );
 }
 
-function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArchive, isExpanded, onToggleExpanded, showArchiveButton = true }) {
+function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArchive, isExpanded, onToggleExpanded, showArchiveButton = true, onAddEggs }) {
     const getGecko = (id) => geckos.find(g => g.id === id);
     const sire = getGecko(plan.sire_id);
     const dam = getGecko(plan.dam_id);
@@ -414,6 +420,31 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
     const handleOpenEggCheckModal = () => {
         setEggCheckDay(plan.egg_check_day || 15);
         setIsEggCheckModalOpen(true);
+    };
+    
+    const handleQuickAddEggs = async (count) => {
+        const today = new Date();
+        const newLayDate = today.toISOString().split('T')[0];
+        const expectedHatch = addDays(today, 65);
+        
+        try {
+            for (let i = 0; i < count; i++) {
+                await Egg.create({
+                    breeding_plan_id: plan.id,
+                    lay_date: newLayDate,
+                    hatch_date_expected: expectedHatch.toISOString().split('T')[0],
+                    status: 'Incubating'
+                });
+            }
+            
+            // Update egg check count
+            const newCount = (plan.egg_check_count || 0) + 1;
+            await BreedingPlan.update(plan.id, { egg_check_count: newCount });
+            
+            onPlanUpdate(); // Refresh plan data
+        } catch (error) {
+            console.error("Failed to add eggs:", error);
+        }
     };
 
     const handleSaveCopulation = async () => {
@@ -586,22 +617,20 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
                                     </div>
                                 )}
                                 
-                                <div className="flex gap-2 mt-2">
+                                <div className="flex gap-2 mt-2 justify-end">
                                     <Button 
-                                        variant="outline" 
                                         size="sm" 
-                                        className="border-slate-600 hover:bg-slate-800 flex-1 md:flex-none text-xs md:text-sm" 
-                                        onClick={(e) => { e.stopPropagation(); handleOpenCopulationModal(); }}
+                                        className="bg-emerald-600 hover:bg-emerald-700 text-xs md:text-sm" 
+                                        onClick={(e) => { e.stopPropagation(); handleQuickAddEggs(1); }}
                                     >
-                                        Record Copulation
+                                        <PlusCircle size={14} className="mr-1" /> Add 1 Egg
                                     </Button>
                                     <Button 
-                                        variant="outline" 
                                         size="sm" 
-                                        className="border-emerald-600 text-emerald-400 hover:bg-emerald-900/20 flex-1 md:flex-none text-xs md:text-sm" 
-                                        onClick={(e) => { e.stopPropagation(); handleOpenEggCheckModal(); }}
+                                        className="bg-emerald-600 hover:bg-emerald-700 text-xs md:text-sm" 
+                                        onClick={(e) => { e.stopPropagation(); handleQuickAddEggs(2); }}
                                     >
-                                        {plan.egg_check_day ? 'Edit' : 'Set'} Egg Check
+                                        <PlusCircle size={14} className="mr-1" /> Add 2 Eggs
                                     </Button>
                                 </div>
                             </div>
@@ -649,6 +678,8 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
                             geckos={geckos}
                             onPlanUpdate={onPlanUpdate}
                             onPlanDelete={onPlanDelete}
+                            onOpenCopulationModal={handleOpenCopulationModal}
+                            onOpenEggCheckModal={handleOpenEggCheckModal}
                         />
                     </>
                 )}
@@ -669,27 +700,9 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
                                 {plan.archived ? 'Unarchive' : 'Archive'}
                             </Button>
                         )}
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button variant="destructive" size="sm" className="text-xs h-8">
-                                    <Trash2 size={14} className="mr-1" /> Delete
-                                </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent className="bg-emerald-950 border-emerald-700">
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle className="text-emerald-100">Are you sure?</AlertDialogTitle>
-                                    <AlertDialogDescription className="text-emerald-300">
-                                        This will permanently delete this breeding plan and all associated eggs. This action cannot be undone.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel className="bg-emerald-900 text-emerald-200 border-emerald-700">Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={() => onPlanDelete(plan.id)} className="bg-red-600 hover:bg-red-700">
-                                        Delete
-                                    </AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
+                        <Button variant="outline" size="sm" className="border-slate-600 hover:bg-slate-800 text-xs h-8" onClick={() => onToggleExpanded(plan.id)}>
+                            <Edit size={14} className="mr-1" /> Edit
+                        </Button>
                     </div>
                 </CardFooter>
             </Card>
