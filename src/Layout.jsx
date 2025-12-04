@@ -927,25 +927,51 @@ function LayoutContent({ children, currentPageName }) {
             background: rgba(4, 120, 87, 0.9) !important;
           }
 
-          /* Force all flex row items to align center on cross-axis */
-          .flex.items-center {
-            align-items: center !important;
-          }
-
-          /* Ensure buttons and selects have consistent box model */
+          /* CRITICAL: Force permanent vertical alignment for all interactive elements */
           button,
           [data-radix-select-trigger],
-          input {
+          [role="combobox"],
+          input,
+          select,
+          .h-10,
+          .h-9,
+          .h-8 {
+            display: inline-flex !important;
+            align-items: center !important;
+            vertical-align: middle !important;
             box-sizing: border-box !important;
             margin-top: 0 !important;
             margin-bottom: 0 !important;
+            flex-shrink: 0 !important;
           }
 
-          /* Fix flex container alignment */
+          /* Force flex rows to align items center */
+          .flex.items-center,
           .flex.gap-2,
           .flex.gap-3,
-          .flex.gap-4 {
+          .flex.gap-4,
+          .flex.flex-wrap {
+            display: flex !important;
             align-items: center !important;
+          }
+
+          /* Prevent any transform or position shifts */
+          button:not(:active),
+          [data-radix-select-trigger]:not([data-state="open"]),
+          [role="combobox"]:not([data-state="open"]) {
+            transform: none !important;
+            position: relative !important;
+          }
+
+          /* Ensure SelectTrigger has consistent height */
+          [data-radix-select-trigger] {
+            min-height: 2.5rem !important;
+            height: auto !important;
+          }
+
+          /* Fix button baseline alignment */
+          button {
+            line-height: 1 !important;
           }
 
           /* Fix all buttons to be visible */
