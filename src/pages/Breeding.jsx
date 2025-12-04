@@ -272,12 +272,6 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
                    <Button variant="outline" size="sm" className="border-emerald-700 hover:bg-emerald-900 h-9 text-emerald-300" onClick={() => setIsEditModalOpen(true)}>
                        <Edit size={14} className="mr-2"/> Edit Plan
                    </Button>
-                   <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 h-9" onClick={() => handleAddNewEggs(1)}>
-                       <PlusCircle size={14} className="mr-2" /> Add 1 Egg
-                   </Button>
-                    <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 h-9" onClick={() => handleAddNewEggs(2)}>
-                       <PlusCircle size={14} className="mr-2" /> Add 2 Eggs
-                   </Button>
                 </div>
             </div>
 
