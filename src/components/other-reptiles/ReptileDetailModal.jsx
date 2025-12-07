@@ -259,16 +259,18 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit 
                                         <Plus className="w-4 h-4 mr-2" /> Add Weight Record
                                     </Button>
                                 ) : (
-                                    <div className="flex gap-2 items-center mt-4">
+                                    <div className="space-y-3 mt-4">
                                         <Input
                                             type="number"
                                             placeholder="Weight in grams"
                                             value={newWeight}
                                             onChange={(e) => setNewWeight(e.target.value)}
-                                            className="bg-slate-800 text-sm border-slate-600"
+                                            className="bg-slate-800 text-sm border-slate-600 w-full"
                                         />
-                                        <Button onClick={handleAddWeight} size="sm" className="bg-emerald-600 hover:bg-emerald-700">Save</Button>
-                                        <Button variant="ghost" size="sm" onClick={() => setShowAddWeight(false)}>Cancel</Button>
+                                        <div className="flex gap-2">
+                                            <Button onClick={handleAddWeight} className="w-full bg-emerald-600 hover:bg-emerald-700">Save</Button>
+                                            <Button variant="outline" onClick={() => setShowAddWeight(false)} className="w-full md:w-auto border-slate-600">Cancel</Button>
+                                        </div>
                                     </div>
                                 )}
                             </div>
