@@ -358,10 +358,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, all
                       onChange={(e) => setNewWeight(e.target.value)}
                       className="bg-slate-800 text-sm w-full"
                     />
-                    <div className="flex gap-2">
-                      <Button onClick={handleAddWeight} className="w-full bg-emerald-600 hover:bg-emerald-700">Save</Button>
-                      <Button variant="outline" onClick={() => setShowAddWeight(false)} className="w-full md:w-auto border-slate-600">Cancel</Button>
-                    </div>
+                    <Button onClick={handleAddWeight} className="w-full bg-emerald-600 hover:bg-emerald-700">Save</Button>
                   </div>
                 )}
               </div>
