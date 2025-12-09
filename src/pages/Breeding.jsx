@@ -27,7 +27,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { format, addDays, addMonths } from 'date-fns';
+import { format, addDays, addMonths, differenceInDays } from 'date-fns';
 import { generateCalendarEvent } from '@/functions/generateCalendarEvent';
 
 function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulationModal, onOpenEggCheckModal }) {
@@ -404,6 +404,27 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
     const [copulationNotes, setCopulationNotes] = useState('');
     const [isEggCheckModalOpen, setIsEggCheckModalOpen] = useState(false);
     const [eggCheckDay, setEggCheckDay] = useState(plan.egg_check_day || 15);
+    const [lastEggDate, setLastEggDate] = useState(null);
+    
+    // Load last egg date
+    useEffect(() => {
+        const fetchLastEggDate = async () => {
+            try {
+                const eggs = await Egg.filter({ breeding_plan_id: plan.id }, '-lay_date');
+                if (eggs.length > 0) {
+                    setLastEggDate(eggs[0].lay_date);
+                }
+            } catch (error) {
+                console.error("Failed to load last egg date:", error);
+            }
+        };
+        fetchLastEggDate();
+    }, [plan.id]);
+    
+    // Calculate days since last egg
+    const daysSinceLastEgg = lastEggDate 
+        ? differenceInDays(new Date(), new Date(lastEggDate))
+        : null;
 
     const handleOpenCopulationModal = () => {
         setCopulationDate(new Date().toISOString().split('T')[0]);
@@ -431,10 +452,11 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
                 });
             }
             
-            // Update egg check count
+            // Update egg check count and refresh last egg date
             const newCount = (plan.egg_check_count || 0) + 1;
             await BreedingPlan.update(plan.id, { egg_check_count: newCount });
             
+            setLastEggDate(newLayDate); // Update local state
             onPlanUpdate(); // Refresh plan data
         } catch (error) {
             console.error("Failed to add eggs:", error);
@@ -577,6 +599,13 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
                                 />
                             </div>
                             <div className="p-4 md:ml-4 flex flex-col justify-center flex-1">
+                                {/* Days Since Last Egg */}
+                                {daysSinceLastEgg !== null && (
+                                    <div className="text-sm text-slate-400 mb-1">
+                                        {daysSinceLastEgg} day{daysSinceLastEgg !== 1 ? 's' : ''} since last egg
+                                    </div>
+                                )}
+                                
                                 <div className="font-bold text-lg md:text-xl text-slate-100 break-words">
                                     {sire?.name || 'N/A'} & {dam?.name || 'N/A'}
                                 </div>
