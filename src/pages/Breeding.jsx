@@ -586,17 +586,21 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
                 <CardHeader className="p-0">
                     <div className="flex flex-col md:flex-row justify-between items-stretch">
                         <div className="flex flex-1 flex-col md:flex-row">
-                            <div className="flex w-full md:w-auto">
-                                <img 
-                                    src={sire?.image_urls?.[0] || 'https://via.placeholder.com/100'} 
-                                    alt={sire?.name} 
-                                    className="w-1/2 md:w-20 h-32 md:h-20 object-cover" 
-                                />
-                                <img 
-                                    src={dam?.image_urls?.[0] || 'https://via.placeholder.com/100'} 
-                                    alt={dam?.name} 
-                                    className="w-1/2 md:w-20 h-32 md:h-20 object-cover" 
-                                />
+                            <div className="flex w-full md:w-40 flex-shrink-0">
+                                <div className="w-1/2 h-40 md:h-32 overflow-hidden">
+                                    <img 
+                                        src={sire?.image_urls?.[0] || 'https://via.placeholder.com/100'} 
+                                        alt={sire?.name} 
+                                        className="w-full h-full object-cover" 
+                                    />
+                                </div>
+                                <div className="w-1/2 h-40 md:h-32 overflow-hidden">
+                                    <img 
+                                        src={dam?.image_urls?.[0] || 'https://via.placeholder.com/100'} 
+                                        alt={dam?.name} 
+                                        className="w-full h-full object-cover" 
+                                    />
+                                </div>
                             </div>
                             <div className="p-4 md:ml-4 flex flex-col justify-center flex-1">
                                 {/* Days Since Last Egg */}
