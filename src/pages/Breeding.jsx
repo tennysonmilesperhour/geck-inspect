@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Loader2, GitBranch, Heart, Edit, Trash2, ChevronDown, ChevronUp, Egg as EggIcon, Calendar as CalendarIcon, Archive, ArchiveRestore, Sparkles, ListTree } from 'lucide-react';
+import { PlusCircle, Loader2, GitBranch, Heart, Edit, Trash2, ChevronDown, ChevronUp, Egg as EggIcon, Calendar as CalendarIcon, Archive, ArchiveRestore, Sparkles, ListTree, Search } from 'lucide-react';
 import Hatchery from '../components/breeding/Hatchery';
 import {
   Dialog,
@@ -851,6 +851,9 @@ export default function BreedingPage() {
 
     const [expandAllActive, setExpandAllActive] = useState(false);
     const [expandAllArchive, setExpandAllArchive] = useState(false);
+    
+    const [searchTerm, setSearchTerm] = useState('');
+    const [sortBy, setSortBy] = useState('newest');
 
     const [newPlan, setNewPlan] = useState({
         sire_id: '',
@@ -1016,8 +1019,87 @@ export default function BreedingPage() {
         setExpandAllActive(false);
     };
 
-    const activePlans = breedingPlans.filter(plan => !plan.archived);
-    const archivedPlans = breedingPlans.filter(plan => plan.archived);
+    // Filter and sort breeding plans
+    const filterAndSortPlans = async (plans) => {
+        // Filter by search term
+        let filtered = plans.filter(plan => {
+            const sire = geckos.find(g => g.id === plan.sire_id);
+            const dam = geckos.find(g => g.id === plan.dam_id);
+            const searchLower = searchTerm.toLowerCase();
+            
+            return (
+                sire?.name?.toLowerCase().includes(searchLower) ||
+                dam?.name?.toLowerCase().includes(searchLower) ||
+                plan.breeding_id?.toLowerCase().includes(searchLower)
+            );
+        });
+        
+        // Get egg counts and last egg dates for sorting
+        const plansWithData = await Promise.all(
+            filtered.map(async (plan) => {
+                try {
+                    const eggs = await Egg.filter({ breeding_plan_id: plan.id }, '-lay_date');
+                    const eggCount = eggs.length;
+                    const lastEggDate = eggs.length > 0 ? eggs[0].lay_date : null;
+                    return { ...plan, eggCount, lastEggDate };
+                } catch (error) {
+                    return { ...plan, eggCount: 0, lastEggDate: null };
+                }
+            })
+        );
+        
+        // Sort
+        plansWithData.sort((a, b) => {
+            switch (sortBy) {
+                case 'eggs_low':
+                    return a.eggCount - b.eggCount;
+                case 'eggs_high':
+                    return b.eggCount - a.eggCount;
+                case 'last_egg_recent':
+                    if (!a.lastEggDate && !b.lastEggDate) return 0;
+                    if (!a.lastEggDate) return 1;
+                    if (!b.lastEggDate) return -1;
+                    return new Date(b.lastEggDate) - new Date(a.lastEggDate);
+                case 'last_egg_oldest':
+                    if (!a.lastEggDate && !b.lastEggDate) return 0;
+                    if (!a.lastEggDate) return 1;
+                    if (!b.lastEggDate) return -1;
+                    return new Date(a.lastEggDate) - new Date(b.lastEggDate);
+                case 'time_newest':
+                    return new Date(b.pairing_date || b.created_date) - new Date(a.pairing_date || a.created_date);
+                case 'time_oldest':
+                    return new Date(a.pairing_date || a.created_date) - new Date(b.pairing_date || b.created_date);
+                case 'newest':
+                default:
+                    return new Date(b.created_date) - new Date(a.created_date);
+            }
+        });
+        
+        return plansWithData;
+    };
+    
+    const [filteredActivePlans, setFilteredActivePlans] = useState([]);
+    const [filteredArchivedPlans, setFilteredArchivedPlans] = useState([]);
+    
+    useEffect(() => {
+        const updateFilteredPlans = async () => {
+            const active = breedingPlans.filter(plan => !plan.archived);
+            const archived = breedingPlans.filter(plan => plan.archived);
+            
+            const filteredActive = await filterAndSortPlans(active);
+            const filteredArchived = await filterAndSortPlans(archived);
+            
+            setFilteredActivePlans(filteredActive);
+            setFilteredArchivedPlans(filteredArchived);
+        };
+        
+        if (breedingPlans.length > 0) {
+            updateFilteredPlans();
+        }
+    }, [breedingPlans, searchTerm, sortBy, geckos]);
+    
+    const activePlans = filteredActivePlans;
+    const archivedPlans = filteredArchivedPlans;
 
     const archivedBySeason = archivedPlans.reduce((acc, plan) => {
         const season = plan.breeding_season || 'Unknown Season';
@@ -1112,6 +1194,34 @@ export default function BreedingPage() {
                         </TabsList>
 
                         <TabsContent value="active" className="mt-6">
+                            {/* Search and Sort Controls */}
+                            <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                                <div className="relative flex-1">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <Input
+                                        type="text"
+                                        placeholder="Search by gecko names or breeding ID..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="pl-10 bg-slate-900 border-slate-700"
+                                    />
+                                </div>
+                                <Select value={sortBy} onValueChange={setSortBy}>
+                                    <SelectTrigger className="w-full sm:w-64 bg-slate-900 border-slate-700">
+                                        <SelectValue placeholder="Sort by..." />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
+                                        <SelectItem value="newest">Newest First</SelectItem>
+                                        <SelectItem value="time_newest">Paired Most Recently</SelectItem>
+                                        <SelectItem value="time_oldest">Paired Longest Ago</SelectItem>
+                                        <SelectItem value="eggs_high">Most Eggs</SelectItem>
+                                        <SelectItem value="eggs_low">Least Eggs</SelectItem>
+                                        <SelectItem value="last_egg_recent">Latest Egg Drop</SelectItem>
+                                        <SelectItem value="last_egg_oldest">Oldest Egg Drop</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            
                             {activePlans.length === 0 ? (
                                 <Card className="bg-slate-900 border-slate-700">
                                     <CardContent className="text-center py-20">
@@ -1164,6 +1274,34 @@ export default function BreedingPage() {
                         </TabsContent>
 
                         <TabsContent value="archive" className="mt-6">
+                            {/* Search and Sort Controls */}
+                            <div className="flex flex-col sm:flex-row gap-3 mb-6">
+                                <div className="relative flex-1">
+                                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                                    <Input
+                                        type="text"
+                                        placeholder="Search by gecko names or breeding ID..."
+                                        value={searchTerm}
+                                        onChange={(e) => setSearchTerm(e.target.value)}
+                                        className="pl-10 bg-slate-900 border-slate-700"
+                                    />
+                                </div>
+                                <Select value={sortBy} onValueChange={setSortBy}>
+                                    <SelectTrigger className="w-full sm:w-64 bg-slate-900 border-slate-700">
+                                        <SelectValue placeholder="Sort by..." />
+                                    </SelectTrigger>
+                                    <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
+                                        <SelectItem value="newest">Newest First</SelectItem>
+                                        <SelectItem value="time_newest">Paired Most Recently</SelectItem>
+                                        <SelectItem value="time_oldest">Paired Longest Ago</SelectItem>
+                                        <SelectItem value="eggs_high">Most Eggs</SelectItem>
+                                        <SelectItem value="eggs_low">Least Eggs</SelectItem>
+                                        <SelectItem value="last_egg_recent">Latest Egg Drop</SelectItem>
+                                        <SelectItem value="last_egg_oldest">Oldest Egg Drop</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            
                             {archivedPlans.length === 0 ? (
                                 <Card className="bg-slate-900 border-slate-700">
                                     <CardContent className="text-center py-20">
