@@ -280,8 +280,15 @@ export default function Lineage() {
         const lineageData = await getLineageFor(geckoId, generations);
         setLineage(lineageData || {});
 
-        const foundOffspring = Object.values(allGeckosMap).filter(g => g.sire_id === geckoId || g.dam_id === geckoId);
-        setOffspring(foundOffspring);
+        // Get offspring - fetch by both sire and dam separately then combine
+        const [sireOffspring, damOffspring] = await Promise.all([
+            Gecko.filter({ sire_id: geckoId }),
+            Gecko.filter({ dam_id: geckoId })
+        ]);
+        const allOffspring = [...sireOffspring, ...damOffspring];
+        // Remove duplicates by ID
+        const uniqueOffspring = Array.from(new Map(allOffspring.map(g => [g.id, g])).values());
+        setOffspring(uniqueOffspring);
 
         const mateIds = new Set();
         allBreedingPlans.forEach(plan => {
