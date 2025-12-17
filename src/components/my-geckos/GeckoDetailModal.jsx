@@ -325,7 +325,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, all
                     </ResponsiveContainer>
                     
                     <div className="max-h-32 overflow-y-auto space-y-2">
-                      {weightRecords.slice(0, 5).map(record => (
+                      {weightRecords.map(record => (
                         <div key={record.id} className="flex justify-between items-center bg-slate-800 p-2 rounded text-sm">
                           <span className="text-slate-300">{format(new Date(record.record_date), 'MMM d, yyyy')}</span>
                           <span className="font-bold text-emerald-400">{record.weight_grams}g</span>
