@@ -44,21 +44,17 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, all
       try {
         const [weights, breedings, eggs, children, events] = await Promise.allSettled([
           WeightRecord.filter({ gecko_id: gecko.id }, '-record_date'),
-          BreedingPlan.filter({ 
-            $or: [
-              { sire_id: gecko.id },
-              { dam_id: gecko.id }
-            ]
-          }, '-created_date'),
+          Promise.all([
+            BreedingPlan.filter({ sire_id: gecko.id }, '-created_date'),
+            BreedingPlan.filter({ dam_id: gecko.id }, '-created_date')
+          ]).then(([sireBreedings, damBreedings]) => [...sireBreedings, ...damBreedings]),
           gecko.sex === 'Female' ? Egg.filter({ 
             breeding_plan_id: { $in: await BreedingPlan.filter({ dam_id: gecko.id }).then(plans => plans.map(p => p.id)) }
           }, '-lay_date') : Promise.resolve([]),
-          Gecko.filter({
-            $or: [
-              { sire_id: gecko.id },
-              { dam_id: gecko.id }
-            ]
-          }, '-hatch_date'),
+          Promise.all([
+            Gecko.filter({ sire_id: gecko.id }, '-hatch_date'),
+            Gecko.filter({ dam_id: gecko.id }, '-hatch_date')
+          ]).then(([sireOffspring, damOffspring]) => [...sireOffspring, ...damOffspring]),
           GeckoEvent.filter({ gecko_id: gecko.id }, '-event_date')
         ]);
 
@@ -408,21 +404,17 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, all
                                   await BreedingPlan.update(breeding.id, { is_public: checked });
                                   const updated = await Promise.allSettled([
                                     WeightRecord.filter({ gecko_id: gecko.id }, '-record_date'),
-                                    BreedingPlan.filter({ 
-                                      $or: [
-                                        { sire_id: gecko.id },
-                                        { dam_id: gecko.id }
-                                      ]
-                                    }, '-created_date'),
+                                    Promise.all([
+                                      BreedingPlan.filter({ sire_id: gecko.id }, '-created_date'),
+                                      BreedingPlan.filter({ dam_id: gecko.id }, '-created_date')
+                                    ]).then(([sireBreedings, damBreedings]) => [...sireBreedings, ...damBreedings]),
                                     gecko.sex === 'Female' ? Egg.filter({ 
                                       breeding_plan_id: { $in: await BreedingPlan.filter({ dam_id: gecko.id }).then(plans => plans.map(p => p.id)) }
                                     }, '-lay_date') : Promise.resolve([]),
-                                    Gecko.filter({
-                                      $or: [
-                                        { sire_id: gecko.id },
-                                        { dam_id: gecko.id }
-                                      ]
-                                    }, '-hatch_date')
+                                    Promise.all([
+                                      Gecko.filter({ sire_id: gecko.id }, '-hatch_date'),
+                                      Gecko.filter({ dam_id: gecko.id }, '-hatch_date')
+                                    ]).then(([sireOffspring, damOffspring]) => [...sireOffspring, ...damOffspring])
                                   ]);
                                   setBreedingHistory(updated[1].status === 'fulfilled' ? updated[1].value : []);
                                 } catch (error) {
