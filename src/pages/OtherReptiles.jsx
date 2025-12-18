@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { OtherReptile, ReptileEvent, Notification } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
-import { PlusCircle, Loader2, Search, Users } from 'lucide-react';
+import { PlusCircle, Loader2, Search, Users, Archive, ArchiveRestore } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import ReptileCard from '../components/other-reptiles/ReptileCard';
@@ -19,6 +19,7 @@ export default function OtherReptilesPage() {
     const [selectedReptile, setSelectedReptile] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [showArchived, setShowArchived] = useState(false);
 
     // Check and create feeding notifications for overdue/due reptiles
     const checkFeedingNotifications = useCallback(async (reptileList, userEmail) => {
@@ -135,6 +136,22 @@ export default function OtherReptilesPage() {
         }
     };
 
+    const handleArchive = async (reptileId, shouldArchive) => {
+        try {
+            await OtherReptile.update(reptileId, {
+                archived: shouldArchive,
+                archived_date: shouldArchive ? new Date().toISOString().split('T')[0] : null
+            });
+            await loadReptiles();
+            setIsDetailModalOpen(false);
+            setSelectedReptile(null);
+            toast({ title: shouldArchive ? "Reptile archived" : "Reptile unarchived" });
+        } catch (error) {
+            console.error("Failed to archive reptile:", error);
+            toast({ title: "Error", description: "Failed to archive.", variant: "destructive" });
+        }
+    };
+
     const handleFormSubmit = async () => {
         setIsFormOpen(false);
         setSelectedReptile(null);
@@ -177,6 +194,7 @@ export default function OtherReptilesPage() {
     };
 
     const filteredReptiles = reptiles
+        .filter(reptile => showArchived ? reptile.archived : !reptile.archived)
         .filter(reptile =>
             reptile.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
             reptile.species?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -209,16 +227,39 @@ export default function OtherReptilesPage() {
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                     <div>
-                        <h1 className="text-4xl font-bold text-slate-100">Other Reptiles</h1>
+                        <h1 className="text-4xl font-bold text-slate-100">
+                            {showArchived ? 'Archived Reptiles' : 'Other Reptiles'}
+                        </h1>
                         <p className="text-slate-400 mt-1">Track your non-gecko reptile collection with feeding reminders.</p>
                     </div>
-                    <Button 
-                        className="bg-emerald-600 hover:bg-emerald-700" 
-                        onClick={() => { setSelectedReptile(null); setIsFormOpen(true); }}
-                    >
-                        <PlusCircle className="w-5 h-5 mr-2" />
-                        Add Reptile
-                    </Button>
+                    <div className="flex gap-2">
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowArchived(!showArchived)}
+                            className="border-slate-600 hover:bg-slate-800"
+                        >
+                            {showArchived ? (
+                                <>
+                                    <ArchiveRestore className="w-5 h-5 mr-2" />
+                                    Active
+                                </>
+                            ) : (
+                                <>
+                                    <Archive className="w-5 h-5 mr-2" />
+                                    Archive
+                                </>
+                            )}
+                        </Button>
+                        {!showArchived && (
+                            <Button 
+                                className="bg-emerald-600 hover:bg-emerald-700" 
+                                onClick={() => { setSelectedReptile(null); setIsFormOpen(true); }}
+                            >
+                                <PlusCircle className="w-5 h-5 mr-2" />
+                                Add Reptile
+                            </Button>
+                        )}
+                    </div>
                 </div>
 
                 <div className="mb-6">
@@ -292,6 +333,7 @@ export default function OtherReptilesPage() {
                                     setSelectedReptile(reptile);
                                     setIsFormOpen(true);
                                 }}
+                                onArchive={handleArchive}
                             />
                         )}
                     </>

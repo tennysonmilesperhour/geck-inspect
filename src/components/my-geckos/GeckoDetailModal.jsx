@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { WeightRecord, BreedingPlan, Egg, Gecko, GeckoEvent } from '@/entities/all';
 import { format } from 'date-fns';
-import { X, Plus, Trash2, LineChart, Loader2, Award, GitBranch, Calendar, Baby, Users, FileText, Edit, Eye, EyeOff, History } from 'lucide-react';
+import { X, Plus, Trash2, LineChart, Loader2, Award, GitBranch, Calendar, Baby, Users, FileText, Edit, Eye, EyeOff, History, Archive, ArchiveRestore } from 'lucide-react';
 import EventTracker from './EventTracker';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -14,7 +14,7 @@ import { generateLineageCertificate } from '@/functions/generateLineageCertifica
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
-export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, allGeckos = [] }) {
+export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onArchive, allGeckos = [] }) {
   const [weightRecords, setWeightRecords] = useState([]);
   const [breedingHistory, setBreedingHistory] = useState([]);
   const [eggHistory, setEggHistory] = useState([]);
@@ -282,13 +282,27 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, all
                     <><Award className="w-4 h-4 mr-2" /> Generate Certificate</>
                   )}
                 </Button>
-                
+
                 <Link to={createPageUrl(`Lineage?geckoId=${gecko.id}`)}>
                   <Button variant="outline" className="w-full border-slate-600 hover:bg-slate-800">
                     <GitBranch className="w-4 h-4 mr-2" />
                     View Lineage Tree
                   </Button>
                 </Link>
+
+                {onArchive && (
+                  <Button
+                    variant="outline"
+                    onClick={() => onArchive(gecko.id, !gecko.archived)}
+                    className="w-full border-yellow-600 text-yellow-500 hover:bg-yellow-900/20"
+                  >
+                    {gecko.archived ? (
+                      <><ArchiveRestore className="w-4 h-4 mr-2" /> Unarchive</>
+                    ) : (
+                      <><Archive className="w-4 h-4 mr-2" /> Archive</>
+                    )}
+                  </Button>
+                )}
               </div>
             </div>
 

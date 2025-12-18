@@ -9,7 +9,7 @@ import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tool
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 
-export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit }) {
+export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit, onArchive }) {
     const [weightRecords, setWeightRecords] = useState([]);
     const [eventHistory, setEventHistory] = useState([]);
     const [showAddWeight, setShowAddWeight] = useState(false);
@@ -130,11 +130,25 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit 
                             <Edit className="w-4 h-4 mr-2" />
                             Edit
                         </Button>
+                        {onArchive && (
+                            <Button 
+                                variant="outline"
+                                size="sm"
+                                onClick={() => onArchive(reptile.id, !reptile.archived)}
+                                className="border-yellow-600 text-yellow-500 hover:bg-yellow-900/20"
+                            >
+                                {reptile.archived ? (
+                                    <><ArchiveRestore className="w-4 h-4 mr-2" /> Unarchive</>
+                                ) : (
+                                    <><Archive className="w-4 h-4 mr-2" /> Archive</>
+                                )}
+                            </Button>
+                        )}
                         <Button variant="ghost" size="icon" onClick={onClose}>
                             <X className="w-5 h-5 text-slate-400" />
                         </Button>
-                    </div>
-                </CardHeader>
+                        </div>
+                        </CardHeader>
                 
                 <CardContent className="p-6 overflow-y-auto flex-1">
                     <div className="grid lg:grid-cols-2 gap-8">
