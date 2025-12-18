@@ -99,6 +99,7 @@ export default function MyGeckosPage() {
         weightMax: ''
     });
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
+    const [showArchived, setShowArchived] = useState(false);
 
     // Enhanced loadGeckos with caching and rate limiting
     // Now uses `user` from state and is dependent on it.
@@ -252,6 +253,38 @@ export default function MyGeckosPage() {
         }
     };
 
+    const handleArchiveGecko = async (geckoId, shouldArchive) => {
+        try {
+            await retryWithBackoff(async () => {
+                return await Gecko.update(geckoId, {
+                    archived: shouldArchive,
+                    archived_date: shouldArchive ? new Date().toISOString().split('T')[0] : null
+                });
+            });
+
+            if (user) {
+                const cacheKey = `geckos_${user.email}`;
+                geckosCache.invalidate(cacheKey);
+            }
+
+            await loadGeckos(true);
+            setIsDetailModalOpen(false);
+            setSelectedGecko(null);
+
+            toast({
+                title: shouldArchive ? "Gecko Archived" : "Gecko Unarchived",
+                description: shouldArchive ? "Moved to archive" : "Restored to collection"
+            });
+        } catch (error) {
+            console.error("Failed to archive gecko:", error);
+            toast({
+                title: "Error",
+                description: "Failed to archive gecko. Please try again.",
+                variant: "destructive"
+            });
+        }
+    };
+
     const handleFormSubmit = async (geckoData, isNew) => {
         setIsFormOpen(false);
         setSelectedGecko(null);
@@ -388,11 +421,13 @@ export default function MyGeckosPage() {
         });
     };
 
-    const searchFiltered = geckos.filter(gecko =>
-        gecko.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        gecko.gecko_id_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        gecko.morphs_traits?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const searchFiltered = geckos
+        .filter(gecko => showArchived ? gecko.archived : !gecko.archived)
+        .filter(gecko =>
+            gecko.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            gecko.gecko_id_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            gecko.morphs_traits?.toLowerCase().includes(searchTerm.toLowerCase())
+        );
     
     const filteredAndSortedGeckos = getSortedGeckos(applyFilters(searchFiltered));
 
@@ -410,27 +445,49 @@ export default function MyGeckosPage() {
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                     <div>
-                        <h1 className="text-4xl font-bold text-slate-100">My Gecko Collection</h1>
+                        <h1 className="text-4xl font-bold text-slate-100">
+                            {showArchived ? 'Archived Geckos' : 'My Gecko Collection'}
+                        </h1>
                         <p className="text-slate-400 mt-1">Manage your geckos, track their lineage, and plan breedings.</p>
                     </div>
                     <div className="flex gap-2">
-                        <Button variant="outline" className="border-slate-600 hover:bg-slate-800" onClick={() => setIsImportModalOpen(true)}>
-                            Import from CSV
+                        <Button
+                            variant="outline"
+                            onClick={() => setShowArchived(!showArchived)}
+                            className="border-slate-600 hover:bg-slate-800"
+                        >
+                            {showArchived ? (
+                                <>
+                                    <ArchiveRestore className="w-5 h-5 mr-2" />
+                                    Active
+                                </>
+                            ) : (
+                                <>
+                                    <Archive className="w-5 h-5 mr-2" />
+                                    Archive
+                                </>
+                            )}
                         </Button>
-                        <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={() => { 
-                            // Check plan limit before adding
-                            const limit = getGeckoLimit(user);
-                            if (geckos.length >= limit) {
-                                setShowUpgradeModal(true);
-                                return;
-                            }
-                            setSelectedGecko(null); 
-                            setIsFormOpen(true); 
-                            setIsDetailModalOpen(false); 
-                        }}>
-                            <PlusCircle className="w-5 h-5 mr-2" />
-                            Add Gecko
-                        </Button>
+                        {!showArchived && (
+                            <>
+                                <Button variant="outline" className="border-slate-600 hover:bg-slate-800" onClick={() => setIsImportModalOpen(true)}>
+                                    Import from CSV
+                                </Button>
+                                <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={() => { 
+                                    const limit = getGeckoLimit(user);
+                                    if (geckos.filter(g => !g.archived).length >= limit) {
+                                        setShowUpgradeModal(true);
+                                        return;
+                                    }
+                                    setSelectedGecko(null); 
+                                    setIsFormOpen(true); 
+                                    setIsDetailModalOpen(false); 
+                                }}>
+                                    <PlusCircle className="w-5 h-5 mr-2" />
+                                    Add Gecko
+                                </Button>
+                            </>
+                        )}
                     </div>
                 </div>
 
@@ -657,6 +714,7 @@ export default function MyGeckosPage() {
                         onClose={handleCloseDetailModal}
                         onUpdate={() => loadGeckos(true)}
                         onEdit={handleEdit}
+                        onArchive={handleArchiveGecko}
                     />
                 )}
 
