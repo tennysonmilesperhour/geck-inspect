@@ -1,4 +1,4 @@
-import { createClientFromRequest } from 'npm:@base44/sdk@0.5.0';
+import { createClientFromRequest } from 'npm:@base44/sdk@0.8.4';
 
 Deno.serve(async (req) => {
     try {
@@ -9,7 +9,7 @@ Deno.serve(async (req) => {
         }
         
         const user = await base44.auth.me();
-        const { geckoId, certificateType } = await req.json();
+        const { geckoId, certificateType = 'lineage' } = await req.json();
 
         // Fetch all of the user's geckos at once for efficiency
         const allGeckos = await base44.entities.Gecko.filter({ created_by: user.email });
@@ -85,8 +85,8 @@ Deno.serve(async (req) => {
             <div class="container">
                 <div class="inner-border">
                     <div class="header">
-                        <div class="logo">GECK INSPECT</div>
-                        <div class="cert-title">Certificate of ${certificateType === 'lineage' ? 'Lineage' : 'Ownership'}</div>
+                        <div class="logo">${user.breeder_name || user.full_name || 'GECK INSPECT'}</div>
+                        <div class="cert-title">Certificate of Lineage</div>
                     </div>
                     
                     <div class="section">
@@ -100,13 +100,27 @@ Deno.serve(async (req) => {
                                     <div class="info-item"><div class="label">Sex</div><div class="value">${geckoData.sex}</div></div>
                                     <div class="info-item"><div class="label">Hatch Date</div><div class="value">${geckoData.hatch_date ? new Date(geckoData.hatch_date).toLocaleDateString() : 'Unknown'}</div></div>
                                     <div class="info-item"><div class="label">Species</div><div class="value">C. ciliatus</div></div>
+                                    ${geckoData.weight_grams ? `<div class="info-item"><div class="label">Weight</div><div class="value">${geckoData.weight_grams}g</div></div>` : ''}
+                                    <div class="info-item"><div class="label">Status</div><div class="value">${geckoData.status || 'N/A'}</div></div>
                                 </div>
                                 <div class="info-item" style="margin-top: 12px;"><div class="label">Morphs & Traits</div><div class="value">${geckoData.morphs_traits || 'Not specified'}</div></div>
+                                ${geckoData.notes ? `<div class="info-item" style="margin-top: 12px;"><div class="label">Notes</div><div class="value">${geckoData.notes}</div></div>` : ''}
                             </div>
                         </div>
                     </div>
                     
-                    ${certificateType === 'lineage' ? `
+                    <div class="section">
+                        <div class="section-title">Breeder Information</div>
+                        <div class="info-grid">
+                            <div class="info-item"><div class="label">Breeder Name</div><div class="value">${user.breeder_name || user.full_name}</div></div>
+                            <div class="info-item"><div class="label">Contact Email</div><div class="value">${user.email_contact || user.email}</div></div>
+                            ${user.phone_contact ? `<div class="info-item"><div class="label">Phone</div><div class="value">${user.phone_contact}</div></div>` : ''}
+                            ${user.website_url ? `<div class="info-item"><div class="label">Website</div><div class="value">${user.website_url}</div></div>` : ''}
+                        </div>
+                        ${user.business_address ? `<div class="info-item" style="margin-top: 12px;"><div class="label">Address</div><div class="value">${user.business_address}</div></div>` : ''}
+                    </div>
+                    
+                    ${sire || dam ? `
                     <div class="section">
                         <div class="section-title">Parentage</div>
                         <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px;">
@@ -132,6 +146,8 @@ Deno.serve(async (req) => {
                             </div>
                         </div>
                     </div>
+                    ` : ''}
+                    ${grandsire_s || granddam_s || grandsire_d || granddam_d ? `
                     <div class="section">
                         <div class="section-title">Grandparentage</div>
                         <div class="lineage-grid">
@@ -153,18 +169,7 @@ Deno.serve(async (req) => {
                             </div>
                         </div>
                     </div>
-                    ` : `
-                    <div class="section">
-                        <div class="section-title">Breeder Information</div>
-                        <div class="info-grid">
-                            <div class="info-item"><div class="label">Breeder Name</div><div class="value">${user.breeder_name || user.full_name}</div></div>
-                            <div class="info-item"><div class="label">Contact Email</div><div class="value">${user.email_contact || user.email}</div></div>
-                            ${user.phone_contact ? `<div class="info-item"><div class="label">Phone</div><div class="value">${user.phone_contact}</div></div>` : ''}
-                            ${user.website_url ? `<div class="info-item"><div class="label">Website</div><div class="value">${user.website_url}</div></div>` : ''}
-                        </div>
-                         ${user.business_address ? `<div class="info-item" style="margin-top: 12px;"><div class="label">Address</div><div class="value">${user.business_address}</div></div>` : ''}
-                    </div>
-                    `}
+                    ` : ''}
                     
                     <div class="footer">
                         <div class="qr-code">
