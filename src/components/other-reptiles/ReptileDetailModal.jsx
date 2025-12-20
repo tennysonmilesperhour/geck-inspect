@@ -3,7 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ReptileEvent, OtherReptile } from '@/entities/all';
 import { format } from 'date-fns';
-import { X, Plus, Trash2, LineChart, Loader2, History, Edit, Calendar } from 'lucide-react';
+import { X, Plus, Trash2, LineChart, Loader2, History, Edit, Calendar, Archive, ArchiveRestore } from 'lucide-react';
 import EventTracker from '../my-geckos/EventTracker';
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Input } from '@/components/ui/input';
