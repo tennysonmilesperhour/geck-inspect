@@ -126,30 +126,88 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
   };
 
   const handleGenerateCertificate = async (type) => {
-    if (!gecko || !gecko.id) return;
-    
-    setIsGeneratingCert(true);
-    
-    try {
-      const { data: htmlContent } = await generateLineageCertificate({
-        geckoId: gecko.id,
-        certificateType: type,
-      });
+      if (!gecko || !gecko.id) return;
 
-      const blob = new Blob([htmlContent], { type: 'text/html' });
-      const url = URL.createObjectURL(blob);
-      const certWindow = window.open(url, '_blank', 'noopener,noreferrer');
-      if (certWindow) {
-        certWindow.onload = () => {
-          URL.revokeObjectURL(url);
-        }
+      setIsGeneratingCert(true);
+
+      try {
+          const { default: html2canvas } = await import('html2canvas');
+          const { default: jsPDF } = await import('jspdf');
+
+          const { data: htmlContent } = await generateLineageCertificate({
+              geckoId: gecko.id,
+              certificateType: type,
+          });
+
+          // Create hidden iframe to render HTML
+          const iframe = document.createElement('iframe');
+          iframe.style.position = 'absolute';
+          iframe.style.left = '-9999px';
+          iframe.style.width = '800px';
+          iframe.style.height = '1200px';
+          document.body.appendChild(iframe);
+
+          const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+          iframeDoc.open();
+          iframeDoc.write(htmlContent);
+          iframeDoc.close();
+
+          // Wait for images to load
+          await new Promise(resolve => {
+              if (iframeDoc.readyState === 'complete') {
+                  setTimeout(resolve, 500);
+              } else {
+                  iframe.onload = () => setTimeout(resolve, 500);
+              }
+          });
+
+          // Convert to canvas
+          const canvas = await html2canvas(iframeDoc.body, {
+              scale: 2,
+              useCORS: true,
+              allowTaint: true,
+              backgroundColor: '#ffffff'
+          });
+
+          // Create PDF
+          const imgData = canvas.toDataURL('image/jpeg', 1.0);
+          const pdf = new jsPDF({
+              orientation: 'portrait',
+              unit: 'mm',
+              format: 'a4'
+          });
+
+          const pdfWidth = pdf.internal.pageSize.getWidth();
+          const pdfHeight = pdf.internal.pageSize.getHeight();
+          const imgWidth = canvas.width;
+          const imgHeight = canvas.height;
+          const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+          const imgX = (pdfWidth - imgWidth * ratio) / 2;
+          const imgY = 0;
+
+          pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+
+          // Clean up
+          document.body.removeChild(iframe);
+
+          // Open PDF in new tab
+          const pdfBlob = pdf.output('blob');
+          const pdfUrl = URL.createObjectURL(pdfBlob);
+          window.open(pdfUrl, '_blank');
+
+          // Also trigger download
+          const link = document.createElement('a');
+          link.href = pdfUrl;
+          link.download = `${gecko.name}_Certificate_${new Date().toISOString().split('T')[0]}.pdf`;
+          link.click();
+
+          setTimeout(() => URL.revokeObjectURL(pdfUrl), 1000);
+
+      } catch (error) {
+          console.error("Failed to generate certificate:", error);
+      } finally {
+          setIsGeneratingCert(false);
       }
-      
-    } catch (error) {
-      console.error("Failed to generate certificate:", error);
-    } finally {
-      setIsGeneratingCert(false);
-    }
   };
 
   // Get parent info for display
