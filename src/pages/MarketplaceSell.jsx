@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Gecko, User } from '@/entities/all';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -223,11 +222,21 @@ export default function MarketplaceSellPage() {
 
     const updateGeckoStatus = async (geckoId, newStatus) => {
         try {
-            await Gecko.update(geckoId, { status: newStatus });
-            setAllGeckos(prev => prev.map(g => g.id === geckoId ? { ...g, status: newStatus } : g));
+            const updateData = { status: newStatus };
+            
+            // If marking as sold, also archive the gecko
+            if (newStatus === 'Sold') {
+                updateData.archived = true;
+                updateData.archived_date = new Date().toISOString().split('T')[0];
+            }
+            
+            await Gecko.update(geckoId, updateData);
+            setAllGeckos(prev => prev.map(g => g.id === geckoId ? { ...g, ...updateData } : g));
             toast({
                 title: "Success",
-                description: `Gecko status updated to "${newStatus}".`,
+                description: newStatus === 'Sold' 
+                    ? "Gecko marked as sold and moved to archive" 
+                    : `Gecko status updated to "${newStatus}".`,
             });
         } catch (error) {
             console.error("Failed to update gecko status:", error);
@@ -239,8 +248,9 @@ export default function MarketplaceSellPage() {
         }
     };
 
-    const forSaleGeckos = allGeckos.filter(g => g.status === 'For Sale');
-    const availableGeckos = allGeckos.filter(g => g.status !== 'For Sale' && g.status !== 'Sold');
+    const forSaleGeckos = allGeckos.filter(g => g.status === 'For Sale' && !g.archived);
+    const soldGeckos = allGeckos.filter(g => g.status === 'Sold');
+    const availableGeckos = allGeckos.filter(g => g.status !== 'For Sale' && g.status !== 'Sold' && !g.archived);
 
     const GeckoListingCard = ({ gecko, onEdit, onUpdateStatus }) => {
         const primaryImage = gecko.image_urls && gecko.image_urls.length > 0 ? gecko.image_urls[0] : null;
@@ -480,6 +490,23 @@ export default function MarketplaceSellPage() {
                         )}
                     </CardContent>
                 </Card>
+
+                {/* Sold Geckos */}
+                {soldGeckos.length > 0 && (
+                    <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-sage-200 dark:border-sage-700 shadow-lg">
+                        <CardHeader>
+                            <CardTitle className="text-xl">Sold Geckos ({soldGeckos.length})</CardTitle>
+                            <CardDescription>Geckos that have been sold (archived).</CardDescription>
+                        </CardHeader>
+                        <CardContent>
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                                {soldGeckos.map(gecko => (
+                                    <GeckoListingCard key={gecko.id} gecko={gecko} onEdit={handleEdit} onUpdateStatus={updateGeckoStatus} />
+                                ))}
+                            </div>
+                        </CardContent>
+                    </Card>
+                )}
 
                 {/* Geckos Available for Listing */}
                 <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-sage-200 dark:border-sage-700 shadow-lg">
