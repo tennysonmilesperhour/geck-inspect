@@ -130,20 +130,6 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
                             <Edit className="w-4 h-4 mr-2" />
                             Edit
                         </Button>
-                        {onArchive && (
-                            <Button 
-                                variant="outline"
-                                size="sm"
-                                onClick={() => onArchive(reptile.id, !reptile.archived)}
-                                className="border-yellow-600 text-yellow-500 hover:bg-yellow-900/20"
-                            >
-                                {reptile.archived ? (
-                                    <><ArchiveRestore className="w-4 h-4 mr-2" /> Unarchive</>
-                                ) : (
-                                    <><Archive className="w-4 h-4 mr-2" /> Archive</>
-                                )}
-                            </Button>
-                        )}
                         <Button variant="ghost" size="icon" onClick={onClose}>
                             <X className="w-5 h-5 text-slate-400" />
                         </Button>
@@ -210,13 +196,29 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="flex gap-2">
-                                <EventTracker 
-                                    entityId={reptile.id} 
-                                    entityType="reptile" 
-                                    EventEntity={ReptileEvent}
-                                    onEventAdded={loadEventHistory}
-                                />
+                            <div className="space-y-3">
+                                <div className="flex gap-2">
+                                    <EventTracker 
+                                        entityId={reptile.id} 
+                                        entityType="reptile" 
+                                        EventEntity={ReptileEvent}
+                                        onEventAdded={loadEventHistory}
+                                    />
+                                </div>
+
+                                {onArchive && (
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => onArchive(reptile.id, !reptile.archived)}
+                                        className="w-full border-yellow-600 text-yellow-500 hover:bg-yellow-900/20"
+                                    >
+                                        {reptile.archived ? (
+                                            <><ArchiveRestore className="w-4 h-4 mr-2" /> Unarchive</>
+                                        ) : (
+                                            <><Archive className="w-4 h-4 mr-2" /> Archive</>
+                                        )}
+                                    </Button>
+                                )}
                             </div>
                         </div>
 
