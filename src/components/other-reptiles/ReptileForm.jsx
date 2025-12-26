@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Upload, X, Loader2, Trash2, Bell, Mail } from 'lucide-react';
+import { Upload, X, Loader2, Trash2, Bell, Mail, Archive } from 'lucide-react';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -22,7 +22,7 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-export default function ReptileForm({ reptile, onSubmit, onCancel, onDelete }) {
+export default function ReptileForm({ reptile, onSubmit, onCancel, onDelete, onArchive }) {
     const [formData, setFormData] = useState({
         name: '',
         species: '',
@@ -296,7 +296,18 @@ export default function ReptileForm({ reptile, onSubmit, onCancel, onDelete }) {
                 </form>
 
                 <CardFooter className="flex-shrink-0 mt-auto bg-slate-900/80 border-t border-slate-800 p-4 flex justify-between">
-                    <div>
+                    <div className="flex gap-2">
+                        {reptile && onArchive && (
+                            <Button 
+                                variant="outline" 
+                                size="sm"
+                                onClick={() => onArchive(reptile.id, !reptile.archived)}
+                                className="border-yellow-600 text-yellow-500 hover:bg-yellow-900/20"
+                            >
+                                <Archive className="w-4 h-4 mr-2" />
+                                {reptile.archived ? 'Unarchive' : 'Archive'}
+                            </Button>
+                        )}
                         {reptile && onDelete && (
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>

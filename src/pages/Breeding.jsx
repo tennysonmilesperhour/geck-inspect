@@ -30,7 +30,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { format, addDays, addMonths, differenceInDays } from 'date-fns';
 import { generateCalendarEvent } from '@/functions/generateCalendarEvent';
 
-function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulationModal, onOpenEggCheckModal }) {
+function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulationModal, onOpenEggCheckModal, refreshTrigger }) {
     const [eggs, setEggs] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -50,7 +50,7 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
 
     useEffect(() => {
         loadEggs();
-    }, [plan.id]);
+    }, [plan.id, refreshTrigger]);
 
     const handleDeleteEgg = async (eggId) => {
         if (window.confirm("Are you sure you want to permanently delete this egg record?")) {
@@ -405,6 +405,7 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
     const [isEggCheckModalOpen, setIsEggCheckModalOpen] = useState(false);
     const [eggCheckDay, setEggCheckDay] = useState(plan.egg_check_day || 15);
     const [lastEggDate, setLastEggDate] = useState(null);
+    const [eggRefreshTrigger, setEggRefreshTrigger] = useState(0);
     
     // Load last egg date
     useEffect(() => {
@@ -457,6 +458,7 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
             await BreedingPlan.update(plan.id, { egg_check_count: newCount });
             
             setLastEggDate(newLayDate); // Update local state
+            setEggRefreshTrigger(prev => prev + 1); // Trigger egg reload in PlanDetails
             onPlanUpdate(); // Refresh plan data
         } catch (error) {
             console.error("Failed to add eggs:", error);
@@ -707,6 +709,7 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
                             onPlanDelete={onPlanDelete}
                             onOpenCopulationModal={handleOpenCopulationModal}
                             onOpenEggCheckModal={handleOpenEggCheckModal}
+                            refreshTrigger={eggRefreshTrigger}
                         />
                     </>
                 )}
