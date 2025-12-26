@@ -196,15 +196,13 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
                             </div>
 
                             {/* Action Buttons */}
-                            <div className="space-y-3">
-                                <div className="flex gap-2">
-                                    <EventTracker 
-                                        entityId={reptile.id} 
-                                        entityType="reptile" 
-                                        EventEntity={ReptileEvent}
-                                        onEventAdded={loadEventHistory}
-                                    />
-                                </div>
+                            <div className="space-y-2">
+                                <EventTracker 
+                                    entityId={reptile.id} 
+                                    entityType="reptile" 
+                                    EventEntity={ReptileEvent}
+                                    onEventAdded={loadEventHistory}
+                                />
 
                                 {onArchive && (
                                     <Button

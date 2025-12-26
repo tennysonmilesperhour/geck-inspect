@@ -320,15 +320,14 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
               </div>
 
               {/* Action Buttons */}
-              <div className="space-y-3">
-                <div className="flex gap-2">
-                  <EventTracker 
-                    entityId={gecko.id} 
-                    entityType="gecko" 
-                    EventEntity={GeckoEvent}
-                    onEventAdded={loadEventHistory}
-                  />
-                </div>
+              <div className="space-y-2">
+                <EventTracker 
+                  entityId={gecko.id} 
+                  entityType="gecko" 
+                  EventEntity={GeckoEvent}
+                  onEventAdded={loadEventHistory}
+                />
+
                 <Button
                   onClick={() => handleGenerateCertificate('lineage')}
                   disabled={isGeneratingCert}
