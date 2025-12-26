@@ -296,18 +296,7 @@ export default function ReptileForm({ reptile, onSubmit, onCancel, onDelete, onA
                 </form>
 
                 <CardFooter className="flex-shrink-0 mt-auto bg-slate-900/80 border-t border-slate-800 p-4 flex justify-between">
-                    <div className="flex gap-2">
-                        {reptile && onArchive && (
-                            <Button 
-                                variant="outline" 
-                                size="sm"
-                                onClick={() => onArchive(reptile.id, !reptile.archived)}
-                                className="border-yellow-600 text-yellow-500 hover:bg-yellow-900/20"
-                            >
-                                <Archive className="w-4 h-4 mr-2" />
-                                {reptile.archived ? 'Unarchive' : 'Archive'}
-                            </Button>
-                        )}
+                    <div>
                         {reptile && onDelete && (
                             <AlertDialog>
                                 <AlertDialogTrigger asChild>

@@ -71,7 +71,7 @@ export default function GeckoCard({ gecko, weightRecords = [], onView, onEdit })
           </span>
         </div>
 
-        <div className="absolute bottom-2 right-2 flex gap-1 sm:gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300">
+        <div className="absolute bottom-2 right-2 flex flex-col gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300">
           <Button
             size="sm"
             onClick={handleViewClick}
