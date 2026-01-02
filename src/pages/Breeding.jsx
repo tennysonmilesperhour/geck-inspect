@@ -988,7 +988,11 @@ export default function BreedingPage() {
     };
 
     const handleToggleExpanded = (planId) => {
-        // When expand all is active, keep it active
+        // If expand all is active, don't change state to keep all plans expanded
+        if (expandedPlanId === 'all_active' || expandedPlanId === 'all_archive') {
+            return;
+        }
+        
         if (expandedPlanId === planId) {
             setExpandedPlanId(null);
         } else {
