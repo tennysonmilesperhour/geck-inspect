@@ -988,15 +988,11 @@ export default function BreedingPage() {
     };
 
     const handleToggleExpanded = (planId) => {
+        // When expand all is active, keep it active
         if (expandedPlanId === planId) {
             setExpandedPlanId(null);
         } else {
             setExpandedPlanId(planId);
-            if (activeTab === 'active' && expandAllActive) {
-                setExpandAllActive(false);
-            } else if (activeTab === 'archive' && expandAllArchive) {
-                setExpandAllArchive(false);
-            }
         }
     };
 
