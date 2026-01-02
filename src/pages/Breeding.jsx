@@ -849,7 +849,7 @@ export default function BreedingPage() {
     const [geckos, setGeckos] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
-    const [expandedPlanId, setExpandedPlanId] = useState(null);
+    const [expandedPlanIds, setExpandedPlanIds] = useState(new Set());
     const [activeTab, setActiveTab] = useState('active');
 
     const [expandAllActive, setExpandAllActive] = useState(false);
@@ -989,24 +989,26 @@ export default function BreedingPage() {
 
     const handleToggleExpanded = (planId) => {
         // If expand all is active, don't change state to keep all plans expanded
-        if (expandedPlanId === 'all_active' || expandedPlanId === 'all_archive') {
+        if (expandAllActive || expandAllArchive) {
             return;
         }
         
-        if (expandedPlanId === planId) {
-            setExpandedPlanId(null);
-        } else {
-            setExpandedPlanId(planId);
-        }
+        setExpandedPlanIds(prev => {
+            const newSet = new Set(prev);
+            if (newSet.has(planId)) {
+                newSet.delete(planId);
+            } else {
+                newSet.add(planId);
+            }
+            return newSet;
+        });
     };
 
     const handleExpandAllActive = () => {
         const newState = !expandAllActive;
         setExpandAllActive(newState);
-        if (newState) {
-            setExpandedPlanId('all_active');
-        } else {
-            setExpandedPlanId(null);
+        if (!newState) {
+            setExpandedPlanIds(new Set());
         }
         setExpandAllArchive(false);
     };
@@ -1014,10 +1016,8 @@ export default function BreedingPage() {
     const handleExpandAllArchive = () => {
         const newState = !expandAllArchive;
         setExpandAllArchive(newState);
-        if (newState) {
-            setExpandedPlanId('all_archive');
-        } else {
-            setExpandedPlanId(null);
+        if (!newState) {
+            setExpandedPlanIds(new Set());
         }
         setExpandAllActive(false);
     };
@@ -1139,9 +1139,9 @@ export default function BreedingPage() {
     const females = geckos.filter(g => g.sex === 'Female');
 
     const isPlanExpanded = (planId) => {
-        if (activeTab === 'active' && expandedPlanId === 'all_active') return true;
-        if (activeTab === 'archive' && expandedPlanId === 'all_archive') return true;
-        return expandedPlanId === planId;
+        if (activeTab === 'active' && expandAllActive) return true;
+        if (activeTab === 'archive' && expandAllArchive) return true;
+        return expandedPlanIds.has(planId);
     };
     
     // Show login portal if not authenticated
@@ -1178,7 +1178,7 @@ export default function BreedingPage() {
                 ) : (
                     <Tabs value={activeTab} onValueChange={(value) => {
                         setActiveTab(value);
-                        setExpandedPlanId(null);
+                        setExpandedPlanIds(new Set());
                         setExpandAllActive(false);
                         setExpandAllArchive(false);
                     }} className="w-full">
