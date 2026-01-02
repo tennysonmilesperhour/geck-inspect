@@ -995,11 +995,39 @@ export default function BreedingPage() {
         
         setExpandedPlanIds(prev => {
             const newSet = new Set(prev);
-            if (newSet.has(planId)) {
-                newSet.delete(planId);
+            const isExpanding = !newSet.has(planId);
+            
+            if (isExpanding) {
+                // Find the index of this plan and its adjacent plan in the current view
+                const currentPlans = activeTab === 'active' ? activePlans : archivedPlans;
+                const planIndex = currentPlans.findIndex(p => p.id === planId);
+                
+                if (planIndex !== -1) {
+                    // Add the clicked plan
+                    newSet.add(planId);
+                    
+                    // Find adjacent plan in the same row (for 2-column grid)
+                    // If even index, adjacent is index+1; if odd, adjacent is index-1
+                    const adjacentIndex = planIndex % 2 === 0 ? planIndex + 1 : planIndex - 1;
+                    if (adjacentIndex >= 0 && adjacentIndex < currentPlans.length) {
+                        newSet.add(currentPlans[adjacentIndex].id);
+                    }
+                }
             } else {
-                newSet.add(planId);
+                // Collapsing - find and collapse both plans in the row
+                const currentPlans = activeTab === 'active' ? activePlans : archivedPlans;
+                const planIndex = currentPlans.findIndex(p => p.id === planId);
+                
+                if (planIndex !== -1) {
+                    newSet.delete(planId);
+                    
+                    const adjacentIndex = planIndex % 2 === 0 ? planIndex + 1 : planIndex - 1;
+                    if (adjacentIndex >= 0 && adjacentIndex < currentPlans.length) {
+                        newSet.delete(currentPlans[adjacentIndex].id);
+                    }
+                }
             }
+            
             return newSet;
         });
     };
