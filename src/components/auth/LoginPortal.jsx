@@ -142,6 +142,11 @@ export default function LoginPortal({ requiredFeature = null }) {
               ? `${requiredFeature} requires an account. Choose your membership level:` 
               : 'Join the ultimate crested gecko breeding & identification platform'}
           </p>
+          <div className="bg-emerald-900/30 border border-emerald-500/50 rounded-lg p-4 max-w-2xl mx-auto">
+            <p className="text-emerald-300 font-semibold">
+              🎉 All plans are currently FREE! Simply select your tier and start using all features immediately—no payment information required.
+            </p>
+          </div>
         </div>
 
         {/* Billing Toggle */}
