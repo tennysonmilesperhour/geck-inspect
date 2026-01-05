@@ -9,8 +9,9 @@ import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Settings, Upload, Save, Globe, Eye, X, Plus, Camera, Mail, Calendar, Loader2, Search, Trash2, AlertTriangle
+  Settings, Upload, Save, Globe, Eye, X, Plus, Camera, Mail, Calendar, Loader2, Search, Trash2, AlertTriangle, ArrowUpDown
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -103,7 +104,11 @@ const initialFormData = {
     palm_street_sync_enabled: false,
     email_on_new_follower: true,
     email_on_new_message: true,
-    email_on_following_activity: true
+    email_on_following_activity: true,
+    default_gecko_sort: 'name',
+    default_reptile_sort: 'name',
+    default_gallery_sort: '-created_date',
+    default_breeding_sort: '-created_date'
 };
 
 const notificationTypes = [
@@ -174,6 +179,10 @@ export default function SettingsPage() {
                         email_on_new_follower: currentUser.email_on_new_follower !== false, // Default true
                         email_on_new_message: currentUser.email_on_new_message !== false, // Default true
                         email_on_following_activity: currentUser.email_on_following_activity !== false, // Default true
+                        default_gecko_sort: currentUser.default_gecko_sort || 'name',
+                        default_reptile_sort: currentUser.default_reptile_sort || 'name',
+                        default_gallery_sort: currentUser.default_gallery_sort || '-created_date',
+                        default_breeding_sort: currentUser.default_breeding_sort || '-created_date'
                     });
                 }
             } catch (error) {
@@ -442,6 +451,87 @@ export default function SettingsPage() {
                                 {calendarAlertTypes.map(alertType => renderNotificationSwitch(alertType, formData.calendar_alert_types.includes(alertType.key), () => toggleArrayItem('calendar_alert_types', alertType.key)))}
                             </div>
                         )}
+                    </CardContent>
+                </Card>
+
+                <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+                    <CardHeader>
+                        <CardTitle className="text-slate-100 flex items-center gap-2">
+                            <ArrowUpDown className="w-5 h-5"/>
+                            Default Sort Preferences
+                        </CardTitle>
+                        <CardDescription className="text-slate-400">
+                            Set your preferred default sorting for different pages
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                            <div>
+                                <Label htmlFor="gecko-sort" className="text-slate-300">My Geckos Default Sort</Label>
+                                <Select value={formData.default_gecko_sort} onValueChange={(v) => handleChange('default_gecko_sort', v)}>
+                                    <SelectTrigger className="bg-slate-800 border-slate-600">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="name">Name (A-Z)</SelectItem>
+                                        <SelectItem value="-name">Name (Z-A)</SelectItem>
+                                        <SelectItem value="hatch_date">Oldest First</SelectItem>
+                                        <SelectItem value="-hatch_date">Newest First</SelectItem>
+                                        <SelectItem value="weight_grams">Lightest First</SelectItem>
+                                        <SelectItem value="-weight_grams">Heaviest First</SelectItem>
+                                        <SelectItem value="display_order">Custom Order</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            
+                            <div>
+                                <Label htmlFor="reptile-sort" className="text-slate-300">Other Reptiles Default Sort</Label>
+                                <Select value={formData.default_reptile_sort} onValueChange={(v) => handleChange('default_reptile_sort', v)}>
+                                    <SelectTrigger className="bg-slate-800 border-slate-600">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="name">Name (A-Z)</SelectItem>
+                                        <SelectItem value="-name">Name (Z-A)</SelectItem>
+                                        <SelectItem value="species">Species (A-Z)</SelectItem>
+                                        <SelectItem value="-species">Species (Z-A)</SelectItem>
+                                        <SelectItem value="birth_date">Oldest First</SelectItem>
+                                        <SelectItem value="-birth_date">Newest First</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            
+                            <div>
+                                <Label htmlFor="gallery-sort" className="text-slate-300">Gallery Default Sort</Label>
+                                <Select value={formData.default_gallery_sort} onValueChange={(v) => handleChange('default_gallery_sort', v)}>
+                                    <SelectTrigger className="bg-slate-800 border-slate-600">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="-created_date">Newest First</SelectItem>
+                                        <SelectItem value="created_date">Oldest First</SelectItem>
+                                        <SelectItem value="-confidence_score">Highest Confidence</SelectItem>
+                                        <SelectItem value="confidence_score">Lowest Confidence</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            
+                            <div>
+                                <Label htmlFor="breeding-sort" className="text-slate-300">Breeding Plans Default Sort</Label>
+                                <Select value={formData.default_breeding_sort} onValueChange={(v) => handleChange('default_breeding_sort', v)}>
+                                    <SelectTrigger className="bg-slate-800 border-slate-600">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="-created_date">Newest First</SelectItem>
+                                        <SelectItem value="created_date">Oldest First</SelectItem>
+                                        <SelectItem value="-pairing_date">Most Recent Pairing</SelectItem>
+                                        <SelectItem value="pairing_date">Oldest Pairing</SelectItem>
+                                        <SelectItem value="breeding_id">ID (A-Z)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </div>
                     </CardContent>
                 </Card>
 
