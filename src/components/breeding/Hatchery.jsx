@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Egg as EggIcon, Search, ExternalLink } from 'lucide-react';
-import { format } from 'date-fns';
+import { Loader2, Egg as EggIcon, Search, ExternalLink, Timer } from 'lucide-react';
+import { format, differenceInDays } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
@@ -23,10 +23,25 @@ export default function Hatchery() {
         search: ''
     });
     
-    const [sortBy, setSortBy] = useState('lay_date_desc');
+    const [sortBy, setSortBy] = useState('incubation_longest');
 
     useEffect(() => {
         loadData();
+    }, []);
+    
+    // Load user's default sort preference
+    useEffect(() => {
+        const loadUserPreference = async () => {
+            try {
+                const currentUser = await User.me();
+                if (currentUser?.default_breeding_sort) {
+                    setSortBy(currentUser.default_breeding_sort);
+                }
+            } catch (error) {
+                console.error("Failed to load user preferences:", error);
+            }
+        };
+        loadUserPreference();
     }, []);
 
     const loadData = async () => {
@@ -82,7 +97,15 @@ export default function Hatchery() {
 
         // Sort
         result.sort((a, b) => {
+            const today = new Date();
+            const daysIncubatingA = differenceInDays(today, new Date(a.lay_date));
+            const daysIncubatingB = differenceInDays(today, new Date(b.lay_date));
+            
             switch (sortBy) {
+                case 'incubation_longest':
+                    return daysIncubatingB - daysIncubatingA;
+                case 'incubation_shortest':
+                    return daysIncubatingA - daysIncubatingB;
                 case 'lay_date_desc':
                     return new Date(b.lay_date) - new Date(a.lay_date);
                 case 'lay_date_asc':
@@ -92,7 +115,7 @@ export default function Hatchery() {
                 case 'hatch_date_asc':
                     return new Date(a.hatch_date_expected) - new Date(b.hatch_date_expected);
                 default:
-                    return 0;
+                    return daysIncubatingB - daysIncubatingA;
             }
         });
 
@@ -185,10 +208,12 @@ export default function Hatchery() {
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent className="bg-slate-800 border-slate-600">
+                                <SelectItem value="incubation_longest">Longest Incubating</SelectItem>
+                                <SelectItem value="incubation_shortest">Shortest Incubating</SelectItem>
+                                <SelectItem value="hatch_date_asc">Hatching Soonest</SelectItem>
+                                <SelectItem value="hatch_date_desc">Hatching Latest</SelectItem>
                                 <SelectItem value="lay_date_desc">Lay Date (Newest)</SelectItem>
                                 <SelectItem value="lay_date_asc">Lay Date (Oldest)</SelectItem>
-                                <SelectItem value="hatch_date_desc">Hatch Date (Latest)</SelectItem>
-                                <SelectItem value="hatch_date_asc">Hatch Date (Earliest)</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>
@@ -201,11 +226,17 @@ export default function Hatchery() {
                     const sire = geckos.find(g => g.id === plan?.sire_id);
                     const dam = geckos.find(g => g.id === plan?.dam_id);
                     const hatchedGecko = egg.gecko_id ? geckos.find(g => g.id === egg.gecko_id) : null;
+                    
+                    const today = new Date();
+                    const daysIncubating = differenceInDays(today, new Date(egg.lay_date));
+                    const isNearHatching = daysIncubating >= 75 && egg.status === 'Incubating';
 
                     return (
                         <Card
                             key={egg.id}
-                            className="bg-slate-800 border-slate-700 hover:border-emerald-500 transition-all cursor-pointer"
+                            className={`bg-slate-800 border-slate-700 hover:border-emerald-500 transition-all cursor-pointer ${
+                                isNearHatching ? 'ring-2 ring-amber-500 shadow-lg shadow-amber-500/50 animate-pulse' : ''
+                            }`}
                             onClick={() => handleEggClick(egg)}
                         >
                             <CardContent className="p-4 space-y-3">
@@ -224,6 +255,24 @@ export default function Hatchery() {
                                         <p className="text-xs text-slate-400">{plan.breeding_season}</p>
                                     )}
                                 </div>
+
+                                {egg.status === 'Incubating' && (
+                                    <div className={`flex items-center gap-2 p-2 rounded ${
+                                        isNearHatching ? 'bg-amber-500/20 border border-amber-500/50' : 'bg-slate-700/50'
+                                    }`}>
+                                        <Timer className="w-4 h-4 text-emerald-400" />
+                                        <div>
+                                            <p className={`text-sm font-semibold ${
+                                                isNearHatching ? 'text-amber-400' : 'text-emerald-400'
+                                            }`}>
+                                                Day {daysIncubating} of incubation
+                                            </p>
+                                            {isNearHatching && (
+                                                <p className="text-xs text-amber-300">Ready to hatch soon!</p>
+                                            )}
+                                        </div>
+                                    </div>
+                                )}
 
                                 <div className="text-sm text-slate-400 space-y-1">
                                     <p>Laid: {format(new Date(egg.lay_date), 'MMM dd, yyyy')}</p>
