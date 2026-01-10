@@ -882,6 +882,21 @@ export default function BreedingPage() {
     useEffect(() => {
         loadData();
     }, []);
+    
+    // Load user's default sort preference
+    useEffect(() => {
+        const loadUserPreference = async () => {
+            try {
+                const currentUser = await base44.auth.me();
+                if (currentUser?.default_breeding_sort) {
+                    setSortBy(currentUser.default_breeding_sort);
+                }
+            } catch (error) {
+                console.error("Failed to load user preferences:", error);
+            }
+        };
+        loadUserPreference();
+    }, []);
 
     const [user, setUser] = useState(null);
     const [authChecked, setAuthChecked] = useState(false);
