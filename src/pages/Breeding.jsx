@@ -97,8 +97,8 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
         const updateData = { status };
         const currentEgg = eggs.find(e => e.id === eggId);
         
-        // Auto-archive when hatched
-        if (status === 'Hatched' && currentEgg?.status !== 'Hatched') {
+        // Auto-archive any egg that isn't incubating
+        if (status !== 'Incubating') {
             updateData.archived = true;
             updateData.archived_date = new Date().toISOString().split('T')[0];
         }

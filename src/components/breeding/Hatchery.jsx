@@ -260,7 +260,7 @@ export default function Hatchery() {
                     return (
                         <Card
                             key={egg.id}
-                            className={`bg-slate-800 border-slate-700 hover:border-emerald-500 transition-all cursor-pointer ${
+                            className={`bg-slate-800 border-slate-700 hover:border-emerald-500 transition-all cursor-pointer relative ${
                                 isNearHatching ? 'ring-2 ring-amber-500 shadow-lg shadow-amber-500/50 animate-pulse' : ''
                             }`}
                             onClick={() => handleEggClick(egg)}
@@ -317,31 +317,29 @@ export default function Hatchery() {
                                         </p>
                                     </div>
                                 )}
-                                
-                                {!egg.archived && (
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={(e) => handleArchiveEgg(egg.id, true, e)}
-                                        className="w-full text-slate-400 hover:text-slate-200"
-                                    >
-                                        <Archive className="w-4 h-4 mr-2" />
-                                        Archive
-                                    </Button>
-                                )}
-                                
-                                {egg.archived && (
-                                    <Button
-                                        variant="ghost"
-                                        size="sm"
-                                        onClick={(e) => handleArchiveEgg(egg.id, false, e)}
-                                        className="w-full text-emerald-400 hover:text-emerald-300"
-                                    >
-                                        <ArchiveRestore className="w-4 h-4 mr-2" />
-                                        Restore
-                                    </Button>
-                                )}
                             </CardContent>
+                            
+                            {!egg.archived && (
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={(e) => handleArchiveEgg(egg.id, true, e)}
+                                    className="absolute bottom-2 right-2 h-7 w-7 text-slate-400 hover:text-slate-200 hover:bg-slate-700"
+                                >
+                                    <Archive className="w-3 h-3" />
+                                </Button>
+                            )}
+                            
+                            {egg.archived && (
+                                <Button
+                                    variant="ghost"
+                                    size="icon"
+                                    onClick={(e) => handleArchiveEgg(egg.id, false, e)}
+                                    className="absolute bottom-2 right-2 h-7 w-7 text-emerald-400 hover:text-emerald-300 hover:bg-slate-700"
+                                >
+                                    <ArchiveRestore className="w-3 h-3" />
+                                </Button>
+                            )}
                         </Card>
                     );
                 })}
