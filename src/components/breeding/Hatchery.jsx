@@ -5,7 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Loader2, Egg as EggIcon, Search, ExternalLink, Timer } from 'lucide-react';
+import { Loader2, Egg as EggIcon, Search, ExternalLink, Timer, Archive, ArchiveRestore } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -20,7 +20,8 @@ export default function Hatchery() {
     const [filters, setFilters] = useState({
         season: 'all',
         status: 'all',
-        search: ''
+        search: '',
+        showArchived: false
     });
     
     const [sortBy, setSortBy] = useState('incubation_longest');
@@ -65,6 +66,9 @@ export default function Hatchery() {
 
     useEffect(() => {
         let result = [...eggs];
+
+        // Filter archived
+        result = result.filter(egg => filters.showArchived ? egg.archived : !egg.archived);
 
         // Filter by season
         if (filters.season !== 'all') {
@@ -147,6 +151,19 @@ export default function Hatchery() {
             }
         }
     };
+    
+    const handleArchiveEgg = async (eggId, shouldArchive, e) => {
+        e.stopPropagation();
+        try {
+            await Egg.update(eggId, { 
+                archived: shouldArchive,
+                archived_date: shouldArchive ? new Date().toISOString().split('T')[0] : null
+            });
+            await loadData();
+        } catch (error) {
+            console.error("Failed to archive egg:", error);
+        }
+    };
 
     if (isLoading) {
         return (
@@ -202,6 +219,15 @@ export default function Hatchery() {
                                 <SelectItem value="Stillbirth">Stillbirth</SelectItem>
                             </SelectContent>
                         </Select>
+                        
+                        <Button
+                            variant={filters.showArchived ? "default" : "outline"}
+                            onClick={() => setFilters({ ...filters, showArchived: !filters.showArchived })}
+                            className={filters.showArchived ? "bg-emerald-600" : ""}
+                        >
+                            {filters.showArchived ? <ArchiveRestore className="w-4 h-4 mr-2" /> : <Archive className="w-4 h-4 mr-2" />}
+                            {filters.showArchived ? "Show Active" : "Show Archived"}
+                        </Button>
 
                         <Select value={sortBy} onValueChange={setSortBy}>
                             <SelectTrigger className="bg-slate-800 border-slate-600">
@@ -290,6 +316,30 @@ export default function Hatchery() {
                                             → {hatchedGecko.name}
                                         </p>
                                     </div>
+                                )}
+                                
+                                {!egg.archived && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={(e) => handleArchiveEgg(egg.id, true, e)}
+                                        className="w-full text-slate-400 hover:text-slate-200"
+                                    >
+                                        <Archive className="w-4 h-4 mr-2" />
+                                        Archive
+                                    </Button>
+                                )}
+                                
+                                {egg.archived && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={(e) => handleArchiveEgg(egg.id, false, e)}
+                                        className="w-full text-emerald-400 hover:text-emerald-300"
+                                    >
+                                        <ArchiveRestore className="w-4 h-4 mr-2" />
+                                        Restore
+                                    </Button>
                                 )}
                             </CardContent>
                         </Card>

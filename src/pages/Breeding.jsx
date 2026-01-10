@@ -41,7 +41,8 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
         setIsLoading(true);
         try {
             const planEggs = await Egg.filter({ breeding_plan_id: plan.id }, '-lay_date');
-            setEggs(planEggs);
+            // Filter out archived eggs
+            setEggs(planEggs.filter(egg => !egg.archived));
         } catch (error) {
             console.error("Failed to load eggs:", error);
         }
@@ -53,12 +54,15 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
     }, [plan.id, refreshTrigger]);
 
     const handleDeleteEgg = async (eggId) => {
-        if (window.confirm("Are you sure you want to permanently delete this egg record?")) {
+        if (window.confirm("Archive this egg record instead of permanently deleting?")) {
             try {
-                await Egg.delete(eggId);
+                await Egg.update(eggId, { 
+                    archived: true,
+                    archived_date: new Date().toISOString().split('T')[0]
+                });
                 loadEggs();
             } catch (error) {
-                console.error("Failed to delete egg:", error);
+                console.error("Failed to archive egg:", error);
             }
         }
     };
@@ -92,6 +96,12 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
     const handleUpdateEggStatus = async (eggId, status) => {
         const updateData = { status };
         const currentEgg = eggs.find(e => e.id === eggId);
+        
+        // Auto-archive when hatched
+        if (status === 'Hatched' && currentEgg?.status !== 'Hatched') {
+            updateData.archived = true;
+            updateData.archived_date = new Date().toISOString().split('T')[0];
+        }
         
         if (status === 'Hatched' && currentEgg?.status !== 'Hatched') {
             const hatchDate = new Date().toISOString().split('T')[0];
