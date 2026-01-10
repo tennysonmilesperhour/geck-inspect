@@ -416,21 +416,28 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
     const [eggCheckDay, setEggCheckDay] = useState(plan.egg_check_day || 15);
     const [lastEggDate, setLastEggDate] = useState(null);
     const [eggRefreshTrigger, setEggRefreshTrigger] = useState(0);
+    const [eggCounts, setEggCounts] = useState({ incubating: 0, hatched: 0, failed: 0 });
     
-    // Load last egg date
+    // Load last egg date and egg counts
     useEffect(() => {
-        const fetchLastEggDate = async () => {
+        const fetchEggData = async () => {
             try {
                 const eggs = await Egg.filter({ breeding_plan_id: plan.id }, '-lay_date');
                 if (eggs.length > 0) {
                     setLastEggDate(eggs[0].lay_date);
                 }
+                
+                // Calculate egg counts
+                const incubating = eggs.filter(e => e.status === 'Incubating' && !e.archived).length;
+                const hatched = eggs.filter(e => e.status === 'Hatched').length;
+                const failed = eggs.filter(e => ['Slug', 'Infertile', 'Stillbirth'].includes(e.status)).length;
+                setEggCounts({ incubating, hatched, failed });
             } catch (error) {
-                console.error("Failed to load last egg date:", error);
+                console.error("Failed to load egg data:", error);
             }
         };
-        fetchLastEggDate();
-    }, [plan.id]);
+        fetchEggData();
+    }, [plan.id, eggRefreshTrigger]);
     
     // Calculate days since last egg
     const daysSinceLastEgg = lastEggDate 
@@ -595,7 +602,27 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
     return (
         <>
             <Card key={plan.id} className="bg-slate-900 border-slate-700 text-slate-300 flex flex-col overflow-hidden">
-                <CardHeader className="p-0">
+                <CardHeader className="p-0 relative">
+                    {/* Egg counts in top right */}
+                    <div className="absolute top-2 right-2 flex gap-1 z-10">
+                        {eggCounts.incubating > 0 && (
+                            <div className="bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
+                                <EggIcon className="w-3 h-3" />
+                                {eggCounts.incubating}
+                            </div>
+                        )}
+                        {eggCounts.hatched > 0 && (
+                            <div className="bg-green-600 text-white text-xs px-1.5 py-0.5 rounded">
+                                ✓ {eggCounts.hatched}
+                            </div>
+                        )}
+                        {eggCounts.failed > 0 && (
+                            <div className="bg-red-600 text-white text-xs px-1.5 py-0.5 rounded">
+                                ✗ {eggCounts.failed}
+                            </div>
+                        )}
+                    </div>
+
                     <div className="flex flex-col md:flex-row justify-between items-stretch">
                         <div className="flex flex-1 flex-col md:flex-row">
                             <div className="flex w-full md:w-40 flex-shrink-0">

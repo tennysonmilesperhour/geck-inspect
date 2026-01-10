@@ -319,27 +319,31 @@ export default function Hatchery() {
                                 )}
                             </CardContent>
                             
-                            {!egg.archived && (
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={(e) => handleArchiveEgg(egg.id, true, e)}
-                                    className="absolute bottom-2 right-2 h-7 w-7 text-slate-400 hover:text-slate-200 hover:bg-slate-700"
-                                >
-                                    <Archive className="w-3 h-3" />
-                                </Button>
-                            )}
-                            
-                            {egg.archived && (
-                                <Button
-                                    variant="ghost"
-                                    size="icon"
-                                    onClick={(e) => handleArchiveEgg(egg.id, false, e)}
-                                    className="absolute bottom-2 right-2 h-7 w-7 text-emerald-400 hover:text-emerald-300 hover:bg-slate-700"
-                                >
-                                    <ArchiveRestore className="w-3 h-3" />
-                                </Button>
-                            )}
+                            <div className="absolute bottom-2 right-2">
+                                {!egg.archived && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={(e) => handleArchiveEgg(egg.id, true, e)}
+                                        className="h-6 text-xs text-slate-400 hover:text-slate-200 hover:bg-slate-700 px-2"
+                                    >
+                                        <Archive className="w-3 h-3 mr-1" />
+                                        Archive
+                                    </Button>
+                                )}
+                                
+                                {egg.archived && (
+                                    <Button
+                                        variant="ghost"
+                                        size="sm"
+                                        onClick={(e) => handleArchiveEgg(egg.id, false, e)}
+                                        className="h-6 text-xs text-emerald-400 hover:text-emerald-300 hover:bg-slate-700 px-2"
+                                    >
+                                        <ArchiveRestore className="w-3 h-3 mr-1" />
+                                        Restore
+                                    </Button>
+                                )}
+                            </div>
                         </Card>
                     );
                 })}
