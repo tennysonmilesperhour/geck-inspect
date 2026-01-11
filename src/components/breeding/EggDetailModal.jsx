@@ -1,0 +1,159 @@
+import React, { useState } from 'react';
+import { Egg, BreedingPlan, Gecko } from '@/entities/all';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Loader2, Egg as EggIcon, Calendar } from 'lucide-react';
+import { format, differenceInDays } from 'date-fns';
+
+export default function EggDetailModal({ egg, breedingPlan, sire, dam, onClose, onUpdate }) {
+    const [isEditing, setIsEditing] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
+    const [editData, setEditData] = useState({
+        lay_date: egg.lay_date,
+        hatch_date_expected: egg.hatch_date_expected,
+        hatch_date_actual: egg.hatch_date_actual || '',
+        status: egg.status
+    });
+
+    const daysIncubating = differenceInDays(new Date(), new Date(egg.lay_date));
+    const incubationDays = egg.status === 'Hatched' && egg.hatch_date_actual
+        ? differenceInDays(new Date(egg.hatch_date_actual), new Date(egg.lay_date))
+        : null;
+
+    const handleSave = async () => {
+        setIsSaving(true);
+        try {
+            const updatePayload = { ...editData };
+            
+            // Auto-archive if not incubating
+            if (editData.status !== 'Incubating') {
+                updatePayload.archived = true;
+                updatePayload.archived_date = new Date().toISOString().split('T')[0];
+            }
+            
+            await Egg.update(egg.id, updatePayload);
+            onUpdate();
+            onClose();
+        } catch (error) {
+            console.error("Failed to update egg:", error);
+        }
+        setIsSaving(false);
+    };
+
+    return (
+        <Dialog open={true} onOpenChange={onClose}>
+            <DialogContent className="bg-slate-900 border-slate-700 text-slate-100 max-w-2xl">
+                <DialogHeader>
+                    <DialogTitle className="flex items-center gap-2">
+                        <EggIcon className="w-6 h-6 text-emerald-400" />
+                        Egg Details
+                    </DialogTitle>
+                </DialogHeader>
+
+                <div className="space-y-4">
+                    {/* Parents */}
+                    <div className="bg-slate-800 p-4 rounded-lg">
+                        <h3 className="text-sm font-semibold text-slate-300 mb-2">Parents</h3>
+                        <p className="text-slate-200">{sire?.name || 'Unknown'} × {dam?.name || 'Unknown'}</p>
+                        {breedingPlan?.breeding_id && (
+                            <p className="text-xs text-slate-400">Plan: {breedingPlan.breeding_id}</p>
+                        )}
+                    </div>
+
+                    {/* Incubation Info */}
+                    <div className="bg-slate-800 p-4 rounded-lg">
+                        <h3 className="text-sm font-semibold text-slate-300 mb-2">Incubation</h3>
+                        {egg.status === 'Incubating' ? (
+                            <p className="text-emerald-400 text-lg font-semibold">Day {daysIncubating}</p>
+                        ) : incubationDays !== null ? (
+                            <p className="text-blue-400 text-lg font-semibold">{incubationDays} days incubated</p>
+                        ) : null}
+                    </div>
+
+                    {/* Dates */}
+                    <div className="space-y-3">
+                        <div>
+                            <Label>Lay Date</Label>
+                            <Input
+                                type="date"
+                                value={editData.lay_date}
+                                onChange={(e) => setEditData({ ...editData, lay_date: e.target.value })}
+                                disabled={!isEditing}
+                                className="bg-slate-800 border-slate-600"
+                            />
+                        </div>
+                        <div>
+                            <Label>Expected Hatch Date</Label>
+                            <Input
+                                type="date"
+                                value={editData.hatch_date_expected}
+                                onChange={(e) => setEditData({ ...editData, hatch_date_expected: e.target.value })}
+                                disabled={!isEditing}
+                                className="bg-slate-800 border-slate-600"
+                            />
+                        </div>
+                        {egg.status === 'Hatched' && (
+                            <div>
+                                <Label>Actual Hatch Date</Label>
+                                <Input
+                                    type="date"
+                                    value={editData.hatch_date_actual}
+                                    onChange={(e) => setEditData({ ...editData, hatch_date_actual: e.target.value })}
+                                    disabled={!isEditing}
+                                    className="bg-slate-800 border-slate-600"
+                                />
+                            </div>
+                        )}
+                    </div>
+
+                    {/* Status */}
+                    <div>
+                        <Label>Status</Label>
+                        <Select 
+                            value={editData.status} 
+                            onValueChange={(v) => setEditData({ ...editData, status: v })}
+                            disabled={!isEditing}
+                        >
+                            <SelectTrigger className="bg-slate-800 border-slate-600">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-800 border-slate-600">
+                                <SelectItem value="Incubating">Incubating</SelectItem>
+                                <SelectItem value="Hatched">Hatched</SelectItem>
+                                <SelectItem value="Slug">Slug</SelectItem>
+                                <SelectItem value="Infertile">Infertile</SelectItem>
+                                <SelectItem value="Stillbirth">Stillbirth</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                </div>
+
+                <DialogFooter>
+                    {isEditing ? (
+                        <>
+                            <Button variant="outline" onClick={() => setIsEditing(false)} className="border-slate-600">
+                                Cancel
+                            </Button>
+                            <Button onClick={handleSave} disabled={isSaving} className="bg-emerald-600 hover:bg-emerald-700">
+                                {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                                Save Changes
+                            </Button>
+                        </>
+                    ) : (
+                        <>
+                            <Button variant="outline" onClick={onClose} className="border-slate-600">
+                                Close
+                            </Button>
+                            <Button onClick={() => setIsEditing(true)} className="bg-emerald-600 hover:bg-emerald-700">
+                                Edit
+                            </Button>
+                        </>
+                    )}
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+    );
+}

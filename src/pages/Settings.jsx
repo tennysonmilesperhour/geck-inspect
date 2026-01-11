@@ -108,7 +108,8 @@ const initialFormData = {
     default_gecko_sort: 'name',
     default_reptile_sort: 'name',
     default_gallery_sort: '-created_date',
-    default_breeding_sort: '-created_date'
+    default_breeding_sort: '-created_date',
+    hatch_alert_days: 60
 };
 
 const notificationTypes = [
@@ -182,7 +183,8 @@ export default function SettingsPage() {
                         default_gecko_sort: currentUser.default_gecko_sort || 'name',
                         default_reptile_sort: currentUser.default_reptile_sort || 'name',
                         default_gallery_sort: currentUser.default_gallery_sort || '-created_date',
-                        default_breeding_sort: currentUser.default_breeding_sort || '-created_date'
+                        default_breeding_sort: currentUser.default_breeding_sort || '-created_date',
+                        hatch_alert_days: currentUser.hatch_alert_days || 60
                     });
                 }
             } catch (error) {
@@ -483,7 +485,11 @@ export default function SettingsPage() {
                                         <SelectItem value="-hatch_date">Newest First</SelectItem>
                                         <SelectItem value="weight_grams">Lightest First</SelectItem>
                                         <SelectItem value="-weight_grams">Heaviest First</SelectItem>
+                                        <SelectItem value="status">Status (A-Z)</SelectItem>
+                                        <SelectItem value="-status">Status (Z-A)</SelectItem>
                                         <SelectItem value="display_order">Custom Order</SelectItem>
+                                        <SelectItem value="-created_date">Recently Added</SelectItem>
+                                        <SelectItem value="created_date">Oldest Added</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -527,27 +533,29 @@ export default function SettingsPage() {
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="-created_date">Newest First</SelectItem>
-                                        <SelectItem value="created_date">Oldest First</SelectItem>
-                                        <SelectItem value="-pairing_date">Most Recent Pairing</SelectItem>
-                                        <SelectItem value="pairing_date">Oldest Pairing</SelectItem>
-                                        <SelectItem value="breeding_id">ID (A-Z)</SelectItem>
+                                        <SelectItem value="newest">Newest First</SelectItem>
+                                        <SelectItem value="time_newest">Paired Most Recently</SelectItem>
+                                        <SelectItem value="time_oldest">Paired Longest Ago</SelectItem>
+                                        <SelectItem value="eggs_high">Most Eggs</SelectItem>
+                                        <SelectItem value="eggs_low">Least Eggs</SelectItem>
+                                        <SelectItem value="last_egg_recent">Latest Egg Drop</SelectItem>
+                                        <SelectItem value="last_egg_oldest">Oldest Egg Drop</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
                             
                             <div>
-                                <Label htmlFor="hatch-alert-days" className="text-slate-300">Hatch Alert (Days Before)</Label>
+                                <Label htmlFor="hatch-alert-days" className="text-slate-300">Hatch Alert (Days Incubating)</Label>
                                 <Input
                                     id="hatch-alert-days"
                                     type="number"
                                     min="1"
-                                    max="30"
-                                    value={formData.hatch_alert_days || 7}
+                                    max="100"
+                                    value={formData.hatch_alert_days || 60}
                                     onChange={(e) => handleChange('hatch_alert_days', parseInt(e.target.value))}
                                     className="bg-slate-800 border-slate-600"
                                 />
-                                <p className="text-xs text-slate-400 mt-1">Eggs will be highlighted this many days before expected hatch date</p>
+                                <p className="text-xs text-slate-400 mt-1">Eggs will be highlighted after incubating this many days</p>
                             </div>
                         </div>
                     </CardContent>

@@ -9,6 +9,7 @@ import { Loader2, Egg as EggIcon, Search, ExternalLink, Timer, Archive, ArchiveR
 import { format, differenceInDays } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import EggDetailModal from './EggDetailModal';
 
 export default function Hatchery() {
     const [eggs, setEggs] = useState([]);
@@ -16,7 +17,8 @@ export default function Hatchery() {
     const [breedingPlans, setBreedingPlans] = useState([]);
     const [geckos, setGeckos] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [hatchAlertDays, setHatchAlertDays] = useState(7);
+    const [hatchAlertDays, setHatchAlertDays] = useState(60);
+    const [selectedEgg, setSelectedEgg] = useState(null);
     
     const [filters, setFilters] = useState({
         season: 'all',
@@ -144,16 +146,7 @@ export default function Hatchery() {
     };
 
     const handleEggClick = (egg) => {
-        if (egg.status === 'Hatched' && egg.gecko_id) {
-            // Navigate to lineage page with the hatched gecko auto-selected
-            window.location.href = createPageUrl(`Lineage?geckoId=${egg.gecko_id}`);
-        } else {
-            // Navigate to lineage of parents
-            const plan = breedingPlans.find(p => p.id === egg.breeding_plan_id);
-            if (plan?.sire_id) {
-                window.location.href = createPageUrl(`Lineage?geckoId=${plan.sire_id}`);
-            }
-        }
+        setSelectedEgg(egg);
     };
     
     const handleArchiveEgg = async (eggId, shouldArchive, e) => {
@@ -257,11 +250,9 @@ export default function Hatchery() {
                     const dam = geckos.find(g => g.id === plan?.dam_id);
                     const hatchedGecko = egg.gecko_id ? geckos.find(g => g.id === egg.gecko_id) : null;
                     
-                    const hatchDate = new Date(egg.hatch_date_expected);
                     const today = new Date();
-                    const daysUntilHatch = differenceInDays(hatchDate, today);
                     const daysIncubating = differenceInDays(today, new Date(egg.lay_date));
-                    const isNearHatching = daysUntilHatch <= hatchAlertDays && daysUntilHatch >= 0 && egg.status === 'Incubating';
+                    const isNearHatching = daysIncubating >= hatchAlertDays && egg.status === 'Incubating';
                     
                     // Calculate incubation days for hatched eggs
                     const incubationDays = egg.status === 'Hatched' && egg.hatch_date_actual
@@ -305,7 +296,7 @@ export default function Hatchery() {
                                                 Day {daysIncubating} of incubation
                                             </p>
                                             {isNearHatching && (
-                                                <p className="text-xs text-amber-300">Hatching in {daysUntilHatch} days!</p>
+                                                <p className="text-xs text-amber-300">Ready to hatch soon!</p>
                                             )}
                                         </div>
                                     </div>
@@ -370,6 +361,28 @@ export default function Hatchery() {
                         <p className="text-slate-400">No eggs found matching your filters</p>
                     </CardContent>
                 </Card>
+            )}
+            
+            {selectedEgg && (
+                <EggDetailModal
+                    egg={selectedEgg}
+                    breedingPlan={breedingPlans.find(p => p.id === selectedEgg.breeding_plan_id)}
+                    sire={geckos.find(g => g.id === breedingPlans.find(p => p.id === selectedEgg.breeding_plan_id)?.sire_id)}
+                    dam={geckos.find(g => g.id === breedingPlans.find(p => p.id === selectedEgg.breeding_plan_id)?.dam_id)}
+                    onClose={() => setSelectedEgg(null)}
+                    onUpdate={loadData}
+                />
+            )}
+            
+            {selectedEgg && (
+                <EggDetailModal
+                    egg={selectedEgg}
+                    breedingPlan={breedingPlans.find(p => p.id === selectedEgg.breeding_plan_id)}
+                    sire={geckos.find(g => g.id === breedingPlans.find(p => p.id === selectedEgg.breeding_plan_id)?.sire_id)}
+                    dam={geckos.find(g => g.id === breedingPlans.find(p => p.id === selectedEgg.breeding_plan_id)?.dam_id)}
+                    onClose={() => setSelectedEgg(null)}
+                    onUpdate={loadData}
+                />
             )}
         </div>
     );
