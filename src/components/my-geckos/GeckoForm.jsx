@@ -549,6 +549,32 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                             className="data-[state=checked]:bg-green-500"
                         />
                     </div>
+                    
+                    {/* Public Display Toggle */}
+                    <div className="flex items-center justify-between p-4 bg-slate-800 rounded-lg">
+                        <div>
+                            <Label htmlFor="is_public" className="text-base">Public Display</Label>
+                            <p className="text-xs text-slate-400">Show in public profile and marketplace</p>
+                        </div>
+                        <Switch
+                            id="is_public"
+                            checked={formData.is_public !== false}
+                            onCheckedChange={(checked) => handleChange('is_public', checked)}
+                        />
+                    </div>
+                    
+                    {/* Gallery Display Toggle */}
+                    <div className="flex items-center justify-between p-4 bg-slate-800 rounded-lg">
+                        <div>
+                            <Label htmlFor="gallery_display" className="text-base">Gallery Display</Label>
+                            <p className="text-xs text-slate-400">Show in public gallery</p>
+                        </div>
+                        <Switch
+                            id="gallery_display"
+                            checked={formData.gallery_display || false}
+                            onCheckedChange={(checked) => handleChange('gallery_display', checked)}
+                        />
+                    </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>

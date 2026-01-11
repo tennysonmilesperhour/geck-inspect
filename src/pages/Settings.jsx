@@ -194,8 +194,11 @@ export default function SettingsPage() {
         loadData();
     }, [toast]);
 
+    const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
     const handleChange = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
+        setHasUnsavedChanges(true);
     };
 
     const handleImageUpload = async (e, type) => {
@@ -236,6 +239,7 @@ export default function SettingsPage() {
         try {
             await User.updateMyUserData(formData);
             toast({ title: "Settings Saved", description: "Your profile has been successfully updated." });
+            setHasUnsavedChanges(false);
         } catch (error) {
             console.error('Failed to update profile:', error);
             toast({ title: "Save Failed", description: "Could not save your settings. Please try again.", variant: "destructive" });
@@ -531,13 +535,29 @@ export default function SettingsPage() {
                                     </SelectContent>
                                 </Select>
                             </div>
+                            
+                            <div>
+                                <Label htmlFor="hatch-alert-days" className="text-slate-300">Hatch Alert (Days Before)</Label>
+                                <Input
+                                    id="hatch-alert-days"
+                                    type="number"
+                                    min="1"
+                                    max="30"
+                                    value={formData.hatch_alert_days || 7}
+                                    onChange={(e) => handleChange('hatch_alert_days', parseInt(e.target.value))}
+                                    className="bg-slate-800 border-slate-600"
+                                />
+                                <p className="text-xs text-slate-400 mt-1">Eggs will be highlighted this many days before expected hatch date</p>
+                            </div>
                         </div>
                     </CardContent>
                 </Card>
 
-                <Button onClick={handleSave} disabled={isSaving} className="w-full bg-emerald-600 hover:bg-emerald-700 text-lg py-6">
-                    {isSaving ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Saving...</> : <><Save className="w-5 h-5 mr-2" /> Save All Settings</>}
-                </Button>
+                {hasUnsavedChanges && (
+                    <Button onClick={handleSave} disabled={isSaving} className="w-full bg-emerald-600 hover:bg-emerald-700 text-lg py-6">
+                        {isSaving ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Saving...</> : <><Save className="w-5 h-5 mr-2" /> Save All Settings</>}
+                    </Button>
+                )}
 
                 {/* Delete Account Section */}
                 <Card className="bg-red-950/30 border-red-900/50 backdrop-blur-sm mt-8">

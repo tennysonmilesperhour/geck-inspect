@@ -127,6 +127,11 @@ export default function GeckoCard({ gecko, weightRecords = [], onView, onEdit })
             </div>
           )}
         </div>
+        {gecko.incubation_days && (
+          <div className="text-xs text-blue-400 font-semibold">
+            {gecko.incubation_days} days incubated
+          </div>
+        )}
       </CardContent>
     </Card>
   );

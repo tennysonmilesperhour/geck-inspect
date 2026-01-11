@@ -114,7 +114,7 @@ export default function UserManagement() {
                     toast({ title: "Success", description: `${selectedUser.full_name} is now an admin.` });
                     break;
                 case 'removeAdmin':
-                    await User.update(selectedUser.id, { role: 'user' });
+                    await User.update(selectedUser.id, { role: 'user', is_expert: selectedUser.is_expert || false });
                     toast({ title: "Success", description: `${selectedUser.full_name} is no longer an admin.` });
                     break;
                 case 'makeExpert':

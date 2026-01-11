@@ -126,6 +126,9 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
                     const damCode = dam?.gecko_id_code || 'UNK';
                     const geckoIdCode = `${sireCode}x${damCode}-${offspringNumber}`;
                     
+                    // Calculate incubation days
+                    const incubationDays = differenceInDays(new Date(hatchDate), new Date(currentEgg.lay_date));
+
                     // Create the gecko
                     const newGecko = await Gecko.create({
                         name: geckoName,
@@ -135,7 +138,8 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
                         sire_id: plan.sire_id,
                         dam_id: plan.dam_id,
                         status: 'Pet', // Default to pet, can be updated later
-                        notes: `Hatched from breeding plan: ${plan.breeding_id || plan.id}`
+                        notes: `Hatched from breeding plan: ${plan.breeding_id || plan.id}`,
+                        incubation_days: incubationDays
                     });
                     
                     // Link gecko to egg

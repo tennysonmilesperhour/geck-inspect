@@ -16,6 +16,7 @@ export default function Hatchery() {
     const [breedingPlans, setBreedingPlans] = useState([]);
     const [geckos, setGeckos] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [hatchAlertDays, setHatchAlertDays] = useState(7);
     
     const [filters, setFilters] = useState({
         season: 'all',
@@ -30,13 +31,16 @@ export default function Hatchery() {
         loadData();
     }, []);
     
-    // Load user's default sort preference
+    // Load user's default sort preference and hatch alert days
     useEffect(() => {
         const loadUserPreference = async () => {
             try {
                 const currentUser = await User.me();
                 if (currentUser?.default_breeding_sort) {
                     setSortBy(currentUser.default_breeding_sort);
+                }
+                if (currentUser?.hatch_alert_days) {
+                    setHatchAlertDays(currentUser.hatch_alert_days);
                 }
             } catch (error) {
                 console.error("Failed to load user preferences:", error);
@@ -253,9 +257,16 @@ export default function Hatchery() {
                     const dam = geckos.find(g => g.id === plan?.dam_id);
                     const hatchedGecko = egg.gecko_id ? geckos.find(g => g.id === egg.gecko_id) : null;
                     
+                    const hatchDate = new Date(egg.hatch_date_expected);
                     const today = new Date();
+                    const daysUntilHatch = differenceInDays(hatchDate, today);
                     const daysIncubating = differenceInDays(today, new Date(egg.lay_date));
-                    const isNearHatching = daysIncubating >= 75 && egg.status === 'Incubating';
+                    const isNearHatching = daysUntilHatch <= hatchAlertDays && daysUntilHatch >= 0 && egg.status === 'Incubating';
+                    
+                    // Calculate incubation days for hatched eggs
+                    const incubationDays = egg.status === 'Hatched' && egg.hatch_date_actual
+                        ? differenceInDays(new Date(egg.hatch_date_actual), new Date(egg.lay_date))
+                        : null;
 
                     return (
                         <Card
@@ -294,7 +305,7 @@ export default function Hatchery() {
                                                 Day {daysIncubating} of incubation
                                             </p>
                                             {isNearHatching && (
-                                                <p className="text-xs text-amber-300">Ready to hatch soon!</p>
+                                                <p className="text-xs text-amber-300">Hatching in {daysUntilHatch} days!</p>
                                             )}
                                         </div>
                                     </div>
@@ -307,6 +318,9 @@ export default function Hatchery() {
                                         <p className="text-green-400">
                                             Hatched: {format(new Date(egg.hatch_date_actual), 'MMM dd, yyyy')}
                                         </p>
+                                    )}
+                                    {incubationDays !== null && (
+                                        <p className="text-blue-400 font-semibold">{incubationDays} days incubated</p>
                                     )}
                                 </div>
 
