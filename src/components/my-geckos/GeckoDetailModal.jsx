@@ -303,20 +303,43 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
               </div>
 
               {/* Public Display Toggle */}
-              <div className="bg-slate-800 p-4 rounded-lg">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    {isPublic ? <Eye className="w-4 h-4 text-emerald-400" /> : <EyeOff className="w-4 h-4 text-slate-500" />}
-                    <Label className="text-slate-300 cursor-pointer">Public Display</Label>
+              <div className="space-y-3">
+                <div className="bg-slate-800 p-4 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      {isPublic ? <Eye className="w-4 h-4 text-emerald-400" /> : <EyeOff className="w-4 h-4 text-slate-500" />}
+                      <Label className="text-slate-300 cursor-pointer">Public Display</Label>
+                    </div>
+                    <Switch
+                      checked={isPublic}
+                      onCheckedChange={handleTogglePublic}
+                    />
                   </div>
-                  <Switch
-                    checked={isPublic}
-                    onCheckedChange={handleTogglePublic}
-                  />
+                  <p className="text-xs text-slate-500 mt-2">
+                    {isPublic ? 'Visible in your public profile' : 'Hidden from public view'}
+                  </p>
                 </div>
-                <p className="text-xs text-slate-500 mt-2">
-                  {isPublic ? 'Visible in your public profile' : 'Hidden from public view'}
-                </p>
+                
+                <div className="bg-slate-800 p-4 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-slate-300 cursor-pointer">Gallery Display</Label>
+                    <Switch
+                      checked={gecko.gallery_display || false}
+                      onCheckedChange={async (checked) => {
+                        try {
+                          await Gecko.update(gecko.id, { gallery_display: checked });
+                          if (onUpdate) onUpdate();
+                        } catch (error) {
+                          console.error("Failed to update gallery display:", error);
+                        }
+                      }}
+                      className="data-[state=checked]:bg-emerald-500"
+                    />
+                  </div>
+                  <p className="text-xs text-slate-500 mt-2">
+                    Show in public gallery
+                  </p>
+                </div>
               </div>
 
               {/* Action Buttons */}
