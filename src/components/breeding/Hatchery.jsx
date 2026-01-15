@@ -174,8 +174,8 @@ export default function Hatchery() {
         <div className="space-y-6">
             <Card className="bg-slate-900 border-slate-700">
                 <CardContent className="p-6">
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-                        <div className="relative">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                        <div className="relative sm:col-span-2 md:col-span-1">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                             <Input
                                 placeholder="Search lineage..."
@@ -220,10 +220,11 @@ export default function Hatchery() {
                         <Button
                             variant={filters.showArchived ? "default" : "outline"}
                             onClick={() => setFilters({ ...filters, showArchived: !filters.showArchived })}
-                            className={filters.showArchived ? "bg-emerald-600" : ""}
+                            className={`${filters.showArchived ? "bg-emerald-600" : ""} text-xs md:text-sm`}
                         >
-                            {filters.showArchived ? <ArchiveRestore className="w-4 h-4 mr-2" /> : <Archive className="w-4 h-4 mr-2" />}
-                            {filters.showArchived ? "Show Active" : "Show Archived"}
+                            {filters.showArchived ? <ArchiveRestore className="w-4 h-4 mr-1 md:mr-2" /> : <Archive className="w-4 h-4 mr-1 md:mr-2" />}
+                            <span className="hidden sm:inline">{filters.showArchived ? "Show Active" : "Show Archived"}</span>
+                            <span className="sm:hidden">{filters.showArchived ? "Active" : "Archived"}</span>
                         </Button>
 
                         <Select value={sortBy} onValueChange={setSortBy}>
@@ -361,17 +362,6 @@ export default function Hatchery() {
                         <p className="text-slate-400">No eggs found matching your filters</p>
                     </CardContent>
                 </Card>
-            )}
-            
-            {selectedEgg && (
-                <EggDetailModal
-                    egg={selectedEgg}
-                    breedingPlan={breedingPlans.find(p => p.id === selectedEgg.breeding_plan_id)}
-                    sire={geckos.find(g => g.id === breedingPlans.find(p => p.id === selectedEgg.breeding_plan_id)?.sire_id)}
-                    dam={geckos.find(g => g.id === breedingPlans.find(p => p.id === selectedEgg.breeding_plan_id)?.dam_id)}
-                    onClose={() => setSelectedEgg(null)}
-                    onUpdate={loadData}
-                />
             )}
             
             {selectedEgg && (
