@@ -608,7 +608,7 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
             <Card key={plan.id} className="bg-slate-900 border-slate-700 text-slate-300 flex flex-col overflow-hidden">
                 <CardHeader className="p-0 relative">
                     {/* Egg counts in top right */}
-                    <div className="absolute top-2 right-2 flex gap-1 z-10">
+                    <div className="absolute top-2 right-12 flex gap-1 z-10 pointer-events-none">
                         {eggCounts.incubating > 0 && (
                             <div className="bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
                                 <EggIcon className="w-3 h-3" />
