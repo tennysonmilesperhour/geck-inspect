@@ -532,7 +532,7 @@ export default function Lineage() {
                                 {isLoading ? (
                                     <div className="flex items-center justify-center p-2 text-emerald-300"><Loader2 className="animate-spin w-4 h-4 mr-2" /> Loading...</div>
                                 ) : (
-                                    filteredSelectableGeckos.map(gecko => (
+                                    [...filteredSelectableGeckos].sort((a, b) => a.name.localeCompare(b.name)).map(gecko => (
                                         <SelectItem key={gecko.id} value={gecko.id}>
                                             {gecko.name} ({gecko.gecko_id_code || 'No ID'})
                                         </SelectItem>
