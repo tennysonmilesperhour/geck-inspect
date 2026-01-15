@@ -1052,33 +1052,40 @@ export default function BreedingPage() {
             const newSet = new Set(prev);
             const isExpanding = !newSet.has(planId);
             
+            // Check if desktop view (window width >= 1024px for lg breakpoint)
+            const isDesktop = window.innerWidth >= 1024;
+            
             if (isExpanding) {
-                // Find the index of this plan and its adjacent plan in the current view
-                const currentPlans = activeTab === 'active' ? activePlans : archivedPlans;
-                const planIndex = currentPlans.findIndex(p => p.id === planId);
+                // Add the clicked plan
+                newSet.add(planId);
                 
-                if (planIndex !== -1) {
-                    // Add the clicked plan
-                    newSet.add(planId);
+                // Only expand adjacent on desktop
+                if (isDesktop) {
+                    const currentPlans = activeTab === 'active' ? activePlans : archivedPlans;
+                    const planIndex = currentPlans.findIndex(p => p.id === planId);
                     
-                    // Find adjacent plan in the same row (for 2-column grid)
-                    // If even index, adjacent is index+1; if odd, adjacent is index-1
-                    const adjacentIndex = planIndex % 2 === 0 ? planIndex + 1 : planIndex - 1;
-                    if (adjacentIndex >= 0 && adjacentIndex < currentPlans.length) {
-                        newSet.add(currentPlans[adjacentIndex].id);
+                    if (planIndex !== -1) {
+                        // Find adjacent plan in the same row (for 2-column grid)
+                        const adjacentIndex = planIndex % 2 === 0 ? planIndex + 1 : planIndex - 1;
+                        if (adjacentIndex >= 0 && adjacentIndex < currentPlans.length) {
+                            newSet.add(currentPlans[adjacentIndex].id);
+                        }
                     }
                 }
             } else {
-                // Collapsing - find and collapse both plans in the row
-                const currentPlans = activeTab === 'active' ? activePlans : archivedPlans;
-                const planIndex = currentPlans.findIndex(p => p.id === planId);
+                // Collapsing
+                newSet.delete(planId);
                 
-                if (planIndex !== -1) {
-                    newSet.delete(planId);
+                // Only collapse adjacent on desktop
+                if (isDesktop) {
+                    const currentPlans = activeTab === 'active' ? activePlans : archivedPlans;
+                    const planIndex = currentPlans.findIndex(p => p.id === planId);
                     
-                    const adjacentIndex = planIndex % 2 === 0 ? planIndex + 1 : planIndex - 1;
-                    if (adjacentIndex >= 0 && adjacentIndex < currentPlans.length) {
-                        newSet.delete(currentPlans[adjacentIndex].id);
+                    if (planIndex !== -1) {
+                        const adjacentIndex = planIndex % 2 === 0 ? planIndex + 1 : planIndex - 1;
+                        if (adjacentIndex >= 0 && adjacentIndex < currentPlans.length) {
+                            newSet.delete(currentPlans[adjacentIndex].id);
+                        }
                     }
                 }
             }

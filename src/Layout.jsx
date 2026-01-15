@@ -711,7 +711,11 @@ function LayoutContent({ children, currentPageName }) {
               radial-gradient(circle at 60% 80%, rgba(134, 239, 172, 0.06) 2px, transparent 2px);
             background-size: 30px 30px, 25px 25px, 40px 40px, 35px 35px;
             background-position: 0 0, 15px 15px, 5px 10px, 25px 5px;
-          }
+            }
+
+            .safe-area-bottom {
+            padding-bottom: env(safe-area-inset-bottom);
+            }
 
           :root {
             --gecko-primary: #86efac;
@@ -1580,7 +1584,7 @@ function LayoutContent({ children, currentPageName }) {
           </div>
         </div>
 
-        <main className="flex-1 flex flex-col min-w-0">
+        <main className="flex-1 flex flex-col min-w-0 pb-16 md:pb-0">
           <header className="bg-sage-200/90 backdrop-blur-md border-b border-sage-300 px-4 py-3 md:hidden sticky top-0 z-10 gecko-header">
             <div className="flex items-center justify-between gap-4">
               <button onClick={toggleSidebar} className="hover:bg-sage-200 p-2 rounded-lg transition-colors duration-200" aria-label="Toggle Sidebar">
@@ -1646,16 +1650,85 @@ function LayoutContent({ children, currentPageName }) {
           <div className="flex-1 overflow-auto">
             {children}
           </div>
-        </main>
-      </div>
-    </>
-  );
-}
 
-export default function Layout({ children, currentPageName }) {
-  return (
-    <SidebarProvider>
-      <LayoutContent children={children} currentPageName={currentPageName} />
-    </SidebarProvider>
-  );
-}
+          {/* Mobile Bottom Navigation */}
+          <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-md border-t border-slate-700 z-50 safe-area-bottom">
+            <div className="flex justify-around items-center h-16 px-2">
+              <Link
+                to={createPageUrl("MyGeckos")}
+                onClick={(e) => {
+                  if (!user) {
+                    e.preventDefault();
+                    handleLoginPrompt("My Geckos");
+                  }
+                }}
+                className="flex flex-col items-center justify-center flex-1 py-2"
+              >
+                <Users className={`w-5 h-5 ${location.pathname === createPageUrl("MyGeckos") ? 'text-emerald-400' : 'text-slate-400'}`} />
+                <span className={`text-[10px] mt-1 ${location.pathname === createPageUrl("MyGeckos") ? 'text-emerald-400' : 'text-slate-400'}`}>
+                  My Geckos
+                </span>
+              </Link>
+
+              <Link
+                to={createPageUrl("Breeding")}
+                onClick={(e) => {
+                  if (!user) {
+                    e.preventDefault();
+                    handleLoginPrompt("Breeding");
+                  }
+                }}
+                className="flex flex-col items-center justify-center flex-1 py-2"
+              >
+                <GitBranch className={`w-5 h-5 ${location.pathname === createPageUrl("Breeding") ? 'text-emerald-400' : 'text-slate-400'}`} />
+                <span className={`text-[10px] mt-1 ${location.pathname === createPageUrl("Breeding") ? 'text-emerald-400' : 'text-slate-400'}`}>
+                  Breeding
+                </span>
+              </Link>
+
+              <Link
+                to={createPageUrl("MyProfile")}
+                onClick={(e) => {
+                  if (!user) {
+                    e.preventDefault();
+                    handleLoginPrompt("My Profile");
+                  }
+                }}
+                className="flex flex-col items-center justify-center flex-1 py-2"
+              >
+                <Users className={`w-5 h-5 ${location.pathname === createPageUrl("MyProfile") ? 'text-emerald-400' : 'text-slate-400'}`} />
+                <span className={`text-[10px] mt-1 ${location.pathname === createPageUrl("MyProfile") ? 'text-emerald-400' : 'text-slate-400'}`}>
+                  Profile
+                </span>
+              </Link>
+
+              <Link
+                to={createPageUrl("Settings")}
+                onClick={(e) => {
+                  if (!user) {
+                    e.preventDefault();
+                    handleLoginPrompt("Settings");
+                  }
+                }}
+                className="flex flex-col items-center justify-center flex-1 py-2"
+              >
+                <Settings className={`w-5 h-5 ${location.pathname === createPageUrl("Settings") ? 'text-emerald-400' : 'text-slate-400'}`} />
+                <span className={`text-[10px] mt-1 ${location.pathname === createPageUrl("Settings") ? 'text-emerald-400' : 'text-slate-400'}`}>
+                  Settings
+                </span>
+              </Link>
+            </div>
+          </nav>
+          </main>
+          </div>
+          </>
+          );
+          }
+
+          export default function Layout({ children, currentPageName }) {
+          return (
+          <SidebarProvider>
+          <LayoutContent children={children} currentPageName={currentPageName} />
+          </SidebarProvider>
+          );
+          }

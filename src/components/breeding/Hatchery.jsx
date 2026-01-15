@@ -331,10 +331,10 @@ export default function Hatchery() {
                                         variant="ghost"
                                         size="sm"
                                         onClick={(e) => handleArchiveEgg(egg.id, true, e)}
-                                        className="h-6 text-xs text-slate-400 hover:text-slate-200 hover:bg-slate-700 px-2"
+                                        className="h-5 text-[10px] md:text-xs text-slate-400 hover:text-slate-200 hover:bg-slate-700 px-1.5 md:px-2"
                                     >
-                                        <Archive className="w-3 h-3 mr-1" />
-                                        Archive
+                                        <Archive className="w-2.5 h-2.5 md:w-3 md:h-3 md:mr-1" />
+                                        <span className="hidden md:inline">Archive</span>
                                     </Button>
                                 )}
                                 
@@ -343,10 +343,10 @@ export default function Hatchery() {
                                         variant="ghost"
                                         size="sm"
                                         onClick={(e) => handleArchiveEgg(egg.id, false, e)}
-                                        className="h-6 text-xs text-emerald-400 hover:text-emerald-300 hover:bg-slate-700 px-2"
+                                        className="h-5 text-[10px] md:text-xs text-emerald-400 hover:text-emerald-300 hover:bg-slate-700 px-1.5 md:px-2"
                                     >
-                                        <ArchiveRestore className="w-3 h-3 mr-1" />
-                                        Restore
+                                        <ArchiveRestore className="w-2.5 h-2.5 md:w-3 md:h-3 md:mr-1" />
+                                        <span className="hidden md:inline">Restore</span>
                                     </Button>
                                 )}
                             </div>

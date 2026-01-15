@@ -365,12 +365,16 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                   )}
                 </Button>
 
-                <a href={createPageUrl(`Lineage?geckoId=${gecko.id}`)} className="block">
-                  <Button variant="outline" className="w-full border-slate-600 hover:bg-slate-800">
-                    <GitBranch className="w-4 h-4 mr-2" />
-                    View Lineage Tree
-                  </Button>
-                </a>
+                <Button 
+                  variant="outline" 
+                  className="w-full border-slate-600 hover:bg-slate-800"
+                  onClick={() => {
+                    window.location.href = createPageUrl(`Lineage?geckoId=${gecko.id}`);
+                  }}
+                >
+                  <GitBranch className="w-4 h-4 mr-2" />
+                  View Lineage Tree
+                </Button>
 
                 {onArchive && (
                   <Button
