@@ -174,7 +174,7 @@ export default function Hatchery() {
         <div className="space-y-6">
             <Card className="bg-slate-900 border-slate-700">
                 <CardContent className="p-6">
-                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                         <div className="relative">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                             <Input
@@ -243,7 +243,7 @@ export default function Hatchery() {
                 </CardContent>
             </Card>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-3 gap-4">
                 {filteredEggs.map(egg => {
                     const plan = breedingPlans.find(p => p.id === egg.breeding_plan_id);
                     const sire = geckos.find(g => g.id === plan?.sire_id);

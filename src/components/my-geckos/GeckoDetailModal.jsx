@@ -303,7 +303,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
               </div>
 
               {/* Public Display Toggle */}
-              <div className="space-y-3">
+              <div className="space-y-3 mb-4">
                 <div className="bg-slate-800 p-4 rounded-lg">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
@@ -344,12 +344,14 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
 
               {/* Action Buttons */}
               <div className="space-y-3">
-                <EventTracker 
-                  entityId={gecko.id} 
-                  entityType="gecko" 
-                  EventEntity={GeckoEvent}
-                  onEventAdded={loadEventHistory}
-                />
+                <div className="mb-3">
+                  <EventTracker 
+                    entityId={gecko.id} 
+                    entityType="gecko" 
+                    EventEntity={GeckoEvent}
+                    onEventAdded={loadEventHistory}
+                  />
+                </div>
 
                 <Button
                   onClick={() => handleGenerateCertificate('lineage')}
@@ -363,12 +365,12 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                   )}
                 </Button>
 
-                <Link to={createPageUrl(`Lineage?geckoId=${gecko.id}`)}>
+                <a href={createPageUrl(`Lineage?geckoId=${gecko.id}`)} className="block">
                   <Button variant="outline" className="w-full border-slate-600 hover:bg-slate-800">
                     <GitBranch className="w-4 h-4 mr-2" />
                     View Lineage Tree
                   </Button>
-                </Link>
+                </a>
 
                 {onArchive && (
                   <Button

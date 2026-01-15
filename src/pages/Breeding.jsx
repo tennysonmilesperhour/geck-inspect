@@ -607,26 +607,6 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
         <>
             <Card key={plan.id} className="bg-slate-900 border-slate-700 text-slate-300 flex flex-col overflow-hidden">
                 <CardHeader className="p-0 relative">
-                    {/* Egg counts in top right */}
-                    <div className="absolute top-2 right-12 flex gap-1 z-10 pointer-events-none">
-                        {eggCounts.incubating > 0 && (
-                            <div className="bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
-                                <EggIcon className="w-3 h-3" />
-                                {eggCounts.incubating}
-                            </div>
-                        )}
-                        {eggCounts.hatched > 0 && (
-                            <div className="bg-green-600 text-white text-xs px-1.5 py-0.5 rounded">
-                                ✓ {eggCounts.hatched}
-                            </div>
-                        )}
-                        {eggCounts.failed > 0 && (
-                            <div className="bg-red-600 text-white text-xs px-1.5 py-0.5 rounded">
-                                ✗ {eggCounts.failed}
-                            </div>
-                        )}
-                    </div>
-
                     <div className="flex flex-col md:flex-row justify-between items-stretch">
                         <div className="flex flex-1 flex-col md:flex-row">
                             <div className="flex w-full md:w-40 flex-shrink-0">
@@ -774,6 +754,25 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
                         <Button variant="outline" size="sm" className="border-slate-600 hover:bg-slate-800 text-xs h-8" onClick={() => onToggleExpanded(plan.id)}>
                             <Edit size={14} className="mr-1" /> Edit
                         </Button>
+                    </div>
+                    
+                    <div className="flex gap-1">
+                        {eggCounts.incubating > 0 && (
+                            <div className="bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
+                                <EggIcon className="w-3 h-3" />
+                                {eggCounts.incubating}
+                            </div>
+                        )}
+                        {eggCounts.hatched > 0 && (
+                            <div className="bg-green-600 text-white text-xs px-1.5 py-0.5 rounded">
+                                ✓ {eggCounts.hatched}
+                            </div>
+                        )}
+                        {eggCounts.failed > 0 && (
+                            <div className="bg-red-600 text-white text-xs px-1.5 py-0.5 rounded">
+                                ✗ {eggCounts.failed}
+                            </div>
+                        )}
                     </div>
                 </CardFooter>
             </Card>
@@ -1267,16 +1266,19 @@ export default function BreedingPage() {
                         setExpandAllArchive(false);
                     }} className="w-full">
                         <TabsList className="grid w-full grid-cols-3 bg-slate-900 h-11">
-                            <TabsTrigger value="active" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-sm">
-                                Active Plans ({activePlans.length})
+                            <TabsTrigger value="active" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-sm text-xs md:text-sm px-2">
+                                <span className="hidden md:inline">Active Plans ({activePlans.length})</span>
+                                <span className="md:hidden">Active ({activePlans.length})</span>
                             </TabsTrigger>
-                            <TabsTrigger value="hatchery" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-sm">
-                                <ListTree className="w-4 h-4 mr-2" />
-                                The Hatchery
+                            <TabsTrigger value="hatchery" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-sm text-xs md:text-sm px-2">
+                                <ListTree className="w-3 h-3 md:w-4 md:h-4 md:mr-2" />
+                                <span className="hidden sm:inline">The Hatchery</span>
+                                <span className="sm:hidden">Hatchery</span>
                             </TabsTrigger>
-                            <TabsTrigger value="archive" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-sm">
-                                <Archive className="w-4 h-4 mr-2" />
-                                Archive ({archivedPlans.length})
+                            <TabsTrigger value="archive" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-sm text-xs md:text-sm px-2">
+                                <Archive className="w-3 h-3 md:w-4 md:h-4 md:mr-2" />
+                                <span className="hidden md:inline">Archive ({archivedPlans.length})</span>
+                                <span className="md:hidden">({archivedPlans.length})</span>
                             </TabsTrigger>
                         </TabsList>
 
