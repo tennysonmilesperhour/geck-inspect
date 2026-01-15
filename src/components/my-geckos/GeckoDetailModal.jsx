@@ -343,7 +343,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
               </div>
 
               {/* Action Buttons */}
-              <div className="space-y-2">
+              <div className="space-y-3">
                 <EventTracker 
                   entityId={gecko.id} 
                   entityType="gecko" 
