@@ -249,7 +249,7 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
         return (
              <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                    <div
+                    <button
                         className={`${baseClasses} ${config.className}`}
                         onClick={(e) => {
                             if (egg.status === 'Hatched') {
@@ -260,9 +260,9 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
                         }}
                     >
                         {config.text}
-                    </div>
+                    </button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-slate-800 border-slate-600 text-slate-200">
+                <DropdownMenuContent className="bg-slate-800 border-slate-600 text-slate-200 z-50">
                     <DropdownMenuItem onClick={() => handleUpdateEggStatus(egg.id, 'Hatched')}>Hatched</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleUpdateEggStatus(egg.id, 'Incubating')}>Incubating</DropdownMenuItem>
                     <DropdownMenuItem onClick={() => handleUpdateEggStatus(egg.id, 'Slug')}>Slug</DropdownMenuItem>
@@ -420,7 +420,7 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
     const [eggCheckDay, setEggCheckDay] = useState(plan.egg_check_day || 15);
     const [lastEggDate, setLastEggDate] = useState(null);
     const [eggRefreshTrigger, setEggRefreshTrigger] = useState(0);
-    const [eggCounts, setEggCounts] = useState({ incubating: 0, hatched: 0, failed: 0 });
+    const [eggCounts, setEggCounts] = useState({ incubating: 0, hatched: 0, failed: 0, eggsLaid: 0 });
     
     // Load last egg date and egg counts
     useEffect(() => {
@@ -431,11 +431,12 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
                     setLastEggDate(eggs[0].lay_date);
                 }
                 
-                // Calculate egg counts
+                // Calculate egg counts - eggs laid includes all non-archived eggs
+                const eggsLaid = eggs.filter(e => !e.archived).length;
                 const incubating = eggs.filter(e => e.status === 'Incubating' && !e.archived).length;
                 const hatched = eggs.filter(e => e.status === 'Hatched').length;
                 const failed = eggs.filter(e => ['Slug', 'Infertile', 'Stillbirth'].includes(e.status)).length;
-                setEggCounts({ incubating, hatched, failed });
+                setEggCounts({ incubating, hatched, failed, eggsLaid });
             } catch (error) {
                 console.error("Failed to load egg data:", error);
             }
@@ -756,11 +757,11 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
                         </Button>
                     </div>
                     
-                    <div className="flex gap-1">
-                        {eggCounts.incubating > 0 && (
-                            <div className="bg-blue-600 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
+                    <div className="flex gap-1 flex-wrap">
+                        {eggCounts.eggsLaid > 0 && (
+                            <div className="bg-slate-600 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
                                 <EggIcon className="w-3 h-3" />
-                                {eggCounts.incubating}
+                                {eggCounts.eggsLaid}
                             </div>
                         )}
                         {eggCounts.hatched > 0 && (

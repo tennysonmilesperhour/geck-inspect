@@ -31,6 +31,7 @@ import Settings from './pages/Settings';
 import Subscription from './pages/Subscription';
 import TrainModel from './pages/TrainModel';
 import Training from './pages/Training';
+import ProjectManager from './pages/ProjectManager';
 import __Layout from './Layout.jsx';
 
 
@@ -68,6 +69,7 @@ export const PAGES = {
     "Subscription": Subscription,
     "TrainModel": TrainModel,
     "Training": Training,
+    "ProjectManager": ProjectManager,
 }
 
 export const pagesConfig = {
