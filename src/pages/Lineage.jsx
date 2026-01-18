@@ -312,10 +312,10 @@ export default function Lineage() {
         const params = new URLSearchParams(location.search);
         const geckoIdFromUrl = params.get('geckoId');
         
-        if (geckoIdFromUrl && allGeckosMap[geckoIdFromUrl] && !isLoading && geckoIdFromUrl !== selectedGeckoId) {
+        if (geckoIdFromUrl && allGeckosMap[geckoIdFromUrl] && !isLoading) {
             handleSelectGecko(geckoIdFromUrl);
         }
-    }, [location.search, allGeckosMap, isLoading, handleSelectGecko, selectedGeckoId]);
+    }, [location.search, allGeckosMap, isLoading, handleSelectGecko]);
 
     const handleEditPlaceholder = (gecko, parentType) => {
         const key = `${gecko.geckoId}_${parentType}`;
