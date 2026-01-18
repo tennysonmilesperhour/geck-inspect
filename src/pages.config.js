@@ -25,13 +25,13 @@ import MyListings from './pages/MyListings';
 import MyProfile from './pages/MyProfile';
 import Notifications from './pages/Notifications';
 import OtherReptiles from './pages/OtherReptiles';
+import ProjectManager from './pages/ProjectManager';
 import PublicProfile from './pages/PublicProfile';
 import Recognition from './pages/Recognition';
 import Settings from './pages/Settings';
 import Subscription from './pages/Subscription';
 import TrainModel from './pages/TrainModel';
 import Training from './pages/Training';
-import ProjectManager from './pages/ProjectManager';
 import __Layout from './Layout.jsx';
 
 
@@ -63,13 +63,13 @@ export const PAGES = {
     "MyProfile": MyProfile,
     "Notifications": Notifications,
     "OtherReptiles": OtherReptiles,
+    "ProjectManager": ProjectManager,
     "PublicProfile": PublicProfile,
     "Recognition": Recognition,
     "Settings": Settings,
     "Subscription": Subscription,
     "TrainModel": TrainModel,
     "Training": Training,
-    "ProjectManager": ProjectManager,
 }
 
 export const pagesConfig = {

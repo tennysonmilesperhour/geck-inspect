@@ -690,7 +690,7 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
                             variant="ghost"
                             size="sm"
                             onClick={() => onToggleExpanded(plan.id)}
-                            className="text-slate-400 hover:text-slate-200 self-center md:self-start m-2"
+                            className="text-slate-400 hover:text-slate-200 self-center md:self-start m-2 hidden md:flex"
                         >
                             {isExpanded ? <ChevronUp className="w-6 h-6"/> : <ChevronDown className="w-6 h-6"/>}
                         </Button>
@@ -759,7 +759,7 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
                     
                     <div className="flex gap-1 flex-wrap">
                         {eggCounts.eggsLaid > 0 && (
-                            <div className="bg-slate-600 text-white text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
+                            <div className="bg-amber-100 text-amber-900 text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
                                 <EggIcon className="w-3 h-3" />
                                 {eggCounts.eggsLaid}
                             </div>
@@ -770,7 +770,7 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
                             </div>
                         )}
                         {eggCounts.failed > 0 && (
-                            <div className="bg-red-600 text-white text-xs px-1.5 py-0.5 rounded">
+                            <div className="bg-yellow-600 text-white text-xs px-1.5 py-0.5 rounded">
                                 ✗ {eggCounts.failed}
                             </div>
                         )}
