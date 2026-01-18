@@ -686,14 +686,7 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
                                 </div>
                             </div>
                         </div>
-                        <Button
-                            variant="ghost"
-                            size="sm"
-                            onClick={() => onToggleExpanded(plan.id)}
-                            className="text-slate-400 hover:text-slate-200 self-center md:self-start m-2 hidden md:flex"
-                        >
-                            {isExpanded ? <ChevronUp className="w-6 h-6"/> : <ChevronDown className="w-6 h-6"/>}
-                        </Button>
+
                     </div>
                 </CardHeader>
 

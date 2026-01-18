@@ -524,9 +524,14 @@ export default function Lineage() {
                                 className="pl-9 w-full md:w-48 h-10"
                             />
                         </div>
-                        <Select onValueChange={handleSelectGecko} value={selectedGeckoId || ''}>
+                        <Select onValueChange={handleSelectGecko} value={selectedGeckoId || undefined}>
                             <SelectTrigger className="w-full md:w-[200px] h-10">
-                                <SelectValue placeholder="Select gecko" />
+                                <SelectValue placeholder="Select gecko">
+                                    {selectedGeckoId && allGeckosMap[selectedGeckoId] ? 
+                                        `${allGeckosMap[selectedGeckoId].name} (${allGeckosMap[selectedGeckoId].gecko_id_code || 'No ID'})` : 
+                                        'Select gecko'
+                                    }
+                                </SelectValue>
                             </SelectTrigger>
                             <SelectContent>
                                 {isLoading ? (
