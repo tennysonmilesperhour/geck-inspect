@@ -70,7 +70,11 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
     const handleAddNewEggs = async (count) => {
         const today = new Date();
         const newLayDate = today.toISOString().split('T')[0];
-        const expectedHatch = addDays(today, 65);
+        
+        // Load user preferences for hatch alert days
+        const currentUser = await User.me();
+        const hatchAlertDays = currentUser?.hatch_alert_days || 60;
+        const expectedHatch = addDays(today, hatchAlertDays);
         
         try {
             for (let i = 0; i < count; i++) {
@@ -463,7 +467,11 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
     const handleQuickAddEggs = async (count) => {
         const today = new Date();
         const newLayDate = today.toISOString().split('T')[0];
-        const expectedHatch = addDays(today, 65);
+        
+        // Load user preferences for hatch alert days
+        const currentUser = await User.me();
+        const hatchAlertDays = currentUser?.hatch_alert_days || 60;
+        const expectedHatch = addDays(today, hatchAlertDays);
         
         try {
             for (let i = 0; i < count; i++) {

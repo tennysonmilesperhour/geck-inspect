@@ -302,19 +302,19 @@ export default function ReptileForm({ reptile, onSubmit, onCancel, onDelete, onA
                                 <AlertDialogTrigger asChild>
                                     <Button variant="destructive" size="sm">
                                         <Trash2 className="w-4 h-4 mr-2" />
-                                        Delete
+                                        Archive
                                     </Button>
                                 </AlertDialogTrigger>
                                 <AlertDialogContent className="bg-slate-900 border-slate-700">
                                     <AlertDialogHeader>
-                                        <AlertDialogTitle className="text-slate-100">Delete {reptile.name}?</AlertDialogTitle>
+                                        <AlertDialogTitle className="text-slate-100">Archive {reptile.name}?</AlertDialogTitle>
                                         <AlertDialogDescription className="text-slate-400">
-                                            This action cannot be undone.
+                                            This will archive the reptile and hide it from your active collection. You can restore it later.
                                         </AlertDialogDescription>
                                     </AlertDialogHeader>
                                     <AlertDialogFooter>
                                         <AlertDialogCancel className="bg-slate-800 border-slate-600">Cancel</AlertDialogCancel>
-                                        <AlertDialogAction onClick={() => onDelete(reptile.id)}>Delete</AlertDialogAction>
+                                        <AlertDialogAction onClick={() => onDelete(reptile.id)} className="bg-yellow-600 hover:bg-yellow-700">Archive</AlertDialogAction>
                                     </AlertDialogFooter>
                                 </AlertDialogContent>
                             </AlertDialog>

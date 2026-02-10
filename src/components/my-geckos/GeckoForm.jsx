@@ -712,20 +712,20 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                             <AlertDialogTrigger asChild>
                                 <Button variant="destructive" className="h-10">
                                     <Trash2 className="w-4 h-4 mr-2" />
-                                    Delete
+                                    Archive
                                 </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent className="bg-emerald-950 border-emerald-700">
                                 <AlertDialogHeader>
-                                    <AlertDialogTitle className="text-emerald-100">Are you absolutely sure?</AlertDialogTitle>
+                                    <AlertDialogTitle className="text-emerald-100">Archive {gecko.name}?</AlertDialogTitle>
                                     <AlertDialogDescription className="text-emerald-300">
-                                        This action cannot be undone. This will permanently delete <strong>{gecko.name}</strong> and all associated records (weights, pairings, etc.).
+                                        This will archive <strong>{gecko.name}</strong> and hide it from your active collection. You can restore it later from the archive.
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
                                     <AlertDialogCancel className="bg-emerald-900 text-emerald-200 border-emerald-700">Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-600 hover:bg-red-700">
-                                        Yes, Delete Gecko
+                                    <AlertDialogAction onClick={handleDeleteConfirm} className="bg-yellow-600 hover:bg-yellow-700">
+                                        Archive Gecko
                                     </AlertDialogAction>
                                 </AlertDialogFooter>
                             </AlertDialogContent>
