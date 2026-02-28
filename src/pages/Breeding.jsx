@@ -50,6 +50,10 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
     };
 
     useEffect(() => {
+        setEditedPlan(plan);
+    }, [plan]);
+
+    useEffect(() => {
         loadEggs();
     }, [plan.id, refreshTrigger]);
 
