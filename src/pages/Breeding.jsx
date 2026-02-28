@@ -500,6 +500,10 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
         ? differenceInDays(new Date(), new Date(lastEggDate))
         : null;
 
+    // Glow when past expected lay interval (default 31 days)
+    const expectedLayInterval = plan.expected_lay_interval ?? 31;
+    const shouldGlow = daysSinceLastEgg !== null && daysSinceLastEgg >= expectedLayInterval;
+
     const handleOpenCopulationModal = () => {
         setCopulationDate(new Date().toISOString().split('T')[0]);
         setCopulationNotes('');
