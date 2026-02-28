@@ -424,6 +424,19 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
                                 </SelectContent>
                             </Select>
                         </div>
+                        <div className="space-y-2">
+                            <Label htmlFor="expected_lay_interval">Expected Lay Interval (days)</Label>
+                            <p className="text-xs text-slate-400">Card glows when this many days have passed since the last egg lay.</p>
+                            <Input
+                                id="expected_lay_interval"
+                                type="number"
+                                min="1"
+                                max="90"
+                                value={editedPlan.expected_lay_interval ?? 31}
+                                onChange={e => setEditedPlan({...editedPlan, expected_lay_interval: parseInt(e.target.value) || 31})}
+                                className="bg-slate-800 border-slate-600"
+                            />
+                        </div>
                     </div>
                     <DialogFooter className="flex-col sm:flex-row gap-2">
                         <Button
