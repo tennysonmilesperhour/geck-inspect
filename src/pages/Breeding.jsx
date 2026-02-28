@@ -467,6 +467,7 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
     const [copulationDate, setCopulationDate] = useState(new Date().toISOString().split('T')[0]);
     const [copulationNotes, setCopulationNotes] = useState('');
     const [isEggCheckModalOpen, setIsEggCheckModalOpen] = useState(false);
+    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [eggCheckDay, setEggCheckDay] = useState(plan.egg_check_day || 15);
     const [lastEggDate, setLastEggDate] = useState(null);
     const [eggRefreshTrigger, setEggRefreshTrigger] = useState(0);
