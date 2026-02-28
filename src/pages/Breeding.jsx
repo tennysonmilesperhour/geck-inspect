@@ -215,6 +215,24 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
         setIsEditModalOpen(false);
     };
 
+    const handleSaveEggEdit = async (eggId, eggData) => {
+        await Egg.update(eggId, { lay_date: eggData.lay_date, hatch_date_expected: eggData.hatch_date_expected });
+        setEditedEggs(prev => ({ ...prev, [eggId]: {} }));
+        loadEggs();
+    };
+
+    const handleCancelEggEdit = (eggId) => {
+        setEditedEggs(prev => ({ ...prev, [eggId]: {} }));
+    };
+
+    const handleEggFieldChange = (eggId, field, value) => {
+        setEditedEggs(prev => ({ ...prev, [eggId]: { ...prev[eggId], [field]: value } }));
+    };
+
+    const handleStartEggEdit = (egg) => {
+        setEditedEggs(prev => ({ ...prev, [egg.id]: { editing: true, lay_date: egg.lay_date, hatch_date_expected: egg.hatch_date_expected } }));
+    };
+
     const StatusDisplay = ({ egg }) => {
         if (editingHatchDate === egg.id) {
             return (
