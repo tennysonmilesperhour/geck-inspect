@@ -329,23 +329,19 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
                                                 <Label className="text-xs text-slate-400 w-24">Lay Date:</Label>
                                                 <Input type="date" className="bg-slate-700 border-slate-600 h-8 text-sm"
                                                     value={eggEdit.lay_date || egg.lay_date}
-                                                    onChange={e => setEditedEggs(prev => ({ ...prev, [egg.id]: { ...prev[egg.id], lay_date: e.target.value } }))}
+                                                    onChange={e => handleEggFieldChange(egg.id, 'lay_date', e.target.value)}
                                                 />
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <Label className="text-xs text-slate-400 w-24">Expected Hatch:</Label>
                                                 <Input type="date" className="bg-slate-700 border-slate-600 h-8 text-sm"
                                                     value={eggEdit.hatch_date_expected || egg.hatch_date_expected}
-                                                    onChange={e => setEditedEggs(prev => ({ ...prev, [egg.id]: { ...prev[egg.id], hatch_date_expected: e.target.value } }))}
+                                                    onChange={e => handleEggFieldChange(egg.id, 'hatch_date_expected', e.target.value)}
                                                 />
                                             </div>
                                             <div className="flex gap-2">
-                                                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 h-7 text-xs" onClick={async () => {
-                                                    await Egg.update(egg.id, { lay_date: eggEdit.lay_date || egg.lay_date, hatch_date_expected: eggEdit.hatch_date_expected || egg.hatch_date_expected });
-                                                    setEditedEggs(prev => ({ ...prev, [egg.id]: {} }));
-                                                    loadEggs();
-                                                }}>Save</Button>
-                                                <Button size="sm" variant="outline" className="border-slate-600 h-7 text-xs" onClick={() => setEditedEggs(prev => ({ ...prev, [egg.id]: {} }))}>Cancel</Button>
+                                                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 h-7 text-xs" onClick={() => handleSaveEggEdit(egg.id, eggEdit)}>Save</Button>
+                                                <Button size="sm" variant="outline" className="border-slate-600 h-7 text-xs" onClick={() => handleCancelEggEdit(egg.id)}>Cancel</Button>
                                             </div>
                                         </div>
                                     ) : (
@@ -357,7 +353,7 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
                                                     <p className="text-xs text-green-400 mt-1">✓ Gecko created in collection</p>
                                                 )}
                                             </div>
-                                            <Button size="sm" variant="ghost" className="text-slate-400 hover:text-slate-200 h-7 text-xs px-2" onClick={() => setEditedEggs(prev => ({ ...prev, [egg.id]: { editing: true, lay_date: egg.lay_date, hatch_date_expected: egg.hatch_date_expected } }))}>
+                                            <Button size="sm" variant="ghost" className="text-slate-400 hover:text-slate-200 h-7 text-xs px-2" onClick={() => handleStartEggEdit(egg)}>
                                                 <Edit size={12} className="mr-1" /> Edit
                                             </Button>
                                         </div>
