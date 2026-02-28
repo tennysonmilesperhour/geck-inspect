@@ -836,8 +836,8 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
             <Dialog open={isCopulationModalOpen} onOpenChange={setIsCopulationModalOpen}>
                 <DialogContent className="bg-slate-900 border-slate-700 text-slate-300">
                     <DialogHeader>
-                        <DialogTitle className="text-slate-100">Record Copulation Event</DialogTitle>
-                        <DialogDescription className="text-slate-400">Record when this pair was observed copulating.</DialogDescription>
+                        <DialogTitle className="text-slate-100">Record Lock Event</DialogTitle>
+                        <DialogDescription className="text-slate-400">Record when this pair was observed locking.</DialogDescription>
                     </DialogHeader>
                     <div className="space-y-4 py-4">
                         <div>
