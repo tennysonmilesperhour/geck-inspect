@@ -384,7 +384,8 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
                                 </div>
                             </div>
                         </div>
-                    ))}
+                    );
+                    })}
                 </div>
             ) : (
                 <p className="text-slate-400 text-center py-6">No eggs have been recorded for this pairing yet.</p>
