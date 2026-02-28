@@ -254,30 +254,25 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
         const config = statusConfig[egg.status] || { className: "bg-transparent text-slate-400 border-slate-400", text: egg.status };
         const baseClasses = "cursor-pointer text-xs font-semibold px-3 py-2 rounded-md border w-full text-center h-9 truncate transition-colors flex items-center justify-center";
 
+        // Only Incubating eggs get the dropdown (limited to Infertile/Failed)
+        if (egg.status === 'Incubating') {
+            return (
+                <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                        <button className={`${baseClasses} ${config.className}`}>
+                            {config.text}
+                        </button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent className="bg-slate-800 border-slate-600 text-slate-200 z-50">
+                        <DropdownMenuItem onClick={() => handleUpdateEggStatus(egg.id, 'Infertile')}>Infertile</DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => handleUpdateEggStatus(egg.id, 'Slug')}>Failed / Slug</DropdownMenuItem>
+                    </DropdownMenuContent>
+                </DropdownMenu>
+            );
+        }
+
         return (
-             <DropdownMenu>
-                <DropdownMenuTrigger asChild>
-                    <button
-                        className={`${baseClasses} ${config.className}`}
-                        onClick={(e) => {
-                            if (egg.status === 'Hatched') {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                setEditingHatchDate(egg.id);
-                            }
-                        }}
-                    >
-                        {config.text}
-                    </button>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="bg-slate-800 border-slate-600 text-slate-200 z-50">
-                    <DropdownMenuItem onClick={() => handleUpdateEggStatus(egg.id, 'Hatched')}>Hatched</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleUpdateEggStatus(egg.id, 'Incubating')}>Incubating</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleUpdateEggStatus(egg.id, 'Slug')}>Slug</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleUpdateEggStatus(egg.id, 'Infertile')}>Infertile</DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => handleUpdateEggStatus(egg.id, 'Stillbirth')}>Stillbirth</DropdownMenuItem>
-                </DropdownMenuContent>
-            </DropdownMenu>
+            <div className={`${baseClasses} ${config.className}`}>{config.text}</div>
         );
     };
 
