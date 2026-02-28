@@ -30,12 +30,12 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { format, addDays, addMonths, differenceInDays } from 'date-fns';
 import { generateCalendarEvent } from '@/functions/generateCalendarEvent';
 
-function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulationModal, onOpenEggCheckModal, refreshTrigger }) {
+function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulationModal, onOpenEggCheckModal, refreshTrigger, isEditModalOpen, setIsEditModalOpen }) {
     const [eggs, setEggs] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [editedPlan, setEditedPlan] = useState(plan);
     const [editingHatchDate, setEditingHatchDate] = useState(null); // eggId to edit
+    const [editedEggs, setEditedEggs] = useState({});
 
     const loadEggs = async () => {
         setIsLoading(true);
