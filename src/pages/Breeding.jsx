@@ -665,7 +665,7 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
 
     return (
         <>
-            <Card key={plan.id} className="bg-slate-900 border-slate-700 text-slate-300 flex flex-col overflow-hidden">
+            <Card key={plan.id} className={`bg-slate-900 border-slate-700 text-slate-300 flex flex-col overflow-hidden transition-all ${shouldGlow ? 'ring-2 ring-white/30 shadow-[0_0_20px_4px_rgba(255,255,255,0.12)]' : ''}`}>
                 <CardHeader className="p-0 relative">
                     <div className="flex flex-col md:flex-row justify-between items-stretch">
                         <div className="flex flex-1 flex-col md:flex-row">
@@ -784,6 +784,8 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
                             onOpenCopulationModal={handleOpenCopulationModal}
                             onOpenEggCheckModal={handleOpenEggCheckModal}
                             refreshTrigger={eggRefreshTrigger}
+                            isEditModalOpen={isEditModalOpen}
+                            setIsEditModalOpen={setIsEditModalOpen}
                         />
                     </>
                 )}
@@ -804,7 +806,7 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
                                 {plan.archived ? 'Unarchive' : 'Archive'}
                             </Button>
                         )}
-                        <Button variant="outline" size="sm" className="border-slate-600 hover:bg-slate-800 text-xs h-8" onClick={() => onToggleExpanded(plan.id)}>
+                        <Button variant="outline" size="sm" className="border-slate-600 hover:bg-slate-800 text-xs h-8" onClick={() => setIsEditModalOpen(true)}>
                             <Edit size={14} className="mr-1" /> Edit
                         </Button>
                     </div>
