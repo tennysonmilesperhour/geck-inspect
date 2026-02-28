@@ -296,21 +296,54 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
                 <div className="text-center"><Loader2 className="w-6 h-6 text-emerald-500 animate-spin mx-auto" /></div>
             ) : eggs.length > 0 ? (
                 <div className="space-y-4">
-                    {eggs.map(egg => (
+                    {eggs.map(egg => {
+                        const eggEdit = editedEggs[egg.id] || {};
+                        const isEditingEgg = !!eggEdit.editing;
+                        return (
                         <div key={egg.id} className="bg-slate-800 p-4 rounded-lg space-y-3">
                             {/* Egg Info Section */}
                             <div className="flex items-start gap-3">
                                 <EggIcon className="w-6 h-6 text-emerald-400 flex-shrink-0 mt-1" />
                                 <div className="flex-1 min-w-0">
-                                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
-                                        <div>
-                                            <p className="text-slate-200 text-sm font-medium">Laid: {format(new Date(egg.lay_date), 'MMM dd, yyyy')}</p>
-                                            <p className="text-xs text-slate-400">Expected Hatch: {format(new Date(egg.hatch_date_expected), 'MMM dd, yyyy')}</p>
-                                            {egg.gecko_id && (
-                                                <p className="text-xs text-green-400 mt-1">✓ Gecko created in collection</p>
-                                            )}
+                                    {isEditingEgg ? (
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-2">
+                                                <Label className="text-xs text-slate-400 w-24">Lay Date:</Label>
+                                                <Input type="date" className="bg-slate-700 border-slate-600 h-8 text-sm"
+                                                    value={eggEdit.lay_date || egg.lay_date}
+                                                    onChange={e => setEditedEggs(prev => ({ ...prev, [egg.id]: { ...prev[egg.id], lay_date: e.target.value } }))}
+                                                />
+                                            </div>
+                                            <div className="flex items-center gap-2">
+                                                <Label className="text-xs text-slate-400 w-24">Expected Hatch:</Label>
+                                                <Input type="date" className="bg-slate-700 border-slate-600 h-8 text-sm"
+                                                    value={eggEdit.hatch_date_expected || egg.hatch_date_expected}
+                                                    onChange={e => setEditedEggs(prev => ({ ...prev, [egg.id]: { ...prev[egg.id], hatch_date_expected: e.target.value } }))}
+                                                />
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 h-7 text-xs" onClick={async () => {
+                                                    await Egg.update(egg.id, { lay_date: eggEdit.lay_date || egg.lay_date, hatch_date_expected: eggEdit.hatch_date_expected || egg.hatch_date_expected });
+                                                    setEditedEggs(prev => ({ ...prev, [egg.id]: {} }));
+                                                    loadEggs();
+                                                }}>Save</Button>
+                                                <Button size="sm" variant="outline" className="border-slate-600 h-7 text-xs" onClick={() => setEditedEggs(prev => ({ ...prev, [egg.id]: {} }))}>Cancel</Button>
+                                            </div>
                                         </div>
-                                    </div>
+                                    ) : (
+                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                            <div>
+                                                <p className="text-slate-200 text-sm font-medium">Laid: {format(new Date(egg.lay_date), 'MMM dd, yyyy')}</p>
+                                                <p className="text-xs text-slate-400">Expected Hatch: {format(new Date(egg.hatch_date_expected), 'MMM dd, yyyy')}</p>
+                                                {egg.gecko_id && (
+                                                    <p className="text-xs text-green-400 mt-1">✓ Gecko created in collection</p>
+                                                )}
+                                            </div>
+                                            <Button size="sm" variant="ghost" className="text-slate-400 hover:text-slate-200 h-7 text-xs px-2" onClick={() => setEditedEggs(prev => ({ ...prev, [egg.id]: { editing: true, lay_date: egg.lay_date, hatch_date_expected: egg.hatch_date_expected } }))}>
+                                                <Edit size={12} className="mr-1" /> Edit
+                                            </Button>
+                                        </div>
+                                    )}
                                 </div>
                             </div>
 
