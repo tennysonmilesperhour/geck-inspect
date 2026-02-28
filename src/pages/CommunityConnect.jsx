@@ -437,7 +437,7 @@ export default function CommunityConnectPage() {
                 const allGeckos = await Gecko.list().catch(() => []);
 
                 // Filter to public geckos only
-                const publicGeckos = (allGeckos || []).filter(g => g.is_public === true);
+                const publicGeckos = (allGeckos || []).filter(g => g.is_public !== false);
 
                 // Calculate gecko counts and cover images per user
                 const counts = {};
