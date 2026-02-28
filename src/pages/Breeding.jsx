@@ -281,7 +281,7 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
             <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-3">
                 <div className="flex flex-wrap gap-2 w-full sm:w-auto items-center justify-end ml-auto">
                    <Button variant="outline" size="sm" className="border-slate-600 hover:bg-slate-800 h-9" onClick={onOpenCopulationModal}>
-                       Record Copulation
+                       Record Lock
                    </Button>
                    <Button variant="outline" size="sm" className="border-emerald-600 text-emerald-400 hover:bg-emerald-900/20 h-9" onClick={onOpenEggCheckModal}>
                        {plan.egg_check_day ? 'Edit' : 'Set'} Egg Check
