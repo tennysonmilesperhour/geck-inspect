@@ -348,6 +348,8 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                 sire_name: sireId ? null : sireInput, // Save manual name if no ID match
                 dam_name: damId ? null : damInput,   // Save manual name if no ID match
                 morphs_traits: formData.morphs_traits,
+                morph_tags: formData.morph_tags || [],
+                feeding_group_id: formData.feeding_group_id || null,
                 notes: formData.notes,
                 status: formData.status,
                 image_urls: formData.image_urls,
