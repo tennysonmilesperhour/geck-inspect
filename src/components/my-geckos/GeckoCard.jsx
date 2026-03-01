@@ -9,7 +9,8 @@ import { GeckoEvent } from '@/entities/all';
 
 const DEFAULT_GECKO_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
 
-export default function GeckoCard({ gecko, weightRecords = [], onView, onEdit }) {
+export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [], onView, onEdit }) {
+  const feedingGroup = feedingGroups.find(g => g.id === gecko.feeding_group_id);
   // Find the latest weight for this gecko from the passed weightRecords
   const latestWeight = React.useMemo(() => {
     const geckoWeights = weightRecords.filter(w => w.gecko_id === gecko.id);
