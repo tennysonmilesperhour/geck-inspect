@@ -529,6 +529,7 @@ export default function MyGeckosPage() {
                         filters={filters}
                         onFiltersChange={setFilters}
                         onClearFilters={handleClearFilters}
+                        feedingGroups={feedingGroups}
                     />
 
                     {/* View Controls */}
