@@ -625,8 +625,35 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     </div>
 
                     <div>
-                        <Label htmlFor="morphs_traits">Morphs & Traits</Label>
+                        <Label htmlFor="morphs_traits">Morphs & Traits (Free Text)</Label>
                         <Textarea id="morphs_traits" value={formData.morphs_traits} onChange={(e) => handleChange('morphs_traits', e.target.value)} />
+                    </div>
+
+                    {/* Morph ID Tags */}
+                    <MorphIDSelector
+                        selectedMorphs={formData.morph_tags || []}
+                        onMorphsChange={(tags) => handleChange('morph_tags', tags)}
+                    />
+
+                    {/* Feeding Group */}
+                    <div>
+                        <Label>Feeding Group</Label>
+                        <Select value={formData.feeding_group_id || 'none'} onValueChange={(v) => handleChange('feeding_group_id', v === 'none' ? null : v)}>
+                            <SelectTrigger className="h-10 bg-emerald-900/80 border-emerald-600 text-emerald-100 hover:bg-emerald-800 focus:ring-emerald-500">
+                                <SelectValue placeholder="No group assigned" />
+                            </SelectTrigger>
+                            <SelectContent className="bg-emerald-900/95 border-emerald-600 text-emerald-100 z-[99999]">
+                                <SelectItem value="none" className="text-emerald-100 focus:bg-emerald-600 focus:text-white">No group</SelectItem>
+                                {feedingGroups.map(g => (
+                                    <SelectItem key={g.id} value={g.id} className="text-emerald-100 focus:bg-emerald-600 focus:text-white">
+                                        Group {g.label}{g.name ? ` — ${g.name}` : ''} ({g.diet_type})
+                                    </SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        {feedingGroups.length === 0 && (
+                            <p className="text-xs text-slate-500 mt-1">Create feeding groups in the Project Manager.</p>
+                        )}
                     </div>
 
                     <div>
