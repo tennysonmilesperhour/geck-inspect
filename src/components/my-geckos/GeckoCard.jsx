@@ -70,6 +70,15 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
           <span className={`${getSexColor(gecko.sex)} text-3xl font-bold drop-shadow-lg`}>
             {getSexIcon(gecko.sex)}
           </span>
+          {feedingGroup && (
+            <div
+              className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg border border-white/30"
+              style={{ backgroundColor: feedingGroup.color || '#f97316' }}
+              title={`Feeding Group ${feedingGroup.label}${feedingGroup.name ? ': ' + feedingGroup.name : ''} — ${feedingGroup.diet_type}`}
+            >
+              {feedingGroup.label}
+            </div>
+          )}
         </div>
 
         <div className="absolute bottom-2 right-2 flex flex-col gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300">
