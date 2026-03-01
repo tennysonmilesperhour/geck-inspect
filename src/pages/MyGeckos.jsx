@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
-import { User, Gecko, WeightRecord } from '@/entities/all';
+import { User, Gecko, WeightRecord, FeedingGroup } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import { PlusCircle, Loader2, Search, Users, Grid3x3, List, ArrowUpDown, UserPlus, Archive, ArchiveRestore } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -95,11 +95,18 @@ export default function MyGeckosPage() {
         sexes: [],
         statuses: [],
         traits: [],
+        morphTags: [],
+        feedingGroupIds: [],
         weightMin: '',
         weightMax: ''
     });
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [showArchived, setShowArchived] = useState(false);
+    const [feedingGroups, setFeedingGroups] = useState([]);
+
+    useEffect(() => {
+        FeedingGroup.list().then(setFeedingGroups).catch(() => {});
+    }, []);
 
     // Enhanced loadGeckos with caching and rate limiting
     // Now uses `user` from state and is dependent on it.
@@ -351,6 +358,19 @@ export default function MyGeckosPage() {
             });
         }
 
+        // Filter by morph tags
+        if (filters.morphTags && filters.morphTags.length > 0) {
+            result = result.filter(g => {
+                if (!g.morph_tags || g.morph_tags.length === 0) return false;
+                return filters.morphTags.every(tag => g.morph_tags.includes(tag));
+            });
+        }
+
+        // Filter by feeding group
+        if (filters.feedingGroupIds && filters.feedingGroupIds.length > 0) {
+            result = result.filter(g => filters.feedingGroupIds.includes(g.feeding_group_id));
+        }
+
         return result;
     };
 
@@ -416,6 +436,8 @@ export default function MyGeckosPage() {
             sexes: [],
             statuses: [],
             traits: [],
+            morphTags: [],
+            feedingGroupIds: [],
             weightMin: '',
             weightMax: ''
         });
