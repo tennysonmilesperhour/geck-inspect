@@ -25,6 +25,8 @@ import { format } from "date-fns";
 import { Upload, X, Save, Trash2, DollarSign, Award, GitBranch, Loader2 } from "lucide-react";
 import { Switch } from '@/components/ui/switch';
 import { generateLineageCertificate } from '@/functions/generateLineageCertificate';
+import MorphIDSelector from './MorphIDSelector';
+import { FeedingGroup } from '@/entities/all';
 
 // Helper function for Gecko ID generation
 const generateNextGeckoId = async (user, allGeckos, sire = null, dam = null) => {
@@ -102,6 +104,11 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
     // New states for certificate generation
     const [isGeneratingCert, setIsGeneratingCert] = useState(false);
     const [certType, setCertType] = useState('');
+    const [feedingGroups, setFeedingGroups] = useState([]);
+
+    useEffect(() => {
+        FeedingGroup.list().then(setFeedingGroups).catch(() => {});
+    }, []);
 
     const handleChange = useCallback((field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
