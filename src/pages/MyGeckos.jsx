@@ -602,6 +602,7 @@ export default function MyGeckosPage() {
                                                         onView={handleOpenDetailModal}
                                                         onEdit={handleEdit}
                                                     />
+
                                                 </motion.div>
                                             ))}
                                         </AnimatePresence>
