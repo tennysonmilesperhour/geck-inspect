@@ -597,6 +597,7 @@ export default function MyGeckosPage() {
                                                     <GeckoCard
                                                         gecko={gecko}
                                                         weightRecords={weightRecords}
+                                                        feedingGroups={feedingGroups}
                                                         onView={handleOpenDetailModal}
                                                         onEdit={handleEdit}
                                                     />
