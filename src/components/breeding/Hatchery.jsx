@@ -162,6 +162,16 @@ export default function Hatchery() {
         }
     };
 
+    const currentYear = new Date().getFullYear();
+    const allNonArchived = eggs.filter(e => !e.archived);
+    const stats = {
+        incubating: allNonArchived.filter(e => e.status === 'Incubating').length,
+        hatchedTotal: eggs.filter(e => e.status === 'Hatched').length,
+        hatchedYTD: eggs.filter(e => e.status === 'Hatched' && e.hatch_date_actual && new Date(e.hatch_date_actual).getFullYear() === currentYear).length,
+        failedTotal: eggs.filter(e => ['Slug', 'Infertile', 'Stillbirth'].includes(e.status)).length,
+        failedYTD: eggs.filter(e => ['Slug', 'Infertile', 'Stillbirth'].includes(e.status) && e.lay_date && new Date(e.lay_date).getFullYear() === currentYear).length,
+    };
+
     if (isLoading) {
         return (
             <div className="flex justify-center items-center py-20">
@@ -172,6 +182,30 @@ export default function Hatchery() {
 
     return (
         <div className="space-y-6">
+            {/* Stats Bar */}
+            <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+                <div className="bg-blue-900/30 border border-blue-700/50 rounded-lg p-4 text-center">
+                    <p className="text-2xl font-bold text-blue-400">{stats.incubating}</p>
+                    <p className="text-xs text-blue-300 mt-1">Incubating</p>
+                </div>
+                <div className="bg-green-900/30 border border-green-700/50 rounded-lg p-4 text-center">
+                    <p className="text-2xl font-bold text-green-400">{stats.hatchedTotal}</p>
+                    <p className="text-xs text-green-300 mt-1">Hatched (All Time)</p>
+                </div>
+                <div className="bg-emerald-900/30 border border-emerald-700/50 rounded-lg p-4 text-center">
+                    <p className="text-2xl font-bold text-emerald-400">{stats.hatchedYTD}</p>
+                    <p className="text-xs text-emerald-300 mt-1">Hatched (YTD)</p>
+                </div>
+                <div className="bg-red-900/30 border border-red-700/50 rounded-lg p-4 text-center">
+                    <p className="text-2xl font-bold text-red-400">{stats.failedTotal}</p>
+                    <p className="text-xs text-red-300 mt-1">Failed (All Time)</p>
+                </div>
+                <div className="bg-orange-900/30 border border-orange-700/50 rounded-lg p-4 text-center sm:col-span-1 col-span-2">
+                    <p className="text-2xl font-bold text-orange-400">{stats.failedYTD}</p>
+                    <p className="text-xs text-orange-300 mt-1">Failed (YTD)</p>
+                </div>
+            </div>
+
             <Card className="bg-slate-900 border-slate-700">
                 <CardContent className="p-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
