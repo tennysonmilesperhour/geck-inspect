@@ -276,12 +276,73 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
           <div className="grid lg:grid-cols-3 gap-8">
             {/* Left Column: Basic Info & Image */}
             <div className="space-y-6">
-              <div className="w-full rounded-lg overflow-hidden">
-                <img 
-                  src={gecko.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'} 
-                  alt={gecko.name} 
-                  className="w-full h-auto object-contain max-h-80"
-                />
+              {/* Image area with optional slideshow */}
+              <div className="space-y-2">
+                {gecko.image_urls?.length > 1 && (
+                  <div className="flex items-center justify-between">
+                    <button
+                      onClick={() => setShowSlideshow(false)}
+                      className={`text-xs px-3 py-1 rounded-full transition-colors ${!showSlideshow ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}`}
+                    >
+                      Latest
+                    </button>
+                    {growthSlots.length > 0 && (
+                      <button
+                        onClick={() => { setShowSlideshow(true); setSlideshowIndex(0); }}
+                        className={`text-xs px-3 py-1 rounded-full flex items-center gap-1 transition-colors ${showSlideshow ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}`}
+                      >
+                        <Camera className="w-3 h-3" /> Growth Slideshow
+                      </button>
+                    )}
+                  </div>
+                )}
+
+                {showSlideshow && growthSlots.length > 0 ? (
+                  <div className="space-y-2">
+                    {/* Milestone tabs */}
+                    <div className="flex flex-wrap gap-1">
+                      {growthSlots.map((slot, idx) => (
+                        <button
+                          key={slot.months}
+                          onClick={() => setSlideshowIndex(idx)}
+                          className={`text-xs px-2 py-1 rounded transition-colors ${slideshowIndex === idx ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}`}
+                        >
+                          {slot.label}
+                        </button>
+                      ))}
+                    </div>
+                    {/* Image display - maps slot index to image index (newest = last slot) */}
+                    <div className="relative w-full rounded-lg overflow-hidden bg-slate-800">
+                      <img
+                        src={gecko.image_urls[Math.min(slideshowIndex, gecko.image_urls.length - 1)] || 'https://i.imgur.com/sw9gnDp.png'}
+                        alt={`${gecko.name} at ${growthSlots[slideshowIndex]?.label}`}
+                        className="w-full h-auto object-contain max-h-72"
+                      />
+                      <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                        {growthSlots[slideshowIndex]?.label}
+                      </div>
+                      <div className="absolute bottom-2 right-2 flex gap-1">
+                        <button onClick={() => setSlideshowIndex(i => Math.max(0, i - 1))} disabled={slideshowIndex === 0}
+                          className="bg-black/60 text-white p-1 rounded disabled:opacity-30">
+                          <ChevronLeft className="w-4 h-4" />
+                        </button>
+                        <button onClick={() => setSlideshowIndex(i => Math.min(growthSlots.length - 1, i + 1))} disabled={slideshowIndex === growthSlots.length - 1}
+                          className="bg-black/60 text-white p-1 rounded disabled:opacity-30">
+                          <ChevronRight className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-500 text-center">Image {slideshowIndex + 1} of {gecko.image_urls.length} · Oldest to newest</p>
+                  </div>
+                ) : (
+                  <div className="w-full rounded-lg overflow-hidden">
+                    <img
+                      src={gecko.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'}
+                      alt={gecko.name}
+                      className="w-full h-auto object-contain max-h-80"
+                    />
+                  </div>
+                )}
               </div>
               
               <div className="space-y-4">
