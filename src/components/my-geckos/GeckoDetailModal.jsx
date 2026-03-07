@@ -28,6 +28,26 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
   const [slideshowIndex, setSlideshowIndex] = useState(0);
   const [showSlideshow, setShowSlideshow] = useState(false);
 
+  // Compute which growth milestone slots to show based on age
+  const growthSlots = useMemo(() => {
+    if (!gecko?.hatch_date || !gecko?.image_urls?.length) return [];
+    const ageMonths = differenceInMonths(new Date(), new Date(gecko.hatch_date));
+    const slots = [];
+    // Every 6 months up to 36 months (3 years), then every 12 months
+    let month = 6;
+    while (month <= ageMonths) {
+      if (month <= 36) {
+        slots.push({ label: month < 12 ? `${month}mo` : month === 12 ? '1yr' : month === 18 ? '18mo' : month === 24 ? '2yr' : month === 30 ? '30mo' : '3yr', months: month });
+        month += 6;
+      } else {
+        const years = month / 12;
+        slots.push({ label: `${years}yr`, months: month });
+        month += 12;
+      }
+    }
+    return slots;
+  }, [gecko]);
+
   const loadEventHistory = async () => {
     if (!gecko) return;
     try {
