@@ -10,7 +10,7 @@ const EVENT_COLORS = {
     feeding: 'bg-orange-500',
 };
 
-export default function ProjectCalendar({ tasks, projects, feedingGroups }) {
+export default function ProjectCalendar({ tasks, projects, feedingGroups, otherReptiles = [] }) {
     const [currentMonth, setCurrentMonth] = useState(new Date());
 
     const days = useMemo(() => {
@@ -44,6 +44,26 @@ export default function ProjectCalendar({ tasks, projects, feedingGroups }) {
             if (project.due_date) {
                 const d = format(new Date(project.due_date), 'yyyy-MM-dd');
                 addEvent(d, { type: 'project', label: project.name, color: EVENT_COLORS.project });
+            }
+        });
+
+        // Other reptile feeding schedules
+        otherReptiles.forEach(reptile => {
+            if (!reptile.last_fed_date || !reptile.feeding_interval_days || !reptile.feeding_reminder_enabled) return;
+            let nextFeed = addDays(new Date(reptile.last_fed_date), reptile.feeding_interval_days);
+            const monthEnd = endOfMonth(currentMonth);
+            const monthStart = startOfMonth(currentMonth);
+            while (nextFeed <= monthEnd) {
+                if (nextFeed >= monthStart) {
+                    const d = format(nextFeed, 'yyyy-MM-dd');
+                    addEvent(d, {
+                        type: 'reptile_feeding',
+                        label: `Feed ${reptile.name}`,
+                        color: 'bg-teal-600',
+                        bgColor: null
+                    });
+                }
+                nextFeed = addDays(nextFeed, reptile.feeding_interval_days);
             }
         });
 
@@ -146,7 +166,10 @@ export default function ProjectCalendar({ tasks, projects, feedingGroups }) {
                     <div className="w-3 h-3 rounded bg-purple-500" /> Projects
                 </div>
                 <div className="flex items-center gap-1.5 text-xs text-slate-400">
-                    <div className="w-3 h-3 rounded bg-orange-500" /> Feeding
+                    <div className="w-3 h-3 rounded bg-orange-500" /> Feeding Groups
+                </div>
+                <div className="flex items-center gap-1.5 text-xs text-slate-400">
+                    <div className="w-3 h-3 rounded bg-teal-600" /> Reptile Feeding
                 </div>
             </div>
         </div>
