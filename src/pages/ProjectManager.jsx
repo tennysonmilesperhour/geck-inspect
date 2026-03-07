@@ -22,6 +22,7 @@ export default function ProjectManager() {
     const [geckos, setGeckos] = useState([]);
     const [breedingPlans, setBreedingPlans] = useState([]);
     const [feedingGroups, setFeedingGroups] = useState([]);
+    const [otherReptiles, setOtherReptiles] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -43,18 +44,20 @@ export default function ProjectManager() {
     const loadData = async () => {
         setIsLoading(true);
         try {
-            const [projectsData, tasksData, geckosData, plansData, feedingData] = await Promise.all([
+            const [projectsData, tasksData, geckosData, plansData, feedingData, reptilesData] = await Promise.all([
                 Project.filter({ status: { $in: ['active', 'completed'] } }),
                 Task.list(),
                 Gecko.list(),
                 BreedingPlan.list(),
-                FeedingGroup.list().catch(() => [])
+                FeedingGroup.list().catch(() => []),
+                OtherReptile.list().catch(() => [])
             ]);
             setProjects(projectsData);
             setTasks(tasksData);
             setGeckos(geckosData);
             setBreedingPlans(plansData);
             setFeedingGroups(feedingData);
+            setOtherReptiles(reptilesData);
         } catch (error) {
             console.error("Failed to load data:", error);
         }
@@ -253,7 +256,7 @@ export default function ProjectManager() {
                         </TabsContent>
 
                         <TabsContent value="calendar">
-                            <ProjectCalendar tasks={tasks} projects={projects} feedingGroups={feedingGroups} />
+                            <ProjectCalendar tasks={tasks} projects={projects} feedingGroups={feedingGroups} otherReptiles={otherReptiles} />
                         </TabsContent>
 
                         <TabsContent value="feeding">
