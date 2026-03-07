@@ -96,10 +96,13 @@ export default function MorphIDSelector({ selectedMorphs = [], onMorphsChange })
                                 {morphs.map(morph => {
                                     const isSelected = selectedMorphs.includes(morph);
                                     return (
-                                        <button
+                                        <div
                                             key={morph}
-                                            type="button"
-                                            onClick={() => toggleMorph(morph)}
+                                            role="button"
+                                            tabIndex={0}
+                                            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); toggleMorph(morph); }}
+                                            onKeyDown={(e) => e.key === 'Enter' && toggleMorph(morph)}
+                                            style={{ cursor: 'pointer', userSelect: 'none', display: 'inline-block' }}
                                             className={`text-xs px-2.5 py-1 rounded-full border transition-all ${
                                                 isSelected
                                                     ? `${badge} text-white border-transparent shadow-sm scale-105`
@@ -107,7 +110,7 @@ export default function MorphIDSelector({ selectedMorphs = [], onMorphsChange })
                                             }`}
                                         >
                                             {morph}
-                                        </button>
+                                        </div>
                                     );
                                 })}
                             </div>
