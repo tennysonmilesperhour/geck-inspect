@@ -25,6 +25,8 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
   const [isLoading, setIsLoading] = useState(true);
   const [isGeneratingCert, setIsGeneratingCert] = useState(false);
   const [isPublic, setIsPublic] = useState(gecko?.is_public ?? true);
+  const [slideshowIndex, setSlideshowIndex] = useState(0);
+  const [showSlideshow, setShowSlideshow] = useState(false);
 
   const loadEventHistory = async () => {
     if (!gecko) return;
