@@ -36,7 +36,7 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
     };
 
     const handleSave = async () => {
-        if (!form.diet_type || !form.interval_days) return;
+        if (!form.interval_days) return;
         if (editingGroup) {
             await FeedingGroup.update(editingGroup.id, form);
         } else {
@@ -197,7 +197,7 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsModalOpen(false)} className="border-slate-600">Cancel</Button>
-                        <Button onClick={handleSave} disabled={!form.diet_type} className="bg-orange-600 hover:bg-orange-700">Save Group</Button>
+                        <Button onClick={handleSave} className="bg-orange-600 hover:bg-orange-700">Save Group</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>

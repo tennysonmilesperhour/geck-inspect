@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Project, Task, Gecko, BreedingPlan, FeedingGroup } from '@/entities/all';
+import { Project, Task, Gecko, BreedingPlan, FeedingGroup, OtherReptile } from '@/entities/all';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
