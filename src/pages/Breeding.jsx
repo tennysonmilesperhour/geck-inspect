@@ -472,7 +472,7 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
     );
 }
 
-function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArchive, isExpanded, onToggleExpanded, showArchiveButton = true, onAddEggs }) {
+function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArchive, isExpanded, onToggleExpanded, showArchiveButton = true }) {
     const getGecko = (id) => geckos.find(g => g.id === id);
     const sire = getGecko(plan.sire_id);
     const dam = getGecko(plan.dam_id);
