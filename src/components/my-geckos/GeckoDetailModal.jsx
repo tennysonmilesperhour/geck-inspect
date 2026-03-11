@@ -319,10 +319,10 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                         </button>
                       ))}
                     </div>
-                    {/* Image display - maps slot index to image index (newest = last slot) */}
+                    {/* Image display */}
                     <div className="relative w-full rounded-lg overflow-hidden bg-slate-800">
                       <img
-                        src={gecko.image_urls[Math.min(slideshowIndex, gecko.image_urls.length - 1)] || 'https://i.imgur.com/sw9gnDp.png'}
+                        src={getSlotImage(slideshowIndex)}
                         alt={`${gecko.name} at ${growthSlots[slideshowIndex]?.label}`}
                         className="w-full h-auto object-contain max-h-72"
                       />
@@ -330,17 +330,42 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                         {growthSlots[slideshowIndex]?.label}
                       </div>
                       <div className="absolute bottom-2 right-2 flex gap-1">
-                        <button onClick={() => setSlideshowIndex(i => Math.max(0, i - 1))} disabled={slideshowIndex === 0}
-                          className="bg-black/60 text-white p-1 rounded disabled:opacity-30">
+                        <button
+                          onClick={() => setSlideshowIndex(i => Math.max(0, i - 1))}
+                          disabled={slideshowIndex === 0}
+                          className="bg-black/60 text-white p-1 rounded disabled:opacity-30"
+                        >
                           <ChevronLeft className="w-4 h-4" />
                         </button>
-                        <button onClick={() => setSlideshowIndex(i => Math.min(growthSlots.length - 1, i + 1))} disabled={slideshowIndex === growthSlots.length - 1}
-                          className="bg-black/60 text-white p-1 rounded disabled:opacity-30">
+                        <button
+                          onClick={() => setSlideshowIndex(i => Math.min(growthSlots.length - 1, i + 1))}
+                          disabled={slideshowIndex === growthSlots.length - 1}
+                          className="bg-black/60 text-white p-1 rounded disabled:opacity-30"
+                        >
                           <ChevronRight className="w-4 h-4" />
                         </button>
                       </div>
                     </div>
-                    <p className="text-xs text-slate-500 text-center">Image {slideshowIndex + 1} of {gecko.image_urls.length} · Oldest to newest</p>
+                    {/* Image picker for this slot */}
+                    <div>
+                      <p className="text-xs text-slate-500 mb-1">Choose photo for "{growthSlots[slideshowIndex]?.label}":</p>
+                      <div className="flex gap-1 flex-wrap">
+                        {gecko.image_urls.map((url, imgIdx) => (
+                          <button
+                            key={url}
+                            onClick={() => setSlotImageMap(prev => ({ ...prev, [slideshowIndex]: imgIdx }))}
+                            className={`w-10 h-10 rounded overflow-hidden border-2 transition-all flex-shrink-0 ${
+                              (slotImageMap[slideshowIndex] ?? Math.min(slideshowIndex, gecko.image_urls.length - 1)) === imgIdx
+                                ? 'border-emerald-500 scale-110'
+                                : 'border-slate-600 hover:border-slate-400'
+                            }`}
+                          >
+                            <img src={url} alt={`img ${imgIdx + 1}`} className="w-full h-full object-cover" />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-xs text-slate-500 text-center">Slot {slideshowIndex + 1} of {growthSlots.length}</p>
                   </div>
                 ) : (
                   <div className="w-full rounded-lg overflow-hidden">
