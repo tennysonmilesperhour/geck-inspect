@@ -294,7 +294,7 @@ export default function PublicProfile() {
                             {forSaleGeckos.length > 0 ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {forSaleGeckos.map(gecko => (
-                                        <GeckoCard key={gecko.id} gecko={gecko} onEdit={() => {}} onDelete={() => {}} onCardClick={() => {}} isPublicView={true}/>
+                                        <GeckoCard key={gecko.id} gecko={gecko} isOwner={false} onView={(g) => navigate(createPageUrl(`GeckoDetail?id=${g.id}`))} onEdit={() => {}} />
                                     ))}
                                 </div>
                             ) : (
@@ -316,7 +316,7 @@ export default function PublicProfile() {
                                             </h3>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                                 {breedingGeckos.filter(g => g.sex === 'Male').map(gecko => (
-                                                    <GeckoCard key={gecko.id} gecko={gecko} onEdit={() => {}} onDelete={() => {}} onCardClick={() => {}} isPublicView={true}/>
+                                                    <GeckoCard key={gecko.id} gecko={gecko} isOwner={false} onView={(g) => navigate(createPageUrl(`GeckoDetail?id=${g.id}`))} onEdit={() => {}} />
                                                 ))}
                                             </div>
                                         </div>
@@ -330,7 +330,7 @@ export default function PublicProfile() {
                                             </h3>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                                 {breedingGeckos.filter(g => g.sex === 'Female').map(gecko => (
-                                                    <GeckoCard key={gecko.id} gecko={gecko} onEdit={() => {}} onDelete={() => {}} onCardClick={() => {}} isPublicView={true}/>
+                                                    <GeckoCard key={gecko.id} gecko={gecko} isOwner={false} onView={(g) => navigate(createPageUrl(`GeckoDetail?id=${g.id}`))} onEdit={() => {}} />
                                                 ))}
                                             </div>
                                         </div>
@@ -344,7 +344,7 @@ export default function PublicProfile() {
                                             </h3>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                                 {breedingGeckos.filter(g => g.sex === 'Unsexed').map(gecko => (
-                                                    <GeckoCard key={gecko.id} gecko={gecko} onEdit={() => {}} onDelete={() => {}} onCardClick={() => {}} isPublicView={true}/>
+                                                    <GeckoCard key={gecko.id} gecko={gecko} isOwner={false} onView={(g) => navigate(createPageUrl(`GeckoDetail?id=${g.id}`))} onEdit={() => {}} />
                                                 ))}
                                             </div>
                                         </div>
@@ -362,7 +362,7 @@ export default function PublicProfile() {
                             {collectionGeckos.length > 0 ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                     {collectionGeckos.map(gecko => (
-                                        <GeckoCard key={gecko.id} gecko={gecko} onEdit={() => {}} onDelete={() => {}} onCardClick={() => {}} isPublicView={true}/>
+                                        <GeckoCard key={gecko.id} gecko={gecko} isOwner={false} onView={(g) => navigate(createPageUrl(`GeckoDetail?id=${g.id}`))} onEdit={() => {}} />
                                     ))}
                                 </div>
                             ) : (
