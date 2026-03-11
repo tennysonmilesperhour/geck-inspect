@@ -1457,6 +1457,10 @@ export default function BreedingPage() {
                             <Hatchery />
                         </TabsContent>
 
+                        <TabsContent value="genetics" className="mt-6">
+                            <GeneticCalculatorTab geckos={geckos} />
+                        </TabsContent>
+
                         <TabsContent value="archive" className="mt-6">
                             {/* Search and Sort Controls */}
                             <div className="flex flex-col sm:flex-row gap-3 mb-6">
