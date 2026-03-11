@@ -825,6 +825,9 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
                         <Button variant="outline" size="sm" className="border-slate-600 hover:bg-slate-800 text-xs h-8" onClick={() => setIsEditModalOpen(true)}>
                             <Edit size={14} className="mr-1" /> Edit
                         </Button>
+                        <Button variant="outline" size="sm" className="border-purple-700 text-purple-300 hover:bg-purple-900/30 text-xs h-8" onClick={() => setIsGeneticsOpen(true)}>
+                            <Dna size={14} className="mr-1" /> Genetics
+                        </Button>
                     </div>
                     
                     <div className="flex gap-1 flex-wrap">
