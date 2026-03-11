@@ -1,200 +1,294 @@
 import React, { useState, useEffect } from 'react';
 import { Gecko, User, WeightRecord } from '@/entities/all';
-import { useNavigate } from 'react-router-dom';
+import { base44 } from '@/api/base44Client';
+import { useNavigate, Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { format } from 'date-fns';
-import { Loader2, ArrowLeft, Edit, Trash2, Calendar, LineChart, Users, GitBranch, Info, StickyNote, DollarSign } from 'lucide-react';
+import {
+    Loader2, ArrowLeft, Calendar, GitBranch, Info, StickyNote,
+    DollarSign, LineChart as LineChartIcon, Mail, MapPin, Tag, User as UserIcon
+} from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import GeckoForm from '../components/my-geckos/GeckoForm';
-
-const DetailItem = ({ icon, label, children }) => (
-    <div className="flex items-start">
-        <div className="flex-shrink-0 w-8 text-slate-400">{icon}</div>
-        <div className="ml-4">
-            <dt className="text-sm font-medium text-slate-400">{label}</dt>
-            <dd className="mt-1 text-sm text-slate-200">{children || 'N/A'}</dd>
-        </div>
-    </div>
-);
+import {
+    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
+} from 'recharts';
+import MessageUserButton from '../components/ui/MessageUserButton';
 
 export default function GeckoDetail() {
     const [gecko, setGecko] = useState(null);
     const [sire, setSire] = useState(null);
     const [dam, setDam] = useState(null);
-    const [userGeckos, setUserGeckos] = useState([]);
+    const [owner, setOwner] = useState(null);
     const [currentUser, setCurrentUser] = useState(null);
+    const [weightRecords, setWeightRecords] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [isFormOpen, setIsFormOpen] = useState(false);
     const navigate = useNavigate();
-    
+
     const urlParams = new URLSearchParams(window.location.search);
     const geckoId = urlParams.get('id');
 
-    const loadData = async () => {
-        if (!geckoId) {
-            setIsLoading(false);
-            return;
-        }
-        setIsLoading(true);
-        try {
-            const [fetchedGecko, user, allGeckos] = await Promise.all([
-                Gecko.get(geckoId),
-                User.me(),
-                Gecko.list()
-            ]);
-            
-            setGecko(fetchedGecko);
-            setCurrentUser(user);
-            setUserGeckos(allGeckos);
-
-            if (fetchedGecko.sire_id) {
-                setSire(await Gecko.get(fetchedGecko.sire_id));
-            }
-            if (fetchedGecko.dam_id) {
-                setDam(await Gecko.get(fetchedGecko.dam_id));
-            }
-
-        } catch (error) {
-            console.error("Failed to load gecko details:", error);
-        }
-        setIsLoading(false);
-    };
-
     useEffect(() => {
+        const loadData = async () => {
+            if (!geckoId) { setIsLoading(false); return; }
+            setIsLoading(true);
+            try {
+                const [fetchedGecko, user] = await Promise.all([
+                    Gecko.get(geckoId),
+                    base44.auth.me().catch(() => null),
+                ]);
+                setGecko(fetchedGecko);
+                setCurrentUser(user);
+
+                // Load owner, parents, weights in parallel
+                const [ownerData, weights, sireData, damData] = await Promise.allSettled([
+                    fetchedGecko.created_by
+                        ? User.filter({ email: fetchedGecko.created_by }).then(r => r[0] || null)
+                        : Promise.resolve(null),
+                    WeightRecord.filter({ gecko_id: geckoId }, 'record_date'),
+                    fetchedGecko.sire_id ? Gecko.get(fetchedGecko.sire_id) : Promise.resolve(null),
+                    fetchedGecko.dam_id ? Gecko.get(fetchedGecko.dam_id) : Promise.resolve(null),
+                ]);
+
+                setOwner(ownerData.status === 'fulfilled' ? ownerData.value : null);
+                setWeightRecords(weights.status === 'fulfilled' ? weights.value : []);
+                setSire(sireData.status === 'fulfilled' ? sireData.value : null);
+                setDam(damData.status === 'fulfilled' ? damData.value : null);
+            } catch (error) {
+                console.error("Failed to load gecko details:", error);
+            }
+            setIsLoading(false);
+        };
         loadData();
     }, [geckoId]);
 
-    const handleFormSave = () => {
-        setIsFormOpen(false);
-        loadData(); // Reload data to show changes
-    };
-
-    const handleDelete = async (id) => {
-        if (window.confirm('Are you sure you want to delete this gecko?')) {
-            try {
-                await Gecko.delete(id);
-                navigate(createPageUrl('MyGeckos'));
-            } catch (error) {
-                console.error("Failed to delete gecko:", error);
-            }
-        }
-    };
-    
     if (isLoading) {
         return <div className="flex justify-center items-center h-screen bg-slate-950"><Loader2 className="w-16 h-16 animate-spin text-emerald-500" /></div>;
     }
-
     if (!gecko) {
         return <div className="text-center text-slate-400 p-8">Gecko not found.</div>;
     }
 
+    const isOwner = currentUser && gecko.created_by === currentUser.email;
+
+    const chartData = weightRecords.map(r => ({
+        date: format(new Date(r.record_date), 'MMM d'),
+        weight: r.weight_grams,
+    }));
+
     const statusColors = {
-        "Ready to Breed": "bg-teal-100 text-teal-700", "Proven": "bg-emerald-100 text-emerald-700", "Holdback": "bg-blue-100 text-blue-700",
-        "For Sale": "bg-yellow-100 text-yellow-700", "Sold": "bg-gray-100 text-gray-700", "Pet": "bg-purple-100 text-purple-700",
-        "Future Breeder": "bg-indigo-100 text-indigo-700"
+        "Ready to Breed": "bg-teal-700", "Proven": "bg-emerald-700", "Holdback": "bg-blue-700",
+        "For Sale": "bg-yellow-700", "Sold": "bg-gray-700", "Pet": "bg-purple-700",
+        "Future Breeder": "bg-indigo-700"
     };
-    
-    const canEdit = currentUser && gecko.created_by === currentUser.email;
 
     return (
         <div className="bg-slate-950 min-h-screen text-slate-200">
-            <div className="max-w-7xl mx-auto p-4 md:p-8">
-                <header className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                    <Button variant="outline" onClick={() => navigate(createPageUrl('MyGeckos'))} className="border-slate-600 hover:bg-slate-800">
-                        <ArrowLeft className="w-4 h-4 mr-2" />
-                        Back to Collection
+            <div className="max-w-5xl mx-auto p-4 md:p-8">
+                {/* Header */}
+                <div className="flex items-center justify-between mb-6">
+                    <Button variant="outline" onClick={() => navigate(-1)} className="border-slate-600 hover:bg-slate-800">
+                        <ArrowLeft className="w-4 h-4 mr-2" /> Back
                     </Button>
-                    {canEdit && (
-                         <Button onClick={() => setIsFormOpen(true)} className="bg-emerald-600 hover:bg-emerald-700">
-                            <Edit className="w-4 h-4 mr-2" />
-                            Edit Gecko Details
+                    {isOwner && (
+                        <Button onClick={() => navigate(createPageUrl('MyGeckos'))} className="bg-emerald-600 hover:bg-emerald-700">
+                            Edit in My Geckos
                         </Button>
                     )}
-                </header>
+                </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                    <div className="lg:col-span-1">
-                        <Card className="bg-slate-900 border-slate-700">
-                             <div className="aspect-square w-full rounded-t-lg overflow-hidden bg-slate-800">
-                                {gecko.image_urls && gecko.image_urls.length > 0 ? (
-                                    <img src={gecko.image_urls[0]} alt={gecko.name} className="w-full h-full object-cover" />
-                                ) : (
-                                    <div className="w-full h-full flex items-center justify-center">
-                                        <Users className="w-24 h-24 text-slate-600" />
-                                    </div>
-                                )}
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    {/* Left: Image + basic info */}
+                    <div className="space-y-4">
+                        <Card className="bg-slate-900 border-slate-700 overflow-hidden">
+                            <div className="aspect-square w-full bg-slate-800">
+                                <img
+                                    src={gecko.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'}
+                                    alt={gecko.name}
+                                    className="w-full h-full object-cover"
+                                />
                             </div>
-                            <CardContent className="p-6 text-center">
-                                <h1 className="text-3xl font-bold text-slate-100">{gecko.name}</h1>
-                                <p className="text-slate-400">{gecko.gecko_id_code}</p>
-                                <div className="mt-4 flex flex-wrap justify-center gap-2">
-                                     <Badge className={statusColors[gecko.status] || "bg-gray-100 text-gray-700"}>{gecko.status}</Badge>
-                                     <Badge variant="secondary">{gecko.sex}</Badge>
+                            <CardContent className="p-4 text-center">
+                                <h1 className="text-2xl font-bold text-slate-100">{gecko.name}</h1>
+                                {gecko.gecko_id_code && <p className="text-slate-400 text-sm">{gecko.gecko_id_code}</p>}
+                                <div className="mt-3 flex flex-wrap justify-center gap-2">
+                                    <Badge className={statusColors[gecko.status] || 'bg-slate-700'}>{gecko.status}</Badge>
+                                    <Badge variant="secondary">{gecko.sex}</Badge>
+                                    {gecko.weight_grams && <Badge variant="outline" className="border-slate-600">{gecko.weight_grams}g</Badge>}
                                 </div>
+                                {gecko.hatch_date && (
+                                    <p className="text-slate-400 text-xs mt-2">
+                                        <Calendar className="w-3 h-3 inline mr-1" />
+                                        Hatched: {format(new Date(gecko.hatch_date), 'MMMM d, yyyy')}
+                                    </p>
+                                )}
                             </CardContent>
                         </Card>
+
+                        {/* Additional images */}
+                        {gecko.image_urls?.length > 1 && (
+                            <Card className="bg-slate-900 border-slate-700">
+                                <CardContent className="p-3">
+                                    <div className="grid grid-cols-3 gap-1.5">
+                                        {gecko.image_urls.slice(1).map((url, i) => (
+                                            <img key={i} src={url} alt={`${gecko.name} ${i + 2}`} className="w-full aspect-square object-cover rounded" />
+                                        ))}
+                                    </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* Owner card */}
+                        {owner && (
+                            <Card className="bg-slate-900 border-slate-700">
+                                <CardContent className="p-4">
+                                    <h3 className="text-slate-300 font-semibold text-sm mb-3 flex items-center gap-2">
+                                        <UserIcon className="w-4 h-4" /> Breeder
+                                    </h3>
+                                    <Link to={createPageUrl(`PublicProfile?userId=${owner.id}`)} className="flex items-center gap-3 hover:opacity-80 transition-opacity mb-3">
+                                        <img
+                                            src={owner.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(owner.full_name || 'B')}&background=059669&color=fff`}
+                                            alt={owner.full_name}
+                                            className="w-10 h-10 rounded-full object-cover"
+                                        />
+                                        <div>
+                                            <p className="text-slate-100 font-medium">{owner.full_name}</p>
+                                            {owner.location && (
+                                                <p className="text-slate-400 text-xs flex items-center gap-1">
+                                                    <MapPin className="w-3 h-3" />{owner.location}
+                                                </p>
+                                            )}
+                                        </div>
+                                    </Link>
+                                    {currentUser && !isOwner && (
+                                        <MessageUserButton
+                                            recipientEmail={owner.email}
+                                            recipientName={owner.full_name}
+                                            variant="outline"
+                                            size="sm"
+                                            className="w-full border-emerald-700 text-emerald-400 hover:bg-emerald-900/30"
+                                        />
+                                    )}
+                                    {!currentUser && (
+                                        <p className="text-xs text-slate-500 text-center mt-1">
+                                            <a href="#" onClick={() => base44.auth.redirectToLogin()} className="text-emerald-400 hover:underline">Log in</a> to contact this breeder
+                                        </p>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        )}
                     </div>
 
-                    <div className="lg:col-span-2">
-                         <Card className="bg-slate-900 border-slate-700">
-                            <CardHeader>
-                                <CardTitle>Gecko Information</CardTitle>
-                            </CardHeader>
-                            <CardContent>
-                                <dl className="space-y-6">
-                                    <DetailItem icon={<Info className="w-5 h-5"/>} label="Morphs & Traits">
-                                        {gecko.morphs_traits}
-                                    </DetailItem>
-                                     <DetailItem icon={<Calendar className="w-5 h-5"/>} label="Hatch Date">
-                                        {gecko.hatch_date ? format(new Date(gecko.hatch_date), 'MMMM d, yyyy') : 'N/A'}
-                                    </DetailItem>
-                                    <DetailItem icon={<Users className="w-5 h-5"/>} label="Genetics">
-                                        <div className="flex items-center gap-4">
-                                            <div>
-                                                <span className="text-xs text-slate-500">Sire</span>
-                                                <p>{sire ? sire.name : 'Unknown'}</p>
-                                            </div>
-                                            <div>
-                                                <span className="text-xs text-slate-500">Dam</span>
-                                                <p>{dam ? dam.name : 'Unknown'}</p>
-                                            </div>
-                                        </div>
-                                    </DetailItem>
-                                    {gecko.asking_price && (
-                                        <DetailItem icon={<DollarSign className="w-5 h-5"/>} label="Asking Price">
-                                            ${gecko.asking_price}
-                                        </DetailItem>
+                    {/* Right: Details */}
+                    <div className="lg:col-span-2 space-y-4">
+                        {/* Morphs & Traits */}
+                        {(gecko.morphs_traits || gecko.morph_tags?.length > 0) && (
+                            <Card className="bg-slate-900 border-slate-700">
+                                <CardHeader className="pb-2 pt-4 px-4">
+                                    <CardTitle className="text-sm flex items-center gap-2 text-slate-300">
+                                        <Tag className="w-4 h-4" /> Morphs & Traits
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="px-4 pb-4 space-y-2">
+                                    {gecko.morphs_traits && (
+                                        <p className="text-slate-200">{gecko.morphs_traits}</p>
                                     )}
-                                     <DetailItem icon={<StickyNote className="w-5 h-5"/>} label="Notes">
-                                        {gecko.notes || 'No notes provided.'}
-                                    </DetailItem>
-                                </dl>
+                                    {gecko.morph_tags?.length > 0 && (
+                                        <div className="flex flex-wrap gap-1.5">
+                                            {gecko.morph_tags.map(tag => (
+                                                <Badge key={tag} variant="outline" className="border-emerald-700 text-emerald-300 text-xs">{tag}</Badge>
+                                            ))}
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* Notes */}
+                        {gecko.notes && (
+                            <Card className="bg-slate-900 border-slate-700">
+                                <CardHeader className="pb-2 pt-4 px-4">
+                                    <CardTitle className="text-sm flex items-center gap-2 text-slate-300">
+                                        <StickyNote className="w-4 h-4" /> Notes
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="px-4 pb-4">
+                                    <p className="text-slate-300 whitespace-pre-wrap">{gecko.notes}</p>
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* Weight Chart */}
+                        {chartData.length > 0 && (
+                            <Card className="bg-slate-900 border-slate-700">
+                                <CardHeader className="pb-2 pt-4 px-4">
+                                    <CardTitle className="text-sm flex items-center gap-2 text-slate-300">
+                                        <LineChartIcon className="w-4 h-4" /> Weight History
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="px-4 pb-4">
+                                    <ResponsiveContainer width="100%" height={180}>
+                                        <LineChart data={chartData}>
+                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(134,239,172,0.15)" />
+                                            <XAxis dataKey="date" stroke="#a7f3d0" tick={{ fontSize: 11 }} />
+                                            <YAxis stroke="#a7f3d0" unit="g" tick={{ fontSize: 11 }} domain={['dataMin - 2', 'dataMax + 2']} />
+                                            <Tooltip
+                                                contentStyle={{ backgroundColor: '#022c22', border: '1px solid rgba(134,239,172,0.2)' }}
+                                                labelStyle={{ color: '#d1fae5' }}
+                                                itemStyle={{ color: '#86efac' }}
+                                                formatter={v => [`${v}g`, 'Weight']}
+                                            />
+                                            <Line type="monotone" dataKey="weight" stroke="#86efac" strokeWidth={2} dot={{ r: 3 }} />
+                                        </LineChart>
+                                    </ResponsiveContainer>
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* Parentage */}
+                        <Card className="bg-slate-900 border-slate-700">
+                            <CardHeader className="pb-2 pt-4 px-4">
+                                <CardTitle className="text-sm flex items-center gap-2 text-slate-300">
+                                    <GitBranch className="w-4 h-4" /> Lineage
+                                </CardTitle>
+                            </CardHeader>
+                            <CardContent className="px-4 pb-4 space-y-3">
+                                <div className="grid grid-cols-2 gap-3">
+                                    <div className="bg-slate-800 p-3 rounded-lg">
+                                        <p className="text-slate-400 text-xs mb-1">Sire (Father)</p>
+                                        <p className="text-slate-200 font-medium">{sire ? sire.name : (gecko.sire_name || 'Unknown')}</p>
+                                    </div>
+                                    <div className="bg-slate-800 p-3 rounded-lg">
+                                        <p className="text-slate-400 text-xs mb-1">Dam (Mother)</p>
+                                        <p className="text-slate-200 font-medium">{dam ? dam.name : (gecko.dam_name || 'Unknown')}</p>
+                                    </div>
+                                </div>
+                                {isOwner && (
+                                    <Link to={createPageUrl(`Lineage?geckoId=${gecko.id}`)}>
+                                        <Button variant="outline" size="sm" className="w-full border-slate-600 hover:bg-slate-800">
+                                            <GitBranch className="w-4 h-4 mr-2" /> View Full Lineage Tree
+                                        </Button>
+                                    </Link>
+                                )}
                             </CardContent>
                         </Card>
+
+                        {/* Price */}
+                        {gecko.asking_price && (
+                            <Card className="bg-slate-900 border-slate-700">
+                                <CardContent className="p-4 flex items-center justify-between">
+                                    <div className="flex items-center gap-2 text-slate-300">
+                                        <DollarSign className="w-5 h-5 text-yellow-400" />
+                                        <span className="font-semibold">Asking Price</span>
+                                    </div>
+                                    <span className="text-2xl font-bold text-yellow-400">${gecko.asking_price}</span>
+                                </CardContent>
+                            </Card>
+                        )}
                     </div>
                 </div>
             </div>
-
-            {canEdit && (
-                <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-                    <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 max-w-2xl p-0">
-                        <DialogHeader className="p-6 pb-0">
-                            <DialogTitle>Edit Gecko</DialogTitle>
-                        </DialogHeader>
-                        <GeckoForm
-                            geckoToEdit={gecko}
-                            userGeckos={userGeckos}
-                            currentUser={currentUser}
-                            onSave={handleFormSave}
-                            onCancel={() => setIsFormOpen(false)}
-                            onDelete={handleDelete}
-                        />
-                    </DialogContent>
-                </Dialog>
-            )}
         </div>
     );
 }
