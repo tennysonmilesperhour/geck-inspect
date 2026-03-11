@@ -67,8 +67,10 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
         }
         if (!targetGroupId) return;
 
+        // Only fetch geckos the current user owns (avoids permission errors on public geckos)
+        const myGeckos = await Gecko.list();
         const { auto_weight_min_g: min, auto_weight_max_g: max } = groupData;
-        await Promise.all(geckos.map(async (g) => {
+        await Promise.all(myGeckos.map(async (g) => {
             const w = parseFloat(g.weight_grams);
             if (!isNaN(w) && w >= min && w <= max) {
                 if (g.feeding_group_id !== targetGroupId) {
