@@ -1,17 +1,17 @@
 import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
-import { PlusCircle, Trash2, Grid3x3, List, X, StickyNote } from 'lucide-react';
+import { PlusCircle, Grid3x3, List, StickyNote } from 'lucide-react';
 
+// Use inline hex colors so Tailwind purge doesn't remove them
 const NOTE_COLORS = [
-    { label: 'Yellow', bg: 'bg-yellow-200', border: 'border-yellow-400', text: 'text-yellow-900', header: 'bg-yellow-300' },
-    { label: 'Green', bg: 'bg-emerald-200', border: 'border-emerald-400', text: 'text-emerald-900', header: 'bg-emerald-300' },
-    { label: 'Blue', bg: 'bg-blue-200', border: 'border-blue-400', text: 'text-blue-900', header: 'bg-blue-300' },
-    { label: 'Pink', bg: 'bg-pink-200', border: 'border-pink-400', text: 'text-pink-900', header: 'bg-pink-300' },
-    { label: 'Purple', bg: 'bg-purple-200', border: 'border-purple-400', text: 'text-purple-900', header: 'bg-purple-300' },
-    { label: 'Orange', bg: 'bg-orange-200', border: 'border-orange-400', text: 'text-orange-900', header: 'bg-orange-300' },
+    { label: 'Yellow',  bg: '#fef08a', border: '#facc15', text: '#713f12', header: '#fde047' },
+    { label: 'Green',   bg: '#a7f3d0', border: '#34d399', text: '#064e3b', header: '#6ee7b7' },
+    { label: 'Blue',    bg: '#bfdbfe', border: '#60a5fa', text: '#1e3a5f', header: '#93c5fd' },
+    { label: 'Pink',    bg: '#fbcfe8', border: '#f472b6', text: '#831843', header: '#f9a8d4' },
+    { label: 'Purple',  bg: '#e9d5ff', border: '#c084fc', text: '#4a1d96', header: '#d8b4fe' },
+    { label: 'Orange',  bg: '#fed7aa', border: '#fb923c', text: '#7c2d12', header: '#fdba74' },
 ];
 
 const STORAGE_KEY = 'gecko_sticky_notes';
@@ -31,60 +31,96 @@ function NoteCard({ note, onDelete, onUpdate, isGrid }) {
     const [isEditing, setIsEditing] = useState(false);
     const [title, setTitle] = useState(note.title);
     const [body, setBody] = useState(note.body);
-    const color = NOTE_COLORS.find(c => c.label === note.color) || NOTE_COLORS[0];
+    const [selectedColor, setSelectedColor] = useState(note.color || 'Yellow');
+    const color = NOTE_COLORS.find(c => c.label === selectedColor) || NOTE_COLORS[0];
 
     const handleSave = () => {
-        onUpdate(note.id, { title, body });
+        onUpdate(note.id, { title, body, color: selectedColor });
         setIsEditing(false);
     };
 
+    const handleCancel = () => {
+        setTitle(note.title);
+        setBody(note.body);
+        setSelectedColor(note.color || 'Yellow');
+        setIsEditing(false);
+    };
+
+    // Keep color in sync with note prop
+    useEffect(() => {
+        setSelectedColor(note.color || 'Yellow');
+    }, [note.color]);
+
     return (
-        <div className={`rounded-lg border-2 ${color.bg} ${color.border} flex flex-col shadow-md transition-shadow hover:shadow-lg ${isGrid ? 'min-h-[180px]' : 'min-h-[100px]'}`}>
-            {/* Sticky note header strip */}
-            <div className={`${color.header} rounded-t-md px-3 py-1.5 flex items-center justify-between`}>
+        <div
+            style={{ backgroundColor: color.bg, borderColor: color.border }}
+            className={`rounded-lg border-2 flex flex-col shadow-md transition-shadow hover:shadow-lg ${isGrid ? 'min-h-[180px]' : 'min-h-[100px]'}`}
+        >
+            {/* Header strip */}
+            <div style={{ backgroundColor: color.header }} className="rounded-t-md px-3 py-1.5 flex items-center justify-between gap-2">
                 {isEditing ? (
-                    <Input
+                    <input
                         value={title}
                         onChange={(e) => setTitle(e.target.value)}
-                        className={`bg-transparent border-none shadow-none text-sm font-semibold ${color.text} h-6 p-0 focus-visible:ring-0`}
+                        style={{ color: color.text, backgroundColor: 'transparent' }}
+                        className="text-sm font-semibold flex-1 bg-transparent border-none outline-none"
                         placeholder="Title..."
                     />
                 ) : (
                     <span
-                        className={`text-sm font-semibold ${color.text} cursor-pointer flex-1 truncate`}
+                        style={{ color: color.text }}
+                        className="text-sm font-semibold cursor-pointer flex-1 truncate"
                         onDoubleClick={() => setIsEditing(true)}
                     >
                         {note.title || 'Untitled'}
                     </span>
                 )}
-                <div className="flex gap-1 flex-shrink-0 ml-2">
+                <div className="flex gap-1 flex-shrink-0">
                     {isEditing ? (
                         <>
-                            <button onClick={handleSave} className={`text-xs ${color.text} font-bold hover:opacity-70 px-1`}>Save</button>
-                            <button onClick={() => { setTitle(note.title); setBody(note.body); setIsEditing(false); }} className={`text-xs ${color.text} hover:opacity-70 px-1`}>✕</button>
+                            <button type="button" onClick={handleSave} style={{ color: color.text }} className="text-xs font-bold hover:opacity-70 px-1">Save</button>
+                            <button type="button" onClick={handleCancel} style={{ color: color.text }} className="text-xs hover:opacity-70 px-1">✕</button>
                         </>
                     ) : (
                         <>
-                            <button onClick={() => setIsEditing(true)} className={`text-xs ${color.text} hover:opacity-70 px-1`}>✏️</button>
-                            <button onClick={() => onDelete(note.id)} className={`text-xs ${color.text} hover:opacity-70 px-1`}>🗑</button>
+                            <button type="button" onClick={() => setIsEditing(true)} style={{ color: color.text }} className="text-xs hover:opacity-70 px-1">✏️</button>
+                            <button type="button" onClick={() => onDelete(note.id)} style={{ color: color.text }} className="text-xs hover:opacity-70 px-1">🗑</button>
                         </>
                     )}
                 </div>
             </div>
 
+            {/* Color picker (edit mode only) */}
+            {isEditing && (
+                <div className="px-3 pt-2 flex gap-1.5 flex-wrap">
+                    {NOTE_COLORS.map(c => (
+                        <button
+                            key={c.label}
+                            type="button"
+                            onClick={() => setSelectedColor(c.label)}
+                            style={{ backgroundColor: c.bg, borderColor: selectedColor === c.label ? '#fff' : 'transparent', outlineColor: c.border }}
+                            className={`w-5 h-5 rounded-full border-2 transition-transform ${selectedColor === c.label ? 'scale-125 outline outline-2' : ''}`}
+                            title={c.label}
+                        />
+                    ))}
+                </div>
+            )}
+
             {/* Body */}
             <div className="p-3 flex-1">
                 {isEditing ? (
-                    <Textarea
+                    <textarea
                         value={body}
                         onChange={(e) => setBody(e.target.value)}
-                        className={`bg-transparent border-none shadow-none resize-none ${color.text} text-sm p-0 focus-visible:ring-0 h-full min-h-[80px]`}
+                        style={{ color: color.text, backgroundColor: 'transparent' }}
+                        className="w-full bg-transparent border-none outline-none resize-none text-sm p-0 min-h-[80px]"
                         placeholder="Write your note..."
                         autoFocus
                     />
                 ) : (
                     <p
-                        className={`text-sm ${color.text} whitespace-pre-wrap cursor-pointer break-words`}
+                        style={{ color: color.text }}
+                        className="text-sm whitespace-pre-wrap cursor-pointer break-words"
                         onDoubleClick={() => setIsEditing(true)}
                     >
                         {note.body || <span className="opacity-50">Double-click to edit...</span>}
@@ -93,7 +129,7 @@ function NoteCard({ note, onDelete, onUpdate, isGrid }) {
             </div>
 
             {/* Timestamp */}
-            <div className={`px-3 pb-1.5 text-[10px] ${color.text} opacity-50`}>
+            <div style={{ color: color.text }} className="px-3 pb-1.5 text-[10px] opacity-50">
                 {new Date(note.created_at).toLocaleDateString()}
             </div>
         </div>
@@ -111,6 +147,8 @@ export default function StickyNotes() {
     useEffect(() => {
         setNotes(loadNotes());
     }, []);
+
+    const selectedColorObj = NOTE_COLORS.find(c => c.label === newColor) || NOTE_COLORS[0];
 
     const handleAdd = () => {
         if (!newBody.trim() && !newTitle.trim()) return;
@@ -153,12 +191,14 @@ export default function StickyNotes() {
                 </Button>
                 <div className="flex items-center gap-1 bg-slate-800 rounded-lg p-1 border border-slate-700">
                     <button
+                        type="button"
                         onClick={() => setViewMode('grid')}
                         className={`p-1.5 rounded transition-colors ${viewMode === 'grid' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
                     >
                         <Grid3x3 className="w-4 h-4" />
                     </button>
                     <button
+                        type="button"
                         onClick={() => setViewMode('list')}
                         className={`p-1.5 rounded transition-colors ${viewMode === 'list' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
                     >
@@ -169,35 +209,47 @@ export default function StickyNotes() {
 
             {/* New note form */}
             {showForm && (
-                <div className="bg-slate-800 border border-slate-600 rounded-xl p-4 space-y-3">
+                <div
+                    style={{ backgroundColor: selectedColorObj.bg, borderColor: selectedColorObj.border }}
+                    className="border-2 rounded-xl p-4 space-y-3"
+                >
                     <div className="flex items-center gap-2 flex-wrap">
-                        <Input
+                        <input
                             value={newTitle}
                             onChange={(e) => setNewTitle(e.target.value)}
                             placeholder="Title (optional)"
-                            className="bg-slate-700 border-slate-600 flex-1"
+                            style={{ color: selectedColorObj.text, backgroundColor: 'rgba(255,255,255,0.5)', borderColor: selectedColorObj.border }}
+                            className="flex-1 rounded-md border px-3 py-1.5 text-sm outline-none"
                         />
-                        <div className="flex gap-1">
+                        {/* Color swatches */}
+                        <div className="flex gap-1.5">
                             {NOTE_COLORS.map(c => (
                                 <button
                                     key={c.label}
+                                    type="button"
                                     onClick={() => setNewColor(c.label)}
-                                    className={`w-6 h-6 rounded-full border-2 ${c.bg} ${newColor === c.label ? 'border-white scale-125' : 'border-transparent'} transition-transform`}
+                                    style={{
+                                        backgroundColor: c.bg,
+                                        borderColor: newColor === c.label ? '#1e293b' : c.border,
+                                        outlineColor: c.border
+                                    }}
+                                    className={`w-6 h-6 rounded-full border-2 transition-transform ${newColor === c.label ? 'scale-125 outline outline-2' : ''}`}
                                     title={c.label}
                                 />
                             ))}
                         </div>
                     </div>
-                    <Textarea
+                    <textarea
                         value={newBody}
                         onChange={(e) => setNewBody(e.target.value)}
                         placeholder="Write your note here..."
-                        className="bg-slate-700 border-slate-600 min-h-[100px]"
+                        style={{ color: selectedColorObj.text, backgroundColor: 'rgba(255,255,255,0.5)', borderColor: selectedColorObj.border }}
+                        className="w-full rounded-md border px-3 py-2 text-sm outline-none resize-none min-h-[100px]"
                         autoFocus
                     />
                     <div className="flex gap-2 justify-end">
-                        <Button variant="outline" size="sm" className="border-slate-600" onClick={() => setShowForm(false)}>Cancel</Button>
-                        <Button size="sm" className="bg-yellow-500 hover:bg-yellow-600 text-yellow-950 font-semibold" onClick={handleAdd}>Add Note</Button>
+                        <button type="button" onClick={() => setShowForm(false)} className="px-3 py-1.5 text-sm rounded-md border border-slate-400 text-slate-700 hover:bg-slate-100">Cancel</button>
+                        <button type="button" onClick={handleAdd} style={{ backgroundColor: selectedColorObj.header, color: selectedColorObj.text }} className="px-3 py-1.5 text-sm font-semibold rounded-md hover:opacity-90">Add Note</button>
                     </div>
                 </div>
             )}

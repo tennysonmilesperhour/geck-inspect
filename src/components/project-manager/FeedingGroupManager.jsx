@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { FeedingGroup, Gecko } from '@/entities/all';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -17,14 +17,15 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingGroup, setEditingGroup] = useState(null);
     const [form, setForm] = useState({
-        label: 'A', name: '', diet_type: '', interval_days: 7, last_fed_date: '', color: GROUP_COLORS[0], notes: ''
+        label: 'A', name: '', diet_type: '', interval_days: 7, last_fed_date: '', color: GROUP_COLORS[0], notes: '',
+        auto_weight_min_g: '', auto_weight_max_g: ''
     });
 
     const openCreate = () => {
         const usedLabels = feedingGroups.map(g => g.label);
         const nextLabel = GROUP_LABELS.find(l => !usedLabels.includes(l)) || String.fromCharCode(65 + feedingGroups.length);
         const colorIndex = feedingGroups.length % GROUP_COLORS.length;
-        setForm({ label: nextLabel, name: '', diet_type: '', interval_days: 7, last_fed_date: '', color: GROUP_COLORS[colorIndex], notes: '' });
+        setForm({ label: nextLabel, name: '', diet_type: '', interval_days: 7, last_fed_date: '', color: GROUP_COLORS[colorIndex], notes: '', auto_weight_min_g: '', auto_weight_max_g: '' });
         setEditingGroup(null);
         setIsModalOpen(true);
     };
@@ -37,13 +38,46 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
 
     const handleSave = async () => {
         if (!form.interval_days) return;
+        const saveData = {
+            ...form,
+            auto_weight_min_g: form.auto_weight_min_g !== '' ? parseFloat(form.auto_weight_min_g) : null,
+            auto_weight_max_g: form.auto_weight_max_g !== '' ? parseFloat(form.auto_weight_max_g) : null,
+        };
         if (editingGroup) {
-            await FeedingGroup.update(editingGroup.id, form);
+            await FeedingGroup.update(editingGroup.id, saveData);
         } else {
-            await FeedingGroup.create(form);
+            await FeedingGroup.create(saveData);
+        }
+        // Auto-assign/remove geckos based on weight range
+        if (saveData.auto_weight_min_g != null && saveData.auto_weight_max_g != null) {
+            const groupId = editingGroup?.id || null;
+            await applyWeightRangeToGeckos(saveData, groupId);
         }
         setIsModalOpen(false);
         onUpdate();
+    };
+
+    const applyWeightRangeToGeckos = async (groupData, existingGroupId) => {
+        // Get the actual saved group id — need to re-fetch if new
+        let targetGroupId = existingGroupId;
+        if (!targetGroupId) {
+            const groups = await FeedingGroup.list();
+            const newest = groups.sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0];
+            targetGroupId = newest?.id;
+        }
+        if (!targetGroupId) return;
+
+        const { auto_weight_min_g: min, auto_weight_max_g: max } = groupData;
+        await Promise.all(geckos.map(async (g) => {
+            const w = parseFloat(g.weight_grams);
+            if (!isNaN(w) && w >= min && w <= max) {
+                if (g.feeding_group_id !== targetGroupId) {
+                    await Gecko.update(g.id, { feeding_group_id: targetGroupId });
+                }
+            } else if (g.feeding_group_id === targetGroupId) {
+                await Gecko.update(g.id, { feeding_group_id: null });
+            }
+        }));
     };
 
     const handleDelete = async (groupId) => {
@@ -136,7 +170,7 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
                                             {isOverdue ? `Overdue by ${Math.abs(daysUntil)} day(s)!` : daysUntil === 0 ? 'Feed today!' : `Next: ${format(nextFeed, 'MMM d')} (${daysUntil}d)`}
                                         </div>
                                     )}
-                                    <div className="text-xs text-slate-500">{assignedGeckos.length} gecko(s)</div>
+                                    <div className="text-xs text-slate-500">{assignedGeckos.length} gecko(s){group.auto_weight_min_g != null && group.auto_weight_max_g != null ? ` · Auto: ${group.auto_weight_min_g}–${group.auto_weight_max_g}g` : ''}</div>
                                     <Button
                                         size="sm"
                                         className="w-full h-7 text-xs bg-orange-600 hover:bg-orange-700"
@@ -189,6 +223,44 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
                                         style={{ backgroundColor: c }} onClick={() => setForm({...form, color: c})} type="button" />
                                 ))}
                             </div>
+                        </div>
+                        <div>
+                            <Label>Auto-Assign by Weight Range (grams)</Label>
+                            <p className="text-xs text-slate-500 mb-2">Geckos within this weight range will be automatically added to this group. Geckos that leave the range will be removed.</p>
+                            <div className="grid grid-cols-2 gap-3">
+                                <div>
+                                    <Label className="text-xs text-slate-400">Min Weight (g)</Label>
+                                    <Input
+                                        type="number"
+                                        step="0.1"
+                                        min="0"
+                                        value={form.auto_weight_min_g}
+                                        onChange={e => setForm({...form, auto_weight_min_g: e.target.value})}
+                                        placeholder="e.g. 5"
+                                        className="bg-slate-800 border-slate-600"
+                                    />
+                                </div>
+                                <div>
+                                    <Label className="text-xs text-slate-400">Max Weight (g)</Label>
+                                    <Input
+                                        type="number"
+                                        step="0.1"
+                                        min="0"
+                                        value={form.auto_weight_max_g}
+                                        onChange={e => setForm({...form, auto_weight_max_g: e.target.value})}
+                                        placeholder="e.g. 25"
+                                        className="bg-slate-800 border-slate-600"
+                                    />
+                                </div>
+                            </div>
+                            {form.auto_weight_min_g !== '' && form.auto_weight_max_g !== '' && (
+                                <p className="text-xs text-emerald-400 mt-1">
+                                    {geckos.filter(g => {
+                                        const w = parseFloat(g.weight_grams);
+                                        return !isNaN(w) && w >= parseFloat(form.auto_weight_min_g) && w <= parseFloat(form.auto_weight_max_g);
+                                    }).length} gecko(s) currently in this range
+                                </p>
+                            )}
                         </div>
                         <div>
                             <Label>Notes</Label>
