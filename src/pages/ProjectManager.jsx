@@ -11,10 +11,11 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { PlusCircle, Loader2, FolderKanban, Trash2, Plus, ChevronDown, ChevronUp, Calendar, RepeatIcon, Utensils } from 'lucide-react';
+import { PlusCircle, Loader2, FolderKanban, Trash2, Plus, ChevronDown, ChevronUp, Calendar, RepeatIcon, Utensils, StickyNote } from 'lucide-react';
 import { format } from 'date-fns';
 import ProjectCalendar from '../components/project-manager/ProjectCalendar';
 import FeedingGroupManager from '../components/project-manager/FeedingGroupManager';
+import StickyNotes from '../components/project-manager/StickyNotes';
 
 export default function ProjectManager() {
     const [projects, setProjects] = useState([]);
@@ -162,7 +163,7 @@ export default function ProjectManager() {
                     <div className="text-center py-20"><Loader2 className="w-12 h-12 text-emerald-500 animate-spin mx-auto" /></div>
                 ) : (
                     <Tabs defaultValue="projects" className="w-full">
-                        <TabsList className="grid w-full grid-cols-3 bg-slate-900 h-11 mb-6">
+                        <TabsList className="grid w-full grid-cols-4 bg-slate-900 h-11 mb-6">
                             <TabsTrigger value="projects" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-xs md:text-sm">
                                 <FolderKanban className="w-4 h-4 mr-1 md:mr-2" /> Projects
                             </TabsTrigger>
@@ -170,7 +171,10 @@ export default function ProjectManager() {
                                 <Calendar className="w-4 h-4 mr-1 md:mr-2" /> Calendar
                             </TabsTrigger>
                             <TabsTrigger value="feeding" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-xs md:text-sm">
-                                <Utensils className="w-4 h-4 mr-1 md:mr-2" /> Feeding Groups
+                                <Utensils className="w-4 h-4 mr-1 md:mr-2" /> <span className="hidden sm:inline">Feeding Groups</span><span className="sm:hidden">Feed</span>
+                            </TabsTrigger>
+                            <TabsTrigger value="notes" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-yellow-950 text-xs md:text-sm">
+                                <StickyNote className="w-4 h-4 mr-1 md:mr-2" /> Notes
                             </TabsTrigger>
                         </TabsList>
 
@@ -261,6 +265,10 @@ export default function ProjectManager() {
 
                         <TabsContent value="feeding">
                             <FeedingGroupManager feedingGroups={feedingGroups} geckos={geckos} onUpdate={loadData} />
+                        </TabsContent>
+
+                        <TabsContent value="notes">
+                            <StickyNotes />
                         </TabsContent>
                     </Tabs>
                 )}
