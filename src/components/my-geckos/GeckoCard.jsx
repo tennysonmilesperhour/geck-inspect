@@ -9,7 +9,7 @@ import { GeckoEvent } from '@/entities/all';
 
 const DEFAULT_GECKO_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
 
-export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [], onView, onEdit }) {
+export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [], onView, onEdit, isOwner = true }) {
   const feedingGroup = feedingGroups.find(g => g.id === gecko.feeding_group_id);
   // Find the latest weight for this gecko from the passed weightRecords
   const latestWeight = React.useMemo(() => {
@@ -90,14 +90,16 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
             <Eye className="w-4 h-4" />
             <span className="hidden sm:inline sm:ml-1">View</span>
           </Button>
-          <Button
-            size="sm"
-            onClick={handleEditClick}
-            className="bg-white/90 hover:bg-white text-gray-900 font-semibold shadow-lg backdrop-blur-sm text-xs h-8 w-8 sm:w-auto sm:px-3"
-          >
-            <Edit className="w-4 h-4" />
-            <span className="hidden sm:inline sm:ml-1">Edit</span>
-          </Button>
+          {isOwner && (
+            <Button
+              size="sm"
+              onClick={handleEditClick}
+              className="bg-white/90 hover:bg-white text-gray-900 font-semibold shadow-lg backdrop-blur-sm text-xs h-8 w-8 sm:w-auto sm:px-3"
+            >
+              <Edit className="w-4 h-4" />
+              <span className="hidden sm:inline sm:ml-1">Edit</span>
+            </Button>
+          )}
         </div>
       </div>
 
@@ -126,7 +128,10 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
               <span className="font-semibold">{latestWeight}g</span>
             </div>
           ) : (
-            <div className="text-slate-500 text-xs">No weight</div>
+            <div className="flex items-center gap-1.5 text-slate-400">
+              <Weight className="w-3 h-3" />
+              <span className="font-semibold">0g</span>
+            </div>
           )}
           {gecko.hatch_date && (
             <div className="flex items-center gap-1.5 text-slate-400">
