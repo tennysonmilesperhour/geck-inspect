@@ -501,13 +501,6 @@ export default function MyProfile() {
                                         levelKey="geckos"
                                     />
                                     <AchievementProgress 
-                                        title="AI Training Level"
-                                        icon={<ImageIcon className="w-5 h-5 text-blue-400" />}
-                                        currentCount={userStats.images}
-                                        levels={EXPERT_LEVELS}
-                                        levelKey="points"
-                                    />
-                                    <AchievementProgress 
                                         title="Community Level"
                                         icon={<MessageSquare className="w-5 h-5 text-purple-400" />}
                                         currentCount={userStats.forumPosts + userStats.comments} // Sum posts and comments for community points

@@ -74,18 +74,15 @@ export default function MorphIDSelector({ selectedMorphs = [], onMorphsChange })
                         <div className="flex flex-wrap gap-1 pb-2 border-b border-slate-700">
                             <span className="text-xs text-slate-400 mr-1 leading-6">Selected:</span>
                             {selectedMorphs.map(m => (
-                                <div
+                                <button
                                     key={m}
-                                    role="button"
-                                    tabIndex={0}
-                                    onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); toggleMorph(m); }}
-                                    onKeyDown={(e) => e.key === 'Enter' && toggleMorph(m)}
-                                    style={{ cursor: 'pointer', userSelect: 'none', display: 'inline-block' }}
+                                    type="button"
+                                    onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleMorph(m); }}
                                     className="text-xs bg-purple-600 text-white px-2 py-0.5 rounded-full hover:bg-red-600 transition-colors"
                                     title="Click to remove"
                                 >
                                     {m} ✕
-                                </div>
+                                </button>
                             ))}
                         </div>
                     )}
@@ -99,21 +96,18 @@ export default function MorphIDSelector({ selectedMorphs = [], onMorphsChange })
                                 {morphs.map(morph => {
                                     const isSelected = selectedMorphs.includes(morph);
                                     return (
-                                        <div
+                                        <button
                                             key={morph}
-                                            role="button"
-                                            tabIndex={0}
-                                            onMouseDown={(e) => { e.preventDefault(); e.stopPropagation(); toggleMorph(morph); }}
-                                            onKeyDown={(e) => e.key === 'Enter' && toggleMorph(morph)}
-                                            style={{ cursor: 'pointer', userSelect: 'none', display: 'inline-block' }}
+                                            type="button"
+                                            onClick={(e) => { e.preventDefault(); e.stopPropagation(); toggleMorph(morph); }}
                                             className={`text-xs px-2.5 py-1 rounded-full border transition-all ${
                                                 isSelected
-                                                    ? `${badge} text-white border-transparent shadow-sm scale-105`
-                                                    : 'bg-slate-700 text-slate-300 border-slate-600 hover:border-slate-400'
+                                                    ? `${badge} text-white border-transparent shadow-sm ring-2 ring-white/30`
+                                                    : 'bg-slate-700 text-slate-300 border-slate-600 hover:border-slate-400 hover:bg-slate-600'
                                             }`}
                                         >
-                                            {morph}
-                                        </div>
+                                            {isSelected ? '✓ ' : ''}{morph}
+                                        </button>
                                     );
                                 })}
                             </div>

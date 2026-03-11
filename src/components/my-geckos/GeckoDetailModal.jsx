@@ -319,32 +319,34 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                         </button>
                       ))}
                     </div>
-                    {/* Image display */}
-                    <div className="relative w-full rounded-lg overflow-hidden bg-slate-800">
-                      <img
-                        src={getSlotImage(slideshowIndex)}
-                        alt={`${gecko.name} at ${growthSlots[slideshowIndex]?.label}`}
-                        className="w-full h-auto object-contain max-h-72"
-                      />
-                      <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-                        {growthSlots[slideshowIndex]?.label}
+                    {/* Image display with navigation */}
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setSlideshowIndex(i => Math.max(0, i - 1))}
+                        disabled={slideshowIndex === 0}
+                        className="bg-slate-700 hover:bg-slate-600 text-white p-1.5 rounded-lg disabled:opacity-30 flex-shrink-0"
+                      >
+                        <ChevronLeft className="w-5 h-5" />
+                      </button>
+                      <div className="relative flex-1 rounded-lg overflow-hidden bg-slate-800">
+                        <img
+                          src={getSlotImage(slideshowIndex)}
+                          alt={`${gecko.name} at ${growthSlots[slideshowIndex]?.label}`}
+                          className="w-full h-auto object-contain max-h-64"
+                        />
+                        <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
+                          {growthSlots[slideshowIndex]?.label}
+                        </div>
                       </div>
-                      <div className="absolute bottom-2 right-2 flex gap-1">
-                        <button
-                          onClick={() => setSlideshowIndex(i => Math.max(0, i - 1))}
-                          disabled={slideshowIndex === 0}
-                          className="bg-black/60 text-white p-1 rounded disabled:opacity-30"
-                        >
-                          <ChevronLeft className="w-4 h-4" />
-                        </button>
-                        <button
-                          onClick={() => setSlideshowIndex(i => Math.min(growthSlots.length - 1, i + 1))}
-                          disabled={slideshowIndex === growthSlots.length - 1}
-                          className="bg-black/60 text-white p-1 rounded disabled:opacity-30"
-                        >
-                          <ChevronRight className="w-4 h-4" />
-                        </button>
-                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setSlideshowIndex(i => Math.min(growthSlots.length - 1, i + 1))}
+                        disabled={slideshowIndex === growthSlots.length - 1}
+                        className="bg-slate-700 hover:bg-slate-600 text-white p-1.5 rounded-lg disabled:opacity-30 flex-shrink-0"
+                      >
+                        <ChevronRight className="w-5 h-5" />
+                      </button>
                     </div>
                     {/* Image picker for this slot */}
                     <div>

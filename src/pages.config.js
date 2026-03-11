@@ -60,6 +60,7 @@ import Forum from './pages/Forum';
 import ForumPost from './pages/ForumPost';
 import Gallery from './pages/Gallery';
 import GeckoDetail from './pages/GeckoDetail';
+import GeneticCalculatorTool from './pages/GeneticCalculatorTool';
 import Home from './pages/Home';
 import LikedGeckos from './pages/LikedGeckos';
 import Lineage from './pages/Lineage';
@@ -81,7 +82,6 @@ import Settings from './pages/Settings';
 import Subscription from './pages/Subscription';
 import TrainModel from './pages/TrainModel';
 import Training from './pages/Training';
-import GeneticCalculatorTool from './pages/GeneticCalculatorTool';
 import __Layout from './Layout.jsx';
 
 
@@ -99,6 +99,7 @@ export const PAGES = {
     "ForumPost": ForumPost,
     "Gallery": Gallery,
     "GeckoDetail": GeckoDetail,
+    "GeneticCalculatorTool": GeneticCalculatorTool,
     "Home": Home,
     "LikedGeckos": LikedGeckos,
     "Lineage": Lineage,
@@ -120,7 +121,6 @@ export const PAGES = {
     "Subscription": Subscription,
     "TrainModel": TrainModel,
     "Training": Training,
-    "GeneticCalculatorTool": GeneticCalculatorTool,
 }
 
 export const pagesConfig = {
