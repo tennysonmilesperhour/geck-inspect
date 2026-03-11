@@ -68,7 +68,10 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
         if (!targetGroupId) return;
 
         // Only fetch geckos the current user owns (avoids permission errors on public geckos)
-        const myGeckos = await Gecko.list();
+        const { base44 } = await import('@/api/base44Client');
+        const currentUser = await base44.auth.me();
+        if (!currentUser) return;
+        const myGeckos = await Gecko.filter({ created_by: currentUser.email });
         const { auto_weight_min_g: min, auto_weight_max_g: max } = groupData;
         await Promise.all(myGeckos.map(async (g) => {
             const w = parseFloat(g.weight_grams);
