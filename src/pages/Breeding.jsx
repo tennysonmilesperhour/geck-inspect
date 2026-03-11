@@ -896,6 +896,22 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
                 </DialogContent>
             </Dialog>
             
+            {/* Genetics Calculator Modal */}
+            <Dialog open={isGeneticsOpen} onOpenChange={setIsGeneticsOpen}>
+                <DialogContent className="bg-slate-900 border-slate-700 text-slate-300 max-w-2xl max-h-[85vh] overflow-y-auto">
+                    <DialogHeader>
+                        <DialogTitle className="text-slate-100 flex items-center gap-2">
+                            <Dna className="w-5 h-5 text-purple-400" />
+                            Genetic Calculator — {sire?.name || 'N/A'} × {dam?.name || 'N/A'}
+                        </DialogTitle>
+                        <DialogDescription className="text-slate-400">
+                            Estimated offspring trait probabilities based on each parent's Morph ID tags.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <GeneticCalculator sire={sire} dam={dam} />
+                </DialogContent>
+            </Dialog>
+
             {/* Egg Check Day Modal */}
             <Dialog open={isEggCheckModalOpen} onOpenChange={setIsEggCheckModalOpen}>
                 <DialogContent className="bg-slate-900 border-slate-700 text-slate-300">
