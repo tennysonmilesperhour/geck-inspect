@@ -5,6 +5,9 @@ import { PlusCircle, Loader2, Search, Users, Grid3x3, List, ArrowUpDown, UserPlu
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import PageSettingsPanel from '../components/ui/PageSettingsPanel';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import GeckoCard from '../components/my-geckos/GeckoCard';
 import GeckoForm from '../components/my-geckos/GeckoForm';
 import CSVImportModal from '../components/my-geckos/CSVImportModal';
@@ -472,7 +475,38 @@ export default function MyGeckosPage() {
                         </h1>
                         <p className="text-slate-400 mt-1">Manage your geckos, track their lineage, and plan breedings.</p>
                     </div>
-                    <div className="flex gap-2">
+                    <div className="flex gap-2 items-center">
+                        <PageSettingsPanel title="Collection Settings">
+                            <div className="flex items-center justify-between">
+                                <Label className="text-slate-300 text-sm">Default View</Label>
+                                <div className="flex gap-1">
+                                    <button onClick={() => setViewMode('card')} className={`px-2 py-1 text-xs rounded ${viewMode === 'card' ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}>Card</button>
+                                    <button onClick={() => setViewMode('list')} className={`px-2 py-1 text-xs rounded ${viewMode === 'list' ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}>List</button>
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <Label className="text-slate-300 text-sm">Show Archived</Label>
+                                <Switch checked={showArchived} onCheckedChange={setShowArchived} />
+                            </div>
+                            <div>
+                                <Label className="text-slate-300 text-sm mb-1 block">Default Sort</Label>
+                                <Select value={sortBy} onValueChange={setSortBy}>
+                                    <SelectTrigger className="w-full h-8 text-xs">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="date_added">Date Added</SelectItem>
+                                        <SelectItem value="name">Name (A-Z)</SelectItem>
+                                        <SelectItem value="hatch_date_newest">Hatch Date (Newest)</SelectItem>
+                                        <SelectItem value="hatch_date_oldest">Hatch Date (Oldest)</SelectItem>
+                                        <SelectItem value="sex">Sex</SelectItem>
+                                        <SelectItem value="status">Status</SelectItem>
+                                        <SelectItem value="weight_heaviest">Weight (Heaviest)</SelectItem>
+                                        <SelectItem value="weight_lightest">Weight (Lightest)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </PageSettingsPanel>
                         <Button
                             variant="outline"
                             onClick={() => setShowArchived(!showArchived)}
