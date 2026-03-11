@@ -8,10 +8,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2, Users, MapPin, Globe, UserPlus, UserMinus, ShoppingCart, GitBranch, Heart, Instagram, Facebook, Youtube } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { createPageUrl } from '@/utils';
+import { useNavigate } from 'react-router-dom';
 import GeckoCard from '../components/my-geckos/GeckoCard';
 
 export default function PublicProfile() {
     const location = useLocation();
+    const navigate = useNavigate();
     const { toast } = useToast();
     const [profileUser, setProfileUser] = useState(null);
     const [userGeckos, setUserGeckos] = useState([]);
