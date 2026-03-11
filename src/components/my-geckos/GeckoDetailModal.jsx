@@ -51,10 +51,10 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
   }, [gecko]);
 
   // Get the image url for a given slot index (use assigned or default sequential)
-  const getSlotImage = (slotIdx) => {
+  const getSlotImage = React.useCallback((slotIdx) => {
     const imgIdx = slotImageMap[slotIdx] ?? Math.min(slotIdx, (gecko?.image_urls?.length ?? 1) - 1);
     return gecko?.image_urls?.[imgIdx] || 'https://i.imgur.com/sw9gnDp.png';
-  };
+  }, [slotImageMap, gecko?.image_urls]);
 
   const loadEventHistory = async () => {
     if (!gecko) return;
@@ -323,14 +323,15 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSlideshowIndex(Math.max(0, slideshowIndex - 1)); }}
+                        onPointerDown={(e) => { e.stopPropagation(); if (slideshowIndex > 0) setSlideshowIndex(slideshowIndex - 1); }}
                         disabled={slideshowIndex === 0}
-                        className="bg-slate-700 hover:bg-slate-600 text-white p-1.5 rounded-lg disabled:opacity-30 flex-shrink-0"
+                        className="bg-slate-700 hover:bg-slate-600 text-white p-1.5 rounded-lg disabled:opacity-30 flex-shrink-0 z-10"
                       >
                         <ChevronLeft className="w-5 h-5" />
                       </button>
-                      <div className="relative flex-1 rounded-lg overflow-hidden bg-slate-800">
+                      <div className="relative flex-1 rounded-lg overflow-hidden bg-slate-800 min-h-[160px]">
                         <img
+                          key={`slide-${slideshowIndex}-${getSlotImage(slideshowIndex)}`}
                           src={getSlotImage(slideshowIndex)}
                           alt={`${gecko.name} at ${growthSlots[slideshowIndex]?.label}`}
                           className="w-full h-auto object-contain max-h-64"
@@ -341,9 +342,9 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                       </div>
                       <button
                         type="button"
-                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSlideshowIndex(Math.min(growthSlots.length - 1, slideshowIndex + 1)); }}
+                        onPointerDown={(e) => { e.stopPropagation(); if (slideshowIndex < growthSlots.length - 1) setSlideshowIndex(slideshowIndex + 1); }}
                         disabled={slideshowIndex === growthSlots.length - 1}
-                        className="bg-slate-700 hover:bg-slate-600 text-white p-1.5 rounded-lg disabled:opacity-30 flex-shrink-0"
+                        className="bg-slate-700 hover:bg-slate-600 text-white p-1.5 rounded-lg disabled:opacity-30 flex-shrink-0 z-10"
                       >
                         <ChevronRight className="w-5 h-5" />
                       </button>
