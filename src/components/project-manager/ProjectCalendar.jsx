@@ -12,6 +12,7 @@ const EVENT_COLORS = {
 
 export default function ProjectCalendar({ tasks, projects, feedingGroups, otherReptiles = [] }) {
     const [currentMonth, setCurrentMonth] = useState(new Date());
+    const [expandedDay, setExpandedDay] = useState(null); // 'yyyy-MM-dd' or null
 
     const days = useMemo(() => {
         const start = startOfMonth(currentMonth);
@@ -124,6 +125,7 @@ export default function ProjectCalendar({ tasks, projects, feedingGroups, otherR
                     const key = format(day, 'yyyy-MM-dd');
                     const isToday = isSameDay(day, new Date());
                     const events = eventsForDay[key] || [];
+                    const hasMore = events.length > 3;
 
                     return (
                         <div
@@ -148,14 +150,68 @@ export default function ProjectCalendar({ tasks, projects, feedingGroups, otherR
                                         {ev.label}
                                     </div>
                                 ))}
-                                {events.length > 3 && (
-                                    <div className="text-[10px] text-slate-500">+{events.length - 3} more</div>
+                                {hasMore && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setExpandedDay(key)}
+                                        className="text-[10px] text-emerald-400 hover:text-emerald-300 hover:underline cursor-pointer w-full text-left"
+                                    >
+                                        +{events.length - 3} more
+                                    </button>
                                 )}
                             </div>
                         </div>
                     );
                 })}
             </div>
+
+            {/* Day expanded overlay */}
+            {expandedDay && (() => {
+                const events = eventsForDay[expandedDay] || [];
+                const dayDate = new Date(expandedDay + 'T12:00:00');
+                return (
+                    <div
+                        className="fixed inset-0 bg-black/60 z-50 flex items-center justify-center p-4"
+                        onClick={() => setExpandedDay(null)}
+                    >
+                        <div
+                            className="bg-slate-900 border border-slate-700 rounded-xl shadow-2xl w-full max-w-sm p-5"
+                            onClick={e => e.stopPropagation()}
+                        >
+                            <div className="flex items-center justify-between mb-4">
+                                <h3 className="text-slate-100 font-bold text-lg">
+                                    {format(dayDate, 'EEEE, MMMM d')}
+                                </h3>
+                                <button
+                                    type="button"
+                                    onClick={() => setExpandedDay(null)}
+                                    className="text-slate-400 hover:text-slate-200 text-xl leading-none"
+                                >
+                                    ✕
+                                </button>
+                            </div>
+                            <div className="space-y-1.5 max-h-80 overflow-y-auto">
+                                {events.map((ev, i) => (
+                                    <div
+                                        key={i}
+                                        className={`text-xs px-2 py-1.5 rounded text-white ${ev.bgColor ? '' : ev.color}`}
+                                        style={ev.bgColor ? { backgroundColor: ev.bgColor } : {}}
+                                    >
+                                        {ev.label}
+                                    </div>
+                                ))}
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setExpandedDay(null)}
+                                className="mt-4 w-full text-sm text-slate-400 hover:text-slate-200 border border-slate-700 rounded-lg py-2 hover:bg-slate-800 transition-colors"
+                            >
+                                Back to Calendar
+                            </button>
+                        </div>
+                    </div>
+                );
+            })()}
 
             {/* Legend */}
             <div className="flex flex-wrap gap-3 px-4 py-3 border-t border-slate-700">

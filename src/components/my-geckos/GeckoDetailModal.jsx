@@ -323,7 +323,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onClick={() => setSlideshowIndex(i => Math.max(0, i - 1))}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSlideshowIndex(Math.max(0, slideshowIndex - 1)); }}
                         disabled={slideshowIndex === 0}
                         className="bg-slate-700 hover:bg-slate-600 text-white p-1.5 rounded-lg disabled:opacity-30 flex-shrink-0"
                       >
@@ -341,7 +341,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                       </div>
                       <button
                         type="button"
-                        onClick={() => setSlideshowIndex(i => Math.min(growthSlots.length - 1, i + 1))}
+                        onClick={(e) => { e.preventDefault(); e.stopPropagation(); setSlideshowIndex(Math.min(growthSlots.length - 1, slideshowIndex + 1)); }}
                         disabled={slideshowIndex === growthSlots.length - 1}
                         className="bg-slate-700 hover:bg-slate-600 text-white p-1.5 rounded-lg disabled:opacity-30 flex-shrink-0"
                       >
