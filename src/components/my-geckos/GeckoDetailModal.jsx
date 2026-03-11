@@ -27,6 +27,8 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
   const [isPublic, setIsPublic] = useState(gecko?.is_public ?? true);
   const [slideshowIndex, setSlideshowIndex] = useState(0);
   const [showSlideshow, setShowSlideshow] = useState(false);
+  // slotImageMap: { [slotIndex]: imageIndex } — user-assigned image per milestone slot
+  const [slotImageMap, setSlotImageMap] = useState({});
 
   // Compute which growth milestone slots to show based on age
   const growthSlots = useMemo(() => {
@@ -47,6 +49,12 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
     }
     return slots;
   }, [gecko]);
+
+  // Get the image url for a given slot index (use assigned or default sequential)
+  const getSlotImage = (slotIdx) => {
+    const imgIdx = slotImageMap[slotIdx] ?? Math.min(slotIdx, (gecko?.image_urls?.length ?? 1) - 1);
+    return gecko?.image_urls?.[imgIdx] || 'https://i.imgur.com/sw9gnDp.png';
+  };
 
   const loadEventHistory = async () => {
     if (!gecko) return;
