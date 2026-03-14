@@ -762,6 +762,7 @@ export default function MyGeckosPage() {
                                         onSubmit={handleFormSubmit}
                                         onCancel={handleFormCancel}
                                         onDelete={handleDelete}
+                                        feedingGroups={feedingGroups}
                                     />
                                 </motion.div>
                             )}

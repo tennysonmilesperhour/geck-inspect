@@ -79,7 +79,7 @@ const initialFormData = {
 
 const DEFAULT_GECKO_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
 
-export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, onCancel, isHatching = false, onDelete, breedingPlan = null }) {
+export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, onCancel, isHatching = false, onDelete, breedingPlan = null, feedingGroups: feedingGroupsProp = null }) {
     const [formData, setFormData] = useState(initialFormData);
     const [isSaving, setIsSaving] = useState(false);
     // Change sire/dam to use text inputs instead of just IDs
