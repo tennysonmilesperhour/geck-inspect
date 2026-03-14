@@ -53,12 +53,6 @@ const STEPS = [
         color: "from-amber-600 to-orange-600"
     },
     {
-        title: "Marketplace",
-        description: "List your geckos for sale and browse geckos from breeders around the world. Message sellers directly and follow your favorite breeders.",
-        icon: "🛒",
-        color: "from-orange-600 to-red-600"
-    },
-    {
         title: "You're all set! 🎉",
         description: "Explore the app at your own pace. You can relaunch this tutorial anytime from the Tools section in the sidebar. Happy breeding!",
         icon: "🎉",
