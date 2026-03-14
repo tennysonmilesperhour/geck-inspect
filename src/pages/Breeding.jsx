@@ -610,13 +610,11 @@ function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate, onPlanDelete, 
                 });
             }
             
-            // Update egg check count and refresh last egg date
+            // Update egg check count
             const newCount = (plan.egg_check_count || 0) + 1;
             await BreedingPlan.update(plan.id, { egg_check_count: newCount });
             
-            setLastEggDate(newLayDate); // Update local state
-            setEggRefreshTrigger(prev => prev + 1); // Trigger egg reload in PlanDetails
-            onPlanUpdate(); // Refresh plan data
+            onPlanUpdate();
         } catch (error) {
             console.error("Failed to add eggs:", error);
         }
