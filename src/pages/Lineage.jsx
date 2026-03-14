@@ -414,29 +414,35 @@ export default function Lineage() {
     };
 
     // Render placeholder with its own unknown parents
-    const renderPlaceholderWithParents = (placeholder, generation, maxGen) => {
+    // uniqueKey tracks the full ancestry path so each node has its own identity
+    const renderPlaceholderWithParents = (placeholder, generation, maxGen, uniqueKey) => {
         const cardSize = getCardSize(generation);
+        // Only look up real placeholder data using the actual base geckoId
         const key = `${placeholder.geckoId}_${placeholder.parentType}`;
-        const placeholderData = placeholders[key];
+        const placeholderData = placeholder.isAncestorPadding ? null : placeholders[key];
         
         // If we need to show more generations, add unknown parents above
         if (generation < maxGen) {
+            const sireUniqueKey = `${uniqueKey}_sire`;
+            const damUniqueKey = `${uniqueKey}_dam`;
             return (
                 <div className="flex flex-col items-center">
-                    {/* Unknown grandparents */}
+                    {/* Unknown grandparents — marked as ancestor padding so they don't share data */}
                     <div className="flex gap-2 md:gap-4">
                         <div className="flex flex-col items-center">
                             {renderPlaceholderWithParents(
-                                { name: 'Unknown', isPlaceholder: true, geckoId: placeholder.geckoId, parentType: 'sire' },
+                                { name: 'Unknown', isPlaceholder: true, geckoId: sireUniqueKey, parentType: 'sire', isAncestorPadding: true },
                                 generation + 1,
-                                maxGen
+                                maxGen,
+                                sireUniqueKey
                             )}
                         </div>
                         <div className="flex flex-col items-center">
                             {renderPlaceholderWithParents(
-                                { name: 'Unknown', isPlaceholder: true, geckoId: placeholder.geckoId, parentType: 'dam' },
+                                { name: 'Unknown', isPlaceholder: true, geckoId: damUniqueKey, parentType: 'dam', isAncestorPadding: true },
                                 generation + 1,
-                                maxGen
+                                maxGen,
+                                damUniqueKey
                             )}
                         </div>
                     </div>
@@ -451,9 +457,9 @@ export default function Lineage() {
                     </div>
                     {/* This placeholder */}
                     <PlaceholderCardNode 
-                        parentName={placeholder.name}
-                        placeholderData={placeholderData}
-                        onEdit={() => handleEditPlaceholder(placeholder, placeholder.parentType)}
+                        parentName={placeholder.isAncestorPadding ? 'Unknown' : (placeholderData?.name || placeholder.name)}
+                        placeholderData={placeholder.isAncestorPadding ? null : placeholderData}
+                        onEdit={placeholder.isAncestorPadding ? undefined : () => handleEditPlaceholder(placeholder, placeholder.parentType)}
                         size={cardSize}
                     />
                 </div>
@@ -463,9 +469,9 @@ export default function Lineage() {
         // At max generation, just show the placeholder
         return (
             <PlaceholderCardNode 
-                parentName={placeholder.name}
-                placeholderData={placeholderData}
-                onEdit={() => handleEditPlaceholder(placeholder, placeholder.parentType)}
+                parentName={placeholder.isAncestorPadding ? 'Unknown' : (placeholderData?.name || placeholder.name)}
+                placeholderData={placeholder.isAncestorPadding ? null : placeholderData}
+                onEdit={placeholder.isAncestorPadding ? undefined : () => handleEditPlaceholder(placeholder, placeholder.parentType)}
                 size={cardSize}
             />
         );
