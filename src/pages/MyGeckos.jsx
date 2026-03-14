@@ -109,6 +109,7 @@ export default function MyGeckosPage() {
     });
     const [showUpgradeModal, setShowUpgradeModal] = useState(false);
     const [showArchived, setShowArchived] = useState(false);
+    const [archiveDialogGeckoId, setArchiveDialogGeckoId] = useState(null);
     const [feedingGroups, setFeedingGroups] = useState([]);
 
     useEffect(() => {
