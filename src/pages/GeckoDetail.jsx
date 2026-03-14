@@ -163,7 +163,7 @@ export default function GeckoDetail() {
                                 <button
                                     className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/80 text-white p-2 rounded-full z-10 disabled:opacity-30"
                                     disabled={lightboxIndex === 0}
-                                    onClick={(e) => { e.stopPropagation(); setLightboxIndex(i => Math.max(0, i - 1)); }}
+                                    onClick={(e) => { e.stopPropagation(); setLightboxIndex(prev => Math.max(0, prev - 1)); }}
                                 >
                                     <ChevronLeft className="w-6 h-6" />
                                 </button>
