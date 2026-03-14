@@ -62,18 +62,24 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
         loadEggs();
     }, [plan.id, refreshTrigger]);
 
-    const handleDeleteEgg = async (eggId) => {
-        if (window.confirm("Archive this egg record instead of permanently deleting?")) {
-            try {
-                await Egg.update(eggId, { 
-                    archived: true,
-                    archived_date: new Date().toISOString().split('T')[0]
-                });
-                loadEggs();
-            } catch (error) {
-                console.error("Failed to archive egg:", error);
-            }
+    const [eggToDelete, setEggToDelete] = useState(null);
+
+    const handleDeleteEgg = (eggId) => {
+        setEggToDelete(eggId);
+    };
+
+    const handleConfirmDeleteEgg = async () => {
+        if (!eggToDelete) return;
+        try {
+            await Egg.update(eggToDelete, { 
+                archived: true,
+                archived_date: new Date().toISOString().split('T')[0]
+            });
+            loadEggs();
+        } catch (error) {
+            console.error("Failed to archive egg:", error);
         }
+        setEggToDelete(null);
     };
 
     const handleAddNewEggs = async (count) => {
