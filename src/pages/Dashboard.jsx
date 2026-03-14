@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from "react";
 import { User, Gecko, GeckoImage, ForumPost, GeckoOfTheDay as GotdEntity } from "@/entities/all"; // Renamed GeckoOfTheDay to avoid conflict
-import { BarChart3, Users, GitBranch, Image as ImageIcon, MessageSquare, Star, Sparkles, Eye } from 'lucide-react';
+import { base44 } from '@/api/base44Client';
+import { BarChart3, Users, GitBranch, Image as ImageIcon, MessageSquare, Star, Sparkles, Eye, Newspaper } from 'lucide-react';
 import StatsCard from "../components/dashboard/StatsCard";
 import RecentActivity from "../components/dashboard/RecentActivity";
 import TrainingProgress from "../components/dashboard/TrainingProgress";
 import { default as GeckoOfTheDayComponent } from '../components/dashboard/GeckoOfTheDay';
-import ImageDetailModal from '../components/gallery/ImageDetailModal'; // Added import for ImageDetailModal
+import ImageDetailModal from '../components/gallery/ImageDetailModal';
+import ChangeLogModal from '../components/changelog/ChangeLogModal';
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -18,12 +20,33 @@ export default function Dashboard() {
     const [stats, setStats] = useState({ users: 0, geckos: 0, images: 0, posts: 0, verifiedImages: 0 });
     const [isLoading, setIsLoading] = useState(true);
     const [user, setUser] = useState(null);
-    const [users, setUsers] = useState([]); // Added users state
+    const [users, setUsers] = useState([]);
     const [geckoOfTheDay, setGeckoOfTheDay] = useState(null);
-    const [fallbackGecko, setFallbackGecko] = useState(null); // Added fallbackGecko state
+    const [fallbackGecko, setFallbackGecko] = useState(null);
     const [recentImages, setRecentImages] = useState([]);
     const [allImages, setAllImages] = useState([]);
-    const [selectedImageData, setSelectedImageData] = useState(null); // Added selectedImageData state
+    const [selectedImageData, setSelectedImageData] = useState(null);
+    const [showChangelog, setShowChangelog] = useState(false);
+    const [changelogGlowing, setChangelogGlowing] = useState(false);
+
+    // Check if there's an unread published changelog
+    useEffect(() => {
+        const checkUnread = async () => {
+            try {
+                const latest = await base44.entities.ChangeLog.filter({ is_published: true }, '-published_date', 1);
+                if (latest && latest.length > 0) {
+                    const lastRead = localStorage.getItem('changelog_last_read');
+                    if (!lastRead || new Date(latest[0].published_date) > new Date(lastRead)) {
+                        setChangelogGlowing(true);
+                    }
+                }
+            } catch (e) {}
+        };
+        checkUnread();
+        const handler = () => setChangelogGlowing(false);
+        window.addEventListener('changelog_read', handler);
+        return () => window.removeEventListener('changelog_read', handler);
+    }, []);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -110,22 +133,35 @@ export default function Dashboard() {
                                 Welcome back to your gecko universe. Here's what's happening in the community.
                             </p>
                         </div>
-                        {user && (
-                            <div className="flex gap-3">
-                                <Link to={createPageUrl('MyGeckos')}>
-                                    <Button variant="outline" className="border-gecko-border text-gecko-text hover:bg-gecko-hover backdrop-blur-sm transition-all duration-300 hover:scale-105">
-                                        <Users className="w-4 h-4 mr-2" />
-                                        My Collection
-                                    </Button>
-                                </Link>
-                                <Link to={createPageUrl('Training')}>
-                                    <Button className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold shadow-lg gecko-glow transition-all duration-300 hover:scale-105">
-                                        <Sparkles className="w-4 h-4 mr-2" />
-                                        Train AI Model
-                                    </Button>
-                                </Link>
-                            </div>
-                        )}
+                        <div className="flex gap-3 flex-wrap">
+                            <Button
+                                variant="outline"
+                                onClick={() => setShowChangelog(true)}
+                                className={`border-gecko-border text-gecko-text hover:bg-gecko-hover backdrop-blur-sm transition-all duration-300 hover:scale-105 relative ${changelogGlowing ? 'ring-2 ring-emerald-400 shadow-[0_0_16px_4px_rgba(52,211,153,0.5)] animate-pulse' : ''}`}
+                            >
+                                <Newspaper className="w-4 h-4 mr-2" />
+                                What's New
+                                {changelogGlowing && (
+                                    <span className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-slate-950" />
+                                )}
+                            </Button>
+                            {user && (
+                                <>
+                                    <Link to={createPageUrl('MyGeckos')}>
+                                        <Button variant="outline" className="border-gecko-border text-gecko-text hover:bg-gecko-hover backdrop-blur-sm transition-all duration-300 hover:scale-105">
+                                            <Users className="w-4 h-4 mr-2" />
+                                            My Collection
+                                        </Button>
+                                    </Link>
+                                    <Link to={createPageUrl('Training')}>
+                                        <Button className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold shadow-lg gecko-glow transition-all duration-300 hover:scale-105">
+                                            <Sparkles className="w-4 h-4 mr-2" />
+                                            Train AI Model
+                                        </Button>
+                                    </Link>
+                                </>
+                            )}
+                        </div>
                     </div>
 
                     {/* Enhanced stats grid */}
@@ -229,6 +265,7 @@ export default function Dashboard() {
                     onClose={() => setSelectedImageData(null)}
                 />
             )}
+            <ChangeLogModal isOpen={showChangelog} onClose={() => setShowChangelog(false)} />
         </div>
     );
 }
