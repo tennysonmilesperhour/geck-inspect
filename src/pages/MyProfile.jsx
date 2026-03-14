@@ -157,16 +157,18 @@ export default function MyProfile() {
                 setUser(currentUser);
                 syncEditData(currentUser);
 
-                // Load user badges and geckos
-                const [badges, geckos, plans] = await Promise.all([
+                // Load user badges, geckos, and weight records
+                const [badges, geckos, plans, weights] = await Promise.all([
                     UserBadge.filter({ user_email: currentUser.email }),
                     Gecko.filter({ created_by: currentUser.email }),
-                    BreedingPlan.filter({ created_by: currentUser.email }).catch(() => [])
+                    BreedingPlan.filter({ created_by: currentUser.email }).catch(() => []),
+                    WeightRecord.filter({ created_by: currentUser.email }).catch(() => [])
                 ]);
                 
                 setUserBadges(badges);
                 setUserGeckos(geckos);
                 setBreedingPlans(plans);
+                setWeightRecords(weights);
                 
                 // Categorize geckos - geckos can appear in multiple categories
                 setForSaleGeckos(geckos.filter(g => g.status === 'For Sale'));
