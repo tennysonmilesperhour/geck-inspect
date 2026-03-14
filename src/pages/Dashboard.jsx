@@ -46,8 +46,8 @@ export default function Dashboard() {
                 setRecentImages(recentImagesData);
                 
                 setStats({
-                    users: usersData.length, // Use usersData for stats
-                    geckos: geckos.length,
+                    users: usersData.length,
+                    geckos: geckos.filter(g => !g.archived && g.status !== 'Sold').length,
                     images: allGeckoImages.length,
                     verifiedImages: allGeckoImages.filter(img => img.verified).length,
                     posts: posts.length,
