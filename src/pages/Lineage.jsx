@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
 import { Gecko, User, BreedingPlan, LineagePlaceholder } from '@/entities/all';
-import { Loader2, Users, Search, ZoomIn, ZoomOut, GitBranch, Heart, Users2, Edit2, Plus } from 'lucide-react';
+import { base44 as base44Client } from '@/api/base44Client';
+import { Loader2, Users, Search, ZoomIn, ZoomOut, GitBranch, Heart, Users2, Edit2, Plus, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -156,6 +157,7 @@ export default function Lineage() {
         breeder_website: '',
         notes: ''
     });
+    const [isUploadingImage, setIsUploadingImage] = useState(false);
 
     // Pinch-to-zoom handlers
     const handleTouchStart = (e) => {
@@ -329,6 +331,18 @@ export default function Lineage() {
             breeder_website: existing?.breeder_website || '',
             notes: existing?.notes || ''
         });
+    };
+
+    const handlePlaceholderImageUpload = async (file) => {
+        if (!file) return;
+        setIsUploadingImage(true);
+        try {
+            const { file_url } = await base44Client.integrations.Core.UploadFile({ file });
+            setPlaceholderForm(f => ({ ...f, image_url: file_url }));
+        } catch (error) {
+            console.error('Failed to upload image:', error);
+        }
+        setIsUploadingImage(false);
     };
 
     const handleSavePlaceholder = async () => {
@@ -648,7 +662,7 @@ export default function Lineage() {
             </main>
             
             {/* Placeholder Edit Modal */}
-            <Dialog open={!!editingPlaceholder} onOpenChange={() => setEditingPlaceholder(null)}>
+            <Dialog open={!!editingPlaceholder} onOpenChange={(open) => { if (!open) setEditingPlaceholder(null); }}>
                 <DialogContent className="bg-slate-900 border-slate-700 text-slate-200 z-[9999]">
                     <DialogHeader>
                         <DialogTitle>Edit Parent Info: {editingPlaceholder?.name || 'Unknown'}</DialogTitle>
@@ -664,13 +678,30 @@ export default function Lineage() {
                             />
                         </div>
                         <div>
-                            <Label className="text-slate-300">Image URL (optional)</Label>
-                            <Input
-                                value={placeholderForm.image_url}
-                                onChange={e => setPlaceholderForm({...placeholderForm, image_url: e.target.value})}
-                                placeholder="https://..."
-                                className="bg-slate-800 border-slate-600 text-slate-100"
-                            />
+                            <Label className="text-slate-300">Photo</Label>
+                            {placeholderForm.image_url && (
+                                <img src={placeholderForm.image_url} alt="preview" className="w-20 h-20 object-cover rounded mb-2 border border-slate-600" />
+                            )}
+                            <div className="flex gap-2">
+                                <Input
+                                    value={placeholderForm.image_url}
+                                    onChange={e => setPlaceholderForm({...placeholderForm, image_url: e.target.value})}
+                                    placeholder="Paste image URL..."
+                                    className="bg-slate-800 border-slate-600 text-slate-100 flex-1"
+                                />
+                                <label className="cursor-pointer">
+                                    <input
+                                        type="file"
+                                        accept="image/*"
+                                        className="sr-only"
+                                        onChange={e => handlePlaceholderImageUpload(e.target.files[0])}
+                                    />
+                                    <div className={`flex items-center gap-1 px-3 py-2 rounded-md border border-slate-600 bg-slate-800 hover:bg-slate-700 text-slate-300 text-sm h-9 ${isUploadingImage ? 'opacity-50' : ''}`}>
+                                        {isUploadingImage ? <Loader2 className="w-4 h-4 animate-spin" /> : <Upload className="w-4 h-4" />}
+                                        Upload
+                                    </div>
+                                </label>
+                            </div>
                         </div>
                         <div>
                             <Label className="text-slate-300">Breeder Name</Label>
