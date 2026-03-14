@@ -1378,6 +1378,15 @@ function LayoutContent({ children, currentPageName }) {
             
             {renderNavSection(navItems.collection, "Collection")}
             {renderNavSection(navItems.tools, "Tools")}
+            <div className="mb-2 px-2">
+              <button
+                onClick={() => setShowTutorial(true)}
+                className="group flex items-center w-full rounded-md px-2 py-2 text-xs font-medium transition-colors duration-200 sidebar-nav-item text-gray-600 dark:text-gray-300 hover:bg-sage-50 dark:hover:bg-gray-700 hover:text-sage-900 dark:hover:text-white"
+              >
+                <GraduationCap className="mr-2 h-5 w-5 flex-shrink-0" />
+                App Tutorial
+              </button>
+            </div>
             {renderNavSection(navItems.public)}
             {user?.role === 'admin' && (
               <div className="mb-4">
@@ -1518,6 +1527,15 @@ function LayoutContent({ children, currentPageName }) {
 
               {renderNavSection(navItems.collection, "Collection")}
               {renderNavSection(navItems.tools, "Tools")}
+              <div className="mb-2 px-2">
+                <button
+                  onClick={() => setShowTutorial(true)}
+                  className="group flex items-center w-full rounded-md px-2 py-2 text-xs font-medium transition-colors duration-200 sidebar-nav-item text-gray-600 dark:text-gray-300 hover:bg-sage-50 dark:hover:bg-gray-700 hover:text-sage-900 dark:hover:text-white"
+                >
+                  <GraduationCap className="mr-2 h-5 w-5 flex-shrink-0" />
+                  App Tutorial
+                </button>
+              </div>
               {renderNavSection(navItems.public)}
               {user?.role === 'admin' && (
                 <div className="mb-4">
@@ -1675,6 +1693,7 @@ function LayoutContent({ children, currentPageName }) {
 
           </main>
           </div>
+          <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
           </>
           );
           }
