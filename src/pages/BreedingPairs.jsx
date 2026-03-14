@@ -18,28 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-
-// Helper function for Gecko ID generation
-const generateNextGeckoId = async (user, allGeckos, sire = null, dam = null) => {
-    if (sire && dam) {
-        // ID for hatched geckos
-        const sireCode = (sire.gecko_id_code || sire.name.substring(0, 3)).toUpperCase().replace(/[^A-Z0-9]/g, '');
-        const damCode = (dam.gecko_id_code || dam.name.substring(0, 3)).toUpperCase().replace(/[^A-Z0-9]/g, '');
-        const prefix = `${sireCode}x${damCode}-`;
-
-        const siblings = allGeckos.filter(g => g.sire_id === sire.id && g.dam_id === dam.id);
-        const nextId = siblings.length + 1;
-        return `${prefix}${String(nextId).padStart(2, '0')}`;
-    } else {
-        // ID for manually added geckos (founders)
-        const userPrefix = (user?.breeder_name || user?.email.split('@')[0] || 'GECK')
-            .substring(0, 3).toUpperCase().replace(/[^A-Z0-9]/g, '');
-
-        const founderGeckos = allGeckos.filter(g => !g.sire_id && !g.dam_id && g.gecko_id_code?.startsWith(userPrefix));
-        const nextId = founderGeckos.length + 1;
-        return `${userPrefix}-${String(nextId).padStart(3, '0')}`;
-    }
-};
+import { generateHatchedGeckoId, generateFounderGeckoId } from '@/utils/geckoIdUtils';
 
 // Helper to generate Google Calendar link
 const createGoogleCalendarLink = (title, start, end, description, location) => {
@@ -106,7 +85,9 @@ export default function BreedingPairsPage() {
 
         try {
             // Auto-generate the new gecko's ID
-            const newGeckoIdCode = await generateNextGeckoId(user, geckos, sire, dam);
+            const siblings = geckos.filter(g => g.sire_id === sire.id && g.dam_id === dam.id);
+            const offspringNumber = siblings.length + 1;
+            const newGeckoIdCode = generateHatchedGeckoId(sire, dam, offspringNumber);
 
             // Create new gecko with auto-populated fields
             const newGecko = await Gecko.create({

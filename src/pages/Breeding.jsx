@@ -33,6 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { format, addDays, addMonths, differenceInDays } from 'date-fns';
 import { generateCalendarEvent } from '@/functions/generateCalendarEvent';
+import { generateHatchedGeckoId } from '@/utils/geckoIdUtils';
 
 const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
 
@@ -124,9 +125,7 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
                     const geckoName = `${sire?.name || 'Unknown'} x ${dam?.name || 'Unknown'} #${offspringNumber}`;
                     
                     // Generate ID code from parent IDs
-                    const sireCode = sire?.gecko_id_code || 'UNK';
-                    const damCode = dam?.gecko_id_code || 'UNK';
-                    const geckoIdCode = `${sireCode}x${damCode}-${offspringNumber}`;
+                    const geckoIdCode = generateHatchedGeckoId(sire, dam, offspringNumber);
                     
                     // Calculate incubation days
                     const incubationDays = differenceInDays(new Date(hatchDate), new Date(currentEgg.lay_date));
