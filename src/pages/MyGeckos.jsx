@@ -15,6 +15,7 @@ import GeckoForm from '../components/my-geckos/GeckoForm';
 import CSVImportModal from '../components/my-geckos/CSVImportModal';
 import GeckoDetailModal from '../components/my-geckos/GeckoDetailModal';
 import GeckoFilters from '../components/my-geckos/GeckoFilters';
+import ArchiveReasonDialog from '../components/my-geckos/ArchiveReasonDialog';
 import { toast } from '@/components/ui/use-toast';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
