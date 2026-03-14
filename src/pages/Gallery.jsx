@@ -111,7 +111,7 @@ export default function Gallery() {
 
                 {isLoading ? (
                     <div className="flex justify-center items-center h-64">
-                        <Loader2 className="w-12 h-12 text-emerald-500 animate-spin" />
+                        <LoadingSpinner />
                     </div>
                 ) : displayedImages.length > 0 ? (
                     <>
@@ -139,11 +139,11 @@ export default function Gallery() {
                         )}
                     </>
                 ) : (
-                    <div className="text-center py-20 bg-slate-900 rounded-lg">
-                        <ImageOff className="w-16 h-16 mx-auto text-slate-500 mb-4" />
-                        <h3 className="text-xl font-semibold text-slate-300">No Images Found</h3>
-                        <p className="text-slate-400">Try adjusting your filters or check back later.</p>
-                    </div>
+                    <EmptyState
+                        icon={ImageOff}
+                        title="No Images Found"
+                        message="Try adjusting your filters or check back later."
+                    />
                 )}
 
                 {selectedImageData && (

@@ -1512,17 +1512,12 @@ export default function BreedingPage() {
                             </div>
                             
                             {activePlans.length === 0 ? (
-                                <Card className="bg-slate-900 border-slate-700">
-                                    <CardContent className="text-center py-20">
-                                        <Heart className="w-16 h-16 mx-auto text-slate-500 mb-4" />
-                                        <h3 className="text-xl font-semibold text-slate-300 mb-2">No Active Breeding Plans</h3>
-                                        <p className="text-slate-400 mb-6">Create your first breeding plan to get started!</p>
-                                        <Button onClick={() => setIsModalOpen(true)} className="bg-emerald-600 hover:bg-emerald-700">
-                                            <PlusCircle className="w-5 h-5 mr-2" />
-                                            Create Breeding Plan
-                                        </Button>
-                                    </CardContent>
-                                </Card>
+                                <EmptyState
+                                    icon={Heart}
+                                    title="No Active Breeding Plans"
+                                    message="Create your first breeding plan to get started!"
+                                    action={{ label: "Create Breeding Plan", onClick: () => setIsModalOpen(true) }}
+                                />
                             ) : (
                                 <>
                                     <div className="flex justify-end mb-4">
@@ -1598,13 +1593,11 @@ export default function BreedingPage() {
                             </div>
                             
                             {archivedPlans.length === 0 ? (
-                                <Card className="bg-slate-900 border-slate-700">
-                                    <CardContent className="text-center py-20">
-                                        <Archive className="w-16 h-16 mx-auto text-slate-500 mb-4" />
-                                        <h3 className="text-xl font-semibold text-slate-300 mb-2">No Archived Plans</h3>
-                                        <p className="text-slate-400">Archived breeding plans will appear here organized by season.</p>
-                                    </CardContent>
-                                </Card>
+                                <EmptyState
+                                    icon={Archive}
+                                    title="No Archived Plans"
+                                    message="Archived breeding plans will appear here organized by season."
+                                />
                             ) : (
                                 <>
                                     <div className="flex justify-end mb-4">

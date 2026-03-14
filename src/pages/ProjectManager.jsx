@@ -181,16 +181,12 @@ export default function ProjectManager() {
 
                         <TabsContent value="projects">
                             {projects.length === 0 ? (
-                                <Card className="bg-slate-900 border-slate-700">
-                                    <CardContent className="text-center py-20">
-                                        <FolderKanban className="w-16 h-16 mx-auto text-slate-500 mb-4" />
-                                        <h3 className="text-xl font-semibold text-slate-300 mb-2">No Projects Yet</h3>
-                                        <p className="text-slate-400 mb-6">Create your first project to get organized!</p>
-                                        <Button onClick={() => setIsProjectModalOpen(true)} className="bg-emerald-600 hover:bg-emerald-700">
-                                            <PlusCircle className="w-5 h-5 mr-2" /> Create Project
-                                        </Button>
-                                    </CardContent>
-                                </Card>
+                                <EmptyState
+                                    icon={FolderKanban}
+                                    title="No Projects Yet"
+                                    message="Create your first project to get organized!"
+                                    action={{ label: "Create Project", onClick: () => setIsProjectModalOpen(true) }}
+                                />
                             ) : (
                                 <div className="grid grid-cols-1 gap-4">
                                     {projects.map(project => {

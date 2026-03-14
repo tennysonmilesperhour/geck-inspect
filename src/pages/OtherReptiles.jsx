@@ -218,7 +218,7 @@ export default function OtherReptilesPage() {
     if (!user && !isLoading) {
         const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
         return (
-            <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center"><Loader2 className="w-12 h-12 text-emerald-500 animate-spin" /></div>}>
+            <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center"><LoadingSpinner /></div>}>
                 <LoginPortal requiredFeature="Other Reptiles Collection" />
             </Suspense>
         );
@@ -279,7 +279,7 @@ export default function OtherReptilesPage() {
 
                 {isLoading ? (
                     <div className="text-center py-20">
-                        <Loader2 className="w-12 h-12 text-emerald-500 animate-spin mx-auto" />
+                        <LoadingSpinner />
                     </div>
                 ) : (
                     <>
@@ -306,11 +306,11 @@ export default function OtherReptilesPage() {
                                     </AnimatePresence>
                                 </div>
                             ) : (
-                                <div className="text-center py-20 bg-slate-900 rounded-lg">
-                                    <Users className="w-16 h-16 mx-auto text-slate-500 mb-4" />
-                                    <h3 className="text-xl font-semibold text-slate-300">No Reptiles Found</h3>
-                                    <p className="text-slate-400 mt-2">Add your first reptile to get started!</p>
-                                </div>
+                                <EmptyState
+                                    icon={Users}
+                                    title="No Reptiles Found"
+                                    message="Add your first reptile to get started!"
+                                />
                             )
                         )}
 

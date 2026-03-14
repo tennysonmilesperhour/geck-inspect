@@ -210,7 +210,7 @@ export default function MarketplaceBuyPage() {
 
                 {isLoading ? (
                     <div className="flex items-center justify-center py-20">
-                        <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+                        <LoadingSpinner />
                     </div>
                 ) : (
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
@@ -228,10 +228,11 @@ export default function MarketplaceBuyPage() {
                     </div>
                 )}
                 { !isLoading && filteredGeckos.length === 0 && (
-                    <div className="text-center py-16 col-span-full bg-slate-900 rounded-lg">
-                        <h3 className="text-xl font-semibold text-slate-300">No geckos found</h3>
-                        <p className="text-slate-400 mt-2">Try adjusting your search or check back later!</p>
-                    </div>
+                    <EmptyState
+                        icon={ShoppingBag}
+                        title="No Geckos Found"
+                        message="Try adjusting your search or check back later!"
+                    />
                 )}
             </div>
         </div>
