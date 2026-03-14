@@ -83,9 +83,13 @@ export default function PublicProfile() {
                     }
                 }
                 
-                // Fetch user's public geckos
-                const geckos = await Gecko.filter({ created_by: user.email, is_public: true });
+                // Fetch user's public geckos and their weight records
+                const [geckos, weights] = await Promise.all([
+                    Gecko.filter({ created_by: user.email, is_public: true }),
+                    WeightRecord.filter({ created_by: user.email }).catch(() => [])
+                ]);
                 setUserGeckos(geckos);
+                setWeightRecords(weights);
                 
                 // Categorize geckos - geckos can appear in multiple categories
                 setForSaleGeckos(geckos.filter(g => g.status === 'For Sale'));
