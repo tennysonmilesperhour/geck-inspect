@@ -154,7 +154,7 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
         
         try {
             await Egg.update(eggId, updateData);
-            loadEggs();
+            onPlanUpdate();
         } catch (error) {
             console.error("Failed to update egg status:", error);
         }
