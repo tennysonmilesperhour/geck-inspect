@@ -121,11 +121,6 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
 
       const createdRecord = await WeightRecord.create(newRecord);
       
-      // Also update the gecko's current weight
-      await Gecko.update(gecko.id, {
-        weight_grams: weightValue
-      });
-      
       setWeightRecords([createdRecord, ...weightRecords]);
       setNewWeight('');
       setShowAddWeight(false);

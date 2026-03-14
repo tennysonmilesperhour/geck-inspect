@@ -361,9 +361,6 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                 notes: formData.notes,
                 status: formData.status,
                 image_urls: formData.image_urls,
-                // Fix weight saving - ensure proper number conversion
-                weight_grams: formData.weight_grams !== '' && formData.weight_grams !== null ? 
-                             parseFloat(formData.weight_grams) : null,
                 asking_price: formData.asking_price !== '' && formData.asking_price !== null ? 
                              parseFloat(formData.asking_price) : null,
                 image_crop_data: cropData // Save the crop data
@@ -392,10 +389,11 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                 savedGecko = await Gecko.update(gecko.id, dataToSave);
             }
 
-            // If a weight was provided, create a WeightRecord to keep history in sync
-            const weightValue = dataToSave.weight_grams;
-            const previousWeight = gecko?.weight_grams ? parseFloat(gecko.weight_grams) : null;
-            if (weightValue !== null && weightValue !== previousWeight) {
+            // If a weight was provided, always create a WeightRecord (WeightRecord is source of truth)
+            const weightValue = formData.weight_grams !== '' && formData.weight_grams !== null
+                ? parseFloat(formData.weight_grams)
+                : null;
+            if (weightValue !== null) {
                 await WeightRecord.create({
                     gecko_id: savedGecko.id,
                     weight_grams: weightValue,
