@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Card, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { format } from "date-fns";
-import { Upload, X, Trash2, DollarSign, Award, GitBranch, Loader2 } from "lucide-react";
+import { Upload, X, Trash2, DollarSign, Award, GitBranch, Loader2, ChevronDown } from "lucide-react";
 import { Switch } from '@/components/ui/switch';
 import { generateLineageCertificate } from '@/functions/generateLineageCertificate';
 import MorphIDSelector from './MorphIDSelector';
