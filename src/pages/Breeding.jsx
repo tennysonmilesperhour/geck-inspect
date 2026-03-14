@@ -1328,7 +1328,7 @@ export default function BreedingPage() {
         let filtered = plans.filter(plan => {
             const sire = geckos.find(g => g.id === plan.sire_id);
             const dam = geckos.find(g => g.id === plan.dam_id);
-            const searchLower = searchTerm.toLowerCase();
+            const searchLower = debouncedSearchTerm.toLowerCase();
             
             return (
                 sire?.name?.toLowerCase().includes(searchLower) ||
