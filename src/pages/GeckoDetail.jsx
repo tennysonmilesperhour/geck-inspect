@@ -6,7 +6,8 @@ import { createPageUrl } from '@/utils';
 import { format } from 'date-fns';
 import {
     Loader2, ArrowLeft, Calendar, GitBranch, Info, StickyNote,
-    DollarSign, LineChart as LineChartIcon, Mail, MapPin, Tag, User as UserIcon
+    DollarSign, LineChart as LineChartIcon, Mail, MapPin, Tag, User as UserIcon,
+    ChevronLeft, ChevronRight, X
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -24,6 +25,7 @@ export default function GeckoDetail() {
     const [currentUser, setCurrentUser] = useState(null);
     const [weightRecords, setWeightRecords] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [lightboxIndex, setLightboxIndex] = useState(null);
     const navigate = useNavigate();
 
     const urlParams = new URLSearchParams(window.location.search);
@@ -131,12 +133,48 @@ export default function GeckoDetail() {
                             <Card className="bg-slate-900 border-slate-700">
                                 <CardContent className="p-3">
                                     <div className="grid grid-cols-3 gap-1.5">
-                                        {gecko.image_urls.slice(1).map((url, i) => (
-                                            <img key={i} src={url} alt={`${gecko.name} ${i + 2}`} className="w-full aspect-square object-cover rounded" />
+                                        {gecko.image_urls.map((url, i) => (
+                                            <img
+                                                key={i}
+                                                src={url}
+                                                alt={`${gecko.name} ${i + 1}`}
+                                                className="w-full aspect-square object-cover rounded cursor-pointer hover:opacity-80 transition-opacity ring-0 hover:ring-2 hover:ring-emerald-500"
+                                                onClick={() => setLightboxIndex(i)}
+                                            />
                                         ))}
                                     </div>
                                 </CardContent>
                             </Card>
+                        )}
+
+                        {/* Lightbox */}
+                        {lightboxIndex !== null && gecko.image_urls?.length > 0 && (
+                            <div className="fixed inset-0 bg-black/90 z-50 flex items-center justify-center p-4" onClick={() => setLightboxIndex(null)}>
+                                <button className="absolute top-4 right-4 text-white hover:text-slate-300 z-10" onClick={() => setLightboxIndex(null)}>
+                                    <X className="w-8 h-8" />
+                                </button>
+                                <button
+                                    className="absolute left-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/80 text-white p-2 rounded-full z-10 disabled:opacity-30"
+                                    disabled={lightboxIndex === 0}
+                                    onClick={(e) => { e.stopPropagation(); setLightboxIndex(i => Math.max(0, i - 1)); }}
+                                >
+                                    <ChevronLeft className="w-6 h-6" />
+                                </button>
+                                <img
+                                    src={gecko.image_urls[lightboxIndex]}
+                                    alt={`${gecko.name} ${lightboxIndex + 1}`}
+                                    className="max-h-[85vh] max-w-full object-contain rounded-lg"
+                                    onClick={e => e.stopPropagation()}
+                                />
+                                <button
+                                    className="absolute right-4 top-1/2 -translate-y-1/2 bg-black/50 hover:bg-black/80 text-white p-2 rounded-full z-10 disabled:opacity-30"
+                                    disabled={lightboxIndex === gecko.image_urls.length - 1}
+                                    onClick={(e) => { e.stopPropagation(); setLightboxIndex(i => Math.min(gecko.image_urls.length - 1, i + 1)); }}
+                                >
+                                    <ChevronRight className="w-6 h-6" />
+                                </button>
+                                <div className="absolute bottom-4 text-slate-400 text-sm">{lightboxIndex + 1} / {gecko.image_urls.length}</div>
+                            </div>
                         )}
 
                         {/* Owner card */}
