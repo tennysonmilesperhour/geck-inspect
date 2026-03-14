@@ -518,33 +518,22 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         {/* Sire autocomplete */}
                         <div ref={sireRef} className="relative">
                             <Label htmlFor="sire_input">Sire (Father)</Label>
-                            <div className="relative">
+                            <div className="relative flex items-center">
                                 <Input
                                     id="sire_input"
                                     value={sireInput}
                                     onChange={(e) => { handleSireInputChange(e.target.value); setShowSireSuggestions(true); }}
                                     onFocus={() => setShowSireSuggestions(true)}
                                     onBlur={() => setTimeout(() => setShowSireSuggestions(false), 150)}
-                                    placeholder="Type name or click ▾ to browse"
+                                    placeholder="Type or browse males..."
                                     className="pr-8"
                                 />
-                                <button
-                                    type="button"
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
-                                    onMouseDown={(e) => { e.preventDefault(); setShowSireSuggestions(v => !v); }}
-                                >
-                                    <ChevronDown className="w-4 h-4" />
-                                </button>
+                                <ChevronDown
+                                    className="w-4 h-4 absolute right-2 text-slate-400 pointer-events-none"
+                                />
                             </div>
                             {showSireSuggestions && (
                                 <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-emerald-700 rounded-lg shadow-2xl z-[99999] max-h-48 overflow-y-auto">
-                                    <button
-                                        type="button"
-                                        className="w-full text-left px-3 py-2 text-sm text-slate-400 hover:bg-slate-700 italic"
-                                        onMouseDown={() => { setSireInput(''); setSireId(''); setShowSireSuggestions(false); }}
-                                    >
-                                        — None —
-                                    </button>
                                     {userGeckos.filter(g => g.sex === 'Male' && g.id !== gecko?.id && (
                                         !sireInput || g.name.toLowerCase().includes(sireInput.toLowerCase()) || g.gecko_id_code?.toLowerCase().includes(sireInput.toLowerCase())
                                     )).map(s => (
@@ -565,33 +554,22 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         {/* Dam autocomplete */}
                         <div ref={damRef} className="relative">
                             <Label htmlFor="dam_input">Dam (Mother)</Label>
-                            <div className="relative">
+                            <div className="relative flex items-center">
                                 <Input
                                     id="dam_input"
                                     value={damInput}
                                     onChange={(e) => { handleDamInputChange(e.target.value); setShowDamSuggestions(true); }}
                                     onFocus={() => setShowDamSuggestions(true)}
                                     onBlur={() => setTimeout(() => setShowDamSuggestions(false), 150)}
-                                    placeholder="Type name or click ▾ to browse"
+                                    placeholder="Type or browse females..."
                                     className="pr-8"
                                 />
-                                <button
-                                    type="button"
-                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
-                                    onMouseDown={(e) => { e.preventDefault(); setShowDamSuggestions(v => !v); }}
-                                >
-                                    <ChevronDown className="w-4 h-4" />
-                                </button>
+                                <ChevronDown
+                                    className="w-4 h-4 absolute right-2 text-slate-400 pointer-events-none"
+                                />
                             </div>
                             {showDamSuggestions && (
                                 <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-emerald-700 rounded-lg shadow-2xl z-[99999] max-h-48 overflow-y-auto">
-                                    <button
-                                        type="button"
-                                        className="w-full text-left px-3 py-2 text-sm text-slate-400 hover:bg-slate-700 italic"
-                                        onMouseDown={() => { setDamInput(''); setDamId(''); setShowDamSuggestions(false); }}
-                                    >
-                                        — None —
-                                    </button>
                                     {userGeckos.filter(g => g.sex === 'Female' && g.id !== gecko?.id && (
                                         !damInput || g.name.toLowerCase().includes(damInput.toLowerCase()) || g.gecko_id_code?.toLowerCase().includes(damInput.toLowerCase())
                                     )).map(d => (
