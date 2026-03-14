@@ -627,6 +627,7 @@ export default function MyGeckosPage() {
                     </div>
                 ) : (
                     <>
+                        <>
                         {filteredAndSortedGeckos.length > 0 ? (
                                 viewMode === 'card' ? (
                                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
@@ -746,6 +747,7 @@ export default function MyGeckosPage() {
                                 <p className="text-slate-400 mt-2">Add your first gecko to get started!</p>
                             </div>
                         }
+                        </>
 
                         <AnimatePresence>
                             {isFormOpen && (
