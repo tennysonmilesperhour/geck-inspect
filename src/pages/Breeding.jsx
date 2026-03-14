@@ -1289,7 +1289,7 @@ export default function BreedingPage() {
     };
 
     // Filter and sort breeding plans
-    const filterAndSortPlans = async (plans) => {
+    const filterAndSortPlans = (plans) => {
         // Filter by search term
         let filtered = plans.filter(plan => {
             const sire = geckos.find(g => g.id === plan.sire_id);
