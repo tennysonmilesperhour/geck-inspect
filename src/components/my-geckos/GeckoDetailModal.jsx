@@ -56,12 +56,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
     return gecko?.image_urls?.[imgIdx] || 'https://i.imgur.com/sw9gnDp.png';
   }, [slotImageMap, gecko?.image_urls]);
 
-  // The arrow navigation goes through the actual images list, not slots
-  const totalImages = gecko?.image_urls?.length ?? 0;
-  // currentImageIndex: which image is currently being displayed in the active slot
-  const currentImageIndex = slideshowIndex < totalImages
-    ? (slotImageMap[slideshowIndex] ?? Math.min(slideshowIndex, totalImages - 1))
-    : 0;
+
 
   const loadEventHistory = async () => {
     if (!gecko) return;
