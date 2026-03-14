@@ -168,7 +168,7 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
         try {
             await Egg.update(eggId, { hatch_date_actual: newDate });
             setEditingHatchDate(null);
-            loadEggs();
+            onPlanUpdate();
         } catch (error) {
             console.error("Failed to update hatch date:", error);
         }
