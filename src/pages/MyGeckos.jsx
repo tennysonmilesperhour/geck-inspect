@@ -460,11 +460,15 @@ export default function MyGeckosPage() {
 
     const searchFiltered = geckos
         .filter(gecko => showArchived ? gecko.archived : !gecko.archived)
-        .filter(gecko =>
-            gecko.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            gecko.gecko_id_code?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            gecko.morphs_traits?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
+        .filter(gecko => {
+            const term = searchTerm.toLowerCase();
+            return (
+                gecko.name.toLowerCase().includes(term) ||
+                gecko.gecko_id_code?.toLowerCase().includes(term) ||
+                gecko.morphs_traits?.toLowerCase().includes(term) ||
+                (gecko.morph_tags || []).some(tag => tag.toLowerCase().includes(term))
+            );
+        });
     
     const filteredAndSortedGeckos = getSortedGeckos(applyFilters(searchFiltered));
 
