@@ -270,23 +270,26 @@ export default function MyGeckosPage() {
         }
     };
 
-    const handleArchiveGecko = async (geckoId, shouldArchive) => {
-        try {
-            await retryWithBackoff(async () => {
-                return await Gecko.update(geckoId, {
-                    archived: shouldArchive,
-                    archived_date: shouldArchive ? new Date().toISOString().split('T')[0] : null
-                });
-            });
+    const handleArchiveGecko = async (geckoId, shouldArchive, reason) => {
+        // If archiving and no reason given yet, show dialog
+        if (shouldArchive && !reason) {
+            setArchiveDialogGeckoId(geckoId);
+            return;
+        }
 
-            if (user) {
-                const cacheKey = `geckos_${user.email}`;
-                geckosCache.invalidate(cacheKey);
-            }
+        try {
+            const updateData = shouldArchive
+                ? { archived: true, archived_date: new Date().toISOString().split('T')[0], archive_reason: reason || null }
+                : { archived: false, archived_date: null, archive_reason: null };
+
+            await retryWithBackoff(async () => Gecko.update(geckoId, updateData));
+
+            if (user) geckosCache.invalidate(`geckos_${user.email}`);
 
             await loadGeckos(true);
             setIsDetailModalOpen(false);
             setSelectedGecko(null);
+            setArchiveDialogGeckoId(null);
 
             toast({
                 title: shouldArchive ? "Gecko Archived" : "Gecko Unarchived",
@@ -294,12 +297,12 @@ export default function MyGeckosPage() {
             });
         } catch (error) {
             console.error("Failed to archive gecko:", error);
-            toast({
-                title: "Error",
-                description: "Failed to archive gecko. Please try again.",
-                variant: "destructive"
-            });
+            toast({ title: "Error", description: "Failed to archive gecko. Please try again.", variant: "destructive" });
         }
+    };
+
+    const handleArchiveReasonConfirm = (reason) => {
+        handleArchiveGecko(archiveDialogGeckoId, true, reason);
     };
 
     const handleFormSubmit = async (geckoData, isNew) => {
