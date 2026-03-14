@@ -1128,11 +1128,13 @@ export default function BreedingPage() {
                 return;
             }
             
-            const [geckosData, plansData] = await Promise.all([
+            const [geckosData, plansData, eggsData] = await Promise.all([
                 Gecko.filter({ created_by: currentUser.email }),
-                BreedingPlan.filter({ created_by: currentUser.email }, '-created_date')
+                BreedingPlan.filter({ created_by: currentUser.email }, '-created_date'),
+                Egg.filter({ created_by: currentUser.email })
             ]);
             setGeckos(geckosData);
+            setAllEggs(eggsData);
             setBreedingPlans(plansData.sort((a,b) => new Date(b.created_date) - new Date(a.created_date)));
         } catch (error) {
             console.error("Failed to load breeding data:", error);
