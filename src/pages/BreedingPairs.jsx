@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useCallback } from 'react';
 import { User, Gecko, BreedingPlan, Egg } from '@/entities/all';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -6,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { HeartHandshake, Plus, CalendarDays, Egg as EggIcon, Sparkles, Pencil, Trash2, Calendar } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -384,7 +384,16 @@ function EditBreedingPlanModal({ plan, males, females, onSave, onClose }) {
 }
 
 function BreedingPlanCard({ plan, sire, dam, eggs, onDataRefresh, onHatch, onEdit, onDelete }) {
-    const GeckoImagePlaceholder = ({ gender }) => (
+     const [planToDelete, setPlanToDelete] = useState(null);
+
+     const handleConfirmDelete = async () => {
+         if (planToDelete) {
+             await onDelete(planToDelete);
+             setPlanToDelete(null);
+         }
+     };
+
+     const GeckoImagePlaceholder = ({ gender }) => (
         <div className={`aspect-square w-full rounded-lg flex items-center justify-center ${gender === 'male' ? 'bg-blue-100' : 'bg-pink-100'}`}>
             <span className={`text-4xl font-bold ${gender === 'male' ? 'text-blue-400' : 'text-pink-400'}`}>{gender === 'male' ? '♂' : '♀'}</span>
         </div>
@@ -416,14 +425,30 @@ function BreedingPlanCard({ plan, sire, dam, eggs, onDataRefresh, onHatch, onEdi
                         >
                             <Pencil className="w-4 h-4" />
                         </Button>
-                        <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => onDelete(plan.id)}
-                            title="Delete Plan"
-                        >
-                            <Trash2 className="w-4 h-4" />
-                        </Button>
+                        <AlertDialog open={planToDelete === plan.id} onOpenChange={(open) => { if (!open) setPlanToDelete(null); }}>
+                             <Button
+                                 size="sm"
+                                 variant="destructive"
+                                 onClick={() => setPlanToDelete(plan.id)}
+                                 title="Delete Plan"
+                             >
+                                 <Trash2 className="w-4 h-4" />
+                             </Button>
+                             <AlertDialogContent className="bg-sage-50 border-sage-200">
+                                 <AlertDialogHeader>
+                                     <AlertDialogTitle className="text-sage-900">Delete this breeding plan?</AlertDialogTitle>
+                                     <AlertDialogDescription className="text-sage-700">
+                                         This will permanently delete this breeding plan and all associated eggs. This action cannot be undone.
+                                     </AlertDialogDescription>
+                                 </AlertDialogHeader>
+                                 <AlertDialogFooter>
+                                     <AlertDialogCancel className="border-sage-300 text-sage-900">Cancel</AlertDialogCancel>
+                                     <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-600 hover:bg-red-700 text-white">
+                                         Delete Plan
+                                     </AlertDialogAction>
+                                 </AlertDialogFooter>
+                             </AlertDialogContent>
+                         </AlertDialog>
                     </div>
                 </div>
             </CardHeader>
