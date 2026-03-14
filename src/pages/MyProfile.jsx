@@ -604,7 +604,7 @@ export default function MyProfile() {
                                     {forSaleGeckos.length > 0 ? (
                                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
                                             {forSaleGeckos.map(gecko => (
-                                                <GeckoCard key={gecko.id} gecko={gecko} isOwner={true} onView={(g) => navigate(createPageUrl(`GeckoDetail?id=${g.id}`))} onEdit={() => navigate(createPageUrl('MyGeckos'))} />
+                                                <GeckoCard key={gecko.id} gecko={gecko} weightRecords={weightRecords} isOwner={true} onView={(g) => navigate(createPageUrl(`GeckoDetail?id=${g.id}`))} onEdit={() => navigate(createPageUrl('MyGeckos'))} />
                                             ))}
                                         </div>
                                     ) : (
