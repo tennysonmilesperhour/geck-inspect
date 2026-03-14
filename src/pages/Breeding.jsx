@@ -887,12 +887,26 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
                             size="sm"
                             className={`text-xs h-8 ${plan.laying_active !== false ? 'border-green-600 text-green-400 hover:bg-green-900/20' : 'border-slate-600 text-slate-400 hover:bg-slate-800'}`}
                             onClick={async () => {
-                                await BreedingPlan.update(plan.id, { laying_active: plan.laying_active === false ? true : false });
+                                const goingDormant = plan.laying_active !== false;
+                                await BreedingPlan.update(plan.id, {
+                                    laying_active: !goingDormant,
+                                    dormant_since: goingDormant ? new Date().toISOString().split('T')[0] : null
+                                });
                                 onPlanUpdate();
                             }}
                             title={plan.laying_active !== false ? 'Active laying season — click to mark dormant' : 'Dormant — click to mark active'}
                         >
-                            {plan.laying_active !== false ? <><Leaf size={14} className="mr-1" /> Active</> : <><Moon size={14} className="mr-1" /> Dormant</>}
+                            {plan.laying_active !== false ? (
+                                <><Leaf size={14} className="mr-1" /> Active</>
+                            ) : (
+                                <>
+                                    <Moon size={14} className="mr-1" /> Dormant
+                                    {plan.dormant_since && (() => {
+                                        const days = Math.floor((new Date() - new Date(plan.dormant_since)) / 86400000);
+                                        return days > 0 ? <span className="ml-1 text-slate-500">({days}d)</span> : null;
+                                    })()}
+                                </>
+                            )}
                         </Button>
                         {showArchiveButton && (
                             <Button

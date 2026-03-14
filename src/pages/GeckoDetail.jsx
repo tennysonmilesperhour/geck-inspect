@@ -74,10 +74,17 @@ export default function GeckoDetail() {
 
     const isOwner = currentUser && gecko.created_by === currentUser.email;
 
-    const chartData = weightRecords.map(r => ({
-        date: format(new Date(r.record_date), 'MMM d'),
-        weight: r.weight_grams,
-    }));
+    // Display weight: use most recent weight record if available, else gecko.weight_grams
+    const latestWeight = weightRecords.length > 0
+        ? [...weightRecords].sort((a, b) => new Date(b.record_date) - new Date(a.record_date))[0].weight_grams
+        : gecko.weight_grams;
+
+    const chartData = [...weightRecords]
+        .sort((a, b) => new Date(a.record_date) - new Date(b.record_date))
+        .map(r => ({
+            date: format(new Date(r.record_date), 'MMM d'),
+            weight: r.weight_grams,
+        }));
 
     const statusColors = {
         "Ready to Breed": "bg-teal-700", "Proven": "bg-emerald-700", "Holdback": "bg-blue-700",
@@ -117,7 +124,7 @@ export default function GeckoDetail() {
                                 <div className="mt-3 flex flex-wrap justify-center gap-2">
                                     <Badge className={statusColors[gecko.status] || 'bg-slate-700'}>{gecko.status}</Badge>
                                     <Badge variant="secondary">{gecko.sex}</Badge>
-                                    {gecko.weight_grams && <Badge variant="outline" className="border-slate-600">{gecko.weight_grams}g</Badge>}
+                                    {latestWeight != null && <Badge variant="outline" className="border-slate-600">{latestWeight}g</Badge>}
                                 </div>
                                 {gecko.hatch_date && (
                                     <p className="text-slate-400 text-xs mt-2">
