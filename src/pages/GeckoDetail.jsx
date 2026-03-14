@@ -74,10 +74,10 @@ export default function GeckoDetail() {
 
     const isOwner = currentUser && gecko.created_by === currentUser.email;
 
-    // Display weight: use most recent weight record if available, else gecko.weight_grams
+    // Display weight: use most recent WeightRecord as source of truth, fall back to gecko.weight_grams
     const latestWeight = weightRecords.length > 0
         ? [...weightRecords].sort((a, b) => new Date(b.record_date) - new Date(a.record_date))[0].weight_grams
-        : gecko.weight_grams;
+        : (gecko.weight_grams ?? null);
 
     const chartData = [...weightRecords]
         .sort((a, b) => new Date(a.record_date) - new Date(b.record_date))

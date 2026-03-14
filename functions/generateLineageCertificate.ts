@@ -11,8 +11,11 @@ Deno.serve(async (req) => {
         const user = await base44.auth.me();
         const { geckoId, certificateType = 'lineage' } = await req.json();
 
-        // Fetch all of the user's geckos at once for efficiency
-        const allGeckos = await base44.entities.Gecko.filter({ created_by: user.email });
+        // Fetch all of the user's geckos and weight records at once for efficiency
+        const [allGeckos, allWeights] = await Promise.all([
+            base44.entities.Gecko.filter({ created_by: user.email }),
+            base44.entities.WeightRecord.filter({ created_by: user.email })
+        ]);
         if (!allGeckos || allGeckos.length === 0) {
             return new Response('No geckos found for user', { status: 404 });
         }
@@ -100,7 +103,7 @@ Deno.serve(async (req) => {
                                     <div class="info-item"><div class="label">Sex</div><div class="value">${geckoData.sex}</div></div>
                                     <div class="info-item"><div class="label">Hatch Date</div><div class="value">${geckoData.hatch_date ? new Date(geckoData.hatch_date).toLocaleDateString() : 'Unknown'}</div></div>
                                     <div class="info-item"><div class="label">Species</div><div class="value">C. ciliatus</div></div>
-                                    ${geckoData.weight_grams ? `<div class="info-item"><div class="label">Weight</div><div class="value">${geckoData.weight_grams}g</div></div>` : ''}
+                                    ${(() => { const recs = allWeights.filter(w => w.gecko_id === geckoId); const latest = recs.length > 0 ? recs.sort((a,b) => new Date(b.record_date)-new Date(a.record_date))[0].weight_grams : geckoData.weight_grams; return latest ? `<div class="info-item"><div class="label">Weight</div><div class="value">${latest}g</div></div>` : ''; })()}
                                     <div class="info-item"><div class="label">Status</div><div class="value">${geckoData.status || 'N/A'}</div></div>
                                 </div>
                                 <div class="info-item" style="margin-top: 12px;"><div class="label">Morphs & Traits</div><div class="value">${geckoData.morphs_traits || 'Not specified'}</div></div>
