@@ -746,11 +746,11 @@ export default function MyGeckosPage() {
                                     </div>
                                 )
                         ) : (
-                            <div className="text-center py-20 bg-slate-900 rounded-lg">
-                                <Users className="w-16 h-16 mx-auto text-slate-500 mb-4" />
-                                <h3 className="text-xl font-semibold text-slate-300">No Geckos Found</h3>
-                                <p className="text-slate-400 mt-2">Add your first gecko to get started!</p>
-                            </div>
+                            <EmptyState
+                                icon={Users}
+                                title="No Geckos Found"
+                                message="Add your first gecko to get started!"
+                            />
                         )}
 
                         <AnimatePresence>
