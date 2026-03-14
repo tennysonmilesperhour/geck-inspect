@@ -302,9 +302,7 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
                 </div>
             </div>
 
-            {isLoading ? (
-                <div className="text-center"><LoadingSpinner size="sm" /></div>
-            ) : eggs.length > 0 ? (
+            {eggs.length > 0 ? (
                 <div className="space-y-4">
                     {eggs.map(egg => {
                         const eggEdit = editedEggs[egg.id] || {};
