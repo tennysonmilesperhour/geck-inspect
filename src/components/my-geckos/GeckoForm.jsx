@@ -105,6 +105,10 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
     const [isGeneratingCert, setIsGeneratingCert] = useState(false);
     const [certType, setCertType] = useState('');
     const [feedingGroups, setFeedingGroups] = useState([]);
+    const [showSireSuggestions, setShowSireSuggestions] = useState(false);
+    const [showDamSuggestions, setShowDamSuggestions] = useState(false);
+    const sireRef = useRef(null);
+    const damRef = useRef(null);
 
     useEffect(() => {
         FeedingGroup.list().then(setFeedingGroups).catch(() => {});
