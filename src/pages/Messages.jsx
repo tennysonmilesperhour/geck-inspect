@@ -7,6 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Mail, Send, Search, User as UserIcon, MessageSquare, Trash2 } from 'lucide-react';
+import LoadingSpinner from '../components/shared/LoadingSpinner';
+import EmptyState from '../components/shared/EmptyState';
 import { format } from 'date-fns';
 
 export default function MessagesPage() {
@@ -183,10 +185,8 @@ export default function MessagesPage() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-slate-950 p-4 md:p-8">
-                <div className="max-w-6xl mx-auto">
-                    <div className="text-center text-slate-400">Loading messages...</div>
-                </div>
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+                <LoadingSpinner message="Loading messages..." />
             </div>
         );
     }
@@ -219,10 +219,11 @@ export default function MessagesPage() {
                         <CardContent className="p-0">
                             <div className="max-h-[calc(100vh-350px)] overflow-y-auto">
                                 {filteredConversations.length === 0 ? (
-                                    <div className="p-6 text-center text-slate-400">
-                                        <MessageSquare className="w-12 h-12 mx-auto mb-3 text-slate-500" />
-                                        <p>No conversations yet</p>
-                                    </div>
+                                    <EmptyState
+                                        icon={MessageSquare}
+                                        title="No Conversations"
+                                        message="No conversations yet"
+                                    />
                                 ) : (
                                     filteredConversations.map((conversation) => (
                                         <div
@@ -353,10 +354,11 @@ export default function MessagesPage() {
                             </Card>
                         ) : (
                             <Card className="bg-slate-900 border-slate-700 h-full flex items-center justify-center">
-                                <div className="text-center text-slate-400">
-                                    <MessageSquare className="w-16 h-16 mx-auto mb-4 text-slate-500" />
-                                    <p className="text-lg">Select a conversation to start messaging</p>
-                                </div>
+                                <EmptyState
+                                    icon={MessageSquare}
+                                    title="No Conversation Selected"
+                                    message="Select a conversation to start messaging"
+                                />
                             </Card>
                         )}
                     </div>

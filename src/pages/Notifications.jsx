@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Bell, MessageSquare, Award, User as UserIcon, Shield, Check, Trash2, ImagePlus, Star } from 'lucide-react';
+import EmptyState from '../components/shared/EmptyState';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 
@@ -174,11 +175,11 @@ export default function NotificationsPage() {
                 <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
                     <CardContent className="p-6">
                         {notifications.length === 0 ? (
-                            <div className="text-center py-12">
-                                <Bell className="w-16 h-16 text-sage-400 mx-auto mb-4" />
-                                <h3 className="text-xl font-semibold text-sage-900 mb-2">No Notifications</h3>
-                                <p className="text-sage-600">You're all caught up! New notifications will appear here.</p>
-                            </div>
+                            <EmptyState
+                                icon={Bell}
+                                title="No Notifications"
+                                message="You're all caught up! New notifications will appear here."
+                            />
                         ) : (
                             <div className="space-y-4">
                                 {notifications.map((notification) => (
