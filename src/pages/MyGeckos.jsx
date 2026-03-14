@@ -745,7 +745,7 @@ export default function MyGeckosPage() {
                                 <h3 className="text-xl font-semibold text-slate-300">No Geckos Found</h3>
                                 <p className="text-slate-400 mt-2">Add your first gecko to get started!</p>
                             </div>
-                        )
+                        }
 
                         <AnimatePresence>
                             {isFormOpen && (
