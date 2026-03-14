@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useCallback, Suspense, useRef } from 'react';
 import { User, Gecko, WeightRecord, FeedingGroup } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
-import { PlusCircle, Loader2, Search, Users, Grid3x3, List, ArrowUpDown, UserPlus, Archive, ArchiveRestore } from 'lucide-react';
+import { PlusCircle, Search, Users, Grid3x3, List, ArrowUpDown, UserPlus, Archive, ArchiveRestore } from 'lucide-react';
+import LoadingSpinner from '../components/shared/LoadingSpinner';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';

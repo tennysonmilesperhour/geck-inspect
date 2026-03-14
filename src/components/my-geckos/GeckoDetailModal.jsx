@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { WeightRecord, BreedingPlan, Egg, Gecko, GeckoEvent } from '@/entities/all';
 import { format, differenceInMonths } from 'date-fns';
 import { X, Plus, Trash2, LineChart, Loader2, Award, GitBranch, Calendar, Baby, Users, FileText, Edit, Eye, EyeOff, History, Archive, ArchiveRestore, ChevronLeft, ChevronRight, Camera } from 'lucide-react';
+import LoadingSpinner from '../shared/LoadingSpinner';
 import EventTracker from './EventTracker';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
