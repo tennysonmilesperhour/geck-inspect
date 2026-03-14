@@ -549,7 +549,7 @@ function GeneticCalculatorTab({ geckos }) {
     );
 }
 
-function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArchive, isExpanded, onToggleExpanded, showArchiveButton = true }) {
+function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate, onPlanDelete, onPlanArchive, isExpanded, onToggleExpanded, showArchiveButton = true }) {
     const getGecko = (id) => geckos.find(g => g.id === id);
     const sire = getGecko(plan.sire_id);
     const dam = getGecko(plan.dam_id);
@@ -561,31 +561,15 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
     const [isGeneticsOpen, setIsGeneticsOpen] = useState(false);
     const [eggCheckDay, setEggCheckDay] = useState(plan.egg_check_day || 15);
-    const [lastEggDate, setLastEggDate] = useState(null);
-    const [eggRefreshTrigger, setEggRefreshTrigger] = useState(0);
-    const [eggCounts, setEggCounts] = useState({ incubating: 0, hatched: 0, failed: 0, eggsLaid: 0 });
-    
-    // Load last egg date and egg counts
-    useEffect(() => {
-        const fetchEggData = async () => {
-            try {
-                const eggs = await Egg.filter({ breeding_plan_id: plan.id }, '-lay_date');
-                if (eggs.length > 0) {
-                    setLastEggDate(eggs[0].lay_date);
-                }
-                
-                // Calculate egg counts - eggs laid includes all non-archived eggs
-                const eggsLaid = eggs.filter(e => !e.archived).length;
-                const incubating = eggs.filter(e => e.status === 'Incubating' && !e.archived).length;
-                const hatched = eggs.filter(e => e.status === 'Hatched').length;
-                const failed = eggs.filter(e => ['Slug', 'Infertile', 'Stillbirth'].includes(e.status)).length;
-                setEggCounts({ incubating, hatched, failed, eggsLaid });
-            } catch (error) {
-                console.error("Failed to load egg data:", error);
-            }
-        };
-        fetchEggData();
-    }, [plan.id, eggRefreshTrigger]);
+
+    // Derive egg data from hoisted prop — no individual fetches
+    const sortedEggs = [...planEggs].sort((a, b) => new Date(b.lay_date) - new Date(a.lay_date));
+    const lastEggDate = sortedEggs.length > 0 ? sortedEggs[0].lay_date : null;
+    const eggsLaid = planEggs.filter(e => !e.archived).length;
+    const incubating = planEggs.filter(e => e.status === 'Incubating' && !e.archived).length;
+    const hatched = planEggs.filter(e => e.status === 'Hatched').length;
+    const failed = planEggs.filter(e => ['Slug', 'Infertile', 'Stillbirth'].includes(e.status)).length;
+    const eggCounts = { incubating, hatched, failed, eggsLaid };
     
     // Calculate days since last egg
     const daysSinceLastEgg = lastEggDate 
