@@ -448,6 +448,11 @@ export default function MyGeckosPage() {
                     const sexOrder = { 'Male': 0, 'Female': 1, 'Unsexed': 2 };
                     return (sexOrder[a.sex] || 3) - (sexOrder[b.sex] || 3);
                 });
+            case 'archive_reason':
+                return sorted.sort((a, b) => {
+                    const order = { 'death': 0, 'sold': 1, 'other': 2 };
+                    return (order[a.archive_reason] ?? 3) - (order[b.archive_reason] ?? 3);
+                });
             default:
                 return sorted;
         }
