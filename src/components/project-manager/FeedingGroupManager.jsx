@@ -261,12 +261,12 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
                                 </div>
                             </div>
                             {form.auto_weight_min_g !== '' && form.auto_weight_max_g !== '' && (
-                                <p className="text-xs text-emerald-400 mt-1">
-                                    {geckos.filter(g => {
-                                        const w = parseFloat(g.weight_grams);
-                                        return !isNaN(w) && w >= parseFloat(form.auto_weight_min_g) && w <= parseFloat(form.auto_weight_max_g);
-                                    }).length} gecko(s) currently in this range
-                                </p>
+                            <p className="text-xs text-emerald-400 mt-1">
+                                {geckos.filter(g => {
+                                    const w = g.weight_grams != null ? parseFloat(g.weight_grams) : 0;
+                                    return !isNaN(w) && w >= parseFloat(form.auto_weight_min_g) && w <= parseFloat(form.auto_weight_max_g);
+                                }).length} gecko(s) currently in this range
+                            </p>
                             )}
                         </div>
                         <div>
