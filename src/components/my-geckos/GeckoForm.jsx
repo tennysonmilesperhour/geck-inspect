@@ -111,8 +111,12 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
     const damRef = useRef(null);
 
     useEffect(() => {
-        FeedingGroup.list().then(setFeedingGroups).catch(() => {});
-    }, []);
+        if (feedingGroupsProp) {
+            setFeedingGroups(feedingGroupsProp);
+        } else {
+            FeedingGroup.list().then(setFeedingGroups).catch(() => {});
+        }
+    }, [feedingGroupsProp]);
 
     const handleChange = useCallback((field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
