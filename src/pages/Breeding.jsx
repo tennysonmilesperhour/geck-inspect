@@ -314,7 +314,7 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
             </div>
 
             {isLoading ? (
-                <div className="text-center"><Loader2 className="w-6 h-6 text-emerald-500 animate-spin mx-auto" /></div>
+                <div className="text-center"><LoadingSpinner size="sm" /></div>
             ) : eggs.length > 0 ? (
                 <div className="space-y-4">
                     {eggs.map(egg => {
