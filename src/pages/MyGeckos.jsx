@@ -806,6 +806,14 @@ export default function MyGeckosPage() {
                     />
                 )}
 
+                {/* Archive Reason Dialog */}
+                <ArchiveReasonDialog
+                    open={!!archiveDialogGeckoId}
+                    geckoName={geckos.find(g => g.id === archiveDialogGeckoId)?.name || 'Gecko'}
+                    onConfirm={handleArchiveReasonConfirm}
+                    onCancel={() => setArchiveDialogGeckoId(null)}
+                />
+
                 {/* Plan Limit Modal */}
                 <PlanLimitModal
                     isOpen={showUpgradeModal}
