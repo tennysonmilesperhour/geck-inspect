@@ -540,8 +540,8 @@ export default function Lineage() {
     return (
         <div className="flex flex-col h-screen bg-slate-950 text-slate-200 overflow-hidden">
             <header className="p-3 md:p-4 border-b border-slate-700 flex-shrink-0 z-20 bg-slate-950/80 backdrop-blur-sm">
-                <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
-                    <div className="text-center md:text-left">
+                <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:justify-start items-center gap-3">
+                    <div className="text-center md:text-left md:mr-6">
                         <h1 className="text-xl md:text-2xl font-bold text-slate-100">Gecko Lineage</h1>
                         <p className="text-slate-400 text-sm hidden md:block">Select a gecko to view its family tree</p>
                     </div>
@@ -559,20 +559,20 @@ export default function Lineage() {
                                 }}
                                 onFocus={() => setShowSuggestions(true)}
                                 onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
-                                className="pl-9 w-full md:w-56 h-10"
+                                className="pl-9 w-full md:w-64 h-10"
                             />
-                            {showSuggestions && searchTerm && filteredSelectableGeckos.length > 0 && (
-                                <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-emerald-700 rounded-lg shadow-2xl z-[99999] max-h-60 overflow-y-auto">
+                            {showSuggestions && filteredSelectableGeckos.length > 0 && (
+                                <div className="absolute top-full left-0 mt-1 bg-slate-800 border border-emerald-700 rounded-lg shadow-2xl z-[99999] max-h-72 overflow-y-auto md:w-80 w-full">
                                     {filteredSelectableGeckos.map(gecko => (
                                         <button
                                             key={gecko.id}
-                                            className="w-full text-left px-3 py-2 text-sm text-slate-200 hover:bg-emerald-800 flex items-center gap-2 transition-colors"
+                                            className="w-full text-left px-3 py-2.5 text-sm text-slate-200 hover:bg-emerald-800 flex items-center gap-3 transition-colors"
                                             onMouseDown={() => handleSearchSelect(gecko)}
                                         >
                                             <img
                                                 src={gecko.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'}
                                                 alt={gecko.name}
-                                                className="w-7 h-7 rounded object-cover flex-shrink-0"
+                                                className="w-9 h-9 rounded object-cover flex-shrink-0"
                                             />
                                             <span className="font-medium">{gecko.name}</span>
                                             {gecko.gecko_id_code && (
@@ -584,7 +584,7 @@ export default function Lineage() {
                             )}
                         </div>
                         <Select value={generations.toString()} onValueChange={(v) => setGenerations(parseInt(v))}>
-                            <SelectTrigger className="w-24 h-10">
+                            <SelectTrigger className="w-28 h-10">
                                 <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
