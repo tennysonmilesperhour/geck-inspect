@@ -361,14 +361,21 @@ export default function MyGeckosPage() {
             result = result.filter(g => filters.statuses.includes(g.status));
         }
 
-        // Filter by weight range
+        // Filter by weight range — use latest WeightRecord, fall back to gecko.weight_grams
+        const getLatestWeight = (g) => {
+            const records = weightRecords.filter(w => w.gecko_id === g.id);
+            if (records.length > 0) {
+                return [...records].sort((a, b) => new Date(b.record_date) - new Date(a.record_date))[0].weight_grams;
+            }
+            return g.weight_grams ?? null;
+        };
         if (filters.weightMin) {
             const min = parseFloat(filters.weightMin);
-            result = result.filter(g => g.weight_grams && g.weight_grams >= min);
+            result = result.filter(g => { const w = getLatestWeight(g); return w !== null && w >= min; });
         }
         if (filters.weightMax) {
             const max = parseFloat(filters.weightMax);
-            result = result.filter(g => g.weight_grams && g.weight_grams <= max);
+            result = result.filter(g => { const w = getLatestWeight(g); return w !== null && w <= max; });
         }
 
         // Filter by traits (must have ALL selected traits)
@@ -430,18 +437,17 @@ export default function MyGeckosPage() {
                 });
             case 'weight_heaviest':
                 return sorted.sort((a, b) => {
-                    const aWeight = a.weight_grams || 0;
-                    const bWeight = b.weight_grams || 0;
-                    return bWeight - aWeight;
+                    const getW = (g) => { const r = weightRecords.filter(w => w.gecko_id === g.id); return r.length > 0 ? [...r].sort((x,y) => new Date(y.record_date)-new Date(x.record_date))[0].weight_grams : (g.weight_grams || 0); };
+                    return getW(b) - getW(a);
                 });
             case 'weight_lightest':
                 return sorted.sort((a, b) => {
-                    const aWeight = a.weight_grams || Infinity;
-                    const bWeight = b.weight_grams || Infinity;
-                    if (aWeight === Infinity && bWeight === Infinity) return 0;
-                    if (aWeight === Infinity) return 1;
-                    if (bWeight === Infinity) return -1;
-                    return aWeight - bWeight;
+                    const getW = (g) => { const r = weightRecords.filter(w => w.gecko_id === g.id); return r.length > 0 ? [...r].sort((x,y) => new Date(y.record_date)-new Date(x.record_date))[0].weight_grams : (g.weight_grams ?? Infinity); };
+                    const aW = getW(a); const bW = getW(b);
+                    if (aW === Infinity && bW === Infinity) return 0;
+                    if (aW === Infinity) return 1;
+                    if (bW === Infinity) return -1;
+                    return aW - bW;
                 });
             case 'sex':
                 return sorted.sort((a, b) => {
@@ -723,9 +729,7 @@ export default function MyGeckosPage() {
                                                                     }>
                                                                         {gecko.sex}
                                                                     </Badge>
-                                                                    {gecko.weight_grams !== undefined && (
-                                                                        <span className="text-slate-400 text-xs bg-slate-800 px-2 py-0.5 rounded-full border border-slate-700">{gecko.weight_grams}g</span>
-                                                                    )}
+                                                                    {(() => { const r = weightRecords.filter(w => w.gecko_id === gecko.id); const w = r.length > 0 ? [...r].sort((a,b) => new Date(b.record_date)-new Date(a.record_date))[0].weight_grams : gecko.weight_grams; return w != null ? <span className="text-slate-400 text-xs bg-slate-800 px-2 py-0.5 rounded-full border border-slate-700">{w}g</span> : null; })()}
                                                                     {gecko.hatch_date && (
                                                                         <span className="text-slate-400 text-xs bg-slate-800 px-2 py-0.5 rounded-full border border-slate-700">
                                                                             Born: {new Date(gecko.hatch_date).toLocaleDateString()}

@@ -391,6 +391,17 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
             } else {
                 savedGecko = await Gecko.update(gecko.id, dataToSave);
             }
+
+            // If a weight was provided, create a WeightRecord to keep history in sync
+            const weightValue = dataToSave.weight_grams;
+            const previousWeight = gecko?.weight_grams ? parseFloat(gecko.weight_grams) : null;
+            if (weightValue !== null && weightValue !== previousWeight) {
+                await WeightRecord.create({
+                    gecko_id: savedGecko.id,
+                    weight_grams: weightValue,
+                    record_date: new Date().toISOString().split('T')[0],
+                });
+            }
             
             if (onSubmit) {
                 onSubmit(savedGecko, isNew);
