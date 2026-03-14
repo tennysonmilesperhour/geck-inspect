@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Gecko, UserActivity } from '@/entities/all';
+import { Gecko, UserActivity, WeightRecord } from '@/entities/all';
 import { UploadFile } from '@/integrations/Core';
 import { notifyFollowersNewGecko } from '@/components/notifications/NotificationService';
 import { Button } from '@/components/ui/button';

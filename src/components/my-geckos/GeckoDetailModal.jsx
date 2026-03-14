@@ -149,7 +149,15 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
     if (!weightToDelete) return;
     try {
       await WeightRecord.delete(weightToDelete);
-      setWeightRecords(weightRecords.filter(r => r.id !== weightToDelete));
+      const remaining = weightRecords.filter(r => r.id !== weightToDelete);
+      setWeightRecords(remaining);
+
+      // Update Gecko.weight_grams to reflect the new latest (or null if none left)
+      const newLatest = remaining.length > 0
+        ? [...remaining].sort((a, b) => new Date(b.record_date) - new Date(a.record_date))[0].weight_grams
+        : null;
+      await Gecko.update(gecko.id, { weight_grams: newLatest });
+      if (onUpdate) onUpdate();
     } catch (error) {
       console.error('Failed to delete weight record:', error);
     }
@@ -432,7 +440,9 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                   <div>
                     <span className="text-slate-400">Current Weight:</span>
                     <p className="font-medium">
-                      {gecko.weight_grams ? `${gecko.weight_grams}g` : 'Not recorded'}
+                      {weightRecords.length > 0
+                        ? `${[...weightRecords].sort((a, b) => new Date(b.record_date) - new Date(a.record_date))[0].weight_grams}g`
+                        : gecko.weight_grams ? `${gecko.weight_grams}g` : 'Not recorded'}
                     </p>
                   </div>
                 </div>
