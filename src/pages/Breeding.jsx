@@ -1099,7 +1099,14 @@ export default function BreedingPage() {
     const [expandAllArchive, setExpandAllArchive] = useState(false);
     
     const [searchTerm, setSearchTerm] = useState('');
+    const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
     const [sortBy, setSortBy] = useState('newest');
+
+    // Debounce search input by 300ms
+    useEffect(() => {
+        const timer = setTimeout(() => setDebouncedSearchTerm(searchTerm), 300);
+        return () => clearTimeout(timer);
+    }, [searchTerm]);
 
     const [newPlan, setNewPlan] = useState({
         sire_id: '',
