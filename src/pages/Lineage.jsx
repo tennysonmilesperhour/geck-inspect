@@ -483,7 +483,8 @@ export default function Lineage() {
         
         // Handle placeholders - they need their own parent tree
         if (gecko.isPlaceholder) {
-            return renderPlaceholderWithParents(gecko, generation, generations);
+            const uniqueKey = `${gecko.geckoId}_${gecko.parentType}`;
+            return renderPlaceholderWithParents(gecko, generation, generations, uniqueKey);
         }
         
         const hasSire = gecko.sire;
