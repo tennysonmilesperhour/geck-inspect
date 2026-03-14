@@ -21,6 +21,8 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import PlanLimitModal, { checkPlanLimit, getGeckoLimit } from '../components/subscription/PlanLimitChecker';
 
+const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
+
 // Enhanced cache specifically for MyGeckos page
 class MyGeckosCache {
     constructor() {
@@ -491,7 +493,6 @@ export default function MyGeckosPage() {
     const filteredAndSortedGeckos = getSortedGeckos(applyFilters(searchFiltered));
 
     if (!user && !isLoading) {
-        const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
         return (
             <React.Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center"><LoadingSpinner /></div>}>
                 <LoginPortal requiredFeature="My Gecko Collection" />

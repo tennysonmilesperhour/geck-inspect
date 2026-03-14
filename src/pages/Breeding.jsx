@@ -34,6 +34,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { format, addDays, addMonths, differenceInDays } from 'date-fns';
 import { generateCalendarEvent } from '@/functions/generateCalendarEvent';
 
+const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
+
 function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulationModal, onOpenEggCheckModal, planEggs, isEditModalOpen, setIsEditModalOpen }) {
     const eggs = planEggs.filter(egg => !egg.archived).sort((a, b) => new Date(b.lay_date) - new Date(a.lay_date));
     const [editedPlan, setEditedPlan] = useState(plan);
@@ -1400,7 +1402,6 @@ export default function BreedingPage() {
     
     // Show login portal if not authenticated
     if (authChecked && !user) {
-        const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
         return (
             <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center"><LoadingSpinner /></div>}>
                 <LoginPortal requiredFeature="Breeding Management" />
