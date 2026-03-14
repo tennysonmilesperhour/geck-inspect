@@ -38,11 +38,13 @@ const PlaceholderCardNode = ({ parentName, placeholderData, onEdit, size = 'norm
                     alt={parentName || 'Unknown'} 
                     className="w-full h-full object-cover opacity-60"
                 />
-                <div className="absolute top-1 right-1">
-                    <div className="bg-black/60 rounded-full p-1">
-                        <Edit2 className="w-3 h-3 text-white" />
+                {isEditable && (
+                    <div className="absolute top-1 right-1">
+                        <div className="bg-black/60 rounded-full p-1">
+                            <Edit2 className="w-3 h-3 text-white" />
+                        </div>
                     </div>
-                </div>
+                )}
             </div>
             
             <div className="absolute bottom-0 left-0 right-0 p-1.5 bg-gradient-to-t from-black/80 to-transparent">
