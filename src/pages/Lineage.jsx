@@ -140,6 +140,8 @@ export default function Lineage() {
     const [isLoadingLineage, setIsLoadingLineage] = useState(false);
     
     const [searchTerm, setSearchTerm] = useState('');
+    const [showSuggestions, setShowSuggestions] = useState(false);
+    const searchRef = useRef(null);
     const [scale, setScale] = useState(1);
     const [generations, setGenerations] = useState(3);
     const mainContentRef = useRef(null);
@@ -517,7 +519,13 @@ export default function Lineage() {
     const filteredSelectableGeckos = myGeckos.filter(g => 
         g.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
         g.gecko_id_code?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    ).sort((a, b) => a.name.localeCompare(b.name));
+
+    const handleSearchSelect = (gecko) => {
+        setSearchTerm(gecko.name + (gecko.gecko_id_code ? ` (${gecko.gecko_id_code})` : ''));
+        setShowSuggestions(false);
+        handleSelectGecko(gecko.id);
+    };
 
     return (
         <div className="flex flex-col h-screen bg-slate-950 text-slate-200 overflow-hidden">
