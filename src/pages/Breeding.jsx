@@ -57,7 +57,7 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
                 archived: true,
                 archived_date: new Date().toISOString().split('T')[0]
             });
-            loadEggs();
+            onPlanUpdate();
         } catch (error) {
             console.error("Failed to archive egg:", error);
         }
