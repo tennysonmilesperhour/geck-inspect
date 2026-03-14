@@ -85,6 +85,7 @@ const retryWithBackoff = async (fn, maxRetries = 3, initialDelay = 2000) => {
 export default function MyGeckosPage() {
     const [geckos, setGeckos] = useState([]);
     const [weightRecords, setWeightRecords] = useState([]);
+    const scrollPositionRef = React.useRef(0);
     const [isLoading, setIsLoading] = useState(true);
     const [user, setUser] = useState(null);
     const [isFormOpen, setIsFormOpen] = useState(false);
@@ -226,9 +227,11 @@ export default function MyGeckosPage() {
     };
 
     const handleEdit = (gecko) => {
+        // Save current scroll position before opening form
+        scrollPositionRef.current = window.scrollY;
         setSelectedGecko(gecko);
-        setIsDetailModalOpen(false); // Close detail modal first
-        setIsFormOpen(true);        // Then open form
+        setIsDetailModalOpen(false);
+        setIsFormOpen(true);
     };
 
     const handleDelete = async (geckoId) => {
@@ -296,24 +299,32 @@ export default function MyGeckosPage() {
     };
 
     const handleFormSubmit = async (geckoData, isNew) => {
+        const savedScroll = scrollPositionRef.current;
         setIsFormOpen(false);
         setSelectedGecko(null);
 
         if (user) {
-            // Invalidate cache to force fresh data
             const cacheKey = `geckos_${user.email}`;
             geckosCache.invalidate(cacheKey);
 
-            // Add small delay to ensure database is updated
             setTimeout(() => {
                 loadGeckos(true);
+                // Restore scroll position after data reloads
+                setTimeout(() => {
+                    window.scrollTo({ top: savedScroll, behavior: 'instant' });
+                }, 100);
             }, 500);
         }
     };
 
     const handleFormCancel = () => {
+        const savedScroll = scrollPositionRef.current;
         setIsFormOpen(false);
         setSelectedGecko(null);
+        // Restore scroll position on cancel too
+        setTimeout(() => {
+            window.scrollTo({ top: savedScroll, behavior: 'instant' });
+        }, 50);
     };
 
     const handleImportComplete = async () => {
