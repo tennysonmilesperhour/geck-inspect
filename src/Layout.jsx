@@ -13,8 +13,9 @@ import { PageConfig } from "@/entities/PageConfig";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Database, BookOpen, BarChart3, Upload, Eye, Users, HeartHandshake, Moon, Sun, Layers, LogOut, ExternalLink, Search, Settings, UserPlus, Award, Shield, MessageSquare, Wrench, Bell, Mail, Heart, Brain, Menu, ShoppingCart, GitBranch,
-  LogIn, ChevronDown, X as CloseIcon, FlaskConical, LifeBuoy, LayoutDashboard, Star, Trophy, FolderKanban
+  LogIn, ChevronDown, X as CloseIcon, FlaskConical, LifeBuoy, LayoutDashboard, Star, Trophy, FolderKanban, GraduationCap
 } from "lucide-react";
+import TutorialModal from "../components/tutorial/TutorialModal";
 import {
   Sidebar,
   SidebarHeader,
@@ -222,6 +223,7 @@ function LayoutContent({ children, currentPageName }) {
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [appLogo, setAppLogo] = useState(null);
   const [pageConfigs, setPageConfigs] = useState([]);
+  const [showTutorial, setShowTutorial] = useState(false);
 
   const { toggleSidebar } = useSidebar();
 
