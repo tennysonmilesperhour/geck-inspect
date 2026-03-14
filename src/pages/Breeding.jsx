@@ -397,15 +397,31 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
                                     >
                                         <CalendarIcon className="w-4 h-4" />
                                     </Button>
-                                    <Button 
-                                        size="icon" 
-                                        variant="destructive"
-                                        onClick={() => handleDeleteEgg(egg.id)}
-                                        className="bg-red-900/50 hover:bg-red-900/80 border border-red-500/30 text-red-400 h-9 w-9 flex-shrink-0"
-                                        title="Delete Egg"
-                                    >
-                                        <Trash2 className="w-4 h-4" />
-                                    </Button>
+                                    <AlertDialog open={eggToDelete === egg.id} onOpenChange={(open) => { if (!open) setEggToDelete(null); }}>
+                                       <Button 
+                                           size="icon" 
+                                           variant="destructive"
+                                           onClick={() => handleDeleteEgg(egg.id)}
+                                           className="bg-red-900/50 hover:bg-red-900/80 border border-red-500/30 text-red-400 h-9 w-9 flex-shrink-0"
+                                           title="Delete Egg"
+                                       >
+                                           <Trash2 className="w-4 h-4" />
+                                       </Button>
+                                       <AlertDialogContent className="bg-emerald-950 border-emerald-700">
+                                           <AlertDialogHeader>
+                                               <AlertDialogTitle className="text-emerald-100">Archive this egg?</AlertDialogTitle>
+                                               <AlertDialogDescription className="text-emerald-300">
+                                                   This will archive the egg record and hide it from the active list. You can view archived eggs in the Hatchery.
+                                               </AlertDialogDescription>
+                                           </AlertDialogHeader>
+                                           <AlertDialogFooter>
+                                               <AlertDialogCancel className="bg-emerald-900 text-emerald-200 border-emerald-700">Cancel</AlertDialogCancel>
+                                               <AlertDialogAction onClick={handleConfirmDeleteEgg} className="bg-yellow-600 hover:bg-yellow-700">
+                                                   Archive Egg
+                                               </AlertDialogAction>
+                                           </AlertDialogFooter>
+                                       </AlertDialogContent>
+                                    </AlertDialog>
                                 </div>
                             </div>
                         </div>

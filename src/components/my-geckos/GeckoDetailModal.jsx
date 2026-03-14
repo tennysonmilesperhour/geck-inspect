@@ -139,15 +139,21 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
     }
   };
 
-  const handleDeleteWeight = async (recordId) => {
-    if (window.confirm("Are you sure you want to delete this weight record?")) {
-      try {
-        await WeightRecord.delete(recordId);
-        setWeightRecords(weightRecords.filter(r => r.id !== recordId));
-      } catch (error) {
-        console.error('Failed to delete weight record:', error);
-      }
+  const [weightToDelete, setWeightToDelete] = useState(null);
+
+  const handleDeleteWeight = (recordId) => {
+    setWeightToDelete(recordId);
+  };
+
+  const handleConfirmDeleteWeight = async () => {
+    if (!weightToDelete) return;
+    try {
+      await WeightRecord.delete(weightToDelete);
+      setWeightRecords(weightRecords.filter(r => r.id !== weightToDelete));
+    } catch (error) {
+      console.error('Failed to delete weight record:', error);
     }
+    setWeightToDelete(null);
   };
 
   const handleTogglePublic = async (checked) => {
