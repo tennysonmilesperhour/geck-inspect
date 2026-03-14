@@ -307,13 +307,14 @@ export default function MyGeckosPage() {
             const cacheKey = `geckos_${user.email}`;
             geckosCache.invalidate(cacheKey);
 
+            // Restore scroll immediately after closing the form, then reload data
+            window.scrollTo({ top: savedScroll, behavior: 'instant' });
             setTimeout(() => {
-                loadGeckos(true);
-                // Restore scroll position after data reloads
-                setTimeout(() => {
+                loadGeckos(true).then(() => {
+                    // Restore again after data reload in case layout shifted
                     window.scrollTo({ top: savedScroll, behavior: 'instant' });
-                }, 100);
-            }, 500);
+                });
+            }, 100);
         }
     };
 
