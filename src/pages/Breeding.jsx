@@ -1053,6 +1053,7 @@ function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate, onPlanDelete, 
 export default function BreedingPage() {
     const [breedingPlans, setBreedingPlans] = useState([]);
     const [geckos, setGeckos] = useState([]);
+    const [allEggs, setAllEggs] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [expandedPlanIds, setExpandedPlanIds] = useState(new Set());
