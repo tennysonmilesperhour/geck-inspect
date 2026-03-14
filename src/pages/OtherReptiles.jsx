@@ -2,6 +2,8 @@ import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { OtherReptile, ReptileEvent, Notification } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import { PlusCircle, Loader2, Search, Users, Archive, ArchiveRestore } from 'lucide-react';
+import LoadingSpinner from '../components/shared/LoadingSpinner';
+import EmptyState from '../components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import ReptileCard from '../components/other-reptiles/ReptileCard';

@@ -4,6 +4,8 @@ import GalleryFilters from '../components/gallery/GalleryFilters';
 import ImageCard from '../components/gallery/ImageCard';
 import ImageDetailModal from '../components/gallery/ImageDetailModal';
 import { Loader2, ImageOff } from 'lucide-react';
+import LoadingSpinner from '../components/shared/LoadingSpinner';
+import EmptyState from '../components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
 import _ from 'lodash';
 
