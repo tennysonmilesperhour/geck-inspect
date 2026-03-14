@@ -1651,74 +1651,7 @@ function LayoutContent({ children, currentPageName }) {
             {children}
           </div>
 
-          {/* Mobile Bottom Navigation */}
-          <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-slate-900/90 backdrop-blur-md border-t border-slate-700 z-50 safe-area-bottom">
-            <div className="flex justify-around items-center h-16 px-2">
-              <Link
-                to={createPageUrl("MyGeckos")}
-                onClick={(e) => {
-                  if (!user) {
-                    e.preventDefault();
-                    handleLoginPrompt("My Geckos");
-                  }
-                }}
-                className="flex flex-col items-center justify-center flex-1 py-2"
-              >
-                <Users className={`w-5 h-5 ${location.pathname === createPageUrl("MyGeckos") ? 'text-emerald-400' : 'text-slate-400'}`} />
-                <span className={`text-[10px] mt-1 ${location.pathname === createPageUrl("MyGeckos") ? 'text-emerald-400' : 'text-slate-400'}`}>
-                  My Geckos
-                </span>
-              </Link>
 
-              <Link
-                to={createPageUrl("Breeding")}
-                onClick={(e) => {
-                  if (!user) {
-                    e.preventDefault();
-                    handleLoginPrompt("Breeding");
-                  }
-                }}
-                className="flex flex-col items-center justify-center flex-1 py-2"
-              >
-                <GitBranch className={`w-5 h-5 ${location.pathname === createPageUrl("Breeding") ? 'text-emerald-400' : 'text-slate-400'}`} />
-                <span className={`text-[10px] mt-1 ${location.pathname === createPageUrl("Breeding") ? 'text-emerald-400' : 'text-slate-400'}`}>
-                  Breeding
-                </span>
-              </Link>
-
-              <Link
-                to={createPageUrl("MyProfile")}
-                onClick={(e) => {
-                  if (!user) {
-                    e.preventDefault();
-                    handleLoginPrompt("My Profile");
-                  }
-                }}
-                className="flex flex-col items-center justify-center flex-1 py-2"
-              >
-                <Users className={`w-5 h-5 ${location.pathname === createPageUrl("MyProfile") ? 'text-emerald-400' : 'text-slate-400'}`} />
-                <span className={`text-[10px] mt-1 ${location.pathname === createPageUrl("MyProfile") ? 'text-emerald-400' : 'text-slate-400'}`}>
-                  Profile
-                </span>
-              </Link>
-
-              <Link
-                to={createPageUrl("Settings")}
-                onClick={(e) => {
-                  if (!user) {
-                    e.preventDefault();
-                    handleLoginPrompt("Settings");
-                  }
-                }}
-                className="flex flex-col items-center justify-center flex-1 py-2"
-              >
-                <Settings className={`w-5 h-5 ${location.pathname === createPageUrl("Settings") ? 'text-emerald-400' : 'text-slate-400'}`} />
-                <span className={`text-[10px] mt-1 ${location.pathname === createPageUrl("Settings") ? 'text-emerald-400' : 'text-slate-400'}`}>
-                  Settings
-                </span>
-              </Link>
-            </div>
-          </nav>
           </main>
           </div>
           </>
