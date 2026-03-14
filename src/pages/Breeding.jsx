@@ -1483,6 +1483,8 @@ export default function BreedingPage() {
                                     </SelectTrigger>
                                     <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
                                         <SelectItem value="newest">Newest First</SelectItem>
+                                        <SelectItem value="laying_active">Active Laying First</SelectItem>
+                                        <SelectItem value="laying_dormant">Dormant First</SelectItem>
                                         <SelectItem value="time_newest">Paired Most Recently</SelectItem>
                                         <SelectItem value="time_oldest">Paired Longest Ago</SelectItem>
                                         <SelectItem value="eggs_high">Most Eggs</SelectItem>
@@ -1567,6 +1569,8 @@ export default function BreedingPage() {
                                     </SelectTrigger>
                                     <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
                                         <SelectItem value="newest">Newest First</SelectItem>
+                                        <SelectItem value="laying_active">Active Laying First</SelectItem>
+                                        <SelectItem value="laying_dormant">Dormant First</SelectItem>
                                         <SelectItem value="time_newest">Paired Most Recently</SelectItem>
                                         <SelectItem value="time_oldest">Paired Longest Ago</SelectItem>
                                         <SelectItem value="eggs_high">Most Eggs</SelectItem>

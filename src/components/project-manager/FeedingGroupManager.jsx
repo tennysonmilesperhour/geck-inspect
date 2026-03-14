@@ -74,7 +74,9 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
         const myGeckos = await Gecko.filter({ created_by: currentUser.email });
         const { auto_weight_min_g: min, auto_weight_max_g: max } = groupData;
         await Promise.all(myGeckos.map(async (g) => {
-            const w = parseFloat(g.weight_grams);
+            // Treat null/undefined weight_grams as 0 so geckos with no weight record
+            // can be auto-assigned to a group whose min is 0.
+            const w = g.weight_grams != null ? parseFloat(g.weight_grams) : 0;
             if (!isNaN(w) && w >= min && w <= max) {
                 if (g.feeding_group_id !== targetGroupId) {
                     await Gecko.update(g.id, { feeding_group_id: targetGroupId });
