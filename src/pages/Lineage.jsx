@@ -16,7 +16,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import { base44 } from '@/api/base44Client';
 import _ from 'lodash';
 
 const DEFAULT_GECKO_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
