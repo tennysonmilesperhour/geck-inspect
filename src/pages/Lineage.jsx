@@ -536,37 +536,43 @@ export default function Lineage() {
                         <p className="text-slate-400 text-sm hidden md:block">Select a gecko to view its family tree</p>
                     </div>
                     <div className="flex items-center gap-2 w-full md:w-auto">
-                        <div className="relative flex-grow md:flex-grow-0">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400" />
+                        {/* Autocomplete gecko search */}
+                        <div className="relative flex-grow md:flex-grow-0" ref={searchRef}>
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400 z-10" />
                             <Input
-                                type="text" 
-                                placeholder="Search..." 
+                                type="text"
+                                placeholder="Search gecko..."
                                 value={searchTerm}
-                                onChange={(e) => setSearchTerm(e.target.value)}
-                                className="pl-9 w-full md:w-48 h-10"
+                                onChange={(e) => {
+                                    setSearchTerm(e.target.value);
+                                    setShowSuggestions(true);
+                                }}
+                                onFocus={() => setShowSuggestions(true)}
+                                onBlur={() => setTimeout(() => setShowSuggestions(false), 150)}
+                                className="pl-9 w-full md:w-56 h-10"
                             />
+                            {showSuggestions && searchTerm && filteredSelectableGeckos.length > 0 && (
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-emerald-700 rounded-lg shadow-2xl z-[99999] max-h-60 overflow-y-auto">
+                                    {filteredSelectableGeckos.map(gecko => (
+                                        <button
+                                            key={gecko.id}
+                                            className="w-full text-left px-3 py-2 text-sm text-slate-200 hover:bg-emerald-800 flex items-center gap-2 transition-colors"
+                                            onMouseDown={() => handleSearchSelect(gecko)}
+                                        >
+                                            <img
+                                                src={gecko.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'}
+                                                alt={gecko.name}
+                                                className="w-7 h-7 rounded object-cover flex-shrink-0"
+                                            />
+                                            <span className="font-medium">{gecko.name}</span>
+                                            {gecko.gecko_id_code && (
+                                                <span className="text-slate-400 text-xs ml-auto">{gecko.gecko_id_code}</span>
+                                            )}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                        <Select onValueChange={handleSelectGecko} value={selectedGeckoId || undefined}>
-                            <SelectTrigger className="w-full md:w-[200px] h-10">
-                                <SelectValue placeholder="Select gecko">
-                                    {selectedGeckoId && allGeckosMap[selectedGeckoId] ? 
-                                        `${allGeckosMap[selectedGeckoId].name} (${allGeckosMap[selectedGeckoId].gecko_id_code || 'No ID'})` : 
-                                        'Select gecko'
-                                    }
-                                </SelectValue>
-                            </SelectTrigger>
-                            <SelectContent>
-                                {isLoading ? (
-                                    <div className="flex items-center justify-center p-2 text-emerald-300"><Loader2 className="animate-spin w-4 h-4 mr-2" /> Loading...</div>
-                                ) : (
-                                    [...filteredSelectableGeckos].sort((a, b) => a.name.localeCompare(b.name)).map(gecko => (
-                                        <SelectItem key={gecko.id} value={gecko.id}>
-                                            {gecko.name} ({gecko.gecko_id_code || 'No ID'})
-                                        </SelectItem>
-                                    ))
-                                )}
-                            </SelectContent>
-                        </Select>
                         <Select value={generations.toString()} onValueChange={(v) => setGenerations(parseInt(v))}>
                             <SelectTrigger className="w-24 h-10">
                                 <SelectValue />
