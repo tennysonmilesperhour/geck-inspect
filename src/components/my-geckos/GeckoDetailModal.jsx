@@ -26,6 +26,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
   const [isGeneratingCert, setIsGeneratingCert] = useState(false);
   const [isPublic, setIsPublic] = useState(gecko?.is_public ?? true);
   const [slideshowIndex, setSlideshowIndex] = useState(0);
+  const [slideshowImageIndex, setSlideshowImageIndex] = useState(0); // which image is currently shown via arrows
   const [showSlideshow, setShowSlideshow] = useState(false);
   // slotImageMap: { [slotIndex]: imageIndex } — user-assigned image per milestone slot
   const [slotImageMap, setSlotImageMap] = useState({});
