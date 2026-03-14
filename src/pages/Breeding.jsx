@@ -853,11 +853,11 @@ function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate, onPlanDelete, 
                         <PlanDetails 
                             plan={plan}
                             geckos={geckos}
+                            planEggs={planEggs}
                             onPlanUpdate={onPlanUpdate}
                             onPlanDelete={onPlanDelete}
                             onOpenCopulationModal={handleOpenCopulationModal}
                             onOpenEggCheckModal={handleOpenEggCheckModal}
-                            refreshTrigger={eggRefreshTrigger}
                             isEditModalOpen={isEditModalOpen}
                             setIsEditModalOpen={setIsEditModalOpen}
                         />
