@@ -260,35 +260,43 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
 
     const handleSireInputChange = (value) => {
         setSireInput(value);
-        // Try to find matching gecko in user's collection
-        const matchingGecko = userGeckos.find(g =>
-            g.sex === 'Male' && (
-                `${g.name} (${g.gecko_id_code || 'No ID'})` === value ||
-                g.name.toLowerCase() === value.toLowerCase() ||
-                (g.gecko_id_code && g.gecko_id_code.toLowerCase() === value.toLowerCase())
-            )
-        );
-        if (matchingGecko) {
-            setSireId(matchingGecko.id);
+        // Only clear ID if user completely empties the input; otherwise keep ID until explicitly changed
+        if (value === '') {
+            setSireId('');
         } else {
-            setSireId(''); // Will save as manual entry
+            // Try to find matching gecko in user's collection
+            const matchingGecko = userGeckos.find(g =>
+                g.sex === 'Male' && (
+                    `${g.name} (${g.gecko_id_code || 'No ID'})` === value ||
+                    g.name.toLowerCase() === value.toLowerCase() ||
+                    (g.gecko_id_code && g.gecko_id_code.toLowerCase() === value.toLowerCase())
+                )
+            );
+            // Only update ID if a fresh match is found; otherwise leave current ID untouched
+            if (matchingGecko) {
+                setSireId(matchingGecko.id);
+            }
         }
     };
 
     const handleDamInputChange = (value) => {
         setDamInput(value);
-        // Try to find matching gecko in user's collection
-        const matchingGecko = userGeckos.find(g =>
-            g.sex === 'Female' && (
-                `${g.name} (${g.gecko_id_code || 'No ID'})` === value ||
-                g.name.toLowerCase() === value.toLowerCase() ||
-                (g.gecko_id_code && g.gecko_id_code.toLowerCase() === value.toLowerCase())
-            )
-        );
-        if (matchingGecko) {
-            setDamId(matchingGecko.id);
+        // Only clear ID if user completely empties the input; otherwise keep ID until explicitly changed
+        if (value === '') {
+            setDamId('');
         } else {
-            setDamId(''); // Will save as manual entry
+            // Try to find matching gecko in user's collection
+            const matchingGecko = userGeckos.find(g =>
+                g.sex === 'Female' && (
+                    `${g.name} (${g.gecko_id_code || 'No ID'})` === value ||
+                    g.name.toLowerCase() === value.toLowerCase() ||
+                    (g.gecko_id_code && g.gecko_id_code.toLowerCase() === value.toLowerCase())
+                )
+            );
+            // Only update ID if a fresh match is found; otherwise leave current ID untouched
+            if (matchingGecko) {
+                setDamId(matchingGecko.id);
+            }
         }
     };
     
