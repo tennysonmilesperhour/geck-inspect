@@ -627,8 +627,7 @@ export default function MyGeckosPage() {
                     </div>
                 ) : (
                     <>
-                        {!isFormOpen && (
-                            filteredAndSortedGeckos.length > 0 ? (
+                        {filteredAndSortedGeckos.length > 0 ? (
                                 viewMode === 'card' ? (
                                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                                         <AnimatePresence>
@@ -740,14 +739,13 @@ export default function MyGeckosPage() {
                                         </AnimatePresence>
                                     </div>
                                 )
-                            ) : (
-                                <div className="text-center py-20 bg-slate-900 rounded-lg">
-                                    <Users className="w-16 h-16 mx-auto text-slate-500 mb-4" />
-                                    <h3 className="text-xl font-semibold text-slate-300">No Geckos Found</h3>
-                                    <p className="text-slate-400 mt-2">Add your first gecko to get started!</p>
-                                </div>
-                            )
-                        )}
+                        ) : (
+                            <div className="text-center py-20 bg-slate-900 rounded-lg">
+                                <Users className="w-16 h-16 mx-auto text-slate-500 mb-4" />
+                                <h3 className="text-xl font-semibold text-slate-300">No Geckos Found</h3>
+                                <p className="text-slate-400 mt-2">Add your first gecko to get started!</p>
+                            </div>
+                        )
 
                         <AnimatePresence>
                             {isFormOpen && (
