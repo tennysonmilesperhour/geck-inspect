@@ -612,6 +612,7 @@ export default function MyGeckosPage() {
                                     <SelectItem value="status" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">Status</SelectItem>
                                     <SelectItem value="weight_heaviest" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">Weight (Heaviest)</SelectItem>
                                     <SelectItem value="weight_lightest" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">Weight (Lightest)</SelectItem>
+                                    {showArchived && <SelectItem value="archive_reason" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">Archive Reason</SelectItem>}
                                 </SelectContent>
                             </Select>
                         </div>
