@@ -526,6 +526,7 @@ export default function Lineage() {
     };
 
     const filteredSelectableGeckos = myGeckos.filter(g => 
+        !searchTerm ||
         g.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
         g.gecko_id_code?.toLowerCase().includes(searchTerm.toLowerCase())
     ).sort((a, b) => a.name.localeCompare(b.name));
