@@ -1518,6 +1518,7 @@ export default function BreedingPage() {
                                                 key={plan.id}
                                                 plan={plan}
                                                 geckos={geckos}
+                                                planEggs={allEggs.filter(e => e.breeding_plan_id === plan.id)}
                                                 onPlanUpdate={loadData}
                                                 onPlanDelete={handleDeletePlan}
                                                 onPlanArchive={handleArchivePlan}
