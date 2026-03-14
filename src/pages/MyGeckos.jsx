@@ -531,6 +531,7 @@ export default function MyGeckosPage() {
                                         <SelectItem value="status">Status</SelectItem>
                                         <SelectItem value="weight_heaviest">Weight (Heaviest)</SelectItem>
                                         <SelectItem value="weight_lightest">Weight (Lightest)</SelectItem>
+                                        {showArchived && <SelectItem value="archive_reason">Archive Reason</SelectItem>}
                                     </SelectContent>
                                 </Select>
                             </div>
