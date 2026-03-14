@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Loader2, GitBranch, Heart, Edit, Trash2, ChevronDown, ChevronUp, Egg as EggIcon, Calendar as CalendarIcon, Archive, ArchiveRestore, Sparkles, ListTree, Search, Dna } from 'lucide-react';
+import { PlusCircle, Loader2, GitBranch, Heart, Edit, Trash2, ChevronDown, ChevronUp, Egg as EggIcon, Calendar as CalendarIcon, Archive, ArchiveRestore, Sparkles, ListTree, Search, Dna, Leaf, Moon } from 'lucide-react';
 import Hatchery from '../components/breeding/Hatchery';
 import {
   Dialog,
@@ -882,6 +882,18 @@ function BreedingPlanCard({ plan, geckos, onPlanUpdate, onPlanDelete, onPlanArch
                         <Button variant="outline" size="sm" className="border-emerald-700 hover:bg-emerald-900 text-xs h-8 text-emerald-300" onClick={() => onToggleExpanded(plan.id)}>
                             {isExpanded ? <><ChevronUp size={14} className="mr-1" /> Collapse</> : <><ChevronDown size={14} className="mr-1" /> Expand</>}
                         </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            className={`text-xs h-8 ${plan.laying_active !== false ? 'border-green-600 text-green-400 hover:bg-green-900/20' : 'border-slate-600 text-slate-400 hover:bg-slate-800'}`}
+                            onClick={async () => {
+                                await BreedingPlan.update(plan.id, { laying_active: plan.laying_active === false ? true : false });
+                                onPlanUpdate();
+                            }}
+                            title={plan.laying_active !== false ? 'Active laying season — click to mark dormant' : 'Dormant — click to mark active'}
+                        >
+                            {plan.laying_active !== false ? <><Leaf size={14} className="mr-1" /> Active</> : <><Moon size={14} className="mr-1" /> Dormant</>}
+                        </Button>
                         {showArchiveButton && (
                             <Button
                                 variant="outline"
@@ -1315,6 +1327,11 @@ export default function BreedingPage() {
                     return new Date(b.pairing_date || b.created_date) - new Date(a.pairing_date || a.created_date);
                 case 'time_oldest':
                     return new Date(a.pairing_date || a.created_date) - new Date(b.pairing_date || b.created_date);
+                case 'laying_active':
+                    // active (true/undefined) before dormant (false)
+                    return (a.laying_active === false ? 1 : 0) - (b.laying_active === false ? 1 : 0);
+                case 'laying_dormant':
+                    return (b.laying_active === false ? 1 : 0) - (a.laying_active === false ? 1 : 0);
                 case 'newest':
                 default:
                     return new Date(b.created_date) - new Date(a.created_date);
