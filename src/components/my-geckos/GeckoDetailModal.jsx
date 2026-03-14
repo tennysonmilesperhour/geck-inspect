@@ -315,38 +315,55 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                       {growthSlots.map((slot, idx) => (
                         <button
                           key={slot.months}
-                          onClick={() => setSlideshowIndex(idx)}
+                          onClick={() => {
+                            setSlideshowIndex(idx);
+                            // Reset image index to the assigned image for this slot
+                            const assignedImg = slotImageMap[idx] ?? Math.min(idx, gecko.image_urls.length - 1);
+                            setSlideshowImageIndex(assignedImg);
+                          }}
                           className={`text-xs px-2 py-1 rounded transition-colors ${slideshowIndex === idx ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}`}
                         >
                           {slot.label}
                         </button>
                       ))}
                     </div>
-                    {/* Image display with navigation */}
+                    {/* Image display with navigation — arrows cycle through all photos */}
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onPointerDown={(e) => { e.stopPropagation(); if (slideshowIndex > 0) setSlideshowIndex(slideshowIndex - 1); }}
-                        disabled={slideshowIndex === 0}
+                        onPointerDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const prev = Math.max(0, slideshowImageIndex - 1);
+                          setSlideshowImageIndex(prev);
+                          setSlotImageMap(m => ({ ...m, [slideshowIndex]: prev }));
+                        }}
+                        disabled={slideshowImageIndex === 0}
                         className="bg-slate-700 hover:bg-slate-600 text-white p-1.5 rounded-lg disabled:opacity-30 flex-shrink-0 z-10"
                       >
                         <ChevronLeft className="w-5 h-5" />
                       </button>
                       <div className="relative flex-1 rounded-lg overflow-hidden bg-slate-800 min-h-[160px]">
                         <img
-                          key={`slide-${slideshowIndex}-${getSlotImage(slideshowIndex)}`}
-                          src={getSlotImage(slideshowIndex)}
-                          alt={`${gecko.name} at ${growthSlots[slideshowIndex]?.label}`}
+                          key={`slide-img-${slideshowImageIndex}`}
+                          src={gecko.image_urls[slideshowImageIndex] || 'https://i.imgur.com/sw9gnDp.png'}
+                          alt={`${gecko.name} photo ${slideshowImageIndex + 1}`}
                           className="w-full h-auto object-contain max-h-64"
                         />
                         <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-                          {growthSlots[slideshowIndex]?.label}
+                          {growthSlots[slideshowIndex]?.label} · {slideshowImageIndex + 1}/{gecko.image_urls.length}
                         </div>
                       </div>
                       <button
                         type="button"
-                        onPointerDown={(e) => { e.stopPropagation(); if (slideshowIndex < growthSlots.length - 1) setSlideshowIndex(slideshowIndex + 1); }}
-                        disabled={slideshowIndex === growthSlots.length - 1}
+                        onPointerDown={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          const next = Math.min(gecko.image_urls.length - 1, slideshowImageIndex + 1);
+                          setSlideshowImageIndex(next);
+                          setSlotImageMap(m => ({ ...m, [slideshowIndex]: next }));
+                        }}
+                        disabled={slideshowImageIndex === gecko.image_urls.length - 1}
                         className="bg-slate-700 hover:bg-slate-600 text-white p-1.5 rounded-lg disabled:opacity-30 flex-shrink-0 z-10"
                       >
                         <ChevronRight className="w-5 h-5" />
@@ -359,9 +376,12 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                         {gecko.image_urls.map((url, imgIdx) => (
                           <button
                             key={url}
-                            onClick={() => setSlotImageMap(prev => ({ ...prev, [slideshowIndex]: imgIdx }))}
+                            onClick={() => {
+                              setSlideshowImageIndex(imgIdx);
+                              setSlotImageMap(prev => ({ ...prev, [slideshowIndex]: imgIdx }));
+                            }}
                             className={`w-10 h-10 rounded overflow-hidden border-2 transition-all flex-shrink-0 ${
-                              (slotImageMap[slideshowIndex] ?? Math.min(slideshowIndex, gecko.image_urls.length - 1)) === imgIdx
+                              slideshowImageIndex === imgIdx
                                 ? 'border-emerald-500 scale-110'
                                 : 'border-slate-600 hover:border-slate-400'
                             }`}
@@ -371,7 +391,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                         ))}
                       </div>
                     </div>
-                    <p className="text-xs text-slate-500 text-center">Slot {slideshowIndex + 1} of {growthSlots.length}</p>
+                    <p className="text-xs text-slate-500 text-center">Milestone {slideshowIndex + 1} of {growthSlots.length}</p>
                   </div>
                 ) : (
                   <div className="w-full rounded-lg overflow-hidden">
