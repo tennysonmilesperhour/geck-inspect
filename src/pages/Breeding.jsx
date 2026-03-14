@@ -1303,19 +1303,12 @@ export default function BreedingPage() {
             );
         });
         
-        // Get egg counts and last egg dates for sorting
-        const plansWithData = await Promise.all(
-            filtered.map(async (plan) => {
-                try {
-                    const eggs = await Egg.filter({ breeding_plan_id: plan.id }, '-lay_date');
-                    const eggCount = eggs.length;
-                    const lastEggDate = eggs.length > 0 ? eggs[0].lay_date : null;
-                    return { ...plan, eggCount, lastEggDate };
-                } catch (error) {
-                    return { ...plan, eggCount: 0, lastEggDate: null };
-                }
-            })
-        );
+        // Get egg counts and last egg dates for sorting — use hoisted allEggs, no extra fetches
+        const plansWithData = filtered.map((plan) => {
+            const eggs = allEggs.filter(e => e.breeding_plan_id === plan.id);
+            const sorted = [...eggs].sort((a, b) => new Date(b.lay_date) - new Date(a.lay_date));
+            return { ...plan, eggCount: eggs.length, lastEggDate: sorted[0]?.lay_date ?? null };
+        });
         
         // Sort
         plansWithData.sort((a, b) => {
