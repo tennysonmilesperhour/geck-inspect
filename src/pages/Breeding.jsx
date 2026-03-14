@@ -1349,21 +1349,11 @@ export default function BreedingPage() {
     const [filteredArchivedPlans, setFilteredArchivedPlans] = useState([]);
     
     useEffect(() => {
-        const updateFilteredPlans = async () => {
-            const active = breedingPlans.filter(plan => !plan.archived);
-            const archived = breedingPlans.filter(plan => plan.archived);
-            
-            const filteredActive = await filterAndSortPlans(active);
-            const filteredArchived = await filterAndSortPlans(archived);
-            
-            setFilteredActivePlans(filteredActive);
-            setFilteredArchivedPlans(filteredArchived);
-        };
-        
-        if (breedingPlans.length > 0) {
-            updateFilteredPlans();
-        }
-    }, [breedingPlans, debouncedSearchTerm, sortBy, geckos]);
+        const active = breedingPlans.filter(plan => !plan.archived);
+        const archived = breedingPlans.filter(plan => plan.archived);
+        setFilteredActivePlans(filterAndSortPlans(active));
+        setFilteredArchivedPlans(filterAndSortPlans(archived));
+    }, [breedingPlans, allEggs, debouncedSearchTerm, sortBy, geckos]);
     
     const activePlans = filteredActivePlans;
     const archivedPlans = filteredArchivedPlans;
