@@ -1404,7 +1404,7 @@ export default function BreedingPage() {
         if (breedingPlans.length > 0) {
             updateFilteredPlans();
         }
-    }, [breedingPlans, searchTerm, sortBy, geckos]);
+    }, [breedingPlans, debouncedSearchTerm, sortBy, geckos]);
     
     const activePlans = filteredActivePlans;
     const archivedPlans = filteredArchivedPlans;
