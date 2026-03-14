@@ -25,11 +25,12 @@ const PlaceholderCardNode = ({ parentName, placeholderData, onEdit, size = 'norm
     const cardSize = size === 'tiny' ? 'w-24 h-28' : size === 'small' ? 'w-28 h-32' : 'w-36 h-44';
     const nameSize = size === 'tiny' ? 'text-[10px]' : size === 'small' ? 'text-xs' : 'text-sm';
     const hasData = placeholderData && (placeholderData.image_url || placeholderData.breeder_name);
+    const isEditable = !!onEdit;
     
     return (
         <Card
-            className={`flex-shrink-0 relative transition-all duration-300 overflow-hidden ${cardSize} bg-slate-800/50 border-2 border-dashed border-slate-600 hover:border-emerald-500 cursor-pointer`}
-            onClick={onEdit}
+            className={`flex-shrink-0 relative transition-all duration-300 overflow-hidden ${cardSize} bg-slate-800/50 border-2 border-dashed border-slate-600 ${isEditable ? 'hover:border-emerald-500 cursor-pointer' : 'cursor-default opacity-60'}`}
+            onClick={isEditable ? onEdit : undefined}
         >
             <div className="w-full h-full bg-slate-700 flex items-center justify-center relative">
                 <img 
