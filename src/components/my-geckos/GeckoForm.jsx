@@ -515,35 +515,99 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div>
+                        {/* Sire autocomplete */}
+                        <div ref={sireRef} className="relative">
                             <Label htmlFor="sire_input">Sire (Father)</Label>
-                            <Input
-                                id="sire_input"
-                                value={sireInput}
-                                onChange={(e) => handleSireInputChange(e.target.value)}
-                                placeholder="Type name or select from your collection"
-                                list="sire-suggestions"
-                            />
-                            <datalist id="sire-suggestions">
-                                {userGeckos.filter(g => g.sex === 'Male' && g.id !== gecko?.id).map(sire => (
-                                    <option key={sire.id} value={`${sire.name} (${sire.gecko_id_code || 'No ID'})`} />
-                                ))}
-                            </datalist>
+                            <div className="relative">
+                                <Input
+                                    id="sire_input"
+                                    value={sireInput}
+                                    onChange={(e) => { handleSireInputChange(e.target.value); setShowSireSuggestions(true); }}
+                                    onFocus={() => setShowSireSuggestions(true)}
+                                    onBlur={() => setTimeout(() => setShowSireSuggestions(false), 150)}
+                                    placeholder="Type name or click ▾ to browse"
+                                    className="pr-8"
+                                />
+                                <button
+                                    type="button"
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                                    onMouseDown={(e) => { e.preventDefault(); setShowSireSuggestions(v => !v); }}
+                                >
+                                    <ChevronDown className="w-4 h-4" />
+                                </button>
+                            </div>
+                            {showSireSuggestions && (
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-emerald-700 rounded-lg shadow-2xl z-[99999] max-h-48 overflow-y-auto">
+                                    <button
+                                        type="button"
+                                        className="w-full text-left px-3 py-2 text-sm text-slate-400 hover:bg-slate-700 italic"
+                                        onMouseDown={() => { setSireInput(''); setSireId(''); setShowSireSuggestions(false); }}
+                                    >
+                                        — None —
+                                    </button>
+                                    {userGeckos.filter(g => g.sex === 'Male' && g.id !== gecko?.id && (
+                                        !sireInput || g.name.toLowerCase().includes(sireInput.toLowerCase()) || g.gecko_id_code?.toLowerCase().includes(sireInput.toLowerCase())
+                                    )).map(s => (
+                                        <button
+                                            key={s.id}
+                                            type="button"
+                                            className="w-full text-left px-3 py-2 text-sm text-slate-200 hover:bg-emerald-800 flex items-center gap-2"
+                                            onMouseDown={() => { setSireInput(`${s.name} (${s.gecko_id_code || 'No ID'})`); setSireId(s.id); setShowSireSuggestions(false); }}
+                                        >
+                                            <img src={s.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'} alt={s.name} className="w-6 h-6 rounded object-cover flex-shrink-0" />
+                                            <span>{s.name}</span>
+                                            {s.gecko_id_code && <span className="text-slate-400 text-xs ml-auto">{s.gecko_id_code}</span>}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
-                        <div>
+                        {/* Dam autocomplete */}
+                        <div ref={damRef} className="relative">
                             <Label htmlFor="dam_input">Dam (Mother)</Label>
-                            <Input
-                                id="dam_input"
-                                value={damInput}
-                                onChange={(e) => handleDamInputChange(e.target.value)}
-                                placeholder="Type name or select from your collection"
-                                list="dam-suggestions"
-                            />
-                            <datalist id="dam-suggestions">
-                                {userGeckos.filter(g => g.sex === 'Female' && g.id !== gecko?.id).map(dam => (
-                                    <option key={dam.id} value={`${dam.name} (${dam.gecko_id_code || 'No ID'})`} />
-                                ))}
-                            </datalist>
+                            <div className="relative">
+                                <Input
+                                    id="dam_input"
+                                    value={damInput}
+                                    onChange={(e) => { handleDamInputChange(e.target.value); setShowDamSuggestions(true); }}
+                                    onFocus={() => setShowDamSuggestions(true)}
+                                    onBlur={() => setTimeout(() => setShowDamSuggestions(false), 150)}
+                                    placeholder="Type name or click ▾ to browse"
+                                    className="pr-8"
+                                />
+                                <button
+                                    type="button"
+                                    className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200"
+                                    onMouseDown={(e) => { e.preventDefault(); setShowDamSuggestions(v => !v); }}
+                                >
+                                    <ChevronDown className="w-4 h-4" />
+                                </button>
+                            </div>
+                            {showDamSuggestions && (
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-emerald-700 rounded-lg shadow-2xl z-[99999] max-h-48 overflow-y-auto">
+                                    <button
+                                        type="button"
+                                        className="w-full text-left px-3 py-2 text-sm text-slate-400 hover:bg-slate-700 italic"
+                                        onMouseDown={() => { setDamInput(''); setDamId(''); setShowDamSuggestions(false); }}
+                                    >
+                                        — None —
+                                    </button>
+                                    {userGeckos.filter(g => g.sex === 'Female' && g.id !== gecko?.id && (
+                                        !damInput || g.name.toLowerCase().includes(damInput.toLowerCase()) || g.gecko_id_code?.toLowerCase().includes(damInput.toLowerCase())
+                                    )).map(d => (
+                                        <button
+                                            key={d.id}
+                                            type="button"
+                                            className="w-full text-left px-3 py-2 text-sm text-slate-200 hover:bg-emerald-800 flex items-center gap-2"
+                                            onMouseDown={() => { setDamInput(`${d.name} (${d.gecko_id_code || 'No ID'})`); setDamId(d.id); setShowDamSuggestions(false); }}
+                                        >
+                                            <img src={d.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'} alt={d.name} className="w-6 h-6 rounded object-cover flex-shrink-0" />
+                                            <span>{d.name}</span>
+                                            {d.gecko_id_code && <span className="text-slate-400 text-xs ml-auto">{d.gecko_id_code}</span>}
+                                        </button>
+                                    ))}
+                                </div>
+                            )}
                         </div>
                     </div>
 
