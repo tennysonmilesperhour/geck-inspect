@@ -210,7 +210,7 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
     const handleSaveEggEdit = async (eggId, eggData) => {
         await Egg.update(eggId, { lay_date: eggData.lay_date, hatch_date_expected: eggData.hatch_date_expected });
         setEditedEggs(prev => ({ ...prev, [eggId]: {} }));
-        loadEggs();
+        onPlanUpdate();
     };
 
     const handleCancelEggEdit = (eggId) => {
