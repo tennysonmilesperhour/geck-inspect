@@ -21,6 +21,7 @@ export default function PublicProfile() {
     const [breedingGeckos, setBreedingGeckos] = useState([]);
     const [collectionGeckos, setCollectionGeckos] = useState([]);
     const [breedingPlans, setBreedingPlans] = useState([]);
+    const [weightRecords, setWeightRecords] = useState([]);
     const [currentUser, setCurrentUser] = useState(null);
     const [isFollowing, setIsFollowing] = useState(false);
     const [followRecord, setFollowRecord] = useState(null);

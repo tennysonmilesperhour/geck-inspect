@@ -126,6 +126,7 @@ export default function MyProfile() {
     const [breedingGeckos, setBreedingGeckos] = useState([]);
     const [collectionGeckos, setCollectionGeckos] = useState([]);
     const [breedingPlans, setBreedingPlans] = useState([]);
+    const [weightRecords, setWeightRecords] = useState([]);
 
     const syncEditData = (currentUser) => {
         if (!currentUser) return;
