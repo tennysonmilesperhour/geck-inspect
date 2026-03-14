@@ -530,17 +530,46 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                 </Link>
 
                 {onArchive && (
-                  <Button
-                    variant="outline"
-                    onClick={() => onArchive(gecko.id, !gecko.archived)}
-                    className="w-full border-yellow-600 text-yellow-500 hover:bg-yellow-900/20"
-                  >
-                    {gecko.archived ? (
-                      <><ArchiveRestore className="w-4 h-4 mr-2" /> Unarchive</>
-                    ) : (
-                      <><Archive className="w-4 h-4 mr-2" /> Archive</>
+                  <div className="space-y-2">
+                    {gecko.archived && gecko.archive_reason && (
+                      <div className="bg-slate-800 p-3 rounded-lg">
+                        <p className="text-xs text-slate-400 mb-2">Archive reason:</p>
+                        <div className="flex gap-2">
+                          {[
+                            { value: 'death', label: 'Passed Away' },
+                            { value: 'sold', label: 'Sold' },
+                            { value: 'other', label: 'Other' },
+                          ].map(opt => (
+                            <button
+                              key={opt.value}
+                              onClick={async () => {
+                                await Gecko.update(gecko.id, { archive_reason: opt.value });
+                                if (onUpdate) onUpdate();
+                              }}
+                              className={`text-xs px-2 py-1 rounded border transition-colors ${
+                                gecko.archive_reason === opt.value
+                                  ? 'border-yellow-500 bg-yellow-900/40 text-yellow-300'
+                                  : 'border-slate-600 text-slate-400 hover:bg-slate-700'
+                              }`}
+                            >
+                              {opt.label}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
                     )}
-                  </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => onArchive(gecko.id, !gecko.archived)}
+                      className="w-full border-yellow-600 text-yellow-500 hover:bg-yellow-900/20"
+                    >
+                      {gecko.archived ? (
+                        <><ArchiveRestore className="w-4 h-4 mr-2" /> Unarchive</>
+                      ) : (
+                        <><Archive className="w-4 h-4 mr-2" /> Archive</>
+                      )}
+                    </Button>
+                  </div>
                 )}
               </div>
             </div>
