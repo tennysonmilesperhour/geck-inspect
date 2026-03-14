@@ -466,7 +466,7 @@ export default function MyGeckosPage() {
     };
 
     const searchFiltered = geckos
-        .filter(gecko => showArchived ? gecko.archived : !gecko.archived)
+        .filter(gecko => showArchived ? gecko.archived : (!gecko.archived && gecko.status !== 'Sold'))
         .filter(gecko => {
             const term = searchTerm.toLowerCase();
             return (
