@@ -33,7 +33,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { format, addDays, addMonths, differenceInDays } from 'date-fns';
 import { generateCalendarEvent } from '@/functions/generateCalendarEvent';
-import { generateHatchedGeckoId } from '@/utils/geckoIdUtils';
+import { generateHatchedGeckoId } from '@/functions/geckoIdUtils';
 
 const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
 

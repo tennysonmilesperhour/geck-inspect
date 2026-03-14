@@ -18,7 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { generateHatchedGeckoId, generateFounderGeckoId } from '@/utils/geckoIdUtils';
+import { generateHatchedGeckoId, generateFounderGeckoId } from '@/functions/geckoIdUtils';
 
 // Helper to generate Google Calendar link
 const createGoogleCalendarLink = (title, start, end, description, location) => {
