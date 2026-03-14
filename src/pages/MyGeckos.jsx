@@ -731,6 +731,15 @@ export default function MyGeckosPage() {
                                                                             Born: {new Date(gecko.hatch_date).toLocaleDateString()}
                                                                         </span>
                                                                     )}
+                                                                    {showArchived && gecko.archive_reason && (
+                                                                        <span className={`text-xs px-2 py-0.5 rounded-full border ${
+                                                                            gecko.archive_reason === 'death' ? 'border-red-700 text-red-400 bg-red-900/20' :
+                                                                            gecko.archive_reason === 'sold' ? 'border-blue-700 text-blue-400 bg-blue-900/20' :
+                                                                            'border-slate-600 text-slate-400 bg-slate-800'
+                                                                        }`}>
+                                                                            {gecko.archive_reason === 'death' ? 'Passed Away' : gecko.archive_reason === 'sold' ? 'Sold' : 'Other'}
+                                                                        </span>
+                                                                    )}
                                                                 </div>
                                                                 {gecko.morphs_traits && (
                                                                     <p className="text-sm text-slate-400 mt-1 truncate">{gecko.morphs_traits}</p>
