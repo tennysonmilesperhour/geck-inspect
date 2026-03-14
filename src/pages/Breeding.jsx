@@ -87,8 +87,7 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
             const newCount = (plan.egg_check_count || 0) + 1;
             await BreedingPlan.update(plan.id, { egg_check_count: newCount });
             
-            loadEggs();
-            onPlanUpdate(); // Refresh plan data
+            onPlanUpdate();
         } catch (error) {
             console.error("Failed to add eggs:", error);
         }
