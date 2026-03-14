@@ -549,7 +549,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                 
                 {isLoading ? (
                   <div className="flex items-center justify-center h-48">
-                    <Loader2 className="w-8 h-8 animate-spin text-emerald-400"/>
+                    <LoadingSpinner size="md" />
                   </div>
                 ) : chartData.length > 0 ? (
                   <div className="space-y-4">

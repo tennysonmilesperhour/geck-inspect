@@ -176,7 +176,7 @@ export default function Hatchery() {
     if (isLoading) {
         return (
             <div className="flex justify-center items-center py-20">
-                <Loader2 className="w-12 h-12 text-emerald-500 animate-spin" />
+                <LoadingSpinner />
             </div>
         );
     }

@@ -1423,7 +1423,7 @@ export default function BreedingPage() {
     if (authChecked && !user) {
         const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
         return (
-            <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center"><Loader2 className="w-12 h-12 text-emerald-500 animate-spin" /></div>}>
+            <Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center"><LoadingSpinner /></div>}>
                 <LoginPortal requiredFeature="Breeding Management" />
             </Suspense>
         );
@@ -1448,7 +1448,7 @@ export default function BreedingPage() {
 
                 {isLoading ? (
                     <div className="text-center py-20">
-                        <Loader2 className="w-12 h-12 text-emerald-500 animate-spin mx-auto" />
+                        <LoadingSpinner />
                     </div>
                 ) : (
                     <Tabs value={activeTab} onValueChange={(value) => {

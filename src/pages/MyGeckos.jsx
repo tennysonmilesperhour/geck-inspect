@@ -476,7 +476,7 @@ export default function MyGeckosPage() {
     if (!user && !isLoading) {
         const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
         return (
-            <React.Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center"><Loader2 className="w-12 h-12 text-emerald-500 animate-spin" /></div>}>
+            <React.Suspense fallback={<div className="min-h-screen bg-slate-950 flex items-center justify-center"><LoadingSpinner /></div>}>
                 <LoginPortal requiredFeature="My Gecko Collection" />
             </React.Suspense>
         );
@@ -628,7 +628,7 @@ export default function MyGeckosPage() {
 
                 {isLoading ? (
                     <div className="text-center py-20">
-                        <Loader2 className="w-12 h-12 text-emerald-500 animate-spin mx-auto" />
+                        <LoadingSpinner />
                     </div>
                 ) : (
                     <>
