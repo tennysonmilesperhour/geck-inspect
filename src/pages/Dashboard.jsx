@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { User, Gecko, GeckoImage, ForumPost, GeckoOfTheDay as GotdEntity } from "@/entities/all"; // Renamed GeckoOfTheDay to avoid conflict
 import { BarChart3, Users, GitBranch, Image as ImageIcon, MessageSquare, Star, Sparkles, Eye } from 'lucide-react';
@@ -33,11 +32,11 @@ export default function Dashboard() {
                 const today = format(new Date(), 'yyyy-MM-dd');
                 const [currentUser, usersData, geckos, posts, gotd, allGeckoImages, recentImagesData] = await Promise.all([
                     User.me().catch(() => null),
-                    User.list(),
+                    User.list('-created_date', 100),
                     Gecko.list(),
-                    ForumPost.list().catch(() => []),
+                    ForumPost.list('-created_date', 10).catch(() => []),
                     GotdEntity.filter({ date: today }, '-created_date', 1).catch(() => []),
-                    GeckoImage.list(),
+                    GeckoImage.list('-created_date', 20),
                     GeckoImage.list('-created_date', 5)
                 ]);
 
