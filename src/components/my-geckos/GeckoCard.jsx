@@ -57,8 +57,8 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
   };
 
   return (
-    <Card className="gecko-card group overflow-hidden">
-      <div className="relative">
+    <Card className="gecko-card group">
+      <div className="relative overflow-hidden rounded-t-xl">
         <img 
           src={primaryImage} 
           alt={gecko.name}
