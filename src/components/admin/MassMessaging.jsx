@@ -118,7 +118,7 @@ Format as a subject line and body content with bullet points for the features.`;
 
             // Send messages and notifications to each user
             let sentCount = 0;
-            for (const user of targetUsers) {
+            for (const user of targetUsers.filter(u => u.email !== currentAdmin.email)) {
                 try {
                     // Create direct message using current admin's email
                     await DirectMessage.create({
