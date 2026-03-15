@@ -287,15 +287,17 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
             )}
           </div>
           <div className="flex items-center gap-2">
-            <Button 
+            {!gecko.archived && (
+              <Button 
                 variant="outline" 
                 size="sm"
                 onClick={() => onEdit(gecko)}
                 className="border-slate-600 hover:bg-slate-800"
-            >
+              >
                 <Edit className="w-4 h-4 mr-2" />
                 Edit
-            </Button>
+              </Button>
+            )}
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="w-5 h-5 text-slate-400" />
             </Button>
@@ -569,7 +571,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                     <Button
                       variant="outline"
                       onClick={() => onArchive(gecko.id, !gecko.archived)}
-                      className="w-full border-yellow-600 text-yellow-500 hover:bg-yellow-900/20"
+                      className={gecko.archived ? "w-full border-emerald-600 text-emerald-500 hover:bg-emerald-900/20" : "w-full border-red-600 text-red-500 hover:bg-red-900/20"}
                     >
                       {gecko.archived ? (
                         <><ArchiveRestore className="w-4 h-4 mr-2" /> Unarchive</>

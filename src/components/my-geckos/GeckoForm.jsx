@@ -512,7 +512,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                      disabled={isArchived}
                                      className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
-                                <Select value={hatchMonth} onValueChange={setHatchMonth}>
+                                <Select value={hatchMonth} onValueChange={setHatchMonth} disabled={isArchived}>
                                     <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100">
                                         <SelectValue placeholder="Month" />
                                     </SelectTrigger>
