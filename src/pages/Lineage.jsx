@@ -193,7 +193,7 @@ export default function Lineage() {
     const fetchAllData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const currentUser = await base44.auth.me();
+            const currentUser = await base44Client.auth.me();
             const [userGeckos, allVisibleGeckos, userPlaceholders] = await Promise.all([
                 Gecko.filter({ created_by: currentUser.email }),
                 Gecko.list(),
