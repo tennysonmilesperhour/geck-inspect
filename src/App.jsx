@@ -12,6 +12,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 // Add page imports here
 import ForumPost from './pages/ForumPost';
 import MarketplaceSalesStats from './pages/MarketplaceSalesStats';
+import Marketplace from './pages/Marketplace';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -71,6 +72,11 @@ const AuthenticatedApp = () => {
       <Route path="/MarketplaceSalesStats" element={
         <LayoutWrapper currentPageName="MarketplaceSalesStats">
           <MarketplaceSalesStats />
+        </LayoutWrapper>
+      } />
+      <Route path="/Marketplace" element={
+        <LayoutWrapper currentPageName="Marketplace">
+          <Marketplace />
         </LayoutWrapper>
       } />
       <Route path="*" element={<PageNotFound />} />

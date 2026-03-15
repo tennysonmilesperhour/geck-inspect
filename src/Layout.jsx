@@ -150,14 +150,13 @@ const publicNavItems = [
   { title: "Care Guide", url: createPageUrl("CareGuide"), icon: Heart },
   { title: "Forum", url: createPageUrl("Forum"), icon: MessageSquare },
   { title: "Image Gallery", url: createPageUrl("Gallery"), icon: Database },
-  { title: "Marketplace", url: createPageUrl("MarketplaceBuy"), icon: ShoppingCart }
+  { title: "Marketplace", url: createPageUrl("Marketplace"), icon: ShoppingCart }
 ];
 
 const userSpecificNavItems = [
   { title: "My Geckos", url: createPageUrl("MyGeckos"), icon: Users, requiresAuth: true },
   { title: "Breeding", url: createPageUrl("Breeding"), icon: GitBranch, requiresAuth: true },
   { title: "Lineage", url: createPageUrl("Lineage"), icon: GitBranch, requiresAuth: true },
-  { title: "Sell Geckos", url: createPageUrl("MarketplaceSell"), icon: Upload, requiresAuth: true },
   { title: "Sales Stats", url: createPageUrl("MarketplaceSalesStats"), icon: BarChart3, requiresAuth: true },
   { title: "My Profile", url: createPageUrl("MyProfile"), icon: Users, requiresAuth: true },
   { title: "Train Model", url: createPageUrl("Training"), icon: Upload, requiresAuth: true },
@@ -580,8 +579,7 @@ function LayoutContent({ children, currentPageName }) {
       { page_name: "MyGeckos", display_name: "My Geckos", icon: "Users", category: "collection", requires_auth: true, is_enabled: true, order: 1 },
       { page_name: "Breeding", display_name: "Breeding", icon: "GitBranch", category: "collection", requires_auth: true, is_enabled: true, order: 2 },
       { page_name: "Lineage", display_name: "Lineage", icon: "GitBranch", category: "collection", requires_auth: true, is_enabled: true, order: 3 },
-      { page_name: "MarketplaceSell", display_name: "Sell Geckos", icon: "Upload", category: "collection", requires_auth: true, is_enabled: true, order: 4 },
-      { page_name: "MyProfile", display_name: "My Profile", icon: "Users", category: "collection", requires_auth: true, is_enabled: true, order: 5 },
+      { page_name: "MyProfile", display_name: "My Profile", icon: "Users", category: "collection", requires_auth: true, is_enabled: true, order: 4 },
     ],
     tools: [
       { page_name: "Recognition", display_name: "Morph ID", icon: "Search", category: "tools", requires_auth: false, is_enabled: true, order: 1 },
@@ -594,7 +592,7 @@ function LayoutContent({ children, currentPageName }) {
       { page_name: "CareGuide", display_name: "Care Guide", icon: "Heart", category: "public", requires_auth: false, is_enabled: true, order: 3 },
       { page_name: "Forum", display_name: "Forum", icon: "MessageSquare", category: "public", requires_auth: false, is_enabled: true, order: 4 },
       { page_name: "Gallery", display_name: "Image Gallery", icon: "Database", category: "public", requires_auth: false, is_enabled: true, order: 5 },
-      { page_name: "MarketplaceBuy", display_name: "Marketplace", icon: "ShoppingCart", category: "public", requires_auth: false, is_enabled: true, order: 6 },
+      { page_name: "Marketplace", display_name: "Marketplace", icon: "ShoppingCart", category: "public", requires_auth: false, is_enabled: true, order: 6 },
     ],
   };
 

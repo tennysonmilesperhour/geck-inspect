@@ -79,14 +79,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
           <span className={`${getSexColor(gecko.sex)} text-3xl font-bold drop-shadow-lg`}>
             {getSexIcon(gecko.sex)}
           </span>
-          {gecko.archived && gecko.archive_reason ? (
-            <div
-              className="w-6 h-6 rounded-full flex items-center justify-center text-lg shadow-lg bg-black/40"
-              title={`Archive reason: ${gecko.archive_reason === 'death' ? 'Passed Away' : gecko.archive_reason === 'sold' ? 'Sold' : 'Other'}`}
-            >
-              {getArchiveReasonIcon(gecko.archive_reason)}
-            </div>
-          ) : feedingGroup && (
+          {!gecko.archived && feedingGroup && (
             <div
               className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg border border-white/30"
               style={{ backgroundColor: feedingGroup.color || '#f97316' }}
@@ -96,6 +89,16 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
             </div>
           )}
         </div>
+
+        {gecko.archived && gecko.archive_reason && (
+          <div
+            className="absolute top-2 right-2 text-3xl drop-shadow-lg"
+            title={`Archive reason: ${gecko.archive_reason === 'death' ? 'Passed Away' : gecko.archive_reason === 'sold' ? 'Sold' : 'Other'}`}
+            style={{ zIndex: 10 }}
+          >
+            {getArchiveReasonIcon(gecko.archive_reason)}
+          </div>
+        )}
 
         <div className="absolute bottom-2 right-2 flex flex-col gap-2 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-300">
           <Button
