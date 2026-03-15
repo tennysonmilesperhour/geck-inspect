@@ -80,6 +80,7 @@ const initialFormData = {
 const DEFAULT_GECKO_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
 
 export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, onCancel, isHatching = false, onDelete, breedingPlan = null, feedingGroups: feedingGroupsProp = null }) {
+    const isArchived = gecko?.archived;
     const [formData, setFormData] = useState(initialFormData);
     const [isSaving, setIsSaving] = useState(false);
     // Change sire/dam to use text inputs instead of just IDs
@@ -482,15 +483,21 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                 </CardHeader>
 
                 <form onSubmit={handleSave} className="flex-grow overflow-y-auto space-y-4 p-4">
+                    {isArchived && (
+                        <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg p-3 mb-4">
+                            <p className="text-sm text-yellow-200"><strong>This gecko is archived.</strong> Only the archive reason can be edited. Unarchive to make other changes.</p>
+                        </div>
+                    )}
+
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                         <div>
+                             <Label htmlFor="name">Name *</Label>
+                             <Input id="name" value={formData.name} onChange={(e) => handleChange('name', e.target.value)} required disabled={isArchived} className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed" />
+                         </div>
                         <div>
-                            <Label htmlFor="name">Name *</Label>
-                            <Input id="name" value={formData.name} onChange={(e) => handleChange('name', e.target.value)} required className="bg-slate-800 border-slate-600 text-slate-100" />
-                        </div>
-                        <div>
-                            <Label htmlFor="gecko_id_code">ID Code</Label>
-                            <Input id="gecko_id_code" value={formData.gecko_id_code} onChange={(e) => handleChange('gecko_id_code', e.target.value)} className="bg-slate-800 border-slate-600 text-slate-100" />
-                        </div>
+                             <Label htmlFor="gecko_id_code">ID Code</Label>
+                             <Input id="gecko_id_code" value={formData.gecko_id_code} onChange={(e) => handleChange('gecko_id_code', e.target.value)} disabled={isArchived} className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed" />
+                         </div>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -501,8 +508,9 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                     placeholder="YYYY"
                                     maxLength={4}
                                     value={hatchYear}
-                                    onChange={(e) => setHatchYear(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
-                                    className="bg-slate-800 border-slate-600 text-slate-100"
+                                     onChange={(e) => setHatchYear(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
+                                     disabled={isArchived}
+                                     className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
                                 <Select value={hatchMonth} onValueChange={setHatchMonth}>
                                     <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100">
@@ -519,14 +527,15 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                     placeholder="DD"
                                     maxLength={2}
                                     value={hatchDay}
-                                    onChange={(e) => setHatchDay(e.target.value.replace(/[^0-9]/g, '').slice(0, 2))}
-                                    className="bg-slate-800 border-slate-600 text-slate-100"
+                                     onChange={(e) => setHatchDay(e.target.value.replace(/[^0-9]/g, '').slice(0, 2))}
+                                     disabled={isArchived}
+                                     className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
                             </div>
                         </div>
                         <div>
                             <Label htmlFor="sex">Sex *</Label>
-                            <Select value={formData.sex} onValueChange={(v) => handleChange('sex', v)}>
+                            <Select value={formData.sex} onValueChange={(v) => handleChange('sex', v)} disabled={isArchived}>
                                 <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100"><SelectValue /></SelectTrigger>
                                 <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
                                     <SelectItem value="Unsexed" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Unsexed</SelectItem>
@@ -544,12 +553,13 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                             <div className="relative flex items-center">
                                 <Input
                                    id="sire_input"
-                                   value={sireInput}
-                                   onChange={(e) => { handleSireInputChange(e.target.value); setShowSireSuggestions(true); }}
-                                   onFocus={() => setShowSireSuggestions(true)}
-                                   onBlur={() => setTimeout(() => setShowSireSuggestions(false), 150)}
-                                   placeholder="Type or browse males..."
-                                   className="bg-slate-800 border-slate-600 text-slate-100 pr-8"
+                                    value={sireInput}
+                                    onChange={(e) => { handleSireInputChange(e.target.value); setShowSireSuggestions(true); }}
+                                    onFocus={() => setShowSireSuggestions(true)}
+                                    onBlur={() => setTimeout(() => setShowSireSuggestions(false), 150)}
+                                    placeholder="Type or browse males..."
+                                    disabled={isArchived}
+                                    className="bg-slate-800 border-slate-600 text-slate-100 pr-8 disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
                                 <ChevronDown
                                     className="w-4 h-4 absolute right-2 text-slate-400 pointer-events-none"
@@ -580,12 +590,13 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                             <div className="relative flex items-center">
                                 <Input
                                     id="dam_input"
-                                    value={damInput}
-                                    onChange={(e) => { handleDamInputChange(e.target.value); setShowDamSuggestions(true); }}
-                                    onFocus={() => setShowDamSuggestions(true)}
-                                    onBlur={() => setTimeout(() => setShowDamSuggestions(false), 150)}
-                                    placeholder="Type or browse females..."
-                                    className="bg-slate-800 border-slate-600 text-slate-100 pr-8"
+                                     value={damInput}
+                                     onChange={(e) => { handleDamInputChange(e.target.value); setShowDamSuggestions(true); }}
+                                     onFocus={() => setShowDamSuggestions(true)}
+                                     onBlur={() => setTimeout(() => setShowDamSuggestions(false), 150)}
+                                     placeholder="Type or browse females..."
+                                     disabled={isArchived}
+                                     className="bg-slate-800 border-slate-600 text-slate-100 pr-8 disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
                                 <ChevronDown
                                     className="w-4 h-4 absolute right-2 text-slate-400 pointer-events-none"
@@ -622,10 +633,11 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                             <p className="text-sm text-sage-600 dark:text-sage-300 mt-1">Makes the gecko visible on the marketplace.</p>
                         </div>
                         <Switch
-                            checked={isForSale}
-                            onCheckedChange={handleForSaleToggle}
-                            className="data-[state=checked]:bg-green-500"
-                        />
+                             checked={isForSale}
+                             onCheckedChange={handleForSaleToggle}
+                             disabled={isArchived}
+                             className="data-[state=checked]:bg-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                         />
                     </div>
                     
                     {/* Public Display Toggle */}
@@ -635,10 +647,12 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                             <p className="text-xs text-slate-400">Show in public profile and marketplace</p>
                         </div>
                         <Switch
-                            id="is_public"
-                            checked={formData.is_public !== false}
-                            onCheckedChange={(checked) => handleChange('is_public', checked)}
-                        />
+                             id="is_public"
+                             checked={formData.is_public !== false}
+                             onCheckedChange={(checked) => handleChange('is_public', checked)}
+                             disabled={isArchived}
+                             className="disabled:opacity-50 disabled:cursor-not-allowed"
+                         />
                     </div>
                     
                     {/* Gallery Display Toggle */}
@@ -648,16 +662,18 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                             <p className="text-xs text-slate-400">Show in public gallery</p>
                         </div>
                         <Switch
-                            id="gallery_display"
-                            checked={formData.gallery_display || false}
-                            onCheckedChange={(checked) => handleChange('gallery_display', checked)}
-                        />
+                             id="gallery_display"
+                             checked={formData.gallery_display || false}
+                             onCheckedChange={(checked) => handleChange('gallery_display', checked)}
+                             disabled={isArchived}
+                             className="disabled:opacity-50 disabled:cursor-not-allowed"
+                         />
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <Label htmlFor="status">Status</Label>
-                            <Select value={formData.status} onValueChange={(v) => handleChange('status', v)} disabled={isForSale}>
+                            <Select value={formData.status} onValueChange={(v) => handleChange('status', v)} disabled={isForSale || isArchived}>
                                 <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100"><SelectValue /></SelectTrigger>
                                 <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
                                     <SelectItem value="Pet" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Pet</SelectItem>
@@ -673,45 +689,48 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         <div>
                             <Label htmlFor="asking_price">Asking Price ($)</Label>
                             <Input 
-                                id="asking_price" 
-                                type="number" 
-                                step="0.01" 
-                                value={formData.asking_price} 
-                                onChange={(e) => handleChange('asking_price', e.target.value)} 
-                                placeholder="e.g., 250.00"
-                                className="bg-slate-800 border-slate-600 text-slate-100"
-                            />
+                                 id="asking_price" 
+                                 type="number" 
+                                 step="0.01" 
+                                 value={formData.asking_price} 
+                                 onChange={(e) => handleChange('asking_price', e.target.value)} 
+                                 placeholder="e.g., 250.00"
+                                 disabled={isArchived}
+                                 className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                             />
                         </div>
                     </div>
 
                     <div>
                         <Label htmlFor="weight_grams">Current Weight (grams)</Label>
                         <Input 
-                            id="weight_grams" 
-                            type="number" 
-                            step="0.1" 
-                            value={formData.weight_grams} 
-                            onChange={(e) => handleChange('weight_grams', e.target.value)} 
-                            placeholder="e.g., 50.3"
-                            className="bg-slate-800 border-slate-600 text-slate-100"
-                        />
+                             id="weight_grams" 
+                             type="number" 
+                             step="0.1" 
+                             value={formData.weight_grams} 
+                             onChange={(e) => handleChange('weight_grams', e.target.value)} 
+                             placeholder="e.g., 50.3"
+                             disabled={isArchived}
+                             className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                         />
                     </div>
 
                     <div>
                         <Label htmlFor="morphs_traits">Morphs & Traits (Free Text)</Label>
-                        <Textarea id="morphs_traits" value={formData.morphs_traits} onChange={(e) => handleChange('morphs_traits', e.target.value)} className="bg-slate-800 border-slate-600 text-slate-100" />
+                        <Textarea id="morphs_traits" value={formData.morphs_traits} onChange={(e) => handleChange('morphs_traits', e.target.value)} disabled={isArchived} className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed" />
                     </div>
 
                     {/* Morph ID Tags */}
-                    <MorphIDSelector
-                        selectedMorphs={formData.morph_tags || []}
-                        onMorphsChange={(tags) => handleChange('morph_tags', tags)}
-                    />
+                     <MorphIDSelector
+                         selectedMorphs={formData.morph_tags || []}
+                         onMorphsChange={(tags) => handleChange('morph_tags', tags)}
+                         disabled={isArchived}
+                     />
 
                     {/* Feeding Group */}
                     <div>
                         <Label>Feeding Group</Label>
-                        <Select value={formData.feeding_group_id || 'none'} onValueChange={(v) => handleChange('feeding_group_id', v === 'none' ? null : v)}>
+                        <Select value={formData.feeding_group_id || 'none'} onValueChange={(v) => handleChange('feeding_group_id', v === 'none' ? null : v)} disabled={isArchived}>
                             <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100">
                                 <SelectValue placeholder="No group assigned" />
                             </SelectTrigger>
@@ -731,7 +750,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
 
                     <div>
                         <Label htmlFor="notes">Notes</Label>
-                        <Textarea id="notes" value={formData.notes} onChange={(e) => handleChange('notes', e.target.value)} className="bg-slate-800 border-slate-600 text-slate-100" />
+                        <Textarea id="notes" value={formData.notes} onChange={(e) => handleChange('notes', e.target.value)} disabled={isArchived} className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed" />
                     </div>
                     
                     {/* Enhanced Images Section */}
@@ -817,9 +836,13 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     {gecko && onDelete && (
                          <AlertDialog>
                             <AlertDialogTrigger asChild>
-                                <Button variant="destructive" className="h-10">
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    Archive
+                                <Button variant="destructive" className="h-10" disabled={isArchived}>
+                                    {isArchived ? (
+                                        <></>
+                                    ) : (
+                                        <><Trash2 className="w-4 h-4 mr-2" /></>
+                                    )}
+                                    {isArchived ? 'Archived' : 'Archive'}
                                 </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent className="bg-slate-900 border-slate-700">
