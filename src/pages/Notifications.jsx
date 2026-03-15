@@ -107,14 +107,6 @@ export default function NotificationsPage() {
         }
     };
 
-    const deleteNotification = async (notificationId) => {
-        try {
-            await Notification.delete(notificationId);
-            setNotifications(prev => prev.filter(notif => notif.id !== notificationId));
-        } catch (error) {
-            console.error("Failed to delete notification:", error);
-        }
-    };
 
     if (!user) {
         return (
