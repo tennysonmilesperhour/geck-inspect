@@ -319,7 +319,7 @@ function LayoutContent({ children, currentPageName }) {
       };
 
       fetchUnread();
-      const interval = setInterval(fetchUnread, 30 * 60 * 1000); // Every 30 minutes
+      const interval = setInterval(fetchUnread, 60 * 1000); // Every 60 seconds
       return () => clearInterval(interval);
     } else {
       setUnreadNotificationsCount(0);
