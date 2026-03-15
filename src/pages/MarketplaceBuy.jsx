@@ -13,7 +13,7 @@ import { createPageUrl } from '@/utils';
 import MessageUserButton from '../components/ui/MessageUserButton';
 
 // Marketplace-specific Gecko Card
-const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike }) => {
+const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike, onViewLineage }) => {
     const getSexIcon = (sex) => sex === 'Male' ? '♂' : sex === 'Female' ? '♀' : '?';
     const getSexColor = (sex) => sex === 'Male' ? 'text-blue-400' : sex === 'Female' ? 'text-pink-400' : 'text-gray-400';
 
@@ -75,14 +75,14 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                        </div>
                     )}
                     <div className="flex gap-2">
-                       <Button
-                           variant="outline"
-                           size="sm"
-                           onClick={(e) => handleViewLineage(gecko.id, e)}
-                           className="flex-1"
-                       >
-                           <GitBranch className="w-3 h-3 mr-1" /> Lineage
-                       </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            onClick={(e) => onViewLineage(gecko.id, e)}
+                            className="flex-1"
+                        >
+                            <GitBranch className="w-3 h-3 mr-1" /> Lineage
+                        </Button>
                        {currentUser && owner && currentUser.id !== owner.id && (
                            <MessageUserButton 
                               recipientEmail={owner.email}
@@ -237,6 +237,7 @@ export default function MarketplaceBuyPage() {
                                    currentUser={currentUser}
                                    isLiked={likedGeckoIds.has(gecko.id)}
                                    onToggleLike={handleToggleLike}
+                                   onViewLineage={handleViewLineage}
                                />
                            </div>
                         ))}
