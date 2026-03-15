@@ -521,7 +521,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                 </Button>
 
                 <Link 
-                  to={createPageUrl(`Lineage?geckoId=${gecko.id}`)}
+                  to={`${createPageUrl('Lineage')}?geckoId=${gecko.id}`}
                   className="w-full"
                   onClick={onClose}
                 >
