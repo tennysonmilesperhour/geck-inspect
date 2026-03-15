@@ -309,13 +309,11 @@ export default function GeckoDetail() {
                                         <p className="text-slate-200 font-medium">{dam ? dam.name : (gecko.dam_name || 'Unknown')}</p>
                                     </div>
                                 </div>
-                                {isOwner && (
-                                    <Link to={createPageUrl(`Lineage?geckoId=${gecko.id}`)}>
-                                        <Button variant="outline" size="sm" className="w-full border-slate-600 hover:bg-slate-800">
-                                            <GitBranch className="w-4 h-4 mr-2" /> View Full Lineage Tree
-                                        </Button>
-                                    </Link>
-                                )}
+                                <Link to={createPageUrl(`Lineage?geckoId=${gecko.id}`)}>
+                                    <Button variant="outline" size="sm" className="w-full border-slate-600 hover:bg-slate-800">
+                                        <GitBranch className="w-4 h-4 mr-2" /> View Full Lineage Tree
+                                    </Button>
+                                </Link>
                             </CardContent>
                         </Card>
 

@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, DollarSign, Users, MapPin, MessageSquare, Heart, Loader2, ShoppingBag } from 'lucide-react';
+import { Search, DollarSign, Users, MapPin, MessageSquare, Heart, Loader2, ShoppingBag, GitBranch } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
 import { useNavigate, Link } from 'react-router-dom';
@@ -69,20 +69,30 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                         </Link>
                     </div>
                     {owner?.location && (
-                        <div className="flex items-center gap-1 text-xs text-slate-400">
-                            <MapPin className="w-3 h-3" />
-                            <span>{owner.location}</span>
-                        </div>
+                       <div className="flex items-center gap-1 text-xs text-slate-400">
+                           <MapPin className="w-3 h-3" />
+                           <span>{owner.location}</span>
+                       </div>
                     )}
-                     {currentUser && owner && currentUser.id !== owner.id && (
-                        <MessageUserButton 
-                           recipientEmail={owner.email}
-                           recipientName={owner.full_name}
+                    <div className="flex gap-2">
+                       <Button
                            variant="outline"
                            size="sm"
-                           className="w-full"
-                        />
-                    )}
+                           onClick={(e) => handleViewLineage(gecko.id, e)}
+                           className="flex-1"
+                       >
+                           <GitBranch className="w-3 h-3 mr-1" /> Lineage
+                       </Button>
+                       {currentUser && owner && currentUser.id !== owner.id && (
+                           <MessageUserButton 
+                              recipientEmail={owner.email}
+                              recipientName={owner.full_name}
+                              variant="outline"
+                              size="sm"
+                              className="flex-1"
+                           />
+                       )}
+                    </div>
                 </div>
             </CardContent>
         </Card>
@@ -180,6 +190,11 @@ export default function MarketplaceBuyPage() {
     
     const handleViewDetails = (geckoId) => {
         navigate(createPageUrl(`GeckoDetail?id=${geckoId}`));
+    };
+
+    const handleViewLineage = (geckoId, e) => {
+        e.stopPropagation();
+        navigate(createPageUrl(`Lineage?geckoId=${geckoId}`));
     };
 
     const filteredGeckos = geckos.filter(gecko =>

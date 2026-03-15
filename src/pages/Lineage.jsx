@@ -193,11 +193,11 @@ export default function Lineage() {
     const fetchAllData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const currentUser = await base44Client.auth.me();
+            const currentUser = await base44Client.auth.me().catch(() => null);
             const [userGeckos, allVisibleGeckos, userPlaceholders] = await Promise.all([
-                Gecko.filter({ created_by: currentUser.email }),
+                currentUser ? Gecko.filter({ created_by: currentUser.email }) : [],
                 Gecko.list(),
-                LineagePlaceholder.filter({ created_by: currentUser.email }).catch(() => [])
+                currentUser ? LineagePlaceholder.filter({ created_by: currentUser.email }).catch(() => []) : []
             ]);
             
             let breedingPlans = [];

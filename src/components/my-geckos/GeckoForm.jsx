@@ -399,16 +399,30 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
             }
 
             // If a weight was provided, always create a WeightRecord (WeightRecord is source of truth)
-            const weightValue = formData.weight_grams !== '' && formData.weight_grams !== null
-                ? parseFloat(formData.weight_grams)
-                : null;
-            if (weightValue !== null) {
-                await WeightRecord.create({
-                    gecko_id: savedGecko.id,
-                    weight_grams: weightValue,
-                    record_date: new Date().toISOString().split('T')[0],
-                });
-            }
+             const weightValue = formData.weight_grams !== '' && formData.weight_grams !== null
+                 ? parseFloat(formData.weight_grams)
+                 : null;
+             if (weightValue !== null) {
+                 await WeightRecord.create({
+                     gecko_id: savedGecko.id,
+                     weight_grams: weightValue,
+                     record_date: new Date().toISOString().split('T')[0],
+                 });
+             }
+
+             // Auto-assign feeding group by weight if weight exists and no group is assigned
+             if (weightValue !== null && !savedGecko.feeding_group_id && feedingGroups.length > 0) {
+                 const matchingGroup = feedingGroups.find(group => 
+                     group.auto_weight_min_g !== null && 
+                     group.auto_weight_max_g !== null &&
+                     weightValue >= group.auto_weight_min_g && 
+                     weightValue <= group.auto_weight_max_g
+                 );
+                 if (matchingGroup) {
+                     await Gecko.update(savedGecko.id, { feeding_group_id: matchingGroup.id });
+                     savedGecko = { ...savedGecko, feeding_group_id: matchingGroup.id };
+                 }
+             }
             
             if (onSubmit) {
                 onSubmit(savedGecko, isNew);
