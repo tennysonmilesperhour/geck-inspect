@@ -528,19 +528,14 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                   )}
                 </Button>
 
-                <Link 
-                  to={`${createPageUrl('Lineage')}?geckoId=${gecko.id}`}
-                  className="w-full"
-                  onClick={onClose}
+                <Button
+                  variant="outline"
+                  onClick={handleLineageClick}
+                  className="w-full border-slate-600 hover:bg-slate-800"
                 >
-                  <Button 
-                    variant="outline" 
-                    className="w-full border-slate-600 hover:bg-slate-800"
-                  >
-                    <GitBranch className="w-4 h-4 mr-2" />
-                    View Lineage Tree
-                  </Button>
-                </Link>
+                  <GitBranch className="w-4 h-4 mr-2" />
+                  View Lineage Tree
+                </Button>
 
                 {onArchive && (
                   <div className="space-y-2">
