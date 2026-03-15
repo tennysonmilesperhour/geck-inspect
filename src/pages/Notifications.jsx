@@ -181,78 +181,50 @@ export default function NotificationsPage() {
                                 message="You're all caught up! New notifications will appear here."
                             />
                         ) : (
-                            <div className="space-y-4">
-                                {notifications.map((notification) => (
-                                    <div
-                                        key={notification.id}
-                                        className={`flex items-start gap-4 p-4 rounded-lg border transition-all duration-200 ${
-                                            notification.is_read 
-                                                ? 'bg-sage-50 border-sage-200' 
-                                                : 'bg-white border-blue-200 shadow-sm'
-                                        }`}
-                                    >
-                                        <div className="flex-shrink-0 mt-1">
-                                            {notificationIcons[notification.type]}
-                                        </div>
-                                        
-                                        <div className="flex-1 min-w-0">
-                                            <div className="flex items-start justify-between gap-4">
-                                                <div className="flex-1">
-                                                    <div className="flex items-center gap-2 mb-1">
-                                                        <Badge className={notificationColors[notification.type] || 'bg-gray-100 text-gray-800'}>
-                                                            {notification.type.replace(/_/g, ' ')}
-                                                        </Badge>
-                                                        {!notification.is_read && (
-                                                            <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                                                        )}
-                                                    </div>
-                                                    <p className="text-sage-800 mb-1">{notification.content}</p>
-                                                    {notification.metadata?.report_content && (
-                                                        <div 
-                                                            className="mt-2 p-3 bg-sage-100 rounded-lg border border-sage-200 text-sm text-sage-700 prose max-w-none" 
-                                                            dangerouslySetInnerHTML={{ __html: notification.metadata.report_content }}
-                                                        />
-                                                    )}
-                                                    <p className="text-sm text-sage-500 mt-2">
-                                                        {format(new Date(notification.created_date), "MMM d, yyyy 'at' h:mm a")}
-                                                    </p>
-                                                </div>
-                                                
-                                                <div className="flex items-center gap-2 flex-shrink-0">
-                                                    {notification.link && (
-                                                        <Button 
-                                                            asChild
-                                                            variant="ghost" 
-                                                            size="sm"
-                                                            onClick={() => markAsRead(notification.id)}
-                                                        >
-                                                            <Link to={notification.link}>
-                                                                View
-                                                            </Link>
-                                                        </Button>
-                                                    )}
+                            <div className="space-y-3">
+                                {notifications.map((notification) => {
+                                    const inner = (
+                                        <div
+                                            className={`flex items-start gap-4 p-4 rounded-lg border transition-all duration-200 ${
+                                                notification.is_read
+                                                    ? 'bg-sage-50 border-sage-200 opacity-50'
+                                                    : 'bg-white border-blue-200 shadow-sm hover:border-blue-400 hover:shadow-md cursor-pointer'
+                                            }`}
+                                            onClick={() => !notification.is_read && markAsRead(notification.id)}
+                                        >
+                                            <div className="flex-shrink-0 mt-1">
+                                                {notificationIcons[notification.type]}
+                                            </div>
+                                            <div className="flex-1 min-w-0">
+                                                <div className="flex items-center gap-2 mb-1">
+                                                    <Badge className={notificationColors[notification.type] || 'bg-gray-100 text-gray-800'}>
+                                                        {notification.type.replace(/_/g, ' ')}
+                                                    </Badge>
                                                     {!notification.is_read && (
-                                                        <Button 
-                                                            variant="ghost" 
-                                                            size="sm"
-                                                            onClick={() => markAsRead(notification.id)}
-                                                        >
-                                                            <Check className="w-4 h-4" />
-                                                        </Button>
+                                                        <div className="w-2 h-2 bg-blue-500 rounded-full flex-shrink-0"></div>
                                                     )}
-                                                    <Button 
-                                                        variant="ghost" 
-                                                        size="sm"
-                                                        onClick={() => deleteNotification(notification.id)}
-                                                        className="text-red-600 hover:text-red-800"
-                                                    >
-                                                        <Trash2 className="w-4 h-4" />
-                                                    </Button>
                                                 </div>
+                                                <p className="text-sage-800 mb-1">{notification.content}</p>
+                                                <p className="text-sm text-sage-500 mt-1">
+                                                    {format(new Date(notification.created_date), "MMM d, yyyy 'at' h:mm a")}
+                                                </p>
                                             </div>
                                         </div>
-                                    </div>
-                                ))}
+                                    );
+
+                                    return notification.link ? (
+                                        <Link
+                                            key={notification.id}
+                                            to={notification.link}
+                                            className="block"
+                                            onClick={() => !notification.is_read && markAsRead(notification.id)}
+                                        >
+                                            {inner}
+                                        </Link>
+                                    ) : (
+                                        <div key={notification.id}>{inner}</div>
+                                    );
+                                })}
                             </div>
                         )}
                     </CardContent>
