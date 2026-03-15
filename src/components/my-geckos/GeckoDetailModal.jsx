@@ -17,6 +17,14 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
 export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onArchive, allGeckos = [] }) {
+  const navigate = useNavigate();
+
+  const handleLineageClick = () => {
+    const url = `${createPageUrl('Lineage')}?geckoId=${gecko.id}`;
+    console.log('Navigating to:', url);
+    onClose();
+    navigate(url);
+  };
   const [weightRecords, setWeightRecords] = useState([]);
   const [breedingHistory, setBreedingHistory] = useState([]);
   const [eggHistory, setEggHistory] = useState([]);
