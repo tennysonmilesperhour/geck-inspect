@@ -16,7 +16,9 @@ export default function MessageUserButton({ recipientEmail, recipientName, varia
         
         setIsSending(true);
         try {
+            const currentUser = await User.me();
             await DirectMessage.create({
+                sender_email: currentUser.email,
                 recipient_email: recipientEmail,
                 content: message.trim()
             });
