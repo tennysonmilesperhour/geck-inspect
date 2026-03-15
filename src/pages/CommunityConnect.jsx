@@ -250,13 +250,11 @@ function ForumTab() {
                         <Card className="bg-slate-900 border-slate-700">
                             <CardContent className="p-0 divide-y divide-slate-700">
                                 {categoryPosts.map(post => (
-                                    <div key={post.id} className="p-4 flex items-center justify-between hover:bg-slate-800/50">
+                                    <Link key={post.id} to={`/ForumPost?id=${post.id}`} className="p-4 flex items-center justify-between hover:bg-slate-800/50 transition-colors cursor-pointer block">
                                         <div className="flex items-center gap-4">
                                             <MessageSquare className="w-5 h-5 text-slate-500 flex-shrink-0" />
                                             <div>
-                                                <Link to={`/ForumPost?id=${post.id}`} className="font-semibold text-slate-100 hover:text-emerald-400">
-                                                    {post.title}
-                                                </Link>
+                                                <p className="font-semibold text-slate-100 hover:text-emerald-400">{post.title}</p>
                                                 <p className="text-sm text-slate-400">
                                                     by {post.author_name} • {formatDistanceToNow(new Date(post.created_date), { addSuffix: true })}
                                                 </p>
@@ -273,7 +271,7 @@ function ForumTab() {
                                                 <span>{post.view_count || 0}</span>
                                             </div>
                                         </div>
-                                    </div>
+                                    </Link>
                                 ))}
                             </CardContent>
                         </Card>
