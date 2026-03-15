@@ -109,7 +109,7 @@ Deno.serve(async (req) => {
                                     ${(() => { const recs = allWeights.filter(w => w.gecko_id === geckoId); const latest = recs.length > 0 ? recs.sort((a,b) => new Date(b.record_date)-new Date(a.record_date))[0].weight_grams : geckoData.weight_grams; return latest ? `<div class="info-item"><div class="label">Weight</div><div class="value">${latest}g</div></div>` : ''; })()}
                                     <div class="info-item"><div class="label">Status</div><div class="value">${geckoData.status || 'N/A'}</div></div>
                                 </div>
-                                <div class="info-item" style="margin-top: 12px;"><div class="label">Morphs & Traits</div><div class="value">${geckoData.morphs_traits || 'Not specified'}</div></div>
+                                <div class="info-item" style="margin-top: 14px;"><div class="label">Morphs &amp; Traits</div><div class="value">${geckoData.morphs_traits || 'Not specified'}</div></div>
                                 ${geckoData.notes ? `<div class="info-item" style="margin-top: 12px;"><div class="label">Notes</div><div class="value">${geckoData.notes}</div></div>` : ''}
                             </div>
                         </div>
