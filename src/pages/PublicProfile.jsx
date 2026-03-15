@@ -68,12 +68,8 @@ export default function PublicProfile() {
                 // Check if current user is following this profile
                 if (loggedInUser && loggedInUser.email !== user.email) {
                     try {
-                        // RLS allows reading where follower_email matches current user
-                        const allFollows = await UserFollow.list();
-                        const existingFollow = allFollows.find(f => 
-                            f.follower_email === loggedInUser.email && 
-                            f.following_email === user.email
-                        );
+                        const myFollows = await UserFollow.filter({ follower_email: loggedInUser.email });
+                        const existingFollow = myFollows.find(f => f.following_email === user.email);
                         if (existingFollow) {
                             setIsFollowing(true);
                             setFollowRecord(existingFollow);
