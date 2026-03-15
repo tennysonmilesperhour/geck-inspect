@@ -254,7 +254,7 @@ function ForumTab() {
                                         <div className="flex items-center gap-4">
                                             <MessageSquare className="w-5 h-5 text-slate-500 flex-shrink-0" />
                                             <div>
-                                                <Link to={createPageUrl(`ForumPost?id=${post.id}`)} className="font-semibold text-slate-100 hover:text-emerald-400">
+                                                <Link to={`/ForumPost?id=${post.id}`} className="font-semibold text-slate-100 hover:text-emerald-400">
                                                     {post.title}
                                                 </Link>
                                                 <p className="text-sm text-slate-400">
