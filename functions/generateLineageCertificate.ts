@@ -119,7 +119,7 @@ Deno.serve(async (req) => {
                         <div class="section-title">Breeder Information</div>
                         <div class="info-grid">
                             <div class="info-item"><div class="label">Breeder Name</div><div class="value">${user.breeder_name || user.full_name}</div></div>
-                            <div class="info-item"><div class="label">Contact Email</div><div class="value">${user.email_contact || user.email}</div></div>
+                             <div class="info-item"><div class="label">Contact Email</div><div class="value">${(user.email_contact || user.email || '').trim()}</div></div>
                             ${user.phone_contact ? `<div class="info-item"><div class="label">Phone</div><div class="value">${user.phone_contact}</div></div>` : ''}
                             ${user.website_url ? `<div class="info-item"><div class="label">Website</div><div class="value">${user.website_url}</div></div>` : ''}
                         </div>
