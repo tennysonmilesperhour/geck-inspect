@@ -13,7 +13,7 @@ import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tool
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { generateLineageCertificate } from '@/functions/generateLineageCertificate';
-import { Link } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
 export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onArchive, allGeckos = [] }) {
