@@ -4,7 +4,7 @@ import { User } from '@/entities/User';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Bell, MessageSquare, Award, User as UserIcon, Shield, Check, Trash2, ImagePlus, Star } from 'lucide-react';
+import { Bell, MessageSquare, Award, User as UserIcon, Shield, Check, ImagePlus, Star } from 'lucide-react';
 import EmptyState from '../components/shared/EmptyState';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
