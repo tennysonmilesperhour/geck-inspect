@@ -18,6 +18,15 @@ export default function ArchiveReasonDialog({ open, onConfirm, onCancel, geckoNa
     setSelected(null);
   };
 
+  const handleSelectReason = (reason) => {
+    setSelected(reason);
+    // Auto-confirm immediately when a reason is selected
+    setTimeout(() => {
+      onConfirm(reason);
+      setSelected(null);
+    }, 0);
+  };
+
   const handleCancel = () => {
     setSelected(null);
     onCancel();
