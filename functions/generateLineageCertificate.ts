@@ -63,7 +63,7 @@ Deno.serve(async (req) => {
                 .logo { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: bold; color: #566B5F; letter-spacing: 1px; }
                 .cert-title { font-size: 18px; color: #333; margin-top: 5px; text-transform: uppercase; letter-spacing: 3px; }
                 .section { margin-bottom: 30px; }
-                .section-title { font-size: 16px; font-weight: bold; color: #fff; background-color: #566B5F; padding: 7px 12px; margin-bottom: 18px; text-transform: uppercase; letter-spacing: 1px; }
+                .section-title { font-size: 16px; font-weight: bold; color: #fff; background-color: #566B5F; padding: 8px 12px; margin-bottom: 18px; text-transform: uppercase; letter-spacing: 1px; display: flex; align-items: center; line-height: 1; }
                 .main-gecko-info { display: flex; gap: 25px; align-items: center; }
                 .main-gecko-img { width: 180px; height: 180px; object-fit: cover; border-radius: 4px; border: 4px solid #e1e5e1; }
                 .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
