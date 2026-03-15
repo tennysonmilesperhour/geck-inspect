@@ -248,7 +248,7 @@ export default function StickyNotes() {
                         autoFocus
                     />
                     <div className="flex gap-2 justify-end">
-                        <button type="button" onClick={() => setShowForm(false)} className="px-3 py-1.5 text-sm rounded-md border border-slate-400 text-slate-700 hover:bg-slate-100">Cancel</button>
+                        <Button variant="outline" type="button" onClick={() => setShowForm(false)} className="border-slate-600 text-slate-300">Cancel</Button>
                         <button type="button" onClick={handleAdd} style={{ backgroundColor: selectedColorObj.header, color: selectedColorObj.text }} className="px-3 py-1.5 text-sm font-semibold rounded-md hover:opacity-90">Add Note</button>
                     </div>
                 </div>
