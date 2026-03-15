@@ -505,7 +505,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                     className="bg-slate-800 border-slate-600 text-slate-100"
                                 />
                                 <Select value={hatchMonth} onValueChange={setHatchMonth}>
-                                    <SelectTrigger className="h-10 bg-emerald-900/80 border-emerald-600 text-emerald-100 hover:bg-emerald-800 focus:ring-emerald-500">
+                                    <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100">
                                         <SelectValue placeholder="Month" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-emerald-900/95 border-emerald-600 text-emerald-100 z-[99999]">
@@ -527,7 +527,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         <div>
                             <Label htmlFor="sex">Sex *</Label>
                             <Select value={formData.sex} onValueChange={(v) => handleChange('sex', v)}>
-                                <SelectTrigger className="h-10 bg-emerald-900/80 border-emerald-600 text-emerald-100 hover:bg-emerald-800 focus:ring-emerald-500"><SelectValue /></SelectTrigger>
+                                <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100"><SelectValue /></SelectTrigger>
                                 <SelectContent className="bg-emerald-900/95 border-emerald-600 text-emerald-100 z-[99999]">
                                     <SelectItem value="Unsexed" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">Unsexed</SelectItem>
                                     <SelectItem value="Male" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">Male</SelectItem>
@@ -613,7 +613,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     </div>
 
                     {/* For Sale Toggle */}
-                    <div className="flex items-center justify-between p-4 border border-sage-200 rounded-lg bg-yellow-50 dark:bg-yellow-900/20">
+                    <div className="flex items-center justify-between p-4 bg-slate-800 rounded-lg">
                         <div className="flex-1">
                             <Label className="text-base font-medium flex items-center gap-2">
                                 <DollarSign className="w-5 h-5 text-yellow-600" />
@@ -658,7 +658,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         <div>
                             <Label htmlFor="status">Status</Label>
                             <Select value={formData.status} onValueChange={(v) => handleChange('status', v)} disabled={isForSale}>
-                                <SelectTrigger className="h-10 bg-emerald-900/80 border-emerald-600 text-emerald-100 hover:bg-emerald-800 focus:ring-emerald-500"><SelectValue /></SelectTrigger>
+                                <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100"><SelectValue /></SelectTrigger>
                                 <SelectContent className="bg-emerald-900/95 border-emerald-600 text-emerald-100 z-[99999]">
                                     <SelectItem value="Pet" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">Pet</SelectItem>
                                     <SelectItem value="Future Breeder" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">Future Breeder</SelectItem>
@@ -712,7 +712,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     <div>
                         <Label>Feeding Group</Label>
                         <Select value={formData.feeding_group_id || 'none'} onValueChange={(v) => handleChange('feeding_group_id', v === 'none' ? null : v)}>
-                            <SelectTrigger className="h-10 bg-emerald-900/80 border-emerald-600 text-emerald-100 hover:bg-emerald-800 focus:ring-emerald-500">
+                            <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100">
                                 <SelectValue placeholder="No group assigned" />
                             </SelectTrigger>
                             <SelectContent className="bg-emerald-900/95 border-emerald-600 text-emerald-100 z-[99999]">
@@ -813,7 +813,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     )}
                 </form>
 
-                <CardFooter className="flex-shrink-0 mt-auto bg-emerald-950/80 backdrop-blur-sm border-t border-emerald-800 p-4 flex justify-end items-center gap-4">
+                <CardFooter className="flex-shrink-0 mt-auto bg-slate-900 border-t border-slate-700 p-4 flex justify-end items-center gap-4">
                     {gecko && onDelete && (
                          <AlertDialog>
                             <AlertDialogTrigger asChild>
@@ -838,7 +838,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                             </AlertDialogContent>
                         </AlertDialog>
                     )}
-                    <Button variant="outline" onClick={onCancel} className="h-10 border-emerald-700 text-emerald-300 hover:bg-emerald-900">Cancel</Button>
+                    <Button variant="outline" onClick={onCancel} className="h-10 border-slate-600 text-slate-300 hover:bg-slate-800">Cancel</Button>
                     <Button onClick={handleSave} disabled={isSaving} className="bg-emerald-600 hover:bg-emerald-700 h-10">
                         {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                         {getSaveButtonText()}
