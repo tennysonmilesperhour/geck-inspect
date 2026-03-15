@@ -471,10 +471,8 @@ export default function CommunityConnectPage() {
                 // Get following list if logged in
                 if (user) {
                     try {
-                        const userFollows = await UserFollow.list();
-                        const followingEmails = (userFollows || [])
-                            .filter(f => f.follower_email === user.email)
-                            .map(f => f.following_email);
+                        const userFollows = await UserFollow.filter({ follower_email: user.email });
+                        const followingEmails = (userFollows || []).map(f => f.following_email);
                         setFollowing(followingEmails);
                     } catch (e) {
                         console.log("Could not load follows");
