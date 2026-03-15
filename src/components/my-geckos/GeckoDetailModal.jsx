@@ -631,7 +631,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
-                                <AlertDialogCancel className="bg-emerald-900 text-emerald-200 border-emerald-700">Cancel</AlertDialogCancel>
+                                <AlertDialogCancel className="bg-slate-800 text-slate-200 border-slate-600">Cancel</AlertDialogCancel>
                                 <AlertDialogAction onClick={handleConfirmDeleteWeight} className="bg-red-700 hover:bg-red-800">
                                   Delete
                                 </AlertDialogAction>

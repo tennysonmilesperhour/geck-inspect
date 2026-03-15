@@ -395,7 +395,7 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
                                                </AlertDialogDescription>
                                            </AlertDialogHeader>
                                            <AlertDialogFooter>
-                                               <AlertDialogCancel className="bg-emerald-900 text-emerald-200 border-emerald-700">Cancel</AlertDialogCancel>
+                                               <AlertDialogCancel className="bg-slate-800 text-slate-200 border-slate-600">Cancel</AlertDialogCancel>
                                                <AlertDialogAction onClick={handleConfirmDeleteEgg} className="bg-yellow-600 hover:bg-yellow-700">
                                                    Archive Egg
                                                </AlertDialogAction>
