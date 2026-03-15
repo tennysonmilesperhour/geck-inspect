@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, Edit, Calendar, DollarSign, Sparkles, Weight } from 'lucide-react';
+import { Eye, Edit, Calendar, DollarSign, Sparkles, Weight, Skull } from 'lucide-react';
 import { format } from 'date-fns';
 import EventTracker from './EventTracker';
 import { GeckoEvent } from '@/entities/all';
@@ -46,6 +46,15 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
     return sex === 'Male' ? 'text-blue-400' : sex === 'Female' ? 'text-pink-400' : 'text-gray-400';
   };
 
+  const getArchiveReasonIcon = (reason) => {
+    switch (reason) {
+      case 'death': return '💀';
+      case 'sold': return '💵';
+      case 'other': return '📋';
+      default: return null;
+    }
+  };
+
   const handleViewClick = (e) => {
     e.stopPropagation();
     if (onView) onView(gecko);
@@ -70,7 +79,14 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
           <span className={`${getSexColor(gecko.sex)} text-3xl font-bold drop-shadow-lg`}>
             {getSexIcon(gecko.sex)}
           </span>
-          {feedingGroup && (
+          {gecko.archived && gecko.archive_reason ? (
+            <div
+              className="w-6 h-6 rounded-full flex items-center justify-center text-lg shadow-lg bg-black/40"
+              title={`Archive reason: ${gecko.archive_reason === 'death' ? 'Passed Away' : gecko.archive_reason === 'sold' ? 'Sold' : 'Other'}`}
+            >
+              {getArchiveReasonIcon(gecko.archive_reason)}
+            </div>
+          ) : feedingGroup && (
             <div
               className="w-6 h-6 rounded-full flex items-center justify-center text-white text-xs font-bold shadow-lg border border-white/30"
               style={{ backgroundColor: feedingGroup.color || '#f97316' }}
