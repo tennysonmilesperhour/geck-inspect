@@ -61,11 +61,11 @@ export default function MessagesPage() {
 
                     return {
                         email,
-                        displayName: email === 'system@geckinspect.app' ? 'Geck Inspect Team' : email.split('@')[0],
+                        displayName: email === 'system@geckinspect.com' ? 'Geck Inspect Team' : email.split('@')[0],
                         messages: msgs.sort((a, b) => new Date(a.created_date) - new Date(b.created_date)),
                         latestMessage,
                         unreadCount,
-                        isSystem: email === 'system@geckinspect.app'
+                        isSystem: email === 'system@geckinspect.com'
                     };
                 });
 
