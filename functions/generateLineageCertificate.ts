@@ -190,9 +190,7 @@ Deno.serve(async (req) => {
                     </div>
                 </div>
             </div>
-            <div class="print-button-wrapper">
-                <button class="print-button" onclick="window.print()">Print Certificate</button>
-            </div>
+
         </body>
         </html>
         `;
