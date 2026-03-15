@@ -158,19 +158,23 @@ Deno.serve(async (req) => {
                         <div class="section-title">Grandparentage</div>
                         <div class="lineage-grid">
                             <div class="ancestor-card">
-                                <img src="${gs_s_img}" class="ancestor-img" alt="Paternal Grandsire"><div class="label">Paternal Grandsire</div>
+                                ${grandsire_s ? `<img src="${gs_s_img}" class="ancestor-img" alt="Paternal Grandsire">` : `<div class="ancestor-placeholder">Unknown</div>`}
+                                <div class="label">Paternal Grandsire</div>
                                 <div class="ancestor-name">${grandsire_s?.name || 'Unknown'}</div><div class="ancestor-id">${grandsire_s?.gecko_id_code || ''}</div>
                             </div>
                             <div class="ancestor-card">
-                                <img src="${gd_s_img}" class="ancestor-img" alt="Paternal Granddam"><div class="label">Paternal Granddam</div>
+                                ${granddam_s ? `<img src="${gd_s_img}" class="ancestor-img" alt="Paternal Granddam">` : `<div class="ancestor-placeholder">Unknown</div>`}
+                                <div class="label">Paternal Granddam</div>
                                 <div class="ancestor-name">${granddam_s?.name || 'Unknown'}</div><div class="ancestor-id">${granddam_s?.gecko_id_code || ''}</div>
                             </div>
                             <div class="ancestor-card">
-                                <img src="${gs_d_img}" class="ancestor-img" alt="Maternal Grandsire"><div class="label">Maternal Grandsire</div>
+                                ${grandsire_d ? `<img src="${gs_d_img}" class="ancestor-img" alt="Maternal Grandsire">` : `<div class="ancestor-placeholder">Unknown</div>`}
+                                <div class="label">Maternal Grandsire</div>
                                 <div class="ancestor-name">${grandsire_d?.name || 'Unknown'}</div><div class="ancestor-id">${grandsire_d?.gecko_id_code || ''}</div>
                             </div>
                             <div class="ancestor-card">
-                                <img src="${gd_d_img}" class="ancestor-img" alt="Maternal Granddam"><div class="label">Maternal Granddam</div>
+                                ${granddam_d ? `<img src="${gd_d_img}" class="ancestor-img" alt="Maternal Granddam">` : `<div class="ancestor-placeholder">Unknown</div>`}
+                                <div class="label">Maternal Granddam</div>
                                 <div class="ancestor-name">${granddam_d?.name || 'Unknown'}</div><div class="ancestor-id">${granddam_d?.gecko_id_code || ''}</div>
                             </div>
                         </div>
