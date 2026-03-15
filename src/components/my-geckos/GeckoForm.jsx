@@ -508,11 +508,11 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                     <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100">
                                         <SelectValue placeholder="Month" />
                                     </SelectTrigger>
-                                    <SelectContent className="bg-emerald-900/95 border-emerald-600 text-emerald-100 z-[99999]">
-                                        <SelectItem value="none" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">None</SelectItem>
-                                        {MONTHS.map(m => (
-                                            <SelectItem key={m.value} value={m.value} className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">{m.label}</SelectItem>
-                                        ))}
+                                    <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
+                                       <SelectItem value="none" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">None</SelectItem>
+                                       {MONTHS.map(m => (
+                                           <SelectItem key={m.value} value={m.value} className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">{m.label}</SelectItem>
+                                       ))}
                                     </SelectContent>
                                 </Select>
                                 <Input
@@ -528,10 +528,10 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                             <Label htmlFor="sex">Sex *</Label>
                             <Select value={formData.sex} onValueChange={(v) => handleChange('sex', v)}>
                                 <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100"><SelectValue /></SelectTrigger>
-                                <SelectContent className="bg-emerald-900/95 border-emerald-600 text-emerald-100 z-[99999]">
-                                    <SelectItem value="Unsexed" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">Unsexed</SelectItem>
-                                    <SelectItem value="Male" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">Male</SelectItem>
-                                    <SelectItem value="Female" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">Female</SelectItem>
+                                <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
+                                    <SelectItem value="Unsexed" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Unsexed</SelectItem>
+                                    <SelectItem value="Male" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Male</SelectItem>
+                                    <SelectItem value="Female" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Female</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -556,14 +556,14 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                 />
                             </div>
                             {showSireSuggestions && (
-                                <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-emerald-700 rounded-lg shadow-2xl z-[99999] max-h-48 overflow-y-auto">
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-2xl z-[99999] max-h-48 overflow-y-auto">
                                     {userGeckos.filter(g => g.sex === 'Male' && g.id !== gecko?.id && (
                                         !sireInput || g.name.toLowerCase().includes(sireInput.toLowerCase()) || g.gecko_id_code?.toLowerCase().includes(sireInput.toLowerCase())
                                     )).map(s => (
                                         <button
                                             key={s.id}
                                             type="button"
-                                            className="w-full text-left px-3 py-2 text-sm text-slate-200 hover:bg-emerald-800 flex items-center gap-2"
+                                            className="w-full text-left px-3 py-2 text-sm text-slate-200 hover:bg-slate-700 flex items-center gap-2"
                                             onMouseDown={() => { setSireInput(`${s.name} (${s.gecko_id_code || 'No ID'})`); setSireId(s.id); setShowSireSuggestions(false); }}
                                         >
                                             <img src={s.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'} alt={s.name} className="w-6 h-6 rounded object-cover flex-shrink-0" />
@@ -592,14 +592,14 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                 />
                             </div>
                             {showDamSuggestions && (
-                                <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-emerald-700 rounded-lg shadow-2xl z-[99999] max-h-48 overflow-y-auto">
+                                <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-2xl z-[99999] max-h-48 overflow-y-auto">
                                     {userGeckos.filter(g => g.sex === 'Female' && g.id !== gecko?.id && (
                                         !damInput || g.name.toLowerCase().includes(damInput.toLowerCase()) || g.gecko_id_code?.toLowerCase().includes(damInput.toLowerCase())
                                     )).map(d => (
                                         <button
                                             key={d.id}
                                             type="button"
-                                            className="w-full text-left px-3 py-2 text-sm text-slate-200 hover:bg-emerald-800 flex items-center gap-2"
+                                            className="w-full text-left px-3 py-2 text-sm text-slate-200 hover:bg-slate-700 flex items-center gap-2"
                                             onMouseDown={() => { setDamInput(`${d.name} (${d.gecko_id_code || 'No ID'})`); setDamId(d.id); setShowDamSuggestions(false); }}
                                         >
                                             <img src={d.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'} alt={d.name} className="w-6 h-6 rounded object-cover flex-shrink-0" />
@@ -659,14 +659,14 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                             <Label htmlFor="status">Status</Label>
                             <Select value={formData.status} onValueChange={(v) => handleChange('status', v)} disabled={isForSale}>
                                 <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100"><SelectValue /></SelectTrigger>
-                                <SelectContent className="bg-emerald-900/95 border-emerald-600 text-emerald-100 z-[99999]">
-                                    <SelectItem value="Pet" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">Pet</SelectItem>
-                                    <SelectItem value="Future Breeder" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">Future Breeder</SelectItem>
-                                    <SelectItem value="Holdback" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">Holdback</SelectItem>
-                                    <SelectItem value="Ready to Breed" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">Ready to Breed</SelectItem>
-                                    <SelectItem value="Proven" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">Proven</SelectItem>
-                                    <SelectItem value="For Sale" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">For Sale</SelectItem>
-                                    <SelectItem value="Sold" className="text-emerald-100 focus:bg-emerald-600 focus:text-white hover:bg-emerald-700">Sold</SelectItem>
+                                <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
+                                    <SelectItem value="Pet" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Pet</SelectItem>
+                                    <SelectItem value="Future Breeder" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Future Breeder</SelectItem>
+                                    <SelectItem value="Holdback" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Holdback</SelectItem>
+                                    <SelectItem value="Ready to Breed" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Ready to Breed</SelectItem>
+                                    <SelectItem value="Proven" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Proven</SelectItem>
+                                    <SelectItem value="For Sale" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">For Sale</SelectItem>
+                                    <SelectItem value="Sold" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Sold</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>
@@ -715,10 +715,10 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                             <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100">
                                 <SelectValue placeholder="No group assigned" />
                             </SelectTrigger>
-                            <SelectContent className="bg-emerald-900/95 border-emerald-600 text-emerald-100 z-[99999]">
-                                <SelectItem value="none" className="text-emerald-100 focus:bg-emerald-600 focus:text-white">No group</SelectItem>
+                            <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
+                                <SelectItem value="none" className="text-slate-100 focus:bg-slate-700 focus:text-white">No group</SelectItem>
                                 {feedingGroups.map(g => (
-                                    <SelectItem key={g.id} value={g.id} className="text-emerald-100 focus:bg-emerald-600 focus:text-white">
+                                    <SelectItem key={g.id} value={g.id} className="text-slate-100 focus:bg-slate-700 focus:text-white">
                                         Group {g.label}{g.name ? ` — ${g.name}` : ''} ({g.diet_type})
                                     </SelectItem>
                                 ))}
@@ -822,16 +822,16 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                     Archive
                                 </Button>
                             </AlertDialogTrigger>
-                            <AlertDialogContent className="bg-emerald-950 border-emerald-700">
+                            <AlertDialogContent className="bg-slate-900 border-slate-700">
                                 <AlertDialogHeader>
-                                    <AlertDialogTitle className="text-emerald-100">Archive {gecko.name}?</AlertDialogTitle>
-                                    <AlertDialogDescription className="text-emerald-300">
+                                    <AlertDialogTitle className="text-slate-100">Archive {gecko.name}?</AlertDialogTitle>
+                                    <AlertDialogDescription className="text-slate-400">
                                         This will archive <strong>{gecko.name}</strong> and hide it from your active collection. You can restore it later from the archive.
                                     </AlertDialogDescription>
                                 </AlertDialogHeader>
                                 <AlertDialogFooter>
-                                    <AlertDialogCancel className="bg-emerald-900 text-emerald-200 border-emerald-700">Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={handleDeleteConfirm} className="bg-yellow-600 hover:bg-yellow-700">
+                                    <AlertDialogCancel className="bg-slate-800 text-slate-200 border-slate-600">Cancel</AlertDialogCancel>
+                                    <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-700 hover:bg-red-800">
                                         Archive Gecko
                                     </AlertDialogAction>
                                 </AlertDialogFooter>
