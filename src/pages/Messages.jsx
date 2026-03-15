@@ -22,17 +22,22 @@ export default function MessagesPage() {
     const [isSending, setIsSending] = useState(false);
 
     useEffect(() => {
-        const loadData = async () => {
-            setIsLoading(true);
+        let currentUserRef = null;
+
+        const loadData = async (isInitial = false) => {
+            if (isInitial) setIsLoading(true);
             try {
-                const user = await User.me();
-                setCurrentUser(user);
-                
+                const user = currentUserRef || await User.me();
+                if (!currentUserRef) {
+                    currentUserRef = user;
+                    setCurrentUser(user);
+                }
+
                 // Get ALL messages where user is sender OR recipient
                 const allMessages = await DirectMessage.list('-created_date');
-                
+
                 // Filter messages for current user (both sent and received)
-                const userMessages = allMessages.filter(m => 
+                const userMessages = allMessages.filter(m =>
                     m.sender_email === user.email || m.recipient_email === user.email
                 );
                 setMessages(userMessages);
@@ -40,10 +45,10 @@ export default function MessagesPage() {
                 // Group by conversations
                 const convMap = new Map();
                 userMessages.forEach(message => {
-                    const otherEmail = message.sender_email === user.email 
-                        ? message.recipient_email 
+                    const otherEmail = message.sender_email === user.email
+                        ? message.recipient_email
                         : message.sender_email;
-                    
+
                     if (!convMap.has(otherEmail)) {
                         convMap.set(otherEmail, []);
                     }
@@ -53,7 +58,7 @@ export default function MessagesPage() {
                 const conversationList = Array.from(convMap.entries()).map(([email, msgs]) => {
                     const latestMessage = msgs.sort((a, b) => new Date(b.created_date) - new Date(a.created_date))[0];
                     const unreadCount = msgs.filter(m => m.recipient_email === user.email && !m.is_read).length;
-                    
+
                     return {
                         email,
                         displayName: email === 'system@geckinspect.app' ? 'Geck Inspect Team' : email.split('@')[0],
@@ -67,34 +72,44 @@ export default function MessagesPage() {
                 conversationList.sort((a, b) => new Date(b.latestMessage.created_date) - new Date(a.latestMessage.created_date));
                 setConversations(conversationList);
 
-                // Check if we should auto-select a conversation from URL params
-                const urlParams = new URLSearchParams(window.location.search);
-                const recipientEmail = urlParams.get('recipient');
-                if (recipientEmail) {
-                    const conversation = conversationList.find(c => c.email === recipientEmail);
-                    if (conversation) {
-                        setSelectedConversation(conversation);
-                        await selectConversation(conversation);
-                    } else {
-                        // Create new conversation
-                        setSelectedConversation({
-                            email: recipientEmail,
-                            displayName: recipientEmail.split('@')[0],
-                            messages: [],
-                            latestMessage: null,
-                            unreadCount: 0,
-                            isSystem: false
-                        });
+                // Check if we should auto-select a conversation from URL params (initial load only)
+                if (isInitial) {
+                    const urlParams = new URLSearchParams(window.location.search);
+                    const recipientEmail = urlParams.get('recipient');
+                    if (recipientEmail) {
+                        const conversation = conversationList.find(c => c.email === recipientEmail);
+                        if (conversation) {
+                            setSelectedConversation(conversation);
+                            await selectConversation(conversation);
+                        } else {
+                            setSelectedConversation({
+                                email: recipientEmail,
+                                displayName: recipientEmail.split('@')[0],
+                                messages: [],
+                                latestMessage: null,
+                                unreadCount: 0,
+                                isSystem: false
+                            });
+                        }
                     }
+                } else {
+                    // On poll, update the selected conversation's messages if open
+                    setSelectedConversation(prev => {
+                        if (!prev) return prev;
+                        const updated = conversationList.find(c => c.email === prev.email);
+                        return updated || prev;
+                    });
                 }
 
             } catch (error) {
                 console.error('Failed to load messages:', error);
             }
-            setIsLoading(false);
+            if (isInitial) setIsLoading(false);
         };
 
-        loadData();
+        loadData(true);
+        const interval = setInterval(() => loadData(false), 15000);
+        return () => clearInterval(interval);
     }, []);
 
     const selectConversation = async (conversation) => {
