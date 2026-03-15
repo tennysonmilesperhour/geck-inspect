@@ -121,11 +121,8 @@ export default function PublicProfile() {
                 toast({ title: "Unfollowed", description: `You've unfollowed ${profileUser.full_name}` });
             } else {
                 // Check if already following to prevent duplicates
-                const allFollows = await UserFollow.list();
-                const existingFollow = allFollows.find(f => 
-                    f.follower_email === currentUser.email && 
-                    f.following_email === profileUser.email
-                );
+                const myFollows = await UserFollow.filter({ follower_email: currentUser.email });
+                const existingFollow = myFollows.find(f => f.following_email === profileUser.email);
                 
                 if (existingFollow) {
                     setIsFollowing(true);
