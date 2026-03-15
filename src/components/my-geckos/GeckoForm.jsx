@@ -484,8 +484,35 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
 
                 <form onSubmit={handleSave} className="flex-grow overflow-y-auto space-y-4 p-4">
                     {isArchived && (
-                        <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg p-3 mb-4">
-                            <p className="text-sm text-yellow-200"><strong>This gecko is archived.</strong> Only the archive reason can be edited. Unarchive to make other changes.</p>
+                        <div className="space-y-4 mb-4">
+                            <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg p-3">
+                                <p className="text-sm text-yellow-200"><strong>This gecko is archived.</strong> Only the archive reason can be edited. Unarchive to make other changes.</p>
+                            </div>
+                            <div className="bg-slate-800 p-4 rounded-lg">
+                                <p className="text-xs text-slate-400 mb-3">Archive reason:</p>
+                                <div className="flex gap-2 flex-wrap">
+                                    {[
+                                        { value: 'death', label: 'Passed Away' },
+                                        { value: 'sold', label: 'Sold' },
+                                        { value: 'other', label: 'Other' },
+                                    ].map(opt => (
+                                        <button
+                                            key={opt.value}
+                                            onClick={async () => {
+                                                await Gecko.update(gecko.id, { archive_reason: opt.value });
+                                                if (onSubmit) onSubmit(gecko);
+                                            }}
+                                            className={`text-xs px-3 py-1.5 rounded border transition-colors ${
+                                                gecko.archive_reason === opt.value
+                                                    ? 'border-emerald-500 bg-emerald-900/40 text-emerald-300'
+                                                    : 'border-slate-600 text-slate-400 hover:bg-slate-700 hover:border-slate-500'
+                                            }`}
+                                        >
+                                            {opt.label}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
                         </div>
                     )}
 
@@ -833,16 +860,12 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                 </form>
 
                 <CardFooter className="flex-shrink-0 mt-auto bg-slate-900 border-t border-slate-700 p-4 flex justify-end items-center gap-4">
-                    {gecko && onDelete && (
+                    {gecko && onDelete && !isArchived && (
                          <AlertDialog>
                             <AlertDialogTrigger asChild>
-                                <Button variant="destructive" className="h-10" disabled={isArchived}>
-                                    {isArchived ? (
-                                        <></>
-                                    ) : (
-                                        <><Trash2 className="w-4 h-4 mr-2" /></>
-                                    )}
-                                    {isArchived ? 'Archived' : 'Archive'}
+                                <Button variant="destructive" className="h-10">
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Archive
                                 </Button>
                             </AlertDialogTrigger>
                             <AlertDialogContent className="bg-slate-900 border-slate-700">
@@ -859,8 +882,13 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                     </AlertDialogAction>
                                 </AlertDialogFooter>
                             </AlertDialogContent>
-                        </AlertDialog>
-                    )}
+                            </AlertDialog>
+                            )}
+                            {isArchived && (
+                            <div className="h-10 px-4 rounded border border-slate-600 bg-slate-800 flex items-center text-slate-400 text-sm font-medium cursor-not-allowed">
+                            Archived
+                            </div>
+                            )}
                     <Button variant="outline" onClick={onCancel} className="h-10 border-slate-600 text-slate-300 hover:bg-slate-800">Cancel</Button>
                     <Button onClick={handleSave} disabled={isSaving} className="bg-emerald-600 hover:bg-emerald-700 h-10">
                         {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
