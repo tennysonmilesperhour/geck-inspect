@@ -65,7 +65,7 @@ export default function NotificationsPage() {
         const loadData = async () => {
             setIsLoading(true);
             try {
-                const currentUser = await retryApiCall(() => User.me());
+                const currentUser = await retryApiCall(() => base44.auth.me());
                 setUser(currentUser);
                 const userNotifications = await retryApiCall(() => Notification.filter({ user_email: currentUser.email }, '-created_date'));
                 setNotifications(userNotifications);
