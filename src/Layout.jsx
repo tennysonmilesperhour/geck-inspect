@@ -277,53 +277,51 @@ function LayoutContent({ children, currentPageName }) {
     document.documentElement.classList.add('dark');
   }, []);
 
-  // Aggressive notification polling with circuit breaker
+  // Notification polling - always fetch fresh on mount, then every 60 seconds
   useEffect(() => {
-    let errorCount = 0;
-    const MAX_ERRORS = 3;
+  let errorCount = 0;
+  const MAX_ERRORS = 3;
 
-    if (user && user.email) {
-      const fetchUnread = async () => {
-        try {
-          const cacheKey = `notifications_${user.email}`;
-          let unreadNotifications = dataCache.get(cacheKey);
+  if (user && user.email) {
+    const fetchUnread = async (forceRefresh = false) => {
+      try {
+        const cacheKey = `notifications_${user.email}`;
 
-          if (!unreadNotifications && dataCache.canMakeRequest(cacheKey) && errorCount < MAX_ERRORS) {
-            dataCache.markRequestMade(cacheKey);
-            unreadNotifications = await retryApiCall(() => 
-              base44.entities.Notification.filter({ user_email: user.email, is_read: false })
-            );
-            if (unreadNotifications) {
-              dataCache.set(cacheKey, unreadNotifications);
-              setUnreadNotificationsCount(unreadNotifications.length);
-              errorCount = 0; // Reset on success
-            }
-          } else if (unreadNotifications) {
-            setUnreadNotificationsCount(unreadNotifications.length);
-            errorCount = 0; // Reset on cache hit
-          }
-        } catch (e) {
-          errorCount++;
-          // Silently handle database connectivity errors
-          if (e.message?.includes('replica set') || e.message?.includes('Timeout') || e.response?.status === 500) {
-            console.log(`Database temporarily unavailable (attempt ${errorCount}/${MAX_ERRORS}). Using cached data.`);
-            // Keep existing cached value if available
-            const cachedNotifications = dataCache.get(`notifications_${user.email}`);
-            if (cachedNotifications) {
-              setUnreadNotificationsCount(cachedNotifications.length);
-            }
-          } else if (e.response?.status !== 429) {
-            setUnreadNotificationsCount(0);
+        if (!forceRefresh) {
+          const cached = dataCache.get(cacheKey);
+          if (cached) {
+            setUnreadNotificationsCount(cached.length);
+            return;
           }
         }
-      };
 
-      fetchUnread();
-      const interval = setInterval(fetchUnread, 60 * 1000); // Every 60 seconds
-      return () => clearInterval(interval);
-    } else {
-      setUnreadNotificationsCount(0);
-    }
+        if (errorCount < MAX_ERRORS) {
+          dataCache.markRequestMade(cacheKey);
+          const unreadNotifications = await retryApiCall(() => 
+            base44.entities.Notification.filter({ user_email: user.email, is_read: false })
+          );
+          if (unreadNotifications) {
+            dataCache.set(cacheKey, unreadNotifications);
+            setUnreadNotificationsCount(unreadNotifications.length);
+            errorCount = 0;
+          }
+        }
+      } catch (e) {
+        errorCount++;
+        if (e.message?.includes('replica set') || e.message?.includes('Timeout') || e.response?.status === 500) {
+          console.log(`Database temporarily unavailable (attempt ${errorCount}/${MAX_ERRORS}). Using cached data.`);
+        } else if (e.response?.status !== 429) {
+          setUnreadNotificationsCount(0);
+        }
+      }
+    };
+
+    fetchUnread(true); // Always fresh on mount
+    const interval = setInterval(() => fetchUnread(false), 60 * 1000);
+    return () => clearInterval(interval);
+  } else {
+    setUnreadNotificationsCount(0);
+  }
   }, [user]);
   
   // Aggressive message polling with circuit breaker
