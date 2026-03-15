@@ -44,7 +44,6 @@ export async function notifyFollowersNewGecko(gecko, ownerEmail, ownerName) {
 
 // Notify all followers when a user creates a new public breeding plan
 export async function notifyFollowersNewBreedingPlan(plan, sire, dam, ownerEmail, ownerName) {
-    if (!plan.is_public) return;
     
     try {
         const followers = await UserFollow.filter({ following_email: ownerEmail });

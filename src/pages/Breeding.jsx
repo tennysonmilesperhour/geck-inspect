@@ -1168,11 +1168,8 @@ export default function BreedingPage() {
             };
             const createdPlan = await BreedingPlan.create(planData);
             
-            // Notify followers if plan is public
-            if (createdPlan.is_public) {
-                const currentUser = await base44.auth.me();
-                notifyFollowersNewBreedingPlan(createdPlan, sire, dam, currentUser.email, currentUser.full_name).catch(console.error);
-            }
+            // Notify followers of new breeding plan
+            notifyFollowersNewBreedingPlan(createdPlan, sire, dam, user.email, user.full_name).catch(console.error);
             
             setIsModalOpen(false);
             setNewPlan({

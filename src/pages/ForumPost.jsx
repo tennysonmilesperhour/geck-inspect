@@ -99,7 +99,18 @@ export default function ForumPostPage() {
 
             const createdComment = await ForumComment.create(commentData);
             
-            // Send notification if replying to someone
+            // Notify post author of new top-level comment
+            if (!replyingTo && post.created_by && post.created_by !== currentUser.email) {
+                await Notification.create({
+                    user_email: post.created_by,
+                    type: 'new_comment',
+                    content: `${currentUser.full_name} commented on your post "${post.title}": "${newComment.substring(0, 50)}${newComment.length > 50 ? '...' : ''}"`,
+                    link: `/ForumPost?id=${postId}`,
+                    metadata: { comment_id: createdComment.id, post_id: postId }
+                });
+            }
+
+            // Notify parent comment author of reply
             if (replyingTo && replyingTo.created_by !== currentUser.email) {
                 await Notification.create({
                     user_email: replyingTo.created_by,
