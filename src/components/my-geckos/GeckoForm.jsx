@@ -485,11 +485,11 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <Label htmlFor="name">Name *</Label>
-                            <Input id="name" value={formData.name} onChange={(e) => handleChange('name', e.target.value)} required />
+                            <Input id="name" value={formData.name} onChange={(e) => handleChange('name', e.target.value)} required className="bg-slate-800 border-slate-600 text-slate-100" />
                         </div>
                         <div>
                             <Label htmlFor="gecko_id_code">ID Code</Label>
-                            <Input id="gecko_id_code" value={formData.gecko_id_code} onChange={(e) => handleChange('gecko_id_code', e.target.value)} />
+                            <Input id="gecko_id_code" value={formData.gecko_id_code} onChange={(e) => handleChange('gecko_id_code', e.target.value)} className="bg-slate-800 border-slate-600 text-slate-100" />
                         </div>
                     </div>
 
@@ -502,6 +502,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                     maxLength={4}
                                     value={hatchYear}
                                     onChange={(e) => setHatchYear(e.target.value.replace(/[^0-9]/g, '').slice(0, 4))}
+                                    className="bg-slate-800 border-slate-600 text-slate-100"
                                 />
                                 <Select value={hatchMonth} onValueChange={setHatchMonth}>
                                     <SelectTrigger className="h-10 bg-emerald-900/80 border-emerald-600 text-emerald-100 hover:bg-emerald-800 focus:ring-emerald-500">
@@ -519,6 +520,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                     maxLength={2}
                                     value={hatchDay}
                                     onChange={(e) => setHatchDay(e.target.value.replace(/[^0-9]/g, '').slice(0, 2))}
+                                    className="bg-slate-800 border-slate-600 text-slate-100"
                                 />
                             </div>
                         </div>
@@ -541,13 +543,13 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                             <Label htmlFor="sire_input">Sire (Father)</Label>
                             <div className="relative flex items-center">
                                 <Input
-                                    id="sire_input"
-                                    value={sireInput}
-                                    onChange={(e) => { handleSireInputChange(e.target.value); setShowSireSuggestions(true); }}
-                                    onFocus={() => setShowSireSuggestions(true)}
-                                    onBlur={() => setTimeout(() => setShowSireSuggestions(false), 150)}
-                                    placeholder="Type or browse males..."
-                                    className="pr-8"
+                                   id="sire_input"
+                                   value={sireInput}
+                                   onChange={(e) => { handleSireInputChange(e.target.value); setShowSireSuggestions(true); }}
+                                   onFocus={() => setShowSireSuggestions(true)}
+                                   onBlur={() => setTimeout(() => setShowSireSuggestions(false), 150)}
+                                   placeholder="Type or browse males..."
+                                   className="bg-slate-800 border-slate-600 text-slate-100 pr-8"
                                 />
                                 <ChevronDown
                                     className="w-4 h-4 absolute right-2 text-slate-400 pointer-events-none"
@@ -583,7 +585,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                     onFocus={() => setShowDamSuggestions(true)}
                                     onBlur={() => setTimeout(() => setShowDamSuggestions(false), 150)}
                                     placeholder="Type or browse females..."
-                                    className="pr-8"
+                                    className="bg-slate-800 border-slate-600 text-slate-100 pr-8"
                                 />
                                 <ChevronDown
                                     className="w-4 h-4 absolute right-2 text-slate-400 pointer-events-none"
@@ -677,6 +679,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                 value={formData.asking_price} 
                                 onChange={(e) => handleChange('asking_price', e.target.value)} 
                                 placeholder="e.g., 250.00"
+                                className="bg-slate-800 border-slate-600 text-slate-100"
                             />
                         </div>
                     </div>
@@ -690,12 +693,13 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                             value={formData.weight_grams} 
                             onChange={(e) => handleChange('weight_grams', e.target.value)} 
                             placeholder="e.g., 50.3"
+                            className="bg-slate-800 border-slate-600 text-slate-100"
                         />
                     </div>
 
                     <div>
                         <Label htmlFor="morphs_traits">Morphs & Traits (Free Text)</Label>
-                        <Textarea id="morphs_traits" value={formData.morphs_traits} onChange={(e) => handleChange('morphs_traits', e.target.value)} />
+                        <Textarea id="morphs_traits" value={formData.morphs_traits} onChange={(e) => handleChange('morphs_traits', e.target.value)} className="bg-slate-800 border-slate-600 text-slate-100" />
                     </div>
 
                     {/* Morph ID Tags */}
@@ -727,7 +731,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
 
                     <div>
                         <Label htmlFor="notes">Notes</Label>
-                        <Textarea id="notes" value={formData.notes} onChange={(e) => handleChange('notes', e.target.value)} />
+                        <Textarea id="notes" value={formData.notes} onChange={(e) => handleChange('notes', e.target.value)} className="bg-slate-800 border-slate-600 text-slate-100" />
                     </div>
                     
                     {/* Enhanced Images Section */}
