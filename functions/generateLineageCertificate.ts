@@ -58,28 +58,31 @@ Deno.serve(async (req) => {
                 @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700&family=Roboto:wght@400;500&display=swap');
                 body { font-family: 'Roboto', sans-serif; margin: 0; padding: 20px; background: #f0f2f0; color: #333; print-color-adjust: exact; -webkit-print-color-adjust: exact; }
                 .container { max-width: 800px; margin: auto; border: 1px solid #ddd; background: white; box-shadow: 0 0 20px rgba(0,0,0,0.1); }
-                .inner-border { border: 6px double #566B5F; padding: 25px; }
-                .header { text-align: center; margin-bottom: 30px; }
+                .inner-border { border: 6px double #566B5F; padding: 30px; }
+                .header { text-align: center; margin-bottom: 35px; }
                 .logo { font-family: 'Playfair Display', serif; font-size: 28px; font-weight: bold; color: #566B5F; letter-spacing: 1px; }
                 .cert-title { font-size: 18px; color: #333; margin-top: 5px; text-transform: uppercase; letter-spacing: 3px; }
-                .section { margin-bottom: 25px; }
-                .section-title { font-size: 16px; font-weight: bold; color: #fff; background-color: #566B5F; padding: 6px 12px; margin-bottom: 15px; text-transform: uppercase; letter-spacing: 1px; }
+                .section { margin-bottom: 30px; }
+                .section-title { font-size: 16px; font-weight: bold; color: #fff; background-color: #566B5F; padding: 7px 12px; margin-bottom: 18px; text-transform: uppercase; letter-spacing: 1px; }
                 .main-gecko-info { display: flex; gap: 25px; align-items: center; }
                 .main-gecko-img { width: 180px; height: 180px; object-fit: cover; border-radius: 4px; border: 4px solid #e1e5e1; }
-                .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
-                .info-item { line-height: 1.4; }
-                .label { font-size: 11px; color: #777; text-transform: uppercase; }
+                .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; }
+                .info-item { line-height: 1.5; }
+                .label { font-size: 11px; color: #777; text-transform: uppercase; letter-spacing: 0.5px; }
                 .value { font-size: 15px; font-weight: 500; }
                 .lineage-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 15px; text-align: center; }
                 .ancestor-card { font-size: 12px; }
                 .ancestor-img { width: 100%; height: 100px; object-fit: cover; border-radius: 4px; margin-bottom: 5px; border: 1px solid #eee; }
+                .ancestor-placeholder { width: 100%; height: 100px; border-radius: 4px; margin-bottom: 5px; border: 1px dashed #ccc; background: #f5f5f5; display: flex; align-items: center; justify-content: center; color: #aaa; font-size: 12px; font-style: italic; }
                 .ancestor-name { font-weight: bold; }
                 .ancestor-id { font-size: 10px; color: #666; }
-                .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 11px; color: #888; display: flex; justify-content: space-between; align-items: center; }
-                .print-button { position: fixed; bottom: 20px; right: 20px; padding: 10px 20px; background: #566B5F; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
+                .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 11px; color: #888; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
+                .footer-cert-id { text-align: right; min-width: 0; word-break: break-all; font-size: 10px; }
+                .print-button-wrapper { text-align: center; padding: 16px; background: #f0f2f0; }
+                .print-button { display: inline-block; padding: 10px 28px; background: #566B5F; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
                 @media print {
                     body { background: white; }
-                    .print-button { display: none; }
+                    .print-button-wrapper { display: none; }
                     .container { box-shadow: none; border: none; }
                 }
             </style>
