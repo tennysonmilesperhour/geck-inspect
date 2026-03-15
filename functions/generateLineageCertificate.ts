@@ -78,11 +78,8 @@ Deno.serve(async (req) => {
                 .ancestor-id { font-size: 10px; color: #666; }
                 .footer { margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee; font-size: 11px; color: #888; display: flex; justify-content: space-between; align-items: center; gap: 12px; }
                 .footer-cert-id { text-align: right; min-width: 0; word-break: break-all; font-size: 10px; }
-                .print-button-wrapper { text-align: center; padding: 16px; background: #f0f2f0; }
-                .print-button { display: inline-block; padding: 10px 28px; background: #566B5F; color: white; border: none; border-radius: 5px; cursor: pointer; font-size: 16px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); }
                 @media print {
                     body { background: white; }
-                    .print-button-wrapper { display: none; }
                     .container { box-shadow: none; border: none; }
                 }
             </style>
