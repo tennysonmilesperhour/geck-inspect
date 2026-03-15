@@ -158,6 +158,7 @@ const userSpecificNavItems = [
   { title: "Breeding", url: createPageUrl("Breeding"), icon: GitBranch, requiresAuth: true },
   { title: "Lineage", url: createPageUrl("Lineage"), icon: GitBranch, requiresAuth: true },
   { title: "Sell Geckos", url: createPageUrl("MarketplaceSell"), icon: Upload, requiresAuth: true },
+  { title: "Sales Stats", url: createPageUrl("MarketplaceSalesStats"), icon: BarChart3, requiresAuth: true },
   { title: "My Profile", url: createPageUrl("MyProfile"), icon: Users, requiresAuth: true },
   { title: "Train Model", url: createPageUrl("Training"), icon: Upload, requiresAuth: true },
 ];
