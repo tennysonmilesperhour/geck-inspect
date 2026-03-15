@@ -62,6 +62,11 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
+      <Route path="/ForumPost" element={
+        <LayoutWrapper currentPageName="ForumPost">
+          <ForumPost />
+        </LayoutWrapper>
+      } />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
   );
