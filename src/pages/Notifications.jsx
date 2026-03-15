@@ -108,25 +108,25 @@ export default function NotificationsPage() {
     };
 
 
-    if (!user) {
+    if (isLoading) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-sage-50 to-earth-50 p-4 md:p-8">
+            <div className="min-h-screen bg-slate-950 p-4 md:p-8">
                 <div className="max-w-4xl mx-auto">
-                    <Card className="text-center py-12">
-                        <CardContent>
-                            <p className="text-lg text-sage-600">Please log in to view your notifications.</p>
-                        </CardContent>
-                    </Card>
+                    <div className="text-center text-slate-400 py-20">Loading notifications...</div>
                 </div>
             </div>
         );
     }
 
-    if (isLoading) {
+    if (!user) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-sage-50 to-earth-50 p-4 md:p-8">
+            <div className="min-h-screen bg-slate-950 p-4 md:p-8">
                 <div className="max-w-4xl mx-auto">
-                    <div className="text-center text-sage-600">Loading notifications...</div>
+                    <Card className="text-center py-12 bg-slate-900 border-slate-700">
+                        <CardContent>
+                            <p className="text-lg text-slate-400">Please log in to view your notifications.</p>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         );
