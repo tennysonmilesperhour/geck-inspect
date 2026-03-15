@@ -44,7 +44,7 @@ export default function ArchiveReasonDialog({ open, onConfirm, onCancel, geckoNa
           {REASONS.map(({ value, label, icon: Icon, color }) => (
             <button
               key={value}
-              onClick={() => setSelected(value)}
+              onClick={() => handleSelectReason(value)}
               className={`flex flex-col items-center gap-2 p-3 rounded-lg border-2 transition-all ${
                 selected === value ? color.replace('hover:', '') : 'border-slate-700 text-slate-400 bg-slate-800 hover:bg-slate-700'
               }`}
