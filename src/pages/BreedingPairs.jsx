@@ -149,7 +149,7 @@ export default function BreedingPairsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-sage-50 to-earth-50 p-4 md:p-8">
+        <div className="min-h-screen bg-slate-950 p-4 md:p-8">
             <div className="max-w-7xl mx-auto">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
@@ -158,22 +158,22 @@ export default function BreedingPairsPage() {
                             <div className="w-12 h-12 bg-gradient-to-br from-pink-600 to-rose-600 rounded-xl flex items-center justify-center shadow-lg">
                                 <HeartHandshake className="w-6 h-6 text-white" />
                             </div>
-                            <h1 className="text-4xl font-bold text-sage-900">Breeding Pairs</h1>
+                            <h1 className="text-4xl font-bold text-slate-100">Breeding Pairs</h1>
                         </div>
-                        <p className="text-lg text-sage-600">Manage your gecko breeding programs and track offspring.</p>
+                        <p className="text-lg text-slate-400">Manage your gecko breeding programs and track offspring.</p>
                     </div>
                     <PlanPairingForm males={males} females={females} onPlanCreated={loadData} />
                 </div>
 
                 {/* Content */}
                 {isLoading ? (
-                    <div className="text-center text-sage-600">Loading breeding pairs...</div>
+                    <div className="text-center text-slate-400">Loading breeding pairs...</div>
                 ) : breedingPlans.length === 0 ? (
-                     <Card className="text-center py-16 bg-white/50 rounded-lg border border-sage-200">
+                     <Card className="text-center py-16 bg-slate-900 rounded-lg border border-slate-700">
                         <CardContent>
-                            <HeartHandshake className="w-16 h-16 mx-auto mb-4 text-sage-400" />
-                            <h3 className="text-xl font-semibold text-sage-900">No breeding pairs yet</h3>
-                            <p className="text-sage-600 mt-2">Create a new breeding plan to get started.</p>
+                            <HeartHandshake className="w-16 h-16 mx-auto mb-4 text-slate-500" />
+                            <h3 className="text-xl font-semibold text-slate-100">No breeding pairs yet</h3>
+                            <p className="text-slate-400 mt-2">Create a new breeding plan to get started.</p>
                         </CardContent>
                     </Card>
                 ) : (
@@ -375,7 +375,7 @@ function BreedingPlanCard({ plan, sire, dam, eggs, onDataRefresh, onHatch, onEdi
      };
 
      const GeckoImagePlaceholder = ({ gender }) => (
-        <div className={`aspect-square w-full rounded-lg flex items-center justify-center ${gender === 'male' ? 'bg-blue-100' : 'bg-pink-100'}`}>
+        <div className={`aspect-square w-full rounded-lg flex items-center justify-center ${gender === 'male' ? 'bg-blue-900/40' : 'bg-pink-900/40'}`}>
             <span className={`text-4xl font-bold ${gender === 'male' ? 'text-blue-400' : 'text-pink-400'}`}>{gender === 'male' ? '♂' : '♀'}</span>
         </div>
     );
@@ -392,10 +392,10 @@ function BreedingPlanCard({ plan, sire, dam, eggs, onDataRefresh, onHatch, onEdi
     };
 
     return (
-        <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg flex flex-col">
+        <Card className="bg-slate-900 border-slate-700 shadow-lg flex flex-col">
             <CardHeader>
                 <div className="flex items-center justify-between">
-                    <CardTitle className="text-xl text-sage-900">{sire?.name || 'Sire'} x {dam?.name || 'Dam'}</CardTitle>
+                    <CardTitle className="text-xl text-slate-100">{sire?.name || 'Sire'} x {dam?.name || 'Dam'}</CardTitle>
                     <div className="flex items-center gap-2">
                         <Badge variant={plan.status === 'Active' ? 'default' : 'secondary'}>{plan.status}</Badge>
                         <Button
@@ -415,15 +415,15 @@ function BreedingPlanCard({ plan, sire, dam, eggs, onDataRefresh, onHatch, onEdi
                              >
                                  <Trash2 className="w-4 h-4" />
                              </Button>
-                             <AlertDialogContent className="bg-sage-50 border-sage-200">
+                             <AlertDialogContent className="bg-slate-900 border-slate-700">
                                  <AlertDialogHeader>
-                                     <AlertDialogTitle className="text-sage-900">Delete this breeding plan?</AlertDialogTitle>
-                                     <AlertDialogDescription className="text-sage-700">
+                                     <AlertDialogTitle className="text-slate-100">Delete this breeding plan?</AlertDialogTitle>
+                                     <AlertDialogDescription className="text-slate-400">
                                          This will permanently delete this breeding plan and all associated eggs. This action cannot be undone.
                                      </AlertDialogDescription>
                                  </AlertDialogHeader>
                                  <AlertDialogFooter>
-                                     <AlertDialogCancel className="border-sage-300 text-sage-900">Cancel</AlertDialogCancel>
+                                     <AlertDialogCancel className="border-slate-600 text-slate-200">Cancel</AlertDialogCancel>
                                      <AlertDialogAction onClick={handleConfirmDelete} className="bg-red-600 hover:bg-red-700 text-white">
                                          Delete Plan
                                      </AlertDialogAction>
@@ -437,15 +437,15 @@ function BreedingPlanCard({ plan, sire, dam, eggs, onDataRefresh, onHatch, onEdi
                 <div className="grid grid-cols-2 gap-4 items-center">
                     <div className="text-center">
                         {sire?.image_urls?.[0] ? <img src={sire.image_urls[0]} alt={sire.name} className="aspect-square w-full object-cover rounded-lg" /> : <GeckoImagePlaceholder gender="male" />}
-                        <p className="mt-2 font-medium text-blue-700">{sire?.name || 'Sire not found'}</p>
+                        <p className="mt-2 font-medium text-blue-400">{sire?.name || 'Sire not found'}</p>
                     </div>
                     <div className="text-center">
                         {dam?.image_urls?.[0] ? <img src={dam.image_urls[0]} alt={dam.name} className="aspect-square w-full object-cover rounded-lg" /> : <GeckoImagePlaceholder gender="female" />}
-                        <p className="mt-2 font-medium text-pink-700">{dam?.name || 'Dam not found'}</p>
+                        <p className="mt-2 font-medium text-pink-400">{dam?.name || 'Dam not found'}</p>
                     </div>
                 </div>
                 <div className="space-y-3">
-                    <h4 className="font-semibold text-sage-800">Eggs ({eggs.length})</h4>
+                    <h4 className="font-semibold text-slate-200">Eggs ({eggs.length})</h4>
                     <div className="space-y-2 max-h-40 overflow-y-auto pr-2">
                         {eggs.map(egg => <EggCard key={egg.id} egg={egg} onHatch={() => onHatch(egg, plan)} />)}
                     </div>
@@ -453,8 +453,8 @@ function BreedingPlanCard({ plan, sire, dam, eggs, onDataRefresh, onHatch, onEdi
                 </div>
 
                 {/* Calendar Integration */}
-                <div className="mt-4 p-3 bg-sage-50 rounded-lg">
-                    <h4 className="font-semibold text-sage-900 mb-2 flex items-center gap-2">
+                <div className="mt-4 p-3 bg-slate-800 rounded-lg">
+                    <h4 className="font-semibold text-slate-100 mb-2 flex items-center gap-2">
                         <Calendar className="w-4 h-4" />
                         Add to Calendar
                     </h4>
@@ -533,21 +533,21 @@ function AddEggForm({ planId, onEggAdded, sire, dam }) {
 
 function EggCard({ egg, onHatch }) {
     return (
-        <div className="p-3 bg-sage-50 rounded-lg flex items-center justify-between">
+        <div className="p-3 bg-slate-800 rounded-lg flex items-center justify-between">
             <div className="flex items-center gap-2">
-                <EggIcon className="w-5 h-5 text-earth-500" />
+                <EggIcon className="w-5 h-5 text-amber-400" />
                 <div>
-                    <p className="text-sm font-medium text-sage-800">
+                    <p className="text-sm font-medium text-slate-200">
                         Laid: {format(new Date(egg.lay_date), 'MMM d, yyyy')}
                     </p>
-                    <p className="text-xs text-sage-600">
+                    <p className="text-xs text-slate-400">
                         Expected Hatch: {format(new Date(egg.hatch_date_expected), 'MMM d, yyyy')}
                     </p>
                 </div>
             </div>
             {egg.status === 'Incubating' ? (
                 <div className="flex items-center gap-1">
-                    <Button size="sm" onClick={onHatch} className="bg-green-100 text-green-700 hover:bg-green-200">
+                    <Button size="sm" onClick={onHatch} className="bg-green-600 text-white hover:bg-green-700">
                         <Sparkles className="w-4 h-4 mr-1" />
                         Hatch
                     </Button>
