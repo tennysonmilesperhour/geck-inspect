@@ -27,6 +27,8 @@ const NotificationDropdown = ({ user, unreadCount, setUnreadCount }) => {
     useEffect(() => {
         if (isOpen) {
             loadNotifications();
+            const interval = setInterval(loadNotifications, 15000);
+            return () => clearInterval(interval);
         }
     }, [isOpen, loadNotifications]);
 
