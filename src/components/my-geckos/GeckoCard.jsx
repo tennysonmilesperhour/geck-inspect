@@ -108,13 +108,15 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
           <h3 className="font-bold text-base sm:text-lg text-emerald-100 truncate flex-1 leading-7">
             {gecko.name}
           </h3>
-          <div className="flex-shrink-0">
-            <EventTracker 
-              entityId={gecko.id} 
-              entityType="gecko" 
-              EventEntity={GeckoEvent}
-            />
-          </div>
+          {isOwner && (
+            <div className="flex-shrink-0">
+              <EventTracker 
+                entityId={gecko.id} 
+                entityType="gecko" 
+                EventEntity={GeckoEvent}
+              />
+            </div>
+          )}
         </div>
         {gecko.gecko_id_code && (
           <p className="text-xs text-slate-400 font-medium truncate">
