@@ -32,11 +32,18 @@ const NotificationDropdown = ({ user, unreadCount, setUnreadCount }) => {
         }
     }, [isOpen, loadNotifications]);
 
+    const clearLayoutCache = () => {
+        if (window.dataCache && user) {
+            window.dataCache.clear(`notifications_${user.email}`);
+        }
+    };
+
     const handleMarkAsRead = async (notificationId) => {
         try {
             await Notification.update(notificationId, { is_read: true });
             setNotifications(prev => prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n));
             setUnreadCount(prev => Math.max(0, prev - 1));
+            clearLayoutCache();
         } catch (error) {
             console.error("Failed to mark notification as read:", error);
         }
@@ -50,6 +57,7 @@ const NotificationDropdown = ({ user, unreadCount, setUnreadCount }) => {
             }
             setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
             setUnreadCount(0);
+            clearLayoutCache();
         } catch (error) {
             console.error("Failed to mark all notifications as read:", error);
         }
