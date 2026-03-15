@@ -491,18 +491,6 @@ export default function CommunityConnectPage() {
     const handleFollow = async (email) => {
         if (!currentUser) return;
         try {
-            // Check if already following
-            const allFollows = await UserFollow.list();
-            const existingFollow = allFollows.find(f => 
-                f.follower_email === currentUser.email && 
-                f.following_email === email
-            );
-            
-            if (existingFollow) {
-                setFollowing([...following, email]);
-                return;
-            }
-            
             await UserFollow.create({
                 follower_email: currentUser.email,
                 following_email: email
@@ -516,11 +504,8 @@ export default function CommunityConnectPage() {
     const handleUnfollow = async (email) => {
         if (!currentUser) return;
         try {
-            const allFollows = await UserFollow.list();
-            const followRecord = allFollows.find(f => 
-                f.follower_email === currentUser.email && 
-                f.following_email === email
-            );
+            const myFollows = await UserFollow.filter({ follower_email: currentUser.email });
+            const followRecord = myFollows.find(f => f.following_email === email);
             if (followRecord) {
                 await UserFollow.delete(followRecord.id);
                 setFollowing(following.filter(e => e !== email));
