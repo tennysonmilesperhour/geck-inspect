@@ -54,13 +54,13 @@ function LookingForSection({ formData, handleChange }) {
                     onKeyPress={(e) => e.key === 'Enter' && addItem()} 
                     className="bg-slate-800 border-slate-600 text-slate-100" 
                 />
-                <Button onClick={addItem} type="button" className="bg-purple-600 hover:bg-purple-700">
+                <Button onClick={addItem} type="button" className="bg-emerald-600 hover:bg-emerald-700">
                     <Plus className="w-4 h-4" />
                 </Button>
             </div>
             <div className="flex flex-wrap gap-2">
                 {formData.looking_for.map((item) => (
-                    <Badge key={item} className="flex items-center gap-1 bg-purple-900/50 text-purple-200 border-purple-600">
+                    <Badge key={item} className="flex items-center gap-1 bg-emerald-900/50 text-emerald-200 border-emerald-600">
                         {item}
                         <button onClick={() => removeItem(item)}><X className="w-3 h-3" /></button>
                     </Badge>

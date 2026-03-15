@@ -176,7 +176,7 @@ Thank you for being part of this community and helping make Geck Inspect possibl
                                         <h3 className="text-xl font-semibold mb-2 text-slate-100">Champion</h3>
                                         <p className="text-3xl font-bold text-emerald-400 mb-4">$50</p>
                                         <p className="text-sm text-slate-400 mb-6">Major impact</p>
-                                        <Button className="w-full bg-purple-600 hover:bg-purple-700">
+                                        <Button className="w-full bg-emerald-600 hover:bg-emerald-700">
                                             <DollarSign className="w-4 h-4 mr-2" />
                                             Donate $50
                                         </Button>
