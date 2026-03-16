@@ -69,7 +69,6 @@ export default function MarketplaceSalesStats() {
               const savedCosts = localStorage.getItem(`marketplace_costs_${currentUser.email}`);
               if (savedCosts) setCosts(JSON.parse(savedCosts));
             } catch (e) { /* ignore */ }
-            return;
           }
         }
 
