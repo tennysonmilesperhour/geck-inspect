@@ -347,5 +347,6 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
                 </CardContent>
             </Card>
         </div>
+        </>
     );
 }
