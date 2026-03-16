@@ -968,7 +968,7 @@ function ImageCropDialog({ imageUrl, initialCrop, onSave, onClose }) {
 
     return (
         <Dialog open={true} onOpenChange={onClose}>
-            <DialogContent className="max-w-md">
+            <DialogContent className="max-w-md bg-slate-900 border-slate-700 text-slate-100">
                 <DialogHeader>
                     <DialogTitle>Adjust Thumbnail Position</DialogTitle>
                      <p className="text-sm text-muted-foreground">Click and drag on the image to set the thumbnail's focus point.</p>

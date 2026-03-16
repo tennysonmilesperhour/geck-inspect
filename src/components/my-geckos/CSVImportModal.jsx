@@ -93,7 +93,7 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
 
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-2xl">
+            <DialogContent className="max-w-2xl bg-slate-900 border-slate-700 text-slate-100">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <FileSpreadsheet className="w-5 h-5" />
@@ -108,7 +108,7 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
                     </TabsList>
 
                     <TabsContent value="template" className="space-y-4">
-                        <div className="text-sm text-gray-600">
+                        <div className="text-sm text-slate-400">
                             <p className="mb-4">Download a CSV template to get started with bulk importing your gecko collection.</p>
                             
                             <div className="space-y-3">

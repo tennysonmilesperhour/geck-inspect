@@ -622,7 +622,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                             <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleDeleteWeight(record.id)}>
                               <Trash2 className="w-3 h-3 text-red-500"/>
                             </Button>
-                            <AlertDialogContent className="bg-emerald-950 border-emerald-700">
+                            <AlertDialogContent className="bg-slate-900 border-slate-700">
                               <AlertDialogHeader>
                                 <AlertDialogTitle className="text-emerald-100">Delete weight record?</AlertDialogTitle>
                                 <AlertDialogDescription className="text-emerald-300">

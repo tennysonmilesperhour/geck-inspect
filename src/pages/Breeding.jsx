@@ -388,10 +388,10 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
                                        >
                                            <Trash2 className="w-4 h-4" />
                                        </Button>
-                                       <AlertDialogContent className="bg-emerald-950 border-emerald-700">
+                                       <AlertDialogContent className="bg-slate-900 border-slate-700">
                                            <AlertDialogHeader>
-                                               <AlertDialogTitle className="text-emerald-100">Archive this egg?</AlertDialogTitle>
-                                               <AlertDialogDescription className="text-emerald-300">
+                                               <AlertDialogTitle className="text-slate-100">Archive this egg?</AlertDialogTitle>
+                                               <AlertDialogDescription className="text-slate-400">
                                                    This will archive the egg record and hide it from the active list. You can view archived eggs in the Hatchery.
                                                </AlertDialogDescription>
                                            </AlertDialogHeader>

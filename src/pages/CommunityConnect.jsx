@@ -444,12 +444,17 @@ export default function CommunityConnectPage() {
                     if (!counts[gecko.created_by]) {
                         counts[gecko.created_by] = { selling: 0, breeding: 0, keeping: 0 };
                     }
+                    // Skip Sold geckos entirely from counts
+                    if (gecko.status === 'Sold') return;
+                    // All active geckos count toward collection
+                    counts[gecko.created_by].keeping++;
+                    // For Sale
                     if (gecko.status === 'For Sale') {
                         counts[gecko.created_by].selling++;
-                    } else if (['Ready to Breed', 'Proven', 'Future Breeder'].includes(gecko.status)) {
+                    }
+                    // Breeding-related statuses
+                    if (['Ready to Breed', 'Proven', 'Future Breeder'].includes(gecko.status)) {
                         counts[gecko.created_by].breeding++;
-                    } else if (gecko.status !== 'Sold') {
-                        counts[gecko.created_by].keeping++;
                     }
                     // Save first gecko image as potential cover
                     if (!coverImages[gecko.created_by] && gecko.image_urls?.length > 0) {
