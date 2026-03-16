@@ -550,7 +550,7 @@ export default function MyProfile() {
                                             {[user.city, user.state_province, user.country].filter(Boolean).join(', ')}
                                         </p>
                                     )}
-                                    {(user.website_url || user.instagram_handle || user.facebook_url || user.youtube_url || user.tiktok_handle) && (
+                                    {(user.website_url || user.instagram_handle || user.facebook_url || user.youtube_url || user.tiktok_handle || user.morphmarket_url || user.palm_street_url) && (
                                         <div className="flex flex-wrap gap-2 pt-2">
                                             {user.website_url && (
                                                 <a href={user.website_url} target="_blank" rel="noopener noreferrer">
@@ -577,6 +577,27 @@ export default function MyProfile() {
                                                 <a href={user.youtube_url} target="_blank" rel="noopener noreferrer">
                                                     <Button size="sm" variant="outline" className="border-red-500/50 hover:bg-red-500/20 text-red-400">
                                                         <Youtube className="w-4 h-4" />
+                                                    </Button>
+                                                </a>
+                                            )}
+                                            {user.tiktok_handle && (
+                                                <a href={`https://tiktok.com/@${user.tiktok_handle}`} target="_blank" rel="noopener noreferrer">
+                                                    <Button size="sm" variant="outline" className="border-slate-500/50 hover:bg-slate-700 text-slate-200">
+                                                        <span className="text-xs font-bold">TT</span>
+                                                    </Button>
+                                                </a>
+                                            )}
+                                            {user.morphmarket_url && (
+                                                <a href={user.morphmarket_url} target="_blank" rel="noopener noreferrer">
+                                                    <Button size="sm" variant="outline" className="border-orange-500/50 hover:bg-orange-500/20 text-orange-400 text-xs font-semibold px-2">
+                                                        MM
+                                                    </Button>
+                                                </a>
+                                            )}
+                                            {user.palm_street_url && (
+                                                <a href={user.palm_street_url} target="_blank" rel="noopener noreferrer">
+                                                    <Button size="sm" variant="outline" className="border-green-500/50 hover:bg-green-500/20 text-green-400 text-xs font-semibold px-2">
+                                                        PS
                                                     </Button>
                                                 </a>
                                             )}
