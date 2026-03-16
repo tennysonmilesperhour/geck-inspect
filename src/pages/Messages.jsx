@@ -13,6 +13,7 @@ import EmptyState from '../components/shared/EmptyState';
 import { format } from 'date-fns';
 
 export default function MessagesPage() {
+    const { toast } = useToast();
     const [messages, setMessages] = useState([]);
     const [currentUser, setCurrentUser] = useState(null);
     const [selectedConversation, setSelectedConversation] = useState(null);
@@ -189,7 +190,7 @@ export default function MessagesPage() {
 
         } catch (error) {
             console.error('Failed to send message:', error);
-            alert('Failed to send message. Please try again.');
+            toast({ title: "Failed to Send", description: "Failed to send message. Please try again.", variant: "destructive" });
         }
         setIsSending(false);
     };

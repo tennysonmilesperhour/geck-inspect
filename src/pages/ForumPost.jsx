@@ -21,6 +21,7 @@ import {
 
 export default function ForumPostPage() {
     const location = useLocation();
+    const navigate = useNavigate();
     const [post, setPost] = useState(null);
     const [comments, setComments] = useState([]);
     const [category, setCategory] = useState(null);
@@ -134,7 +135,7 @@ export default function ForumPostPage() {
         
         try {
             await ForumPost.delete(deleteTarget.id);
-            window.location.href = createPageUrl('Forum');
+            navigate(createPageUrl('Forum'));
         } catch (error) {
             console.error("Failed to delete post:", error);
         }

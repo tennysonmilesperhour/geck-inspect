@@ -13,6 +13,7 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { format } from 'date-fns';
 
 export default function CommentSection({ morphGuideId }) {
+    const { toast } = useToast();
     const [comments, setComments] = useState([]);
     const [user, setUser] = useState(null);
     const [showForm, setShowForm] = useState(false);
@@ -60,7 +61,7 @@ export default function CommentSection({ morphGuideId }) {
             setFormData(prev => ({ ...prev, image_url: file_url }));
         } catch (error) {
             console.error('Failed to upload image:', error);
-            alert('Failed to upload image. Please try again.');
+            toast({ title: "Upload Failed", description: "Failed to upload image. Please try again.", variant: "destructive" });
         }
         setUploadingImage(false);
     };
@@ -82,10 +83,10 @@ export default function CommentSection({ morphGuideId }) {
 
             setFormData({ subject: '', content: '', image_url: '' });
             setShowForm(false);
-            alert('Comment submitted for review! It will appear after admin approval.');
+            toast({ title: "Comment Submitted", description: "Your comment will appear after admin approval." });
         } catch (error) {
             console.error('Failed to submit comment:', error);
-            alert('Failed to submit comment. Please try again.');
+            toast({ title: "Submission Failed", description: "Failed to submit comment. Please try again.", variant: "destructive" });
         }
         setIsSubmitting(false);
     };

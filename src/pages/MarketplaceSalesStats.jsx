@@ -12,6 +12,7 @@ import { DollarSign, TrendingUp, AlertCircle, Trash2, Plus, Save } from 'lucide-
 import { format } from 'date-fns';
 
 export default function MarketplaceSalesStats() {
+  const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [soldGeckos, setSoldGeckos] = useState([]);
   const [priceOverrides, setPriceOverrides] = useState({});
@@ -26,7 +27,7 @@ export default function MarketplaceSalesStats() {
       try {
         const currentUser = await base44.auth.me();
         if (!currentUser) {
-          window.location.href = '/';
+          navigate(createPageUrl('Home'));
           return;
         }
         setUser(currentUser);

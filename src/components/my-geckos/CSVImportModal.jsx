@@ -13,6 +13,7 @@ import { importGeckosFromCSV } from '@/functions/importGeckosFromCSV';
 import { generateCSVTemplate } from '@/functions/generateCSVTemplate';
 
 export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
+    const { toast } = useToast();
     const [file, setFile] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
@@ -25,7 +26,7 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
             setFile(selectedFile);
             setImportResults(null);
         } else {
-            alert('Please select a valid CSV file');
+            toast({ title: "Invalid File", description: "Please select a valid CSV file.", variant: "destructive" });
         }
     };
 
