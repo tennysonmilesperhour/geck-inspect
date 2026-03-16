@@ -1615,7 +1615,6 @@ function LayoutContent({ children, currentPageName }) {
             </div>
           </div>
         </div>
-      </div>
 
         <main className="flex-1 flex flex-col min-w-0">
           <header className="bg-sage-200/90 backdrop-blur-md border-b border-sage-300 px-4 py-3 md:hidden sticky top-0 z-10 gecko-header">
