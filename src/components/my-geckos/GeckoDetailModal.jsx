@@ -287,17 +287,15 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
             )}
           </div>
           <div className="flex items-center gap-2">
-            {!gecko.archived && (
-              <Button 
-                variant="outline" 
-                size="sm"
-                onClick={() => onEdit(gecko)}
-                className="border-slate-600 hover:bg-slate-800"
-              >
-                <Edit className="w-4 h-4 mr-2" />
-                Edit
-              </Button>
-            )}
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => onEdit(gecko)}
+              className="border-slate-600 hover:bg-slate-800"
+            >
+              <Edit className="w-4 h-4 mr-2" />
+              Edit
+            </Button>
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="w-5 h-5 text-slate-400" />
             </Button>
