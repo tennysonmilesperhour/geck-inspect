@@ -135,6 +135,11 @@ export default function MyProfile() {
             location: currentUser.location || '',
             website_url: currentUser.website_url || '',
             instagram_handle: currentUser.instagram_handle || '',
+            facebook_url: currentUser.facebook_url || '',
+            youtube_url: currentUser.youtube_url || '',
+            tiktok_handle: currentUser.tiktok_handle || '',
+            morphmarket_url: currentUser.morphmarket_url || '',
+            palm_street_url: currentUser.palm_street_url || '',
             breeder_name: currentUser.breeder_name || '',
             years_experience: currentUser.years_experience || 0,
             // Add settings data
@@ -170,11 +175,12 @@ export default function MyProfile() {
                 setBreedingPlans(plans);
                 setWeightRecords(weights);
                 
-                // Categorize geckos - geckos can appear in multiple categories
-                setForSaleGeckos(geckos.filter(g => g.status === 'For Sale'));
-                setBreedingGeckos(geckos.filter(g => ['Ready to Breed', 'Proven', 'Future Breeder'].includes(g.status)));
-                // Collection shows ALL geckos except sold ones
-                setCollectionGeckos(geckos.filter(g => g.status !== 'Sold'));
+                // Categorize geckos - exclude archived geckos from all display sections
+                const activeGeckos = geckos.filter(g => !g.archived);
+                setForSaleGeckos(activeGeckos.filter(g => g.status === 'For Sale'));
+                setBreedingGeckos(activeGeckos.filter(g => ['Ready to Breed', 'Proven', 'Future Breeder'].includes(g.status)));
+                // Collection shows active geckos except sold ones
+                setCollectionGeckos(activeGeckos.filter(g => g.status !== 'Sold'));
 
                 // Load stats with heavy rate limit protection
                 const loadStatsWithFallback = async () => {
