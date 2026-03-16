@@ -328,19 +328,19 @@ export default function MyProfile() {
                 )}
                 <div className="absolute inset-0 bg-black bg-opacity-40"></div>
                 <div className="absolute bottom-4 right-4">
-                    <Button asChild size="sm" className="bg-black/50 hover:bg-black/70 cursor-pointer">
-                         <label>
-                            <Camera className="w-4 h-4 mr-2" />
+                    <label className="cursor-pointer">
+                        <div className="flex items-center gap-2 bg-black/50 hover:bg-black/70 text-white text-sm font-medium px-3 py-1.5 rounded-md transition-colors">
+                            <Camera className="w-4 h-4" />
                             Update Cover
-                            <input
-                                type="file"
-                                accept="image/*"
-                                onChange={(e) => handleImageUpload(e.target.files[0], 'cover')}
-                                className="sr-only"
-                                disabled={isUploading}
-                            />
-                        </label>
-                    </Button>
+                        </div>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleImageUpload(e.target.files[0], 'cover')}
+                            className="sr-only"
+                            disabled={isUploading}
+                        />
+                    </label>
                 </div>
             </div>
 
@@ -447,47 +447,43 @@ export default function MyProfile() {
                                             />
                                         </div>
                                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                                            <div>
-                                                <Label htmlFor="location" className="block text-sm font-medium text-slate-300 mb-2">Location</Label>
-                                                <Input
-                                                    id="location"
-                                                    value={editData.location}
-                                                    onChange={(e) => setEditData({...editData, location: e.target.value})}
-                                                    placeholder="City, Country"
-                                                    className="bg-slate-800 border-slate-600 text-slate-100"
-                                                />
-                                            </div>
-                                            <div>
-                                                <Label htmlFor="website_url" className="block text-sm font-medium text-slate-300 mb-2">Website</Label>
-                                                <Input
-                                                    id="website_url"
-                                                    value={editData.website_url}
-                                                    onChange={(e) => setEditData({...editData, website_url: e.target.value})}
-                                                    placeholder="https://yourwebsite.com"
-                                                    className="bg-slate-800 border-slate-600 text-slate-100"
-                                                />
-                                            </div>
-                                            <div>
-                                                <Label htmlFor="instagram_handle" className="block text-sm font-medium text-slate-300 mb-2">Instagram</Label>
-                                                <Input
-                                                    id="instagram_handle"
-                                                    value={editData.instagram_handle}
-                                                    onChange={(e) => setEditData({...editData, instagram_handle: e.target.value})}
-                                                    placeholder="@yourusername"
-                                                    className="bg-slate-800 border-slate-600 text-slate-100"
-                                                />
-                                            </div>
-                                            <div>
-                                                <Label htmlFor="breeder_name" className="block text-sm font-medium text-slate-300 mb-2">Breeder Name</Label>
-                                                <Input
-                                                    id="breeder_name"
-                                                    value={editData.breeder_name}
-                                                    onChange={(e) => setEditData({...editData, breeder_name: e.target.value})}
-                                                    placeholder="Your breeding business name"
-                                                    className="bg-slate-800 border-slate-600 text-slate-100"
-                                                />
-                                            </div>
-                                        </div>
+                                             <div>
+                                                 <Label htmlFor="location" className="block text-sm font-medium text-slate-300 mb-2">Location</Label>
+                                                 <Input id="location" value={editData.location} onChange={(e) => setEditData({...editData, location: e.target.value})} placeholder="City, Country" className="bg-slate-800 border-slate-600 text-slate-100" />
+                                             </div>
+                                             <div>
+                                                 <Label htmlFor="breeder_name" className="block text-sm font-medium text-slate-300 mb-2">Breeder Name</Label>
+                                                 <Input id="breeder_name" value={editData.breeder_name} onChange={(e) => setEditData({...editData, breeder_name: e.target.value})} placeholder="Your breeding business name" className="bg-slate-800 border-slate-600 text-slate-100" />
+                                             </div>
+                                             <div>
+                                                 <Label htmlFor="website_url" className="block text-sm font-medium text-slate-300 mb-2">Website</Label>
+                                                 <Input id="website_url" value={editData.website_url} onChange={(e) => setEditData({...editData, website_url: e.target.value})} placeholder="https://yourwebsite.com" className="bg-slate-800 border-slate-600 text-slate-100" />
+                                             </div>
+                                             <div>
+                                                 <Label htmlFor="instagram_handle" className="block text-sm font-medium text-slate-300 mb-2">Instagram Handle</Label>
+                                                 <Input id="instagram_handle" value={editData.instagram_handle} onChange={(e) => setEditData({...editData, instagram_handle: e.target.value})} placeholder="yourusername (no @)" className="bg-slate-800 border-slate-600 text-slate-100" />
+                                             </div>
+                                             <div>
+                                                 <Label htmlFor="facebook_url" className="block text-sm font-medium text-slate-300 mb-2">Facebook URL</Label>
+                                                 <Input id="facebook_url" value={editData.facebook_url} onChange={(e) => setEditData({...editData, facebook_url: e.target.value})} placeholder="https://facebook.com/yourpage" className="bg-slate-800 border-slate-600 text-slate-100" />
+                                             </div>
+                                             <div>
+                                                 <Label htmlFor="youtube_url" className="block text-sm font-medium text-slate-300 mb-2">YouTube URL</Label>
+                                                 <Input id="youtube_url" value={editData.youtube_url} onChange={(e) => setEditData({...editData, youtube_url: e.target.value})} placeholder="https://youtube.com/yourchannel" className="bg-slate-800 border-slate-600 text-slate-100" />
+                                             </div>
+                                             <div>
+                                                 <Label htmlFor="tiktok_handle" className="block text-sm font-medium text-slate-300 mb-2">TikTok Handle</Label>
+                                                 <Input id="tiktok_handle" value={editData.tiktok_handle} onChange={(e) => setEditData({...editData, tiktok_handle: e.target.value})} placeholder="yourusername (no @)" className="bg-slate-800 border-slate-600 text-slate-100" />
+                                             </div>
+                                             <div>
+                                                 <Label htmlFor="morphmarket_url" className="block text-sm font-medium text-slate-300 mb-2">MorphMarket URL</Label>
+                                                 <Input id="morphmarket_url" value={editData.morphmarket_url} onChange={(e) => setEditData({...editData, morphmarket_url: e.target.value})} placeholder="https://morphmarket.com/stores/yourstore" className="bg-slate-800 border-slate-600 text-slate-100" />
+                                             </div>
+                                             <div>
+                                                 <Label htmlFor="palm_street_url" className="block text-sm font-medium text-slate-300 mb-2">Palm Street URL</Label>
+                                                 <Input id="palm_street_url" value={editData.palm_street_url} onChange={(e) => setEditData({...editData, palm_street_url: e.target.value})} placeholder="https://palmstreet.app/yourprofile" className="bg-slate-800 border-slate-600 text-slate-100" />
+                                             </div>
+                                         </div>
                                         <div className="flex justify-end pt-4">
                                             <Button onClick={handleSave} disabled={isSaving} className="bg-emerald-600 hover:bg-emerald-700">
                                                 {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
