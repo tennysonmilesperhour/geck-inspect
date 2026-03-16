@@ -101,7 +101,7 @@ export default function GeckoDetail() {
                         <ArrowLeft className="w-4 h-4 mr-2" /> Back
                     </Button>
                     {isOwner && (
-                        <Button onClick={() => navigate(createPageUrl('MyGeckos'))} className="bg-emerald-600 hover:bg-emerald-700">
+                        <Button onClick={() => navigate(createPageUrl('MyGeckos'))}>
                             Edit in My Geckos
                         </Button>
                     )}

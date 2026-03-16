@@ -315,7 +315,7 @@ export default function TrainingPage() {
                                     <Button
                                         onClick={analyzeWithLLM}
                                         disabled={!testImage || isLlmAnalyzing}
-                                        className="bg-emerald-600 hover:bg-emerald-700"
+                                        className=""
                                     >
                                         {isLlmAnalyzing ? (
                                             <>
