@@ -1686,9 +1686,10 @@ function LayoutContent({ children, currentPageName }) {
 
 
           </main>
-          <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
-          </>
-          );
+        </div>
+        <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
+      </>
+      );
           }
 
           export default function Layout({ children, currentPageName }) {
