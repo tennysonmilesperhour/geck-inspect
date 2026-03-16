@@ -240,8 +240,8 @@ export default function ProjectManager() {
                                                                             </p>
                                                                         )}
                                                                     </div>
-                                                                    <Button size="icon" variant="ghost" onClick={() => handleDeleteTask(task.id)} className="text-red-400 hover:text-red-300">
-                                                                        <Trash2 className="w-4 h-4" />
+                                                                    <Button size="icon" variant="ghost" onClick={() => setTaskToDelete(task.id)} className="text-red-400 hover:text-red-300">
+                                                                       <Trash2 className="w-4 h-4" />
                                                                     </Button>
                                                                 </div>
                                                             ))}
@@ -250,7 +250,7 @@ export default function ProjectManager() {
                                                             <Button size="sm" onClick={() => { setSelectedProjectId(project.id); setIsTaskModalOpen(true); }} className="bg-emerald-600 hover:bg-emerald-700">
                                                                 <Plus className="w-4 h-4 mr-2" /> Add Task
                                                             </Button>
-                                                            <Button size="sm" variant="destructive" onClick={() => handleDeleteProject(project.id)}>Delete Project</Button>
+                                                            <Button size="sm" variant="destructive" onClick={() => setProjectToDelete(project.id)}>Delete Project</Button>
                                                         </div>
                                                     </CardContent>
                                                 )}

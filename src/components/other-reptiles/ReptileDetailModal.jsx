@@ -258,8 +258,8 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
                                                 <div key={record.id} className="flex justify-between items-center bg-slate-800 p-2 rounded text-sm">
                                                     <span className="text-slate-300">{format(new Date(record.record_date), 'MMM d, yyyy')}</span>
                                                     <span className="font-bold text-emerald-400">{record.weight_grams}g</span>
-                                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => handleDeleteWeight(record.id)}>
-                                                        <Trash2 className="w-3 h-3 text-red-500"/>
+                                                    <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setWeightToDelete(record.id)}>
+                                                       <Trash2 className="w-3 h-3 text-red-500"/>
                                                     </Button>
                                                 </div>
                                             ))}

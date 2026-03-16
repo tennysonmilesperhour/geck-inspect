@@ -159,7 +159,7 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
                                             <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-slate-200" onClick={() => openEdit(group)}>
                                                 <Edit className="w-3 h-3" />
                                             </Button>
-                                            <Button size="icon" variant="ghost" className="h-7 w-7 text-red-400 hover:text-red-300" onClick={() => handleDelete(group.id)}>
+                                            <Button size="icon" variant="ghost" className="h-7 w-7 text-red-400 hover:text-red-300" onClick={() => setGroupToDelete(group.id)}>
                                                 <Trash2 className="w-3 h-3" />
                                             </Button>
                                         </div>
