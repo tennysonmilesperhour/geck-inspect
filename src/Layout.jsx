@@ -1417,59 +1417,58 @@ function LayoutContent({ children, currentPageName }) {
                 App Tutorial
               </button>
 
-              <div className="border-t border-sage-300 dark:border-sage-700 pt-3" />
-                  <Link to={createPageUrl("Subscription")} className="block">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full justify-start text-sage-600 hover:text-sage-700 border-sage-300 text-sm"
-                >
-                  <Star className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <span className="truncate">Subscription</span>
-                </Button>
-              </Link>
-
-              {user ?
-                <div className="space-y-2">
-                  {sidebarBadge && (
-                    <UserBadge
-                      badge={sidebarBadge.badge}
-                      title={sidebarBadge.title}
-                      count={sidebarBadge.count}
-                      label={sidebarBadge.label}
-                    />
-                  )}
-
-                  <Link to={createPageUrl("Settings")} className="block">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full justify-start text-sage-600 hover:text-sage-700 border-sage-300 text-sm">
-
-                      <Settings className="w-4 h-4 mr-2" />
-                      Settings
-                    </Button>
-                  </Link>
-
-                  <div className="text-xs text-sage-500 px-3">
-                    Logged in as {user.full_name}
-                    {user.is_expert && <span className="ml-2 text-green-600">✓ Expert</span>}
-                    {user.role === 'admin' && <span className="ml-2 text-purple-600">⚡ Admin</span>}
-                  </div>
+              <div className="border-t border-sage-300 dark:border-sage-700 pt-3">
+                <Link to={createPageUrl("Subscription")} className="block">
                   <Button
                     variant="outline"
                     size="sm"
-                    onClick={handleLogout}
-                    className="w-full justify-start text-sage-600 hover:text-sage-700 border-sage-300 text-sm">
-
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Logout
+                    className="w-full justify-start text-sage-600 hover:text-sage-700 border-sage-300 text-sm"
+                  >
+                    <Star className="w-4 h-4 mr-2 flex-shrink-0" />
+                    <span className="truncate">Subscription</span>
                   </Button>
-                </div> :
-                null}
-                </div>
-                </SidebarFooter>
-                </Sidebar>
+                </Link>
+
+                {user ?
+                  <div className="space-y-2">
+                    {sidebarBadge && (
+                      <UserBadge
+                        badge={sidebarBadge.badge}
+                        title={sidebarBadge.title}
+                        count={sidebarBadge.count}
+                        label={sidebarBadge.label}
+                      />
+                    )}
+
+                    <Link to={createPageUrl("Settings")} className="block">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full justify-start text-sage-600 hover:text-sage-700 border-sage-300 text-sm">
+                        <Settings className="w-4 h-4 mr-2" />
+                        Settings
+                      </Button>
+                    </Link>
+
+                    <div className="text-xs text-sage-500 px-3">
+                      Logged in as {user.full_name}
+                      {user.is_expert && <span className="ml-2 text-green-600">✓ Expert</span>}
+                      {user.role === 'admin' && <span className="ml-2 text-purple-600">⚡ Admin</span>}
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={handleLogout}
+                      className="w-full justify-start text-sage-600 hover:text-sage-700 border-sage-300 text-sm">
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Logout
+                    </Button>
+                  </div> :
+                  null}
+              </div>
+            </div>
+          </SidebarFooter>
+        </Sidebar>
 
 
         {/* Static sidebar for desktop */}
@@ -1621,7 +1620,7 @@ function LayoutContent({ children, currentPageName }) {
                     </div>
                     </div>
 
-        <main className="flex-1 flex flex-col min-w-0">
+                    <main className="flex-1 flex flex-col min-w-0">
           <header className="bg-sage-200/90 backdrop-blur-md border-b border-sage-300 px-4 py-3 md:hidden sticky top-0 z-10 gecko-header">
             <div className="flex items-center justify-between gap-4">
               <button onClick={toggleSidebar} className="hover:bg-sage-200 p-2 rounded-lg transition-colors duration-200" aria-label="Toggle Sidebar">
