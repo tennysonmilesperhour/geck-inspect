@@ -562,7 +562,7 @@ export default function SettingsPage() {
                 </Card>
 
                 {hasUnsavedChanges && (
-                    <Button onClick={handleSave} disabled={isSaving} className="w-full bg-emerald-600 hover:bg-emerald-700">
+                    <Button onClick={handleSave} disabled={isSaving} className="w-full">
                         {isSaving ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Saving...</> : <><Save className="w-5 h-5 mr-2" /> Save All Settings</>}
                     </Button>
                 )}
