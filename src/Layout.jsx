@@ -585,6 +585,7 @@ function LayoutContent({ children, currentPageName }) {
       { page_name: "Recognition", display_name: "Morph ID", icon: "Search", category: "tools", requires_auth: false, is_enabled: true, order: 1 },
       { page_name: "MorphVisualizer", display_name: "Morph Visualizer", icon: "Layers", category: "tools", requires_auth: false, is_enabled: true, order: 2 },
       { page_name: "BreederConsultant", display_name: "AI Consultant", icon: "FlaskConical", category: "tools", requires_auth: false, is_enabled: true, order: 3 },
+      { page_name: "ProjectManager", display_name: "Project Manager", icon: "FolderKanban", category: "tools", requires_auth: true, is_enabled: true, order: 4 },
     ],
     public: [
     { page_name: "Dashboard", display_name: "Dashboard", icon: "BarChart3", category: "public", requires_auth: false, is_enabled: true, order: 1 },
@@ -1417,55 +1418,53 @@ function LayoutContent({ children, currentPageName }) {
                 App Tutorial
               </button>
 
-              <div className="border-t border-sage-300 dark:border-sage-700 pt-3">
-                <Link to={createPageUrl("Subscription")} className="block">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="w-full justify-start text-sage-600 hover:text-sage-700 border-sage-300 text-sm"
-                  >
-                    <Star className="w-4 h-4 mr-2 flex-shrink-0" />
-                    <span className="truncate">Subscription</span>
-                  </Button>
-                </Link>
+              <Link to={createPageUrl("Subscription")} className="block">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="w-full justify-start text-sage-600 hover:text-sage-700 border-sage-300 text-sm"
+                >
+                  <Star className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span className="truncate">Subscription</span>
+                </Button>
+              </Link>
 
-                {user ?
-                  <div className="space-y-2">
-                    {sidebarBadge && (
-                      <UserBadge
-                        badge={sidebarBadge.badge}
-                        title={sidebarBadge.title}
-                        count={sidebarBadge.count}
-                        label={sidebarBadge.label}
-                      />
-                    )}
+              {user ?
+                <div className="space-y-3">
+                  {sidebarBadge && (
+                    <UserBadge
+                      badge={sidebarBadge.badge}
+                      title={sidebarBadge.title}
+                      count={sidebarBadge.count}
+                      label={sidebarBadge.label}
+                    />
+                  )}
 
-                    <Link to={createPageUrl("Settings")} className="block">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        className="w-full justify-start text-sage-600 hover:text-sage-700 border-sage-300 text-sm">
-                        <Settings className="w-4 h-4 mr-2" />
-                        Settings
-                      </Button>
-                    </Link>
-
-                    <div className="text-xs text-sage-500 px-3">
-                      Logged in as {user.full_name}
-                      {user.is_expert && <span className="ml-2 text-green-600">✓ Expert</span>}
-                      {user.role === 'admin' && <span className="ml-2 text-purple-600">⚡ Admin</span>}
-                    </div>
+                  <Link to={createPageUrl("Settings")} className="block">
                     <Button
                       variant="outline"
                       size="sm"
-                      onClick={handleLogout}
                       className="w-full justify-start text-sage-600 hover:text-sage-700 border-sage-300 text-sm">
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Logout
+                      <Settings className="w-4 h-4 mr-2" />
+                      Settings
                     </Button>
-                  </div> :
-                  null}
-              </div>
+                  </Link>
+
+                  <div className="text-xs text-sage-500 px-3">
+                    Logged in as {user.full_name}
+                    {user.is_expert && <span className="ml-2 text-green-600">✓ Expert</span>}
+                    {user.role === 'admin' && <span className="ml-2 text-purple-600">⚡ Admin</span>}
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleLogout}
+                    className="w-full justify-start text-sage-600 hover:text-sage-700 border-sage-300 text-sm">
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Logout
+                  </Button>
+                </div> :
+                null}
             </div>
           </SidebarFooter>
         </Sidebar>
@@ -1564,7 +1563,6 @@ function LayoutContent({ children, currentPageName }) {
                    App Tutorial
                   </button>
 
-                  <div className="border-t border-sage-300 dark:border-sage-700 pt-3">
                   <Link to={createPageUrl("Subscription")} className="block">
                     <Button
                       variant="outline"
@@ -1577,7 +1575,7 @@ function LayoutContent({ children, currentPageName }) {
                   </Link>
 
                   {user ?
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       {sidebarBadge && (
                         <UserBadge
                           badge={sidebarBadge.badge}
@@ -1607,18 +1605,17 @@ function LayoutContent({ children, currentPageName }) {
                         size="sm"
                         onClick={handleLogout}
                         className="w-full justify-start text-sage-600 hover:text-sage-700 border-sage-300 text-sm">
-
                         <LogOut className="w-4 h-4 mr-2" />
                         Logout
                       </Button>
                     </div> :
                     null}
-                    </div>
-                    </div>
-                    </div>
-                    </div>
-                    </div>
-                    </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
 
                     <main className="flex-1 flex flex-col min-w-0">
           <header className="bg-sage-200/90 backdrop-blur-md border-b border-sage-300 px-4 py-3 md:hidden sticky top-0 z-10 gecko-header">
