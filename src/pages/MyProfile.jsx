@@ -6,7 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Camera, MapPin, Link as LinkIcon, Calendar, Users, MessageSquare, Image as ImageIcon, Heart, Edit, Save, X, Loader2, Upload, Star, ShoppingCart, GitBranch, Globe, Instagram, Facebook, Youtube } from 'lucide-react';
+import { Camera, MapPin, Link as LinkIcon, Calendar, Users, MessageSquare, Image as ImageIcon, Heart, Edit, Save, X, Loader2, Upload, Star, ShoppingCart, GitBranch, Globe, Instagram, Facebook, Youtube, Twitter } from 'lucide-react';
 import { UploadFile } from '@/integrations/Core';
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from 'react-router-dom';
