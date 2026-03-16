@@ -39,7 +39,7 @@ function BreederCard({ breeder, currentUser, isFollowing, onFollow, onUnfollow, 
                     <img 
                         src={breeder.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(breeder.full_name || 'User')}&background=10b981&color=fff`}
                         alt={breeder.full_name}
-                        className={`w-20 h-20 rounded-lg object-cover border-2 border-emerald-500/30 flex-shrink-0 ${cardCover ? 'ring-4 ring-slate-900' : ''}`}
+                        className={`w-20 h-20 rounded-full object-cover border-2 border-emerald-500/30 flex-shrink-0 ${cardCover ? 'ring-4 ring-slate-900' : ''}`}
                     />
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
@@ -434,8 +434,8 @@ export default function CommunityConnectPage() {
                 const allUsers = await User.list().catch(() => []);
                 const allGeckos = await Gecko.list().catch(() => []);
 
-                // Filter to public geckos only
-                const publicGeckos = (allGeckos || []).filter(g => g.is_public !== false);
+                // Filter to public, non-archived geckos only
+                const publicGeckos = (allGeckos || []).filter(g => g.is_public !== false && !g.archived);
 
                 // Calculate gecko counts and cover images per user
                 const counts = {};
@@ -446,9 +446,9 @@ export default function CommunityConnectPage() {
                     }
                     if (gecko.status === 'For Sale') {
                         counts[gecko.created_by].selling++;
-                    } else if (['Ready to Breed', 'Proven'].includes(gecko.status)) {
+                    } else if (['Ready to Breed', 'Proven', 'Future Breeder'].includes(gecko.status)) {
                         counts[gecko.created_by].breeding++;
-                    } else {
+                    } else if (gecko.status !== 'Sold') {
                         counts[gecko.created_by].keeping++;
                     }
                     // Save first gecko image as potential cover
