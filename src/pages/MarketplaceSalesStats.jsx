@@ -119,25 +119,22 @@ export default function MarketplaceSalesStats() {
     setIsSaving(false);
   };
 
-  const handleAddCost = () => {
+  const handleAddCost = async () => {
     if (!newCostDesc || !newCostAmount) return;
-    const newCost = {
-      id: Date.now().toString(),
+    const created = await MarketplaceCost.create({
+      user_email: user.email,
       description: newCostDesc,
       amount: parseFloat(newCostAmount),
       date: new Date().toISOString(),
-    };
-    const updatedCosts = [...costs, newCost];
-    setCosts(updatedCosts);
-    localStorage.setItem(`marketplace_costs_${user.email}`, JSON.stringify(updatedCosts));
+    });
+    setCosts(prev => [created, ...prev]);
     setNewCostDesc('');
     setNewCostAmount('');
   };
 
-  const handleRemoveCost = (costId) => {
-    const updatedCosts = costs.filter(c => c.id !== costId);
-    setCosts(updatedCosts);
-    localStorage.setItem(`marketplace_costs_${user.email}`, JSON.stringify(updatedCosts));
+  const handleRemoveCost = async (costId) => {
+    await MarketplaceCost.delete(costId);
+    setCosts(prev => prev.filter(c => c.id !== costId));
   };
 
   if (isLoading) {
