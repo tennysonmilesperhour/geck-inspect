@@ -56,7 +56,8 @@ export default function Dashboard() {
                 const [currentUser, usersData, geckos, posts, gotd, allGeckoImages, recentImagesData] = await Promise.all([
                     User.me().catch(() => null),
                     User.list('-created_date', 100),
-                    Gecko.list(),
+                    // Limited to 500 — only used for community count stat on dashboard
+                    Gecko.list('-created_date', 500),
                     ForumPost.list('-created_date', 10).catch(() => []),
                     GotdEntity.filter({ date: today }, '-created_date', 1).catch(() => []),
                     GeckoImage.list('-created_date', 20),

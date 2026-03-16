@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { base44 } from '@/api/base44Client';
-import { Gecko } from '@/entities/all';
+import { Gecko, MarketplaceCost } from '@/entities/all';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,10 +36,44 @@ export default function MarketplaceSalesStats() {
         );
         setSoldGeckos(sold);
 
-        const savedCosts = localStorage.getItem(`marketplace_costs_${currentUser.email}`);
-        if (savedCosts) {
-          setCosts(JSON.parse(savedCosts));
+        // Load costs from DB
+        let dbCosts = [];
+        try {
+          dbCosts = await MarketplaceCost.filter({ user_email: currentUser.email }, '-date');
+        } catch (e) {
+          console.error('Failed to load costs from DB:', e);
         }
+
+        // One-time migration: if DB is empty and localStorage has data, migrate it
+        if (dbCosts.length === 0) {
+          try {
+            const savedCosts = localStorage.getItem(`marketplace_costs_${currentUser.email}`);
+            if (savedCosts) {
+              const localCosts = JSON.parse(savedCosts);
+              if (localCosts.length > 0) {
+                const toCreate = localCosts.map(c => ({
+                  user_email: currentUser.email,
+                  description: c.description,
+                  amount: c.amount,
+                  date: c.date,
+                }));
+                await MarketplaceCost.bulkCreate(toCreate);
+                dbCosts = await MarketplaceCost.filter({ user_email: currentUser.email }, '-date');
+                localStorage.removeItem(`marketplace_costs_${currentUser.email}`);
+              }
+            }
+          } catch (migrationError) {
+            // Migration failed — silently fall back to localStorage
+            console.warn('Cost migration failed, using localStorage:', migrationError);
+            try {
+              const savedCosts = localStorage.getItem(`marketplace_costs_${currentUser.email}`);
+              if (savedCosts) setCosts(JSON.parse(savedCosts));
+            } catch (e) { /* ignore */ }
+            return;
+          }
+        }
+
+        setCosts(dbCosts);
       } catch (error) {
         console.error('Failed to load marketplace stats:', error);
       } finally {
