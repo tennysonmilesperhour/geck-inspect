@@ -220,7 +220,7 @@ export default function MarketplaceSalesStats() {
                   <Button
                     onClick={handleSaveAllPrices}
                     disabled={isSaving}
-                    className="bg-emerald-600 hover:bg-emerald-700 gap-2"
+                    className="gap-2"
                     size="sm"
                   >
                     <Save className="w-4 h-4" />
@@ -295,7 +295,7 @@ export default function MarketplaceSalesStats() {
                       className="bg-slate-800 border-slate-600 text-slate-100 mt-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
-                  <Button onClick={handleAddCost} className="w-full bg-emerald-600 hover:bg-emerald-700">
+                  <Button onClick={handleAddCost} className="w-full">
                     <Plus className="w-4 h-4 mr-2" />
                     Add Cost
                   </Button>

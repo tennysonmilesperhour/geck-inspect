@@ -254,7 +254,6 @@ export default function OtherReptilesPage() {
                         </Button>
                         {!showArchived && (
                             <Button 
-                                className="bg-emerald-600 hover:bg-emerald-700" 
                                 onClick={() => { setSelectedReptile(null); setIsFormOpen(true); }}
                             >
                                 <PlusCircle className="w-5 h-5 mr-2" />

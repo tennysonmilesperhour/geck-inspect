@@ -59,7 +59,7 @@ function BreederCard({ breeder, currentUser, isFollowing, onFollow, onUnfollow, 
                                     size="sm"
                                     variant={isFollowing ? "outline" : "default"}
                                     onClick={() => isFollowing ? onUnfollow(breeder.email) : onFollow(breeder.email)}
-                                    className={isFollowing ? "border-slate-600" : "bg-emerald-600 hover:bg-emerald-700"}
+                                    className={isFollowing ? "border-slate-600" : ""}
                                 >
                                     {isFollowing ? (
                                         <><UserCheck className="w-4 h-4 mr-1" /> Following</>
@@ -199,7 +199,7 @@ function ForumTab() {
         <div className="space-y-6">
             <div className="flex justify-end">
                 {currentUser && (
-                    <Button onClick={() => setShowCreatePost(!showCreatePost)} className="bg-emerald-600 hover:bg-emerald-700">
+                    <Button onClick={() => setShowCreatePost(!showCreatePost)}>
                         <PlusCircle className="w-4 h-4 mr-2" />
                         {showCreatePost ? 'Cancel' : 'Create New Post'}
                     </Button>
@@ -236,7 +236,7 @@ function ForumTab() {
                         </Select>
                     </CardContent>
                     <CardFooter>
-                        <Button onClick={handleCreatePost} className="bg-emerald-600 hover:bg-emerald-700">Submit Post</Button>
+                        <Button onClick={handleCreatePost}>Submit Post</Button>
                     </CardFooter>
                 </Card>
             )}

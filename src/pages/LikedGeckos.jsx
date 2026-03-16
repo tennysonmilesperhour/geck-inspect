@@ -104,7 +104,7 @@ export default function LikedGeckosPage() {
                         <h3 className="text-xl font-semibold text-slate-300">No liked geckos yet</h3>
                         <p className="text-slate-400 mt-2">Browse the marketplace and tap the heart to save geckos you love!</p>
                         <Link to={createPageUrl('MarketplaceBuy')}>
-                            <Button className="mt-4 bg-emerald-600 hover:bg-emerald-700">
+                            <Button className="mt-4">
                                 Browse Marketplace
                             </Button>
                         </Link>
