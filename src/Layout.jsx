@@ -1557,13 +1557,14 @@ function LayoutContent({ children, currentPageName }) {
                     </Button>
                   </Link>
                   <button
-                    onClick={() => setShowTutorial(true)}
-                    className="w-full group flex items-center justify-start rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 border border-sage-300 text-sage-600 hover:bg-sage-50 dark:text-sage-400 dark:border-sage-600 dark:hover:bg-sage-900/20"
+                   onClick={() => setShowTutorial(true)}
+                   className="w-full group flex items-center justify-start rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 border border-sage-300 text-sage-600 hover:bg-sage-50 dark:text-sage-400 dark:border-sage-600 dark:hover:bg-sage-900/20"
                   >
-                    <GraduationCap className="w-4 h-4 mr-2 flex-shrink-0" />
-                    App Tutorial
+                   <GraduationCap className="w-4 h-4 mr-2 flex-shrink-0" />
+                   App Tutorial
                   </button>
 
+                  <div className="border-t border-sage-300 dark:border-sage-700 pt-3">
                   <Link to={createPageUrl("Subscription")} className="block">
                     <Button
                       variant="outline"
@@ -1612,11 +1613,12 @@ function LayoutContent({ children, currentPageName }) {
                       </Button>
                     </div> :
                     null}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
+                    </div>
+                    </div>
+                    </div>
+                    </div>
+                    </div>
+                    </div>
 
         <main className="flex-1 flex flex-col min-w-0">
           <header className="bg-sage-200/90 backdrop-blur-md border-b border-sage-300 px-4 py-3 md:hidden sticky top-0 z-10 gecko-header">
@@ -1681,7 +1683,7 @@ function LayoutContent({ children, currentPageName }) {
             </div>
           </header>
 
-          <div className="flex-1 overflow-auto">
+          <div className="flex-1 overflow-auto overflow-x-hidden">
             {children}
           </div>
 
