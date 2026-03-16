@@ -113,6 +113,19 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
     if (!reptile) return null;
 
     return (
+        <>
+        <AlertDialog open={!!weightToDelete} onOpenChange={(open) => { if (!open) setWeightToDelete(null); }}>
+            <AlertDialogContent className="bg-slate-900 border-slate-700">
+                <AlertDialogHeader>
+                    <AlertDialogTitle className="text-slate-100">Delete this weight record?</AlertDialogTitle>
+                    <AlertDialogDescription className="text-slate-400">This action cannot be undone.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                    <AlertDialogCancel className="bg-slate-800 text-slate-200 border-slate-600">Cancel</AlertDialogCancel>
+                    <AlertDialogAction onClick={handleDeleteWeight} className="bg-red-700 hover:bg-red-800 text-white">Delete</AlertDialogAction>
+                </AlertDialogFooter>
+            </AlertDialogContent>
+        </AlertDialog>
         <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
             <Card className="max-w-4xl w-full max-h-[90vh] flex flex-col bg-slate-900 border-slate-700">
                 <CardHeader className="flex flex-row items-center justify-between border-b border-slate-700">

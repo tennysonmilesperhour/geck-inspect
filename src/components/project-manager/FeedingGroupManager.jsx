@@ -194,6 +194,19 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
                 </div>
             )}
 
+            <AlertDialog open={!!groupToDelete} onOpenChange={(open) => { if (!open) setGroupToDelete(null); }}>
+                <AlertDialogContent className="bg-slate-900 border-slate-700">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle className="text-slate-100">Delete this feeding group?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-slate-400">Geckos in this group will not be deleted, but their group assignment will be cleared.</AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel className="bg-slate-800 text-slate-200 border-slate-600">Cancel</AlertDialogCancel>
+                        <AlertDialogAction onClick={handleDelete} className="bg-red-700 hover:bg-red-800 text-white">Delete Group</AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
+
             <Dialog open={isModalOpen} onOpenChange={setIsModalOpen}>
                 <DialogContent className="bg-slate-900 border-slate-700 text-slate-300">
                     <DialogHeader>

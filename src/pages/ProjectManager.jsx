@@ -275,6 +275,34 @@ export default function ProjectManager() {
                     </Tabs>
                 )}
                 
+                {/* Delete Task Confirmation */}
+                <AlertDialog open={!!taskToDelete} onOpenChange={(open) => { if (!open) setTaskToDelete(null); }}>
+                    <AlertDialogContent className="bg-slate-900 border-slate-700">
+                        <AlertDialogHeader>
+                            <AlertDialogTitle className="text-slate-100">Delete this task?</AlertDialogTitle>
+                            <AlertDialogDescription className="text-slate-400">This action cannot be undone.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel className="bg-slate-800 text-slate-200 border-slate-600">Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDeleteTask} className="bg-red-700 hover:bg-red-800 text-white">Delete</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+
+                {/* Delete Project Confirmation */}
+                <AlertDialog open={!!projectToDelete} onOpenChange={(open) => { if (!open) setProjectToDelete(null); }}>
+                    <AlertDialogContent className="bg-slate-900 border-slate-700">
+                        <AlertDialogHeader>
+                            <AlertDialogTitle className="text-slate-100">Delete this project?</AlertDialogTitle>
+                            <AlertDialogDescription className="text-slate-400">This will permanently delete this project and all its tasks. This action cannot be undone.</AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                            <AlertDialogCancel className="bg-slate-800 text-slate-200 border-slate-600">Cancel</AlertDialogCancel>
+                            <AlertDialogAction onClick={handleDeleteProject} className="bg-red-700 hover:bg-red-800 text-white">Delete Project</AlertDialogAction>
+                        </AlertDialogFooter>
+                    </AlertDialogContent>
+                </AlertDialog>
+
                 {/* Create Project Modal */}
                 <Dialog open={isProjectModalOpen} onOpenChange={setIsProjectModalOpen}>
                     <DialogContent className="bg-slate-900 border-slate-700 text-slate-300 max-w-2xl">
