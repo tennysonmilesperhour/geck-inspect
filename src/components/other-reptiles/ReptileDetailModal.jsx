@@ -92,16 +92,16 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
         }
     };
 
-    const handleDeleteWeight = async (recordId) => {
-        if (window.confirm("Are you sure you want to delete this weight record?")) {
-            try {
-                await ReptileEvent.delete(recordId);
-                setWeightRecords(weightRecords.filter(r => r.id !== recordId));
-                setEventHistory(eventHistory.filter(e => e.id !== recordId));
-            } catch (error) {
-                console.error('Failed to delete weight record:', error);
-            }
+    const handleDeleteWeight = async () => {
+        if (!weightToDelete) return;
+        try {
+            await ReptileEvent.delete(weightToDelete);
+            setWeightRecords(weightRecords.filter(r => r.id !== weightToDelete));
+            setEventHistory(eventHistory.filter(e => e.id !== weightToDelete));
+        } catch (error) {
+            console.error('Failed to delete weight record:', error);
         }
+        setWeightToDelete(null);
     };
 
     const chartData = [...weightRecords].reverse().map(r => ({

@@ -89,12 +89,12 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
         }));
     };
 
-    const handleDelete = async (groupId) => {
-        if (!window.confirm('Delete this feeding group? Geckos will not be deleted.')) return;
-        // Clear gecko assignments
-        const assigned = geckos.filter(g => g.feeding_group_id === groupId);
+    const handleDelete = async () => {
+        if (!groupToDelete) return;
+        const assigned = geckos.filter(g => g.feeding_group_id === groupToDelete);
         await Promise.all(assigned.map(g => Gecko.update(g.id, { feeding_group_id: null })));
-        await FeedingGroup.delete(groupId);
+        await FeedingGroup.delete(groupToDelete);
+        setGroupToDelete(null);
         onUpdate();
     };
 

@@ -110,19 +110,21 @@ export default function ProjectManager() {
         } catch (error) { console.error("Failed to toggle task:", error); }
     };
     
-    const handleDeleteTask = async (taskId) => {
-        if (!window.confirm('Delete this task?')) return;
-        try { await Task.delete(taskId); loadData(); } catch (error) { console.error("Failed to delete task:", error); }
+    const handleDeleteTask = async () => {
+        if (!taskToDelete) return;
+        try { await Task.delete(taskToDelete); loadData(); } catch (error) { console.error("Failed to delete task:", error); }
+        setTaskToDelete(null);
     };
     
-    const handleDeleteProject = async (projectId) => {
-        if (!window.confirm('Delete this project and all its tasks?')) return;
+    const handleDeleteProject = async () => {
+        if (!projectToDelete) return;
         try {
-            const projectTasks = tasks.filter(t => t.project_id === projectId);
+            const projectTasks = tasks.filter(t => t.project_id === projectToDelete);
             await Promise.all(projectTasks.map(t => Task.delete(t.id)));
-            await Project.delete(projectId);
+            await Project.delete(projectToDelete);
             loadData();
         } catch (error) { console.error("Failed to delete project:", error); }
+        setProjectToDelete(null);
     };
     
     const toggleProjectExpand = (projectId) => {
