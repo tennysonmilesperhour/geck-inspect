@@ -1417,7 +1417,7 @@ function LayoutContent({ children, currentPageName }) {
                 App Tutorial
               </button>
 
-              <div className="border-t border-sage-300 dark:border-sage-700 pt-3">
+              <div className="border-t border-sage-300 dark:border-sage-700 pt-3" />
                   <Link to={createPageUrl("Subscription")} className="block">
                 <Button
                   variant="outline"
