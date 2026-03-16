@@ -1376,15 +1376,6 @@ function LayoutContent({ children, currentPageName }) {
             
             {renderNavSection(navItems.collection, "Collection")}
             {renderNavSection(navItems.tools, "Tools")}
-            <div className="mb-2 px-2">
-              <button
-                onClick={() => setShowTutorial(true)}
-                className="group flex items-center w-full rounded-md px-2 py-2 text-xs font-medium transition-colors duration-200 sidebar-nav-item text-gray-600 dark:text-gray-300 hover:bg-sage-50 dark:hover:bg-gray-700 hover:text-sage-900 dark:hover:text-white"
-              >
-                <GraduationCap className="mr-2 h-5 w-5 flex-shrink-0" />
-                App Tutorial
-              </button>
-            </div>
             {renderNavSection(navItems.public)}
             {user?.role === 'admin' && (
               <div className="mb-4">
@@ -1418,6 +1409,13 @@ function LayoutContent({ children, currentPageName }) {
                   Support This Project
                 </Button>
               </Link>
+              <button
+                onClick={() => setShowTutorial(true)}
+                className="w-full group flex items-center justify-start rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 border border-sage-300 text-sage-600 hover:bg-sage-50 dark:text-sage-400 dark:border-sage-600 dark:hover:bg-sage-900/20"
+              >
+                <GraduationCap className="w-4 h-4 mr-2 flex-shrink-0" />
+                App Tutorial
+              </button>
 
               <Link to={createPageUrl("Subscription")} className="block">
                 <Button
