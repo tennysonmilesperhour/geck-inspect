@@ -332,7 +332,7 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
                                                 />
                                             </div>
                                             <div className="flex gap-2">
-                                                <Button size="sm" className="bg-emerald-600 hover:bg-emerald-700 h-7 text-xs" onClick={() => handleSaveEggEdit(egg.id, eggEdit)}>Save</Button>
+                                                <Button size="sm" className="h-7 text-xs" onClick={() => handleSaveEggEdit(egg.id, eggEdit)}>Save</Button>
                                                 <Button size="sm" variant="outline" className="border-slate-600 h-7 text-xs" onClick={() => handleCancelEggEdit(egg.id)}>Cancel</Button>
                                             </div>
                                         </div>
@@ -363,7 +363,7 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
                                     {egg.status === 'Incubating' && (
                                         <Button 
                                             size="sm" 
-                                            className="bg-green-600 hover:bg-green-700 h-9 flex-1"
+                                            className="h-9 flex-1"
                                             onClick={() => handleHatchEgg(egg.id)}
                                         >
                                             Hatched!
@@ -473,7 +473,7 @@ function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulatio
                             <Trash2 size={14} className="mr-2" />
                             Delete Plan
                         </Button>
-                        <Button onClick={handleUpdatePlan} className="bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto">Save Changes</Button>
+                        <Button onClick={handleUpdatePlan} className="w-full sm:w-auto">Save Changes</Button>
                     </DialogFooter>
                 </DialogContent>
             </Dialog>
@@ -975,7 +975,7 @@ function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate, onPlanDelete, 
                         <Button variant="outline" onClick={() => setIsCopulationModalOpen(false)} className="border-slate-600">
                             Cancel
                         </Button>
-                        <Button onClick={handleSaveCopulation} className="bg-emerald-600 hover:bg-emerald-700">
+                        <Button onClick={handleSaveCopulation}>
                             Save Event
                         </Button>
                     </DialogFooter>
@@ -1042,7 +1042,7 @@ function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate, onPlanDelete, 
                         <Button variant="outline" onClick={() => setIsEggCheckModalOpen(false)} className="border-slate-600 w-full sm:w-auto">
                             Cancel
                         </Button>
-                        <Button onClick={handleSaveEggCheckDay} className="bg-emerald-600 hover:bg-emerald-700 w-full sm:w-auto">
+                        <Button onClick={handleSaveEggCheckDay} className="w-full sm:w-auto">
                             Save
                         </Button>
                     </DialogFooter>
@@ -1418,7 +1418,7 @@ export default function BreedingPage() {
                         </h1>
                         <p className="text-slate-400 mt-2 text-sm md:text-base">Plan and track your gecko breeding projects</p>
                     </div>
-                    <Button onClick={() => setIsModalOpen(true)} className="bg-emerald-600 hover:bg-emerald-700 w-full md:w-auto">
+                    <Button onClick={() => setIsModalOpen(true)} className="w-full md:w-auto">
                         <PlusCircle className="w-5 h-5 mr-2" />
                         New Breeding Plan
                     </Button>
@@ -1730,7 +1730,6 @@ export default function BreedingPage() {
                             <Button 
                                 onClick={handleCreatePlan} 
                                 disabled={!newPlan.sire_id || !newPlan.dam_id}
-                                className="bg-emerald-600 hover:bg-emerald-700"
                             >
                                 Create Plan
                             </Button>
