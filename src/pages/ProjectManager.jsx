@@ -247,7 +247,7 @@ export default function ProjectManager() {
                                                             ))}
                                                         </div>
                                                         <div className="flex gap-2">
-                                                            <Button size="sm" onClick={() => { setSelectedProjectId(project.id); setIsTaskModalOpen(true); }} className="bg-emerald-600 hover:bg-emerald-700">
+                                                            <Button size="sm" onClick={() => { setSelectedProjectId(project.id); setIsTaskModalOpen(true); }} className="">
                                                                 <Plus className="w-4 h-4 mr-2" /> Add Task
                                                             </Button>
                                                             <Button size="sm" variant="destructive" onClick={() => setProjectToDelete(project.id)}>Delete Project</Button>
@@ -371,7 +371,7 @@ export default function ProjectManager() {
                         </div>
                         <DialogFooter>
                             <Button variant="outline" onClick={() => setIsProjectModalOpen(false)} className="border-slate-600">Cancel</Button>
-                            <Button onClick={handleCreateProject} disabled={!newProject.name} className="bg-emerald-600 hover:bg-emerald-700">Create Project</Button>
+                            <Button onClick={handleCreateProject} disabled={!newProject.name} className="">Create Project</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
@@ -407,7 +407,7 @@ export default function ProjectManager() {
                         </div>
                         <DialogFooter>
                             <Button variant="outline" onClick={() => setIsTaskModalOpen(false)} className="border-slate-600">Cancel</Button>
-                            <Button onClick={handleCreateTask} disabled={!newTask.title} className="bg-emerald-600 hover:bg-emerald-700">Add Task</Button>
+                            <Button onClick={handleCreateTask} disabled={!newTask.title} className="">Add Task</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>

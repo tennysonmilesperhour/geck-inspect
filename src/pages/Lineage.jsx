@@ -759,7 +759,7 @@ export default function Lineage() {
                         <Button variant="outline" onClick={() => setEditingPlaceholder(null)} className="border-slate-600">
                             Cancel
                         </Button>
-                        <Button onClick={handleSavePlaceholder} className="bg-emerald-600 hover:bg-emerald-700">
+                        <Button onClick={handleSavePlaceholder} className="">
                             Save
                         </Button>
                     </DialogFooter>
