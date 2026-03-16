@@ -31,6 +31,8 @@ export default function ProjectManager() {
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const [selectedProjectId, setSelectedProjectId] = useState(null);
     const [expandedProjects, setExpandedProjects] = useState(new Set());
+    const [taskToDelete, setTaskToDelete] = useState(null);
+    const [projectToDelete, setProjectToDelete] = useState(null);
     
     const [newProject, setNewProject] = useState({
         name: '', description: '', category: 'custom', related_gecko_id: '',

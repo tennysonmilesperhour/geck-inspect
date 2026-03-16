@@ -16,6 +16,7 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
     const [showAddWeight, setShowAddWeight] = useState(false);
     const [newWeight, setNewWeight] = useState('');
     const [isLoading, setIsLoading] = useState(true);
+    const [weightToDelete, setWeightToDelete] = useState(null);
 
     const loadEventHistory = async () => {
         if (!reptile) return;

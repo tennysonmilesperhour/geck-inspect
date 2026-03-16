@@ -17,6 +17,7 @@ const GROUP_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
 export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate }) {
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [editingGroup, setEditingGroup] = useState(null);
+    const [groupToDelete, setGroupToDelete] = useState(null);
     const [form, setForm] = useState({
         label: 'A', name: '', diet_type: '', interval_days: 7, last_fed_date: '', color: GROUP_COLORS[0], notes: '',
         auto_weight_min_g: '', auto_weight_max_g: ''
