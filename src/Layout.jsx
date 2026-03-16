@@ -1467,9 +1467,10 @@ function LayoutContent({ children, currentPageName }) {
                   </Button>
                 </div> :
                 null}
-            </div>
-          </SidebarFooter>
-        </Sidebar>
+                </div>
+                </SidebarFooter>
+                </Sidebar>
+
 
         {/* Static sidebar for desktop */}
         <div className="hidden lg:flex lg:flex-shrink-0">
