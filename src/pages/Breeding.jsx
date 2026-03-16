@@ -34,6 +34,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { format, addDays, addMonths, differenceInDays } from 'date-fns';
 import { generateCalendarEvent } from '@/functions/generateCalendarEvent';
 import { generateHatchedGeckoId } from '@/components/shared/geckoIdUtils';
+import { useToast } from '@/components/ui/use-toast';
 
 const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
 
@@ -1052,6 +1053,7 @@ function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate, onPlanDelete, 
 }
 
 export default function BreedingPage() {
+    const { toast } = useToast();
     const [breedingPlans, setBreedingPlans] = useState([]);
     const [geckos, setGeckos] = useState([]);
     const [allEggs, setAllEggs] = useState([]);
