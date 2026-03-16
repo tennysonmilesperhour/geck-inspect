@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { DirectMessage, User } from '@/entities/all';
 import { notifyNewMessage } from '@/components/notifications/NotificationService';
+import { useToast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

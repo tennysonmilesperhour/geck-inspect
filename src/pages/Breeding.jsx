@@ -1146,7 +1146,7 @@ export default function BreedingPage() {
     
     const handleCreatePlan = async () => {
         if (!newPlan.sire_id || !newPlan.dam_id) {
-            alert('Please select both a sire and a dam.');
+            toast({ title: "Missing Selection", description: "Please select both a sire and a dam.", variant: "destructive" });
             return;
         }
         try {

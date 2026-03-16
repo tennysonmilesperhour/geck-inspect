@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MorphGuideComment } from '@/entities/MorphGuideComment';
 import { User } from '@/entities/User';
 import { UploadFile } from '@/integrations/Core';
+import { useToast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

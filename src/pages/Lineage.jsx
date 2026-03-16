@@ -318,15 +318,7 @@ export default function Lineage() {
         const params = new URLSearchParams(location.search);
         const geckoIdFromUrl = params.get('geckoId');
         
-        console.log('Lineage URL effect fired:', {
-            geckoIdFromUrl,
-            geckoExists: !!allGeckosMap[geckoIdFromUrl],
-            isLoading,
-            mapSize: Object.keys(allGeckosMap).length
-        });
-        
         if (geckoIdFromUrl && allGeckosMap[geckoIdFromUrl] && !isLoading) {
-            console.log('Calling handleSelectGecko with:', geckoIdFromUrl);
             handleSelectGecko(geckoIdFromUrl);
         }
     }, [location.search, allGeckosMap, isLoading, handleSelectGecko]);

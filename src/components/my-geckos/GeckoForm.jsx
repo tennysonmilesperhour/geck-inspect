@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Gecko, UserActivity, WeightRecord } from '@/entities/all';
+import { Gecko, UserActivity, WeightRecord, FeedingGroup } from '@/entities/all';
 import { UploadFile } from '@/integrations/Core';
 import { notifyFollowersNewGecko } from '@/components/notifications/NotificationService';
 import { Button } from '@/components/ui/button';
@@ -26,7 +26,6 @@ import { Upload, X, Trash2, DollarSign, Award, GitBranch, Loader2, ChevronDown }
 import { Switch } from '@/components/ui/switch';
 import { generateLineageCertificate } from '@/functions/generateLineageCertificate';
 import MorphIDSelector from './MorphIDSelector';
-import { FeedingGroup } from '@/entities/all';
 
 // Helper function for Gecko ID generation
 const generateNextGeckoId = async (user, allGeckos, sire = null, dam = null) => {

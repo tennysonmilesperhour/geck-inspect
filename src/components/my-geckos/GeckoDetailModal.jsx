@@ -21,7 +21,6 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
 
   const handleLineageClick = () => {
     const url = `${createPageUrl('Lineage')}?geckoId=${gecko.id}`;
-    console.log('Navigating to:', url);
     onClose();
     navigate(url);
   };
