@@ -624,8 +624,8 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                             </Button>
                             <AlertDialogContent className="bg-slate-900 border-slate-700">
                               <AlertDialogHeader>
-                                <AlertDialogTitle className="text-emerald-100">Delete weight record?</AlertDialogTitle>
-                                <AlertDialogDescription className="text-emerald-300">
+                                <AlertDialogTitle className="text-slate-100">Delete weight record?</AlertDialogTitle>
+                                <AlertDialogDescription className="text-slate-400">
                                   This will permanently delete the weight record from {format(new Date(record.record_date), 'MMM d, yyyy')}. This cannot be undone.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
@@ -659,7 +659,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                       onChange={(e) => setNewWeight(e.target.value)}
                       className="bg-slate-800 text-sm w-full"
                     />
-                    <Button onClick={handleAddWeight} className="w-full bg-emerald-600 hover:bg-emerald-700">Save</Button>
+                    <Button onClick={handleAddWeight} className="w-full">Save</Button>
                   </div>
                 )}
               </div>
