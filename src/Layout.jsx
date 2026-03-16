@@ -1498,7 +1498,7 @@ function LayoutContent({ children, currentPageName }) {
                           <img
                             src={user.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name)}&background=84A98C&color=fff`}
                             alt="User avatar"
-                            className="w-8 h-8 rounded-lg object-cover"
+                            className="w-8 h-8 rounded-full object-cover"
                           />
                         </Link>
                     <div className="flex-1">
