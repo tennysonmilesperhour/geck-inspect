@@ -17,6 +17,7 @@ export default function MarketplaceSalesStats() {
   const [newCostDesc, setNewCostDesc] = useState('');
   const [newCostAmount, setNewCostAmount] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [isSaving, setIsSaving] = useState(false);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -28,7 +29,6 @@ export default function MarketplaceSalesStats() {
         }
         setUser(currentUser);
 
-        // Fetch sold geckos from archive or where marked sold
         const allGeckos = await Gecko.filter({ created_by: currentUser.email });
         const sold = allGeckos.filter(g => 
           (g.archived && g.archive_reason === 'sold') || 
@@ -36,7 +36,6 @@ export default function MarketplaceSalesStats() {
         );
         setSoldGeckos(sold);
 
-        // Load costs from localStorage (simple persistence)
         const savedCosts = localStorage.getItem(`marketplace_costs_${currentUser.email}`);
         if (savedCosts) {
           setCosts(JSON.parse(savedCosts));
@@ -52,7 +51,7 @@ export default function MarketplaceSalesStats() {
   }, []);
 
   const getPrice = (gecko) => {
-    if (priceOverrides[gecko.id]) return parseFloat(priceOverrides[gecko.id]);
+    if (priceOverrides[gecko.id] !== undefined) return parseFloat(priceOverrides[gecko.id]) || 0;
     return gecko.asking_price ? parseFloat(gecko.asking_price) : 0;
   };
 
@@ -71,18 +70,19 @@ export default function MarketplaceSalesStats() {
   }, 0);
 
   const handlePriceChange = (geckoId, value) => {
-    setPriceOverrides(prev => ({
-      ...prev,
-      [geckoId]: value
-    }));
+    setPriceOverrides(prev => ({ ...prev, [geckoId]: value }));
   };
 
-  const handlePriceSave = async (gecko) => {
-    const value = priceOverrides[gecko.id];
-    if (value === undefined || value === '') return;
-    const parsed = parseFloat(value);
-    if (isNaN(parsed)) return;
-    await Gecko.update(gecko.id, { asking_price: parsed });
+  const handleSaveAllPrices = async () => {
+    setIsSaving(true);
+    const updates = Object.entries(priceOverrides);
+    for (const [geckoId, value] of updates) {
+      const parsed = parseFloat(value);
+      if (!isNaN(parsed)) {
+        await Gecko.update(geckoId, { asking_price: parsed });
+      }
+    }
+    setIsSaving(false);
   };
 
   const handleAddCost = () => {
@@ -181,7 +181,20 @@ export default function MarketplaceSalesStats() {
 
           <TabsContent value="revenue" className="space-y-4 mt-6">
             <div>
-              <h3 className="text-lg font-semibold text-slate-100 mb-4">Sold Geckos</h3>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="text-lg font-semibold text-slate-100">Sold Geckos</h3>
+                {Object.keys(priceOverrides).length > 0 && (
+                  <Button
+                    onClick={handleSaveAllPrices}
+                    disabled={isSaving}
+                    className="bg-emerald-600 hover:bg-emerald-700 gap-2"
+                    size="sm"
+                  >
+                    <Save className="w-4 h-4" />
+                    {isSaving ? 'Saving...' : 'Save Changes'}
+                  </Button>
+                )}
+              </div>
               {soldGeckos.length === 0 ? (
                 <div className="text-center py-8">
                   <AlertCircle className="w-8 h-8 text-slate-500 mx-auto mb-2" />
@@ -190,42 +203,30 @@ export default function MarketplaceSalesStats() {
               ) : (
                 <div className="space-y-3">
                   {soldGeckos.map(gecko => (
-                    <div key={gecko.id} className="bg-slate-700 p-4 rounded-lg flex items-center justify-between">
-                      <div>
-                        <p className="font-medium text-slate-100">{gecko.name}</p>
+                    <div key={gecko.id} className="bg-slate-700 p-4 rounded-lg flex items-center gap-4">
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-slate-100 truncate">{gecko.name}</p>
                         <p className="text-xs text-slate-500">
                           {gecko.archived_date ? format(new Date(gecko.archived_date), 'MMM d, yyyy') : format(new Date(gecko.updated_date), 'MMM d, yyyy')}
                         </p>
                       </div>
-                      <div className="w-40">
-                       <Label htmlFor={`price-${gecko.id}`} className="text-xs text-slate-400 block mb-1">
-                         Sale Price
-                       </Label>
-                       <div className="flex items-center gap-1">
-                         <span className="text-slate-400 text-sm">$</span>
-                         <Input
-                           id={`price-${gecko.id}`}
-                           type="number"
-                           step="0.01"
-                           value={priceOverrides[gecko.id] !== undefined ? priceOverrides[gecko.id] : (gecko.asking_price || '')}
-                           onChange={(e) => handlePriceChange(gecko.id, e.target.value)}
-                           onBlur={() => handlePriceSave(gecko)}
-                           placeholder="Enter price"
-                           className="bg-slate-800 border-slate-600 text-slate-100 h-8 text-sm"
-                         />
-                         <Button
-                           size="icon"
-                           variant="ghost"
-                           onClick={() => handlePriceSave(gecko)}
-                           className="h-8 w-8 text-emerald-400 hover:bg-emerald-900/20 flex-shrink-0"
-                           title="Save price"
-                         >
-                           <Save className="w-3.5 h-3.5" />
-                         </Button>
-                       </div>
-                      </div>
-                      <div className="text-right">
-                        <p className="text-emerald-400 font-semibold">${getPrice(gecko).toFixed(2)}</p>
+                      <div className="flex items-center gap-2 flex-shrink-0 ml-auto">
+                        <Label htmlFor={`price-${gecko.id}`} className="text-xs text-slate-400 whitespace-nowrap">
+                          Sale Price
+                        </Label>
+                        <div className="flex items-center gap-1">
+                          <span className="text-slate-400 text-sm">$</span>
+                          <Input
+                            id={`price-${gecko.id}`}
+                            type="number"
+                            step="0.01"
+                            value={priceOverrides[gecko.id] !== undefined ? priceOverrides[gecko.id] : (gecko.asking_price || '')}
+                            onChange={(e) => handlePriceChange(gecko.id, e.target.value)}
+                            placeholder="0.00"
+                            className="bg-slate-800 border-slate-600 text-slate-100 h-8 text-sm w-28 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                          />
+                        </div>
+                        <p className="text-emerald-400 font-semibold w-16 text-right">${getPrice(gecko).toFixed(2)}</p>
                       </div>
                     </div>
                   ))}
@@ -258,7 +259,7 @@ export default function MarketplaceSalesStats() {
                       value={newCostAmount}
                       onChange={(e) => setNewCostAmount(e.target.value)}
                       placeholder="0.00"
-                      className="bg-slate-800 border-slate-600 text-slate-100 mt-1"
+                      className="bg-slate-800 border-slate-600 text-slate-100 mt-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     />
                   </div>
                   <Button onClick={handleAddCost} className="w-full bg-emerald-600 hover:bg-emerald-700">
