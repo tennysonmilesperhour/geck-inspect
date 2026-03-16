@@ -576,11 +576,10 @@ function LayoutContent({ children, currentPageName }) {
 
   const FALLBACK_NAV_ITEMS = {
     collection: [
-      { page_name: "MyGeckos", display_name: "My Geckos", icon: "Users", category: "collection", requires_auth: true, is_enabled: true, order: 1 },
-      { page_name: "Breeding", display_name: "Breeding", icon: "GitBranch", category: "collection", requires_auth: true, is_enabled: true, order: 2 },
-      { page_name: "Lineage", display_name: "Lineage", icon: "GitBranch", category: "collection", requires_auth: true, is_enabled: true, order: 3 },
-      { page_name: "MarketplaceSalesStats", display_name: "Sales Stats", icon: "BarChart3", category: "collection", requires_auth: true, is_enabled: true, order: 4 },
-      { page_name: "MyProfile", display_name: "My Profile", icon: "Users", category: "collection", requires_auth: true, is_enabled: true, order: 5 },
+    { page_name: "MyGeckos", display_name: "My Geckos", icon: "Users", category: "collection", requires_auth: true, is_enabled: true, order: 1 },
+    { page_name: "Breeding", display_name: "Breeding", icon: "GitBranch", category: "collection", requires_auth: true, is_enabled: true, order: 2 },
+    { page_name: "Lineage", display_name: "Lineage", icon: "GitBranch", category: "collection", requires_auth: true, is_enabled: true, order: 3 },
+    { page_name: "MyProfile", display_name: "My Profile", icon: "Users", category: "collection", requires_auth: true, is_enabled: true, order: 4 },
     ],
     tools: [
       { page_name: "Recognition", display_name: "Morph ID", icon: "Search", category: "tools", requires_auth: false, is_enabled: true, order: 1 },
@@ -588,12 +587,13 @@ function LayoutContent({ children, currentPageName }) {
       { page_name: "BreederConsultant", display_name: "AI Consultant", icon: "FlaskConical", category: "tools", requires_auth: false, is_enabled: true, order: 3 },
     ],
     public: [
-      { page_name: "Dashboard", display_name: "Dashboard", icon: "BarChart3", category: "public", requires_auth: false, is_enabled: true, order: 1 },
-      { page_name: "MorphGuide", display_name: "Morph Guide", icon: "BookOpen", category: "public", requires_auth: false, is_enabled: true, order: 2 },
-      { page_name: "CareGuide", display_name: "Care Guide", icon: "Heart", category: "public", requires_auth: false, is_enabled: true, order: 3 },
-      { page_name: "Forum", display_name: "Forum", icon: "MessageSquare", category: "public", requires_auth: false, is_enabled: true, order: 4 },
-      { page_name: "Gallery", display_name: "Image Gallery", icon: "Database", category: "public", requires_auth: false, is_enabled: true, order: 5 },
-      { page_name: "Marketplace", display_name: "Marketplace", icon: "ShoppingCart", category: "public", requires_auth: false, is_enabled: true, order: 6 },
+    { page_name: "Dashboard", display_name: "Dashboard", icon: "BarChart3", category: "public", requires_auth: false, is_enabled: true, order: 1 },
+    { page_name: "MorphGuide", display_name: "Morph Guide", icon: "BookOpen", category: "public", requires_auth: false, is_enabled: true, order: 2 },
+    { page_name: "CareGuide", display_name: "Care Guide", icon: "Heart", category: "public", requires_auth: false, is_enabled: true, order: 3 },
+    { page_name: "Forum", display_name: "Forum", icon: "MessageSquare", category: "public", requires_auth: false, is_enabled: true, order: 4 },
+    { page_name: "Gallery", display_name: "Image Gallery", icon: "Database", category: "public", requires_auth: false, is_enabled: true, order: 5 },
+    { page_name: "Marketplace", display_name: "Marketplace", icon: "ShoppingCart", category: "public", requires_auth: false, is_enabled: true, order: 6 },
+    { page_name: "MarketplaceSalesStats", display_name: "Sales Stats", icon: "BarChart3", category: "public", requires_auth: true, is_enabled: true, order: 7 },
     ],
   };
 
