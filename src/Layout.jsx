@@ -1325,7 +1325,7 @@ function LayoutContent({ children, currentPageName }) {
 
       <div className="flex h-screen bg-gray-100 dark:bg-gray-900 font-sans app-container-outline">
         {/* Mobile Sidebar */}
-        <Sidebar className="border-r border-sage-300 bg-sage-200/90 backdrop-blur-sm md:hidden">
+        <Sidebar className="border-r border-sage-300 bg-sage-200/90 backdrop-blur-sm md:hidden z-50">
           <SidebarHeader className="border-b border-sage-300 p-6">
             <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2">
               {appLogo && (
