@@ -8,6 +8,7 @@ import EventTracker from '../my-geckos/EventTracker';
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 
 export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit, onArchive }) {
     const [weightRecords, setWeightRecords] = useState([]);
