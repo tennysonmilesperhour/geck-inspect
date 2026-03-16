@@ -806,14 +806,14 @@ function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate, onPlanDelete, 
                                 <div className="flex gap-2 mt-2 justify-end">
                                     <Button 
                                         size="sm" 
-                                        className="bg-emerald-600 hover:bg-emerald-700 text-xs md:text-sm" 
+                                        className="text-xs md:text-sm" 
                                         onClick={(e) => { e.stopPropagation(); handleQuickAddEggs(1); }}
                                     >
                                         <PlusCircle size={14} className="mr-1" /> Add 1 Egg
                                     </Button>
                                     <Button 
                                         size="sm" 
-                                        className="bg-emerald-600 hover:bg-emerald-700 text-xs md:text-sm" 
+                                        className="text-xs md:text-sm" 
                                         onClick={(e) => { e.stopPropagation(); handleQuickAddEggs(2); }}
                                     >
                                         <PlusCircle size={14} className="mr-1" /> Add 2 Eggs
