@@ -85,7 +85,7 @@ export default function ChangeLogModal({ isOpen, onClose }) {
                     </div>
                 )}
 
-                <Button onClick={onClose} className="mt-4 w-full bg-emerald-600 hover:bg-emerald-700">
+                <Button onClick={onClose} className="mt-4 w-full">
                     Got it!
                 </Button>
             </DialogContent>

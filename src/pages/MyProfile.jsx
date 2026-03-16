@@ -392,7 +392,7 @@ export default function MyProfile() {
                                     {/* These save/cancel buttons are for the main header if editing covers multiple sections */}
                                     {/* The overview tab now has its own save button for profile info */}
                                     {activeTab !== 'overview' && ( 
-                                        <Button onClick={handleSave} disabled={isSaving} className="bg-emerald-600 hover:bg-emerald-700">
+                                        <Button onClick={handleSave} disabled={isSaving}>
                                             {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                                             Save
                                         </Button>
@@ -485,10 +485,10 @@ export default function MyProfile() {
                                              </div>
                                          </div>
                                         <div className="flex justify-end pt-4">
-                                            <Button onClick={handleSave} disabled={isSaving} className="bg-emerald-600 hover:bg-emerald-700">
-                                                {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                                                Save Changes
-                                            </Button>
+                                            <Button onClick={handleSave} disabled={isSaving}>
+                                                        {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                                                        Save Changes
+                                                    </Button>
                                         </div>
                                     </CardContent>
                                 </Card>
@@ -828,10 +828,10 @@ export default function MyProfile() {
 
                             {/* Save Settings */}
                             <div className="flex justify-end">
-                                <Button onClick={handleSave} disabled={isSaving} className="bg-emerald-600 hover:bg-emerald-700">
-                                    {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
-                                    Save All Settings
-                                </Button>
+                                <Button onClick={handleSave} disabled={isSaving}>
+                                     {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
+                                     Save All Settings
+                                 </Button>
                             </div>
                         </TabsContent>
                     </Tabs>

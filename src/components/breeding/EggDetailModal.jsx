@@ -137,7 +137,7 @@ export default function EggDetailModal({ egg, breedingPlan, sire, dam, onClose, 
                             <Button variant="outline" onClick={() => setIsEditing(false)} className="border-slate-600">
                                 Cancel
                             </Button>
-                            <Button onClick={handleSave} disabled={isSaving} className="bg-emerald-600 hover:bg-emerald-700">
+                            <Button onClick={handleSave} disabled={isSaving}>
                                 {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                                 Save Changes
                             </Button>
@@ -147,7 +147,7 @@ export default function EggDetailModal({ egg, breedingPlan, sire, dam, onClose, 
                             <Button variant="outline" onClick={onClose} className="border-slate-600">
                                 Close
                             </Button>
-                            <Button onClick={() => setIsEditing(true)} className="bg-emerald-600 hover:bg-emerald-700">
+                            <Button onClick={() => setIsEditing(true)}>
                                 Edit
                             </Button>
                         </>
