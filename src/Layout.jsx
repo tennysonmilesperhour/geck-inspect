@@ -895,10 +895,10 @@ function LayoutContent({ children, currentPageName }) {
           [role="listbox"],
           [data-radix-select-content],
           [data-radix-select-viewport] {
-            background: rgba(8,20,14,0.85) !important;
-            backdrop-filter: blur(24px) saturate(180%) !important;
-            border: 1px solid rgba(255,255,255,0.12) !important;
-            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.08) !important;
+            background: rgba(6, 78, 59, 0.95) !important;
+            background-color: rgba(6, 78, 59, 0.95) !important;
+            border: 1px solid #059669 !important;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8) !important;
             z-index: 99999 !important;
           }
 
@@ -908,7 +908,7 @@ function LayoutContent({ children, currentPageName }) {
           .dark [data-radix-collection-item],
           [role="option"],
           [data-radix-collection-item] {
-            color: rgba(255,255,255,0.85) !important;
+            color: #d1fae5 !important;
             background: transparent !important;
           }
 
@@ -926,19 +926,19 @@ function LayoutContent({ children, currentPageName }) {
           [role="option"][data-state="checked"],
           [data-radix-collection-item]:hover,
           [data-radix-collection-item][data-highlighted] {
-            background: rgba(52,211,153,0.15) !important;
+            background: #047857 !important;
+            background-color: #047857 !important;
             color: white !important;
           }
 
-          /* Glass SelectTrigger */
+          /* Fix SelectTrigger visibility - use consistent dark emerald theme */
           .dark [data-radix-select-trigger],
           .dark button[role="combobox"],
           [data-radix-select-trigger],
           button[role="combobox"] {
-            background: rgba(255,255,255,0.06) !important;
-            border: 1px solid rgba(255,255,255,0.12) !important;
-            color: rgba(255,255,255,0.85) !important;
-            backdrop-filter: blur(12px) !important;
+            background: rgba(6, 78, 59, 0.8) !important;
+            border: 1px solid #059669 !important;
+            color: #d1fae5 !important;
             font-size: 0.875rem !important;
           }
 
@@ -946,8 +946,7 @@ function LayoutContent({ children, currentPageName }) {
           .dark button[role="combobox"]:hover,
           [data-radix-select-trigger]:hover,
           button[role="combobox"]:hover {
-            background: rgba(255,255,255,0.10) !important;
-            border-color: rgba(255,255,255,0.18) !important;
+            background: rgba(4, 120, 87, 0.9) !important;
           }
 
           /* Hide file input text that shows "Choose file No file chosen" */
@@ -1270,7 +1269,6 @@ function LayoutContent({ children, currentPageName }) {
           <div className="absolute top-1/2 -right-60 w-[500px] h-[500px] rounded-full bg-teal-400/8 blur-[100px]" />
           <div className="absolute -bottom-20 left-1/3 w-[400px] h-[400px] rounded-full bg-emerald-600/8 blur-[90px]" />
         </div>
-        {/* Content layers above orbs */}
         {/* Mobile Sidebar */}
         <Sidebar className="border-r border-white/10 bg-black/40 backdrop-blur-2xl md:hidden z-50 relative" style={{zIndex:10}}>
           <SidebarHeader className="border-b border-sage-300 p-6">
