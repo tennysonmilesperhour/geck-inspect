@@ -1,0 +1,196 @@
+{
+  "name": "Gecko",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "The gecko's given name"
+    },
+    "hatch_date": {
+      "type": "string",
+      "format": "date",
+      "description": "The date the gecko hatched"
+    },
+    "sex": {
+      "type": "string",
+      "enum": [
+        "Male",
+        "Female",
+        "Unsexed"
+      ],
+      "description": "The sex of the gecko"
+    },
+    "sire_id": {
+      "type": "string",
+      "description": "The ID of the father (sire) gecko from this collection"
+    },
+    "dam_id": {
+      "type": "string",
+      "description": "The ID of the mother (dam) gecko from this collection"
+    },
+    "sire_name": {
+      "type": "string",
+      "description": "Manual entry for sire name when not in collection"
+    },
+    "dam_name": {
+      "type": "string",
+      "description": "Manual entry for dam name when not in collection"
+    },
+    "morphs_traits": {
+      "type": "string",
+      "description": "A text description of the gecko's morphs and traits"
+    },
+    "morph_tags": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Structured morph/phenotype tags selected from the Morph ID system"
+    },
+    "notes": {
+      "type": "string",
+      "description": "General notes, feeding schedule, temperament, etc."
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Pet",
+        "Future Breeder",
+        "Holdback",
+        "Ready to Breed",
+        "Proven",
+        "For Sale",
+        "Sold"
+      ],
+      "description": "The current status of the gecko"
+    },
+    "image_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "A list of image URLs for this gecko"
+    },
+    "gecko_id_code": {
+      "type": "string",
+      "description": "A unique identifier code for the gecko (e.g., AB01)"
+    },
+    "display_order": {
+      "type": "number",
+      "description": "Custom display order for sorting"
+    },
+    "asking_price": {
+      "type": "number",
+      "description": "Asking price for the gecko if for sale"
+    },
+    "weight_grams": {
+      "type": "number",
+      "description": "Current weight of the gecko in grams"
+    },
+    "market_price_estimate": {
+      "type": "object",
+      "properties": {
+        "low": {
+          "type": "number"
+        },
+        "high": {
+          "type": "number"
+        },
+        "average": {
+          "type": "number"
+        },
+        "last_updated": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "description": "Estimated market price range"
+    },
+    "morphmarket_id": {
+      "type": "string",
+      "description": "MorphMarket listing ID if synced"
+    },
+    "morphmarket_url": {
+      "type": "string",
+      "description": "Direct link to MorphMarket listing"
+    },
+    "palm_street_id": {
+      "type": "string",
+      "description": "Palm Street listing ID if synced"
+    },
+    "palm_street_url": {
+      "type": "string",
+      "description": "Direct link to Palm Street listing"
+    },
+    "marketplace_description": {
+      "type": "string",
+      "description": "Special description for marketplace listings"
+    },
+    "is_public": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this gecko is visible in public profile and marketplace"
+    },
+    "gallery_display": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this gecko is visible in the public gallery"
+    },
+    "image_crop_data": {
+      "type": "object",
+      "description": "Stores crop data for image thumbnails, with URLs as keys."
+    },
+    "incubation_days": {
+      "type": "number",
+      "description": "Number of days the egg incubated before hatching"
+    },
+    "archived": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this gecko has been archived"
+    },
+    "archived_date": {
+      "type": "string",
+      "format": "date",
+      "description": "The date this gecko was archived"
+    },
+    "archive_reason": {
+      "type": "string",
+      "enum": [
+        "death",
+        "sold",
+        "other"
+      ],
+      "description": "The reason this gecko was archived"
+    },
+    "feeding_group_id": {
+      "type": "string",
+      "description": "ID of the FeedingGroup this gecko belongs to"
+    },
+    "is_gravid": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this female gecko is currently gravid (pregnant)"
+    },
+    "gravid_since": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the gecko was confirmed gravid"
+    },
+    "egg_drop_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Expected or actual egg drop date"
+    }
+  },
+  "required": [
+    "name",
+    "sex"
+  ],
+  "rls": {
+    "read": {},
+    "write": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}

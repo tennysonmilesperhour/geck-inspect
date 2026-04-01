@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, Edit, Calendar, DollarSign, Sparkles, Weight, Skull } from 'lucide-react';
+import { Eye, Edit, Calendar, Weight, Heart } from 'lucide-react';
 import { format } from 'date-fns';
 import EventTracker from './EventTracker';
 import { GeckoEvent } from '@/entities/all';
@@ -148,12 +148,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
               <Weight className="w-3 h-3" />
               <span className="font-semibold">{latestWeight}g</span>
             </div>
-          ) : (
-            <div className="flex items-center gap-1.5 text-slate-400">
-              <Weight className="w-3 h-3" />
-              <span className="font-semibold">0g</span>
-            </div>
-          )}
+          ) : null}
           {gecko.hatch_date && (
             <div className="flex items-center gap-1.5 text-slate-400">
               <Calendar className="w-3 h-3" />
@@ -167,6 +162,11 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
           <div className="text-xs text-blue-400 font-semibold">
             {gecko.incubation_days} days incubated
           </div>
+        )}
+        {gecko.sex === 'Female' && gecko.is_gravid && (
+          <Badge className="bg-pink-700 text-pink-100 text-xs w-fit flex items-center gap-1">
+            <Heart className="w-3 h-3" /> Gravid
+          </Badge>
         )}
       </CardContent>
     </Card>

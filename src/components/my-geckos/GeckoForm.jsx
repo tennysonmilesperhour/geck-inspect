@@ -359,10 +359,10 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                 gecko_id_code: formData.gecko_id_code,
                 hatch_date: formData.hatch_date ? format(formData.hatch_date, 'yyyy-MM-dd') : null,
                 sex: formData.sex,
-                sire_id: sireId || null, // Use the matched ID if available
-                dam_id: damId || null,   // Use the matched ID if available
-                sire_name: sireId ? null : sireInput, // Save manual name if no ID match
-                dam_name: damId ? null : damInput,   // Save manual name if no ID match
+                sire_id: sireId || null,
+                dam_id: damId || null,
+                sire_name: sireId ? null : sireInput,
+                dam_name: damId ? null : damInput,
                 morphs_traits: formData.morphs_traits,
                 morph_tags: formData.morph_tags || [],
                 feeding_group_id: formData.feeding_group_id || null,
@@ -371,7 +371,10 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                 image_urls: formData.image_urls,
                 asking_price: formData.asking_price !== '' && formData.asking_price !== null ? 
                              parseFloat(formData.asking_price) : null,
-                image_crop_data: cropData // Save the crop data
+                image_crop_data: cropData,
+                is_gravid: formData.sex === 'Female' ? (formData.is_gravid || false) : false,
+                gravid_since: formData.sex === 'Female' && formData.is_gravid ? (formData.gravid_since || null) : null,
+                egg_drop_date: formData.sex === 'Female' && formData.is_gravid ? (formData.egg_drop_date || null) : null,
             };
 
             let savedGecko;
@@ -709,6 +712,48 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                              className="disabled:opacity-50 disabled:cursor-not-allowed"
                          />
                     </div>
+
+                    {/* Gravid — Female only */}
+                    {formData.sex === 'Female' && (
+                        <div className="space-y-3 p-4 bg-pink-950/30 border border-pink-800/40 rounded-lg">
+                            <div className="flex items-center justify-between">
+                                <div>
+                                    <Label className="text-base font-medium text-pink-300">Gravid (Pregnant)</Label>
+                                    <p className="text-xs text-slate-400 mt-0.5">Toggle on if this female is currently gravid</p>
+                                </div>
+                                <Switch
+                                    checked={formData.is_gravid || false}
+                                    onCheckedChange={(checked) => handleChange('is_gravid', checked)}
+                                    disabled={isArchived}
+                                    className="data-[state=checked]:bg-pink-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                                />
+                            </div>
+                            {formData.is_gravid && (
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
+                                    <div>
+                                        <Label className="text-sm text-slate-300">Gravid Since</Label>
+                                        <Input
+                                            type="date"
+                                            value={formData.gravid_since || ''}
+                                            onChange={(e) => handleChange('gravid_since', e.target.value)}
+                                            disabled={isArchived}
+                                            className="bg-slate-800 border-slate-600 text-slate-100 mt-1"
+                                        />
+                                    </div>
+                                    <div>
+                                        <Label className="text-sm text-slate-300">Expected / Actual Egg Drop Date</Label>
+                                        <Input
+                                            type="date"
+                                            value={formData.egg_drop_date || ''}
+                                            onChange={(e) => handleChange('egg_drop_date', e.target.value)}
+                                            disabled={isArchived}
+                                            className="bg-slate-800 border-slate-600 text-slate-100 mt-1"
+                                        />
+                                    </div>
+                                </div>
+                            )}
+                        </div>
+                    )}
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>

@@ -730,11 +730,14 @@ export default function MyGeckosPage() {
                                                                     }>
                                                                         {gecko.sex}
                                                                     </Badge>
-                                                                    {(() => { const r = weightRecords.filter(w => w.gecko_id === gecko.id); const w = r.length > 0 ? [...r].sort((a,b) => new Date(b.record_date)-new Date(a.record_date))[0].weight_grams : gecko.weight_grams; return w != null ? <span className="text-slate-400 text-xs bg-slate-800 px-2 py-0.5 rounded-full border border-slate-700">{w}g</span> : null; })()}
+                                                                    {(() => { const r = weightRecords.filter(w => w.gecko_id === gecko.id); const w = r.length > 0 ? [...r].sort((a,b) => new Date(b.record_date)-new Date(a.record_date))[0].weight_grams : (gecko.weight_grams ?? null); return w != null ? <span className="text-slate-400 text-xs bg-slate-800 px-2 py-0.5 rounded-full border border-slate-700">{w}g</span> : null; })()}
                                                                     {gecko.hatch_date && (
                                                                         <span className="text-slate-400 text-xs bg-slate-800 px-2 py-0.5 rounded-full border border-slate-700">
                                                                             Born: {new Date(gecko.hatch_date).toLocaleDateString()}
                                                                         </span>
+                                                                    )}
+                                                                    {gecko.sex === 'Female' && gecko.is_gravid && (
+                                                                        <span className="text-xs bg-pink-900/40 border border-pink-700 text-pink-300 px-2 py-0.5 rounded-full">💕 Gravid</span>
                                                                     )}
                                                                     {showArchived && gecko.archive_reason && (
                                                                         <span className={`text-xs px-2 py-0.5 rounded-full border ${
