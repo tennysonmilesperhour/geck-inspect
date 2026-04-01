@@ -799,69 +799,65 @@ function LayoutContent({ children, currentPageName }) {
           }
 
           body {
-            background: linear-gradient(135deg, #0a0f0a 0%, #1a2920 100%);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            color: var(--gecko-text);
+            background: #020c07;
+            color: rgba(255,255,255,0.9);
             font-weight: 400;
           }
 
+          /* Liquid glass surface overrides */
           .dark .bg-white,
           .dark .bg-white\\/80,
           .dark .bg-white\\/90 {
-            background: rgba(20, 83, 45, 0.6) !important;
-            backdrop-filter: blur(20px) saturate(180%);
-            border: 1px solid var(--gecko-border);
-            box-shadow: 
-              0 8px 32px rgba(0, 0, 0, 0.4),
-              inset 0 1px 0 rgba(255, 255, 255, 0.1);
+            background: rgba(255,255,255,0.06) !important;
+            backdrop-filter: blur(24px) saturate(180%);
+            border: 1px solid rgba(255,255,255,0.1);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5), inset 0 1px 0 rgba(255,255,255,0.08);
           }
 
           .dark .bg-slate-900,
           .dark .bg-gray-900 {
-            background: rgba(4, 120, 87, 0.3) !important;
-            backdrop-filter: blur(15px);
-            border: 1px solid var(--gecko-border);
+            background: rgba(255,255,255,0.04) !important;
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.08);
           }
 
           .dark .bg-slate-800,
           .dark .bg-gray-800 {
-            background: rgba(6, 95, 70, 0.4) !important;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(134, 239, 172, 0.15);
+            background: rgba(255,255,255,0.06) !important;
+            backdrop-filter: blur(16px);
+            border: 1px solid rgba(255,255,255,0.1);
           }
 
           .dark .bg-slate-950 {
-            background: linear-gradient(135deg, 
-              rgba(2, 44, 34, 0.95) 0%, 
-              rgba(6, 78, 59, 0.9) 50%, 
-              rgba(4, 120, 87, 0.8) 100%) !important;
-            position: relative;
+            background: #020c07 !important;
           }
 
-          .dark .bg-slate-950::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            background: 
-              radial-gradient(ellipse at top, rgba(134, 239, 172, 0.03) 0%, transparent 50%),
-              radial-gradient(ellipse at bottom right, rgba(74, 222, 128, 0.02) 0%, transparent 50%);
-            pointer-events: none;
+          /* Glass input fields */
+          .dark input,
+          .dark textarea,
+          .dark select {
+            background: rgba(255,255,255,0.06) !important;
+            border: 1px solid rgba(255,255,255,0.12) !important;
+            color: rgba(255,255,255,0.9) !important;
+            backdrop-filter: blur(12px);
           }
 
-          .dark button:not([data-state]),
+          .dark input:focus,
+          .dark textarea:focus {
+            border-color: rgba(52,211,153,0.5) !important;
+            box-shadow: 0 0 0 3px rgba(52,211,153,0.08), 0 0 16px rgba(52,211,153,0.15) !important;
+            background: rgba(255,255,255,0.08) !important;
+          }
+
+          /* Muted gray backgrounds become glass */
           .dark .bg-gray-100,
           .dark .bg-gray-200,
           .dark .bg-slate-100,
           .dark .bg-slate-200 {
-            background: rgba(6, 95, 70, 0.6) !important;
-            color: var(--gecko-text) !important;
-            border: 1px solid var(--gecko-border) !important;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-weight: 500;
+            background: rgba(255,255,255,0.06) !important;
+            color: rgba(255,255,255,0.85) !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            backdrop-filter: blur(12px);
           }
 
           /* Fix Switch and Toggle visibility */
@@ -899,10 +895,10 @@ function LayoutContent({ children, currentPageName }) {
           [role="listbox"],
           [data-radix-select-content],
           [data-radix-select-viewport] {
-            background: rgba(6, 78, 59, 0.95) !important;
-            background-color: rgba(6, 78, 59, 0.95) !important;
-            border: 1px solid #059669 !important;
-            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8) !important;
+            background: rgba(8,20,14,0.85) !important;
+            backdrop-filter: blur(24px) saturate(180%) !important;
+            border: 1px solid rgba(255,255,255,0.12) !important;
+            box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8), inset 0 1px 0 rgba(255,255,255,0.08) !important;
             z-index: 99999 !important;
           }
 
@@ -912,7 +908,7 @@ function LayoutContent({ children, currentPageName }) {
           .dark [data-radix-collection-item],
           [role="option"],
           [data-radix-collection-item] {
-            color: #d1fae5 !important;
+            color: rgba(255,255,255,0.85) !important;
             background: transparent !important;
           }
 
@@ -930,19 +926,19 @@ function LayoutContent({ children, currentPageName }) {
           [role="option"][data-state="checked"],
           [data-radix-collection-item]:hover,
           [data-radix-collection-item][data-highlighted] {
-            background: #047857 !important;
-            background-color: #047857 !important;
+            background: rgba(52,211,153,0.15) !important;
             color: white !important;
           }
 
-          /* Fix SelectTrigger visibility - use consistent dark emerald theme */
+          /* Glass SelectTrigger */
           .dark [data-radix-select-trigger],
           .dark button[role="combobox"],
           [data-radix-select-trigger],
           button[role="combobox"] {
-            background: rgba(6, 78, 59, 0.8) !important;
-            border: 1px solid #059669 !important;
-            color: #d1fae5 !important;
+            background: rgba(255,255,255,0.06) !important;
+            border: 1px solid rgba(255,255,255,0.12) !important;
+            color: rgba(255,255,255,0.85) !important;
+            backdrop-filter: blur(12px) !important;
             font-size: 0.875rem !important;
           }
 
@@ -950,7 +946,8 @@ function LayoutContent({ children, currentPageName }) {
           .dark button[role="combobox"]:hover,
           [data-radix-select-trigger]:hover,
           button[role="combobox"]:hover {
-            background: rgba(4, 120, 87, 0.9) !important;
+            background: rgba(255,255,255,0.10) !important;
+            border-color: rgba(255,255,255,0.18) !important;
           }
 
           /* Hide file input text that shows "Choose file No file chosen" */
@@ -1027,87 +1024,41 @@ function LayoutContent({ children, currentPageName }) {
             }
           }
 
-          .dark button:hover,
-          .dark .hover\\:bg-gray-50:hover,
-          .dark .hover\\:bg-gray-100:hover,
-          .dark .hover\\:bg-slate-50:hover,
-          .dark .hover\\:bg-slate-100:hover {
-            background: rgba(16, 185, 129, 0.2) !important;
-            border-color: var(--gecko-accent) !important;
-            box-shadow: 0 0 20px rgba(134, 239, 172, 0.2);
-            transform: translateY(-1px);
-          }
-
-          .dark button[class*="bg-emerald"],
-          .dark button[class*="bg-green"] {
-            background: linear-gradient(135deg, var(--gecko-accent) 0%, var(--gecko-primary) 100%) !important;
-            border: none !important;
-            color: var(--gecko-dark) !important;
-            font-weight: 600;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-          }
-
-          .dark button[class*="bg-emerald"]:hover,
-          .dark button[class*="bg-green"]:hover {
-            background: linear-gradient(135deg, #22c55e 0%, #86efac 100%) !important;
-            box-shadow: 
-              0 0 25px rgba(134, 239, 172, 0.4),
-              0 8px 32px rgba(0, 0, 0, 0.3);
-            transform: translateY(-2px);
-          }
-
-          .dark input,
-          .dark textarea,
-          .dark select,
-          .dark [role="combobox"] {
-            background: rgba(4, 120, 87, 0.4) !important;
-            border: 1px solid var(--gecko-border) !important;
-            color: var(--gecko-text) !important;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-          }
-
-          .dark input:focus,
-          .dark textarea:focus,
-          .dark select:focus,
-          .dark [role="combobox"]:focus {
-            border-color: var(--gecko-accent) !important;
-            box-shadow: 
-              0 0 0 3px rgba(134, 239, 172, 0.1),
-              0 0 20px rgba(134, 239, 172, 0.2) !important;
-            background: rgba(6, 95, 70, 0.6) !important;
+          .dark button:hover:not([class*="sidebar-nav"]) {
+            transition: all 0.2s ease;
           }
 
           .dark .text-slate-100,
           .dark .text-slate-200,
           .dark .text-white {
-            color: var(--gecko-text) !important;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+            color: rgba(255,255,255,0.95) !important;
           }
 
           .dark .text-slate-400,
           .dark .text-slate-500,
           .dark .text-gray-400,
           .dark .text-gray-500 {
-            color: var(--gecko-text-muted) !important;
+            color: rgba(255,255,255,0.45) !important;
           }
 
           .dark .border-slate-700,
           .dark .border-gray-700 {
-            border-color: var(--gecko-border) !important;
+            border-color: rgba(255,255,255,0.1) !important;
           }
 
           .dark [data-state="checked"] {
-            background-color: var(--gecko-accent) !important;
-            border-color: var(--gecko-accent) !important;
+            background-color: rgba(52,211,153,0.8) !important;
+            border-color: rgba(52,211,153,0.8) !important;
           }
 
           .dark .bg-emerald-600 {
-            background: linear-gradient(135deg, var(--gecko-accent) 0%, var(--gecko-primary) 100%) !important;
+            background: rgba(52,211,153,0.25) !important;
+            border: 1px solid rgba(52,211,153,0.3) !important;
+            backdrop-filter: blur(8px);
           }
 
           .dark .hover\\:bg-emerald-700:hover {
-            background: linear-gradient(135deg, #22c55e 0%, #86efac 100%) !important;
+            background: rgba(52,211,153,0.35) !important;
           }
 
           .notification-badge {
@@ -1142,13 +1093,15 @@ function LayoutContent({ children, currentPageName }) {
                           }
 
           .gecko-card {
-            background: rgba(6, 95, 70, 0.4);
-            backdrop-filter: blur(15px) saturate(180%);
-            border: 1px solid var(--gecko-border);
-            border-radius: 16px;
+            background: rgba(255,255,255,0.05);
+            backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
             overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.4), inset 0 1px 0 rgba(255,255,255,0.08);
+            ring: 1px solid rgba(255,255,255,0.05);
           }
 
           .gecko-card::before {
@@ -1158,18 +1111,18 @@ function LayoutContent({ children, currentPageName }) {
             left: 0;
             right: 0;
             height: 1px;
-            background: linear-gradient(90deg, transparent, var(--gecko-primary), transparent);
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
             opacity: 0;
             transition: opacity 0.3s ease;
           }
 
           .gecko-card:hover {
-            transform: translateY(-8px) scale(1.02);
-            border-color: var(--gecko-accent);
+            transform: translateY(-6px) scale(1.015);
+            border-color: rgba(52,211,153,0.3);
             box-shadow: 
-              0 20px 40px rgba(0, 0, 0, 0.4),
-              0 0 60px rgba(134, 239, 172, 0.2),
-              inset 0 1px 0 rgba(134, 239, 172, 0.1);
+              0 24px 48px rgba(0,0,0,0.5),
+              0 0 40px rgba(52,211,153,0.12),
+              inset 0 1px 0 rgba(255,255,255,0.12);
           }
 
           .gecko-card:hover::before {
@@ -1177,40 +1130,27 @@ function LayoutContent({ children, currentPageName }) {
           }
 
           .sidebar-nav-item {
-            backdrop-filter: blur(10px);
+            backdrop-filter: blur(12px);
             border-radius: 12px;
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
             position: relative;
             overflow: hidden;
-          }
-
-          .sidebar-nav-item::before {
-            content: '';
-            position: absolute;
-            left: 0;
-            top: 0;
-            bottom: 0;
-            width: 3px;
-            background: var(--gecko-accent);
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            border: 1px solid transparent;
           }
 
           .sidebar-nav-item.active {
-            background: rgba(16, 185, 129, 0.15);
-            border-left: 3px solid var(--gecko-accent);
-            color: var(--gecko-primary);
-          }
-
-          .sidebar-nav-item.active::before {
-            opacity: 1;
+            background: rgba(255,255,255,0.12);
+            border: 1px solid rgba(255,255,255,0.15);
+            color: #fff;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
           }
 
           .sidebar-nav-item:hover {
-            background: rgba(16, 185, 129, 0.35) !important;
-            transform: translateX(4px);
-            color: var(--gecko-primary) !important;
-            box-shadow: 0 0 25px rgba(134, 239, 172, 0.4), inset 0 0 15px rgba(134, 239, 172, 0.15) !important;
+            background: rgba(255,255,255,0.08) !important;
+            border: 1px solid rgba(255,255,255,0.1) !important;
+            transform: translateX(2px);
+            color: #fff !important;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.2) !important;
           }
 
           .gecko-progress {
@@ -1262,12 +1202,10 @@ function LayoutContent({ children, currentPageName }) {
           }
 
           .gecko-header {
-            background: linear-gradient(135deg, 
-              rgba(6, 95, 70, 0.8) 0%, 
-              rgba(4, 120, 87, 0.6) 100%);
-            backdrop-filter: blur(20px) saturate(180%);
-            border-bottom: 1px solid var(--gecko-border);
-            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+            background: rgba(2,12,7,0.6);
+            backdrop-filter: blur(24px) saturate(180%);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+            box-shadow: 0 1px 0 rgba(255,255,255,0.05);
           }
 
           .custom-scrollbar::-webkit-scrollbar {
@@ -1325,9 +1263,16 @@ function LayoutContent({ children, currentPageName }) {
         <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
       </div>
 
-      <div className="flex h-screen bg-gray-100 dark:bg-gray-900 font-sans app-container-outline">
+      <div className="flex h-screen bg-slate-950 font-sans app-container-outline relative overflow-hidden">
+        {/* Ambient glass orbs */}
+        <div className="pointer-events-none absolute inset-0 overflow-hidden" style={{zIndex:0}}>
+          <div className="absolute -top-40 -left-40 w-[600px] h-[600px] rounded-full bg-emerald-500/10 blur-[120px]" />
+          <div className="absolute top-1/2 -right-60 w-[500px] h-[500px] rounded-full bg-teal-400/8 blur-[100px]" />
+          <div className="absolute -bottom-20 left-1/3 w-[400px] h-[400px] rounded-full bg-emerald-600/8 blur-[90px]" />
+        </div>
+        {/* Content layers above orbs */}
         {/* Mobile Sidebar */}
-        <Sidebar className="border-r border-sage-300 bg-sage-200/90 backdrop-blur-sm md:hidden z-50">
+        <Sidebar className="border-r border-white/10 bg-black/40 backdrop-blur-2xl md:hidden z-50 relative" style={{zIndex:10}}>
           <SidebarHeader className="border-b border-sage-300 p-6">
             <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2">
               {appLogo && (
@@ -1472,9 +1417,9 @@ function LayoutContent({ children, currentPageName }) {
 
 
         {/* Static sidebar for desktop */}
-        <div className="hidden lg:flex lg:flex-shrink-0">
+        <div className="hidden lg:flex lg:flex-shrink-0 relative" style={{zIndex:10}}>
           <div className="flex w-64 flex-col">
-            <div className="flex flex-grow flex-col overflow-y-auto bg-white dark:bg-gray-800 pt-5 border-r border-gray-200 dark:border-gray-700" ref={sidebarRef}>
+            <div className="flex flex-grow flex-col overflow-y-auto bg-black/40 backdrop-blur-2xl pt-5 border-r border-white/10" ref={sidebarRef}>
               <div className="flex items-center flex-shrink-0 px-6 mb-4">
                 <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2">
                   {appLogo && (
@@ -1617,7 +1562,7 @@ function LayoutContent({ children, currentPageName }) {
           </div>
         </div>
 
-        <main className="flex-1 flex flex-col min-w-0">
+        <main className="flex-1 flex flex-col min-w-0 relative" style={{zIndex:5}}>
           <header className="bg-sage-200/90 backdrop-blur-md border-b border-sage-300 px-4 py-3 md:hidden sticky top-0 z-10 gecko-header">
             <div className="flex items-center justify-between gap-4">
               <button onClick={toggleSidebar} className="hover:bg-sage-200 p-2 rounded-lg transition-colors duration-200" aria-label="Toggle Sidebar">
