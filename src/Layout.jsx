@@ -378,13 +378,13 @@ function LayoutContent({ children, currentPageName }) {
         setIsLoading(true);
 
         // Load page configs
-        let configs = dataCache.get('page_configs');
-        if (!configs && dataCache.canMakeRequest('page_configs')) {
+        let configs = dataCache.get('page_configs_v2');
+        if (!configs && dataCache.canMakeRequest('page_configs_v2')) {
           try {
-            dataCache.markRequestMade('page_configs');
+            dataCache.markRequestMade('page_configs_v2');
             configs = await retryApiCall(() => base44.entities.PageConfig.list());
             if (configs) {
-              dataCache.set('page_configs', configs);
+              dataCache.set('page_configs_v2', configs);
               setPageConfigs(configs);
             }
           } catch (error) {
