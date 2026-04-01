@@ -641,7 +641,7 @@ function LayoutContent({ children, currentPageName }) {
 
             const iconMap = {
                                   BarChart3, Search, Layers, FlaskConical, BookOpen, Heart, MessageSquare,
-                                  Database, ShoppingCart, Users, GitBranch, Upload, Shield, HeartHandshake, FolderKanban, Dna
+                                  Database, ShoppingCart, Users, GitBranch, Upload, Shield, HeartHandshake, FolderKanban, Dna, GraduationCap, Star, Settings
                                 };
                                 const IconComponent = iconMap[item.icon] || Database;
             
