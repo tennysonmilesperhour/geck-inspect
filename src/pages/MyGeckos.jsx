@@ -402,6 +402,11 @@ export default function MyGeckosPage() {
             result = result.filter(g => filters.feedingGroupIds.includes(g.feeding_group_id));
         }
 
+        // Filter by species
+        if (filters.species && filters.species.length > 0) {
+            result = result.filter(g => filters.species.includes(g.species || 'Crested Gecko'));
+        }
+
         return result;
     };
 
@@ -461,6 +466,8 @@ export default function MyGeckosPage() {
                     const order = { 'death': 0, 'sold': 1, 'other': 2 };
                     return (order[a.archive_reason] ?? 3) - (order[b.archive_reason] ?? 3);
                 });
+            case 'species':
+                return sorted.sort((a, b) => (a.species || 'Crested Gecko').localeCompare(b.species || 'Crested Gecko'));
             default:
                 return sorted;
         }
@@ -473,6 +480,7 @@ export default function MyGeckosPage() {
             traits: [],
             morphTags: [],
             feedingGroupIds: [],
+            species: [],
             weightMin: '',
             weightMax: ''
         });
@@ -538,11 +546,12 @@ export default function MyGeckosPage() {
                                         <SelectItem value="status">Status</SelectItem>
                                         <SelectItem value="weight_heaviest">Weight (Heaviest)</SelectItem>
                                         <SelectItem value="weight_lightest">Weight (Lightest)</SelectItem>
-                                        {showArchived && <SelectItem value="archive_reason">Archive Reason</SelectItem>}
-                                    </SelectContent>
-                                </Select>
-                            </div>
-                        </PageSettingsPanel>
+                                            <SelectItem value="species">Species (A-Z)</SelectItem>
+                                            {showArchived && <SelectItem value="archive_reason">Archive Reason</SelectItem>}
+                                        </SelectContent>
+                                        </Select>
+                                        </div>
+                                        </PageSettingsPanel>
                         <Button
                             variant="outline"
                             onClick={() => setShowArchived(!showArchived)}
@@ -620,10 +629,11 @@ export default function MyGeckosPage() {
                                     <SelectItem value="status">Status</SelectItem>
                                     <SelectItem value="weight_heaviest">Weight (Heaviest)</SelectItem>
                                     <SelectItem value="weight_lightest">Weight (Lightest)</SelectItem>
+                                    <SelectItem value="species">Species (A-Z)</SelectItem>
                                     {showArchived && <SelectItem value="archive_reason">Archive Reason</SelectItem>}
-                                </SelectContent>
-                            </Select>
-                        </div>
+                                    </SelectContent>
+                                    </Select>
+                                    </div>
 
                         <div className="flex items-center gap-2 bg-slate-900 rounded-lg p-1 border border-slate-700">
                             <Button
@@ -653,7 +663,52 @@ export default function MyGeckosPage() {
                 ) : (
                     <>
                         {filteredAndSortedGeckos.length > 0 ? (
-                                viewMode === 'card' ? (
+                            sortBy === 'species' ? (
+                                // Species-grouped view
+                                (() => {
+                                    const bySpecies = filteredAndSortedGeckos.reduce((acc, g) => {
+                                        const s = g.species || 'Crested Gecko';
+                                        if (!acc[s]) acc[s] = [];
+                                        acc[s].push(g);
+                                        return acc;
+                                    }, {});
+                                    return (
+                                        <div className="space-y-8">
+                                            {Object.entries(bySpecies).sort(([a],[b]) => a.localeCompare(b)).map(([species, speciesGeckos]) => (
+                                                <div key={species}>
+                                                    <h2 className="text-xl font-bold text-teal-400 mb-3 flex items-center gap-2">
+                                                        <span className="w-2 h-2 rounded-full bg-teal-400 inline-block"></span>
+                                                        {species} <span className="text-slate-500 text-base font-normal">({speciesGeckos.length})</span>
+                                                    </h2>
+                                                    {viewMode === 'card' ? (
+                                                        <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                                                            {speciesGeckos.map(gecko => (
+                                                                <GeckoCard key={gecko.id} gecko={gecko} weightRecords={weightRecords} feedingGroups={feedingGroups} onView={handleOpenDetailModal} onEdit={handleEdit} />
+                                                            ))}
+                                                        </div>
+                                                    ) : (
+                                                        <div className="space-y-2">
+                                                            {speciesGeckos.map(gecko => (
+                                                                <div key={gecko.id} className="bg-slate-900 border border-slate-700 rounded-lg p-2 md:p-4 hover:border-emerald-600 transition-colors cursor-pointer flex items-center gap-3" onClick={() => handleOpenDetailModal(gecko)}>
+                                                                    <img src={gecko.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'} alt={gecko.name} className="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
+                                                                    <div className="flex-1 min-w-0">
+                                                                        <h3 className="font-bold text-slate-100 truncate">{gecko.name}</h3>
+                                                                        <div className="flex flex-wrap gap-1 mt-1">
+                                                                            <Badge variant="outline" className={gecko.sex === 'Male' ? 'border-blue-500 text-blue-400 text-xs' : gecko.sex === 'Female' ? 'border-pink-500 text-pink-400 text-xs' : 'border-slate-500 text-slate-400 text-xs'}>{gecko.sex}</Badge>
+                                                                            <Badge className="bg-slate-600 text-xs">{gecko.status}</Badge>
+                                                                        </div>
+                                                                    </div>
+                                                                    <Button size="sm" variant="outline" onClick={(e) => { e.stopPropagation(); handleEdit(gecko); }} className="border-slate-600 text-xs">Edit</Button>
+                                                                </div>
+                                                            ))}
+                                                        </div>
+                                                    )}
+                                                </div>
+                                            ))}
+                                        </div>
+                                    );
+                                })()
+                            ) : viewMode === 'card' ? (
                                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                                         <AnimatePresence>
                                             {filteredAndSortedGeckos.map(gecko => (
@@ -737,7 +792,10 @@ export default function MyGeckosPage() {
                                                                         </span>
                                                                     )}
                                                                     {gecko.sex === 'Female' && gecko.is_gravid && (
-                                                                        <span className="text-xs bg-pink-900/40 border border-pink-700 text-pink-300 px-2 py-0.5 rounded-full">💕 Gravid</span>
+                                                                       <span className="text-xs bg-pink-900/40 border border-pink-700 text-pink-300 px-2 py-0.5 rounded-full">💕 Gravid</span>
+                                                                    )}
+                                                                    {gecko.species && gecko.species !== 'Crested Gecko' && (
+                                                                       <span className="text-xs bg-teal-900/40 border border-teal-700 text-teal-300 px-2 py-0.5 rounded-full">{gecko.species}</span>
                                                                     )}
                                                                     {showArchived && gecko.archive_reason && (
                                                                         <span className={`text-xs px-2 py-0.5 rounded-full border ${
@@ -773,9 +831,9 @@ export default function MyGeckosPage() {
                                             ))}
                                         </AnimatePresence>
                                     </div>
-                                )
-                        ) : (
-                            <EmptyState
+                                    )
+                                    ) : (
+                                    <EmptyState
                                 icon={Users}
                                 title="No Geckos Found"
                                 message="Add your first gecko to get started!"

@@ -772,6 +772,9 @@ function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate, onPlanDelete, 
                                 <div className="font-bold text-lg md:text-xl text-slate-100 break-words">
                                     {sire?.name || 'N/A'} & {dam?.name || 'N/A'}
                                 </div>
+                                {sire?.species && sire.species !== 'Crested Gecko' && (
+                                    <div className="text-xs text-teal-400 font-medium">{sire.species}</div>
+                                )}
                                 {plan.breeding_id && (
                                     <div className="text-sm text-slate-400">ID: {plan.breeding_id}</div>
                                 )}
@@ -1336,6 +1339,13 @@ export default function BreedingPage() {
                     return (a.laying_active === false ? 1 : 0) - (b.laying_active === false ? 1 : 0);
                 case 'laying_dormant':
                     return (b.laying_active === false ? 1 : 0) - (a.laying_active === false ? 1 : 0);
+                case 'species': {
+                    const sireA = geckos.find(g => g.id === a.sire_id);
+                    const sireB = geckos.find(g => g.id === b.sire_id);
+                    const spA = sireA?.species || 'Crested Gecko';
+                    const spB = sireB?.species || 'Crested Gecko';
+                    return spA.localeCompare(spB);
+                }
                 case 'newest':
                 default:
                     return new Date(b.created_date) - new Date(a.created_date);
@@ -1484,6 +1494,7 @@ export default function BreedingPage() {
                                         <SelectItem value="eggs_low">Least Eggs</SelectItem>
                                         <SelectItem value="last_egg_recent">Latest Egg Drop</SelectItem>
                                         <SelectItem value="last_egg_oldest">Oldest Egg Drop</SelectItem>
+                                        <SelectItem value="species">Species (A-Z)</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -1511,6 +1522,34 @@ export default function BreedingPage() {
                                             )}
                                         </Button>
                                     </div>
+                                    {sortBy === 'species' ? (
+                                        (() => {
+                                            const bySpecies = activePlans.reduce((acc, plan) => {
+                                                const sire = geckos.find(g => g.id === plan.sire_id);
+                                                const sp = sire?.species || 'Crested Gecko';
+                                                if (!acc[sp]) acc[sp] = [];
+                                                acc[sp].push(plan);
+                                                return acc;
+                                            }, {});
+                                            return (
+                                                <div className="space-y-8">
+                                                    {Object.entries(bySpecies).sort(([a],[b]) => a.localeCompare(b)).map(([species, plans]) => (
+                                                        <div key={species}>
+                                                            <h2 className="text-xl font-bold text-teal-400 mb-3 flex items-center gap-2">
+                                                                <span className="w-2 h-2 rounded-full bg-teal-400 inline-block"></span>
+                                                                {species} <span className="text-slate-500 text-base font-normal">({plans.length})</span>
+                                                            </h2>
+                                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                                                                {plans.map(plan => (
+                                                                    <BreedingPlanCard key={plan.id} plan={plan} geckos={geckos} planEggs={allEggs.filter(e => e.breeding_plan_id === plan.id)} onPlanUpdate={loadData} onPlanDelete={handleDeletePlan} onPlanArchive={handleArchivePlan} isExpanded={isPlanExpanded(plan.id)} onToggleExpanded={handleToggleExpanded} showArchiveButton={true} />
+                                                                ))}
+                                                            </div>
+                                                        </div>
+                                                    ))}
+                                                </div>
+                                            );
+                                        })()
+                                    ) : (
                                     <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                                         {activePlans.map(plan => (
                                             <BreedingPlanCard
@@ -1527,6 +1566,7 @@ export default function BreedingPage() {
                                             />
                                         ))}
                                     </div>
+                                    )}
                                 </>
                             )}
                         </TabsContent>

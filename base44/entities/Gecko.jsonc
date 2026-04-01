@@ -6,6 +6,25 @@
       "type": "string",
       "description": "The gecko's given name"
     },
+    "species": {
+      "type": "string",
+      "enum": [
+        "Crested Gecko",
+        "Gargoyle Gecko",
+        "Giant Day Gecko",
+        "Gold Dust Day Gecko",
+        "Leachianus Gecko",
+        "Mourning Gecko",
+        "Chahoua Gecko",
+        "Pictus Gecko",
+        "Tokay Gecko",
+        "Leopard Gecko",
+        "African Fat-Tailed Gecko",
+        "Other"
+      ],
+      "default": "Crested Gecko",
+      "description": "The species of the gecko"
+    },
     "hatch_date": {
       "type": "string",
       "format": "date",

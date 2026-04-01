@@ -13,7 +13,7 @@ import { PageConfig } from "@/entities/PageConfig";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Database, BookOpen, BarChart3, Upload, Eye, Users, HeartHandshake, Moon, Sun, Layers, LogOut, ExternalLink, Search, Settings, UserPlus, Award, Shield, MessageSquare, Wrench, Bell, Mail, Heart, Brain, Menu, ShoppingCart, GitBranch,
-  LogIn, ChevronDown, X as CloseIcon, FlaskConical, LifeBuoy, LayoutDashboard, Star, Trophy, FolderKanban, GraduationCap
+  LogIn, ChevronDown, X as CloseIcon, FlaskConical, LifeBuoy, LayoutDashboard, Star, Trophy, FolderKanban, GraduationCap, Dna
 } from "lucide-react";
 import TutorialModal from "../components/tutorial/TutorialModal";
 import {
@@ -641,7 +641,7 @@ function LayoutContent({ children, currentPageName }) {
 
             const iconMap = {
                                   BarChart3, Search, Layers, FlaskConical, BookOpen, Heart, MessageSquare,
-                                  Database, ShoppingCart, Users, GitBranch, Upload, Shield, HeartHandshake, FolderKanban
+                                  Database, ShoppingCart, Users, GitBranch, Upload, Shield, HeartHandshake, FolderKanban, Dna
                                 };
                                 const IconComponent = iconMap[item.icon] || Database;
             

@@ -8,6 +8,11 @@ import { Filter, X } from 'lucide-react';
 import { MORPH_CATEGORIES } from './MorphIDSelector';
 
 const STATUS_OPTIONS = ['Pet', 'Future Breeder', 'Holdback', 'Ready to Breed', 'Proven', 'For Sale', 'Sold'];
+const SPECIES_OPTIONS = [
+    'Crested Gecko', 'Gargoyle Gecko', 'Giant Day Gecko', 'Gold Dust Day Gecko',
+    'Leachianus Gecko', 'Mourning Gecko', 'Chahoua Gecko', 'Pictus Gecko',
+    'Tokay Gecko', 'Leopard Gecko', 'African Fat-Tailed Gecko', 'Other'
+];
 
 export default function GeckoFilters({ filters, onFiltersChange, onClearFilters, feedingGroups = [] }) {
     const [isExpanded, setIsExpanded] = React.useState(false);
@@ -50,9 +55,16 @@ export default function GeckoFilters({ filters, onFiltersChange, onClearFilters,
         onFiltersChange({ ...filters, feedingGroupIds: updated });
     };
 
+    const handleSpeciesToggle = (species) => {
+        const current = filters.species || [];
+        const updated = current.includes(species) ? current.filter(s => s !== species) : [...current, species];
+        onFiltersChange({ ...filters, species: updated });
+    };
+
     const hasActiveFilters = filters.sexes.length > 0 || filters.statuses.length > 0 || 
         filters.traits.length > 0 || filters.weightMin || filters.weightMax ||
-        (filters.morphTags?.length > 0) || (filters.feedingGroupIds?.length > 0);
+        (filters.morphTags?.length > 0) || (filters.feedingGroupIds?.length > 0) ||
+        (filters.species?.length > 0);
 
     const allMorphs = Object.values(MORPH_CATEGORIES).flatMap(c => c.morphs);
 
@@ -80,6 +92,19 @@ export default function GeckoFilters({ filters, onFiltersChange, onClearFilters,
             
             {isExpanded && (
                 <CardContent className="space-y-6">
+                    {/* Species Filter */}
+                    <div>
+                        <Label className="text-slate-300 mb-2 block">Species</Label>
+                        <div className="flex flex-wrap gap-2">
+                            {SPECIES_OPTIONS.map(species => (
+                                <button key={species} onClick={() => handleSpeciesToggle(species)}
+                                    className={`px-3 py-1.5 rounded-full text-xs font-medium transition-colors ${(filters.species || []).includes(species) ? 'bg-teal-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>
+                                    {species}
+                                </button>
+                            ))}
+                        </div>
+                    </div>
+
                     {/* Sex Filter */}
                     <div>
                         <Label className="text-slate-300 mb-2 block">Sex</Label>

@@ -60,11 +60,18 @@ const MONTHS = [
     { value: "11", label: "November" }, { value: "12", label: "December" }
 ];
 
+const GECKO_SPECIES = [
+    'Crested Gecko', 'Gargoyle Gecko', 'Giant Day Gecko', 'Gold Dust Day Gecko',
+    'Leachianus Gecko', 'Mourning Gecko', 'Chahoua Gecko', 'Pictus Gecko',
+    'Tokay Gecko', 'Leopard Gecko', 'African Fat-Tailed Gecko', 'Other'
+];
+
 const initialFormData = {
     name: '',
     gecko_id_code: '',
     hatch_date: null,
     sex: 'Unsexed',
+    species: 'Crested Gecko',
     sire_id: '',
     dam_id: '',
     morphs_traits: '',
@@ -372,6 +379,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                 asking_price: formData.asking_price !== '' && formData.asking_price !== null ? 
                              parseFloat(formData.asking_price) : null,
                 image_crop_data: cropData,
+                species: formData.species || 'Crested Gecko',
                 is_gravid: formData.sex === 'Female' ? (formData.is_gravid || false) : false,
                 gravid_since: formData.sex === 'Female' && formData.is_gravid ? (formData.gravid_since || null) : null,
                 egg_drop_date: formData.sex === 'Female' && formData.is_gravid ? (formData.egg_drop_date || null) : null,
@@ -587,6 +595,18 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                 </SelectContent>
                             </Select>
                         </div>
+                    </div>
+
+                    <div>
+                        <Label htmlFor="species">Species</Label>
+                        <Select value={formData.species || 'Crested Gecko'} onValueChange={(v) => handleChange('species', v)} disabled={isArchived}>
+                            <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100"><SelectValue /></SelectTrigger>
+                            <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
+                                {GECKO_SPECIES.map(s => (
+                                    <SelectItem key={s} value={s} className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">{s}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

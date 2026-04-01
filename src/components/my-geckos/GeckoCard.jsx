@@ -168,6 +168,11 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
             <Heart className="w-3 h-3" /> Gravid
           </Badge>
         )}
+        {gecko.species && gecko.species !== 'Crested Gecko' && (
+          <Badge className="bg-teal-900 text-teal-300 border border-teal-700 text-xs w-fit">
+            {gecko.species}
+          </Badge>
+        )}
       </CardContent>
     </Card>
   );
