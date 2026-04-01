@@ -586,6 +586,7 @@ function LayoutContent({ children, currentPageName }) {
       { page_name: "MorphVisualizer", display_name: "Morph Visualizer", icon: "Layers", category: "tools", requires_auth: false, is_enabled: true, order: 2 },
       { page_name: "BreederConsultant", display_name: "AI Consultant", icon: "FlaskConical", category: "tools", requires_auth: false, is_enabled: true, order: 3 },
       { page_name: "ProjectManager", display_name: "Project Manager", icon: "FolderKanban", category: "tools", requires_auth: true, is_enabled: true, order: 4 },
+      { page_name: "GeneticsGuide", display_name: "Genetics Guide", icon: "Dna", category: "tools", requires_auth: false, is_enabled: true, order: 5 },
     ],
     public: [
     { page_name: "Dashboard", display_name: "Dashboard", icon: "BarChart3", category: "public", requires_auth: false, is_enabled: true, order: 1 },

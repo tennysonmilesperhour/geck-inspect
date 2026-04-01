@@ -61,6 +61,7 @@ import ForumPost from './pages/ForumPost';
 import Gallery from './pages/Gallery';
 import GeckoDetail from './pages/GeckoDetail';
 import GeneticCalculatorTool from './pages/GeneticCalculatorTool';
+import GeneticsGuide from './pages/GeneticsGuide';
 import Home from './pages/Home';
 import LikedGeckos from './pages/LikedGeckos';
 import Lineage from './pages/Lineage';
@@ -100,6 +101,7 @@ export const PAGES = {
     "Gallery": Gallery,
     "GeckoDetail": GeckoDetail,
     "GeneticCalculatorTool": GeneticCalculatorTool,
+    "GeneticsGuide": GeneticsGuide,
     "Home": Home,
     "LikedGeckos": LikedGeckos,
     "Lineage": Lineage,
