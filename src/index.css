@@ -159,5 +159,21 @@ button:focus-visible {
   }
   body {
     @apply bg-background text-foreground;
+    scrollbar-width: thin;
+    scrollbar-color: #334155 transparent;
   }
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #334155;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #10b981;
 }
