@@ -554,7 +554,7 @@ export default function MyGeckosPage() {
                                         </PageSettingsPanel>
                         <Button
                             variant="outline"
-                            onClick={() => setShowArchived(!showArchived)}
+                            onClick={() => { setShowArchived(!showArchived); loadGeckos(true); }}
                             className="border-slate-600 hover:bg-slate-800"
                         >
                             {showArchived ? (
