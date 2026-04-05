@@ -11,6 +11,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 // Add page imports here
 import ForumPost from './pages/ForumPost';
+import PrivacyPolicy from './pages/PrivacyPolicy';
 import MarketplaceSalesStats from './pages/MarketplaceSalesStats';
 import Marketplace from './pages/Marketplace';
 
@@ -77,6 +78,11 @@ const AuthenticatedApp = () => {
       <Route path="/Marketplace" element={
         <LayoutWrapper currentPageName="Marketplace">
           <Marketplace />
+        </LayoutWrapper>
+      } />
+      <Route path="/PrivacyPolicy" element={
+        <LayoutWrapper currentPageName="PrivacyPolicy">
+          <PrivacyPolicy />
         </LayoutWrapper>
       } />
       <Route path="*" element={<PageNotFound />} />

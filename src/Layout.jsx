@@ -1546,6 +1546,7 @@ function LayoutContent({ children, currentPageName }) {
               
               <div className="p-4 border-t border-sage-300 dark:border-sage-300 mt-auto">
                 <div className="space-y-3">
+                  <Link to="/PrivacyPolicy" className="block text-xs text-slate-500 hover:text-slate-300 px-3 transition-colors">Privacy Policy</Link>
                   <Link to={createPageUrl("Donations")} className="block">
                     <Button
                       variant="outline"
