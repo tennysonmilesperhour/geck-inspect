@@ -1312,9 +1312,8 @@ export default function BreedingPage() {
             const sorted = [...eggs].sort((a, b) => new Date(b.lay_date) - new Date(a.lay_date));
             return { ...plan, eggCount: eggs.length, lastEggDate: sorted[0]?.lay_date ?? null };
         });
-        
-        // Sort
-        plansWithData.sort((a, b) => {
+
+        const sortFn = (a, b) => {
             switch (sortBy) {
                 case 'eggs_low':
                     return a.eggCount - b.eggCount;
@@ -1335,7 +1334,6 @@ export default function BreedingPage() {
                 case 'time_oldest':
                     return new Date(a.pairing_date || a.created_date) - new Date(b.pairing_date || b.created_date);
                 case 'laying_active':
-                    // active (true/undefined) before dormant (false)
                     return (a.laying_active === false ? 1 : 0) - (b.laying_active === false ? 1 : 0);
                 case 'laying_dormant':
                     return (b.laying_active === false ? 1 : 0) - (a.laying_active === false ? 1 : 0);
@@ -1350,8 +1348,20 @@ export default function BreedingPage() {
                 default:
                     return new Date(b.created_date) - new Date(a.created_date);
             }
-        });
-        
+        };
+
+        // For active plans: separate dormant from active, sort each group independently,
+        // then place dormant section below active section (ignore dormant/active sort options which handle their own ordering)
+        if (!plans.some(p => p.archived)) {
+            const activeLaying = plansWithData.filter(p => p.laying_active !== false);
+            const dormant = plansWithData.filter(p => p.laying_active === false);
+            activeLaying.sort(sortFn);
+            dormant.sort(sortFn);
+            return [...activeLaying, ...dormant];
+        }
+
+        // For archived plans: sort normally
+        plansWithData.sort(sortFn);
         return plansWithData;
     };
     
@@ -1550,22 +1560,54 @@ export default function BreedingPage() {
                                             );
                                         })()
                                     ) : (
-                                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-                                        {activePlans.map(plan => (
-                                            <BreedingPlanCard
-                                                key={plan.id}
-                                                plan={plan}
-                                                geckos={geckos}
-                                                planEggs={allEggs.filter(e => e.breeding_plan_id === plan.id)}
-                                                onPlanUpdate={loadData}
-                                                onPlanDelete={handleDeletePlan}
-                                                onPlanArchive={handleArchivePlan}
-                                                isExpanded={isPlanExpanded(plan.id)}
-                                                onToggleExpanded={handleToggleExpanded}
-                                                showArchiveButton={true}
-                                            />
-                                        ))}
-                                    </div>
+                                    (() => {
+                                        const activeLaying = activePlans.filter(p => p.laying_active !== false);
+                                        const dormant = activePlans.filter(p => p.laying_active === false);
+                                        return (
+                                            <div className="space-y-8">
+                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                                                    {activeLaying.map(plan => (
+                                                        <BreedingPlanCard
+                                                            key={plan.id}
+                                                            plan={plan}
+                                                            geckos={geckos}
+                                                            planEggs={allEggs.filter(e => e.breeding_plan_id === plan.id)}
+                                                            onPlanUpdate={loadData}
+                                                            onPlanDelete={handleDeletePlan}
+                                                            onPlanArchive={handleArchivePlan}
+                                                            isExpanded={isPlanExpanded(plan.id)}
+                                                            onToggleExpanded={handleToggleExpanded}
+                                                            showArchiveButton={true}
+                                                        />
+                                                    ))}
+                                                </div>
+                                                {dormant.length > 0 && (
+                                                    <div>
+                                                        <h2 className="text-lg font-semibold text-slate-400 mb-4 flex items-center gap-2">
+                                                            <Moon className="w-5 h-5 text-slate-500" />
+                                                            Dormant Pairs ({dormant.length})
+                                                        </h2>
+                                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+                                                            {dormant.map(plan => (
+                                                                <BreedingPlanCard
+                                                                    key={plan.id}
+                                                                    plan={plan}
+                                                                    geckos={geckos}
+                                                                    planEggs={allEggs.filter(e => e.breeding_plan_id === plan.id)}
+                                                                    onPlanUpdate={loadData}
+                                                                    onPlanDelete={handleDeletePlan}
+                                                                    onPlanArchive={handleArchivePlan}
+                                                                    isExpanded={isPlanExpanded(plan.id)}
+                                                                    onToggleExpanded={handleToggleExpanded}
+                                                                    showArchiveButton={true}
+                                                                />
+                                                            ))}
+                                                        </div>
+                                                    </div>
+                                                )}
+                                            </div>
+                                        );
+                                    })()
                                     )}
                                 </>
                             )}
