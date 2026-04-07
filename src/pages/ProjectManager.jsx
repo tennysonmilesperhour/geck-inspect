@@ -170,16 +170,16 @@ export default function ProjectManager() {
                 ) : (
                     <Tabs defaultValue="projects" className="w-full">
                         <TabsList className="grid w-full grid-cols-4 bg-slate-900 h-11 mb-6">
-                            <TabsTrigger value="projects" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-xs md:text-sm">
+                            <TabsTrigger value="projects" className="data-[state=active]:bg-transparent data-[state=active]:text-slate-100 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 text-xs md:text-sm">
                                 <FolderKanban className="w-4 h-4 mr-1 md:mr-2" /> Projects
                             </TabsTrigger>
-                            <TabsTrigger value="calendar" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-xs md:text-sm">
+                            <TabsTrigger value="calendar" className="data-[state=active]:bg-transparent data-[state=active]:text-slate-100 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 text-xs md:text-sm">
                                 <Calendar className="w-4 h-4 mr-1 md:mr-2" /> Calendar
                             </TabsTrigger>
-                            <TabsTrigger value="feeding" className="data-[state=active]:bg-orange-600 data-[state=active]:text-white text-xs md:text-sm">
+                            <TabsTrigger value="feeding" className="data-[state=active]:bg-transparent data-[state=active]:text-slate-100 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 text-xs md:text-sm">
                                 <Utensils className="w-4 h-4 mr-1 md:mr-2" /> <span className="hidden sm:inline">Feeding Groups</span><span className="sm:hidden">Feed</span>
                             </TabsTrigger>
-                            <TabsTrigger value="notes" className="data-[state=active]:bg-yellow-500 data-[state=active]:text-yellow-950 text-xs md:text-sm">
+                            <TabsTrigger value="notes" className="data-[state=active]:bg-transparent data-[state=active]:text-slate-100 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 text-xs md:text-sm">
                                 <StickyNote className="w-4 h-4 mr-1 md:mr-2" /> Notes
                             </TabsTrigger>
                         </TabsList>
