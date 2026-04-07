@@ -1411,14 +1411,15 @@ function LayoutContent({ children, currentPageName }) {
                   Support This Project
                 </Button>
               </Link>
-              <button
-                onClick={() => setShowTutorial(true)}
-                className="w-full group flex items-center justify-start rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 border border-sage-300 text-sage-600 hover:bg-sage-50 dark:text-sage-400 dark:border-sage-600 dark:hover:bg-sage-900/20"
-              >
-                <GraduationCap className="w-4 h-4 mr-2 flex-shrink-0" />
-                App Tutorial
-              </button>
-
+              <div className="block">
+                <button
+                 onClick={() => setShowTutorial(true)}
+                 className="w-full group flex items-center justify-start rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 border border-sage-300 text-sage-600 hover:bg-sage-50 dark:text-sage-400 dark:border-sage-600 dark:hover:bg-sage-900/20"
+                >
+                 <GraduationCap className="w-4 h-4 mr-2 flex-shrink-0" />
+                 App Tutorial
+                </button>
+              </div>
               <Link to={createPageUrl("Subscription")} className="block">
                 <Button
                   variant="outline"
@@ -1557,6 +1558,7 @@ function LayoutContent({ children, currentPageName }) {
                       Support This Project
                     </Button>
                   </Link>
+                  <div>
                   <button
                    onClick={() => setShowTutorial(true)}
                    className="w-full group flex items-center justify-start rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 border border-sage-300 text-sage-600 hover:bg-sage-50 dark:text-sage-400 dark:border-sage-600 dark:hover:bg-sage-900/20"
@@ -1564,6 +1566,7 @@ function LayoutContent({ children, currentPageName }) {
                    <GraduationCap className="w-4 h-4 mr-2 flex-shrink-0" />
                    App Tutorial
                   </button>
+                  </div>
 
                   <Link to={createPageUrl("Subscription")} className="block">
                     <Button
