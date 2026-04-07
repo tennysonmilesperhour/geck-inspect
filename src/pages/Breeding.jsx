@@ -1455,7 +1455,7 @@ export default function BreedingPage() {
                         setExpandAllActive(false);
                         setExpandAllArchive(false);
                     }} className="w-full">
-                        <TabsList className="grid w-full grid-cols-4 bg-slate-950 border border-slate-700 h-11 rounded-md p-0.5 gap-0.5">
+                        <TabsList className="grid w-full grid-cols-4 bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1">
                             <TabsTrigger value="active" className="data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-2 rounded-sm transition-colors">
                                 <span className="hidden md:inline">Active Plans ({activePlans.length})</span>
                                 <span className="md:hidden">Active ({activePlans.length})</span>
