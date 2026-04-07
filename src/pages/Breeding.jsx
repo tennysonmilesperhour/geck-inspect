@@ -921,19 +921,34 @@ function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate, onPlanDelete, 
                     
                     <div className="flex gap-1 flex-wrap">
                         {eggCounts.eggsLaid > 0 && (
-                            <div className="bg-amber-100 text-amber-900 text-xs px-1.5 py-0.5 rounded flex items-center gap-1">
-                                <EggIcon className="w-3 h-3" />
-                                {eggCounts.eggsLaid}
+                            <div className="relative group/tip">
+                                <div className="bg-amber-100 text-amber-900 text-xs px-1.5 py-0.5 rounded flex items-center gap-1 cursor-default">
+                                    <EggIcon className="w-3 h-3" />
+                                    {eggCounts.eggsLaid}
+                                </div>
+                                <div className="pointer-events-none absolute bottom-full right-0 mb-1.5 px-2 py-1 bg-slate-800 text-slate-100 text-xs rounded shadow-lg whitespace-nowrap opacity-0 group-hover/tip:opacity-100 transition-opacity duration-150 z-50">
+                                    Eggs incubating
+                                </div>
                             </div>
                         )}
                         {eggCounts.hatched > 0 && (
-                            <div className="bg-green-600 text-white text-xs px-1.5 py-0.5 rounded">
-                                ✓ {eggCounts.hatched}
+                            <div className="relative group/tip">
+                                <div className="bg-green-600 text-white text-xs px-1.5 py-0.5 rounded cursor-default">
+                                    ✓ {eggCounts.hatched}
+                                </div>
+                                <div className="pointer-events-none absolute bottom-full right-0 mb-1.5 px-2 py-1 bg-slate-800 text-slate-100 text-xs rounded shadow-lg whitespace-nowrap opacity-0 group-hover/tip:opacity-100 transition-opacity duration-150 z-50">
+                                    Hatched
+                                </div>
                             </div>
                         )}
                         {eggCounts.failed > 0 && (
-                            <div className="bg-yellow-600 text-white text-xs px-1.5 py-0.5 rounded">
-                                ✗ {eggCounts.failed}
+                            <div className="relative group/tip">
+                                <div className="bg-yellow-600 text-white text-xs px-1.5 py-0.5 rounded cursor-default">
+                                    ✗ {eggCounts.failed}
+                                </div>
+                                <div className="pointer-events-none absolute bottom-full right-0 mb-1.5 px-2 py-1 bg-slate-800 text-slate-100 text-xs rounded shadow-lg whitespace-nowrap opacity-0 group-hover/tip:opacity-100 transition-opacity duration-150 z-50">
+                                    Failed / Slug / Infertile
+                                </div>
                             </div>
                         )}
                     </div>
