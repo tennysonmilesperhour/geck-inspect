@@ -2,7 +2,7 @@
 @tailwind components;
 @tailwind utilities;
 
-@import url('https://fonts.googleapis.com/css2?family=Righteous&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Righteous&family=Outfit:wght@300;400;500;600;700&display=swap');
 
 html, body {
   overflow-x: hidden;
@@ -19,6 +19,7 @@ html, body {
   color: rgba(255, 255, 255, 0.87);
   background-color: #242424;
 
+  font-family: 'Outfit', system-ui, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -161,6 +162,7 @@ button:focus-visible {
   }
   body {
     @apply bg-background text-foreground;
+    font-family: 'Outfit', system-ui, sans-serif;
     scrollbar-width: thin;
     scrollbar-color: #4ade80 transparent;
   }
