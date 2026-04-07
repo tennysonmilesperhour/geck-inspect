@@ -69,7 +69,7 @@ function CostRow({ cost, categories, onDelete, onUpdate }) {
         </div>
         <div className="flex gap-2 justify-end">
           <Button size="sm" variant="ghost" onClick={() => setEditing(false)} className="h-7 text-slate-400"><X className="w-3 h-3" /></Button>
-          <Button size="sm" onClick={handleSave} className="h-7 bg-emerald-700 hover:bg-emerald-600 text-white"><Check className="w-3 h-3 mr-1" />Save</Button>
+          <Button size="sm" onClick={handleSave} className="h-7 bg-slate-600 hover:bg-slate-500 text-white"><Check className="w-3 h-3 mr-1" />Save</Button>
         </div>
       </div>
     );
@@ -298,7 +298,7 @@ export default function MarketplaceSalesStats() {
     return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
   }, [soldGeckos, geckoCategories, priceOverrides]);
 
-  const tabTriggerClass = "data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors";
+  const tabTriggerClass = "data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:border data-[state=active]:border-slate-500 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors";
 
   if (isLoading) {
     return (
@@ -344,7 +344,7 @@ export default function MarketplaceSalesStats() {
               <span className="text-sm font-semibold text-slate-200">Custom Categories</span>
             </div>
             <Button size="sm" variant="ghost" onClick={() => setShowCategoryInput(v => !v)}
-              className="h-7 text-emerald-400 hover:bg-emerald-900/30 text-xs">
+              className="h-7 text-slate-300 hover:bg-slate-700 text-xs border border-slate-600">
               <Plus className="w-3 h-3 mr-1" /> Add
             </Button>
           </div>
@@ -362,23 +362,23 @@ export default function MarketplaceSalesStats() {
               <Input value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)}
                 onKeyDown={e => e.key === 'Enter' && handleAddCategory()}
                 placeholder="Category name..." className="bg-slate-800 border-slate-600 text-slate-100 h-8 text-sm" />
-              <Button size="sm" onClick={handleAddCategory} className="h-8 bg-emerald-700 hover:bg-emerald-600 text-white px-3">Add</Button>
+              <Button size="sm" onClick={handleAddCategory} className="h-8 bg-slate-600 hover:bg-slate-500 text-white px-3">Add</Button>
             </div>
           )}
         </div>
 
         <div className="bg-emerald-950/30 border border-emerald-900/40 rounded-xl p-4 md:p-6">
           <Tabs defaultValue="revenue">
-            <TabsList className="grid w-full grid-cols-2 bg-slate-950 border border-slate-700 h-10 rounded-md p-0.5 gap-0.5 mb-6">
-              <TabsTrigger value="revenue" className={tabTriggerClass}>Revenue</TabsTrigger>
-              <TabsTrigger value="costs" className={tabTriggerClass}>Costs</TabsTrigger>
+            <TabsList className="flex w-fit mx-auto bg-slate-900 border border-slate-700 h-10 rounded-md p-1 gap-1 mb-6">
+              <TabsTrigger value="revenue" className={`${tabTriggerClass} px-10`}>Revenue</TabsTrigger>
+              <TabsTrigger value="costs" className={`${tabTriggerClass} px-10`}>Costs</TabsTrigger>
             </TabsList>
 
             <TabsContent value="revenue" className="space-y-4">
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-semibold text-slate-100">Sold Geckos by Quarter</h3>
                 {Object.keys(priceOverrides).length > 0 && (
-                  <Button onClick={handleSaveAllPrices} disabled={isSaving} size="sm" className="gap-1.5 h-8 bg-emerald-700 hover:bg-emerald-600 text-white">
+                  <Button onClick={handleSaveAllPrices} disabled={isSaving} size="sm" className="gap-1.5 h-8 bg-slate-600 hover:bg-slate-500 text-white">
                     <Save className="w-3.5 h-3.5" />{isSaving ? 'Saving...' : 'Save Prices'}
                   </Button>
                 )}
@@ -452,7 +452,7 @@ export default function MarketplaceSalesStats() {
                     </select>
                   </div>
                 </div>
-                <Button onClick={handleAddCost} className="w-full bg-emerald-700 hover:bg-emerald-600 text-white h-9">
+                <Button onClick={handleAddCost} className="w-full bg-slate-600 hover:bg-slate-500 text-white h-9 mt-2">
                   <Plus className="w-4 h-4 mr-2" />Add Cost
                 </Button>
               </div>
