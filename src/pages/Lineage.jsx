@@ -562,11 +562,11 @@ export default function Lineage() {
                                 className="pl-9 w-full md:w-64 h-10"
                             />
                             {showSuggestions && filteredSelectableGeckos.length > 0 && (
-                                <div className="absolute top-full left-0 mt-1 bg-slate-800 border border-emerald-700 rounded-lg shadow-2xl z-[99999] max-h-72 overflow-y-auto md:w-80 w-full">
-                                    {filteredSelectableGeckos.map(gecko => (
+                                <div className="absolute top-full left-0 mt-1 bg-slate-900 border border-slate-600 rounded-lg shadow-2xl z-[99999] max-h-72 overflow-y-auto md:w-80 w-full">
+                                    {filteredSelectableGeckos.map((gecko, idx) => (
                                         <button
                                             key={gecko.id}
-                                            className="w-full text-left px-3 py-2.5 text-sm text-slate-200 hover:bg-emerald-800 flex items-center gap-3 transition-colors"
+                                            className={`w-full text-left px-3 py-2.5 text-sm text-slate-200 hover:bg-slate-700 flex items-center gap-3 transition-colors ${idx !== 0 ? 'border-t border-slate-700/60' : ''}`}
                                             onMouseDown={() => handleSearchSelect(gecko)}
                                         >
                                             <img
