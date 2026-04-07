@@ -1549,10 +1549,10 @@ export default function BreedingPage() {
                                                                 <span className="w-2 h-2 rounded-full bg-teal-400 inline-block"></span>
                                                                 {species} <span className="text-slate-500 text-base font-normal">({plans.length})</span>
                                                             </h2>
-                                                            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-                                                                {plans.map(plan => (
-                                                                    <BreedingPlanCard key={plan.id} plan={plan} geckos={geckos} planEggs={allEggs.filter(e => e.breeding_plan_id === plan.id)} onPlanUpdate={loadData} onPlanDelete={handleDeletePlan} onPlanArchive={handleArchivePlan} isExpanded={isPlanExpanded(plan.id)} onToggleExpanded={handleToggleExpanded} showArchiveButton={true} />
-                                                                ))}
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                                                                                {plans.map(plan => (
+                                                                                    <BreedingPlanCard key={plan.id} plan={plan} geckos={geckos} planEggs={allEggs.filter(e => e.breeding_plan_id === plan.id)} onPlanUpdate={loadData} onPlanDelete={handleDeletePlan} onPlanArchive={handleArchivePlan} isExpanded={isPlanExpanded(plan.id)} onToggleExpanded={handleToggleExpanded} showArchiveButton={true} />
+                                                                                ))}
                                                             </div>
                                                         </div>
                                                     ))}
@@ -1565,8 +1565,8 @@ export default function BreedingPage() {
                                         const dormant = activePlans.filter(p => p.laying_active === false);
                                         return (
                                             <div className="space-y-8">
-                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-                                                    {activeLaying.map(plan => (
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                                                                     {activeLaying.map(plan => (
                                                         <BreedingPlanCard
                                                             key={plan.id}
                                                             plan={plan}
@@ -1587,8 +1587,8 @@ export default function BreedingPage() {
                                                             <Moon className="w-5 h-5 text-slate-500" />
                                                             Dormant Pairs ({dormant.length})
                                                         </h2>
-                                                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-                                                            {dormant.map(plan => (
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                                                                             {dormant.map(plan => (
                                                                 <BreedingPlanCard
                                                                     key={plan.id}
                                                                     plan={plan}
@@ -1681,8 +1681,8 @@ export default function BreedingPage() {
                                                     <CalendarIcon className="w-5 h-5 md:w-6 md:h-6" />
                                                     {season}
                                                 </h2>
-                                                <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
-                                                    {archivedBySeason[season].map(plan => (
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                                                        {archivedBySeason[season].map(plan => (
                                                         <BreedingPlanCard
                                                             key={plan.id}
                                                             plan={plan}
