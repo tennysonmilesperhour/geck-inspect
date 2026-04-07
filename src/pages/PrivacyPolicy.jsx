@@ -107,7 +107,6 @@ export default function PrivacyPolicy() {
                         <p>If you have questions, requests, or concerns about this Privacy Policy or how we handle your data, please contact us at:</p>
                         <div className="bg-slate-800 rounded-lg p-4 mt-2">
                             <p className="text-slate-300 font-medium">Geck Inspect</p>
-                            <p>Email: <a href="mailto:privacy@geckinspect.com" className="text-emerald-400 hover:underline">privacy@geckinspect.com</a></p>
                         </div>
                     </Section>
                 </div>
