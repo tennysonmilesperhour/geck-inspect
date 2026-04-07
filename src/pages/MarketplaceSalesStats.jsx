@@ -103,9 +103,9 @@ function QuarterSection({ quarterKey, items, categories, onDelete, onUpdate, ren
   }, {});
 
   return (
-    <div className="bg-emerald-950/30 border border-emerald-900/40 rounded-xl overflow-hidden">
+    <div className="bg-slate-800/60 border border-emerald-900/60 rounded-xl overflow-hidden">
       <button onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-emerald-900/20 transition-colors">
+        className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-700/40 transition-colors">
         <div className="flex items-center gap-3">
           <Calendar className="w-4 h-4 text-emerald-500" />
           <span className="font-semibold text-slate-100">{year} — {QUARTER_LABELS[quarter]}</span>

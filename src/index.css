@@ -132,7 +132,7 @@ button:focus-visible {
     --accent-foreground: 0 0% 98%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
+    --border: 153 40% 18%;
     --input: 0 0% 14.9%;
     --ring: 0 0% 83.1%;
     --chart-1: 220 70% 50%;
@@ -160,7 +160,7 @@ button:focus-visible {
   body {
     @apply bg-background text-foreground;
     scrollbar-width: thin;
-    scrollbar-color: #334155 transparent;
+    scrollbar-color: #4ade80 transparent;
   }
 }
 
@@ -171,9 +171,9 @@ button:focus-visible {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #334155;
+  background: #4ade80;
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #10b981;
+  background: #86efac;
 }
