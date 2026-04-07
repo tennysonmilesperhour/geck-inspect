@@ -452,9 +452,11 @@ export default function MarketplaceSalesStats() {
                     </select>
                   </div>
                 </div>
-                <Button onClick={handleAddCost} className="w-full bg-slate-600 hover:bg-slate-500 text-white h-9 mt-2">
-                  <Plus className="w-4 h-4 mr-2" />Add Cost
-                </Button>
+                <div className="pt-2">
+                  <Button onClick={handleAddCost} className="bg-slate-600 hover:bg-slate-500 text-white h-9">
+                    <Plus className="w-4 h-4 mr-2" />Add Cost
+                  </Button>
+                </div>
               </div>
 
               {costs.length === 0 ? (
