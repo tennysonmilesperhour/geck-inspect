@@ -686,7 +686,7 @@ function LayoutContent({ children, currentPageName }) {
             min-height: 100vh; /* Changed from height to min-height for better compatibility */
             display: flex;
             background: linear-gradient(135deg, #0a0f0a 0%, #1a2920 100%);
-            font-family: 'Outfit', system-ui, sans-serif;
+            font-family: 'Inter', system-ui, sans-serif;
           }
 
           @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
