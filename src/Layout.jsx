@@ -618,10 +618,10 @@ function LayoutContent({ children, currentPageName }) {
 
   // Modified renderNavSection to handle auth requirements
   const renderNavSection = (items, title) => {
-    if (!items || items.length === 0) return null;
+  if (!items || items.length === 0) return null;
 
-    return (
-      <div className="mb-4">
+  return (
+    <div className="mb-1">
         {title && <div className="text-xs font-semibold text-sage-700 uppercase tracking-wider px-4 py-2">{title}</div>}
         <nav className="space-y-1 px-2">
           {items.map((item) => {
