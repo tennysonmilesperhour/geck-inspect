@@ -1341,7 +1341,7 @@ function LayoutContent({ children, currentPageName }) {
                   }}
                 />
               )}
-              <span className="text-lg font-bold text-sage-800">Geck Inspect</span>
+              <span className="text-lg font-bold text-sage-800" style={{fontFamily: "'Righteous', cursive", letterSpacing: '0.03em'}}>Geck Inspect</span>
             </Link>
           </SidebarHeader>
 
@@ -1488,7 +1488,7 @@ function LayoutContent({ children, currentPageName }) {
                       }}
                     />
                   )}
-                  <span className="text-lg font-bold text-sage-800 dark:text-sage-700">Geck Inspect</span>
+                  <span className="text-lg font-bold text-sage-800 dark:text-sage-700" style={{fontFamily: "'Righteous', cursive", letterSpacing: '0.03em'}}>Geck Inspect</span>
                 </Link>
               </div>
 
