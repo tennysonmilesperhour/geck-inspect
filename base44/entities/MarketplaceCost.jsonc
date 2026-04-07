@@ -1,0 +1,42 @@
+{
+  "name": "MarketplaceCost",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user who owns this cost entry"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the cost (e.g., Food, Supplies, Vet Care)"
+    },
+    "amount": {
+      "type": "number",
+      "description": "Cost amount in dollars"
+    },
+    "date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the cost was incurred"
+    },
+    "category": {
+      "type": "string",
+      "description": "Category for this cost entry (custom or 'General')",
+      "default": "General"
+    }
+  },
+  "required": [
+    "user_email",
+    "description",
+    "amount",
+    "date"
+  ],
+  "rls": {
+    "read": {
+      "user_email": "{{user.email}}"
+    },
+    "write": {
+      "user_email": "{{user.email}}"
+    }
+  }
+}
