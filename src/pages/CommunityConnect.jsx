@@ -592,12 +592,12 @@ export default function CommunityConnectPage() {
                 </div>
 
                 <Tabs defaultValue="breeders" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 mb-6 bg-slate-800">
-                        <TabsTrigger value="breeders" className="data-[state=active]:bg-emerald-600">
+                    <TabsList className="grid w-full grid-cols-2 mb-6 bg-slate-950 border border-slate-700 p-1.5 gap-1">
+                        <TabsTrigger value="breeders" className="data-[state=active]:bg-transparent data-[state=active]:text-slate-100 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-sm transition-colors">
                             <Users className="w-4 h-4 mr-2" />
                             Find Breeders
                         </TabsTrigger>
-                        <TabsTrigger value="forum" className="data-[state=active]:bg-emerald-600">
+                        <TabsTrigger value="forum" className="data-[state=active]:bg-transparent data-[state=active]:text-slate-100 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 rounded-sm transition-colors">
                             <MessageSquare className="w-4 h-4 mr-2" />
                             Forum
                         </TabsTrigger>
