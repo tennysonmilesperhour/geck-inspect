@@ -12,7 +12,7 @@ import UserNotRegisteredError from '@/components/UserNotRegisteredError';
 // Add page imports here
 import ForumPost from './pages/ForumPost';
 import PrivacyPolicy from './pages/PrivacyPolicy';
-import MarketplaceSalesStats from './pages/MarketplaceSalesStats.jsx';
+import MarketplaceSalesStats from './pages/MarketplaceSalesStats';
 import Marketplace from './pages/Marketplace';
 
 const { Pages, Layout, mainPage } = pagesConfig;
