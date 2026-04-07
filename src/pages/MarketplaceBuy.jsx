@@ -121,7 +121,7 @@ export default function MarketplaceBuyPage() {
 
                 // Filter to public for-sale geckos
                 const forSaleGeckos = (allGeckos || []).filter(g => 
-                    g.status === 'For Sale' && g.is_public === true
+                    g.status === 'For Sale' && g.is_public === true && !g.archived
                 );
                 
                 // Fetch user's likes if logged in (non-blocking)
