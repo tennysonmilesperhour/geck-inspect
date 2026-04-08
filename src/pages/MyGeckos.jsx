@@ -504,7 +504,12 @@ export default function MyGeckosPage() {
     };
 
     // Reset pagination when filters/search/sort change
-    React.useEffect(() => { setGeckoOffset(0); setVisibleCount(25); }, [searchTerm, filters, sortBy, showArchived]);
+    React.useEffect(() => { 
+        setGeckoOffset(0); 
+        setVisibleCount(25); 
+        setGeckos([]);
+        loadGeckos(true, 0);
+    }, [searchTerm, filters, sortBy, showArchived]);
 
     const searchFiltered = geckos
         .filter(gecko => showArchived ? gecko.archived : (!gecko.archived && gecko.status !== 'Sold'))
