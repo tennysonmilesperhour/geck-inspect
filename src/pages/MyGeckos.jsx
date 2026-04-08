@@ -113,7 +113,7 @@ export default function MyGeckosPage() {
     const [showArchived, setShowArchived] = useState(false);
     const [archiveDialogGeckoId, setArchiveDialogGeckoId] = useState(null);
     const [feedingGroups, setFeedingGroups] = useState([]);
-    const [visibleCount, setVisibleCount] = useState(24);
+    const [visibleCount, setVisibleCount] = useState(25);
     const [geckoOffset, setGeckoOffset] = useState(0);
     const [hasMoreGeckos, setHasMoreGeckos] = useState(true);
 
@@ -504,7 +504,7 @@ export default function MyGeckosPage() {
     };
 
     // Reset pagination when filters/search/sort change
-    React.useEffect(() => { setGeckoOffset(0); setVisibleCount(24); }, [searchTerm, filters, sortBy, showArchived]);
+    React.useEffect(() => { setGeckoOffset(0); setVisibleCount(25); }, [searchTerm, filters, sortBy, showArchived]);
 
     const searchFiltered = geckos
         .filter(gecko => showArchived ? gecko.archived : (!gecko.archived && gecko.status !== 'Sold'))
