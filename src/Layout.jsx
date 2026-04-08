@@ -14,7 +14,7 @@ import { useToast } from "@/components/ui/use-toast";
 import {
   Database, BookOpen, BarChart3, Upload, Eye, Users, HeartHandshake, Moon, Sun, Layers, LogOut, ExternalLink, Search, Settings, UserPlus, Award, Shield, MessageSquare, Wrench, Bell, Mail, Heart, Brain, Menu, ShoppingCart, GitBranch,
   LogIn, ChevronDown, X as CloseIcon, FlaskConical, LifeBuoy, LayoutDashboard, Star, Trophy, FolderKanban, GraduationCap, Dna,
-  Egg, LayoutGrid, CircleUser, UsersRound, Images, Tag
+  Egg, LayoutGrid, CircleUser, UsersRound, Images, Tag, CalendarDays
 } from "lucide-react";
 import TutorialModal from "../components/tutorial/TutorialModal";
 import {
@@ -592,7 +592,7 @@ function LayoutContent({ children, currentPageName }) {
       { page_name: "Recognition", display_name: "Morph ID", icon: "Search", category: "tools", requires_auth: false, is_enabled: true, order: 1 },
       { page_name: "MorphVisualizer", display_name: "Morph Visualizer", icon: "Layers", category: "tools", requires_auth: false, is_enabled: true, order: 2 },
       { page_name: "BreederConsultant", display_name: "AI Consultant", icon: "FlaskConical", category: "tools", requires_auth: false, is_enabled: true, order: 3 },
-      { page_name: "ProjectManager", display_name: "Project Manager", icon: "FolderKanban", category: "tools", requires_auth: true, is_enabled: true, order: 4 },
+      { page_name: "ProjectManager", display_name: "Season Planner", icon: "CalendarDays", category: "tools", requires_auth: true, is_enabled: true, order: 4 },
       { page_name: "GeneticsGuide", display_name: "Genetics Guide", icon: "Dna", category: "tools", requires_auth: false, is_enabled: true, order: 5 },
     ],
     public: [
@@ -649,7 +649,7 @@ function LayoutContent({ children, currentPageName }) {
             const iconMap = {
                                   BarChart3, Search, Layers, FlaskConical, BookOpen, Heart, MessageSquare,
                                   Database, ShoppingCart, Users, GitBranch, Upload, Shield, HeartHandshake, FolderKanban, Dna, GraduationCap, Star, Settings,
-                                  Egg, LayoutGrid, CircleUser, UsersRound, Images, Tag
+                                  Egg, LayoutGrid, CircleUser, UsersRound, Images, Tag, CalendarDays
                                 };
                                 const IconComponent = iconMap[item.icon] || Database;
             

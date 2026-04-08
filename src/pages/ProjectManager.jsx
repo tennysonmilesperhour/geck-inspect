@@ -12,7 +12,7 @@ import { Progress } from '@/components/ui/progress';
 import { Badge } from '@/components/ui/badge';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { PlusCircle, Loader2, FolderKanban, Trash2, Plus, ChevronDown, ChevronUp, Calendar, RepeatIcon, Utensils, StickyNote } from 'lucide-react';
+import { PlusCircle, Loader2, CalendarDays, Trash2, Plus, ChevronDown, ChevronUp, Calendar, RepeatIcon, Utensils, StickyNote } from 'lucide-react';
 import EmptyState from '../components/shared/EmptyState';
 import { format } from 'date-fns';
 import ProjectCalendar from '../components/project-manager/ProjectCalendar';
@@ -155,14 +155,14 @@ export default function ProjectManager() {
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                     <div>
                         <h1 className="text-2xl md:text-4xl font-bold text-slate-100 flex items-center gap-3">
-                            <FolderKanban className="w-8 h-8 md:w-10 md:h-10 text-emerald-500" />
-                            Project Manager
+                            <CalendarDays className="w-8 h-8 md:w-10 md:h-10 text-emerald-500" />
+                            Season Planner
                         </h1>
-                        <p className="text-slate-400 mt-2 text-sm md:text-base">Organize tasks, track projects, and manage feeding schedules</p>
+                        <p className="text-slate-400 mt-2 text-sm md:text-base">Plan breeding seasons, prep for expos, and track gecko care tasks</p>
                     </div>
                     <Button onClick={() => setIsProjectModalOpen(true)} className="bg-emerald-600 hover:bg-emerald-700 w-full md:w-auto">
-                        <PlusCircle className="w-5 h-5 mr-2" /> New Project
-                    </Button>
+                            <PlusCircle className="w-5 h-5 mr-2" /> New Plan
+                        </Button>
                 </div>
                 
                 {isLoading ? (
@@ -171,7 +171,7 @@ export default function ProjectManager() {
                     <Tabs defaultValue="projects" className="w-full">
                         <TabsList className="grid w-full grid-cols-4 bg-slate-900 h-11 mb-6">
                             <TabsTrigger value="projects" className="data-[state=active]:bg-transparent data-[state=active]:text-slate-100 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 text-xs md:text-sm">
-                                <FolderKanban className="w-4 h-4 mr-1 md:mr-2" /> Projects
+                                <CalendarDays className="w-4 h-4 mr-1 md:mr-2" /> Plans
                             </TabsTrigger>
                             <TabsTrigger value="calendar" className="data-[state=active]:bg-transparent data-[state=active]:text-slate-100 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 text-xs md:text-sm">
                                 <Calendar className="w-4 h-4 mr-1 md:mr-2" /> Calendar
@@ -187,10 +187,10 @@ export default function ProjectManager() {
                         <TabsContent value="projects">
                             {projects.length === 0 ? (
                                 <EmptyState
-                                    icon={FolderKanban}
-                                    title="No Projects Yet"
-                                    message="Create your first project to get organized!"
-                                    action={{ label: "Create Project", onClick: () => setIsProjectModalOpen(true) }}
+                                    icon={CalendarDays}
+                                    title="No Plans Yet"
+                                    message="Create your first plan to organize your breeding season, expo prep, or gecko care tasks!"
+                                    action={{ label: "Create Plan", onClick: () => setIsProjectModalOpen(true) }}
                                 />
                             ) : (
                                 <div className="grid grid-cols-1 gap-4">
@@ -250,7 +250,7 @@ export default function ProjectManager() {
                                                             <Button size="sm" onClick={() => { setSelectedProjectId(project.id); setIsTaskModalOpen(true); }} className="">
                                                                 <Plus className="w-4 h-4 mr-2" /> Add Task
                                                             </Button>
-                                                            <Button size="sm" variant="destructive" onClick={() => setProjectToDelete(project.id)}>Delete Project</Button>
+                                                            <Button size="sm" variant="destructive" onClick={() => setProjectToDelete(project.id)}>Delete Plan</Button>
                                                         </div>
                                                     </CardContent>
                                                 )}
@@ -293,12 +293,12 @@ export default function ProjectManager() {
                 <AlertDialog open={!!projectToDelete} onOpenChange={(open) => { if (!open) setProjectToDelete(null); }}>
                     <AlertDialogContent className="bg-slate-900 border-slate-700">
                         <AlertDialogHeader>
-                            <AlertDialogTitle className="text-slate-100">Delete this project?</AlertDialogTitle>
-                            <AlertDialogDescription className="text-slate-400">This will permanently delete this project and all its tasks. This action cannot be undone.</AlertDialogDescription>
+                            <AlertDialogTitle className="text-slate-100">Delete this plan?</AlertDialogTitle>
+                            <AlertDialogDescription className="text-slate-400">This will permanently delete this plan and all its tasks. This action cannot be undone.</AlertDialogDescription>
                         </AlertDialogHeader>
                         <AlertDialogFooter>
                             <AlertDialogCancel className="bg-slate-800 text-slate-200 border-slate-600">Cancel</AlertDialogCancel>
-                            <AlertDialogAction onClick={handleDeleteProject} className="bg-red-700 hover:bg-red-800 text-white">Delete Project</AlertDialogAction>
+                            <AlertDialogAction onClick={handleDeleteProject} className="bg-red-700 hover:bg-red-800 text-white">Delete Plan</AlertDialogAction>
                         </AlertDialogFooter>
                     </AlertDialogContent>
                 </AlertDialog>
@@ -306,11 +306,11 @@ export default function ProjectManager() {
                 {/* Create Project Modal */}
                 <Dialog open={isProjectModalOpen} onOpenChange={setIsProjectModalOpen}>
                     <DialogContent className="bg-slate-900 border-slate-700 text-slate-300 max-w-2xl">
-                        <DialogHeader><DialogTitle className="text-slate-100">Create New Project</DialogTitle></DialogHeader>
+                        <DialogHeader><DialogTitle className="text-slate-100">Create New Plan</DialogTitle></DialogHeader>
                         <div className="grid gap-4 py-4">
                             <div>
-                                <Label>Project Name</Label>
-                                <Input value={newProject.name} onChange={(e) => setNewProject({...newProject, name: e.target.value})} placeholder="e.g., Weekly Feeding Schedule" className="bg-slate-800 border-slate-600" />
+                                <Label>Plan Name</Label>
+                                <Input value={newProject.name} onChange={(e) => setNewProject({...newProject, name: e.target.value})} placeholder="e.g., 2025 Breeding Season, Spring Expo Prep" className="bg-slate-800 border-slate-600" />
                             </div>
                             <div>
                                 <Label>Description</Label>
@@ -371,7 +371,7 @@ export default function ProjectManager() {
                         </div>
                         <DialogFooter>
                             <Button variant="outline" onClick={() => setIsProjectModalOpen(false)} className="border-slate-600">Cancel</Button>
-                            <Button onClick={handleCreateProject} disabled={!newProject.name} className="">Create Project</Button>
+                             <Button onClick={handleCreateProject} disabled={!newProject.name} className="">Create Plan</Button>
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
