@@ -47,30 +47,24 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
+import { lazy } from 'react';
 import AdminPanel from './pages/AdminPanel';
 import AuthPortal from './pages/AuthPortal';
-import BreederConsultant from './pages/BreederConsultant';
 import Breeding from './pages/Breeding';
 import BreedingPairs from './pages/BreedingPairs';
-import CareGuide from './pages/CareGuide';
 import CommunityConnect from './pages/CommunityConnect';
-import Dashboard from './pages/Dashboard';
 import Donations from './pages/Donations';
 import Forum from './pages/Forum';
 import ForumPost from './pages/ForumPost';
 import Gallery from './pages/Gallery';
 import GeckoDetail from './pages/GeckoDetail';
 import GeneticCalculatorTool from './pages/GeneticCalculatorTool';
-import GeneticsGuide from './pages/GeneticsGuide';
 import Home from './pages/Home';
 import LikedGeckos from './pages/LikedGeckos';
 import Lineage from './pages/Lineage';
 import MarketplaceBuy from './pages/MarketplaceBuy';
-import MarketplaceSell from './pages/MarketplaceSell';
 import Messages from './pages/Messages';
-import MorphGuide from './pages/MorphGuide';
 import MorphGuideSubmission from './pages/MorphGuideSubmission';
-import MorphVisualizer from './pages/MorphVisualizer';
 import MyGeckos from './pages/MyGeckos';
 import MyListings from './pages/MyListings';
 import MyProfile from './pages/MyProfile';
@@ -78,12 +72,21 @@ import Notifications from './pages/Notifications';
 import OtherReptiles from './pages/OtherReptiles';
 import ProjectManager from './pages/ProjectManager';
 import PublicProfile from './pages/PublicProfile';
-import Recognition from './pages/Recognition';
 import Settings from './pages/Settings';
 import Subscription from './pages/Subscription';
 import TrainModel from './pages/TrainModel';
-import Training from './pages/Training';
 import __Layout from './Layout.jsx';
+
+// Lazy-loaded pages — JS only downloads when the user navigates to that route
+const BreederConsultant = lazy(() => import('./pages/BreederConsultant'));
+const CareGuide         = lazy(() => import('./pages/CareGuide'));
+const Dashboard         = lazy(() => import('./pages/Dashboard'));
+const GeneticsGuide     = lazy(() => import('./pages/GeneticsGuide'));
+const MarketplaceSell   = lazy(() => import('./pages/MarketplaceSell'));
+const MorphGuide        = lazy(() => import('./pages/MorphGuide'));
+const MorphVisualizer   = lazy(() => import('./pages/MorphVisualizer'));
+const Recognition       = lazy(() => import('./pages/Recognition'));
+const Training          = lazy(() => import('./pages/Training'));
 
 
 export const PAGES = {
