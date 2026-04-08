@@ -28,6 +28,7 @@ export default function Dashboard() {
     const [selectedImageData, setSelectedImageData] = useState(null);
     const [showChangelog, setShowChangelog] = useState(false);
     const [changelogGlowing, setChangelogGlowing] = useState(false);
+    const [trainingPageEnabled, setTrainingPageEnabled] = useState(false);
 
     // Check if there's an unread published changelog
     useEffect(() => {
@@ -46,6 +47,12 @@ export default function Dashboard() {
         const handler = () => setChangelogGlowing(false);
         window.addEventListener('changelog_read', handler);
         return () => window.removeEventListener('changelog_read', handler);
+    }, []);
+
+    useEffect(() => {
+        base44.entities.PageConfig.filter({ page_name: 'Training' })
+            .then(configs => setTrainingPageEnabled(configs.some(c => c.is_enabled)))
+            .catch(() => setTrainingPageEnabled(false));
     }, []);
 
     useEffect(() => {
@@ -154,12 +161,14 @@ export default function Dashboard() {
                                             My Collection
                                         </Button>
                                     </Link>
-                                    <Link to={createPageUrl('Training')}>
-                                        <Button className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold shadow-lg gecko-glow transition-all duration-300 hover:scale-105">
-                                            <Sparkles className="w-4 h-4 mr-2" />
-                                            Train AI Model
-                                        </Button>
-                                    </Link>
+                                    {trainingPageEnabled && (
+                                        <Link to={createPageUrl('Training')}>
+                                            <Button className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold shadow-lg gecko-glow transition-all duration-300 hover:scale-105">
+                                                <Sparkles className="w-4 h-4 mr-2" />
+                                                Train AI Model
+                                            </Button>
+                                        </Link>
+                                    )}
                                 </>
                             )}
                         </div>
