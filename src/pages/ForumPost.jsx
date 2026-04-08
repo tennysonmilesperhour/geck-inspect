@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { ForumPost, ForumComment, User, ForumCategory, Notification } from '@/entities/all';
+import { ForumPost, ForumComment, User, ForumCategory, Notification, ForumLike } from '@/entities/all';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -30,6 +30,8 @@ export default function ForumPostPage() {
     const [newComment, setNewComment] = useState('');
     const [replyingTo, setReplyingTo] = useState(null);
     const [deleteTarget, setDeleteTarget] = useState(null);
+    // ForumLike state: { [targetId]: { count: number, userLiked: boolean } }
+    const [likesData, setLikesData] = useState({});
 
     const postId = new URLSearchParams(location.search).get('id');
 
@@ -50,12 +52,34 @@ export default function ForumPostPage() {
                 
                 if (fetchedPost) {
                     setPost(fetchedPost);
-                    const [fetchedComments, fetchedCategory] = await Promise.all([
+                    const [fetchedComments, fetchedCategory, allLikes] = await Promise.all([
                         ForumComment.filter({ post_id: postId }, '-created_date'),
-                        ForumCategory.get(fetchedPost.category_id)
+                        ForumCategory.get(fetchedPost.category_id),
+                        ForumLike.filter({ target_id: postId }).catch(() => [])
                     ]);
                     setComments(fetchedComments);
                     setCategory(fetchedCategory);
+
+                    // Build initial likes data for the post
+                    const newLikesData = {};
+                    newLikesData[postId] = {
+                        count: allLikes.length,
+                        userLiked: user ? allLikes.some(l => l.user_email === user.email) : false
+                    };
+
+                    // Fetch likes for all comments in parallel
+                    if (fetchedComments.length > 0) {
+                        const commentLikesResults = await Promise.all(
+                            fetchedComments.map(c => ForumLike.filter({ target_id: c.id }).catch(() => []))
+                        );
+                        fetchedComments.forEach((c, i) => {
+                            newLikesData[c.id] = {
+                                count: commentLikesResults[i].length,
+                                userLiked: user ? commentLikesResults[i].some(l => l.user_email === user.email) : false
+                            };
+                        });
+                    }
+                    setLikesData(newLikesData);
                 }
             } catch (error) {
                 console.error("Failed to load post data:", error);
@@ -68,22 +92,39 @@ export default function ForumPostPage() {
     const handleLike = async (item, type) => {
         if (!currentUser) return;
 
-        const likedBy = item.liked_by_users || [];
-        const isLiked = likedBy.includes(currentUser.email);
-        const newLikedBy = isLiked 
-            ? likedBy.filter(email => email !== currentUser.email)
-            : [...likedBy, currentUser.email];
+        const current = likesData[item.id] || { count: 0, userLiked: false };
+        const isLiked = current.userLiked;
+
+        // Optimistic update
+        setLikesData(prev => ({
+            ...prev,
+            [item.id]: {
+                count: isLiked ? current.count - 1 : current.count + 1,
+                userLiked: !isLiked
+            }
+        }));
 
         try {
-            if (type === 'post') {
-                const updatedPost = await ForumPost.update(item.id, { liked_by_users: newLikedBy });
-                setPost(updatedPost);
+            if (isLiked) {
+                // Find and delete the existing ForumLike record
+                const existing = await ForumLike.filter({ target_id: item.id, user_email: currentUser.email });
+                if (existing.length > 0) {
+                    await ForumLike.delete(existing[0].id);
+                }
             } else {
-                const updatedComment = await ForumComment.update(item.id, { liked_by_users: newLikedBy });
-                setComments(comments.map(c => c.id === item.id ? updatedComment : c));
+                await ForumLike.create({
+                    target_id: item.id,
+                    target_type: type,
+                    user_email: currentUser.email
+                });
             }
         } catch (error) {
             console.error("Failed to update like:", error);
+            // Revert optimistic update on error
+            setLikesData(prev => ({
+                ...prev,
+                [item.id]: current
+            }));
         }
     };
 
@@ -162,7 +203,8 @@ export default function ForumPostPage() {
         return <div className="p-8 text-center text-white">Post not found.</div>;
     }
     
-    const isPostLiked = post.liked_by_users?.includes(currentUser?.email);
+    const isPostLiked = likesData[post.id]?.userLiked || false;
+    const postLikeCount = likesData[post.id]?.count ?? 0;
 
     // Organize comments into threads
     const topLevelComments = comments.filter(c => !c.parent_comment_id);
@@ -177,7 +219,8 @@ export default function ForumPostPage() {
     });
 
     const renderComment = (comment, isReply = false) => {
-        const isCommentLiked = comment.liked_by_users?.includes(currentUser?.email);
+        const isCommentLiked = likesData[comment.id]?.userLiked || false;
+        const commentLikeCount = likesData[comment.id]?.count ?? 0;
         
         return (
             <div key={comment.id} className={isReply ? 'ml-8 mt-3' : ''}>
@@ -204,7 +247,7 @@ export default function ForumPostPage() {
                                 disabled={!currentUser}
                             >
                                 <ThumbsUp className={`w-3 h-3 ${isCommentLiked ? 'fill-current' : ''}`} />
-                                ({comment.liked_by_users?.length || 0})
+                                ({commentLikeCount})
                             </Button>
                             {currentUser && (
                                 <Button
@@ -272,7 +315,7 @@ export default function ForumPostPage() {
                             disabled={!currentUser}
                         >
                             <ThumbsUp className={`w-4 h-4 ${isPostLiked ? 'fill-current' : ''}`} />
-                            Like ({post.liked_by_users?.length || 0})
+                            Like ({postLikeCount})
                         </Button>
                         {currentUser?.role === 'admin' && (
                             <Button
