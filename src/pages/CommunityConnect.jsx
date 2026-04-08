@@ -13,7 +13,6 @@ import {
     UserPlus, UserCheck, ExternalLink, MessageSquare, ThumbsUp, Eye, 
     PlusCircle, Pin, Loader2, Rss, Activity
 } from 'lucide-react';
-import { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { formatDistanceToNow } from 'date-fns';

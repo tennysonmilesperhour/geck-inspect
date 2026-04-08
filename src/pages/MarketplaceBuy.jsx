@@ -11,7 +11,6 @@ import EmptyState from '../components/shared/EmptyState';
 import { useNavigate, Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import MessageUserButton from '../components/ui/MessageUserButton';
-import { useState, useEffect, useCallback } from 'react';
 
 // Marketplace-specific Gecko Card
 const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike, onViewLineage }) => {
@@ -117,9 +116,9 @@ export default function MarketplaceBuyPage() {
     const navigate = useNavigate();
 
     const fetchGeckoBatch = useCallback(async (offset = 0, append = false) => {
-        try {
-            // Get 24 geckos at a time
-            const batch = await Gecko.filter({ status: 'For Sale', is_public: true, archived: false }, "-updated_date", 24, offset).catch(() => []);
+         try {
+             // Get 24 geckos at a time, filtering out empty names and junk data
+             const batch = await Gecko.filter({ status: 'For Sale', is_public: true, archived: false, name: { $ne: '', $exists: true } }, "-updated_date", 24, offset).catch(() => []);
             
             if (append) {
                 setGeckos(prev => [...prev, ...batch]);

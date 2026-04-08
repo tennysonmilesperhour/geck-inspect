@@ -39,15 +39,15 @@ export default function Gallery() {
         : filters.sort;
 
     const fetchBatch = useCallback(async (offset = 0, replace = false) => {
-        const query = buildQuery();
-        const results = await base44.entities.GeckoImage.filter(query, sortField, BATCH_SIZE, offset);
+         const query = buildQuery();
+         const results = await base44.entities.GeckoImage.filter(query, sortField, BATCH_SIZE, offset);
 
-        // Client-side filter secondary_traits (not supported server-side as array contains)
-        const filtered = filters.secondary_traits.length > 0
-            ? results.filter(img =>
-                filters.secondary_traits.every(t => img.secondary_traits?.includes(t))
-              )
-            : results;
+         // Client-side filter: exclude images with empty/missing data and secondary_traits
+         const filtered = results.filter(img => 
+             img.image_url && // Must have image URL
+             img.created_by && // Must have creator
+             (!filters.secondary_traits.length > 0 || filters.secondary_traits.every(t => img.secondary_traits?.includes(t)))
+         );
 
         if (replace) {
             setImages(filtered);
