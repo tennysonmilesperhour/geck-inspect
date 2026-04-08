@@ -8,7 +8,7 @@ import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
 
-const BATCH_SIZE = 48;
+const BATCH_SIZE = 24;
 
 export default function Gallery() {
     const [images, setImages] = useState([]);

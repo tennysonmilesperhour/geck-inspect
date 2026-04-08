@@ -16,6 +16,7 @@ import {
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { formatDistanceToNow } from 'date-fns';
+import { useState, useEffect, useCallback } from 'react';
 
 // Breeder Card Component
 function BreederCard({ breeder, currentUser, isFollowing, onFollow, onUnfollow, geckoCounts, coverImage }) {
@@ -31,6 +32,8 @@ function BreederCard({ breeder, currentUser, isFollowing, onFollow, onUnfollow, 
                         src={cardCover}
                         alt="Cover"
                         className="w-full h-full object-cover"
+                        loading="lazy"
+                        decoding="async"
                     />
                 </div>
             )}
@@ -40,6 +43,8 @@ function BreederCard({ breeder, currentUser, isFollowing, onFollow, onUnfollow, 
                         src={breeder.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(breeder.full_name || 'User')}&background=10b981&color=fff`}
                         alt={breeder.full_name}
                         className={`w-20 h-20 rounded-full object-cover border-2 border-emerald-500/30 flex-shrink-0 ${cardCover ? 'ring-4 ring-slate-900' : ''}`}
+                        loading="lazy"
+                        decoding="async"
                     />
                     <div className="flex-1 min-w-0">
                         <div className="flex items-center justify-between">
@@ -421,6 +426,17 @@ export default function CommunityConnectPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
     const [locationFilter, setLocationFilter] = useState('');
+    const [breederOffset, setBreederOffset] = useState(0);
+    const [hasMoreBreeders, setHasMoreBreeders] = useState(true);
+
+    const fetchBreederBatch = useCallback(async (offset = 0) => {
+        try {
+            return await User.list(undefined, 24, offset).catch(() => []);
+        } catch (error) {
+            console.error("Failed to fetch breeder batch:", error);
+            return [];
+        }
+    }, []);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -430,8 +446,8 @@ export default function CommunityConnectPage() {
                 const user = await base44.auth.me().catch(() => null);
                 setCurrentUser(user);
 
-                // Fetch users and geckos separately with error handling
-                const allUsers = await User.list().catch(() => []);
+                // Fetch initial 24 breeders and all geckos
+                const initialBreeders = await fetchBreederBatch(0);
                 const allGeckos = await Gecko.list().catch(() => []);
 
                 // Filter to public, non-archived geckos only
@@ -464,12 +480,13 @@ export default function CommunityConnectPage() {
                 setGeckoCounts(counts);
                 setGeckoCoverImages(coverImages);
 
-                // Show ALL users - they can all be displayed since defaults are now public
-                const publicBreeders = (allUsers || []).filter(u => 
+                // Filter to public breeders
+                const publicBreeders = (initialBreeders || []).filter(u => 
                     u.is_public_profile !== false && // Not explicitly set to false
                     u.profile_public !== false // Not explicitly set to false
                 );
                 setBreeders(publicBreeders);
+                setHasMoreBreeders(initialBreeders.length === 24);
 
                 // Get following list if logged in
                 if (user) {
@@ -489,7 +506,19 @@ export default function CommunityConnectPage() {
             setIsLoading(false);
         };
         fetchData();
-    }, []);
+    }, [fetchBreederBatch]);
+
+    const loadMoreBreeders = useCallback(async () => {
+        const newOffset = breederOffset + 24;
+        const batch = await fetchBreederBatch(newOffset);
+        const publicBatch = (batch || []).filter(u => 
+            u.is_public_profile !== false && 
+            u.profile_public !== false
+        );
+        setBreeders(prev => [...prev, ...publicBatch]);
+        setHasMoreBreeders(batch.length === 24);
+        setBreederOffset(newOffset);
+    }, [breederOffset, fetchBreederBatch]);
 
     const handleFollow = async (email) => {
         if (!currentUser) return;
@@ -642,20 +671,33 @@ export default function CommunityConnectPage() {
                                 <Loader2 className="w-12 h-12 text-emerald-500 animate-spin" />
                             </div>
                         ) : filteredBreeders.length > 0 ? (
-                            <div className="grid md:grid-cols-2 gap-4">
-                                {filteredBreeders.map(breeder => (
-                                    <BreederCard
-                                        key={breeder.id}
-                                        breeder={breeder}
-                                        currentUser={currentUser}
-                                        isFollowing={following.includes(breeder.email)}
-                                        onFollow={handleFollow}
-                                        onUnfollow={handleUnfollow}
-                                        geckoCounts={geckoCounts}
-                                        coverImage={geckoCoverImages[breeder.email]}
-                                    />
-                                ))}
-                            </div>
+                            <>
+                                <div className="grid md:grid-cols-2 gap-4">
+                                    {filteredBreeders.map(breeder => (
+                                        <BreederCard
+                                            key={breeder.id}
+                                            breeder={breeder}
+                                            currentUser={currentUser}
+                                            isFollowing={following.includes(breeder.email)}
+                                            onFollow={handleFollow}
+                                            onUnfollow={handleUnfollow}
+                                            geckoCounts={geckoCounts}
+                                            coverImage={geckoCoverImages[breeder.email]}
+                                        />
+                                    ))}
+                                </div>
+                                {hasMoreBreeders && (
+                                    <div className="flex justify-center mt-8">
+                                        <Button
+                                            variant="outline"
+                                            className="border-slate-600 hover:bg-slate-800 text-slate-300 px-8"
+                                            onClick={loadMoreBreeders}
+                                        >
+                                            Load More Breeders
+                                        </Button>
+                                    </div>
+                                )}
+                            </>
                         ) : (
                             <div className="text-center py-20 bg-slate-900 rounded-lg">
                                 <Users className="w-16 h-16 mx-auto text-slate-500 mb-4" />

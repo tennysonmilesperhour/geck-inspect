@@ -11,6 +11,7 @@ import EmptyState from '../components/shared/EmptyState';
 import { useNavigate, Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import MessageUserButton from '../components/ui/MessageUserButton';
+import { useState, useEffect, useCallback } from 'react';
 
 // Marketplace-specific Gecko Card
 const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike, onViewLineage }) => {
@@ -25,6 +26,7 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                     alt={gecko.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     loading="lazy"
+                    decoding="async"
                 />
                 {/* Sex icon in top left */}
                 <div className="absolute top-2 left-2">
@@ -65,6 +67,8 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                                 src={owner?.profile_image_url || `https://ui-avatars.com/api/?name=${owner?.full_name?.charAt(0)}&background=random`} 
                                 className="w-6 h-6 rounded-lg group-hover:opacity-80 transition-opacity" 
                                 alt={owner?.full_name}
+                                loading="lazy"
+                                decoding="async"
                             />
                             <span className="truncate group-hover:underline">{owner?.full_name || 'Breeder'}</span>
                         </Link>
@@ -104,11 +108,32 @@ export default function MarketplaceBuyPage() {
     const [geckos, setGeckos] = useState([]);
     const [owners, setOwners] = useState({});
     const [isLoading, setIsLoading] = useState(true);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [currentUser, setCurrentUser] = useState(null);
     const [likedGeckoIds, setLikedGeckoIds] = useState(new Set());
-    const [visibleCount, setVisibleCount] = useState(24);
+    const [geckoOffset, setGeckoOffset] = useState(0);
+    const [hasMoreGeckos, setHasMoreGeckos] = useState(true);
     const navigate = useNavigate();
+
+    const fetchGeckoBatch = useCallback(async (offset = 0, append = false) => {
+        try {
+            // Get 24 geckos at a time
+            const batch = await Gecko.filter({ status: 'For Sale', is_public: true, archived: false }, "-updated_date", 24, offset).catch(() => []);
+            
+            if (append) {
+                setGeckos(prev => [...prev, ...batch]);
+            } else {
+                setGeckos(batch);
+            }
+            
+            setHasMoreGeckos(batch.length === 24);
+            return batch;
+        } catch (error) {
+            console.error("Failed to fetch gecko batch:", error);
+            return [];
+        }
+    }, []);
 
     useEffect(() => {
         const fetchData = async () => {
@@ -118,13 +143,8 @@ export default function MarketplaceBuyPage() {
                 const loggedInUser = await base44.auth.me().catch(() => null);
                 setCurrentUser(loggedInUser);
 
-                // Get all geckos
-                const allGeckos = await Gecko.list("-updated_date").catch(() => []);
-
-                // Filter to public for-sale geckos
-                const forSaleGeckos = (allGeckos || []).filter(g => 
-                    g.status === 'For Sale' && g.is_public === true && !g.archived
-                );
+                // Get initial 24 geckos
+                const batch = await fetchGeckoBatch(0, false);
                 
                 // Fetch user's likes if logged in (non-blocking)
                 if (loggedInUser) {
@@ -136,7 +156,7 @@ export default function MarketplaceBuyPage() {
                     }
                 }
                 
-                const ownerEmails = [...new Set(forSaleGeckos.map(g => g.created_by))];
+                const ownerEmails = [...new Set(batch.map(g => g.created_by))];
                 
                 if (ownerEmails.length > 0) {
                     try {
@@ -153,8 +173,6 @@ export default function MarketplaceBuyPage() {
                 } else {
                     setOwners({});
                 }
-
-                setGeckos(forSaleGeckos);
             } catch (error) {
                 console.error("Failed to fetch marketplace data:", error);
                 setGeckos([]);
@@ -162,7 +180,31 @@ export default function MarketplaceBuyPage() {
             setIsLoading(false);
         };
         fetchData();
-    }, []);
+    }, [fetchGeckoBatch]);
+
+    const loadMoreGeckos = useCallback(async () => {
+        setIsLoadingMore(true);
+        const newOffset = geckoOffset + 24;
+        const batch = await fetchGeckoBatch(newOffset, true);
+        
+        // Load owner data for new batch
+        const newOwnerEmails = [...new Set(batch.map(g => g.created_by))];
+        if (newOwnerEmails.length > 0) {
+            try {
+                const ownerData = await User.filter({ email: { $in: newOwnerEmails } });
+                const ownersMap = ownerData.reduce((acc, user) => {
+                    acc[user.email] = user;
+                    return acc;
+                }, {});
+                setOwners(prev => ({ ...prev, ...ownersMap }));
+            } catch (e) {
+                console.log("Could not load owners");
+            }
+        }
+        
+        setGeckoOffset(newOffset);
+        setIsLoadingMore(false);
+    }, [geckoOffset, fetchGeckoBatch]);
 
     const handleToggleLike = async (geckoId) => {
         if (!currentUser) return;
@@ -205,12 +247,6 @@ export default function MarketplaceBuyPage() {
         (owners[gecko.created_by]?.full_name?.toLowerCase() || '').includes(searchTerm.toLowerCase())
     );
 
-    // Reset pagination when search changes
-    React.useEffect(() => { setVisibleCount(24); }, [searchTerm]);
-
-    const visibleGeckos = filteredGeckos.slice(0, visibleCount);
-    const hasMore = visibleCount < filteredGeckos.length;
-
     return (
         <div className="p-4 md:p-8 bg-slate-950 min-h-screen">
             <div className="max-w-7xl mx-auto">
@@ -238,7 +274,7 @@ export default function MarketplaceBuyPage() {
                 ) : (
                     <>
                         <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                            {visibleGeckos.map(gecko => (
+                            {filteredGeckos.map(gecko => (
                                <div key={gecko.id} onClick={() => handleViewDetails(gecko.id)} className="cursor-pointer group">
                                    <MarketplaceGeckoCard 
                                        gecko={gecko} 
@@ -251,14 +287,15 @@ export default function MarketplaceBuyPage() {
                                </div>
                             ))}
                         </div>
-                        {hasMore && (
+                        {hasMoreGeckos && (
                             <div className="flex justify-center mt-10">
                                 <Button
                                     variant="outline"
                                     className="border-slate-600 hover:bg-slate-800 text-slate-300 px-8"
-                                    onClick={() => setVisibleCount(c => c + 24)}
+                                    disabled={isLoadingMore}
+                                    onClick={loadMoreGeckos}
                                 >
-                                    Load More ({filteredGeckos.length - visibleCount} remaining)
+                                    {isLoadingMore ? 'Loading...' : 'Load More Geckos'}
                                 </Button>
                             </div>
                         )}

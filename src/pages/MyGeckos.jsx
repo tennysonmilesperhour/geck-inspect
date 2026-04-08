@@ -114,6 +114,8 @@ export default function MyGeckosPage() {
     const [archiveDialogGeckoId, setArchiveDialogGeckoId] = useState(null);
     const [feedingGroups, setFeedingGroups] = useState([]);
     const [visibleCount, setVisibleCount] = useState(24);
+    const [geckoOffset, setGeckoOffset] = useState(0);
+    const [hasMoreGeckos, setHasMoreGeckos] = useState(true);
 
     useEffect(() => {
         FeedingGroup.list().then(setFeedingGroups).catch(() => {});
@@ -121,15 +123,15 @@ export default function MyGeckosPage() {
 
     // Enhanced loadGeckos with caching and rate limiting
     // Now uses `user` from state and is dependent on it.
-    const loadGeckos = useCallback(async (forceRefresh = false) => {
+    const loadGeckos = useCallback(async (forceRefresh = false, offset = 0) => {
         if (!user) return; // Use the `user` state directly
 
         setIsLoading(true);
-        const cacheKey = `geckos_${user.email}`; // Use `user` state
+        const cacheKey = offset === 0 ? `geckos_${user.email}` : `geckos_${user.email}_${offset}`;
 
         try {
             // Check cache first unless forcing refresh
-            if (!forceRefresh) {
+            if (!forceRefresh && offset === 0) {
                 const cachedGeckos = geckosCache.get(cacheKey);
                 if (cachedGeckos) {
                     console.log('Using cached gecko data');
@@ -149,10 +151,10 @@ export default function MyGeckosPage() {
             // Mark request being made
             geckosCache.markRequest(cacheKey);
 
-            // Make API call with retry logic - fetch both geckos and weights
+            // Make API call with retry logic - fetch both geckos and weights (24 per page)
             const [userGeckos, userWeights] = await retryWithBackoff(async () => {
                 return await Promise.all([
-                    Gecko.filter({ created_by: user.email }, '-created_date'),
+                    Gecko.filter({ created_by: user.email }, '-created_date', 24, offset),
                     WeightRecord.filter({ created_by: user.email }, '-record_date')
                 ]);
             });
@@ -160,8 +162,14 @@ export default function MyGeckosPage() {
             // Cache the results
             geckosCache.set(cacheKey, userGeckos);
             geckosCache.set(`weights_${user.email}`, userWeights);
-            setGeckos(userGeckos);
+            
+            if (offset === 0) {
+                setGeckos(userGeckos);
+            } else {
+                setGeckos(prev => [...prev, ...userGeckos]);
+            }
             setWeightRecords(userWeights);
+            setHasMoreGeckos(userGeckos.length === 24);
 
         } catch (error) {
             console.error("Failed to load geckos:", error);
@@ -186,6 +194,12 @@ export default function MyGeckosPage() {
         }
     }, [user]); // Add `user` to dependencies
 
+    const loadMoreGeckos = useCallback(async () => {
+        const newOffset = geckoOffset + 24;
+        setGeckoOffset(newOffset);
+        await loadGeckos(false, newOffset);
+    }, [geckoOffset, loadGeckos]);
+
     // Effect to handle initial user loading
     useEffect(() => {
         const fetchUser = async () => {
@@ -204,6 +218,7 @@ export default function MyGeckosPage() {
     // Effect to load geckos when user is available or changes
     useEffect(() => {
         if (user) {
+            setGeckoOffset(0);
             loadGeckos();
         }
     }, [user, loadGeckos]); // loadGeckos depends on user, so this ensures it runs when user is ready.
@@ -485,11 +500,11 @@ export default function MyGeckosPage() {
             weightMin: '',
             weightMax: ''
         });
-        setVisibleCount(24);
+        setGeckoOffset(0);
     };
 
     // Reset pagination when filters/search/sort change
-    React.useEffect(() => { setVisibleCount(24); }, [searchTerm, filters, sortBy, showArchived]);
+    React.useEffect(() => { setGeckoOffset(0); setVisibleCount(24); }, [searchTerm, filters, sortBy, showArchived]);
 
     const searchFiltered = geckos
         .filter(gecko => showArchived ? gecko.archived : (!gecko.archived && gecko.status !== 'Sold'))
@@ -697,7 +712,7 @@ export default function MyGeckosPage() {
                                                         <div className="space-y-2">
                                                             {speciesGeckos.map(gecko => (
                                                                 <div key={gecko.id} className="bg-slate-900 border border-slate-700 rounded-lg p-2 md:p-4 hover:border-emerald-600 transition-colors cursor-pointer flex items-center gap-3" onClick={() => handleOpenDetailModal(gecko)}>
-                                                                    <img src={gecko.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'} alt={gecko.name} className="w-12 h-12 object-cover rounded-lg flex-shrink-0" loading="lazy" />
+                                                                    <img src={gecko.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'} alt={gecko.name} className="w-12 h-12 object-cover rounded-lg flex-shrink-0" loading="lazy" decoding="async" />
                                                                     <div className="flex-1 min-w-0">
                                                                         <h3 className="font-bold text-slate-100 truncate">{gecko.name}</h3>
                                                                         <div className="flex flex-wrap gap-1 mt-1">
@@ -755,12 +770,13 @@ export default function MyGeckosPage() {
                                                 >
                                                     <div className="flex items-center gap-2 md:gap-4">
                                                         <img
-                                                               src={gecko.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'}
-                                                               alt={gecko.name}
-                                                               className="w-12 h-12 md:w-20 md:h-20 object-cover rounded-lg flex-shrink-0"
-                                                               loading="lazy"
-                                                               onError={(e) => { e.target.src = 'https://i.imgur.com/sw9gnDp.png'; }}
-                                                           />
+                                                                    src={gecko.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'}
+                                                                    alt={gecko.name}
+                                                                    className="w-12 h-12 md:w-20 md:h-20 object-cover rounded-lg flex-shrink-0"
+                                                                    loading="lazy"
+                                                                    decoding="async"
+                                                                    onError={(e) => { e.target.src = 'https://i.imgur.com/sw9gnDp.png'; }}
+                                                                />
                                                         <div className="flex-1 min-w-0">
                                                             {/* Mobile: Name only */}
                                                             <div className="md:hidden">
@@ -848,14 +864,14 @@ export default function MyGeckosPage() {
                             />
                         )}
 
-                        {hasMore && (
+                        {hasMoreGeckos && (
                             <div className="flex justify-center mt-8">
                                 <Button
                                     variant="outline"
                                     className="border-slate-600 hover:bg-slate-800 text-slate-300 px-8"
-                                    onClick={() => setVisibleCount(c => c + 24)}
+                                    onClick={loadMoreGeckos}
                                 >
-                                    Load More ({filteredAndSortedGeckos.length - visibleCount} remaining)
+                                    Load More Geckos
                                 </Button>
                             </div>
                         )}

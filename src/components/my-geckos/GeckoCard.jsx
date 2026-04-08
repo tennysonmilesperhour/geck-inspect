@@ -73,6 +73,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
           alt={gecko.name}
           className="w-full h-40 sm:h-56 object-cover"
           loading="lazy"
+          decoding="async"
           onError={(e) => { e.target.src = DEFAULT_GECKO_IMAGE; }}
         />
         

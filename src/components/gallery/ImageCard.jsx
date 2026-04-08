@@ -30,6 +30,7 @@ export default function ImageCard({ image, uploader, onImageSelect, onLike, thum
           alt={image.primary_morph}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
           loading="lazy"
+          decoding="async"
           width={thumbnail ? 400 : undefined}
           onError={(e) => {
             if (e.target.src !== DEFAULT_GECKO_IMAGE) {
