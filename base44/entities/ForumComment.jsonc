@@ -1,0 +1,64 @@
+{
+  "name": "ForumComment",
+  "type": "object",
+  "properties": {
+    "post_id": {
+      "type": "string",
+      "description": "ID of the forum post this comment belongs to"
+    },
+    "content": {
+      "type": "string",
+      "description": "Content of the comment"
+    },
+    "author_name": {
+      "type": "string",
+      "description": "Display name of the comment author"
+    },
+    "image_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of image URLs attached to the comment"
+    },
+    "parent_comment_id": {
+      "type": "string",
+      "description": "ID of parent comment for nested replies"
+    }
+  },
+  "required": [
+    "post_id",
+    "content",
+    "author_name"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

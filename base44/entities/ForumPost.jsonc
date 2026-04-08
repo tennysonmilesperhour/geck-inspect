@@ -1,0 +1,80 @@
+{
+  "name": "ForumPost",
+  "type": "object",
+  "properties": {
+    "title": {
+      "type": "string",
+      "description": "Title of the forum post"
+    },
+    "content": {
+      "type": "string",
+      "description": "Content/body of the post"
+    },
+    "category_id": {
+      "type": "string",
+      "description": "ID of the forum category this post belongs to"
+    },
+    "author_name": {
+      "type": "string",
+      "description": "Display name of the post author"
+    },
+    "image_urls": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Array of image URLs attached to the post"
+    },
+    "is_pinned": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this post is pinned to the top"
+    },
+    "is_locked": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether comments are disabled on this post"
+    },
+    "view_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of times this post has been viewed"
+    }
+  },
+  "required": [
+    "title",
+    "content",
+    "category_id",
+    "author_name"
+  ],
+  "rls": {
+    "read": {},
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}
