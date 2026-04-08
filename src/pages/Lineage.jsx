@@ -37,6 +37,8 @@ const PlaceholderCardNode = ({ parentName, placeholderData, onEdit, size = 'norm
                     src={placeholderData?.image_url || DEFAULT_GECKO_IMAGE} 
                     alt={parentName || 'Unknown'} 
                     className="w-full h-full object-cover opacity-60"
+                    loading="lazy"
+                    decoding="async"
                 />
                 {isEditable && (
                     <div className="absolute top-1 right-1">
@@ -87,7 +89,9 @@ const GeckoCardNode = ({ gecko, onNodeClick, isSelected, size = 'normal', isFade
                 <img 
                     src={hasImage ? gecko.image_urls[0] : DEFAULT_GECKO_IMAGE} 
                     alt={gecko.name} 
-                    className="w-full h-full object-cover" 
+                    className="w-full h-full object-cover"
+                    loading="lazy"
+                    decoding="async"
                 />
             </div>
             
@@ -110,14 +114,16 @@ const GeckoCardNode = ({ gecko, onNodeClick, isSelected, size = 'normal', isFade
 
 // Simplified UnknownCard
 const UnknownCardNode = ({ size = 'normal' }) => {
-    const cardSize = size === 'tiny' ? 'w-24 h-28' : size === 'small' ? 'w-28 h-32' : 'w-36 h-44';
-    return (
-        <div className={`flex-shrink-0 relative overflow-hidden bg-slate-800/50 border-2 border-dashed border-slate-600 rounded-lg ${cardSize}`}>
-            <img 
-                src={DEFAULT_GECKO_IMAGE} 
-                alt="Unknown" 
-                className="w-full h-full object-cover opacity-50" 
-            />
+     const cardSize = size === 'tiny' ? 'w-24 h-28' : size === 'small' ? 'w-28 h-32' : 'w-36 h-44';
+     return (
+         <div className={`flex-shrink-0 relative overflow-hidden bg-slate-800/50 border-2 border-dashed border-slate-600 rounded-lg ${cardSize}`}>
+             <img 
+                 src={DEFAULT_GECKO_IMAGE} 
+                 alt="Unknown" 
+                 className="w-full h-full object-cover opacity-50"
+                 loading="lazy"
+                 decoding="async"
+             />
             <div className="absolute bottom-0 left-0 right-0 p-1.5 bg-gradient-to-t from-black/80 to-transparent">
                 <span className="text-xs text-slate-400">Unknown</span>
             </div>
@@ -573,6 +579,8 @@ export default function Lineage() {
                                                 src={gecko.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'}
                                                 alt={gecko.name}
                                                 className="w-9 h-9 rounded object-cover flex-shrink-0"
+                                                loading="lazy"
+                                                decoding="async"
                                             />
                                             <span className="font-medium">{gecko.name}</span>
                                             {gecko.gecko_id_code && (
@@ -704,7 +712,7 @@ export default function Lineage() {
                         <div>
                             <Label className="text-slate-300">Photo</Label>
                             {placeholderForm.image_url && (
-                                <img src={placeholderForm.image_url} alt="preview" className="w-20 h-20 object-cover rounded mb-2 border border-slate-600" />
+                                <img src={placeholderForm.image_url} alt="preview" className="w-20 h-20 object-cover rounded mb-2 border border-slate-600" loading="lazy" decoding="async" />
                             )}
                             <div className="flex gap-2">
                                 <Input

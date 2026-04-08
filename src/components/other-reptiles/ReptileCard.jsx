@@ -160,6 +160,8 @@ export default function ReptileCard({ reptile, onView, onEdit, onFeedingComplete
                         src={primaryImage} 
                         alt={reptile.name}
                         className="w-full h-40 sm:h-56 object-cover"
+                        loading="lazy"
+                        decoding="async"
                         onError={(e) => { e.target.src = DEFAULT_IMAGE; }}
                     />
                     
