@@ -1,4 +1,3 @@
-
 import React, { useState } from 'react';
 import { User } from '@/entities/User';
 import { UploadFile } from '@/integrations/Core';
@@ -28,7 +27,7 @@ export default function ProfileSettings({ user, onUserUpdate }) {
         location: user?.location || '',
         profile_image_url: user?.profile_image_url || '',
         cover_image_url: user?.cover_image_url || '',
-        profile_public: user?.profile_public !== false, // Default to true
+        is_public_profile: user?.is_public_profile !== false, // Default to true
         show_username_on_images: user?.show_username_on_images !== false, // Default to true
         allow_profile_clicks: user?.allow_profile_clicks !== false, // Default to true
         website_url: user?.website_url || '',
@@ -394,8 +393,8 @@ export default function ProfileSettings({ user, onUserUpdate }) {
                     <ToggleSwitch
                         label="Make Profile Public"
                         description="Allow others to view your profile and collection"
-                        checked={formData.profile_public}
-                        onCheckedChange={(checked) => handleChange('profile_public', checked)}
+                        checked={formData.is_public_profile}
+                        onCheckedChange={(checked) => handleChange('is_public_profile', checked)}
                     />
                     <ToggleSwitch
                         label="Show Username on Images"

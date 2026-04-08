@@ -146,7 +146,7 @@ export default function MyProfile() {
             email_notifications_enabled: currentUser.email_notifications_enabled ?? true,
             email_notification_types: currentUser.email_notification_types || [],
             calendar_alerts_enabled: currentUser.calendar_alerts_enabled ?? true,
-            profile_public: currentUser.profile_public ?? true,
+            is_public_profile: currentUser.is_public_profile ?? true,
             show_username_on_images: currentUser.show_username_on_images ?? true,
             allow_profile_clicks: currentUser.allow_profile_clicks ?? true,
             public_title_preference: currentUser.public_title_preference || 'collection',
@@ -708,12 +708,12 @@ export default function MyProfile() {
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <span className="text-xs text-slate-400">
-                                                {editData.profile_public ? 'Public' : 'Private'}
+                                                {editData.is_public_profile ? 'Public' : 'Private'}
                                             </span>
                                             <Switch
                                                 id="profile-public"
-                                                checked={editData.profile_public}
-                                                onCheckedChange={(checked) => handleSettingChange('profile_public', checked)}
+                                                checked={editData.is_public_profile}
+                                                onCheckedChange={(checked) => handleSettingChange('is_public_profile', checked)}
                                             />
                                         </div>
                                     </div>

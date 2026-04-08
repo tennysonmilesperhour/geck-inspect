@@ -81,7 +81,6 @@ const initialFormData = {
     business_name: '',
     profile_image_url: '',
     cover_image_url: '',
-    profile_public: true,
     is_public_profile: true,
     show_username_on_images: true,
     allow_profile_clicks: true,
@@ -156,7 +155,6 @@ export default function SettingsPage() {
                         business_name: currentUser.business_name || '',
                         profile_image_url: currentUser.profile_image_url || '',
                         cover_image_url: currentUser.cover_image_url || '',
-                        profile_public: currentUser.profile_public !== false, // Default true
                         is_public_profile: currentUser.is_public_profile !== false, // Default true
                         show_username_on_images: currentUser.show_username_on_images !== false,
                         allow_profile_clicks: currentUser.allow_profile_clicks !== false,
@@ -421,8 +419,7 @@ export default function SettingsPage() {
                 <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
                     <CardHeader><CardTitle className="text-slate-100 flex items-center gap-2"><Eye className="w-5 h-5"/>Privacy Settings</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
-                        {renderSwitch('is-public-profile', 'Show in Community Directory', 'Allow others to find you in the Community Connect breeder directory', formData.is_public_profile, (checked) => handleChange('is_public_profile', checked))}
-                        {renderSwitch('profile-public', 'Make Profile Public', 'Allow others to view your profile and collection', formData.profile_public, (checked) => handleChange('profile_public', checked))}
+                        {renderSwitch('is-public-profile', 'Show in Community Directory / Make Profile Public', 'Allow others to find you and view your profile and collection', formData.is_public_profile, (checked) => handleChange('is_public_profile', checked))}
                         {renderSwitch('show-username', 'Show Username on Images', 'Display your name on images you upload', formData.show_username_on_images, (checked) => handleChange('show_username_on_images', checked))}
                         {renderSwitch('allow-clicks', 'Allow Profile Clicks', 'Let others click your name to view your profile', formData.allow_profile_clicks, (checked) => handleChange('allow_profile_clicks', checked))}
                         {renderSwitch('palm-sync', 'Sync with PalmStreet', 'Allows PalmStreet users to find your public profile', formData.palm_street_sync_enabled, (checked) => handleChange('palm_street_sync_enabled', checked))}

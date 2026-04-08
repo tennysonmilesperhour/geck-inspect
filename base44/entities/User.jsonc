@@ -76,12 +76,7 @@
     "is_public_profile": {
       "type": "boolean",
       "default": true,
-      "description": "Whether profile is visible in community directory"
-    },
-    "profile_public": {
-      "type": "boolean",
-      "default": true,
-      "description": "Legacy field - profile public visibility"
+      "description": "Whether profile is public and visible in community directory"
     },
     "looking_for": {
       "type": "array",
