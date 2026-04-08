@@ -1,0 +1,248 @@
+{
+  "name": "User",
+  "type": "object",
+  "properties": {
+    "sidebar_badge_preference": {
+      "type": "string",
+      "enum": [
+        "collection",
+        "ai_training",
+        "community"
+      ],
+      "default": "collection",
+      "description": "User's preferred badge display in sidebar"
+    },
+    "profile_image_url": {
+      "type": "string",
+      "description": "URL to user's profile image"
+    },
+    "cover_image_url": {
+      "type": "string",
+      "description": "URL to user's profile cover image"
+    },
+    "bio": {
+      "type": "string",
+      "description": "User biography/description"
+    },
+    "location": {
+      "type": "string",
+      "description": "User's location"
+    },
+    "city": {
+      "type": "string",
+      "description": "User's city"
+    },
+    "state_province": {
+      "type": "string",
+      "description": "User's state or province"
+    },
+    "country": {
+      "type": "string",
+      "description": "User's country"
+    },
+    "region": {
+      "type": "string",
+      "description": "User's region (e.g., Northeast, Europe)"
+    },
+    "business_name": {
+      "type": "string",
+      "description": "Business or breeder name"
+    },
+    "website_url": {
+      "type": "string",
+      "description": "User's website URL"
+    },
+    "instagram_handle": {
+      "type": "string",
+      "description": "Instagram username"
+    },
+    "facebook_url": {
+      "type": "string",
+      "description": "Facebook profile URL"
+    },
+    "youtube_url": {
+      "type": "string",
+      "description": "YouTube channel URL"
+    },
+    "tiktok_handle": {
+      "type": "string",
+      "description": "TikTok username"
+    },
+    "is_expert": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether user has expert status"
+    },
+    "is_public_profile": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether profile is visible in community directory"
+    },
+    "profile_public": {
+      "type": "boolean",
+      "default": true,
+      "description": "Legacy field - profile public visibility"
+    },
+    "looking_for": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Morphs or traits the user is looking for"
+    },
+    "privacy_show_collection": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to show collection publicly"
+    },
+    "privacy_show_activity": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to show activity publicly"
+    },
+    "notifications_email": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to send email notifications"
+    },
+    "notifications_follows": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to notify about new followers"
+    },
+    "notifications_messages": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to notify about new messages"
+    },
+    "notifications_marketplace": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to notify about marketplace activity"
+    },
+    "notifications_following_activity": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether to notify when people you follow list new geckos or breeding plans"
+    },
+    "email_on_new_follower": {
+      "type": "boolean",
+      "default": true,
+      "description": "Send email when someone follows you"
+    },
+    "email_on_new_message": {
+      "type": "boolean",
+      "default": true,
+      "description": "Send email when you receive a message"
+    },
+    "email_on_following_activity": {
+      "type": "boolean",
+      "default": true,
+      "description": "Send email when people you follow have new listings"
+    },
+    "morphmarket_username": {
+      "type": "string",
+      "description": "MorphMarket username"
+    },
+    "morphmarket_api_key": {
+      "type": "string",
+      "description": "MorphMarket API key"
+    },
+    "morphmarket_sync_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to auto-sync with MorphMarket"
+    },
+    "palm_street_username": {
+      "type": "string",
+      "description": "Palm Street username"
+    },
+    "palm_street_api_key": {
+      "type": "string",
+      "description": "Palm Street API key"
+    },
+    "palm_street_sync_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether to auto-sync with Palm Street"
+    },
+    "membership_tier": {
+      "type": "string",
+      "enum": [
+        "free",
+        "keeper",
+        "breeder"
+      ],
+      "default": "free",
+      "description": "User's membership tier"
+    },
+    "membership_billing_cycle": {
+      "type": "string",
+      "enum": [
+        "monthly",
+        "annual"
+      ],
+      "description": "Billing cycle for paid memberships"
+    },
+    "membership_expires_at": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the paid membership expires"
+    },
+    "hatch_alert_days": {
+      "type": "number",
+      "default": 60,
+      "description": "Days ahead to expect egg hatch"
+    },
+    "default_breeding_sort": {
+      "type": "string",
+      "description": "Default sort order for breeding plans"
+    },
+    "stripe_customer_id": {
+      "type": "string",
+      "description": "Stripe customer ID (cus_...). Links user to their Stripe billing account."
+    },
+    "stripe_subscription_id": {
+      "type": "string",
+      "description": "Active Stripe subscription ID (sub_...)."
+    },
+    "subscription_status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "trialing",
+        "past_due",
+        "canceled",
+        "unpaid",
+        "incomplete"
+      ],
+      "description": "Current Stripe subscription status. Null for free users."
+    },
+    "total_points": {
+      "type": "number",
+      "default": 0,
+      "description": "Running total of community points for leaderboards, incremented when UserActivity records are created."
+    }
+  },
+  "required": [],
+  "rls": {
+    "read": {},
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
