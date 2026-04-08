@@ -1329,7 +1329,7 @@ function LayoutContent({ children, currentPageName }) {
         {/* Mobile Sidebar */}
         <Sidebar className="border-r border-sage-300 bg-sage-200/90 backdrop-blur-sm md:hidden z-50">
           <SidebarHeader className="border-b border-sage-300 p-6">
-            <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2">
+            <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-sage-300 hover:bg-sage-100 transition-colors duration-200">
               {appLogo && (
                 <img 
                   src={appLogo}
@@ -1477,7 +1477,7 @@ function LayoutContent({ children, currentPageName }) {
           <div className="flex w-64 flex-col">
             <div className="flex flex-grow flex-col overflow-y-auto bg-white dark:bg-gray-800 pt-5 border-r border-gray-200 dark:border-gray-700" ref={sidebarRef}>
               <div className="flex items-center flex-shrink-0 px-6 mb-4">
-                <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2">
+                <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-sage-300 dark:border-emerald-700/50 hover:bg-sage-100 dark:hover:bg-emerald-900/30 transition-colors duration-200">
                   {appLogo && (
                     <img
                       src={appLogo}
