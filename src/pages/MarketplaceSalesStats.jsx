@@ -31,10 +31,10 @@ const COST_CATEGORIES = [
 ];
 
 const REVENUE_CATEGORIES = [
-  { value: 'animal', label: 'Animal' },
-  { value: 'breeder', label: 'Breeder' },
-  { value: 'acquisition', label: 'Acquisition' },
-  { value: 'special_morph', label: 'Special Morph' },
+  { value: 'resale', label: 'Resale' },
+  { value: 'produced_in_house', label: 'Produced In House' },
+  { value: 'holdback_release', label: 'Holdback Release' },
+  { value: 'retired_breeder', label: 'Retired Breeder' },
   { value: 'other', label: 'Other' },
 ];
 
@@ -174,7 +174,7 @@ export default function MarketplaceSalesStats() {
     description: '', amount: '', date: new Date().toISOString().split('T')[0], category: 'other'
   });
   const [newRevenue, setNewRevenue] = useState({
-    name: '', amount: '', date: new Date().toISOString().split('T')[0], category: 'animal'
+    name: '', amount: '', date: new Date().toISOString().split('T')[0], category: 'produced_in_house'
   });
   const [geckoCategories, setGeckoCategories] = useState({});
 
