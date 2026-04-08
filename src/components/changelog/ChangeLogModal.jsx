@@ -56,7 +56,7 @@ export default function ChangeLogModal({ isOpen, onClose }) {
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent
-                className="bg-slate-900 border-slate-700 text-slate-100 max-w-lg max-h-[80vh] overflow-y-auto"
+                className="bg-slate-900 border-slate-700 text-slate-100 max-w-lg max-h-[80vh] overflow-y-auto [&>button:last-child]:!hidden"
                 hideCloseButton
             >
                 <DialogHeader>
