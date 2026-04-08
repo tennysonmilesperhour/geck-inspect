@@ -743,17 +743,17 @@ function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate, onPlanDelete, 
         <>
             <Card key={plan.id} className={`bg-slate-900 border-slate-700 text-slate-300 flex flex-col overflow-hidden transition-all ${shouldGlow ? 'ring-2 ring-white/30 shadow-[0_0_20px_4px_rgba(255,255,255,0.12)]' : ''}`}>
                 <CardHeader className="p-0 relative">
-                    <div className="flex flex-col md:flex-row justify-between items-stretch">
-                        <div className="flex flex-1 flex-col md:flex-row">
-                            <div className="flex w-full md:w-40 flex-shrink-0">
-                                <div className="w-1/2 h-40 md:h-32 overflow-hidden">
+                    <div className="flex flex-col sm:flex-row justify-between items-stretch min-w-0">
+                        <div className="flex flex-1 flex-col sm:flex-row min-w-0">
+                            <div className="flex w-full sm:w-32 lg:w-40 flex-shrink-0">
+                                <div className="w-1/2 h-32 sm:h-28 lg:h-32 overflow-hidden">
                                     <img 
                                         src={sire?.image_urls?.[0] || 'https://via.placeholder.com/100'} 
                                         alt={sire?.name} 
                                         className="w-full h-full object-cover" 
                                     />
                                 </div>
-                                <div className="w-1/2 h-40 md:h-32 overflow-hidden">
+                                <div className="w-1/2 h-32 sm:h-28 lg:h-32 overflow-hidden">
                                     <img 
                                         src={dam?.image_urls?.[0] || 'https://via.placeholder.com/100'} 
                                         alt={dam?.name} 
@@ -761,7 +761,7 @@ function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate, onPlanDelete, 
                                     />
                                 </div>
                             </div>
-                            <div className="p-4 md:ml-4 flex flex-col justify-center flex-1">
+                            <div className="p-3 sm:p-4 sm:ml-3 lg:ml-4 flex flex-col justify-center flex-1 min-w-0">
                                 {/* Days Since Last Egg */}
                                 {daysSinceLastEgg !== null && (
                                     <div className="text-sm text-slate-400 mb-1">
@@ -769,14 +769,14 @@ function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate, onPlanDelete, 
                                     </div>
                                 )}
                                 
-                                <div className="font-bold text-lg md:text-xl text-slate-100 break-words">
+                                <div className="font-bold text-base sm:text-lg lg:text-xl text-slate-100 break-words truncate">
                                     {sire?.name || 'N/A'} & {dam?.name || 'N/A'}
                                 </div>
                                 {sire?.species && sire.species !== 'Crested Gecko' && (
-                                    <div className="text-xs text-teal-400 font-medium">{sire.species}</div>
+                                    <div className="text-xs text-teal-400 font-medium truncate">{sire.species}</div>
                                 )}
                                 {plan.breeding_id && (
-                                    <div className="text-sm text-slate-400">ID: {plan.breeding_id}</div>
+                                    <div className="text-xs sm:text-sm text-slate-400 truncate">ID: {plan.breeding_id}</div>
                                 )}
                                 
                                 {/* Egg Check Day Display */}
@@ -806,20 +806,20 @@ function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate, onPlanDelete, 
                                     </div>
                                 )}
                                 
-                                <div className="flex gap-2 mt-2 justify-end">
+                                <div className="flex gap-2 mt-2 justify-end flex-wrap">
                                     <Button 
                                         size="sm" 
-                                        className="text-xs md:text-sm" 
+                                        className="text-xs sm:text-sm" 
                                         onClick={(e) => { e.stopPropagation(); handleQuickAddEggs(1); }}
                                     >
-                                        <PlusCircle size={14} className="mr-1" /> Add 1 Egg
+                                        <PlusCircle size={14} className="mr-1" /> <span className="hidden sm:inline">Add 1 Egg</span><span className="sm:hidden">+1</span>
                                     </Button>
                                     <Button 
                                         size="sm" 
-                                        className="text-xs md:text-sm" 
+                                        className="text-xs sm:text-sm" 
                                         onClick={(e) => { e.stopPropagation(); handleQuickAddEggs(2); }}
                                     >
-                                        <PlusCircle size={14} className="mr-1" /> Add 2 Eggs
+                                        <PlusCircle size={14} className="mr-1" /> <span className="hidden sm:inline">Add 2 Eggs</span><span className="sm:hidden">+2</span>
                                     </Button>
                                 </div>
                             </div>
