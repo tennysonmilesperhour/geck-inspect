@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { useCallback } from 'react';
 import { Gecko, User, MarketplaceLike } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import { Input } from '@/components/ui/input';

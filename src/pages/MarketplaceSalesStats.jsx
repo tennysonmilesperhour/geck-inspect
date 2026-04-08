@@ -14,6 +14,7 @@ import {
   ChevronDown, ChevronUp, Tag, Calendar, Edit2, X, Check
 } from 'lucide-react';
 import { format, getQuarter, getYear } from 'date-fns';
+import GeckoSelectionModal from '../components/marketplace/GeckoSelectionModal';
 
 const QUARTER_LABELS = { 1: 'Q1 (Jan–Mar)', 2: 'Q2 (Apr–Jun)', 3: 'Q3 (Jul–Sep)', 4: 'Q4 (Oct–Dec)' };
 
@@ -179,6 +180,7 @@ export default function MarketplaceSalesStats() {
   const [geckoCategories, setGeckoCategories] = useState({});
   const [addSaleModalOpen, setAddSaleModalOpen] = useState(false);
   const [saleMode, setSaleMode] = useState(null);
+  const [selectionModalOpen, setSelectionModalOpen] = useState(false);
 
   useEffect(() => {
     const savedGeckoCats = localStorage.getItem('marketplace_gecko_categories');
@@ -283,6 +285,27 @@ export default function MarketplaceSalesStats() {
     localStorage.setItem('marketplace_gecko_categories', JSON.stringify(updated));
   };
 
+  const handleAddGeckosFromSelection = async (selectedGeckos) => {
+    try {
+      // Archive selected geckos as sold
+      for (const gecko of selectedGeckos) {
+        const price = parseFloat(gecko.asking_price) || 0;
+        await Gecko.update(gecko.id, {
+          archived: true,
+          archive_reason: 'sold',
+          archived_date: new Date().toISOString().split('T')[0],
+          asking_price: price
+        });
+      }
+
+      // Refresh sold geckos list
+      const allGeckos = await Gecko.filter({ created_by: user.email });
+      setSoldGeckos(allGeckos.filter(g => (g.archived && g.archive_reason === 'sold') || g.status === 'Sold'));
+    } catch (error) {
+      console.error('Failed to add geckos:', error);
+    }
+  };
+
   const costsByQuarter = useMemo(() => {
     const groups = {};
     costs.forEach(cost => {
@@ -361,12 +384,12 @@ export default function MarketplaceSalesStats() {
                     <h2 className="text-2xl font-bold text-slate-100 mb-2">Add Gecko Sale</h2>
                     <p className="text-slate-400 text-sm mb-6">Choose how you'd like to add a sale to your records</p>
                     <div className="grid grid-cols-2 gap-4 mb-4">
-                      <button onClick={() => { setSaleMode('collection'); setAddSaleModalOpen(false); }}
+                      <button onClick={() => { setSelectionModalOpen(true); setAddSaleModalOpen(false); setSaleMode('collection'); }}
                         className="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-5 text-center transition-colors flex flex-col justify-center">
                         <p className="font-bold text-slate-100 text-base mb-2">From Collection</p>
                         <p className="text-xs text-slate-400">Select an existing gecko</p>
                       </button>
-                      <button onClick={() => { setSaleMode('listings'); setAddSaleModalOpen(false); }}
+                      <button onClick={() => { setSelectionModalOpen(true); setAddSaleModalOpen(false); setSaleMode('listings'); }}
                         className="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-5 text-center transition-colors flex flex-col justify-center">
                         <p className="font-bold text-slate-100 text-base mb-2">From Listings</p>
                         <p className="text-xs text-slate-400">Active marketplace listings</p>
@@ -384,6 +407,15 @@ export default function MarketplaceSalesStats() {
                     </div>
                   </div>
                 </div>
+              )}
+
+              {selectionModalOpen && saleMode && (
+                <GeckoSelectionModal
+                  mode={saleMode}
+                  onClose={() => { setSelectionModalOpen(false); setSaleMode(null); }}
+                  onAddGeckos={handleAddGeckosFromSelection}
+                  userEmail={user.email}
+                />
               )}
 
               {saleMode === 'manual' && (
