@@ -1,0 +1,68 @@
+{
+  "name": "Notification",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user who should receive this notification"
+    },
+    "type": {
+      "type": "string",
+      "enum": [
+        "level_up",
+        "expert_status",
+        "role_change",
+        "new_comment",
+        "new_reply",
+        "new_message",
+        "announcement",
+        "gecko_of_day",
+        "submission_approved",
+        "new_follower",
+        "new_gecko_listing",
+        "new_breeding_plan"
+      ],
+      "description": "Type of notification"
+    },
+    "content": {
+      "type": "string",
+      "description": "The notification message content"
+    },
+    "is_read": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the notification has been read"
+    },
+    "link": {
+      "type": "string",
+      "description": "Optional link to the relevant page/content"
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional data related to the notification"
+    }
+  },
+  "required": [
+    "user_email",
+    "type",
+    "content"
+  ],
+  "rls": {
+    "read": {
+      "user_email": "{{user.email}}"
+    },
+    "update": {
+      "user_email": "{{user.email}}"
+    },
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
