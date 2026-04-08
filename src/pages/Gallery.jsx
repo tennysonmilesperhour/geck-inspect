@@ -1,20 +1,18 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { GeckoImage, User } from '@/entities/all';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { base44 } from '@/api/base44Client';
 import GalleryFilters from '../components/gallery/GalleryFilters';
 import ImageCard from '../components/gallery/ImageCard';
 import ImageDetailModal from '../components/gallery/ImageDetailModal';
-import { Loader2, ImageOff } from 'lucide-react';
+import { ImageOff, Loader2 } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
-import _ from 'lodash';
 
-const PAGE_SIZE = 24;
+const BATCH_SIZE = 48;
 
 export default function Gallery() {
     const [images, setImages] = useState([]);
     const [users, setUsers] = useState([]);
-    const [filteredImages, setFilteredImages] = useState([]);
     const [filters, setFilters] = useState({
         primary_morph: 'all',
         secondary_traits: [],
@@ -23,80 +21,71 @@ export default function Gallery() {
     });
     const [selectedImageData, setSelectedImageData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
-    const [displayedImages, setDisplayedImages] = useState([]);
-    const [currentPage, setCurrentPage] = useState(1);
+    const [isLoadingMore, setIsLoadingMore] = useState(false);
+    const [hasMore, setHasMore] = useState(true);
+    const offsetRef = useRef(0);
 
+    // Build filter query for API
+    const buildQuery = useCallback(() => {
+        const q = {};
+        if (filters.primary_morph !== 'all') q.primary_morph = filters.primary_morph;
+        if (filters.base_color !== 'all') q.base_color = filters.base_color;
+        return q;
+    }, [filters]);
+
+    // Sort string for API
+    const sortField = filters.sort === '-likes'
+        ? '-likes'
+        : filters.sort;
+
+    const fetchBatch = useCallback(async (offset = 0, replace = false) => {
+        const query = buildQuery();
+        const results = await base44.entities.GeckoImage.filter(query, sortField, BATCH_SIZE, offset);
+
+        // Client-side filter secondary_traits (not supported server-side as array contains)
+        const filtered = filters.secondary_traits.length > 0
+            ? results.filter(img =>
+                filters.secondary_traits.every(t => img.secondary_traits?.includes(t))
+              )
+            : results;
+
+        if (replace) {
+            setImages(filtered);
+        } else {
+            setImages(prev => [...prev, ...filtered]);
+        }
+
+        setHasMore(results.length === BATCH_SIZE);
+        offsetRef.current = offset + results.length;
+    }, [buildQuery, sortField, filters.secondary_traits]);
+
+    // Initial load + reload on filter change
     useEffect(() => {
-        const fetchAllData = async () => {
+        const load = async () => {
             setIsLoading(true);
-            try {
-                // GeckoImage has public read RLS, so this should work for everyone
-                const allImages = await GeckoImage.list('-created_date');
-                const allUsers = await User.list().catch(() => []);
-                
-                console.log(`Gallery loaded ${allImages.length} images`);
-                
-                setImages(allImages);
+            offsetRef.current = 0;
+            await fetchBatch(0, true);
+            // Load users once
+            if (users.length === 0) {
+                const allUsers = await base44.entities.User.list().catch(() => []);
                 setUsers(allUsers);
-                // Initial filter and display setup
-                const sortedImages = _.orderBy(allImages, [img => new Date(img.created_date)], ['desc']);
-                setFilteredImages(sortedImages);
-                setDisplayedImages(sortedImages.slice(0, PAGE_SIZE));
-                setCurrentPage(1);
-            } catch (error) {
-                console.error("Failed to load initial data:", error);
             }
             setIsLoading(false);
         };
-        fetchAllData();
-    }, []);
+        load();
+    }, [filters]); // eslint-disable-line react-hooks/exhaustive-deps
 
-    const applyFilters = useCallback(() => {
-        let tempImages = [...images];
-
-        if (filters.primary_morph !== 'all') {
-            tempImages = tempImages.filter(img => img.primary_morph === filters.primary_morph);
-        }
-        if (filters.base_color !== 'all') {
-            tempImages = tempImages.filter(img => img.base_color === filters.base_color);
-        }
-        if (filters.secondary_traits.length > 0) {
-            tempImages = tempImages.filter(img =>
-                filters.secondary_traits.every(trait => img.secondary_traits?.includes(trait))
-            );
-        }
-
-        // Apply sorting
-        if (filters.sort === '-likes') {
-            tempImages = _.orderBy(tempImages, [(img) => img.likes || 0], ['desc']);
-        } else {
-            tempImages = _.orderBy(tempImages, [img => new Date(img.created_date)], [filters.sort.startsWith('-') ? 'desc' : 'asc']);
-        }
-        
-        setFilteredImages(tempImages);
-        setDisplayedImages(tempImages.slice(0, PAGE_SIZE));
-        setCurrentPage(1);
-    }, [images, filters]);
-
-    useEffect(() => {
-        if (!isLoading) {
-            applyFilters();
-        }
-    }, [filters, images, isLoading, applyFilters]);
-
-    const loadMoreImages = () => {
-        const nextPage = currentPage + 1;
-        const newImages = filteredImages.slice(0, nextPage * PAGE_SIZE);
-        setDisplayedImages(newImages);
-        setCurrentPage(nextPage);
+    const loadMore = async () => {
+        setIsLoadingMore(true);
+        await fetchBatch(offsetRef.current, false);
+        setIsLoadingMore(false);
     };
-    
+
     const handleImageSelect = (image) => {
         const uploader = users.find(u => u.email === image.created_by);
         setSelectedImageData({ image, uploader });
     };
 
-    const hasMoreImages = displayedImages.length < filteredImages.length;
     const usersMap = new Map(users.map(u => [u.email, u]));
 
     return (
@@ -104,7 +93,7 @@ export default function Gallery() {
             <div className="max-w-7xl mx-auto">
                 <h1 className="text-4xl font-bold text-slate-100 mb-2">Image Gallery</h1>
                 <p className="text-slate-400 mb-6">Explore user-submitted gecko images. Use the filters to find specific morphs and traits.</p>
-                
+
                 <div className="mb-8">
                     <GalleryFilters filters={filters} onFilterChange={setFilters} />
                 </div>
@@ -113,27 +102,33 @@ export default function Gallery() {
                     <div className="flex justify-center items-center h-64">
                         <LoadingSpinner />
                     </div>
-                ) : displayedImages.length > 0 ? (
+                ) : images.length > 0 ? (
                     <>
                         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
-                            {displayedImages.map(image => (
-                                <ImageCard 
-                                    key={image.id} 
+                            {images.map(image => (
+                                <ImageCard
+                                    key={image.id}
                                     image={image}
                                     uploader={usersMap.get(image.created_by)}
                                     onImageSelect={handleImageSelect}
+                                    thumbnail
                                 />
                             ))}
                         </div>
-                        
-                        {hasMoreImages && (
+
+                        {hasMore && (
                             <div className="flex justify-center mt-8">
-                                <Button 
-                                    onClick={loadMoreImages}
+                                <Button
+                                    onClick={loadMore}
+                                    disabled={isLoadingMore}
                                     variant="outline"
-                                    className="border-emerald-500 text-emerald-400 hover:bg-emerald-900/50"
+                                    className="border-emerald-500 text-emerald-400 hover:bg-emerald-900/50 px-8"
                                 >
-                                    Load More Images
+                                    {isLoadingMore ? (
+                                        <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Loading...</>
+                                    ) : (
+                                        'Load More Images'
+                                    )}
                                 </Button>
                             </div>
                         )}

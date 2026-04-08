@@ -8,7 +8,7 @@ import { createPageUrl } from '@/utils';
 
 const DEFAULT_GECKO_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
 
-export default function ImageCard({ image, uploader, onImageSelect, onLike }) {
+export default function ImageCard({ image, uploader, onImageSelect, onLike, thumbnail = false }) {
   const handleLike = (e) => {
     e.stopPropagation();
     if (onLike) {
@@ -29,6 +29,8 @@ export default function ImageCard({ image, uploader, onImageSelect, onLike }) {
           src={image.image_url}
           alt={image.primary_morph}
           className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+          loading="lazy"
+          width={thumbnail ? 400 : undefined}
           onError={(e) => {
             if (e.target.src !== DEFAULT_GECKO_IMAGE) {
               e.target.src = DEFAULT_GECKO_IMAGE;
