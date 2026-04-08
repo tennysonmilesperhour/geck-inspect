@@ -53,7 +53,7 @@ import AuthPortal from './pages/AuthPortal';
 import Breeding from './pages/Breeding';
 import BreedingPairs from './pages/BreedingPairs';
 import CommunityConnect from './pages/CommunityConnect';
-import Donations from './pages/Donations';
+
 import Forum from './pages/Forum';
 import ForumPost from './pages/ForumPost';
 import Gallery from './pages/Gallery';
@@ -98,7 +98,6 @@ export const PAGES = {
     "CareGuide": CareGuide,
     "CommunityConnect": CommunityConnect,
     "Dashboard": Dashboard,
-    "Donations": Donations,
     "Forum": Forum,
     "ForumPost": ForumPost,
     "Gallery": Gallery,

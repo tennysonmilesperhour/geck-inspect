@@ -166,7 +166,8 @@
       "enum": [
         "free",
         "keeper",
-        "breeder"
+        "breeder",
+        "enterprise"
       ],
       "default": "free",
       "description": "User's membership tier",
