@@ -24,6 +24,7 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                     src={gecko.image_urls?.[0] || `https://ui-avatars.com/api/?name=${gecko.name.charAt(0)}&background=random`}
                     alt={gecko.name}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    loading="lazy"
                 />
                 {/* Sex icon in top left */}
                 <div className="absolute top-2 left-2">
@@ -106,6 +107,7 @@ export default function MarketplaceBuyPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [currentUser, setCurrentUser] = useState(null);
     const [likedGeckoIds, setLikedGeckoIds] = useState(new Set());
+    const [visibleCount, setVisibleCount] = useState(24);
     const navigate = useNavigate();
 
     useEffect(() => {
@@ -203,6 +205,12 @@ export default function MarketplaceBuyPage() {
         (owners[gecko.created_by]?.full_name?.toLowerCase() || '').includes(searchTerm.toLowerCase())
     );
 
+    // Reset pagination when search changes
+    React.useEffect(() => { setVisibleCount(24); }, [searchTerm]);
+
+    const visibleGeckos = filteredGeckos.slice(0, visibleCount);
+    const hasMore = visibleCount < filteredGeckos.length;
+
     return (
         <div className="p-4 md:p-8 bg-slate-950 min-h-screen">
             <div className="max-w-7xl mx-auto">
@@ -228,20 +236,33 @@ export default function MarketplaceBuyPage() {
                         <LoadingSpinner />
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
-                        {filteredGeckos.map(gecko => (
-                           <div key={gecko.id} onClick={() => handleViewDetails(gecko.id)} className="cursor-pointer group">
-                               <MarketplaceGeckoCard 
-                                   gecko={gecko} 
-                                   owner={owners[gecko.created_by]} 
-                                   currentUser={currentUser}
-                                   isLiked={likedGeckoIds.has(gecko.id)}
-                                   onToggleLike={handleToggleLike}
-                                   onViewLineage={handleViewLineage}
-                               />
-                           </div>
-                        ))}
-                    </div>
+                    <>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                            {visibleGeckos.map(gecko => (
+                               <div key={gecko.id} onClick={() => handleViewDetails(gecko.id)} className="cursor-pointer group">
+                                   <MarketplaceGeckoCard 
+                                       gecko={gecko} 
+                                       owner={owners[gecko.created_by]} 
+                                       currentUser={currentUser}
+                                       isLiked={likedGeckoIds.has(gecko.id)}
+                                       onToggleLike={handleToggleLike}
+                                       onViewLineage={handleViewLineage}
+                                   />
+                               </div>
+                            ))}
+                        </div>
+                        {hasMore && (
+                            <div className="flex justify-center mt-10">
+                                <Button
+                                    variant="outline"
+                                    className="border-slate-600 hover:bg-slate-800 text-slate-300 px-8"
+                                    onClick={() => setVisibleCount(c => c + 24)}
+                                >
+                                    Load More ({filteredGeckos.length - visibleCount} remaining)
+                                </Button>
+                            </div>
+                        )}
+                    </>
                 )}
                 { !isLoading && filteredGeckos.length === 0 && (
                     <EmptyState

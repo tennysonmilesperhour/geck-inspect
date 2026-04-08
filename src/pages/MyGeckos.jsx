@@ -113,6 +113,7 @@ export default function MyGeckosPage() {
     const [showArchived, setShowArchived] = useState(false);
     const [archiveDialogGeckoId, setArchiveDialogGeckoId] = useState(null);
     const [feedingGroups, setFeedingGroups] = useState([]);
+    const [visibleCount, setVisibleCount] = useState(24);
 
     useEffect(() => {
         FeedingGroup.list().then(setFeedingGroups).catch(() => {});
@@ -484,7 +485,11 @@ export default function MyGeckosPage() {
             weightMin: '',
             weightMax: ''
         });
+        setVisibleCount(24);
     };
+
+    // Reset pagination when filters/search/sort change
+    React.useEffect(() => { setVisibleCount(24); }, [searchTerm, filters, sortBy, showArchived]);
 
     const searchFiltered = geckos
         .filter(gecko => showArchived ? gecko.archived : (!gecko.archived && gecko.status !== 'Sold'))
@@ -499,6 +504,8 @@ export default function MyGeckosPage() {
         });
     
     const filteredAndSortedGeckos = getSortedGeckos(applyFilters(searchFiltered));
+    const visibleGeckos = filteredAndSortedGeckos.slice(0, visibleCount);
+    const hasMore = visibleCount < filteredAndSortedGeckos.length;
 
     if (!user && !isLoading) {
         return (
@@ -690,7 +697,7 @@ export default function MyGeckosPage() {
                                                         <div className="space-y-2">
                                                             {speciesGeckos.map(gecko => (
                                                                 <div key={gecko.id} className="bg-slate-900 border border-slate-700 rounded-lg p-2 md:p-4 hover:border-emerald-600 transition-colors cursor-pointer flex items-center gap-3" onClick={() => handleOpenDetailModal(gecko)}>
-                                                                    <img src={gecko.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'} alt={gecko.name} className="w-12 h-12 object-cover rounded-lg flex-shrink-0" />
+                                                                    <img src={gecko.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'} alt={gecko.name} className="w-12 h-12 object-cover rounded-lg flex-shrink-0" loading="lazy" />
                                                                     <div className="flex-1 min-w-0">
                                                                         <h3 className="font-bold text-slate-100 truncate">{gecko.name}</h3>
                                                                         <div className="flex flex-wrap gap-1 mt-1">
@@ -711,7 +718,7 @@ export default function MyGeckosPage() {
                             ) : viewMode === 'card' ? (
                                     <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                                         <AnimatePresence>
-                                            {filteredAndSortedGeckos.map(gecko => (
+                                            {visibleGeckos.map(gecko => (
                                                 <motion.div
                                                     key={gecko.id}
                                                     layout
@@ -735,7 +742,7 @@ export default function MyGeckosPage() {
                                 ) : (
                                     <div className="space-y-2">
                                         <AnimatePresence mode="popLayout">
-                                            {filteredAndSortedGeckos.map(gecko => (
+                                            {visibleGeckos.map(gecko => (
                                                 <motion.div
                                                     key={gecko.id}
                                                     layout
@@ -748,11 +755,12 @@ export default function MyGeckosPage() {
                                                 >
                                                     <div className="flex items-center gap-2 md:gap-4">
                                                         <img
-                                                            src={gecko.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'}
-                                                            alt={gecko.name}
-                                                            className="w-12 h-12 md:w-20 md:h-20 object-cover rounded-lg flex-shrink-0"
-                                                            onError={(e) => { e.target.src = 'https://i.imgur.com/sw9gnDp.png'; }}
-                                                        />
+                                                               src={gecko.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'}
+                                                               alt={gecko.name}
+                                                               className="w-12 h-12 md:w-20 md:h-20 object-cover rounded-lg flex-shrink-0"
+                                                               loading="lazy"
+                                                               onError={(e) => { e.target.src = 'https://i.imgur.com/sw9gnDp.png'; }}
+                                                           />
                                                         <div className="flex-1 min-w-0">
                                                             {/* Mobile: Name only */}
                                                             <div className="md:hidden">
@@ -838,6 +846,18 @@ export default function MyGeckosPage() {
                                 title="No Geckos Found"
                                 message="Add your first gecko to get started!"
                             />
+                        )}
+
+                        {hasMore && (
+                            <div className="flex justify-center mt-8">
+                                <Button
+                                    variant="outline"
+                                    className="border-slate-600 hover:bg-slate-800 text-slate-300 px-8"
+                                    onClick={() => setVisibleCount(c => c + 24)}
+                                >
+                                    Load More ({filteredAndSortedGeckos.length - visibleCount} remaining)
+                                </Button>
+                            </div>
                         )}
 
                         <AnimatePresence>
