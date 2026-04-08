@@ -291,7 +291,7 @@ export default function PublicProfile() {
                         <TabsContent value="for-sale">
                             {forSaleGeckos.length > 0 ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {forSaleGeckos.map(gecko => (
+                                    {forSaleGeckos.slice(0, 24).map(gecko => (
                                         <GeckoCard key={gecko.id} gecko={gecko} weightRecords={weightRecords} isOwner={false} onView={(g) => navigate(createPageUrl(`GeckoDetail?id=${g.id}`))} onEdit={() => {}} />
                                     ))}
                                 </div>
@@ -313,7 +313,7 @@ export default function PublicProfile() {
                                                 <span className="text-2xl">♂</span> Males ({breedingGeckos.filter(g => g.sex === 'Male').length})
                                             </h3>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                                {breedingGeckos.filter(g => g.sex === 'Male').map(gecko => (
+                                                {breedingGeckos.filter(g => g.sex === 'Male').slice(0, 24).map(gecko => (
                                                     <GeckoCard key={gecko.id} gecko={gecko} weightRecords={weightRecords} isOwner={false} onView={(g) => navigate(createPageUrl(`GeckoDetail?id=${g.id}`))} onEdit={() => {}} />
                                                 ))}
                                             </div>
@@ -327,7 +327,7 @@ export default function PublicProfile() {
                                                 <span className="text-2xl">♀</span> Females ({breedingGeckos.filter(g => g.sex === 'Female').length})
                                             </h3>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                                {breedingGeckos.filter(g => g.sex === 'Female').map(gecko => (
+                                                {breedingGeckos.filter(g => g.sex === 'Female').slice(0, 24).map(gecko => (
                                                     <GeckoCard key={gecko.id} gecko={gecko} weightRecords={weightRecords} isOwner={false} onView={(g) => navigate(createPageUrl(`GeckoDetail?id=${g.id}`))} onEdit={() => {}} />
                                                 ))}
                                             </div>
@@ -341,7 +341,7 @@ export default function PublicProfile() {
                                                 <span className="text-2xl">?</span> Unsexed ({breedingGeckos.filter(g => g.sex === 'Unsexed').length})
                                             </h3>
                                             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                                {breedingGeckos.filter(g => g.sex === 'Unsexed').map(gecko => (
+                                                {breedingGeckos.filter(g => g.sex === 'Unsexed').slice(0, 24).map(gecko => (
                                                     <GeckoCard key={gecko.id} gecko={gecko} weightRecords={weightRecords} isOwner={false} onView={(g) => navigate(createPageUrl(`GeckoDetail?id=${g.id}`))} onEdit={() => {}} />
                                                 ))}
                                             </div>
@@ -359,7 +359,7 @@ export default function PublicProfile() {
                         <TabsContent value="collection">
                             {collectionGeckos.length > 0 ? (
                                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-                                    {collectionGeckos.map(gecko => (
+                                    {collectionGeckos.slice(0, 24).map(gecko => (
                                         <GeckoCard key={gecko.id} gecko={gecko} weightRecords={weightRecords} isOwner={false} onView={(g) => navigate(createPageUrl(`GeckoDetail?id=${g.id}`))} onEdit={() => {}} />
                                     ))}
                                 </div>

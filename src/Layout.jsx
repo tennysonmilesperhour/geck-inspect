@@ -1339,18 +1339,20 @@ function LayoutContent({ children, currentPageName }) {
         {/* Mobile Sidebar */}
         <Sidebar className="border-r border-sage-300 bg-sage-200/90 backdrop-blur-sm md:hidden z-50">
           <SidebarHeader className="border-b border-sage-300 p-6">
-            <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-sage-300 hover:bg-sage-100 transition-colors duration-200">
-              {appLogo && (
-                <img 
-                  src={appLogo}
-                  alt="Geck Inspect Logo" 
-                  className="h-8 w-8 object-contain rounded-lg"
-                  onError={(e) => {
-                    e.target.onerror = null;
-                    e.target.src = 'https://i.imgur.com/gfaW2Yg.png';
-                  }}
-                />
-              )}
+          <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-sage-300 hover:bg-sage-100 transition-colors duration-200">
+          {appLogo && (
+            <img 
+              src={appLogo}
+              alt="Geck Inspect Logo" 
+              className="h-8 w-8 object-contain rounded-lg"
+              loading="lazy"
+              decoding="async"
+              onError={(e) => {
+                e.target.onerror = null;
+                e.target.src = 'https://i.imgur.com/gfaW2Yg.png';
+              }}
+            />
+          )}
               <span className="text-lg font-bold text-sage-800" style={{fontFamily: "'Righteous', cursive", letterSpacing: '0.03em'}}>Geck Inspect</span>
             </Link>
           </SidebarHeader>
@@ -1361,10 +1363,12 @@ function LayoutContent({ children, currentPageName }) {
                 <div className="flex items-center gap-3">
                   <Link to={createPageUrl('MyProfile')}>
                       <img 
-                        src={user.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name)}&background=84A98C&color=fff`} 
-                        alt="User avatar" 
-                        className="w-8 h-8 rounded-full object-cover"
-                      />
+                            src={user.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name)}&background=84A98C&color=fff`} 
+                            alt="User avatar" 
+                            className="w-8 h-8 rounded-full object-cover"
+                            loading="lazy"
+                            decoding="async"
+                          />
                     </Link>
                   <div className="flex-1">
                     <Link to={createPageUrl('MyProfile')} className="font-medium text-sage-800 text-sm">{user.full_name}</Link>
@@ -1493,6 +1497,8 @@ function LayoutContent({ children, currentPageName }) {
                       src={appLogo}
                       alt="Geck Inspect Logo"
                       className="h-8 w-8 object-contain rounded-lg"
+                      loading="lazy"
+                      decoding="async"
                       onError={(e) => {
                         e.target.onerror = null;
                         e.target.src = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png';
@@ -1511,6 +1517,8 @@ function LayoutContent({ children, currentPageName }) {
                             src={user.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name)}&background=84A98C&color=fff`}
                             alt="User avatar"
                             className="w-8 h-8 rounded-full object-cover"
+                            loading="lazy"
+                            decoding="async"
                           />
                         </Link>
                     <div className="flex-1">
