@@ -61,7 +61,7 @@ export default function GeckoOfTheDay({ geckoOfTheDay, fallbackGecko = null, onI
                 
                 <div className="space-y-3">
                     <p className="text-slate-300 leading-relaxed italic">
-                        "{appreciative_message || 'A beautiful example of this morph - check out those amazing colors and patterns!'}"
+                        {appreciative_message || 'A beautiful example of this morph - check out those amazing colors and patterns!'}
                     </p>
                     
                     {uploader && (
