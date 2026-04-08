@@ -13,7 +13,8 @@ import { PageConfig } from "@/entities/PageConfig";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Database, BookOpen, BarChart3, Upload, Eye, Users, HeartHandshake, Moon, Sun, Layers, LogOut, ExternalLink, Search, Settings, UserPlus, Award, Shield, MessageSquare, Wrench, Bell, Mail, Heart, Brain, Menu, ShoppingCart, GitBranch,
-  LogIn, ChevronDown, X as CloseIcon, FlaskConical, LifeBuoy, LayoutDashboard, Star, Trophy, FolderKanban, GraduationCap, Dna
+  LogIn, ChevronDown, X as CloseIcon, FlaskConical, LifeBuoy, LayoutDashboard, Star, Trophy, FolderKanban, GraduationCap, Dna,
+  Egg, LayoutGrid, CircleUser, UsersRound, Images, Tag
 } from "lucide-react";
 import TutorialModal from "../components/tutorial/TutorialModal";
 import {
@@ -582,10 +583,10 @@ function LayoutContent({ children, currentPageName }) {
 
   const FALLBACK_NAV_ITEMS = {
     collection: [
-    { page_name: "MyGeckos", display_name: "My Geckos", icon: "Users", category: "collection", requires_auth: true, is_enabled: true, order: 1 },
-    { page_name: "Breeding", display_name: "Breeding", icon: "GitBranch", category: "collection", requires_auth: true, is_enabled: true, order: 2 },
+    { page_name: "MyGeckos", display_name: "My Geckos", icon: "LayoutGrid", category: "collection", requires_auth: true, is_enabled: true, order: 1 },
+    { page_name: "Breeding", display_name: "Breeding", icon: "Egg", category: "collection", requires_auth: true, is_enabled: true, order: 2 },
     { page_name: "Lineage", display_name: "Lineage", icon: "GitBranch", category: "collection", requires_auth: true, is_enabled: true, order: 3 },
-    { page_name: "MyProfile", display_name: "My Profile", icon: "Users", category: "collection", requires_auth: true, is_enabled: true, order: 4 },
+    { page_name: "MyProfile", display_name: "My Profile", icon: "CircleUser", category: "collection", requires_auth: true, is_enabled: true, order: 4 },
     ],
     tools: [
       { page_name: "Recognition", display_name: "Morph ID", icon: "Search", category: "tools", requires_auth: false, is_enabled: true, order: 1 },
@@ -599,7 +600,7 @@ function LayoutContent({ children, currentPageName }) {
     { page_name: "MorphGuide", display_name: "Morph Guide", icon: "BookOpen", category: "public", requires_auth: false, is_enabled: true, order: 2 },
     { page_name: "CareGuide", display_name: "Care Guide", icon: "Heart", category: "public", requires_auth: false, is_enabled: true, order: 3 },
     { page_name: "Forum", display_name: "Forum", icon: "MessageSquare", category: "public", requires_auth: false, is_enabled: true, order: 4 },
-    { page_name: "Gallery", display_name: "Image Gallery", icon: "Database", category: "public", requires_auth: false, is_enabled: true, order: 5 },
+    { page_name: "Gallery", display_name: "Image Gallery", icon: "Images", category: "public", requires_auth: false, is_enabled: true, order: 5 },
     { page_name: "Marketplace", display_name: "Marketplace", icon: "ShoppingCart", category: "public", requires_auth: false, is_enabled: true, order: 6 },
     { page_name: "MarketplaceSalesStats", display_name: "Sales Stats", icon: "BarChart3", category: "public", requires_auth: true, is_enabled: true, order: 7 },
     ],
@@ -647,7 +648,8 @@ function LayoutContent({ children, currentPageName }) {
 
             const iconMap = {
                                   BarChart3, Search, Layers, FlaskConical, BookOpen, Heart, MessageSquare,
-                                  Database, ShoppingCart, Users, GitBranch, Upload, Shield, HeartHandshake, FolderKanban, Dna, GraduationCap, Star, Settings
+                                  Database, ShoppingCart, Users, GitBranch, Upload, Shield, HeartHandshake, FolderKanban, Dna, GraduationCap, Star, Settings,
+                                  Egg, LayoutGrid, CircleUser, UsersRound, Images, Tag
                                 };
                                 const IconComponent = iconMap[item.icon] || Database;
             
