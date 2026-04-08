@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Settings, Upload, Save, Globe, Eye, X, Plus, Camera, Mail, Calendar, Loader2, Search, Trash2, AlertTriangle, ArrowUpDown
+  Settings, Upload, Save, Globe, Eye, X, Plus, Camera, Mail, Calendar, Loader2, Search, Trash2, AlertTriangle, ArrowUpDown, Clock
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -100,6 +100,7 @@ const initialFormData = {
     email_notification_types: ['level_up', 'expert_status', 'new_message', 'new_follower', 'following_activity', 'gecko_of_day', 'forum_replies', 'breeding_updates', 'announcements'],
     calendar_alerts_enabled: true,
     calendar_alert_types: ['egg_lay_estimate', 'hatch_estimate', 'breeding_reminders', 'weight_check_reminders'],
+    feeding_alerts_enabled: true,
     palm_street_sync_enabled: false,
     email_on_new_follower: true,
     email_on_new_message: true,
@@ -174,6 +175,7 @@ export default function SettingsPage() {
                         email_notification_types: currentUser.email_notification_types || ['level_up', 'expert_status', 'new_message', 'new_follower', 'following_activity', 'gecko_of_day', 'forum_replies', 'breeding_updates', 'announcements'],
                         calendar_alerts_enabled: currentUser.calendar_alerts_enabled !== false,
                         calendar_alert_types: currentUser.calendar_alert_types || ['egg_lay_estimate', 'hatch_estimate', 'breeding_reminders', 'weight_check_reminders'],
+                        feeding_alerts_enabled: currentUser.feeding_alerts_enabled !== false,
                         palm_street_sync_enabled: currentUser.palm_street_sync_enabled || false,
                         email_on_new_follower: currentUser.email_on_new_follower !== false, // Default true
                         email_on_new_message: currentUser.email_on_new_message !== false, // Default true
@@ -446,16 +448,26 @@ export default function SettingsPage() {
                 </Card>
 
                 <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
-                    <CardHeader><CardTitle className="text-slate-100 flex items-center gap-2"><Calendar className="w-5 h-5"/>Calendar Alerts</CardTitle></CardHeader>
-                    <CardContent className="space-y-6">
-                         {renderSwitch('calendar-enabled', 'Enable Calendar Alerts', 'Auto-download .ics files for breeding events', formData.calendar_alerts_enabled, (checked) => handleChange('calendar_alerts_enabled', checked))}
-                        {formData.calendar_alerts_enabled && (
-                            <div className="space-y-3">
-                                {calendarAlertTypes.map(alertType => renderNotificationSwitch(alertType, formData.calendar_alert_types.includes(alertType.key), () => toggleArrayItem('calendar_alert_types', alertType.key)))}
-                            </div>
-                        )}
-                    </CardContent>
-                </Card>
+                     <CardHeader><CardTitle className="text-slate-100 flex items-center gap-2"><Calendar className="w-5 h-5"/>Calendar Alerts</CardTitle></CardHeader>
+                     <CardContent className="space-y-6">
+                          {renderSwitch('calendar-enabled', 'Enable Calendar Alerts', 'Auto-download .ics files for breeding events', formData.calendar_alerts_enabled, (checked) => handleChange('calendar_alerts_enabled', checked))}
+                         {formData.calendar_alerts_enabled && (
+                             <div className="space-y-3">
+                                 {calendarAlertTypes.map(alertType => renderNotificationSwitch(alertType, formData.calendar_alert_types.includes(alertType.key), () => toggleArrayItem('calendar_alert_types', alertType.key)))}
+                             </div>
+                         )}
+                     </CardContent>
+                 </Card>
+
+                 <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+                     <CardHeader><CardTitle className="text-slate-100 flex items-center gap-2"><Clock className="w-5 h-5"/>Feeding Alerts</CardTitle></CardHeader>
+                     <CardContent className="space-y-6">
+                          {renderSwitch('feeding-alerts-enabled', 'Enable Feeding Alerts', 'Show glowing in-app notifications and popups when feeding is overdue', formData.feeding_alerts_enabled, (checked) => handleChange('feeding_alerts_enabled', checked))}
+                         {formData.feeding_alerts_enabled && (
+                             <p className="text-sm text-slate-400">Alerts will appear in the bottom right corner when feeding groups or reptiles are overdue. Notifications glow yellow (1+ day overdue), orange (2+ weeks), or red (3+ weeks).</p>
+                         )}
+                     </CardContent>
+                 </Card>
 
                 <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
                     <CardHeader>

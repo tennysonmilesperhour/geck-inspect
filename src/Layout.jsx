@@ -17,6 +17,7 @@ import {
   Egg, LayoutGrid, CircleUser, UsersRound, Images, Tag, CalendarDays, Sparkles
 } from "lucide-react";
 import TutorialModal from "../components/tutorial/TutorialModal";
+import FeedingAlertSystem from "../components/feeding/FeedingAlertSystem";
 import {
   Sidebar,
   SidebarHeader,
@@ -1701,6 +1702,7 @@ function LayoutContent({ children, currentPageName }) {
           </main>
       </div>
       <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
+      <FeedingAlertSystem user={user} enabled={user?.feeding_alerts_enabled !== false} />
     </>
     );
           }
