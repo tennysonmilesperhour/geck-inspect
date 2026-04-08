@@ -1,0 +1,70 @@
+{
+  "name": "UserBadge",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user who earned the badge"
+    },
+    "badge_type": {
+      "type": "string",
+      "enum": [
+        "contributor",
+        "trainer",
+        "classifier",
+        "breeder",
+        "community_helper",
+        "expert_verifier",
+        "milestone_achiever",
+        "streak_master",
+        "quality_contributor",
+        "social_connector"
+      ],
+      "description": "Type of badge earned"
+    },
+    "badge_name": {
+      "type": "string",
+      "description": "Display name of the badge"
+    },
+    "badge_description": {
+      "type": "string",
+      "description": "Description of what this badge represents"
+    },
+    "badge_icon": {
+      "type": "string",
+      "description": "Emoji or icon for the badge"
+    },
+    "requirements_met": {
+      "type": "object",
+      "description": "The specific requirements that were met to earn this badge"
+    },
+    "rarity": {
+      "type": "string",
+      "enum": [
+        "common",
+        "uncommon",
+        "rare",
+        "epic",
+        "legendary"
+      ],
+      "default": "common",
+      "description": "Rarity level of the badge"
+    }
+  },
+  "required": [
+    "user_email",
+    "badge_type",
+    "badge_name",
+    "badge_description",
+    "badge_icon",
+    "requirements_met"
+  ],
+  "rls": {
+    "read": {},
+    "write": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}
