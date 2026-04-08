@@ -362,24 +362,24 @@ export default function MarketplaceSalesStats() {
                     <p className="text-slate-400 text-sm mb-6">Choose how you'd like to add a sale to your records</p>
                     <div className="grid grid-cols-2 gap-4 mb-4">
                       <button onClick={() => { setSaleMode('collection'); setAddSaleModalOpen(false); }}
-                        className="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-4 text-left transition-colors">
-                        <p className="font-semibold text-slate-100 text-sm">From Collection</p>
-                        <p className="text-xs text-slate-400 mt-2">Select an existing gecko</p>
+                        className="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-5 text-center transition-colors flex flex-col justify-center">
+                        <p className="font-bold text-slate-100 text-base mb-2">From Collection</p>
+                        <p className="text-xs text-slate-400">Select an existing gecko</p>
                       </button>
                       <button onClick={() => { setSaleMode('listings'); setAddSaleModalOpen(false); }}
-                        className="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-4 text-left transition-colors">
-                        <p className="font-semibold text-slate-100 text-sm">From Listings</p>
-                        <p className="text-xs text-slate-400 mt-2">Active marketplace listings</p>
+                        className="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-5 text-center transition-colors flex flex-col justify-center">
+                        <p className="font-bold text-slate-100 text-base mb-2">From Listings</p>
+                        <p className="text-xs text-slate-400">Active marketplace listings</p>
                       </button>
                       <button onClick={() => { setSaleMode('manual'); setAddSaleModalOpen(false); }}
-                        className="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-4 text-left transition-colors">
-                        <p className="font-semibold text-slate-100 text-sm">Manual Entry</p>
-                        <p className="text-xs text-slate-400 mt-2">Enter details directly</p>
+                        className="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-5 text-center transition-colors flex flex-col justify-center">
+                        <p className="font-bold text-slate-100 text-base mb-2">Manual Entry</p>
+                        <p className="text-xs text-slate-400">Enter details directly</p>
                       </button>
                       <button onClick={() => setAddSaleModalOpen(false)}
-                        className="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-4 text-left transition-colors">
-                        <p className="font-semibold text-slate-100 text-sm">Cancel</p>
-                        <p className="text-xs text-slate-400 mt-2">Close this menu</p>
+                        className="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-5 text-center transition-colors flex flex-col justify-center">
+                        <p className="font-bold text-slate-100 text-base mb-2">Cancel</p>
+                        <p className="text-xs text-slate-400">Close this menu</p>
                       </button>
                     </div>
                   </div>
