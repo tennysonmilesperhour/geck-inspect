@@ -174,7 +174,14 @@
         "breeder"
       ],
       "default": "free",
-      "description": "User's membership tier"
+      "description": "User's membership tier",
+      "rls": {
+        "write": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
     },
     "membership_billing_cycle": {
       "type": "string",
@@ -200,11 +207,25 @@
     },
     "stripe_customer_id": {
       "type": "string",
-      "description": "Stripe customer ID (cus_...). Links user to their Stripe billing account."
+      "description": "Stripe customer ID (cus_...). Links user to their Stripe billing account. Admin/webhook write only.",
+      "rls": {
+        "write": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
     },
     "stripe_subscription_id": {
       "type": "string",
-      "description": "Active Stripe subscription ID (sub_...)."
+      "description": "Active Stripe subscription ID (sub_...). Admin/webhook write only.",
+      "rls": {
+        "write": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
     },
     "subscription_status": {
       "type": "string",
@@ -216,7 +237,14 @@
         "unpaid",
         "incomplete"
       ],
-      "description": "Current Stripe subscription status. Null for free users."
+      "description": "Current Stripe subscription status. Null for free users. Admin/webhook write only.",
+      "rls": {
+        "write": {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      }
     },
     "total_points": {
       "type": "number",
