@@ -382,6 +382,49 @@ export default function MarketplaceSalesStats() {
                 </div>
               )}
 
+              {saleMode === 'manual' && (
+                <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 space-y-3">
+                  <div className="flex justify-between items-center">
+                    <h3 className="text-sm font-semibold text-slate-200">Add Gecko Sale</h3>
+                    <button onClick={() => setSaleMode(null)} className="text-slate-400 hover:text-slate-200">
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    <div>
+                      <Label className="text-xs text-slate-400">Gecko Name</Label>
+                      <Input value={newRevenue.name} onChange={e => setNewRevenue(f => ({ ...f, name: e.target.value }))}
+                        placeholder="e.g., Flame Morph #1" className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-slate-400">Sale Price ($)</Label>
+                      <Input type="number" step="0.01" value={newRevenue.amount} onChange={e => setNewRevenue(f => ({ ...f, amount: e.target.value }))}
+                        placeholder="0.00" className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-slate-400">Sale Date</Label>
+                      <Input type="date" value={newRevenue.date} onChange={e => setNewRevenue(f => ({ ...f, date: e.target.value }))}
+                        className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1" />
+                    </div>
+                    <div>
+                      <Label className="text-xs text-slate-400">Category</Label>
+                      <select value={newRevenue.category} onChange={e => setNewRevenue(f => ({ ...f, category: e.target.value }))}
+                        className="w-full h-9 mt-1 rounded-md bg-slate-700 border border-slate-600 text-slate-100 text-sm px-2">
+                        {REVENUE_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                      </select>
+                    </div>
+                  </div>
+                  <div className="pt-2 flex gap-2">
+                    <Button onClick={() => setSaleMode(null)} variant="outline" className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-800">
+                      Cancel
+                    </Button>
+                    <Button className="flex-1 bg-slate-600 hover:bg-slate-500 text-white h-9">
+                      <Plus className="w-4 h-4 mr-2" />Add Sale
+                    </Button>
+                  </div>
+                </div>
+              )}
+
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-semibold text-slate-100">Sold Geckos by Quarter</h3>
                 {Object.keys(priceOverrides).length > 0 && (
