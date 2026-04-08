@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { User, Gecko, GeckoImage, ForumPost, GeckoOfTheDay as GotdEntity } from "@/entities/all"; // Renamed GeckoOfTheDay to avoid conflict
 import { base44 } from '@/api/base44Client';
-import { BarChart3, Users, GitBranch, Image as ImageIcon, MessageSquare, Star, Sparkles, Eye, Newspaper } from 'lucide-react';
+import { BarChart3, Users, GitBranch, Image as ImageIcon, MessageSquare, Star, Sparkles, Eye, Newspaper, Egg } from 'lucide-react';
 import StatsCard from "../components/dashboard/StatsCard";
 import RecentActivity from "../components/dashboard/RecentActivity";
 import TrainingProgress from "../components/dashboard/TrainingProgress";
@@ -29,6 +29,7 @@ export default function Dashboard() {
     const [showChangelog, setShowChangelog] = useState(false);
     const [changelogGlowing, setChangelogGlowing] = useState(false);
     const [trainingPageEnabled, setTrainingPageEnabled] = useState(false);
+    const [hatcheryStats, setHatcheryStats] = useState({ hatched: 0, incubating: 0, total: 0 });
 
     // Check if there's an unread published changelog
     useEffect(() => {
@@ -51,7 +52,18 @@ export default function Dashboard() {
 
     useEffect(() => {
         base44.entities.PageConfig.filter({ page_name: 'Training' })
-            .then(configs => setTrainingPageEnabled(configs.some(c => c.is_enabled)))
+            .then(async configs => {
+                const enabled = configs.some(c => c.is_enabled);
+                setTrainingPageEnabled(enabled);
+                if (!enabled) {
+                    const eggs = await base44.entities.Egg.list().catch(() => []);
+                    setHatcheryStats({
+                        hatched: eggs.filter(e => e.status === 'Hatched').length,
+                        incubating: eggs.filter(e => e.status === 'Incubating' && !e.archived).length,
+                        total: eggs.length
+                    });
+                }
+            })
             .catch(() => setTrainingPageEnabled(false));
     }, []);
 
@@ -236,7 +248,37 @@ export default function Dashboard() {
                             />
                         </div>
                         <div className="space-y-8">
-                            <TrainingProgress totalImages={stats.images} verifiedImages={stats.verifiedImages} isLoading={isLoading} />
+                            {trainingPageEnabled ? (
+                                <TrainingProgress totalImages={stats.images} verifiedImages={stats.verifiedImages} isLoading={isLoading} />
+                            ) : (
+                                <Card className="gecko-card">
+                                    <CardHeader>
+                                        <CardTitle className="text-gecko-text text-glow flex items-center gap-2">
+                                            <Egg className="w-5 h-5 text-gecko-accent" />
+                                            Community Hatchery
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <div className="flex justify-between items-center">
+                                            <span className="text-gecko-text-muted text-sm">Geckos Hatched</span>
+                                            <span className="text-3xl font-bold text-gecko-text">{hatcheryStats.hatched.toLocaleString()}</span>
+                                        </div>
+                                        <div className="w-full bg-gecko-surface rounded-full h-2.5">
+                                            <div
+                                                className="bg-gradient-to-r from-emerald-500 to-green-400 h-2.5 rounded-full transition-all duration-700"
+                                                style={{ width: hatcheryStats.total > 0 ? `${Math.round((hatcheryStats.hatched / hatcheryStats.total) * 100)}%` : '0%' }}
+                                            />
+                                        </div>
+                                        <div className="flex justify-between text-xs text-gecko-text-muted">
+                                            <span>🥚 {hatcheryStats.incubating} currently incubating</span>
+                                            <span>{hatcheryStats.total > 0 ? Math.round((hatcheryStats.hatched / hatcheryStats.total) * 100) : 0}% hatch rate</span>
+                                        </div>
+                                        <p className="text-gecko-text-muted text-sm leading-relaxed">
+                                            Geckos successfully hatched through the community's breeding programs.
+                                        </p>
+                                    </CardContent>
+                                </Card>
+                            )}
                             <Card className="gecko-card">
                                 <CardHeader>
                                     <CardTitle className="text-gecko-text text-glow flex items-center gap-2">
