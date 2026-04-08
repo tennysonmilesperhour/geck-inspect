@@ -8,7 +8,7 @@
     },
     "description": {
       "type": "string",
-      "description": "Description of the cost (e.g., Food, Supplies, Vet Care)"
+      "description": "Description of the cost"
     },
     "amount": {
       "type": "number",
@@ -21,8 +21,20 @@
     },
     "category": {
       "type": "string",
-      "description": "Category for this cost entry (custom or 'General')",
-      "default": "General"
+      "enum": [
+        "food",
+        "supplies",
+        "vet_care",
+        "equipment",
+        "shipping",
+        "expo_fees",
+        "acquisition",
+        "utilities",
+        "marketing",
+        "other"
+      ],
+      "default": "other",
+      "description": "Category for this cost entry"
     }
   },
   "required": [

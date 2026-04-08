@@ -11,11 +11,25 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import {
   DollarSign, TrendingUp, AlertCircle, Trash2, Plus, Save,
-  ChevronDown, ChevronUp, Tag, Calendar, FolderOpen, Edit2, X, Check
+  ChevronDown, ChevronUp, Tag, Calendar, Edit2, X, Check
 } from 'lucide-react';
 import { format, getQuarter, getYear } from 'date-fns';
 
 const QUARTER_LABELS = { 1: 'Q1 (Jan–Mar)', 2: 'Q2 (Apr–Jun)', 3: 'Q3 (Jul–Sep)', 4: 'Q4 (Oct–Dec)' };
+
+const COST_CATEGORIES = [
+  { value: 'food', label: 'Food' },
+  { value: 'supplies', label: 'Supplies' },
+  { value: 'vet_care', label: 'Vet Care' },
+  { value: 'equipment', label: 'Equipment' },
+  { value: 'shipping', label: 'Shipping' },
+  { value: 'expo_fees', label: 'Expo Fees' },
+  { value: 'acquisition', label: 'Acquisition' },
+  { value: 'utilities', label: 'Utilities' },
+  { value: 'marketing', label: 'Marketing' },
+  { value: 'other', label: 'Other' },
+];
+const getCategoryLabel = (value) => COST_CATEGORIES.find(c => c.value === value)?.label || value || 'Other';
 
 function getQuarterKey(dateStr) {
   const d = new Date(dateStr);
@@ -26,13 +40,13 @@ function parseQuarterKey(key) {
   return { year: parseInt(year), quarter: parseInt(q) };
 }
 
-function CostRow({ cost, categories, onDelete, onUpdate }) {
+function CostRow({ cost, onDelete, onUpdate }) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
     description: cost.description,
     amount: cost.amount,
     date: cost.date,
-    category: cost.category || 'General'
+    category: cost.category || 'other'
   });
 
   const handleSave = async () => {
@@ -63,7 +77,7 @@ function CostRow({ cost, categories, onDelete, onUpdate }) {
             <Label className="text-xs text-slate-400">Category</Label>
             <select value={form.category} onChange={e => setForm(f => ({ ...f, category: e.target.value }))}
               className="w-full h-8 mt-1 rounded-md bg-slate-800 border border-slate-600 text-slate-100 text-sm px-2">
-              {['General', ...categories].map(c => <option key={c} value={c}>{c}</option>)}
+              {COST_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
             </select>
           </div>
         </div>
@@ -81,7 +95,7 @@ function CostRow({ cost, categories, onDelete, onUpdate }) {
         <p className="font-medium text-slate-100 text-sm truncate">{cost.description}</p>
         <div className="flex items-center gap-2 mt-0.5">
           <span className="text-xs text-slate-500">{cost.date ? format(new Date(cost.date), 'MMM d, yyyy') : '—'}</span>
-          <Badge className="text-[10px] px-1.5 py-0 bg-emerald-900/50 text-emerald-300 border-emerald-800/50">{cost.category || 'General'}</Badge>
+          <Badge className="text-[10px] px-1.5 py-0 bg-emerald-900/50 text-emerald-300 border-emerald-800/50">{getCategoryLabel(cost.category)}</Badge>
         </div>
       </div>
       <p className="text-orange-400 font-semibold text-sm flex-shrink-0">${Number(cost.amount).toFixed(2)}</p>
@@ -91,12 +105,12 @@ function CostRow({ cost, categories, onDelete, onUpdate }) {
   );
 }
 
-function QuarterSection({ quarterKey, items, categories, onDelete, onUpdate, renderItem }) {
+function QuarterSection({ quarterKey, items, onDelete, onUpdate, renderItem }) {
   const [open, setOpen] = useState(true);
   const { year, quarter } = parseQuarterKey(quarterKey);
   const total = items.reduce((s, i) => s + Number(i.amount || 0), 0);
   const grouped = items.reduce((acc, item) => {
-    const cat = item.category || 'General';
+    const cat = item.category || 'other';
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(item);
     return acc;
@@ -123,7 +137,7 @@ function QuarterSection({ quarterKey, items, categories, onDelete, onUpdate, ren
             <div key={cat}>
               <div className="flex items-center gap-2 mb-2">
                 <Tag className="w-3 h-3 text-emerald-600" />
-                <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">{cat}</span>
+                <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">{getCategoryLabel(cat)}</span>
                 <span className="text-xs text-slate-500">— ${catItems.reduce((s, i) => s + Number(i.amount || 0), 0).toFixed(2)}</span>
               </div>
               <div className="space-y-2">
@@ -147,16 +161,11 @@ export default function MarketplaceSalesStats() {
   const [isSaving, setIsSaving] = useState(false);
 
   const [newCost, setNewCost] = useState({
-    description: '', amount: '', date: new Date().toISOString().split('T')[0], category: 'General'
+    description: '', amount: '', date: new Date().toISOString().split('T')[0], category: 'other'
   });
-  const [customCategories, setCustomCategories] = useState([]);
-  const [newCategoryName, setNewCategoryName] = useState('');
-  const [showCategoryInput, setShowCategoryInput] = useState(false);
   const [geckoCategories, setGeckoCategories] = useState({});
 
   useEffect(() => {
-    const saved = localStorage.getItem('marketplace_custom_categories');
-    if (saved) setCustomCategories(JSON.parse(saved));
     const savedGeckoCats = localStorage.getItem('marketplace_gecko_categories');
     if (savedGeckoCats) setGeckoCategories(JSON.parse(savedGeckoCats));
   }, []);
@@ -207,24 +216,6 @@ export default function MarketplaceSalesStats() {
     fetchData();
   }, []);
 
-  const allCategories = useMemo(() => ['General', ...customCategories], [customCategories]);
-
-  const handleAddCategory = () => {
-    const name = newCategoryName.trim();
-    if (!name || customCategories.includes(name) || name === 'General') return;
-    const updated = [...customCategories, name];
-    setCustomCategories(updated);
-    localStorage.setItem('marketplace_custom_categories', JSON.stringify(updated));
-    setNewCategoryName('');
-    setShowCategoryInput(false);
-  };
-
-  const handleRemoveCategory = (cat) => {
-    const updated = customCategories.filter(c => c !== cat);
-    setCustomCategories(updated);
-    localStorage.setItem('marketplace_custom_categories', JSON.stringify(updated));
-  };
-
   const getPrice = (gecko) => {
     if (priceOverrides[gecko.id] !== undefined) return parseFloat(priceOverrides[gecko.id]) || 0;
     return gecko.asking_price ? parseFloat(gecko.asking_price) : 0;
@@ -258,7 +249,7 @@ export default function MarketplaceSalesStats() {
       category: newCost.category || 'General',
     });
     setCosts(prev => [created, ...prev]);
-    setNewCost({ description: '', amount: '', date: new Date().toISOString().split('T')[0], category: 'General' });
+    setNewCost({ description: '', amount: '', date: new Date().toISOString().split('T')[0], category: 'other' });
   };
 
   const handleDeleteCost = async (id) => {
@@ -337,36 +328,6 @@ export default function MarketplaceSalesStats() {
           ))}
         </div>
 
-        <div className="bg-emerald-950/30 border border-emerald-900/40 rounded-xl p-4">
-          <div className="flex items-center justify-between mb-3">
-            <div className="flex items-center gap-2">
-              <FolderOpen className="w-4 h-4 text-emerald-500" />
-              <span className="text-sm font-semibold text-slate-200">Custom Categories</span>
-            </div>
-            <Button size="sm" variant="ghost" onClick={() => setShowCategoryInput(v => !v)}
-              className="h-7 text-slate-300 hover:bg-slate-700 text-xs border border-slate-600">
-              <Plus className="w-3 h-3 mr-1" /> Add
-            </Button>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <Badge className="bg-slate-700 text-slate-300 border-slate-600 text-xs">General</Badge>
-            {customCategories.map(cat => (
-              <Badge key={cat} className="bg-emerald-900/50 text-emerald-300 border-emerald-800/50 text-xs flex items-center gap-1 pr-1">
-                {cat}
-                <button onClick={() => handleRemoveCategory(cat)} className="hover:text-red-400 ml-1"><X className="w-2.5 h-2.5" /></button>
-              </Badge>
-            ))}
-          </div>
-          {showCategoryInput && (
-            <div className="flex gap-2 mt-3">
-              <Input value={newCategoryName} onChange={e => setNewCategoryName(e.target.value)}
-                onKeyDown={e => e.key === 'Enter' && handleAddCategory()}
-                placeholder="Category name..." className="bg-slate-800 border-slate-600 text-slate-100 h-8 text-sm" />
-              <Button size="sm" onClick={handleAddCategory} className="h-8 bg-slate-600 hover:bg-slate-500 text-white px-3">Add</Button>
-            </div>
-          )}
-        </div>
-
         <div className="bg-emerald-950/30 border border-emerald-900/40 rounded-xl p-4 md:p-6">
           <Tabs defaultValue="revenue">
             <TabsList className="flex w-fit mx-auto bg-slate-900 border border-slate-700 h-10 rounded-md p-1 gap-1 mb-6">
@@ -391,7 +352,7 @@ export default function MarketplaceSalesStats() {
               ) : (
                 <div className="space-y-3">
                   {revenueByQuarter.map(([key, geckos]) => (
-                    <QuarterSection key={key} quarterKey={key} items={geckos} categories={customCategories}
+                    <QuarterSection key={key} quarterKey={key} items={geckos}
                       renderItem={(gecko) => (
                         <div key={gecko.id} className="bg-slate-800/60 border border-slate-700/50 p-3 rounded-lg">
                           <div className="flex items-center gap-3">
@@ -401,10 +362,10 @@ export default function MarketplaceSalesStats() {
                               <p className="font-medium text-slate-100 text-sm truncate">{gecko.name}</p>
                               <p className="text-xs text-slate-500">{gecko.archived_date ? format(new Date(gecko.archived_date), 'MMM d, yyyy') : '—'}</p>
                             </div>
-                            <select value={geckoCategories[gecko.id] || 'General'}
+                            <select value={geckoCategories[gecko.id] || 'other'}
                               onChange={e => handleGeckoCategoryChange(gecko.id, e.target.value)}
                               className="h-7 text-xs rounded bg-slate-700 border border-slate-600 text-slate-300 px-1.5">
-                              {allCategories.map(c => <option key={c} value={c}>{c}</option>)}
+                              {COST_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                             </select>
                             <div className="flex items-center gap-1.5 flex-shrink-0">
                               <span className="text-slate-400 text-xs">$</span>
@@ -448,7 +409,7 @@ export default function MarketplaceSalesStats() {
                     <Label className="text-xs text-slate-400">Category</Label>
                     <select value={newCost.category} onChange={e => setNewCost(f => ({ ...f, category: e.target.value }))}
                       className="w-full h-9 mt-1 rounded-md bg-slate-700 border border-slate-600 text-slate-100 text-sm px-2">
-                      {allCategories.map(c => <option key={c} value={c}>{c}</option>)}
+                      {COST_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                     </select>
                   </div>
                 </div>
@@ -467,10 +428,10 @@ export default function MarketplaceSalesStats() {
               ) : (
                 <div className="space-y-3">
                   {costsByQuarter.map(([key, quarterCosts]) => (
-                    <QuarterSection key={key} quarterKey={key} items={quarterCosts} categories={customCategories}
+                    <QuarterSection key={key} quarterKey={key} items={quarterCosts}
                       onDelete={handleDeleteCost} onUpdate={handleUpdateCost}
                       renderItem={(cost) => (
-                        <CostRow key={cost.id} cost={cost} categories={customCategories}
+                        <CostRow key={cost.id} cost={cost}
                           onDelete={handleDeleteCost} onUpdate={handleUpdateCost} />
                       )} />
                   ))}
