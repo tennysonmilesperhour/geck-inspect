@@ -357,27 +357,31 @@ export default function MarketplaceSalesStats() {
 
               {addSaleModalOpen && (
                 <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                  <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 max-w-md w-full">
-                    <h3 className="text-lg font-semibold text-slate-100 mb-4">Add Gecko Sale</h3>
-                    <div className="space-y-3">
+                  <div className="bg-slate-900 border border-slate-700 rounded-xl p-8 max-w-lg w-full">
+                    <h2 className="text-2xl font-bold text-slate-100 mb-2">Add Gecko Sale</h2>
+                    <p className="text-slate-400 text-sm mb-6">Choose how you'd like to add a sale to your records</p>
+                    <div className="grid grid-cols-2 gap-4 mb-4">
                       <button onClick={() => { setSaleMode('collection'); setAddSaleModalOpen(false); }}
-                        className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-4 text-left transition-colors">
-                        <p className="font-medium text-slate-100">Select from Collection</p>
-                        <p className="text-xs text-slate-400 mt-1">Choose a gecko you own</p>
+                        className="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-4 text-left transition-colors">
+                        <p className="font-semibold text-slate-100 text-sm">From Collection</p>
+                        <p className="text-xs text-slate-400 mt-2">Select an existing gecko</p>
                       </button>
                       <button onClick={() => { setSaleMode('listings'); setAddSaleModalOpen(false); }}
-                        className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-4 text-left transition-colors">
-                        <p className="font-medium text-slate-100">Select from Active Listings</p>
-                        <p className="text-xs text-slate-400 mt-1">Choose from marketplace listings</p>
+                        className="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-4 text-left transition-colors">
+                        <p className="font-semibold text-slate-100 text-sm">From Listings</p>
+                        <p className="text-xs text-slate-400 mt-2">Active marketplace listings</p>
                       </button>
                       <button onClick={() => { setSaleMode('manual'); setAddSaleModalOpen(false); }}
-                        className="w-full bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-4 text-left transition-colors">
-                        <p className="font-medium text-slate-100">Manual Add</p>
-                        <p className="text-xs text-slate-400 mt-1">Enter sale details manually</p>
+                        className="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-4 text-left transition-colors">
+                        <p className="font-semibold text-slate-100 text-sm">Manual Entry</p>
+                        <p className="text-xs text-slate-400 mt-2">Enter details directly</p>
+                      </button>
+                      <button onClick={() => setAddSaleModalOpen(false)}
+                        className="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-4 text-left transition-colors">
+                        <p className="font-semibold text-slate-100 text-sm">Cancel</p>
+                        <p className="text-xs text-slate-400 mt-2">Close this menu</p>
                       </button>
                     </div>
-                    <Button variant="outline" onClick={() => setAddSaleModalOpen(false)}
-                      className="w-full mt-4 border-slate-600 text-slate-300 hover:bg-slate-800">Cancel</Button>
                   </div>
                 </div>
               )}
