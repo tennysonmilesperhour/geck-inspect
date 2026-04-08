@@ -29,7 +29,7 @@ export default function Dashboard() {
     const [showChangelog, setShowChangelog] = useState(false);
     const [changelogGlowing, setChangelogGlowing] = useState(false);
     const [trainingPageEnabled, setTrainingPageEnabled] = useState(false);
-    const [hatcheryStats, setHatcheryStats] = useState({ hatched: 0, incubating: 0, total: 0 });
+    const [hatcheryStats, setHatcheryStats] = useState({ hatched: 0, incubating: 0, total: 0, plans: 0 });
 
     // Check if there's an unread published changelog
     useEffect(() => {
@@ -56,11 +56,15 @@ export default function Dashboard() {
                 const enabled = configs.some(c => c.is_enabled);
                 setTrainingPageEnabled(enabled);
                 if (!enabled) {
-                    const eggs = await base44.entities.Egg.list().catch(() => []);
+                    const [eggs, plans] = await Promise.all([
+                        base44.entities.Egg.list().catch(() => []),
+                        base44.entities.BreedingPlan.list().catch(() => [])
+                    ]);
                     setHatcheryStats({
                         hatched: eggs.filter(e => e.status === 'Hatched').length,
                         incubating: eggs.filter(e => e.status === 'Incubating' && !e.archived).length,
-                        total: eggs.length
+                        total: eggs.length,
+                        plans: plans.filter(p => !p.archived).length
                     });
                 }
             })
@@ -271,7 +275,7 @@ export default function Dashboard() {
                                         </div>
                                         <div className="flex justify-between text-xs text-gecko-text-muted">
                                             <span>🥚 {hatcheryStats.incubating} currently incubating</span>
-                                            <span>{hatcheryStats.total > 0 ? Math.round((hatcheryStats.hatched / hatcheryStats.total) * 100) : 0}% hatch rate</span>
+                                            <span>🐊 {hatcheryStats.plans} active breeding pairs</span>
                                         </div>
                                         <p className="text-gecko-text-muted text-sm leading-relaxed">
                                             Geckos successfully hatched through the community's breeding programs.
