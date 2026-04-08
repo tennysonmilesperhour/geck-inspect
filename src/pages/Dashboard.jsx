@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { User, Gecko, GeckoImage, ForumPost, GeckoOfTheDay as GotdEntity } from "@/entities/all"; // Renamed GeckoOfTheDay to avoid conflict
 import { base44 } from '@/api/base44Client';
-import { BarChart3, Users, GitBranch, Image as ImageIcon, MessageSquare, Star, Sparkles, Eye, Newspaper, Egg } from 'lucide-react';
+import { BarChart3, Users, GitBranch, Image as ImageIcon, MessageSquare, Star, Sparkles, Eye, Newspaper, Egg, GraduationCap } from 'lucide-react';
 import StatsCard from "../components/dashboard/StatsCard";
 import RecentActivity from "../components/dashboard/RecentActivity";
 import TrainingProgress from "../components/dashboard/TrainingProgress";
@@ -290,19 +290,20 @@ export default function Dashboard() {
                                     <p className="text-gecko-text-muted leading-relaxed">
                                         Start your journey by adding geckos to your collection or help train our AI with gecko photos.
                                     </p>
-                                    <div className="space-y-3">
+                                    <div className="flex flex-col gap-3">
                                         <Link to={createPageUrl('MyGeckos')}>
                                             <Button variant="outline" className="w-full border-gecko-border hover:bg-gecko-hover backdrop-blur-sm transition-all duration-300 hover:scale-105">
                                                 <Users className="w-4 h-4 mr-2" />
                                                 Build My Collection
                                             </Button>
                                         </Link>
-                                        <Link to={createPageUrl('Recognition')}>
-                                            <Button className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold gecko-glow transition-all duration-300 hover:scale-105">
-                                                <Eye className="w-4 h-4 mr-2" />
-                                                Identify a Morph
-                                            </Button>
-                                        </Link>
+                                        <Button
+                                            className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold gecko-glow transition-all duration-300 hover:scale-105"
+                                            onClick={() => window.dispatchEvent(new CustomEvent('open_tutorial'))}
+                                        >
+                                            <GraduationCap className="w-4 h-4 mr-2" />
+                                            Start Tutorial
+                                        </Button>
                                     </div>
                                 </CardContent>
                             </Card>

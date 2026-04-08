@@ -227,6 +227,12 @@ function LayoutContent({ children, currentPageName }) {
 
   const { toggleSidebar } = useSidebar();
 
+  useEffect(() => {
+    const handler = () => setShowTutorial(true);
+    window.addEventListener('open_tutorial', handler);
+    return () => window.removeEventListener('open_tutorial', handler);
+  }, []);
+
   const getUserLevel = (geckoCount) => {
     return [...USER_LEVELS].reverse().find((level) => geckoCount >= level.geckos) || USER_LEVELS[0];
   };
