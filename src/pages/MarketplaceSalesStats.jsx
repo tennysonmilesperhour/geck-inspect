@@ -29,7 +29,17 @@ const COST_CATEGORIES = [
   { value: 'marketing', label: 'Marketing' },
   { value: 'other', label: 'Other' },
 ];
+
+const REVENUE_CATEGORIES = [
+  { value: 'animal', label: 'Animal' },
+  { value: 'breeder', label: 'Breeder' },
+  { value: 'acquisition', label: 'Acquisition' },
+  { value: 'special_morph', label: 'Special Morph' },
+  { value: 'other', label: 'Other' },
+];
+
 const getCategoryLabel = (value) => COST_CATEGORIES.find(c => c.value === value)?.label || value || 'Other';
+const getRevenueCategory = (value) => REVENUE_CATEGORIES.find(c => c.value === value)?.label || value || 'Animal';
 
 function getQuarterKey(dateStr) {
   const d = new Date(dateStr);
@@ -162,6 +172,9 @@ export default function MarketplaceSalesStats() {
 
   const [newCost, setNewCost] = useState({
     description: '', amount: '', date: new Date().toISOString().split('T')[0], category: 'other'
+  });
+  const [newRevenue, setNewRevenue] = useState({
+    name: '', amount: '', date: new Date().toISOString().split('T')[0], category: 'animal'
   });
   const [geckoCategories, setGeckoCategories] = useState({});
 
@@ -341,20 +354,24 @@ export default function MarketplaceSalesStats() {
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <Label className="text-xs text-slate-400">Gecko Name</Label>
-                    <Input placeholder="e.g., Flame Morph #1" className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1" />
+                    <Input value={newRevenue.name} onChange={e => setNewRevenue(f => ({ ...f, name: e.target.value }))}
+                      placeholder="e.g., Flame Morph #1" className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1" />
                   </div>
                   <div>
                     <Label className="text-xs text-slate-400">Sale Price ($)</Label>
-                    <Input type="number" step="0.01" placeholder="0.00" className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                    <Input type="number" step="0.01" value={newRevenue.amount} onChange={e => setNewRevenue(f => ({ ...f, amount: e.target.value }))}
+                      placeholder="0.00" className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                   </div>
                   <div>
                     <Label className="text-xs text-slate-400">Sale Date</Label>
-                    <Input type="date" className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1" />
+                    <Input type="date" value={newRevenue.date} onChange={e => setNewRevenue(f => ({ ...f, date: e.target.value }))}
+                      className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1" />
                   </div>
                   <div>
                     <Label className="text-xs text-slate-400">Category</Label>
-                    <select className="w-full h-9 mt-1 rounded-md bg-slate-700 border border-slate-600 text-slate-100 text-sm px-2">
-                      {COST_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                    <select value={newRevenue.category} onChange={e => setNewRevenue(f => ({ ...f, category: e.target.value }))}
+                      className="w-full h-9 mt-1 rounded-md bg-slate-700 border border-slate-600 text-slate-100 text-sm px-2">
+                      {REVENUE_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                     </select>
                   </div>
                 </div>
