@@ -1,0 +1,44 @@
+name: Run Crawlers
+
+on:
+  schedule:
+    - cron: '0 6 * * 0'  # Every Sunday at 06:00 UTC
+  workflow_dispatch:       # Allow manual run from the Actions tab
+    inputs:
+      dry_run:
+        description: 'Set to "true" to print progress without writing to DB (not yet implemented)'
+        required: false
+        default: 'false'
+
+jobs:
+  crawl:
+    name: Crawl iNaturalist → Utah Forage DB
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: pip
+          cache-dependency-path: backend/requirements.txt
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+        working-directory: backend
+
+      - name: Run all crawlers
+        run: python crawler/run_all.py
+        working-directory: backend
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          SECRET_KEY: ${{ secrets.SECRET_KEY }}
+
+      - name: Notify on failure
+        if: failure()
+        run: |
+          echo "::error::Crawler run failed. Check logs above."
+          echo "Crawler failed at $(date -u)" >> $GITHUB_STEP_SUMMARY
