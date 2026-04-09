@@ -98,3 +98,9 @@ class VerificationCreate(BaseModel):
     sighting_id: uuid.UUID
     confirmed: bool
     notes: str | None = None
+
+
+# Used by POST /sightings/{id}/verify — sighting_id comes from the path
+class VerificationVote(BaseModel):
+    confirmed: bool
+    notes: str | None = None
