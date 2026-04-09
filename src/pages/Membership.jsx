@@ -106,14 +106,24 @@ export default function MembershipPage() {
         </div>
 
         {/* Pricing Cards */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mt-4">
           {tiers.map((tier) => {
             const Icon = tier.icon;
             const isBreeder = tier.featured;
             const isEnterprise = tier.comingSoon;
 
             return (
-              <div key={tier.name} className="relative">
+              <div key={tier.name} className="relative pt-5">
+                {isBreeder && (
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10">
+                    <span className="text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-3 py-1 rounded-full whitespace-nowrap">Most Popular</span>
+                  </div>
+                )}
+                {isEnterprise && (
+                  <div className="absolute top-0 left-1/2 -translate-x-1/2 z-10">
+                    <span className="text-xs font-semibold bg-slate-700/60 text-slate-400 border border-slate-600 px-3 py-1 rounded-full whitespace-nowrap">Coming Soon</span>
+                  </div>
+                )}
                 <Card
                   className={`h-full flex flex-col transition-all duration-300 ${
                     isBreeder
@@ -124,8 +134,7 @@ export default function MembershipPage() {
                   }`}
                 >
                   <CardHeader className="space-y-4">
-                    <div className="flex items-center justify-between gap-3">
-                      <div className="flex items-center gap-3">
+                    <div className="flex items-center gap-3">
                       <div className={`p-3 rounded-lg ${
                         isBreeder
                           ? 'bg-emerald-500/20'
@@ -141,18 +150,11 @@ export default function MembershipPage() {
                             : 'text-slate-300'
                         }`} />
                       </div>
-                        <CardTitle className={`text-2xl ${
-                          isBreeder ? 'text-emerald-300' : isEnterprise ? 'text-slate-400' : 'text-white'
-                        }`}>
-                          {tier.name}
-                        </CardTitle>
-                      </div>
-                      {isBreeder && (
-                        <span className="text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 px-2 py-0.5 rounded-full whitespace-nowrap">Most Popular</span>
-                      )}
-                      {isEnterprise && (
-                        <span className="text-xs font-semibold bg-slate-700/60 text-slate-400 border border-slate-600 px-2 py-0.5 rounded-full whitespace-nowrap">Coming Soon</span>
-                      )}
+                      <CardTitle className={`text-2xl ${
+                        isBreeder ? 'text-emerald-300' : isEnterprise ? 'text-slate-400' : 'text-white'
+                      }`}>
+                        {tier.name}
+                      </CardTitle>
                     </div>
 
                     <div>
