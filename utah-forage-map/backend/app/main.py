@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routes import sightings, species, stats, users
+from app.routes import sightings, species, sponsors, stats, users
 
 app = FastAPI(
     title="Utah Forage Map API",
@@ -23,6 +23,7 @@ app.include_router(sightings.router, prefix=API_PREFIX)
 app.include_router(species.router, prefix=API_PREFIX)
 app.include_router(users.router, prefix=API_PREFIX)
 app.include_router(stats.router, prefix=API_PREFIX)
+app.include_router(sponsors.router, prefix=API_PREFIX)
 
 
 @app.get("/health")

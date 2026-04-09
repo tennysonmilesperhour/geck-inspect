@@ -36,6 +36,14 @@ See backend/app/models.py for full schema.
 Run migrations with: cd backend && alembic upgrade head
 Seed species with:   python scripts/seed_species.py
 
+## Monetization
+AdSense + direct sponsors. Controlled by VITE_ADS_ENABLED flag (default false).
+Ad placements: sidebar_top, sidebar_bottom, map_banner, species_detail.
+Slot definitions: frontend/src/config/ads.js
+AdSlot component: renders null when disabled, SponsorCard for direct sponsors, AdSense ins tag otherwise.
+Sponsor model in DB with GET /api/v1/sponsors/active endpoint.
+See MONETIZATION.md for full revenue strategy and setup instructions.
+
 ## Auth
 Auth0 RS256 JWT — no local passwords for regular users.
 Backend verifies tokens against Auth0 JWKS (`https://{AUTH0_DOMAIN}/.well-known/jwks.json`).

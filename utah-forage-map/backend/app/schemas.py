@@ -93,6 +93,22 @@ class SightingFilter(BaseModel):
     verified_only: bool | None = None
 
 
+# ── Sponsor ───────────────────────────────────────────────────────────────────
+
+class SponsorRead(BaseModel):
+    id: uuid.UUID
+    name: str
+    tagline: str | None
+    image_url: str | None
+    link_url: str
+    placement: str
+    is_active: bool
+    starts_on: date | None
+    ends_on: date | None
+
+    model_config = {"from_attributes": True}
+
+
 # ── Verification ──────────────────────────────────────────────────────────────
 
 class VerificationCreate(BaseModel):

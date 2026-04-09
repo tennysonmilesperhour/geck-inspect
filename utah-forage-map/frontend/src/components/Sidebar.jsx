@@ -1,3 +1,5 @@
+import AdSlot from './AdSlot'
+
 const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec']
 
 const SOURCES = [
@@ -71,6 +73,11 @@ export default function Sidebar({ species = [], filters, onChange }) {
       <div className="px-4 py-3 border-b border-gray-200 bg-green-800 text-white flex-shrink-0">
         <p className="font-bold text-base leading-tight">Utah Forage Map</p>
         <p className="text-green-200 text-xs mt-0.5">Mushroom sightings</p>
+      </div>
+
+      {/* sidebar_top ad — renders null when ADS_ENABLED=false */}
+      <div className="flex-shrink-0 px-4 pt-3">
+        <AdSlot placement="sidebar_top" />
       </div>
 
       {/* Scrollable filters */}
@@ -179,6 +186,9 @@ export default function Sidebar({ species = [], filters, onChange }) {
             />
           </label>
         </section>
+
+        {/* sidebar_bottom ad */}
+        <AdSlot placement="sidebar_bottom" />
       </div>
 
       {/* Footer — clear button */}

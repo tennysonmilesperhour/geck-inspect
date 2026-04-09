@@ -87,6 +87,21 @@ class Verification(Base):
     verifier: Mapped["User"] = relationship("User", back_populates="verifications")
 
 
+class Sponsor(Base):
+    __tablename__ = "sponsors"
+
+    id: Mapped[uuid.UUID] = mapped_column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4)
+    name: Mapped[str] = mapped_column(String, nullable=False)
+    tagline: Mapped[str | None] = mapped_column(String)
+    image_url: Mapped[str | None] = mapped_column(String)
+    link_url: Mapped[str] = mapped_column(String, nullable=False)
+    placement: Mapped[str] = mapped_column(String, nullable=False)  # matches AD_SLOTS key
+    is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    starts_on: Mapped[date | None] = mapped_column(Date)
+    ends_on: Mapped[date | None] = mapped_column(Date)
+    created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+
 class CrawledSource(Base):
     __tablename__ = "crawled_sources"
 
