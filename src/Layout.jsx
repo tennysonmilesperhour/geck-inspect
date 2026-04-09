@@ -1414,6 +1414,13 @@ function LayoutContent({ children, currentPageName }) {
 
           <SidebarFooter className="p-4 border-t border-sage-300">
             <div className="space-y-3">
+              <Link to="/PrivacyPolicy" className="block text-xs text-slate-500 hover:text-slate-300 px-3 transition-colors">Privacy Policy</Link>
+              <Link to={createPageUrl("Membership")} className="block">
+                <Button variant="outline" size="sm" className="w-full justify-start text-sage-600 hover:text-sage-700 border-sage-300 text-sm">
+                  <Star className="w-4 h-4 mr-2 flex-shrink-0" />
+                  <span className="truncate">Membership</span>
+                </Button>
+              </Link>
               <div className="block">
                 <button
                  onClick={() => setShowTutorial(true)}
@@ -1555,6 +1562,12 @@ function LayoutContent({ children, currentPageName }) {
               <div className="p-4 border-t border-sage-300 dark:border-sage-300 mt-auto">
                 <div className="space-y-3">
                   <Link to="/PrivacyPolicy" className="block text-xs text-slate-500 hover:text-slate-300 px-3 transition-colors">Privacy Policy</Link>
+                  <Link to={createPageUrl("Membership")} className="block">
+                    <Button variant="outline" size="sm" className="w-full justify-start text-sage-600 hover:text-sage-700 border-sage-300 text-sm">
+                      <Star className="w-4 h-4 mr-2 flex-shrink-0" />
+                      <span className="truncate">Membership</span>
+                    </Button>
+                  </Link>
                   <div>
                   <button
                    onClick={() => setShowTutorial(true)}
