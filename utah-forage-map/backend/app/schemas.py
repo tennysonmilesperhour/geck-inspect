@@ -24,16 +24,17 @@ class SpeciesRead(BaseModel):
 
 # ── User ──────────────────────────────────────────────────────────────────────
 
-class UserCreate(BaseModel):
-    username: str
-    email: EmailStr
-    password: str
+class UserSyncPayload(BaseModel):
+    """Body sent to POST /users/sync after Auth0 social login."""
+    access_token: str
 
 
 class UserRead(BaseModel):
     id: uuid.UUID
     username: str
     email: str
+    display_name: str | None
+    avatar_url: str | None
     role: str
     trust_level: int
     total_finds: int

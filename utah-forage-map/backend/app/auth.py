@@ -1,12 +1,11 @@
 import os
-import uuid
-from datetime import datetime, timedelta, timezone
+import time
 
+import httpx
 from dotenv import load_dotenv
 from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
+from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 from jose import JWTError, jwt
-from passlib.context import CryptContext
 from sqlalchemy.orm import Session
 
 from app.database import get_db
@@ -14,49 +13,77 @@ from app.models import User
 
 load_dotenv()
 
-SECRET_KEY = os.getenv("SECRET_KEY", "changeme-set-a-real-secret-in-env")
-ALGORITHM = "HS256"
-ACCESS_TOKEN_EXPIRE_MINUTES = 60 * 24  # 24 hours
+AUTH0_DOMAIN = os.getenv("AUTH0_DOMAIN", "")
+AUTH0_AUDIENCE = os.getenv("AUTH0_AUDIENCE", "")
 
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
-oauth2_scheme = OAuth2PasswordBearer(tokenUrl="/api/v1/users/login")
+bearer_scheme = HTTPBearer()
 
-
-def verify_password(plain: str, hashed: str) -> bool:
-    return pwd_context.verify(plain, hashed)
+# In-memory JWKS cache: (keys_list, fetched_at_monotonic)
+_jwks_cache: tuple[list, float] | None = None
+_JWKS_TTL = 3600  # refresh keys every hour
 
 
-def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+def _get_jwks() -> list:
+    global _jwks_cache
+    now = time.monotonic()
+    if _jwks_cache and now - _jwks_cache[1] < _JWKS_TTL:
+        return _jwks_cache[0]
+    url = f"https://{AUTH0_DOMAIN}/.well-known/jwks.json"
+    resp = httpx.get(url, timeout=10)
+    resp.raise_for_status()
+    keys = resp.json()["keys"]
+    _jwks_cache = (keys, now)
+    return keys
 
 
-def create_access_token(data: dict, expires_delta: timedelta | None = None) -> str:
-    to_encode = data.copy()
-    expire = datetime.now(timezone.utc) + (
-        expires_delta or timedelta(minutes=ACCESS_TOKEN_EXPIRE_MINUTES)
-    )
-    to_encode["exp"] = expire
-    return jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
-
-
-def get_current_user(
-    token: str = Depends(oauth2_scheme),
-    db: Session = Depends(get_db),
-) -> User:
+def verify_auth0_token(token: str) -> dict:
+    """Validate an Auth0 RS256 JWT against JWKS. Returns decoded payload."""
     credentials_exc = HTTPException(
         status_code=status.HTTP_401_UNAUTHORIZED,
         detail="Could not validate credentials",
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
-        user_id: str | None = payload.get("sub")
-        if user_id is None:
-            raise credentials_exc
+        unverified_header = jwt.get_unverified_header(token)
     except JWTError:
         raise credentials_exc
 
-    user = db.query(User).filter(User.id == uuid.UUID(user_id)).first()
-    if user is None or not user.is_active:
+    rsa_key = next(
+        (k for k in _get_jwks() if k.get("kid") == unverified_header.get("kid")),
+        None,
+    )
+    if rsa_key is None:
         raise credentials_exc
+
+    try:
+        payload = jwt.decode(
+            token,
+            rsa_key,
+            algorithms=["RS256"],
+            audience=AUTH0_AUDIENCE,
+            issuer=f"https://{AUTH0_DOMAIN}/",
+        )
+    except JWTError:
+        raise credentials_exc
+
+    return payload
+
+
+def get_current_user(
+    credentials: HTTPAuthorizationCredentials = Depends(bearer_scheme),
+    db: Session = Depends(get_db),
+) -> User:
+    payload = verify_auth0_token(credentials.credentials)
+    auth0_id: str | None = payload.get("sub")
+    if not auth0_id:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Invalid token subject",
+        )
+    user = db.query(User).filter(User.auth0_id == auth0_id).first()
+    if user is None or not user.is_active:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="User not found or inactive",
+        )
     return user

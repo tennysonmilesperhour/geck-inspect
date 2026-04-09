@@ -2,6 +2,8 @@ import { useMemo, useState } from 'react'
 import { useQuery } from '@tanstack/react-query'
 import MapView from './components/MapView'
 import Sidebar from './components/Sidebar'
+import AuthButton from './components/AuthButton'
+import AppAuth0Provider from './auth/Auth0Provider'
 import { getSightings, getSpecies } from './api/sightings'
 
 // ── Default filter state ──────────────────────────────────────────────────────
@@ -15,17 +17,17 @@ const DEFAULTS = {
   verifiedOnly: false,
 }
 
-// ── App ───────────────────────────────────────────────────────────────────────
+// ── Inner app (needs Auth0 context) ──────────────────────────────────────────
 
-export default function App() {
+function MapApp() {
   const [filters, setFilters] = useState(DEFAULTS)
 
   // Build API-side params (server can handle elev range, verified, single species)
   const apiParams = useMemo(() => {
     const p = {}
-    if (filters.elevMin > 2000)    p.elev_min     = filters.elevMin
-    if (filters.elevMax < 13500)   p.elev_max     = filters.elevMax
-    if (filters.verifiedOnly)      p.verified_only = true
+    if (filters.elevMin > 2000)    p.elev_min      = filters.elevMin
+    if (filters.elevMax < 13500)   p.elev_max      = filters.elevMax
+    if (filters.verifiedOnly)      p.verified_only  = true
     if (filters.speciesIds.length === 1) p.species_id = filters.speciesIds[0]
     return p
   }, [filters])
@@ -77,6 +79,19 @@ export default function App() {
       <div style={{ flex: 1, position: 'relative' }}>
         <MapView sightings={sightings} speciesMap={speciesMap} />
 
+        {/* Auth button — top right */}
+        <div
+          style={{
+            position: 'absolute', top: 12, right: 12,
+            background: 'rgba(255,255,255,0.92)', backdropFilter: 'blur(4px)',
+            borderRadius: 8, padding: '6px 10px',
+            boxShadow: '0 2px 8px rgba(0,0,0,0.15)',
+            zIndex: 10,
+          }}
+        >
+          <AuthButton />
+        </div>
+
         {/* Loading overlay */}
         {(isLoading || isFetching) && (
           <div
@@ -110,6 +125,16 @@ export default function App() {
         )}
       </div>
     </div>
+  )
+}
+
+// ── App root — wraps everything in Auth0Provider ──────────────────────────────
+
+export default function App() {
+  return (
+    <AppAuth0Provider>
+      <MapApp />
+    </AppAuth0Provider>
   )
 }
 

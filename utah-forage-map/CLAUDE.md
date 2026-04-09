@@ -36,6 +36,17 @@ See backend/app/models.py for full schema.
 Run migrations with: cd backend && alembic upgrade head
 Seed species with:   python scripts/seed_species.py
 
+## Auth
+Auth0 RS256 JWT — no local passwords for regular users.
+Backend verifies tokens against Auth0 JWKS (`https://{AUTH0_DOMAIN}/.well-known/jwks.json`).
+POST /api/v1/users/sync upserts user on first login; GET /api/v1/users/me requires Bearer token.
+Crawler still uses a fixed system user UUID (no Auth0 sub).
+
+Backend env: AUTH0_DOMAIN, AUTH0_AUDIENCE
+Frontend env: VITE_AUTH0_DOMAIN, VITE_AUTH0_CLIENT_ID, VITE_AUTH0_AUDIENCE
+
+See AUTH0_SETUP.md for full setup instructions.
+
 ## Running locally
 Backend:  cd backend && uvicorn app.main:app --reload --port 8000
 Frontend: cd frontend && npm run dev   (runs on port 5173)

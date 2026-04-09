@@ -1,47 +1,51 @@
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
-from app.auth import create_access_token, get_current_user, get_password_hash, verify_password
+from app.auth import get_current_user, verify_auth0_token
 from app.database import get_db
 from app.models import User
-from app.schemas import UserCreate, UserRead
+from app.schemas import UserRead, UserSyncPayload
 
 router = APIRouter(prefix="/users", tags=["users"])
 
 
-@router.post("/register", response_model=UserRead, status_code=status.HTTP_201_CREATED)
-def register(payload: UserCreate, db: Session = Depends(get_db)):
-    if db.query(User).filter(User.username == payload.username).first():
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Username already taken")
-    if db.query(User).filter(User.email == payload.email).first():
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Email already registered")
+@router.post("/sync", response_model=UserRead, status_code=status.HTTP_200_OK)
+def sync_user(payload: UserSyncPayload, db: Session = Depends(get_db)):
+    """
+    Called by the frontend immediately after a successful Auth0 social login.
+    Creates the user on first sign-in; updates name/avatar on subsequent calls.
+    """
+    token_data = verify_auth0_token(payload.access_token)
+    auth0_id: str = token_data["sub"]
+    email: str = token_data.get("email", "")
+    name: str = token_data.get("name", "")
+    picture: str = token_data.get("picture", "")
 
-    user = User(
-        username=payload.username,
-        email=payload.email,
-        hashed_password=get_password_hash(payload.password),
-    )
-    db.add(user)
+    user = db.query(User).filter(User.auth0_id == auth0_id).first()
+    if user:
+        user.email = email or user.email
+        user.display_name = name or user.display_name
+        user.avatar_url = picture or user.avatar_url
+    else:
+        # Derive a unique username from email local-part or Auth0 sub
+        base = (email.split("@")[0] if email else auth0_id.replace("|", "_"))[:30]
+        username, suffix = base, 1
+        while db.query(User).filter(User.username == username).first():
+            username = f"{base}{suffix}"
+            suffix += 1
+
+        user = User(
+            auth0_id=auth0_id,
+            email=email,
+            username=username,
+            display_name=name or None,
+            avatar_url=picture or None,
+        )
+        db.add(user)
+
     db.commit()
     db.refresh(user)
     return user
-
-
-@router.post("/login")
-def login(
-    form: OAuth2PasswordRequestForm = Depends(),
-    db: Session = Depends(get_db),
-):
-    user = db.query(User).filter(User.username == form.username).first()
-    if not user or not verify_password(form.password, user.hashed_password):
-        raise HTTPException(
-            status_code=status.HTTP_401_UNAUTHORIZED,
-            detail="Incorrect username or password",
-            headers={"WWW-Authenticate": "Bearer"},
-        )
-    token = create_access_token({"sub": str(user.id)})
-    return {"access_token": token, "token_type": "bearer"}
 
 
 @router.get("/me", response_model=UserRead)
