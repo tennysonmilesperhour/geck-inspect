@@ -391,7 +391,7 @@ function LayoutContent({ children, currentPageName }) {
           try {
             dataCache.markRequestMade('page_configs');
             configs = await retryApiCall(() => base44.entities.PageConfig.list());
-            if (configs) {
+            if (Array.isArray(configs)) {
               dataCache.set('page_configs', configs);
               setPageConfigs(configs);
             }
@@ -399,7 +399,7 @@ function LayoutContent({ children, currentPageName }) {
             console.log("Could not load page configs:", error);
             setPageConfigs([]);
           }
-        } else if (configs) {
+        } else if (Array.isArray(configs)) {
           setPageConfigs(configs);
         }
 
@@ -609,7 +609,7 @@ function LayoutContent({ children, currentPageName }) {
 
   // Build navigation from PageConfig
   const getNavItems = () => {
-    if (pageConfigs.length === 0) {
+    if (!Array.isArray(pageConfigs) || pageConfigs.length === 0) {
       return FALLBACK_NAV_ITEMS;
     }
 

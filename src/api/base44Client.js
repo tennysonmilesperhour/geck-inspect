@@ -3,16 +3,19 @@ import { appParams } from '@/lib/app-params';
 
 const { appId, serverUrl, token, functionsVersion } = appParams;
 
+const BASE44_SERVER = 'https://base44.app';
+
 // appBaseUrl must be absolute so auth.redirectToLogin() builds a valid URL.
-// Falls back to serverUrl, then to the Base44 default, so /login never resolves
-// as a relative path on Vercel (which would hit the SPA catch-all and 404).
 const appBaseUrl = import.meta.env.VITE_BASE44_APP_BASE_URL
   || serverUrl
-  || 'https://base44.app';
+  || BASE44_SERVER;
+
+// Avoid passing null serverUrl to the SDK — let it use its own default instead.
+const resolvedServerUrl = serverUrl || BASE44_SERVER;
 
 export const base44 = createClient({
   appId,
-  serverUrl,
+  serverUrl: resolvedServerUrl,
   token,
   functionsVersion,
   appBaseUrl,
