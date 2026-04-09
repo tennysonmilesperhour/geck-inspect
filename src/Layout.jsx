@@ -16,12 +16,12 @@ import {
   LogIn, ChevronDown, X as CloseIcon, FlaskConical, LifeBuoy, LayoutDashboard, Star, Trophy, FolderKanban, GraduationCap, Dna,
   Egg, LayoutGrid, CircleUser, UsersRound, Images, Tag, CalendarDays, Sparkles
 } from "lucide-react";
-import TutorialModal from "../components/tutorial/TutorialModal";
-import FeedingAlertSystem from "../components/feeding/FeedingAlertSystem";
+import TutorialModal from "@/components/tutorial/TutorialModal";
+import FeedingAlertSystem from "@/components/feeding/FeedingAlertSystem";
 import {
   Sidebar,
   SidebarHeader,
-  SidebarBody,
+  SidebarContent as SidebarBody,
   SidebarFooter,
   SidebarProvider,
   useSidebar
@@ -29,8 +29,8 @@ import {
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Badge } from "@/components/ui/badge";
-import NotificationDropdown from "../components/ui/NotificationDropdown";
-import UserBadge from '../components/ui/UserBadge';
+import NotificationDropdown from "@/components/ui/NotificationDropdown";
+import UserBadge from "@/components/ui/UserBadge";
 import {
   DropdownMenu,
   DropdownMenuContent,
