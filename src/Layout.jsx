@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44 } from '@/api/base44Client';
+import { base44, redirectToLogin } from '@/api/base44Client';
 import { GeckoImage } from "@/entities/GeckoImage";
 import { User } from "@/entities/User";
 import { Gecko } from "@/entities/Gecko";
@@ -504,13 +504,8 @@ function LayoutContent({ children, currentPageName }) {
   }, []);
 
 
-  const handleLogin = async () => {
-    try {
-      const currentUrl = window.location.href;
-      await base44.auth.redirectToLogin(currentUrl);
-    } catch (error) {
-      console.error("Login failed:", error);
-    }
+  const handleLogin = () => {
+    redirectToLogin(window.location.href);
   };
 
   const handleLogout = async () => {
