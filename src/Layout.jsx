@@ -603,8 +603,7 @@ function LayoutContent({ children, currentPageName }) {
     { page_name: "Forum", display_name: "Forum", icon: "MessageSquare", category: "public", requires_auth: false, is_enabled: true, order: 4 },
     { page_name: "Gallery", display_name: "Image Gallery", icon: "Images", category: "public", requires_auth: false, is_enabled: true, order: 5 },
     { page_name: "Marketplace", display_name: "Marketplace", icon: "ShoppingCart", category: "public", requires_auth: false, is_enabled: true, order: 6 },
-    { page_name: "Membership", display_name: "Membership", icon: "Sparkles", category: "public", requires_auth: false, is_enabled: true, order: 7 },
-    { page_name: "MarketplaceSalesStats", display_name: "Sales Stats", icon: "BarChart3", category: "public", requires_auth: true, is_enabled: true, order: 8 },
+    { page_name: "MarketplaceSalesStats", display_name: "Sales Stats", icon: "BarChart3", category: "public", requires_auth: true, is_enabled: true, order: 7 },
     ],
   };
 
@@ -1415,16 +1414,6 @@ function LayoutContent({ children, currentPageName }) {
 
           <SidebarFooter className="p-4 border-t border-sage-300">
             <div className="space-y-3">
-              <Link to={createPageUrl("Membership")} className="block">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full justify-start text-emerald-600 hover:text-emerald-800 border-emerald-300 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:text-emerald-300 dark:border-emerald-700 dark:hover:bg-emerald-900/20 text-sm"
-                >
-                  <Star className="w-4 h-4 mr-2" />
-                  Membership
-                </Button>
-              </Link>
               <div className="block">
                 <button
                  onClick={() => setShowTutorial(true)}
@@ -1566,16 +1555,6 @@ function LayoutContent({ children, currentPageName }) {
               <div className="p-4 border-t border-sage-300 dark:border-sage-300 mt-auto">
                 <div className="space-y-3">
                   <Link to="/PrivacyPolicy" className="block text-xs text-slate-500 hover:text-slate-300 px-3 transition-colors">Privacy Policy</Link>
-                  <Link to={createPageUrl("Membership")} className="block">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full justify-start text-emerald-600 hover:text-emerald-800 border-emerald-300 hover:bg-emerald-50 dark:text-emerald-400 dark:hover:text-emerald-300 dark:border-emerald-700 dark:hover:bg-emerald-900/20 text-sm"
-                    >
-                      <Star className="w-4 h-4 mr-2" />
-                      Membership
-                    </Button>
-                  </Link>
                   <div>
                   <button
                    onClick={() => setShowTutorial(true)}
