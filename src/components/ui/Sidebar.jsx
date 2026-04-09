@@ -73,6 +73,9 @@ export const SidebarBody = React.forwardRef(({ children, className, ...props }, 
 });
 SidebarBody.displayName = 'SidebarBody';
 
+// Alias so Layout.jsx can import either name
+export const SidebarContent = SidebarBody;
+
 
 export function SidebarFooter({ children, className }) {
   return <div className={`${className}`}>{children}</div>;
