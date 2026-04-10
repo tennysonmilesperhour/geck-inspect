@@ -1,77 +1,77 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
-    <loc>https://geck-inspect.vercel.app/</loc>
+    <loc>https://geckinspect.com/</loc>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://geck-inspect.vercel.app/Home</loc>
+    <loc>https://geckinspect.com/Home</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://geck-inspect.vercel.app/CareGuide</loc>
+    <loc>https://geckinspect.com/CareGuide</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://geck-inspect.vercel.app/MorphGuide</loc>
+    <loc>https://geckinspect.com/MorphGuide</loc>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://geck-inspect.vercel.app/GeneticsGuide</loc>
+    <loc>https://geckinspect.com/GeneticsGuide</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://geck-inspect.vercel.app/GeneticCalculatorTool</loc>
+    <loc>https://geckinspect.com/GeneticCalculatorTool</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://geck-inspect.vercel.app/MorphVisualizer</loc>
+    <loc>https://geckinspect.com/MorphVisualizer</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://geck-inspect.vercel.app/Gallery</loc>
+    <loc>https://geckinspect.com/Gallery</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://geck-inspect.vercel.app/CommunityConnect</loc>
+    <loc>https://geckinspect.com/CommunityConnect</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://geck-inspect.vercel.app/Forum</loc>
+    <loc>https://geckinspect.com/Forum</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://geck-inspect.vercel.app/Marketplace</loc>
+    <loc>https://geckinspect.com/Marketplace</loc>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://geck-inspect.vercel.app/MarketplaceBuy</loc>
+    <loc>https://geckinspect.com/MarketplaceBuy</loc>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
-    <loc>https://geck-inspect.vercel.app/Membership</loc>
+    <loc>https://geckinspect.com/Membership</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
-    <loc>https://geck-inspect.vercel.app/PrivacyPolicy</loc>
+    <loc>https://geckinspect.com/PrivacyPolicy</loc>
     <changefreq>yearly</changefreq>
     <priority>0.2</priority>
   </url>
   <url>
-    <loc>https://geck-inspect.vercel.app/AuthPortal</loc>
+    <loc>https://geckinspect.com/AuthPortal</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>

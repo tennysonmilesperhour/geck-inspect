@@ -12,7 +12,7 @@ import { Helmet } from 'react-helmet-async';
  *     path="/MorphGuide"
  *   />
  */
-const SITE_URL = 'https://geck-inspect.vercel.app';
+const SITE_URL = 'https://geckinspect.com';
 const SITE_NAME = 'Geck Inspect';
 const DEFAULT_IMAGE =
   'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png';

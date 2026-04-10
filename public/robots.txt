@@ -83,4 +83,4 @@ User-agent: DuckDuckBot
 Allow: /
 
 # Sitemap
-Sitemap: https://geck-inspect.vercel.app/sitemap.xml
+Sitemap: https://geckinspect.com/sitemap.xml

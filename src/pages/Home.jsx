@@ -55,13 +55,13 @@ const LANDING_JSON_LD = {
   '@context': 'https://schema.org',
   '@type': 'WebPage',
   name: 'Geck Inspect — Crested Gecko Collection, Breeding & Community Platform',
-  url: 'https://geck-inspect.vercel.app/',
+  url: 'https://geckinspect.com/',
   description:
     'The professional platform for crested gecko (Correlophus ciliatus) breeders and keepers. Collection management, breeding planning, AI-powered morph identification, lineage tracking, and community tools.',
   isPartOf: {
     '@type': 'WebSite',
     name: 'Geck Inspect',
-    url: 'https://geck-inspect.vercel.app/',
+    url: 'https://geckinspect.com/',
   },
   about: {
     '@type': 'Thing',
