@@ -12,11 +12,18 @@ const SUPABASE_URL =
   'https://mmuglfphhwlaluyfyxsp.supabase.co';
 
 // Base44 stores its images in a public bucket on their own Supabase project.
-// Photo migration scans every migrated row, downloads each image from here,
-// uploads it to our own bucket, and rewrites the URL in the row.
-const BASE44_IMAGE_HOST = 'qtrypzzcjebvfcihiynt.supabase.co';
-const BASE44_STORAGE_PREFIX = '/base44-prod/';
+// The exact host wasn't known up front, so we scan for any HTTP(S) URL that
+// looks like an image and is NOT already on our own Supabase project.
 const MEDIA_BUCKET = 'geck-inspect-media';
+const URL_RE = /https?:\/\/[^\s"'<>)\]}]+/g;
+const IMAGE_EXT_RE = /\.(jpe?g|png|gif|webp|avif|svg|bmp|heic|heif)(\?|#|$)/i;
+
+function looksLikeImageUrl(url) {
+  return (
+    url.includes('/storage/v1/object/public/') ||
+    IMAGE_EXT_RE.test(url)
+  );
+}
 
 // Entity definitions: [Base44EntityName, SupabaseTableName, label]
 const ENTITY_DEFS = [
@@ -169,15 +176,23 @@ async function upsertBatch(sbAdmin, tableName, records, addLog) {
 // Photo migration
 // ---------------------------------------------------------------------------
 
-// Recursively find every string in a value (including inside arrays and
-// nested objects) that contains a Base44 image URL.
-function collectBase44Urls(value, set) {
+// Recursively find every image URL in a value (including inside arrays and
+// nested objects). Skips URLs already hosted on our own Supabase project so
+// re-runs are idempotent.
+function collectImageUrls(value, set, ourHost) {
   if (typeof value === 'string') {
-    if (value.includes(BASE44_IMAGE_HOST)) set.add(value);
+    const matches = value.match(URL_RE);
+    if (matches) {
+      for (const url of matches) {
+        if (!looksLikeImageUrl(url)) continue;
+        if (url.includes(ourHost)) continue;
+        set.add(url);
+      }
+    }
   } else if (Array.isArray(value)) {
-    for (const v of value) collectBase44Urls(v, set);
+    for (const v of value) collectImageUrls(v, set, ourHost);
   } else if (value && typeof value === 'object') {
-    for (const v of Object.values(value)) collectBase44Urls(v, set);
+    for (const v of Object.values(value)) collectImageUrls(v, set, ourHost);
   }
 }
 
@@ -199,26 +214,31 @@ function rewriteUrls(value, map) {
   return value;
 }
 
-// Download one Base44-hosted image, upload it to our own Supabase bucket,
-// and return the new public URL. Idempotent: running twice is safe because
-// upsert is used on upload.
-async function migrateOneImage(sbAdmin, url) {
-  // Extract the storage path that comes after "/base44-prod/" — we preserve
-  // the same relative path in our own bucket so filenames stay meaningful.
-  const idx = url.indexOf(BASE44_STORAGE_PREFIX);
-  if (idx === -1) throw new Error('not a base44 storage URL');
-  let path = url.slice(idx + BASE44_STORAGE_PREFIX.length);
-  // Strip query string (?token=... etc.) if present
-  path = path.split('?')[0];
-  // Decode URL-encoded segments so the bucket path is clean
-  try { path = decodeURIComponent(path); } catch { /* keep as-is */ }
+// Build a deterministic storage path for a given source URL.
+// Uses hostname + pathname so the same URL always maps to the same file,
+// and so filenames from the origin are preserved where possible.
+function storagePathForUrl(url) {
+  let u;
+  try { u = new URL(url); } catch { return null; }
+  let path = u.hostname + u.pathname;
+  // Strip the leading / after hostname is already avoided; collapse any //
+  path = path.replace(/\/+/g, '/');
+  try { path = decodeURIComponent(path); } catch { /* keep */ }
+  // Supabase Storage paths can't start with a slash
+  if (path.startsWith('/')) path = path.slice(1);
+  return path;
+}
 
-  // Download the image
+// Download one image, upload it to our own Supabase bucket, and return the
+// new public URL. Idempotent: upsert is used on upload.
+async function migrateOneImage(sbAdmin, url) {
+  const path = storagePathForUrl(url);
+  if (!path) throw new Error('could not parse URL');
+
   const res = await fetch(url);
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   const blob = await res.blob();
 
-  // Upload to our bucket, upserting so re-runs are safe
   const { error: upErr } = await sbAdmin.storage
     .from(MEDIA_BUCKET)
     .upload(path, blob, {
@@ -227,7 +247,6 @@ async function migrateOneImage(sbAdmin, url) {
     });
   if (upErr) throw upErr;
 
-  // Return the new public URL
   const { data } = sbAdmin.storage.from(MEDIA_BUCKET).getPublicUrl(path);
   return data.publicUrl;
 }
@@ -378,79 +397,115 @@ export default function AdminMigration() {
     }
     addLog(`Found bucket '${MEDIA_BUCKET}'.`, 'dim');
 
-    // Cache: Base44 URL -> new Supabase URL (or same URL on failure)
+    // Our own Supabase host (to skip URLs already migrated)
+    const ourHost = new URL(SUPABASE_URL).hostname;
+
+    // Phase 1: discovery — scan every row and collect all distinct image URLs
+    // and the hostnames they live on. This lets us see exactly what's out
+    // there before we start downloading anything.
+    addLog('Phase 1: discovering image URLs...', 'info');
+    const allUrls = new Set();
+    const hostCounts = new Map();
+    const allRows = []; // { tableName, row, urls }
+
+    for (const [, tableName, label] of ENTITY_DEFS) {
+      const { data: rows, error: selectErr } = await sbAdmin
+        .from(tableName)
+        .select('*');
+      if (selectErr) {
+        addLog(`  ✗ ${label}: ${selectErr.message}`, 'error');
+        continue;
+      }
+      if (!rows || rows.length === 0) continue;
+
+      for (const row of rows) {
+        const urls = new Set();
+        collectImageUrls(row, urls, ourHost);
+        if (urls.size === 0) continue;
+        for (const u of urls) {
+          allUrls.add(u);
+          try {
+            const h = new URL(u).hostname;
+            hostCounts.set(h, (hostCounts.get(h) || 0) + 1);
+          } catch {}
+        }
+        allRows.push({ tableName, row, urls });
+      }
+    }
+
+    addLog(
+      `  Found ${allUrls.size} distinct image URLs across ${allRows.length} rows`,
+      'info'
+    );
+    if (hostCounts.size === 0) {
+      addLog(
+        '  No image URLs found. Either there are no images, or the URL format is something the scanner doesn\'t recognize.',
+        'dim'
+      );
+      setDone(true);
+      setRunning(false);
+      return;
+    }
+    for (const [host, count] of [...hostCounts.entries()].sort((a, b) => b[1] - a[1])) {
+      addLog(`    ${host}: ${count} occurrence(s)`, 'dim');
+    }
+
+    // Phase 2: download + upload + rewrite
+    addLog('Phase 2: downloading and uploading...', 'info');
     const urlMap = new Map();
     let uploaded = 0;
     let failed = 0;
     let rowsUpdated = 0;
 
-    for (const [, tableName, label] of ENTITY_DEFS) {
-      addLog(`Scanning ${label}...`, 'info');
-      const { data: rows, error: selectErr } = await sbAdmin
-        .from(tableName)
-        .select('*');
-      if (selectErr) {
-        addLog(`  ✗ ${selectErr.message}`, 'error');
-        continue;
-      }
-      if (!rows || rows.length === 0) {
-        addLog(`  (empty)`, 'dim');
-        continue;
-      }
-
-      let rowsWithUrls = 0;
-      for (const row of rows) {
-        const urls = new Set();
-        collectBase44Urls(row, urls);
-        if (urls.size === 0) continue;
-        rowsWithUrls++;
-
-        // Upload any URLs we haven't seen yet
-        for (const url of urls) {
-          if (urlMap.has(url)) continue;
-          try {
-            const newUrl = await migrateOneImage(sbAdmin, url);
-            urlMap.set(url, newUrl);
-            uploaded++;
-          } catch (err) {
-            addLog(`  ! ${url.slice(-60)}: ${err.message}`, 'error');
-            urlMap.set(url, url); // leave as-is on failure
-            failed++;
-          }
+    // Upload every unique URL first so the rewrite phase is quick
+    let urlIdx = 0;
+    for (const url of allUrls) {
+      urlIdx++;
+      try {
+        const newUrl = await migrateOneImage(sbAdmin, url);
+        urlMap.set(url, newUrl);
+        uploaded++;
+        if (urlIdx % 10 === 0 || urlIdx === allUrls.size) {
+          addLog(`  ${urlIdx}/${allUrls.size} uploaded`, 'dim');
         }
+      } catch (err) {
+        addLog(`  ! ${url.slice(-70)}: ${err.message}`, 'error');
+        urlMap.set(url, url);
+        failed++;
+      }
+    }
 
-        // Build an update patch of only the columns that actually changed
-        const patch = {};
-        let changed = false;
-        for (const [col, val] of Object.entries(row)) {
-          if (col === 'id') continue;
-          const newVal = rewriteUrls(val, urlMap);
-          if (typeof val === 'object' && val !== null) {
-            if (JSON.stringify(newVal) !== JSON.stringify(val)) {
-              patch[col] = newVal;
-              changed = true;
-            }
-          } else if (newVal !== val) {
+    // Phase 3: rewrite rows with the new URLs
+    addLog('Phase 3: rewriting rows...', 'info');
+    for (const { tableName, row } of allRows) {
+      const patch = {};
+      let changed = false;
+      for (const [col, val] of Object.entries(row)) {
+        if (col === 'id') continue;
+        const newVal = rewriteUrls(val, urlMap);
+        if (typeof val === 'object' && val !== null) {
+          if (JSON.stringify(newVal) !== JSON.stringify(val)) {
             patch[col] = newVal;
             changed = true;
           }
-        }
-        if (changed) {
-          const { error: updErr } = await sbAdmin
-            .from(tableName)
-            .update(patch)
-            .eq('id', row.id);
-          if (updErr) {
-            addLog(`  ! update ${row.id.slice(0, 8)}: ${updErr.message}`, 'error');
-          } else {
-            rowsUpdated++;
-          }
+        } else if (newVal !== val) {
+          patch[col] = newVal;
+          changed = true;
         }
       }
-      addLog(
-        `  ✓ ${rowsWithUrls} row(s) had Base44 images, ${rows.length} scanned`,
-        'success'
-      );
+      if (!changed) continue;
+      const { error: updErr } = await sbAdmin
+        .from(tableName)
+        .update(patch)
+        .eq('id', row.id);
+      if (updErr) {
+        addLog(
+          `  ! ${tableName} ${String(row.id).slice(0, 8)}: ${updErr.message}`,
+          'error'
+        );
+      } else {
+        rowsUpdated++;
+      }
     }
 
     addLog(``, 'info');
