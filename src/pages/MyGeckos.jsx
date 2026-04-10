@@ -27,6 +27,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import PlanLimitModal, { checkPlanLimit, getGeckoLimit } from '../components/subscription/PlanLimitChecker';
 import { exportGeckosCSV, exportGeckosPDF } from '@/lib/exportUtils';
+import { captureEvent } from '@/lib/posthog';
 
 const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
 
@@ -335,6 +336,15 @@ export default function MyGeckosPage() {
         setIsFormOpen(false);
         setSelectedGecko(null);
 
+        // Analytics: distinguish new-gecko creation from edits so the funnel
+        // can see "first gecko" vs "updated a gecko".
+        captureEvent(isNew ? 'gecko_added' : 'gecko_updated', {
+            sex: geckoData?.sex || null,
+            status: geckoData?.status || null,
+            has_image: Array.isArray(geckoData?.image_urls) && geckoData.image_urls.length > 0,
+            has_lineage: Boolean(geckoData?.sire_id || geckoData?.dam_id || geckoData?.sire_name || geckoData?.dam_name),
+        });
+
         if (user) {
             const cacheKey = `geckos_${user.email}`;
             geckosCache.invalidate(cacheKey);
@@ -628,6 +638,10 @@ export default function MyGeckosPage() {
                                             onClick={() => {
                                                 try {
                                                     const name = exportGeckosCSV(filteredAndSortedGeckos);
+                                                    captureEvent('roster_exported', {
+                                                        format: 'csv',
+                                                        count: filteredAndSortedGeckos.length,
+                                                    });
                                                     toast({
                                                         title: 'CSV exported',
                                                         description: `Saved ${filteredAndSortedGeckos.length} geckos to ${name}`,
@@ -652,6 +666,10 @@ export default function MyGeckosPage() {
                                                     const name = exportGeckosPDF(filteredAndSortedGeckos, {
                                                         title: `${user?.full_name || user?.email || 'My'} Gecko Roster`,
                                                         userName: user?.full_name || user?.email,
+                                                    });
+                                                    captureEvent('roster_exported', {
+                                                        format: 'pdf',
+                                                        count: filteredAndSortedGeckos.length,
                                                     });
                                                     toast({
                                                         title: 'PDF exported',

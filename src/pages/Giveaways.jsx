@@ -38,6 +38,7 @@ import {
   Shuffle,
 } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
+import { captureEvent } from '@/lib/posthog';
 
 const LOGO_URL =
   'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png';
@@ -124,6 +125,12 @@ function CreateGiveawayModal({ open, onOpenChange, user, onCreated }) {
         created_by: user.email,
       };
       const created = await Giveaway.create(payload);
+      captureEvent('giveaway_created', {
+        entry_method: payload.entry_method,
+        max_winners: payload.max_winners,
+        has_gecko: Boolean(payload.gecko_id),
+        has_end_date: Boolean(payload.end_date),
+      });
       toast({
         title: 'Giveaway created',
         description: `"${payload.title}" is now live.`,
@@ -319,6 +326,11 @@ function GiveawayCard({ giveaway, user, myEntries, onEntered, onPickWinner, onRe
         giveaway_id: giveaway.id,
         user_email: user.email,
         user_name: user.full_name || user.email,
+      });
+      captureEvent('giveaway_entered', {
+        giveaway_id: giveaway.id,
+        giveaway_title: giveaway.title,
+        entry_method: giveaway.entry_method,
       });
       toast({ title: "You're entered!", description: giveaway.title });
       onEntered?.(giveaway.id);

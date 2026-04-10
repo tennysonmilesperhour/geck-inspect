@@ -1,5 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
+import { identifyUser, resetUser } from '@/lib/posthog';
 
 const AuthContext = createContext();
 
@@ -26,9 +27,14 @@ export const AuthProvider = ({ children }) => {
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         // Set basic user immediately so loading clears, then enrich with profile
-        setUser(normalizeSupabaseUser(session.user));
+        const basic = normalizeSupabaseUser(session.user);
+        setUser(basic);
         setIsAuthenticated(true);
-        buildUser(session.user).then(setUser);
+        identifyUser(basic);
+        buildUser(session.user).then((enriched) => {
+          setUser(enriched);
+          identifyUser(enriched);
+        });
       }
       setIsLoadingAuth(false);
     });
@@ -36,12 +42,18 @@ export const AuthProvider = ({ children }) => {
     // Keep auth state in sync with Supabase
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        setUser(normalizeSupabaseUser(session.user));
+        const basic = normalizeSupabaseUser(session.user);
+        setUser(basic);
         setIsAuthenticated(true);
-        buildUser(session.user).then(setUser);
+        identifyUser(basic);
+        buildUser(session.user).then((enriched) => {
+          setUser(enriched);
+          identifyUser(enriched);
+        });
       } else {
         setUser(null);
         setIsAuthenticated(false);
+        resetUser();
       }
     });
 
@@ -52,6 +64,7 @@ export const AuthProvider = ({ children }) => {
     await supabase.auth.signOut();
     setUser(null);
     setIsAuthenticated(false);
+    resetUser();
     if (shouldRedirect) {
       window.location.href = '/';
     }
