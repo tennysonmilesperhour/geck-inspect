@@ -220,7 +220,7 @@ export default function MyProfile() {
 
             } catch (error) {
                 console.error("Failed to load user data:", error);
-                setUser(null);
+                // Don't clear user — auth may still be valid even if data fetch fails
             }
             setIsLoading(false);
         };

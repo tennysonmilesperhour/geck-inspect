@@ -179,6 +179,10 @@ function createEntityClient(entityName) {
       if (error) throw error;
       return data;
     },
+
+    async list(sort = null) {
+      return this.filter({}, sort);
+    },
   };
 }
 

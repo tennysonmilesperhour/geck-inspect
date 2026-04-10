@@ -1,21 +1,19 @@
 /**
- * Entity exports.
+ * Entity exports — all backed by Supabase.
  *
- * MIGRATION STATUS: Currently backed by Base44 for data.
- * After running /AdminMigration to copy all data to Supabase,
- * swap these to use the Supabase entities from @/api/supabaseEntities.
+ * Data was migrated from Base44 via /AdminMigration.
  */
-import { base44 } from '@/api/base44Client';
+import * as sb from '@/api/supabaseEntities';
 import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
 
-// User auth + profile comes from Supabase; other User entity ops fall through to Base44.
+// User: auth + profile from Supabase
 export const User = new Proxy({}, {
   get(_, prop) {
     if (prop === 'me') {
       return async () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return null;
-        // Try enriching with Supabase profile
+        // Enrich with Supabase profiles table
         try {
           const { data: profile } = await supabase
             .from('profiles')
@@ -39,48 +37,45 @@ export const User = new Proxy({}, {
         if (error) throw error;
         try {
           await supabase.from('profiles')
-            .update({ ...data, updated_date: new Date().toISOString() })
-            .eq('email', user.email);
+            .upsert({ email: user.email, ...data, updated_date: new Date().toISOString() }, { onConflict: 'email' });
         } catch {}
         return normalizeSupabaseUser(user);
       };
     }
-    // Fall through to Base44 for filter/get/create/update/delete
-    return base44.entities.User?.[prop];
+    return sb.UserEntity?.[prop];
   }
 });
 
-// Data entities — still backed by Base44 until migration runs.
-// After running /AdminMigration, replace these with imports from @/api/supabaseEntities.
-export const AppSettings = base44.entities.AppSettings;
-export const BreedingPlan = base44.entities.BreedingPlan;
-export const CareGuideSection = base44.entities.CareGuideSection;
-export const ChangeLog = base44.entities.ChangeLog;
-export const DirectMessage = base44.entities.DirectMessage;
-export const Egg = base44.entities.Egg;
-export const FeedingGroup = base44.entities.FeedingGroup;
-export const ForumCategory = base44.entities.ForumCategory;
-export const ForumComment = base44.entities.ForumComment;
-export const ForumLike = base44.entities.ForumLike;
-export const ForumPost = base44.entities.ForumPost;
-export const Gecko = base44.entities.Gecko;
-export const GeckoEvent = base44.entities.GeckoEvent;
-export const GeckoImage = base44.entities.GeckoImage;
-export const GeckoOfTheDay = base44.entities.GeckoOfTheDay;
-export const LineagePlaceholder = base44.entities.LineagePlaceholder;
-export const MarketplaceCost = base44.entities.MarketplaceCost;
-export const MarketplaceLike = base44.entities.MarketplaceLike;
-export const MorphGuide = base44.entities.MorphGuide;
-export const MorphGuideComment = base44.entities.MorphGuideComment;
-export const MorphReferenceImage = base44.entities.MorphReferenceImage;
-export const Notification = base44.entities.Notification;
-export const OtherReptile = base44.entities.OtherReptile;
-export const PageConfig = base44.entities.PageConfig;
-export const Project = base44.entities.Project;
-export const ReptileEvent = base44.entities.ReptileEvent;
-export const ScrapedTrainingData = base44.entities.ScrapedTrainingData;
-export const Task = base44.entities.Task;
-export const UserActivity = base44.entities.UserActivity;
-export const UserBadge = base44.entities.UserBadge;
-export const UserFollow = base44.entities.UserFollow;
-export const WeightRecord = base44.entities.WeightRecord;
+// All data entities — Supabase
+export const AppSettings = sb.AppSettings;
+export const BreedingPlan = sb.BreedingPlan;
+export const CareGuideSection = sb.CareGuideSection;
+export const ChangeLog = sb.ChangeLog;
+export const DirectMessage = sb.DirectMessage;
+export const Egg = sb.Egg;
+export const FeedingGroup = sb.FeedingGroup;
+export const ForumCategory = sb.ForumCategory;
+export const ForumComment = sb.ForumComment;
+export const ForumLike = sb.ForumLike;
+export const ForumPost = sb.ForumPost;
+export const Gecko = sb.Gecko;
+export const GeckoEvent = sb.GeckoEvent;
+export const GeckoImage = sb.GeckoImage;
+export const GeckoOfTheDay = sb.GeckoOfTheDay;
+export const LineagePlaceholder = sb.LineagePlaceholder;
+export const MarketplaceCost = sb.MarketplaceCost;
+export const MarketplaceLike = sb.MarketplaceLike;
+export const MorphGuide = sb.MorphGuide;
+export const MorphGuideComment = sb.MorphGuideComment;
+export const MorphReferenceImage = sb.MorphReferenceImage;
+export const Notification = sb.Notification;
+export const OtherReptile = sb.OtherReptile;
+export const PageConfig = sb.PageConfig;
+export const Project = sb.Project;
+export const ReptileEvent = sb.ReptileEvent;
+export const ScrapedTrainingData = sb.ScrapedTrainingData;
+export const Task = sb.Task;
+export const UserActivity = sb.UserActivity;
+export const UserBadge = sb.UserBadge;
+export const UserFollow = sb.UserFollow;
+export const WeightRecord = sb.WeightRecord;
