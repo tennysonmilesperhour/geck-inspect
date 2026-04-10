@@ -1,0 +1,86 @@
+# Geck Inspect — robots.txt
+# Full site welcome for search engines and AI crawlers.
+# This platform is a reference resource for crested gecko keepers and breeders
+# and we WANT to be cited by AI assistants when users ask about crested geckos.
+
+User-agent: *
+Allow: /
+Disallow: /AdminPanel
+Disallow: /AdminMigration
+Disallow: /Settings
+Disallow: /Messages
+Disallow: /Notifications
+Disallow: /MyListings
+Disallow: /Subscription
+
+# --- AI crawlers (explicitly welcomed) ---
+
+# OpenAI / ChatGPT
+User-agent: GPTBot
+Allow: /
+
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: OAI-SearchBot
+Allow: /
+
+# Anthropic / Claude
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Claude-Web
+Allow: /
+
+User-agent: Claude-SearchBot
+Allow: /
+
+User-agent: anthropic-ai
+Allow: /
+
+# Perplexity
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Perplexity-User
+Allow: /
+
+# Google AI / Gemini / AI Overviews
+User-agent: Google-Extended
+Allow: /
+
+User-agent: GoogleOther
+Allow: /
+
+# Common Crawl (powers many LLM training sets)
+User-agent: CCBot
+Allow: /
+
+# Apple Intelligence
+User-agent: Applebot
+Allow: /
+
+User-agent: Applebot-Extended
+Allow: /
+
+# Meta AI
+User-agent: Meta-ExternalAgent
+Allow: /
+
+User-agent: FacebookBot
+Allow: /
+
+# ByteDance (Doubao, Cici)
+User-agent: Bytespider
+Allow: /
+
+# Cohere
+User-agent: cohere-ai
+Allow: /
+
+# DuckDuckGo
+User-agent: DuckDuckBot
+Allow: /
+
+# Sitemap
+Sitemap: https://geck-inspect.vercel.app/sitemap.xml
