@@ -418,16 +418,30 @@ function LayoutContent({ children, currentPageName }) {
         }
 
         // Try to get user first with heavy caching
-        let currentUser = dataCache.get('current_user');
-        if (!currentUser && dataCache.canMakeRequest('current_user')) {
+        let currentUser = dataCache.get('current_user_v2');
+        if (!currentUser && dataCache.canMakeRequest('current_user_v2')) {
           try {
-            dataCache.markRequestMade('current_user');
+            dataCache.markRequestMade('current_user_v2');
             const { data: { user: _supaUser } } = await supabase.auth.getUser();
             currentUser = normalizeSupabaseUser(_supaUser);
             if (currentUser) {
-              dataCache.set('current_user', currentUser);
+              // Enrich with the profile row so user.role, bio, business_name,
+              // etc. are available for the sidebar admin check and other UI
+              // bits. Without this, user.role is undefined even when the
+              // profiles row is correctly marked admin in the database.
+              try {
+                const { data: profile } = await supabase
+                  .from('profiles')
+                  .select('*')
+                  .eq('email', currentUser.email)
+                  .maybeSingle();
+                if (profile) currentUser = { ...currentUser, ...profile };
+              } catch (profileErr) {
+                console.log('Profile enrichment failed:', profileErr);
+              }
+              dataCache.set('current_user_v2', currentUser);
               setUser(currentUser);
-              console.log('User authenticated successfully:', currentUser.email);
+              console.log('User authenticated successfully:', currentUser.email, 'role:', currentUser.role);
             }
           } catch (error) {
             console.log("User authentication check failed:", error);
@@ -437,7 +451,7 @@ function LayoutContent({ children, currentPageName }) {
             setCommunityLevel(null);
             setUnreadMessages(0);
             setUnreadNotificationsCount(0);
-            dataCache.clear('current_user');
+            dataCache.clear('current_user_v2');
           }
         } else if (currentUser) {
           setUser(currentUser);
