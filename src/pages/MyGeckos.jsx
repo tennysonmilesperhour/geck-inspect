@@ -231,6 +231,21 @@ export default function MyGeckosPage() {
         }
     }, [user, loadGeckos]); // loadGeckos depends on user, so this ensures it runs when user is ready.
 
+    // Listen for cross-page gecko-list changes (e.g. a new gecko auto-created
+    // when hatching an egg on the Breeding page). Any page that mutates the
+    // gecko collection should dispatch a 'geckos_changed' window event; we
+    // invalidate our cache and reload so the new gecko appears immediately
+    // when the user navigates back here.
+    useEffect(() => {
+        const handler = () => {
+            if (!user?.email) return;
+            geckosCache.invalidate(`geckos_${user.email}`);
+            loadGeckos(true);
+        };
+        window.addEventListener('geckos_changed', handler);
+        return () => window.removeEventListener('geckos_changed', handler);
+    }, [user, loadGeckos]);
+
     // Effect to update selectedGecko after geckos list reloads
     useEffect(() => {
         if (selectedGecko && geckos.length > 0) {
@@ -344,6 +359,12 @@ export default function MyGeckosPage() {
             has_image: Array.isArray(geckoData?.image_urls) && geckoData.image_urls.length > 0,
             has_lineage: Boolean(geckoData?.sire_id || geckoData?.dam_id || geckoData?.sire_name || geckoData?.dam_name),
         });
+
+        // Notify any other page listening on the gecko list (Dashboard,
+        // Lineage, Breeding, etc.) so their caches can invalidate.
+        window.dispatchEvent(new CustomEvent('geckos_changed', {
+            detail: { action: isNew ? 'created' : 'updated' }
+        }));
 
         if (user) {
             const cacheKey = `geckos_${user.email}`;

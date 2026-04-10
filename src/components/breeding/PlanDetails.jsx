@@ -152,6 +152,13 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
 
                     // Link gecko to egg
                     updateData.gecko_id = newGecko.id;
+
+                    // Notify any listening pages (MyGeckos in particular)
+                    // that the user's gecko list has changed, so caches can
+                    // invalidate and the new gecko shows up on navigation.
+                    window.dispatchEvent(new CustomEvent('geckos_changed', {
+                        detail: { action: 'created', geckoId: newGecko.id }
+                    }));
                 } catch (error) {
                     console.error("Failed to create gecko:", error);
                     // Decide whether to proceed with egg status update if gecko creation fails
