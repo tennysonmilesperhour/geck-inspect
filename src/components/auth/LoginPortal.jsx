@@ -114,10 +114,13 @@ export default function LoginPortal({ requiredFeature = null }) {
             className="h-16 w-16 rounded-xl mx-auto"
           />
           <h1 className="text-4xl font-bold text-white">Geck Inspect</h1>
+          <p className="text-[11px] font-semibold uppercase tracking-[0.2em] text-emerald-300">
+            geckOS — the ultimate gecko operating system
+          </p>
           <p className="text-slate-400 text-sm">
             {requiredFeature
               ? `${requiredFeature} requires an account — sign in or create one below.`
-              : 'The ultimate crested gecko breeding & identification platform'}
+              : 'Sign in to continue to your collection.'}
           </p>
         </div>
 

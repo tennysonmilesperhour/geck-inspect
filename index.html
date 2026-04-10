@@ -14,6 +14,22 @@
     <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1" />
     <link rel="canonical" href="https://geckinspect.com/" />
 
+    <!-- Auto-noindex on any host that isn't production. Keeps staging,
+         preview deployments, and the vercel.app subdomain out of Google
+         so they don't compete with geckinspect.com for ranking. -->
+    <script>
+      (function () {
+        var h = location.hostname;
+        var isProd = h === 'geckinspect.com' || h === 'www.geckinspect.com';
+        if (!isProd) {
+          var m = document.createElement('meta');
+          m.name = 'robots';
+          m.content = 'noindex, nofollow';
+          document.head.appendChild(m);
+        }
+      })();
+    </script>
+
     <!-- Theme -->
     <meta name="theme-color" content="#064e3b" />
     <meta name="color-scheme" content="dark" />

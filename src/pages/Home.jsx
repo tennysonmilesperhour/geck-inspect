@@ -127,18 +127,22 @@ export default function Home() {
 
         {/* Hero */}
         <section className="relative z-10 max-w-5xl mx-auto px-6 pt-16 pb-24 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-xs font-medium text-emerald-300 mb-8">
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-emerald-300 mb-8">
             <Sparkles className="w-3.5 h-3.5" />
-            Built for serious crested gecko keepers &amp; breeders
+            Welcome to geckOS
           </div>
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-[1.05] mb-6 bg-gradient-to-b from-white via-white to-emerald-200 bg-clip-text text-transparent">
-            Every gecko in your collection,
+            The ultimate gecko
             <br />
-            finally in one place.
+            operating system.
           </h1>
-          <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="text-xl md:text-2xl text-emerald-200/90 max-w-2xl mx-auto mb-4 font-medium">
+            Every gecko in your collection, finally in one place.
+          </p>
+          <p className="text-base md:text-lg text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed">
             Track, breed, and identify crested geckos with a platform built specifically for the
-            hobby. AI morph identification, breeding planning, lineage trees, community — all of it.
+            hobby. AI morph identification, breeding planning, lineage trees, community — your
+            new geckOS.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
             <Link to={createPageUrl('AuthPortal')}>
@@ -263,7 +267,7 @@ export default function Home() {
         {/* Final CTA */}
         <section className="relative z-10 max-w-4xl mx-auto px-6 pb-24 text-center">
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
-            Ready to inspect your geckos?
+            Boot up your geckOS.
           </h2>
           <p className="text-slate-400 mb-8 text-lg">
             Create a free account and start cataloging your collection in minutes.
@@ -284,7 +288,7 @@ export default function Home() {
           <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
             <div className="flex items-center gap-3">
               <img src={LOGO_URL} alt="Geck Inspect" className="h-6 w-6 rounded" />
-              <span>© {new Date().getFullYear()} Geck Inspect</span>
+              <span>© {new Date().getFullYear()} Geck Inspect · geckOS</span>
             </div>
             <div className="flex items-center gap-6">
               <Link to={createPageUrl('PrivacyPolicy')} className="hover:text-slate-300">
