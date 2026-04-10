@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
-import { base44, redirectToLogin } from '@/api/base44Client';
+import { base44 } from '@/api/base44Client';
+import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
 import { GeckoImage } from "@/entities/GeckoImage";
 import { User } from "@/entities/User";
 import { Gecko } from "@/entities/Gecko";
@@ -408,7 +409,8 @@ function LayoutContent({ children, currentPageName }) {
         if (!currentUser && dataCache.canMakeRequest('current_user')) {
           try {
             dataCache.markRequestMade('current_user');
-            currentUser = await retryApiCall(() => base44.auth.me());
+            const { data: { user: _supaUser } } = await supabase.auth.getUser();
+            currentUser = normalizeSupabaseUser(_supaUser);
             if (currentUser) {
               dataCache.set('current_user', currentUser);
               setUser(currentUser);
@@ -505,12 +507,12 @@ function LayoutContent({ children, currentPageName }) {
 
 
   const handleLogin = () => {
-    redirectToLogin(window.location.href);
+    window.location.href = '/AuthPortal';
   };
 
   const handleLogout = async () => {
     try {
-      await base44.auth.logout();
+      await supabase.auth.signOut();
       setUser(null);
       setUserLevel(null);
       setImageLevel(null);

@@ -1,279 +1,226 @@
-import React, { useState, useEffect } from 'react';
-import { base44 } from '@/api/base44Client';
-import { User } from '@/entities/all';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import React, { useState } from 'react';
+import { supabase } from '@/lib/supabaseClient';
+import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Check, Sparkles, Users, GitBranch, Calendar, TrendingUp, CheckCircle, Loader2 } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
+import { Loader2, Mail, Lock } from 'lucide-react';
 
-const MEMBERSHIP_TIERS = [
-  {
-    id: 'free',
-    name: 'Free Member',
-    price: 0,
-    features: [
-      'Up to 10 geckos in collection',
-      'Basic breeding tracking',
-      'Public profile',
-      'Community forum access',
-      'AI morph identification'
-    ],
-    color: 'from-gray-600 to-gray-700',
-    icon: Users
-  },
-  {
-    id: 'keeper',
-    name: 'Keeper',
-    monthlyPrice: 4,
-    annualPrice: 38.40, // 20% off
-    features: [
-      'Up to 50 geckos in collection',
-      'Advanced breeding tools',
-      'Calendar reminders',
-      'Weight tracking & charts',
-      'Priority support',
-      'Export data to CSV'
-    ],
-    color: 'from-emerald-600 to-teal-600',
-    icon: Sparkles,
-    popular: true
-  },
-  {
-    id: 'breeder',
-    name: 'Breeder',
-    monthlyPrice: 11,
-    annualPrice: 105.60, // 20% off
-    features: [
-      'Unlimited geckos',
-      'Full lineage tree access',
-      'Advanced calendar system',
-      'Marketplace sync (MorphMarket, Palm Street)',
-      'Custom breeding analytics',
-      'Priority AI training access',
-      'White-label certificates'
-    ],
-    color: 'from-purple-600 to-indigo-600',
-    icon: GitBranch
-  }
-];
+function GoogleIcon() {
+  return (
+    <svg viewBox="0 0 24 24" className="w-5 h-5" aria-hidden="true">
+      <path
+        d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
+        fill="#4285F4"
+      />
+      <path
+        d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
+        fill="#34A853"
+      />
+      <path
+        d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
+        fill="#FBBC05"
+      />
+      <path
+        d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
+        fill="#EA4335"
+      />
+    </svg>
+  );
+}
 
 export default function LoginPortal({ requiredFeature = null }) {
-  const [billingCycle, setBillingCycle] = useState('monthly');
-  const [currentUser, setCurrentUser] = useState(null);
-  const [isCheckingAuth, setIsCheckingAuth] = useState(true);
-  const [selectedTier, setSelectedTier] = useState(null);
-  const [isSaving, setIsSaving] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(false);
+  const [signUpSent, setSignUpSent] = useState(false);
   const { toast } = useToast();
 
-  useEffect(() => {
-    const checkAuth = async () => {
-      try {
-        const user = await base44.auth.me();
-        setCurrentUser(user);
-        if (user?.membership_tier) {
-          setSelectedTier(user.membership_tier);
+  const handleGoogleSignIn = async () => {
+    setIsGoogleLoading(true);
+    const { error } = await supabase.auth.signInWithOAuth({
+      provider: 'google',
+      options: { redirectTo: window.location.origin },
+    });
+    if (error) {
+      toast({ title: 'Google sign-in failed', description: error.message, variant: 'destructive' });
+      setIsGoogleLoading(false);
+    }
+    // On success, Supabase redirects the browser — no need to reset state.
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    setIsLoading(true);
+    try {
+      if (isSignUp) {
+        const { error } = await supabase.auth.signUp({ email, password });
+        if (error) {
+          toast({ title: 'Sign up failed', description: error.message, variant: 'destructive' });
+        } else {
+          setSignUpSent(true);
         }
-      } catch (error) {
-        // Not logged in
+      } else {
+        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        if (error) {
+          toast({ title: 'Sign in failed', description: error.message, variant: 'destructive' });
+        }
+        // On success, onAuthStateChange in AuthContext re-renders the app.
       }
-      setIsCheckingAuth(false);
-    };
-    checkAuth();
-  }, []);
-
-  const handleLogin = async () => {
-    try {
-      const currentUrl = window.location.href;
-      await base44.auth.redirectToLogin(currentUrl);
-    } catch (error) {
-      console.error("Login failed:", error);
+    } catch (err) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
     }
+    setIsLoading(false);
   };
 
-  const handleSelectTier = async (tier) => {
-    if (!currentUser) {
-      // Not logged in, redirect to login
-      await handleLogin();
-      return;
-    }
-
-    // User is logged in, save their tier selection
-    setIsSaving(true);
-    try {
-      await base44.auth.updateMe({
-        membership_tier: tier.id,
-        membership_billing_cycle: tier.price === 0 ? null : billingCycle
-      });
-      
-      setSelectedTier(tier.id);
-      toast({ 
-        title: "Plan Selected!", 
-        description: tier.price === 0 
-          ? "You're now on the Free plan. Enjoy!" 
-          : `You've selected the ${tier.name} plan. Payment integration coming soon!`
-      });
-      
-      // Reload the page to refresh the app state
-      setTimeout(() => {
-        window.location.reload();
-      }, 1500);
-    } catch (error) {
-      console.error("Failed to save tier:", error);
-      toast({ title: "Error", description: "Failed to save your selection.", variant: "destructive" });
-    }
-    setIsSaving(false);
-  };
+  if (signUpSent) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 flex items-center justify-center p-4">
+        <div className="w-full max-w-md text-center space-y-6">
+          <img
+            src={window.APP_LOGO_URL || 'https://i.imgur.com/gfaW2Yg.png'}
+            alt="Geck Inspect"
+            className="h-16 w-16 rounded-xl mx-auto"
+          />
+          <h1 className="text-3xl font-bold text-white">Check your email</h1>
+          <p className="text-slate-300">
+            We sent a confirmation link to{' '}
+            <span className="text-emerald-400">{email}</span>.
+            Click it to activate your account, then come back and sign in.
+          </p>
+          <button
+            onClick={() => { setIsSignUp(false); setSignUpSent(false); }}
+            className="text-emerald-400 hover:text-emerald-300 underline text-sm"
+          >
+            Back to sign in
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 flex items-center justify-center p-4">
-      <div className="max-w-6xl w-full space-y-8">
-        <div className="text-center space-y-4">
-          <div className="flex items-center justify-center gap-3 mb-4">
-            <img 
-              src={window.APP_LOGO_URL || 'https://i.imgur.com/gfaW2Yg.png'} 
-              alt="Geck Inspect" 
-              className="h-12 w-12 rounded-lg"
-            />
-            <h1 className="text-4xl md:text-5xl font-bold text-white">Geck Inspect</h1>
-          </div>
-          <p className="text-xl text-slate-300">
-            {requiredFeature 
-              ? `${requiredFeature} requires an account. Choose your membership level:` 
-              : 'Join the ultimate crested gecko breeding & identification platform'}
+      <div className="w-full max-w-md space-y-7">
+
+        {/* Branding */}
+        <div className="text-center space-y-3">
+          <img
+            src={window.APP_LOGO_URL || 'https://i.imgur.com/gfaW2Yg.png'}
+            alt="Geck Inspect"
+            className="h-16 w-16 rounded-xl mx-auto"
+          />
+          <h1 className="text-4xl font-bold text-white">Geck Inspect</h1>
+          <p className="text-slate-400 text-sm">
+            {requiredFeature
+              ? `${requiredFeature} requires an account — sign in or create one below.`
+              : 'The ultimate crested gecko breeding & identification platform'}
           </p>
-          <div className="bg-emerald-900/30 border border-emerald-500/50 rounded-lg p-4 max-w-2xl mx-auto">
-            <p className="text-emerald-300 font-semibold text-lg mb-2">
-              🧪 Beta Access - All Features Free!
-            </p>
-            <p className="text-emerald-300">
-              This app is currently in beta. All membership tiers are completely free—simply select the one you want and it will activate immediately. No credit card or payment information required.
-            </p>
-          </div>
         </div>
 
-        {/* Billing Toggle */}
-        <div className="flex justify-center">
-          <div className="bg-slate-800 p-1 rounded-lg inline-flex">
-            <button
-              onClick={() => setBillingCycle('monthly')}
-              className={`px-6 py-2 rounded-md transition-all ${
-                billingCycle === 'monthly' 
-                  ? 'bg-emerald-600 text-white' 
-                  : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              Monthly
-            </button>
-            <button
-              onClick={() => setBillingCycle('annual')}
-              className={`px-6 py-2 rounded-md transition-all ${
-                billingCycle === 'annual' 
-                  ? 'bg-emerald-600 text-white' 
-                  : 'text-slate-300 hover:text-white'
-              }`}
-            >
-              Annual <span className="ml-1 text-xs">(Save 20%)</span>
-            </button>
-          </div>
-        </div>
+        {/* Auth card */}
+        <Card className="bg-slate-900 border-slate-700 shadow-xl">
+          <CardContent className="pt-6 space-y-5">
 
-        {/* Membership Tiers */}
-        <div className="grid md:grid-cols-3 gap-6">
-          {MEMBERSHIP_TIERS.map(tier => {
-            const Icon = tier.icon;
-            const price = tier.price === 0 
-              ? 'Free' 
-              : billingCycle === 'monthly' 
-                ? `$${tier.monthlyPrice}/mo` 
-                : `$${tier.annualPrice}/yr`;
-            
-            return (
-              <Card 
-                key={tier.id}
-                className={`relative overflow-hidden ${
-                  tier.popular 
-                    ? 'ring-2 ring-emerald-500 shadow-2xl shadow-emerald-500/20' 
-                    : ''
-                } bg-slate-900 border-slate-700 hover:border-emerald-500/50 transition-all`}
+            {/* Tab toggle */}
+            <div className="flex bg-slate-800 rounded-lg p-1 gap-1">
+              <button
+                onClick={() => setIsSignUp(false)}
+                className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
+                  !isSignUp
+                    ? 'bg-emerald-600 text-white shadow'
+                    : 'text-slate-400 hover:text-white'
+                }`}
               >
-                {tier.popular && (
-                  <div className="absolute top-4 right-4">
-                    <Badge className="bg-emerald-500 text-white">Most Popular</Badge>
-                  </div>
-                )}
-                
-                <CardHeader>
-                  <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${tier.color} flex items-center justify-center mb-4`}>
-                    <Icon className="w-6 h-6 text-white" />
-                  </div>
-                  <CardTitle className="text-2xl text-white">{tier.name}</CardTitle>
-                  <CardDescription>
-                    <span className="text-3xl font-bold text-white">{price}</span>
-                  </CardDescription>
-                </CardHeader>
-
-                <CardContent className="space-y-6">
-                  <ul className="space-y-3">
-                    {tier.features.map((feature, idx) => (
-                      <li key={idx} className="flex items-start gap-2 text-slate-300">
-                        <Check className="w-5 h-5 text-emerald-400 flex-shrink-0 mt-0.5" />
-                        <span className="text-sm">{feature}</span>
-                      </li>
-                    ))}
-                  </ul>
-
-                  <Button
-                    onClick={() => handleSelectTier(tier)}
-                    disabled={isSaving}
-                    className={`w-full ${
-                      selectedTier === tier.id
-                        ? 'bg-green-600 hover:bg-green-700'
-                        : tier.popular 
-                          ? 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700' 
-                          : 'bg-slate-700 hover:bg-slate-600'
-                    }`}
-                  >
-                    {isSaving ? (
-                      <Loader2 className="w-4 h-4 animate-spin" />
-                    ) : selectedTier === tier.id ? (
-                      <><CheckCircle className="w-4 h-4 mr-2" /> Current Plan</>
-                    ) : currentUser ? (
-                      tier.price === 0 ? 'Select Free Plan' : 'Select Plan'
-                    ) : (
-                      tier.price === 0 ? 'Start Free' : 'Get Started'
-                    )}
-                  </Button>
-                </CardContent>
-              </Card>
-            );
-          })}
-        </div>
-
-        <div className="text-center">
-          {currentUser ? (
-            <p className="text-slate-400 text-sm">
-              Logged in as <span className="text-emerald-400">{currentUser.full_name || currentUser.email}</span>
-              {' • '}
-              <button 
-                onClick={() => window.location.reload()}
-                className="text-emerald-400 hover:text-emerald-300 underline"
-              >
-                Continue to app
+                Sign In
               </button>
-            </p>
-          ) : (
-            <p className="text-slate-400 text-sm">
-              Already have an account?{' '}
-              <button 
-                onClick={handleLogin}
-                className="text-emerald-400 hover:text-emerald-300 underline"
+              <button
+                onClick={() => setIsSignUp(true)}
+                className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
+                  isSignUp
+                    ? 'bg-emerald-600 text-white shadow'
+                    : 'text-slate-400 hover:text-white'
+                }`}
               >
-                Log in here
+                Create Account
               </button>
-            </p>
-          )}
-        </div>
+            </div>
+
+            {/* Google OAuth */}
+            <Button
+              type="button"
+              variant="outline"
+              onClick={handleGoogleSignIn}
+              disabled={isGoogleLoading || isLoading}
+              className="w-full bg-white hover:bg-slate-100 text-slate-900 border-slate-300 font-medium gap-2"
+            >
+              {isGoogleLoading
+                ? <Loader2 className="w-4 h-4 animate-spin" />
+                : <GoogleIcon />}
+              Continue with Google
+            </Button>
+
+            {/* Divider */}
+            <div className="flex items-center gap-3">
+              <div className="flex-1 h-px bg-slate-700" />
+              <span className="text-xs text-slate-500 uppercase tracking-wider">or</span>
+              <div className="flex-1 h-px bg-slate-700" />
+            </div>
+
+            {/* Email / password form */}
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-1">
+                <Label htmlFor="email" className="text-slate-300 text-sm">Email</Label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="you@example.com"
+                    className="pl-10 bg-slate-800 border-slate-600 text-white placeholder-slate-500 focus:border-emerald-500"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <Label htmlFor="password" className="text-slate-300 text-sm">Password</Label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="••••••••"
+                    className="pl-10 bg-slate-800 border-slate-600 text-white placeholder-slate-500 focus:border-emerald-500"
+                    required
+                    minLength={6}
+                  />
+                </div>
+              </div>
+
+              <Button
+                type="submit"
+                disabled={isLoading || isGoogleLoading}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+              >
+                {isLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                {isSignUp ? 'Create Account' : 'Sign In'}
+              </Button>
+            </form>
+
+          </CardContent>
+        </Card>
+
+        <p className="text-center text-xs text-slate-600">
+          By continuing you agree to our terms of service and privacy policy.
+        </p>
       </div>
     </div>
   );

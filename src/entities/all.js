@@ -1,12 +1,29 @@
 import { base44 } from '@/api/base44Client';
+import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
 
-// User maps to the auth module (with entity fallback for other props)
+// User maps to Supabase auth so it works without Base44's auth servers.
 export const User = new Proxy({}, {
   get(_, prop) {
-    if (prop === 'me') return (...args) => base44.auth.me(...args);
-    if (prop === 'loginWithRedirect' || prop === 'login') return (...args) => base44.auth.loginWithRedirect(...args);
-    if (prop === 'logout') return (...args) => base44.auth.logout(...args);
-    if (prop === 'updateMyUserData') return (...args) => base44.auth.updateMe(...args);
+    if (prop === 'me') {
+      return async () => {
+        const { data: { user } } = await supabase.auth.getUser();
+        return normalizeSupabaseUser(user);
+      };
+    }
+    if (prop === 'loginWithRedirect' || prop === 'login') {
+      return () => { window.location.href = '/AuthPortal'; };
+    }
+    if (prop === 'logout') {
+      return async () => { await supabase.auth.signOut(); };
+    }
+    if (prop === 'updateMyUserData') {
+      return async (data) => {
+        const { data: { user }, error } = await supabase.auth.updateUser({ data });
+        if (error) throw error;
+        return normalizeSupabaseUser(user);
+      };
+    }
+    // Fall through to Base44 entity for any other props
     return base44.entities.User?.[prop];
   }
 });
