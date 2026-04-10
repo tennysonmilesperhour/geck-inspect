@@ -18,6 +18,7 @@ import LoginPortal from '@/components/auth/LoginPortal';
 import Home from './pages/Home';
 
 // Everything else below is lazy-loaded for bundle-size wins.
+const Breeder               = lazy(() => import('./pages/Breeder'));
 const ForumPost             = lazy(() => import('./pages/ForumPost'));
 const PrivacyPolicy         = lazy(() => import('./pages/PrivacyPolicy'));
 const MarketplaceSalesStats = lazy(() => import('./pages/MarketplaceSalesStats'));
@@ -61,6 +62,7 @@ const AuthenticatedApp = () => {
         <Routes>
           <Route path="/" element={<Home />} />
           <Route path="/Home" element={<Home />} />
+          <Route path="/Breeder" element={<Breeder />} />
           <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
           <Route path="*" element={<LoginPortal />} />
         </Routes>
@@ -111,6 +113,11 @@ const AuthenticatedApp = () => {
       <Route path="/Membership" element={
         <LayoutWrapper currentPageName="Membership">
           <Membership />
+        </LayoutWrapper>
+      } />
+      <Route path="/Breeder" element={
+        <LayoutWrapper currentPageName="Breeder">
+          <Breeder />
         </LayoutWrapper>
       } />
       <Route path="/AdminMigration" element={<AdminMigration />} />

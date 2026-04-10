@@ -4,11 +4,35 @@ import { base44 } from '@/api/base44Client';
 import { useNavigate, Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { format } from 'date-fns';
+import { breederSlug, looksLikeBreederName } from '@/lib/breederUtils';
 import {
     Loader2, ArrowLeft, Calendar, GitBranch, Info, StickyNote,
     DollarSign, LineChart as LineChartIcon, Mail, MapPin, Tag, User as UserIcon,
     ChevronLeft, ChevronRight, X
 } from 'lucide-react';
+
+// Renders a sire/dam parent name. If we have a linked Gecko record, that
+// wins. Otherwise, if the free-text name looks like a breeder reference
+// (multi-word capitalized, or has a .com suffix), link it to the public
+// /Breeder page. Plain single-word nicknames render as bare text.
+function ParentName({ linkedGecko, fallbackName }) {
+    if (linkedGecko) return <span>{linkedGecko.name}</span>;
+    const text = fallbackName || 'Unknown';
+    if (!fallbackName || !looksLikeBreederName(fallbackName)) {
+        return <span>{text}</span>;
+    }
+    const slug = breederSlug(fallbackName);
+    if (!slug) return <span>{text}</span>;
+    return (
+        <Link
+            to={`/Breeder?slug=${slug}`}
+            className="text-emerald-300 hover:text-emerald-200 underline decoration-emerald-500/40 decoration-dotted underline-offset-2"
+            title={`View ${text} on Geck Inspect`}
+        >
+            {text}
+        </Link>
+    );
+}
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -302,11 +326,15 @@ export default function GeckoDetail() {
                                 <div className="grid grid-cols-2 gap-3">
                                     <div className="bg-slate-800 p-3 rounded-lg">
                                         <p className="text-slate-400 text-xs mb-1">Sire (Father)</p>
-                                        <p className="text-slate-200 font-medium">{sire ? sire.name : (gecko.sire_name || 'Unknown')}</p>
+                                        <p className="text-slate-200 font-medium">
+                                            <ParentName linkedGecko={sire} fallbackName={gecko.sire_name} />
+                                        </p>
                                     </div>
                                     <div className="bg-slate-800 p-3 rounded-lg">
                                         <p className="text-slate-400 text-xs mb-1">Dam (Mother)</p>
-                                        <p className="text-slate-200 font-medium">{dam ? dam.name : (gecko.dam_name || 'Unknown')}</p>
+                                        <p className="text-slate-200 font-medium">
+                                            <ParentName linkedGecko={dam} fallbackName={gecko.dam_name} />
+                                        </p>
                                     </div>
                                 </div>
                                 <Link to={createPageUrl(`Lineage?geckoId=${gecko.id}`)}>

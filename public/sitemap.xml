@@ -75,4 +75,14 @@
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
+  <!--
+    /Breeder?slug=... pages are generated dynamically from attribution
+    data (sire_name / dam_name / notes on each gecko). Known breeder
+    slugs can be enumerated here as they become relevant for outreach.
+  -->
+  <url>
+    <loc>https://geckinspect.com/Breeder?slug=altitude-exotics</loc>
+    <changefreq>weekly</changefreq>
+    <priority>0.7</priority>
+  </url>
 </urlset>
