@@ -1,12 +1,18 @@
 import React, { useState, useEffect, useCallback, Suspense, useRef } from 'react';
 import { User, Gecko, WeightRecord, FeedingGroup } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
-import { PlusCircle, Search, Users, Grid3x3, List, ArrowUpDown, UserPlus, Archive, ArchiveRestore } from 'lucide-react';
+import { PlusCircle, Search, Users, Grid3x3, List, ArrowUpDown, UserPlus, Archive, ArchiveRestore, Download, FileText, FileSpreadsheet } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import PageSettingsPanel from '../components/ui/PageSettingsPanel';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -20,6 +26,7 @@ import { toast } from '@/components/ui/use-toast';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import PlanLimitModal, { checkPlanLimit, getGeckoLimit } from '../components/subscription/PlanLimitChecker';
+import { exportGeckosCSV, exportGeckosPDF } from '@/lib/exportUtils';
 
 const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
 
@@ -601,15 +608,79 @@ export default function MyGeckosPage() {
                                 <Button variant="outline" className="border-slate-600 hover:bg-slate-800" onClick={() => setIsImportModalOpen(true)}>
                                     Import from CSV
                                 </Button>
-                                <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={() => { 
+                                <DropdownMenu>
+                                    <DropdownMenuTrigger asChild>
+                                        <Button
+                                            variant="outline"
+                                            className="border-slate-600 hover:bg-slate-800"
+                                            disabled={!filteredAndSortedGeckos || filteredAndSortedGeckos.length === 0}
+                                        >
+                                            <Download className="w-4 h-4 mr-2" />
+                                            Export
+                                        </Button>
+                                    </DropdownMenuTrigger>
+                                    <DropdownMenuContent
+                                        align="end"
+                                        className="bg-slate-900 border-slate-700 text-slate-100"
+                                    >
+                                        <DropdownMenuItem
+                                            className="focus:bg-slate-800 focus:text-white cursor-pointer"
+                                            onClick={() => {
+                                                try {
+                                                    const name = exportGeckosCSV(filteredAndSortedGeckos);
+                                                    toast({
+                                                        title: 'CSV exported',
+                                                        description: `Saved ${filteredAndSortedGeckos.length} geckos to ${name}`,
+                                                    });
+                                                } catch (err) {
+                                                    toast({
+                                                        title: 'Export failed',
+                                                        description: err.message,
+                                                        variant: 'destructive',
+                                                    });
+                                                }
+                                            }}
+                                        >
+                                            <FileSpreadsheet className="w-4 h-4 mr-2 text-emerald-400" />
+                                            Download as CSV
+                                            <span className="ml-auto text-xs text-slate-500">.csv</span>
+                                        </DropdownMenuItem>
+                                        <DropdownMenuItem
+                                            className="focus:bg-slate-800 focus:text-white cursor-pointer"
+                                            onClick={() => {
+                                                try {
+                                                    const name = exportGeckosPDF(filteredAndSortedGeckos, {
+                                                        title: `${user?.full_name || user?.email || 'My'} Gecko Roster`,
+                                                        userName: user?.full_name || user?.email,
+                                                    });
+                                                    toast({
+                                                        title: 'PDF exported',
+                                                        description: `Saved ${filteredAndSortedGeckos.length} geckos to ${name}`,
+                                                    });
+                                                } catch (err) {
+                                                    toast({
+                                                        title: 'Export failed',
+                                                        description: err.message,
+                                                        variant: 'destructive',
+                                                    });
+                                                }
+                                            }}
+                                        >
+                                            <FileText className="w-4 h-4 mr-2 text-emerald-400" />
+                                            Download as PDF
+                                            <span className="ml-auto text-xs text-slate-500">.pdf</span>
+                                        </DropdownMenuItem>
+                                    </DropdownMenuContent>
+                                </DropdownMenu>
+                                <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={() => {
                                     const limit = getGeckoLimit(user);
                                     if (geckos.filter(g => !g.archived).length >= limit) {
                                         setShowUpgradeModal(true);
                                         return;
                                     }
-                                    setSelectedGecko(null); 
-                                    setIsFormOpen(true); 
-                                    setIsDetailModalOpen(false); 
+                                    setSelectedGecko(null);
+                                    setIsFormOpen(true);
+                                    setIsDetailModalOpen(false);
                                 }}>
                                     <PlusCircle className="w-5 h-5 mr-2" />
                                     Add Gecko
