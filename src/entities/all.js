@@ -1,12 +1,29 @@
+/**
+ * Entity exports.
+ *
+ * MIGRATION STATUS: Currently backed by Base44 for data.
+ * After running /AdminMigration to copy all data to Supabase,
+ * swap these to use the Supabase entities from @/api/supabaseEntities.
+ */
 import { base44 } from '@/api/base44Client';
 import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
 
-// User maps to Supabase auth so it works without Base44's auth servers.
+// User auth + profile comes from Supabase; other User entity ops fall through to Base44.
 export const User = new Proxy({}, {
   get(_, prop) {
     if (prop === 'me') {
       return async () => {
         const { data: { user } } = await supabase.auth.getUser();
+        if (!user) return null;
+        // Try enriching with Supabase profile
+        try {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('email', user.email)
+            .maybeSingle();
+          if (profile) return { ...normalizeSupabaseUser(user), ...profile };
+        } catch {}
         return normalizeSupabaseUser(user);
       };
     }
@@ -20,15 +37,21 @@ export const User = new Proxy({}, {
       return async (data) => {
         const { data: { user }, error } = await supabase.auth.updateUser({ data });
         if (error) throw error;
+        try {
+          await supabase.from('profiles')
+            .update({ ...data, updated_date: new Date().toISOString() })
+            .eq('email', user.email);
+        } catch {}
         return normalizeSupabaseUser(user);
       };
     }
-    // Fall through to Base44 entity for any other props
+    // Fall through to Base44 for filter/get/create/update/delete
     return base44.entities.User?.[prop];
   }
 });
 
-// Standard entity exports
+// Data entities — still backed by Base44 until migration runs.
+// After running /AdminMigration, replace these with imports from @/api/supabaseEntities.
 export const AppSettings = base44.entities.AppSettings;
 export const BreedingPlan = base44.entities.BreedingPlan;
 export const CareGuideSection = base44.entities.CareGuideSection;

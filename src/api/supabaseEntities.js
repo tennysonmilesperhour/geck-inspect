@@ -1,0 +1,226 @@
+/**
+ * Supabase entity compatibility layer.
+ * Provides the same API as base44.entities.* so pages work without changes.
+ *
+ * API:
+ *   Entity.filter(query, sort, limit, skip) → Array
+ *   Entity.get(id) → Object
+ *   Entity.create(data) → Object
+ *   Entity.update(id, data) → Object
+ *   Entity.delete(id) → Object
+ */
+import { supabase } from '@/lib/supabaseClient';
+
+export const TABLE_MAP = {
+  AppSettings: 'app_settings',
+  BreedingPlan: 'breeding_plans',
+  CareGuideSection: 'care_guide_sections',
+  ChangeLog: 'change_logs',
+  ClassificationVote: 'classification_votes',
+  DirectMessage: 'direct_messages',
+  Egg: 'eggs',
+  ExpertAction: 'expert_actions',
+  ExpertVerificationRequest: 'expert_verification_requests',
+  FeedingGroup: 'feeding_groups',
+  ForumCategory: 'forum_categories',
+  ForumComment: 'forum_comments',
+  ForumLike: 'forum_likes',
+  ForumPost: 'forum_posts',
+  Gecko: 'geckos',
+  GeckoEvent: 'gecko_events',
+  GeckoImage: 'gecko_images',
+  GeckoLike: 'gecko_likes',
+  GeckoOfTheDay: 'gecko_of_the_day',
+  LineagePlaceholder: 'lineage_placeholders',
+  MarketplaceCost: 'marketplace_costs',
+  MarketplaceLike: 'marketplace_likes',
+  MorphGuide: 'morph_guides',
+  MorphGuideComment: 'morph_guide_comments',
+  MorphPriceCache: 'morph_price_cache',
+  MorphReferenceImage: 'morph_reference_images',
+  MorphTrait: 'morph_traits',
+  Notification: 'notifications',
+  OtherReptile: 'other_reptiles',
+  PageConfig: 'page_config',
+  PaymentEvent: 'payment_events',
+  Project: 'projects',
+  ReptileEvent: 'reptile_events',
+  ScrapedTrainingData: 'scraped_training_data',
+  StripeWebhookLog: 'stripe_webhook_logs',
+  Task: 'tasks',
+  UserActivity: 'user_activity',
+  UserBadge: 'user_badges',
+  UserFollow: 'user_follows',
+  WeightRecord: 'weight_records',
+  User: 'profiles',
+};
+
+function parseSort(sort) {
+  if (!sort) return [{ column: 'created_date', ascending: false }];
+  // Support comma-separated sorts: "-created_date,name"
+  return sort.split(',').map(s => {
+    s = s.trim();
+    if (s.startsWith('-')) return { column: s.slice(1), ascending: false };
+    return { column: s, ascending: true };
+  });
+}
+
+function applyFilter(query, filterObj) {
+  if (!filterObj || typeof filterObj !== 'object') return query;
+  for (const [key, value] of Object.entries(filterObj)) {
+    if (key === '$or') {
+      // Build OR string for Supabase .or()
+      const parts = value.map(clause => {
+        const [[k, v]] = Object.entries(clause);
+        if (v === null || v === undefined) return `${k}.is.null`;
+        if (typeof v === 'boolean') return `${k}.is.${v}`;
+        // For strings, use eq
+        return `${k}.eq.${v}`;
+      });
+      query = query.or(parts.join(','));
+    } else if (value === null || value === undefined) {
+      query = query.is(key, null);
+    } else if (typeof value === 'object' && !Array.isArray(value)) {
+      // Handle operators like { $gt: 5 }
+      for (const [op, opVal] of Object.entries(value)) {
+        if (op === '$gt') query = query.gt(key, opVal);
+        else if (op === '$gte') query = query.gte(key, opVal);
+        else if (op === '$lt') query = query.lt(key, opVal);
+        else if (op === '$lte') query = query.lte(key, opVal);
+        else if (op === '$ne') query = query.neq(key, opVal);
+        else if (op === '$in') query = query.in(key, opVal);
+      }
+    } else {
+      query = query.eq(key, value);
+    }
+  }
+  return query;
+}
+
+function createEntityClient(entityName) {
+  const tableName = TABLE_MAP[entityName];
+  if (!tableName) {
+    console.warn(`[supabaseEntities] No table mapping for entity: ${entityName}`);
+  }
+
+  return {
+    async filter(filterObj = {}, sort = null, limit = null, skip = null) {
+      let query = supabase.from(tableName).select('*');
+      query = applyFilter(query, filterObj);
+
+      const sorts = parseSort(sort);
+      for (const { column, ascending } of sorts) {
+        query = query.order(column, { ascending, nullsFirst: false });
+      }
+
+      if (skip && limit) {
+        query = query.range(skip, skip + limit - 1);
+      } else if (limit) {
+        query = query.limit(limit);
+      }
+
+      const { data, error } = await query;
+      if (error) throw error;
+      return data || [];
+    },
+
+    async get(id) {
+      const { data, error } = await supabase
+        .from(tableName)
+        .select('*')
+        .eq('id', id)
+        .maybeSingle();
+      if (error) throw error;
+      return data;
+    },
+
+    async create(record) {
+      const { data: { user } } = await supabase.auth.getUser();
+      const email = user?.email || null;
+      const now = new Date().toISOString();
+
+      const { data, error } = await supabase
+        .from(tableName)
+        .insert({
+          ...record,
+          created_by: email,
+          created_date: record.created_date || now,
+          updated_date: now,
+        })
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+
+    async update(id, record) {
+      const now = new Date().toISOString();
+      // Remove undefined keys
+      const cleaned = Object.fromEntries(
+        Object.entries(record).filter(([, v]) => v !== undefined)
+      );
+      const { data, error } = await supabase
+        .from(tableName)
+        .update({ ...cleaned, updated_date: now })
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+
+    async delete(id) {
+      const { data, error } = await supabase
+        .from(tableName)
+        .delete()
+        .eq('id', id)
+        .select()
+        .single();
+      if (error) throw error;
+      return data;
+    },
+  };
+}
+
+// Named entity exports (same names as Base44)
+export const AppSettings = createEntityClient('AppSettings');
+export const BreedingPlan = createEntityClient('BreedingPlan');
+export const CareGuideSection = createEntityClient('CareGuideSection');
+export const ChangeLog = createEntityClient('ChangeLog');
+export const ClassificationVote = createEntityClient('ClassificationVote');
+export const DirectMessage = createEntityClient('DirectMessage');
+export const Egg = createEntityClient('Egg');
+export const ExpertAction = createEntityClient('ExpertAction');
+export const ExpertVerificationRequest = createEntityClient('ExpertVerificationRequest');
+export const FeedingGroup = createEntityClient('FeedingGroup');
+export const ForumCategory = createEntityClient('ForumCategory');
+export const ForumComment = createEntityClient('ForumComment');
+export const ForumLike = createEntityClient('ForumLike');
+export const ForumPost = createEntityClient('ForumPost');
+export const Gecko = createEntityClient('Gecko');
+export const GeckoEvent = createEntityClient('GeckoEvent');
+export const GeckoImage = createEntityClient('GeckoImage');
+export const GeckoLike = createEntityClient('GeckoLike');
+export const GeckoOfTheDay = createEntityClient('GeckoOfTheDay');
+export const LineagePlaceholder = createEntityClient('LineagePlaceholder');
+export const MarketplaceCost = createEntityClient('MarketplaceCost');
+export const MarketplaceLike = createEntityClient('MarketplaceLike');
+export const MorphGuide = createEntityClient('MorphGuide');
+export const MorphGuideComment = createEntityClient('MorphGuideComment');
+export const MorphPriceCache = createEntityClient('MorphPriceCache');
+export const MorphReferenceImage = createEntityClient('MorphReferenceImage');
+export const MorphTrait = createEntityClient('MorphTrait');
+export const Notification = createEntityClient('Notification');
+export const OtherReptile = createEntityClient('OtherReptile');
+export const PageConfig = createEntityClient('PageConfig');
+export const PaymentEvent = createEntityClient('PaymentEvent');
+export const Project = createEntityClient('Project');
+export const ReptileEvent = createEntityClient('ReptileEvent');
+export const ScrapedTrainingData = createEntityClient('ScrapedTrainingData');
+export const StripeWebhookLog = createEntityClient('StripeWebhookLog');
+export const Task = createEntityClient('Task');
+export const UserActivity = createEntityClient('UserActivity');
+export const UserBadge = createEntityClient('UserBadge');
+export const UserFollow = createEntityClient('UserFollow');
+export const WeightRecord = createEntityClient('WeightRecord');
+export const UserEntity = createEntityClient('User');

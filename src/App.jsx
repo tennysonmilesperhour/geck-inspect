@@ -17,6 +17,7 @@ import PrivacyPolicy from './pages/PrivacyPolicy';
 import MarketplaceSalesStats from './pages/MarketplaceSalesStats';
 import Marketplace from './pages/Marketplace';
 import Membership from './pages/Membership';
+import AdminMigration from './pages/AdminMigration';
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -94,6 +95,7 @@ const AuthenticatedApp = () => {
           <Membership />
         </LayoutWrapper>
       } />
+      <Route path="/AdminMigration" element={<AdminMigration />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
     </Suspense>
