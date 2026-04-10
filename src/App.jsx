@@ -20,6 +20,7 @@ import Home from './pages/Home';
 // Everything else below is lazy-loaded for bundle-size wins.
 const Breeder               = lazy(() => import('./pages/Breeder'));
 const Shipping              = lazy(() => import('./pages/Shipping'));
+const Giveaways             = lazy(() => import('./pages/Giveaways'));
 const ForumPost             = lazy(() => import('./pages/ForumPost'));
 const PrivacyPolicy         = lazy(() => import('./pages/PrivacyPolicy'));
 const MarketplaceSalesStats = lazy(() => import('./pages/MarketplaceSalesStats'));
@@ -65,6 +66,7 @@ const AuthenticatedApp = () => {
           <Route path="/Home" element={<Home />} />
           <Route path="/Breeder" element={<Breeder />} />
           <Route path="/Shipping" element={<Shipping />} />
+          <Route path="/Giveaways" element={<Giveaways />} />
           <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
           <Route path="*" element={<LoginPortal />} />
         </Routes>
@@ -125,6 +127,11 @@ const AuthenticatedApp = () => {
       <Route path="/Shipping" element={
         <LayoutWrapper currentPageName="Shipping">
           <Shipping />
+        </LayoutWrapper>
+      } />
+      <Route path="/Giveaways" element={
+        <LayoutWrapper currentPageName="Giveaways">
+          <Giveaways />
         </LayoutWrapper>
       } />
       <Route path="/AdminMigration" element={<AdminMigration />} />

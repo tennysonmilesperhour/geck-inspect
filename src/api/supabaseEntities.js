@@ -31,6 +31,8 @@ export const TABLE_MAP = {
   GeckoImage: 'gecko_images',
   GeckoLike: 'gecko_likes',
   GeckoOfTheDay: 'gecko_of_the_day',
+  Giveaway: 'giveaways',
+  GiveawayEntry: 'giveaway_entries',
   LineagePlaceholder: 'lineage_placeholders',
   MarketplaceCost: 'marketplace_costs',
   MarketplaceLike: 'marketplace_likes',
@@ -206,6 +208,8 @@ export const GeckoEvent = createEntityClient('GeckoEvent');
 export const GeckoImage = createEntityClient('GeckoImage');
 export const GeckoLike = createEntityClient('GeckoLike');
 export const GeckoOfTheDay = createEntityClient('GeckoOfTheDay');
+export const Giveaway = createEntityClient('Giveaway');
+export const GiveawayEntry = createEntityClient('GiveawayEntry');
 export const LineagePlaceholder = createEntityClient('LineagePlaceholder');
 export const MarketplaceCost = createEntityClient('MarketplaceCost');
 export const MarketplaceLike = createEntityClient('MarketplaceLike');
