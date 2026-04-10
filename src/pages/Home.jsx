@@ -275,6 +275,64 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Featured morphs — visual entry points into the per-morph pages.
+            Each card hard-codes the slug so the landing page doesn't need
+            a DB fetch, and the morph description is short and AI-friendly. */}
+        <section className="relative z-10 max-w-6xl mx-auto px-6 pb-24">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300 mb-4">
+              <Dna className="w-3.5 h-3.5" />
+              Featured morphs
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
+              Explore the crested gecko morph universe
+            </h2>
+            <p className="text-slate-400 max-w-2xl mx-auto">
+              From classic Harlequins to rare Lilly Whites, every major morph has its own page with descriptions, rarity, key features, and breeding info.
+            </p>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+            {[
+              { slug: 'harlequin',         name: 'Harlequin',         blurb: 'Extensive pattern on sides and legs' },
+              { slug: 'pinstripe',         name: 'Pinstripe',         blurb: 'Raised dorsal scales running head to tail' },
+              { slug: 'dalmatian',         name: 'Dalmatian',         blurb: 'Spots scattered across the body' },
+              { slug: 'lilly-white',       name: 'Lilly White',       blurb: 'Co-dominant white body markings' },
+              { slug: 'cappuccino',        name: 'Cappuccino',        blurb: 'Recessive coffee-brown color' },
+              { slug: 'flame',             name: 'Flame',             blurb: 'Classic dorsal stripe morph' },
+              { slug: 'brindle',           name: 'Brindle',           blurb: 'Fine chaotic marbled striping' },
+              { slug: 'axanthic',          name: 'Axanthic',          blurb: 'Black, white, and gray only' },
+            ].map((m) => (
+              <Link
+                key={m.slug}
+                to={`/MorphGuide/${m.slug}`}
+                className="group rounded-xl border border-slate-800 bg-slate-900/60 hover:border-emerald-500/50 hover:bg-slate-900 p-5 transition-all"
+              >
+                <div className="text-sm font-bold text-white mb-1 group-hover:text-emerald-300 transition-colors">
+                  {m.name}
+                </div>
+                <div className="text-xs text-slate-400 leading-relaxed line-clamp-2">
+                  {m.blurb}
+                </div>
+                <div className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-400 group-hover:text-emerald-300">
+                  Read guide
+                  <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
+                </div>
+              </Link>
+            ))}
+          </div>
+          <div className="text-center mt-8">
+            <Link to="/MorphGuide">
+              <Button
+                variant="outline"
+                className="bg-white text-slate-900 hover:bg-slate-100 hover:text-slate-900 border-white/40 font-semibold"
+              >
+                View all morphs
+                <ArrowRight className="w-4 h-4 ml-2 text-slate-800" />
+              </Button>
+            </Link>
+          </div>
+        </section>
+
         {/* Crested gecko context — this is valuable SEO/AI content */}
         <section className="relative z-10 max-w-4xl mx-auto px-6 pb-24">
           <div className="rounded-2xl border border-slate-800 bg-slate-900/50 backdrop-blur p-8 md:p-12">
@@ -337,6 +395,61 @@ export default function Home() {
                 </Button>
               </Link>
             </div>
+          </div>
+        </section>
+
+        {/* Visible FAQ — mirrors the FAQPage JSON-LD in LANDING_JSON_LD.
+            Google requires the HTML content to match the structured data
+            for rich result eligibility, so we render the same Q&A here. */}
+        <section className="relative z-10 max-w-3xl mx-auto px-6 pb-24">
+          <div className="text-center mb-10">
+            <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
+              Frequently asked questions
+            </h2>
+            <p className="text-slate-400">
+              Common questions about Geck Inspect and the crested gecko hobby.
+            </p>
+          </div>
+          <div className="space-y-4">
+            {[
+              {
+                q: 'What is Geck Inspect?',
+                a: 'Geck Inspect is a free web platform built specifically for crested gecko keepers and breeders. It combines collection management, breeding planning, AI-powered morph identification, lineage tracking, a community gallery, a forum, and a verified marketplace into one tool. It is used by hobbyists with a single gecko through commercial breeders managing hundreds of animals.',
+              },
+              {
+                q: 'Is Geck Inspect free?',
+                a: 'Yes. Creating an account and using Geck Inspect is free. Premium membership tiers may unlock advanced features in the future, but the core collection tracking, breeding planning, and community features are free for all users.',
+              },
+              {
+                q: 'Can Geck Inspect identify the morph of my crested gecko?',
+                a: 'Yes. Geck Inspect has an AI-powered morph identification feature. Upload a photo of your gecko and the model will return a classification of primary morph, secondary traits, and base color. The classifier is trained on thousands of verified crested gecko photos from the community.',
+              },
+              {
+                q: 'Does Geck Inspect help with breeding planning?',
+                a: 'Yes. You can plan pairings, track copulation events, schedule monthly egg checks, log eggs and incubation dates, auto-generate hatchling records when eggs hatch, and visualize multi-generation lineage trees and pedigree charts for any gecko in your collection.',
+              },
+              {
+                q: 'How do I track my crested gecko collection?',
+                a: "Create a free account, then add each gecko with name, ID code, sex, hatch date, weight, morph tags, photos, and optionally the sire/dam lineage. Geck Inspect tracks weight history, photos over time, feeding group, and breeding history automatically. You can export your roster as CSV or PDF at any time.",
+              },
+            ].map((item, i) => (
+              <details
+                key={i}
+                className="group rounded-xl border border-slate-800 bg-slate-900/50 backdrop-blur-sm open:border-emerald-500/40 open:bg-slate-900/80 transition-colors"
+              >
+                <summary className="cursor-pointer list-none p-5 flex items-center justify-between gap-4">
+                  <span className="text-base md:text-lg font-semibold text-white">
+                    {item.q}
+                  </span>
+                  <span className="text-emerald-400 text-2xl leading-none flex-shrink-0 group-open:rotate-45 transition-transform">
+                    +
+                  </span>
+                </summary>
+                <div className="px-5 pb-5 pt-0 text-slate-300 leading-relaxed text-sm md:text-base">
+                  {item.a}
+                </div>
+              </details>
+            ))}
           </div>
         </section>
 
