@@ -11,6 +11,13 @@ const SUPABASE_URL =
   import.meta.env.VITE_SUPABASE_URL ||
   'https://mmuglfphhwlaluyfyxsp.supabase.co';
 
+// Base44 stores its images in a public bucket on their own Supabase project.
+// Photo migration scans every migrated row, downloads each image from here,
+// uploads it to our own bucket, and rewrites the URL in the row.
+const BASE44_IMAGE_HOST = 'qtrypzzcjebvfcihiynt.supabase.co';
+const BASE44_STORAGE_PREFIX = '/base44-prod/';
+const MEDIA_BUCKET = 'geck-inspect-media';
+
 // Entity definitions: [Base44EntityName, SupabaseTableName, label]
 const ENTITY_DEFS = [
   ['User',                   'profiles',                    'User Profiles',            true],
@@ -158,6 +165,73 @@ async function upsertBatch(sbAdmin, tableName, records, addLog) {
   return inserted;
 }
 
+// ---------------------------------------------------------------------------
+// Photo migration
+// ---------------------------------------------------------------------------
+
+// Recursively find every string in a value (including inside arrays and
+// nested objects) that contains a Base44 image URL.
+function collectBase44Urls(value, set) {
+  if (typeof value === 'string') {
+    if (value.includes(BASE44_IMAGE_HOST)) set.add(value);
+  } else if (Array.isArray(value)) {
+    for (const v of value) collectBase44Urls(v, set);
+  } else if (value && typeof value === 'object') {
+    for (const v of Object.values(value)) collectBase44Urls(v, set);
+  }
+}
+
+// Recursively rewrite every string in a value using a URL -> URL map.
+function rewriteUrls(value, map) {
+  if (typeof value === 'string') {
+    return map.get(value) || value;
+  }
+  if (Array.isArray(value)) {
+    return value.map((v) => rewriteUrls(v, map));
+  }
+  if (value && typeof value === 'object') {
+    const out = {};
+    for (const [k, v] of Object.entries(value)) {
+      out[k] = rewriteUrls(v, map);
+    }
+    return out;
+  }
+  return value;
+}
+
+// Download one Base44-hosted image, upload it to our own Supabase bucket,
+// and return the new public URL. Idempotent: running twice is safe because
+// upsert is used on upload.
+async function migrateOneImage(sbAdmin, url) {
+  // Extract the storage path that comes after "/base44-prod/" — we preserve
+  // the same relative path in our own bucket so filenames stay meaningful.
+  const idx = url.indexOf(BASE44_STORAGE_PREFIX);
+  if (idx === -1) throw new Error('not a base44 storage URL');
+  let path = url.slice(idx + BASE44_STORAGE_PREFIX.length);
+  // Strip query string (?token=... etc.) if present
+  path = path.split('?')[0];
+  // Decode URL-encoded segments so the bucket path is clean
+  try { path = decodeURIComponent(path); } catch { /* keep as-is */ }
+
+  // Download the image
+  const res = await fetch(url);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  const blob = await res.blob();
+
+  // Upload to our bucket, upserting so re-runs are safe
+  const { error: upErr } = await sbAdmin.storage
+    .from(MEDIA_BUCKET)
+    .upload(path, blob, {
+      upsert: true,
+      contentType: blob.type || 'application/octet-stream',
+    });
+  if (upErr) throw upErr;
+
+  // Return the new public URL
+  const { data } = sbAdmin.storage.from(MEDIA_BUCKET).getPublicUrl(path);
+  return data.publicUrl;
+}
+
 export default function AdminMigration() {
   const { user } = useAuth();
   const [log, setLog] = useState([]);
@@ -265,6 +339,129 @@ export default function AdminMigration() {
     setRunning(false);
   }, [addLog, token, serviceKey]);
 
+  const runPhotoMigration = useCallback(async () => {
+    if (!serviceKey.trim()) {
+      addLog('Please paste your Supabase service role key first.', 'error');
+      return;
+    }
+    setRunning(true);
+    setDone(false);
+    setLog([]);
+    addLog('Starting photo migration (Base44 → Supabase Storage)...', 'info');
+
+    const sanitize = (s) => s.replace(/[^\x20-\x7E]/g, '');
+    const cleanServiceKey = sanitize(serviceKey);
+    if (!cleanServiceKey) {
+      addLog('Supabase service role key is empty after sanitization.', 'error');
+      setRunning(false);
+      return;
+    }
+
+    const sbAdmin = createSupabaseClient(SUPABASE_URL, cleanServiceKey, {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+
+    // Verify the bucket exists so we fail fast with a clear message.
+    const { data: buckets, error: bucketErr } = await sbAdmin.storage.listBuckets();
+    if (bucketErr) {
+      addLog(`Could not list buckets: ${bucketErr.message}`, 'error');
+      setRunning(false);
+      return;
+    }
+    if (!buckets.find((b) => b.name === MEDIA_BUCKET)) {
+      addLog(
+        `Bucket '${MEDIA_BUCKET}' does not exist. Create it in Supabase → Storage (set to Public) and try again.`,
+        'error'
+      );
+      setRunning(false);
+      return;
+    }
+    addLog(`Found bucket '${MEDIA_BUCKET}'.`, 'dim');
+
+    // Cache: Base44 URL -> new Supabase URL (or same URL on failure)
+    const urlMap = new Map();
+    let uploaded = 0;
+    let failed = 0;
+    let rowsUpdated = 0;
+
+    for (const [, tableName, label] of ENTITY_DEFS) {
+      addLog(`Scanning ${label}...`, 'info');
+      const { data: rows, error: selectErr } = await sbAdmin
+        .from(tableName)
+        .select('*');
+      if (selectErr) {
+        addLog(`  ✗ ${selectErr.message}`, 'error');
+        continue;
+      }
+      if (!rows || rows.length === 0) {
+        addLog(`  (empty)`, 'dim');
+        continue;
+      }
+
+      let rowsWithUrls = 0;
+      for (const row of rows) {
+        const urls = new Set();
+        collectBase44Urls(row, urls);
+        if (urls.size === 0) continue;
+        rowsWithUrls++;
+
+        // Upload any URLs we haven't seen yet
+        for (const url of urls) {
+          if (urlMap.has(url)) continue;
+          try {
+            const newUrl = await migrateOneImage(sbAdmin, url);
+            urlMap.set(url, newUrl);
+            uploaded++;
+          } catch (err) {
+            addLog(`  ! ${url.slice(-60)}: ${err.message}`, 'error');
+            urlMap.set(url, url); // leave as-is on failure
+            failed++;
+          }
+        }
+
+        // Build an update patch of only the columns that actually changed
+        const patch = {};
+        let changed = false;
+        for (const [col, val] of Object.entries(row)) {
+          if (col === 'id') continue;
+          const newVal = rewriteUrls(val, urlMap);
+          if (typeof val === 'object' && val !== null) {
+            if (JSON.stringify(newVal) !== JSON.stringify(val)) {
+              patch[col] = newVal;
+              changed = true;
+            }
+          } else if (newVal !== val) {
+            patch[col] = newVal;
+            changed = true;
+          }
+        }
+        if (changed) {
+          const { error: updErr } = await sbAdmin
+            .from(tableName)
+            .update(patch)
+            .eq('id', row.id);
+          if (updErr) {
+            addLog(`  ! update ${row.id.slice(0, 8)}: ${updErr.message}`, 'error');
+          } else {
+            rowsUpdated++;
+          }
+        }
+      }
+      addLog(
+        `  ✓ ${rowsWithUrls} row(s) had Base44 images, ${rows.length} scanned`,
+        'success'
+      );
+    }
+
+    addLog(``, 'info');
+    addLog(
+      `Photo migration complete! ${uploaded} uploaded, ${failed} failed, ${rowsUpdated} rows updated`,
+      'success'
+    );
+    setDone(true);
+    setRunning(false);
+  }, [addLog, serviceKey]);
+
   // Only admin can access this page
   if (!user || user.role !== 'admin') {
     return (
@@ -327,9 +524,20 @@ export default function AdminMigration() {
         <button
           onClick={runMigration}
           disabled={!token.trim() || !serviceKey.trim()}
-          className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-lg text-lg mb-6"
+          className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-lg text-lg mb-3 mr-3"
         >
           Start Migration
+        </button>
+      )}
+
+      {!running && (
+        <button
+          onClick={runPhotoMigration}
+          disabled={!serviceKey.trim()}
+          className="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-lg text-lg mb-6"
+          title="Copies images from Base44's public bucket into your own Supabase Storage bucket and rewrites the URLs. Needs only the Supabase service role key."
+        >
+          Migrate Photos
         </button>
       )}
 
