@@ -18,6 +18,7 @@ import {
   Egg, LayoutGrid, CircleUser, UsersRound, Images, Tag, CalendarDays, Sparkles
 } from "lucide-react";
 import TutorialModal from "@/components/tutorial/TutorialModal";
+import CommandPalette from "@/components/command-palette/CommandPalette";
 import FeedingAlertSystem from "@/components/feeding/FeedingAlertSystem";
 import {
   Sidebar,
@@ -1675,7 +1676,19 @@ function LayoutContent({ children, currentPageName }) {
 
           <header className="bg-sage-200/90 backdrop-blur-md border-b border-sage-300 px-4 py-3 hidden md:flex sticky top-0 z-10 gecko-header">
             <div className="flex items-center justify-between gap-4 w-full">
-              <div></div>
+              {/* Command palette launcher — matches Linear / Vercel / Notion */}
+              <button
+                type="button"
+                onClick={() => window.dispatchEvent(new CustomEvent('open_command_palette'))}
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-sage-300 bg-white/50 hover:bg-white text-sage-600 hover:text-sage-800 transition-colors text-sm w-72 max-w-full"
+                aria-label="Open command palette"
+              >
+                <Search className="w-4 h-4" />
+                <span className="flex-1 text-left text-sage-500">Quick search…</span>
+                <kbd className="hidden lg:inline-flex items-center gap-1 px-1.5 py-0.5 rounded border border-sage-300 bg-sage-100 text-[10px] font-mono text-sage-600">
+                  ⌘K
+                </kbd>
+              </button>
 
               <div className="flex items-center gap-2">
                 {user ?
@@ -1711,6 +1724,7 @@ function LayoutContent({ children, currentPageName }) {
           </main>
       </div>
       <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
+      <CommandPalette />
       <FeedingAlertSystem user={user} enabled={user?.feeding_alerts_enabled !== false} />
     </>
     );
