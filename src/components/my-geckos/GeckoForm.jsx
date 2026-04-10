@@ -23,7 +23,10 @@ import { Card, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { format } from "date-fns";
 import { Upload, X, Trash2, DollarSign, Award, GitBranch, Loader2 } from "lucide-react";
 import { Switch } from '@/components/ui/switch';
-import { generateLineageCertificate } from '@/functions/generateLineageCertificate';
+import {
+  generateOwnershipCertificatePDF,
+  generateLineageCertificatePDF,
+} from '@/lib/certificateUtils';
 import MorphIDSelector from './MorphIDSelector';
 // Extracted helpers / constants / sub-components — keeps this file focused
 // on the orchestration logic instead of static data and pure UI pieces.
@@ -398,28 +401,36 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
     
     const handleGenerateCertificate = async (type) => {
         if (!gecko || !gecko.id) return;
-        
+
         setIsGeneratingCert(true);
         setCertType(type);
-        
+
         try {
-            const { data: htmlContent } = await generateLineageCertificate({
-                geckoId: gecko.id,
-                certificateType: type,
-            });
-    
-            const blob = new Blob([htmlContent], { type: 'text/html' });
-            const url = URL.createObjectURL(blob);
-            const certWindow = window.open(url, '_blank', 'noopener,noreferrer');
-            if (certWindow) {
-                certWindow.onload = () => {
-                    URL.revokeObjectURL(url);
-                }
+            // Resolve parents + grandparents from the in-memory userGeckos list
+            // — no server round-trip. Falls back to null when not found.
+            const getById = (id) => (id ? userGeckos.find((g) => g.id === id) : null);
+            const sire = getById(gecko.sire_id);
+            const dam  = getById(gecko.dam_id);
+            const grandparents = {
+                gsS: sire ? getById(sire.sire_id) : null,
+                gdS: sire ? getById(sire.dam_id)  : null,
+                gsD: dam  ? getById(dam.sire_id)  : null,
+                gdD: dam  ? getById(dam.dam_id)   : null,
+            };
+
+            if (type === 'ownership') {
+                generateOwnershipCertificatePDF(gecko, currentUser);
+            } else {
+                generateLineageCertificatePDF({
+                    gecko,
+                    sire,
+                    dam,
+                    grandparents,
+                    owner: currentUser,
+                });
             }
-            
         } catch (error) {
-            console.error("Failed to generate certificate:", error);
-            // Consider adding a user-facing error message here, e.g., using a toast.
+            console.error('Failed to generate certificate:', error);
         } finally {
             setIsGeneratingCert(false);
             setCertType('');
