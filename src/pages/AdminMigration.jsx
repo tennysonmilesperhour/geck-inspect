@@ -72,7 +72,8 @@ async function fetchAllFromBase44(base44Client, entityName) {
   return all;
 }
 
-// Normalize a Base44 record for Supabase insertion
+// Normalize a Base44 record for Supabase insertion.
+// Returns null if the record should be skipped entirely.
 function normalizeRecord(record, tableName) {
   // Remove Base44-only fields
   const { app_id, is_sample, created_by_id, _app_role, collaborator_role,
@@ -86,22 +87,39 @@ function normalizeRecord(record, tableName) {
     cleaned[k] = v === '' ? null : v;
   }
 
-  // Handle profiles table specifically
+  // Per-table fixups for NOT NULL columns and special cases
   if (tableName === 'profiles') {
     return {
       ...cleaned,
       created_by: record.email,
     };
   }
+  if (tableName === 'geckos') {
+    if (!cleaned.name) cleaned.name = 'Unnamed Gecko';
+    return cleaned;
+  }
+  if (tableName === 'app_settings') {
+    // setting_key is NOT NULL; skip rows without one
+    if (!cleaned.setting_key) return null;
+    return cleaned;
+  }
 
   return cleaned;
 }
+
+// Per-table override for which column to use as the upsert conflict target.
+// Default is 'id'. profiles needs 'email' because we may already have an
+// admin row with the same email but a different id.
+const CONFLICT_COLUMN = {
+  profiles: 'email',
+};
 
 // Upsert a batch of records, automatically retrying after stripping any
 // columns that Supabase doesn't know about (schema mismatch with Base44).
 async function upsertBatch(sbAdmin, tableName, records, addLog) {
   if (records.length === 0) return 0;
   const CHUNK = 50;
+  const conflictColumn = CONFLICT_COLUMN[tableName] || 'id';
   const droppedColumns = new Set();
   let inserted = 0;
 
@@ -116,7 +134,7 @@ async function upsertBatch(sbAdmin, tableName, records, addLog) {
     while (true) {
       const { error } = await sbAdmin
         .from(tableName)
-        .upsert(chunk, { onConflict: 'id', ignoreDuplicates: true });
+        .upsert(chunk, { onConflict: conflictColumn, ignoreDuplicates: true });
       if (!error) {
         inserted += chunk.length;
         break;
@@ -226,7 +244,13 @@ export default function AdminMigration() {
           continue;
         }
 
-        const normalized = records.map(r => normalizeRecord(r, tableName));
+        const normalized = records
+          .map(r => normalizeRecord(r, tableName))
+          .filter(r => r !== null);
+        const skipped = records.length - normalized.length;
+        if (skipped > 0) {
+          addLog(`  ! Skipped ${skipped} record(s) missing required fields`, 'dim');
+        }
         const inserted = await upsertBatch(sbAdmin, tableName, normalized, addLog);
         addLog(`  ✓ Inserted/updated ${inserted} records into ${tableName}`, 'success');
         totalRecords += inserted;
