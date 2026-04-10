@@ -12,11 +12,15 @@ import { Label } from '@/components/ui/label';
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
-import { generateLineageCertificate } from '@/functions/generateLineageCertificate';
+import {
+  generateOwnershipCertificatePDF,
+  generateLineageCertificatePDF,
+} from '@/lib/certificateUtils';
+import { toast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
-export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onArchive, allGeckos = [] }) {
+export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onArchive, allGeckos = [], currentUser = null }) {
   const navigate = useNavigate();
 
   const handleLineageClick = () => {
@@ -177,85 +181,52 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
   };
 
   const handleGenerateCertificate = async (type) => {
-      if (!gecko || !gecko.id) return;
+      if (!gecko || !gecko.id) {
+          toast({
+              title: 'Save the gecko first',
+              description: 'Certificates can only be generated for saved geckos.',
+              variant: 'destructive',
+          });
+          return;
+      }
 
       setIsGeneratingCert(true);
 
       try {
-          const { default: html2canvas } = await import('html2canvas');
-          const { default: jsPDF } = await import('jspdf');
+          // Resolve parents + grandparents from allGeckos (already in memory).
+          const getById = (id) => (id ? allGeckos.find((g) => g.id === id) : null);
+          const sire = getById(gecko.sire_id);
+          const dam = getById(gecko.dam_id);
+          const grandparents = {
+              gsS: sire ? getById(sire.sire_id) : null,
+              gdS: sire ? getById(sire.dam_id) : null,
+              gsD: dam ? getById(dam.sire_id) : null,
+              gdD: dam ? getById(dam.dam_id) : null,
+          };
 
-          const { data: htmlContent } = await generateLineageCertificate({
-              geckoId: gecko.id,
-              certificateType: type,
+          if (type === 'ownership') {
+              generateOwnershipCertificatePDF(gecko, currentUser);
+          } else {
+              generateLineageCertificatePDF({
+                  gecko,
+                  sire,
+                  dam,
+                  grandparents,
+                  owner: currentUser,
+              });
+          }
+
+          toast({
+              title: 'Certificate downloaded',
+              description: `${type === 'ownership' ? 'Ownership' : 'Lineage'} certificate for ${gecko.name || 'your gecko'} has been saved to your downloads.`,
           });
-
-          // Create hidden iframe to render HTML
-          const iframe = document.createElement('iframe');
-          iframe.style.position = 'absolute';
-          iframe.style.left = '-9999px';
-          iframe.style.width = '800px';
-          iframe.style.height = '1200px';
-          document.body.appendChild(iframe);
-
-          const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
-          iframeDoc.open();
-          iframeDoc.write(htmlContent);
-          iframeDoc.close();
-
-          // Wait for images to load
-          await new Promise(resolve => {
-              if (iframeDoc.readyState === 'complete') {
-                  setTimeout(resolve, 500);
-              } else {
-                  iframe.onload = () => setTimeout(resolve, 500);
-              }
-          });
-
-          // Convert to canvas
-          const canvas = await html2canvas(iframeDoc.body, {
-              scale: 2,
-              useCORS: true,
-              allowTaint: true,
-              backgroundColor: '#ffffff'
-          });
-
-          // Create PDF
-          const imgData = canvas.toDataURL('image/jpeg', 1.0);
-          const pdf = new jsPDF({
-              orientation: 'portrait',
-              unit: 'mm',
-              format: 'a4'
-          });
-
-          const pdfWidth = pdf.internal.pageSize.getWidth();
-          const pdfHeight = pdf.internal.pageSize.getHeight();
-          const imgWidth = canvas.width;
-          const imgHeight = canvas.height;
-          const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
-          const imgX = (pdfWidth - imgWidth * ratio) / 2;
-          const imgY = 0;
-
-          pdf.addImage(imgData, 'JPEG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
-
-          // Clean up
-          document.body.removeChild(iframe);
-
-          // Open PDF in new tab
-          const pdfBlob = pdf.output('blob');
-          const pdfUrl = URL.createObjectURL(pdfBlob);
-          window.open(pdfUrl, '_blank');
-
-          // Also trigger download
-          const link = document.createElement('a');
-          link.href = pdfUrl;
-          link.download = `${gecko.name}_Certificate_${new Date().toISOString().split('T')[0]}.pdf`;
-          link.click();
-
-          setTimeout(() => URL.revokeObjectURL(pdfUrl), 1000);
-
       } catch (error) {
-          console.error("Failed to generate certificate:", error);
+          console.error('Failed to generate certificate:', error);
+          toast({
+              title: 'Could not generate certificate',
+              description: error?.message || String(error) || 'Unknown error.',
+              variant: 'destructive',
+          });
       } finally {
           setIsGeneratingCert(false);
       }
@@ -528,17 +499,31 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                   />
                 </div>
 
-                <Button
-                  onClick={() => handleGenerateCertificate('lineage')}
-                  disabled={isGeneratingCert}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700"
-                >
-                  {isGeneratingCert ? (
-                    <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
-                  ) : (
-                    <><Award className="w-4 h-4 mr-2" /> Generate Certificate</>
-                  )}
-                </Button>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  <Button
+                    onClick={() => handleGenerateCertificate('ownership')}
+                    disabled={isGeneratingCert}
+                    variant="outline"
+                    className="border-emerald-700 text-emerald-300 hover:bg-emerald-900/20"
+                  >
+                    {isGeneratingCert ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
+                    ) : (
+                      <><Award className="w-4 h-4 mr-2" /> Ownership Certificate</>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={() => handleGenerateCertificate('lineage')}
+                    disabled={isGeneratingCert}
+                    className="bg-emerald-700 hover:bg-emerald-800"
+                  >
+                    {isGeneratingCert ? (
+                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
+                    ) : (
+                      <><GitBranch className="w-4 h-4 mr-2" /> Lineage Certificate</>
+                    )}
+                  </Button>
+                </div>
 
                 <Button
                   variant="outline"

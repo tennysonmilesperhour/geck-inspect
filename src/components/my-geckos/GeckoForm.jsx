@@ -21,13 +21,8 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Card, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { format } from "date-fns";
-import { Upload, X, Trash2, DollarSign, Award, GitBranch, Loader2 } from "lucide-react";
+import { Upload, X, Trash2, DollarSign, Loader2 } from "lucide-react";
 import { Switch } from '@/components/ui/switch';
-import {
-  generateOwnershipCertificatePDF,
-  generateLineageCertificatePDF,
-} from '@/lib/certificateUtils';
-import { toast } from '@/components/ui/use-toast';
 import MorphIDSelector from './MorphIDSelector';
 // Extracted helpers / constants / sub-components — keeps this file focused
 // on the orchestration logic instead of static data and pure UI pieces.
@@ -63,8 +58,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
     const [isForSale, setIsForSale] = useState(false);
     
     // New states for certificate generation
-    const [isGeneratingCert, setIsGeneratingCert] = useState(false);
-    const [certType, setCertType] = useState('');
+    // isGeneratingCert / certType state removed — certificates live on the view modal now.
     const [feedingGroups, setFeedingGroups] = useState([]);
     // sire/dam suggestion visibility + refs now live inside ParentAutocomplete
 
@@ -400,64 +394,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
         }
     };
     
-    const handleGenerateCertificate = async (type) => {
-        console.log('[cert] clicked', { type, geckoId: gecko?.id, hasUser: !!currentUser });
-        if (!gecko || !gecko.id) {
-            toast({
-                title: 'Save the gecko first',
-                description: 'Certificates can only be generated for saved geckos.',
-                variant: 'destructive',
-            });
-            return;
-        }
-
-        setIsGeneratingCert(true);
-        setCertType(type);
-
-        try {
-            // Resolve parents + grandparents from the in-memory userGeckos list
-            // — no server round-trip. Falls back to null when not found.
-            const getById = (id) => (id ? userGeckos.find((g) => g.id === id) : null);
-            const sire = getById(gecko.sire_id);
-            const dam  = getById(gecko.dam_id);
-            const grandparents = {
-                gsS: sire ? getById(sire.sire_id) : null,
-                gdS: sire ? getById(sire.dam_id)  : null,
-                gsD: dam  ? getById(dam.sire_id)  : null,
-                gdD: dam  ? getById(dam.dam_id)   : null,
-            };
-
-            console.log('[cert] generating', type, { sire, dam, grandparents });
-
-            if (type === 'ownership') {
-                generateOwnershipCertificatePDF(gecko, currentUser);
-            } else {
-                generateLineageCertificatePDF({
-                    gecko,
-                    sire,
-                    dam,
-                    grandparents,
-                    owner: currentUser,
-                });
-            }
-
-            console.log('[cert] success');
-            toast({
-                title: 'Certificate downloaded',
-                description: `${type === 'ownership' ? 'Ownership' : 'Lineage'} certificate for ${gecko.name || 'your gecko'} has been saved to your downloads.`,
-            });
-        } catch (error) {
-            console.error('[cert] FAILED:', error);
-            toast({
-                title: 'Could not generate certificate',
-                description: error?.message || String(error) || 'Unknown error — check the browser console.',
-                variant: 'destructive',
-            });
-        } finally {
-            setIsGeneratingCert(false);
-            setCertType('');
-        }
-    };
+    // Certificate generation moved to GeckoDetailModal (view flow).
 
     const getSaveButtonText = () => {
         if (isSaving) return 'Saving...';
@@ -832,41 +769,8 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         </Button>
                     </div>
 
-                    {/* Certificate Generation Section */}
-                    {gecko && gecko.id && (
-                        <div className="p-4 border border-dashed border-slate-600 rounded-lg mt-6 bg-slate-800/50">
-                            <h3 className="text-lg font-medium mb-2 text-slate-200">Generate Certificate</h3>
-                            <p className="text-sm text-slate-400 mb-4">
-                                Create a professional, printable certificate for your records or for new owners.
-                            </p>
-                            <div className="flex flex-col sm:flex-row gap-2">
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    className="border-slate-500 hover:bg-slate-700"
-                                    onClick={() => handleGenerateCertificate('ownership')}
-                                    disabled={isGeneratingCert}
-                                >
-                                    {isGeneratingCert && certType === 'ownership' 
-                                        ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
-                                        : <><Award className="w-4 h-4 mr-2" /> Ownership Certificate</>
-                                    }
-                                </Button>
-                                <Button
-                                    type="button"
-                                    variant="outline"
-                                    className="border-slate-500 hover:bg-slate-700"
-                                    onClick={() => handleGenerateCertificate('lineage')}
-                                    disabled={isGeneratingCert}
-                                >
-                                    {isGeneratingCert && certType === 'lineage' 
-                                        ? <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
-                                        : <><GitBranch className="w-4 h-4 mr-2" /> Lineage Certificate</>
-                                    }
-                                </Button>
-                            </div>
-                        </div>
-                    )}
+                    {/* Certificates now live on the gecko detail view rather
+                        than the edit form — see GeckoDetailModal. */}
                 </form>
 
                 <CardFooter className="flex-shrink-0 mt-auto bg-slate-900 border-t border-slate-700 p-4 flex justify-end items-center gap-4">

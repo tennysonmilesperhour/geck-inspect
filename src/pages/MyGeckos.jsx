@@ -1025,6 +1025,7 @@ export default function MyGeckosPage() {
                     <GeckoDetailModal
                         gecko={selectedGecko}
                         allGeckos={geckos}
+                        currentUser={user}
                         onClose={handleCloseDetailModal}
                         onUpdate={() => loadGeckos(true)}
                         onEdit={handleEdit}
