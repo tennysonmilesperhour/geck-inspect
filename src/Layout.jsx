@@ -283,7 +283,6 @@ function LayoutContent({ children, currentPageName }) {
               }
               dataCache.set('current_user_v2', currentUser);
               setUser(currentUser);
-              console.log('User authenticated successfully:', currentUser.email, 'role:', currentUser.role);
             }
           } catch (error) {
             console.log("User authentication check failed:", error);

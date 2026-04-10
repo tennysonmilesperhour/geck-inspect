@@ -60,29 +60,80 @@ const FEATURES = [
 
 const LANDING_JSON_LD = {
   '@context': 'https://schema.org',
-  '@type': 'WebPage',
-  name: 'Geck Inspect — Crested Gecko Collection, Breeding & Community Platform',
-  url: 'https://geckinspect.com/',
-  description:
-    'The professional platform for crested gecko (Correlophus ciliatus) breeders and keepers. Collection management, breeding planning, AI-powered morph identification, lineage tracking, and community tools.',
-  isPartOf: {
-    '@type': 'WebSite',
-    name: 'Geck Inspect',
-    url: 'https://geckinspect.com/',
-  },
-  about: {
-    '@type': 'Thing',
-    name: 'Crested gecko',
-    alternateName: 'Correlophus ciliatus',
-    sameAs: 'https://en.wikipedia.org/wiki/Crested_gecko',
-  },
-  mainEntity: {
-    '@type': 'SoftwareApplication',
-    name: 'Geck Inspect',
-    applicationCategory: 'LifestyleApplication',
-    operatingSystem: 'Web',
-    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
-  },
+  '@graph': [
+    {
+      '@type': 'WebPage',
+      '@id': 'https://geckinspect.com/#webpage',
+      name: 'Geck Inspect — Crested Gecko Collection, Breeding & Community Platform',
+      url: 'https://geckinspect.com/',
+      description:
+        'The professional platform for crested gecko (Correlophus ciliatus) breeders and keepers. Collection management, breeding planning, AI-powered morph identification, lineage tracking, and community tools.',
+      isPartOf: {
+        '@type': 'WebSite',
+        name: 'Geck Inspect',
+        url: 'https://geckinspect.com/',
+      },
+      about: {
+        '@type': 'Thing',
+        name: 'Crested gecko',
+        alternateName: 'Correlophus ciliatus',
+        sameAs: 'https://en.wikipedia.org/wiki/Crested_gecko',
+      },
+      mainEntity: {
+        '@type': 'SoftwareApplication',
+        name: 'Geck Inspect',
+        applicationCategory: 'LifestyleApplication',
+        operatingSystem: 'Web',
+        offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+      },
+    },
+    {
+      '@type': 'FAQPage',
+      '@id': 'https://geckinspect.com/#faq',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: 'What is Geck Inspect?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Geck Inspect is a free web platform built specifically for crested gecko keepers and breeders. It combines collection management, breeding planning, AI-powered morph identification, lineage tracking, a community gallery, a forum, and a verified marketplace into one tool. It is used by hobbyists with a single gecko through commercial breeders managing hundreds of animals.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Is Geck Inspect free?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Yes. Creating an account and using Geck Inspect is free. Premium membership tiers may unlock advanced features in the future, but the core collection tracking, breeding planning, and community features are free for all users.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Can Geck Inspect identify the morph of my crested gecko?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Yes. Geck Inspect has an AI-powered morph identification feature. Upload a photo of your gecko and the model will return a classification of primary morph, secondary traits, and base color. The classifier is trained on thousands of verified crested gecko photos from the community.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Does Geck Inspect help with breeding planning?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Yes. You can plan pairings, track copulation events, schedule monthly egg checks, log eggs and incubation dates, auto-generate hatchling records when eggs hatch, and visualize multi-generation lineage trees and pedigree charts for any gecko in your collection.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'How do I track my crested gecko collection?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Create a free account, then add each gecko with name, ID code, sex, hatch date, weight, morph tags, photos, and optionally the sire/dam lineage. Geck Inspect tracks weight history, photos over time, feeding group, and breeding history automatically. You can export your roster as CSV or PDF at any time.',
+          },
+        },
+      ],
+    },
+  ],
 };
 
 export default function Home() {
