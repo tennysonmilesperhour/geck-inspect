@@ -2,6 +2,7 @@ import './App.css'
 import { Suspense } from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
+import { HelmetProvider } from 'react-helmet-async'
 import { queryClientInstance } from '@/lib/query-client'
 import VisualEditAgent from '@/lib/VisualEditAgent'
 import NavigationTracker from '@/lib/NavigationTracker'
@@ -12,6 +13,7 @@ import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UpdateNotification from '@/components/ui/UpdateNotification';
 import LoginPortal from '@/components/auth/LoginPortal';
 // Add page imports here
+import Home from './pages/Home';
 import ForumPost from './pages/ForumPost';
 import PrivacyPolicy from './pages/PrivacyPolicy';
 import MarketplaceSalesStats from './pages/MarketplaceSalesStats';
@@ -27,6 +29,12 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
 
+const LazyFallback = (
+  <div className="fixed inset-0 flex items-center justify-center bg-slate-950">
+    <div className="w-8 h-8 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+  </div>
+);
+
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isAuthenticated } = useAuth();
 
@@ -39,16 +47,22 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // Show login form when not authenticated
+  // When the visitor is NOT signed in, the root URL shows the public
+  // landing page (good for SEO and first impressions), and any other
+  // route falls through to the login portal so protected pages stay
+  // gated behind auth.
   if (!isAuthenticated) {
-    return <LoginPortal />;
+    return (
+      <Suspense fallback={LazyFallback}>
+        <Routes>
+          <Route path="/" element={<Home />} />
+          <Route path="/Home" element={<Home />} />
+          <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
+          <Route path="*" element={<LoginPortal />} />
+        </Routes>
+      </Suspense>
+    );
   }
-
-  const LazyFallback = (
-    <div className="fixed inset-0 flex items-center justify-center bg-slate-950">
-      <div className="w-8 h-8 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
-    </div>
-  );
 
   // Render the main app
   return (
@@ -106,17 +120,19 @@ const AuthenticatedApp = () => {
 function App() {
 
   return (
-    <AuthProvider>
-      <QueryClientProvider client={queryClientInstance}>
-        <Router>
-          <NavigationTracker />
-          <AuthenticatedApp />
-        </Router>
-        <Toaster />
-        <VisualEditAgent />
-        <UpdateNotification />
-      </QueryClientProvider>
-    </AuthProvider>
+    <HelmetProvider>
+      <AuthProvider>
+        <QueryClientProvider client={queryClientInstance}>
+          <Router>
+            <NavigationTracker />
+            <AuthenticatedApp />
+          </Router>
+          <Toaster />
+          <VisualEditAgent />
+          <UpdateNotification />
+        </QueryClientProvider>
+      </AuthProvider>
+    </HelmetProvider>
   )
 }
 
