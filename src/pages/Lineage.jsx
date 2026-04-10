@@ -549,7 +549,20 @@ export default function Lineage() {
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:justify-start items-center gap-3">
                     <div className="text-center md:text-left md:mr-6">
                         <h1 className="text-xl md:text-2xl font-bold text-slate-100">Gecko Lineage</h1>
-                        <p className="text-slate-400 text-sm hidden md:block">Select a gecko to view its family tree</p>
+                        <p className="text-slate-400 text-sm hidden md:block">
+                            Select a gecko to view its family tree
+                            {selectedGeckoId && (
+                                <>
+                                    {' '}·{' '}
+                                    <a
+                                        href={`/Pedigree?geckoId=${selectedGeckoId}`}
+                                        className="text-emerald-300 hover:text-emerald-200 underline underline-offset-2"
+                                    >
+                                        Open pedigree chart →
+                                    </a>
+                                </>
+                            )}
+                        </p>
                     </div>
                     <div className="flex items-center gap-2 w-full md:w-auto">
                         {/* Autocomplete gecko search */}

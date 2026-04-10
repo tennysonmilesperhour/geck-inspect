@@ -23,6 +23,7 @@ const Shipping              = lazy(() => import('./pages/Shipping'));
 const Giveaways             = lazy(() => import('./pages/Giveaways'));
 const MorphDetail           = lazy(() => import('./pages/MorphDetail'));
 const MorphGuideList        = lazy(() => import('./pages/MorphGuide'));
+const Pedigree              = lazy(() => import('./pages/Pedigree'));
 const ForumPost             = lazy(() => import('./pages/ForumPost'));
 const PrivacyPolicy         = lazy(() => import('./pages/PrivacyPolicy'));
 const MarketplaceSalesStats = lazy(() => import('./pages/MarketplaceSalesStats'));
@@ -141,6 +142,11 @@ const AuthenticatedApp = () => {
       <Route path="/MorphGuide/:slug" element={
         <LayoutWrapper currentPageName="MorphGuide">
           <MorphDetail />
+        </LayoutWrapper>
+      } />
+      <Route path="/Pedigree" element={
+        <LayoutWrapper currentPageName="Pedigree">
+          <Pedigree />
         </LayoutWrapper>
       } />
       <Route path="/AdminMigration" element={<AdminMigration />} />

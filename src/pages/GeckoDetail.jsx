@@ -337,11 +337,18 @@ export default function GeckoDetail() {
                                         </p>
                                     </div>
                                 </div>
-                                <Link to={createPageUrl(`Lineage?geckoId=${gecko.id}`)}>
-                                    <Button variant="outline" size="sm" className="w-full border-slate-600 hover:bg-slate-800">
-                                        <GitBranch className="w-4 h-4 mr-2" /> View Full Lineage Tree
-                                    </Button>
-                                </Link>
+                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                    <Link to={`/Pedigree?geckoId=${gecko.id}`}>
+                                        <Button size="sm" className="w-full bg-emerald-700 hover:bg-emerald-800 text-white font-semibold">
+                                            <GitBranch className="w-4 h-4 mr-2" /> View Pedigree
+                                        </Button>
+                                    </Link>
+                                    <Link to={createPageUrl(`Lineage?geckoId=${gecko.id}`)}>
+                                        <Button variant="outline" size="sm" className="w-full border-slate-600 hover:bg-slate-800">
+                                            Classic Lineage
+                                        </Button>
+                                    </Link>
+                                </div>
                             </CardContent>
                         </Card>
 
