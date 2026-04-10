@@ -30,6 +30,7 @@ export default function Dashboard() {
     const [changelogGlowing, setChangelogGlowing] = useState(false);
     const [trainingPageEnabled, setTrainingPageEnabled] = useState(false);
     const [hatcheryStats, setHatcheryStats] = useState({ hatched: 0, incubating: 0, total: 0, plans: 0 });
+    const [userGeckoCount, setUserGeckoCount] = useState(null);
 
     // Check if there's an unread published changelog
     useEffect(() => {
@@ -91,6 +92,15 @@ export default function Dashboard() {
                 setUsers(usersData); // Set the fetched users data
                 setAllImages(allGeckoImages);
                 setRecentImages(recentImagesData);
+
+                // How many geckos does the current user actually own?
+                if (currentUser?.email) {
+                    Gecko.filter({ created_by: currentUser.email })
+                        .then(r => setUserGeckoCount(Array.isArray(r) ? r.filter(g => !g.archived).length : 0))
+                        .catch(() => setUserGeckoCount(0));
+                } else {
+                    setUserGeckoCount(0);
+                }
                 
                 setStats({
                     users: usersData.length,
@@ -190,6 +200,50 @@ export default function Dashboard() {
                         </div>
                     </div>
 
+                    {/* Empty-state onboarding hero — shown only when the
+                        authenticated user has zero geckos in their collection.
+                        Experienced users never see this. */}
+                    {!isLoading && user && userGeckoCount === 0 && (
+                        <div className="relative overflow-hidden rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-900/40 via-slate-900/60 to-slate-900/40 backdrop-blur-sm p-6 md:p-10">
+                            <div className="absolute -top-10 -right-10 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
+                            <div className="relative z-10 flex flex-col md:flex-row items-start md:items-center justify-between gap-6">
+                                <div className="max-w-2xl space-y-3">
+                                    <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/20 border border-emerald-500/30 px-3 py-1 text-xs font-semibold text-emerald-300">
+                                        <Sparkles className="w-3.5 h-3.5" />
+                                        Welcome to Geck Inspect
+                                    </div>
+                                    <h2 className="text-2xl md:text-3xl font-bold text-white tracking-tight">
+                                        Add your first gecko to get started
+                                    </h2>
+                                    <p className="text-slate-300 leading-relaxed">
+                                        Track weights, plan breedings, visualize lineages, and identify morphs with AI.
+                                        It takes about 30 seconds to add your first gecko.
+                                    </p>
+                                </div>
+                                <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+                                    <Link to={createPageUrl('MyGeckos')} className="flex-1 md:flex-none">
+                                        <Button
+                                            size="lg"
+                                            className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold shadow-lg shadow-emerald-500/20"
+                                        >
+                                            <GitBranch className="w-4 h-4 mr-2" />
+                                            Add First Gecko
+                                        </Button>
+                                    </Link>
+                                    <Button
+                                        size="lg"
+                                        variant="outline"
+                                        onClick={() => window.dispatchEvent(new CustomEvent('open_tutorial'))}
+                                        className="border-slate-600 text-slate-200 hover:bg-slate-800"
+                                    >
+                                        <GraduationCap className="w-4 h-4 mr-2" />
+                                        Quick tutorial
+                                    </Button>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
                     {/* Enhanced stats grid */}
                     {isLoading ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
@@ -283,34 +337,40 @@ export default function Dashboard() {
                                     </CardContent>
                                 </Card>
                             )}
-                            <Card className="gecko-card">
-                                <CardHeader>
-                                    <CardTitle className="text-gecko-text text-glow flex items-center gap-2">
-                                        <Sparkles className="w-5 h-5 text-gecko-accent" />
-                                        New to Geck Inspect?
-                                    </CardTitle>
-                                </CardHeader>
-                                <CardContent className="space-y-4">
-                                    <p className="text-gecko-text-muted leading-relaxed">
-                                        Start your journey by adding geckos to your collection or help train our AI with gecko photos.
-                                    </p>
-                                    <div className="flex flex-col gap-3">
-                                        <Link to={createPageUrl('MyGeckos')}>
-                                            <Button variant="outline" className="w-full border-gecko-border hover:bg-gecko-hover backdrop-blur-sm transition-all duration-300 hover:scale-105">
-                                                <Users className="w-4 h-4 mr-2" />
-                                                Build My Collection
+                            {/* Small "new user" card — shown only to fresh accounts.
+                                The big hero above covers the zero-gecko case; this
+                                small card is a tidier reminder for anyone with a
+                                handful of geckos but who hasn't finished the tour. */}
+                            {userGeckoCount !== null && userGeckoCount < 3 && (
+                                <Card className="gecko-card">
+                                    <CardHeader>
+                                        <CardTitle className="text-gecko-text text-glow flex items-center gap-2">
+                                            <Sparkles className="w-5 h-5 text-gecko-accent" />
+                                            New to Geck Inspect?
+                                        </CardTitle>
+                                    </CardHeader>
+                                    <CardContent className="space-y-4">
+                                        <p className="text-gecko-text-muted leading-relaxed">
+                                            Start your journey by adding geckos to your collection or help train our AI with gecko photos.
+                                        </p>
+                                        <div className="flex flex-col gap-3">
+                                            <Link to={createPageUrl('MyGeckos')}>
+                                                <Button variant="outline" className="w-full border-gecko-border hover:bg-gecko-hover backdrop-blur-sm transition-all duration-300 hover:scale-105">
+                                                    <Users className="w-4 h-4 mr-2" />
+                                                    Build My Collection
+                                                </Button>
+                                            </Link>
+                                            <Button
+                                                className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold gecko-glow transition-all duration-300 hover:scale-105"
+                                                onClick={() => window.dispatchEvent(new CustomEvent('open_tutorial'))}
+                                            >
+                                                <GraduationCap className="w-4 h-4 mr-2" />
+                                                Start Tutorial
                                             </Button>
-                                        </Link>
-                                        <Button
-                                            className="w-full bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold gecko-glow transition-all duration-300 hover:scale-105"
-                                            onClick={() => window.dispatchEvent(new CustomEvent('open_tutorial'))}
-                                        >
-                                            <GraduationCap className="w-4 h-4 mr-2" />
-                                            Start Tutorial
-                                        </Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
+                                        </div>
+                                    </CardContent>
+                                </Card>
+                            )}
                         </div>
                     </div>
                 </div>

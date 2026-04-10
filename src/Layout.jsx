@@ -236,6 +236,18 @@ function LayoutContent({ children, currentPageName }) {
     return () => window.removeEventListener('open_tutorial', handler);
   }, []);
 
+  // Auto-open the tutorial on the first authenticated session, once per
+  // browser. A small delay avoids colliding with the initial page load.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (localStorage.getItem('geck_inspect_tutorial_seen') === '1') return;
+    const timer = setTimeout(() => {
+      setShowTutorial(true);
+      localStorage.setItem('geck_inspect_tutorial_seen', '1');
+    }, 1500);
+    return () => clearTimeout(timer);
+  }, []);
+
   const getUserLevel = (geckoCount) => {
     return [...USER_LEVELS].reverse().find((level) => geckoCount >= level.geckos) || USER_LEVELS[0];
   };
