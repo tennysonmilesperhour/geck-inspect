@@ -27,6 +27,7 @@ import {
   generateOwnershipCertificatePDF,
   generateLineageCertificatePDF,
 } from '@/lib/certificateUtils';
+import { toast } from '@/components/ui/use-toast';
 import MorphIDSelector from './MorphIDSelector';
 // Extracted helpers / constants / sub-components — keeps this file focused
 // on the orchestration logic instead of static data and pure UI pieces.
@@ -400,7 +401,15 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
     };
     
     const handleGenerateCertificate = async (type) => {
-        if (!gecko || !gecko.id) return;
+        console.log('[cert] clicked', { type, geckoId: gecko?.id, hasUser: !!currentUser });
+        if (!gecko || !gecko.id) {
+            toast({
+                title: 'Save the gecko first',
+                description: 'Certificates can only be generated for saved geckos.',
+                variant: 'destructive',
+            });
+            return;
+        }
 
         setIsGeneratingCert(true);
         setCertType(type);
@@ -418,6 +427,8 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                 gdD: dam  ? getById(dam.dam_id)   : null,
             };
 
+            console.log('[cert] generating', type, { sire, dam, grandparents });
+
             if (type === 'ownership') {
                 generateOwnershipCertificatePDF(gecko, currentUser);
             } else {
@@ -429,8 +440,19 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     owner: currentUser,
                 });
             }
+
+            console.log('[cert] success');
+            toast({
+                title: 'Certificate downloaded',
+                description: `${type === 'ownership' ? 'Ownership' : 'Lineage'} certificate for ${gecko.name || 'your gecko'} has been saved to your downloads.`,
+            });
         } catch (error) {
-            console.error('Failed to generate certificate:', error);
+            console.error('[cert] FAILED:', error);
+            toast({
+                title: 'Could not generate certificate',
+                description: error?.message || String(error) || 'Unknown error — check the browser console.',
+                variant: 'destructive',
+            });
         } finally {
             setIsGeneratingCert(false);
             setCertType('');
