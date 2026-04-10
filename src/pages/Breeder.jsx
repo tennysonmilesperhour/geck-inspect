@@ -121,8 +121,8 @@ export default function Breeder() {
             <code>/Breeder?slug=altitude-exotics</code>.
           </p>
           <Link to="/">
-            <Button variant="outline" className="border-slate-600 text-slate-200">
-              <ArrowLeft className="w-4 h-4 mr-2" /> Back to Geck Inspect
+            <Button variant="outline" className="bg-white text-slate-900 hover:bg-slate-100 hover:text-slate-900 border-white/40 font-semibold">
+              <ArrowLeft className="w-4 h-4 mr-2 text-slate-800" /> Back to Geck Inspect
             </Button>
           </Link>
         </div>
@@ -159,7 +159,7 @@ export default function Breeder() {
             <span className="text-xl font-bold tracking-tight">Geck Inspect</span>
           </Link>
           <Link to={createPageUrl('AuthPortal')}>
-            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold">
+            <Button className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold">
               Sign In
             </Button>
           </Link>
@@ -175,7 +175,7 @@ export default function Breeder() {
             Geck Inspect
           </Link>
 
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-[11px] font-semibold uppercase tracking-[0.15em] text-emerald-300 mb-5">
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300 mb-5">
             <Sparkles className="w-3 h-3" />
             Breeder on Geck Inspect
           </div>
@@ -228,7 +228,7 @@ export default function Breeder() {
             <Link to={createPageUrl('AuthPortal')}>
               <Button
                 size="lg"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-lg shadow-emerald-500/20 whitespace-nowrap"
+                className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold shadow-lg shadow-emerald-500/30 whitespace-nowrap"
               >
                 Claim this page
                 <ArrowRight className="w-4 h-4 ml-2" />

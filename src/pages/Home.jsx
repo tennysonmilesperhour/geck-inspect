@@ -139,7 +139,7 @@ export default function Home() {
             </Link>
           </nav>
           <Link to={createPageUrl('AuthPortal')}>
-            <Button className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold">
+            <Button className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold">
               Sign In
             </Button>
           </Link>
@@ -147,9 +147,9 @@ export default function Home() {
 
         {/* Hero */}
         <section className="relative z-10 max-w-5xl mx-auto px-6 pt-16 pb-24 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-[0.15em] text-emerald-300 mb-8">
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-sm font-semibold text-emerald-300 mb-8">
             <Sparkles className="w-3.5 h-3.5" />
-            Welcome to geckOS
+            Welcome to <span className="font-bold">geckOS</span>
           </div>
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-[1.05] mb-6 bg-gradient-to-b from-white via-white to-emerald-200 bg-clip-text text-transparent">
             The ultimate gecko
@@ -162,13 +162,13 @@ export default function Home() {
           <p className="text-base md:text-lg text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed">
             Track, breed, and identify crested geckos with a platform built specifically for the
             hobby. AI morph identification, breeding planning, lineage trees, community — your
-            new geckOS.
+            new <span className="font-semibold text-emerald-200">geckOS</span>.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
             <Link to={createPageUrl('AuthPortal')}>
               <Button
                 size="lg"
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-base px-8 py-6 shadow-lg shadow-emerald-500/20"
+                className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-base px-8 py-6 shadow-lg shadow-emerald-500/30"
               >
                 Create your account
                 <ArrowRight className="w-4 h-4 ml-2" />
@@ -178,7 +178,7 @@ export default function Home() {
               <Button
                 size="lg"
                 variant="outline"
-                className="border-slate-600 text-slate-200 hover:bg-slate-800 font-semibold text-base px-8 py-6"
+                className="bg-white text-slate-900 hover:bg-slate-100 hover:text-slate-900 border-white/40 font-semibold text-base px-8 py-6"
               >
                 Browse morph guide
               </Button>
@@ -258,25 +258,25 @@ export default function Home() {
             </div>
             <div className="mt-8 flex flex-wrap gap-3">
               <Link to={createPageUrl('CareGuide')}>
-                <Button variant="outline" className="border-slate-600 text-slate-200 hover:bg-slate-800">
-                  <BookOpen className="w-4 h-4 mr-2" />
+                <Button variant="outline" className="bg-white text-slate-900 hover:bg-slate-100 hover:text-slate-900 border-white/40 font-semibold">
+                  <BookOpen className="w-4 h-4 mr-2 text-slate-800" />
                   Care Guide
                 </Button>
               </Link>
               <Link to={createPageUrl('MorphGuide')}>
-                <Button variant="outline" className="border-slate-600 text-slate-200 hover:bg-slate-800">
-                  <Dna className="w-4 h-4 mr-2" />
+                <Button variant="outline" className="bg-white text-slate-900 hover:bg-slate-100 hover:text-slate-900 border-white/40 font-semibold">
+                  <Dna className="w-4 h-4 mr-2 text-slate-800" />
                   Morph Guide
                 </Button>
               </Link>
               <Link to={createPageUrl('GeneticsGuide')}>
-                <Button variant="outline" className="border-slate-600 text-slate-200 hover:bg-slate-800">
+                <Button variant="outline" className="bg-white text-slate-900 hover:bg-slate-100 hover:text-slate-900 border-white/40 font-semibold">
                   Genetics
                 </Button>
               </Link>
               <Link to={createPageUrl('Gallery')}>
-                <Button variant="outline" className="border-slate-600 text-slate-200 hover:bg-slate-800">
-                  <Images className="w-4 h-4 mr-2" />
+                <Button variant="outline" className="bg-white text-slate-900 hover:bg-slate-100 hover:text-slate-900 border-white/40 font-semibold">
+                  <Images className="w-4 h-4 mr-2 text-slate-800" />
                   Community Gallery
                 </Button>
               </Link>
@@ -295,7 +295,7 @@ export default function Home() {
           <Link to={createPageUrl('AuthPortal')}>
             <Button
               size="lg"
-              className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-base px-8 py-6 shadow-lg shadow-emerald-500/20"
+              className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-base px-8 py-6 shadow-lg shadow-emerald-500/30"
             >
               Get started — it&rsquo;s free
               <ArrowRight className="w-4 h-4 ml-2" />
