@@ -1,8 +1,11 @@
 import React, { useState, useCallback } from 'react';
-import { base44RawEntities } from '@/api/base44Client';
+import { createClient } from '@base44/sdk';
 import * as sb from '@/api/supabaseEntities';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
+
+const BASE44_APP_ID = '68929cdad944c572926ab6cb';
+const BASE44_SERVER = 'https://base44.app';
 
 // Entity definitions: [Base44EntityName, SupabaseTableName, label]
 const ENTITY_DEFS = [
@@ -49,8 +52,8 @@ const ENTITY_DEFS = [
   ['StripeWebhookLog',       'stripe_webhook_logs',         'Stripe Webhook Logs',      false],
 ];
 
-async function fetchAllFromBase44(entityName) {
-  const entity = base44RawEntities[entityName];
+async function fetchAllFromBase44(base44Client, entityName) {
+  const entity = base44Client.entities[entityName];
   if (!entity) return [];
   let all = [];
   let skip = 0;
@@ -104,22 +107,38 @@ export default function AdminMigration() {
   const [log, setLog] = useState([]);
   const [running, setRunning] = useState(false);
   const [done, setDone] = useState(false);
+  const [token, setToken] = useState('');
 
   const addLog = useCallback((msg, type = 'info') => {
     setLog(prev => [...prev, { msg, type, ts: new Date().toLocaleTimeString() }]);
   }, []);
 
   const runMigration = useCallback(async () => {
+    if (!token.trim()) {
+      addLog('Please paste your Base44 access token first.', 'error');
+      return;
+    }
     setRunning(true);
     setDone(false);
     setLog([]);
     addLog('Starting Base44 → Supabase migration...', 'info');
 
+    // Create a dedicated Base44 client using the provided access token.
+    // This bypasses the base44.entities proxy in base44Client.js which
+    // otherwise redirects reads to Supabase.
+    const base44Client = createClient({
+      appId: BASE44_APP_ID,
+      serverUrl: BASE44_SERVER,
+      token: token.trim(),
+      appBaseUrl: BASE44_SERVER,
+      requiresAuth: false,
+    });
+
     let totalRecords = 0;
     for (const [entityName, tableName, label] of ENTITY_DEFS) {
       try {
         addLog(`Fetching ${label} from Base44...`, 'info');
-        const records = await fetchAllFromBase44(entityName);
+        const records = await fetchAllFromBase44(base44Client, entityName);
         addLog(`  Found ${records.length} records`, 'info');
 
         if (records.length === 0) {
@@ -140,7 +159,7 @@ export default function AdminMigration() {
     addLog(`Migration complete! Total records: ${totalRecords}`, 'success');
     setDone(true);
     setRunning(false);
-  }, [addLog]);
+  }, [addLog, token]);
 
   // Only admin can access this page
   if (!user || user.role !== 'admin') {
@@ -159,10 +178,31 @@ export default function AdminMigration() {
         Run this once. Existing records are skipped (upsert by ID).
       </p>
 
+      <div className="bg-slate-900 border border-slate-700 rounded-lg p-4 mb-6">
+        <label className="block text-slate-300 text-sm font-semibold mb-2">
+          Base44 Access Token
+        </label>
+        <p className="text-slate-500 text-xs mb-3">
+          Open the old Base44 app in another tab, log in, then open DevTools
+          (F12) → Application → Local Storage → copy the value of the
+          <code className="text-emerald-400 mx-1">base44_access_token</code>
+          key and paste it below.
+        </p>
+        <input
+          type="password"
+          value={token}
+          onChange={(e) => setToken(e.target.value)}
+          placeholder="Paste Base44 access token here..."
+          className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-200 font-mono text-xs"
+          disabled={running}
+        />
+      </div>
+
       {!running && !done && (
         <button
           onClick={runMigration}
-          className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-8 rounded-lg text-lg mb-6"
+          disabled={!token.trim()}
+          className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-lg text-lg mb-6"
         >
           Start Migration
         </button>
