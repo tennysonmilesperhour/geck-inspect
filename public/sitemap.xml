@@ -61,6 +61,16 @@
     <priority>0.7</priority>
   </url>
   <url>
+    <loc>https://geckinspect.com/Shipping</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://geckinspect.com/Giveaways</loc>
+    <changefreq>daily</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://geckinspect.com/Membership</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>

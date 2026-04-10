@@ -128,14 +128,14 @@ export default function Home() {
             <Link to={createPageUrl('CareGuide')} className="hover:text-emerald-300 transition-colors">
               Care Guide
             </Link>
-            <Link to={createPageUrl('GeneticsGuide')} className="hover:text-emerald-300 transition-colors">
-              Genetics
-            </Link>
-            <Link to={createPageUrl('Gallery')} className="hover:text-emerald-300 transition-colors">
-              Gallery
-            </Link>
             <Link to={createPageUrl('Marketplace')} className="hover:text-emerald-300 transition-colors">
               Marketplace
+            </Link>
+            <Link to={createPageUrl('Shipping')} className="hover:text-emerald-300 transition-colors">
+              Shipping
+            </Link>
+            <Link to={createPageUrl('Giveaways')} className="hover:text-emerald-300 transition-colors">
+              Giveaways
             </Link>
           </nav>
           <Link to={createPageUrl('AuthPortal')}>
