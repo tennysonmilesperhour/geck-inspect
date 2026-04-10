@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Gecko, UserActivity, WeightRecord, FeedingGroup } from '@/entities/all';
 import { UploadFile } from '@/integrations/Core';
@@ -8,7 +8,6 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,68 +21,19 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Card, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { format } from "date-fns";
-import { Upload, X, Trash2, DollarSign, Award, GitBranch, Loader2, ChevronDown } from "lucide-react";
+import { Upload, X, Trash2, DollarSign, Award, GitBranch, Loader2 } from "lucide-react";
 import { Switch } from '@/components/ui/switch';
 import { generateLineageCertificate } from '@/functions/generateLineageCertificate';
 import MorphIDSelector from './MorphIDSelector';
+// Extracted helpers / constants / sub-components — keeps this file focused
+// on the orchestration logic instead of static data and pure UI pieces.
+import { MONTHS, GECKO_SPECIES, INITIAL_FORM_DATA, DEFAULT_GECKO_IMAGE } from './form/constants';
+import { generateNextGeckoId } from './form/helpers';
+import ImageCropDialog from './form/ImageCropDialog';
+import ParentAutocomplete from './form/ParentAutocomplete';
 
-// Helper function for Gecko ID generation
-const generateNextGeckoId = async (user, allGeckos, sire = null, dam = null) => {
-    if (sire && dam) {
-        // ID for hatched geckos
-        const sireCode = (sire.gecko_id_code || sire.name.substring(0, 3)).toUpperCase().replace(/[^A-Z0-9]/g, '');
-        const damCode = (dam.gecko_id_code || dam.name.substring(0, 3)).toUpperCase().replace(/[^A-Z0-9]/g, '');
-        const prefix = `${sireCode}x${damCode}-`;
-        
-        // Find siblings that have this sire and dam
-        const siblings = allGeckos.filter(g => g.sire_id === sire.id && g.dam_id === dam.id);
-        const nextId = siblings.length + 1;
-        return `${prefix}${String(nextId).padStart(2, '0')}`;
-    } else {
-        // ID for manually added geckos (founders)
-        const userPrefix = (user?.breeder_name || user?.email?.split('@')[0] || 'GECK')
-            .substring(0, 3).toUpperCase().replace(/[^A-Z0-9]/g, '');
-        
-        // Find existing founder geckos that match the user's prefix and have no parents
-        const founderGeckos = allGeckos.filter(g => !g.sire_id && !g.dam_id && g.gecko_id_code?.startsWith(userPrefix));
-        const nextId = founderGeckos.length + 1;
-        return `${userPrefix}-${String(nextId).padStart(3, '0')}`;
-    }
-};
-
-const MONTHS = [
-    { value: "1", label: "January" }, { value: "2", label: "February" },
-    { value: "3", label: "March" }, { value: "4", label: "April" },
-    { value: "5", label: "May" }, { value: "6", label: "June" },
-    { value: "7", label: "July" }, { value: "8", label: "August" },
-    { value: "9", label: "September" }, { value: "10", label: "October" },
-    { value: "11", label: "November" }, { value: "12", label: "December" }
-];
-
-const GECKO_SPECIES = [
-    'Crested Gecko', 'Gargoyle Gecko', 'Giant Day Gecko', 'Gold Dust Day Gecko',
-    'Leachianus Gecko', 'Mourning Gecko', 'Chahoua Gecko', 'Pictus Gecko',
-    'Tokay Gecko', 'Leopard Gecko', 'African Fat-Tailed Gecko', 'Other'
-];
-
-const initialFormData = {
-    name: '',
-    gecko_id_code: '',
-    hatch_date: null,
-    sex: 'Unsexed',
-    species: 'Crested Gecko',
-    sire_id: '',
-    dam_id: '',
-    morphs_traits: '',
-    notes: '',
-    status: 'Pet',
-    image_urls: [],
-    weight_grams: '',
-    asking_price: '',
-    image_crop_data: {}
-};
-
-const DEFAULT_GECKO_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
+// Back-compat alias so the rest of this file doesn't need to change
+const initialFormData = INITIAL_FORM_DATA;
 
 export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, onCancel, isHatching = false, onDelete, breedingPlan = null, feedingGroups: feedingGroupsProp = null }) {
     const isArchived = gecko?.archived;
@@ -112,10 +62,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
     const [isGeneratingCert, setIsGeneratingCert] = useState(false);
     const [certType, setCertType] = useState('');
     const [feedingGroups, setFeedingGroups] = useState([]);
-    const [showSireSuggestions, setShowSireSuggestions] = useState(false);
-    const [showDamSuggestions, setShowDamSuggestions] = useState(false);
-    const sireRef = useRef(null);
-    const damRef = useRef(null);
+    // sire/dam suggestion visibility + refs now live inside ParentAutocomplete
 
     useEffect(() => {
         if (feedingGroupsProp) {
@@ -610,80 +557,32 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     </div>
 
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Sire autocomplete */}
-                        <div ref={sireRef} className="relative">
-                            <Label htmlFor="sire_input">Sire (Father)</Label>
-                            <div className="relative flex items-center">
-                                <Input
-                                   id="sire_input"
-                                    value={sireInput}
-                                    onChange={(e) => { handleSireInputChange(e.target.value); setShowSireSuggestions(true); }}
-                                    onFocus={() => setShowSireSuggestions(true)}
-                                    onBlur={() => setTimeout(() => setShowSireSuggestions(false), 150)}
-                                    placeholder="Type or browse males..."
-                                    disabled={isArchived}
-                                    className="bg-slate-800 border-slate-600 text-slate-100 pr-8 disabled:opacity-50 disabled:cursor-not-allowed"
-                                />
-                                <ChevronDown
-                                    className="w-4 h-4 absolute right-2 text-slate-400 pointer-events-none"
-                                />
-                            </div>
-                            {showSireSuggestions && (
-                                <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-2xl z-[99999] max-h-48 overflow-y-auto">
-                                    {userGeckos.filter(g => g.sex === 'Male' && g.id !== gecko?.id && (
-                                        !sireInput || g.name.toLowerCase().includes(sireInput.toLowerCase()) || g.gecko_id_code?.toLowerCase().includes(sireInput.toLowerCase())
-                                    )).map(s => (
-                                        <button
-                                            key={s.id}
-                                            type="button"
-                                            className="w-full text-left px-3 py-2 text-sm text-slate-200 hover:bg-slate-700 flex items-center gap-2"
-                                            onMouseDown={() => { setSireInput(`${s.name} (${s.gecko_id_code || 'No ID'})`); setSireId(s.id); setShowSireSuggestions(false); }}
-                                        >
-                                            <img src={s.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'} alt={s.name} className="w-6 h-6 rounded object-cover flex-shrink-0" />
-                                            <span>{s.name}</span>
-                                            {s.gecko_id_code && <span className="text-slate-400 text-xs ml-auto">{s.gecko_id_code}</span>}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                        {/* Dam autocomplete */}
-                        <div ref={damRef} className="relative">
-                            <Label htmlFor="dam_input">Dam (Mother)</Label>
-                            <div className="relative flex items-center">
-                                <Input
-                                    id="dam_input"
-                                     value={damInput}
-                                     onChange={(e) => { handleDamInputChange(e.target.value); setShowDamSuggestions(true); }}
-                                     onFocus={() => setShowDamSuggestions(true)}
-                                     onBlur={() => setTimeout(() => setShowDamSuggestions(false), 150)}
-                                     placeholder="Type or browse females..."
-                                     disabled={isArchived}
-                                     className="bg-slate-800 border-slate-600 text-slate-100 pr-8 disabled:opacity-50 disabled:cursor-not-allowed"
-                                />
-                                <ChevronDown
-                                    className="w-4 h-4 absolute right-2 text-slate-400 pointer-events-none"
-                                />
-                            </div>
-                            {showDamSuggestions && (
-                                <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-2xl z-[99999] max-h-48 overflow-y-auto">
-                                    {userGeckos.filter(g => g.sex === 'Female' && g.id !== gecko?.id && (
-                                        !damInput || g.name.toLowerCase().includes(damInput.toLowerCase()) || g.gecko_id_code?.toLowerCase().includes(damInput.toLowerCase())
-                                    )).map(d => (
-                                        <button
-                                            key={d.id}
-                                            type="button"
-                                            className="w-full text-left px-3 py-2 text-sm text-slate-200 hover:bg-slate-700 flex items-center gap-2"
-                                            onMouseDown={() => { setDamInput(`${d.name} (${d.gecko_id_code || 'No ID'})`); setDamId(d.id); setShowDamSuggestions(false); }}
-                                        >
-                                            <img src={d.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'} alt={d.name} className="w-6 h-6 rounded object-cover flex-shrink-0" />
-                                            <span>{d.name}</span>
-                                            {d.gecko_id_code && <span className="text-slate-400 text-xs ml-auto">{d.gecko_id_code}</span>}
-                                        </button>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
+                        <ParentAutocomplete
+                            id="sire_input"
+                            label="Sire (Father)"
+                            placeholder="Type or browse males..."
+                            value={sireInput}
+                            onChange={handleSireInputChange}
+                            onSelect={(s) => {
+                                setSireInput(`${s.name} (${s.gecko_id_code || 'No ID'})`);
+                                setSireId(s.id);
+                            }}
+                            geckos={userGeckos.filter((g) => g.sex === 'Male' && g.id !== gecko?.id)}
+                            disabled={isArchived}
+                        />
+                        <ParentAutocomplete
+                            id="dam_input"
+                            label="Dam (Mother)"
+                            placeholder="Type or browse females..."
+                            value={damInput}
+                            onChange={handleDamInputChange}
+                            onSelect={(d) => {
+                                setDamInput(`${d.name} (${d.gecko_id_code || 'No ID'})`);
+                                setDamId(d.id);
+                            }}
+                            geckos={userGeckos.filter((g) => g.sex === 'Female' && g.id !== gecko?.id)}
+                            disabled={isArchived}
+                        />
                     </div>
 
                     {/* For Sale Toggle */}
@@ -988,91 +887,4 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
     );
 }
 
-// Click-and-drag Image Crop Dialog Component
-function ImageCropDialog({ imageUrl, initialCrop, onSave, onClose }) {
-    const [cropPosition, setCropPosition] = useState(initialCrop || { x: 50, y: 50 });
-    const imageContainerRef = useRef(null);
-    const isDragging = useRef(false);
-
-    const handleInteractionStart = (e) => {
-        e.preventDefault();
-        isDragging.current = true;
-        updatePosition(e);
-    };
-
-    const handleInteractionEnd = (e) => {
-        e.preventDefault();
-        isDragging.current = false;
-    };
-
-    const handleInteractionMove = (e) => {
-        e.preventDefault();
-        if (isDragging.current) {
-            updatePosition(e);
-        }
-    };
-    
-    const updatePosition = (e) => {
-        if (!imageContainerRef.current) return;
-        
-        const rect = imageContainerRef.current.getBoundingClientRect();
-        
-        // Handle both touch and mouse events
-        const clientX = e.touches ? e.touches[0].clientX : e.clientX;
-        const clientY = e.touches ? e.touches[0].clientY : e.clientY;
-
-        const x = Math.max(0, Math.min(100, ((clientX - rect.left) / rect.width) * 100));
-        const y = Math.max(0, Math.min(100, ((clientY - rect.top) / rect.height) * 100));
-
-        setCropPosition({ x, y });
-    };
-
-    const handleSave = () => {
-        onSave(cropPosition);
-    };
-
-    return (
-        <Dialog open={true} onOpenChange={onClose}>
-            <DialogContent className="max-w-md bg-slate-900 border-slate-700 text-slate-100">
-                <DialogHeader>
-                    <DialogTitle>Adjust Thumbnail Position</DialogTitle>
-                     <p className="text-sm text-muted-foreground">Click and drag on the image to set the thumbnail's focus point.</p>
-                </DialogHeader>
-                <div className="space-y-4">
-                    <div 
-                        ref={imageContainerRef}
-                        className="w-full h-64 rounded overflow-hidden border border-input relative cursor-move"
-                        onMouseDown={handleInteractionStart}
-                        onMouseMove={handleInteractionMove}
-                        onMouseUp={handleInteractionEnd}
-                        onMouseLeave={handleInteractionEnd}
-                        onTouchStart={handleInteractionStart}
-                        onTouchMove={handleInteractionMove}
-                        onTouchEnd={handleInteractionEnd}
-                    >
-                        <img 
-                            src={imageUrl} 
-                            alt="Crop preview" 
-                            className="w-full h-full object-cover pointer-events-none"
-                            style={{
-                                objectPosition: `${cropPosition.x}% ${cropPosition.y}%`
-                            }}
-                        />
-                         <div 
-                            className="absolute w-4 h-4 bg-white/50 rounded-full border-2 border-white pointer-events-none"
-                            style={{ 
-                                left: `calc(${cropPosition.x}% - 8px)`, 
-                                top: `calc(${cropPosition.y}% - 8px)`
-                            }}
-                        />
-                    </div>
-                    
-                    <div className="flex gap-2">
-                        <Button onClick={handleSave} className="flex-1">Save Position</Button>
-                        <Button variant="outline" onClick={onClose}>Cancel</Button>
-                    </div>
-                </div>
-            </DialogContent>
-        </Dialog>
-    );
-}
+// ImageCropDialog moved to ./form/ImageCropDialog.jsx
