@@ -6,6 +6,48 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Dna, Grid2X2, Layers, TrendingUp, ShieldCheck, ChevronDown, ChevronUp, ArrowUp, ChevronRight, ChevronLeft, Search } from 'lucide-react';
+import Seo from '@/components/seo/Seo';
+
+const GENETICS_GUIDE_JSON_LD = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Article',
+      '@id': 'https://geckinspect.com/GeneticsGuide#article',
+      headline: 'Crested Gecko Genetics Guide — Morphs, Inheritance, and Selective Breeding',
+      description:
+        'Complete educational reference for crested gecko (Correlophus ciliatus) genetics: dominant, recessive, and co-dominant traits; polygenic morphs; inheritance patterns; selective breeding strategies; and notable genetic morphs like Lilly White, Axanthic, and Cappuccino.',
+      url: 'https://geckinspect.com/GeneticsGuide',
+      about: {
+        '@type': 'Thing',
+        name: 'Crested gecko genetics',
+        sameAs: 'https://en.wikipedia.org/wiki/Crested_gecko',
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'Geck Inspect',
+        url: 'https://geckinspect.com/',
+      },
+    },
+    {
+      '@type': 'DefinedTermSet',
+      '@id': 'https://geckinspect.com/GeneticsGuide#termset',
+      name: 'Crested Gecko Genetics Terminology',
+      hasDefinedTerm: [
+        { '@type': 'DefinedTerm', name: 'Allele', description: 'One of two or more alternative forms of a gene.' },
+        { '@type': 'DefinedTerm', name: 'Homozygous', description: 'Having two identical alleles for a given gene.' },
+        { '@type': 'DefinedTerm', name: 'Heterozygous', description: 'Having two different alleles for a given gene.' },
+        { '@type': 'DefinedTerm', name: 'Dominant', description: 'An allele whose trait shows up even when only one copy is present.' },
+        { '@type': 'DefinedTerm', name: 'Recessive', description: 'An allele whose trait only shows up when both copies are present.' },
+        { '@type': 'DefinedTerm', name: 'Co-dominant', description: 'An allele that produces a visible trait in heterozygous form and a stronger "super" form when homozygous.' },
+        { '@type': 'DefinedTerm', name: 'Polygenic', description: 'A trait controlled by multiple genes acting together rather than a single dominant/recessive gene.' },
+        { '@type': 'DefinedTerm', name: 'Lilly White', description: 'A co-dominant crested gecko morph producing white body markings; homozygous form (Super Lilly White) is lethal.' },
+        { '@type': 'DefinedTerm', name: 'Axanthic', description: 'A recessive crested gecko morph lacking yellow and red pigments, resulting in black/white/gray coloration.' },
+        { '@type': 'DefinedTerm', name: 'Cappuccino', description: 'A recessive crested gecko morph with brown/coffee coloration and modified head structure.' },
+      ],
+    },
+  ],
+};
 
 // ── Callout box ──────────────────────────────────────────────────────────────
 function Callout({ items }) {
@@ -438,6 +480,13 @@ export default function GeneticsGuide() {
   );
 
   return (
+    <>
+      <Seo
+        title="Crested Gecko Genetics Guide"
+        description="Complete reference for crested gecko genetics: dominant, recessive, and co-dominant inheritance; polygenic traits; Lilly White, Axanthic, Cappuccino, and other notable morphs; selective breeding strategies."
+        path="/GeneticsGuide"
+        jsonLd={GENETICS_GUIDE_JSON_LD}
+      />
     <div className="min-h-screen bg-slate-950 p-4 md:p-8">
       {/* Header */}
       <div className="max-w-6xl mx-auto mb-8">
@@ -577,5 +626,6 @@ export default function GeneticsGuide() {
         </button>
       )}
     </div>
+    </>
   );
 }

@@ -21,6 +21,86 @@ import {
   Clock,
   Scale
 } from 'lucide-react';
+import Seo from '@/components/seo/Seo';
+
+const CARE_GUIDE_JSON_LD = {
+  '@context': 'https://schema.org',
+  '@graph': [
+    {
+      '@type': 'Article',
+      '@id': 'https://geckinspect.com/CareGuide#article',
+      headline: 'Crested Gecko Care Guide — Complete Beginner to Advanced Reference',
+      description:
+        'Comprehensive care guide for crested geckos (Correlophus ciliatus): housing, temperature and humidity, diet, handling, common health issues, shedding, tail loss, breeding, and hatchling care.',
+      url: 'https://geckinspect.com/CareGuide',
+      about: {
+        '@type': 'Thing',
+        name: 'Crested gecko',
+        alternateName: 'Correlophus ciliatus',
+        sameAs: 'https://en.wikipedia.org/wiki/Crested_gecko',
+      },
+      publisher: {
+        '@type': 'Organization',
+        name: 'Geck Inspect',
+        url: 'https://geckinspect.com/',
+      },
+    },
+    {
+      '@type': 'FAQPage',
+      '@id': 'https://geckinspect.com/CareGuide#faq',
+      mainEntity: [
+        {
+          '@type': 'Question',
+          name: 'How big of an enclosure does a crested gecko need?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'An adult crested gecko needs a minimum of an 18x18x24 inch vertical terrarium. Hatchlings should start in a smaller 6-qt tub or 12x12x18 inch juvenile enclosure to reduce stress and make feeding easier to monitor. Vertical height matters more than floor space because crested geckos are arboreal.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Do crested geckos need heat or UVB lighting?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Crested geckos thrive at room temperature (72-78°F) and usually do not need supplemental heat in most homes. They do not strictly require UVB lighting because complete crested gecko diets (CGD) contain vitamin D3, but low-level UVB is enriching and beneficial. Avoid temperatures above 82°F, which are stressful and potentially fatal.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'What do crested geckos eat?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'The primary diet is commercial Crested Gecko Diet (CGD) — a complete powdered food mixed with water. Popular brands include Pangea, Repashy, and Black Panther Zoological. Insects like dubia roaches or black soldier fly larvae can be offered 1-2 times per week as optional enrichment, but are not required. Fresh fruit should only be offered rarely as a treat.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'How long do crested geckos live?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'With proper care, crested geckos can live 15 to 20 years in captivity. They are a long-term commitment.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'Do crested geckos regrow their tails?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'No. Unlike leopard geckos and many other species, crested geckos do not regrow their tails once dropped. Tail loss (autotomy) is a predator-escape response and is permanent. Tailless crested geckos are extremely common in the hobby and live normal, healthy lives.',
+          },
+        },
+        {
+          '@type': 'Question',
+          name: 'When can crested geckos be bred?',
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: 'Females should not be bred until they reach 35-40 grams and at least 18 months of age to avoid calcium depletion and egg-binding. Males can breed earlier once they reach 25-30 grams of healthy weight. Never breed undersized or underage females.',
+          },
+        },
+      ],
+    },
+  ],
+};
 
 const categoryIcons = {
   housing: <Home className="w-6 h-6" />,
@@ -199,6 +279,13 @@ export default function CareGuidePage() {
   }
 
   return (
+    <>
+      <Seo
+        title="Crested Gecko Care Guide"
+        description="Comprehensive crested gecko care guide: housing, temperature, humidity, diet, handling, health, shedding, tail loss, breeding, and hatchling care. Everything a new or experienced keeper needs to know."
+        path="/CareGuide"
+        jsonLd={CARE_GUIDE_JSON_LD}
+      />
     <div className="min-h-screen bg-slate-950">
       {/* Hero Section */}
       <div className="bg-gradient-to-br from-emerald-900/30 to-slate-900 border-b border-slate-800">
@@ -212,7 +299,7 @@ export default function CareGuidePage() {
               Crested Gecko Care
             </h1>
             <p className="text-xl text-slate-300 max-w-3xl mx-auto">
-              Everything you need to know to provide the best care for your crested gecko, 
+              Everything you need to know to provide the best care for your crested gecko,
               from basic housing to advanced breeding techniques.
             </p>
           </div>
@@ -329,5 +416,6 @@ export default function CareGuidePage() {
         ))}
       </div>
     </div>
+    </>
   );
 }
