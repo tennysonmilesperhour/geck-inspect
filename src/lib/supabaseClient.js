@@ -2,16 +2,11 @@ import { createClient } from '@supabase/supabase-js';
 
 const SUPABASE_URL =
   import.meta.env.VITE_SUPABASE_URL ||
-  'https://qtrypzzcjebvfcihiynt.supabase.co';
+  'https://mmuglfphhwlaluyfyxsp.supabase.co';
 
-const SUPABASE_ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY || '';
-
-if (!SUPABASE_ANON_KEY) {
-  console.warn(
-    '[supabaseClient] VITE_SUPABASE_ANON_KEY is not set. ' +
-    'Authentication will not work until this env var is configured.'
-  );
-}
+const SUPABASE_ANON_KEY =
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tdWdsZnBoaHdsYWx1eWZ5eHNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MjA5MTksImV4cCI6MjA5MTA5NjkxOX0.mbjrSDZoEvQwPBiZbRtzjC04viNmSJ7sABDJQK9TmIM';
 
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
