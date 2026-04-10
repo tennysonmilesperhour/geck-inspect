@@ -1,6 +1,7 @@
 import { createClient } from '@base44/sdk';
 import { appParams } from '@/lib/app-params';
 import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
+import * as sbEntities from '@/api/supabaseEntities';
 
 const { appId, serverUrl, token, functionsVersion } = appParams;
 
@@ -47,6 +48,18 @@ base44.auth = new Proxy(base44.auth, {
       };
     }
     return target[prop];
+  }
+});
+
+// Redirect all base44.entities.* calls to Supabase so every page that
+// calls base44.entities.Gecko.filter() / .list() / etc. uses Supabase.
+base44.entities = new Proxy(base44.entities || {}, {
+  get(target, entityName) {
+    if (typeof entityName !== 'string') return target[entityName];
+    // Named exports in sbEntities match entity names exactly (e.g. sbEntities.Gecko)
+    // UserEntity covers the User entity
+    const sbEntity = entityName === 'User' ? sbEntities.UserEntity : sbEntities[entityName];
+    return sbEntity || target[entityName];
   }
 });
 
