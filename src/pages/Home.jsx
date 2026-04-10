@@ -240,14 +240,19 @@ export default function Home() {
               </p>
               <p>
                 Modern crested gecko breeding is built around a vocabulary of morphs and traits
-                including <strong>Harlequin</strong>, <strong>Pinstripe</strong>,{' '}
-                <strong>Dalmatian</strong>, <strong>Lilly White</strong>,{' '}
-                <strong>Flame</strong>, <strong>Cream</strong>, <strong>Brindle</strong>,{' '}
-                <strong>Tiger</strong>, <strong>Cappuccino</strong>, and many more. Geck Inspect
-                treats these as structured, searchable data rather than free-text descriptions, so
-                you can finally answer questions like &ldquo;how many harlequin pinstripes are in
-                my collection?&rdquo; or &ldquo;what&rsquo;s the lineage of this particular
-                Lilly White?&rdquo;
+                including{' '}
+                <Link to="/MorphGuide/harlequin" className="text-emerald-300 hover:text-emerald-200 font-semibold">Harlequin</Link>,{' '}
+                <Link to="/MorphGuide/pinstripe" className="text-emerald-300 hover:text-emerald-200 font-semibold">Pinstripe</Link>,{' '}
+                <Link to="/MorphGuide/dalmatian" className="text-emerald-300 hover:text-emerald-200 font-semibold">Dalmatian</Link>,{' '}
+                <Link to="/MorphGuide/lilly-white" className="text-emerald-300 hover:text-emerald-200 font-semibold">Lilly White</Link>,{' '}
+                <Link to="/MorphGuide/flame" className="text-emerald-300 hover:text-emerald-200 font-semibold">Flame</Link>,{' '}
+                <Link to="/MorphGuide/brindle" className="text-emerald-300 hover:text-emerald-200 font-semibold">Brindle</Link>,{' '}
+                <Link to="/MorphGuide/tiger" className="text-emerald-300 hover:text-emerald-200 font-semibold">Tiger</Link>,{' '}
+                <Link to="/MorphGuide/cappuccino" className="text-emerald-300 hover:text-emerald-200 font-semibold">Cappuccino</Link>,
+                and many more. Geck Inspect treats these as structured, searchable data rather
+                than free-text descriptions, so you can finally answer questions like
+                &ldquo;how many harlequin pinstripes are in my collection?&rdquo; or
+                &ldquo;what&rsquo;s the lineage of this particular Lilly White?&rdquo;
               </p>
               <p>
                 Whether you&rsquo;re keeping your first gecko or running a project with hundreds

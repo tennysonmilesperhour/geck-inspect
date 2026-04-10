@@ -1,5 +1,6 @@
 
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 import { MorphGuide } from "@/entities/MorphGuide";
 import { User } from "@/entities/User"; // Added: Import User entity
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -16,9 +17,25 @@ import {
 } from "lucide-react";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import _ from 'lodash';
+import Seo from "@/components/seo/Seo";
+import { morphSlug } from "@/lib/morphUtils";
 
 import MorphCard from "../components/morph-guide/MorphCard";
 import MorphDetail from "../components/morph-guide/MorphDetail";
+
+const MORPH_GUIDE_JSON_LD = {
+  '@context': 'https://schema.org',
+  '@type': 'CollectionPage',
+  name: 'Crested Gecko Morph Guide',
+  url: 'https://geckinspect.com/MorphGuide',
+  description:
+    'Reference guide for crested gecko morphs: Harlequin, Dalmatian, Pinstripe, Lilly White, Flame, Cream, Brindle, Tiger, Cappuccino, Patternless, and more. Detailed morph descriptions, rarity, and breeding information.',
+  about: {
+    '@type': 'Thing',
+    name: 'Crested gecko',
+    alternateName: 'Correlophus ciliatus',
+  },
+};
 
 const rarityColors = {
   common: "bg-amber-100 text-amber-700 border-amber-200",
@@ -131,6 +148,12 @@ export default function MorphGuidePage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-sage-50 to-earth-50 p-4 md:p-8">
+      <Seo
+        title="Crested Gecko Morph Guide"
+        description="Reference guide for crested gecko morphs — Harlequin, Dalmatian, Pinstripe, Lilly White, Flame, Cream, Brindle, Tiger, Cappuccino, Patternless, and more. Rarity, key features, and breeding information for every major morph."
+        path="/MorphGuide"
+        jsonLd={MORPH_GUIDE_JSON_LD}
+      />
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">

@@ -20,6 +20,40 @@
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
+  <!-- Per-morph detail pages: each one is its own crawlable article -->
+  <url><loc>https://geckinspect.com/MorphGuide/harlequin</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/extreme-harlequin</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/pinstripe</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/phantom-pinstripe</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/dalmatian</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/super-dalmatian</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/lilly-white</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/super-lilly-white</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/flame</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/cappuccino</loc><changefreq>monthly</changefreq><priority>0.9</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/frappuccino</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/brindle</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/extreme-brindle</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/tiger</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/tiger-brindle</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/tricolor</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/bicolor</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/patternless</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/axanthic</loc><changefreq>monthly</changefreq><priority>0.8</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/hypo</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/moonglow</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/translucent</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/soft-scale</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/super-soft-scale</loc><changefreq>monthly</changefreq><priority>0.5</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/white-wall</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/white-wall-white-spot</loc><changefreq>monthly</changefreq><priority>0.6</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/buckskin</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/chocolate</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/olive</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/lavender</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/red-base</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/orange-base</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
+  <url><loc>https://geckinspect.com/MorphGuide/yellow-base</loc><changefreq>monthly</changefreq><priority>0.7</priority></url>
   <url>
     <loc>https://geckinspect.com/GeneticsGuide</loc>
     <changefreq>monthly</changefreq>

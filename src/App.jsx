@@ -21,6 +21,8 @@ import Home from './pages/Home';
 const Breeder               = lazy(() => import('./pages/Breeder'));
 const Shipping              = lazy(() => import('./pages/Shipping'));
 const Giveaways             = lazy(() => import('./pages/Giveaways'));
+const MorphDetail           = lazy(() => import('./pages/MorphDetail'));
+const MorphGuideList        = lazy(() => import('./pages/MorphGuide'));
 const ForumPost             = lazy(() => import('./pages/ForumPost'));
 const PrivacyPolicy         = lazy(() => import('./pages/PrivacyPolicy'));
 const MarketplaceSalesStats = lazy(() => import('./pages/MarketplaceSalesStats'));
@@ -67,6 +69,8 @@ const AuthenticatedApp = () => {
           <Route path="/Breeder" element={<Breeder />} />
           <Route path="/Shipping" element={<Shipping />} />
           <Route path="/Giveaways" element={<Giveaways />} />
+          <Route path="/MorphGuide" element={<MorphGuideList />} />
+          <Route path="/MorphGuide/:slug" element={<MorphDetail />} />
           <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
           <Route path="*" element={<LoginPortal />} />
         </Routes>
@@ -132,6 +136,11 @@ const AuthenticatedApp = () => {
       <Route path="/Giveaways" element={
         <LayoutWrapper currentPageName="Giveaways">
           <Giveaways />
+        </LayoutWrapper>
+      } />
+      <Route path="/MorphGuide/:slug" element={
+        <LayoutWrapper currentPageName="MorphGuide">
+          <MorphDetail />
         </LayoutWrapper>
       } />
       <Route path="/AdminMigration" element={<AdminMigration />} />
