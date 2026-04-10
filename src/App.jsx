@@ -1,5 +1,5 @@
 import './App.css'
-import { Suspense } from 'react';
+import { Suspense, lazy } from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { HelmetProvider } from 'react-helmet-async'
@@ -12,14 +12,18 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UpdateNotification from '@/components/ui/UpdateNotification';
 import LoginPortal from '@/components/auth/LoginPortal';
-// Add page imports here
+
+// Public landing page — stays eager because it's what unauthenticated
+// visitors (and crawlers) hit first.
 import Home from './pages/Home';
-import ForumPost from './pages/ForumPost';
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import MarketplaceSalesStats from './pages/MarketplaceSalesStats';
-import Marketplace from './pages/Marketplace';
-import Membership from './pages/Membership';
-import AdminMigration from './pages/AdminMigration';
+
+// Everything else below is lazy-loaded for bundle-size wins.
+const ForumPost             = lazy(() => import('./pages/ForumPost'));
+const PrivacyPolicy         = lazy(() => import('./pages/PrivacyPolicy'));
+const MarketplaceSalesStats = lazy(() => import('./pages/MarketplaceSalesStats'));
+const Marketplace           = lazy(() => import('./pages/Marketplace'));
+const Membership            = lazy(() => import('./pages/Membership'));
+const AdminMigration        = lazy(() => import('./pages/AdminMigration'));
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];

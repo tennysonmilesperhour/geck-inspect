@@ -48,45 +48,48 @@
  * The mainPage value must match a key in the PAGES object exactly.
  */
 import { lazy } from 'react';
-import AdminPanel from './pages/AdminPanel';
-import AuthPortal from './pages/AuthPortal';
-import Breeding from './pages/Breeding';
-import BreedingPairs from './pages/BreedingPairs';
-import CommunityConnect from './pages/CommunityConnect';
-
-import Forum from './pages/Forum';
-import ForumPost from './pages/ForumPost';
-import Gallery from './pages/Gallery';
-import GeckoDetail from './pages/GeckoDetail';
-import GeneticCalculatorTool from './pages/GeneticCalculatorTool';
-import Home from './pages/Home';
-import LikedGeckos from './pages/LikedGeckos';
-import Lineage from './pages/Lineage';
-import MarketplaceBuy from './pages/MarketplaceBuy';
-import Messages from './pages/Messages';
-import MorphGuideSubmission from './pages/MorphGuideSubmission';
-import MyGeckos from './pages/MyGeckos';
-import MyListings from './pages/MyListings';
-import MyProfile from './pages/MyProfile';
-import Notifications from './pages/Notifications';
-import OtherReptiles from './pages/OtherReptiles';
-import ProjectManager from './pages/ProjectManager';
-import PublicProfile from './pages/PublicProfile';
-import Settings from './pages/Settings';
-import Subscription from './pages/Subscription';
-import TrainModel from './pages/TrainModel';
 import __Layout from './Layout.jsx';
 
-// Lazy-loaded pages — JS only downloads when the user navigates to that route
-const BreederConsultant = lazy(() => import('./pages/BreederConsultant'));
-const CareGuide         = lazy(() => import('./pages/CareGuide'));
-const Dashboard         = lazy(() => import('./pages/Dashboard'));
-const GeneticsGuide     = lazy(() => import('./pages/GeneticsGuide'));
-const MarketplaceSell   = lazy(() => import('./pages/MarketplaceSell'));
-const MorphGuide        = lazy(() => import('./pages/MorphGuide'));
-const MorphVisualizer   = lazy(() => import('./pages/MorphVisualizer'));
-const Recognition       = lazy(() => import('./pages/Recognition'));
-const Training          = lazy(() => import('./pages/Training'));
+// Eagerly loaded: the pages a signed-in user is most likely to hit first.
+// Keeping these in the main bundle avoids a blank flash on the common path.
+import Home from './pages/Home';
+import MyProfile from './pages/MyProfile';
+
+// Everything else is split into its own chunk and only downloaded
+// when the user navigates to that route. Cuts ~MB off first paint.
+const AdminPanel            = lazy(() => import('./pages/AdminPanel'));
+const AuthPortal            = lazy(() => import('./pages/AuthPortal'));
+const BreederConsultant     = lazy(() => import('./pages/BreederConsultant'));
+const Breeding              = lazy(() => import('./pages/Breeding'));
+const BreedingPairs         = lazy(() => import('./pages/BreedingPairs'));
+const CareGuide             = lazy(() => import('./pages/CareGuide'));
+const CommunityConnect      = lazy(() => import('./pages/CommunityConnect'));
+const Dashboard             = lazy(() => import('./pages/Dashboard'));
+const Forum                 = lazy(() => import('./pages/Forum'));
+const ForumPost             = lazy(() => import('./pages/ForumPost'));
+const Gallery               = lazy(() => import('./pages/Gallery'));
+const GeckoDetail           = lazy(() => import('./pages/GeckoDetail'));
+const GeneticCalculatorTool = lazy(() => import('./pages/GeneticCalculatorTool'));
+const GeneticsGuide         = lazy(() => import('./pages/GeneticsGuide'));
+const LikedGeckos           = lazy(() => import('./pages/LikedGeckos'));
+const Lineage               = lazy(() => import('./pages/Lineage'));
+const MarketplaceBuy        = lazy(() => import('./pages/MarketplaceBuy'));
+const MarketplaceSell       = lazy(() => import('./pages/MarketplaceSell'));
+const Messages              = lazy(() => import('./pages/Messages'));
+const MorphGuide            = lazy(() => import('./pages/MorphGuide'));
+const MorphGuideSubmission  = lazy(() => import('./pages/MorphGuideSubmission'));
+const MorphVisualizer       = lazy(() => import('./pages/MorphVisualizer'));
+const MyGeckos              = lazy(() => import('./pages/MyGeckos'));
+const MyListings            = lazy(() => import('./pages/MyListings'));
+const Notifications         = lazy(() => import('./pages/Notifications'));
+const OtherReptiles         = lazy(() => import('./pages/OtherReptiles'));
+const ProjectManager        = lazy(() => import('./pages/ProjectManager'));
+const PublicProfile         = lazy(() => import('./pages/PublicProfile'));
+const Recognition           = lazy(() => import('./pages/Recognition'));
+const Settings              = lazy(() => import('./pages/Settings'));
+const Subscription          = lazy(() => import('./pages/Subscription'));
+const TrainModel            = lazy(() => import('./pages/TrainModel'));
+const Training              = lazy(() => import('./pages/Training'));
 
 
 export const PAGES = {
