@@ -39,178 +39,20 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+// Non-React concerns extracted from this file as part of the hairball
+// cleanup — pure JS cache + rate-limit helpers, and the static
+// navigation / level-progression constants.
+import { dataCache, delay, retryApiCall, debouncedApiCall } from '@/lib/layoutCache';
+import {
+  publicNavItems,
+  userSpecificNavItems,
+  adminOnlyNavItems,
+  MILESTONES,
+  USER_LEVELS,
+  EXPERT_LEVELS,
+  COMMUNITY_LEVELS,
+} from '@/lib/layoutConstants';
 
-// Much more aggressive cache with longer durations
-class DataCache {
-  constructor() {
-    this.cache = new Map();
-    this.cacheTimestamps = new Map();
-    this.requestTimestamps = new Map();
-    this.CACHE_DURATION = 5 * 60 * 60 * 1000; // Increased to 5 hours
-    this.MIN_REQUEST_INTERVAL = 120000; // Minimum 2 minutes between same requests
-  }
-
-  isCacheValid(key) {
-    const timestamp = this.cacheTimestamps.get(key);
-    if (!timestamp) return false;
-    return Date.now() - timestamp < this.CACHE_DURATION;
-  }
-
-  canMakeRequest(key) {
-    const lastRequest = this.requestTimestamps.get(key);
-    if (!lastRequest) return true;
-    return Date.now() - lastRequest > this.MIN_REQUEST_INTERVAL;
-  }
-
-  markRequestMade(key) {
-    this.requestTimestamps.set(key, Date.now());
-  }
-
-  get(key) {
-    if (this.isCacheValid(key)) {
-      return this.cache.get(key);
-    }
-    return null;
-  }
-
-  set(key, data) {
-    this.cache.set(key, data);
-    this.cacheTimestamps.set(key, Date.now());
-  }
-
-  clear(key) {
-    this.cache.delete(key);
-    this.cacheTimestamps.delete(key);
-    this.requestTimestamps.delete(key);
-  }
-
-  clearAll() {
-    this.cache.clear();
-    this.cacheTimestamps.clear();
-    this.requestTimestamps.clear();
-  }
-}
-
-// Global cache instance
-const dataCache = new DataCache();
-window.dataCache = dataCache;
-
-// Utility functions with much longer delays
-const delay = (ms) => new Promise(resolve => setTimeout(resolve, ms));
-
-// Enhanced retry with exponential backoff
-const retryApiCall = async (apiCall, maxRetries = 2, initialDelayMs = 10000) => {
-  for (let attempt = 1; attempt <= maxRetries; attempt++) {
-    try {
-      return await apiCall();
-    } catch (error) {
-      if (error.response?.status === 429 && attempt < maxRetries) {
-        const delayMs = initialDelayMs * Math.pow(2, attempt - 1); // Exponential backoff
-        console.log(`Rate limit hit, waiting ${delayMs}ms before retry (attempt ${attempt}/${maxRetries})`);
-        await delay(delayMs);
-        continue;
-      }
-      throw error;
-    }
-  }
-};
-
-// Much longer debounce
-const debouncedApiCall = (() => {
-  const debounceMap = new Map();
-  
-  return (key, apiCall, delayMs = 5000) => { // Increased to 5 seconds
-    return new Promise((resolve, reject) => {
-      if (debounceMap.has(key)) {
-        clearTimeout(debounceMap.get(key));
-      }
-      
-      const timeoutId = setTimeout(async () => {
-        try {
-          const result = await apiCall();
-          resolve(result);
-        } catch (error) {
-          reject(error);
-        } finally {
-          debounceMap.delete(key);
-        }
-      }, delayMs);
-      
-      debounceMap.set(key, timeoutId);
-    });
-  };
-})();
-
-window.delay = delay;
-window.retryApiCall = retryApiCall;
-
-// Navigation items - now always visible
-const publicNavItems = [
-  { title: "Dashboard", url: createPageUrl("Dashboard"), icon: BarChart3 },
-  { title: "Morph ID", url: createPageUrl("Recognition"), icon: Search },
-  { title: "Morph Visualizer", url: createPageUrl("MorphVisualizer"), icon: Layers },
-  { title: "AI Consultant", url: createPageUrl("BreederConsultant"), icon: FlaskConical },
-  { title: "Morph Guide", url: createPageUrl("MorphGuide"), icon: BookOpen },
-  { title: "Care Guide", url: createPageUrl("CareGuide"), icon: Heart },
-  { title: "Forum", url: createPageUrl("Forum"), icon: MessageSquare },
-  { title: "Image Gallery", url: createPageUrl("Gallery"), icon: Database },
-  { title: "Marketplace", url: createPageUrl("Marketplace"), icon: ShoppingCart }
-];
-
-const userSpecificNavItems = [
-  { title: "My Geckos", url: createPageUrl("MyGeckos"), icon: Users, requiresAuth: true },
-  { title: "Breeding", url: createPageUrl("Breeding"), icon: GitBranch, requiresAuth: true },
-  { title: "Lineage", url: createPageUrl("Lineage"), icon: GitBranch, requiresAuth: true },
-  { title: "Sales Stats", url: createPageUrl("MarketplaceSalesStats"), icon: BarChart3, requiresAuth: true },
-  { title: "My Profile", url: createPageUrl("MyProfile"), icon: Users, requiresAuth: true },
-  { title: "Train Model", url: createPageUrl("Training"), icon: Upload, requiresAuth: true },
-];
-
-const adminOnlyNavItems = [
-  { title: "Admin Panel", url: createPageUrl("AdminPanel"), icon: Shield }
-];
-
-// Milestone and level constants
-const MILESTONES = [
-  { count: 1000, title: "Community Contributor", description: "First major milestone reached!" },
-  { count: 5000, title: "Expert Trainer", description: "Advanced AI training achieved!" },
-  { count: 10000, title: "Master Classifier", description: "Professional-grade dataset!" },
-  { count: 100000, title: "AI Pioneer", description: "Revolutionary training dataset!" }
-];
-
-const USER_LEVELS = [
-  { geckos: 1, title: "New Collector", badge: "🥚" },
-  { geckos: 2, title: "Gecko Keeper", badge: "🦎" },
-  { geckos: 5, title: "Hobbyist", badge: "🌿" },
-  { geckos: 10, title: "Enthusiast", badge: "⭐" },
-  { geckos: 15, title: "Dedicated Keeper", badge: "🌱" },
-  { geckos: 20, title: "Breeder", badge: "❤️‍🔥" },
-  { geckos: 30, title: "Pro Breeder", badge: "🏆" },
-  { geckos: 40, title: "Expert Breeder", badge: "🧬" },
-  { geckos: 50, title: "Master Breeder", badge: "👑" },
-  { geckos: 75, title: "Grandmaster", badge: "🌌" },
-  { geckos: 100, title: "Living Legend", badge: "💫" },
-  { geckos: 150, title: "Gecko Tycoon", badge: "💼" },
-  { geckos: 200, title: "Scale Sovereign", badge: "🏰" },
-  { geckos: 300, title: "Reptile Royalty", badge: "⚜️" },
-  { geckos: 500, title: "Crested King", badge: "🦁" },
-];
-
-const EXPERT_LEVELS = [
-  { level: 1, title: "Apprentice Trainer", points: 10, badge: "🌱" },
-  { level: 2, title: "Skilled Recognizer", points: 50, badge: "🧠" },
-  { level: 3, title: "Master Annotator", points: 100, badge: "✍️" },
-  { level: 4, title: "AI Virtuoso", points: 250, badge: "🤖" },
-  { level: 5, title: "Gecko AI Grandmaster", points: 500, badge: "🌟" }
-];
-
-const COMMUNITY_LEVELS = [
-  { level: 1, title: "New Contributor", points: 1, badge: "📝" },
-  { level: 2, title: "Active Talker", points: 5, badge: "🗣️" },
-  { level: 3, title: "Forum Regular", points: 10, badge: "💬" },
-  { level: 4, title: "Community Pillar", points: 25, badge: "🏛️" },
-  { level: 5, title: "Gecko Guru", points: 50, badge: "🎓" },
-];
 
 function LayoutContent({ children, currentPageName }) {
   const location = useLocation();
