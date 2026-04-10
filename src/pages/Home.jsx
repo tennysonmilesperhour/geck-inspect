@@ -18,6 +18,13 @@ import Seo from '@/components/seo/Seo';
 const LOGO_URL =
   'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png';
 
+// Jungle hero background from Unsplash (free-license, hotlinking allowed).
+// Sebastian Unrau's classic forest — dense, misty, reads as wild habitat
+// once darkened with an overlay. Swap this URL for a more specifically
+// tropical photo whenever you find one you like; the overlay will handle it.
+const BACKGROUND_IMAGE =
+  'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=2400&q=80';
+
 const FEATURES = [
   {
     icon: Dna,
@@ -88,11 +95,24 @@ export default function Home() {
         jsonLd={LANDING_JSON_LD}
       />
 
-      <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 text-slate-100">
-        {/* Ambient glow */}
-        <div className="fixed inset-0 pointer-events-none overflow-hidden">
-          <div className="absolute top-0 right-0 w-[40rem] h-[40rem] bg-emerald-500/10 rounded-full blur-3xl" />
-          <div className="absolute bottom-0 left-0 w-[40rem] h-[40rem] bg-green-500/10 rounded-full blur-3xl" />
+      <div className="min-h-screen bg-slate-950 text-slate-100 relative">
+        {/* Jungle background — fixed so it parallax-feels as you scroll.
+            Three stacked overlays:
+              1. Base slate tint to kill any color that would clash
+              2. Vertical gradient darker at top and bottom for text contrast
+              3. Diagonal emerald tint to marry it with the brand palette  */}
+        <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
+          <img
+            src={BACKGROUND_IMAGE}
+            alt=""
+            aria-hidden="true"
+            className="w-full h-full object-cover"
+            loading="eager"
+            fetchpriority="high"
+          />
+          <div className="absolute inset-0 bg-slate-950/75" />
+          <div className="absolute inset-0 bg-gradient-to-b from-slate-950/95 via-slate-950/50 to-slate-950/95" />
+          <div className="absolute inset-0 bg-gradient-to-br from-emerald-950/40 via-transparent to-emerald-950/30" />
         </div>
 
         {/* Top nav */}
