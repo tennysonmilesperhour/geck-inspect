@@ -3,6 +3,19 @@ import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
 
 const AuthContext = createContext();
 
+async function buildUser(supabaseUser) {
+  const base = normalizeSupabaseUser(supabaseUser);
+  try {
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('*')
+      .eq('email', supabaseUser.email)
+      .maybeSingle();
+    if (profile) return { ...base, ...profile };
+  } catch {}
+  return base;
+}
+
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -10,18 +23,18 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Hydrate from any existing session on mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(async ({ data: { session } }) => {
       if (session?.user) {
-        setUser(normalizeSupabaseUser(session.user));
+        setUser(await buildUser(session.user));
         setIsAuthenticated(true);
       }
       setIsLoadingAuth(false);
     });
 
     // Keep auth state in sync with Supabase
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       if (session?.user) {
-        setUser(normalizeSupabaseUser(session.user));
+        setUser(await buildUser(session.user));
         setIsAuthenticated(true);
       } else {
         setUser(null);
