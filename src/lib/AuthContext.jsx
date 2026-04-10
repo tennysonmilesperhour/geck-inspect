@@ -23,19 +23,22 @@ export const AuthProvider = ({ children }) => {
 
   useEffect(() => {
     // Hydrate from any existing session on mount
-    supabase.auth.getSession().then(async ({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
-        setUser(await buildUser(session.user));
+        // Set basic user immediately so loading clears, then enrich with profile
+        setUser(normalizeSupabaseUser(session.user));
         setIsAuthenticated(true);
+        buildUser(session.user).then(setUser);
       }
       setIsLoadingAuth(false);
     });
 
     // Keep auth state in sync with Supabase
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
-        setUser(await buildUser(session.user));
+        setUser(normalizeSupabaseUser(session.user));
         setIsAuthenticated(true);
+        buildUser(session.user).then(setUser);
       } else {
         setUser(null);
         setIsAuthenticated(false);
