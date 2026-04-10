@@ -166,20 +166,51 @@ export default function AdminMigration() {
     setLog([]);
     addLog('Starting Base44 → Supabase migration...', 'info');
 
+    // Aggressively sanitize pasted credentials: strip every character
+    // outside printable ASCII. This catches stray newlines, zero-width
+    // spaces, smart quotes, or non-breaking spaces that sneak in during
+    // copy-paste and break XMLHttpRequest.setRequestHeader.
+    const sanitize = (s) => s.replace(/[^\x20-\x7E]/g, '');
+    const cleanToken = sanitize(token);
+    const cleanServiceKey = sanitize(serviceKey);
+
+    if (cleanToken.length !== token.trim().length) {
+      addLog(
+        `  ! Stripped ${token.trim().length - cleanToken.length} invalid character(s) from Base44 token`,
+        'dim'
+      );
+    }
+    if (cleanServiceKey.length !== serviceKey.trim().length) {
+      addLog(
+        `  ! Stripped ${serviceKey.trim().length - cleanServiceKey.length} invalid character(s) from Supabase key`,
+        'dim'
+      );
+    }
+    if (!cleanToken) {
+      addLog('Base44 token is empty after sanitization.', 'error');
+      setRunning(false);
+      return;
+    }
+    if (!cleanServiceKey) {
+      addLog('Supabase service role key is empty after sanitization.', 'error');
+      setRunning(false);
+      return;
+    }
+
     // Create a dedicated Base44 client using the provided access token.
     // This bypasses the base44.entities proxy in base44Client.js which
     // otherwise redirects reads to Supabase.
     const base44Client = createClient({
       appId: BASE44_APP_ID,
       serverUrl: BASE44_SERVER,
-      token: token.trim(),
+      token: cleanToken,
       appBaseUrl: BASE44_SERVER,
       requiresAuth: false,
     });
 
     // Create a Supabase admin client using the service role key.
     // This bypasses row-level security so we can insert into all tables.
-    const sbAdmin = createSupabaseClient(SUPABASE_URL, serviceKey.trim(), {
+    const sbAdmin = createSupabaseClient(SUPABASE_URL, cleanServiceKey, {
       auth: { persistSession: false, autoRefreshToken: false },
     });
 
