@@ -1,11 +1,15 @@
 import React, { useState, useCallback } from 'react';
 import { createClient } from '@base44/sdk';
+import { createClient as createSupabaseClient } from '@supabase/supabase-js';
 import * as sb from '@/api/supabaseEntities';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 
 const BASE44_APP_ID = '68929cdad944c572926ab6cb';
 const BASE44_SERVER = 'https://base44.app';
+const SUPABASE_URL =
+  import.meta.env.VITE_SUPABASE_URL ||
+  'https://mmuglfphhwlaluyfyxsp.supabase.co';
 
 // Entity definitions: [Base44EntityName, SupabaseTableName, label]
 const ENTITY_DEFS = [
@@ -75,29 +79,63 @@ function normalizeRecord(record, tableName) {
           disabled, force_password_reset, is_service, is_verified,
           liked_by_users, ...rest } = record;
 
+  // Convert empty strings to null so PostgreSQL doesn't reject them
+  // when the column is a date, timestamp, or other non-text type.
+  const cleaned = {};
+  for (const [k, v] of Object.entries(rest)) {
+    cleaned[k] = v === '' ? null : v;
+  }
+
   // Handle profiles table specifically
   if (tableName === 'profiles') {
     return {
-      ...rest,
+      ...cleaned,
       created_by: record.email,
     };
   }
 
-  return rest;
+  return cleaned;
 }
 
-async function upsertBatch(tableName, records) {
+// Upsert a batch of records, automatically retrying after stripping any
+// columns that Supabase doesn't know about (schema mismatch with Base44).
+async function upsertBatch(sbAdmin, tableName, records, addLog) {
   if (records.length === 0) return 0;
   const CHUNK = 50;
+  const droppedColumns = new Set();
   let inserted = 0;
+
   for (let i = 0; i < records.length; i += CHUNK) {
-    const chunk = records.slice(i, i + CHUNK);
-    const { error, count } = await supabase
-      .from(tableName)
-      .upsert(chunk, { onConflict: 'id', ignoreDuplicates: true })
-      .select('id');
-    if (error) throw new Error(`${tableName}: ${error.message}`);
-    inserted += chunk.length;
+    let chunk = records.slice(i, i + CHUNK).map((r) => {
+      const copy = { ...r };
+      for (const col of droppedColumns) delete copy[col];
+      return copy;
+    });
+
+    let attempts = 0;
+    while (true) {
+      const { error } = await sbAdmin
+        .from(tableName)
+        .upsert(chunk, { onConflict: 'id', ignoreDuplicates: true });
+      if (!error) {
+        inserted += chunk.length;
+        break;
+      }
+      const match = error.message.match(/Could not find the '([^']+)' column/);
+      if (match && attempts < 20) {
+        const badCol = match[1];
+        droppedColumns.add(badCol);
+        addLog(`  ! Stripping unknown column '${badCol}' and retrying`, 'dim');
+        chunk = chunk.map((r) => {
+          const copy = { ...r };
+          delete copy[badCol];
+          return copy;
+        });
+        attempts++;
+        continue;
+      }
+      throw new Error(`${tableName}: ${error.message}`);
+    }
   }
   return inserted;
 }
@@ -108,6 +146,7 @@ export default function AdminMigration() {
   const [running, setRunning] = useState(false);
   const [done, setDone] = useState(false);
   const [token, setToken] = useState('');
+  const [serviceKey, setServiceKey] = useState('');
 
   const addLog = useCallback((msg, type = 'info') => {
     setLog(prev => [...prev, { msg, type, ts: new Date().toLocaleTimeString() }]);
@@ -116,6 +155,10 @@ export default function AdminMigration() {
   const runMigration = useCallback(async () => {
     if (!token.trim()) {
       addLog('Please paste your Base44 access token first.', 'error');
+      return;
+    }
+    if (!serviceKey.trim()) {
+      addLog('Please paste your Supabase service role key first.', 'error');
       return;
     }
     setRunning(true);
@@ -134,6 +177,12 @@ export default function AdminMigration() {
       requiresAuth: false,
     });
 
+    // Create a Supabase admin client using the service role key.
+    // This bypasses row-level security so we can insert into all tables.
+    const sbAdmin = createSupabaseClient(SUPABASE_URL, serviceKey.trim(), {
+      auth: { persistSession: false, autoRefreshToken: false },
+    });
+
     let totalRecords = 0;
     for (const [entityName, tableName, label] of ENTITY_DEFS) {
       try {
@@ -147,7 +196,7 @@ export default function AdminMigration() {
         }
 
         const normalized = records.map(r => normalizeRecord(r, tableName));
-        const inserted = await upsertBatch(tableName, normalized);
+        const inserted = await upsertBatch(sbAdmin, tableName, normalized, addLog);
         addLog(`  ✓ Inserted/updated ${inserted} records into ${tableName}`, 'success');
         totalRecords += inserted;
       } catch (err) {
@@ -159,7 +208,7 @@ export default function AdminMigration() {
     addLog(`Migration complete! Total records: ${totalRecords}`, 'success');
     setDone(true);
     setRunning(false);
-  }, [addLog, token]);
+  }, [addLog, token, serviceKey]);
 
   // Only admin can access this page
   if (!user || user.role !== 'admin') {
@@ -198,10 +247,31 @@ export default function AdminMigration() {
         />
       </div>
 
+      <div className="bg-slate-900 border border-slate-700 rounded-lg p-4 mb-6">
+        <label className="block text-slate-300 text-sm font-semibold mb-2">
+          Supabase Service Role Key
+        </label>
+        <p className="text-slate-500 text-xs mb-3">
+          Needed to bypass row-level security during the migration. Get it
+          from your Supabase dashboard → Project Settings → API → copy the
+          <code className="text-emerald-400 mx-1">service_role</code>
+          key (not the anon key). This is never stored or sent anywhere
+          except directly to your Supabase project.
+        </p>
+        <input
+          type="password"
+          value={serviceKey}
+          onChange={(e) => setServiceKey(e.target.value)}
+          placeholder="Paste Supabase service role key here..."
+          className="w-full bg-slate-950 border border-slate-700 rounded px-3 py-2 text-slate-200 font-mono text-xs"
+          disabled={running}
+        />
+      </div>
+
       {!running && !done && (
         <button
           onClick={runMigration}
-          disabled={!token.trim()}
+          disabled={!token.trim() || !serviceKey.trim()}
           className="bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-700 disabled:cursor-not-allowed text-white font-bold py-3 px-8 rounded-lg text-lg mb-6"
         >
           Start Migration
