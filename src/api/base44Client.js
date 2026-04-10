@@ -23,6 +23,11 @@ export const base44 = createClient({
   requiresAuth: false
 });
 
+// Keep a reference to the REAL Base44 entities before we proxy them below.
+// This is used by the AdminMigration page to read data directly from Base44
+// (all other code should use base44.entities which now points to Supabase).
+export const base44RawEntities = base44.entities;
+
 // Override base44.auth so every page that calls base44.auth.me() / logout()
 // uses Supabase instead of Base44's dead auth servers.
 base44.auth = new Proxy(base44.auth, {

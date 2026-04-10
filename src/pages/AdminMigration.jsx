@@ -1,5 +1,5 @@
 import React, { useState, useCallback } from 'react';
-import { base44 } from '@/api/base44Client';
+import { base44RawEntities } from '@/api/base44Client';
 import * as sb from '@/api/supabaseEntities';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
@@ -50,7 +50,7 @@ const ENTITY_DEFS = [
 ];
 
 async function fetchAllFromBase44(entityName) {
-  const entity = base44.entities[entityName];
+  const entity = base44RawEntities[entityName];
   if (!entity) return [];
   let all = [];
   let skip = 0;
