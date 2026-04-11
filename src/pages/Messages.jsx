@@ -13,24 +13,22 @@ import EmptyState from '../components/shared/EmptyState';
 import { format } from 'date-fns';
 
 /**
- * Messages page — light cream theme per the April 2026 UI pass.
- *
- * The rest of the app is dark slate, but the user specifically wanted
- * this surface to be cream with black text because reading long message
- * bodies on dark slate was tough. The whole page is wrapped in an
- * amber-cream background and all internal Cards use cream-50 with
- * slate-900 text. Bubbles use an amber tint for incoming and emerald
- * for outgoing so you can still tell them apart at a glance.
+ * Messages page — dark slate shell to match the rest of the app, but
+ * the individual message bubbles themselves use a cream background
+ * with black ink so long message bodies are easy to read. Only the
+ * bubbles get recolored; the page background, conversation list, and
+ * composer stay on the app's standard dark theme.
  */
 
-const CREAM_BG = '#fdf8ed';
-const CREAM_SURFACE = '#ffffff';
-const CREAM_SURFACE_ALT = '#f8f1dc';
-const INK = '#1a1a1a';
-const INK_MUTED = '#5f5a4f';
-const INK_FAINT = '#8a8577';
-const AMBER_BORDER = '#e7dcc0';
-const ACCENT = '#0f766e';
+// Bubble color tokens — kept inline so we don't have to extend Tailwind.
+const BUBBLE_INCOMING_BG = '#fdf6e3';
+const BUBBLE_INCOMING_BORDER = '#e7dcc0';
+const BUBBLE_SYSTEM_BG = '#fff7d6';
+const BUBBLE_SYSTEM_BORDER = '#e3d49f';
+const BUBBLE_OUTGOING_BG = '#fefaf0';
+const BUBBLE_OUTGOING_BORDER = '#d4c89a';
+const BUBBLE_INK = '#1a1a1a';
+const BUBBLE_INK_MUTED = '#6b6658';
 
 export default function MessagesPage() {
     const { toast } = useToast();
@@ -60,7 +58,6 @@ export default function MessagesPage() {
                     m.sender_email === user.email || m.recipient_email === user.email
                 );
 
-                // Group into conversations keyed on the other participant
                 const convMap = new Map();
                 userMessages.forEach(message => {
                     const otherEmail = message.sender_email === user.email
@@ -215,62 +212,45 @@ export default function MessagesPage() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: CREAM_BG }}>
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
                 <LoadingSpinner message="Loading messages..." />
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen p-4 md:p-8" style={{ backgroundColor: CREAM_BG, color: INK }}>
+        <div className="min-h-screen bg-slate-950 p-4 md:p-8">
             <div className="max-w-6xl mx-auto">
                 <div className="flex items-center gap-3 mb-8">
-                    <div
-                        className="w-12 h-12 rounded-xl flex items-center justify-center shadow-sm"
-                        style={{ backgroundColor: ACCENT }}
-                    >
+                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
                         <Mail className="w-6 h-6 text-white" />
                     </div>
-                    <h1 className="text-4xl font-bold" style={{ color: INK }}>
-                        Messages
-                    </h1>
+                    <h1 className="text-4xl font-bold text-slate-100">Messages</h1>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
                     {/* Conversation list */}
-                    <Card
-                        className="border shadow-sm"
-                        style={{ backgroundColor: CREAM_SURFACE, borderColor: AMBER_BORDER }}
-                    >
+                    <Card className="bg-slate-900 border-slate-800">
                         <CardHeader className="pb-4">
-                            <CardTitle className="text-lg" style={{ color: INK }}>
-                                Conversations
-                            </CardTitle>
+                            <CardTitle className="text-lg text-slate-100">Conversations</CardTitle>
                             <div className="relative">
-                                <Search
-                                    className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4"
-                                    style={{ color: INK_FAINT }}
-                                />
+                                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500" />
                                 <Input
                                     placeholder="Search conversations..."
                                     value={searchTerm}
                                     onChange={(e) => setSearchTerm(e.target.value)}
-                                    className="pl-10 border"
-                                    style={{
-                                        backgroundColor: CREAM_SURFACE_ALT,
-                                        borderColor: AMBER_BORDER,
-                                        color: INK,
-                                    }}
+                                    className="pl-10 bg-slate-950 border-slate-700 text-slate-100"
                                 />
                             </div>
                         </CardHeader>
                         <CardContent className="p-0">
                             <div className="max-h-[calc(100vh-350px)] overflow-y-auto">
                                 {filteredConversations.length === 0 ? (
-                                    <div className="p-8 text-center" style={{ color: INK_MUTED }}>
-                                        <MessageSquare className="w-8 h-8 mx-auto mb-2 opacity-40" />
-                                        <p className="text-sm font-medium">No conversations yet</p>
-                                    </div>
+                                    <EmptyState
+                                        icon={MessageSquare}
+                                        title="No Conversations"
+                                        message="No conversations yet"
+                                    />
                                 ) : (
                                     filteredConversations.map((conversation) => {
                                         const isActive = selectedConversation?.email === conversation.email;
@@ -278,45 +258,26 @@ export default function MessagesPage() {
                                             <div
                                                 key={conversation.email}
                                                 onClick={() => selectConversation(conversation)}
-                                                className="p-4 border-b cursor-pointer transition-colors"
-                                                style={{
-                                                    borderColor: AMBER_BORDER,
-                                                    backgroundColor: isActive ? CREAM_SURFACE_ALT : 'transparent',
-                                                }}
-                                                onMouseEnter={(e) => {
-                                                    if (!isActive) e.currentTarget.style.backgroundColor = '#fbf5e3';
-                                                }}
-                                                onMouseLeave={(e) => {
-                                                    if (!isActive) e.currentTarget.style.backgroundColor = 'transparent';
-                                                }}
+                                                className={`p-4 border-b border-slate-800 cursor-pointer transition-colors ${
+                                                    isActive ? 'bg-slate-800' : 'hover:bg-slate-800/60'
+                                                }`}
                                             >
                                                 <div className="flex items-center justify-between gap-2">
                                                     <div className="flex items-center gap-3 min-w-0">
-                                                        <div
-                                                            className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-                                                            style={{ backgroundColor: CREAM_SURFACE_ALT, color: INK_MUTED }}
-                                                        >
-                                                            <UserIcon className="w-5 h-5" />
+                                                        <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center shrink-0">
+                                                            <UserIcon className="w-5 h-5 text-slate-400" />
                                                         </div>
                                                         <div className="min-w-0">
-                                                            <div className="font-semibold flex items-center gap-2" style={{ color: INK }}>
+                                                            <div className="font-medium text-slate-100 flex items-center gap-2">
                                                                 <span className="truncate">{conversation.displayName}</span>
                                                                 {conversation.isSystem && (
-                                                                    <Badge
-                                                                        variant="secondary"
-                                                                        className="text-[10px] shrink-0"
-                                                                        style={{
-                                                                            backgroundColor: '#f3e9cb',
-                                                                            color: '#5a4a21',
-                                                                            borderColor: '#e3d49f',
-                                                                        }}
-                                                                    >
+                                                                    <Badge variant="secondary" className="text-[10px] bg-slate-700 text-slate-200 border-slate-600 shrink-0">
                                                                         System
                                                                     </Badge>
                                                                 )}
                                                             </div>
                                                             {conversation.latestMessage && (
-                                                                <div className="text-sm truncate max-w-[220px]" style={{ color: INK_MUTED }}>
+                                                                <div className="text-sm text-slate-400 truncate max-w-[220px]">
                                                                     {conversation.latestMessage.content.substring(0, 60)}
                                                                 </div>
                                                             )}
@@ -324,15 +285,12 @@ export default function MessagesPage() {
                                                     </div>
                                                     <div className="flex flex-col items-end gap-1 shrink-0">
                                                         {conversation.latestMessage && (
-                                                            <div className="text-xs" style={{ color: INK_FAINT }}>
+                                                            <div className="text-xs text-slate-500">
                                                                 {format(new Date(conversation.latestMessage.created_date), 'MMM d')}
                                                             </div>
                                                         )}
                                                         {conversation.unreadCount > 0 && (
-                                                            <Badge
-                                                                className="text-[10px] font-bold"
-                                                                style={{ backgroundColor: '#b91c1c', color: '#fff' }}
-                                                            >
+                                                            <Badge className="bg-red-600 text-white text-[10px] font-bold">
                                                                 {conversation.unreadCount}
                                                             </Badge>
                                                         )}
@@ -349,36 +307,22 @@ export default function MessagesPage() {
                     {/* Message view */}
                     <div className="lg:col-span-2">
                         {selectedConversation ? (
-                            <Card
-                                className="border shadow-sm h-full flex flex-col"
-                                style={{ backgroundColor: CREAM_SURFACE, borderColor: AMBER_BORDER }}
-                            >
-                                <CardHeader className="pb-4 border-b" style={{ borderColor: AMBER_BORDER }}>
-                                    <CardTitle className="flex items-center gap-3" style={{ color: INK }}>
-                                        <div
-                                            className="w-10 h-10 rounded-full flex items-center justify-center"
-                                            style={{ backgroundColor: CREAM_SURFACE_ALT, color: INK_MUTED }}
-                                        >
-                                            <UserIcon className="w-5 h-5" />
+                            <Card className="bg-slate-900 border-slate-800 h-full flex flex-col">
+                                <CardHeader className="pb-4 border-b border-slate-800">
+                                    <CardTitle className="flex items-center gap-3 text-slate-100">
+                                        <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center">
+                                            <UserIcon className="w-5 h-5 text-slate-400" />
                                         </div>
                                         <div className="min-w-0">
                                             <div className="flex items-center gap-2">
                                                 <span className="truncate">{selectedConversation.displayName}</span>
                                                 {selectedConversation.isSystem && (
-                                                    <Badge
-                                                        variant="secondary"
-                                                        className="text-xs"
-                                                        style={{
-                                                            backgroundColor: '#f3e9cb',
-                                                            color: '#5a4a21',
-                                                            borderColor: '#e3d49f',
-                                                        }}
-                                                    >
+                                                    <Badge variant="secondary" className="text-xs bg-slate-700 text-slate-200 border-slate-600">
                                                         System
                                                     </Badge>
                                                 )}
                                             </div>
-                                            <div className="text-sm font-normal truncate" style={{ color: INK_MUTED }}>
+                                            <div className="text-sm font-normal text-slate-400 truncate">
                                                 {selectedConversation.email}
                                             </div>
                                         </div>
@@ -389,14 +333,27 @@ export default function MessagesPage() {
                                     <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[calc(100vh-450px)]">
                                         {selectedConversation.messages.map((message) => {
                                             const isMine = message.sender_email === currentUser.email;
+                                            const isSystem = message.message_type === 'system';
+                                            // Bubble: cream, black text — the only element that
+                                            // intentionally breaks the dark theme because the
+                                            // user asked for it to be easier to read.
                                             const bubbleStyle = isMine
-                                                ? { backgroundColor: ACCENT, color: '#ffffff', borderColor: ACCENT }
-                                                : message.message_type === 'system'
-                                                    ? { backgroundColor: '#fff9e3', color: INK, borderColor: '#e3d49f' }
-                                                    : { backgroundColor: CREAM_SURFACE_ALT, color: INK, borderColor: AMBER_BORDER };
-                                            const timeStyle = isMine
-                                                ? { color: 'rgba(255,255,255,0.8)' }
-                                                : { color: INK_FAINT };
+                                                ? {
+                                                      backgroundColor: BUBBLE_OUTGOING_BG,
+                                                      borderColor: BUBBLE_OUTGOING_BORDER,
+                                                      color: BUBBLE_INK,
+                                                  }
+                                                : isSystem
+                                                    ? {
+                                                          backgroundColor: BUBBLE_SYSTEM_BG,
+                                                          borderColor: BUBBLE_SYSTEM_BORDER,
+                                                          color: BUBBLE_INK,
+                                                      }
+                                                    : {
+                                                          backgroundColor: BUBBLE_INCOMING_BG,
+                                                          borderColor: BUBBLE_INCOMING_BORDER,
+                                                          color: BUBBLE_INK,
+                                                      };
                                             return (
                                                 <div
                                                     key={message.id}
@@ -409,7 +366,10 @@ export default function MessagesPage() {
                                                         <div className="whitespace-pre-wrap text-sm leading-relaxed">
                                                             {message.content}
                                                         </div>
-                                                        <div className="text-[10px] mt-1" style={timeStyle}>
+                                                        <div
+                                                            className="text-[10px] mt-1"
+                                                            style={{ color: BUBBLE_INK_MUTED }}
+                                                        >
                                                             {format(new Date(message.created_date), 'MMM d, h:mm a')}
                                                         </div>
                                                     </div>
@@ -419,7 +379,7 @@ export default function MessagesPage() {
                                     </div>
 
                                     {!selectedConversation.isSystem && (
-                                        <div className="p-4 border-t" style={{ borderColor: AMBER_BORDER }}>
+                                        <div className="p-4 border-t border-slate-800">
                                             <div className="flex gap-3">
                                                 <Textarea
                                                     placeholder="Type your message..."
@@ -431,19 +391,13 @@ export default function MessagesPage() {
                                                             sendMessage();
                                                         }
                                                     }}
-                                                    className="flex-1 resize-none border"
-                                                    style={{
-                                                        backgroundColor: CREAM_SURFACE_ALT,
-                                                        borderColor: AMBER_BORDER,
-                                                        color: INK,
-                                                    }}
+                                                    className="flex-1 resize-none bg-slate-950 border-slate-700 text-slate-100"
                                                     rows={2}
                                                 />
                                                 <Button
                                                     onClick={sendMessage}
                                                     disabled={!newMessage.trim() || isSending}
-                                                    className="shrink-0 text-white"
-                                                    style={{ backgroundColor: ACCENT }}
+                                                    className="bg-emerald-600 hover:bg-emerald-500 text-white shrink-0"
                                                 >
                                                     <Send className="w-4 h-4" />
                                                 </Button>
@@ -453,17 +407,12 @@ export default function MessagesPage() {
                                 </CardContent>
                             </Card>
                         ) : (
-                            <Card
-                                className="border shadow-sm h-full flex items-center justify-center"
-                                style={{ backgroundColor: CREAM_SURFACE, borderColor: AMBER_BORDER }}
-                            >
-                                <div className="p-8 text-center" style={{ color: INK_MUTED }}>
-                                    <MessageSquare className="w-10 h-10 mx-auto mb-3 opacity-40" />
-                                    <p className="text-base font-semibold mb-1" style={{ color: INK }}>
-                                        No Conversation Selected
-                                    </p>
-                                    <p className="text-sm">Select a conversation to start messaging.</p>
-                                </div>
+                            <Card className="bg-slate-900 border-slate-800 h-full flex items-center justify-center">
+                                <EmptyState
+                                    icon={MessageSquare}
+                                    title="No Conversation Selected"
+                                    message="Select a conversation to start messaging"
+                                />
                             </Card>
                         )}
                     </div>
