@@ -63,10 +63,19 @@ export default function ProjectManager() {
     const loadData = async ({ background = false } = {}) => {
         if (!background) setIsLoading(true);
         try {
+            // Resolve current user first so we can scope every subsequent
+            // query to their own data. Previously Gecko.list() was
+            // unscoped, so the Future Breeding planner could pick other
+            // breeders' geckos as parents — a real bug.
+            const currentUser = await User.me().catch(() => null);
+            const userEmail = currentUser?.email || null;
+            const geckoQuery = userEmail
+                ? Gecko.filter({ created_by: userEmail })
+                : Promise.resolve([]);
             const [projectsData, tasksData, geckosData, plansData, feedingData, reptilesData] = await Promise.all([
                 Project.filter({ status: { $in: ['active', 'completed'] } }),
                 Task.list(),
-                Gecko.list(),
+                geckoQuery,
                 BreedingPlan.list(),
                 FeedingGroup.list().catch(() => []),
                 OtherReptile.list().catch(() => [])

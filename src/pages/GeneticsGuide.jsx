@@ -1,11 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { Dna, Grid2X2, Layers, TrendingUp, ShieldCheck, ChevronDown, ChevronUp, ArrowUp, ChevronRight, ChevronLeft, Search, AlertTriangle, Palette } from 'lucide-react';
+import { Dna, Grid2X2, Layers, TrendingUp, ShieldCheck, ArrowUp, Search, AlertTriangle, Palette } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
 
 const GENETICS_GUIDE_JSON_LD = {
@@ -64,23 +62,24 @@ function Callout({ items }) {
   );
 }
 
-// ── Subsection collapsible ────────────────────────────────────────────────────
+// ── Subsection (always-visible block) ────────────────────────────────────────
+//
+// Old version was a Collapsible that hid content behind a click, which
+// made the guide feel like a shallow slideshow. Always-visible blocks
+// read better and make the DNA-strand flow obvious.
 function Subsection({ title, children }) {
-  const [open, setOpen] = useState(false);
   return (
-    <Collapsible open={open} onOpenChange={setOpen}>
-      <CollapsibleTrigger className="w-full text-left">
-        <div className="flex items-center justify-between py-3 px-4 bg-slate-800 hover:bg-slate-700 rounded-lg transition-colors cursor-pointer">
-          <h3 className="text-emerald-400 font-semibold text-base">{title}</h3>
-          {open ? <ChevronUp className="w-4 h-4 text-slate-400 flex-shrink-0" /> : <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0" />}
-        </div>
-      </CollapsibleTrigger>
-      <CollapsibleContent>
-        <div className="px-4 pt-3 pb-4 space-y-2 bg-slate-800/50 rounded-b-lg">
-          {children}
-        </div>
-      </CollapsibleContent>
-    </Collapsible>
+    <div className="rounded-lg border border-slate-800 bg-slate-900/60">
+      <div className="px-4 py-3 border-b border-slate-800">
+        <h3 className="text-emerald-300 font-semibold text-base flex items-center gap-2">
+          <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400" />
+          {title}
+        </h3>
+      </div>
+      <div className="px-4 py-3 space-y-2">
+        {children}
+      </div>
+    </div>
   );
 }
 
@@ -99,18 +98,16 @@ function BulletList({ items }) {
 
 // ── Content data ──────────────────────────────────────────────────────────────
 //
-// Content organized by experience level:
+// Content organized by experience level — only TWO levels now:
 //
-//   Beginner:     Foundations + Punnett squares
-//   Intermediate: Proven Mendelian morphs + polygenic traits
-//   Advanced:     Selective breeding, lethal alleles, proving genetics
+//   Beginner: Foundations + Punnett squares + Morphs-vs-Polygenic basics
+//   Advanced: Proven Mendelian morphs, lethal alleles, proving genetics
 //
-// Crested gecko genetics is unusual for reptile hobby in that most of the
-// "morphs" we talk about are POLYGENIC (base color, harlequin, pinstripe,
-// tiger, dalmatian, flame, etc). A small handful are proven single-gene
-// Mendelian traits — and almost all of those are incomplete-dominant, not
-// pure dominant or pure recessive. The "Proven Mendelian Morphs" section
-// covers each one in detail with inheritance pattern + breeding strategy.
+// Each level is shown as a tab on the page. Within a level, sections are
+// laid out as a vertical "DNA strand" — numbered nodes on the left rail
+// linked by a gradient backbone, with content cards on the right. There's
+// no level filter, no prev/next slideshow buttons, and nothing is hidden
+// behind collapsibles that chop off the flow.
 
 const SECTIONS = [
   {
@@ -244,7 +241,7 @@ const SECTIONS = [
   {
     id: 'proven-morphs',
     title: 'Proven Mendelian Morphs',
-    level: 'Intermediate',
+    level: 'Advanced',
     icon: Layers,
     intro: 'Only a handful of crested gecko traits have been proven as single-gene Mendelian morphs with predictable inheritance. Almost all of them are incomplete dominants — single copy looks one way, double copy is more extreme, and in several cases the double copy carries real risks.',
     subsections: [
@@ -350,7 +347,7 @@ const SECTIONS = [
   {
     id: 'polygenic',
     title: 'Polygenic Traits — The Real Art',
-    level: 'Intermediate',
+    level: 'Beginner',
     icon: Palette,
     intro: 'Most of what makes a crested gecko visually stunning is NOT a single gene. Base color, harlequin extension, pinstripe fullness, dalmatian spotting, flame contrast — all polygenic. Understanding how to work with polygenic traits separates serious breeders from hobbyists.',
     subsections: [
@@ -608,15 +605,80 @@ const GLOSSARY = [
   { term: 'Selective Breeding', def: 'Consistently pairing animals displaying desired traits across multiple generations to shift polygenic expression.' },
 ];
 
-const LEVEL_COLORS = {
-  Beginner: 'bg-emerald-700 text-emerald-100',
-  Intermediate: 'bg-blue-700 text-blue-100',
-  Advanced: 'bg-red-900 text-red-200',
+const LEVEL_META = {
+  Beginner: {
+    label: 'Beginner',
+    subtitle: 'Start here — what genes, alleles, and inheritance actually are.',
+    accent: 'from-emerald-500 to-teal-400',
+    badgeClass: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40',
+    nodeClass: 'bg-emerald-500 text-white ring-emerald-400/30',
+  },
+  Advanced: {
+    label: 'Advanced',
+    subtitle: 'Proven morphs, lethal alleles, and the ethics of serious breeding.',
+    accent: 'from-purple-500 to-fuchsia-400',
+    badgeClass: 'bg-purple-500/15 text-purple-300 border-purple-500/40',
+    nodeClass: 'bg-purple-500 text-white ring-purple-400/30',
+  },
 };
+
+// Decorative DNA helix illustration for the page header. Pure SVG,
+// animated rungs, zero images.
+function DnaHelix() {
+  return (
+    <svg
+      viewBox="0 0 300 80"
+      className="w-full h-20 opacity-80"
+      role="presentation"
+      aria-hidden="true"
+    >
+      <defs>
+        <linearGradient id="helix-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+          <stop offset="0%" stopColor="#10b981" />
+          <stop offset="50%" stopColor="#14b8a6" />
+          <stop offset="100%" stopColor="#a855f7" />
+        </linearGradient>
+      </defs>
+      {/* Two sinusoidal strands */}
+      <path
+        d="M0,40 Q37.5,5 75,40 T150,40 T225,40 T300,40"
+        stroke="url(#helix-grad)"
+        strokeWidth="2.5"
+        fill="none"
+      />
+      <path
+        d="M0,40 Q37.5,75 75,40 T150,40 T225,40 T300,40"
+        stroke="url(#helix-grad)"
+        strokeWidth="2.5"
+        fill="none"
+      />
+      {/* Base-pair rungs */}
+      {[15, 45, 75, 105, 135, 165, 195, 225, 255, 285].map((x, i) => {
+        // Compute y offset along the sine wave at this x for the rung start/end
+        const freq = Math.PI / 37.5;
+        const top = 40 + Math.sin((x - 0) * freq) * 20;
+        const bot = 40 - Math.sin((x - 0) * freq) * 20;
+        return (
+          <line
+            key={x}
+            x1={x}
+            y1={top}
+            x2={x}
+            y2={bot}
+            stroke={i % 2 === 0 ? '#34d399' : '#a78bfa'}
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            opacity="0.7"
+          />
+        );
+      })}
+    </svg>
+  );
+}
 
 // ── Main Page ─────────────────────────────────────────────────────────────────
 export default function GeneticsGuide() {
-  const [levelFilter, setLevelFilter] = useState('All');
+  const [activeLevel, setActiveLevel] = useState('Beginner');
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [glossarySearch, setGlossarySearch] = useState('');
   const sectionRefs = useRef({});
@@ -627,19 +689,17 @@ export default function GeneticsGuide() {
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
 
+  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
   const scrollToSection = (id) => {
     sectionRefs.current[id]?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
 
-  const scrollToTop = () => window.scrollTo({ top: 0, behavior: 'smooth' });
+  const levelSections = (level) => SECTIONS.filter((s) => s.level === level);
 
-  const filteredSections = levelFilter === 'All'
-    ? SECTIONS
-    : SECTIONS.filter(s => s.level === levelFilter);
-
-  const filteredGlossary = GLOSSARY.filter(g =>
-    g.term.toLowerCase().includes(glossarySearch.toLowerCase()) ||
-    g.def.toLowerCase().includes(glossarySearch.toLowerCase())
+  const filteredGlossary = GLOSSARY.filter(
+    (g) =>
+      g.term.toLowerCase().includes(glossarySearch.toLowerCase()) ||
+      g.def.toLowerCase().includes(glossarySearch.toLowerCase())
   );
 
   return (
@@ -650,145 +710,220 @@ export default function GeneticsGuide() {
         path="/GeneticsGuide"
         jsonLd={GENETICS_GUIDE_JSON_LD}
       />
-    <div className="min-h-screen bg-slate-950 p-4 md:p-8">
-      {/* Header */}
-      <div className="max-w-6xl mx-auto mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <Dna className="w-8 h-8 text-emerald-400" />
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-100">Crested Gecko Genetics Guide</h1>
-        </div>
-        <p className="text-slate-400 mb-6">An interactive educational reference for understanding crested gecko genetics, morphs, and selective breeding.</p>
-        <div className="flex flex-wrap gap-2">
-          {['All', 'Beginner', 'Intermediate', 'Advanced'].map(level => (
-            <Button
-              key={level}
-              variant={levelFilter === level ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setLevelFilter(level)}
-              className={levelFilter === level ? '' : 'border-slate-600 text-slate-300'}
-            >
-              {level}
-            </Button>
-          ))}
-        </div>
-      </div>
-
-      {/* Body */}
-      <div className="max-w-6xl mx-auto">
-        <Tabs defaultValue="guide">
-          <TabsList className="bg-slate-800 mb-6">
-            <TabsTrigger value="guide" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">Guide</TabsTrigger>
-            <TabsTrigger value="glossary" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white">Glossary</TabsTrigger>
-          </TabsList>
-
-          {/* Guide Tab */}
-          <TabsContent value="guide">
-            <div className="flex gap-6">
-              {/* Sidebar */}
-              <div className="hidden lg:block w-56 flex-shrink-0">
-                <div className="sticky top-4 bg-slate-900 border border-slate-700 rounded-lg p-3 space-y-1">
-                  <p className="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-3 px-2">Sections</p>
-                  {filteredSections.map(section => (
-                    <button
-                      key={section.id}
-                      onClick={() => scrollToSection(section.id)}
-                      className="w-full text-left px-2 py-2 rounded text-sm text-slate-300 hover:bg-slate-800 hover:text-emerald-400 transition-colors"
-                    >
-                      {section.title}
-                    </button>
-                  ))}
-                </div>
+      <div className="min-h-screen bg-slate-950">
+        {/* Hero with DNA helix */}
+        <div className="relative overflow-hidden border-b border-slate-800 bg-gradient-to-br from-slate-950 via-emerald-950/30 to-purple-950/20">
+          <div className="absolute inset-0 gecko-scale-pattern opacity-[0.04] pointer-events-none" />
+          <div className="relative max-w-6xl mx-auto px-4 md:px-8 py-10 md:py-14">
+            <div className="flex items-center gap-3 mb-3">
+              <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
+                <Dna className="w-6 h-6 text-emerald-400" />
               </div>
-
-              {/* Main content */}
-              <div className="flex-1 space-y-10 min-w-0">
-                {filteredSections.map((section, sectionIdx) => {
-                  const Icon = section.icon;
-                  const prevSection = filteredSections[sectionIdx - 1];
-                  const nextSection = filteredSections[sectionIdx + 1];
-                  return (
-                    <div key={section.id} ref={el => sectionRefs.current[section.id] = el}>
-                      {/* Section header card */}
-                      <Card className="bg-slate-900 border-slate-700 mb-4">
-                        <CardHeader className="pb-3">
-                          <div className="flex items-center gap-3 mb-2">
-                            <Icon className="w-6 h-6 text-emerald-400 flex-shrink-0" />
-                            <h2 className="text-xl md:text-2xl font-bold text-slate-100">{section.title}</h2>
-                            <Badge className={`ml-auto text-xs ${LEVEL_COLORS[section.level]}`}>{section.level}</Badge>
-                          </div>
-                          <p className="text-slate-400 italic text-sm leading-relaxed">{section.intro}</p>
-                        </CardHeader>
-                      </Card>
-
-                      {/* Subsections */}
-                      <div className="space-y-3">
-                        {section.subsections.map(sub => (
-                          <Subsection key={sub.title} title={sub.title}>
-                            {sub.content}
-                          </Subsection>
-                        ))}
-                      </div>
-
-                      {/* Prev / Next */}
-                      <div className="flex justify-between mt-6 pt-4 border-t border-slate-800">
-                        {prevSection ? (
-                          <Button variant="outline" size="sm" className="border-slate-600 text-slate-300" onClick={() => scrollToSection(prevSection.id)}>
-                            <ChevronLeft className="w-4 h-4 mr-1" /> {prevSection.title}
-                          </Button>
-                        ) : <div />}
-                        {nextSection ? (
-                          <Button variant="outline" size="sm" className="border-slate-600 text-slate-300" onClick={() => scrollToSection(nextSection.id)}>
-                            {nextSection.title} <ChevronRight className="w-4 h-4 ml-1" />
-                          </Button>
-                        ) : <div />}
-                      </div>
-                    </div>
-                  );
-                })}
+              <div>
+                <h1 className="text-3xl md:text-5xl font-bold bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent tracking-tight">
+                  Crested Gecko Genetics Guide
+                </h1>
+                <p className="text-sm md:text-base text-slate-400 mt-1">
+                  An interactive educational reference for understanding crested gecko
+                  genetics, morphs, and selective breeding.
+                </p>
               </div>
             </div>
-          </TabsContent>
+            <div className="mt-6">
+              <DnaHelix />
+            </div>
+          </div>
+        </div>
 
-          {/* Glossary Tab */}
-          <TabsContent value="glossary">
-            <div className="max-w-3xl">
-              <div className="relative mb-4">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                <Input
-                  placeholder="Search glossary..."
-                  value={glossarySearch}
-                  onChange={e => setGlossarySearch(e.target.value)}
-                  className="pl-9 bg-slate-800 border-slate-600 text-slate-100"
-                />
-              </div>
-              <div className="rounded-lg overflow-hidden border border-slate-700">
-                <div className="grid grid-cols-[180px_1fr] bg-emerald-900/60 px-4 py-2">
-                  <span className="text-emerald-400 text-xs font-bold uppercase tracking-wider">Term</span>
-                  <span className="text-emerald-400 text-xs font-bold uppercase tracking-wider">Definition</span>
+        <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
+          <Tabs defaultValue="guide">
+            <TabsList className="bg-slate-900 border border-slate-800 mb-6">
+              <TabsTrigger
+                value="guide"
+                className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white"
+              >
+                Guide
+              </TabsTrigger>
+              <TabsTrigger
+                value="glossary"
+                className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white"
+              >
+                Glossary
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Guide Tab */}
+            <TabsContent value="guide">
+              {/* Level toggles */}
+              <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4 mb-6">
+                <div className="flex items-center gap-2 p-1 rounded-xl border border-slate-800 bg-slate-900 self-start">
+                  {Object.keys(LEVEL_META).map((level) => {
+                    const meta = LEVEL_META[level];
+                    const isActive = activeLevel === level;
+                    return (
+                      <button
+                        key={level}
+                        type="button"
+                        onClick={() => {
+                          setActiveLevel(level);
+                          window.scrollTo({ top: 280, behavior: 'smooth' });
+                        }}
+                        className={`px-4 py-2 rounded-lg text-sm font-semibold transition-all ${
+                          isActive
+                            ? `bg-gradient-to-r ${meta.accent} text-white shadow-md`
+                            : 'text-slate-400 hover:text-slate-200'
+                        }`}
+                      >
+                        {meta.label}
+                      </button>
+                    );
+                  })}
                 </div>
-                {filteredGlossary.map((row, i) => (
-                  <div key={row.term} className={`grid grid-cols-[180px_1fr] px-4 py-3 gap-4 ${i % 2 === 0 ? 'bg-slate-900' : 'bg-slate-800'}`}>
-                    <span className="text-emerald-400 font-semibold text-sm">{row.term}</span>
-                    <span className="text-slate-300 text-sm leading-relaxed">{row.def}</span>
+                <p className="text-sm text-slate-400 max-w-md md:text-right">
+                  {LEVEL_META[activeLevel].subtitle}
+                </p>
+              </div>
+
+              {/* Section quick-jump chips */}
+              {(() => {
+                const sections = levelSections(activeLevel);
+                if (sections.length <= 1) return null;
+                return (
+                  <div className="flex flex-wrap gap-2 mb-6">
+                    {sections.map((section, i) => (
+                      <button
+                        key={section.id}
+                        type="button"
+                        onClick={() => scrollToSection(section.id)}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900/80 hover:bg-slate-800 hover:border-emerald-500/40 px-3 py-1 text-xs text-slate-300 transition-colors"
+                      >
+                        <span className="inline-flex items-center justify-center w-4 h-4 rounded-full bg-slate-800 text-[10px] font-bold text-emerald-400">
+                          {i + 1}
+                        </span>
+                        {section.title}
+                      </button>
+                    ))}
                   </div>
-                ))}
-              </div>
-            </div>
-          </TabsContent>
-        </Tabs>
-      </div>
+                );
+              })()}
 
-      {/* Back to Top */}
-      {showBackToTop && (
-        <button
-          onClick={scrollToTop}
-          className="fixed bottom-6 right-6 z-50 bg-emerald-600 hover:bg-emerald-700 text-white rounded-full p-3 shadow-lg transition-all"
-          aria-label="Back to top"
-        >
-          <ArrowUp className="w-5 h-5" />
-        </button>
-      )}
-    </div>
+              {/* DNA-strand section layout */}
+              <div className="relative">
+                {/* Vertical DNA backbone — decorative gradient line on the left
+                    rail, connecting every section's numbered node. */}
+                <div className="absolute left-[19px] md:left-[23px] top-6 bottom-6 w-0.5 bg-gradient-to-b from-emerald-500/60 via-teal-400/40 to-purple-500/60 pointer-events-none" />
+
+                <div className="space-y-8">
+                  {levelSections(activeLevel).map((section, sectionIdx) => {
+                    const Icon = section.icon;
+                    const meta = LEVEL_META[section.level];
+                    return (
+                      <div
+                        key={section.id}
+                        ref={(el) => (sectionRefs.current[section.id] = el)}
+                        className="relative pl-12 md:pl-14"
+                      >
+                        {/* Node on the strand */}
+                        <div className="absolute left-0 top-5">
+                          <div
+                            className={`relative w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm ring-4 ${meta.nodeClass}`}
+                          >
+                            {sectionIdx + 1}
+                            <span className="absolute inset-0 rounded-full animate-ping opacity-20 bg-emerald-400" />
+                          </div>
+                        </div>
+
+                        {/* Section card */}
+                        <Card className="bg-slate-900/70 border-slate-800">
+                          <CardHeader className="pb-3">
+                            <div className="flex items-start gap-3 flex-wrap">
+                              <div className="flex items-center gap-3 flex-1 min-w-0">
+                                <Icon className="w-5 h-5 text-emerald-400 shrink-0" />
+                                <h2 className="text-xl md:text-2xl font-bold text-slate-100 truncate">
+                                  {section.title}
+                                </h2>
+                              </div>
+                              <Badge
+                                variant="outline"
+                                className={`text-[10px] uppercase tracking-wider border ${meta.badgeClass}`}
+                              >
+                                {meta.label}
+                              </Badge>
+                            </div>
+                            <p className="text-slate-400 text-sm leading-relaxed mt-2">
+                              {section.intro}
+                            </p>
+                          </CardHeader>
+                          <CardContent className="space-y-3">
+                            {section.subsections.map((sub) => (
+                              <Subsection key={sub.title} title={sub.title}>
+                                {sub.content}
+                              </Subsection>
+                            ))}
+                          </CardContent>
+                        </Card>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </TabsContent>
+
+            {/* Glossary Tab */}
+            <TabsContent value="glossary">
+              <div className="max-w-3xl">
+                <div className="relative mb-4">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Input
+                    placeholder="Search glossary..."
+                    value={glossarySearch}
+                    onChange={(e) => setGlossarySearch(e.target.value)}
+                    className="pl-9 bg-slate-900 border-slate-700 text-slate-100"
+                  />
+                </div>
+                <div className="rounded-lg overflow-hidden border border-slate-800">
+                  <div className="grid grid-cols-[200px_1fr] bg-emerald-900/40 px-4 py-2">
+                    <span className="text-emerald-300 text-xs font-bold uppercase tracking-wider">
+                      Term
+                    </span>
+                    <span className="text-emerald-300 text-xs font-bold uppercase tracking-wider">
+                      Definition
+                    </span>
+                  </div>
+                  {filteredGlossary.map((row, i) => (
+                    <div
+                      key={row.term}
+                      className={`grid grid-cols-[200px_1fr] px-4 py-3 gap-4 border-t border-slate-800 ${i % 2 === 0 ? 'bg-slate-900' : 'bg-slate-900/40'}`}
+                    >
+                      <span className="text-emerald-300 font-semibold text-sm">
+                        {row.term}
+                      </span>
+                      <span className="text-slate-300 text-sm leading-relaxed">
+                        {row.def}
+                      </span>
+                    </div>
+                  ))}
+                  {filteredGlossary.length === 0 && (
+                    <div className="px-4 py-8 text-center text-sm text-slate-500 bg-slate-900">
+                      No glossary entries match that search.
+                    </div>
+                  )}
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {showBackToTop && (
+          <button
+            onClick={scrollToTop}
+            className="fixed bottom-6 right-6 z-50 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full p-3 shadow-lg transition-all"
+            aria-label="Back to top"
+          >
+            <ArrowUp className="w-5 h-5" />
+          </button>
+        )}
+      </div>
     </>
   );
 }
