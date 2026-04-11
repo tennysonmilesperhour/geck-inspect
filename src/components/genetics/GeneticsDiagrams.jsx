@@ -408,7 +408,29 @@ export function PigmentLayers({ caption }) {
 // ---- Lethal allele diagram --------------------------------------------------
 // Visualizes the Super Lilly White problem: LW × LW → 1 Super LW (lethal) +
 // 2 visual LW + 1 normal.
+//
+// Layout is built around a viewBox that fits all four offspring cards + a
+// bit of padding. Each card is 86×62 at center-x positions computed from
+// an even distribution so nothing gets clipped no matter the container
+// width. Uses `preserveAspectRatio="xMidYMid meet"` and a 100% width SVG
+// so the browser scales instead of cropping at small containers.
 export function LethalAlleleDiagram({ caption }) {
+  const viewW = 460;
+  const viewH = 210;
+  const cardW = 86;
+  const cardH = 64;
+  // Evenly distribute four cards with a margin on each side
+  const sideMargin = 20;
+  const cardGap =
+    (viewW - sideMargin * 2 - cardW * 4) / 3; // gap between consecutive cards
+  const cardY = 130;
+  const offspring = [
+    { fill: '#b91c1c', stroke: '#ef4444', label: 'Super LW', note: 'lethal', pct: '25%' },
+    { fill: '#10b981', stroke: '#34d399', label: 'Visual LW', note: 'one copy', pct: '25%' },
+    { fill: '#10b981', stroke: '#34d399', label: 'Visual LW', note: 'one copy', pct: '25%' },
+    { fill: '#475569', stroke: '#64748b', label: 'Normal', note: 'no LW gene', pct: '25%' },
+  ];
+
   return (
     <DiagramFrame
       caption={
@@ -417,54 +439,66 @@ export function LethalAlleleDiagram({ caption }) {
       }
       ariaLabel="Lethal allele inheritance diagram for Lilly White"
     >
-      <svg viewBox="0 0 400 200" width="400" height="200" fontFamily="inherit">
+      <svg
+        viewBox={`0 0 ${viewW} ${viewH}`}
+        width="100%"
+        style={{ maxWidth: `${viewW}px`, height: 'auto' }}
+        preserveAspectRatio="xMidYMid meet"
+        fontFamily="inherit"
+      >
         {/* Parents */}
         <g>
-          <circle cx="60" cy="30" r="20" fill="#10b981" fillOpacity="0.4" stroke="#10b981" />
-          <text x="60" y="35" textAnchor="middle" fontSize="12" fontWeight="700" fill="#fff">
+          <circle cx={viewW * 0.18} cy="34" r="22" fill="#10b981" fillOpacity="0.35" stroke="#10b981" strokeWidth="2" />
+          <text x={viewW * 0.18} y="39" textAnchor="middle" fontSize="13" fontWeight="800" fill="#fff">
             LW
           </text>
-          <text x="60" y="65" textAnchor="middle" fontSize="9" fill="#94a3b8">
+          <text x={viewW * 0.18} y="72" textAnchor="middle" fontSize="10" fill="#94a3b8">
             Lilly White ♂
           </text>
         </g>
-        <text x="200" y="35" textAnchor="middle" fontSize="18" fill="#94a3b8">
+        <text x={viewW / 2} y="42" textAnchor="middle" fontSize="22" fill="#94a3b8">
           ×
         </text>
         <g>
-          <circle cx="340" cy="30" r="20" fill="#10b981" fillOpacity="0.4" stroke="#10b981" />
-          <text x="340" y="35" textAnchor="middle" fontSize="12" fontWeight="700" fill="#fff">
+          <circle cx={viewW * 0.82} cy="34" r="22" fill="#10b981" fillOpacity="0.35" stroke="#10b981" strokeWidth="2" />
+          <text x={viewW * 0.82} y="39" textAnchor="middle" fontSize="13" fontWeight="800" fill="#fff">
             LW
           </text>
-          <text x="340" y="65" textAnchor="middle" fontSize="9" fill="#94a3b8">
+          <text x={viewW * 0.82} y="72" textAnchor="middle" fontSize="10" fill="#94a3b8">
             Lilly White ♀
           </text>
         </g>
 
         {/* Arrow down */}
-        <line x1="200" y1="75" x2="200" y2="100" stroke="#64748b" strokeWidth="2" />
-        <polygon points="195,97 200,107 205,97" fill="#64748b" />
+        <line x1={viewW / 2} y1="88" x2={viewW / 2} y2="118" stroke="#64748b" strokeWidth="2" />
+        <polygon points={`${viewW / 2 - 5},115 ${viewW / 2},125 ${viewW / 2 + 5},115`} fill="#64748b" />
 
         {/* Offspring */}
-        {[
-          { x: 50, fill: '#b91c1c', label: 'Super LW', note: 'lethal — no hatch', pct: '25%' },
-          { x: 160, fill: '#10b981', label: 'Visual LW', note: 'one copy', pct: '25%' },
-          { x: 270, fill: '#10b981', label: 'Visual LW', note: 'one copy', pct: '25%' },
-          { x: 380, fill: '#475569', label: 'Normal', note: 'no LW gene', pct: '25%' },
-        ].map((child, i) => (
-          <g key={i} transform={`translate(${child.x - 40}, 120)`}>
-            <rect width="80" height="64" rx="8" fill={child.fill} fillOpacity="0.3" stroke={child.fill} />
-            <text x="40" y="20" textAnchor="middle" fontSize="14" fontWeight="800" fill="#fff">
-              {child.pct}
-            </text>
-            <text x="40" y="36" textAnchor="middle" fontSize="10" fontWeight="700" fill="#fff">
-              {child.label}
-            </text>
-            <text x="40" y="52" textAnchor="middle" fontSize="8" fill="#cbd5e1">
-              {child.note}
-            </text>
-          </g>
-        ))}
+        {offspring.map((child, i) => {
+          const x = sideMargin + i * (cardW + cardGap);
+          return (
+            <g key={i} transform={`translate(${x}, ${cardY})`}>
+              <rect
+                width={cardW}
+                height={cardH}
+                rx="8"
+                fill={child.fill}
+                fillOpacity="0.3"
+                stroke={child.stroke}
+                strokeWidth="1.5"
+              />
+              <text x={cardW / 2} y="20" textAnchor="middle" fontSize="14" fontWeight="800" fill="#fff">
+                {child.pct}
+              </text>
+              <text x={cardW / 2} y="37" textAnchor="middle" fontSize="10" fontWeight="700" fill="#fff">
+                {child.label}
+              </text>
+              <text x={cardW / 2} y="52" textAnchor="middle" fontSize="9" fill="#cbd5e1">
+                {child.note}
+              </text>
+            </g>
+          );
+        })}
       </svg>
     </DiagramFrame>
   );

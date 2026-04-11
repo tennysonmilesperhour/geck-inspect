@@ -306,6 +306,52 @@ export default function MarketplaceSalesStats() {
     }
   };
 
+  // Manual "Add Sale" — for sales of animals that were never added to
+  // the collection (e.g. rehoming a gecko you helped a friend list, or
+  // an "Other" category item). Creates a minimal archived Gecko record
+  // so the sale flows through the same revenueByQuarter pipeline as
+  // from-collection sales.
+  const handleAddManualRevenue = async () => {
+    if (!newRevenue.name.trim() || !newRevenue.amount) {
+      return;
+    }
+    const price = parseFloat(newRevenue.amount) || 0;
+    try {
+      const created = await Gecko.create({
+        name: newRevenue.name.trim(),
+        sex: 'Unsexed',
+        status: 'Sold',
+        archived: true,
+        archive_reason: 'sold',
+        archived_date: newRevenue.date || new Date().toISOString().split('T')[0],
+        asking_price: price,
+        is_public: false,
+        notes: `Manual sale entry (${newRevenue.category})`,
+      });
+
+      // Track the category override so revenueByQuarter picks up the
+      // right bucket instead of falling back to "General".
+      setGeckoCategories((prev) => {
+        const updated = { ...prev, [created.id]: newRevenue.category };
+        try {
+          localStorage.setItem('marketplace_gecko_categories', JSON.stringify(updated));
+        } catch {}
+        return updated;
+      });
+
+      setSoldGeckos((prev) => [created, ...prev]);
+      setNewRevenue({
+        name: '',
+        amount: '',
+        date: new Date().toISOString().split('T')[0],
+        category: 'produced_in_house',
+      });
+      setSaleMode(null);
+    } catch (error) {
+      console.error('Failed to add manual sale:', error);
+    }
+  };
+
   const costsByQuarter = useMemo(() => {
     const groups = {};
     costs.forEach(cost => {
@@ -454,7 +500,11 @@ export default function MarketplaceSalesStats() {
                     <Button onClick={() => setSaleMode(null)} variant="outline" className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-800">
                       Cancel
                     </Button>
-                    <Button className="flex-1 bg-slate-600 hover:bg-slate-500 text-white h-9">
+                    <Button
+                      onClick={handleAddManualRevenue}
+                      disabled={!newRevenue.name.trim() || !newRevenue.amount}
+                      className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white h-9 disabled:opacity-50"
+                    >
                       <Plus className="w-4 h-4 mr-2" />Add Sale
                     </Button>
                   </div>

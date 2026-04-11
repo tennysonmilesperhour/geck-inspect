@@ -115,13 +115,31 @@ export default function ReptileForm({ reptile, onSubmit, onCancel, onDelete, onA
     };
 
     const handleSave = async (e) => {
-        e.preventDefault();
+        if (e?.preventDefault) e.preventDefault();
+
+        // Hard requirements from the DB schema (other_reptiles.name and
+        // other_reptiles.species are NOT NULL). Before this validation
+        // the form would silently fail because the Supabase insert
+        // rejected the row and the error was only console.error'd.
+        if (!formData.name?.trim()) {
+            toast({ title: 'Name is required', variant: 'destructive' });
+            return;
+        }
+        if (!formData.species?.trim()) {
+            toast({ title: 'Species is required', variant: 'destructive' });
+            return;
+        }
+
         setIsSaving(true);
-        
         try {
+            // Coerce empty-string date fields to null — Postgres rejects
+            // '' for date columns, which was the other reason new-reptile
+            // saves were failing.
             const dataToSave = {
                 ...formData,
                 feeding_interval_days: parseInt(formData.feeding_interval_days) || 7,
+                birth_date: formData.birth_date || null,
+                last_fed_date: formData.last_fed_date || null,
             };
 
             let saved;
@@ -130,10 +148,16 @@ export default function ReptileForm({ reptile, onSubmit, onCancel, onDelete, onA
             } else {
                 saved = await OtherReptile.create(dataToSave);
             }
-            
+
+            toast({ title: reptile?.id ? 'Reptile updated' : 'Reptile added' });
             if (onSubmit) onSubmit(saved, !reptile?.id);
         } catch (error) {
             console.error('Failed to save reptile:', error);
+            toast({
+                title: 'Save failed',
+                description: error.message || 'Could not save this reptile.',
+                variant: 'destructive',
+            });
         }
         setIsSaving(false);
     };

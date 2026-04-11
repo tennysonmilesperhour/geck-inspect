@@ -110,61 +110,68 @@ function ListingCard({ gecko, user, onEdit, onToggleVisible, onUnlist, onMarkSol
     ? formatDistanceToNowStrict(new Date(gecko.updated_date), { addSuffix: true })
     : null;
 
+  // One standardized card size — `aspect-square` image on top keeps every
+  // card identical regardless of photo dimensions, and the inner padding /
+  // button sizes are tight enough that three-up and four-up grids both
+  // read well without each card ballooning.
   return (
-    <Card className="bg-slate-900 border-slate-800 overflow-hidden flex flex-col group hover:border-emerald-500/40 transition-colors">
-      {/* Photo */}
-      <div className="relative aspect-[4/3] bg-slate-950">
+    <Card className="bg-slate-900 border-slate-800 overflow-hidden flex flex-col group hover:border-emerald-500/40 transition-colors rounded-xl">
+      {/* Photo — fixed square aspect so cards line up regardless of
+          source image dimensions. `object-cover` crops to fill. */}
+      <div className="relative aspect-square bg-slate-950 overflow-hidden">
         {photo ? (
           <img
             src={photo}
             alt={gecko.name}
-            className="w-full h-full object-cover"
+            className="absolute inset-0 w-full h-full object-cover"
             loading="lazy"
             decoding="async"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center">
+          <div className="absolute inset-0 flex items-center justify-center">
             <ShoppingBag className="w-10 h-10 text-slate-700" />
           </div>
         )}
 
-        {/* Top-left: sex indicator */}
+        {/* Top-left: sex chip */}
         <div className="absolute top-2 left-2">
-          <Badge
-            className={`text-xs border ${
+          <span
+            className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold backdrop-blur-sm ${
               gecko.sex === 'Male'
-                ? 'bg-blue-500/20 text-blue-200 border-blue-500/40'
+                ? 'bg-blue-500/30 text-blue-100 border-blue-400/40'
                 : gecko.sex === 'Female'
-                  ? 'bg-pink-500/20 text-pink-200 border-pink-500/40'
-                  : 'bg-slate-700/60 text-slate-200 border-slate-600'
+                  ? 'bg-pink-500/30 text-pink-100 border-pink-400/40'
+                  : 'bg-slate-900/60 text-slate-200 border-slate-600'
             }`}
           >
-            {gecko.sex === 'Male' ? '♂ Male' : gecko.sex === 'Female' ? '♀ Female' : '? Unsexed'}
-          </Badge>
+            {gecko.sex === 'Male' ? '♂' : gecko.sex === 'Female' ? '♀' : '?'}
+          </span>
         </div>
 
-        {/* Top-right: visibility badge */}
+        {/* Top-right: visibility chip */}
         <div className="absolute top-2 right-2">
           {isLive && (
-            <Badge className="bg-emerald-500/90 text-white border-0 shadow-md">
-              <Eye className="w-3 h-3 mr-1" /> Live
-            </Badge>
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-500/90 text-white text-[10px] font-bold px-2 py-0.5 shadow">
+              <Eye className="w-3 h-3" /> LIVE
+            </span>
           )}
           {isHidden && (
-            <Badge className="bg-slate-700/90 text-slate-200 border-0 shadow-md">
-              <EyeOff className="w-3 h-3 mr-1" /> Hidden
-            </Badge>
+            <span className="inline-flex items-center gap-1 rounded-full bg-slate-800/90 text-slate-200 text-[10px] font-bold px-2 py-0.5 shadow border border-slate-600">
+              <EyeOff className="w-3 h-3" /> HIDDEN
+            </span>
           )}
           {gecko.status === 'Sold' && (
-            <Badge className="bg-rose-500/90 text-white border-0 shadow-md">Sold</Badge>
+            <span className="inline-flex items-center rounded-full bg-rose-500/90 text-white text-[10px] font-bold px-2 py-0.5 shadow">
+              SOLD
+            </span>
           )}
         </div>
 
-        {/* Bottom gradient with price */}
+        {/* Bottom price bar */}
         {price != null && (
-          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/60 to-transparent px-3 pt-8 pb-2">
-            <div className="text-2xl font-bold text-white flex items-center">
-              <DollarSign className="w-5 h-5 text-emerald-400" />
+          <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/85 via-black/50 to-transparent px-3 pt-6 pb-2">
+            <div className="text-xl font-bold text-white flex items-center">
+              <DollarSign className="w-4 h-4 text-emerald-400" />
               {price.toLocaleString()}
             </div>
           </div>
@@ -172,95 +179,85 @@ function ListingCard({ gecko, user, onEdit, onToggleVisible, onUnlist, onMarkSol
       </div>
 
       {/* Body */}
-      <CardContent className="p-4 flex-1 flex flex-col">
-        <h3 className="font-bold text-slate-100 truncate text-base">{gecko.name}</h3>
-        <p className="text-xs text-slate-500 truncate font-mono">
-          {gecko.gecko_id_code || '—'}
-        </p>
+      <CardContent className="p-3 flex-1 flex flex-col gap-2">
+        <div>
+          <h3 className="font-semibold text-slate-100 truncate text-sm">{gecko.name}</h3>
+          <p className="text-[10px] text-slate-500 truncate font-mono uppercase tracking-wider">
+            {gecko.gecko_id_code || '—'}
+          </p>
+        </div>
         {gecko.morphs_traits && (
-          <p className="text-xs text-slate-400 line-clamp-2 mt-2">{gecko.morphs_traits}</p>
+          <p className="text-[11px] text-slate-400 line-clamp-2">{gecko.morphs_traits}</p>
         )}
 
-        {/* Meta strip */}
-        <div className="flex items-center gap-2 mt-3 text-[11px] text-slate-500 flex-wrap">
-          {daysLive && (
-            <span className="flex items-center gap-1">
-              <Clock className="w-3 h-3" />
-              {daysLive}
-            </span>
-          )}
-          {gecko.morphmarket_url && (
-            <a
-              href={gecko.morphmarket_url}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-1 hover:text-amber-300"
-            >
-              <ExternalLink className="w-3 h-3" /> MM
-            </a>
-          )}
-        </div>
+        {daysLive && (
+          <div className="text-[10px] text-slate-500 flex items-center gap-1">
+            <Clock className="w-3 h-3" />
+            {daysLive}
+          </div>
+        )}
 
         {/* Controls */}
-        <div className="mt-auto pt-4 space-y-2">
-          {/* Visibility toggle — only for For Sale geckos */}
+        <div className="mt-auto pt-2 space-y-2">
+          {/* Visibility toggle — clean inline row, no nested border */}
           {gecko.status === 'For Sale' && (
-            <div className="flex items-center justify-between rounded-lg border border-slate-800 bg-slate-950 px-3 py-2">
-              <div className="flex items-center gap-2 min-w-0">
+            <label className="flex items-center justify-between gap-2 cursor-pointer select-none">
+              <span className="flex items-center gap-1.5 text-[11px] text-slate-400 truncate">
                 {isLive ? (
-                  <Eye className="w-4 h-4 text-emerald-400 shrink-0" />
+                  <Eye className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                 ) : (
-                  <EyeOff className="w-4 h-4 text-slate-500 shrink-0" />
+                  <EyeOff className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                 )}
-                <span className="text-xs text-slate-300 truncate">
-                  {isLive ? 'Visible on marketplace' : 'Hidden from marketplace'}
+                <span className="truncate">
+                  {isLive ? 'Visible on marketplace' : 'Hidden'}
                 </span>
-              </div>
+              </span>
               <Switch
                 checked={isLive}
                 onCheckedChange={(checked) => onToggleVisible(gecko, checked)}
                 disabled={isToggling}
+                className="data-[state=checked]:bg-emerald-500"
               />
-            </div>
+            </label>
           )}
 
-          <div className="flex items-center gap-2">
+          {/* Action row — matched sizing, matched height */}
+          <div className="grid grid-cols-2 gap-1.5">
             <Button
               variant="outline"
               size="sm"
               onClick={() => onEdit(gecko)}
-              className="flex-1 border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700"
+              className="h-8 border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 text-xs"
             >
-              <Edit className="w-3.5 h-3.5 mr-1" /> Edit
+              <Edit className="w-3 h-3 mr-1" /> Edit
             </Button>
             {gecko.status === 'For Sale' ? (
               <Button
                 size="sm"
                 onClick={() => onMarkSold(gecko)}
-                className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white"
+                className="h-8 bg-emerald-600 hover:bg-emerald-500 text-white text-xs"
               >
-                <CheckCircle2 className="w-3.5 h-3.5 mr-1" /> Sold
+                <CheckCircle2 className="w-3 h-3 mr-1" /> Sold
               </Button>
             ) : (
               <Button
                 size="sm"
                 onClick={() => onEdit(gecko)}
-                className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white"
+                className="h-8 bg-emerald-600 hover:bg-emerald-500 text-white text-xs"
               >
-                <DollarSign className="w-3.5 h-3.5 mr-1" /> List
+                <DollarSign className="w-3 h-3 mr-1" /> List
               </Button>
             )}
           </div>
 
           {gecko.status === 'For Sale' && (
-            <Button
-              variant="ghost"
-              size="sm"
+            <button
+              type="button"
               onClick={() => onUnlist(gecko)}
-              className="w-full text-xs text-slate-500 hover:text-rose-400"
+              className="w-full text-[10px] text-slate-500 hover:text-rose-400 transition-colors py-0.5"
             >
               Remove from marketplace
-            </Button>
+            </button>
           )}
         </div>
       </CardContent>

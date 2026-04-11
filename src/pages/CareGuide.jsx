@@ -282,8 +282,27 @@ export default function CareGuidePage() {
     <>
       <Seo
         title="Crested Gecko Care Guide"
-        description="Comprehensive crested gecko care guide: housing, temperature, humidity, diet, handling, health, shedding, tail loss, breeding, and hatchling care. Everything a new or experienced keeper needs to know."
+        description="Comprehensive crested gecko (Correlophus ciliatus) care guide — housing setups, ideal temperature and humidity ranges, diet including Repashy and Pangea, handling, common health issues, shedding, tail loss and regrowth, breeding season prep, egg incubation, and hatchling care. Everything a new or experienced keeper needs to know."
         path="/CareGuide"
+        imageAlt="Crested gecko care and husbandry reference"
+        keywords={[
+          'crested gecko care',
+          'crested gecko husbandry',
+          'crestie care sheet',
+          'Correlophus ciliatus care',
+          'crested gecko diet',
+          'Repashy crested gecko',
+          'Pangea crested gecko diet',
+          'crested gecko humidity',
+          'crested gecko temperature',
+          'crested gecko housing',
+          'crested gecko enclosure',
+          'crested gecko shedding',
+          'crested gecko tail loss',
+          'crested gecko hatchling care',
+          'crested gecko lifespan',
+          'first time gecko keeper',
+        ]}
         jsonLd={CARE_GUIDE_JSON_LD}
       />
     <div className="min-h-screen bg-slate-950">

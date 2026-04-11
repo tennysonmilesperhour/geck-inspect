@@ -1,12 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { User, Gecko, GeckoImage, ForumPost, ForumComment, DirectMessage, Notification, MorphReferenceImage, UserBadge, UserActivity, BreedingPlan, WeightRecord } from '@/entities/all';
+import { User, Gecko, GeckoImage, ForumPost, ForumComment, DirectMessage, Notification, MorphReferenceImage, UserBadge, UserActivity, BreedingPlan, WeightRecord, Egg } from '@/entities/all';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Camera, MapPin, Link as LinkIcon, Calendar, Users, MessageSquare, Image as ImageIcon, Heart, Edit, Save, X, Loader2, Upload, Star, ShoppingCart, GitBranch, Globe, Instagram, Facebook, Youtube, Twitter } from 'lucide-react';
+import { Camera, MapPin, Link as LinkIcon, Calendar, Users, MessageSquare, Image as ImageIcon, Heart, Edit, Save, X, Loader2, Upload, Star, ShoppingCart, GitBranch, Globe, Instagram, Facebook, Youtube, Twitter, Egg as EggIcon, Palette } from 'lucide-react';
 import { UploadFile } from '@/integrations/Core';
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from 'react-router-dom';
@@ -39,6 +39,71 @@ const COMMUNITY_LEVELS = [
   { level: 3, title: "Forum Regular", points: 10, badge: "💬" }, { level: 4, title: "Community Pillar", points: 25, badge: "🏛️" },
   { level: 5, title: "Gecko Guru", points: 50, badge: "🎓" },
 ];
+
+// Sales progression — counts every gecko the user has marked Sold. The
+// thresholds ramp quickly at the low end (first sale is a big deal)
+// then spread out at the top so veteran breeders still have a goal.
+const SALES_LEVELS = [
+  { sales: 1, title: "First Sale", badge: "💵" },
+  { sales: 3, title: "Starter Seller", badge: "🤝" },
+  { sales: 5, title: "Active Seller", badge: "💼" },
+  { sales: 10, title: "Marketplace Regular", badge: "🛒" },
+  { sales: 25, title: "Proven Vendor", badge: "📦" },
+  { sales: 50, title: "Respected Breeder", badge: "⭐" },
+  { sales: 100, title: "Established Seller", badge: "🏷️" },
+  { sales: 200, title: "Top Breeder", badge: "👑" },
+  { sales: 500, title: "Legendary Seller", badge: "💎" },
+];
+
+// Hatchery progression — counts every Egg with status 'Hatched' from
+// the user's breeding plans.
+const HATCHERY_LEVELS = [
+  { hatched: 1, title: "First Hatch", badge: "🥚" },
+  { hatched: 3, title: "Nest Watcher", badge: "🪹" },
+  { hatched: 5, title: "Incubator Operator", badge: "♨️" },
+  { hatched: 10, title: "Hatchling Parent", badge: "🐣" },
+  { hatched: 25, title: "Clutch Master", badge: "🧬" },
+  { hatched: 50, title: "Season Breeder", badge: "🏅" },
+  { hatched: 100, title: "Breeding Veteran", badge: "🏆" },
+  { hatched: 250, title: "Prolific Breeder", badge: "🌟" },
+  { hatched: 500, title: "Hatchery Legend", badge: "🌌" },
+];
+
+// Gallery contributor progression — counts GeckoImage rows the user
+// has uploaded to the public community gallery.
+const GALLERY_LEVELS = [
+  { uploads: 1, title: "First Upload", badge: "📸" },
+  { uploads: 5, title: "Photo Enthusiast", badge: "🖼️" },
+  { uploads: 10, title: "Gallery Contributor", badge: "🎞️" },
+  { uploads: 25, title: "Shutterbug", badge: "📷" },
+  { uploads: 50, title: "Gallery Veteran", badge: "🌠" },
+  { uploads: 100, title: "Visual Historian", badge: "🏛️" },
+  { uploads: 250, title: "Gallery Legend", badge: "📽️" },
+];
+
+// Morph diversity progression — counts distinct morph tags across
+// every gecko the user has in their active collection.
+const MORPH_DIVERSITY_LEVELS = [
+  { morphs: 1, title: "Morph Dabbler", badge: "🎨" },
+  { morphs: 3, title: "Morph Explorer", badge: "🔎" },
+  { morphs: 5, title: "Morph Curator", badge: "📚" },
+  { morphs: 10, title: "Morph Collector", badge: "🧩" },
+  { morphs: 15, title: "Morph Specialist", badge: "🧪" },
+  { morphs: 20, title: "Morph Strategist", badge: "🧠" },
+  { morphs: 30, title: "Morph Scholar", badge: "🎓" },
+  { morphs: 50, title: "Morph Master", badge: "🏆" },
+];
+
+// Human-readable label for each level key — used when the user hits max level
+// and we need to render the totals (e.g. "42 Sales", "17 Morphs").
+const LEVEL_KEY_LABELS = {
+    geckos: 'Geckos',
+    points: 'Points',
+    sales: 'Sales',
+    hatched: 'Hatchlings',
+    uploads: 'Uploads',
+    morphs: 'Morphs',
+};
 
 const getLevelInfo = (count, levels, key = 'geckos') => {
     // Levels should be sorted ascending by `key` for this logic to work correctly
@@ -87,7 +152,7 @@ const AchievementProgress = ({ title, icon, currentCount, levels, levelKey }) =>
                     <p className="text-sm font-medium text-slate-300">{currentLevel.title}</p>
                     <Progress value={progressValue} className="mt-1 h-2" />
                     <div className="flex justify-between items-center text-xs text-slate-400 mt-1">
-                        <span>{nextLevel ? `${displayProgressNumerator} / ${displayProgressDenominator}` : `${displayProgressNumerator} ${levelKey === 'points' ? 'Points' : 'Geckos'}`}</span>
+                        <span>{nextLevel ? `${displayProgressNumerator} / ${displayProgressDenominator}` : `${displayProgressNumerator} ${LEVEL_KEY_LABELS[levelKey] || 'Geckos'}`}</span>
                         {nextLevel ? <span>Next: {nextLevel.title}</span> : <span className="font-bold text-emerald-400">Max Level!</span>}
                     </div>
                 </div>
@@ -114,7 +179,11 @@ export default function MyProfile() {
         comments: 0,
         messages: 0,
         notifications: 0,
-        morphSubmissions: 0
+        morphSubmissions: 0,
+        sales: 0,
+        eggsHatched: 0,
+        galleryUploads: 0,
+        distinctMorphs: 0
     });
     
     const [editData, setEditData] = useState({});
@@ -184,8 +253,8 @@ export default function MyProfile() {
 
                 // Load stats with heavy rate limit protection
                 const loadStatsWithFallback = async () => {
-                    const stats = { geckos: 0, images: 0, forumPosts: 0, comments: 0, messages: 0, notifications: 0, morphSubmissions: 0 };
-                    
+                    const stats = { geckos: 0, images: 0, forumPosts: 0, comments: 0, messages: 0, notifications: 0, morphSubmissions: 0, sales: 0, eggsHatched: 0, galleryUploads: 0, distinctMorphs: 0 };
+
                     try {
                         // Use Promise.allSettled to prevent one failure from breaking everything
                         const results = await Promise.allSettled([
@@ -195,17 +264,34 @@ export default function MyProfile() {
                             ForumComment.filter({ created_by: currentUser.email }),
                             DirectMessage.filter({ sender_email: currentUser.email }),
                             Notification.filter({ user_email: currentUser.email }),
-                            MorphReferenceImage.filter({ submitted_by_email: currentUser.email })
+                            MorphReferenceImage.filter({ submitted_by_email: currentUser.email }),
+                            Egg.filter({ created_by: currentUser.email }).catch(() => [])
                         ]);
 
                         // Safely extract results
-                        if (results[0].status === 'fulfilled') stats.geckos = results[0].value.length;
-                        if (results[1].status === 'fulfilled') stats.images = results[1].value.length; // Morph submissions via images
+                        if (results[0].status === 'fulfilled') {
+                            const allGeckos = results[0].value;
+                            // Active geckos count (excludes archived) — keeps the collection level consistent with what's visible
+                            stats.geckos = allGeckos.filter(g => !g.archived).length;
+                            // Sales counts any gecko flagged as sold (status or archive reason)
+                            stats.sales = allGeckos.filter(g => g.status === 'Sold' || (g.archived && g.archive_reason === 'sold')).length;
+                            // Distinct morph tags across the collection
+                            const morphSet = new Set();
+                            allGeckos.forEach(g => (g.morph_tags || []).forEach(m => m && morphSet.add(m)));
+                            stats.distinctMorphs = morphSet.size;
+                        }
+                        if (results[1].status === 'fulfilled') {
+                            stats.images = results[1].value.length; // Morph submissions via images
+                            stats.galleryUploads = results[1].value.length;
+                        }
                         if (results[2].status === 'fulfilled') stats.forumPosts = results[2].value.length;
                         if (results[3].status === 'fulfilled') stats.comments = results[3].value.length;
                         if (results[4].status === 'fulfilled') stats.messages = results[4].value.length;
                         if (results[5].status === 'fulfilled') stats.notifications = results[5].value.length;
                         if (results[6].status === 'fulfilled') stats.morphSubmissions = results[6].value.length;
+                        if (results[7].status === 'fulfilled') {
+                            stats.eggsHatched = results[7].value.filter(e => e.status === 'Hatched').length;
+                        }
 
                         setUserStats(stats);
                     } catch (error) {
@@ -500,19 +586,47 @@ export default function MyProfile() {
                                     <CardTitle className="text-xl text-slate-100">Achievement Progress</CardTitle>
                                 </CardHeader>
                                 <CardContent className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                                    <AchievementProgress 
+                                    <AchievementProgress
                                         title="Collection Level"
                                         icon={<Users className="w-5 h-5 text-emerald-400" />}
                                         currentCount={userStats.geckos}
                                         levels={USER_LEVELS}
                                         levelKey="geckos"
                                     />
-                                    <AchievementProgress 
+                                    <AchievementProgress
                                         title="Community Level"
                                         icon={<MessageSquare className="w-5 h-5 text-purple-400" />}
                                         currentCount={userStats.forumPosts + userStats.comments} // Sum posts and comments for community points
                                         levels={COMMUNITY_LEVELS}
                                         levelKey="points"
+                                    />
+                                    <AchievementProgress
+                                        title="Sales Progress"
+                                        icon={<ShoppingCart className="w-5 h-5 text-amber-400" />}
+                                        currentCount={userStats.sales}
+                                        levels={SALES_LEVELS}
+                                        levelKey="sales"
+                                    />
+                                    <AchievementProgress
+                                        title="Hatchery Progress"
+                                        icon={<EggIcon className="w-5 h-5 text-rose-300" />}
+                                        currentCount={userStats.eggsHatched}
+                                        levels={HATCHERY_LEVELS}
+                                        levelKey="hatched"
+                                    />
+                                    <AchievementProgress
+                                        title="Gallery Contributor"
+                                        icon={<ImageIcon className="w-5 h-5 text-sky-400" />}
+                                        currentCount={userStats.galleryUploads}
+                                        levels={GALLERY_LEVELS}
+                                        levelKey="uploads"
+                                    />
+                                    <AchievementProgress
+                                        title="Morph Diversity"
+                                        icon={<Palette className="w-5 h-5 text-fuchsia-400" />}
+                                        currentCount={userStats.distinctMorphs}
+                                        levels={MORPH_DIVERSITY_LEVELS}
+                                        levelKey="morphs"
                                     />
                                 </CardContent>
                             </Card>

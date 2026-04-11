@@ -197,8 +197,37 @@ export default function MorphGuidePage() {
     <>
       <Seo
         title="Crested Gecko Morph Guide"
-        description="Reference guide for crested gecko morphs — Harlequin, Dalmatian, Pinstripe, Lilly White, Flame, Cream, Brindle, Tiger, Cappuccino, Patternless, and more. Rarity, key features, and breeding information for every major morph."
+        description="Complete visual reference for every major crested gecko (Correlophus ciliatus) morph — Harlequin, Extreme Harlequin, Dalmatian, Pinstripe, Lilly White, Flame, Cream, Brindle, Tiger, Cappuccino, Frappuccino, Soft Scale, Patternless, Axanthic, and more. Rarity ratings, key identifying features, breeding information, and example photos for every proven morph and polygenic trait."
         path="/MorphGuide"
+        imageAlt="Crested gecko morph reference guide"
+        keywords={[
+          'crested gecko morph guide',
+          'gecko morph list',
+          'crestie morphs',
+          'harlequin crested gecko',
+          'extreme harlequin',
+          'pinstripe gecko',
+          'phantom pinstripe',
+          'dalmatian gecko',
+          'super dalmatian',
+          'lilly white',
+          'axanthic',
+          'cappuccino',
+          'frappuccino',
+          'soft scale',
+          'white wall',
+          'flame crested gecko',
+          'tiger crested gecko',
+          'brindle gecko',
+          'patternless gecko',
+          'bicolor tricolor',
+          'red base gecko',
+          'orange base gecko',
+          'yellow base gecko',
+          'olive gecko',
+          'chocolate gecko',
+          'crested gecko rarity',
+        ]}
         jsonLd={MORPH_GUIDE_JSON_LD}
       />
       <div className="min-h-screen bg-slate-950 text-slate-100">

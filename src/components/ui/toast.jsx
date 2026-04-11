@@ -87,6 +87,14 @@ const VARIANT_ICONS = {
   info: { Icon: Info, tint: 'text-slate-300' },
 };
 
+// The Toast component renders its OWN close button as a direct child of
+// the Root, not nested inside a wrapper div. That way the `absolute
+// right-2 top-2` positioning anchors to the Root (which has `relative`)
+// instead of getting trapped inside the flex-1 children wrapper — which
+// was the root cause of the "X appears below the title" bug.
+//
+// The companion Toaster component no longer renders its own <ToastClose />
+// since every Toast already provides one here.
 const Toast = React.forwardRef(({ className, variant, children, ...props }, ref) => {
   const meta = VARIANT_ICONS[variant || 'default'] || VARIANT_ICONS.default;
   const Icon = meta.Icon;
@@ -99,7 +107,8 @@ const Toast = React.forwardRef(({ className, variant, children, ...props }, ref)
       <div className={cn('shrink-0 mt-0.5', meta.tint)}>
         <Icon className="w-5 h-5" />
       </div>
-      <div className="flex-1 min-w-0">{children}</div>
+      <div className="flex-1 min-w-0 pr-4">{children}</div>
+      <ToastClose />
     </ToastPrimitives.Root>
   );
 });

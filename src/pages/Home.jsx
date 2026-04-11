@@ -141,8 +141,23 @@ export default function Home() {
     <>
       <Seo
         title="Crested Gecko Collection, Breeding & Community Platform"
-        description="Geck Inspect is the professional platform for crested gecko breeders and keepers. Track collections, plan breedings, log weights, identify morphs with AI, research lineages, and connect with the community."
+        description="Geck Inspect is the professional platform for crested gecko (Correlophus ciliatus) breeders and keepers. Track collections, plan breedings with lineage trees, log weights over time, identify morphs with AI, research genetics, sync with MorphMarket and Palm Street, and connect with a community of serious breeders."
         path="/"
+        imageAlt="Geck Inspect — crested gecko breeding and collection platform"
+        keywords={[
+          'crested gecko app',
+          'gecko breeding software',
+          'Correlophus ciliatus platform',
+          'crestie collection tracker',
+          'reptile breeding software',
+          'gecko lineage tree',
+          'gecko morph ID AI',
+          'crested gecko marketplace',
+          'geckOS',
+          'gecko breeder community',
+          'reptile collection manager',
+          'crested gecko genetics calculator',
+        ]}
         jsonLd={LANDING_JSON_LD}
       />
 
