@@ -1,22 +1,27 @@
 import jsPDF from 'jspdf';
 
 /**
- * Certificate PDF generators.
+ * Certificate PDF generators — ownership and lineage.
  *
- * Two flavors:
- *   - generateOwnershipCertificatePDF(gecko, owner)
- *   - generateLineageCertificatePDF({ gecko, sire, dam, grandparents, owner })
+ * Two flavors, both portrait Letter, both downloaded as a blob via a
+ * manual <a> click (the same pattern exportUtils.js uses for the gecko
+ * roster CSV/PDF, which is known to work in production browsers).
  *
- * Both produce a portrait-letter PDF and trigger a download. Pure client
- * side — no server roundtrip. Text-only for now (no embedded photos)
- * because cross-origin image decoding with jsPDF is unreliable; can add
- * images in a follow-up.
+ * The drawing logic is intentionally simple: pure text + a few rectangles
+ * + horizontal divider lines. No complex field grids, no foreign font
+ * loading, no Unicode characters that jsPDF's WinAnsi-encoded helvetica
+ * can't render. Anything weird in user-entered data is run through
+ * safeText() before reaching doc.text().
  */
 
-function fmtDate(iso) {
-  if (!iso) return 'Unknown';
+// ---------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------
+
+function fmtDate(value) {
+  if (!value) return 'Unknown';
   try {
-    const d = iso instanceof Date ? iso : new Date(iso);
+    const d = value instanceof Date ? value : new Date(value);
     if (isNaN(d.getTime())) return 'Unknown';
     return d.toLocaleDateString(undefined, {
       year: 'numeric',
@@ -28,252 +33,123 @@ function fmtDate(iso) {
   }
 }
 
-// jsPDF's standard helvetica is WinAnsi-encoded; anything outside that set
-// (em-dashes, smart quotes, emoji) can render as boxes or trip up the
-// encoder. Scrub any input before handing it to doc.text() so we never
-// ship characters that can break the PDF.
+// jsPDF's standard helvetica is WinAnsi-encoded; smart quotes, dashes,
+// emoji, ellipses can break the encoder. Scrub everything before it
+// reaches doc.text().
 function safeText(value) {
   if (value == null) return '';
   return String(value)
-    .replace(/[\u2018\u2019]/g, "'")      // smart single quotes
-    .replace(/[\u201C\u201D]/g, '"')      // smart double quotes
-    .replace(/[\u2013\u2014]/g, '-')      // en/em dash
-    .replace(/[\u2026]/g, '...')          // ellipsis
-    .replace(/[^\x20-\x7E]/g, '');        // strip everything else outside printable ASCII
+    .replace(/[\u2018\u2019]/g, "'")
+    .replace(/[\u201C\u201D]/g, '"')
+    .replace(/[\u2013\u2014]/g, '-')
+    .replace(/[\u2026]/g, '...')
+    .replace(/[^\x20-\x7E]/g, '');
 }
 
-function timestampSlug() {
-  const d = new Date();
-  const pad = (n) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
-}
-
-// Sanitize a string for use as a filename — strip anything that isn't
-// alphanumeric, dash, underscore, or dot; collapse runs; trim.
 function safeFilename(value) {
   if (!value) return 'certificate';
-  return String(value)
-    .replace(/[^a-zA-Z0-9._-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 60) || 'certificate';
+  return (
+    String(value)
+      .replace(/[^a-zA-Z0-9._-]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .slice(0, 60) || 'certificate'
+  );
 }
 
-// Shared chrome: outer double border, header logo/title, footer
-function drawChrome(doc, title, owner) {
+// Manual blob download — same pattern exportUtils.js uses successfully.
+// Doesn't depend on jsPDF's doc.save() implementation.
+function downloadPdfBlob(doc, filename) {
+  const blob = doc.output('blob');
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+}
+
+// ---------------------------------------------------------------------------
+// Drawing primitives — kept simple on purpose
+// ---------------------------------------------------------------------------
+
+function drawHeader(doc, title, owner) {
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
   const margin = 15;
 
-  // Outer double border (emerald-ish)
+  // Outer border (single rect, no double-line decoration)
   doc.setDrawColor(86, 107, 95);
-  doc.setLineWidth(1.5);
+  doc.setLineWidth(1.2);
   doc.rect(margin, margin, pageW - margin * 2, pageH - margin * 2);
-  doc.setLineWidth(0.4);
-  doc.rect(margin + 3, margin + 3, pageW - margin * 2 - 6, pageH - margin * 2 - 6);
 
-  // Header
-  doc.setTextColor(86, 107, 95);
+  // Breeder name centered at top
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(22);
-  const breederName = owner?.breeder_name || owner?.full_name || owner?.email || 'GECK INSPECT';
-  doc.text(safeText(breederName), pageW / 2, margin + 18, { align: 'center' });
+  doc.setTextColor(86, 107, 95);
+  const breederName = safeText(
+    owner?.breeder_name || owner?.full_name || owner?.email || 'GECK INSPECT'
+  );
+  doc.text(breederName, pageW / 2, margin + 18, { align: 'center' });
 
-  doc.setFontSize(12);
+  // Certificate title underneath
   doc.setFont('helvetica', 'normal');
+  doc.setFontSize(14);
   doc.setTextColor(60, 60, 60);
-  doc.text(safeText(title.toUpperCase()), pageW / 2, margin + 25, { align: 'center' });
+  doc.text(safeText(title.toUpperCase()), pageW / 2, margin + 27, { align: 'center' });
 
-  // Decorative line under title
+  // Decorative divider line
   doc.setDrawColor(86, 107, 95);
   doc.setLineWidth(0.5);
-  doc.line(pageW / 2 - 40, margin + 28, pageW / 2 + 40, margin + 28);
+  doc.line(pageW / 2 - 50, margin + 31, pageW / 2 + 50, margin + 31);
 
   return { pageW, pageH, margin };
 }
 
 function drawFooter(doc, geckoId, pageW, pageH, margin) {
-  const y = pageH - margin - 10;
+  const y = pageH - margin - 8;
+  doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
   doc.setTextColor(120, 120, 120);
-  doc.setFont('helvetica', 'normal');
   doc.text(
-    safeText(
-      `Generated by Geck Inspect | geckinspect.com | ${new Date().toLocaleDateString()}`
-    ),
-    margin + 8,
+    safeText(`Generated by Geck Inspect | geckinspect.com | ${new Date().toLocaleDateString()}`),
+    margin + 5,
     y
   );
   doc.text(
-    safeText(
-      `Certificate ID: CERT-${String(geckoId || '').substring(0, 8).toUpperCase()}`
-    ),
-    pageW - margin - 8,
+    safeText(`Certificate ID: CERT-${String(geckoId || '').substring(0, 8).toUpperCase()}`),
+    pageW - margin - 5,
     y,
     { align: 'right' }
   );
 }
 
-// Section header bar
-function drawSectionTitle(doc, text, x, y, width) {
+// Section heading bar with white text on emerald background
+function drawSection(doc, title, x, y, width) {
   doc.setFillColor(86, 107, 95);
   doc.rect(x, y, width, 7, 'F');
-  doc.setTextColor(255, 255, 255);
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(10);
-  doc.text(safeText(text.toUpperCase()), x + 3, y + 5);
+  doc.setTextColor(255, 255, 255);
+  doc.text(safeText(title.toUpperCase()), x + 3, y + 5);
   return y + 11;
 }
 
-// Label + value row
-function drawField(doc, label, value, x, y, maxW = 75) {
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
+// Single label/value row
+function drawRow(doc, label, value, x, y, maxWidth) {
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
   doc.setTextColor(120, 120, 120);
-  doc.text(safeText(String(label).toUpperCase()), x, y);
+  doc.text(safeText(label.toUpperCase()), x, y);
+
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(11);
   doc.setTextColor(30, 30, 30);
-  const safe = value == null || value === '' ? '-' : safeText(value);
-  const text = safe || '-';
-  const lines = doc.splitTextToSize(text, maxW);
+  const text = safeText(value) || '-';
+  // Force a single-line clip — multi-line wraps would mess up our row math
+  const lines = doc.splitTextToSize(text, maxWidth);
   doc.text(lines[0] || '-', x, y + 5);
-  return y + 11;
-}
-
-function fieldGrid(doc, fields, startX, startY, colWidth, gap = 4) {
-  let col = 0;
-  let row = 0;
-  const perRow = 2;
-  fields.forEach(({ label, value }) => {
-    const x = startX + col * (colWidth + gap);
-    const y = startY + row * 13;
-    drawField(doc, label, value, x, y, colWidth - 2);
-    col++;
-    if (col >= perRow) {
-      col = 0;
-      row++;
-    }
-  });
-  return startY + (row + (col > 0 ? 1 : 0)) * 13;
-}
-
-function drawSubjectBlock(doc, gecko, margin, pageW, y) {
-  const blockW = pageW - margin * 2 - 16;
-  y = drawSectionTitle(doc, 'Subject Information', margin + 8, y, blockW);
-
-  // Gecko name, large
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(18);
-  doc.setTextColor(40, 40, 40);
-  doc.text(safeText(gecko.name) || 'Unnamed Gecko', margin + 10, y + 5);
-  y += 11;
-
-  // Two-column grid of details
-  const colW = (blockW - 8) / 2;
-  y = fieldGrid(
-    doc,
-    [
-      { label: 'ID Code', value: gecko.gecko_id_code },
-      { label: 'Sex', value: gecko.sex },
-      { label: 'Hatch Date', value: fmtDate(gecko.hatch_date) },
-      { label: 'Species', value: gecko.species || 'C. ciliatus' },
-      { label: 'Weight', value: gecko.weight_grams != null ? `${gecko.weight_grams} g` : null },
-      { label: 'Status', value: gecko.status },
-    ],
-    margin + 10,
-    y,
-    colW
-  );
-
-  // Morphs (as array or free-text) / notes - full width
-  const morphsText = Array.isArray(gecko.morph_tags) && gecko.morph_tags.length > 0
-    ? gecko.morph_tags.join(', ')
-    : gecko.morphs_traits || '';
-  if (morphsText) {
-    y = drawField(doc, 'Morphs and Traits', morphsText, margin + 10, y, blockW - 4);
-  }
-  if (gecko.notes) {
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(120, 120, 120);
-    doc.text('NOTES', margin + 10, y);
-    doc.setFontSize(10);
-    doc.setTextColor(30, 30, 30);
-    const notesLines = doc.splitTextToSize(safeText(gecko.notes), blockW - 4);
-    const clipped = notesLines.slice(0, 3);
-    doc.text(clipped, margin + 10, y + 5);
-    y += 5 + clipped.length * 5;
-  }
-  return y + 4;
-}
-
-function drawBreederBlock(doc, owner, margin, pageW, y) {
-  const blockW = pageW - margin * 2 - 16;
-  y = drawSectionTitle(doc, 'Breeder Information', margin + 8, y, blockW);
-  const colW = (blockW - 8) / 2;
-  const fields = [
-    { label: 'Breeder', value: owner?.breeder_name || owner?.full_name || owner?.email },
-    { label: 'Email', value: owner?.email_contact || owner?.email },
-  ];
-  if (owner?.phone_contact) fields.push({ label: 'Phone', value: owner.phone_contact });
-  if (owner?.website_url) fields.push({ label: 'Website', value: owner.website_url });
-  if (owner?.business_name) fields.push({ label: 'Business', value: owner.business_name });
-  if (owner?.location) fields.push({ label: 'Location', value: owner.location });
-  return fieldGrid(doc, fields, margin + 10, y, colW) + 4;
-}
-
-function drawParentageBlock(doc, sire, dam, margin, pageW, y) {
-  const blockW = pageW - margin * 2 - 16;
-  y = drawSectionTitle(doc, 'Parentage', margin + 8, y, blockW);
-  const colW = (blockW - 8) / 2;
-
-  const drawParent = (label, parent, x) => {
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
-    doc.setTextColor(60, 60, 60);
-    doc.text(safeText(label), x, y);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(12);
-    doc.setTextColor(30, 30, 30);
-    doc.text(safeText(parent?.name) || 'Unknown', x, y + 6);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(120, 120, 120);
-    doc.text(safeText(`ID: ${parent?.gecko_id_code || '-'}`), x, y + 11);
-  };
-
-  drawParent('SIRE (Father)', sire, margin + 10);
-  drawParent('DAM (Mother)', dam, margin + 10 + colW + 4);
-  return y + 18;
-}
-
-function drawGrandparentageBlock(doc, { gsS, gdS, gsD, gdD }, margin, pageW, y) {
-  if (!gsS && !gdS && !gsD && !gdD) return y;
-  const blockW = pageW - margin * 2 - 16;
-  y = drawSectionTitle(doc, 'Grandparentage', margin + 8, y, blockW);
-  const colW = (blockW - 12) / 4;
-
-  const draw = (label, g, x) => {
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7);
-    doc.setTextColor(120, 120, 120);
-    doc.text(safeText(label.toUpperCase()), x, y);
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(10);
-    doc.setTextColor(30, 30, 30);
-    const name = safeText(g?.name) || 'Unknown';
-    doc.text(doc.splitTextToSize(name, colW - 2)[0] || name, x, y + 5);
-    doc.setFontSize(7);
-    doc.setTextColor(120, 120, 120);
-    doc.text(safeText(g?.gecko_id_code) || '-', x, y + 10);
-  };
-
-  const startX = margin + 10;
-  draw('Paternal Grandsire', gsS, startX);
-  draw('Paternal Granddam',  gdS, startX + colW + 4);
-  draw('Maternal Grandsire', gsD, startX + (colW + 4) * 2);
-  draw('Maternal Granddam',  gdD, startX + (colW + 4) * 3);
-  return y + 16;
 }
 
 // ---------------------------------------------------------------------------
@@ -282,40 +158,170 @@ function drawGrandparentageBlock(doc, { gsS, gdS, gsD, gdD }, margin, pageW, y) 
 
 export function generateOwnershipCertificatePDF(gecko, owner) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
-  const { pageW, pageH, margin } = drawChrome(doc, 'Certificate of Ownership', owner);
+  const { pageW, pageH, margin } = drawHeader(doc, 'Certificate of Ownership', owner);
 
-  let y = margin + 40;
-  y = drawSubjectBlock(doc, gecko, margin, pageW, y);
-  y = drawBreederBlock(doc, owner, margin, pageW, y);
+  const blockW = pageW - margin * 2 - 16;
+  const innerX = margin + 8;
+  let y = margin + 45;
 
-  // Attestation text
+  // Subject section
+  y = drawSection(doc, 'Subject', innerX, y, blockW);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(20);
+  doc.setTextColor(40, 40, 40);
+  doc.text(safeText(gecko?.name || 'Unnamed Gecko'), innerX + 2, y + 5);
+  y += 14;
+
+  // Two-column field grid drawn explicitly
+  const colW = (blockW - 8) / 2;
+  drawRow(doc, 'ID Code', gecko?.gecko_id_code, innerX + 2, y, colW - 4);
+  drawRow(doc, 'Sex', gecko?.sex, innerX + 2 + colW + 4, y, colW - 4);
+  y += 12;
+  drawRow(doc, 'Hatch Date', fmtDate(gecko?.hatch_date), innerX + 2, y, colW - 4);
+  drawRow(doc, 'Species', gecko?.species || 'C. ciliatus', innerX + 2 + colW + 4, y, colW - 4);
+  y += 12;
+  drawRow(
+    doc,
+    'Weight',
+    gecko?.weight_grams != null ? `${gecko.weight_grams} g` : null,
+    innerX + 2,
+    y,
+    colW - 4
+  );
+  drawRow(doc, 'Status', gecko?.status, innerX + 2 + colW + 4, y, colW - 4);
+  y += 16;
+
+  // Owner section
+  y = drawSection(doc, 'Owner', innerX, y, blockW);
+  drawRow(
+    doc,
+    'Owner',
+    owner?.breeder_name || owner?.full_name || owner?.email,
+    innerX + 2,
+    y,
+    colW - 4
+  );
+  drawRow(doc, 'Email', owner?.email, innerX + 2 + colW + 4, y, colW - 4);
+  y += 12;
+  if (owner?.website_url) {
+    drawRow(doc, 'Website', owner.website_url, innerX + 2, y, blockW - 4);
+    y += 12;
+  }
+  y += 8;
+
+  // Attestation
   doc.setFont('helvetica', 'italic');
-  doc.setFontSize(10);
+  doc.setFontSize(11);
   doc.setTextColor(70, 70, 70);
   const attestation = safeText(
-    `This certifies that the gecko described above is owned by ${
+    `This certifies that ${gecko?.name || 'the gecko described above'} is owned by ${
       owner?.breeder_name || owner?.full_name || owner?.email || 'the undersigned'
     } as of ${new Date().toLocaleDateString()}.`
   );
-  const lines = doc.splitTextToSize(attestation, pageW - margin * 2 - 20);
-  doc.text(lines, margin + 10, y + 4);
+  const attLines = doc.splitTextToSize(attestation, blockW - 8);
+  doc.text(attLines, innerX + 2, y);
 
-  drawFooter(doc, gecko.id, pageW, pageH, margin);
-  const slug = safeFilename(gecko.gecko_id_code || gecko.name || timestampSlug());
-  doc.save(`ownership-certificate-${slug}.pdf`);
+  drawFooter(doc, gecko?.id, pageW, pageH, margin);
+
+  const slug = safeFilename(gecko?.gecko_id_code || gecko?.name);
+  downloadPdfBlob(doc, `ownership-certificate-${slug}.pdf`);
 }
 
 export function generateLineageCertificatePDF({ gecko, sire, dam, grandparents = {}, owner }) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
-  const { pageW, pageH, margin } = drawChrome(doc, 'Certificate of Lineage', owner);
+  const { pageW, pageH, margin } = drawHeader(doc, 'Certificate of Lineage', owner);
 
-  let y = margin + 40;
-  y = drawSubjectBlock(doc, gecko, margin, pageW, y);
-  y = drawBreederBlock(doc, owner, margin, pageW, y);
-  y = drawParentageBlock(doc, sire, dam, margin, pageW, y);
-  y = drawGrandparentageBlock(doc, grandparents, margin, pageW, y);
+  const blockW = pageW - margin * 2 - 16;
+  const innerX = margin + 8;
+  let y = margin + 45;
 
-  drawFooter(doc, gecko.id, pageW, pageH, margin);
-  const slug = safeFilename(gecko.gecko_id_code || gecko.name || timestampSlug());
-  doc.save(`lineage-certificate-${slug}.pdf`);
+  // Subject section
+  y = drawSection(doc, 'Subject', innerX, y, blockW);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(20);
+  doc.setTextColor(40, 40, 40);
+  doc.text(safeText(gecko?.name || 'Unnamed Gecko'), innerX + 2, y + 5);
+  y += 14;
+
+  const colW = (blockW - 8) / 2;
+  drawRow(doc, 'ID Code', gecko?.gecko_id_code, innerX + 2, y, colW - 4);
+  drawRow(doc, 'Sex', gecko?.sex, innerX + 2 + colW + 4, y, colW - 4);
+  y += 12;
+  drawRow(doc, 'Hatch Date', fmtDate(gecko?.hatch_date), innerX + 2, y, colW - 4);
+  drawRow(doc, 'Species', gecko?.species || 'C. ciliatus', innerX + 2 + colW + 4, y, colW - 4);
+  y += 12;
+  drawRow(
+    doc,
+    'Weight',
+    gecko?.weight_grams != null ? `${gecko.weight_grams} g` : null,
+    innerX + 2,
+    y,
+    colW - 4
+  );
+  drawRow(doc, 'Status', gecko?.status, innerX + 2 + colW + 4, y, colW - 4);
+  y += 16;
+
+  // Parentage
+  y = drawSection(doc, 'Parentage', innerX, y, blockW);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(60, 60, 60);
+  doc.text('SIRE (Father)', innerX + 2, y);
+  doc.text('DAM (Mother)', innerX + 2 + colW + 4, y);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(12);
+  doc.setTextColor(30, 30, 30);
+  doc.text(safeText(sire?.name) || 'Unknown', innerX + 2, y + 6);
+  doc.text(safeText(dam?.name) || 'Unknown', innerX + 2 + colW + 4, y + 6);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(120, 120, 120);
+  doc.text(`ID: ${safeText(sire?.gecko_id_code) || '-'}`, innerX + 2, y + 11);
+  doc.text(`ID: ${safeText(dam?.gecko_id_code) || '-'}`, innerX + 2 + colW + 4, y + 11);
+  y += 18;
+
+  // Grandparentage (4 columns)
+  const { gsS, gdS, gsD, gdD } = grandparents;
+  if (gsS || gdS || gsD || gdD) {
+    y = drawSection(doc, 'Grandparentage', innerX, y, blockW);
+    const quarterW = (blockW - 12) / 4;
+    const labels = ['Pat. Grandsire', 'Pat. Granddam', 'Mat. Grandsire', 'Mat. Granddam'];
+    const gp = [gsS, gdS, gsD, gdD];
+    for (let i = 0; i < 4; i++) {
+      const x = innerX + 2 + i * (quarterW + 4);
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(7);
+      doc.setTextColor(120, 120, 120);
+      doc.text(safeText(labels[i].toUpperCase()), x, y);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(10);
+      doc.setTextColor(30, 30, 30);
+      const name = safeText(gp[i]?.name) || 'Unknown';
+      const lines = doc.splitTextToSize(name, quarterW - 2);
+      doc.text(lines[0] || name, x, y + 5);
+      doc.setFontSize(7);
+      doc.setTextColor(120, 120, 120);
+      doc.text(safeText(gp[i]?.gecko_id_code) || '-', x, y + 10);
+    }
+    y += 16;
+  }
+
+  // Owner section
+  y += 4;
+  y = drawSection(doc, 'Owner', innerX, y, blockW);
+  drawRow(
+    doc,
+    'Owner',
+    owner?.breeder_name || owner?.full_name || owner?.email,
+    innerX + 2,
+    y,
+    colW - 4
+  );
+  drawRow(doc, 'Email', owner?.email, innerX + 2 + colW + 4, y, colW - 4);
+
+  drawFooter(doc, gecko?.id, pageW, pageH, margin);
+
+  const slug = safeFilename(gecko?.gecko_id_code || gecko?.name);
+  downloadPdfBlob(doc, `lineage-certificate-${slug}.pdf`);
 }
