@@ -709,33 +709,26 @@ export default function MyGeckosPage() {
                     </div>
                 </div>
 
-                <div className="mb-6 space-y-4">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-                        <Input
-                            type="text"
-                            placeholder="Search by name, ID, or morph..."
-                            value={searchTerm}
-                            onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 h-10 bg-slate-800 border-slate-600 text-slate-100"
-                        />
-                    </div>
-
-                    <GeckoFilters 
-                        filters={filters}
-                        onFiltersChange={setFilters}
-                        onClearFilters={handleClearFilters}
-                        feedingGroups={feedingGroups}
-                    />
-
-                    {/* View Controls */}
-                    <div className="flex flex-wrap items-center gap-4 justify-between">
-                        <div className="flex items-center gap-2">
-                            <ArrowUpDown className="w-4 h-4 text-emerald-400" />
-                            <span className="text-sm text-emerald-400 leading-10">Sort by:</span>
+                <div className="mb-6">
+                    {/* Toolbar — single row: search (grows) + sort + view + filters */}
+                    <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 p-2 rounded-xl border border-slate-800 bg-slate-900/60">
+                        <div className="relative flex-1 min-w-0">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                            <Input
+                                type="text"
+                                placeholder="Search by name, ID, morph, or tag..."
+                                value={searchTerm}
+                                onChange={(e) => setSearchTerm(e.target.value)}
+                                className="pl-10 h-9 bg-slate-950 border-slate-700 text-slate-100 focus-visible:ring-emerald-500/40"
+                            />
+                        </div>
+                        <div className="flex items-center gap-2 shrink-0">
                             <Select value={sortBy} onValueChange={setSortBy}>
-                                <SelectTrigger className="w-48 h-10 bg-slate-800 border-slate-600 text-slate-100 hover:bg-slate-700">
-                                    <SelectValue placeholder="Sort by" />
+                                <SelectTrigger className="w-44 h-9 bg-slate-950 border-slate-700 text-slate-100 text-sm">
+                                    <div className="flex items-center gap-1.5 min-w-0">
+                                        <ArrowUpDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                                        <SelectValue placeholder="Sort" />
+                                    </div>
                                 </SelectTrigger>
                                 <SelectContent className="z-[99999]">
                                     <SelectItem value="date_added">Date Added (Newest)</SelectItem>
@@ -748,28 +741,37 @@ export default function MyGeckosPage() {
                                     <SelectItem value="weight_lightest">Weight (Lightest)</SelectItem>
                                     <SelectItem value="species">Species (A-Z)</SelectItem>
                                     {showArchived && <SelectItem value="archive_reason">Archive Reason</SelectItem>}
-                                    </SelectContent>
-                                    </Select>
-                                    </div>
-
-                        <div className="flex items-center gap-2 bg-slate-900 rounded-lg p-1 border border-slate-700">
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setViewMode('card')}
-                                className={viewMode === 'card' ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'text-slate-400 hover:text-slate-200'}
-                            >
-                                <Grid3x3 className="w-4 h-4" />
-                            </Button>
-                            <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setViewMode('list')}
-                                className={viewMode === 'list' ? 'bg-emerald-600 text-white hover:bg-emerald-700' : 'text-slate-400 hover:text-slate-200'}
-                            >
-                                <List className="w-4 h-4" />
-                            </Button>
+                                </SelectContent>
+                            </Select>
+                            <div className="flex items-center bg-slate-950 rounded-md p-0.5 border border-slate-700">
+                                <button
+                                    type="button"
+                                    onClick={() => setViewMode('card')}
+                                    className={`h-8 w-8 rounded flex items-center justify-center transition-colors ${viewMode === 'card' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+                                    aria-label="Card view"
+                                >
+                                    <Grid3x3 className="w-4 h-4" />
+                                </button>
+                                <button
+                                    type="button"
+                                    onClick={() => setViewMode('list')}
+                                    className={`h-8 w-8 rounded flex items-center justify-center transition-colors ${viewMode === 'list' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+                                    aria-label="List view"
+                                >
+                                    <List className="w-4 h-4" />
+                                </button>
+                            </div>
                         </div>
+                    </div>
+
+                    {/* Filters panel — slimmer than before. Opens inline below the toolbar. */}
+                    <div className="mt-3">
+                        <GeckoFilters
+                            filters={filters}
+                            onFiltersChange={setFilters}
+                            onClearFilters={handleClearFilters}
+                            feedingGroups={feedingGroups}
+                        />
                     </div>
                 </div>
 

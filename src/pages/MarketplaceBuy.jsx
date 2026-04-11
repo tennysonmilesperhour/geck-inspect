@@ -1,12 +1,18 @@
-import React, { useState, useEffect } from 'react';
-import { useCallback } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import { Gecko, User, MarketplaceLike } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Search, DollarSign, Users, MapPin, MessageSquare, Heart, Loader2, ShoppingBag, GitBranch } from 'lucide-react';
+import {
+    Select,
+    SelectContent,
+    SelectItem,
+    SelectTrigger,
+    SelectValue,
+} from '@/components/ui/select';
+import { Search, DollarSign, MapPin, Heart, ShoppingBag, GitBranch, ArrowUpDown } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
 import { useNavigate, Link } from 'react-router-dom';
@@ -116,6 +122,8 @@ export default function MarketplaceBuyPage() {
     const [likedGeckoIds, setLikedGeckoIds] = useState(new Set());
     const [geckoOffset, setGeckoOffset] = useState(0);
     const [hasMoreGeckos, setHasMoreGeckos] = useState(true);
+    const [sexFilter, setSexFilter] = useState('all');
+    const [sortBy, setSortBy] = useState('newest');
     const navigate = useNavigate();
 
     const fetchGeckoBatch = useCallback(async (offset = 0, append = false) => {
@@ -246,31 +254,106 @@ export default function MarketplaceBuyPage() {
         navigate(`${createPageUrl('Lineage')}?geckoId=${geckoId}`);
     };
 
-    const filteredGeckos = geckos.filter(gecko =>
-        (gecko.name?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-        (gecko.morphs_traits?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
-        (owners[gecko.created_by]?.full_name?.toLowerCase() || '').includes(searchTerm.toLowerCase())
-    );
+    const filteredGeckos = useMemo(() => {
+        const q = searchTerm.toLowerCase();
+        let list = geckos.filter(
+            (gecko) =>
+                (gecko.name?.toLowerCase() || '').includes(q) ||
+                (gecko.morphs_traits?.toLowerCase() || '').includes(q) ||
+                (owners[gecko.created_by]?.full_name?.toLowerCase() || '').includes(q)
+        );
+        if (sexFilter !== 'all') {
+            list = list.filter((g) => g.sex === sexFilter);
+        }
+        switch (sortBy) {
+            case 'price_low':
+                list = [...list].sort(
+                    (a, b) => (a.asking_price ?? Infinity) - (b.asking_price ?? Infinity)
+                );
+                break;
+            case 'price_high':
+                list = [...list].sort(
+                    (a, b) => (b.asking_price ?? -Infinity) - (a.asking_price ?? -Infinity)
+                );
+                break;
+            case 'name':
+                list = [...list].sort((a, b) =>
+                    (a.name || '').localeCompare(b.name || '')
+                );
+                break;
+            case 'newest':
+            default:
+                // Already sorted by updated_date desc from the server
+                break;
+        }
+        return list;
+    }, [geckos, owners, searchTerm, sexFilter, sortBy]);
 
     return (
         <div className="p-4 md:p-8 bg-slate-950 min-h-screen">
             <div className="max-w-7xl mx-auto">
-                <header className="text-center mb-8">
-                    <h1 className="text-4xl font-bold text-slate-100">Gecko Marketplace</h1>
-                    <p className="text-lg text-slate-400 mt-2">Find your next crested gecko from breeders around the world.</p>
+                <header className="mb-6">
+                    <h1 className="text-3xl md:text-4xl font-bold text-slate-100">
+                        Gecko Marketplace
+                    </h1>
+                    <p className="text-sm md:text-base text-slate-400 mt-1">
+                        Find your next crested gecko from breeders around the world.
+                    </p>
                 </header>
 
-                <div className="mb-8 max-w-lg mx-auto">
-                    <div className="relative">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
+                {/* Filter toolbar */}
+                <div className="mb-6 flex flex-col md:flex-row gap-2 md:gap-3 p-2 rounded-xl border border-slate-800 bg-slate-900/60">
+                    <div className="relative flex-1 min-w-0">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                         <Input
-                            placeholder="Search by morph, gecko name, or breeder..."
+                            placeholder="Search morph, gecko name, or breeder..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 h-12 text-lg bg-slate-800 border-slate-700 text-slate-100"
+                            className="pl-10 h-9 bg-slate-950 border-slate-700 text-slate-100"
                         />
                     </div>
+                    <div className="flex items-center gap-1 bg-slate-950 border border-slate-700 rounded-md p-0.5">
+                        {[
+                            { value: 'all', label: 'All' },
+                            { value: 'Male', label: '♂' },
+                            { value: 'Female', label: '♀' },
+                        ].map((opt) => (
+                            <button
+                                key={opt.value}
+                                type="button"
+                                onClick={() => setSexFilter(opt.value)}
+                                className={`px-3 h-8 rounded text-sm font-medium transition-colors ${
+                                    sexFilter === opt.value
+                                        ? 'bg-emerald-600 text-white'
+                                        : 'text-slate-400 hover:text-slate-200'
+                                }`}
+                            >
+                                {opt.label}
+                            </button>
+                        ))}
+                    </div>
+                    <Select value={sortBy} onValueChange={setSortBy}>
+                        <SelectTrigger className="w-44 h-9 bg-slate-950 border-slate-700 text-slate-100 text-sm">
+                            <div className="flex items-center gap-1.5 min-w-0">
+                                <ArrowUpDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                                <SelectValue placeholder="Sort" />
+                            </div>
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-900 border-slate-700 text-slate-100">
+                            <SelectItem value="newest">Newest first</SelectItem>
+                            <SelectItem value="price_low">Price: low → high</SelectItem>
+                            <SelectItem value="price_high">Price: high → low</SelectItem>
+                            <SelectItem value="name">Name (A-Z)</SelectItem>
+                        </SelectContent>
+                    </Select>
                 </div>
+
+                {/* Result count */}
+                {!isLoading && (
+                    <p className="text-xs text-slate-500 mb-4">
+                        {filteredGeckos.length} {filteredGeckos.length === 1 ? 'gecko' : 'geckos'} found
+                    </p>
+                )}
 
                 {isLoading ? (
                     <div className="flex items-center justify-center py-20">
