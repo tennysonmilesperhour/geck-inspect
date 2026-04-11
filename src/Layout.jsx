@@ -893,8 +893,13 @@ function LayoutContent({ children, currentPageName }) {
             align-items: center !important;
           }
 
-          /* Prevent any transform or position shifts */
-          button:not(:active),
+          /* Prevent any transform or position shifts on Select triggers.
+             NOTE: this rule used to also target button:not(:active), but
+             that was forcing position:relative !important onto every
+             button in the app - which broke the absolute top-right close
+             button on shadcn Dialogs (the X fell into the grid flow and
+             rendered as a full-width row at the bottom of the modal).
+             Keep the scope limited to Radix Select triggers only. */
           [data-radix-select-trigger]:not([data-state="open"]),
           [role="combobox"]:not([data-state="open"]) {
             transform: none !important;
