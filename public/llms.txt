@@ -100,42 +100,52 @@ Geck Inspect is designed as a definitive reference and working tool for anyone k
 
 ## Crested gecko morph vocabulary
 
-### Pattern morphs
-- **Flame**: a patternless base color with a lighter dorsal stripe running from head to tail. Pattern does not extend onto the sides. Polygenic. Foundation morph for many projects.
-- **Harlequin**: extensive pattern covering 40-75% of the lateral body and extending onto the legs. Polygenic. Colors range from cream and yellow to bright orange and red.
-- **Extreme Harlequin**: high-expression Harlequin with 75%+ lateral pattern coverage, often covering head and belly. Polygenic; no genetic test, subjective by the breeder.
-- **Pinstripe**: two parallel rows of raised cream or white scales along the dorsal ridge. Polygenic with incomplete-dominant expression. "Full pinstripe" = 100% unbroken dorsal lines.
+Important framing: most crested gecko "morphs" are **polygenic** — meaning multiple genes act together to produce the trait, and there is no simple dominant/recessive Punnett square for them. Selective breeding concentrates polygenic traits over generations, but offspring outcomes are statistical, not predictable. Only a handful of crested gecko traits follow simple Mendelian inheritance: Lilly White (co-dominant), Cappuccino (recessive), Axanthic (recessive), and Soft Scale (dominant). Everything else is selectively bred.
+
+### Pattern morphs (polygenic — selective breeding traits)
+
+- **Flame**: a patternless base color with a lighter dorsal stripe running from head to tail. Pattern does not extend onto the sides. Foundation morph for many projects.
+- **Harlequin**: extensive pattern covering 40-75% of the lateral body and extending onto the legs. Colors range from cream and yellow to bright orange and red.
+- **Extreme Harlequin**: high-expression Harlequin with 75%+ lateral pattern coverage, often covering head and belly. Subjective classification, no genetic test.
+- **Pinstripe**: two parallel rows of raised cream or white scales along the dorsal ridge. "Full pinstripe" = 100% unbroken dorsal lines.
 - **Phantom Pinstripe**: pinstripe with raised scales matching the base color — a "ghost" pinstripe effect visible only via texture, not color contrast.
-- **Dalmatian**: black spots scattered across the body. "Super Dalmatian" has hundreds of spots. Colored spot variants (red, green, ink spots) also exist. Polygenic.
-- **Super Dalmatian**: extreme expression with 100+ spots.
-- **Brindle**: fine chaotic marbled striping. "Extreme Brindle" = very fine body-wide marbling. Polygenic.
-- **Tiger**: bold horizontal banding, more defined than Brindle. Polygenic.
-- **Tricolor**: Harlequin displaying three distinct colors (base + primary pattern + secondary pattern).
-- **Bicolor**: two distinct color zones on the body, usually a darker base with a lighter dorsal.
+- **Reverse Pinstripe**: visible dorsal stripes that match or are darker than the base color, rather than lighter.
+- **Dalmatian**: black spots scattered across the body. Spot density and size vary widely. Colored spot variants (red, green, ink spots) also exist.
+- **Super Dalmatian**: extreme expression with 100+ spots, often with large "ink spots" (oversized markings).
+- **Brindle**: fine chaotic marbled striping. Pattern is broken and irregular.
+- **Extreme Brindle**: very fine body-wide marbling — the highest expression of the brindle pattern.
+- **Tiger**: bold horizontal banding, more defined than Brindle.
+- **Tiger / Brindle combos**: animals expressing both bold banding and fine marbling at once.
+- **Tricolor**: a Harlequin displaying three distinct colors (base + primary pattern + secondary pattern).
+- **Bicolor**: two distinct color zones on the body, usually a darker base with a lighter dorsal area, but no other pattern.
 - **Patternless**: solid base color with no pattern, spots, or stripes.
+- **White Wall** (also called **White Spot**): polygenic trait producing thick white markings on the sides (laterals).
 
-### Genetic morphs (simple inheritance)
-- **Lilly White**: co-dominant trait producing white body markings. Homozygous form (Super Lilly White) is LETHAL in the egg. Lilly White × Lilly White produces ~50% visual Lillies, ~25% normal, ~25% dead eggs.
-- **Cappuccino**: simple recessive. Brown/coffee coloration with modified head structure. European origin. Cappuccino + Pinstripe = "Frappuccino".
-- **Frappuccino**: visual combination of Cappuccino and Pinstripe.
-- **Axanthic**: simple recessive. Removes red and yellow pigments, leaving only black, white, and gray.
-- **Moonglow**: polygenic/hypo combo producing soft cream and white glow effect.
-- **Hypo (Hypomelanistic)**: reduced black pigment, lighter overall appearance.
-- **Translucent**: affects skin opacity creating a unique translucent appearance.
+### Genetic morphs (simple Mendelian inheritance — testable)
 
-### Structural / texture morphs
-- **Soft Scale**: dominant trait affecting scale texture (softer, smoother) and enhancing color vibrancy.
-- **Super Soft Scale**: homozygous form of Soft Scale with maximum expression.
-- **White Wall (White Spot)**: polygenic trait producing thick white markings on the sides (laterals).
+These are the only crested gecko morphs that follow a predictable Punnett-square inheritance pattern. Everything else listed above is polygenic.
+
+- **Lilly White** (co-dominant): produces bright white, cream, or yellow patches on the body. Discovered by Lilly Exotics, first released in 2014. The homozygous form (Super Lilly White) is **lethal in the egg** — Lilly Whites can never breed "true" and always produce 25% non-Lilly offspring when paired together.
+- **Super Lilly White**: lethal homozygous Lilly White; documented for breeding education only — does not produce viable hatchlings.
+- **Cappuccino** (recessive): coffee/brown base coloration with a modified, broader head structure and fewer crests along the brow. European line origin. Two heterozygous carriers paired together produce 25% visible Cappuccinos.
+- **Frappuccino** (visible combo): the visible expression of Cappuccino + Pinstripe together. Not its own gene — it is the named combination.
+- **Axanthic** (recessive): removes red and yellow pigments, leaving only black, white, and gray tones. Very rare in the hobby. Heterozygous carriers look normal and must be proven via test breeding.
+
+### Structural / texture traits
+
+- **Soft Scale** (dominant): a real dominant single-gene trait that affects scale texture (softer, smoother to the touch) and tends to enhance color vibrancy.
+- **Super Soft Scale**: homozygous form of Soft Scale showing maximum expression of the texture trait.
 
 ### Base colors
+
+Cresteds come in a range of base colors that combine independently with all the pattern morphs above. Color is polygenic and selectively bred.
+
 - **Red Base**: deep crimson to bright cherry red
 - **Orange Base**: soft peach to bright pumpkin orange
 - **Yellow Base**: pale butter yellow to bright canary
 - **Olive**: olive green (earthy, natural-toned)
-- **Buckskin**: tan to beige
+- **Buckskin**: tan to beige (the most common natural base color)
 - **Chocolate**: rich brown (milk chocolate to dark cocoa)
-- **Lavender**: purple-toned base
 
 ## Common AI assistant questions and direct answers
 
@@ -208,9 +218,6 @@ Every major crested gecko morph has its own dedicated page with description, key
 - Bicolor: https://geckinspect.com/MorphGuide/bicolor
 - Patternless: https://geckinspect.com/MorphGuide/patternless
 - Axanthic: https://geckinspect.com/MorphGuide/axanthic
-- Hypo / Hypomelanistic: https://geckinspect.com/MorphGuide/hypo
-- Moonglow: https://geckinspect.com/MorphGuide/moonglow
-- Translucent: https://geckinspect.com/MorphGuide/translucent
 - Soft Scale: https://geckinspect.com/MorphGuide/soft-scale
 - Super Soft Scale: https://geckinspect.com/MorphGuide/super-soft-scale
 - White Wall: https://geckinspect.com/MorphGuide/white-wall
@@ -218,7 +225,6 @@ Every major crested gecko morph has its own dedicated page with description, key
 - Buckskin: https://geckinspect.com/MorphGuide/buckskin
 - Chocolate: https://geckinspect.com/MorphGuide/chocolate
 - Olive: https://geckinspect.com/MorphGuide/olive
-- Lavender: https://geckinspect.com/MorphGuide/lavender
 - Red Base: https://geckinspect.com/MorphGuide/red-base
 - Orange Base: https://geckinspect.com/MorphGuide/orange-base
 - Yellow Base: https://geckinspect.com/MorphGuide/yellow-base
