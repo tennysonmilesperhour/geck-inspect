@@ -5,6 +5,7 @@ import { BarChart3, Users, GitBranch, Image as ImageIcon, MessageSquare, Star, S
 import StatsCard from "../components/dashboard/StatsCard";
 import RecentActivity from "../components/dashboard/RecentActivity";
 import TrainingProgress from "../components/dashboard/TrainingProgress";
+import FeaturedBreeders from "../components/dashboard/FeaturedBreeders";
 import { default as GeckoOfTheDayComponent } from '../components/dashboard/GeckoOfTheDay';
 import ImageDetailModal from '../components/gallery/ImageDetailModal';
 import ChangeLogModal from '../components/changelog/ChangeLogModal';
@@ -293,12 +294,13 @@ export default function Dashboard() {
                     {/* Enhanced content grid */}
                     <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 items-start">
                         <div className="lg:col-span-2 space-y-8">
-                            <GeckoOfTheDayComponent 
-                                geckoOfTheDay={geckoOfTheDay} 
+                            <GeckoOfTheDayComponent
+                                geckoOfTheDay={geckoOfTheDay}
                                 fallbackGecko={fallbackGecko}
                                 onImageSelect={handleImageSelect} // Pass onImageSelect
                             />
-                            <RecentActivity 
+                            <FeaturedBreeders />
+                            <RecentActivity
                                 geckoImages={recentImages} 
                                 isLoading={isLoading}
                                 onImageSelect={handleImageSelect} // Pass onImageSelect

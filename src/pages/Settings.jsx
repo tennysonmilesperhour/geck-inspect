@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Settings, Upload, Save, Globe, Eye, X, Plus, Camera, Mail, Calendar, Loader2, Search, Trash2, AlertTriangle, ArrowUpDown, Clock
+  Settings, Upload, Save, Globe, Eye, X, Plus, Camera, Mail, Calendar, Loader2, Search, Trash2, AlertTriangle, ArrowUpDown, Clock, Crown
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -109,7 +109,8 @@ const initialFormData = {
     default_reptile_sort: 'name',
     default_gallery_sort: '-created_date',
     default_breeding_sort: '-created_date',
-    hatch_alert_days: 60
+    hatch_alert_days: 60,
+    is_featured_breeder: false,
 };
 
 const notificationTypes = [
@@ -184,7 +185,8 @@ export default function SettingsPage() {
                         default_reptile_sort: currentUser.default_reptile_sort || 'name',
                         default_gallery_sort: currentUser.default_gallery_sort || '-created_date',
                         default_breeding_sort: currentUser.default_breeding_sort || '-created_date',
-                        hatch_alert_days: currentUser.hatch_alert_days || 60
+                        hatch_alert_days: currentUser.hatch_alert_days || 60,
+                        is_featured_breeder: currentUser.is_featured_breeder === true,
                     });
                 }
             } catch (error) {
@@ -427,6 +429,30 @@ export default function SettingsPage() {
                         {renderSwitch('palm-sync', 'Sync with PalmStreet', 'Allows PalmStreet users to find your public profile', formData.palm_street_sync_enabled, (checked) => handleChange('palm_street_sync_enabled', checked))}
                     </CardContent>
                 </Card>
+
+                {/* Breeder-tier only: opt in to be featured on the home dashboard.
+                    Grandfathered users automatically qualify for Breeder privileges. */}
+                {(user?.membership_tier === 'breeder' || user?.subscription_status === 'grandfathered') && (
+                    <Card className="bg-emerald-950/20 border-emerald-900/40 backdrop-blur-sm">
+                        <CardHeader>
+                            <CardTitle className="text-emerald-200 flex items-center gap-2">
+                                <Crown className="w-5 h-5" /> Breeder Perks
+                            </CardTitle>
+                            <CardDescription className="text-emerald-300/60">
+                                Benefits exclusive to the Breeder tier.
+                            </CardDescription>
+                        </CardHeader>
+                        <CardContent className="space-y-4">
+                            {renderSwitch(
+                                'featured-breeder',
+                                'Feature me on the Dashboard',
+                                'Your profile, business name, and latest listings get highlighted in the home dashboard breeder rotation. Turn off any time.',
+                                formData.is_featured_breeder,
+                                (checked) => handleChange('is_featured_breeder', checked)
+                            )}
+                        </CardContent>
+                    </Card>
+                )}
 
                 <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
                     <CardHeader><CardTitle className="text-slate-100 flex items-center gap-2"><Mail className="w-5 h-5"/>Email Notifications</CardTitle></CardHeader>

@@ -6,18 +6,37 @@ import { Sparkles, Lock, ArrowRight, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
+// Plan limits and feature flags. Source of truth for:
+//   - how many geckos the user can own (geckos)
+//   - how many active breeding pairs the user can track (breeding_pairs)
+//   - which feature keys unlock for the tier (features)
+//
+// Grandfathered accounts keep `breeder` tier indefinitely — they never
+// get paywalled as long as subscription_status === 'grandfathered'.
 const PLAN_LIMITS = {
     free: {
         geckos: 10,
+        breeding_pairs: 1,
         features: ['basic_breeding', 'public_profile', 'forum', 'ai_morph_id']
     },
     keeper: {
         geckos: 50,
-        features: ['basic_breeding', 'public_profile', 'forum', 'ai_morph_id', 'advanced_breeding', 'calendar', 'weight_tracking', 'csv_export']
+        breeding_pairs: 5,
+        features: [
+            'basic_breeding', 'public_profile', 'forum', 'ai_morph_id',
+            'advanced_breeding', 'calendar', 'weight_tracking', 'csv_export',
+            'lineage_tree'
+        ]
     },
     breeder: {
         geckos: Infinity,
-        features: ['basic_breeding', 'public_profile', 'forum', 'ai_morph_id', 'advanced_breeding', 'calendar', 'weight_tracking', 'csv_export', 'lineage_tree', 'marketplace_sync', 'breeding_analytics', 'certificates']
+        breeding_pairs: Infinity,
+        features: [
+            'basic_breeding', 'public_profile', 'forum', 'ai_morph_id',
+            'advanced_breeding', 'calendar', 'weight_tracking', 'csv_export',
+            'lineage_tree', 'marketplace_sync', 'breeding_analytics',
+            'certificates', 'featured_breeder'
+        ]
     }
 };
 
@@ -33,42 +52,65 @@ const FEATURE_NAMES = {
     lineage_tree: 'Full Lineage Tree',
     marketplace_sync: 'Marketplace Sync',
     breeding_analytics: 'Breeding Analytics',
-    certificates: 'White-label Certificates'
+    certificates: 'White-label Certificates',
+    featured_breeder: 'Featured Breeder on Dashboard',
 };
 
+// Grandfathered accounts keep Breeder privileges regardless of tier field.
+function effectiveTier(user) {
+    if (user?.subscription_status === 'grandfathered') return 'breeder';
+    return user?.membership_tier || 'free';
+}
+
 export function checkPlanLimit(user, limitType, currentCount = 0) {
-    const tier = user?.membership_tier || 'free';
+    const tier = effectiveTier(user);
     const limits = PLAN_LIMITS[tier];
-    
+
     if (limitType === 'geckos') {
         return {
             allowed: currentCount < limits.geckos,
             limit: limits.geckos,
             current: currentCount,
-            tier
+            tier,
         };
     }
-    
+    if (limitType === 'breeding_pairs') {
+        return {
+            allowed: currentCount < limits.breeding_pairs,
+            limit: limits.breeding_pairs,
+            current: currentCount,
+            tier,
+        };
+    }
+
     return {
         allowed: limits.features.includes(limitType),
         feature: limitType,
-        tier
+        tier,
     };
 }
 
 export function canUseFeature(user, feature) {
-    const tier = user?.membership_tier || 'free';
+    const tier = effectiveTier(user);
     const limits = PLAN_LIMITS[tier];
     return limits.features.includes(feature);
 }
 
 export function getGeckoLimit(user) {
-    const tier = user?.membership_tier || 'free';
+    const tier = effectiveTier(user);
     return PLAN_LIMITS[tier].geckos;
 }
 
+export function getBreedingPairLimit(user) {
+    const tier = effectiveTier(user);
+    return PLAN_LIMITS[tier].breeding_pairs;
+}
+
+export { PLAN_LIMITS, effectiveTier };
+
 export default function PlanLimitModal({ isOpen, onClose, limitType, currentCount, featureName }) {
     const isGeckoLimit = limitType === 'geckos';
+    const isPairLimit = limitType === 'breeding_pairs';
     
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
@@ -80,18 +122,27 @@ export default function PlanLimitModal({ isOpen, onClose, limitType, currentCoun
                         </div>
                     </div>
                     <DialogTitle className="text-2xl text-center text-white">
-                        {isGeckoLimit ? 'Gecko Limit Reached' : 'Feature Unavailable'}
+                        {isGeckoLimit
+                            ? 'Gecko Limit Reached'
+                            : isPairLimit
+                                ? 'Breeding Pair Limit Reached'
+                                : 'Feature Unavailable'}
                     </DialogTitle>
                     <DialogDescription className="text-center text-slate-400 mt-2">
                         {isGeckoLimit ? (
                             <>
                                 You've reached the limit of <strong className="text-white">{currentCount} geckos</strong> on your current plan.
-                                Upgrade to add more geckos to your collection!
+                                Upgrade to add more geckos to your collection.
+                            </>
+                        ) : isPairLimit ? (
+                            <>
+                                You've reached the limit of <strong className="text-white">{currentCount} active breeding pairs</strong> on your current plan.
+                                Upgrade for more.
                             </>
                         ) : (
                             <>
                                 <strong className="text-white">{featureName || FEATURE_NAMES[limitType] || limitType}</strong> is not available on your current plan.
-                                Upgrade to unlock this feature!
+                                Upgrade to unlock this feature.
                             </>
                         )}
                     </DialogDescription>
@@ -104,15 +155,15 @@ export default function PlanLimitModal({ isOpen, onClose, limitType, currentCoun
                             <span className="font-semibold text-white">Upgrade Benefits</span>
                         </div>
                         <ul className="space-y-2 text-sm">
-                            {isGeckoLimit ? (
+                            {isGeckoLimit || isPairLimit ? (
                                 <>
                                     <li className="flex items-center gap-2 text-slate-300">
                                         <Check className="w-4 h-4 text-emerald-400" />
-                                        <span>Keeper: Up to 50 geckos</span>
+                                        <span>Keeper: 50 geckos &amp; 5 breeding pairs</span>
                                     </li>
                                     <li className="flex items-center gap-2 text-slate-300">
                                         <Check className="w-4 h-4 text-emerald-400" />
-                                        <span>Breeder: Unlimited geckos</span>
+                                        <span>Breeder: Unlimited geckos &amp; pairs</span>
                                     </li>
                                 </>
                             ) : (

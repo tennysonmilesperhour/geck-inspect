@@ -16,7 +16,7 @@ import {
     Users, Shield, Award, Mail, Trash2, Search,
     MoreVertical, Crown, Star, MessageSquare, Loader2, Eye, Calendar, Activity, ExternalLink, ArrowUpDown
 } from 'lucide-react';
-import { formatDistanceToNowStrict } from 'date-fns';
+import { format, formatDistanceToNowStrict } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
@@ -34,7 +34,6 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 import { Textarea } from '@/components/ui/textarea';
-import { format } from 'date-fns';
 
 const SORT_OPTIONS = [
     { value: 'newest', label: 'Newest first' },

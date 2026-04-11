@@ -2,6 +2,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import { Gecko, BreedingPlan, Egg, User } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import { notifyFollowersNewBreedingPlan } from '@/components/notifications/NotificationService';
+import PlanLimitModal, { checkPlanLimit } from '@/components/subscription/PlanLimitChecker';
 // Extracted sub-components (previously inlined at the top of this file)
 import PlanDetails from '../components/breeding/PlanDetails';
 import BreedingPlanCard from '../components/breeding/BreedingPlanCard';
@@ -43,6 +44,7 @@ export default function BreedingPage() {
     const [breedingPlans, setBreedingPlans] = useState([]);
     const [geckos, setGeckos] = useState([]);
     const [allEggs, setAllEggs] = useState([]);
+    const [showPairLimitModal, setShowPairLimitModal] = useState(false);
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [expandedPlanIds, setExpandedPlanIds] = useState(new Set());
@@ -135,6 +137,15 @@ export default function BreedingPage() {
     const handleCreatePlan = async () => {
         if (!newPlan.sire_id || !newPlan.dam_id) {
             toast({ title: "Missing Selection", description: "Please select both a sire and a dam.", variant: "destructive" });
+            return;
+        }
+        // Gate by the user's tier's breeding-pair limit. Only plans that
+        // are still "active" (not archived) count toward the cap.
+        const activePairCount = breedingPlans.filter(p => !p.archived).length;
+        const limitCheck = checkPlanLimit(user, 'breeding_pairs', activePairCount);
+        if (!limitCheck.allowed) {
+            setIsModalOpen(false);
+            setShowPairLimitModal(true);
             return;
         }
         try {
@@ -801,6 +812,12 @@ export default function BreedingPage() {
                         </DialogFooter>
                     </DialogContent>
                 </Dialog>
+                <PlanLimitModal
+                    isOpen={showPairLimitModal}
+                    onClose={() => setShowPairLimitModal(false)}
+                    limitType="breeding_pairs"
+                    currentCount={breedingPlans.filter(p => !p.archived).length}
+                />
             </div>
         </div>
     );
