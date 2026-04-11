@@ -12,17 +12,22 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Search, DollarSign, MapPin, Heart, ShoppingBag, GitBranch, ArrowUpDown } from 'lucide-react';
+import { Search, DollarSign, MapPin, Heart, ShoppingBag, GitBranch, ArrowUpDown, LayoutGrid, Grid3x3 } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
 import { useNavigate, Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import MessageUserButton from '../components/ui/MessageUserButton';
 
-// Marketplace-specific Gecko Card
-const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike, onViewLineage }) => {
+// Marketplace-specific Gecko Card. `size` switches between the two
+// grid densities: 'regular' mirrors MyGeckos' tighter look (more cards
+// per row, smaller type) and 'large' keeps the original spacious
+// 4-up layout.
+const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike, onViewLineage, size = 'large' }) => {
     const getSexIcon = (sex) => sex === 'Male' ? '♂' : sex === 'Female' ? '♀' : '?';
     const getSexColor = (sex) => sex === 'Male' ? 'text-blue-400' : sex === 'Female' ? 'text-pink-400' : 'text-gray-400';
+
+    const isRegular = size === 'regular';
 
     return (
         <Card className="overflow-hidden group-hover:border-emerald-500/50 group-hover:shadow-lg group-hover:shadow-emerald-500/10 transition-colors duration-200 h-full flex flex-col bg-slate-900 border-slate-800">
@@ -37,7 +42,7 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                 />
                 {/* Sex icon in top left */}
                 <div className="absolute top-2 left-2">
-                    <span className={`${getSexColor(gecko.sex)} text-3xl font-bold drop-shadow-lg`}>
+                    <span className={`${getSexColor(gecko.sex)} ${isRegular ? 'text-2xl' : 'text-3xl'} font-bold drop-shadow-lg`}>
                         {getSexIcon(gecko.sex)}
                     </span>
                 </div>
@@ -49,30 +54,32 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                             e.stopPropagation();
                             onToggleLike(gecko.id);
                         }}
-                        className={`absolute top-2 right-2 bg-black/50 hover:bg-black/70 ${isLiked ? 'text-pink-500' : 'text-white'}`}
+                        className={`absolute top-2 right-2 ${isRegular ? 'h-7 w-7' : ''} bg-black/50 hover:bg-black/70 ${isLiked ? 'text-pink-500' : 'text-white'}`}
                     >
-                        <Heart className={`w-5 h-5 ${isLiked ? 'fill-pink-500' : ''}`} />
+                        <Heart className={`${isRegular ? 'w-4 h-4' : 'w-5 h-5'} ${isLiked ? 'fill-pink-500' : ''}`} />
                     </Button>
                 )}
             </div>
-            <CardContent className="p-4 flex-grow flex flex-col">
-                <h3 className="font-semibold text-lg truncate text-slate-100">{gecko.name}</h3>
-                <p className="text-sm text-emerald-400 font-bold flex items-center gap-1">
-                    <DollarSign className="w-4 h-4" />
+            <CardContent className={`${isRegular ? 'p-3' : 'p-4'} flex-grow flex flex-col`}>
+                <h3 className={`font-semibold ${isRegular ? 'text-sm' : 'text-lg'} truncate text-slate-100`}>{gecko.name}</h3>
+                <p className={`${isRegular ? 'text-xs' : 'text-sm'} text-emerald-400 font-bold flex items-center gap-1`}>
+                    <DollarSign className={isRegular ? 'w-3 h-3' : 'w-4 h-4'} />
                     {gecko.asking_price ? `$${gecko.asking_price}` : 'Inquire for price'}
                 </p>
-                <p className="text-xs text-slate-400 mt-1 line-clamp-2">{gecko.morphs_traits}</p>
-                
-                <div className="mt-auto pt-4 space-y-3">
-                    <div className="flex items-center gap-2 text-sm text-slate-300">
-                        <Link 
+                {gecko.morphs_traits && (
+                    <p className={`${isRegular ? 'text-[10px]' : 'text-xs'} text-slate-400 mt-1 line-clamp-2`}>{gecko.morphs_traits}</p>
+                )}
+
+                <div className={`mt-auto ${isRegular ? 'pt-2 space-y-2' : 'pt-4 space-y-3'}`}>
+                    <div className={`flex items-center gap-2 ${isRegular ? 'text-xs' : 'text-sm'} text-slate-300`}>
+                        <Link
                             to={createPageUrl(`PublicProfile?userId=${owner?.id}`)}
                             onClick={(e) => e.stopPropagation()}
-                            className="flex items-center gap-2 group"
+                            className="flex items-center gap-2 group min-w-0"
                         >
-                            <img 
-                                src={owner?.profile_image_url || `https://ui-avatars.com/api/?name=${owner?.full_name?.charAt(0)}&background=random`} 
-                                className="w-6 h-6 rounded-lg group-hover:opacity-80 transition-opacity" 
+                            <img
+                                src={owner?.profile_image_url || `https://ui-avatars.com/api/?name=${owner?.full_name?.charAt(0)}&background=random`}
+                                className={`${isRegular ? 'w-5 h-5' : 'w-6 h-6'} rounded-lg group-hover:opacity-80 transition-opacity shrink-0`}
                                 alt={owner?.full_name}
                                 loading="lazy"
                                 decoding="async"
@@ -81,28 +88,28 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                             <span className="truncate group-hover:underline">{owner?.full_name || 'Breeder'}</span>
                         </Link>
                     </div>
-                    {owner?.location && (
+                    {owner?.location && !isRegular && (
                        <div className="flex items-center gap-1 text-xs text-slate-400">
                            <MapPin className="w-3 h-3" />
                            <span>{owner.location}</span>
                        </div>
                     )}
-                    <div className="flex gap-2">
+                    <div className={`flex ${isRegular ? 'gap-1' : 'gap-2'}`}>
                         <Button
                             variant="outline"
                             size="sm"
                             onClick={(e) => onViewLineage(gecko.id, e)}
-                            className="flex-1"
+                            className={`flex-1 ${isRegular ? 'h-7 text-[10px] px-1.5' : ''}`}
                         >
-                            <GitBranch className="w-3 h-3 mr-1" /> Lineage
+                            <GitBranch className={`${isRegular ? 'w-3 h-3' : 'w-3 h-3'} mr-1`} /> Lineage
                         </Button>
                        {currentUser && owner && currentUser.id !== owner.id && (
-                           <MessageUserButton 
+                           <MessageUserButton
                               recipientEmail={owner.email}
                               recipientName={owner.full_name}
                               variant="outline"
                               size="sm"
-                              className="flex-1"
+                              className={`flex-1 ${isRegular ? 'h-7 text-[10px] px-1.5' : ''}`}
                            />
                        )}
                     </div>
@@ -124,6 +131,18 @@ export default function MarketplaceBuyPage() {
     const [hasMoreGeckos, setHasMoreGeckos] = useState(true);
     const [sexFilter, setSexFilter] = useState('all');
     const [sortBy, setSortBy] = useState('newest');
+    // Persist the card size preference so browsers who prefer one density
+    // don't have to flip it every visit. Defaults to 'regular' (tighter,
+    // matches MyGeckos) for maximum geckos-per-viewport.
+    const [cardSize, setCardSize] = useState(() => {
+        if (typeof window === 'undefined') return 'regular';
+        return window.localStorage?.getItem('marketplaceBuyCardSize') || 'regular';
+    });
+    useEffect(() => {
+        if (typeof window !== 'undefined') {
+            window.localStorage?.setItem('marketplaceBuyCardSize', cardSize);
+        }
+    }, [cardSize]);
     const navigate = useNavigate();
 
     const fetchGeckoBatch = useCallback(async (offset = 0, append = false) => {
@@ -346,6 +365,38 @@ export default function MarketplaceBuyPage() {
                             <SelectItem value="name">Name (A-Z)</SelectItem>
                         </SelectContent>
                     </Select>
+                    {/* Card size toggle — 'regular' packs the grid like
+                        MyGeckos, 'large' shows a roomier 4-up layout. */}
+                    <div className="flex items-center gap-1 bg-slate-950 border border-slate-700 rounded-md p-0.5">
+                        <button
+                            type="button"
+                            onClick={() => setCardSize('regular')}
+                            className={`flex items-center gap-1 px-2.5 h-8 rounded text-xs font-medium transition-colors ${
+                                cardSize === 'regular'
+                                    ? 'bg-emerald-600 text-white'
+                                    : 'text-slate-400 hover:text-slate-200'
+                            }`}
+                            aria-pressed={cardSize === 'regular'}
+                            title="Regular card size"
+                        >
+                            <Grid3x3 className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Regular</span>
+                        </button>
+                        <button
+                            type="button"
+                            onClick={() => setCardSize('large')}
+                            className={`flex items-center gap-1 px-2.5 h-8 rounded text-xs font-medium transition-colors ${
+                                cardSize === 'large'
+                                    ? 'bg-emerald-600 text-white'
+                                    : 'text-slate-400 hover:text-slate-200'
+                            }`}
+                            aria-pressed={cardSize === 'large'}
+                            title="Large card size"
+                        >
+                            <LayoutGrid className="w-3.5 h-3.5" />
+                            <span className="hidden sm:inline">Large</span>
+                        </button>
+                    </div>
                 </div>
 
                 {/* Result count */}
@@ -361,16 +412,21 @@ export default function MarketplaceBuyPage() {
                     </div>
                 ) : (
                     <>
-                        <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                        <div className={
+                            cardSize === 'large'
+                                ? 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6'
+                                : 'grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4'
+                        }>
                             {filteredGeckos.map(gecko => (
                                <div key={gecko.id} onClick={() => handleViewDetails(gecko.id)} className="cursor-pointer group">
-                                   <MarketplaceGeckoCard 
-                                       gecko={gecko} 
-                                       owner={owners[gecko.created_by]} 
+                                   <MarketplaceGeckoCard
+                                       gecko={gecko}
+                                       owner={owners[gecko.created_by]}
                                        currentUser={currentUser}
                                        isLiked={likedGeckoIds.has(gecko.id)}
                                        onToggleLike={handleToggleLike}
                                        onViewLineage={handleViewLineage}
+                                       size={cardSize}
                                    />
                                </div>
                             ))}

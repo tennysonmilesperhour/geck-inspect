@@ -110,15 +110,16 @@ function ListingCard({ gecko, user, onEdit, onToggleVisible, onUnlist, onMarkSol
     ? formatDistanceToNowStrict(new Date(gecko.updated_date), { addSuffix: true })
     : null;
 
-  // One standardized card size — `aspect-square` image on top keeps every
-  // card identical regardless of photo dimensions, and the inner padding /
-  // button sizes are tight enough that three-up and four-up grids both
-  // read well without each card ballooning.
+  // Card sizing deliberately mirrors the MyGeckos GeckoCard so Sell and
+  // My Geckos look like the same shelf side-by-side: same fixed image
+  // height (`h-40 sm:h-56`), same grid breakpoints on the parent, same
+  // tight body padding. Prior version used `aspect-square` which made
+  // these cards noticeably larger than their MyGeckos siblings.
   return (
     <Card className="bg-slate-900 border-slate-800 overflow-hidden flex flex-col group hover:border-emerald-500/40 transition-colors rounded-xl">
-      {/* Photo — fixed square aspect so cards line up regardless of
-          source image dimensions. `object-cover` crops to fill. */}
-      <div className="relative aspect-square bg-slate-950 overflow-hidden">
+      {/* Photo — fixed height matches MyGeckos GeckoCard. `object-cover`
+          crops to fill regardless of source image dimensions. */}
+      <div className="relative h-40 sm:h-56 bg-slate-950 overflow-hidden">
         {photo ? (
           <img
             src={photo}
@@ -500,7 +501,7 @@ export default function MarketplaceSellPage() {
               </p>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {liveListings.map((g) => (
                 <ListingCard
                   key={g.id}
@@ -525,7 +526,7 @@ export default function MarketplaceSellPage() {
               count={hiddenListings.length}
               description="Marked For Sale but toggled off the marketplace. One click to republish."
             />
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {hiddenListings.map((g) => (
                 <ListingCard
                   key={g.id}
@@ -561,7 +562,7 @@ export default function MarketplaceSellPage() {
               </Link>
             </div>
           ) : (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
               {availableToList.map((g) => (
                 <ListingCard
                   key={g.id}
