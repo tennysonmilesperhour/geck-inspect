@@ -191,16 +191,15 @@ export default function NotificationsPage() {
                             </p>
                         </div>
                     </div>
-                    {unreadCount > 0 && (
-                        <Button
-                            onClick={markAllAsRead}
-                            variant="outline"
-                            className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 shrink-0"
-                        >
-                            <Check className="w-4 h-4 mr-1.5" />
-                            Mark all read
-                        </Button>
-                    )}
+                    <Button
+                        onClick={markAllAsRead}
+                        disabled={unreadCount === 0}
+                        variant="outline"
+                        className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                        <Check className="w-4 h-4 mr-1.5" />
+                        Mark all read
+                    </Button>
                 </div>
 
                 <Card className="bg-slate-900 border-slate-800">

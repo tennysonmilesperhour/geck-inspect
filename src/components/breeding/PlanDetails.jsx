@@ -36,7 +36,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Edit, Trash2, Egg as EggIcon, Calendar as CalendarIcon } from 'lucide-react';
 import { format, addDays, differenceInDays } from 'date-fns';
-import { generateHatchedGeckoId } from '@/components/shared/geckoIdUtils';
+import { generateHatchedGeckoIdFromEgg } from '@/components/shared/geckoIdUtils';
 
 /**
  * Expanded-state view of a single breeding plan — shows all eggs with
@@ -123,16 +123,26 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
                     const sire = geckos.find(g => g.id === plan.sire_id);
                     const dam = geckos.find(g => g.id === plan.dam_id);
 
-                    // Count existing offspring from this breeding plan this season that have a gecko_id
+                    // Pull every egg for this plan so generateHatchedGeckoIdFromEgg
+                    // can group by clutch (lay_date) and derive offspring number
+                    // + egg letter for the new ID format.
                     const allEggs = await Egg.filter({ breeding_plan_id: plan.id });
+
+                    // Simple 1-based offspring number for the human-readable name
+                    // — the ID code carries the authoritative sequence.
                     const hatchedEggsWithGeckos = allEggs.filter(e => e.status === 'Hatched' && e.gecko_id);
-                    const offspringNumber = hatchedEggsWithGeckos.length + 1; // +1 for the current egg being hatched
+                    const offspringNumber = hatchedEggsWithGeckos.length + 1;
 
                     // Generate name: SireName x DamName #1
                     const geckoName = `${sire?.name || 'Unknown'} x ${dam?.name || 'Unknown'} #${offspringNumber}`;
 
-                    // Generate ID code from parent IDs
-                    const geckoIdCode = generateHatchedGeckoId(sire, dam, offspringNumber);
+                    // New April 2026 format: (SiFirst2)(DaFirst2)(offspringNum)(egg letter)(YY)
+                    const geckoIdCode = generateHatchedGeckoIdFromEgg({
+                        sire,
+                        dam,
+                        egg: currentEgg,
+                        allEggsForPair: allEggs,
+                    });
 
                     // Calculate incubation days
                     const incubationDays = differenceInDays(new Date(hatchDate), new Date(currentEgg.lay_date));

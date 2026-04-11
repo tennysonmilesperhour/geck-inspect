@@ -18,7 +18,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { generateHatchedGeckoId, generateFounderGeckoId } from '@/components/shared/geckoIdUtils';
+import { generateHatchedGeckoIdFromEgg, generateFounderGeckoId } from '@/components/shared/geckoIdUtils';
 
 // Helper to generate Google Calendar link
 const createGoogleCalendarLink = (title, start, end, description, location) => {
@@ -84,10 +84,17 @@ export default function BreedingPairsPage() {
         }
 
         try {
-            // Auto-generate the new gecko's ID
-            const siblings = geckos.filter(g => g.sire_id === sire.id && g.dam_id === dam.id);
-            const offspringNumber = siblings.length + 1;
-            const newGeckoIdCode = generateHatchedGeckoId(sire, dam, offspringNumber);
+            // Auto-generate the new gecko's ID using the new April 2026 format.
+            // Filter `eggs` down to this pair's eggs (both laid and already
+            // hatched) so generateHatchedGeckoIdFromEgg can compute clutch
+            // grouping + offspring number.
+            const pairEggs = eggs.filter(e => e.breeding_plan_id === plan.id);
+            const newGeckoIdCode = generateHatchedGeckoIdFromEgg({
+                sire,
+                dam,
+                egg,
+                allEggsForPair: pairEggs,
+            });
 
             // Create new gecko with auto-populated fields
             const newGecko = await Gecko.create({
