@@ -141,7 +141,9 @@ function LayoutContent({ children, currentPageName }) {
     document.documentElement.classList.add('dark');
   }, []);
 
-  // Notification polling - always fetch fresh on mount, then every 60 seconds
+  // Notification polling - always fetch fresh on mount, every 60 seconds,
+  // AND on any `unread_counts_changed` window event (so marking something
+  // read on another page updates the header badge immediately).
   useEffect(() => {
   let errorCount = 0;
   const MAX_ERRORS = 3;
@@ -150,6 +152,10 @@ function LayoutContent({ children, currentPageName }) {
     const fetchUnread = async (forceRefresh = false) => {
       try {
         const cacheKey = `notifications_${user.email}`;
+
+        if (forceRefresh) {
+          dataCache.clear(cacheKey);
+        }
 
         if (!forceRefresh) {
           const cached = dataCache.get(cacheKey);
@@ -182,54 +188,77 @@ function LayoutContent({ children, currentPageName }) {
 
     fetchUnread(true); // Always fresh on mount
     const interval = setInterval(() => fetchUnread(false), 60 * 1000);
-    return () => clearInterval(interval);
+    const onChange = (e) => {
+      if (!e?.detail?.kind || e.detail.kind === 'notifications') {
+        fetchUnread(true);
+      }
+    };
+    window.addEventListener('unread_counts_changed', onChange);
+    return () => {
+      clearInterval(interval);
+      window.removeEventListener('unread_counts_changed', onChange);
+    };
   } else {
     setUnreadNotificationsCount(0);
   }
   }, [user]);
   
-  // Aggressive message polling with circuit breaker
+  // Unread message polling + event-driven refresh. Previously polled
+  // every 30 minutes with a cache that never invalidated — which is why
+  // the badge didn't clear after reading a conversation. Now:
+  //   * Polls every 60s
+  //   * Invalidates the cache on force-refresh
+  //   * Listens for `unread_counts_changed` so selectConversation()
+  //     updates the header badge immediately without a reload.
   useEffect(() => {
     let errorCount = 0;
     const MAX_ERRORS = 3;
 
     if (user && user.email) {
-      const fetchUnreadMessages = async () => {
+      const cacheKey = `unread_messages_count_${user.email}`;
+      const fetchUnreadMessages = async (forceRefresh = false) => {
         try {
-          const cacheKey = `unread_messages_count_${user.email}`;
-          let cachedCount = dataCache.get(cacheKey);
-
-          if (cachedCount !== null) {
+          if (forceRefresh) {
+            dataCache.clear(cacheKey);
+          }
+          const cachedCount = dataCache.get(cacheKey);
+          if (!forceRefresh && cachedCount !== null && cachedCount !== undefined) {
             setUnreadMessages(cachedCount);
-            errorCount = 0; // Reset error count on cache hit
-          } else if (dataCache.canMakeRequest(cacheKey) && errorCount < MAX_ERRORS) {
+            errorCount = 0;
+            return;
+          }
+          if (dataCache.canMakeRequest(cacheKey) && errorCount < MAX_ERRORS) {
             dataCache.markRequestMade(cacheKey);
             const unread = await retryApiCall(() =>
               base44.entities.DirectMessage.filter({ recipient_email: user.email, is_read: false })
             );
             setUnreadMessages(unread.length);
             dataCache.set(cacheKey, unread.length);
-            errorCount = 0; // Reset on success
+            errorCount = 0;
           }
         } catch (e) {
           errorCount++;
-          // Silently handle database connectivity errors
           if (e.message?.includes('replica set') || e.message?.includes('Timeout') || e.response?.status === 500) {
-            console.log(`Database temporarily unavailable (attempt ${errorCount}/${MAX_ERRORS}). Using cached data.`);
-            // Keep existing cached value if available
-            const cachedCount = dataCache.get(`unread_messages_count_${user.email}`);
-            if (cachedCount !== null && cachedCount !== undefined) {
-              setUnreadMessages(cachedCount);
-            }
+            const cached = dataCache.get(cacheKey);
+            if (cached !== null && cached !== undefined) setUnreadMessages(cached);
           } else if (e.response?.status !== 429) {
             setUnreadMessages(0);
           }
         }
       };
 
-      fetchUnreadMessages();
-      const interval = setInterval(fetchUnreadMessages, 30 * 60 * 1000); // Every 30 minutes
-      return () => clearInterval(interval);
+      fetchUnreadMessages(true);
+      const interval = setInterval(() => fetchUnreadMessages(false), 60 * 1000);
+      const onChange = (e) => {
+        if (!e?.detail?.kind || e.detail.kind === 'messages') {
+          fetchUnreadMessages(true);
+        }
+      };
+      window.addEventListener('unread_counts_changed', onChange);
+      return () => {
+        clearInterval(interval);
+        window.removeEventListener('unread_counts_changed', onChange);
+      };
     } else {
       setUnreadMessages(0);
     }
@@ -986,26 +1015,64 @@ function LayoutContent({ children, currentPageName }) {
             background: linear-gradient(135deg, #22c55e 0%, #86efac 100%) !important;
           }
 
+          /* Header action group: message / bell / profile sit in a
+             single rounded container with tight spacing so they read
+             as a set, not three loose islands. */
+          .gecko-header-actions {
+            display: inline-flex;
+            align-items: center;
+            gap: 2px;
+            padding: 4px;
+            border-radius: 12px;
+            background: rgba(255, 255, 255, 0.3);
+            border: 1px solid rgba(86, 107, 95, 0.18);
+            backdrop-filter: blur(6px);
+          }
+          .gecko-header-action {
+            position: relative;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 9px;
+            color: #4a5d52;
+            transition: background 0.15s ease, color 0.15s ease;
+          }
+          .gecko-header-action:hover {
+            background: rgba(86, 107, 95, 0.15);
+            color: #1f2937;
+          }
+          .gecko-header-action svg {
+            width: 20px;
+            height: 20px;
+          }
           .notification-badge {
-                            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-                            color: white;
-                            border-radius: 50%;
-                            width: 18px;
-                            height: 18px;
-                            display: flex;
-                            align-items: center;
-                            justify-content: center;
-                            font-size: 10px;
-                            font-weight: 700;
-                            border: 2px solid var(--gecko-dark);
-                            box-shadow: 0 0 10px rgba(239, 68, 68, 0.5);
-                            animation: pulse-notification 2s infinite;
-                          }
-
-                          @keyframes pulse-notification {
-                            0%, 100% { transform: scale(1); }
-                            50% { transform: scale(1.1); }
-                          }
+            position: absolute;
+            top: -2px;
+            right: -2px;
+            min-width: 18px;
+            height: 18px;
+            padding: 0 5px;
+            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+            color: white;
+            border-radius: 9999px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            font-weight: 700;
+            line-height: 1;
+            border: 2px solid #e8efe3;
+            box-shadow: 0 2px 6px rgba(220, 38, 38, 0.35);
+          }
+          @keyframes pulse-notification {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.08); }
+          }
+          .notification-badge.is-pulsing {
+            animation: pulse-notification 2s infinite;
+          }
 
                           /* Toast fade out animation */
                           [data-state="closed"] {
@@ -1506,27 +1573,34 @@ function LayoutContent({ children, currentPageName }) {
               </button>
 
               <div className="flex items-center gap-2">
-                {user ?
-                  <>
-                    <Link to={createPageUrl("Messages")} className="relative hover:bg-sage-200 p-2 rounded-lg transition-colors duration-200">
-                      <Mail className="w-5 h-5 text-sage-600" />
-                      {unreadMessages > 0 && <span className="notification-badge">{unreadMessages}</span>}
+                {user ? (
+                  <div className="gecko-header-actions">
+                    <Link to={createPageUrl("Messages")} className="gecko-header-action" aria-label="Messages">
+                      <Mail />
+                      {unreadMessages > 0 && (
+                        <span className="notification-badge">
+                          {unreadMessages > 99 ? '99+' : unreadMessages}
+                        </span>
+                      )}
                     </Link>
-                    <div className="relative">
-                      <Link to={createPageUrl("Notifications")} className="relative hover:bg-sage-200 p-2 rounded-lg transition-colors duration-200 block">
-                        <Bell className="w-5 h-5 text-sage-600" />
-                      </Link>
-                      {unreadNotificationsCount > 0 && <span className="notification-badge pointer-events-none">{unreadNotificationsCount}</span>}
-                    </div>
-                    <Link to={createPageUrl("MyProfile")} className="hover:bg-sage-200 p-2 rounded-lg transition-colors duration-200">
-                      <Users className="w-5 h-5 text-sage-600" />
+                    <Link to={createPageUrl("Notifications")} className="gecko-header-action" aria-label="Notifications">
+                      <Bell />
+                      {unreadNotificationsCount > 0 && (
+                        <span className="notification-badge">
+                          {unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}
+                        </span>
+                      )}
                     </Link>
-                  </> :
+                    <Link to={createPageUrl("MyProfile")} className="gecko-header-action" aria-label="Profile">
+                      <Users />
+                    </Link>
+                  </div>
+                ) : (
                   <Button onClick={handleLogin} size="sm" className="bg-gradient-to-r from-sage-600 to-earth-600 hover:from-sage-700 hover:to-earth-700">
                     <UserPlus className="w-4 h-4 mr-1" />
                     Login
                   </Button>
-                }
+                )}
               </div>
             </div>
           </header>
@@ -1545,27 +1619,34 @@ function LayoutContent({ children, currentPageName }) {
               </button>
 
               <div className="flex items-center gap-2">
-                {user ?
-                  <>
-                    <Link to={createPageUrl("Messages")} className="relative hover:bg-sage-200 p-2 rounded-lg transition-colors duration-200">
-                      <Mail className="w-5 h-5 text-sage-600" />
-                      {unreadMessages > 0 && <span className="notification-badge">{unreadMessages}</span>}
+                {user ? (
+                  <div className="gecko-header-actions">
+                    <Link to={createPageUrl("Messages")} className="gecko-header-action" aria-label="Messages">
+                      <Mail />
+                      {unreadMessages > 0 && (
+                        <span className="notification-badge">
+                          {unreadMessages > 99 ? '99+' : unreadMessages}
+                        </span>
+                      )}
                     </Link>
-                     <div className="relative">
-                       <Link to={createPageUrl("Notifications")} className="relative hover:bg-sage-200 p-2 rounded-lg transition-colors duration-200 block">
-                         <Bell className="w-5 h-5 text-sage-600" />
-                       </Link>
-                       {unreadNotificationsCount > 0 && <span className="notification-badge pointer-events-none">{unreadNotificationsCount}</span>}
-                    </div>
-                    <Link to={createPageUrl("MyProfile")} className="hover:bg-sage-200 p-2 rounded-lg transition-colors duration-200">
-                      <Users className="w-5 h-5 text-sage-600" />
+                    <Link to={createPageUrl("Notifications")} className="gecko-header-action" aria-label="Notifications">
+                      <Bell />
+                      {unreadNotificationsCount > 0 && (
+                        <span className="notification-badge">
+                          {unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}
+                        </span>
+                      )}
                     </Link>
-                  </> :
-                  <Button onClick={handleLogin} size="sm" className="bg-gradient-to-r from-sage-600 to-earth-600 hover:from-sage-700 to-earth-700">
+                    <Link to={createPageUrl("MyProfile")} className="gecko-header-action" aria-label="Profile">
+                      <Users />
+                    </Link>
+                  </div>
+                ) : (
+                  <Button onClick={handleLogin} size="sm" className="bg-gradient-to-r from-sage-600 to-earth-600 hover:from-sage-700 hover:to-earth-700">
                     <UserPlus className="w-4 h-4 mr-1" />
                     Login
                   </Button>
-                }
+                )}
               </div>
             </div>
           </header>
