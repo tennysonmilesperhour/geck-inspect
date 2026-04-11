@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import {
   LayoutDashboard,
   Users,
@@ -102,6 +102,19 @@ const SECTION_TITLES = {
 
 export default function AdminPanel() {
   const [section, setSection] = useState('overview');
+  // Prefill payload passed into MassMessaging when the Changelog manager
+  // clicks "Broadcast". Consumed on mount by the target component.
+  const [messagingPrefill, setMessagingPrefill] = useState(null);
+
+  useEffect(() => {
+    const onPrefill = (e) => {
+      if (!e.detail) return;
+      setMessagingPrefill(e.detail);
+      setSection('messaging');
+    };
+    window.addEventListener('admin:prefill-message', onPrefill);
+    return () => window.removeEventListener('admin:prefill-message', onPrefill);
+  }, []);
 
   const renderSection = () => {
     switch (section) {
@@ -112,7 +125,12 @@ export default function AdminPanel() {
       case 'moderation':
         return <ContentModeration />;
       case 'messaging':
-        return <MassMessaging />;
+        return (
+          <MassMessaging
+            prefill={messagingPrefill}
+            onPrefillConsumed={() => setMessagingPrefill(null)}
+          />
+        );
       case 'changelog':
         return <ChangeLogManager />;
       case 'morph_guides':

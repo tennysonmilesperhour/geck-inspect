@@ -321,9 +321,12 @@ export default function Lineage() {
     }, [generations]);
 
     useEffect(() => {
+        // Accept both `geckoId` and `geckoid` — some older call sites
+        // passed the whole thing through createPageUrl() which lowercases
+        // the query string and turned `geckoId` into `geckoid`.
         const params = new URLSearchParams(location.search);
-        const geckoIdFromUrl = params.get('geckoId');
-        
+        const geckoIdFromUrl = params.get('geckoId') || params.get('geckoid');
+
         if (geckoIdFromUrl && allGeckosMap[geckoIdFromUrl] && !isLoading) {
             handleSelectGecko(geckoIdFromUrl);
         }

@@ -478,7 +478,9 @@ function LayoutContent({ children, currentPageName }) {
       return FALLBACK_NAV_ITEMS;
     }
 
-    const enabled = pageConfigs.filter(p => p.is_enabled).sort((a, b) => a.order - b.order);
+    const enabled = pageConfigs
+      .filter(p => p.is_enabled)
+      .sort((a, b) => (a.order_position ?? 0) - (b.order_position ?? 0));
     
     return {
       collection: enabled.filter(p => p.category === 'collection'),

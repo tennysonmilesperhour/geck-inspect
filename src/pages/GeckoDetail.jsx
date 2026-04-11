@@ -343,7 +343,7 @@ export default function GeckoDetail() {
                                             <GitBranch className="w-4 h-4 mr-2" /> View Pedigree
                                         </Button>
                                     </Link>
-                                    <Link to={createPageUrl(`Lineage?geckoId=${gecko.id}`)}>
+                                    <Link to={`${createPageUrl('Lineage')}?geckoId=${gecko.id}`}>
                                         <Button variant="outline" size="sm" className="w-full border-slate-600 hover:bg-slate-800">
                                             Classic Lineage
                                         </Button>

@@ -235,12 +235,15 @@ export default function MarketplaceBuyPage() {
     };
     
     const handleViewDetails = (geckoId) => {
-        navigate(createPageUrl(`GeckoDetail?id=${geckoId}`));
+        // createPageUrl lowercases its input, so the query param name has to
+        // be appended AFTER the call — otherwise `?id=` becomes part of the
+        // lowercased string and Lineage.jsx can't read it case-sensitively.
+        navigate(`${createPageUrl('GeckoDetail')}?id=${geckoId}`);
     };
 
     const handleViewLineage = (geckoId, e) => {
         e.stopPropagation();
-        navigate(createPageUrl(`Lineage?geckoId=${geckoId}`));
+        navigate(`${createPageUrl('Lineage')}?geckoId=${geckoId}`);
     };
 
     const filteredGeckos = geckos.filter(gecko =>

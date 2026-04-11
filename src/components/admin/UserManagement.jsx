@@ -1,14 +1,22 @@
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { User, Notification, DirectMessage, Gecko, GeckoImage, ForumPost, UserActivity } from '@/entities/all';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { useToast } from "@/components/ui/use-toast";
-import { 
-    Users, Shield, Award, Mail, Trash2, Search, UserPlus, 
-    MoreVertical, Crown, Star, MessageSquare, Loader2, Eye, Calendar, Activity, ExternalLink 
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+import {
+    Users, Shield, Award, Mail, Trash2, Search,
+    MoreVertical, Crown, Star, MessageSquare, Loader2, Eye, Calendar, Activity, ExternalLink, ArrowUpDown
 } from 'lucide-react';
+import { formatDistanceToNowStrict } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
@@ -28,11 +36,40 @@ import {
 import { Textarea } from '@/components/ui/textarea';
 import { format } from 'date-fns';
 
+const SORT_OPTIONS = [
+    { value: 'newest', label: 'Newest first' },
+    { value: 'oldest', label: 'Oldest (longest tenure)' },
+    { value: 'name_asc', label: 'Name A → Z' },
+    { value: 'name_desc', label: 'Name Z → A' },
+    { value: 'geckos_desc', label: 'Most geckos' },
+    { value: 'geckos_asc', label: 'Fewest geckos' },
+    { value: 'role', label: 'Role (admins first)' },
+    { value: 'expert', label: 'Experts first' },
+];
+
+const ROLE_FILTERS = [
+    { value: 'all', label: 'All users' },
+    { value: 'admin', label: 'Admins only' },
+    { value: 'expert', label: 'Experts only' },
+    { value: 'regular', label: 'Regular users' },
+];
+
+function timeAgo(date) {
+    if (!date) return '—';
+    try {
+        return formatDistanceToNowStrict(new Date(date), { addSuffix: true });
+    } catch {
+        return '—';
+    }
+}
+
 export default function UserManagement() {
     const [users, setUsers] = useState([]);
-    const [filteredUsers, setFilteredUsers] = useState([]);
+    const [geckoCounts, setGeckoCounts] = useState({}); // email -> count
     const [isLoading, setIsLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [sortBy, setSortBy] = useState('newest');
+    const [roleFilter, setRoleFilter] = useState('all');
     const [selectedUser, setSelectedUser] = useState(null);
     const [userDetails, setUserDetails] = useState(null);
     const [actionType, setActionType] = useState('');
@@ -44,9 +81,17 @@ export default function UserManagement() {
     const fetchUsers = async () => {
         setIsLoading(true);
         try {
-            const allUsers = await User.list();
+            const [allUsers, allGeckos] = await Promise.all([
+                User.list(),
+                Gecko.list().catch(() => []),
+            ]);
             setUsers(allUsers);
-            setFilteredUsers(allUsers);
+            // Pre-compute gecko counts per email so sorting is instant.
+            const counts = {};
+            for (const g of allGeckos) {
+                if (g.created_by) counts[g.created_by] = (counts[g.created_by] || 0) + 1;
+            }
+            setGeckoCounts(counts);
         } catch (error) {
             console.error("Failed to fetch users:", error);
             toast({ title: "Error", description: "Could not fetch users.", variant: "destructive" });
@@ -58,13 +103,56 @@ export default function UserManagement() {
         fetchUsers();
     }, []);
 
-    useEffect(() => {
-        const filtered = users.filter(user => 
-            user.full_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-            user.email?.toLowerCase().includes(searchTerm.toLowerCase())
-        );
-        setFilteredUsers(filtered);
-    }, [searchTerm, users]);
+    const filteredUsers = useMemo(() => {
+        let list = [...users];
+
+        // Role filter
+        if (roleFilter === 'admin') list = list.filter(u => u.role === 'admin');
+        else if (roleFilter === 'expert') list = list.filter(u => u.is_expert);
+        else if (roleFilter === 'regular') list = list.filter(u => u.role !== 'admin' && !u.is_expert);
+
+        // Search
+        if (searchTerm) {
+            const q = searchTerm.toLowerCase();
+            list = list.filter(
+                (user) =>
+                    user.full_name?.toLowerCase().includes(q) ||
+                    user.email?.toLowerCase().includes(q) ||
+                    user.breeder_name?.toLowerCase().includes(q) ||
+                    user.location?.toLowerCase().includes(q)
+            );
+        }
+
+        // Sort
+        const byName = (a, b) =>
+            (a.full_name || a.email || '').localeCompare(b.full_name || b.email || '');
+        const byCreatedAsc = (a, b) =>
+            new Date(a.created_date || 0).getTime() - new Date(b.created_date || 0).getTime();
+        list.sort((a, b) => {
+            switch (sortBy) {
+                case 'oldest':
+                    return byCreatedAsc(a, b);
+                case 'name_asc':
+                    return byName(a, b);
+                case 'name_desc':
+                    return -byName(a, b);
+                case 'geckos_desc':
+                    return (geckoCounts[b.email] || 0) - (geckoCounts[a.email] || 0) || byName(a, b);
+                case 'geckos_asc':
+                    return (geckoCounts[a.email] || 0) - (geckoCounts[b.email] || 0) || byName(a, b);
+                case 'role': {
+                    const score = (u) => (u.role === 'admin' ? 2 : u.is_expert ? 1 : 0);
+                    return score(b) - score(a) || byName(a, b);
+                }
+                case 'expert':
+                    return (b.is_expert ? 1 : 0) - (a.is_expert ? 1 : 0) || byName(a, b);
+                case 'newest':
+                default:
+                    return -byCreatedAsc(a, b);
+            }
+        });
+        return list;
+    }, [users, searchTerm, sortBy, roleFilter, geckoCounts]);
 
     const handleViewUserDetails = async (user) => {
         setSelectedUser(user);
@@ -183,21 +271,47 @@ export default function UserManagement() {
     }
 
     return (
-        <Card className="bg-slate-900 border-slate-700">
+        <Card className="bg-slate-900 border-slate-800">
             <CardHeader>
                 <CardTitle className="text-slate-100 flex items-center gap-2">
                     <Users className="w-5 h-5" />
-                    User Management ({filteredUsers.length} users)
+                    User Management
+                    <span className="text-sm font-normal text-slate-500">({filteredUsers.length} of {users.length})</span>
                 </CardTitle>
-                <div className="flex gap-4 items-center">
+                <div className="flex flex-col lg:flex-row gap-3 items-stretch lg:items-center mt-3">
                     <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500" />
                         <Input
-                            placeholder="Search users by name or email..."
+                            placeholder="Search by name, email, breeder, location..."
                             value={searchTerm}
                             onChange={(e) => setSearchTerm(e.target.value)}
-                            className="pl-10 bg-slate-800 border-slate-600 text-slate-100"
+                            className="pl-10 bg-slate-950 border-slate-700 text-slate-100"
                         />
+                    </div>
+                    <div className="flex gap-2">
+                        <Select value={roleFilter} onValueChange={setRoleFilter}>
+                            <SelectTrigger className="w-36 bg-slate-950 border-slate-700 text-slate-200">
+                                <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-900 border-slate-700 text-slate-200">
+                                {ROLE_FILTERS.map(f => (
+                                    <SelectItem key={f.value} value={f.value}>{f.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
+                        <Select value={sortBy} onValueChange={setSortBy}>
+                            <SelectTrigger className="w-52 bg-slate-950 border-slate-700 text-slate-200">
+                                <div className="flex items-center gap-1.5">
+                                    <ArrowUpDown className="w-3.5 h-3.5 text-slate-500" />
+                                    <SelectValue />
+                                </div>
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-900 border-slate-700 text-slate-200">
+                                {SORT_OPTIONS.map(s => (
+                                    <SelectItem key={s.value} value={s.value}>{s.label}</SelectItem>
+                                ))}
+                            </SelectContent>
+                        </Select>
                     </div>
                 </div>
             </CardHeader>
@@ -222,12 +336,18 @@ export default function UserManagement() {
                                         ))}
                                     </div>
                                     <p className="text-sm text-slate-400">{user.email}</p>
-                                    {user.location && <p className="text-xs text-slate-500">{user.location}</p>}
-                                    {user.created_date && (
-                                        <p className="text-xs text-slate-500 mt-1">
-                                            Joined {format(new Date(user.created_date), 'MMM d, yyyy')}
-                                        </p>
-                                    )}
+                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-0.5 mt-1 text-xs text-slate-500">
+                                        {user.location && <span>{user.location}</span>}
+                                        <span className="flex items-center gap-1">
+                                            <Activity className="w-3 h-3" />
+                                            {geckoCounts[user.email] || 0} geckos
+                                        </span>
+                                        {user.created_date && (
+                                            <span>
+                                                joined {timeAgo(user.created_date)}
+                                            </span>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
                             
