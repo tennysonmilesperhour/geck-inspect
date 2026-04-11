@@ -5,6 +5,16 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dna, Grid2X2, Layers, TrendingUp, ShieldCheck, ArrowUp, Search, AlertTriangle, Palette } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
+import {
+  PunnettSquare,
+  AllelePair,
+  OutcomeBar,
+  PolygenicGradient,
+  PigmentLayers,
+  LethalAlleleDiagram,
+  EpistasisDiagram,
+  DoseResponse,
+} from '@/components/genetics/GeneticsDiagrams';
 
 const GENETICS_GUIDE_JSON_LD = {
   '@context': 'https://schema.org',
@@ -130,11 +140,26 @@ const SECTIONS = [
       {
         title: 'Alleles: The Two Copies',
         content: (
+          <>
+            <BulletList items={[
+              'An allele is a specific version of a gene. Every gecko has two alleles per gene — one from each parent.',
+              'Homozygous: the two alleles are identical (written AA or aa). The animal has two of the same thing.',
+              'Heterozygous: the two alleles are different (written Aa). The animal is carrying two different versions of the same gene.',
+              'Whether a trait shows up visually depends on which alleles the gecko carries AND how those alleles interact — dominant, recessive, or incomplete-dominant.',
+              'Locus: the specific address on a chromosome where a given gene lives. Paired chromosomes share matching loci, so your gecko\'s two alleles at a given gene always sit across from each other.',
+            ]} />
+            <AllelePair left="A" right="a" caption="Heterozygous (Aa) — one copy from each parent at the same gene locus." />
+          </>
+        )
+      },
+      {
+        title: 'DNA, Chromosomes, and Gametes',
+        content: (
           <BulletList items={[
-            'An allele is a specific version of a gene. Every gecko has two alleles per gene.',
-            'Homozygous: the two alleles are identical (written AA or aa).',
-            'Heterozygous: the two alleles are different (written Aa).',
-            'Whether a trait shows up visually depends on which alleles the gecko carries and how they interact — dominant, recessive, or incomplete-dominant.',
+            'DNA is the molecule that carries the genetic instructions. A gene is a stretch of DNA that codes for a specific trait.',
+            'Chromosomes are long strands of DNA wound around structural proteins. Crested geckos have 38 chromosomes arranged as 19 pairs.',
+            'When a gecko produces a gamete (sperm or egg), each gamete carries ONE random allele from each pair — a process called meiosis. Which allele gets passed is a 50/50 coin flip per pair.',
+            'At fertilization, the sperm\'s allele lines up with the egg\'s allele and the offspring inherits both. That\'s why every baby gecko is genetically a unique remix of its parents, never an exact copy.',
           ]} />
         )
       },
@@ -179,27 +204,48 @@ const SECTIONS = [
       {
         title: 'How to Read a Punnett Square',
         content: (
-          <BulletList items={[
-            'A 2x2 grid — one parent\'s alleles across the top, the other\'s down the side.',
-            'Each of the four boxes represents a possible offspring combination at 25% probability.',
-            'The same combination in multiple boxes increases probability: two boxes = 50%, three = 75%.',
-            'Punnett squares show probability, not certainty. 25% chance of a visual does not guarantee one per 4 eggs.',
-          ]} />
+          <>
+            <BulletList items={[
+              'A 2×2 grid — one parent\'s alleles across the top, the other\'s down the side.',
+              'Each of the four inner cells represents one possible offspring combination, each with 25% probability.',
+              'The same combination in multiple boxes increases probability: two boxes = 50%, three = 75%, four = 100%.',
+              'Punnett squares show probability, not certainty. A 25% chance of a visual does NOT guarantee one per four eggs — you can get four visuals in a row, or none across twelve eggs. It all averages out over many clutches.',
+            ]} />
+            <PunnettSquare
+              sireAlleles={['A', 'a']}
+              damAlleles={['A', 'a']}
+              caption="A generic Aa × Aa square. Top row = sire alleles, left column = dam alleles. Each cell is one 25% outcome."
+            />
+          </>
         )
       },
       {
-        title: 'Het x Het (Aa x Aa)',
+        title: 'Het × Het (Aa × Aa)',
         content: (
           <>
             <BulletList items={[
-              'When both parents carry one copy of a recessive but look normal (Aa x Aa):',
+              'When both parents carry one copy of a recessive but look normal (Aa × Aa):',
               '25% AA — does not carry the gene at all',
               '50% Aa — het, looks normal, carries the gene invisibly',
               '25% aa — visual (displays the trait)',
-              'Of visually normal offspring: 2 out of 3 statistically carry the gene.',
+              'Of the visually normal offspring specifically (AA + Aa), 2 out of 3 statistically carry the gene — those are your "66% possible hets."',
             ]} />
+            <PunnettSquare
+              sireAlleles={['A', 'a']}
+              damAlleles={['A', 'a']}
+              highlight={(combo) => (combo === 'aa' ? 'visual' : combo === 'Aa' ? 'het' : 'normal')}
+              caption="Het × Het. Purple cell = visual (aa), emerald = het carrier (Aa), slate = non-carrier (AA)."
+            />
+            <OutcomeBar
+              caption="Expected offspring ratio from Aa × Aa."
+              segments={[
+                { label: 'Non-carrier', pct: 25, tint: '#475569' },
+                { label: 'Het carrier', pct: 50, tint: '#10b981' },
+                { label: 'Visual', pct: 25, tint: '#a855f7' },
+              ]}
+            />
             <Callout items={[
-              'Aa x Aa = 25% visual, 50% het, 25% non-carrier',
+              'Aa × Aa = 25% visual, 50% het, 25% non-carrier',
               'This is the standard pairing to produce visual recessives',
               'Requires patience — multiple clutches needed for reliable results',
             ]} />
@@ -230,9 +276,40 @@ const SECTIONS = [
         content: (
           <BulletList items={[
             'Tracking two independent recessives simultaneously: probability compounds multiplicatively.',
-            'Double het x double het = 6.25% chance per offspring of being visual for both traits.',
+            'Double het × double het = 6.25% chance per offspring of being visual for both traits.',
             'Each additional recessive cuts the odds by ~75% again.',
             'Use the Genetic Calculator in this app for multi-trait calculations.',
+          ]} />
+        )
+      },
+      {
+        title: 'Incomplete Dominant Dose-Response',
+        content: (
+          <>
+            <BulletList items={[
+              'For incomplete dominants (Lilly White, Cappuccino, Soft Scale, etc.) the math is different — "how many copies" matters visually:',
+              '0 copies: normal appearance.',
+              '1 copy: the visual morph (the form you see most often for sale).',
+              '2 copies: the "super" form, which is usually more extreme — and sometimes lethal.',
+              'Punnett squares still work, but instead of "visual vs het vs normal" think "super vs visual vs normal".',
+            ]} />
+            <DoseResponse
+              traitName="Lilly White"
+              superLabel="Super LW"
+              caption="Incomplete-dominant dose-response. One copy gives the visible morph, two copies shift to a more extreme form."
+            />
+          </>
+        )
+      },
+      {
+        title: 'F1, F2, and Beyond — Generation Naming',
+        content: (
+          <BulletList items={[
+            'F1 (filial 1): the first-generation offspring from your original pairing. If you bring in a visual axanthic and pair it with a non-carrier, every F1 baby is a 100% het.',
+            'F2: the second generation — offspring of two F1 animals (or one F1 × something else). When you F1 × F1 a recessive project, the F2 generation is where you finally see visuals appear in 25% of the clutch.',
+            'F3 and beyond: continuing the project. Most serious projects take at least an F2 or F3 before you have stable lines of proven visuals.',
+            'P (parental): the original founder generation before F1. Useful shorthand when writing up breeding records.',
+            'Naming conventions matter when documenting a project publicly — an "F2 visual cappuccino from proven hets" is meaningfully different from an "F1 het from a pet-store pairing."',
           ]} />
         )
       },
@@ -354,11 +431,42 @@ const SECTIONS = [
       {
         title: 'What Makes a Trait Polygenic?',
         content: (
+          <>
+            <BulletList items={[
+              'A polygenic trait is controlled by many genes, each contributing a small additive effect to the final phenotype.',
+              'The result is a CONTINUOUS SPECTRUM of expression — not a clean on/off switch. That\'s why crested gecko coloration ranges smoothly from pale cream to vibrant red rather than jumping between two states.',
+              'You CANNOT predict polygenic outcomes with a Punnett square. You can only INFLUENCE them through consistent selective breeding over multiple generations.',
+              'Two stunning parents often produce offspring that span a wide quality range. Some will exceed both parents, some will fall short. This is normal and expected.',
+              'Qualitative vs quantitative traits: a qualitative trait is discrete (has it / doesn\'t have it — like visual Lilly White). A quantitative trait sits on a scale (dalmatian spot count, red pigment saturation). Polygenics are almost all quantitative.',
+            ]} />
+            <PolygenicGradient caption="Polygenic traits form a continuous spectrum. A 'red' crested gecko isn't red or not-red — it sits somewhere on a gradient from muted to extreme, shaped by dozens of small-effect genes." />
+          </>
+        )
+      },
+      {
+        title: 'Pigment Biology: Where Color Comes From',
+        content: (
+          <>
+            <BulletList items={[
+              'Crested gecko coloration comes from three layers of specialized skin cells called chromatophores, stacked like sheets:',
+              'Xanthophores — the top layer. They produce yellow and red pigments (pteridines and carotenoids). Axanthic geckos have these cells genetically disabled.',
+              'Iridophores — the middle layer. They contain reflective crystal platelets that bounce light back through the skin, producing brightness, shimmer, and the "fired up" visual effect.',
+              'Melanophores — the deepest layer. They produce melanin (dark pigment) and are responsible for the dark base under everything else. These are what spread to create the "fired up" dark state.',
+              'Most polygenic coloration in the hobby — red base, yellow base, olive, buckskin — is driven by differential expression in the xanthophore and iridophore layers.',
+            ]} />
+            <PigmentLayers />
+          </>
+        )
+      },
+      {
+        title: 'Firing Up and Firing Down',
+        content: (
           <BulletList items={[
-            'A polygenic trait is controlled by many genes, each contributing a small additive effect to the final phenotype.',
-            'The result is a CONTINUOUS SPECTRUM of expression — not a clean on/off switch. Why crested gecko coloration ranges smoothly from pale cream to vibrant red rather than jumping between two states.',
-            'You CANNOT predict polygenic outcomes with a Punnett square. You can only INFLUENCE them through consistent selective breeding over multiple generations.',
-            'Two stunning parents often produce offspring that span a wide quality range. Some will exceed both parents, some will fall short. This is normal and expected.',
+            'Crested geckos can dramatically change color over 30–90 minutes depending on temperature, stress, humidity, and circadian cues. This is "firing up" (dark/saturated) or "firing down" (pale/washed out).',
+            'The mechanism: melanophores contain granules of melanin that can spread out to darken the skin or clump up to lighten it. Iridophore reflectivity also shifts.',
+            'This isn\'t genetics — it\'s physiology. Two animals with identical alleles can look dramatically different at different times of day.',
+            'Photographing geckos for breeding records: fire them up consistently by misting and waiting 20 minutes in their usual enclosure. Fired-down photos make it very hard to compare animals across a collection.',
+            'Axanthics still fire up — they get darker — but the warm tones (red, yellow) stay absent regardless of fire state, because those tones come from a different cell layer entirely.',
           ]} />
         )
       },
@@ -416,11 +524,27 @@ const SECTIONS = [
       {
         title: 'Epistasis: Gene Interaction',
         content: (
+          <>
+            <BulletList items={[
+              'Epistasis occurs when one gene masks or modifies the expression of another.',
+              'Example: an axanthic gecko carries normal red/yellow color genes, but axanthic masks them by disabling the xanthophore pigment cells entirely. The red genes are there — they just can\'t be expressed.',
+              'Breed that axanthic to a high-red gecko — the het offspring are NOT axanthic (only one copy), so their xanthophores develop normally and the red color genes finally get a chance to show up. Only homozygous axanthic offspring show gray again.',
+              'Background genetics — all the polygenic "noise" genes interacting with your target trait — dramatically affect expression. The same proven morph can look completely different coming out of two different breeding programs.',
+              'Takeaway: when buying into a new morph, buy from a line whose animals look like what you want. The background genetics matter as much as the named morph itself.',
+            ]} />
+            <EpistasisDiagram />
+          </>
+        )
+      },
+      {
+        title: 'Heritability and Selection',
+        content: (
           <BulletList items={[
-            'Epistasis occurs when one gene masks or modifies the expression of another.',
-            'Example: an axanthic gecko carries normal red/yellow color genes, but axanthic masks them. Breed that axanthic to a high-red gecko — the het offspring show normal, potentially vibrant coloration because color genes are expressed in heterozygotes. Only homozygous axanthic offspring show gray again.',
-            'Background genetics — all the polygenic "noise" genes interacting with your target trait — dramatically affect expression. The same proven morph can look dramatically different coming out of two different breeding programs.',
-            'Takeaway: when buying into a new morph, buy from a line whose animals look like what you want. The background genetics matter as much as the named morph.',
+            'Heritability is a technical term (h²) for the proportion of variation in a trait that\'s actually due to genetics vs environment. It ranges from 0 (pure environment) to 1 (pure genetics).',
+            'For crested gecko color traits, realistic heritability sits around 0.3–0.6 — meaningful but not absolute. That\'s why selection works over generations but individual results vary.',
+            'High-heritability traits respond quickly to selection. Low-heritability traits (things influenced heavily by incubation temperature, diet, stress) barely respond no matter how carefully you pair.',
+            'Selection differential: the gap between the average of your breeders and the average of your whole collection. The larger the gap, the more "pressure" you\'re applying. You can\'t just pick one amazing pair and expect everything to shift — you need to be culling the bottom of your lines too.',
+            'Response to selection = heritability × selection differential. This is the math behind why selective breeding is slow. A "one generation overnight transformation" is almost always polygenic luck, not a real shift.',
           ]} />
         )
       },
@@ -454,6 +578,7 @@ const SECTIONS = [
               'Correct pairing: always pair Lilly White × non-LW. You get ~50% visual LW, ~50% normal, and zero lethal supers.',
               'Some breeders test-pair two LWs for research documentation. That\'s a personal choice — but do it with eyes open and disclose it.',
             ]} />
+            <LethalAlleleDiagram />
             <Callout items={[
               'LW × LW: AVOID — produces ~25% lethal Super LW',
               'LW × non-LW: SAFE — 50% visual LW, 50% normal',
@@ -570,40 +695,165 @@ const SECTIONS = [
           ]} />
         )
       },
+      {
+        title: 'Progeny Testing — How Proof Actually Happens',
+        content: (
+          <BulletList items={[
+            'Progeny testing means: you believe an animal carries a gene, so you pair it with a known animal and examine the offspring to find out.',
+            'Testing a suspected het recessive: pair it with a known visual. ~50% of offspring should be visual if the "het" is real. If you get a clutch of 6+ with zero visuals, the het claim is suspect.',
+            'Testing a suspected incomplete dominant: pair it with a known non-carrier. ~50% of offspring should show the visual form. Most cases prove themselves in the first clutch.',
+            'Sample sizes matter. "Zero out of 2 eggs" proves nothing — the math still allows a real het to produce two non-visuals in a row 25% of the time. You need at least 6–10 offspring before drawing conclusions.',
+            'Write down the pairing, the parents\' documented genetics, the clutch dates, and every offspring phenotype. This becomes the evidence base if you want to prove or disprove a claim publicly.',
+          ]} />
+        )
+      },
+      {
+        title: 'Disclosure Template for Selling',
+        content: (
+          <BulletList items={[
+            'A good sales listing answers three questions: what is the animal\'s proven genetics, what is POSSIBLE het status, and what is SPECULATIVE?',
+            'Example template: "Sire: Zeus (100% het axanthic, proven). Dam: Luna (visual cappuccino, proven). Offspring: visual cappuccino, 50% possible het axanthic. Sold as such."',
+            'Never use "looks het" or "probably carries" as proof. If you can\'t trace the claim back to a documented pairing, call it speculative.',
+            'If an animal was produced from a proven-het × non-carrier pairing, its offspring are "50% possible het" — half carry, half don\'t, and you can\'t tell which from looking.',
+            'If an animal was produced from het × het and is visually normal, it\'s "66% possible het" — 2 of 3 normal-looking siblings carry the gene.',
+          ]} />
+        )
+      },
     ]
   },
 ];
 
-const GLOSSARY = [
-  { term: 'Allele', def: 'A specific version of a gene. Every gecko has two alleles per gene — one from each parent.' },
-  { term: 'Homozygous', def: 'Both alleles are identical (AA or aa).' },
-  { term: 'Heterozygous (Het)', def: 'Alleles are different (Aa). Carries one copy of a recessive gene without showing it.' },
-  { term: 'Dominant', def: 'Trait expresses with only one copy of the allele present.' },
-  { term: 'Recessive', def: 'Trait only expresses when two copies are present (one from each parent). Axanthic is the cleanest crested gecko example.' },
-  { term: 'Incomplete Dominant', def: 'Single copy produces the visible form; two copies produce a "super" form that is more extreme. Describes most proven crested gecko morphs.' },
-  { term: 'Codominant', def: 'Both alleles express simultaneously without blending. Used loosely in the hobby; most "codominant" cresties are technically incomplete dominant.' },
-  { term: '100% Het', def: 'Parentage guarantees the animal carries one copy of the recessive.' },
-  { term: 'Possible Het (Pos Het)', def: 'May carry the gene — probability stated as 50% or 66% based on parentage.' },
-  { term: 'Visual', def: 'The animal displays the trait — homozygous for a recessive, or one/two copies of an incomplete dominant.' },
-  { term: 'Super Form', def: 'The homozygous expression of an incomplete dominant (e.g. Super Lilly White, Frappuccino, Super Dalmatian). Sometimes more extreme, sometimes lethal.' },
-  { term: 'Lethal Allele', def: 'An allele whose homozygous form prevents normal development. Super Lilly White is the textbook crested gecko example.' },
-  { term: 'Polygenic', def: 'Trait controlled by many genes with additive effects. Cannot be Punnett-squared. Base color, harlequin, flame, and dalmatian spotting are all polygenic.' },
-  { term: 'Epistasis', def: 'One gene masks or modifies the expression of another gene.' },
-  { term: 'Proven', def: 'Inheritance pattern demonstrated through documented, controlled breeding results.' },
-  { term: 'Breeding Value', def: 'Genetic potential an animal contributes to offspring beyond its own display. Revealed only through progeny testing.' },
-  { term: 'Genotype', def: 'The actual genetic code the animal carries (AA, Aa, aa).' },
-  { term: 'Phenotype', def: 'What the animal actually looks like. Two geckos can share a phenotype with different genotypes.' },
-  { term: 'Lilly White (LW)', def: 'Incomplete-dominant morph with high-contrast white body markings. Single copy = visual LW. Two copies = Super LW (embryonic-lethal).' },
-  { term: 'Axanthic', def: 'Recessive morph lacking yellow/red pigment. Appears gray/white/black. Two copies required to show.' },
-  { term: 'Cappuccino', def: 'Incomplete-dominant morph with dark coffee-brown coloration and a connected dorsal pattern. Super form is Frappuccino.' },
-  { term: 'Frappuccino', def: 'Homozygous (super) form of Cappuccino. More extreme expression; some breeders report viability concerns.' },
-  { term: 'Soft Scale', def: 'Incomplete-dominant morph with smaller, softer scales. Super form exists with some reported fertility concerns.' },
-  { term: 'White Wall', def: 'Incomplete-dominant morph producing a distinct white lateral stripe along the belly wall.' },
-  { term: 'Super Dalmatian', def: 'A polygenic extreme of Dalmatian spotting — NOT a proven Mendelian super form, despite the "Super" name.' },
-  { term: 'Phantom Pinstripe', def: 'Polygenic pinstripe variant with partial, broken, or faint expression. NOT a proven recessive morph despite old claims.' },
-  { term: 'Punnett Square', def: 'A 2×2 grid tool for predicting offspring genetic probabilities from a Mendelian pairing. Does not apply to polygenic traits.' },
-  { term: 'Selective Breeding', def: 'Consistently pairing animals displaying desired traits across multiple generations to shift polygenic expression.' },
+// Glossary is grouped by category so the tab renders as a real reference
+// instead of a flat alphabetical blob. Each entry has term + definition.
+const GLOSSARY_GROUPS = [
+  {
+    category: 'Core Genetics',
+    entries: [
+      { term: 'DNA', def: 'The molecule that carries genetic instructions. Long chains of four chemical bases (A, T, C, G) wound into a double helix.' },
+      { term: 'Gene', def: 'A stretch of DNA that codes for a specific trait or protein. Every gene sits at a specific location (locus) on a chromosome.' },
+      { term: 'Locus', def: 'The specific physical address on a chromosome where a given gene lives. Paired chromosomes share matching loci.' },
+      { term: 'Allele', def: 'A specific version of a gene. Every gecko has two alleles per gene — one from each parent.' },
+      { term: 'Chromosome', def: 'A long strand of DNA wound around structural proteins. Crested geckos have 38 chromosomes arranged as 19 pairs.' },
+      { term: 'Diploid', def: 'Having two copies of each chromosome — the normal state for most animals including crested geckos.' },
+      { term: 'Gamete', def: 'A reproductive cell (sperm or egg) that carries ONE allele from each pair, produced by meiosis.' },
+      { term: 'Meiosis', def: 'The cell-division process that produces gametes. Each gamete gets a random one of the two alleles at every gene.' },
+      { term: 'Fertilization', def: 'The moment when sperm and egg combine, producing a diploid embryo with one allele from each parent at every gene.' },
+      { term: 'Homozygous', def: 'Both alleles at a gene are identical (written AA or aa). The animal has two of the same thing.' },
+      { term: 'Heterozygous (Het)', def: 'The two alleles at a gene are different (written Aa). Carries one copy of a recessive without showing it.' },
+      { term: 'Genotype', def: 'The actual genetic code an animal carries (AA, Aa, aa). Invisible without lineage or progeny testing.' },
+      { term: 'Phenotype', def: 'The visible appearance of an animal. Two geckos can share a phenotype with very different genotypes.' },
+      { term: 'Wild type', def: 'The default, non-morph form of the species — what crested geckos look like in nature before selective breeding.' },
+    ],
+  },
+  {
+    category: 'Inheritance Patterns',
+    entries: [
+      { term: 'Dominant', def: 'A trait expresses with only one copy of the allele present. Rare in proven crested gecko morphs.' },
+      { term: 'Recessive', def: 'A trait only expresses when two copies are present. Axanthic is the cleanest crested gecko example.' },
+      { term: 'Incomplete Dominant', def: 'Single copy produces a visible form; two copies produce a distinct "super" form. Most proven crested gecko morphs work this way.' },
+      { term: 'Codominant', def: 'Both alleles express simultaneously without blending. Used loosely in the hobby — most so-called codominant cresties are technically incomplete dominant.' },
+      { term: 'Mendelian', def: 'Following the simple single-gene inheritance patterns first described by Gregor Mendel. Many proven crested gecko morphs are Mendelian; most trait expression is not.' },
+      { term: 'Polygenic', def: 'A trait controlled by many genes with additive effects. Cannot be Punnett-squared. Base color, harlequin, flame, and dalmatian spotting are all polygenic.' },
+      { term: 'Epistasis', def: 'One gene masks or modifies the expression of another. Axanthic masking red color is a crested gecko example.' },
+      { term: 'Penetrance', def: 'The % of individuals with a given genotype that actually show the trait. High penetrance = almost always visible; low penetrance = often hidden.' },
+      { term: 'Expressivity', def: 'The degree to which a trait shows up visually when it does show. A morph with variable expressivity looks dramatically different across individuals.' },
+      { term: 'Autosomal', def: 'Located on a non-sex chromosome. All proven crested gecko morphs are autosomal — the animal\'s sex doesn\'t affect inheritance.' },
+      { term: 'Sex-linked', def: 'A gene located on a sex chromosome. Common in some reptile lineages, but not documented in crested geckos.' },
+    ],
+  },
+  {
+    category: 'Carrier Status & Proof',
+    entries: [
+      { term: 'Visual', def: 'The animal displays the trait — homozygous for a recessive, or one/two copies of an incomplete dominant.' },
+      { term: '100% Het', def: 'Parentage guarantees the animal carries one copy of the recessive. Example: offspring from visual × non-carrier.' },
+      { term: '66% Possible Het', def: 'A normal-looking offspring from a het × het pairing. Statistically, 2 of 3 such offspring carry the gene, but there\'s no way to know which one.' },
+      { term: '50% Possible Het', def: 'One parent is confirmed het; the other is unknown. The offspring has a 50/50 chance of carrying the gene.' },
+      { term: 'Proven', def: 'An inheritance claim demonstrated through documented, controlled breeding results — not assumed from appearance.' },
+      { term: 'Proven Producer', def: 'An animal whose offspring have been evaluated and confirm the breeding value claims made about it.' },
+      { term: 'Progeny Testing', def: 'Pairing a suspected carrier with a known animal and examining offspring to confirm whether the suspected genetics are real.' },
+      { term: 'Test Pair', def: 'A pairing specifically done to verify a genetic claim, rather than to produce animals for sale.' },
+    ],
+  },
+  {
+    category: 'Generations & Pairings',
+    entries: [
+      { term: 'P (Parental)', def: 'The original founder generation before any crosses for a project have been made.' },
+      { term: 'F1 (Filial 1)', def: 'First-generation offspring from the original pairing. Example: visual axanthic × non-carrier → all F1 are 100% het.' },
+      { term: 'F2 (Filial 2)', def: 'Second-generation offspring, typically from F1 × F1. The generation where recessive visuals usually first appear.' },
+      { term: 'F3', def: 'Third generation. Serious recessive projects usually take this long to stabilize.' },
+      { term: 'Outcross', def: 'Pairing with an unrelated animal (usually to bring in fresh blood or new traits).' },
+      { term: 'Inbreeding', def: 'Pairing closely related animals (siblings, parent/offspring). Concentrates both desirable and undesirable recessives.' },
+      { term: 'Linebreeding', def: 'Moderate inbreeding within a specific line to fix desired traits while maintaining some diversity.' },
+      { term: 'Founder', def: 'An original, unrelated animal brought into a breeding project. The starting point of a new line.' },
+      { term: 'Inbreeding Coefficient', def: 'A numeric measure of how inbred an animal is. Useful for comparing line health over generations.' },
+    ],
+  },
+  {
+    category: 'Pigment & Physiology',
+    entries: [
+      { term: 'Chromatophore', def: 'A specialized skin cell containing pigment or reflective crystals. Crested geckos have three types layered in the skin.' },
+      { term: 'Melanophore', def: 'The deepest chromatophore layer. Contains dark melanin and spreads/clumps to shift fire state.' },
+      { term: 'Xanthophore', def: 'The top chromatophore layer. Produces yellow and red pigments. Absent in axanthic geckos.' },
+      { term: 'Iridophore', def: 'The middle chromatophore layer. Reflective crystal platelets produce brightness and shimmer.' },
+      { term: 'Fired Up', def: 'The dark, saturated color state crested geckos enter at night or under stress — melanin granules spread through the skin.' },
+      { term: 'Fired Down', def: 'The pale, washed-out color state during the day — melanin clumped, iridophore reflectivity dominant.' },
+      { term: 'Base Color', def: 'The underlying polygenic color of a gecko — red, yellow, buckskin, olive, etc. Independent of pattern.' },
+    ],
+  },
+  {
+    category: 'Morphs & Traits',
+    entries: [
+      { term: 'Morph', def: 'A genetically distinct variant with a KNOWN, predictable inheritance pattern. Lilly White, Axanthic, and Cappuccino are morphs.' },
+      { term: 'Trait', def: 'A phenotypic characteristic whose precise genetics isn\'t mapped — usually polygenic. Harlequin, pinstripe, flame, and dalmatian are traits.' },
+      { term: 'Lilly White (LW)', def: 'Incomplete-dominant morph with high-contrast white body markings. Single copy = visual LW. Two copies = Super LW (embryonic-lethal).' },
+      { term: 'Super Lilly White', def: 'The homozygous form of Lilly White. Confirmed embryonic-lethal — eggs develop partially then fail to hatch.' },
+      { term: 'Axanthic', def: 'Recessive morph lacking yellow/red pigment. Appears gray/white/black regardless of base color genes. Two copies required.' },
+      { term: 'Cappuccino', def: 'Incomplete-dominant morph with dark coffee-brown coloration and a connected dorsal pattern. Super form is Frappuccino.' },
+      { term: 'Frappuccino', def: 'Homozygous (super) form of Cappuccino. More extreme expression; some breeders report viability concerns.' },
+      { term: 'Soft Scale', def: 'Incomplete-dominant morph with smaller, softer scales. Super form exists with some reported fertility concerns.' },
+      { term: 'White Wall', def: 'Incomplete-dominant morph producing a distinct white lateral stripe along the belly wall.' },
+      { term: 'Harlequin', def: 'Polygenic pattern trait — high-contrast lateral markings extending up the body. Graded from partial to "extreme."' },
+      { term: 'Pinstripe', def: 'Polygenic pattern trait — a raised cream dorsal stripe. Expressed partial to 100%.' },
+      { term: 'Dalmatian', def: 'Polygenic pattern trait — dark spotting across the body, sparse to extreme.' },
+      { term: 'Flame', def: 'Polygenic pattern trait — lateral "flame" markings rising from the belly up the sides.' },
+      { term: 'Patternless', def: 'Polygenic pattern trait — solid base color with no dorsal or lateral pattern.' },
+      { term: 'Tiger / Brindle', def: 'Polygenic pattern traits producing lateral banding or broken striping.' },
+      { term: 'Super Dalmatian', def: 'A polygenic extreme of dalmatian spotting — NOT a proven Mendelian super form despite the "super" name.' },
+      { term: 'Phantom Pinstripe', def: 'Polygenic pinstripe variant with partial, broken, or faint expression. NOT a proven recessive morph.' },
+    ],
+  },
+  {
+    category: 'Breeding Strategy',
+    entries: [
+      { term: 'Selective Breeding', def: 'Consistently pairing animals displaying desired traits across multiple generations to shift polygenic expression.' },
+      { term: 'Breeding Value', def: 'Genetic potential an animal contributes to offspring beyond its own display. Revealed only through progeny testing.' },
+      { term: 'Heritability (h²)', def: 'The proportion of variation in a trait that\'s actually due to genetics vs environment. Ranges from 0 (pure environment) to 1 (pure genetics).' },
+      { term: 'Selection Differential', def: 'The gap between the average of your breeding animals and the average of your whole collection. Larger gap = stronger selection pressure.' },
+      { term: 'Response to Selection', def: 'The actual shift in offspring phenotype vs parents. Equals heritability × selection differential.' },
+      { term: 'Holdback', def: 'An offspring kept from the sale pool because the breeder wants to use it for future breeding or evaluation.' },
+      { term: 'Culling', def: 'Removing an animal from the breeding program — via sale, pet-out, or (less commonly) euthanasia. A necessary part of directional selection.' },
+      { term: 'Outbreeding Depression', def: 'Loss of adaptive traits when two very distinct lines are crossed. Rare in cresties but real for some reptile species.' },
+      { term: 'Inbreeding Depression', def: 'Reduced fitness, fertility, or vigor from excessive inbreeding. Why thoughtful outcrosses matter.' },
+    ],
+  },
+  {
+    category: 'Tools & Terminology',
+    entries: [
+      { term: 'Punnett Square', def: 'A 2×2 grid tool for predicting offspring genetic probabilities from a Mendelian pairing. Does not apply to polygenic traits.' },
+      { term: 'Lethal Allele', def: 'An allele whose homozygous form prevents normal development. Super Lilly White is the textbook crested gecko example.' },
+      { term: 'Super Form', def: 'The homozygous expression of an incomplete dominant (Super LW, Frappuccino, Super Soft Scale). Sometimes more extreme, sometimes lethal.' },
+      { term: 'Stacking Morphs', def: 'Combining multiple proven morphs into a single animal (e.g. Lilly White + Cappuccino + Axanthic het). The holy grail of most breeding projects.' },
+      { term: 'Morph Combo', def: 'An animal carrying two or more proven morphs simultaneously.' },
+      { term: 'Cresto (or Crestie)', def: 'Hobby nickname for a crested gecko (Correlophus ciliatus).' },
+      { term: 'Correlophus ciliatus', def: 'The scientific name for the crested gecko. Previously classified as Rhacodactylus ciliatus until 2012.' },
+    ],
+  },
 ];
+
+// Flat list used by the glossary search. Preserves category for display.
+const GLOSSARY = GLOSSARY_GROUPS.flatMap((g) =>
+  g.entries.map((e) => ({ ...e, category: g.category }))
+);
 
 const LEVEL_META = {
   Beginner: {
@@ -871,8 +1121,8 @@ export default function GeneticsGuide() {
 
             {/* Glossary Tab */}
             <TabsContent value="glossary">
-              <div className="max-w-3xl">
-                <div className="relative mb-4">
+              <div className="max-w-4xl">
+                <div className="relative mb-5">
                   <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input
                     placeholder="Search glossary..."
@@ -880,35 +1130,79 @@ export default function GeneticsGuide() {
                     onChange={(e) => setGlossarySearch(e.target.value)}
                     className="pl-9 bg-slate-900 border-slate-700 text-slate-100"
                   />
+                  <p className="text-xs text-slate-500 mt-2">
+                    {GLOSSARY.length} terms across {GLOSSARY_GROUPS.length} categories
+                  </p>
                 </div>
-                <div className="rounded-lg overflow-hidden border border-slate-800">
-                  <div className="grid grid-cols-[200px_1fr] bg-emerald-900/40 px-4 py-2">
-                    <span className="text-emerald-300 text-xs font-bold uppercase tracking-wider">
-                      Term
-                    </span>
-                    <span className="text-emerald-300 text-xs font-bold uppercase tracking-wider">
-                      Definition
-                    </span>
+
+                {glossarySearch.trim() ? (
+                  // Flat search results
+                  <div className="rounded-lg overflow-hidden border border-slate-800">
+                    <div className="grid grid-cols-[200px_1fr] bg-emerald-900/40 px-4 py-2">
+                      <span className="text-emerald-300 text-xs font-bold uppercase tracking-wider">
+                        Term
+                      </span>
+                      <span className="text-emerald-300 text-xs font-bold uppercase tracking-wider">
+                        Definition
+                      </span>
+                    </div>
+                    {filteredGlossary.map((row, i) => (
+                      <div
+                        key={row.term}
+                        className={`grid grid-cols-[200px_1fr] px-4 py-3 gap-4 border-t border-slate-800 ${i % 2 === 0 ? 'bg-slate-900' : 'bg-slate-900/40'}`}
+                      >
+                        <div>
+                          <div className="text-emerald-300 font-semibold text-sm">
+                            {row.term}
+                          </div>
+                          <div className="text-[10px] text-slate-500 uppercase tracking-wider mt-0.5">
+                            {row.category}
+                          </div>
+                        </div>
+                        <span className="text-slate-300 text-sm leading-relaxed">
+                          {row.def}
+                        </span>
+                      </div>
+                    ))}
+                    {filteredGlossary.length === 0 && (
+                      <div className="px-4 py-8 text-center text-sm text-slate-500 bg-slate-900">
+                        No glossary entries match that search.
+                      </div>
+                    )}
                   </div>
-                  {filteredGlossary.map((row, i) => (
-                    <div
-                      key={row.term}
-                      className={`grid grid-cols-[200px_1fr] px-4 py-3 gap-4 border-t border-slate-800 ${i % 2 === 0 ? 'bg-slate-900' : 'bg-slate-900/40'}`}
-                    >
-                      <span className="text-emerald-300 font-semibold text-sm">
-                        {row.term}
-                      </span>
-                      <span className="text-slate-300 text-sm leading-relaxed">
-                        {row.def}
-                      </span>
-                    </div>
-                  ))}
-                  {filteredGlossary.length === 0 && (
-                    <div className="px-4 py-8 text-center text-sm text-slate-500 bg-slate-900">
-                      No glossary entries match that search.
-                    </div>
-                  )}
-                </div>
+                ) : (
+                  // Grouped by category when no search is active
+                  <div className="space-y-6">
+                    {GLOSSARY_GROUPS.map((group) => (
+                      <div
+                        key={group.category}
+                        className="rounded-lg overflow-hidden border border-slate-800"
+                      >
+                        <div className="bg-gradient-to-r from-emerald-900/50 via-slate-900 to-slate-900 px-4 py-3 border-b border-slate-800">
+                          <h3 className="text-emerald-300 text-sm font-bold uppercase tracking-wider">
+                            {group.category}
+                          </h3>
+                          <p className="text-[10px] text-slate-500 mt-0.5">
+                            {group.entries.length} terms
+                          </p>
+                        </div>
+                        {group.entries.map((row, i) => (
+                          <div
+                            key={row.term}
+                            className={`grid grid-cols-[200px_1fr] px-4 py-3 gap-4 border-t border-slate-800 ${i % 2 === 0 ? 'bg-slate-900/60' : 'bg-slate-900/30'}`}
+                          >
+                            <span className="text-emerald-300 font-semibold text-sm">
+                              {row.term}
+                            </span>
+                            <span className="text-slate-300 text-sm leading-relaxed">
+                              {row.def}
+                            </span>
+                          </div>
+                        ))}
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             </TabsContent>
           </Tabs>
