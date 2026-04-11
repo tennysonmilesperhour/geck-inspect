@@ -108,7 +108,10 @@ button:focus-visible {
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
+    /* 20% less rounded than the shadcn default of 0.5rem. Flows through
+       rounded-sm/md/lg and every component that references var(--radius)
+       via the Tailwind borderRadius overrides in tailwind.config.js. */
+    --radius: 0.4rem;
     --sidebar-background: 0 0% 98%;
     --sidebar-foreground: 240 5.3% 26.1%;
     --sidebar-primary: 240 5.9% 10%;

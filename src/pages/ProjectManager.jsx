@@ -31,8 +31,9 @@ export default function ProjectManager() {
     const [isLoading, setIsLoading] = useState(true);
     // Controlled tab state so child actions (like "Mark Fed Today" in the
     // Feeding tab) can refresh data without unmounting the Tabs shell and
-    // snapping the user back to the Plans tab.
-    const [activeTab, setActiveTab] = useState('projects');
+    // snapping the user back to the Plans tab. Defaults to 'calendar' so
+    // opening Season Planner always lands on the monthly calendar view.
+    const [activeTab, setActiveTab] = useState('calendar');
     const [currentUserEmail, setCurrentUserEmail] = useState(null);
 
     useEffect(() => {

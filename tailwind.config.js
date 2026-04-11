@@ -4,10 +4,19 @@ module.exports = {
     content: ["./index.html", "./src/**/*.{ts,tsx,js,jsx}"],
   theme: {
   	extend: {
+  		// Every `rounded-*` size is scaled down ~20% from Tailwind's
+  		// defaults. `rounded-full` and `rounded-none` are intentionally
+  		// left alone so pills/avatars still render as full circles.
+  		// The sm/md/lg values flow through --radius (0.4rem) in index.css
+  		// so shadcn primitives automatically inherit the reduction.
   		borderRadius: {
-  			lg: 'var(--radius)',
-  			md: 'calc(var(--radius) - 2px)',
-  			sm: 'calc(var(--radius) - 4px)'
+  			lg: 'var(--radius)',                 /* 0.4rem  (was 0.5rem)  */
+  			md: 'calc(var(--radius) - 2px)',     /* 4.4px   (was 6px)     */
+  			sm: 'calc(var(--radius) - 4px)',     /* 2.4px   (was 4px)     */
+  			DEFAULT: '0.2rem',                   /* 3.2px   (was 4px)     */
+  			xl: '0.6rem',                        /* 9.6px   (was 12px)    */
+  			'2xl': '0.8rem',                     /* 12.8px  (was 16px)    */
+  			'3xl': '1.2rem'                      /* 19.2px  (was 24px)    */
   		},
   		colors: {
   			background: 'hsl(var(--background))',

@@ -7,11 +7,11 @@ import { Crown, MapPin, ChevronRight, Sparkles } from 'lucide-react';
 /**
  * Featured Breeders dashboard widget.
  *
- * Shows up to 6 Breeder-tier users who have opted in via Settings
- * ("Feature me on the Dashboard"). Clicking a card takes you to their
- * public profile. Displays their avatar, display name, location, and a
- * rough count of how many geckos they currently have listed for sale so
- * the card has real signal instead of being a vanity list.
+ * Shows 2 Breeder-tier users who have opted in via Settings ("Feature
+ * me on the Dashboard"). The pair rotates every 24h — the selection is
+ * deterministic per UTC day so every visitor sees the same breeders on
+ * the same day, and the rotation advances once a day rather than on
+ * every refresh. Clicking a card takes you to their public profile.
  *
  * Uses Gecko.list() to bucket sale counts client-side — the table is
  * small enough that a single fetch is fine. When it grows we can move
@@ -19,6 +19,30 @@ import { Crown, MapPin, ChevronRight, Sparkles } from 'lucide-react';
  */
 
 const DEFAULT_AVATAR = 'https://i.imgur.com/sw9gnDp.png';
+const FEATURED_COUNT = 2;
+
+// Small deterministic PRNG. Given the same seed it always produces the
+// same sequence of floats in [0, 1). We use it to drive a Fisher-Yates
+// shuffle that's stable for 24h — seeding from `days since epoch` means
+// the pick only changes at UTC midnight.
+function mulberry32(seed) {
+  return function () {
+    let t = (seed += 0x6d2b79f5);
+    t = Math.imul(t ^ (t >>> 15), t | 1);
+    t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+    return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+  };
+}
+
+function seededShuffle(arr, seed) {
+  const rng = mulberry32(seed);
+  const out = [...arr];
+  for (let i = out.length - 1; i > 0; i--) {
+    const j = Math.floor(rng() * (i + 1));
+    [out[i], out[j]] = [out[j], out[i]];
+  }
+  return out;
+}
 
 export default function FeaturedBreeders() {
   const [breeders, setBreeders] = useState([]);
@@ -34,8 +58,11 @@ export default function FeaturedBreeders() {
           Gecko.list().catch(() => []),
         ]);
 
-        // Shuffle + cap at 6 so the rotation feels fresh on reloads.
-        const shuffled = [...users].sort(() => Math.random() - 0.5).slice(0, 6);
+        // Deterministic 24h rotation: seed the shuffle with the current
+        // UTC day index. Every visitor sees the same 2 breeders all day,
+        // and the pick rolls over at UTC midnight.
+        const todaySeed = Math.floor(Date.now() / 86400000);
+        const shuffled = seededShuffle(users, todaySeed).slice(0, FEATURED_COUNT);
         setBreeders(shuffled);
 
         // Bucket geckos for sale by created_by email
@@ -73,8 +100,8 @@ export default function FeaturedBreeders() {
       </CardHeader>
       <CardContent>
         {isLoading ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-            {[...Array(3)].map((_, i) => (
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {[...Array(FEATURED_COUNT)].map((_, i) => (
               <div
                 key={i}
                 className="h-24 rounded-lg border border-slate-800 bg-slate-800/40 animate-pulse"
@@ -82,7 +109,7 @@ export default function FeaturedBreeders() {
             ))}
           </div>
         ) : (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {breeders.map((b) => {
               const sales = saleCounts[b.email] || 0;
               const displayName = b.business_name || b.full_name || b.email.split('@')[0];

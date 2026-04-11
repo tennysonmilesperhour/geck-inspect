@@ -52,8 +52,10 @@ import __Layout from './Layout.jsx';
 
 // Eagerly loaded: the pages a signed-in user is most likely to hit first.
 // Keeping these in the main bundle avoids a blank flash on the common path.
+// Dashboard is the authenticated landing page so it MUST be eager.
 import Home from './pages/Home';
 import MyProfile from './pages/MyProfile';
+import Dashboard from './pages/Dashboard';
 
 // Everything else is split into its own chunk and only downloaded
 // when the user navigates to that route. Cuts ~MB off first paint.
@@ -64,7 +66,6 @@ const Breeding              = lazy(() => import('./pages/Breeding'));
 const BreedingPairs         = lazy(() => import('./pages/BreedingPairs'));
 const CareGuide             = lazy(() => import('./pages/CareGuide'));
 const CommunityConnect      = lazy(() => import('./pages/CommunityConnect'));
-const Dashboard             = lazy(() => import('./pages/Dashboard'));
 const Forum                 = lazy(() => import('./pages/Forum'));
 const ForumPost             = lazy(() => import('./pages/ForumPost'));
 const Gallery               = lazy(() => import('./pages/Gallery'));
@@ -131,7 +132,7 @@ export const PAGES = {
 }
 
 export const pagesConfig = {
-    mainPage: "MyProfile",
+    mainPage: "Dashboard",
     Pages: PAGES,
     Layout: __Layout,
 };
