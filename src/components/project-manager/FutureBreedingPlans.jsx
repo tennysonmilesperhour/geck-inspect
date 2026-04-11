@@ -68,6 +68,54 @@ const YEAR_OPTIONS = Array.from(
   (_, i) => new Date().getFullYear() + i
 );
 
+const DEFAULT_GECKO_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
+
+// Parent thumbnail card used inside FutureBreedingPlan cards. Shows
+// the gecko's first photo (or a fallback), a ♂/♀ sex chip, and the
+// name underneath. Dim/outlined when the parent is missing from the
+// user's collection.
+function ParentPortrait({ gecko, role }) {
+  const isSire = role === 'sire';
+  const img = gecko?.image_urls?.[0] || DEFAULT_GECKO_IMAGE;
+  const roleTint = isSire
+    ? 'bg-blue-500/15 text-blue-300 border-blue-500/30'
+    : 'bg-pink-500/15 text-pink-300 border-pink-500/30';
+  const sexGlyph = isSire ? '♂' : '♀';
+  return (
+    <div className="flex flex-col items-center min-w-0">
+      <div
+        className={`relative w-full aspect-square rounded-lg overflow-hidden border ${
+          gecko ? 'border-slate-700 bg-slate-800' : 'border-dashed border-slate-700 bg-slate-800/40 opacity-70'
+        }`}
+      >
+        <img
+          src={img}
+          alt={gecko?.name || (isSire ? 'Unknown sire' : 'Unknown dam')}
+          className="w-full h-full object-cover"
+          loading="lazy"
+          onError={(e) => {
+            e.currentTarget.src = DEFAULT_GECKO_IMAGE;
+          }}
+        />
+        <span
+          className={`absolute top-1 left-1 text-xs font-bold rounded-full border w-5 h-5 flex items-center justify-center ${roleTint}`}
+          title={isSire ? 'Sire' : 'Dam'}
+        >
+          {sexGlyph}
+        </span>
+      </div>
+      <p className="text-xs text-slate-200 font-semibold mt-1.5 truncate w-full text-center">
+        {gecko?.name || 'Unknown'}
+      </p>
+      {gecko?.gecko_id_code && (
+        <p className="text-[10px] text-slate-500 truncate w-full text-center">
+          {gecko.gecko_id_code}
+        </p>
+      )}
+    </div>
+  );
+}
+
 function emptyForm() {
   const nextYear = new Date().getFullYear() + 1;
   return {
@@ -274,7 +322,7 @@ export default function FutureBreedingPlans({ geckos, currentUserEmail }) {
             };
 
             return (
-              <Card key={plan.id} className="bg-slate-900 border-slate-800">
+              <Card key={plan.id} className="bg-slate-900 border-slate-800 overflow-hidden">
                 <CardHeader className="pb-2">
                   <div className="flex items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -326,7 +374,18 @@ export default function FutureBreedingPlans({ geckos, currentUserEmail }) {
                     </div>
                   </div>
                 </CardHeader>
-                <CardContent className="pt-1 space-y-2">
+                <CardContent className="pt-1 space-y-3">
+                  {/* Sire + dam photo row. Each parent is a small portrait
+                      card tagged with ♂/♀ and the gecko's name; a gradient
+                      "×" divider between the two reinforces the pairing. */}
+                  <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+                    <ParentPortrait gecko={sire} role="sire" />
+                    <div className="flex flex-col items-center text-slate-500">
+                      <span className="text-2xl leading-none">×</span>
+                    </div>
+                    <ParentPortrait gecko={dam} role="dam" />
+                  </div>
+
                   {plan.goals && (
                     <div>
                       <p className="text-[10px] uppercase tracking-wider text-slate-500">Goals</p>
