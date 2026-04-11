@@ -59,6 +59,7 @@ export const ForumComment = sb.ForumComment;
 export const ForumLike = sb.ForumLike;
 export const ForumPost = sb.ForumPost;
 export const FutureBreedingPlan = sb.FutureBreedingPlan;
+export const SupportMessage = sb.SupportMessage;
 export const Gecko = sb.Gecko;
 export const GeckoEvent = sb.GeckoEvent;
 export const GeckoImage = sb.GeckoImage;

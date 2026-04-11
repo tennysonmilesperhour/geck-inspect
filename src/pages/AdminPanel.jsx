@@ -12,6 +12,7 @@ import {
   CheckSquare,
   Activity,
   ChevronRight,
+  LifeBuoy,
 } from 'lucide-react';
 
 import AdminOverview from '@/components/admin/AdminOverview';
@@ -25,6 +26,7 @@ import ScrapedDataReview from '@/components/admin/ScrapedDataReview';
 import PageManagement from '@/components/admin/PageManagement';
 import MorphSubmissionReview from '@/components/admin/MorphSubmissionReview';
 import SystemHealth from '@/components/admin/SystemHealth';
+import SupportInbox from '@/components/admin/SupportInbox';
 
 /**
  * Admin Panel — sidebar layout grouped by responsibility.
@@ -58,6 +60,7 @@ const NAV_GROUPS = [
     label: 'Community',
     items: [
       { id: 'users', label: 'Users', icon: Users },
+      { id: 'support', label: 'Support inbox', icon: LifeBuoy },
       { id: 'moderation', label: 'Content moderation', icon: ShieldAlert },
       { id: 'messaging', label: 'Mass messaging', icon: Megaphone },
       { id: 'changelog', label: 'Changelog', icon: Bell },
@@ -89,6 +92,7 @@ const NAV_GROUPS = [
 const SECTION_TITLES = {
   overview: 'Overview',
   users: 'User management',
+  support: 'Support inbox',
   moderation: 'Content moderation',
   messaging: 'Mass messaging',
   changelog: 'Changelog',
@@ -122,6 +126,8 @@ export default function AdminPanel() {
         return <AdminOverview onNavigate={setSection} />;
       case 'users':
         return <UserManagement />;
+      case 'support':
+        return <SupportInbox />;
       case 'moderation':
         return <ContentModeration />;
       case 'messaging':

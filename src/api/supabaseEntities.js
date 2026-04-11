@@ -50,6 +50,7 @@ export const TABLE_MAP = {
   ReptileEvent: 'reptile_events',
   ScrapedTrainingData: 'scraped_training_data',
   StripeWebhookLog: 'stripe_webhook_logs',
+  SupportMessage: 'support_messages',
   Task: 'tasks',
   UserActivity: 'user_activity',
   UserBadge: 'user_badges',
@@ -228,6 +229,7 @@ export const Project = createEntityClient('Project');
 export const ReptileEvent = createEntityClient('ReptileEvent');
 export const ScrapedTrainingData = createEntityClient('ScrapedTrainingData');
 export const StripeWebhookLog = createEntityClient('StripeWebhookLog');
+export const SupportMessage = createEntityClient('SupportMessage');
 export const Task = createEntityClient('Task');
 export const UserActivity = createEntityClient('UserActivity');
 export const UserBadge = createEntityClient('UserBadge');

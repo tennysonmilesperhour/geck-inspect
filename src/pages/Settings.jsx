@@ -46,18 +46,18 @@ function LookingForSection({ formData, handleChange }) {
                 <Search className="w-4 h-4" />
                 Looking For (morphs/traits you want to acquire)
             </Label>
-            <div className="flex gap-2">
-                <Input 
-                    value={newItem} 
-                    onChange={(e) => setNewItem(e.target.value)} 
-                    placeholder="Add morph or trait you're looking for..." 
-                    onKeyPress={(e) => e.key === 'Enter' && addItem()} 
-                    className="bg-slate-800 border-slate-600 text-slate-100" 
-                />
-                <Button onClick={addItem} type="button" className="bg-emerald-600 hover:bg-emerald-700">
-                    <Plus className="w-4 h-4" />
-                </Button>
-            </div>
+            <Input
+                value={newItem}
+                onChange={(e) => setNewItem(e.target.value)}
+                placeholder="Type a morph or trait and press Enter..."
+                onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                        e.preventDefault();
+                        addItem();
+                    }
+                }}
+                className="bg-slate-800 border-slate-600 text-slate-100"
+            />
             <div className="flex flex-wrap gap-2">
                 {formData.looking_for.map((item) => (
                     <Badge key={item} className="flex items-center gap-1 bg-emerald-900/50 text-emerald-200 border-emerald-600">
@@ -305,19 +305,78 @@ export default function SettingsPage() {
         );
     }
 
+    const sectionNav = [
+        { id: 'profile-photos', label: 'Profile Photos' },
+        { id: 'basic-information', label: 'Basic Info' },
+        { id: 'contact-information', label: 'Contact' },
+        { id: 'social-media', label: 'Social' },
+        { id: 'privacy-settings', label: 'Privacy' },
+        ...((user?.membership_tier === 'breeder' || user?.subscription_status === 'grandfathered')
+            ? [{ id: 'breeder-perks', label: 'Breeder Perks' }]
+            : []),
+        { id: 'email-notifications', label: 'Email' },
+        { id: 'calendar-alerts', label: 'Calendar' },
+        { id: 'feeding-alerts', label: 'Feeding Alerts' },
+        { id: 'default-sorts', label: 'Defaults' },
+        { id: 'danger-zone', label: 'Danger Zone' },
+    ];
+
     return (
-        <div className="bg-slate-950 min-h-screen p-4 md:p-8 text-slate-100">
-            <div className="max-w-4xl mx-auto space-y-8">
-                <div className="text-center md:text-left">
-                    <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
+        <div className="bg-slate-950 min-h-screen text-slate-100">
+            <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
+                <div className="mb-8">
+                    <div className="flex items-center gap-3 mb-2">
                         <div className="w-12 h-12 bg-emerald-600/20 rounded-xl flex items-center justify-center border border-emerald-500/30">
                             <Settings className="w-6 h-6 text-emerald-400" />
                         </div>
-                        <h1 className="text-4xl font-bold text-slate-100">Account Settings</h1>
+                        <div>
+                            <h1 className="text-3xl md:text-4xl font-bold text-slate-100">Account Settings</h1>
+                            <p className="text-sm text-slate-400">
+                                Manage your profile, privacy, notifications, and account preferences.
+                            </p>
+                        </div>
                     </div>
-                    <p className="text-lg text-slate-400">Manage your profile, privacy settings, and account preferences.</p>
                 </div>
-                
+
+                {hasUnsavedChanges && (
+                    <div className="sticky top-2 z-20 mb-6 rounded-xl border border-amber-500/40 bg-amber-500/10 backdrop-blur-sm px-4 py-3 flex items-center justify-between gap-3 shadow-lg">
+                        <p className="text-sm text-amber-200">You have unsaved changes.</p>
+                        <Button
+                            size="sm"
+                            onClick={handleSave}
+                            disabled={isSaving}
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white"
+                        >
+                            {isSaving ? (
+                                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Saving</>
+                            ) : (
+                                <><Save className="w-4 h-4 mr-2" />Save changes</>
+                            )}
+                        </Button>
+                    </div>
+                )}
+
+                <div className="flex flex-col lg:flex-row gap-8">
+                    {/* Sticky section navigator — industry-standard pattern */}
+                    <aside className="lg:w-56 shrink-0">
+                        <nav className="lg:sticky lg:top-20 space-y-1">
+                            <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold px-2 mb-2">
+                                Jump to
+                            </p>
+                            {sectionNav.map((s) => (
+                                <a
+                                    key={s.id}
+                                    href={`#${s.id}`}
+                                    className="block text-sm text-slate-300 hover:text-emerald-300 hover:bg-slate-900/60 rounded-md px-2 py-1.5 transition-colors"
+                                >
+                                    {s.label}
+                                </a>
+                            ))}
+                        </nav>
+                    </aside>
+
+                    <div className="flex-1 min-w-0 space-y-8">
+                <section id="profile-photos">
                 <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
                     <CardHeader>
                         <CardTitle className="text-slate-100">Profile Photos</CardTitle>
@@ -345,7 +404,9 @@ export default function SettingsPage() {
                         </div>
                     </CardContent>
                 </Card>
-                
+                </section>
+
+                <section id="basic-information">
                 <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
                     <CardHeader><CardTitle className="text-slate-100">Basic Information</CardTitle></CardHeader>
                     <CardContent className="space-y-6">
@@ -381,10 +442,18 @@ export default function SettingsPage() {
                         </div>
                         <div className="space-y-3">
                             <Label className="text-slate-300">Specialties/Morphs</Label>
-                            <div className="flex gap-2">
-                                <Input value={newSpecialty} onChange={(e) => setNewSpecialty(e.target.value)} placeholder="Add a specialty..." onKeyPress={(e) => e.key === 'Enter' && addSpecialty()} className="bg-slate-800 border-slate-600 text-slate-100" />
-                                <Button onClick={addSpecialty} type="button" className="bg-emerald-600 hover:bg-emerald-700"><Plus className="w-4 h-4" /></Button>
-                            </div>
+                            <Input
+                                value={newSpecialty}
+                                onChange={(e) => setNewSpecialty(e.target.value)}
+                                placeholder="Type a specialty and press Enter..."
+                                onKeyDown={(e) => {
+                                    if (e.key === 'Enter') {
+                                        e.preventDefault();
+                                        addSpecialty();
+                                    }
+                                }}
+                                className="bg-slate-800 border-slate-600 text-slate-100"
+                            />
                             <div className="flex flex-wrap gap-2">
                                 {formData.specialties.map((specialty) => (
                                     <Badge key={specialty} variant="secondary" className="flex items-center gap-1 bg-slate-700 text-slate-200 border-slate-600">
@@ -397,7 +466,9 @@ export default function SettingsPage() {
                         <LookingForSection formData={formData} handleChange={handleChange} />
                     </CardContent>
                 </Card>
+                </section>
 
+                <section id="contact-information">
                 <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
                     <CardHeader><CardTitle className="text-slate-100 flex items-center gap-2"><Mail className="w-5 h-5"/>Contact Information</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
@@ -406,7 +477,9 @@ export default function SettingsPage() {
                         <div><Label htmlFor="business_address" className="text-slate-300">Business Address</Label><Textarea id="business_address" value={formData.business_address} onChange={(e) => handleChange('business_address', e.target.value)} placeholder="123 Main St, City, State 12345" className="h-20 bg-slate-800 border-slate-600 text-slate-100" /></div>
                     </CardContent>
                 </Card>
+                </section>
 
+                <section id="social-media">
                 <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
                     <CardHeader><CardTitle className="text-slate-100 flex items-center gap-2"><Globe className="w-5 h-5"/>Social Media & Website</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
@@ -419,7 +492,9 @@ export default function SettingsPage() {
                         </div>
                     </CardContent>
                 </Card>
+                </section>
 
+                <section id="privacy-settings">
                 <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
                     <CardHeader><CardTitle className="text-slate-100 flex items-center gap-2"><Eye className="w-5 h-5"/>Privacy Settings</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
@@ -429,10 +504,12 @@ export default function SettingsPage() {
                         {renderSwitch('palm-sync', 'Sync with PalmStreet', 'Allows PalmStreet users to find your public profile', formData.palm_street_sync_enabled, (checked) => handleChange('palm_street_sync_enabled', checked))}
                     </CardContent>
                 </Card>
+                </section>
 
                 {/* Breeder-tier only: opt in to be featured on the home dashboard.
                     Grandfathered users automatically qualify for Breeder privileges. */}
                 {(user?.membership_tier === 'breeder' || user?.subscription_status === 'grandfathered') && (
+                <section id="breeder-perks">
                     <Card className="bg-emerald-950/20 border-emerald-900/40 backdrop-blur-sm">
                         <CardHeader>
                             <CardTitle className="text-emerald-200 flex items-center gap-2">
@@ -452,8 +529,10 @@ export default function SettingsPage() {
                             )}
                         </CardContent>
                     </Card>
+                </section>
                 )}
 
+                <section id="email-notifications">
                 <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
                     <CardHeader><CardTitle className="text-slate-100 flex items-center gap-2"><Mail className="w-5 h-5"/>Email Notifications</CardTitle></CardHeader>
                     <CardContent className="space-y-6">
@@ -472,7 +551,9 @@ export default function SettingsPage() {
                         )}
                     </CardContent>
                 </Card>
+                </section>
 
+                <section id="calendar-alerts">
                 <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
                      <CardHeader><CardTitle className="text-slate-100 flex items-center gap-2"><Calendar className="w-5 h-5"/>Calendar Alerts</CardTitle></CardHeader>
                      <CardContent className="space-y-6">
@@ -484,7 +565,9 @@ export default function SettingsPage() {
                          )}
                      </CardContent>
                  </Card>
+                </section>
 
+                <section id="feeding-alerts">
                  <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
                      <CardHeader><CardTitle className="text-slate-100 flex items-center gap-2"><Clock className="w-5 h-5"/>Feeding Alerts</CardTitle></CardHeader>
                      <CardContent className="space-y-6">
@@ -494,7 +577,9 @@ export default function SettingsPage() {
                          )}
                      </CardContent>
                  </Card>
+                </section>
 
+                <section id="default-sorts">
                 <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
                     <CardHeader>
                         <CardTitle className="text-slate-100 flex items-center gap-2">
@@ -595,13 +680,9 @@ export default function SettingsPage() {
                         </div>
                     </CardContent>
                 </Card>
+                </section>
 
-                {hasUnsavedChanges && (
-                    <Button onClick={handleSave} disabled={isSaving} className="w-full">
-                        {isSaving ? <><Loader2 className="w-5 h-5 mr-2 animate-spin" /> Saving...</> : <><Save className="w-5 h-5 mr-2" /> Save All Settings</>}
-                    </Button>
-                )}
-
+                <section id="danger-zone">
                 {/* Delete Account Section */}
                 <Card className="bg-red-950/30 border-red-900/50 backdrop-blur-sm mt-8">
                     <CardHeader>
@@ -653,6 +734,9 @@ export default function SettingsPage() {
                         </AlertDialog>
                     </CardContent>
                 </Card>
+                </section>
+                    </div>
+                </div>
             </div>
         </div>
     );

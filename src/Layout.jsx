@@ -555,6 +555,8 @@ function LayoutContent({ children, currentPageName }) {
                 key={item.page_name}
                 to={itemUrl}
                 onClick={handleNavClick}
+                data-tutorial-id={item.page_name}
+                data-tutorial-label={item.display_name}
                 className={`group flex items-center rounded-md px-2 py-2 text-xs font-medium transition-colors duration-200 sidebar-nav-item
                   ${isActive
                     ? "active"

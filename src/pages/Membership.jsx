@@ -5,6 +5,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Check, Sparkles, Zap, Crown, Star, Loader2, Flame } from 'lucide-react';
 import { User } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
+import SupportContactCard from '@/components/support/SupportContactCard';
 
 /**
  * Membership / pricing page.
@@ -137,7 +138,15 @@ export default function MembershipPage() {
 
   const handleCTA = async (tier) => {
     if (tier.comingSoon) {
-      window.location.href = 'mailto:tennysontaggart@gmail.com?subject=Enterprise%20waitlist';
+      // Enterprise waitlist now routes into our in-app support inbox
+      // instead of a personal mailto. Scroll down to the support card.
+      toast({
+        title: 'Enterprise waitlist',
+        description: 'Tell us about your operation using the support form below.',
+      });
+      requestAnimationFrame(() => {
+        window.scrollTo({ top: document.body.scrollHeight, behavior: 'smooth' });
+      });
       return;
     }
     if (tier.key === 'free') {
@@ -188,9 +197,6 @@ export default function MembershipPage() {
       <div className="max-w-7xl mx-auto space-y-12">
         {/* Header */}
         <div className="text-center space-y-4">
-          <h1 className="text-4xl md:text-5xl font-bold text-white">
-            Simple, Transparent Pricing
-          </h1>
           <p className="text-xl text-slate-300 max-w-2xl mx-auto">
             Choose the tier that fits your collection. Cancel anytime — all paid plans
             include a 7-day free trial.
@@ -348,17 +354,9 @@ export default function MembershipPage() {
           })}
         </div>
 
-        {/* FAQ */}
-        <div className="bg-slate-900/50 border border-slate-700 rounded-lg p-8 text-center space-y-4">
-          <h2 className="text-2xl font-bold text-white">Need Help Choosing?</h2>
-          <p className="text-slate-300">
-            Start free with up to 10 geckos. Upgrade to Keeper the moment your collection
-            starts to outgrow the free tier, or jump straight to Breeder if you want the
-            full dashboard-featured experience.
-          </p>
-          <p className="text-sm text-slate-500">
-            Questions? Reach out to tennysontaggart@gmail.com
-          </p>
+        {/* Support contact — in-app ticket instead of mailto */}
+        <div className="max-w-2xl mx-auto w-full">
+          <SupportContactCard title="Questions about a plan? Message support." />
         </div>
       </div>
     </div>
