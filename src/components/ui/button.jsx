@@ -13,8 +13,21 @@ const buttonVariants = cva(
           "bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold shadow-lg",
         destructive:
           "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
+        // Themed to match the rest of the app's dark-emerald shell. The
+        // previous `bg-background` fell back to near-black in dark mode,
+        // and any outline button wrapped in a Radix trigger
+        // (DialogTrigger, DropdownMenuTrigger, etc.) escaped the global
+        // `button:not([data-state])` emerald override in Layout.jsx —
+        // rendering as a pure-black button against the green theme.
+        //
+        // NOTE: we deliberately use arbitrary `bg-[rgba(...)]` values
+        // instead of `bg-emerald-*` here. Layout.jsx has a selector
+        // `.dark button[class*="bg-emerald"]` that force-promotes any
+        // button with `bg-emerald` in its class list to a full primary
+        // gradient — which would make outline buttons look like solid
+        // CTAs. Arbitrary values don't trigger that substring match.
         outline:
-          "border border-input bg-background shadow-sm hover:bg-accent hover:text-accent-foreground",
+          "border border-emerald-700/60 bg-[rgba(6,95,70,0.35)] text-slate-100 shadow-sm hover:bg-[rgba(4,120,87,0.5)] hover:border-emerald-500/70 hover:text-white",
         secondary:
           "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",

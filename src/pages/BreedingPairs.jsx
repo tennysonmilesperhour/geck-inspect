@@ -305,9 +305,9 @@ function EditBreedingPlanModal({ plan, males, females, onSave, onClose }) {
 
     return (
         <Dialog open={true} onOpenChange={onClose}>
-            <DialogContent>
+            <DialogContent className="max-w-2xl bg-slate-900 border-slate-700 text-slate-100">
                 <DialogHeader>
-                    <DialogTitle>Edit Breeding Plan</DialogTitle>
+                    <DialogTitle className="text-slate-100">Edit Breeding Plan</DialogTitle>
                 </DialogHeader>
                 <form onSubmit={handleSubmit} className="space-y-4">
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -406,10 +406,16 @@ function BreedingPlanCard({ plan, sire, dam, eggs, onDataRefresh, onHatch, onEdi
                     <div className="flex items-center gap-2">
                         <Badge variant={plan.status === 'Active' ? 'default' : 'secondary'}>{plan.status}</Badge>
                         <Button
+                            type="button"
                             size="sm"
                             variant="outline"
-                            onClick={() => onEdit(plan)}
+                            onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                onEdit(plan);
+                            }}
                             title="Edit Plan"
+                            className="border-emerald-700/60 text-slate-100"
                         >
                             <Pencil className="w-4 h-4" />
                         </Button>

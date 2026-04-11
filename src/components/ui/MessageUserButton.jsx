@@ -6,7 +6,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Textarea } from '@/components/ui/textarea';
 import { Mail, Send } from 'lucide-react';
 
-export default function MessageUserButton({ recipientEmail, recipientName, variant = "outline", size = "sm" }) {
+export default function MessageUserButton({ recipientEmail, recipientName, variant = "outline", size = "sm", className = "" }) {
     const [isOpen, setIsOpen] = useState(false);
     const [message, setMessage] = useState('');
     const [isSending, setIsSending] = useState(false);
@@ -34,7 +34,7 @@ export default function MessageUserButton({ recipientEmail, recipientName, varia
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button variant={variant} size={size}>
+                <Button variant={variant} size={size} className={className}>
                     <Mail className="w-4 h-4 mr-2" />
                     Message
                 </Button>
