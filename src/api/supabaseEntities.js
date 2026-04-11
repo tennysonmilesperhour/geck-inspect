@@ -26,6 +26,7 @@ export const TABLE_MAP = {
   ForumComment: 'forum_comments',
   ForumLike: 'forum_likes',
   ForumPost: 'forum_posts',
+  FutureBreedingPlan: 'future_breeding_plans',
   Gecko: 'geckos',
   GeckoEvent: 'gecko_events',
   GeckoImage: 'gecko_images',
@@ -203,6 +204,7 @@ export const ForumCategory = createEntityClient('ForumCategory');
 export const ForumComment = createEntityClient('ForumComment');
 export const ForumLike = createEntityClient('ForumLike');
 export const ForumPost = createEntityClient('ForumPost');
+export const FutureBreedingPlan = createEntityClient('FutureBreedingPlan');
 export const Gecko = createEntityClient('Gecko');
 export const GeckoEvent = createEntityClient('GeckoEvent');
 export const GeckoImage = createEntityClient('GeckoImage');

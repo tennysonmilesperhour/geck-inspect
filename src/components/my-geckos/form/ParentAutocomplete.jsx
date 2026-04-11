@@ -62,7 +62,14 @@ export default function ParentAutocomplete({
         <ChevronDown className="w-4 h-4 absolute right-2 text-slate-400 pointer-events-none" />
       </div>
       {showSuggestions && filtered.length > 0 && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-2xl z-[99999] max-h-48 overflow-y-auto">
+        <div
+          className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-2xl z-[99999] overflow-y-auto overscroll-contain"
+          style={{ maxHeight: 'min(60vh, 420px)' }}
+        >
+          <div className="sticky top-0 bg-slate-800 border-b border-slate-700 px-3 py-1.5 text-[10px] uppercase tracking-wider text-slate-500 flex items-center justify-between">
+            <span>{filtered.length} {filtered.length === 1 ? 'match' : 'matches'}</span>
+            <span className="text-slate-600">scroll for more</span>
+          </div>
           {filtered.map((g) => (
             <button
               key={g.id}
@@ -78,9 +85,9 @@ export default function ParentAutocomplete({
                 alt={g.name}
                 className="w-6 h-6 rounded object-cover flex-shrink-0"
               />
-              <span>{g.name}</span>
+              <span className="truncate">{g.name}</span>
               {g.gecko_id_code && (
-                <span className="text-slate-400 text-xs ml-auto">
+                <span className="text-slate-400 text-xs ml-auto shrink-0">
                   {g.gecko_id_code}
                 </span>
               )}

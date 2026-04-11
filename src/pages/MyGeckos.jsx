@@ -121,92 +121,78 @@ export default function MyGeckosPage() {
     const [showArchived, setShowArchived] = useState(false);
     const [archiveDialogGeckoId, setArchiveDialogGeckoId] = useState(null);
     const [feedingGroups, setFeedingGroups] = useState([]);
-    const [visibleCount, setVisibleCount] = useState(25);
-    const [geckoOffset, setGeckoOffset] = useState(0);
-    const [hasMoreGeckos, setHasMoreGeckos] = useState(true);
+
+    // Hard cap on how many geckos we fetch in one go. Most keepers are well
+    // under this, and even at 100 the payload is tiny. No incremental paging
+    // — the dual server-side offset + client-side visibleCount that used to
+    // live here was producing random counts and losing its "Load more" button
+    // on re-renders. Simple batch fetch is correct and snappy.
+    const GECKO_FETCH_LIMIT = 100;
 
     useEffect(() => {
         FeedingGroup.list().then(setFeedingGroups).catch(() => {});
     }, []);
 
-    // Enhanced loadGeckos with caching and rate limiting
-    // Now uses `user` from state and is dependent on it.
-    const loadGeckos = useCallback(async (forceRefresh = false, offset = 0) => {
-        if (!user) return; // Use the `user` state directly
+    // Load every gecko the current user owns, up to GECKO_FETCH_LIMIT. Reads
+    // from the rate-limited cache when possible, otherwise does a single
+    // Supabase round trip.
+    const loadGeckos = useCallback(async (forceRefresh = false) => {
+        if (!user) return;
 
         setIsLoading(true);
-        const cacheKey = offset === 0 ? `geckos_${user.email}` : `geckos_${user.email}_${offset}`;
+        const cacheKey = `geckos_${user.email}`;
 
         try {
-            // Check cache first unless forcing refresh
-            if (!forceRefresh && offset === 0) {
+            if (!forceRefresh) {
                 const cachedGeckos = geckosCache.get(cacheKey);
                 if (cachedGeckos) {
-                    console.log('Using cached gecko data');
                     setGeckos(cachedGeckos);
                     setIsLoading(false);
                     return;
                 }
             }
 
-            // Check if we can make a request
             if (!geckosCache.canMakeRequest(cacheKey)) {
                 console.log('Rate limit protection: using existing data');
                 setIsLoading(false);
                 return;
             }
-
-            // Mark request being made
             geckosCache.markRequest(cacheKey);
 
-            // Make API call with retry logic - fetch both geckos and weights (24 per page)
             const [userGeckos, userWeights] = await retryWithBackoff(async () => {
                 return await Promise.all([
-                    Gecko.filter({ created_by: user.email }, '-created_date', 24, offset),
-                    WeightRecord.filter({ created_by: user.email }, '-record_date')
+                    Gecko.filter(
+                        { created_by: user.email },
+                        '-created_date',
+                        GECKO_FETCH_LIMIT
+                    ),
+                    WeightRecord.filter({ created_by: user.email }, '-record_date'),
                 ]);
             });
 
-            // Cache the results
             geckosCache.set(cacheKey, userGeckos);
             geckosCache.set(`weights_${user.email}`, userWeights);
-            
-            if (offset === 0) {
-                setGeckos(userGeckos);
-            } else {
-                setGeckos(prev => [...prev, ...userGeckos]);
-            }
+            setGeckos(userGeckos);
             setWeightRecords(userWeights);
-            setHasMoreGeckos(userGeckos.length === 24);
-
         } catch (error) {
-            console.error("Failed to load geckos:", error);
-
-            // If we have cached data, use it as fallback
+            console.error('Failed to load geckos:', error);
             const fallbackGeckos = geckosCache.get(cacheKey);
             const fallbackWeights = geckosCache.get(`weights_${user.email}`);
             if (fallbackGeckos) {
-                console.log('Using fallback cached data due to error');
                 setGeckos(fallbackGeckos);
                 if (fallbackWeights) setWeightRecords(fallbackWeights);
             } else {
-                // Show error toast only if no fallback data
                 toast({
-                    title: "Error Loading Geckos",
-                    description: "Unable to load your gecko collection. Please try again in a moment.",
-                    variant: "destructive",
+                    title: 'Error Loading Geckos',
+                    description:
+                        'Unable to load your gecko collection. Please try again in a moment.',
+                    variant: 'destructive',
                 });
             }
         } finally {
             setIsLoading(false);
         }
-    }, [user]); // Add `user` to dependencies
-
-    const loadMoreGeckos = useCallback(async () => {
-        const newOffset = geckoOffset + 24;
-        setGeckoOffset(newOffset);
-        await loadGeckos(false, newOffset);
-    }, [geckoOffset, loadGeckos]);
+    }, [user]);
 
     // Effect to handle initial user loading
     useEffect(() => {
@@ -226,10 +212,9 @@ export default function MyGeckosPage() {
     // Effect to load geckos when user is available or changes
     useEffect(() => {
         if (user) {
-            setGeckoOffset(0);
             loadGeckos();
         }
-    }, [user, loadGeckos]); // loadGeckos depends on user, so this ensures it runs when user is ready.
+    }, [user, loadGeckos]);
 
     // Listen for cross-page gecko-list changes (e.g. a new gecko auto-created
     // when hatching an egg on the Breeding page). Any page that mutates the
@@ -538,16 +523,10 @@ export default function MyGeckosPage() {
             weightMin: '',
             weightMax: ''
         });
-        setGeckoOffset(0);
     };
 
-    // Reset pagination when filters/search/sort change
-    React.useEffect(() => { 
-        setGeckoOffset(0); 
-        setVisibleCount(25); 
-        setGeckos([]);
-        loadGeckos(true, 0);
-    }, [searchTerm, filters, sortBy, showArchived]);
+    // Filters + search + sort run purely client-side now, so there's no
+    // need to re-fetch from Supabase every time the user types.
 
     const searchFiltered = geckos
         .filter(gecko => showArchived ? gecko.archived : (!gecko.archived && gecko.status !== 'Sold'))
@@ -562,8 +541,9 @@ export default function MyGeckosPage() {
         });
     
     const filteredAndSortedGeckos = getSortedGeckos(applyFilters(searchFiltered));
-    const visibleGeckos = filteredAndSortedGeckos.slice(0, visibleCount);
-    const hasMore = visibleCount < filteredAndSortedGeckos.length;
+    // We render every gecko we've loaded; the server already capped the
+    // fetch at GECKO_FETCH_LIMIT and filters/search are pure.
+    const visibleGeckos = filteredAndSortedGeckos;
 
     if (!user && !isLoading) {
         return (
@@ -979,15 +959,9 @@ export default function MyGeckosPage() {
                             />
                         )}
 
-                        {hasMoreGeckos && (
-                            <div className="flex justify-center mt-8">
-                                <Button
-                                    variant="outline"
-                                    className="border-slate-600 hover:bg-slate-800 text-slate-300 px-8"
-                                    onClick={loadMoreGeckos}
-                                >
-                                    Load More Geckos
-                                </Button>
+                        {geckos.length >= GECKO_FETCH_LIMIT && (
+                            <div className="mt-8 text-center text-xs text-slate-500">
+                                Showing the {GECKO_FETCH_LIMIT} most recent geckos. If you need to see older entries, narrow the filters or search.
                             </div>
                         )}
 

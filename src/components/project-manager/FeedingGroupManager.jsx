@@ -114,6 +114,15 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
         return differenceInDays(next, new Date());
     };
 
+    // Did the user mark this group fed today? Used to suppress the due-soon
+    // glow ring immediately after clicking "Mark Fed Today" — previously the
+    // ring stayed orange whenever the next feed landed "within 1 day", which
+    // on a daily interval is basically always.
+    const wasFedToday = (group) => {
+        if (!group.last_fed_date) return false;
+        return group.last_fed_date === format(new Date(), 'yyyy-MM-dd');
+    };
+
     return (
         <div className="space-y-4">
             <div className="flex items-center justify-between">
@@ -136,8 +145,11 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
                         const daysUntil = getDaysUntil(group);
                         const nextFeed = getNextFeedDate(group);
                         const assignedGeckos = geckos.filter(g => g.feeding_group_id === group.id);
-                        const isOverdue = daysUntil !== null && daysUntil < 0;
-                        const isDueSoon = daysUntil !== null && daysUntil >= 0 && daysUntil <= 1;
+                        const fedToday = wasFedToday(group);
+                        // If you fed today the group is not overdue and not
+                        // "due soon", regardless of interval math.
+                        const isOverdue = !fedToday && daysUntil !== null && daysUntil < 0;
+                        const isDueSoon = !fedToday && daysUntil !== null && daysUntil === 0;
 
                         return (
                             <Card key={group.id} className={`bg-slate-800 border-slate-700 ${isOverdue ? 'ring-2 ring-red-500' : isDueSoon ? 'ring-2 ring-orange-500' : ''}`}>
@@ -176,7 +188,13 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
                                     )}
                                     {nextFeed && (
                                         <div className={`text-xs font-semibold ${isOverdue ? 'text-red-400' : isDueSoon ? 'text-orange-400' : 'text-emerald-400'}`}>
-                                            {isOverdue ? `Overdue by ${Math.abs(daysUntil)} day(s)!` : daysUntil === 0 ? 'Feed today!' : `Next: ${format(nextFeed, 'MMM d')} (${daysUntil}d)`}
+                                            {fedToday
+                                                ? `Fed today · Next: ${format(nextFeed, 'MMM d')}`
+                                                : isOverdue
+                                                    ? `Overdue by ${Math.abs(daysUntil)} day(s)!`
+                                                    : daysUntil === 0
+                                                        ? 'Feed today!'
+                                                        : `Next: ${format(nextFeed, 'MMM d')} (${daysUntil}d)`}
                                         </div>
                                     )}
                                     <div className="text-xs text-slate-500">{assignedGeckos.length} gecko(s){group.auto_weight_min_g != null && group.auto_weight_max_g != null ? ` · Auto: ${group.auto_weight_min_g}–${group.auto_weight_max_g}g` : ''}</div>

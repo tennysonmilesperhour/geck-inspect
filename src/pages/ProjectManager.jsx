@@ -18,6 +18,8 @@ import { format } from 'date-fns';
 import ProjectCalendar from '../components/project-manager/ProjectCalendar';
 import FeedingGroupManager from '../components/project-manager/FeedingGroupManager';
 import StickyNotes from '../components/project-manager/StickyNotes';
+import FutureBreedingPlans from '../components/project-manager/FutureBreedingPlans';
+import { User } from '@/entities/all';
 
 export default function ProjectManager() {
     const [projects, setProjects] = useState([]);
@@ -27,6 +29,15 @@ export default function ProjectManager() {
     const [feedingGroups, setFeedingGroups] = useState([]);
     const [otherReptiles, setOtherReptiles] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    // Controlled tab state so child actions (like "Mark Fed Today" in the
+    // Feeding tab) can refresh data without unmounting the Tabs shell and
+    // snapping the user back to the Plans tab.
+    const [activeTab, setActiveTab] = useState('projects');
+    const [currentUserEmail, setCurrentUserEmail] = useState(null);
+
+    useEffect(() => {
+        User.me().then((u) => setCurrentUserEmail(u?.email || null)).catch(() => {});
+    }, []);
     const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
     const [selectedProjectId, setSelectedProjectId] = useState(null);
@@ -46,8 +57,11 @@ export default function ProjectManager() {
     
     useEffect(() => { loadData(); }, []);
     
-    const loadData = async () => {
-        setIsLoading(true);
+    // Refresh data from Supabase. `background=true` skips the full-screen
+    // loading spinner so child actions (e.g. Mark Fed Today) don't unmount
+    // the tabs shell and reset the user's selected tab.
+    const loadData = async ({ background = false } = {}) => {
+        if (!background) setIsLoading(true);
         try {
             const [projectsData, tasksData, geckosData, plansData, feedingData, reptilesData] = await Promise.all([
                 Project.filter({ status: { $in: ['active', 'completed'] } }),
@@ -66,7 +80,7 @@ export default function ProjectManager() {
         } catch (error) {
             console.error("Failed to load data:", error);
         }
-        setIsLoading(false);
+        if (!background) setIsLoading(false);
     };
     
     const handleCreateProject = async () => {
@@ -165,23 +179,38 @@ export default function ProjectManager() {
                         </Button>
                 </div>
                 
-                {isLoading ? (
+                {isLoading && projects.length === 0 && feedingGroups.length === 0 ? (
                     <div className="text-center py-20"><Loader2 className="w-12 h-12 text-emerald-500 animate-spin mx-auto" /></div>
                 ) : (
-                    <Tabs defaultValue="projects" className="w-full">
-                        <TabsList className="grid w-full grid-cols-4 bg-slate-900 h-11 mb-6">
-                            <TabsTrigger value="projects" className="data-[state=active]:bg-transparent data-[state=active]:text-slate-100 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 text-xs md:text-sm">
-                                <CalendarDays className="w-4 h-4 mr-1 md:mr-2" /> Plans
-                            </TabsTrigger>
-                            <TabsTrigger value="calendar" className="data-[state=active]:bg-transparent data-[state=active]:text-slate-100 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 text-xs md:text-sm">
-                                <Calendar className="w-4 h-4 mr-1 md:mr-2" /> Calendar
-                            </TabsTrigger>
-                            <TabsTrigger value="feeding" className="data-[state=active]:bg-transparent data-[state=active]:text-slate-100 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 text-xs md:text-sm">
-                                <Utensils className="w-4 h-4 mr-1 md:mr-2" /> <span className="hidden sm:inline">Feeding Groups</span><span className="sm:hidden">Feed</span>
-                            </TabsTrigger>
-                            <TabsTrigger value="notes" className="data-[state=active]:bg-transparent data-[state=active]:text-slate-100 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 text-xs md:text-sm">
-                                <StickyNote className="w-4 h-4 mr-1 md:mr-2" /> Notes
-                            </TabsTrigger>
+                    <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+                        <TabsList className="grid w-full grid-cols-5 bg-slate-900 border border-slate-800 h-12 p-1 mb-6 gap-1">
+                            {[
+                                { value: 'projects', icon: CalendarDays, label: 'Plans' },
+                                { value: 'future', icon: Calendar, label: 'Future Breeding', shortLabel: 'Future' },
+                                { value: 'calendar', icon: Calendar, label: 'Calendar' },
+                                { value: 'feeding', icon: Utensils, label: 'Feeding Groups', shortLabel: 'Feed' },
+                                { value: 'notes', icon: StickyNote, label: 'Notes' },
+                            ].map(({ value, icon: Icon, label, shortLabel }) => (
+                                <TabsTrigger
+                                    key={value}
+                                    value={value}
+                                    className="
+                                        flex items-center justify-center gap-1.5 rounded-md
+                                        text-xs md:text-sm font-medium transition-colors
+                                        text-slate-400 hover:text-slate-200
+                                        data-[state=active]:bg-emerald-600
+                                        data-[state=active]:text-white
+                                        data-[state=active]:shadow-md
+                                        data-[state=active]:ring-1
+                                        data-[state=active]:ring-emerald-400/50
+                                    "
+                                >
+                                    <Icon className="w-4 h-4" />
+                                    <span className="hidden sm:inline">{label}</span>
+                                    {shortLabel && <span className="sm:hidden">{shortLabel}</span>}
+                                    {!shortLabel && <span className="sm:hidden">{label}</span>}
+                                </TabsTrigger>
+                            ))}
                         </TabsList>
 
                         <TabsContent value="projects">
@@ -261,12 +290,20 @@ export default function ProjectManager() {
                             )}
                         </TabsContent>
 
+                        <TabsContent value="future">
+                            <FutureBreedingPlans geckos={geckos} currentUserEmail={currentUserEmail} />
+                        </TabsContent>
+
                         <TabsContent value="calendar">
                             <ProjectCalendar tasks={tasks} projects={projects} feedingGroups={feedingGroups} otherReptiles={otherReptiles} />
                         </TabsContent>
 
                         <TabsContent value="feeding">
-                            <FeedingGroupManager feedingGroups={feedingGroups} geckos={geckos} onUpdate={loadData} />
+                            <FeedingGroupManager
+                                feedingGroups={feedingGroups}
+                                geckos={geckos}
+                                onUpdate={() => loadData({ background: true })}
+                            />
                         </TabsContent>
 
                         <TabsContent value="notes">
