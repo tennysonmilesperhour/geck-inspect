@@ -1366,16 +1366,6 @@ function LayoutContent({ children, currentPageName }) {
                  App Tutorial
                 </button>
               </div>
-              <Link to={createPageUrl("Subscription")} className="block">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  className="w-full justify-start text-sage-600 hover:text-sage-700 border-sage-300 text-sm"
-                >
-                  <Star className="w-4 h-4 mr-2 flex-shrink-0" />
-                  <span className="truncate">Subscription</span>
-                </Button>
-              </Link>
 
               {user ?
                 <div className="space-y-3">
@@ -1513,17 +1503,6 @@ function LayoutContent({ children, currentPageName }) {
                    App Tutorial
                   </button>
                   </div>
-
-                  <Link to={createPageUrl("Subscription")} className="block">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      className="w-full justify-start text-sage-600 hover:text-sage-700 border-sage-300 text-sm"
-                    >
-                      <Star className="w-4 h-4 mr-2 flex-shrink-0" />
-                      <span className="truncate">Subscription</span>
-                    </Button>
-                  </Link>
 
                   {user ?
                     <div className="space-y-3">

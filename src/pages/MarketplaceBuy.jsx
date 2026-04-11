@@ -19,12 +19,12 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
     const getSexColor = (sex) => sex === 'Male' ? 'text-blue-400' : sex === 'Female' ? 'text-pink-400' : 'text-gray-400';
 
     return (
-        <Card className="overflow-hidden group-hover:shadow-lg transition-shadow duration-300 h-full flex flex-col bg-slate-800/80 backdrop-blur-sm border-slate-700">
+        <Card className="overflow-hidden group-hover:border-emerald-500/50 group-hover:shadow-lg group-hover:shadow-emerald-500/10 transition-colors duration-200 h-full flex flex-col bg-slate-900 border-slate-800">
             <div className="aspect-square w-full overflow-hidden relative">
                 <img
                     src={gecko.image_urls?.[0] || `https://ui-avatars.com/api/?name=${gecko.name.charAt(0)}&background=random`}
                     alt={gecko.name}
-                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover"
                     loading="lazy"
                     decoding="async"
                     onError={(e) => { e.target.src = 'https://i.imgur.com/sw9gnDp.png'; }}
@@ -51,7 +51,7 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
             </div>
             <CardContent className="p-4 flex-grow flex flex-col">
                 <h3 className="font-semibold text-lg truncate text-slate-100">{gecko.name}</h3>
-                <p className="text-sm text-green-500 font-bold flex items-center gap-1">
+                <p className="text-sm text-emerald-400 font-bold flex items-center gap-1">
                     <DollarSign className="w-4 h-4" />
                     {gecko.asking_price ? `$${gecko.asking_price}` : 'Inquire for price'}
                 </p>

@@ -1,40 +1,40 @@
-
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { ForumCategory, ForumPost, User } from '@/entities/all';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
-import { MessageSquare, ThumbsUp, Eye, PlusCircle, Pin } from 'lucide-react';
+import {
+    Select,
+    SelectTrigger,
+    SelectValue,
+    SelectContent,
+    SelectItem,
+} from '@/components/ui/select';
+import {
+    MessageSquare,
+    ThumbsUp,
+    Eye,
+    PlusCircle,
+    Pin,
+    Loader2,
+    Search,
+    X,
+} from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { formatDistanceToNow } from 'date-fns';
 
-// Create a page-specific cache
-const forumCache = {
-  data: null,
-  timestamp: null,
-  CACHE_DURATION: 5 * 60 * 1000, // 5 minutes
-  
-  get() {
-    if (this.data && this.timestamp && (Date.now() - this.timestamp) < this.CACHE_DURATION) {
-      return this.data;
-    }
-    return null;
-  },
-  
-  set(data) {
-    this.data = data;
-    this.timestamp = Date.now();
-  },
-  
-  clear() {
-    this.data = null;
-    this.timestamp = null;
-  }
-};
-
+/**
+ * Forum index — dark theme to match the rest of the app.
+ *
+ * Previous version used sage/earth light colors and cached the post
+ * list for 5 minutes. The cache meant that when a user deleted a post
+ * from ForumPost.jsx and navigated back here, the deleted title
+ * would still be shown until the cache expired, and clicking it
+ * would take them to a dead page. Now the list is re-fetched on
+ * every mount.
+ */
 export default function ForumPage() {
     const [categories, setCategories] = useState([]);
     const [posts, setPosts] = useState([]);
@@ -42,149 +42,225 @@ export default function ForumPage() {
     const [currentUser, setCurrentUser] = useState(null);
     const [showCreatePost, setShowCreatePost] = useState(false);
     const [newPost, setNewPost] = useState({ title: '', content: '', category_id: '' });
+    const [isPosting, setIsPosting] = useState(false);
+    const [search, setSearch] = useState('');
 
+    const loadData = async () => {
+        setIsLoading(true);
+        try {
+            const [user, fetchedCategories, fetchedPosts] = await Promise.all([
+                User.me().catch(() => null),
+                ForumCategory.list(),
+                ForumPost.list('-created_date'),
+            ]);
+            setCurrentUser(user);
+            setCategories(
+                [...fetchedCategories].sort(
+                    (a, b) => (a.order_position ?? 0) - (b.order_position ?? 0)
+                )
+            );
+            setPosts(fetchedPosts);
+        } catch (error) {
+            console.error('Failed to load forum data:', error);
+        }
+        setIsLoading(false);
+    };
+
+    // Always fetch fresh on mount. No time-based cache — deleted posts
+    // need to disappear immediately when the user navigates back here.
     useEffect(() => {
-        const fetchData = async () => {
-            setIsLoading(true);
-            
-            // Check cache first
-            const cachedData = forumCache.get();
-            if (cachedData) {
-                console.log('Using cached forum data');
-                setCategories(cachedData.categories);
-                setPosts(cachedData.posts);
-                setCurrentUser(cachedData.user);
-                setIsLoading(false);
-                return;
-            }
-            
-            try {
-                const [user, fetchedCategories, fetchedPosts] = await Promise.all([
-                    User.me().catch(() => null),
-                    ForumCategory.list(),
-                    ForumPost.list('-created_date')
-                ]);
-                
-                const sortedCategories = fetchedCategories.sort((a,b) => a.order_position - b.order_position);
-                
-                // Cache the results
-                forumCache.set({
-                    user,
-                    categories: sortedCategories,
-                    posts: fetchedPosts
-                });
-                
-                setCurrentUser(user);
-                setCategories(sortedCategories);
-                setPosts(fetchedPosts);
-            } catch (error) {
-                console.error("Failed to load forum data:", error);
-            }
-            setIsLoading(false);
-        };
-        fetchData();
+        loadData();
     }, []);
 
     const handleCreatePost = async () => {
-        if (!newPost.title || !newPost.content || !newPost.category_id || !currentUser) return;
+        if (!newPost.title.trim() || !newPost.content.trim() || !newPost.category_id || !currentUser) {
+            return;
+        }
+        setIsPosting(true);
         try {
             const createdPost = await ForumPost.create({
-                ...newPost,
-                author_name: currentUser.full_name,
+                title: newPost.title.trim(),
+                content: newPost.content.trim(),
+                category_id: newPost.category_id,
+                author_name: currentUser.full_name || currentUser.breeder_name || currentUser.email,
             });
-            setPosts([createdPost, ...posts]);
+            setPosts((prev) => [createdPost, ...prev]);
             setShowCreatePost(false);
             setNewPost({ title: '', content: '', category_id: '' });
-            
-            // Clear cache so it refreshes next time
-            forumCache.clear();
         } catch (error) {
-            console.error("Failed to create post:", error);
+            console.error('Failed to create post:', error);
         }
+        setIsPosting(false);
     };
 
+    const handleCancelPost = () => {
+        setShowCreatePost(false);
+        setNewPost({ title: '', content: '', category_id: '' });
+    };
+
+    const filteredPosts = useMemo(() => {
+        if (!search.trim()) return posts;
+        const q = search.toLowerCase();
+        return posts.filter(
+            (p) =>
+                p.title?.toLowerCase().includes(q) ||
+                p.content?.toLowerCase().includes(q) ||
+                p.author_name?.toLowerCase().includes(q)
+        );
+    }, [posts, search]);
+
     if (isLoading) {
-        return <div className="p-8">Loading forum...</div>;
+        return (
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+                <div className="flex items-center gap-2 text-slate-400">
+                    <Loader2 className="w-5 h-5 animate-spin" />
+                    Loading forum...
+                </div>
+            </div>
+        );
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-sage-50 to-earth-50 p-4 md:p-8">
-            <div className="max-w-6xl mx-auto space-y-8">
-                <div className="text-center">
-                    <h1 className="text-5xl font-bold text-sage-900 mb-2">Community Forum</h1>
-                    <p className="text-lg text-sage-600">Connect, share, and learn with fellow gecko enthusiasts.</p>
-                </div>
-                
-                <div className="flex justify-end">
+        <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+            <div className="max-w-6xl mx-auto space-y-6">
+                {/* Header */}
+                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl md:text-5xl font-bold text-slate-100 mb-1">
+                            Community Forum
+                        </h1>
+                        <p className="text-sm md:text-lg text-slate-400">
+                            Connect, share, and learn with fellow gecko enthusiasts.
+                        </p>
+                    </div>
                     {currentUser && (
-                        <Button onClick={() => setShowCreatePost(!showCreatePost)}>
-                            <PlusCircle className="w-4 h-4 mr-2" />
-                            {showCreatePost ? 'Cancel' : 'Create New Post'}
+                        <Button
+                            onClick={() => setShowCreatePost((v) => !v)}
+                            className="bg-emerald-600 hover:bg-emerald-500 text-white shrink-0"
+                        >
+                            {showCreatePost ? (
+                                <>
+                                    <X className="w-4 h-4 mr-2" />
+                                    Cancel
+                                </>
+                            ) : (
+                                <>
+                                    <PlusCircle className="w-4 h-4 mr-2" />
+                                    New post
+                                </>
+                            )}
                         </Button>
                     )}
                 </div>
 
+                {/* Search */}
+                <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                    <Input
+                        placeholder="Search posts by title, content, or author..."
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        className="pl-10 bg-slate-900 border-slate-700 text-slate-100"
+                    />
+                </div>
+
+                {/* Create post form */}
                 {showCreatePost && (
-                    <Card className="bg-white/80 backdrop-blur-sm">
+                    <Card className="bg-slate-900 border-slate-800">
                         <CardHeader>
-                            <CardTitle>Create a New Post</CardTitle>
+                            <CardTitle className="text-slate-100">Create a new post</CardTitle>
                         </CardHeader>
-                        <CardContent className="space-y-4">
+                        <CardContent className="space-y-3">
                             <Input
-                                placeholder="Post Title"
+                                placeholder="Post title"
                                 value={newPost.title}
                                 onChange={(e) => setNewPost({ ...newPost, title: e.target.value })}
+                                className="bg-slate-950 border-slate-700 text-slate-100"
                             />
                             <Textarea
                                 placeholder="What's on your mind?"
                                 value={newPost.content}
                                 onChange={(e) => setNewPost({ ...newPost, content: e.target.value })}
-                                className="h-32"
+                                className="h-32 bg-slate-950 border-slate-700 text-slate-100"
                             />
-                            <Select onValueChange={(value) => setNewPost({ ...newPost, category_id: value })}>
-                                <SelectTrigger>
+                            <Select
+                                value={newPost.category_id}
+                                onValueChange={(value) => setNewPost({ ...newPost, category_id: value })}
+                            >
+                                <SelectTrigger className="bg-slate-950 border-slate-700 text-slate-100">
                                     <SelectValue placeholder="Select a category" />
                                 </SelectTrigger>
-                                <SelectContent>
-                                    {categories.map(cat => (
-                                        <SelectItem key={cat.id} value={cat.id}>{cat.name}</SelectItem>
+                                <SelectContent className="bg-slate-900 border-slate-700 text-slate-100">
+                                    {categories.map((cat) => (
+                                        <SelectItem key={cat.id} value={cat.id}>
+                                            {cat.name}
+                                        </SelectItem>
                                     ))}
                                 </SelectContent>
                             </Select>
                         </CardContent>
-                        <CardFooter>
-                            <Button onClick={handleCreatePost}>Submit Post</Button>
+                        <CardFooter className="flex justify-end gap-2">
+                            <Button
+                                variant="outline"
+                                onClick={handleCancelPost}
+                                className="border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700"
+                            >
+                                Cancel
+                            </Button>
+                            <Button
+                                onClick={handleCreatePost}
+                                disabled={
+                                    isPosting ||
+                                    !newPost.title.trim() ||
+                                    !newPost.content.trim() ||
+                                    !newPost.category_id
+                                }
+                                className="bg-emerald-600 hover:bg-emerald-500 text-white"
+                            >
+                                {isPosting && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                                Submit post
+                            </Button>
                         </CardFooter>
                     </Card>
                 )}
 
-                {categories.map(category => {
-                    const categoryPosts = posts.filter(p => p.category_id === category.id);
+                {/* Category feed */}
+                {categories.map((category) => {
+                    const categoryPosts = filteredPosts.filter((p) => p.category_id === category.id);
                     if (categoryPosts.length === 0) return null;
                     return (
                         <div key={category.id}>
-                            <h2 className="text-2xl font-bold text-sage-800 mb-4">{category.name}</h2>
-                            <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
-                                <CardContent className="p-0 divide-y divide-sage-200">
-                                    {categoryPosts.map(post => (
-                                        <div key={post.id} className="p-4 flex items-center justify-between hover:bg-sage-50/50">
-                                            <div className="flex items-center gap-4">
-                                                <MessageSquare className="w-6 h-6 text-sage-500 flex-shrink-0" />
-                                                <div>
-                                                    <Link to={createPageUrl(`ForumPost?id=${post.id}`)} className="text-lg font-bold text-sage-900 hover:underline">
+                            <h2 className="text-xl md:text-2xl font-bold text-slate-200 mb-3">
+                                {category.name}
+                            </h2>
+                            <Card className="bg-slate-900 border-slate-800">
+                                <CardContent className="p-0 divide-y divide-slate-800">
+                                    {categoryPosts.map((post) => (
+                                        <div
+                                            key={post.id}
+                                            className="p-4 flex items-center justify-between hover:bg-slate-800/60 transition-colors"
+                                        >
+                                            <div className="flex items-center gap-4 min-w-0">
+                                                <MessageSquare className="w-5 h-5 text-slate-500 shrink-0" />
+                                                <div className="min-w-0">
+                                                    <Link
+                                                        to={`${createPageUrl('ForumPost')}?id=${post.id}`}
+                                                        className="text-base md:text-lg font-semibold text-slate-100 hover:text-emerald-300 transition-colors truncate block"
+                                                    >
                                                         {post.title}
                                                     </Link>
-                                                    <p className="text-sm text-sage-600">
-                                                        by {post.author_name} • {formatDistanceToNow(new Date(post.created_date), { addSuffix: true })}
+                                                    <p className="text-xs md:text-sm text-slate-500 truncate">
+                                                        by {post.author_name || 'Unknown'} ·{' '}
+                                                        {formatDistanceToNow(new Date(post.created_date), {
+                                                            addSuffix: true,
+                                                        })}
                                                     </p>
                                                 </div>
-                                                {post.is_pinned && <Pin className="w-4 h-4 text-orange-500" />}
+                                                {post.is_pinned && (
+                                                    <Pin className="w-4 h-4 text-amber-400 shrink-0" />
+                                                )}
                                             </div>
-                                            <div className="flex items-center gap-4 text-sm text-sage-600">
-                                                <div className="flex items-center gap-1">
-                                                    <ThumbsUp className="w-4 h-4" />
-                                                    <span>0</span>
-                                                </div>
+                                            <div className="flex items-center gap-4 text-xs text-slate-500 shrink-0">
                                                 <div className="flex items-center gap-1">
                                                     <Eye className="w-4 h-4" />
                                                     <span>{post.view_count || 0}</span>
@@ -197,6 +273,20 @@ export default function ForumPage() {
                         </div>
                     );
                 })}
+
+                {filteredPosts.length === 0 && (
+                    <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/40 p-10 text-center">
+                        <MessageSquare className="w-8 h-8 text-slate-600 mx-auto mb-2" />
+                        <p className="text-slate-300 font-semibold mb-1">
+                            {search ? 'No posts match that search.' : 'No posts yet.'}
+                        </p>
+                        <p className="text-slate-500 text-sm">
+                            {search
+                                ? 'Try a different keyword.'
+                                : 'Be the first to start a discussion.'}
+                        </p>
+                    </div>
+                )}
             </div>
         </div>
     );
