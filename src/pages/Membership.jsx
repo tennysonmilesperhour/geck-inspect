@@ -36,6 +36,7 @@ const tiers = [
     comingSoon: false,
     features: [
       'Up to 10 geckos in your collection',
+      'Up to 5 additional reptiles tracked',
       'Basic breeding log (1 active pair)',
       'Weight tracking',
       'Public marketplace browsing',
@@ -54,6 +55,7 @@ const tiers = [
     comingSoon: false,
     features: [
       'Up to 50 geckos',
+      'Up to 10 additional reptiles tracked',
       'Up to 5 active breeding pairs',
       'Full lineage tree visualizer',
       'Feeding groups and event logging',
@@ -74,8 +76,8 @@ const tiers = [
     features: [
       'Everything in Keeper',
       'Unlimited geckos and breeding pairs',
+      'Unlimited additional reptiles tracked',
       'Sales stats and cost tracking dashboard',
-      'MorphMarket and Palm Street sync',
       'Option to be featured on the dashboard',
       'Expert verification eligibility',
       'Early access to new features',
@@ -93,6 +95,7 @@ const tiers = [
     comingSoon: true,
     features: [
       'Everything in Breeder',
+      'MorphMarket and Palm Street sync',
       'Market intelligence dashboard',
       'Pricing trends and morph demand analytics',
       'Breeding ROI projections',

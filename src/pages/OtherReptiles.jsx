@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import { OtherReptile, ReptileEvent, Notification } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
-import { PlusCircle, Loader2, Search, Users, Archive, ArchiveRestore } from 'lucide-react';
+import { PlusCircle, Loader2, Search, Users, Archive, ArchiveRestore, Lock } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { Input } from '@/components/ui/input';
 import ReptileCard from '../components/other-reptiles/ReptileCard';
 import ReptileForm from '../components/other-reptiles/ReptileForm';
 import ReptileDetailModal from '../components/other-reptiles/ReptileDetailModal';
+import PlanLimitModal, { checkPlanLimit, getOtherReptileLimit } from '@/components/subscription/PlanLimitChecker';
 import { toast } from '@/components/ui/use-toast';
 import { AnimatePresence, motion } from 'framer-motion';
 import { differenceInDays } from 'date-fns';
@@ -22,6 +23,7 @@ export default function OtherReptilesPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [showArchived, setShowArchived] = useState(false);
+    const [showLimitModal, setShowLimitModal] = useState(false);
 
     // Check and create feeding notifications for overdue/due reptiles
     const checkFeedingNotifications = useCallback(async (reptileList, userEmail) => {
@@ -253,8 +255,19 @@ export default function OtherReptilesPage() {
                             )}
                         </Button>
                         {!showArchived && (
-                            <Button 
-                                onClick={() => { setSelectedReptile(null); setIsFormOpen(true); }}
+                            <Button
+                                onClick={() => {
+                                    // Enforce per-tier limit. Active (non-archived)
+                                    // reptiles count toward the cap.
+                                    const activeCount = reptiles.filter(r => !r.archived).length;
+                                    const check = checkPlanLimit(user, 'other_reptiles', activeCount);
+                                    if (!check.allowed) {
+                                        setShowLimitModal(true);
+                                        return;
+                                    }
+                                    setSelectedReptile(null);
+                                    setIsFormOpen(true);
+                                }}
                             >
                                 <PlusCircle className="w-5 h-5 mr-2" />
                                 Add Reptile
@@ -262,6 +275,20 @@ export default function OtherReptilesPage() {
                         )}
                     </div>
                 </div>
+
+                {(() => {
+                    const activeCount = reptiles.filter(r => !r.archived).length;
+                    const limit = getOtherReptileLimit(user);
+                    if (!Number.isFinite(limit)) return null;
+                    return (
+                        <div className="mb-4 text-xs text-slate-400 flex items-center gap-2">
+                            <Lock className="w-3.5 h-3.5" />
+                            <span>
+                                {activeCount} / {limit} additional reptiles tracked on your plan.
+                            </span>
+                        </div>
+                    );
+                })()}
 
                 <div className="mb-6">
                     <div className="relative">
@@ -340,6 +367,12 @@ export default function OtherReptilesPage() {
                     </>
                 )}
             </div>
+            <PlanLimitModal
+                isOpen={showLimitModal}
+                onClose={() => setShowLimitModal(false)}
+                limitType="other_reptiles"
+                currentCount={reptiles.filter(r => !r.archived).length}
+            />
         </div>
     );
 }

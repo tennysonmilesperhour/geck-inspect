@@ -1,43 +1,62 @@
 import React from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Sparkles, Lock, ArrowRight, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 
 // Plan limits and feature flags. Source of truth for:
 //   - how many geckos the user can own (geckos)
+//   - how many additional (non-gecko) reptiles they can track
+//     (other_reptiles)
 //   - how many active breeding pairs the user can track (breeding_pairs)
 //   - which feature keys unlock for the tier (features)
 //
 // Grandfathered accounts keep `breeder` tier indefinitely — they never
 // get paywalled as long as subscription_status === 'grandfathered'.
+//
+// NOTE (Apr 2026): marketplace_sync moved OUT of Breeder and into the
+// Enterprise tier. Breeder users keep everything else.
 const PLAN_LIMITS = {
     free: {
         geckos: 10,
+        other_reptiles: 5,
         breeding_pairs: 1,
-        features: ['basic_breeding', 'public_profile', 'forum', 'ai_morph_id']
+        features: ['basic_breeding', 'public_profile', 'forum', 'ai_morph_id'],
     },
     keeper: {
         geckos: 50,
+        other_reptiles: 10,
         breeding_pairs: 5,
         features: [
             'basic_breeding', 'public_profile', 'forum', 'ai_morph_id',
             'advanced_breeding', 'calendar', 'weight_tracking', 'csv_export',
-            'lineage_tree'
-        ]
+            'lineage_tree',
+        ],
     },
     breeder: {
         geckos: Infinity,
+        other_reptiles: Infinity,
         breeding_pairs: Infinity,
         features: [
             'basic_breeding', 'public_profile', 'forum', 'ai_morph_id',
             'advanced_breeding', 'calendar', 'weight_tracking', 'csv_export',
-            'lineage_tree', 'marketplace_sync', 'breeding_analytics',
-            'certificates', 'featured_breeder'
-        ]
-    }
+            'lineage_tree', 'breeding_analytics',
+            'certificates', 'featured_breeder',
+        ],
+    },
+    enterprise: {
+        geckos: Infinity,
+        other_reptiles: Infinity,
+        breeding_pairs: Infinity,
+        features: [
+            'basic_breeding', 'public_profile', 'forum', 'ai_morph_id',
+            'advanced_breeding', 'calendar', 'weight_tracking', 'csv_export',
+            'lineage_tree', 'breeding_analytics',
+            'certificates', 'featured_breeder', 'marketplace_sync',
+            'market_intelligence', 'breeding_roi',
+        ],
+    },
 };
 
 const FEATURE_NAMES = {
@@ -50,10 +69,12 @@ const FEATURE_NAMES = {
     weight_tracking: 'Weight Tracking & Charts',
     csv_export: 'Export Data to CSV',
     lineage_tree: 'Full Lineage Tree',
-    marketplace_sync: 'Marketplace Sync',
+    marketplace_sync: 'MorphMarket & Palm Street Sync',
     breeding_analytics: 'Breeding Analytics',
     certificates: 'White-label Certificates',
     featured_breeder: 'Featured Breeder on Dashboard',
+    market_intelligence: 'Market Intelligence Dashboard',
+    breeding_roi: 'Breeding ROI Projections',
 };
 
 // Grandfathered accounts keep Breeder privileges regardless of tier field.
@@ -64,12 +85,20 @@ function effectiveTier(user) {
 
 export function checkPlanLimit(user, limitType, currentCount = 0) {
     const tier = effectiveTier(user);
-    const limits = PLAN_LIMITS[tier];
+    const limits = PLAN_LIMITS[tier] || PLAN_LIMITS.free;
 
     if (limitType === 'geckos') {
         return {
             allowed: currentCount < limits.geckos,
             limit: limits.geckos,
+            current: currentCount,
+            tier,
+        };
+    }
+    if (limitType === 'other_reptiles') {
+        return {
+            allowed: currentCount < limits.other_reptiles,
+            limit: limits.other_reptiles,
             current: currentCount,
             tier,
         };
@@ -92,18 +121,23 @@ export function checkPlanLimit(user, limitType, currentCount = 0) {
 
 export function canUseFeature(user, feature) {
     const tier = effectiveTier(user);
-    const limits = PLAN_LIMITS[tier];
+    const limits = PLAN_LIMITS[tier] || PLAN_LIMITS.free;
     return limits.features.includes(feature);
 }
 
 export function getGeckoLimit(user) {
     const tier = effectiveTier(user);
-    return PLAN_LIMITS[tier].geckos;
+    return (PLAN_LIMITS[tier] || PLAN_LIMITS.free).geckos;
 }
 
 export function getBreedingPairLimit(user) {
     const tier = effectiveTier(user);
-    return PLAN_LIMITS[tier].breeding_pairs;
+    return (PLAN_LIMITS[tier] || PLAN_LIMITS.free).breeding_pairs;
+}
+
+export function getOtherReptileLimit(user) {
+    const tier = effectiveTier(user);
+    return (PLAN_LIMITS[tier] || PLAN_LIMITS.free).other_reptiles;
 }
 
 export { PLAN_LIMITS, effectiveTier };
@@ -111,7 +145,8 @@ export { PLAN_LIMITS, effectiveTier };
 export default function PlanLimitModal({ isOpen, onClose, limitType, currentCount, featureName }) {
     const isGeckoLimit = limitType === 'geckos';
     const isPairLimit = limitType === 'breeding_pairs';
-    
+    const isOtherReptileLimit = limitType === 'other_reptiles';
+
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
             <DialogContent className="bg-slate-900 border-slate-700 max-w-md">
@@ -126,7 +161,9 @@ export default function PlanLimitModal({ isOpen, onClose, limitType, currentCoun
                             ? 'Gecko Limit Reached'
                             : isPairLimit
                                 ? 'Breeding Pair Limit Reached'
-                                : 'Feature Unavailable'}
+                                : isOtherReptileLimit
+                                    ? 'Other Reptile Limit Reached'
+                                    : 'Feature Unavailable'}
                     </DialogTitle>
                     <DialogDescription className="text-center text-slate-400 mt-2">
                         {isGeckoLimit ? (
@@ -138,6 +175,11 @@ export default function PlanLimitModal({ isOpen, onClose, limitType, currentCoun
                             <>
                                 You've reached the limit of <strong className="text-white">{currentCount} active breeding pairs</strong> on your current plan.
                                 Upgrade for more.
+                            </>
+                        ) : isOtherReptileLimit ? (
+                            <>
+                                You've reached the limit of <strong className="text-white">{currentCount} additional reptiles</strong> on your current plan.
+                                Upgrade for more space.
                             </>
                         ) : (
                             <>
@@ -166,6 +208,17 @@ export default function PlanLimitModal({ isOpen, onClose, limitType, currentCoun
                                         <span>Breeder: Unlimited geckos &amp; pairs</span>
                                     </li>
                                 </>
+                            ) : isOtherReptileLimit ? (
+                                <>
+                                    <li className="flex items-center gap-2 text-slate-300">
+                                        <Check className="w-4 h-4 text-emerald-400" />
+                                        <span>Keeper: Up to 10 additional reptiles</span>
+                                    </li>
+                                    <li className="flex items-center gap-2 text-slate-300">
+                                        <Check className="w-4 h-4 text-emerald-400" />
+                                        <span>Breeder: Unlimited additional reptiles</span>
+                                    </li>
+                                </>
                             ) : (
                                 <>
                                     <li className="flex items-center gap-2 text-slate-300">
@@ -189,7 +242,7 @@ export default function PlanLimitModal({ isOpen, onClose, limitType, currentCoun
                         <Button variant="outline" onClick={onClose} className="flex-1 border-slate-600">
                             Maybe Later
                         </Button>
-                        <Link to={createPageUrl("Subscription")} className="flex-1">
+                        <Link to={createPageUrl("Membership")} className="flex-1">
                             <Button className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700">
                                 View Plans
                                 <ArrowRight className="w-4 h-4 ml-2" />
