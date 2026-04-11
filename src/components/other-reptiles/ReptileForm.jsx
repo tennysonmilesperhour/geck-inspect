@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { OtherReptile } from '@/entities/all';
 import { UploadFile } from '@/integrations/Core';
+import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -23,6 +24,8 @@ import {
 } from "@/components/ui/alert-dialog";
 
 export default function ReptileForm({ reptile, onSubmit, onCancel, onDelete, onArchive }) {
+    const { toast } = useToast();
+    const [isUploadingImage, setIsUploadingImage] = useState(false);
     const [formData, setFormData] = useState({
         name: '',
         species: '',
@@ -63,23 +66,45 @@ export default function ReptileForm({ reptile, onSubmit, onCancel, onDelete, onA
     };
 
     const handleImageUpload = async (e) => {
-        const files = Array.from(e.target.files);
+        const files = Array.from(e.target.files || []);
+        if (e.target) e.target.value = '';
         if (files.length === 0) return;
-        
-        setIsSaving(true);
-        const urls = [...formData.image_urls];
 
-        try {
-            for (const file of files) {
+        setIsUploadingImage(true);
+        const urls = [...formData.image_urls];
+        let uploadedCount = 0;
+        let failedCount = 0;
+
+        for (const file of files) {
+            try {
                 const { file_url } = await UploadFile({ file });
                 urls.push(file_url);
+                uploadedCount++;
+            } catch (err) {
+                console.error('Image upload failed', err);
+                failedCount++;
             }
-            setFormData(prev => ({ ...prev, image_urls: urls }));
-        } catch (err) {
-            console.error("Image upload failed", err);
         }
-        
-        setIsSaving(false);
+
+        if (uploadedCount > 0) {
+            setFormData(prev => ({ ...prev, image_urls: urls }));
+        }
+        if (failedCount > 0) {
+            toast({
+                title: uploadedCount > 0 ? 'Some uploads failed' : 'Upload failed',
+                description:
+                    failedCount === 1
+                        ? 'One image could not be uploaded. Try a smaller file or different format.'
+                        : `${failedCount} images could not be uploaded.`,
+                variant: 'destructive',
+            });
+        } else if (uploadedCount > 0) {
+            toast({
+                title: uploadedCount === 1 ? 'Image uploaded' : `${uploadedCount} images uploaded`,
+            });
+        }
+
+        setIsUploadingImage(false);
     };
 
     const removeImage = (urlToRemove) => {
@@ -286,10 +311,25 @@ export default function ReptileForm({ reptile, onSubmit, onCancel, onDelete, onA
                                 </div>
                             ))}
                         </div>
-                        <Button asChild variant="outline" className="w-full border-slate-600">
+                        <Button asChild type="button" variant="outline" disabled={isUploadingImage} className="w-full border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700 disabled:opacity-60">
                             <label className="cursor-pointer">
-                                <Upload className="w-4 h-4 mr-2"/> Upload Images
-                                <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload}/>
+                                {isUploadingImage ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Upload className="w-4 h-4 mr-2"/> Upload Images
+                                    </>
+                                )}
+                                <input
+                                    type="file"
+                                    multiple
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={handleImageUpload}
+                                    disabled={isUploadingImage}
+                                />
                             </label>
                         </Button>
                     </div>

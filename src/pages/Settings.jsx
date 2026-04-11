@@ -206,16 +206,23 @@ export default function SettingsPage() {
     };
 
     const handleImageUpload = async (e, type) => {
-        const file = e.target.files[0];
+        const file = e.target.files?.[0];
+        // Reset the input so picking the same file twice still fires onChange
+        if (e.target) e.target.value = '';
         if (!file) return;
 
         try {
-            const { file_url } = await UploadFile({ file });
+            const folder = type === 'profile_image_url' ? 'profile-photos' : 'cover-photos';
+            const { file_url } = await UploadFile({ file, folder });
             handleChange(type, file_url);
-            toast({ title: "Success", description: "Image uploaded successfully." });
+            toast({ title: 'Image uploaded' });
         } catch (error) {
             console.error('Image upload failed:', error);
-            toast({ title: "Upload Failed", description: "There was an error uploading your image.", variant: "destructive" });
+            toast({
+                title: 'Upload failed',
+                description: error.message || 'There was an error uploading your image.',
+                variant: 'destructive',
+            });
         }
     };
 

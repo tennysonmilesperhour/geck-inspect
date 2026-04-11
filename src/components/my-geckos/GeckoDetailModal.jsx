@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { WeightRecord, BreedingPlan, Egg, Gecko, GeckoEvent } from '@/entities/all';
+import { WeightRecord, BreedingPlan, Egg, Gecko, GeckoEvent, GeckoImage } from '@/entities/all';
 import { format, differenceInMonths } from 'date-fns';
 import { X, Plus, Trash2, LineChart, Loader2, Award, GitBranch, Calendar, Baby, Users, FileText, Edit, Eye, EyeOff, History, Archive, ArchiveRestore, ChevronLeft, ChevronRight, Camera } from 'lucide-react';
 import LoadingSpinner from '../shared/LoadingSpinner';
@@ -474,16 +474,81 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                       onCheckedChange={async (checked) => {
                         try {
                           await Gecko.update(gecko.id, { gallery_display: checked });
+                          // Sync GeckoImage rows so the public Gallery page
+                          // actually shows the gecko's photos. Without this
+                          // the gallery_display flag was decorative — the
+                          // public gallery reads from gecko_images, not
+                          // from the geckos table.
+                          const imageUrls = Array.isArray(gecko.image_urls)
+                            ? gecko.image_urls.filter(Boolean)
+                            : [];
+                          if (checked && imageUrls.length > 0) {
+                            // Fetch existing GeckoImage rows tied to this gecko's URLs
+                            // to avoid duplicates, then create any that are missing.
+                            const existing = await GeckoImage.filter({
+                              created_by: gecko.created_by,
+                            }).catch(() => []);
+                            const existingUrls = new Set(
+                              existing.map((row) => row.image_url).filter(Boolean)
+                            );
+                            for (const url of imageUrls) {
+                              if (existingUrls.has(url)) continue;
+                              try {
+                                await GeckoImage.create({
+                                  image_url: url,
+                                  primary_morph: (gecko.morphs_traits || 'crested_gecko')
+                                    .split(',')[0]
+                                    .trim()
+                                    .toLowerCase()
+                                    .replace(/\s+/g, '_') || 'crested_gecko',
+                                  secondary_traits: Array.isArray(gecko.morph_tags)
+                                    ? gecko.morph_tags
+                                    : [],
+                                  notes: `Gallery entry for ${gecko.name}`,
+                                  verified: false,
+                                });
+                              } catch (imgErr) {
+                                console.warn('Failed to create GeckoImage:', imgErr);
+                              }
+                            }
+                          } else if (!checked && imageUrls.length > 0) {
+                            // Toggle off: remove any GeckoImage rows that came
+                            // from this gecko (matched by URL + creator).
+                            const urlSet = new Set(imageUrls);
+                            const mine = await GeckoImage.filter({
+                              created_by: gecko.created_by,
+                            }).catch(() => []);
+                            for (const row of mine) {
+                              if (urlSet.has(row.image_url)) {
+                                try {
+                                  await GeckoImage.delete(row.id);
+                                } catch (delErr) {
+                                  console.warn('Failed to remove GeckoImage:', delErr);
+                                }
+                              }
+                            }
+                          }
                           if (onUpdate) onUpdate();
+                          toast({
+                            title: checked ? 'Added to gallery' : 'Removed from gallery',
+                            description: checked
+                              ? `${imageUrls.length} ${imageUrls.length === 1 ? 'photo' : 'photos'} now in the public gallery`
+                              : 'Photos removed from the public gallery',
+                          });
                         } catch (error) {
-                          console.error("Failed to update gallery display:", error);
+                          console.error('Failed to update gallery display:', error);
+                          toast({
+                            title: 'Update failed',
+                            description: error.message || 'Could not update gallery display.',
+                            variant: 'destructive',
+                          });
                         }
                       }}
                       className="data-[state=checked]:bg-emerald-500"
                     />
                   </div>
                   <p className="text-xs text-slate-500 mt-2">
-                    Show in public gallery
+                    Show this gecko's photos in the public Gallery
                   </p>
                 </div>
               </div>

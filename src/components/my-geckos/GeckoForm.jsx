@@ -3,6 +3,7 @@ import { motion } from 'framer-motion';
 import { Gecko, UserActivity, WeightRecord, FeedingGroup } from '@/entities/all';
 import { UploadFile } from '@/integrations/Core';
 import { notifyFollowersNewGecko } from '@/components/notifications/NotificationService';
+import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -35,9 +36,11 @@ import ParentAutocomplete from './form/ParentAutocomplete';
 const initialFormData = INITIAL_FORM_DATA;
 
 export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, onCancel, isHatching = false, onDelete, breedingPlan = null, feedingGroups: feedingGroupsProp = null }) {
+    const { toast } = useToast();
     const isArchived = gecko?.archived;
     const [formData, setFormData] = useState(initialFormData);
     const [isSaving, setIsSaving] = useState(false);
+    const [isUploadingImage, setIsUploadingImage] = useState(false);
     // Change sire/dam to use text inputs instead of just IDs
     const [sireInput, setSireInput] = useState('');
     const [damInput, setDamInput] = useState('');
@@ -252,29 +255,54 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
         }
     };
     
-    // Enhanced image upload with cropping capability
+    // Enhanced image upload with cropping capability. Uses a dedicated
+    // isUploadingImage flag so we don't confuse it with form save state —
+    // previously a failed upload would flicker isSaving which made the
+    // whole form look like it was submitting.
     const handleImageUpload = async (e) => {
-        const files = Array.from(e.target.files);
+        const files = Array.from(e.target.files || []);
+        // Always clear the input so re-selecting the same file still fires.
+        if (e.target) e.target.value = '';
         if (files.length === 0) return;
-        
-        setIsSaving(true);
+
+        setIsUploadingImage(true);
         const urls = [...formData.image_urls];
         const newCropData = { ...cropData };
+        let uploadedCount = 0;
+        let failedCount = 0;
 
-        try {
-            for (const file of files) {
+        for (const file of files) {
+            try {
                 const { file_url } = await UploadFile({ file });
                 urls.push(file_url);
-                // Initialize crop data for new image (centered by default)
                 newCropData[file_url] = { x: 50, y: 50 };
+                uploadedCount++;
+            } catch (err) {
+                console.error('Image upload failed', err);
+                failedCount++;
             }
+        }
+
+        if (uploadedCount > 0) {
             setFormData(prev => ({ ...prev, image_urls: urls }));
             setCropData(newCropData);
-        } catch (err) {
-            console.error("Image upload failed", err);
         }
-        
-        setIsSaving(false);
+        if (failedCount > 0) {
+            toast({
+                title: uploadedCount > 0 ? 'Some uploads failed' : 'Upload failed',
+                description:
+                    failedCount === 1
+                        ? 'One image could not be uploaded. Try a smaller file or different format.'
+                        : `${failedCount} images could not be uploaded.`,
+                variant: 'destructive',
+            });
+        } else if (uploadedCount > 0) {
+            toast({
+                title: uploadedCount === 1 ? 'Image uploaded' : `${uploadedCount} images uploaded`,
+            });
+        }
+
+        setIsUploadingImage(false);
     };
 
     const handleImageCrop = (imageUrl) => {
@@ -761,10 +789,25 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                 </div>
                             ))}
                         </div>
-                        <Button asChild variant="outline" className="w-full">
+                        <Button asChild type="button" variant="outline" disabled={isUploadingImage} className="w-full border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700 disabled:opacity-60">
                             <label className="cursor-pointer">
-                                <Upload className="w-4 h-4 mr-2"/> Upload Images
-                                <input type="file" multiple accept="image/*" className="hidden" onChange={handleImageUpload}/>
+                                {isUploadingImage ? (
+                                    <>
+                                        <Loader2 className="w-4 h-4 mr-2 animate-spin" /> Uploading...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Upload className="w-4 h-4 mr-2"/> Upload Images
+                                    </>
+                                )}
+                                <input
+                                    type="file"
+                                    multiple
+                                    accept="image/*"
+                                    className="hidden"
+                                    onChange={handleImageUpload}
+                                    disabled={isUploadingImage}
+                                />
                             </label>
                         </Button>
                     </div>

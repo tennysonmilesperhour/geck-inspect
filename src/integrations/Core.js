@@ -6,12 +6,15 @@
  * leave the rest as a stub that throws a clear error.
  *
  * - InvokeLLM  -> Supabase edge function `invoke-llm` (Anthropic proxy)
+ * - UploadFile -> Supabase Storage (geck-inspect-media bucket)
  * - Everything else -> throws with a descriptive message so callers can
  *   surface it in a toast instead of silently hanging.
  */
 import { InvokeLLM as invokeLlmViaEdgeFn } from '@/lib/invokeLlm';
+import { uploadFile as supabaseUploadFile } from '@/lib/uploadFile';
 
 export const InvokeLLM = invokeLlmViaEdgeFn;
+export const UploadFile = supabaseUploadFile;
 
 function notImplemented(name) {
   return async () => {
@@ -23,6 +26,5 @@ function notImplemented(name) {
 
 export const SendEmail = notImplemented('SendEmail');
 export const SendSMS = notImplemented('SendSMS');
-export const UploadFile = notImplemented('UploadFile');
 export const GenerateImage = notImplemented('GenerateImage');
 export const ExtractDataFromUploadedFile = notImplemented('ExtractDataFromUploadedFile');
