@@ -287,7 +287,7 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
         };
 
         const config = statusConfig[egg.status] || { className: "bg-transparent text-slate-400 border-slate-400", text: egg.status };
-        const baseClasses = "cursor-pointer text-xs font-semibold px-3 py-2 rounded-md border w-full text-center h-9 truncate transition-colors flex items-center justify-center";
+        const baseClasses = "cursor-pointer text-xs font-semibold px-4 py-2 rounded-md border text-center h-9 truncate transition-colors inline-flex items-center justify-center";
 
         // Only Incubating eggs get the dropdown (limited to Infertile/Failed)
         if (egg.status === 'Incubating') {
@@ -376,31 +376,29 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
                                 </div>
                             </div>
 
-                            {/* Status and Actions Section */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2">
-                                <div className="sm:col-span-1 lg:col-span-2">
-                                    <StatusDisplay egg={egg} />
-                                </div>
+                            {/* Status and Actions — single flex row so everything
+                                stays aligned side by side regardless of viewport. */}
+                            <div className="flex flex-wrap items-center gap-2">
+                                <StatusDisplay egg={egg} />
 
-                                <div className="flex gap-2 sm:col-span-1 lg:col-span-2">
-                                    {egg.status === 'Incubating' && (
-                                        <Button
-                                            size="sm"
-                                            className="h-9 flex-1"
-                                            onClick={() => handleHatchEgg(egg.id)}
-                                        >
-                                            Hatched!
-                                        </Button>
-                                    )}
+                                {egg.status === 'Incubating' && (
                                     <Button
-                                        size="icon"
-                                        variant="outline"
-                                        onClick={() => handleAddToCalendar(egg)}
-                                        className="border-slate-600 hover:bg-slate-700 h-9 w-9 flex-shrink-0"
-                                        title="Add to Calendar"
+                                        size="sm"
+                                        className="h-9"
+                                        onClick={() => handleHatchEgg(egg.id)}
                                     >
-                                        <CalendarIcon className="w-4 h-4" />
+                                        Hatched!
                                     </Button>
+                                )}
+                                <Button
+                                    size="icon"
+                                    variant="outline"
+                                    onClick={() => handleAddToCalendar(egg)}
+                                    className="border-slate-600 hover:bg-slate-700 h-9 w-9 flex-shrink-0"
+                                    title="Add to Calendar"
+                                >
+                                    <CalendarIcon className="w-4 h-4" />
+                                </Button>
                                     <AlertDialog open={eggToDelete === egg.id} onOpenChange={(open) => { if (!open) setEggToDelete(null); }}>
                                        <Button
                                            size="icon"
@@ -426,7 +424,6 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
                                            </AlertDialogFooter>
                                        </AlertDialogContent>
                                     </AlertDialog>
-                                </div>
                             </div>
                         </div>
                     );
