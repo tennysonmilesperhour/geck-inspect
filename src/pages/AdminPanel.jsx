@@ -113,7 +113,18 @@ export default function AdminPanel() {
   // clicks "Broadcast". Consumed on mount by the target component.
   const [messagingPrefill, setMessagingPrefill] = useState(null);
 
+  useEffect(() => {
+    const onPrefill = (e) => {
+      if (!e.detail) return;
+      setMessagingPrefill(e.detail);
+      setSection('messaging');
+    };
+    window.addEventListener('admin:prefill-message', onPrefill);
+    return () => window.removeEventListener('admin:prefill-message', onPrefill);
+  }, []);
+
   // Gate: only admins may access this page.
+  // Placed after all hooks to satisfy React's rules-of-hooks.
   if (isLoadingAuth) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
@@ -124,16 +135,6 @@ export default function AdminPanel() {
   if (!user || user.role !== 'admin') {
     return <Navigate to="/" replace />;
   }
-
-  useEffect(() => {
-    const onPrefill = (e) => {
-      if (!e.detail) return;
-      setMessagingPrefill(e.detail);
-      setSection('messaging');
-    };
-    window.addEventListener('admin:prefill-message', onPrefill);
-    return () => window.removeEventListener('admin:prefill-message', onPrefill);
-  }, []);
 
   const renderSection = () => {
     switch (section) {

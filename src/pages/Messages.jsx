@@ -64,7 +64,7 @@ export default function MessagesPage() {
                 if (msgError) throw msgError;
 
                 const convMap = new Map();
-                userMessages.forEach(message => {
+                (userMessages || []).forEach(message => {
                     const otherEmail = message.sender_email === user.email
                         ? message.recipient_email
                         : message.sender_email;
