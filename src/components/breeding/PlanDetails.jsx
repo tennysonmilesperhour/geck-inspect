@@ -287,7 +287,7 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
         };
 
         const config = statusConfig[egg.status] || { className: "bg-transparent text-slate-400 border-slate-400", text: egg.status };
-        const baseClasses = "cursor-pointer text-xs font-semibold px-4 py-2 rounded-md border text-center h-9 truncate transition-colors inline-flex items-center justify-center";
+        const baseClasses = "cursor-pointer text-xs font-semibold px-3 py-2 rounded-md border w-full text-center h-9 truncate transition-colors flex items-center justify-center";
 
         // Only Incubating eggs get the dropdown (limited to Infertile/Failed)
         if (egg.status === 'Incubating') {
@@ -377,14 +377,17 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
                             </div>
 
                             {/* Status and Actions — single flex row so everything
-                                stays aligned side by side regardless of viewport. */}
-                            <div className="flex flex-wrap items-center gap-2">
-                                <StatusDisplay egg={egg} />
+                                stays aligned side by side. StatusDisplay and
+                                Hatched! stretch to fill; icon buttons stay fixed. */}
+                            <div className="flex items-center gap-2">
+                                <div className="flex-1 min-w-0">
+                                    <StatusDisplay egg={egg} />
+                                </div>
 
                                 {egg.status === 'Incubating' && (
                                     <Button
                                         size="sm"
-                                        className="h-9"
+                                        className="h-9 flex-1"
                                         onClick={() => handleHatchEgg(egg.id)}
                                     >
                                         Hatched!
