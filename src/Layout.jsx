@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import "@/styles/layout-theme.css";
+import { initialsAvatarUrl } from "@/components/shared/InitialsAvatar";
 import { createPageUrl } from "@/utils";
 import { base44 } from '@/api/base44Client';
 import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
@@ -365,7 +366,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           const milestone = [...MILESTONES].reverse().find((m) => images.length >= m.count);
           setCurrentMilestone(milestone);
         } else {
-          setImageCount(2500); 
+          setImageCount(0);
         }
 
         // Skip pinned posts to reduce API calls
@@ -559,15 +560,6 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
   return (
     <>
-
-      <div style={{ display: 'none' }}>
-        <meta name="apple-mobile-web-app-capable" content="yes" />
-        <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-        <meta name="apple-mobile-web-app-title" content="Geck Inspect" />
-        <meta name="mobile-web-app-capable" content="yes" />
-        <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-      </div>
-
       <div className="flex h-screen bg-gray-100 dark:bg-gray-900 font-sans app-container-outline">
         {/* Mobile Sidebar */}
         <Sidebar className="border-r border-sage-300 bg-sage-200/90 backdrop-blur-sm md:hidden z-50">
@@ -596,7 +588,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 <div className="flex items-center gap-3">
                   <Link to={createPageUrl('MyProfile')}>
                       <img 
-                            src={user.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name)}&background=84A98C&color=fff`} 
+                            src={user.profile_image_url || initialsAvatarUrl(user.full_name)} 
                             alt="User avatar" 
                             className="w-8 h-8 rounded-full object-cover"
                             loading="lazy"
@@ -734,7 +726,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                   <div className="flex items-center gap-3">
                     <Link to={createPageUrl('MyProfile')}>
                           <img
-                            src={user.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name)}&background=84A98C&color=fff`}
+                            src={user.profile_image_url || initialsAvatarUrl(user.full_name)}
                             alt="User avatar"
                             className="w-8 h-8 rounded-full object-cover"
                             loading="lazy"

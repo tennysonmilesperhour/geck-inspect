@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
 import { Gecko, User, WeightRecord } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import { useNavigate, Link } from 'react-router-dom';
@@ -217,7 +218,7 @@ export default function GeckoDetail() {
                                     </h3>
                                     <Link to={createPageUrl(`PublicProfile?userId=${owner.id}`)} className="flex items-center gap-3 hover:opacity-80 transition-opacity mb-3">
                                         <img
-                                            src={owner.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(owner.full_name || 'B')}&background=059669&color=fff`}
+                                            src={owner.profile_image_url || initialsAvatarUrl(owner.full_name || 'B')}
                                             alt={owner.full_name}
                                             className="w-10 h-10 rounded-full object-cover"
                                         />

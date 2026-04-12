@@ -1,4 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
 import { Gecko, User, MarketplaceLike } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import { Input } from '@/components/ui/input';
@@ -32,7 +33,7 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
         <Card className="overflow-hidden group-hover:border-emerald-500/50 group-hover:shadow-lg group-hover:shadow-emerald-500/10 transition-colors duration-200 h-full flex flex-col bg-slate-900 border-slate-800">
             <div className="aspect-square w-full overflow-hidden relative">
                 <img
-                    src={gecko.image_urls?.[0] || `https://ui-avatars.com/api/?name=${gecko.name.charAt(0)}&background=random`}
+                    src={gecko.image_urls?.[0] || initialsAvatarUrl(gecko.name)}
                     alt={gecko.name}
                     className="w-full h-full object-cover"
                     loading="lazy"
@@ -77,7 +78,7 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                             className="flex items-center gap-2 group min-w-0"
                         >
                             <img
-                                src={owner?.profile_image_url || `https://ui-avatars.com/api/?name=${owner?.full_name?.charAt(0)}&background=random`}
+                                src={owner?.profile_image_url || initialsAvatarUrl(owner?.full_name || '')}
                                 className={`${isRegular ? 'w-5 h-5' : 'w-6 h-6'} rounded-lg group-hover:opacity-80 transition-opacity shrink-0`}
                                 alt={owner?.full_name}
                                 loading="lazy"

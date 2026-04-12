@@ -1,5 +1,6 @@
-import { useState, useEffect } from 'react';
-import { User, Gecko, GeckoImage, ForumPost, ForumComment, DirectMessage, Notification, MorphReferenceImage, UserBadge, BreedingPlan, WeightRecord, Egg } from '@/entities/all';
+import React, { useState, useEffect } from 'react';
+import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
+import { User, Gecko, GeckoImage, ForumPost, ForumComment, DirectMessage, Notification, MorphReferenceImage, UserBadge, UserActivity, BreedingPlan, WeightRecord, Egg } from '@/entities/all';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -433,7 +434,7 @@ export default function MyProfile() {
                     <div className="relative group">
                         <img
                             className="h-24 w-24 rounded-full ring-4 ring-slate-950 sm:h-32 sm:w-32 object-cover"
-                            src={user.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name)}&background=84A98C&color=fff`}
+                            src={user.profile_image_url || initialsAvatarUrl(user.full_name)}
                             alt={user.full_name}
                         />
                         <label className="absolute inset-0 flex items-center justify-center cursor-pointer rounded-full overflow-hidden">

@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
+import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
 import { Gecko, User, MarketplaceLike } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent } from '@/components/ui/card';
@@ -153,7 +154,7 @@ export default function LikedGeckosPage() {
                                                     className="flex items-center gap-2 text-sm text-slate-300 hover:text-emerald-400"
                                                 >
                                                     <img 
-                                                        src={owner.profile_image_url || `https://ui-avatars.com/api/?name=${owner.full_name}&background=10b981&color=fff`}
+                                                        src={owner.profile_image_url || initialsAvatarUrl(owner.full_name)}
                                                         className="w-6 h-6 rounded-full"
                                                         alt={owner.full_name}
                                                     />
