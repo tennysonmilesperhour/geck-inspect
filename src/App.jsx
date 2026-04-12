@@ -25,7 +25,7 @@ const Giveaways             = lazy(() => import('./pages/Giveaways'));
 const MorphDetail           = lazy(() => import('./pages/MorphDetail'));
 const MorphGuideList        = lazy(() => import('./pages/MorphGuide'));
 const Pedigree              = lazy(() => import('./pages/Pedigree'));
-const ForumPost             = lazy(() => import('./pages/ForumPost'));
+// ForumPost is in pages.config.js — no separate import needed here.
 const PrivacyPolicy         = lazy(() => import('./pages/PrivacyPolicy'));
 const MarketplaceSalesStats = lazy(() => import('./pages/MarketplaceSalesStats'));
 const Marketplace           = lazy(() => import('./pages/Marketplace'));
@@ -100,11 +100,7 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
-      <Route path="/ForumPost" element={
-        <LayoutWrapper currentPageName="ForumPost">
-          <ForumPost />
-        </LayoutWrapper>
-      } />
+      {/* ForumPost is already in the Pages map above — no manual route needed. */}
       <Route path="/MarketplaceSalesStats" element={
         <LayoutWrapper currentPageName="MarketplaceSalesStats">
           <MarketplaceSalesStats />
