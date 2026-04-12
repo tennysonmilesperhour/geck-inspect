@@ -13,6 +13,7 @@ import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UpdateNotification from '@/components/ui/UpdateNotification';
 import LoginPortal from '@/components/auth/LoginPortal';
+import ScrollToTop from '@/components/shared/ScrollToTop';
 
 // Public landing page — stays eager because it's what unauthenticated
 // visitors (and crawlers) hit first.
@@ -161,6 +162,7 @@ function App() {
       <AuthProvider>
         <QueryClientProvider client={queryClientInstance}>
           <Router>
+            <ScrollToTop />
             <NavigationTracker />
             <PostHogPageTracker />
             <AuthenticatedApp />

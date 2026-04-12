@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
 import { User, Gecko, UserFollow, Notification, BreedingPlan, WeightRecord } from '@/entities/all';
 import { notifyNewFollower } from '@/components/notifications/NotificationService';
 import { useLocation, Link } from 'react-router-dom';
@@ -178,7 +179,7 @@ export default function PublicProfile() {
                     <div className="flex">
                         <img 
                             className="h-24 w-24 rounded-lg ring-4 ring-slate-950 sm:h-32 sm:w-32 object-cover" 
-                            src={profileUser.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(profileUser.full_name)}&background=84A98C&color=fff`}
+                            src={profileUser.profile_image_url || initialsAvatarUrl(profileUser.full_name)}
                             alt={profileUser.full_name}
                         />
                     </div>

@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
 import { User, Notification, DirectMessage, Gecko, GeckoImage, ForumPost, UserActivity } from '@/entities/all';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -320,7 +321,7 @@ export default function UserManagement() {
                         <div key={user.id} className="flex items-center justify-between p-4 bg-slate-800 rounded-lg border border-slate-600">
                             <div className="flex items-center gap-4 flex-1 cursor-pointer" onClick={() => handleViewUserDetails(user)}>
                                 <img 
-                                    src={user.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(user.full_name)}&background=random`}
+                                    src={user.profile_image_url || initialsAvatarUrl(user.full_name)}
                                     alt={user.full_name}
                                     className="w-10 h-10 rounded-full object-cover"
                                 />
@@ -418,7 +419,7 @@ export default function UserManagement() {
                     <DialogHeader>
                         <DialogTitle className="text-2xl flex items-center gap-3">
                             <img 
-                                src={selectedUser?.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(selectedUser?.full_name || '')}&background=random`}
+                                src={selectedUser?.profile_image_url || initialsAvatarUrl(selectedUser?.full_name || '')}
                                 alt={selectedUser?.full_name}
                                 className="w-12 h-12 rounded-full object-cover"
                             />

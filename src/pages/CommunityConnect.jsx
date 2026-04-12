@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useCallback } from 'react';
+import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
 import { User, Gecko, UserFollow, ForumCategory, ForumPost, UserActivity } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -40,7 +41,7 @@ function BreederCard({ breeder, currentUser, isFollowing, onFollow, onUnfollow, 
             <CardContent className={`p-4 ${cardCover ? '-mt-10 relative' : ''}`}>
                 <div className="flex items-start gap-4">
                     <img 
-                        src={breeder.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(breeder.full_name || 'User')}&background=10b981&color=fff`}
+                        src={breeder.profile_image_url || initialsAvatarUrl(breeder.full_name || 'User')}
                         alt={breeder.full_name}
                         className={`w-20 h-20 rounded-full object-cover border-2 border-emerald-500/30 flex-shrink-0 ${cardCover ? 'ring-4 ring-slate-900' : ''}`}
                         loading="lazy"
