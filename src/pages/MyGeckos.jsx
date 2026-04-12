@@ -597,10 +597,18 @@ export default function MyGeckosPage() {
                                         </Select>
                                         </div>
                                         </PageSettingsPanel>
+                        {/* All header buttons use explicit emerald styling with
+                             arbitrary rgba() values so they render consistently
+                             whether or not Layout.jsx's global
+                             `button:not([data-state])` emerald override applies.
+                             The Export button is wrapped in DropdownMenuTrigger,
+                             which gives it data-state — so without explicit
+                             classes it escaped the global rule and rendered
+                             with a grey border, misaligned against its siblings. */}
                         <Button
                             variant="outline"
                             onClick={() => { setShowArchived(!showArchived); loadGeckos(true); }}
-                            className="border-slate-600 hover:bg-slate-800"
+                            className="border-emerald-700/60 bg-[rgba(6,95,70,0.35)] text-slate-100 hover:bg-[rgba(4,120,87,0.5)] hover:border-emerald-500/70"
                         >
                             {showArchived ? (
                                 <>
@@ -616,14 +624,14 @@ export default function MyGeckosPage() {
                         </Button>
                         {!showArchived && (
                             <>
-                                <Button variant="outline" className="border-slate-600 hover:bg-slate-800" onClick={() => setIsImportModalOpen(true)}>
+                                <Button variant="outline" className="border-emerald-700/60 bg-[rgba(6,95,70,0.35)] text-slate-100 hover:bg-[rgba(4,120,87,0.5)] hover:border-emerald-500/70" onClick={() => setIsImportModalOpen(true)}>
                                     Import from CSV
                                 </Button>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>
                                         <Button
                                             variant="outline"
-                                            className="border-slate-600 hover:bg-slate-800"
+                                            className="border-emerald-700/60 bg-[rgba(6,95,70,0.35)] text-slate-100 hover:bg-[rgba(4,120,87,0.5)] hover:border-emerald-500/70"
                                             disabled={!filteredAndSortedGeckos || filteredAndSortedGeckos.length === 0}
                                         >
                                             <Download className="w-4 h-4 mr-2" />
@@ -724,7 +732,7 @@ export default function MyGeckosPage() {
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                             <Select value={sortBy} onValueChange={setSortBy}>
-                                <SelectTrigger className="w-44 h-9 bg-slate-950 border-slate-700 text-slate-100 text-sm">
+                                <SelectTrigger className="w-44 !h-8 !min-h-0 bg-slate-950 border-slate-700 text-slate-100 !text-xs py-1">
                                     <div className="flex items-center gap-1.5 min-w-0">
                                         <ArrowUpDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                                         <SelectValue placeholder="Sort" />

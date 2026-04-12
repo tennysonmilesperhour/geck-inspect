@@ -287,13 +287,31 @@ function PlanPairingForm({ males, females, onPlanCreated }) {
 }
 
 function EditBreedingPlanModal({ plan, males, females, onSave, onClose }) {
+    // Defensive initial state. `plan.pairing_date` can come back as null,
+    // an empty string, or an invalid ISO from the DB — `new Date()` of any
+    // of those yields either epoch 1970 or Invalid Date, which then
+    // explodes in `format()` downstream. Fall back to today when the
+    // stored value is unusable so the modal never crashes on mount.
+    const parseStoredDate = (raw) => {
+        if (!raw) return new Date();
+        const d = new Date(raw);
+        return isNaN(d.getTime()) ? new Date() : d;
+    };
+
     const [formData, setFormData] = useState({
-        sire_id: plan.sire_id,
-        dam_id: plan.dam_id,
-        pairing_date: new Date(plan.pairing_date),
-        status: plan.status,
+        sire_id: plan.sire_id || '',
+        dam_id: plan.dam_id || '',
+        pairing_date: parseStoredDate(plan.pairing_date),
+        status: plan.status || 'Planned',
         notes: plan.notes || ''
     });
+
+    // Radix Select requires every SelectItem to have a non-empty string
+    // value. If we hand it a gecko with a null/empty id (e.g. a partially
+    // created row) the entire modal render throws and the edit button
+    // appears to do nothing. Filter those out up front.
+    const validMales = (males || []).filter((g) => g && typeof g.id === 'string' && g.id.length > 0);
+    const validFemales = (females || []).filter((g) => g && typeof g.id === 'string' && g.id.length > 0);
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -313,19 +331,19 @@ function EditBreedingPlanModal({ plan, males, females, onSave, onClose }) {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
                             <Label>Sire (Male)</Label>
-                            <Select value={formData.sire_id} onValueChange={v => setFormData({...formData, sire_id: v})} required>
+                            <Select value={formData.sire_id || ''} onValueChange={v => setFormData({...formData, sire_id: v})}>
                                 <SelectTrigger><SelectValue placeholder="Choose a male" /></SelectTrigger>
                                 <SelectContent>
-                                    {males.map(g => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
+                                    {validMales.map(g => <SelectItem key={g.id} value={g.id}>{g.name || 'Unnamed'}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
                         <div>
                             <Label>Dam (Female)</Label>
-                            <Select value={formData.dam_id} onValueChange={v => setFormData({...formData, dam_id: v})} required>
+                            <Select value={formData.dam_id || ''} onValueChange={v => setFormData({...formData, dam_id: v})}>
                                 <SelectTrigger><SelectValue placeholder="Choose a female" /></SelectTrigger>
                                 <SelectContent>
-                                    {females.map(g => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}
+                                    {validFemales.map(g => <SelectItem key={g.id} value={g.id}>{g.name || 'Unnamed'}</SelectItem>)}
                                 </SelectContent>
                             </Select>
                         </div>
