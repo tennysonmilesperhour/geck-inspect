@@ -16,8 +16,6 @@ import {
     SelectTrigger,
     SelectValue,
 } from "@/components/ui/select";
-import _ from 'lodash';
-
 const DEFAULT_GECKO_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
 
 // Placeholder card for missing parents
@@ -214,7 +212,7 @@ export default function Lineage() {
             }
             
             setMyGeckos(userGeckos);
-            setAllGeckosMap(_.keyBy(allVisibleGeckos, 'id'));
+            setAllGeckosMap(Object.fromEntries(allVisibleGeckos.map(g => [g.id, g])));
             setAllBreedingPlans(breedingPlans);
             
             const placeholderMap = {};
