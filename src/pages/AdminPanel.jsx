@@ -1,4 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
+import { useAuth } from '@/lib/AuthContext';
+import { Navigate } from 'react-router-dom';
 import {
   LayoutDashboard,
   Users,
@@ -105,10 +107,23 @@ const SECTION_TITLES = {
 };
 
 export default function AdminPanel() {
+  const { user, isLoadingAuth } = useAuth();
   const [section, setSection] = useState('overview');
   // Prefill payload passed into MassMessaging when the Changelog manager
   // clicks "Broadcast". Consumed on mount by the target component.
   const [messagingPrefill, setMessagingPrefill] = useState(null);
+
+  // Gate: only admins may access this page.
+  if (isLoadingAuth) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="w-8 h-8 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+      </div>
+    );
+  }
+  if (!user || user.role !== 'admin') {
+    return <Navigate to="/" replace />;
+  }
 
   useEffect(() => {
     const onPrefill = (e) => {

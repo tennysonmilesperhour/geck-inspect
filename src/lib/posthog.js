@@ -38,11 +38,11 @@ export function initPostHog() {
       capture_pageleave: true,
       // Autocapture clicks, form submits, etc. — the whole point of PostHog.
       autocapture: true,
-      // Mask all inputs by default; PostHog will still track that an input
-      // was touched, but it won't see the value. Safer default for a
-      // community app with PII.
-      mask_all_text: false,
-      mask_all_element_attributes: false,
+      // Mask all text and attributes by default to protect PII (bios,
+      // messages, shipping addresses). PostHog still tracks interactions
+      // structurally but never captures the actual content.
+      mask_all_text: true,
+      mask_all_element_attributes: true,
       // Session replay is off unless you explicitly enable it in the
       // PostHog dashboard. Keeps bandwidth and storage down.
       disable_session_recording: true,

@@ -21,6 +21,17 @@ import { supabase } from '@/lib/supabaseClient';
 
 const BUCKET = 'geck-inspect-media';
 
+// Only allow real image types — SVG is excluded because it's scriptable.
+const ALLOWED_MIME_TYPES = new Set([
+  'image/jpeg',
+  'image/png',
+  'image/webp',
+  'image/gif',
+  'image/avif',
+]);
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
+
 // Turn a filename into a safe storage key fragment.
 function safeFileName(name) {
   return (name || 'upload')
@@ -53,12 +64,28 @@ export async function uploadFile({ file, folder = 'uploads' } = {}) {
     throw new Error('uploadFile: no file provided');
   }
 
-  // Namespace by user email (if signed in) so policies + accounting
-  // can tell who owns what. Falls back to "public" for anon uploads.
+  // Validate MIME type — reject anything that isn't an allowed image format.
+  if (!ALLOWED_MIME_TYPES.has(file.type)) {
+    throw new Error(
+      `Unsupported file type "${file.type || 'unknown'}". Allowed: JPEG, PNG, WebP, GIF, AVIF.`
+    );
+  }
+
+  // Validate file size — reject uploads larger than 10 MB.
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error(
+      `File is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximum allowed: 10 MB.`
+    );
+  }
+
+  // Validate folder — must be a simple alphanumeric slug, no path traversal.
+  if (!/^[a-zA-Z0-9_-]+$/.test(folder)) {
+    throw new Error('Invalid upload folder name.');
+  }
+
+  // Namespace by user ID (UUID) so public URLs don't leak emails.
   const { data: { user } } = await supabase.auth.getUser();
-  const ownerSlug = user?.email
-    ? user.email.split('@')[0].replace(/[^a-zA-Z0-9._-]+/g, '-')
-    : 'public';
+  const ownerSlug = user?.id || 'public';
 
   const ext = extensionFor(file);
   const baseName = safeFileName((file.name || 'upload').replace(/\.[a-zA-Z0-9]+$/, ''));

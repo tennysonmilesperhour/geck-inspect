@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { DirectMessage, User } from '@/entities/all';
+import { supabase } from '@/lib/supabaseClient';
 import { notifyNewMessage } from '@/components/notifications/NotificationService';
 import { useToast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -52,11 +53,15 @@ export default function MessagesPage() {
                     setCurrentUser(user);
                 }
 
-                const allMessages = await DirectMessage.list('-created_date');
+                // Server-side filter: only fetch messages involving this user.
+                const { data: userMessages, error: msgError } = await supabase
+                    .from('direct_messages')
+                    .select('*')
+                    .or(`sender_email.eq.${user.email},recipient_email.eq.${user.email}`)
+                    .order('created_date', { ascending: false })
+                    .limit(500);
 
-                const userMessages = allMessages.filter(m =>
-                    m.sender_email === user.email || m.recipient_email === user.email
-                );
+                if (msgError) throw msgError;
 
                 const convMap = new Map();
                 userMessages.forEach(message => {
@@ -120,7 +125,9 @@ export default function MessagesPage() {
         };
 
         loadData(true);
-        const interval = setInterval(() => loadData(false), 15000);
+        // Poll every 60s instead of 15s to reduce server load.
+        // TODO: Replace with Supabase Realtime channel for instant updates.
+        const interval = setInterval(() => loadData(false), 60000);
         return () => clearInterval(interval);
     }, []);
 
