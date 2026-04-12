@@ -111,6 +111,7 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
+
       <Route path="/MorphGuide/:slug" element={
         <LayoutWrapper currentPageName="MorphGuide">
           <MorphDetail />

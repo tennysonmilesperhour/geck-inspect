@@ -19,6 +19,34 @@ module.exports = {
   			'3xl': '1.2rem'                      /* 19.2px  (was 24px)    */
   		},
   		colors: {
+  			// Sage: the brand green palette. Values are the dark-mode scale
+  			// (the app is always-dark) so text-sage-700 renders as light
+  			// green text and bg-sage-50 renders as a dark green surface.
+  			sage: {
+  				50:  '#064e3b',
+  				100: '#065f46',
+  				200: '#047857',
+  				300: '#059669',
+  				400: '#10b981',
+  				500: '#34d399',
+  				600: '#6ee7b7',
+  				700: '#a7f3d0',
+  				800: '#d1fae5',
+  				900: '#ecfdf5',
+  			},
+  			// Earth: the warm accent palette (orange/amber).
+  			earth: {
+  				50:  '#6f2e0c',
+  				100: '#8e3a16',
+  				200: '#b7472a',
+  				300: '#d35400',
+  				400: '#e67e22',
+  				500: '#ed9455',
+  				600: '#f4b885',
+  				700: '#f9d5b5',
+  				800: '#fdeee0',
+  				900: '#fef7f0',
+  			},
   			background: 'hsl(var(--background))',
   			foreground: 'hsl(var(--foreground))',
   			card: {
