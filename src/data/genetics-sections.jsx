@@ -14,6 +14,7 @@ import {
   EpistasisDiagram,
   DoseResponse,
 } from "@/components/genetics/GeneticsDiagrams";
+import { Callout, Subsection, BulletList } from "@/components/genetics/GeneticsHelpers";
 import { Dna, Grid2X2, Layers, TrendingUp, ShieldCheck, ArrowUp, AlertTriangle, Palette } from "lucide-react";
 
 const SECTIONS = [

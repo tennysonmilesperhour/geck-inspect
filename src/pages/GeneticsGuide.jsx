@@ -5,54 +5,10 @@ import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Dna, ArrowUp, Search } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
+import { Callout, Subsection, BulletList } from '@/components/genetics/GeneticsHelpers';
 import { GENETICS_GUIDE_JSON_LD, GENETICS_GUIDE_PUBLISHED, GENETICS_GUIDE_MODIFIED } from "@/data/genetics-jsonld";
-import { SECTIONS } from "@/data/genetics-sections";
+import { SECTIONS } from "@/data/genetics-sections.jsx";
 import { GLOSSARY_GROUPS, GLOSSARY } from "@/data/genetics-glossary";
-
-// ── Callout box ──────────────────────────────────────────────────────────────
-function Callout({ items }) {
-  return (
-    <div className="bg-emerald-900/40 border border-emerald-600 rounded-lg p-4 my-4 space-y-1">
-      {items.map((item, i) => (
-        <p key={i} className="text-emerald-400 text-sm font-medium">→ {item}</p>
-      ))}
-    </div>
-  );
-}
-
-// ── Subsection (always-visible block) ────────────────────────────────────────
-//
-// Old version was a Collapsible that hid content behind a click, which
-// made the guide feel like a shallow slideshow. Always-visible blocks
-// read better and make the DNA-strand flow obvious.
-function Subsection({ title, children }) {
-  return (
-    <div className="rounded-lg border border-slate-800 bg-slate-900/60">
-      <div className="px-4 py-3 border-b border-slate-800">
-        <h3 className="text-emerald-300 font-semibold text-base flex items-center gap-2">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-emerald-400" />
-          {title}
-        </h3>
-      </div>
-      <div className="px-4 py-3 space-y-2">
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function BulletList({ items }) {
-  return (
-    <ul className="space-y-2">
-      {items.map((item, i) => (
-        <li key={i} className="flex items-start gap-2 text-slate-300 text-sm leading-relaxed">
-          <span className="text-emerald-500 mt-1 flex-shrink-0">•</span>
-          <span>{item}</span>
-        </li>
-      ))}
-    </ul>
-  );
-}
 
 // ── Content data ──────────────────────────────────────────────────────────────
 //
