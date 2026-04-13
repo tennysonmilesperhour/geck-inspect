@@ -1,3 +1,5 @@
+import React from 'react';
+import { APP_LOGO_URL } from "@/lib/constants";
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
@@ -15,7 +17,7 @@ import {
 import Seo from '@/components/seo/Seo';
 
 const LOGO_URL =
-  'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png';
+  APP_LOGO_URL;
 
 const ZERO_SHIPPING_URL = 'https://www.zerosgeckos.com/shippingproject';
 

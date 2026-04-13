@@ -4,7 +4,17 @@ import "@/styles/layout-theme.css";
 import { initialsAvatarUrl } from "@/components/shared/InitialsAvatar";
 import { createPageUrl } from "@/utils";
 import { base44 } from '@/api/base44Client';
-import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
+import { useAuth } from '@/lib/AuthContext';
+import { APP_LOGO_URL } from '@/lib/constants';
+import { GeckoImage } from "@/entities/GeckoImage";
+import { User } from "@/entities/User";
+import { Gecko } from "@/entities/Gecko";
+import { ForumPost } from "@/entities/ForumPost";
+import { Notification } from "@/entities/Notification";
+import { DirectMessage } from "@/entities/DirectMessage";
+import { MorphReferenceImage } from "@/entities/MorphReferenceImage";
+import { PageConfig } from "@/entities/PageConfig";
+import { useToast } from "@/components/ui/use-toast";
 import {
   Database, BookOpen, BarChart3, Upload, Users, HeartHandshake, Layers, LogOut, Search, Settings, UserPlus, Shield, MessageSquare, Bell, Mail, Heart, Menu, ShoppingCart, GitBranch, FlaskConical, Star, FolderKanban, GraduationCap, Dna,
   Egg, LayoutGrid, CircleUser, UsersRound, Images, Tag, CalendarDays, Sparkles
@@ -38,11 +48,11 @@ import {
 
 function LayoutContent({ children, currentPageName: _currentPageName }) {
   const location = useLocation();
+  const { user, logout } = useAuth();
   const sidebarRef = useRef(null);
   const [imageCount, setImageCount] = useState(0);
-  const [_isLoading, setIsLoading] = useState(true);
-  const [user, setUser] = useState(null);
-  const [_currentMilestone, setCurrentMilestone] = useState(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [currentMilestone, setCurrentMilestone] = useState(null);
   const [userLevel, setUserLevel] = useState(null);
   const [imageLevel, setImageLevel] = useState(null);
   const [communityLevel, setCommunityLevel] = useState(null);
@@ -90,8 +100,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   };
 
   useEffect(() => {
-    const _logoUrl = window.APP_LOGO_URL;
-    setAppLogo('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png');
+    setAppLogo(APP_LOGO_URL);
   }, []);
 
   useEffect(() => {
@@ -246,7 +255,8 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     }
   }, [user]);
 
-  // Enhanced authentication check with better error handling
+  // Sidebar data: contributions, levels, images, page configs.
+  // User comes from useAuth() — no separate fetch needed.
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -270,56 +280,17 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           setPageConfigs(configs);
         }
 
-        // Try to get user first with heavy caching
-        let currentUser = dataCache.get('current_user_v2');
-        if (!currentUser && dataCache.canMakeRequest('current_user_v2')) {
-          try {
-            dataCache.markRequestMade('current_user_v2');
-            const { data: { user: _supaUser } } = await supabase.auth.getUser();
-            currentUser = normalizeSupabaseUser(_supaUser);
-            if (currentUser) {
-              // Enrich with the profile row so user.role, bio, business_name,
-              // etc. are available for the sidebar admin check and other UI
-              // bits. Without this, user.role is undefined even when the
-              // profiles row is correctly marked admin in the database.
-              try {
-                const { data: profile } = await supabase
-                  .from('profiles')
-                  .select('*')
-                  .eq('email', currentUser.email)
-                  .maybeSingle();
-                if (profile) currentUser = { ...currentUser, ...profile };
-              } catch (profileErr) {
-                console.log('Profile enrichment failed:', profileErr);
-              }
-              dataCache.set('current_user_v2', currentUser);
-              setUser(currentUser);
-            }
-          } catch (error) {
-            console.log("User authentication check failed:", error);
-            setUser(null);
-            setUserLevel(null);
-            setImageLevel(null);
-            setCommunityLevel(null);
-            setUnreadMessages(0);
-            setUnreadNotificationsCount(0);
-            dataCache.clear('current_user_v2');
-          }
-        } else if (currentUser) {
-          setUser(currentUser);
-        }
-
         // Load user-specific data with very heavy caching
-        if (currentUser) {
-          let userContributions = dataCache.get(`user_contributions_${currentUser.email}`);
-          if (!userContributions && dataCache.canMakeRequest(`user_contributions_${currentUser.email}`)) {
+        if (user) {
+          let userContributions = dataCache.get(`user_contributions_${user.email}`);
+          if (!userContributions && dataCache.canMakeRequest(`user_contributions_${user.email}`)) {
             try {
-              dataCache.markRequestMade(`user_contributions_${currentUser.email}`);
+              dataCache.markRequestMade(`user_contributions_${user.email}`);
 
               const results = await Promise.allSettled([
-                retryApiCall(() => base44.entities.Gecko.filter({ created_by: currentUser.email })),
-                retryApiCall(() => base44.entities.GeckoImage.filter({ created_by: currentUser.email })),
-                retryApiCall(() => base44.entities.ForumPost.filter({ created_by: currentUser.email }))
+                retryApiCall(() => base44.entities.Gecko.filter({ created_by: user.email })),
+                retryApiCall(() => base44.entities.GeckoImage.filter({ created_by: user.email })),
+                retryApiCall(() => base44.entities.ForumPost.filter({ created_by: user.email }))
               ]);
 
               userContributions = {
@@ -327,7 +298,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 imageCount: results[1].status === 'fulfilled' ? results[1].value.length : 0,
                 postCount: results[2].status === 'fulfilled' ? results[2].value.length : 0
               };
-              dataCache.set(`user_contributions_${currentUser.email}`, userContributions);
+              dataCache.set(`user_contributions_${user.email}`, userContributions);
             } catch (error) {
               console.log("Could not load user contributions (rate limited):", error);
               userContributions = { geckoCount: 0, imageCount: 0, postCount: 0 };
@@ -380,9 +351,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     };
 
     fetchData();
-    
-    // Removed periodic auth check to reduce API calls
-  }, []);
+  }, [user]);
 
 
   const handleLogin = () => {
@@ -391,15 +360,13 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
   const handleLogout = async () => {
     try {
-      await supabase.auth.signOut();
-      setUser(null);
+      dataCache.clearAll();
       setUserLevel(null);
       setImageLevel(null);
       setCommunityLevel(null);
-      dataCache.clearAll();
       setUnreadNotificationsCount(0);
       setUnreadMessages(0);
-      window.location.reload();
+      await logout();
     } catch (error) {
       console.error("Logout failed:", error);
     }
@@ -713,7 +680,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                       decoding="async"
                       onError={(e) => {
                         e.target.onerror = null;
-                        e.target.src = 'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png';
+                        e.target.src = APP_LOGO_URL;
                       }}
                     />
                   )}

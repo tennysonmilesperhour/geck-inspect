@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Notification } from '@/entities/all';
-import { Bell } from 'lucide-react';
+import { dataCache } from '@/lib/layoutCache';
+import { Bell, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { formatDistanceToNow } from 'date-fns';
@@ -33,8 +34,8 @@ const NotificationDropdown = ({ user, unreadCount, setUnreadCount }) => {
     }, [isOpen, loadNotifications]);
 
     const clearLayoutCache = () => {
-        if (window.dataCache && user) {
-            window.dataCache.clear(`notifications_${user.email}`);
+        if (dataCache && user) {
+            dataCache.clear(`notifications_${user.email}`);
         }
     };
 
