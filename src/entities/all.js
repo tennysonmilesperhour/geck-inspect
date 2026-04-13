@@ -88,3 +88,20 @@ export const ShedRecord = sb.ShedRecord;
 export const VetRecord = sb.VetRecord;
 export const TransferRequest = sb.TransferRequest;
 export const FeedingRecord = sb.FeedingRecord;
+// P2 — Market Pricing Intelligence
+export const MorphPriceEntry = sb.MorphPriceEntry;
+export const PriceAlert = sb.PriceAlert;
+export const CollectionValuation = sb.CollectionValuation;
+// P3 — Breeding ROI Dashboard
+export const BreedingProject = sb.BreedingProject;
+export const GeneticOutcomePrediction = sb.GeneticOutcomePrediction;
+export const Clutch = sb.Clutch;
+// P4 — Breeding Loan Management
+export const BreedingLoan = sb.BreedingLoan;
+// P5 — Geck Answers
+export const Question = sb.Question;
+export const Answer = sb.Answer;
+export const QuestionVote = sb.QuestionVote;
+// P8 — Breeder Storefront
+export const BreederProfile = sb.BreederProfile;
+export const BreederReview = sb.BreederReview;
