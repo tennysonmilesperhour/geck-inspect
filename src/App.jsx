@@ -32,6 +32,7 @@ const MarketplaceSalesStats = lazy(() => import('./pages/MarketplaceSalesStats')
 const Marketplace           = lazy(() => import('./pages/Marketplace'));
 const Membership            = lazy(() => import('./pages/Membership'));
 const AdminMigration        = lazy(() => import('./pages/AdminMigration'));
+const Passport              = lazy(() => import('./pages/Passport'));
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -75,6 +76,7 @@ const AuthenticatedApp = () => {
           <Route path="/MorphGuide" element={<MorphGuideList />} />
           <Route path="/MorphGuide/:slug" element={<MorphDetail />} />
           <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
+          <Route path="/passport" element={<Passport />} />
           <Route path="*" element={<LoginPortal />} />
         </Routes>
       </Suspense>
@@ -148,6 +150,7 @@ const AuthenticatedApp = () => {
         </LayoutWrapper>
       } />
       <Route path="/AdminMigration" element={<AdminMigration />} />
+      <Route path="/passport" element={<Passport />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
     </Suspense>
