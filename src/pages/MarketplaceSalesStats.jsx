@@ -335,7 +335,9 @@ export default function MarketplaceSalesStats() {
         const updated = { ...prev, [created.id]: newRevenue.category };
         try {
           localStorage.setItem('marketplace_gecko_categories', JSON.stringify(updated));
-        } catch {}
+        } catch (e) {
+          console.warn('localStorage write failed:', e);
+        }
         return updated;
       });
 

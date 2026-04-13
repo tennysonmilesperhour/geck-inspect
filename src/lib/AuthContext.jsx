@@ -13,7 +13,9 @@ async function buildUser(supabaseUser) {
       .eq('email', supabaseUser.email)
       .maybeSingle();
     if (profile) return { ...base, ...profile };
-  } catch {}
+  } catch (e) {
+    console.warn('Profile enrichment failed:', e);
+  }
   return base;
 }
 
