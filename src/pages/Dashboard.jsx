@@ -74,7 +74,9 @@ export default function Dashboard() {
                         setChangelogGlowing(true);
                     }
                 }
-            } catch (_err) {}
+            } catch (e) {
+                console.warn('Changelog check failed:', e);
+            }
         };
         checkUnread();
         const handler = () => setChangelogGlowing(false);
@@ -96,7 +98,9 @@ export default function Dashboard() {
                     total: eggs.length,
                     plans: plans.filter((p) => !p.archived).length,
                 });
-            } catch {}
+            } catch (e) {
+                console.warn('Hatchery stats failed:', e);
+            }
         })();
     }, []);
 

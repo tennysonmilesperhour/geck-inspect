@@ -291,33 +291,21 @@ html, body, #root {
             display: none !important;
           }
 
-          /* CRITICAL: Force permanent vertical alignment for all interactive elements */
-          button,
+          /* Radix Select triggers need explicit alignment to avoid
+             baseline shifts in flex rows. Scoped to Radix only —
+             the previous version targeted ALL button/input/select
+             globally with !important, breaking flex layouts, hidden
+             inputs, and loading states across the app. */
           [data-radix-select-trigger],
-          [role="combobox"],
-          input,
-          select,
-          .h-10,
-          .h-9,
-          .h-8 {
-            display: inline-flex !important;
-            align-items: center !important;
-            vertical-align: middle !important;
-            box-sizing: border-box !important;
-            margin-top: 0 !important;
-            margin-bottom: 0 !important;
-            flex-shrink: 0 !important;
+          [role="combobox"] {
+            display: inline-flex;
+            align-items: center;
+            vertical-align: middle;
           }
 
-          /* Force flex rows to align items center */
-          .flex.items-center,
-          .flex.gap-2,
-          .flex.gap-3,
-          .flex.gap-4,
-          .flex.flex-wrap {
-            display: flex !important;
-            align-items: center !important;
-          }
+          /* Removed: global .flex.gap-* forced align-items override.
+             Was overriding items-start/items-end/items-stretch on
+             every flex container in the app. Tailwind handles this. */
 
           /* Prevent any transform or position shifts on Select triggers.
              NOTE: this rule used to also target button:not(:active), but
@@ -338,17 +326,9 @@ html, body, #root {
             height: auto !important;
           }
 
-          /* Fix button baseline alignment */
-          button {
-            line-height: 1 !important;
-          }
-
-          /* Fix all buttons to be visible */
-          .dark button,
-          button {
-            opacity: 1 !important;
-            visibility: visible !important;
-          }
+          /* Removed: global button line-height + opacity overrides.
+             Was breaking multi-line buttons, loading transitions, and
+             intentionally hidden states across the app. */
 
           /* Mobile-specific: ensure all interactive elements visible */
           @media (max-width: 768px) {
