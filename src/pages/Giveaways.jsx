@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { APP_LOGO_URL } from "@/lib/constants";
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { supabase } from '@/lib/supabaseClient';
@@ -41,7 +42,7 @@ import Seo from '@/components/seo/Seo';
 import { captureEvent } from '@/lib/posthog';
 
 const LOGO_URL =
-  'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png';
+  APP_LOGO_URL;
 const DEFAULT_GECKO_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
 
 const ENTRY_METHOD_LABELS = {

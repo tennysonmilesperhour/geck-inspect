@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
+import { dataCache } from '@/lib/layoutCache';
 import { User, Gecko, GeckoImage, ForumPost, ForumComment, DirectMessage, Notification, MorphReferenceImage, UserBadge, UserActivity, BreedingPlan, WeightRecord, Egg } from '@/entities/all';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -323,8 +324,8 @@ export default function MyProfile() {
             setUser(updatedUser);
             
             // Update the global cache if it exists
-            if (window.dataCache) {
-                window.dataCache.set('current_user', updatedUser);
+            if (dataCache) {
+                dataCache.set('current_user', updatedUser);
             }
 
             toast({ title: "Success", description: "Profile updated successfully." });

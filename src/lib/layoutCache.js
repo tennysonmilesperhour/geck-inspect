@@ -57,12 +57,8 @@ class DataCache {
   }
 }
 
-// One shared instance for the whole app. Also exposed on window for
-// legacy debug tooling / in-app event handlers that toggled it.
+// One shared instance for the whole app.
 export const dataCache = new DataCache();
-if (typeof window !== 'undefined') {
-  window.dataCache = dataCache;
-}
 
 // Sleep for N ms.
 export const delay = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
@@ -115,8 +111,3 @@ export const debouncedApiCall = (() => {
   };
 })();
 
-// Legacy window globals — some older code calls these directly.
-if (typeof window !== 'undefined') {
-  window.delay = delay;
-  window.retryApiCall = retryApiCall;
-}

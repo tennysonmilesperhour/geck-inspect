@@ -1,5 +1,6 @@
 import React from 'react';
 import { Helmet } from 'react-helmet-async';
+import { APP_LOGO_URL } from '@/lib/constants';
 
 /**
  * Per-page SEO component. Drop this at the top of any page to override
@@ -28,8 +29,7 @@ import { Helmet } from 'react-helmet-async';
 const SITE_URL = 'https://geckinspect.com';
 const SITE_NAME = 'Geck Inspect';
 const SITE_HANDLE = '@geckinspect';
-const DEFAULT_IMAGE =
-  'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png';
+const DEFAULT_IMAGE = APP_LOGO_URL;
 
 // Default keyword base that every page picks up — keeps the top-level
 // crested gecko identity searches consistent across the whole app.

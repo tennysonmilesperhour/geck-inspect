@@ -1,4 +1,5 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { APP_LOGO_URL } from "@/lib/constants";
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { supabase } from '@/lib/supabaseClient';
@@ -8,7 +9,7 @@ import Seo from '@/components/seo/Seo';
 import { breederCanonical, breederDisplayName, breederSlug } from '@/lib/breederUtils';
 
 const LOGO_URL =
-  'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png';
+  APP_LOGO_URL;
 const DEFAULT_GECKO_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
 
 function GeckoTile({ gecko }) {
