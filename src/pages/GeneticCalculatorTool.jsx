@@ -6,6 +6,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import GeneticCalculator from '../components/breeding/GeneticCalculator';
+import BreedingSimulator from '../components/innovations/BreedingSimulator';
 
 export default function GeneticCalculatorTool() {
     const [geckos, setGeckos] = useState([]);
@@ -144,6 +145,9 @@ export default function GeneticCalculatorTool() {
                         <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
                             <GeneticCalculator sire={sire} dam={dam} />
                         </div>
+
+                        {/* Monte Carlo simulator */}
+                        <BreedingSimulator sire={sire} dam={dam} />
                     </>
                 )}
             </div>
