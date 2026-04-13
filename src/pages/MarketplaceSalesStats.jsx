@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { Gecko, MarketplaceCost } from '@/entities/all';
+import { toast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -258,15 +259,21 @@ export default function MarketplaceSalesStats() {
 
   const handleAddCost = async () => {
     if (!newCost.description || !newCost.amount) return;
-    const created = await MarketplaceCost.create({
-      user_email: user.email,
-      description: newCost.description,
-      amount: parseFloat(newCost.amount),
-      date: newCost.date,
-      category: newCost.category || 'General',
-    });
-    setCosts(prev => [created, ...prev]);
-    setNewCost({ description: '', amount: '', date: new Date().toISOString().split('T')[0], category: 'other' });
+    try {
+      const created = await MarketplaceCost.create({
+        user_email: user.email,
+        description: newCost.description,
+        amount: parseFloat(newCost.amount),
+        date: newCost.date,
+        category: newCost.category || 'General',
+      });
+      setCosts(prev => [created, ...prev]);
+      setNewCost({ description: '', amount: '', date: new Date().toISOString().split('T')[0], category: 'other' });
+      toast({ title: "Cost Added", description: `${newCost.description} — $${parseFloat(newCost.amount).toFixed(2)}` });
+    } catch (error) {
+      console.error('Failed to add cost:', error);
+      toast({ title: "Error", description: "Could not add cost. Please try again.", variant: "destructive" });
+    }
   };
 
   const handleDeleteCost = async (id) => {

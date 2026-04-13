@@ -22,34 +22,36 @@ import { formatDistanceToNow } from 'date-fns';
 function BreederCard({ breeder, currentUser, isFollowing, onFollow, onUnfollow, geckoCounts, coverImage }) {
     const counts = geckoCounts[breeder.email] || { selling: 0, breeding: 0, keeping: 0 };
     const cardCover = breeder.cover_image_url || coverImage;
-    
+
     return (
-        <Card className="bg-slate-900 border-slate-700 hover:border-emerald-500/50 transition-all overflow-hidden">
-            {/* Cover Image */}
-            {cardCover && (
-                <div className="h-24 w-full overflow-hidden">
-                    <img 
+        <Card className="bg-slate-900 border-slate-700 hover:border-emerald-500/50 transition-all overflow-hidden flex flex-col">
+            {/* Cover Image — always rendered for consistent card height */}
+            <div className="h-24 w-full overflow-hidden flex-shrink-0">
+                {cardCover ? (
+                    <img
                         src={cardCover}
                         alt="Cover"
                         className="w-full h-full object-cover"
                         loading="lazy"
                         decoding="async"
                     />
-                </div>
-            )}
-            <CardContent className={`p-4 ${cardCover ? '-mt-10 relative' : ''}`}>
-                <div className="flex items-start gap-4">
-                    <img 
+                ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-emerald-950/60 to-slate-800" />
+                )}
+            </div>
+            <CardContent className="p-4 -mt-10 relative flex-1 flex flex-col">
+                <div className="flex items-start gap-4 flex-1">
+                    <img
                         src={breeder.profile_image_url || `https://ui-avatars.com/api/?name=${encodeURIComponent(breeder.full_name || 'User')}&background=10b981&color=fff`}
                         alt={breeder.full_name}
-                        className={`w-20 h-20 rounded-full object-cover border-2 border-emerald-500/30 flex-shrink-0 ${cardCover ? 'ring-4 ring-slate-900' : ''}`}
+                        className="w-20 h-20 rounded-full object-cover border-2 border-emerald-500/30 flex-shrink-0 ring-4 ring-slate-900"
                         loading="lazy"
                         decoding="async"
                     />
-                    <div className="flex-1 min-w-0">
+                    <div className="flex-1 min-w-0 flex flex-col">
                         <div className="flex items-center justify-between">
                             <div>
-                                <Link 
+                                <Link
                                     to={createPageUrl(`PublicProfile?email=${encodeURIComponent(breeder.email)}`)}
                                     className="font-bold text-slate-100 hover:text-emerald-400 transition-colors"
                                 >
@@ -74,19 +76,23 @@ function BreederCard({ breeder, currentUser, isFollowing, onFollow, onUnfollow, 
                                 </Button>
                             )}
                         </div>
-                        
-                        {(breeder.city || breeder.state_province || breeder.country) && (
-                            <p className="text-sm text-slate-400 flex items-center gap-1 mt-1">
-                                <MapPin className="w-3 h-3" />
-                                {[breeder.city, breeder.state_province, breeder.country].filter(Boolean).join(', ')}
-                            </p>
-                        )}
-                        
-                        {breeder.bio && (
-                            <p className="text-sm text-slate-300 mt-2 line-clamp-2">{breeder.bio}</p>
-                        )}
-                        
-                        <div className="flex flex-wrap gap-2 mt-3">
+
+                        <p className="text-sm text-slate-400 flex items-center gap-1 mt-1 min-h-[1.25rem]">
+                            {(breeder.city || breeder.state_province || breeder.country) ? (
+                                <>
+                                    <MapPin className="w-3 h-3 flex-shrink-0" />
+                                    {[breeder.city, breeder.state_province, breeder.country].filter(Boolean).join(', ')}
+                                </>
+                            ) : (
+                                <span className="text-slate-600 italic">No location set</span>
+                            )}
+                        </p>
+
+                        <p className="text-sm text-slate-300 mt-2 line-clamp-2 min-h-[2.5rem]">
+                            {breeder.bio || <span className="text-slate-600 italic">No bio yet</span>}
+                        </p>
+
+                        <div className="flex flex-wrap gap-2 mt-3 min-h-[1.5rem]">
                             {counts.selling > 0 && (
                                 <Badge variant="outline" className="text-orange-400 border-orange-400/30">
                                     <ShoppingCart className="w-3 h-3 mr-1" />
@@ -106,7 +112,7 @@ function BreederCard({ breeder, currentUser, isFollowing, onFollow, onUnfollow, 
                                 </Badge>
                             )}
                         </div>
-                        
+
                         {breeder.looking_for && breeder.looking_for.length > 0 && (
                             <div className="mt-2">
                                 <p className="text-xs text-slate-500 mb-1">Looking for:</p>
@@ -124,8 +130,8 @@ function BreederCard({ breeder, currentUser, isFollowing, onFollow, onUnfollow, 
                                 </div>
                             </div>
                         )}
-                        
-                        <div className="flex gap-2 mt-3">
+
+                        <div className="flex gap-2 mt-auto pt-3">
                             <Link to={createPageUrl(`PublicProfile?email=${encodeURIComponent(breeder.email)}`)}>
                                 <Button size="sm" variant="outline" className="border-slate-600 text-xs">
                                     <ExternalLink className="w-3 h-3 mr-1" /> View Profile
