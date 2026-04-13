@@ -81,3 +81,10 @@ export const UserActivity = sb.UserActivity;
 export const UserBadge = sb.UserBadge;
 export const UserFollow = sb.UserFollow;
 export const WeightRecord = sb.WeightRecord;
+
+// P1 — Animal Passport + Ownership Transfer
+export const OwnershipRecord = sb.OwnershipRecord;
+export const ShedRecord = sb.ShedRecord;
+export const VetRecord = sb.VetRecord;
+export const TransferRequest = sb.TransferRequest;
+export const FeedingRecord = sb.FeedingRecord;

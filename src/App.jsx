@@ -32,6 +32,11 @@ const Marketplace           = lazy(() => import('./pages/Marketplace'));
 const Membership            = lazy(() => import('./pages/Membership'));
 const AdminMigration        = lazy(() => import('./pages/AdminMigration'));
 
+// P1 — Animal Passport (public pages, no auth required)
+const AnimalPassport        = lazy(() => import('./pages/AnimalPassport'));
+const PassportQR            = lazy(() => import('./pages/PassportQR'));
+const ClaimAnimal           = lazy(() => import('./pages/ClaimAnimal'));
+
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
 const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
@@ -74,6 +79,10 @@ const AuthenticatedApp = () => {
           <Route path="/MorphGuide" element={<MorphGuideList />} />
           <Route path="/MorphGuide/:slug" element={<MorphDetail />} />
           <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
+          {/* P1 — Public passport pages (no auth needed) */}
+          <Route path="/passport/:passportCode" element={<AnimalPassport />} />
+          <Route path="/passport/:passportCode/qr" element={<PassportQR />} />
+          <Route path="/claim/:token" element={<ClaimAnimal />} />
           <Route path="*" element={<LoginPortal />} />
         </Routes>
       </Suspense>
@@ -151,6 +160,12 @@ const AuthenticatedApp = () => {
         </LayoutWrapper>
       } />
       <Route path="/AdminMigration" element={<AdminMigration />} />
+      {/* P1 — Public passport pages (also available when authenticated) */}
+      <Route path="/passport/:passportCode" element={<AnimalPassport />} />
+      <Route path="/passport/:passportCode/qr" element={
+        <LayoutWrapper currentPageName="PassportQR"><PassportQR /></LayoutWrapper>
+      } />
+      <Route path="/claim/:token" element={<ClaimAnimal />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
     </Suspense>

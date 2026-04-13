@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Righteous&family=Inter:wght@300;400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:ital,opsz,wght@0,9..40,100..1000;1,9..40,100..1000&family=Righteous&family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -154,6 +154,20 @@ button:focus-visible {
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+  }
+
+  /* P1 Design System — Passport & new feature pages */
+  :root {
+    --gi-forest-deep: #1A2E1A;
+    --gi-moss-mid: #2D4A2D;
+    --gi-sage-accent: #4E7C4E;
+    --gi-pale-sage: #E8F0E8;
+    --gi-warm-white: #F7F9F4;
+    --gi-ember-gold: #C4860A;
+    --gi-ember-light: #FDF3E0;
+    --gi-alert-red: #C0392B;
+    --gi-slate-text: #3D4A3D;
+    --gi-muted-text: #6B7B6B;
   }
 }
 

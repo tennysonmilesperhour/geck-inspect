@@ -57,6 +57,13 @@ export const TABLE_MAP = {
   UserFollow: 'user_follows',
   WeightRecord: 'weight_records',
   User: 'profiles',
+
+  // P1 — Animal Passport + Ownership Transfer
+  OwnershipRecord: 'ownership_records',
+  ShedRecord: 'shed_records',
+  VetRecord: 'vet_records',
+  TransferRequest: 'transfer_requests',
+  FeedingRecord: 'feeding_records',
 };
 
 function parseSort(sort) {
@@ -236,3 +243,10 @@ export const UserBadge = createEntityClient('UserBadge');
 export const UserFollow = createEntityClient('UserFollow');
 export const WeightRecord = createEntityClient('WeightRecord');
 export const UserEntity = createEntityClient('User');
+
+// P1 — Animal Passport + Ownership Transfer
+export const OwnershipRecord = createEntityClient('OwnershipRecord');
+export const ShedRecord = createEntityClient('ShedRecord');
+export const VetRecord = createEntityClient('VetRecord');
+export const TransferRequest = createEntityClient('TransferRequest');
+export const FeedingRecord = createEntityClient('FeedingRecord');
