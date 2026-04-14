@@ -293,9 +293,6 @@ export default function FutureBreedingPlans({ geckos, currentUserEmail }) {
             Plan pairings for a future season. You'll get a notification when the target window opens.
           </p>
         </div>
-        <Button size="sm" onClick={openCreate} className="bg-emerald-600 hover:bg-emerald-500 text-white">
-          <Plus className="w-4 h-4 mr-1" /> New plan
-        </Button>
       </div>
 
       {isLoading ? (

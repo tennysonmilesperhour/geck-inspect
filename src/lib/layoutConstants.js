@@ -20,6 +20,13 @@ import {
   GitBranch,
   Upload,
   Shield,
+  DollarSign,
+  TrendingUp,
+  Handshake,
+  HelpCircle,
+  Utensils,
+  Printer,
+  Store,
 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 
@@ -34,16 +41,23 @@ export const publicNavItems = [
   { title: 'Forum',             url: createPageUrl('Forum'),             icon: MessageSquare },
   { title: 'Image Gallery',     url: createPageUrl('Gallery'),           icon: Database },
   { title: 'Marketplace',       url: createPageUrl('Marketplace'),       icon: ShoppingCart },
+  { title: 'Geck Answers',      url: createPageUrl('GeckAnswers'),       icon: HelpCircle },
 ];
 
 // User-only navigation, shown to signed-in users.
 export const userSpecificNavItems = [
-  { title: 'My Geckos',   url: createPageUrl('MyGeckos'),             icon: Users,     requiresAuth: true },
-  { title: 'Breeding',    url: createPageUrl('Breeding'),             icon: GitBranch, requiresAuth: true },
-  { title: 'Lineage',     url: createPageUrl('Lineage'),              icon: GitBranch, requiresAuth: true },
-  { title: 'Sales Stats', url: createPageUrl('MarketplaceSalesStats'), icon: BarChart3, requiresAuth: true },
-  { title: 'My Profile',  url: createPageUrl('MyProfile'),            icon: Users,     requiresAuth: true },
-  { title: 'Train Model', url: createPageUrl('Training'),             icon: Upload,    requiresAuth: true },
+  { title: 'My Geckos',       url: createPageUrl('MyGeckos'),              icon: Users,       requiresAuth: true },
+  { title: 'Breeding',        url: createPageUrl('Breeding'),              icon: GitBranch,   requiresAuth: true },
+  { title: 'Breeding ROI',    url: createPageUrl('BreedingROI'),           icon: TrendingUp,  requiresAuth: true },
+  { title: 'Breeding Loans',  url: createPageUrl('BreedingLoans'),         icon: Handshake,   requiresAuth: true },
+  { title: 'Lineage',         url: createPageUrl('Lineage'),               icon: GitBranch,   requiresAuth: true },
+  { title: 'Market Pricing',  url: createPageUrl('MarketPricing'),         icon: DollarSign,  requiresAuth: true },
+  { title: 'Sales Stats',     url: createPageUrl('MarketplaceSalesStats'), icon: BarChart3,   requiresAuth: true },
+  { title: 'Batch Husbandry', url: createPageUrl('BatchHusbandry'),        icon: Utensils,    requiresAuth: true },
+  { title: 'Worksheets',      url: createPageUrl('PrintableWorksheets'),   icon: Printer,     requiresAuth: true },
+  { title: 'My Storefront',   url: createPageUrl('BreederStorefront'),     icon: Store,       requiresAuth: true },
+  { title: 'My Profile',      url: createPageUrl('MyProfile'),             icon: Users,       requiresAuth: true },
+  { title: 'Train Model',     url: createPageUrl('Training'),              icon: Upload,      requiresAuth: true },
 ];
 
 // Admin-only navigation.

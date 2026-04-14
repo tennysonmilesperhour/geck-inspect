@@ -29,9 +29,9 @@
 // First two letters of a name, title-cased. Strips non-alphanumerics.
 function firstTwoTitleCase(name) {
     const clean = (name || '').replace(/[^A-Za-z0-9]/g, '');
-    if (clean.length === 0) return 'Xx';
+    if (clean.length === 0) return '??';
     const first = clean.charAt(0).toUpperCase();
-    const second = (clean.charAt(1) || 'x').toLowerCase();
+    const second = (clean.charAt(1) || '?').toLowerCase();
     return `${first}${second}`;
 }
 

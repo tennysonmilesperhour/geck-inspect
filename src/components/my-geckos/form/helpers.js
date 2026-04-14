@@ -16,7 +16,8 @@ import { generateHatchedGeckoId, generateFounderGeckoId } from '@/components/sha
  *   - founder gecko (no parents) → "PREFIX-NNN" where PREFIX is derived
  *     from the user's breeder_name or email prefix
  */
-export async function generateNextGeckoId(user, allGeckos, sire = null, dam = null) {
+export async function generateNextGeckoId(user, allGeckos, sire = null, dam = null, sireName = '', damName = '') {
+  // If we have linked sire + dam gecko objects, use full logic
   if (sire && dam) {
     const year = new Date().getFullYear();
     const siblingsThisSeason = (allGeckos || []).filter((g) => {
@@ -26,6 +27,16 @@ export async function generateNextGeckoId(user, allGeckos, sire = null, dam = nu
     });
     const offspringNumber = siblingsThisSeason.length + 1;
     return generateHatchedGeckoId(sire, dam, offspringNumber, year);
+  }
+
+  // If user typed free-text sire/dam names, generate an ID using those names
+  // with ? for any missing parts
+  if (sireName || damName) {
+    return generateHatchedGeckoId(
+      { name: sireName || '' },
+      { name: damName || '' },
+      1
+    );
   }
 
   return generateFounderGeckoId(user, allGeckos);

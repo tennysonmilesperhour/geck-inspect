@@ -257,8 +257,13 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
             )}
           </div>
           <div className="flex items-center gap-2">
-            <Button 
-              variant="outline" 
+            <EventTracker
+              entityId={gecko.id}
+              entityType="gecko"
+              EventEntity={GeckoEvent}
+            />
+            <Button
+              variant="outline"
               size="sm"
               onClick={() => onEdit(gecko)}
               className="border-slate-600 hover:bg-slate-800"
