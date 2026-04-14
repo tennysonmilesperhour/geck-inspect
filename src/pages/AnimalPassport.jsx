@@ -20,16 +20,18 @@ import { Helmet } from 'react-helmet-async';
 
 /* ─── Design tokens ─────────────────────────────────────────────── */
 const C = {
-  forest:    '#1A2E1A',
-  moss:      '#2D4A2D',
-  sage:      '#4E7C4E',
-  paleSage:  '#E8F0E8',
-  warmWhite: '#F7F9F4',
-  gold:      '#C4860A',
-  goldLight: '#FDF3E0',
-  red:       '#C0392B',
-  slate:     '#3D4A3D',
-  muted:     '#6B7B6B',
+  forest:    '#e2e8f0',
+  moss:      '#94a3b8',
+  sage:      '#10b981',
+  paleSage:  'rgba(16,185,129,0.1)',
+  warmWhite: '#020617',
+  gold:      '#f59e0b',
+  goldLight: 'rgba(245,158,11,0.15)',
+  red:       '#ef4444',
+  slate:     '#cbd5e1',
+  muted:     '#64748b',
+  cardBg:    '#0f172a',
+  border:    'rgba(51,65,85,0.5)',
 };
 
 /* ─── Tiny sub-components ───────────────────────────────────────── */
@@ -156,7 +158,7 @@ function LineageTree({ gecko, sire, dam }) {
     return (
       <div
         className="rounded-xl p-4 text-center min-w-[140px] border"
-        style={{ backgroundColor: C.warmWhite, borderColor: 'rgba(78,124,78,0.15)' }}
+        style={{ backgroundColor: C.warmWhite, borderColor: C.border }}
       >
         <p className="text-xs uppercase tracking-wider mb-1" style={{ color: C.muted }}>{label}</p>
         {hasPassport ? (
@@ -440,7 +442,7 @@ function VetRecordCard({ record }) {
   return (
     <div
       className="rounded-xl border p-4 cursor-pointer transition hover:shadow-sm"
-      style={{ borderColor: 'rgba(78,124,78,0.15)', backgroundColor: C.warmWhite }}
+      style={{ borderColor: C.border, backgroundColor: C.warmWhite }}
       onClick={() => setExpanded(!expanded)}
     >
       <div className="flex items-center justify-between">
@@ -683,7 +685,7 @@ export default function AnimalPassport() {
           {(baseMorph || morphTraits.length > 0 || gecko.pattern_grade) && (
             <div
               className="rounded-xl border p-6"
-              style={{ borderColor: 'rgba(78,124,78,0.15)', backgroundColor: 'white' }}
+              style={{ borderColor: C.border, backgroundColor: C.cardBg }}
             >
               <SectionHeading>Morph &amp; Genetics</SectionHeading>
               <div className="flex flex-wrap items-center gap-2">
@@ -705,7 +707,7 @@ export default function AnimalPassport() {
           {(gecko.sire_id || gecko.dam_id || gecko.sire_name || gecko.dam_name) && (
             <div
               className="rounded-xl border p-6"
-              style={{ borderColor: 'rgba(78,124,78,0.15)', backgroundColor: 'white' }}
+              style={{ borderColor: C.border, backgroundColor: C.cardBg }}
             >
               <SectionHeading>Lineage</SectionHeading>
               <LineageTree gecko={gecko} sire={sire} dam={dam} />
@@ -721,7 +723,7 @@ export default function AnimalPassport() {
           {/* ─── Ownership timeline ────────────────── */}
           <div
             className="rounded-xl border p-6"
-            style={{ borderColor: 'rgba(78,124,78,0.15)', backgroundColor: 'white' }}
+            style={{ borderColor: C.border, backgroundColor: C.cardBg }}
           >
             <SectionHeading>Ownership History</SectionHeading>
             <OwnershipTimeline records={ownershipRecords} />
@@ -730,7 +732,7 @@ export default function AnimalPassport() {
           {/* ─── Care history ──────────────────────── */}
           <div
             className="rounded-xl border p-6"
-            style={{ borderColor: 'rgba(78,124,78,0.15)', backgroundColor: 'white' }}
+            style={{ borderColor: C.border, backgroundColor: C.cardBg }}
           >
             <SectionHeading>Care History</SectionHeading>
             <CareHistoryTabs
@@ -744,7 +746,7 @@ export default function AnimalPassport() {
           {/* ─── QR Code section ───────────────────── */}
           <div
             className="rounded-xl border p-6 text-center"
-            style={{ borderColor: 'rgba(78,124,78,0.15)', backgroundColor: 'white' }}
+            style={{ borderColor: C.border, backgroundColor: C.cardBg }}
           >
             <QRCodeSVG value={url} size={120} level="M" className="mx-auto mb-3" />
             <p className="text-sm font-medium" style={{ color: C.forest }}>Scan to view this passport</p>

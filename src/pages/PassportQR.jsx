@@ -6,8 +6,9 @@ import { QRCodeSVG } from 'qrcode.react';
 import { Download, Copy, Check, Printer, ArrowLeft } from 'lucide-react';
 
 const C = {
-  forest: '#1A2E1A', moss: '#2D4A2D', sage: '#4E7C4E',
-  paleSage: '#E8F0E8', warmWhite: '#F7F9F4', muted: '#6B7B6B', slate: '#3D4A3D',
+  forest: '#e2e8f0', moss: '#94a3b8', sage: '#10b981',
+  paleSage: 'rgba(16,185,129,0.1)', warmWhite: '#020617', muted: '#64748b', slate: '#cbd5e1',
+  cardBg: '#0f172a', border: 'rgba(51,65,85,0.5)',
 };
 
 export default function PassportQR() {
@@ -100,7 +101,7 @@ export default function PassportQR() {
         {/* Print-optimized QR card */}
         <div
           className="rounded-xl border p-8 text-center print:border-none print:shadow-none print:rounded-none"
-          style={{ borderColor: 'rgba(78,124,78,0.15)', backgroundColor: 'white' }}
+          style={{ borderColor: C.border, backgroundColor: C.cardBg }}
           ref={qrRef}
         >
           <QRCodeSVG value={url} size={280} level="M" className="mx-auto mb-6" />

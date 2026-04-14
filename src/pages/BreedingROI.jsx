@@ -5,7 +5,7 @@ import { format } from 'date-fns';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, BarChart, Bar, XAxis, YAxis, CartesianGrid } from 'recharts';
 import { Plus, ChevronLeft, AlertTriangle, TrendingUp, DollarSign, Percent, Target, Egg } from 'lucide-react';
 
-const C = { forest: '#1A2E1A', sage: '#4E7C4E', paleSage: '#E8F0E8', warmWhite: '#F7F9F4', gold: '#C4860A', goldLight: '#FDF3E0', red: '#C0392B', slate: '#3D4A3D', muted: '#6B7B6B' };
+const C = { forest: '#e2e8f0', sage: '#10b981', paleSage: 'rgba(16,185,129,0.1)', warmWhite: '#020617', gold: '#f59e0b', goldLight: 'rgba(245,158,11,0.15)', red: '#ef4444', slate: '#cbd5e1', muted: '#64748b', cardBg: '#0f172a', border: 'rgba(51,65,85,0.5)' };
 const fmt = (v) => '$' + Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 const COST_COLORS = ['#4E7C4E', '#2D4A2D', '#C4860A', '#6B7B6B', '#1A2E1A', '#8BA88B'];
 
@@ -93,15 +93,15 @@ export default function BreedingROI() {
             <div className="space-y-4">
               <h2 className="text-lg font-medium" style={{ color: C.forest }}>Pairing Details</h2>
               <input value={wizard.name} onChange={e => setWizard(p => ({ ...p, name: e.target.value }))} placeholder="Project name"
-                className="w-full rounded-xl border px-4 py-3 text-sm" style={{ borderColor: 'rgba(78,124,78,0.15)', color: C.slate }} />
+                className="w-full rounded-xl border px-4 py-3 text-sm" style={{ borderColor: C.border, color: C.slate }} />
               <div className="grid grid-cols-2 gap-3">
-                <input value={wizard.sire_name} onChange={e => setWizard(p => ({ ...p, sire_name: e.target.value }))} placeholder="Sire name" className="rounded-lg border px-3 py-2 text-sm" style={{ borderColor: 'rgba(78,124,78,0.15)', color: C.slate }} />
-                <input value={wizard.sire_morph} onChange={e => setWizard(p => ({ ...p, sire_morph: e.target.value }))} placeholder="Sire morph" className="rounded-lg border px-3 py-2 text-sm" style={{ borderColor: 'rgba(78,124,78,0.15)', color: C.slate }} />
-                <input value={wizard.dam_name} onChange={e => setWizard(p => ({ ...p, dam_name: e.target.value }))} placeholder="Dam name" className="rounded-lg border px-3 py-2 text-sm" style={{ borderColor: 'rgba(78,124,78,0.15)', color: C.slate }} />
-                <input value={wizard.dam_morph} onChange={e => setWizard(p => ({ ...p, dam_morph: e.target.value }))} placeholder="Dam morph" className="rounded-lg border px-3 py-2 text-sm" style={{ borderColor: 'rgba(78,124,78,0.15)', color: C.slate }} />
+                <input value={wizard.sire_name} onChange={e => setWizard(p => ({ ...p, sire_name: e.target.value }))} placeholder="Sire name" className="rounded-lg border px-3 py-2 text-sm" style={{ borderColor: C.border, color: C.slate }} />
+                <input value={wizard.sire_morph} onChange={e => setWizard(p => ({ ...p, sire_morph: e.target.value }))} placeholder="Sire morph" className="rounded-lg border px-3 py-2 text-sm" style={{ borderColor: C.border, color: C.slate }} />
+                <input value={wizard.dam_name} onChange={e => setWizard(p => ({ ...p, dam_name: e.target.value }))} placeholder="Dam name" className="rounded-lg border px-3 py-2 text-sm" style={{ borderColor: C.border, color: C.slate }} />
+                <input value={wizard.dam_morph} onChange={e => setWizard(p => ({ ...p, dam_morph: e.target.value }))} placeholder="Dam morph" className="rounded-lg border px-3 py-2 text-sm" style={{ borderColor: C.border, color: C.slate }} />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div><label className="text-xs block mb-1" style={{ color: C.muted }}>Target clutches</label><input type="number" value={wizard.target_clutch_count} onChange={e => setWizard(p => ({ ...p, target_clutch_count: Number(e.target.value) }))} className="w-full rounded-lg border px-3 py-2 text-sm" style={{ borderColor: 'rgba(78,124,78,0.15)', color: C.slate }} /></div>
+                <div><label className="text-xs block mb-1" style={{ color: C.muted }}>Target clutches</label><input type="number" value={wizard.target_clutch_count} onChange={e => setWizard(p => ({ ...p, target_clutch_count: Number(e.target.value) }))} className="w-full rounded-lg border px-3 py-2 text-sm" style={{ borderColor: C.border, color: C.slate }} /></div>
               </div>
               <button onClick={() => setWizard(p => ({ ...p, step: 2 }))} className="px-6 py-2.5 rounded-lg text-sm font-medium text-white" style={{ backgroundColor: C.sage }}>Next: Genetic Outcomes</button>
             </div>
@@ -116,9 +116,9 @@ export default function BreedingROI() {
               <p className="text-xs" style={{ color: probSum === 100 ? C.sage : C.red }}>{probSum}% / 100%</p>
               {wizard.outcomes.map((o, i) => (
                 <div key={i} className="grid grid-cols-5 gap-2 items-end">
-                  <div className="col-span-2"><label className="text-xs block mb-1" style={{ color: C.muted }}>Morph</label><input value={o.morph_combination} onChange={e => { const n = [...wizard.outcomes]; n[i].morph_combination = e.target.value; setWizard(p => ({ ...p, outcomes: n })); }} className="w-full rounded-lg border px-2 py-1.5 text-sm" style={{ borderColor: 'rgba(78,124,78,0.15)', color: C.slate }} /></div>
-                  <div><label className="text-xs block mb-1" style={{ color: C.muted }}>Prob %</label><input type="number" value={o.probability} onChange={e => { const n = [...wizard.outcomes]; n[i].probability = Number(e.target.value); setWizard(p => ({ ...p, outcomes: n })); }} className="w-full rounded-lg border px-2 py-1.5 text-sm" style={{ borderColor: 'rgba(78,124,78,0.15)', color: C.slate }} /></div>
-                  <div><label className="text-xs block mb-1" style={{ color: C.muted }}>Mid $</label><input type="number" value={o.price_mid} onChange={e => { const n = [...wizard.outcomes]; n[i].price_mid = Number(e.target.value); setWizard(p => ({ ...p, outcomes: n })); }} className="w-full rounded-lg border px-2 py-1.5 text-sm" style={{ borderColor: 'rgba(78,124,78,0.15)', color: C.slate }} /></div>
+                  <div className="col-span-2"><label className="text-xs block mb-1" style={{ color: C.muted }}>Morph</label><input value={o.morph_combination} onChange={e => { const n = [...wizard.outcomes]; n[i].morph_combination = e.target.value; setWizard(p => ({ ...p, outcomes: n })); }} className="w-full rounded-lg border px-2 py-1.5 text-sm" style={{ borderColor: C.border, color: C.slate }} /></div>
+                  <div><label className="text-xs block mb-1" style={{ color: C.muted }}>Prob %</label><input type="number" value={o.probability} onChange={e => { const n = [...wizard.outcomes]; n[i].probability = Number(e.target.value); setWizard(p => ({ ...p, outcomes: n })); }} className="w-full rounded-lg border px-2 py-1.5 text-sm" style={{ borderColor: C.border, color: C.slate }} /></div>
+                  <div><label className="text-xs block mb-1" style={{ color: C.muted }}>Mid $</label><input type="number" value={o.price_mid} onChange={e => { const n = [...wizard.outcomes]; n[i].price_mid = Number(e.target.value); setWizard(p => ({ ...p, outcomes: n })); }} className="w-full rounded-lg border px-2 py-1.5 text-sm" style={{ borderColor: C.border, color: C.slate }} /></div>
                   <button onClick={() => setWizard(p => ({ ...p, outcomes: p.outcomes.filter((_, j) => j !== i) }))} className="text-xs py-1.5 rounded" style={{ color: C.red }}>Remove</button>
                 </div>
               ))}
@@ -140,7 +140,7 @@ export default function BreedingROI() {
               ].map(f => (
                 <div key={f.key}><label className="text-xs block mb-1" style={{ color: C.muted }}>{f.label}</label>
                 <input type="number" value={wizard.costs[f.key]} onChange={e => setWizard(p => ({ ...p, costs: { ...p.costs, [f.key]: Number(e.target.value) } }))}
-                  className="w-full rounded-lg border px-3 py-2 text-sm" style={{ borderColor: 'rgba(78,124,78,0.15)', color: C.slate }} /></div>
+                  className="w-full rounded-lg border px-3 py-2 text-sm" style={{ borderColor: C.border, color: C.slate }} /></div>
               ))}
               <div className="flex gap-3">
                 <button onClick={() => setWizard(p => ({ ...p, step: 2 }))} className="px-4 py-2 rounded-lg text-sm border" style={{ borderColor: C.sage, color: C.sage }}>Back</button>
@@ -163,7 +163,7 @@ export default function BreedingROI() {
                   <div className="rounded-xl p-4 text-center" style={{ backgroundColor: C.paleSage }}><p className="text-xs uppercase" style={{ color: C.muted }}>Costs</p><p className="text-xl font-semibold" style={{ color: C.slate }}>{fmt(totalCosts)}</p></div>
                   <div className="rounded-xl p-4 text-center" style={{ backgroundColor: profit >= 0 ? C.paleSage : '#FCEBEB' }}><p className="text-xs uppercase" style={{ color: C.muted }}>Profit</p><p className="text-xl font-semibold" style={{ color: profit >= 0 ? C.sage : C.red }}>{fmt(profit)}</p></div>
                 </div>
-                {profit < 0 && <div className="rounded-lg p-3 flex items-center gap-2" style={{ backgroundColor: '#FCEBEB' }}><AlertTriangle size={16} style={{ color: C.red }} /><span className="text-sm" style={{ color: C.red }}>This project is projected to lose money at current prices.</span></div>}
+                {profit < 0 && <div className="rounded-lg p-3 flex items-center gap-2" style={{ backgroundColor: 'rgba(239,68,68,0.15)' }}><AlertTriangle size={16} style={{ color: C.red }} /><span className="text-sm" style={{ color: C.red }}>This project is projected to lose money at current prices.</span></div>}
                 <div className="flex gap-3">
                   <button onClick={() => setWizard(p => ({ ...p, step: 3 }))} className="px-4 py-2 rounded-lg text-sm border" style={{ borderColor: C.sage, color: C.sage }}>Back</button>
                   <button onClick={createProject} disabled={probSum !== 100} className="px-6 py-2.5 rounded-lg text-sm font-medium text-white disabled:opacity-50" style={{ backgroundColor: C.sage }}>Create Project</button>
@@ -196,7 +196,7 @@ export default function BreedingROI() {
           <h1 className="text-3xl mb-1" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>{selected.name}</h1>
           <p className="text-sm mb-6" style={{ color: C.muted }}>{selected.sire_name} x {selected.dam_name}</p>
 
-          {m.profit < 0 && <div className="rounded-lg p-3 flex items-center gap-2 mb-4" style={{ backgroundColor: '#FCEBEB' }}><AlertTriangle size={16} style={{ color: C.red }} /><span className="text-sm" style={{ color: C.red }}>Projected to lose money at current market prices.</span></div>}
+          {m.profit < 0 && <div className="rounded-lg p-3 flex items-center gap-2 mb-4" style={{ backgroundColor: 'rgba(239,68,68,0.15)' }}><AlertTriangle size={16} style={{ color: C.red }} /><span className="text-sm" style={{ color: C.red }}>Projected to lose money at current market prices.</span></div>}
 
           {/* Stat cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
@@ -206,7 +206,7 @@ export default function BreedingROI() {
               { label: 'Projected Profit', value: fmt(m.profit), icon: TrendingUp, color: m.profit >= 0 ? C.sage : C.red },
               { label: 'ROI', value: `${m.roi.toFixed(1)}%`, icon: Percent, color: m.roi >= 0 ? C.sage : C.red },
             ].map((s, i) => (
-              <div key={i} className="rounded-xl border p-5" style={{ borderColor: 'rgba(78,124,78,0.15)', backgroundColor: 'white' }}>
+              <div key={i} className="rounded-xl border p-5" style={{ borderColor: C.border, backgroundColor: C.cardBg }}>
                 <div className="flex items-center gap-2 mb-1"><s.icon size={14} style={{ color: C.sage }} /><span className="text-xs uppercase tracking-wider" style={{ color: C.muted }}>{s.label}</span></div>
                 <p className="text-2xl font-semibold" style={{ color: s.color }}>{s.value}</p>
               </div>
@@ -215,7 +215,7 @@ export default function BreedingROI() {
 
           <div className="grid lg:grid-cols-5 gap-6 mb-6">
             {/* Outcomes table */}
-            <div className="lg:col-span-3 rounded-xl border p-5" style={{ borderColor: 'rgba(78,124,78,0.15)', backgroundColor: 'white' }}>
+            <div className="lg:col-span-3 rounded-xl border p-5" style={{ borderColor: C.border, backgroundColor: C.cardBg }}>
               <h2 className="text-lg mb-3" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>Morph Outcomes</h2>
               <table className="w-full text-sm">
                 <thead><tr style={{ borderBottom: `1px solid ${C.paleSage}` }}>
@@ -236,7 +236,7 @@ export default function BreedingROI() {
             </div>
 
             {/* Cost donut */}
-            <div className="lg:col-span-2 rounded-xl border p-5" style={{ borderColor: 'rgba(78,124,78,0.15)', backgroundColor: 'white' }}>
+            <div className="lg:col-span-2 rounded-xl border p-5" style={{ borderColor: C.border, backgroundColor: C.cardBg }}>
               <h2 className="text-lg mb-3" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>Cost Breakdown</h2>
               <ResponsiveContainer width="100%" height={180}>
                 <PieChart><Pie data={costData} innerRadius={50} outerRadius={75} dataKey="value" paddingAngle={2}>
@@ -251,7 +251,7 @@ export default function BreedingROI() {
           </div>
 
           {/* Clutch log */}
-          <div className="rounded-xl border p-5" style={{ borderColor: 'rgba(78,124,78,0.15)', backgroundColor: 'white' }}>
+          <div className="rounded-xl border p-5" style={{ borderColor: C.border, backgroundColor: C.cardBg }}>
             <h2 className="text-lg mb-3" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>Clutch Log</h2>
             {clutches.length > 0 ? (
               <div className="space-y-2">
@@ -283,7 +283,7 @@ export default function BreedingROI() {
           <button onClick={() => setView('wizard')} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white" style={{ backgroundColor: C.sage }}><Plus size={16} /> New Project</button>
         </div>
         {loading ? <div className="space-y-3">{[1,2].map(i => <div key={i} className="animate-pulse rounded-xl h-20" style={{ backgroundColor: C.paleSage }} />)}</div> : (
-          <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'rgba(78,124,78,0.15)', backgroundColor: 'white' }}>
+          <div className="rounded-xl border overflow-hidden" style={{ borderColor: C.border, backgroundColor: C.cardBg }}>
             <table className="w-full text-sm">
               <thead><tr style={{ backgroundColor: C.paleSage }}>
                 {['Project', 'Pairing', 'Status', 'Clutches'].map(h => <th key={h} className="text-left py-3 px-4 text-xs uppercase tracking-wider" style={{ color: C.muted }}>{h}</th>)}

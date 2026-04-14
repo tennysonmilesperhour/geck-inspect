@@ -5,9 +5,9 @@ import { format } from 'date-fns';
 import { TrendingUp, TrendingDown, Minus, DollarSign, BarChart3, Activity, ChevronDown, ChevronUp, Plus, X } from 'lucide-react';
 
 const C = {
-  forest: '#1A2E1A', moss: '#2D4A2D', sage: '#4E7C4E', paleSage: '#E8F0E8',
-  warmWhite: '#F7F9F4', gold: '#C4860A', goldLight: '#FDF3E0', red: '#C0392B',
-  slate: '#3D4A3D', muted: '#6B7B6B',
+  forest: '#e2e8f0', moss: '#94a3b8', sage: '#10b981', paleSage: 'rgba(16,185,129,0.1)',
+  warmWhite: '#020617', gold: '#f59e0b', goldLight: 'rgba(245,158,11,0.15)', red: '#ef4444',
+  slate: '#cbd5e1', muted: '#64748b', cardBg: '#0f172a', border: 'rgba(51,65,85,0.5)',
 };
 const fmt = (v) => '$' + Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -128,7 +128,7 @@ export default function MarketPricing() {
             { label: 'Highest Avg Sale', value: fmt(stats.highestAvg), icon: BarChart3 },
             { label: '90-Day Trend', value: `${stats.trend > 0 ? '+' : ''}${stats.trend}%`, icon: TrendingUp, trend: stats.trend },
           ].map((s, i) => (
-            <div key={i} className="rounded-xl border p-5" style={{ borderColor: 'rgba(78,124,78,0.15)', backgroundColor: 'white' }}>
+            <div key={i} className="rounded-xl border p-5" style={{ borderColor: C.border, backgroundColor: C.cardBg }}>
               <div className="flex items-center gap-2 mb-2">
                 <s.icon size={16} style={{ color: C.sage }} />
                 <span className="text-xs uppercase tracking-wider" style={{ color: C.muted }}>{s.label}</span>
@@ -149,7 +149,7 @@ export default function MarketPricing() {
             { key: 'grade', options: ['all', 'pet', 'breeder', 'high_end', 'investment'] },
           ].map(f => (
             <select key={f.key} value={filters[f.key]} onChange={e => setFilters(p => ({ ...p, [f.key]: e.target.value }))}
-              className="rounded-lg px-3 py-1.5 text-sm border" style={{ borderColor: 'rgba(78,124,78,0.15)', backgroundColor: 'white', color: C.slate }}>
+              className="rounded-lg px-3 py-1.5 text-sm border" style={{ borderColor: C.border, backgroundColor: C.cardBg, color: C.slate }}>
               {f.options.map(o => <option key={o} value={o}>{o === 'all' ? `All ${f.key}s` : o.replace('_', ' ')}</option>)}
             </select>
           ))}
@@ -157,7 +157,7 @@ export default function MarketPricing() {
         </div>
 
         {/* Price table */}
-        <div className="rounded-xl border overflow-hidden" style={{ borderColor: 'rgba(78,124,78,0.15)', backgroundColor: 'white' }}>
+        <div className="rounded-xl border overflow-hidden" style={{ borderColor: C.border, backgroundColor: C.cardBg }}>
           <table className="w-full text-sm">
             <thead>
               <tr style={{ backgroundColor: C.paleSage }}>
@@ -211,7 +211,7 @@ export default function MarketPricing() {
         {/* Log a Sale Modal */}
         {showModal && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowModal(false)}>
-            <div className="rounded-xl border p-6 w-full max-w-md mx-4" style={{ backgroundColor: 'white', borderColor: 'rgba(78,124,78,0.15)' }} onClick={e => e.stopPropagation()}>
+            <div className="rounded-xl border p-6 w-full max-w-md mx-4" style={{ backgroundColor: C.cardBg, borderColor: C.border }} onClick={e => e.stopPropagation()}>
               <div className="flex items-center justify-between mb-4">
                 <h2 className="text-xl" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>Log a Sale</h2>
                 <button onClick={() => setShowModal(false)}><X size={20} style={{ color: C.muted }} /></button>
@@ -220,7 +220,7 @@ export default function MarketPricing() {
                 <div>
                   <label className="text-xs uppercase tracking-wider block mb-1" style={{ color: C.muted }}>Morph</label>
                   <input value={form.base_morph} onChange={e => setForm(p => ({ ...p, base_morph: e.target.value }))}
-                    className="w-full rounded-lg border px-3 py-2 text-sm" style={{ borderColor: 'rgba(78,124,78,0.15)', color: C.slate }}
+                    className="w-full rounded-lg border px-3 py-2 text-sm" style={{ borderColor: C.border, color: C.slate }}
                     placeholder="e.g. Harlequin, Lilly White..." />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
@@ -232,7 +232,7 @@ export default function MarketPricing() {
                     <div key={f.key}>
                       <label className="text-xs uppercase tracking-wider block mb-1" style={{ color: C.muted }}>{f.label}</label>
                       <select value={form[f.key]} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
-                        className="w-full rounded-lg border px-3 py-2 text-sm" style={{ borderColor: 'rgba(78,124,78,0.15)', color: C.slate }}>
+                        className="w-full rounded-lg border px-3 py-2 text-sm" style={{ borderColor: C.border, color: C.slate }}>
                         {f.options.map(o => <option key={o} value={o}>{o.replace('_', ' ')}</option>)}
                       </select>
                     </div>
@@ -240,13 +240,13 @@ export default function MarketPricing() {
                   <div>
                     <label className="text-xs uppercase tracking-wider block mb-1" style={{ color: C.muted }}>Sale Price ($)</label>
                     <input type="number" value={form.sale_price} onChange={e => setForm(p => ({ ...p, sale_price: e.target.value }))}
-                      className="w-full rounded-lg border px-3 py-2 text-sm" style={{ borderColor: 'rgba(78,124,78,0.15)', color: C.slate }} placeholder="0.00" />
+                      className="w-full rounded-lg border px-3 py-2 text-sm" style={{ borderColor: C.border, color: C.slate }} placeholder="0.00" />
                   </div>
                 </div>
                 <div>
                   <label className="text-xs uppercase tracking-wider block mb-1" style={{ color: C.muted }}>Sale Date</label>
                   <input type="date" value={form.sale_date} onChange={e => setForm(p => ({ ...p, sale_date: e.target.value }))}
-                    className="w-full rounded-lg border px-3 py-2 text-sm" style={{ borderColor: 'rgba(78,124,78,0.15)', color: C.slate }} />
+                    className="w-full rounded-lg border px-3 py-2 text-sm" style={{ borderColor: C.border, color: C.slate }} />
                 </div>
                 <label className="flex items-center gap-2 cursor-pointer">
                   <input type="checkbox" checked={form.is_anonymous} onChange={e => setForm(p => ({ ...p, is_anonymous: e.target.checked }))} style={{ accentColor: C.sage }} />

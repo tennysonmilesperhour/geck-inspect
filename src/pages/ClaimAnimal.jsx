@@ -6,9 +6,10 @@ import { format } from 'date-fns';
 import { ArrowRightLeft, ShieldCheck, Clock, AlertCircle, Check } from 'lucide-react';
 
 const C = {
-  forest: '#1A2E1A', moss: '#2D4A2D', sage: '#4E7C4E',
-  paleSage: '#E8F0E8', warmWhite: '#F7F9F4', gold: '#C4860A',
-  goldLight: '#FDF3E0', red: '#C0392B', muted: '#6B7B6B', slate: '#3D4A3D',
+  forest: '#e2e8f0', moss: '#94a3b8', sage: '#10b981',
+  paleSage: 'rgba(16,185,129,0.1)', warmWhite: '#020617', gold: '#f59e0b',
+  goldLight: 'rgba(245,158,11,0.15)', red: '#ef4444', muted: '#64748b', slate: '#cbd5e1',
+  cardBg: '#0f172a', border: 'rgba(51,65,85,0.5)',
 };
 
 export default function ClaimAnimal() {
@@ -226,7 +227,7 @@ export default function ClaimAnimal() {
         {/* Animal summary */}
         <div
           className="rounded-xl border p-6 mb-6"
-          style={{ borderColor: 'rgba(78,124,78,0.15)', backgroundColor: 'white' }}
+          style={{ borderColor: C.border, backgroundColor: C.cardBg }}
         >
           <div className="flex items-center gap-4">
             {profileImg ? (
@@ -272,7 +273,7 @@ export default function ClaimAnimal() {
         {transfer.sale_price && (
           <label
             className="flex items-start gap-3 rounded-xl border p-4 mb-6 cursor-pointer"
-            style={{ borderColor: 'rgba(78,124,78,0.15)', backgroundColor: 'white' }}
+            style={{ borderColor: C.border, backgroundColor: C.cardBg }}
           >
             <input
               type="checkbox"

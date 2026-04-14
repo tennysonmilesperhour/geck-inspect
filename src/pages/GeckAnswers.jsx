@@ -5,7 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { Search, ThumbsUp, MessageSquare, CheckCircle, ChevronLeft, Plus, Star } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
 
-const C = { forest: '#1A2E1A', sage: '#4E7C4E', paleSage: '#E8F0E8', warmWhite: '#F7F9F4', gold: '#C4860A', goldLight: '#FDF3E0', slate: '#3D4A3D', muted: '#6B7B6B' };
+const C = { forest: '#e2e8f0', sage: '#10b981', paleSage: 'rgba(16,185,129,0.1)', warmWhite: '#020617', gold: '#f59e0b', goldLight: 'rgba(245,158,11,0.15)', slate: '#cbd5e1', muted: '#64748b', cardBg: '#0f172a', border: 'rgba(51,65,85,0.5)' };
 const TAGS = ['Nutrition', 'Health', 'Housing', 'Breeding', 'Morphs', 'Juveniles', 'Adults', 'Hatchlings', 'Equipment', 'Genetics'];
 
 export default function GeckAnswers() {
@@ -95,12 +95,12 @@ export default function GeckAnswers() {
             <div>
               <label className="text-xs uppercase tracking-wider block mb-1" style={{ color: C.muted }}>Title ({newQ.title.length}/150)</label>
               <input value={newQ.title} onChange={e => setNewQ(p => ({ ...p, title: e.target.value.slice(0, 150) }))} placeholder="What's your question?"
-                className="w-full rounded-xl border px-4 py-3 text-base" style={{ borderColor: 'rgba(78,124,78,0.15)', color: C.slate }} />
+                className="w-full rounded-xl border px-4 py-3 text-base" style={{ borderColor: C.border, color: C.slate }} />
             </div>
             <div>
               <label className="text-xs uppercase tracking-wider block mb-1" style={{ color: C.muted }}>Details (optional, supports markdown)</label>
               <textarea value={newQ.body} onChange={e => setNewQ(p => ({ ...p, body: e.target.value }))} rows={6} placeholder="Add context, what you've already tried..."
-                className="w-full rounded-xl border px-4 py-3 text-sm" style={{ borderColor: 'rgba(78,124,78,0.15)', color: C.slate }} />
+                className="w-full rounded-xl border px-4 py-3 text-sm" style={{ borderColor: C.border, color: C.slate }} />
             </div>
             <div>
               <label className="text-xs uppercase tracking-wider block mb-1" style={{ color: C.muted }}>Tags (max 5)</label>
@@ -132,7 +132,7 @@ export default function GeckAnswers() {
           <button onClick={() => { setView('list'); setSelected(null); }} className="flex items-center gap-1 text-sm mb-4" style={{ color: C.sage }}><ChevronLeft size={16} /> Back to questions</button>
 
           {/* Question */}
-          <div className="rounded-xl border p-6 mb-6" style={{ borderColor: 'rgba(78,124,78,0.15)', backgroundColor: 'white' }}>
+          <div className="rounded-xl border p-6 mb-6" style={{ borderColor: C.border, backgroundColor: C.cardBg }}>
             <div className="flex gap-4">
               <div className="flex flex-col items-center gap-1 shrink-0">
                 <button onClick={() => upvoteQuestion(selected)} className="p-1 rounded hover:bg-gray-100 transition"><ThumbsUp size={18} style={{ color: C.sage }} /></button>
@@ -170,7 +170,7 @@ export default function GeckAnswers() {
           {/* Other answers */}
           <h3 className="text-sm font-medium mb-3" style={{ color: C.muted }}>{answers.length} answer{answers.length !== 1 ? 's' : ''}</h3>
           {otherAnswers.map(a => (
-            <div key={a.id} className="rounded-xl border p-5 mb-3" style={{ borderColor: 'rgba(78,124,78,0.15)', backgroundColor: 'white' }}>
+            <div key={a.id} className="rounded-xl border p-5 mb-3" style={{ borderColor: C.border, backgroundColor: C.cardBg }}>
               <div className="prose prose-sm max-w-none" style={{ color: C.slate }}><ReactMarkdown>{a.body}</ReactMarkdown></div>
               <div className="flex items-center gap-3 mt-3">
                 <button onClick={() => upvoteAnswer(a)} className="flex items-center gap-1 text-xs" style={{ color: C.sage }}><ThumbsUp size={13} /> {a.upvote_count || 0}</button>
@@ -184,10 +184,10 @@ export default function GeckAnswers() {
 
           {/* Add answer */}
           {auth.user ? (
-            <div className="rounded-xl border p-5 mt-4" style={{ borderColor: 'rgba(78,124,78,0.15)', backgroundColor: 'white' }}>
+            <div className="rounded-xl border p-5 mt-4" style={{ borderColor: C.border, backgroundColor: C.cardBg }}>
               <h3 className="text-sm font-medium mb-2" style={{ color: C.forest }}>Your Answer</h3>
               <textarea value={newAnswer} onChange={e => setNewAnswer(e.target.value)} rows={4} placeholder="Share your knowledge... (markdown supported)"
-                className="w-full rounded-lg border px-3 py-2 text-sm mb-3" style={{ borderColor: 'rgba(78,124,78,0.15)', color: C.slate }} />
+                className="w-full rounded-lg border px-3 py-2 text-sm mb-3" style={{ borderColor: C.border, color: C.slate }} />
               <button onClick={submitAnswer} className="px-4 py-2 rounded-lg text-sm font-medium text-white" style={{ backgroundColor: C.sage }}>Post Answer</button>
             </div>
           ) : (
@@ -215,7 +215,7 @@ export default function GeckAnswers() {
         <div className="relative mb-4">
           <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: C.muted }} />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search questions..."
-            className="w-full rounded-xl border pl-10 pr-4 py-2.5 text-sm" style={{ borderColor: 'rgba(78,124,78,0.15)', color: C.slate }} />
+            className="w-full rounded-xl border pl-10 pr-4 py-2.5 text-sm" style={{ borderColor: C.border, color: C.slate }} />
         </div>
 
         {/* Tags */}
@@ -246,7 +246,7 @@ export default function GeckAnswers() {
             {[...featured, ...regular].map(q => (
               <div key={q.id} onClick={() => openQuestion(q)}
                 className="rounded-xl border p-4 cursor-pointer transition hover:shadow-sm"
-                style={{ borderColor: q.is_featured ? C.sage : 'rgba(78,124,78,0.15)', backgroundColor: 'white' }}>
+                style={{ borderColor: q.is_featured ? C.sage : 'rgba(78,124,78,0.15)', backgroundColor: C.cardBg }}>
                 <div className="flex gap-3">
                   <div className="flex flex-col items-center gap-0.5 shrink-0 min-w-[40px]">
                     <span className="text-lg font-semibold" style={{ color: C.forest }}>{q.upvote_count || 0}</span>

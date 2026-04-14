@@ -13,16 +13,18 @@ import { QRCodeSVG } from 'qrcode.react';
 
 /* ─── Design tokens ─────────────────────────────────────────────── */
 const C = {
-  forest:    '#1A2E1A',
-  moss:      '#2D4A2D',
-  sage:      '#4E7C4E',
-  paleSage:  '#E8F0E8',
-  warmWhite: '#F7F9F4',
-  gold:      '#C4860A',
-  goldLight: '#FDF3E0',
-  red:       '#C0392B',
-  slate:     '#3D4A3D',
-  muted:     '#6B7B6B',
+  forest:    '#e2e8f0',
+  moss:      '#94a3b8',
+  sage:      '#10b981',
+  paleSage:  'rgba(16,185,129,0.1)',
+  warmWhite: '#020617',
+  gold:      '#f59e0b',
+  goldLight: 'rgba(245,158,11,0.15)',
+  red:       '#ef4444',
+  slate:     '#cbd5e1',
+  muted:     '#64748b',
+  cardBg:    '#0f172a',
+  border:    'rgba(51,65,85,0.5)',
 };
 
 /* ─── Print CSS (injected once) ─────────────────────────────────── */

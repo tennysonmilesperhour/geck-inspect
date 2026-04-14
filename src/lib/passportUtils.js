@@ -71,15 +71,15 @@ export function feedFreshness(daysSinceLastFed) {
  * Status badge config matching the design system.
  */
 export const STATUS_BADGE_STYLES = {
-  owned:       { bg: '#E8F0E8', text: '#1A2E1A', label: 'Owned' },
-  active:      { bg: '#E8F0E8', text: '#1A2E1A', label: 'Active' },
-  for_sale:    { bg: '#FDF3E0', text: '#633806', label: 'For Sale' },
-  sold:        { bg: '#6B7B6B', text: '#ffffff', label: 'Sold' },
-  completed:   { bg: '#6B7B6B', text: '#ffffff', label: 'Completed' },
-  transferred: { bg: '#D3D1C7', text: '#3D4A3D', label: 'Transferred' },
-  on_loan:     { bg: '#E6F1FB', text: '#0C447C', label: 'On Loan' },
-  cancelled:   { bg: '#FCEBEB', text: '#791F1F', label: 'Cancelled' },
-  deceased:    { bg: '#FCEBEB', text: '#791F1F', label: 'Deceased' },
+  owned:       { bg: 'rgba(16,185,129,0.15)', text: '#10b981', label: 'Owned' },
+  active:      { bg: 'rgba(16,185,129,0.15)', text: '#10b981', label: 'Active' },
+  for_sale:    { bg: 'rgba(245,158,11,0.15)', text: '#f59e0b', label: 'For Sale' },
+  sold:        { bg: 'rgba(100,116,139,0.2)', text: '#94a3b8', label: 'Sold' },
+  completed:   { bg: 'rgba(100,116,139,0.2)', text: '#94a3b8', label: 'Completed' },
+  transferred: { bg: 'rgba(100,116,139,0.2)', text: '#cbd5e1', label: 'Transferred' },
+  on_loan:     { bg: 'rgba(59,130,246,0.15)', text: '#3b82f6', label: 'On Loan' },
+  cancelled:   { bg: 'rgba(239,68,68,0.15)', text: '#ef4444', label: 'Cancelled' },
+  deceased:    { bg: 'rgba(239,68,68,0.15)', text: '#ef4444', label: 'Deceased' },
 };
 
 /**

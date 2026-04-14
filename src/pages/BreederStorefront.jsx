@@ -4,7 +4,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { format } from 'date-fns';
 import { MapPin, Calendar, ShieldCheck, Instagram, Globe, Facebook, Star, MessageSquare, Edit, Save, ExternalLink } from 'lucide-react';
 
-const C = { forest: '#1A2E1A', sage: '#4E7C4E', paleSage: '#E8F0E8', warmWhite: '#F7F9F4', gold: '#C4860A', goldLight: '#FDF3E0', slate: '#3D4A3D', muted: '#6B7B6B' };
+const C = { forest: '#e2e8f0', sage: '#10b981', paleSage: 'rgba(16,185,129,0.1)', warmWhite: '#020617', gold: '#f59e0b', goldLight: 'rgba(245,158,11,0.15)', slate: '#cbd5e1', muted: '#64748b', cardBg: '#0f172a', border: 'rgba(51,65,85,0.5)' };
 
 function StarRating({ rating }) {
   return <div className="flex gap-0.5">{[1,2,3,4,5].map(i => <Star key={i} size={14} fill={i <= rating ? C.gold : 'transparent'} style={{ color: i <= rating ? C.gold : C.muted }} />)}</div>;
@@ -81,14 +81,14 @@ export default function BreederStorefront() {
           <h1 className="text-3xl mb-2" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>Set Up Your Storefront</h1>
           <p className="text-sm mb-6" style={{ color: C.muted }}>Create your public breeder page to share with buyers.</p>
           <div className="space-y-4">
-            <div><label className="text-xs uppercase block mb-1" style={{ color: C.muted }}>Display Name *</label><input value={setupForm.display_name} onChange={e => setSetupForm(p => ({ ...p, display_name: e.target.value }))} className="w-full rounded-xl border px-4 py-3 text-sm" style={{ borderColor: 'rgba(78,124,78,0.15)', color: C.slate }} placeholder="Tennys Crested Geckos" /></div>
-            <div><label className="text-xs uppercase block mb-1" style={{ color: C.muted }}>URL Slug * (geckinspect.com/BreederStorefront?slug=your-slug)</label><input value={setupForm.custom_slug} onChange={e => setSetupForm(p => ({ ...p, custom_slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') }))} className="w-full rounded-xl border px-4 py-3 text-sm font-mono" style={{ borderColor: 'rgba(78,124,78,0.15)', color: C.slate }} placeholder="tennys-crested-geckos" /></div>
-            <div><label className="text-xs uppercase block mb-1" style={{ color: C.muted }}>Bio</label><textarea value={setupForm.bio} onChange={e => setSetupForm(p => ({ ...p, bio: e.target.value }))} rows={3} className="w-full rounded-xl border px-4 py-3 text-sm" style={{ borderColor: 'rgba(78,124,78,0.15)', color: C.slate }} /></div>
+            <div><label className="text-xs uppercase block mb-1" style={{ color: C.muted }}>Display Name *</label><input value={setupForm.display_name} onChange={e => setSetupForm(p => ({ ...p, display_name: e.target.value }))} className="w-full rounded-xl border px-4 py-3 text-sm" style={{ borderColor: 'rgba(51,65,85,0.5)', color: C.slate }} placeholder="Tennys Crested Geckos" /></div>
+            <div><label className="text-xs uppercase block mb-1" style={{ color: C.muted }}>URL Slug * (geckinspect.com/BreederStorefront?slug=your-slug)</label><input value={setupForm.custom_slug} onChange={e => setSetupForm(p => ({ ...p, custom_slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') }))} className="w-full rounded-xl border px-4 py-3 text-sm font-mono" style={{ borderColor: 'rgba(51,65,85,0.5)', color: C.slate }} placeholder="tennys-crested-geckos" /></div>
+            <div><label className="text-xs uppercase block mb-1" style={{ color: C.muted }}>Bio</label><textarea value={setupForm.bio} onChange={e => setSetupForm(p => ({ ...p, bio: e.target.value }))} rows={3} className="w-full rounded-xl border px-4 py-3 text-sm" style={{ borderColor: 'rgba(51,65,85,0.5)', color: C.slate }} /></div>
             <div className="grid grid-cols-2 gap-3">
-              <div><label className="text-xs uppercase block mb-1" style={{ color: C.muted }}>Location</label><input value={setupForm.location} onChange={e => setSetupForm(p => ({ ...p, location: e.target.value }))} className="w-full rounded-lg border px-3 py-2 text-sm" style={{ borderColor: 'rgba(78,124,78,0.15)', color: C.slate }} placeholder="Utah, USA" /></div>
-              <div><label className="text-xs uppercase block mb-1" style={{ color: C.muted }}>Years Breeding</label><input type="number" value={setupForm.years_breeding} onChange={e => setSetupForm(p => ({ ...p, years_breeding: Number(e.target.value) }))} className="w-full rounded-lg border px-3 py-2 text-sm" style={{ borderColor: 'rgba(78,124,78,0.15)', color: C.slate }} /></div>
+              <div><label className="text-xs uppercase block mb-1" style={{ color: C.muted }}>Location</label><input value={setupForm.location} onChange={e => setSetupForm(p => ({ ...p, location: e.target.value }))} className="w-full rounded-lg border px-3 py-2 text-sm" style={{ borderColor: 'rgba(51,65,85,0.5)', color: C.slate }} placeholder="Utah, USA" /></div>
+              <div><label className="text-xs uppercase block mb-1" style={{ color: C.muted }}>Years Breeding</label><input type="number" value={setupForm.years_breeding} onChange={e => setSetupForm(p => ({ ...p, years_breeding: Number(e.target.value) }))} className="w-full rounded-lg border px-3 py-2 text-sm" style={{ borderColor: 'rgba(51,65,85,0.5)', color: C.slate }} /></div>
             </div>
-            <div><label className="text-xs uppercase block mb-1" style={{ color: C.muted }}>Specialty Morphs (comma-separated)</label><input value={setupForm.specialty_morphs} onChange={e => setSetupForm(p => ({ ...p, specialty_morphs: e.target.value }))} className="w-full rounded-lg border px-3 py-2 text-sm" style={{ borderColor: 'rgba(78,124,78,0.15)', color: C.slate }} placeholder="Lilly White, Extreme Harlequin, Tricolor" /></div>
+            <div><label className="text-xs uppercase block mb-1" style={{ color: C.muted }}>Specialty Morphs (comma-separated)</label><input value={setupForm.specialty_morphs} onChange={e => setSetupForm(p => ({ ...p, specialty_morphs: e.target.value }))} className="w-full rounded-lg border px-3 py-2 text-sm" style={{ borderColor: 'rgba(51,65,85,0.5)', color: C.slate }} placeholder="Lilly White, Extreme Harlequin, Tricolor" /></div>
             <button onClick={createStorefront} className="px-6 py-2.5 rounded-lg text-sm font-medium text-white" style={{ backgroundColor: C.sage }}>Create Storefront</button>
           </div>
         </div>
@@ -134,7 +134,7 @@ export default function BreederStorefront() {
         </div>
 
         {/* Bio */}
-        {editing ? <textarea value={editForm.bio} onChange={e => setEditForm(p => ({ ...p, bio: e.target.value }))} rows={3} className="w-full rounded-lg border px-3 py-2 text-sm mb-4" style={{ borderColor: 'rgba(78,124,78,0.15)', color: C.slate }} />
+        {editing ? <textarea value={editForm.bio} onChange={e => setEditForm(p => ({ ...p, bio: e.target.value }))} rows={3} className="w-full rounded-lg border px-3 py-2 text-sm mb-4" style={{ borderColor: 'rgba(51,65,85,0.5)', color: C.slate }} />
           : profile.bio && <p className="text-sm mb-4" style={{ color: C.slate }}>{profile.bio}</p>}
 
         {/* Specialty morphs */}
@@ -158,7 +158,7 @@ export default function BreederStorefront() {
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-4 mb-8">
             {forSale.map(g => (
               <a key={g.id} href={g.passport_code ? `/passport/${g.passport_code}` : `/GeckoDetail?id=${g.id}`}
-                className="rounded-xl border overflow-hidden transition hover:shadow-md" style={{ borderColor: 'rgba(78,124,78,0.15)', backgroundColor: 'white' }}>
+                className="rounded-xl border overflow-hidden transition hover:shadow-md" style={{ borderColor: 'rgba(51,65,85,0.5)', backgroundColor: C.cardBg }}>
                 {g.image_urls?.[0] ? <img src={g.image_urls[0]} alt={g.name} className="w-full h-32 object-cover" /> : <div className="w-full h-32 flex items-center justify-center text-3xl" style={{ backgroundColor: C.paleSage }}>🦎</div>}
                 <div className="p-3">
                   <h3 className="text-sm font-semibold truncate" style={{ color: C.forest }}>{g.name}</h3>
@@ -177,7 +177,7 @@ export default function BreederStorefront() {
         {reviews.length > 0 ? (
           <div className="space-y-3 mb-8">
             {reviews.map(r => (
-              <div key={r.id} className="rounded-xl border p-4" style={{ borderColor: 'rgba(78,124,78,0.15)', backgroundColor: 'white' }}>
+              <div key={r.id} className="rounded-xl border p-4" style={{ borderColor: 'rgba(51,65,85,0.5)', backgroundColor: C.cardBg }}>
                 <div className="flex items-center gap-2 mb-2">
                   <StarRating rating={r.rating} />
                   {r.is_verified && <span className="text-xs rounded-full px-2 py-0.5" style={{ backgroundColor: C.paleSage, color: C.sage }}>Verified purchase</span>}

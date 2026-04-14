@@ -13,16 +13,18 @@ import { useToast } from '@/components/ui/use-toast';
 
 /* ─── Design tokens ─────────────────────────────────────────────── */
 const C = {
-  forest:    '#1A2E1A',
-  moss:      '#2D4A2D',
-  sage:      '#4E7C4E',
-  paleSage:  '#E8F0E8',
-  warmWhite: '#F7F9F4',
-  gold:      '#C4860A',
-  goldLight: '#FDF3E0',
-  red:       '#C0392B',
-  slate:     '#3D4A3D',
-  muted:     '#6B7B6B',
+  forest:    '#e2e8f0',
+  moss:      '#94a3b8',
+  sage:      '#10b981',
+  paleSage:  'rgba(16,185,129,0.1)',
+  warmWhite: '#020617',
+  gold:      '#f59e0b',
+  goldLight: 'rgba(245,158,11,0.15)',
+  red:       '#ef4444',
+  slate:     '#cbd5e1',
+  muted:     '#64748b',
+  cardBg:    '#0f172a',
+  border:    'rgba(51,65,85,0.5)',
 };
 
 /* ─── Helpers ───────────────────────────────────────────────────── */
@@ -75,7 +77,7 @@ function GroupCard({ group, geckos, feedingRecords, onFeed, onWeigh }) {
   return (
     <div
       className="rounded-xl p-5"
-      style={{ border: '1px solid rgba(78,124,78,0.15)', backgroundColor: '#fff' }}
+      style={{ border: '1px solid rgba(51,65,85,0.15)', backgroundColor: '#fff' }}
     >
       <div className="flex items-start gap-3 mb-4">
         <div
@@ -137,7 +139,7 @@ function GroupCard({ group, geckos, feedingRecords, onFeed, onWeigh }) {
           variant="outline"
           onClick={() => onWeigh(group, groupGeckos)}
           className="flex-1 text-xs"
-          style={{ borderColor: 'rgba(78,124,78,0.3)', color: C.slate }}
+          style={{ borderColor: 'rgba(51,65,85,0.3)', color: C.slate }}
           disabled={groupGeckos.length === 0}
         >
           <Scale size={14} className="mr-1.5" />
@@ -224,7 +226,7 @@ function BatchFeedView({ group, groupGeckos, feedingRecords, onBack, onSaved }) 
       <div className="max-w-2xl mx-auto">
         <div
           className="rounded-xl p-8 text-center"
-          style={{ border: '1px solid rgba(78,124,78,0.15)', backgroundColor: '#fff' }}
+          style={{ border: '1px solid rgba(51,65,85,0.15)', backgroundColor: '#fff' }}
         >
           <div
             className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
@@ -291,7 +293,7 @@ function BatchFeedView({ group, groupGeckos, feedingRecords, onBack, onSaved }) 
           variant="outline"
           onClick={markAllFed}
           className="text-xs"
-          style={{ borderColor: 'rgba(78,124,78,0.3)', color: C.sage }}
+          style={{ borderColor: 'rgba(51,65,85,0.3)', color: C.sage }}
         >
           <Check size={14} className="mr-1" /> Mark All Fed
         </Button>
@@ -299,14 +301,14 @@ function BatchFeedView({ group, groupGeckos, feedingRecords, onBack, onSaved }) 
 
       <div
         className="rounded-xl overflow-hidden"
-        style={{ border: '1px solid rgba(78,124,78,0.15)', backgroundColor: '#fff' }}
+        style={{ border: '1px solid rgba(51,65,85,0.15)', backgroundColor: '#fff' }}
       >
         {rows.map((row, idx) => (
           <div
             key={row.gecko.id}
             className="flex items-center gap-3 px-4 py-3"
             style={{
-              borderBottom: idx < rows.length - 1 ? '1px solid rgba(78,124,78,0.08)' : 'none',
+              borderBottom: idx < rows.length - 1 ? '1px solid rgba(51,65,85,0.08)' : 'none',
             }}
           >
             {/* Gecko name */}
@@ -433,7 +435,7 @@ function BatchWeighView({ group, groupGeckos, weightRecords, onBack, onSaved }) 
       <div className="max-w-2xl mx-auto">
         <div
           className="rounded-xl p-8 text-center"
-          style={{ border: '1px solid rgba(78,124,78,0.15)', backgroundColor: '#fff' }}
+          style={{ border: '1px solid rgba(51,65,85,0.15)', backgroundColor: '#fff' }}
         >
           <div
             className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
@@ -495,7 +497,7 @@ function BatchWeighView({ group, groupGeckos, weightRecords, onBack, onSaved }) 
 
       <div
         className="rounded-xl overflow-hidden"
-        style={{ border: '1px solid rgba(78,124,78,0.15)', backgroundColor: '#fff' }}
+        style={{ border: '1px solid rgba(51,65,85,0.15)', backgroundColor: '#fff' }}
       >
         {/* Header */}
         <div
@@ -517,7 +519,7 @@ function BatchWeighView({ group, groupGeckos, weightRecords, onBack, onSaved }) 
               key={row.gecko.id}
               className="grid grid-cols-3 gap-2 px-4 py-3 items-center"
               style={{
-                borderBottom: idx < rows.length - 1 ? '1px solid rgba(78,124,78,0.08)' : 'none',
+                borderBottom: idx < rows.length - 1 ? '1px solid rgba(51,65,85,0.08)' : 'none',
                 backgroundColor: hasSignificantDrop ? 'rgba(253,243,224,0.4)' : 'transparent',
               }}
             >
@@ -695,21 +697,21 @@ export default function BatchHusbandry() {
               <div className="grid grid-cols-3 gap-3 mb-6">
                 <div
                   className="rounded-xl p-4 text-center"
-                  style={{ border: '1px solid rgba(78,124,78,0.15)', backgroundColor: '#fff' }}
+                  style={{ border: '1px solid rgba(51,65,85,0.15)', backgroundColor: '#fff' }}
                 >
                   <p className="text-2xl font-bold" style={{ color: C.forest }}>{groups.length}</p>
                   <p className="text-xs" style={{ color: C.muted }}>Groups</p>
                 </div>
                 <div
                   className="rounded-xl p-4 text-center"
-                  style={{ border: '1px solid rgba(78,124,78,0.15)', backgroundColor: '#fff' }}
+                  style={{ border: '1px solid rgba(51,65,85,0.15)', backgroundColor: '#fff' }}
                 >
                   <p className="text-2xl font-bold" style={{ color: C.sage }}>{geckos.length}</p>
                   <p className="text-xs" style={{ color: C.muted }}>Total Animals</p>
                 </div>
                 <div
                   className="rounded-xl p-4 text-center"
-                  style={{ border: '1px solid rgba(78,124,78,0.15)', backgroundColor: '#fff' }}
+                  style={{ border: '1px solid rgba(51,65,85,0.15)', backgroundColor: '#fff' }}
                 >
                   <p className="text-2xl font-bold" style={{ color: C.gold }}>
                     {feedingRecords.filter(r => {

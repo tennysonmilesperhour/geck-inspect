@@ -20,16 +20,18 @@ import { useToast } from '@/components/ui/use-toast';
 
 /* ─── Design tokens ─────────────────────────────────────────────── */
 const C = {
-  forest:    '#1A2E1A',
-  moss:      '#2D4A2D',
-  sage:      '#4E7C4E',
-  paleSage:  '#E8F0E8',
-  warmWhite: '#F7F9F4',
-  gold:      '#C4860A',
-  goldLight: '#FDF3E0',
-  red:       '#C0392B',
-  slate:     '#3D4A3D',
-  muted:     '#6B7B6B',
+  forest:    '#e2e8f0',
+  moss:      '#94a3b8',
+  sage:      '#10b981',
+  paleSage:  'rgba(16,185,129,0.1)',
+  warmWhite: '#020617',
+  gold:      '#f59e0b',
+  goldLight: 'rgba(245,158,11,0.15)',
+  red:       '#ef4444',
+  slate:     '#cbd5e1',
+  muted:     '#64748b',
+  cardBg:    '#0f172a',
+  border:    'rgba(51,65,85,0.5)',
 };
 
 /* ─── Helpers ───────────────────────────────────────────────────── */
@@ -109,7 +111,7 @@ function LoanCard({ loan, geckoMap, isOutgoing, onRefresh }) {
     <div
       className="rounded-xl p-5"
       style={{
-        border: `1px solid ${displayStatus === 'overdue' ? 'rgba(196,134,10,0.35)' : 'rgba(78,124,78,0.15)'}`,
+        border: `1px solid ${displayStatus === 'overdue' ? 'rgba(196,134,10,0.35)' : 'rgba(51,65,85,0.5)'}`,
         backgroundColor: displayStatus === 'overdue' ? 'rgba(253,243,224,0.3)' : '#fff',
       }}
     >
@@ -195,7 +197,7 @@ function LoanCard({ loan, geckoMap, isOutgoing, onRefresh }) {
 
       {/* Actions */}
       {(displayStatus === 'active' || displayStatus === 'overdue') && isOutgoing && (
-        <div className="flex items-center gap-2 mt-4 pt-3" style={{ borderTop: '1px solid rgba(78,124,78,0.1)' }}>
+        <div className="flex items-center gap-2 mt-4 pt-3" style={{ borderTop: '1px solid rgba(51,65,85,0.3)' }}>
           <Button
             size="sm"
             onClick={handleMarkReturned}
@@ -210,7 +212,7 @@ function LoanCard({ loan, geckoMap, isOutgoing, onRefresh }) {
             variant="outline"
             onClick={handleCancel}
             className="text-xs"
-            style={{ borderColor: 'rgba(78,124,78,0.3)', color: C.muted }}
+            style={{ borderColor: 'rgba(51,65,85,0.5)', color: C.muted }}
           >
             Cancel Loan
           </Button>
@@ -561,14 +563,14 @@ export default function BreedingLoans() {
         <div className="grid grid-cols-3 gap-3 mb-6">
           <div
             className="rounded-xl p-4 text-center"
-            style={{ border: '1px solid rgba(78,124,78,0.15)', backgroundColor: '#fff' }}
+            style={{ border: '1px solid rgba(51,65,85,0.5)', backgroundColor: '#0f172a' }}
           >
             <p className="text-2xl font-bold" style={{ color: C.forest }}>{loans.length}</p>
             <p className="text-xs" style={{ color: C.muted }}>Total Loans</p>
           </div>
           <div
             className="rounded-xl p-4 text-center"
-            style={{ border: '1px solid rgba(78,124,78,0.15)', backgroundColor: '#fff' }}
+            style={{ border: '1px solid rgba(51,65,85,0.5)', backgroundColor: '#0f172a' }}
           >
             <p className="text-2xl font-bold" style={{ color: C.sage }}>{activeCount}</p>
             <p className="text-xs" style={{ color: C.muted }}>Active</p>
@@ -576,7 +578,7 @@ export default function BreedingLoans() {
           <div
             className="rounded-xl p-4 text-center"
             style={{
-              border: overdueCount > 0 ? '1px solid rgba(196,134,10,0.35)' : '1px solid rgba(78,124,78,0.15)',
+              border: overdueCount > 0 ? '1px solid rgba(196,134,10,0.35)' : '1px solid rgba(51,65,85,0.5)',
               backgroundColor: overdueCount > 0 ? 'rgba(253,243,224,0.3)' : '#fff',
             }}
           >
