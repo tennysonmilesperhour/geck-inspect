@@ -1,23 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { User, GeckoImage } from '@/entities/all';
 import { InvokeLLM, UploadFile } from '@/integrations/Core';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
 import ManualClassification from '../components/training/ManualClassification';
 import { 
     Brain, 
     Database, 
     TrendingUp, 
     Eye, 
-    Upload, 
-    CheckCircle, 
-    AlertTriangle,
+    CheckCircle,
     Loader2,
     BarChart3,
     Zap,
@@ -38,8 +32,8 @@ export default function TrainingPage() {
     
     // Model testing
     const [testImage, setTestImage] = useState(null);
-    const [testResult, setTestResult] = useState(null); // This state is currently unused in the provided code logic.
-    const [isAnalyzing, setIsAnalyzing] = useState(false); // This state is currently unused in the provided code logic.
+    const [_testResult, setTestResult] = useState(null);
+    const [_isAnalyzing, setIsAnalyzing] = useState(false);
     
     // LLM-based recognition
     const [llmAnalysis, setLlmAnalysis] = useState('');

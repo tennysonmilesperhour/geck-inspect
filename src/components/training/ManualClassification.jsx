@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { GeckoImage, User } from '@/entities/all';
 import { UploadFile } from '@/integrations/Core';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Upload, Loader2, CheckCircle2 } from 'lucide-react';
+import { Loader2, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 const MORPH_OPTIONS = [
@@ -30,7 +30,7 @@ const SECONDARY_TRAITS = [
 ];
 
 export default function ManualClassification() {
-    const [uploadedImage, setUploadedImage] = useState(null);
+    const [_uploadedImage, setUploadedImage] = useState(null);
     const [imageUrl, setImageUrl] = useState(null);
     const [isUploading, setIsUploading] = useState(false);
     const [isSaving, setIsSaving] = useState(false);

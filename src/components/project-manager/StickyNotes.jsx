@@ -1,7 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Textarea } from '@/components/ui/textarea';
-import { Input } from '@/components/ui/input';
 import { PlusCircle, Grid3x3, List, StickyNote } from 'lucide-react';
 
 // Use inline hex colors so Tailwind purge doesn't remove them

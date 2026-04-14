@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Gecko, Egg, BreedingPlan, User } from '@/entities/all';
 import { Button } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
@@ -74,7 +74,7 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
         setEggToDelete(null);
     };
 
-    const handleAddNewEggs = async (count) => {
+    const _handleAddNewEggs = async (count) => {
         const today = new Date();
         const newLayDate = today.toISOString().split('T')[0];
 

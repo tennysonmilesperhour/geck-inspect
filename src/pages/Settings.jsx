@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Settings, Upload, Save, Globe, Eye, X, Plus, Camera, Mail, Calendar, Loader2, Search, Trash2, AlertTriangle, ArrowUpDown, Clock, Crown
+  Settings, Upload, Save, Globe, Eye, X, Camera, Mail, Calendar, Loader2, Search, Trash2, AlertTriangle, ArrowUpDown, Clock, Crown
 } from 'lucide-react';
 import {
   AlertDialog,

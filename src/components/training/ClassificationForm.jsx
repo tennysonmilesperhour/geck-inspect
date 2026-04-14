@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { GeckoImage } from "@/entities/all";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,7 +13,7 @@ export default function ClassificationForm({
   onSave,
   isSaving,
   existingClassification,
-  currentUser,
+  currentUser: _currentUser,
   images = [],
   currentImageIndex,
   setCurrentImageIndex,

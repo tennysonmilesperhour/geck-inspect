@@ -1,11 +1,10 @@
-import React, { useState } from 'react';
 import { Upload, Camera, Image } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Label } from "@/components/ui/label";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 
-export default function ImageUploadZone({ onFilesSelected, selectedFiles, uploadType, setUploadType }) {
+export default function ImageUploadZone({ onFilesSelected, selectedFiles: _selectedFiles, uploadType, setUploadType }) {
   const handleDrop = (e) => {
     e.preventDefault();
     const files = Array.from(e.dataTransfer.files).filter(

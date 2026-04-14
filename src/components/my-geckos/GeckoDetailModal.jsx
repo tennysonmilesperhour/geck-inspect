@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { WeightRecord, BreedingPlan, Egg, Gecko, GeckoEvent, GeckoImage } from '@/entities/all';
 import { format, differenceInMonths } from 'date-fns';
-import { X, Plus, Trash2, LineChart, Loader2, Award, GitBranch, Calendar, Baby, Users, FileText, Edit, Eye, EyeOff, History, Archive, ArchiveRestore, ChevronLeft, ChevronRight, Camera } from 'lucide-react';
+import { X, Plus, Trash2, LineChart, Loader2, Award, GitBranch, Calendar, Baby, Users, Edit, Eye, EyeOff, History, Archive, ArchiveRestore, ChevronLeft, ChevronRight, Camera } from 'lucide-react';
 import LoadingSpinner from '../shared/LoadingSpinner';
 import EventTracker from './EventTracker';
 import { Switch } from '@/components/ui/switch';
@@ -65,7 +65,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
   }, [gecko]);
 
   // Get the image url for a given slot index (use assigned or default sequential)
-  const getSlotImage = React.useCallback((slotIdx) => {
+  const _getSlotImage = React.useCallback((slotIdx) => {
     const imgIdx = slotImageMap[slotIdx] ?? Math.min(slotIdx, (gecko?.image_urls?.length ?? 1) - 1);
     return gecko?.image_urls?.[imgIdx] || 'https://i.imgur.com/sw9gnDp.png';
   }, [slotImageMap, gecko?.image_urls]);
@@ -147,7 +147,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
 
   const [weightToDelete, setWeightToDelete] = useState(null);
 
-  const handleDeleteWeight = (recordId) => {
+  const _handleDeleteWeight = (recordId) => {
     setWeightToDelete(recordId);
   };
 

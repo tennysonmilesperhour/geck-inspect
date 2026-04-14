@@ -1,10 +1,9 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Gecko, User, MarketplaceLike } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import {
     Select,
     SelectContent,
@@ -180,7 +179,7 @@ export default function MarketplaceBuyPage() {
                     try {
                         const userLikes = await MarketplaceLike.filter({ user_email: loggedInUser.email });
                         setLikedGeckoIds(new Set(userLikes.map(l => l.gecko_id)));
-                    } catch (e) {
+                    } catch (_err) {
                         console.log("Could not load likes");
                     }
                 }
@@ -195,7 +194,7 @@ export default function MarketplaceBuyPage() {
                             return acc;
                         }, {});
                         setOwners(ownersMap);
-                    } catch (e) {
+                    } catch (_err) {
                         console.log("Could not load owners");
                         setOwners({});
                     }
@@ -226,7 +225,7 @@ export default function MarketplaceBuyPage() {
                     return acc;
                 }, {});
                 setOwners(prev => ({ ...prev, ...ownersMap }));
-            } catch (e) {
+            } catch (_err) {
                 console.log("Could not load owners");
             }
         }

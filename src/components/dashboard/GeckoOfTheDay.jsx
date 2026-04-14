@@ -1,11 +1,8 @@
-import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Star, Calendar, ExternalLink } from 'lucide-react';
+import { Star, Calendar } from 'lucide-react';
 import { format } from 'date-fns';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Skeleton } from '@/components/ui/skeleton';
 
 export default function GeckoOfTheDay({ geckoOfTheDay, fallbackGecko = null, onImageSelect }) {
     // Use official gecko of the day if available, otherwise use fallback

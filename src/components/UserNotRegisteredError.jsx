@@ -1,4 +1,3 @@
-import React from 'react';
 import LoginPortal from '@/components/auth/LoginPortal';
 
 // Previously showed an "Access Restricted" error for Base44's user-registration

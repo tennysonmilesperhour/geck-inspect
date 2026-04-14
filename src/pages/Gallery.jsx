@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { base44 } from '@/api/base44Client';
 import GalleryFilters from '../components/gallery/GalleryFilters';
 import ImageCard from '../components/gallery/ImageCard';
@@ -73,7 +73,7 @@ export default function Gallery() {
             setIsLoading(false);
         };
         load();
-    }, [filters]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [filters]);  
 
     const loadMore = async () => {
         setIsLoadingMore(true);

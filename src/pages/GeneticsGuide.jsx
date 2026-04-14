@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dna, Grid2X2, Layers, TrendingUp, ShieldCheck, ArrowUp, Search, AlertTriangle, Palette } from 'lucide-react';
+import { Dna, Grid2X2, Layers, ShieldCheck, ArrowUp, Search, AlertTriangle, Palette } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
 import {
   PunnettSquare,

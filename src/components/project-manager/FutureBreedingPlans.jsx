@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FutureBreedingPlan } from '@/entities/all';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -190,7 +190,7 @@ export default function FutureBreedingPlans({ geckos, currentUserEmail }) {
         }
       }
     })();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [plans.length, currentUserEmail]);
 
   const openCreate = () => {

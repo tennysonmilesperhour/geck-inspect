@@ -1,4 +1,4 @@
-import React, { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, X, Sparkles } from 'lucide-react';
@@ -248,7 +248,7 @@ export default function TutorialModal({ isOpen, onClose }) {
         };
         window.addEventListener('keydown', onKey);
         return () => window.removeEventListener('keydown', onKey);
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
     }, [isOpen, stepIndex, steps.length]);
 
     const handleFinish = () => {

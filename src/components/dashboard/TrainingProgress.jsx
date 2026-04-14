@@ -1,9 +1,8 @@
-import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Progress } from "@/components/ui/progress";
-import { TrendingUp, Target, CheckCircle } from "lucide-react";
+import { TrendingUp, CheckCircle } from "lucide-react";
 
-export default function TrainingProgress({ totalImages, verifiedImages, isLoading }) {
+export default function TrainingProgress({ totalImages, verifiedImages, isLoading: _isLoading }) {
   const trainingGoal = 10000; // Increased training goal
 
   return (

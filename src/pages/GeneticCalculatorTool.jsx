@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Gecko } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import { Dna, Loader2, ArrowLeftRight } from 'lucide-react';

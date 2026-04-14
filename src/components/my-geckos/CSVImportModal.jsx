@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Badge } from '@/components/ui/badge';
-import { Upload, Download, FileSpreadsheet, CheckCircle, XCircle, AlertTriangle, Loader2 } from 'lucide-react';
+import { Upload, Download, FileSpreadsheet, AlertTriangle, Loader2 } from 'lucide-react';
 import { UploadFile } from '@/integrations/Core';
 import { importGeckosFromCSV } from '@/functions/importGeckosFromCSV';
 import { generateCSVTemplate } from '@/functions/generateCSVTemplate';

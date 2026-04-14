@@ -1,23 +1,18 @@
-import React from 'react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Heart, User, Calendar } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
-import { Link } from 'react-router-dom';
+import { Card } from '@/components/ui/card';
 import { createPageUrl } from '@/utils';
 
 const DEFAULT_GECKO_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
 
 export default function ImageCard({ image, uploader, onImageSelect, onLike, thumbnail = false }) {
-  const handleLike = (e) => {
+  const _handleLike = (e) => {
     e.stopPropagation();
     if (onLike) {
       onLike(image.id);
     }
   };
 
-  const uploaderName = uploader?.full_name || 'Anonymous';
-  const profileLink = uploader ? createPageUrl(`PublicProfile?userId=${uploader.id}`) : '#';
+  const _uploaderName = uploader?.full_name || 'Anonymous';
+  const _profileLink = uploader ? createPageUrl(`PublicProfile?userId=${uploader.id}`) : '#';
 
   return (
     <Card 

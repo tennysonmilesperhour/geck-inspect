@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { User, DirectMessage, Notification, ChangeLog } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
 import { InvokeLLM } from '@/lib/invokeLlm';

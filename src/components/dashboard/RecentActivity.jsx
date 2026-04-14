@@ -1,4 +1,4 @@
-import React, { memo, useMemo } from 'react';
+import { memo, useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Image as ImageIcon } from 'lucide-react';
 import { Skeleton } from '@/components/ui/skeleton';
@@ -16,7 +16,7 @@ import { formatDistanceToNowStrict } from 'date-fns';
  * tricks, so there's no layout thrash.
  */
 
-const Tile = memo(function Tile({ image, uploader, onClick }) {
+const Tile = memo(function Tile({ image, uploader: _uploader, onClick }) {
     const morph = (image.primary_morph || 'gecko').replace(/_/g, ' ');
     return (
         <button

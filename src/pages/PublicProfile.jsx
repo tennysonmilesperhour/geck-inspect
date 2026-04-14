@@ -1,7 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import { User, Gecko, UserFollow, Notification, BreedingPlan, WeightRecord } from '@/entities/all';
+import { useState, useEffect } from 'react';
+import { User, Gecko, UserFollow, BreedingPlan, WeightRecord } from '@/entities/all';
 import { notifyNewFollower } from '@/components/notifications/NotificationService';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
@@ -16,11 +16,11 @@ export default function PublicProfile() {
     const navigate = useNavigate();
     const { toast } = useToast();
     const [profileUser, setProfileUser] = useState(null);
-    const [userGeckos, setUserGeckos] = useState([]);
+    const [_userGeckos, setUserGeckos] = useState([]);
     const [forSaleGeckos, setForSaleGeckos] = useState([]);
     const [breedingGeckos, setBreedingGeckos] = useState([]);
     const [collectionGeckos, setCollectionGeckos] = useState([]);
-    const [breedingPlans, setBreedingPlans] = useState([]);
+    const [_breedingPlans, setBreedingPlans] = useState([]);
     const [weightRecords, setWeightRecords] = useState([]);
     const [currentUser, setCurrentUser] = useState(null);
     const [isFollowing, setIsFollowing] = useState(false);

@@ -1,18 +1,14 @@
 import React, { useState, useEffect, Suspense } from 'react';
-import { Gecko, BreedingPlan, Egg, User } from '@/entities/all';
+import { Gecko, BreedingPlan, Egg } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import { notifyFollowersNewBreedingPlan } from '@/components/notifications/NotificationService';
 import PlanLimitModal, { checkPlanLimit } from '@/components/subscription/PlanLimitChecker';
 // Extracted sub-components (previously inlined at the top of this file)
-import PlanDetails from '../components/breeding/PlanDetails';
 import BreedingPlanCard from '../components/breeding/BreedingPlanCard';
 import GeneticCalculatorTab from '../components/breeding/GeneticCalculatorTab';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Loader2, GitBranch, Heart, Edit, Trash2, ChevronDown, ChevronUp, Egg as EggIcon, Calendar as CalendarIcon, Archive, ArchiveRestore, Sparkles, ListTree, Search, Dna, Leaf, Moon } from 'lucide-react';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { PlusCircle, GitBranch, Heart, ChevronDown, ChevronUp, Calendar as CalendarIcon, Archive, ListTree, Search, Dna, Moon } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
 import Hatchery from '../components/breeding/Hatchery';
@@ -24,17 +20,12 @@ import {
   DialogDescription,
   DialogFooter,
 } from "@/components/ui/dialog";
-import {
-    DropdownMenu,
-    DropdownMenuContent,
-    DropdownMenuItem,
-    DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
+
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { format, addDays, addMonths, differenceInDays } from 'date-fns';
 import { useToast } from '@/components/ui/use-toast';
 
 const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));

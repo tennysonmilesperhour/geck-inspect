@@ -1,4 +1,3 @@
-import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -7,7 +6,7 @@ import { format, differenceInDays } from 'date-fns';
 import { createGeckoFromEgg } from '@/functions/createGeckoFromEgg';
 import { toast } from '@/components/ui/use-toast';
 
-export default function EggCard({ egg, breedingPlan, onUpdate }) {
+export default function EggCard({ egg, breedingPlan: _breedingPlan, onUpdate }) {
   const getStatusColor = (status) => {
     const colors = {
       'Incubating': 'bg-blue-500',

@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { supabase } from '@/lib/supabaseClient';
@@ -31,10 +31,8 @@ import {
   Plus,
   Calendar,
   CheckCircle,
-  Users,
   ExternalLink,
   ArrowLeft,
-  Clock,
   Shuffle,
 } from 'lucide-react';
 import Seo from '@/components/seo/Seo';

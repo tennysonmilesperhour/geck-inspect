@@ -1,20 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { User, GeckoImage, ScrapedTrainingData } from '@/entities/all';
 import { InvokeLLM } from '@/integrations/Core';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-import { Textarea } from '@/components/ui/textarea';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
     Brain, 
     Database, 
     TrendingUp, 
     Eye, 
-    Upload, 
-    CheckCircle, 
-    AlertTriangle,
+    CheckCircle,
     Loader2,
     BarChart3,
     Zap,
@@ -80,7 +77,7 @@ export default function TrainModelPage() {
                         recentSubmissions: recentSubmissions.length
                     });
                 }
-            } catch (error) {
+            } catch (_err) {
                 setUser(null);
             }
             setIsLoading(false);

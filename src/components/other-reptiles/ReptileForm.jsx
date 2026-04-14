@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { OtherReptile } from '@/entities/all';
 import { UploadFile } from '@/integrations/Core';
@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Switch } from '@/components/ui/switch';
 import { Card, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
-import { Upload, X, Loader2, Trash2, Bell, Mail, Archive } from 'lucide-react';
+import { Upload, X, Loader2, Trash2, Bell, Mail } from 'lucide-react';
 import {
     AlertDialog,
     AlertDialogAction,
@@ -23,7 +23,7 @@ import {
     AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-export default function ReptileForm({ reptile, onSubmit, onCancel, onDelete, onArchive }) {
+export default function ReptileForm({ reptile, onSubmit, onCancel, onDelete, onArchive: _onArchive }) {
     const { toast } = useToast();
     const [isUploadingImage, setIsUploadingImage] = useState(false);
     const [formData, setFormData] = useState({

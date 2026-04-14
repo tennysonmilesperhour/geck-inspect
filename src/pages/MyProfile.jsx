@@ -1,23 +1,19 @@
-import React, { useState, useEffect } from 'react';
-import { User, Gecko, GeckoImage, ForumPost, ForumComment, DirectMessage, Notification, MorphReferenceImage, UserBadge, UserActivity, BreedingPlan, WeightRecord, Egg } from '@/entities/all';
+import { useState, useEffect } from 'react';
+import { User, Gecko, GeckoImage, ForumPost, ForumComment, DirectMessage, Notification, MorphReferenceImage, UserBadge, BreedingPlan, WeightRecord, Egg } from '@/entities/all';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Camera, MapPin, Link as LinkIcon, Calendar, Users, MessageSquare, Image as ImageIcon, Heart, Edit, Save, X, Loader2, Upload, Star, ShoppingCart, GitBranch, Globe, Instagram, Facebook, Youtube, Twitter, Egg as EggIcon, Palette } from 'lucide-react';
+import { Camera, MapPin, Users, MessageSquare, Image as ImageIcon, Heart, Edit, Save, X, Loader2, ShoppingCart, GitBranch, Globe, Instagram, Facebook, Youtube, Egg as EggIcon, Palette } from 'lucide-react';
 import { UploadFile } from '@/integrations/Core';
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from 'react-router-dom';
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Progress } from "@/components/ui/progress";
-import { format } from 'date-fns';
 import GeckoCard from '../components/my-geckos/GeckoCard';
 import { createPageUrl } from '@/utils';
-import { Link } from 'react-router-dom';
 
 const USER_LEVELS = [
   { geckos: 1, title: "New Collector", badge: "🥚" }, { geckos: 2, title: "Gecko Keeper", badge: "🦎" },
@@ -29,7 +25,7 @@ const USER_LEVELS = [
   { geckos: 200, title: "Scale Sovereign", badge: "🏰" }, { geckos: 300, title: "Reptile Royalty", badge: "⚜️" },
   { geckos: 500, title: "Crested King", badge: "🦁" },
 ];
-const EXPERT_LEVELS = [
+const _EXPERT_LEVELS = [
   { level: 1, title: "Apprentice Trainer", points: 10, badge: "🌱" }, { level: 2, title: "Skilled Recognizer", points: 50, badge: "🧠" },
   { level: 3, title: "Master Annotator", points: 100, badge: "✍️" }, { level: 4, title: "AI Virtuoso", points: 250, badge: "🤖" },
   { level: 5, title: "Gecko AI Grandmaster", points: 500, badge: "🌟" }
@@ -190,11 +186,11 @@ export default function MyProfile() {
     const [userBadges, setUserBadges] = useState([]);
     
     // Gecko collections for overview display
-    const [userGeckos, setUserGeckos] = useState([]);
+    const [_userGeckos, setUserGeckos] = useState([]);
     const [forSaleGeckos, setForSaleGeckos] = useState([]);
     const [breedingGeckos, setBreedingGeckos] = useState([]);
     const [collectionGeckos, setCollectionGeckos] = useState([]);
-    const [breedingPlans, setBreedingPlans] = useState([]);
+    const [_breedingPlans, setBreedingPlans] = useState([]);
     const [weightRecords, setWeightRecords] = useState([]);
 
     const syncEditData = (currentUser) => {

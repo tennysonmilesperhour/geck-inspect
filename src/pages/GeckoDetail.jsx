@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Gecko, User, WeightRecord } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import { useNavigate, Link } from 'react-router-dom';
@@ -6,8 +6,8 @@ import { createPageUrl } from '@/utils';
 import { format } from 'date-fns';
 import { breederSlug, looksLikeBreederName } from '@/lib/breederUtils';
 import {
-    Loader2, ArrowLeft, Calendar, GitBranch, Info, StickyNote,
-    DollarSign, LineChart as LineChartIcon, Mail, MapPin, Tag, User as UserIcon,
+    Loader2, ArrowLeft, Calendar, GitBranch, StickyNote,
+    DollarSign, LineChart as LineChartIcon, MapPin, Tag, User as UserIcon,
     ChevronLeft, ChevronRight, X
 } from 'lucide-react';
 

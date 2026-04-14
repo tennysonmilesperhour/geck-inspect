@@ -61,6 +61,7 @@ import Dashboard from './pages/Dashboard';
 // when the user navigates to that route. Cuts ~MB off first paint.
 const AdminPanel            = lazy(() => import('./pages/AdminPanel'));
 const AuthPortal            = lazy(() => import('./pages/AuthPortal'));
+const Breeder               = lazy(() => import('./pages/Breeder'));
 const BreederConsultant     = lazy(() => import('./pages/BreederConsultant'));
 const Breeding              = lazy(() => import('./pages/Breeding'));
 const BreedingPairs         = lazy(() => import('./pages/BreedingPairs'));
@@ -72,10 +73,14 @@ const Gallery               = lazy(() => import('./pages/Gallery'));
 const GeckoDetail           = lazy(() => import('./pages/GeckoDetail'));
 const GeneticCalculatorTool = lazy(() => import('./pages/GeneticCalculatorTool'));
 const GeneticsGuide         = lazy(() => import('./pages/GeneticsGuide'));
+const Giveaways             = lazy(() => import('./pages/Giveaways'));
 const LikedGeckos           = lazy(() => import('./pages/LikedGeckos'));
 const Lineage               = lazy(() => import('./pages/Lineage'));
+const Marketplace           = lazy(() => import('./pages/Marketplace'));
 const MarketplaceBuy        = lazy(() => import('./pages/MarketplaceBuy'));
+const MarketplaceSalesStats = lazy(() => import('./pages/MarketplaceSalesStats'));
 const MarketplaceSell       = lazy(() => import('./pages/MarketplaceSell'));
+const Membership            = lazy(() => import('./pages/Membership'));
 const Messages              = lazy(() => import('./pages/Messages'));
 const MorphGuide            = lazy(() => import('./pages/MorphGuide'));
 const MorphGuideSubmission  = lazy(() => import('./pages/MorphGuideSubmission'));
@@ -84,10 +89,13 @@ const MyGeckos              = lazy(() => import('./pages/MyGeckos'));
 const MyListings            = lazy(() => import('./pages/MyListings'));
 const Notifications         = lazy(() => import('./pages/Notifications'));
 const OtherReptiles         = lazy(() => import('./pages/OtherReptiles'));
+const Pedigree              = lazy(() => import('./pages/Pedigree'));
+const PrivacyPolicy         = lazy(() => import('./pages/PrivacyPolicy'));
 const ProjectManager        = lazy(() => import('./pages/ProjectManager'));
 const PublicProfile         = lazy(() => import('./pages/PublicProfile'));
 const Recognition           = lazy(() => import('./pages/Recognition'));
 const Settings              = lazy(() => import('./pages/Settings'));
+const Shipping              = lazy(() => import('./pages/Shipping'));
 const Subscription          = lazy(() => import('./pages/Subscription'));
 const TrainModel            = lazy(() => import('./pages/TrainModel'));
 const Training              = lazy(() => import('./pages/Training'));
@@ -96,6 +104,7 @@ const Training              = lazy(() => import('./pages/Training'));
 export const PAGES = {
     "AdminPanel": AdminPanel,
     "AuthPortal": AuthPortal,
+    "Breeder": Breeder,
     "BreederConsultant": BreederConsultant,
     "Breeding": Breeding,
     "BreedingPairs": BreedingPairs,
@@ -108,11 +117,15 @@ export const PAGES = {
     "GeckoDetail": GeckoDetail,
     "GeneticCalculatorTool": GeneticCalculatorTool,
     "GeneticsGuide": GeneticsGuide,
+    "Giveaways": Giveaways,
     "Home": Home,
     "LikedGeckos": LikedGeckos,
     "Lineage": Lineage,
+    "Marketplace": Marketplace,
     "MarketplaceBuy": MarketplaceBuy,
+    "MarketplaceSalesStats": MarketplaceSalesStats,
     "MarketplaceSell": MarketplaceSell,
+    "Membership": Membership,
     "Messages": Messages,
     "MorphGuide": MorphGuide,
     "MorphGuideSubmission": MorphGuideSubmission,
@@ -122,10 +135,13 @@ export const PAGES = {
     "MyProfile": MyProfile,
     "Notifications": Notifications,
     "OtherReptiles": OtherReptiles,
+    "Pedigree": Pedigree,
+    "PrivacyPolicy": PrivacyPolicy,
     "ProjectManager": ProjectManager,
     "PublicProfile": PublicProfile,
     "Recognition": Recognition,
     "Settings": Settings,
+    "Shipping": Shipping,
     "Subscription": Subscription,
     "TrainModel": TrainModel,
     "Training": Training,

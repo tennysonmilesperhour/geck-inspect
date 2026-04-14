@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,6 @@ import {
   ArrowRight,
   ArrowLeft,
   Clock,
-  MapPin,
   ExternalLink,
   Snowflake,
 } from 'lucide-react';
