@@ -12,7 +12,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Search, DollarSign, MapPin, Heart, ShoppingBag, GitBranch, ArrowUpDown, LayoutGrid, Grid3x3 } from 'lucide-react';
+import { Search, DollarSign, MapPin, Heart, ShoppingBag, GitBranch, ArrowUpDown, LayoutGrid, Grid3x3, Filter } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
 import { useNavigate, Link } from 'react-router-dom';
@@ -94,14 +94,14 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                            <span>{owner.location}</span>
                        </div>
                     )}
-                    <div className={`flex ${isRegular ? 'gap-1' : 'gap-2'}`}>
+                    <div className={`flex items-center ${isRegular ? 'gap-1' : 'gap-2'}`}>
                         <Button
                             variant="outline"
                             size="sm"
                             onClick={(e) => onViewLineage(gecko.id, e)}
-                            className={`flex-1 ${isRegular ? 'h-7 text-[10px] px-1.5' : ''}`}
+                            className={`flex-1 inline-flex items-center justify-center ${isRegular ? 'h-7 text-[10px] px-1.5' : 'h-9'}`}
                         >
-                            <GitBranch className={`${isRegular ? 'w-3 h-3' : 'w-3 h-3'} mr-1`} /> Lineage
+                            <GitBranch className="w-3 h-3 mr-1 shrink-0" /> Lineage
                         </Button>
                        {currentUser && owner && currentUser.id !== owner.id && (
                            <MessageUserButton
@@ -109,7 +109,7 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                               recipientName={owner.full_name}
                               variant="outline"
                               size="sm"
-                              className={`flex-1 ${isRegular ? 'h-7 text-[10px] px-1.5' : ''}`}
+                              className={`flex-1 inline-flex items-center justify-center ${isRegular ? 'h-7 text-[10px] px-1.5' : 'h-9'}`}
                               context="marketplace_inquiry"
                            />
                        )}
@@ -132,6 +132,21 @@ export default function MarketplaceBuyPage() {
     const [hasMoreGeckos, setHasMoreGeckos] = useState(true);
     const [sexFilter, setSexFilter] = useState('all');
     const [sortBy, setSortBy] = useState('newest');
+    const [activeFilters, setActiveFilters] = useState(new Set());
+
+    const MORPH_FILTERS = [
+        'Lilly White', 'Axanthic', 'Cappuccino', 'Soft Scale', 'Dalmatian',
+        'Harlequin', 'Pinstripe', 'Flame', 'Tiger', 'Patternless', 'Bicolor',
+    ];
+
+    const toggleFilter = (morph) => {
+        setActiveFilters(prev => {
+            const next = new Set(prev);
+            if (next.has(morph)) next.delete(morph);
+            else next.add(morph);
+            return next;
+        });
+    };
     // Persist the card size preference so browsers who prefer one density
     // don't have to flip it every visit. Defaults to 'regular' (tighter,
     // matches MyGeckos) for maximum geckos-per-viewport.
@@ -285,6 +300,12 @@ export default function MarketplaceBuyPage() {
         if (sexFilter !== 'all') {
             list = list.filter((g) => g.sex === sexFilter);
         }
+        if (activeFilters.size > 0) {
+            list = list.filter((g) => {
+                const traits = (g.morphs_traits || '').toLowerCase() + ' ' + (g.morph_tags || []).join(' ').toLowerCase();
+                return [...activeFilters].some(f => traits.includes(f.toLowerCase()));
+            });
+        }
         switch (sortBy) {
             case 'price_low':
                 list = [...list].sort(
@@ -307,7 +328,7 @@ export default function MarketplaceBuyPage() {
                 break;
         }
         return list;
-    }, [geckos, owners, searchTerm, sexFilter, sortBy]);
+    }, [geckos, owners, searchTerm, sexFilter, sortBy, activeFilters]);
 
     return (
         <div className="p-4 md:p-8 bg-slate-950 min-h-screen">
@@ -398,6 +419,36 @@ export default function MarketplaceBuyPage() {
                             <span className="hidden sm:inline">Large</span>
                         </button>
                     </div>
+                </div>
+
+                {/* Morph filter toggles */}
+                <div className="mb-4 flex flex-wrap items-center gap-1.5">
+                    <span className="text-xs text-slate-500 mr-1 flex items-center gap-1">
+                        <Filter className="w-3 h-3" /> Morphs:
+                    </span>
+                    {MORPH_FILTERS.map((morph) => (
+                        <button
+                            key={morph}
+                            type="button"
+                            onClick={() => toggleFilter(morph)}
+                            className={`px-2.5 py-1 rounded-full text-xs font-medium border transition-colors ${
+                                activeFilters.has(morph)
+                                    ? 'bg-emerald-600 text-white border-emerald-500'
+                                    : 'bg-slate-900 text-slate-400 border-slate-700 hover:border-slate-500 hover:text-slate-200'
+                            }`}
+                        >
+                            {morph}
+                        </button>
+                    ))}
+                    {activeFilters.size > 0 && (
+                        <button
+                            type="button"
+                            onClick={() => setActiveFilters(new Set())}
+                            className="px-2.5 py-1 rounded-full text-xs font-medium text-red-400 border border-red-800 hover:bg-red-900/30 transition-colors"
+                        >
+                            Clear all
+                        </button>
+                    )}
                 </div>
 
                 {/* Result count */}

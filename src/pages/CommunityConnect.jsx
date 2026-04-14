@@ -296,6 +296,7 @@ function ForumTab() {
 function FollowingFeed({ currentUser, following, allUsers }) {
     const [activities, setActivities] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
+    const [collapsed, setCollapsed] = useState(false);
 
     useEffect(() => {
         const fetchActivities = async () => {
@@ -343,6 +344,28 @@ function FollowingFeed({ currentUser, following, allUsers }) {
         }
     };
 
+    const getActivityLink = (activity) => {
+        const meta = activity.metadata || {};
+        switch (activity.activity_type) {
+            case 'new_gecko':
+            case 'gecko_for_sale':
+                return meta.gecko_id ? `${createPageUrl('GeckoDetail')}?id=${meta.gecko_id}` : null;
+            case 'new_post':
+                return meta.post_id ? `${createPageUrl('ForumPost')}?id=${meta.post_id}` : createPageUrl('Forum');
+            case 'new_breeding_plan':
+                return createPageUrl('Breeding');
+            case 'new_comment':
+                return meta.post_id ? `${createPageUrl('ForumPost')}?id=${meta.post_id}` : null;
+            default:
+                return createPageUrl(`PublicProfile?email=${encodeURIComponent(activity.user_email)}`);
+        }
+    };
+
+    const getActivityImage = (activity) => {
+        const meta = activity.metadata || {};
+        return meta.gecko_image_url || meta.image_url || null;
+    };
+
     const getUserName = (email) => {
         const user = allUsers.find(u => u.email === email);
         return user?.full_name || email.split('@')[0];
@@ -381,21 +404,32 @@ function FollowingFeed({ currentUser, following, allUsers }) {
 
     return (
         <Card className="bg-slate-900 border-slate-700">
-            <CardHeader>
+            <CardHeader className="cursor-pointer select-none" onClick={() => setCollapsed(!collapsed)}>
                 <CardTitle className="text-slate-100 flex items-center gap-2">
                     <Activity className="w-5 h-5 text-emerald-400" />
                     Recent Activity from People You Follow
+                    <span className="ml-auto text-slate-500 text-sm font-normal">
+                        {collapsed ? '▸ Show' : '▾ Hide'}
+                    </span>
                 </CardTitle>
             </CardHeader>
+            {!collapsed && (
             <CardContent>
                 {activities.length > 0 ? (
                     <div className="space-y-3">
-                        {activities.map((activity) => (
+                        {activities.map((activity) => {
+                            const link = getActivityLink(activity);
+                            const image = getActivityImage(activity);
+                            return (
                             <div key={activity.id} className="flex items-start gap-3 p-3 bg-slate-800 rounded-lg hover:bg-slate-700/50 transition-colors">
-                                <span className="text-xl">{getActivityIcon(activity.activity_type)}</span>
+                                {image ? (
+                                    <img src={image} alt="" className="w-10 h-10 rounded-lg object-cover shrink-0" loading="lazy" />
+                                ) : (
+                                    <span className="text-xl w-10 h-10 flex items-center justify-center shrink-0">{getActivityIcon(activity.activity_type)}</span>
+                                )}
                                 <div className="flex-1 min-w-0">
                                     <p className="text-slate-300 text-sm">
-                                        <Link 
+                                        <Link
                                             to={createPageUrl(`PublicProfile?email=${encodeURIComponent(activity.user_email)}`)}
                                             className="font-semibold text-emerald-400 hover:text-emerald-300"
                                         >
@@ -403,12 +437,20 @@ function FollowingFeed({ currentUser, following, allUsers }) {
                                         </Link>
                                         {' '}{getActivityText(activity.activity_type)}
                                     </p>
-                                    <p className="text-xs text-slate-500 mt-1">
-                                        {formatDistanceToNow(new Date(activity.created_date), { addSuffix: true })}
-                                    </p>
+                                    <div className="flex items-center gap-3 mt-1">
+                                        <p className="text-xs text-slate-500">
+                                            {formatDistanceToNow(new Date(activity.created_date), { addSuffix: true })}
+                                        </p>
+                                        {link && (
+                                            <Link to={link} className="text-xs text-emerald-500 hover:text-emerald-400 flex items-center gap-0.5">
+                                                View <ExternalLink className="w-3 h-3" />
+                                            </Link>
+                                        )}
+                                    </div>
                                 </div>
                             </div>
-                        ))}
+                            );
+                        })}
                     </div>
                 ) : (
                     <div className="text-center py-8 text-slate-400">
@@ -418,6 +460,7 @@ function FollowingFeed({ currentUser, following, allUsers }) {
                     </div>
                 )}
             </CardContent>
+            )}
         </Card>
     );
 }
