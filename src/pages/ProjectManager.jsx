@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Project, Task, Gecko, BreedingPlan, FeedingGroup, OtherReptile } from '@/entities/all';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -45,6 +45,18 @@ export default function ProjectManager() {
     const [expandedProjects, setExpandedProjects] = useState(new Set());
     const [taskToDelete, setTaskToDelete] = useState(null);
     const [projectToDelete, setProjectToDelete] = useState(null);
+    // Ref to trigger FutureBreedingPlans' create modal from the top-level button
+    const futureBreedingRef = useRef(null);
+
+    const handleNewPlan = () => {
+        if (activeTab === 'future') {
+            // On the Future Breeding tab, open the breeding plan modal (sire/dam/season/year)
+            futureBreedingRef.current?.openCreate();
+        } else {
+            // On other tabs, open the generic project modal
+            setIsProjectModalOpen(true);
+        }
+    };
     
     const [newProject, setNewProject] = useState({
         name: '', description: '', category: 'custom', related_gecko_id: '',
@@ -184,8 +196,9 @@ export default function ProjectManager() {
                         </h1>
                         <p className="text-slate-400 mt-2 text-sm md:text-base">Plan breeding seasons, prep for expos, and track gecko care tasks</p>
                     </div>
-                    <Button onClick={() => setIsProjectModalOpen(true)} className="bg-emerald-600 hover:bg-emerald-700 w-full md:w-auto">
-                            <PlusCircle className="w-5 h-5 mr-2" /> New Plan
+                    <Button onClick={handleNewPlan} className="bg-emerald-600 hover:bg-emerald-700 w-full md:w-auto">
+                            <PlusCircle className="w-5 h-5 mr-2" />
+                            {activeTab === 'future' ? 'New Breeding Plan' : 'New Plan'}
                         </Button>
                 </div>
                 
@@ -292,7 +305,7 @@ export default function ProjectManager() {
                         </TabsContent>
 
                         <TabsContent value="future">
-                            <FutureBreedingPlans geckos={geckos} currentUserEmail={currentUserEmail} />
+                            <FutureBreedingPlans ref={futureBreedingRef} geckos={geckos} currentUserEmail={currentUserEmail} />
                         </TabsContent>
 
                         <TabsContent value="calendar">
