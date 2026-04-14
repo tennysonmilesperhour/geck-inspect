@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useImperativeHandle, useMemo, useState, forwardRef } from 'react';
 import { FutureBreedingPlan } from '@/entities/all';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -128,7 +128,7 @@ function emptyForm() {
   };
 }
 
-export default function FutureBreedingPlans({ geckos, currentUserEmail }) {
+const FutureBreedingPlans = forwardRef(function FutureBreedingPlans({ geckos, currentUserEmail }, ref) {
   const [plans, setPlans] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -198,6 +198,9 @@ export default function FutureBreedingPlans({ geckos, currentUserEmail }) {
     setForm(emptyForm());
     setIsModalOpen(true);
   };
+
+  // Expose openCreate so the parent page can trigger the modal
+  useImperativeHandle(ref, () => ({ openCreate }));
 
   const openEdit = (plan) => {
     setEditing(plan);
@@ -571,4 +574,6 @@ export default function FutureBreedingPlans({ geckos, currentUserEmail }) {
       </AlertDialog>
     </div>
   );
-}
+});
+
+export default FutureBreedingPlans;
