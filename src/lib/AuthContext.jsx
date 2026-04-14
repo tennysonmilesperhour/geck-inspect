@@ -62,6 +62,38 @@ export const AuthProvider = ({ children }) => {
     return () => subscription.unsubscribe();
   }, []);
 
+  // Ephemeral session: if the user chose not to stay signed in, clear
+  // the session when the browser tab/window closes. sessionStorage is
+  // automatically cleared on tab close, so we just check for the flag
+  // on page load — if it survived a refresh (sessionStorage persists
+  // across refreshes) that's fine, but on a fresh tab open after the
+  // old one closed the flag will be gone and the Supabase session
+  // token in localStorage is what keeps the user logged in.
+  // We listen for `beforeunload` and mark a timestamp; on next mount
+  // if the gap is >2s the tab was actually closed (not just refreshed).
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      if (sessionStorage.getItem('geck_inspect_ephemeral_session') === '1') {
+        localStorage.setItem('geck_inspect_unload_ts', String(Date.now()));
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
+    // On mount: if ephemeral flag existed AND the tab was closed (not
+    // a refresh), sign out. A refresh round-trips in <2 seconds.
+    const unloadTs = localStorage.getItem('geck_inspect_unload_ts');
+    if (
+      unloadTs &&
+      !sessionStorage.getItem('geck_inspect_ephemeral_session') &&
+      Date.now() - Number(unloadTs) > 2000
+    ) {
+      localStorage.removeItem('geck_inspect_unload_ts');
+      supabase.auth.signOut();
+    }
+
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
+
   const logout = async (shouldRedirect = true) => {
     await supabase.auth.signOut();
     setUser(null);

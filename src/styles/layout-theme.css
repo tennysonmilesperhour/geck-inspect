@@ -164,11 +164,12 @@ html, body, #root {
           }
 
           .dark .bg-slate-950 {
-            background: linear-gradient(135deg, 
-              rgba(2, 44, 34, 0.95) 0%, 
-              rgba(6, 78, 59, 0.9) 50%, 
+            background: linear-gradient(135deg,
+              rgba(2, 44, 34, 0.95) 0%,
+              rgba(6, 78, 59, 0.9) 50%,
               rgba(4, 120, 87, 0.8) 100%) !important;
             position: relative;
+            isolation: isolate;
           }
 
           .dark .bg-slate-950::before {
@@ -178,7 +179,8 @@ html, body, #root {
             left: 0;
             right: 0;
             bottom: 0;
-            background: 
+            z-index: -1;
+            background:
               radial-gradient(ellipse at top, rgba(134, 239, 172, 0.03) 0%, transparent 50%),
               radial-gradient(ellipse at bottom right, rgba(74, 222, 128, 0.02) 0%, transparent 50%);
             pointer-events: none;

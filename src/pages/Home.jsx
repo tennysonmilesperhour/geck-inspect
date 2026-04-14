@@ -1,4 +1,3 @@
-import React from 'react';
 import { APP_LOGO_URL } from "@/lib/constants";
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -241,13 +240,13 @@ export default function Home() {
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
             </Link>
-            <Link to={createPageUrl('MorphGuide')}>
+            <Link to={createPageUrl('AuthPortal')}>
               <Button
                 size="lg"
                 variant="outline"
                 className="bg-white text-slate-900 hover:bg-slate-100 hover:text-slate-900 border-white/40 font-semibold text-base px-8 py-6"
               >
-                Browse morph guide
+                Sign In
               </Button>
             </Link>
           </div>

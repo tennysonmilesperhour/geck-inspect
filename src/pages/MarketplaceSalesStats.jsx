@@ -393,12 +393,28 @@ export default function MarketplaceSalesStats() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-950 p-4 md:p-6">
-      <div className="max-w-5xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-100 mb-1">Marketplace Sales Stats</h1>
-          <p className="text-slate-400 text-sm">Track your sales performance and profitability</p>
+    <div className="min-h-screen bg-slate-950">
+      {/* Hero — matches GeneticsGuide visual pattern */}
+      <div className="relative overflow-hidden border-b border-slate-800 bg-gradient-to-br from-slate-950 via-emerald-950/30 to-teal-950/20">
+        <div className="absolute inset-0 gecko-scale-pattern opacity-[0.04] pointer-events-none" />
+        <div className="relative max-w-5xl mx-auto px-4 md:px-8 py-8 md:py-10">
+          <div className="flex items-center gap-3">
+            <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
+              <TrendingUp className="w-6 h-6 text-emerald-400" />
+            </div>
+            <div>
+              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent tracking-tight">
+                Sales Stats
+              </h1>
+              <p className="text-sm text-slate-400 mt-1">
+                Track revenue, costs, and profitability across your breeding operation.
+              </p>
+            </div>
+          </div>
         </div>
+      </div>
+
+      <div className="max-w-5xl mx-auto px-4 md:px-8 py-6 space-y-6">
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[

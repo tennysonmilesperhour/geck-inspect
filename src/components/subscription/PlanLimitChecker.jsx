@@ -77,8 +77,9 @@ const FEATURE_NAMES = {
     shipping_integration: 'Zero\u2019s Geckos Shipping Integration',
 };
 
-// Grandfathered accounts keep Breeder privileges regardless of tier field.
+// Admins get enterprise-level access. Grandfathered accounts keep Breeder.
 function effectiveTier(user) {
+    if (user?.role === 'admin') return 'enterprise';
     if (user?.subscription_status === 'grandfathered') return 'breeder';
     return user?.membership_tier || 'free';
 }

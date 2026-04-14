@@ -1,10 +1,12 @@
 import { useState } from 'react';
+import { APP_LOGO_URL } from '@/lib/constants';
 import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/components/ui/use-toast';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Loader2, Mail, Lock } from 'lucide-react';
 
 function GoogleIcon() {
@@ -37,6 +39,7 @@ export default function LoginPortal({ requiredFeature = null }) {
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
   const [isSignUp, setIsSignUp] = useState(false);
   const [signUpSent, setSignUpSent] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
   const { toast } = useToast();
 
   const handleGoogleSignIn = async () => {
@@ -67,6 +70,11 @@ export default function LoginPortal({ requiredFeature = null }) {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
           toast({ title: 'Sign in failed', description: error.message, variant: 'destructive' });
+        } else if (!rememberMe) {
+          // Mark session as ephemeral — AuthContext will clear it on tab close
+          sessionStorage.setItem('geck_inspect_ephemeral_session', '1');
+        } else {
+          sessionStorage.removeItem('geck_inspect_ephemeral_session');
         }
         // On success, onAuthStateChange in AuthContext re-renders the app.
       }
@@ -81,7 +89,7 @@ export default function LoginPortal({ requiredFeature = null }) {
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 flex items-center justify-center p-4">
         <div className="w-full max-w-md text-center space-y-6">
           <img
-            src={window.APP_LOGO_URL || 'https://i.imgur.com/gfaW2Yg.png'}
+            src={APP_LOGO_URL}
             alt="Geck Inspect"
             className="h-16 w-16 rounded-xl mx-auto"
           />
@@ -109,19 +117,11 @@ export default function LoginPortal({ requiredFeature = null }) {
         {/* Branding */}
         <div className="text-center space-y-3">
           <img
-            src={window.APP_LOGO_URL || 'https://i.imgur.com/gfaW2Yg.png'}
+            src={APP_LOGO_URL}
             alt="Geck Inspect"
             className="h-16 w-16 rounded-xl mx-auto"
           />
           <h1 className="text-4xl font-bold text-white">Geck Inspect</h1>
-          <p className="text-sm font-semibold text-emerald-300">
-            <span className="font-bold">geckOS</span> — the ultimate gecko operating system
-          </p>
-          <p className="text-slate-400 text-sm">
-            {requiredFeature
-              ? `${requiredFeature} requires an account — sign in or create one below.`
-              : 'Sign in to continue to your collection.'}
-          </p>
         </div>
 
         {/* Auth card */}
@@ -207,6 +207,16 @@ export default function LoginPortal({ requiredFeature = null }) {
                   />
                 </div>
               </div>
+
+              {!isSignUp && (
+                <label className="flex items-center gap-2 cursor-pointer select-none">
+                  <Checkbox
+                    checked={rememberMe}
+                    onCheckedChange={(checked) => setRememberMe(!!checked)}
+                  />
+                  <span className="text-sm text-slate-400">Stay signed in</span>
+                </label>
+              )}
 
               <Button
                 type="submit"
