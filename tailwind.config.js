@@ -30,10 +30,10 @@ module.exports = {
   				400: '#34d399',
   				500: '#6b8f80',
   				600: '#4a6e5e',
-  				700: '#1a4034',
-  				800: '#103527',
-  				900: '#0c2a1f',
-  				950: '#071a12',
+  				700: '#243f35',
+  				800: '#1a3a2d',
+  				900: '#163026',
+  				950: '#0d1f17',
   			},
   			// Gray also needs the same override — Tailwind's gray is
   			// blue-tinted too and the Layout sidebar uses gray-* classes.
@@ -45,10 +45,10 @@ module.exports = {
   				400: '#34d399',
   				500: '#6b8f80',
   				600: '#4a6e5e',
-  				700: '#1a4034',
-  				800: '#103527',
-  				900: '#0c2a1f',
-  				950: '#071a12',
+  				700: '#243f35',
+  				800: '#1a3a2d',
+  				900: '#163026',
+  				950: '#0d1f17',
   			},
   			// Sage: the brand green palette. Values are the dark-mode scale
   			// (the app is always-dark) so text-sage-700 renders as light

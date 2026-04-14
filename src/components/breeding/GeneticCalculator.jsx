@@ -2,25 +2,50 @@ import { useMemo } from 'react';
 import { Dna } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 
-// Traits known to be co-dominant / incomplete dominant (visual in single copy, super in double copy)
+// Proven genetic traits — incomplete dominant (visual in single copy, super in double).
+// These are the only traits where Punnett-square math applies.
 const CO_DOM_TRAITS = new Set([
-  'Lilly White', 'Axanthic', 'Soft Scale', 'Super Soft Scale', 'Moonglow',
-  'Cappuccino', 'Frappuccino', 'Hypo', 'Translucent', 'White Wall', 'Empty Back',
-  'Dalmatian', 'Super Dalmatian'
+  'Lilly White', 'Axanthic', 'Cappuccino', 'Soft Scale', 'Moonglow',
+  'Empty Back', 'White Wall',
 ]);
 
-// Traits that are simply dominant / polygenic — just show presence/absence
+// Polygenic / dominant / display traits — presence/absence only, no
+// Mendelian math. Kept in sync with MorphIDSelector categories.
 const DOM_TRAITS = new Set([
-  'Flame', 'Harlequin', 'Extreme Harlequin', 'Pinstripe', 'Phantom Pinstripe',
-  'Tiger', 'Brindle', 'Extreme Brindle', 'Patternless', 'Bicolor', 'Tricolor',
-  'Ink Spots', 'Oil Spots', 'Red Spots', 'Super Spots',
-  'Red Base', 'Yellow Base', 'Orange Base', 'Olive', 'Chocolate', 'Lavender', 'Buckskin',
-  'Red Harlequin', 'Yellow Harlequin', 'Cream Harlequin', 'Orange Harlequin', 'Extreme Red Harlequin',
-  'Super Stripe', 'Partial Pinstripe', 'Dashed Pinstripe', 'Reverse Pinstripe', 'Phantom',
-  'White Fringe', 'Side Stripe', 'Crowned', 'Quad Stripe', 'Chevron Pattern',
-  'Diamond Pattern', 'Reticulated', 'Mottled', 'Speckled',
-  'White Tipped Crests', 'Colored Crests', 'Drippy Dorsal', 'Kneecaps', 'Portholes',
-  'Furred Trait', 'Fired Up', 'Fired Down', 'Tiger Striping', 'Banded', 'Broken Banding'
+  // Combo morphs
+  'Frappuccino', 'Super Cappuccino', 'Cappuccino Lilly White',
+  'Axanthic Lilly White', 'Axanthic Cappuccino',
+  'Soft Scale Lilly White', 'Soft Scale Cappuccino', 'Moonglow Lilly White',
+  // Base patterns
+  'Flame', 'Chevron Flame', 'Harlequin', 'Extreme Harlequin',
+  'Pinstripe', 'Full Pinstripe', 'Phantom Pinstripe',
+  'Tiger', 'Brindle', 'Extreme Brindle', 'Patternless',
+  'Bicolor', 'Tricolor', 'Phantom', 'Whiteout',
+  // Harlequin variants
+  'Red Harlequin', 'Extreme Red Harlequin', 'Yellow Harlequin',
+  'Cream Harlequin', 'Orange Harlequin', 'Halloween Harlequin',
+  // Pinstripe variants
+  'Partial Pinstripe', 'Dashed Pinstripe', 'Reverse Pinstripe',
+  'Quad Stripe', 'Super Stripe',
+  // Base colors
+  'Red Base', 'Dark Red Base', 'Orange Base', 'Yellow Base', 'Bright Yellow Base',
+  'Cream Base', 'Pink Base', 'Olive Base', 'Dark Olive Base', 'Green Base',
+  'Tan Base', 'Brown Base', 'Dark Brown Base', 'Chocolate Base',
+  'Buckskin Base', 'Lavender Base', 'Near Black Base',
+  // Color traits
+  'Hypo', 'Translucent', 'High White', 'High Contrast',
+  // Dalmatian & spots
+  'Dalmatian', 'Super Dalmatian', 'Ink Spots', 'Oil Spots',
+  'Red Spots', 'Confetti', 'Spots on Head', 'Dalmatian Tail',
+  // Structure
+  'Furred', 'Crowned',
+  // Body markings
+  'White Fringe', 'Kneecaps', 'Portholes', 'Drippy Dorsal',
+  'White Tipped Crests', 'Colored Crests', 'Side Stripe',
+  'Tiger Striping', 'Banded', 'Broken Banding',
+  'Chevron Pattern', 'Diamond Pattern', 'Reticulated', 'Mottled', 'Speckled',
+  // Display state
+  'Fired Up', 'Fired Down', 'Full Tail', 'Tailless',
 ]);
 
 // For co-dominant traits, if one parent has the "Super" version infer double copy

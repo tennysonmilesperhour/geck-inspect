@@ -11,22 +11,34 @@ import { Loader2, CheckCircle2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
 const MORPH_OPTIONS = [
-    "flame", "harlequin", "extreme_harlequin", "pinstripe", "phantom_pinstripe",
-    "tiger", "brindle", "extreme_brindle", "dalmatian", "super_dalmatian",
-    "patternless", "bicolor", "tricolor", "lilly_white", "axanthic",
-    "cappuccino", "frappuccino", "hypo", "translucent", "moonglow"
+    "flame", "chevron_flame", "harlequin", "extreme_harlequin",
+    "pinstripe", "full_pinstripe", "phantom_pinstripe",
+    "tiger", "brindle", "extreme_brindle",
+    "dalmatian", "super_dalmatian",
+    "patternless", "bicolor", "tricolor", "phantom", "whiteout",
+    "lilly_white", "axanthic", "cappuccino", "frappuccino",
+    "soft_scale", "moonglow", "empty_back", "white_wall",
+    "hypo", "translucent",
 ];
 
 const BASE_COLOR_OPTIONS = [
-    "red", "dark_red", "bright_red", "yellow", "bright_yellow", "pale_yellow",
-    "orange", "peach", "cream", "white", "brown", "dark_brown", "tan",
-    "olive", "dark_olive", "buckskin", "chocolate", "lavender", "purple"
+    "red", "dark_red", "orange", "yellow", "bright_yellow",
+    "cream", "pink", "olive", "dark_olive", "green",
+    "tan", "brown", "dark_brown", "chocolate", "buckskin",
+    "lavender", "near_black",
 ];
 
 const SECONDARY_TRAITS = [
     "super_stripe", "partial_pinstripe", "dashed_pinstripe", "reverse_pinstripe",
-    "phantom", "fired_up", "fired_down", "dalmatian_spots", "super_spots",
-    "ink_spots", "oil_spots", "red_spots", "portholes", "kneecaps"
+    "quad_stripe", "phantom", "crowned", "furred",
+    "white_fringe", "kneecaps", "portholes", "drippy_dorsal",
+    "white_tipped_crests", "colored_crests", "side_stripe",
+    "tiger_striping", "banded", "broken_banding",
+    "chevron_pattern", "diamond_pattern", "reticulated", "mottled", "speckled",
+    "ink_spots", "oil_spots", "red_spots", "confetti",
+    "spots_on_head", "dalmatian_tail",
+    "high_white", "high_contrast",
+    "fired_up", "fired_down", "tailless",
 ];
 
 export default function ManualClassification() {

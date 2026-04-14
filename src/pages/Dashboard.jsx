@@ -382,7 +382,6 @@ export default function Dashboard() {
                                         </div>
                                         <div className="grid grid-cols-1 gap-2">
                                             {[
-                                                { label: 'Morph ID Tool', href: '/Recognition' },
                                                 { label: 'Genetics Calculator', href: '/GeneticCalculatorTool' },
                                                 { label: 'Season Planner', href: '/ProjectManager' },
                                                 { label: 'Lineage Tree', href: '/Lineage' },
