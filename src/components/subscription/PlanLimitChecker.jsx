@@ -68,7 +68,7 @@ const FEATURE_NAMES = {
     weight_tracking: 'Weight Tracking & Charts',
     csv_export: 'Export Data to CSV',
     lineage_tree: 'Full Lineage Tree',
-    marketplace_sync: 'MorphMarket & Palm Street Sync',
+    marketplace_sync: 'MorphMarket CSV Sync (Palm Street pending)',
     breeding_analytics: 'Breeding Analytics',
     certificates: 'White-label Certificates',
     featured_breeder: 'Featured Breeder on Dashboard',

@@ -508,9 +508,9 @@ export default function MyProfile() {
                 {/* Tabs */}
                 <div className="mt-8">
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                        <TabsList className="grid w-full grid-cols-2 bg-slate-800">
-                            <TabsTrigger value="overview" className="data-[state=active]:bg-slate-700">Overview</TabsTrigger>
-                            <TabsTrigger value="settings" className="data-[state=active]:bg-slate-700">Settings</TabsTrigger>
+                        <TabsList className="flex w-full bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1">
+                            <TabsTrigger value="overview" className="flex-1 data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-2 rounded-sm transition-colors">Overview</TabsTrigger>
+                            <TabsTrigger value="settings" className="flex-1 data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-2 rounded-sm transition-colors">Settings</TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="overview" className="space-y-6">

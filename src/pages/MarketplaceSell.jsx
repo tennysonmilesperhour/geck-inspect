@@ -3,6 +3,7 @@ import { Gecko, User } from '@/entities/all';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import MorphMarketSync from '@/components/marketplace/MorphMarketSync';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -471,6 +472,15 @@ export default function MarketplaceSellPage() {
           <StatCard label="Collection" value={availableToList.length} tone="slate" icon={ShoppingBag} />
           <StatCard label="Sold all-time" value={soldCount} tone="slate" icon={CheckCircle2} />
         </div>
+
+        {/* MorphMarket CSV sync — breeder tier+ */}
+        <MorphMarketSync
+          geckos={allGeckos}
+          user={user}
+          onImportComplete={() => {
+            Gecko.filter({ created_by: user.email }, '-created_date').then(setAllGeckos);
+          }}
+        />
 
         {/* Search */}
         <div className="relative">

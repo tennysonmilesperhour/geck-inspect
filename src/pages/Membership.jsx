@@ -97,7 +97,7 @@ const tiers = [
     comingSoon: true,
     features: [
       'Everything in Breeder',
-      'MorphMarket and Palm Street sync',
+      'MorphMarket CSV sync (Palm Street pending)',
       'Market intelligence dashboard',
       'Pricing trends and morph demand analytics',
       'Breeding ROI projections',
