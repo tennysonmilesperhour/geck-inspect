@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ForumPost, ForumComment, User, ForumCategory, Notification, ForumLike } from '@/entities/all';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';

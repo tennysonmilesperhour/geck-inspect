@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
@@ -41,7 +41,7 @@ const REVENUE_CATEGORIES = [
 ];
 
 const getCategoryLabel = (value) => COST_CATEGORIES.find(c => c.value === value)?.label || value || 'Other';
-const getRevenueCategory = (value) => REVENUE_CATEGORIES.find(c => c.value === value)?.label || value || 'Animal';
+const _getRevenueCategory = (value) => REVENUE_CATEGORIES.find(c => c.value === value)?.label || value || 'Animal';
 
 function getQuarterKey(dateStr) {
   const d = new Date(dateStr);
@@ -117,7 +117,7 @@ function CostRow({ cost, onDelete, onUpdate }) {
   );
 }
 
-function QuarterSection({ quarterKey, items, onDelete, onUpdate, renderItem }) {
+function QuarterSection({ quarterKey, items, onDelete: _onDelete, onUpdate: _onUpdate, renderItem }) {
   const [open, setOpen] = useState(true);
   const { year, quarter } = parseQuarterKey(quarterKey);
   const total = items.reduce((s, i) => s + Number(i.amount || 0), 0);

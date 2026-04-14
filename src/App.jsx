@@ -18,19 +18,17 @@ import LoginPortal from '@/components/auth/LoginPortal';
 // visitors (and crawlers) hit first.
 import Home from './pages/Home';
 
-// Everything else below is lazy-loaded for bundle-size wins.
-const Breeder               = lazy(() => import('./pages/Breeder'));
-const Shipping              = lazy(() => import('./pages/Shipping'));
-const Giveaways             = lazy(() => import('./pages/Giveaways'));
-const MorphDetail           = lazy(() => import('./pages/MorphDetail'));
-const MorphGuideList        = lazy(() => import('./pages/MorphGuide'));
-const Pedigree              = lazy(() => import('./pages/Pedigree'));
-const ForumPost             = lazy(() => import('./pages/ForumPost'));
-const PrivacyPolicy         = lazy(() => import('./pages/PrivacyPolicy'));
-const MarketplaceSalesStats = lazy(() => import('./pages/MarketplaceSalesStats'));
-const Marketplace           = lazy(() => import('./pages/Marketplace'));
-const Membership            = lazy(() => import('./pages/Membership'));
-const AdminMigration        = lazy(() => import('./pages/AdminMigration'));
+// Lazy-loaded pages used in the unauthenticated route set.
+// (The authenticated set is driven entirely by pages.config.js.)
+const Breeder       = lazy(() => import('./pages/Breeder'));
+const Shipping      = lazy(() => import('./pages/Shipping'));
+const Giveaways     = lazy(() => import('./pages/Giveaways'));
+const MorphDetail   = lazy(() => import('./pages/MorphDetail'));
+const MorphGuideList = lazy(() => import('./pages/MorphGuide'));
+const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+
+// Special-case pages that need unique routing (no layout, param routes, etc.)
+const AdminMigration = lazy(() => import('./pages/AdminMigration'));
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -100,54 +98,9 @@ const AuthenticatedApp = () => {
           }
         />
       ))}
-      <Route path="/ForumPost" element={
-        <LayoutWrapper currentPageName="ForumPost">
-          <ForumPost />
-        </LayoutWrapper>
-      } />
-      <Route path="/MarketplaceSalesStats" element={
-        <LayoutWrapper currentPageName="MarketplaceSalesStats">
-          <MarketplaceSalesStats />
-        </LayoutWrapper>
-      } />
-      <Route path="/Marketplace" element={
-        <LayoutWrapper currentPageName="Marketplace">
-          <Marketplace />
-        </LayoutWrapper>
-      } />
-      <Route path="/PrivacyPolicy" element={
-        <LayoutWrapper currentPageName="PrivacyPolicy">
-          <PrivacyPolicy />
-        </LayoutWrapper>
-      } />
-      <Route path="/Membership" element={
-        <LayoutWrapper currentPageName="Membership">
-          <Membership />
-        </LayoutWrapper>
-      } />
-      <Route path="/Breeder" element={
-        <LayoutWrapper currentPageName="Breeder">
-          <Breeder />
-        </LayoutWrapper>
-      } />
-      <Route path="/Shipping" element={
-        <LayoutWrapper currentPageName="Shipping">
-          <Shipping />
-        </LayoutWrapper>
-      } />
-      <Route path="/Giveaways" element={
-        <LayoutWrapper currentPageName="Giveaways">
-          <Giveaways />
-        </LayoutWrapper>
-      } />
       <Route path="/MorphGuide/:slug" element={
         <LayoutWrapper currentPageName="MorphGuide">
           <MorphDetail />
-        </LayoutWrapper>
-      } />
-      <Route path="/Pedigree" element={
-        <LayoutWrapper currentPageName="Pedigree">
-          <Pedigree />
         </LayoutWrapper>
       } />
       <Route path="/AdminMigration" element={<AdminMigration />} />

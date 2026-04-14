@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ForumCategory, ForumPost, User } from '@/entities/all';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -13,7 +13,6 @@ import {
 } from '@/components/ui/select';
 import {
     MessageSquare,
-    ThumbsUp,
     Eye,
     PlusCircle,
     Pin,

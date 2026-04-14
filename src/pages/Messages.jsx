@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { DirectMessage, User } from '@/entities/all';
 import { notifyNewMessage } from '@/components/notifications/NotificationService';
 import { useToast } from '@/components/ui/use-toast';

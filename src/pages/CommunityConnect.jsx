@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useCallback } from 'react';
 import { User, Gecko, UserFollow, ForumCategory, ForumPost, UserActivity } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
@@ -10,7 +10,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Select, SelectTrigger, SelectValue, SelectContent, SelectItem } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
 import { 
-    Search, Users, MapPin, Globe, ShoppingCart, GitBranch, Heart, 
+    Search, Users, MapPin, Globe, ShoppingCart, GitBranch, 
     UserPlus, UserCheck, ExternalLink, MessageSquare, ThumbsUp, Eye, 
     PlusCircle, Pin, Loader2, Rss, Activity
 } from 'lucide-react';
@@ -500,7 +500,7 @@ export default function CommunityConnectPage() {
                         const userFollows = await UserFollow.filter({ follower_email: user.email });
                         const followingEmails = (userFollows || []).map(f => f.following_email);
                         setFollowing(followingEmails);
-                    } catch (e) {
+                    } catch (_err) {
                         console.log("Could not load follows");
                     }
                 }

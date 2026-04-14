@@ -1,8 +1,6 @@
 import React from 'react';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Filter, X } from 'lucide-react';
 import { MORPH_CATEGORIES } from './MorphIDSelector';
@@ -66,7 +64,7 @@ export default function GeckoFilters({ filters, onFiltersChange, onClearFilters,
         (filters.morphTags?.length > 0) || (filters.feedingGroupIds?.length > 0) ||
         (filters.species?.length > 0);
 
-    const allMorphs = Object.values(MORPH_CATEGORIES).flatMap(c => c.morphs);
+    const _allMorphs = Object.values(MORPH_CATEGORIES).flatMap(c => c.morphs);
 
     return (
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 overflow-hidden">

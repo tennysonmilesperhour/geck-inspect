@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
-import { Egg, BreedingPlan, Gecko } from '@/entities/all';
+import { useState } from 'react';
+import { Egg } from '@/entities/all';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Loader2, Egg as EggIcon, Calendar } from 'lucide-react';
-import { format, differenceInDays } from 'date-fns';
+import { Loader2, Egg as EggIcon } from 'lucide-react';
+import { differenceInDays } from 'date-fns';
 
 export default function EggDetailModal({ egg, breedingPlan, sire, dam, onClose, onUpdate }) {
     const [isEditing, setIsEditing] = useState(false);

@@ -1,4 +1,4 @@
-import React, { useMemo } from 'react';
+import { useMemo } from 'react';
 import { Dna } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 

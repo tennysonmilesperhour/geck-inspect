@@ -1,20 +1,10 @@
-import React, { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { base44 } from '@/api/base44Client';
 import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
-import { GeckoImage } from "@/entities/GeckoImage";
-import { User } from "@/entities/User";
-import { Gecko } from "@/entities/Gecko";
-import { ForumPost } from "@/entities/ForumPost";
-import { Notification } from "@/entities/Notification";
-import { DirectMessage } from "@/entities/DirectMessage";
-import { MorphReferenceImage } from "@/entities/MorphReferenceImage";
-import { PageConfig } from "@/entities/PageConfig";
-import { useToast } from "@/components/ui/use-toast";
 import {
-  Database, BookOpen, BarChart3, Upload, Eye, Users, HeartHandshake, Moon, Sun, Layers, LogOut, ExternalLink, Search, Settings, UserPlus, Award, Shield, MessageSquare, Wrench, Bell, Mail, Heart, Brain, Menu, ShoppingCart, GitBranch,
-  LogIn, ChevronDown, X as CloseIcon, FlaskConical, LifeBuoy, LayoutDashboard, Star, Trophy, FolderKanban, GraduationCap, Dna,
+  Database, BookOpen, BarChart3, Upload, Users, HeartHandshake, Layers, LogOut, Search, Settings, UserPlus, Shield, MessageSquare, Bell, Mail, Heart, Menu, ShoppingCart, GitBranch, FlaskConical, Star, FolderKanban, GraduationCap, Dna,
   Egg, LayoutGrid, CircleUser, UsersRound, Images, Tag, CalendarDays, Sparkles
 } from "lucide-react";
 import TutorialModal from "@/components/tutorial/TutorialModal";
@@ -29,24 +19,14 @@ import {
   useSidebar
 } from "@/components/ui/Sidebar";
 import { Button } from "@/components/ui/button";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
-import NotificationDropdown from "@/components/ui/NotificationDropdown";
 import UserBadge from "@/components/ui/UserBadge";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
+
+
 // Non-React concerns extracted from this file as part of the hairball
 // cleanup — pure JS cache + rate-limit helpers, and the static
 // navigation / level-progression constants.
-import { dataCache, delay, retryApiCall, debouncedApiCall } from '@/lib/layoutCache';
+import { dataCache, retryApiCall } from '@/lib/layoutCache';
 import {
-  publicNavItems,
-  userSpecificNavItems,
-  adminOnlyNavItems,
   MILESTONES,
   USER_LEVELS,
   EXPERT_LEVELS,
@@ -54,17 +34,17 @@ import {
 } from '@/lib/layoutConstants';
 
 
-function LayoutContent({ children, currentPageName }) {
+function LayoutContent({ children, currentPageName: _currentPageName }) {
   const location = useLocation();
   const sidebarRef = useRef(null);
   const [imageCount, setImageCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
+  const [_isLoading, setIsLoading] = useState(true);
   const [user, setUser] = useState(null);
-  const [currentMilestone, setCurrentMilestone] = useState(null);
+  const [_currentMilestone, setCurrentMilestone] = useState(null);
   const [userLevel, setUserLevel] = useState(null);
   const [imageLevel, setImageLevel] = useState(null);
   const [communityLevel, setCommunityLevel] = useState(null);
-  const [pinnedPosts, setPinnedPosts] = useState([]);
+  const [_pinnedPosts, setPinnedPosts] = useState([]);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
   const [appLogo, setAppLogo] = useState(null);
@@ -95,7 +75,7 @@ function LayoutContent({ children, currentPageName }) {
     return [...USER_LEVELS].reverse().find((level) => geckoCount >= level.geckos) || USER_LEVELS[0];
   };
 
-  const getNextLevel = (geckoCount) => {
+  const _getNextLevel = (geckoCount) => {
     return USER_LEVELS.find((level) => geckoCount < level.geckos);
   };
 
@@ -108,7 +88,7 @@ function LayoutContent({ children, currentPageName }) {
   };
 
   useEffect(() => {
-    const logoUrl = window.APP_LOGO_URL;
+    const _logoUrl = window.APP_LOGO_URL;
     setAppLogo('https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png');
   }, []);
 
@@ -431,7 +411,7 @@ function LayoutContent({ children, currentPageName }) {
 
   const nextMilestone = MILESTONES.find((m) => imageCount < m.count);
   const goalCount = nextMilestone ? nextMilestone.count : 100000;
-  const progressPercent = Math.min(100, imageCount / goalCount * 100);
+  const _progressPercent = Math.min(100, imageCount / goalCount * 100);
 
   const getSidebarBadge = () => {
     if (!user) return null;

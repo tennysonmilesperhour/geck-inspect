@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { DirectMessage } from '@/entities/DirectMessage';
 import { User } from '@/entities/User';
 import { Button } from '@/components/ui/button';

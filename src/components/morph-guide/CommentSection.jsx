@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { MorphGuideComment } from '@/entities/MorphGuideComment';
 import { User } from '@/entities/User';
 import { UploadFile } from '@/integrations/Core';
@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { MessageSquare, Plus, Upload, Send, Clock, CheckCircle, Star } from 'lucide-react';
+import { MessageSquare, Plus, Upload, Send, CheckCircle, Star } from 'lucide-react';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { format } from 'date-fns';
 
@@ -46,7 +46,7 @@ export default function CommentSection({ morphGuideId }) {
         try {
             const currentUser = await User.me();
             setUser(currentUser);
-        } catch (error) {
+        } catch (_err) {
             setUser(null);
         }
     };

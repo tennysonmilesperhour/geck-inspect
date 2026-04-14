@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { Gecko, User } from '@/entities/all';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -26,7 +26,7 @@ import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger }
 const COLORS = ['#10b981', '#f59e0b', '#ef4444', '#6366f1', '#8b5cf6', '#ec4899'];
 
 export default function MyListingsPage() {
-    const [user, setUser] = useState(null);
+    const [_user, setUser] = useState(null);
     const [geckos, setGeckos] = useState([]);
     const [analytics, setAnalytics] = useState({
         totalListings: 0,
@@ -37,7 +37,7 @@ export default function MyListingsPage() {
         messages: 0 // Mock data removed
     });
     const [salesData, setSalesData] = useState([]); // Added state for sales data
-    const [isLoading, setIsLoading] = useState(true);
+    const [_isLoading, setIsLoading] = useState(true);
 
     useEffect(() => {
         const loadData = async () => {

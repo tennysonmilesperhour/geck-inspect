@@ -1,17 +1,13 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { User, Gecko, GeckoImage, ForumPost, GeckoOfTheDay as GotdEntity } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import {
-    BarChart3,
     Users,
     GitBranch,
-    Image as ImageIcon,
     MessageSquare,
-    Sparkles,
     Newspaper,
     Egg,
-    GraduationCap,
     Flame,
     Camera,
     Crown,
@@ -78,7 +74,7 @@ export default function Dashboard() {
                         setChangelogGlowing(true);
                     }
                 }
-            } catch (e) {}
+            } catch (_err) {}
         };
         checkUnread();
         const handler = () => setChangelogGlowing(false);

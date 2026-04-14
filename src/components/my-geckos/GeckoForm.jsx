@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Gecko, UserActivity, WeightRecord, FeedingGroup } from '@/entities/all';
 import { UploadFile } from '@/integrations/Core';
@@ -27,7 +27,7 @@ import { Switch } from '@/components/ui/switch';
 import MorphIDSelector from './MorphIDSelector';
 // Extracted helpers / constants / sub-components — keeps this file focused
 // on the orchestration logic instead of static data and pure UI pieces.
-import { MONTHS, GECKO_SPECIES, INITIAL_FORM_DATA, DEFAULT_GECKO_IMAGE } from './form/constants';
+import { MONTHS, GECKO_SPECIES, INITIAL_FORM_DATA } from './form/constants';
 import { generateNextGeckoId } from './form/helpers';
 import ImageCropDialog from './form/ImageCropDialog';
 import ParentAutocomplete from './form/ParentAutocomplete';

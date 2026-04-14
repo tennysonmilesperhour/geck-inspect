@@ -1,4 +1,3 @@
-import React from 'react';
 
 /**
  * Inline SVG diagrams for the Crested Gecko Genetics Guide.

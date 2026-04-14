@@ -1,4 +1,3 @@
-import React from 'react';
 import { X, Dna } from 'lucide-react';
 import GeneticCalculator from './GeneticCalculator';
 

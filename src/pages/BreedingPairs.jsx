@@ -1,9 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { User, Gecko, BreedingPlan, Egg } from '@/entities/all';
-import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { HeartHandshake, Plus, CalendarDays, Egg as EggIcon, Sparkles, Pencil, Trash2, Calendar } from 'lucide-react';
+import { HeartHandshake, Plus, Egg as EggIcon, Sparkles, Pencil, Trash2, Calendar } from 'lucide-react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -15,10 +15,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format, addDays } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { useNavigate } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
 
-import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { generateHatchedGeckoIdFromEgg, generateFounderGeckoId } from '@/components/shared/geckoIdUtils';
+import { generateHatchedGeckoIdFromEgg } from '@/components/shared/geckoIdUtils';
 
 // Helper to generate Google Calendar link
 const createGoogleCalendarLink = (title, start, end, description, location) => {
@@ -38,12 +36,12 @@ const createGoogleCalendarLink = (title, start, end, description, location) => {
 };
 
 export default function BreedingPairsPage() {
-    const [user, setUser] = useState(null);
+    const [_user, setUser] = useState(null);
     const [geckos, setGeckos] = useState([]);
     const [breedingPlans, setBreedingPlans] = useState([]);
     const [eggs, setEggs] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const navigate = useNavigate();
+    const _navigate = useNavigate();
     const [editingPlan, setEditingPlan] = useState(null);
 
     const loadData = useCallback(async () => {
@@ -519,7 +517,7 @@ function BreedingPlanCard({ plan, sire, dam, eggs, onDataRefresh, onHatch, onEdi
     );
 }
 
-function AddEggForm({ planId, onEggAdded, sire, dam }) {
+function AddEggForm({ planId, onEggAdded, sire: _sire, dam: _dam }) {
     const [isOpen, setIsOpen] = useState(false);
     const [layDate, setLayDate] = useState(new Date());
 

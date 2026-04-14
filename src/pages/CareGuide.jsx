@@ -1,9 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { CareGuideSection } from '@/entities/all';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import {
   Heart,
   Home,
@@ -11,7 +10,6 @@ import {
   Hand,
   Users,
   Info,
-  ChevronRight,
   ExternalLink,
   BookOpen,
   AlertCircle,
@@ -130,7 +128,7 @@ const categoryColors = {
 };
 
 // Enhanced content renderer for better formatting
-const ContentRenderer = ({ content, title }) => {
+const ContentRenderer = ({ content, title: _title }) => {
   if (!content) return null;
 
   // Split content into sections and format

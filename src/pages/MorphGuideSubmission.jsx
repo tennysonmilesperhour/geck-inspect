@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { User, MorphGuide, MorphReferenceImage } from '@/entities/all';
 import { UploadFile } from '@/integrations/Core';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -42,7 +42,7 @@ export default function MorphGuideSubmissionPage() {
         setUser(currentUser);
         const guides = await MorphGuide.list();
         setMorphGuides(guides.sort((a, b) => a.morph_name.localeCompare(b.morph_name)));
-      } catch (e) {
+      } catch (_err) {
         setUser(null); // Not logged in
       }
     };

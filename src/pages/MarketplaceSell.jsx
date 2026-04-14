@@ -1,7 +1,6 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { Gecko, User } from '@/entities/all';
 import { Card, CardContent } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -28,7 +27,6 @@ import {
   Loader2,
   CheckCircle2,
   Search,
-  ExternalLink,
   Clock,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -101,7 +99,7 @@ function StatCard({ label, value, tone = 'emerald', icon: Icon }) {
   );
 }
 
-function ListingCard({ gecko, user, onEdit, onToggleVisible, onUnlist, onMarkSold, isToggling }) {
+function ListingCard({ gecko, user: _user, onEdit, onToggleVisible, onUnlist, onMarkSold, isToggling }) {
   const photo = gecko.image_urls?.[0];
   const price = gecko.asking_price;
   const isLive = gecko.status === 'For Sale' && gecko.is_public !== false;

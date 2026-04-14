@@ -1,8 +1,6 @@
-import React, { useState, useCallback } from 'react';
+import { useState, useCallback } from 'react';
 import { createClient } from '@base44/sdk';
 import { createClient as createSupabaseClient } from '@supabase/supabase-js';
-import * as sb from '@/api/supabaseEntities';
-import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 
 const BASE44_APP_ID = '68929cdad944c572926ab6cb';
@@ -90,9 +88,9 @@ async function fetchAllFromBase44(base44Client, entityName) {
 // Returns null if the record should be skipped entirely.
 function normalizeRecord(record, tableName) {
   // Remove Base44-only fields
-  const { app_id, is_sample, created_by_id, _app_role, collaborator_role,
-          disabled, force_password_reset, is_service, is_verified,
-          liked_by_users, ...rest } = record;
+  const { app_id: _app_id, is_sample: _is_sample, created_by_id: _created_by_id, _app_role, collaborator_role: _collaborator_role,
+          disabled: _disabled, force_password_reset: _force_password_reset, is_service: _is_service, is_verified: _is_verified,
+          liked_by_users: _liked_by_users, ...rest } = record;
 
   // Convert empty strings to null so PostgreSQL doesn't reject them
   // when the column is a date, timestamp, or other non-text type.

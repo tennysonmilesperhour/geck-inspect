@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
@@ -174,7 +173,7 @@ export default function Home() {
             aria-hidden="true"
             className="w-full h-full object-cover"
             loading="eager"
-            fetchpriority="high"
+            fetchPriority="high"
           />
           <div className="absolute inset-0 bg-slate-950/75" />
           <div className="absolute inset-0 bg-gradient-to-b from-slate-950/95 via-slate-950/50 to-slate-950/95" />

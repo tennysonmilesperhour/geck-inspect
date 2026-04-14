@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { MorphReferenceImage, MorphGuide, Notification, User } from '@/entities/all';
+import { useState, useEffect } from 'react';
+import { MorphReferenceImage, MorphGuide, Notification } from '@/entities/all';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { useToast } from "@/components/ui/use-toast";
-import { Check, X, Loader2, Image, User as UserIcon } from 'lucide-react';
+import { Check, X, Loader2, User as UserIcon } from 'lucide-react';
 import {
   Dialog,
   DialogContent,

@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useLocation } from 'react-router-dom';
-import { Gecko, User, BreedingPlan, LineagePlaceholder } from '@/entities/all';
+import { Gecko, BreedingPlan, LineagePlaceholder } from '@/entities/all';
 import { base44 as base44Client } from '@/api/base44Client';
-import { Loader2, Users, Search, ZoomIn, ZoomOut, GitBranch, Heart, Users2, Edit2, Plus, Upload } from 'lucide-react';
+import { Loader2, Search, ZoomIn, ZoomOut, GitBranch, Heart, Users2, Edit2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -75,7 +75,7 @@ const GeckoCardNode = ({ gecko, onNodeClick, isSelected, size = 'normal', isFade
         small: { card: 'w-28 h-32', name: 'text-xs', id: 'text-[10px]', icon: 'w-8 h-8' },
         normal: { card: 'w-36 h-44', name: 'text-sm', id: 'text-xs', icon: 'w-10 h-10' },
     };
-    const { card: cardSize, name: nameTextSize, id: idTextSize, icon: iconSize } = sizes[size] || sizes.normal;
+    const { card: cardSize, name: nameTextSize, id: idTextSize, icon: _iconSize } = sizes[size] || sizes.normal;
     
     const sexIcon = gecko.sex === 'Male' ? '♂' : gecko.sex === 'Female' ? '♀' : '?';
     const sexColor = gecko.sex === 'Male' ? 'text-blue-400' : gecko.sex === 'Female' ? 'text-pink-400' : 'text-gray-400';

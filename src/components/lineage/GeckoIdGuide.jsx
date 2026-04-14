@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Users, Link as LinkIcon, GitBranch, ChevronDown, ChevronUp, Info } from 'lucide-react';
+import { Users, Link as LinkIcon, ChevronDown, ChevronUp, Info } from 'lucide-react';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const CodeExample = ({ children }) => (

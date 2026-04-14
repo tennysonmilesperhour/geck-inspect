@@ -1,7 +1,7 @@
-import React, { useState, useEffect, useCallback, Suspense, useRef } from 'react';
-import { User, Gecko, WeightRecord, FeedingGroup } from '@/entities/all';
+import React, { useState, useEffect, useCallback } from 'react';
+import { Gecko, WeightRecord, FeedingGroup } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
-import { PlusCircle, Search, Users, Grid3x3, List, ArrowUpDown, UserPlus, Archive, ArchiveRestore, Download, FileText, FileSpreadsheet } from 'lucide-react';
+import { PlusCircle, Search, Users, Grid3x3, List, ArrowUpDown, Archive, ArchiveRestore, Download, FileText, FileSpreadsheet } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
@@ -25,7 +25,7 @@ import ArchiveReasonDialog from '../components/my-geckos/ArchiveReasonDialog';
 import { toast } from '@/components/ui/use-toast';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
-import PlanLimitModal, { checkPlanLimit, getGeckoLimit } from '../components/subscription/PlanLimitChecker';
+import PlanLimitModal, { getGeckoLimit } from '../components/subscription/PlanLimitChecker';
 import { exportGeckosCSV, exportGeckosPDF } from '@/lib/exportUtils';
 import { captureEvent } from '@/lib/posthog';
 

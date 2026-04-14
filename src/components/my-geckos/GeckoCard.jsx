@@ -25,7 +25,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
     ? gecko.image_urls[0] 
     : DEFAULT_GECKO_IMAGE;
 
-  const getStatusColor = (status) => {
+  const _getStatusColor = (status) => {
     const colors = {
       'Pet': 'bg-gradient-to-r from-blue-400 to-blue-600',
       'Future Breeder': 'bg-gradient-to-r from-purple-400 to-purple-600',

@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { SupportMessage, User } from '@/entities/all';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -30,7 +30,6 @@ import {
     CheckCircle2,
     Archive as ArchiveIcon,
     Trash2,
-    MessageSquare,
     Send,
     User as UserIcon,
 } from 'lucide-react';

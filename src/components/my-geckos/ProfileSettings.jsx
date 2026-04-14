@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { User } from '@/entities/User';
 import { UploadFile } from '@/integrations/Core';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -12,9 +12,7 @@ import {
   Settings, 
   Upload, 
   Save, 
-  Globe, 
-  Eye, 
-  EyeOff,
+  Globe,
   X,
   Plus,
   Mail,
