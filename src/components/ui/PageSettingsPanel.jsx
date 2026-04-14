@@ -1,10 +1,16 @@
 import { useState } from 'react';
-import { Settings, X } from 'lucide-react';
+import { Settings, X, ArrowRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 
 /**
  * Reusable page-level settings panel.
- * 
+ *
+ * Renders a gear-icon button that opens a floating dropdown with
+ * page-specific settings. A footer link directs users to the main
+ * Settings page for account-wide preferences.
+ *
  * Usage:
  *   <PageSettingsPanel title="My Geckos Settings">
  *     <div>...your settings controls...</div>
@@ -43,6 +49,16 @@ export default function PageSettingsPanel({ title = 'Page Settings', children, c
                         </div>
                         <div className="border-t border-slate-700 pt-3 space-y-3">
                             {children}
+                        </div>
+                        <div className="border-t border-slate-700 pt-2">
+                            <Link
+                                to={createPageUrl('Settings')}
+                                onClick={() => setOpen(false)}
+                                className="flex items-center justify-between text-[11px] text-slate-500 hover:text-emerald-400 transition-colors"
+                            >
+                                <span>All settings</span>
+                                <ArrowRight className="w-3 h-3" />
+                            </Link>
                         </div>
                     </div>
                 </>

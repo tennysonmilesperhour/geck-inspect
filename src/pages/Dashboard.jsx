@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import { User, Gecko, GeckoImage, ForumPost, GeckoOfTheDay as GotdEntity } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import {
@@ -245,6 +246,11 @@ export default function Dashboard() {
                                             </Button>
                                         </Link>
                                     )}
+                                    <PageSettingsPanel title="Dashboard Settings">
+                                        <p className="text-[11px] text-slate-500 leading-relaxed">
+                                            Customize notification preferences, calendar alerts, and featured breeder settings from the main Settings page.
+                                        </p>
+                                    </PageSettingsPanel>
                                 </div>
                             </div>
                         </div>

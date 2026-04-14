@@ -4,6 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { HeartHandshake, Plus, Egg as EggIcon, Sparkles, Pencil, Trash2, Calendar } from 'lucide-react';
+import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -167,7 +168,14 @@ export default function BreedingPairsPage() {
                         </div>
                         <p className="text-lg text-slate-400">Manage your gecko breeding programs and track offspring.</p>
                     </div>
-                    <PlanPairingForm males={males} females={females} onPlanCreated={loadData} />
+                    <div className="flex gap-2">
+                        <PageSettingsPanel title="Breeding Pairs Settings">
+                            <p className="text-[11px] text-slate-500 leading-relaxed">
+                                Breeding sort preferences and plan defaults can be configured in the main Settings page.
+                            </p>
+                        </PageSettingsPanel>
+                        <PlanPairingForm males={males} females={females} onPlanCreated={loadData} />
+                    </div>
                 </div>
 
                 {/* Content */}

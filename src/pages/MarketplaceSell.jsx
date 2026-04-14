@@ -4,6 +4,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import MorphMarketSync from '@/components/marketplace/MorphMarketSync';
+import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -454,15 +455,27 @@ export default function MarketplaceSellPage() {
               and track your active listings at a glance.
             </p>
           </div>
-          <Link to={createPageUrl('MyGeckos')}>
-            <Button
-              variant="outline"
-              className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Manage collection
-            </Button>
-          </Link>
+          <div className="flex gap-2">
+            <PageSettingsPanel title="Seller Settings">
+              <div className="flex items-center justify-between">
+                <span className="text-slate-300 text-sm">Default visibility</span>
+                <span className="text-xs text-slate-500">Public</span>
+              </div>
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                New listings default to visible on the marketplace. Toggle individual listings
+                off from their cards.
+              </p>
+            </PageSettingsPanel>
+            <Link to={createPageUrl('MyGeckos')}>
+              <Button
+                variant="outline"
+                className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Manage collection
+              </Button>
+            </Link>
+          </div>
         </div>
 
         {/* Stats strip */}

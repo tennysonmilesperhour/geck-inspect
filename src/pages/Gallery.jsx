@@ -5,6 +5,7 @@ import ImageCard from '../components/gallery/ImageCard';
 import ImageDetailModal from '../components/gallery/ImageDetailModal';
 import { ImageOff, Loader2 } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
+import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import EmptyState from '../components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
 
@@ -91,8 +92,17 @@ export default function Gallery() {
     return (
         <div className="p-4 md:p-8 bg-slate-950 min-h-screen">
             <div className="max-w-7xl mx-auto">
-                <h1 className="text-4xl font-bold text-slate-100 mb-2">Image Gallery</h1>
-                <p className="text-slate-400 mb-6">Explore user-submitted gecko images. Use the filters to find specific morphs and traits.</p>
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
+                    <div>
+                        <h1 className="text-4xl font-bold text-slate-100 mb-2">Image Gallery</h1>
+                        <p className="text-slate-400">Explore user-submitted gecko images. Use the filters to find specific morphs and traits.</p>
+                    </div>
+                    <PageSettingsPanel title="Gallery Settings">
+                        <p className="text-[11px] text-slate-500 leading-relaxed">
+                            Sort and display preferences for the gallery. Default sort can be changed in the main Settings page.
+                        </p>
+                    </PageSettingsPanel>
+                </div>
 
                 <div className="mb-8">
                     <GalleryFilters filters={filters} onFilterChange={setFilters} />

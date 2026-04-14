@@ -10,6 +10,7 @@ import ReptileCard from '../components/other-reptiles/ReptileCard';
 import ReptileForm from '../components/other-reptiles/ReptileForm';
 import ReptileDetailModal from '../components/other-reptiles/ReptileDetailModal';
 import PlanLimitModal, { checkPlanLimit, getOtherReptileLimit } from '@/components/subscription/PlanLimitChecker';
+import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import { toast } from '@/components/ui/use-toast';
 import { AnimatePresence, motion } from 'framer-motion';
 import { differenceInDays } from 'date-fns';
@@ -237,6 +238,11 @@ export default function OtherReptilesPage() {
                         <p className="text-slate-400 mt-1">Track your non-gecko reptile collection with feeding reminders.</p>
                     </div>
                     <div className="flex gap-2">
+                        <PageSettingsPanel title="Reptile Settings">
+                            <p className="text-[11px] text-slate-500 leading-relaxed">
+                                Default sort order for other reptiles can be changed in the main Settings page.
+                            </p>
+                        </PageSettingsPanel>
                         <Button
                             variant="outline"
                             onClick={() => setShowArchived(!showArchived)}

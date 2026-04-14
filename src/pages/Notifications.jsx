@@ -3,6 +3,7 @@ import { Notification, User } from '@/entities/all';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import {
     Bell,
     MessageSquare,
@@ -196,15 +197,22 @@ export default function NotificationsPage() {
                             </p>
                         </div>
                     </div>
-                    <Button
-                        onClick={markAllAsRead}
-                        disabled={unreadCount === 0}
-                        variant="outline"
-                        className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                    >
-                        <Check className="w-4 h-4 mr-1.5" />
-                        Mark all read
-                    </Button>
+                    <div className="flex gap-2 shrink-0">
+                        <PageSettingsPanel title="Notification Settings">
+                            <p className="text-[11px] text-slate-500 leading-relaxed">
+                                Choose which notifications you receive and how you're alerted in the main Settings page.
+                            </p>
+                        </PageSettingsPanel>
+                        <Button
+                            onClick={markAllAsRead}
+                            disabled={unreadCount === 0}
+                            variant="outline"
+                            className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            <Check className="w-4 h-4 mr-1.5" />
+                            Mark all read
+                        </Button>
+                    </div>
                 </div>
 
                 <Card className="bg-slate-900 border-slate-800">

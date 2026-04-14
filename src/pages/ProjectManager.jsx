@@ -14,6 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { PlusCircle, Loader2, CalendarDays, Trash2, Plus, ChevronDown, ChevronUp, Calendar, RepeatIcon, Utensils, StickyNote } from 'lucide-react';
 import EmptyState from '../components/shared/EmptyState';
+import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import { format } from 'date-fns';
 import ProjectCalendar from '../components/project-manager/ProjectCalendar';
 import FeedingGroupManager from '../components/project-manager/FeedingGroupManager';
@@ -196,10 +197,17 @@ export default function ProjectManager() {
                         </h1>
                         <p className="text-slate-400 mt-2 text-sm md:text-base">Plan breeding seasons, prep for expos, and track gecko care tasks</p>
                     </div>
-                    <Button onClick={handleNewPlan} className="bg-emerald-600 hover:bg-emerald-700 w-full md:w-auto">
+                    <div className="flex gap-2 w-full md:w-auto">
+                        <PageSettingsPanel title="Planner Settings">
+                            <p className="text-[11px] text-slate-500 leading-relaxed">
+                                Feeding alert thresholds and calendar alert preferences can be adjusted in the main Settings page.
+                            </p>
+                        </PageSettingsPanel>
+                        <Button onClick={handleNewPlan} className="bg-emerald-600 hover:bg-emerald-700 flex-1 md:flex-none">
                             <PlusCircle className="w-5 h-5 mr-2" />
                             {activeTab === 'future' ? 'New Breeding Plan' : 'New Plan'}
                         </Button>
+                    </div>
                 </div>
                 
                 {isLoading && projects.length === 0 && feedingGroups.length === 0 ? (

@@ -5,6 +5,7 @@ import { notifyNewMessage } from '@/components/notifications/NotificationService
 import { useToast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -228,11 +229,18 @@ export default function MessagesPage() {
     return (
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
             <div className="max-w-6xl mx-auto">
-                <div className="flex items-center gap-3 mb-8">
-                    <div className="w-12 h-12 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
-                        <Mail className="w-6 h-6 text-white" />
+                <div className="flex items-center justify-between mb-8">
+                    <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
+                            <Mail className="w-6 h-6 text-white" />
+                        </div>
+                        <h1 className="text-4xl font-bold text-slate-100">Messages</h1>
                     </div>
-                    <h1 className="text-4xl font-bold text-slate-100">Messages</h1>
+                    <PageSettingsPanel title="Message Settings">
+                        <p className="text-[11px] text-slate-500 leading-relaxed">
+                            Email notifications for new messages can be toggled in the main Settings page.
+                        </p>
+                    </PageSettingsPanel>
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">

@@ -11,6 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PlusCircle, GitBranch, Heart, ChevronDown, ChevronUp, Calendar as CalendarIcon, Archive, ListTree, Search, Dna, Moon } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
+import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import Hatchery from '../components/breeding/Hatchery';
 import {
   Dialog,
@@ -423,10 +424,27 @@ export default function BreedingPage() {
                         </h1>
                         <p className="text-slate-400 mt-2 text-sm md:text-base">Plan and track your gecko breeding projects</p>
                     </div>
-                    <Button onClick={() => setIsModalOpen(true)} className="w-full md:w-auto">
-                        <PlusCircle className="w-5 h-5 mr-2" />
-                        New Breeding Plan
-                    </Button>
+                    <div className="flex gap-2 w-full md:w-auto">
+                        <PageSettingsPanel title="Breeding Settings">
+                            <div className="flex items-center justify-between">
+                                <span className="text-slate-300 text-sm">Default tab</span>
+                                <select
+                                    value={activeTab}
+                                    onChange={(e) => setActiveTab(e.target.value)}
+                                    className="h-7 rounded-md bg-slate-800 border border-slate-600 text-slate-100 text-xs px-2"
+                                >
+                                    <option value="active">Active</option>
+                                    <option value="hatchery">Hatchery</option>
+                                    <option value="genetics">Genetics</option>
+                                    <option value="archive">Archive</option>
+                                </select>
+                            </div>
+                        </PageSettingsPanel>
+                        <Button onClick={() => setIsModalOpen(true)} className="flex-1 md:flex-none">
+                            <PlusCircle className="w-5 h-5 mr-2" />
+                            New Breeding Plan
+                        </Button>
+                    </div>
                 </div>
 
                 {isLoading ? (

@@ -4,6 +4,7 @@ import { Gecko, BreedingPlan, LineagePlaceholder } from '@/entities/all';
 import { base44 as base44Client } from '@/api/base44Client';
 import { Loader2, Search, ZoomIn, ZoomOut, GitBranch, Heart, Users2, Edit2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -616,10 +617,15 @@ export default function Lineage() {
                                 <SelectItem value="5">5 Gen</SelectItem>
                             </SelectContent>
                         </Select>
+                        <PageSettingsPanel title="Lineage Settings">
+                            <p className="text-[11px] text-slate-500 leading-relaxed">
+                                Lineage display preferences and zoom settings. Default generation depth can be adjusted above.
+                            </p>
+                        </PageSettingsPanel>
                     </div>
                 </div>
             </header>
-            
+
             <main 
                 ref={mainContentRef} 
                 className="flex-1 overflow-auto relative touch-none"

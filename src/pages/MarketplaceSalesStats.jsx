@@ -5,6 +5,7 @@ import { base44 } from '@/api/base44Client';
 import { Gecko, MarketplaceCost } from '@/entities/all';
 import { toast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -398,18 +399,25 @@ export default function MarketplaceSalesStats() {
       <div className="relative overflow-hidden border-b border-slate-800 bg-gradient-to-br from-slate-950 via-emerald-950/30 to-teal-950/20">
         <div className="absolute inset-0 gecko-scale-pattern opacity-[0.04] pointer-events-none" />
         <div className="relative max-w-5xl mx-auto px-4 md:px-8 py-8 md:py-10">
-          <div className="flex items-center gap-3">
-            <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
-              <TrendingUp className="w-6 h-6 text-emerald-400" />
+          <div className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
+                <TrendingUp className="w-6 h-6 text-emerald-400" />
+              </div>
+              <div>
+                <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent tracking-tight">
+                  Sales Stats
+                </h1>
+                <p className="text-sm text-slate-400 mt-1">
+                  Track revenue, costs, and profitability across your breeding operation.
+                </p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent tracking-tight">
-                Sales Stats
-              </h1>
-              <p className="text-sm text-slate-400 mt-1">
-                Track revenue, costs, and profitability across your breeding operation.
+            <PageSettingsPanel title="Sales Stats Settings">
+              <p className="text-[11px] text-slate-500 leading-relaxed">
+                Revenue categories and cost tracking preferences. Quarterly breakdowns update automatically.
               </p>
-            </div>
+            </PageSettingsPanel>
           </div>
         </div>
       </div>

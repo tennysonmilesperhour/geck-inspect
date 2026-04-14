@@ -4,6 +4,7 @@ import { Gecko, User, MarketplaceLike } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
+import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import { Card, CardContent } from '@/components/ui/card';
 import {
     Select,
@@ -333,13 +334,20 @@ export default function MarketplaceBuyPage() {
     return (
         <div className="p-4 md:p-8 bg-slate-950 min-h-screen">
             <div className="max-w-7xl mx-auto">
-                <header className="mb-6">
-                    <h1 className="text-3xl md:text-4xl font-bold text-slate-100">
-                        Gecko Marketplace
-                    </h1>
-                    <p className="text-sm md:text-base text-slate-400 mt-1">
-                        Find your next crested gecko from breeders around the world.
-                    </p>
+                <header className="mb-6 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+                    <div>
+                        <h1 className="text-3xl md:text-4xl font-bold text-slate-100">
+                            Gecko Marketplace
+                        </h1>
+                        <p className="text-sm md:text-base text-slate-400 mt-1">
+                            Find your next crested gecko from breeders around the world.
+                        </p>
+                    </div>
+                    <PageSettingsPanel title="Marketplace Settings">
+                        <p className="text-[11px] text-slate-500 leading-relaxed">
+                            Card size and sort preferences are saved automatically. Default sort can also be changed in the main Settings page.
+                        </p>
+                    </PageSettingsPanel>
                 </header>
 
                 {/* Filter toolbar */}

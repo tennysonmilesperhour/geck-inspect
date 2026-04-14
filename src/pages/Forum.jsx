@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { ForumCategory, ForumPost, User } from '@/entities/all';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -132,6 +133,12 @@ export default function ForumPage() {
                             Connect, share, and learn with fellow gecko enthusiasts.
                         </p>
                     </div>
+                    <div className="flex gap-2 shrink-0">
+                        <PageSettingsPanel title="Forum Settings">
+                            <p className="text-[11px] text-slate-500 leading-relaxed">
+                                Notification preferences for forum activity can be configured in the main Settings page.
+                            </p>
+                        </PageSettingsPanel>
                     {currentUser && (
                         <Button
                             onClick={() => setShowCreatePost((v) => !v)}
@@ -150,6 +157,7 @@ export default function ForumPage() {
                             )}
                         </Button>
                     )}
+                    </div>
                 </div>
 
                 {/* Search */}
