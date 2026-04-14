@@ -506,7 +506,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
   return (
     <div className="mb-1">
-        {title && <div className="text-xs font-semibold text-sage-700 uppercase tracking-wider px-4 py-2">{title}</div>}
+        {title && <div className="text-xs font-semibold text-sage-700 uppercase tracking-wider px-4 py-2 sidebar-section-header">{title}</div>}
         <nav className="space-y-1 px-2">
           {items.map((item) => {
             const itemUrl = createPageUrl(item.page_name);
@@ -543,7 +543,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                     : "text-gray-600 dark:text-gray-300 hover:bg-sage-50 dark:hover:bg-gray-700 hover:text-sage-900 dark:hover:text-white"
                   }`}
               >
-                <IconComponent className="mr-2 h-5 w-5 flex-shrink-0" />
+                <IconComponent className="mr-2 h-5 w-5 flex-shrink-0 nav-icon" />
                 {item.display_name}
                 {item.requires_auth && !user && (
                   <span className="ml-auto text-xs text-sage-500">Login</span>
@@ -715,6 +715,89 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
             background: rgba(6, 95, 70, 0.4) !important;
             backdrop-filter: blur(10px);
             border: 1px solid rgba(134, 239, 172, 0.15);
+          }
+
+          /* Desktop sidebar - distinct from main content */
+          .dark .desktop-sidebar {
+            background: linear-gradient(180deg,
+              rgba(2, 26, 18, 0.97) 0%,
+              rgba(4, 40, 28, 0.95) 50%,
+              rgba(2, 26, 18, 0.97) 100%) !important;
+            backdrop-filter: blur(20px) saturate(150%);
+            border: none !important;
+            border-right: 1px solid rgba(16, 185, 129, 0.2) !important;
+            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3),
+                         1px 0 0 rgba(16, 185, 129, 0.1);
+          }
+
+          .desktop-sidebar .sidebar-section-header {
+            color: rgba(16, 185, 129, 0.7);
+            font-size: 0.65rem;
+            letter-spacing: 0.12em;
+            padding-left: 1.25rem;
+            padding-top: 0.75rem;
+            padding-bottom: 0.35rem;
+          }
+
+          .dark .desktop-sidebar .sidebar-nav-item {
+            color: rgba(209, 250, 229, 0.75);
+            border-radius: 10px;
+            margin: 1px 0;
+            backdrop-filter: none;
+          }
+
+          .dark .desktop-sidebar .sidebar-nav-item:hover {
+            background: rgba(16, 185, 129, 0.12) !important;
+            color: #86efac !important;
+            box-shadow: none !important;
+            transform: translateX(2px);
+          }
+
+          .dark .desktop-sidebar .sidebar-nav-item.active {
+            background: rgba(16, 185, 129, 0.15);
+            color: #86efac;
+            border-left: 3px solid #34d399;
+            font-weight: 600;
+          }
+
+          .dark .desktop-sidebar .sidebar-nav-item.active .nav-icon {
+            color: #4ade80;
+          }
+
+          .dark .desktop-sidebar .sidebar-footer-section {
+            border-color: rgba(16, 185, 129, 0.12) !important;
+          }
+
+          .dark .desktop-sidebar .sidebar-footer-section button,
+          .dark .desktop-sidebar .sidebar-footer-section a button {
+            background: transparent !important;
+            border: 1px solid rgba(16, 185, 129, 0.15) !important;
+            color: rgba(209, 250, 229, 0.6) !important;
+            backdrop-filter: none;
+          }
+
+          .dark .desktop-sidebar .sidebar-footer-section button:hover,
+          .dark .desktop-sidebar .sidebar-footer-section a button:hover {
+            background: rgba(16, 185, 129, 0.1) !important;
+            color: #86efac !important;
+            border-color: rgba(16, 185, 129, 0.3) !important;
+          }
+
+          .dark .desktop-sidebar .sidebar-logo-link {
+            border-color: rgba(16, 185, 129, 0.15) !important;
+            background: transparent !important;
+          }
+
+          .dark .desktop-sidebar .sidebar-logo-link:hover {
+            background: rgba(16, 185, 129, 0.08) !important;
+          }
+
+          .dark .desktop-sidebar .sidebar-user-name {
+            color: #d1fae5;
+          }
+
+          .dark .desktop-sidebar .sidebar-user-email {
+            color: rgba(167, 243, 208, 0.5);
           }
 
           .dark .bg-slate-950 {
@@ -1396,9 +1479,9 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         {/* Static sidebar for desktop */}
         <div className="hidden lg:flex lg:flex-shrink-0">
           <div className="flex w-64 flex-col">
-            <div className="flex flex-grow flex-col overflow-y-auto bg-white dark:bg-gray-800 pt-5 border-r border-gray-200 dark:border-gray-700" ref={sidebarRef}>
+            <div className="flex flex-grow flex-col overflow-y-auto bg-white desktop-sidebar pt-5 border-r border-gray-200 dark:border-emerald-900/30" ref={sidebarRef}>
               <div className="flex items-center flex-shrink-0 px-6 mb-4">
-                <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-sage-300 dark:border-emerald-700/50 hover:bg-sage-100 dark:hover:bg-emerald-900/30 transition-colors duration-200">
+                <Link to={createPageUrl("Dashboard")} className="sidebar-logo-link flex items-center gap-2 px-3 py-2 rounded-lg border border-sage-300 dark:border-emerald-700/50 hover:bg-sage-100 dark:hover:bg-emerald-900/30 transition-colors duration-200">
                   {appLogo && (
                     <img
                       src={appLogo}
@@ -1429,8 +1512,8 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                           />
                         </Link>
                     <div className="flex-1">
-                      <Link to={createPageUrl('MyProfile')} className="font-medium text-sage-800 dark:text-sage-700 text-sm">{user.full_name}</Link>
-                      <p className="text-xs text-sage-600 dark:text-sage-500">{user.email}</p>
+                      <Link to={createPageUrl('MyProfile')} className="font-medium text-sage-800 dark:text-sage-700 text-sm sidebar-user-name">{user.full_name}</Link>
+                      <p className="text-xs text-sage-600 dark:text-sage-500 sidebar-user-email">{user.email}</p>
                     </div>
                   </div>
                 ) : (
@@ -1453,7 +1536,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
               {renderNavSection(navItems.public)}
               {user?.role === 'admin' && (
                 <div className="mb-4">
-                  <div className="text-xs font-semibold text-sage-700 uppercase tracking-wider px-4 py-2">Admin</div>
+                  <div className="text-xs font-semibold text-sage-700 uppercase tracking-wider px-4 py-2 sidebar-section-header">Admin</div>
                   <nav className="space-y-1 px-2">
                     <Link
                       to={createPageUrl("AdminPanel")}
@@ -1463,14 +1546,14 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                           : "text-gray-600 dark:text-gray-300 hover:bg-sage-50 dark:hover:bg-gray-700 hover:text-sage-900 dark:hover:text-white"
                       }`}
                     >
-                      <Shield className="mr-2 h-5 w-5 flex-shrink-0" />
+                      <Shield className="mr-2 h-5 w-5 flex-shrink-0 nav-icon" />
                       Admin Panel
                     </Link>
                   </nav>
                 </div>
               )}
               
-              <div className="p-4 border-t border-sage-300 dark:border-sage-300 mt-auto">
+              <div className="p-4 border-t border-sage-300 dark:border-sage-300 mt-auto sidebar-footer-section">
                 <div className="space-y-3">
                   <Link to="/PrivacyPolicy" className="block text-xs text-slate-500 hover:text-slate-300 px-3 transition-colors">Privacy Policy</Link>
                   <Link to={createPageUrl("Membership")} className="block">
