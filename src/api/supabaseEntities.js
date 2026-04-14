@@ -57,6 +57,30 @@ export const TABLE_MAP = {
   UserFollow: 'user_follows',
   WeightRecord: 'weight_records',
   User: 'profiles',
+
+  // P1 — Animal Passport + Ownership Transfer
+  OwnershipRecord: 'ownership_records',
+  ShedRecord: 'shed_records',
+  VetRecord: 'vet_records',
+  TransferRequest: 'transfer_requests',
+  FeedingRecord: 'feeding_records',
+  // P2 — Market Pricing Intelligence
+  MorphPriceEntry: 'morph_price_entries',
+  PriceAlert: 'price_alerts',
+  CollectionValuation: 'collection_valuations',
+  // P3 — Breeding ROI Dashboard
+  BreedingProject: 'breeding_projects',
+  GeneticOutcomePrediction: 'genetic_outcome_predictions',
+  Clutch: 'clutches',
+  // P4 — Breeding Loan Management
+  BreedingLoan: 'breeding_loans',
+  // P5 — Geck Answers
+  Question: 'questions',
+  Answer: 'answers',
+  QuestionVote: 'question_votes',
+  // P8 — Breeder Storefront
+  BreederProfile: 'breeder_profiles',
+  BreederReview: 'breeder_reviews',
 };
 
 function parseSort(sort) {
@@ -236,3 +260,27 @@ export const UserBadge = createEntityClient('UserBadge');
 export const UserFollow = createEntityClient('UserFollow');
 export const WeightRecord = createEntityClient('WeightRecord');
 export const UserEntity = createEntityClient('User');
+
+// P1 — Animal Passport + Ownership Transfer
+export const OwnershipRecord = createEntityClient('OwnershipRecord');
+export const ShedRecord = createEntityClient('ShedRecord');
+export const VetRecord = createEntityClient('VetRecord');
+export const TransferRequest = createEntityClient('TransferRequest');
+export const FeedingRecord = createEntityClient('FeedingRecord');
+// P2 — Market Pricing Intelligence
+export const MorphPriceEntry = createEntityClient('MorphPriceEntry');
+export const PriceAlert = createEntityClient('PriceAlert');
+export const CollectionValuation = createEntityClient('CollectionValuation');
+// P3 — Breeding ROI Dashboard
+export const BreedingProject = createEntityClient('BreedingProject');
+export const GeneticOutcomePrediction = createEntityClient('GeneticOutcomePrediction');
+export const Clutch = createEntityClient('Clutch');
+// P4 — Breeding Loan Management
+export const BreedingLoan = createEntityClient('BreedingLoan');
+// P5 — Geck Answers
+export const Question = createEntityClient('Question');
+export const Answer = createEntityClient('Answer');
+export const QuestionVote = createEntityClient('QuestionVote');
+// P8 — Breeder Storefront
+export const BreederProfile = createEntityClient('BreederProfile');
+export const BreederReview = createEntityClient('BreederReview');

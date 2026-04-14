@@ -100,6 +100,15 @@ const Subscription          = lazy(() => import('./pages/Subscription'));
 const TrainModel            = lazy(() => import('./pages/TrainModel'));
 const Training              = lazy(() => import('./pages/Training'));
 
+// P2–P8 Feature pages
+const MarketPricing         = lazy(() => import('./pages/MarketPricing'));
+const BreedingROI           = lazy(() => import('./pages/BreedingROI'));
+const BreedingLoans         = lazy(() => import('./pages/BreedingLoans'));
+const GeckAnswers           = lazy(() => import('./pages/GeckAnswers'));
+const BatchHusbandry        = lazy(() => import('./pages/BatchHusbandry'));
+const PrintableWorksheets   = lazy(() => import('./pages/PrintableWorksheets'));
+const BreederStorefront     = lazy(() => import('./pages/BreederStorefront'));
+
 
 export const PAGES = {
     "AdminPanel": AdminPanel,
@@ -145,6 +154,14 @@ export const PAGES = {
     "Subscription": Subscription,
     "TrainModel": TrainModel,
     "Training": Training,
+    // P2–P8 Feature pages
+    "MarketPricing": MarketPricing,
+    "BreedingROI": BreedingROI,
+    "BreedingLoans": BreedingLoans,
+    "GeckAnswers": GeckAnswers,
+    "BatchHusbandry": BatchHusbandry,
+    "PrintableWorksheets": PrintableWorksheets,
+    "BreederStorefront": BreederStorefront,
 }
 
 export const pagesConfig = {
