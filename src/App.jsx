@@ -1,5 +1,5 @@
 import './App.css'
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useState, useEffect } from 'react';
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { HelmetProvider } from 'react-helmet-async'
@@ -8,12 +8,13 @@ import VisualEditAgent from '@/lib/VisualEditAgent'
 import NavigationTracker from '@/lib/NavigationTracker'
 import PostHogPageTracker from '@/lib/PostHogPageTracker'
 import { pagesConfig } from './pages.config'
-import { BrowserRouter as Router, Route, Routes } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UpdateNotification from '@/components/ui/UpdateNotification';
 import LoginPortal from '@/components/auth/LoginPortal';
 import ScrollToTop from '@/components/shared/ScrollToTop';
+import { base44 } from '@/api/base44Client';
 
 // Public landing page — stays eager because it's what unauthenticated
 // visitors (and crawlers) hit first.
@@ -54,6 +55,20 @@ const LazyFallback = (
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isAuthenticated } = useAuth();
+  const [disabledPages, setDisabledPages] = useState(new Set());
+
+  // Load page configs to enforce is_enabled at the router level.
+  // Deactivated pages redirect to / instead of rendering.
+  useEffect(() => {
+    if (!isAuthenticated) return;
+    base44.entities.PageConfig.list().then((configs) => {
+      if (!Array.isArray(configs)) return;
+      const disabled = new Set(
+        configs.filter(c => c.is_enabled === false).map(c => c.page_name)
+      );
+      setDisabledPages(disabled);
+    }).catch(() => {});
+  }, [isAuthenticated]);
 
   // Show loading spinner while checking auth
   if (isLoadingAuth) {
@@ -106,9 +121,11 @@ const AuthenticatedApp = () => {
           key={path}
           path={`/${path}`}
           element={
-            <LayoutWrapper currentPageName={path}>
-              <Page />
-            </LayoutWrapper>
+            disabledPages.has(path)
+              ? <Navigate to="/" replace />
+              : <LayoutWrapper currentPageName={path}>
+                  <Page />
+                </LayoutWrapper>
           }
         />
       ))}
