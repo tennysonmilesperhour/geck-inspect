@@ -36,8 +36,10 @@ function BreederCard({ breeder, currentUser, isFollowing, onFollow, onUnfollow, 
                         loading="lazy"
                         decoding="async"
                     />
-                </div>
-            )}
+                ) : (
+                    <div className="w-full h-full bg-gradient-to-br from-emerald-950/60 to-slate-800" />
+                )}
+            </div>
             <CardContent className={`p-4 ${cardCover ? '-mt-10 relative' : ''}`}>
                 <div className="flex items-start gap-4">
                     <img 
