@@ -165,22 +165,48 @@ export default function ForumPostPage() {
             // Non-fatal notifications. If they fail we still keep the comment.
             try {
                 if (!replyingTo && post?.created_by && post.created_by !== currentUser.email) {
-                    await Notification.create({
-                        user_email: post.created_by,
-                        type: 'new_comment',
-                        content: `${commentData.author_name} commented on your post "${post.title}": "${commentData.content.substring(0, 50)}${commentData.content.length > 50 ? '...' : ''}"`,
-                        link: `/ForumPost?id=${postId}`,
-                        metadata: { comment_id: createdComment.id, post_id: postId },
-                    });
+                    // Check recipient's notification preferences
+                    const [postAuthor] = await User.filter({ email: post.created_by });
+                    if (postAuthor?.notifications_forum !== false) {
+                        await Notification.create({
+                            user_email: post.created_by,
+                            type: 'new_comment',
+                            content: `${commentData.author_name} commented on your post "${post.title}": "${commentData.content.substring(0, 50)}${commentData.content.length > 50 ? '...' : ''}"`,
+                            link: `/ForumPost?id=${postId}`,
+                            metadata: { comment_id: createdComment.id, post_id: postId },
+                        });
+                        // Send email if enabled
+                        if (postAuthor?.email_on_forum_replies && postAuthor?.notifications_email) {
+                            import('@/integrations/Core').then(({ SendEmail }) => {
+                                SendEmail({
+                                    to: post.created_by,
+                                    subject: `${commentData.author_name} commented on your post`,
+                                    body: `Someone commented on your forum post "${post.title}":\n\n"${commentData.content.substring(0, 200)}"\n\nView the full discussion on Geck Inspect!`
+                                }).catch(e => console.log('Email send failed:', e));
+                            });
+                        }
+                    }
                 }
                 if (replyingTo && replyingTo.created_by && replyingTo.created_by !== currentUser.email) {
-                    await Notification.create({
-                        user_email: replyingTo.created_by,
-                        type: 'new_reply',
-                        content: `${commentData.author_name} replied to your comment: "${commentData.content.substring(0, 50)}${commentData.content.length > 50 ? '...' : ''}"`,
-                        link: `/ForumPost?id=${postId}`,
-                        metadata: { comment_id: createdComment.id, post_id: postId },
-                    });
+                    const [commentAuthor] = await User.filter({ email: replyingTo.created_by });
+                    if (commentAuthor?.notifications_forum !== false) {
+                        await Notification.create({
+                            user_email: replyingTo.created_by,
+                            type: 'new_reply',
+                            content: `${commentData.author_name} replied to your comment: "${commentData.content.substring(0, 50)}${commentData.content.length > 50 ? '...' : ''}"`,
+                            link: `/ForumPost?id=${postId}`,
+                            metadata: { comment_id: createdComment.id, post_id: postId },
+                        });
+                        if (commentAuthor?.email_on_forum_replies && commentAuthor?.notifications_email) {
+                            import('@/integrations/Core').then(({ SendEmail }) => {
+                                SendEmail({
+                                    to: replyingTo.created_by,
+                                    subject: `${commentData.author_name} replied to your comment`,
+                                    body: `Someone replied to your comment on Geck Inspect:\n\n"${commentData.content.substring(0, 200)}"\n\nView the full discussion!`
+                                }).catch(e => console.log('Email send failed:', e));
+                            });
+                        }
+                    }
                 }
             } catch (notifErr) {
                 console.warn('Notification failed but comment saved:', notifErr);

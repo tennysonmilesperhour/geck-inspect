@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import { Gecko, UserActivity, WeightRecord, FeedingGroup } from '@/entities/all';
 import { UploadFile } from '@/integrations/Core';
-import { notifyFollowersNewGecko } from '@/components/notifications/NotificationService';
+import { notifyFollowersNewGecko, checkAndNotifyLevelUp } from '@/components/notifications/NotificationService';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -376,6 +376,8 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     if (savedGecko.is_public !== false) {
                         notifyFollowersNewGecko(savedGecko, currentUser.email, currentUser.full_name).catch(console.error);
                     }
+                    // Check if user hit a gecko count milestone
+                    checkAndNotifyLevelUp(currentUser.email).catch(console.error);
                 }
             } else {
                 savedGecko = await Gecko.update(gecko.id, dataToSave);

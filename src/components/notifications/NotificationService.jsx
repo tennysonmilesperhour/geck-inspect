@@ -1,5 +1,33 @@
-import { Notification, UserFollow, User } from '@/entities/all';
+import { Notification, UserFollow, User, Gecko } from '@/entities/all';
 import { SendEmail } from '@/integrations/Core';
+
+const LEVEL_THRESHOLDS = [1, 2, 5, 10, 15, 20, 30, 40, 50, 75, 100, 150, 200, 300, 500];
+const LEVEL_TITLES = {
+  1: 'New Collector', 2: 'Gecko Keeper', 5: 'Hobbyist', 10: 'Enthusiast',
+  15: 'Dedicated Keeper', 20: 'Breeder', 30: 'Pro Breeder', 40: 'Expert Breeder',
+  50: 'Master Breeder', 75: 'Grandmaster', 100: 'Living Legend', 150: 'Gecko Tycoon',
+  200: 'Scale Sovereign', 300: 'Reptile Royalty', 500: 'Crested King',
+};
+
+// Check if a user just crossed a gecko count milestone and notify them
+export async function checkAndNotifyLevelUp(userEmail) {
+    try {
+        const geckos = await Gecko.filter({ created_by: userEmail });
+        const count = geckos.filter(g => !g.archived).length;
+        const matchedThreshold = LEVEL_THRESHOLDS.find(t => t === count);
+        if (matchedThreshold && LEVEL_TITLES[matchedThreshold]) {
+            await Notification.create({
+                user_email: userEmail,
+                type: 'level_up',
+                content: `You've reached ${LEVEL_TITLES[matchedThreshold]} status with ${count} geckos in your collection!`,
+                link: '/MyGeckos',
+                metadata: { level: LEVEL_TITLES[matchedThreshold], gecko_count: count }
+            });
+        }
+    } catch (error) {
+        console.error('Failed to check level up:', error);
+    }
+}
 
 // Notify all followers when a user lists a new public gecko
 export async function notifyFollowersNewGecko(gecko, ownerEmail, ownerName) {
@@ -104,6 +132,84 @@ export async function notifyNewFollower(followedUserEmail, followerEmail, follow
         }
     } catch (error) {
         console.error('Failed to notify of new follower:', error);
+    }
+}
+
+// Notify when a user reaches a gecko milestone (level_up)
+export async function notifyLevelUp(userEmail, newLevel, geckoCount) {
+    try {
+        await Notification.create({
+            user_email: userEmail,
+            type: 'level_up',
+            content: `Congratulations! You've reached ${newLevel} status with ${geckoCount} geckos in your collection!`,
+            link: '/MyGeckos',
+            metadata: { level: newLevel, gecko_count: geckoCount }
+        });
+    } catch (error) {
+        console.error('Failed to notify level up:', error);
+    }
+}
+
+// Notify when a user's gecko is selected as Gecko of the Day
+export async function notifyGeckoOfTheDay(ownerEmail, geckoName) {
+    try {
+        const [owner] = await User.filter({ email: ownerEmail });
+        await Notification.create({
+            user_email: ownerEmail,
+            type: 'gecko_of_the_day',
+            content: `Your gecko "${geckoName}" was selected as Gecko of the Day!`,
+            link: '/Dashboard',
+            metadata: { gecko_name: geckoName }
+        });
+        if (owner?.notifications_email) {
+            await SendEmail({
+                to: ownerEmail,
+                subject: `Your gecko "${geckoName}" is Gecko of the Day!`,
+                body: `Congratulations! Your gecko "${geckoName}" was featured as Gecko of the Day on Geck Inspect!\n\nCheck it out on your dashboard!`
+            }).catch(e => console.log('Email send failed:', e));
+        }
+    } catch (error) {
+        console.error('Failed to notify gecko of the day:', error);
+    }
+}
+
+// Notify when a future breeding plan's target window opens
+export async function notifyFutureBreedingReady(userEmail, planName, sireName, damName) {
+    try {
+        await Notification.create({
+            user_email: userEmail,
+            type: 'future_breeding_ready',
+            content: `Your future breeding plan "${planName}" (${sireName} × ${damName}) is now in its target window!`,
+            link: '/ProjectManager',
+            metadata: { plan_name: planName, sire: sireName, dam: damName }
+        });
+    } catch (error) {
+        console.error('Failed to notify future breeding ready:', error);
+    }
+}
+
+// Notify a seller about a marketplace inquiry (distinct from regular DMs)
+export async function notifyMarketplaceInquiry(sellerEmail, buyerEmail, buyerName, geckoName) {
+    try {
+        const [seller] = await User.filter({ email: sellerEmail });
+        if (seller?.notifications_messages !== false) {
+            await Notification.create({
+                user_email: sellerEmail,
+                type: 'marketplace_inquiry',
+                content: `${buyerName || buyerEmail} is interested in your gecko "${geckoName}"`,
+                link: `/Messages?recipient=${encodeURIComponent(buyerEmail)}`,
+                metadata: { buyer_email: buyerEmail, gecko_name: geckoName }
+            });
+            if (seller?.email_on_new_message && seller?.notifications_email) {
+                await SendEmail({
+                    to: sellerEmail,
+                    subject: `Someone is interested in your gecko "${geckoName}"`,
+                    body: `${buyerName || buyerEmail} sent you a marketplace inquiry about "${geckoName}" on Geck Inspect!\n\nLog in to reply!`
+                }).catch(e => console.log('Email send failed:', e));
+            }
+        }
+    } catch (error) {
+        console.error('Failed to notify marketplace inquiry:', error);
     }
 }
 

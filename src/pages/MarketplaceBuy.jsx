@@ -109,6 +109,7 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                               variant="outline"
                               size="sm"
                               className={`flex-1 ${isRegular ? 'h-7 text-[10px] px-1.5' : ''}`}
+                              context="marketplace_inquiry"
                            />
                        )}
                     </div>

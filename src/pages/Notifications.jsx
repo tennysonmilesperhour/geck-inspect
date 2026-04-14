@@ -14,6 +14,7 @@ import {
     Star,
     ExternalLink,
     Trash2,
+    ShoppingCart,
 } from 'lucide-react';
 import EmptyState from '../components/shared/EmptyState';
 import { Link } from 'react-router-dom';
@@ -51,6 +52,8 @@ const notificationIcons = {
     new_gecko_listing: <Star className="w-5 h-5 text-blue-400" />,
     new_breeding_plan: <Star className="w-5 h-5 text-purple-400" />,
     future_breeding_ready: <Star className="w-5 h-5 text-emerald-400" />,
+    marketplace_inquiry: <ShoppingCart className="w-5 h-5 text-amber-400" />,
+    gecko_of_the_day: <Star className="w-5 h-5 text-yellow-400" />,
 };
 
 const typeLabels = {
@@ -67,6 +70,8 @@ const typeLabels = {
     new_gecko_listing: 'New Listing',
     new_breeding_plan: 'Breeding',
     future_breeding_ready: 'Breeding Ready',
+    marketplace_inquiry: 'Inquiry',
+    gecko_of_the_day: 'Gecko of the Day',
 };
 
 export default function NotificationsPage() {

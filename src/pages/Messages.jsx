@@ -120,7 +120,7 @@ export default function MessagesPage() {
         };
 
         loadData(true);
-        const interval = setInterval(() => loadData(false), 15000);
+        const interval = setInterval(() => loadData(false), 30000);
         return () => clearInterval(interval);
     }, []);
 
