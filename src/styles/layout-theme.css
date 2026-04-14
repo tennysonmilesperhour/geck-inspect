@@ -487,15 +487,13 @@ html, body, #root {
             animation: pulse-notification 2s infinite;
           }
 
-                          /* Toast fade out animation */
-                          [data-state="closed"] {
-                            animation: toast-fade-out 0.3s ease-out forwards;
-                          }
-
-                          @keyframes toast-fade-out {
-                            from { opacity: 1; transform: translateY(0); }
-                            to { opacity: 0; transform: translateY(-10px); }
-                          }
+                          /* Toast close animation is handled by the Toast
+                             component itself via Tailwind data-attribute
+                             classes (data-[state=closed]:animate-out etc.).
+                             A previous global [data-state="closed"] rule
+                             here faded out EVERY Radix element whose state
+                             was "closed" — including Select triggers — which
+                             made dropdowns invisible until clicked. Removed. */
 
           .gecko-card {
             background: rgba(6, 95, 70, 0.4);
