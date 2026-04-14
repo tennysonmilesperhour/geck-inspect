@@ -132,71 +132,47 @@ html, body, #root {
           }
 
           body {
-            background: linear-gradient(135deg, #0a0f0a 0%, #1a2920 100%);
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            background: #071a12;
             color: var(--gecko-text);
             font-weight: 400;
           }
 
-          .dark .bg-white,
-          .dark .bg-white\/80,
-          .dark .bg-white\/90 {
+          /* Sidebar-only white overrides — scoped to avoid
+             cascading into card content throughout the app. */
+          .dark [data-sidebar] .bg-white,
+          .dark [data-sidebar] .bg-white\/80,
+          .dark [data-sidebar] .bg-white\/90 {
             background: rgba(20, 83, 45, 0.6) !important;
             backdrop-filter: blur(20px) saturate(180%);
             border: 1px solid var(--gecko-border);
-            box-shadow: 
+            box-shadow:
               0 8px 32px rgba(0, 0, 0, 0.4),
               inset 0 1px 0 rgba(255, 255, 255, 0.1);
           }
 
+          /* Card and container backgrounds — opaque emerald-tinted
+             dark colors without backdrop-filter so cards don't turn
+             black. Removed forced border so components keep their own. */
           .dark .bg-slate-900,
           .dark .bg-gray-900 {
-            background: rgba(4, 120, 87, 0.3) !important;
-            backdrop-filter: blur(15px);
-            border: 1px solid var(--gecko-border);
+            background: #0c2a1f !important;
           }
 
           .dark .bg-slate-800,
           .dark .bg-gray-800 {
-            background: rgba(6, 95, 70, 0.4) !important;
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(134, 239, 172, 0.15);
+            background: #103527 !important;
           }
 
           .dark .bg-slate-950 {
-            background: linear-gradient(135deg,
-              rgba(2, 44, 34, 0.95) 0%,
-              rgba(6, 78, 59, 0.9) 50%,
-              rgba(4, 120, 87, 0.8) 100%) !important;
-            position: relative;
-            isolation: isolate;
+            background: #071a12 !important;
           }
 
-          .dark .bg-slate-950::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            bottom: 0;
-            z-index: -1;
-            background:
-              radial-gradient(ellipse at top, rgba(134, 239, 172, 0.03) 0%, transparent 50%),
-              radial-gradient(ellipse at bottom right, rgba(74, 222, 128, 0.02) 0%, transparent 50%);
-            pointer-events: none;
-          }
-
-          .dark button:not([data-state]),
           .dark .bg-gray-100,
           .dark .bg-gray-200,
           .dark .bg-slate-100,
           .dark .bg-slate-200 {
-            background: rgba(6, 95, 70, 0.6) !important;
+            background: #103527 !important;
             color: var(--gecko-text) !important;
-            border: 1px solid var(--gecko-border) !important;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-            font-weight: 500;
           }
 
           /* Fix Switch and Toggle visibility */
@@ -347,44 +323,25 @@ html, body, #root {
             }
           }
 
-          .dark button:hover,
           .dark .hover\:bg-gray-50:hover,
           .dark .hover\:bg-gray-100:hover,
           .dark .hover\:bg-slate-50:hover,
           .dark .hover\:bg-slate-100:hover {
-            background: rgba(16, 185, 129, 0.2) !important;
-            border-color: var(--gecko-accent) !important;
-            box-shadow: 0 0 20px rgba(134, 239, 172, 0.2);
-            transform: translateY(-1px);
+            background: rgba(16, 185, 129, 0.15) !important;
           }
 
-          .dark button[class*="bg-emerald"],
-          .dark button[class*="bg-green"] {
-            background: linear-gradient(135deg, var(--gecko-accent) 0%, var(--gecko-primary) 100%) !important;
-            border: none !important;
-            color: var(--gecko-dark) !important;
-            font-weight: 600;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-          }
-
-          .dark button[class*="bg-emerald"]:hover,
-          .dark button[class*="bg-green"]:hover {
-            background: linear-gradient(135deg, #22c55e 0%, #86efac 100%) !important;
-            box-shadow: 
-              0 0 25px rgba(134, 239, 172, 0.4),
-              0 8px 32px rgba(0, 0, 0, 0.3);
-            transform: translateY(-2px);
-          }
+          /* Let emerald/green buttons keep their Tailwind styles.
+             Previous overrides forced gradients + transforms on every
+             emerald button, causing inconsistent appearance. */
 
           .dark input,
           .dark textarea,
           .dark select,
           .dark [role="combobox"] {
-            background: rgba(4, 120, 87, 0.4) !important;
+            background: #0c2a1f !important;
             border: 1px solid var(--gecko-border) !important;
             color: var(--gecko-text) !important;
-            backdrop-filter: blur(10px);
-            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: border-color 0.2s ease;
           }
 
           .dark input:focus,
@@ -392,10 +349,7 @@ html, body, #root {
           .dark select:focus,
           .dark [role="combobox"]:focus {
             border-color: var(--gecko-accent) !important;
-            box-shadow: 
-              0 0 0 3px rgba(134, 239, 172, 0.1),
-              0 0 20px rgba(134, 239, 172, 0.2) !important;
-            background: rgba(6, 95, 70, 0.6) !important;
+            box-shadow: 0 0 0 2px rgba(134, 239, 172, 0.15) !important;
           }
 
           .dark .text-slate-100,
@@ -422,13 +376,9 @@ html, body, #root {
             border-color: var(--gecko-accent) !important;
           }
 
-          .dark .bg-emerald-600 {
-            background: linear-gradient(135deg, var(--gecko-accent) 0%, var(--gecko-primary) 100%) !important;
-          }
-
-          .dark .hover\:bg-emerald-700:hover {
-            background: linear-gradient(135deg, #22c55e 0%, #86efac 100%) !important;
-          }
+          /* Removed: gradient overrides for bg-emerald-600 and
+             hover:bg-emerald-700. Tailwind's built-in colors are
+             cleaner and more consistent. */
 
           /* Header action group: message / bell / profile sit in a
              single rounded container with tight spacing so they read
