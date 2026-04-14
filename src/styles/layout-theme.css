@@ -139,8 +139,8 @@ html, body, #root {
           }
 
           .dark .bg-white,
-          .dark .bg-white\\/80,
-          .dark .bg-white\\/90 {
+          .dark .bg-white\/80,
+          .dark .bg-white\/90 {
             background: rgba(20, 83, 45, 0.6) !important;
             backdrop-filter: blur(20px) saturate(180%);
             border: 1px solid var(--gecko-border);
@@ -346,10 +346,10 @@ html, body, #root {
           }
 
           .dark button:hover,
-          .dark .hover\\:bg-gray-50:hover,
-          .dark .hover\\:bg-gray-100:hover,
-          .dark .hover\\:bg-slate-50:hover,
-          .dark .hover\\:bg-slate-100:hover {
+          .dark .hover\:bg-gray-50:hover,
+          .dark .hover\:bg-gray-100:hover,
+          .dark .hover\:bg-slate-50:hover,
+          .dark .hover\:bg-slate-100:hover {
             background: rgba(16, 185, 129, 0.2) !important;
             border-color: var(--gecko-accent) !important;
             box-shadow: 0 0 20px rgba(134, 239, 172, 0.2);
@@ -424,7 +424,7 @@ html, body, #root {
             background: linear-gradient(135deg, var(--gecko-accent) 0%, var(--gecko-primary) 100%) !important;
           }
 
-          .dark .hover\\:bg-emerald-700:hover {
+          .dark .hover\:bg-emerald-700:hover {
             background: linear-gradient(135deg, #22c55e 0%, #86efac 100%) !important;
           }
 
