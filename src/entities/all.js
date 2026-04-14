@@ -105,3 +105,5 @@ export const QuestionVote = sb.QuestionVote;
 // P8 — Breeder Storefront
 export const BreederProfile = sb.BreederProfile;
 export const BreederReview = sb.BreederReview;
+// Shipping — Zero's Geckos integration
+export const ShippingOrder = sb.ShippingOrder;

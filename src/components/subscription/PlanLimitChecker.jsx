@@ -41,7 +41,7 @@ const PLAN_LIMITS = {
             'basic_breeding', 'public_profile', 'forum', 'ai_morph_id',
             'advanced_breeding', 'calendar', 'weight_tracking', 'csv_export',
             'lineage_tree', 'breeding_analytics',
-            'certificates', 'featured_breeder',
+            'certificates', 'featured_breeder', 'shipping_integration',
         ],
     },
     enterprise: {
@@ -52,7 +52,7 @@ const PLAN_LIMITS = {
             'basic_breeding', 'public_profile', 'forum', 'ai_morph_id',
             'advanced_breeding', 'calendar', 'weight_tracking', 'csv_export',
             'lineage_tree', 'breeding_analytics',
-            'certificates', 'featured_breeder', 'marketplace_sync',
+            'certificates', 'featured_breeder', 'shipping_integration', 'marketplace_sync',
             'market_intelligence', 'breeding_roi',
         ],
     },
@@ -74,6 +74,7 @@ const FEATURE_NAMES = {
     featured_breeder: 'Featured Breeder on Dashboard',
     market_intelligence: 'Market Intelligence Dashboard',
     breeding_roi: 'Breeding ROI Projections',
+    shipping_integration: 'Zero\u2019s Geckos Shipping Integration',
 };
 
 // Grandfathered accounts keep Breeder privileges regardless of tier field.

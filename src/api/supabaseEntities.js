@@ -81,6 +81,8 @@ export const TABLE_MAP = {
   // P8 — Breeder Storefront
   BreederProfile: 'breeder_profiles',
   BreederReview: 'breeder_reviews',
+  // Shipping — Zero's Geckos integration
+  ShippingOrder: 'shipping_orders',
 };
 
 function parseSort(sort) {

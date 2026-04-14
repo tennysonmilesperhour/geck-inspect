@@ -17,7 +17,7 @@ import { PageConfig } from "@/entities/PageConfig";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Database, BookOpen, BarChart3, Upload, Users, HeartHandshake, Layers, LogOut, Search, Settings, UserPlus, Shield, MessageSquare, Bell, Mail, Heart, Menu, ShoppingCart, GitBranch, FlaskConical, Star, FolderKanban, GraduationCap, Dna,
-  Egg, LayoutGrid, CircleUser, UsersRound, Images, Tag, CalendarDays, Sparkles
+  Egg, LayoutGrid, CircleUser, UsersRound, Images, Tag, CalendarDays, Sparkles, Truck
 } from "lucide-react";
 import TutorialModal from "@/components/tutorial/TutorialModal";
 import CommandPalette from "@/components/command-palette/CommandPalette";
@@ -447,6 +447,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     { page_name: "Gallery", display_name: "Image Gallery", icon: "Images", category: "public", requires_auth: false, is_enabled: true, order: 5 },
     { page_name: "Marketplace", display_name: "Marketplace", icon: "ShoppingCart", category: "public", requires_auth: false, is_enabled: true, order: 6 },
     { page_name: "MarketplaceSalesStats", display_name: "Sales Stats", icon: "BarChart3", category: "public", requires_auth: true, is_enabled: true, order: 7 },
+    { page_name: "BreederShipping", display_name: "Shipping", icon: "Truck", category: "public", requires_auth: true, is_enabled: true, order: 8 },
     ],
   };
 
@@ -495,7 +496,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
             const iconMap = {
                                   BarChart3, Search, Layers, FlaskConical, BookOpen, Heart, MessageSquare,
                                   Database, ShoppingCart, Users, GitBranch, Upload, Shield, HeartHandshake, FolderKanban, Dna, GraduationCap, Star, Settings,
-                                  Egg, LayoutGrid, CircleUser, UsersRound, Images, Tag, CalendarDays, Sparkles
+                                  Egg, LayoutGrid, CircleUser, UsersRound, Images, Tag, CalendarDays, Sparkles, Truck
                                 };
                                 const IconComponent = iconMap[item.icon] || Database;
             

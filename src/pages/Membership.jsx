@@ -80,6 +80,7 @@ const tiers = [
       'Unlimited additional reptiles tracked',
       'Sales stats and cost tracking dashboard',
       'Option to be featured on the dashboard',
+      'Zero\u2019s Geckos shipping integration',
       'Expert verification eligibility',
       'Early access to new features',
     ],

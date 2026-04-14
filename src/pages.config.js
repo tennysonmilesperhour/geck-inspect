@@ -108,6 +108,7 @@ const GeckAnswers           = lazy(() => import('./pages/GeckAnswers'));
 const BatchHusbandry        = lazy(() => import('./pages/BatchHusbandry'));
 const PrintableWorksheets   = lazy(() => import('./pages/PrintableWorksheets'));
 const BreederStorefront     = lazy(() => import('./pages/BreederStorefront'));
+const BreederShipping       = lazy(() => import('./pages/BreederShipping'));
 
 
 export const PAGES = {
@@ -162,6 +163,7 @@ export const PAGES = {
     "BatchHusbandry": BatchHusbandry,
     "PrintableWorksheets": PrintableWorksheets,
     "BreederStorefront": BreederStorefront,
+    "BreederShipping": BreederShipping,
 }
 
 export const pagesConfig = {

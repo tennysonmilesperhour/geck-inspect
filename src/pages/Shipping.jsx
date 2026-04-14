@@ -219,6 +219,28 @@ export default function Shipping() {
           </div>
         </section>
 
+        {/* Breeder dashboard CTA */}
+        <section className="max-w-4xl mx-auto px-6 pb-10 text-center">
+          <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 via-slate-900/60 to-slate-900/40 p-8 md:p-10">
+            <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
+              Already a Breeder member?
+            </h2>
+            <p className="text-slate-400 max-w-xl mx-auto mb-6">
+              Access the full shipping dashboard — get quotes, book shipments, print labels, and
+              track packages all from inside Geck Inspect.
+            </p>
+            <Link to={createPageUrl('BreederShipping')}>
+              <Button
+                size="lg"
+                className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold text-base px-8 py-6 shadow-lg shadow-emerald-500/30"
+              >
+                Open shipping dashboard
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+          </div>
+        </section>
+
         {/* Status / CTA */}
         <section className="max-w-4xl mx-auto px-6 pb-24 text-center">
           <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/10 border border-amber-500/30 px-4 py-1.5 text-xs font-semibold text-amber-300 mb-5">
