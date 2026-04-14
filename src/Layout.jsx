@@ -718,86 +718,100 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           }
 
           /* Desktop sidebar - distinct from main content */
-          .dark .desktop-sidebar {
+          .desktop-sidebar {
             background: linear-gradient(180deg,
-              rgba(2, 26, 18, 0.97) 0%,
-              rgba(4, 40, 28, 0.95) 50%,
-              rgba(2, 26, 18, 0.97) 100%) !important;
-            backdrop-filter: blur(20px) saturate(150%);
+              rgba(2, 26, 18, 0.98) 0%,
+              rgba(4, 38, 26, 0.96) 50%,
+              rgba(2, 26, 18, 0.98) 100%) !important;
+            backdrop-filter: blur(20px) saturate(150%) !important;
             border: none !important;
-            border-right: 1px solid rgba(16, 185, 129, 0.2) !important;
-            box-shadow: 4px 0 24px rgba(0, 0, 0, 0.3),
-                         1px 0 0 rgba(16, 185, 129, 0.1);
+            border-right: 1px solid rgba(16, 185, 129, 0.18) !important;
+            box-shadow: 4px 0 30px rgba(0, 0, 0, 0.4),
+                         1px 0 0 rgba(16, 185, 129, 0.08) !important;
           }
 
           .desktop-sidebar .sidebar-section-header {
-            color: rgba(16, 185, 129, 0.7);
-            font-size: 0.65rem;
-            letter-spacing: 0.12em;
+            color: rgba(16, 185, 129, 0.65) !important;
+            font-size: 0.65rem !important;
+            letter-spacing: 0.12em !important;
             padding-left: 1.25rem;
             padding-top: 0.75rem;
             padding-bottom: 0.35rem;
           }
 
-          .dark .desktop-sidebar .sidebar-nav-item {
-            color: rgba(209, 250, 229, 0.75);
-            border-radius: 10px;
+          .desktop-sidebar .sidebar-nav-item {
+            color: rgba(209, 250, 229, 0.7) !important;
+            border-radius: 10px !important;
             margin: 1px 0;
-            backdrop-filter: none;
+            backdrop-filter: none !important;
+            background: transparent !important;
+            border: none !important;
+            box-shadow: none !important;
           }
 
-          .dark .desktop-sidebar .sidebar-nav-item:hover {
-            background: rgba(16, 185, 129, 0.12) !important;
+          .desktop-sidebar .sidebar-nav-item:hover {
+            background: rgba(16, 185, 129, 0.1) !important;
             color: #86efac !important;
             box-shadow: none !important;
             transform: translateX(2px);
           }
 
-          .dark .desktop-sidebar .sidebar-nav-item.active {
-            background: rgba(16, 185, 129, 0.15);
-            color: #86efac;
-            border-left: 3px solid #34d399;
+          .desktop-sidebar .sidebar-nav-item.active {
+            background: rgba(16, 185, 129, 0.13) !important;
+            color: #86efac !important;
+            border-left: 3px solid #34d399 !important;
             font-weight: 600;
           }
 
-          .dark .desktop-sidebar .sidebar-nav-item.active .nav-icon {
-            color: #4ade80;
+          .desktop-sidebar .sidebar-nav-item.active .nav-icon {
+            color: #4ade80 !important;
           }
 
-          .dark .desktop-sidebar .sidebar-footer-section {
-            border-color: rgba(16, 185, 129, 0.12) !important;
+          .desktop-sidebar .sidebar-footer-section {
+            border-color: rgba(16, 185, 129, 0.1) !important;
           }
 
-          .dark .desktop-sidebar .sidebar-footer-section button,
-          .dark .desktop-sidebar .sidebar-footer-section a button {
+          .desktop-sidebar .sidebar-footer-section button {
             background: transparent !important;
             border: 1px solid rgba(16, 185, 129, 0.15) !important;
-            color: rgba(209, 250, 229, 0.6) !important;
-            backdrop-filter: none;
+            color: rgba(209, 250, 229, 0.55) !important;
+            backdrop-filter: none !important;
+            font-weight: 400 !important;
           }
 
-          .dark .desktop-sidebar .sidebar-footer-section button:hover,
-          .dark .desktop-sidebar .sidebar-footer-section a button:hover {
-            background: rgba(16, 185, 129, 0.1) !important;
+          .desktop-sidebar .sidebar-footer-section button:hover {
+            background: rgba(16, 185, 129, 0.08) !important;
             color: #86efac !important;
-            border-color: rgba(16, 185, 129, 0.3) !important;
+            border-color: rgba(16, 185, 129, 0.25) !important;
           }
 
-          .dark .desktop-sidebar .sidebar-logo-link {
-            border-color: rgba(16, 185, 129, 0.15) !important;
+          .desktop-sidebar .sidebar-logo-link {
+            border-color: rgba(16, 185, 129, 0.12) !important;
             background: transparent !important;
           }
 
-          .dark .desktop-sidebar .sidebar-logo-link:hover {
-            background: rgba(16, 185, 129, 0.08) !important;
+          .desktop-sidebar .sidebar-logo-link:hover {
+            background: rgba(16, 185, 129, 0.06) !important;
           }
 
-          .dark .desktop-sidebar .sidebar-user-name {
-            color: #d1fae5;
+          .desktop-sidebar .sidebar-user-name {
+            color: #d1fae5 !important;
           }
 
-          .dark .desktop-sidebar .sidebar-user-email {
-            color: rgba(167, 243, 208, 0.5);
+          .desktop-sidebar .sidebar-user-email {
+            color: rgba(167, 243, 208, 0.45) !important;
+          }
+
+          .desktop-sidebar .sidebar-privacy-link {
+            color: rgba(167, 243, 208, 0.4) !important;
+          }
+
+          .desktop-sidebar .sidebar-privacy-link:hover {
+            color: rgba(167, 243, 208, 0.7) !important;
+          }
+
+          .desktop-sidebar .sidebar-logged-in-text {
+            color: rgba(167, 243, 208, 0.4) !important;
           }
 
           .dark .bg-slate-950 {
@@ -1479,7 +1493,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         {/* Static sidebar for desktop */}
         <div className="hidden lg:flex lg:flex-shrink-0">
           <div className="flex w-64 flex-col">
-            <div className="flex flex-grow flex-col overflow-y-auto bg-white desktop-sidebar pt-5 border-r border-gray-200 dark:border-emerald-900/30" ref={sidebarRef}>
+            <div className="flex flex-grow flex-col overflow-y-auto desktop-sidebar pt-5" ref={sidebarRef}>
               <div className="flex items-center flex-shrink-0 px-6 mb-4">
                 <Link to={createPageUrl("Dashboard")} className="sidebar-logo-link flex items-center gap-2 px-3 py-2 rounded-lg border border-sage-300 dark:border-emerald-700/50 hover:bg-sage-100 dark:hover:bg-emerald-900/30 transition-colors duration-200">
                   {appLogo && (
@@ -1555,7 +1569,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
               
               <div className="p-4 border-t border-sage-300 dark:border-sage-300 mt-auto sidebar-footer-section">
                 <div className="space-y-3">
-                  <Link to="/PrivacyPolicy" className="block text-xs text-slate-500 hover:text-slate-300 px-3 transition-colors">Privacy Policy</Link>
+                  <Link to="/PrivacyPolicy" className="block text-xs text-slate-500 hover:text-slate-300 px-3 transition-colors sidebar-privacy-link">Privacy Policy</Link>
                   <Link to={createPageUrl("Membership")} className="block">
                     <Button variant="outline" size="sm" className="w-full justify-start text-sage-600 hover:text-sage-700 border-sage-300 text-sm">
                       <Star className="w-4 h-4 mr-2 flex-shrink-0" />
@@ -1593,7 +1607,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                         </Button>
                       </Link>
 
-                      <div className="text-xs text-sage-500 dark:text-sage-400 px-3">
+                      <div className="text-xs text-sage-500 dark:text-sage-400 px-3 sidebar-logged-in-text">
                         Logged in as {user.full_name}
                         {user.is_expert && <span className="ml-2 text-green-600">✓ Expert</span>}
                         {user.role === 'admin' && <span className="ml-2 text-purple-600">⚡ Admin</span>}
