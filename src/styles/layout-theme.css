@@ -156,13 +156,8 @@ html, body, #root {
              text-slate-*, border-slate-* class generates the right
              color at build time. */
 
-          .dark .bg-gray-100,
-          .dark .bg-gray-200,
-          .dark .bg-slate-100,
-          .dark .bg-slate-200 {
-            background: #103527 !important;
-            color: var(--gecko-text) !important;
-          }
+          /* bg-gray-100/200 and bg-slate-100/200 are now handled by
+             the tailwind.config.js palette overrides. */
 
           /* Fix Switch and Toggle visibility */
           .dark [data-state="checked"],
@@ -312,12 +307,7 @@ html, body, #root {
             }
           }
 
-          .dark .hover\:bg-gray-50:hover,
-          .dark .hover\:bg-gray-100:hover,
-          .dark .hover\:bg-slate-50:hover,
-          .dark .hover\:bg-slate-100:hover {
-            background: rgba(16, 185, 129, 0.15) !important;
-          }
+          /* Hover overrides now handled by tailwind.config.js palette. */
 
           /* Let emerald/green buttons keep their Tailwind styles.
              Previous overrides forced gradients + transforms on every
