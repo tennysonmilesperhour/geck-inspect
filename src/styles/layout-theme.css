@@ -368,8 +368,8 @@ html, body, #root {
             gap: 2px;
             padding: 4px;
             border-radius: 12px;
-            background: rgba(255, 255, 255, 0.3);
-            border: 1px solid rgba(86, 107, 95, 0.18);
+            background: rgba(6, 78, 59, 0.5);
+            border: 1px solid rgba(134, 239, 172, 0.15);
             backdrop-filter: blur(6px);
           }
           .gecko-header-action {
@@ -380,12 +380,12 @@ html, body, #root {
             width: 36px;
             height: 36px;
             border-radius: 9px;
-            color: #4a5d52;
+            color: #a7f3d0;
             transition: background 0.15s ease, color 0.15s ease;
           }
           .gecko-header-action:hover {
-            background: rgba(86, 107, 95, 0.15);
-            color: #1f2937;
+            background: rgba(16, 185, 129, 0.25);
+            color: #d1fae5;
           }
           .gecko-header-action svg {
             width: 20px;

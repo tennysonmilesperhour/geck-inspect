@@ -857,11 +857,11 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
               <button
                 type="button"
                 onClick={() => window.dispatchEvent(new CustomEvent('open_command_palette'))}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-sage-300 bg-white/50 hover:bg-white text-sage-600 hover:text-sage-800 transition-colors text-sm w-72 max-w-full"
+                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-emerald-700/40 bg-emerald-950/60 hover:bg-emerald-900/70 text-emerald-300 hover:text-emerald-200 transition-colors text-sm w-72 max-w-full"
                 aria-label="Open quick search"
               >
                 <Search className="w-4 h-4" />
-                <span className="flex-1 text-left text-sage-500">Quick search…</span>
+                <span className="flex-1 text-left text-emerald-500/70">Quick search…</span>
               </button>
 
               <div className="flex items-center gap-2">
