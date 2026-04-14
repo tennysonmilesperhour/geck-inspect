@@ -10,7 +10,7 @@ export default function GeckoOfTheDay({ geckoOfTheDay, fallbackGecko = null, onI
     
     if (!displayGecko) {
         return (
-            <Card className="bg-slate-900 border-slate-700 shadow-lg">
+            <Card className="gecko-card shadow-lg">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2 text-slate-200">
                         <Star className="w-5 h-5 text-yellow-500" />
@@ -37,7 +37,7 @@ export default function GeckoOfTheDay({ geckoOfTheDay, fallbackGecko = null, onI
     };
 
     return (
-        <Card className="bg-slate-900 border-slate-700 shadow-lg">
+        <Card className="gecko-card shadow-lg">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-slate-200">
                     <Star className="w-5 h-5 text-yellow-500" />

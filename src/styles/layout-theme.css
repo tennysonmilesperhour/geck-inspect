@@ -150,22 +150,11 @@ html, body, #root {
               inset 0 1px 0 rgba(255, 255, 255, 0.1);
           }
 
-          /* Card and container backgrounds — opaque emerald-tinted
-             dark colors without backdrop-filter so cards don't turn
-             black. Removed forced border so components keep their own. */
-          .dark .bg-slate-900,
-          .dark .bg-gray-900 {
-            background: #0c2a1f !important;
-          }
-
-          .dark .bg-slate-800,
-          .dark .bg-gray-800 {
-            background: #103527 !important;
-          }
-
-          .dark .bg-slate-950 {
-            background: #071a12 !important;
-          }
+          /* Slate palette is overridden in tailwind.config.js to use
+             emerald-tinted dark tones instead of Tailwind's default
+             blue-grey. No !important hacks needed — every bg-slate-*,
+             text-slate-*, border-slate-* class generates the right
+             color at build time. */
 
           .dark .bg-gray-100,
           .dark .bg-gray-200,

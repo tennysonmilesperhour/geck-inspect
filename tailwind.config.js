@@ -19,6 +19,22 @@ module.exports = {
   			'3xl': '1.2rem'                      /* 19.2px  (was 24px)    */
   		},
   		colors: {
+  			// Override Tailwind's default blue-grey slate with emerald-tinted
+  			// neutral tones so every bg-slate-*, text-slate-*, border-slate-*
+  			// class matches the app's green theme automatically.
+  			slate: {
+  				50:  '#f0fdf6',
+  				100: '#d1fae5',
+  				200: '#a7f3d0',
+  				300: '#6ee7b7',
+  				400: '#34d399',
+  				500: '#6b8f80',
+  				600: '#4a6e5e',
+  				700: '#1a4034',
+  				800: '#103527',
+  				900: '#0c2a1f',
+  				950: '#071a12',
+  			},
   			// Sage: the brand green palette. Values are the dark-mode scale
   			// (the app is always-dark) so text-sage-700 renders as light
   			// green text and bg-sage-50 renders as a dark green surface.
