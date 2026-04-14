@@ -36,6 +36,8 @@ const AdminMigration        = lazy(() => import('./pages/AdminMigration'));
 const AnimalPassport        = lazy(() => import('./pages/AnimalPassport'));
 const PassportQR            = lazy(() => import('./pages/PassportQR'));
 const ClaimAnimal           = lazy(() => import('./pages/ClaimAnimal'));
+// P5 — Geck Answers (public read, auth to post)
+const GeckAnswersPublic     = lazy(() => import('./pages/GeckAnswers'));
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -83,6 +85,8 @@ const AuthenticatedApp = () => {
           <Route path="/passport/:passportCode" element={<AnimalPassport />} />
           <Route path="/passport/:passportCode/qr" element={<PassportQR />} />
           <Route path="/claim/:token" element={<ClaimAnimal />} />
+          {/* P5 — Geck Answers (public read) */}
+          <Route path="/GeckAnswers" element={<GeckAnswersPublic />} />
           <Route path="*" element={<LoginPortal />} />
         </Routes>
       </Suspense>
