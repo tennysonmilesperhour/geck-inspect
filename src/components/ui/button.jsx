@@ -27,7 +27,7 @@ const buttonVariants = cva(
         // gradient — which would make outline buttons look like solid
         // CTAs. Arbitrary values don't trigger that substring match.
         outline:
-          "border border-slate-700 bg-transparent text-slate-300 shadow-sm hover:bg-slate-800 hover:text-white hover:border-slate-600",
+          "border border-emerald-900/60 bg-emerald-950/30 text-emerald-100/80 shadow-sm hover:bg-emerald-900/40 hover:text-white hover:border-emerald-700/60",
         secondary:
           "bg-secondary text-secondary-foreground shadow-sm hover:bg-secondary/80",
         ghost: "hover:bg-accent hover:text-accent-foreground",

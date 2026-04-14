@@ -2,7 +2,7 @@ import { Card, CardContent } from "@/components/ui/card";
 
 export default function StatsCard({ title, value, icon: Icon, gradient, description }) {
   return (
-    <Card className="bg-slate-900 border-slate-700 hover:border-emerald-500/30 transition-all duration-300">
+    <Card className="gecko-card hover:border-emerald-500/30 transition-all duration-300">
       <CardContent className="p-5">
         <div className="flex justify-between gap-3">
           <div className="flex-1 min-w-0">

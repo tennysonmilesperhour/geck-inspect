@@ -613,11 +613,11 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
             )}
           </SidebarBody>
 
-          <SidebarFooter className="p-4 border-t border-slate-700/50">
+          <SidebarFooter className="p-4 border-t border-emerald-900/40">
             <div className="space-y-3">
               <Link to="/PrivacyPolicy" className="block text-xs text-slate-500 hover:text-slate-300 px-3 transition-colors">Privacy Policy</Link>
               <Link to={createPageUrl("Membership")} className="block">
-                <Button variant="outline" size="sm" className="w-full justify-start text-slate-300 hover:text-emerald-300 border-slate-700 hover:border-emerald-500/40 text-sm">
+                <Button variant="outline" size="sm" className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm">
                   <Star className="w-4 h-4 mr-2 flex-shrink-0" />
                   <span className="truncate">Membership</span>
                 </Button>
@@ -625,7 +625,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
               <div className="block">
                 <button
                  onClick={() => setShowTutorial(true)}
-                 className="w-full group flex items-center justify-start rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 border border-slate-700 text-slate-300 hover:text-emerald-300 hover:border-emerald-500/40"
+                 className="w-full group flex items-center justify-start rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 border border-emerald-900/60 text-emerald-100/80 hover:text-white hover:bg-emerald-900/40 hover:border-emerald-700/60"
                 >
                  <GraduationCap className="w-4 h-4 mr-2 flex-shrink-0" />
                  App Tutorial
@@ -647,13 +647,13 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                     <Button
                       variant="outline"
                       size="sm"
-                      className="w-full justify-start text-slate-300 hover:text-emerald-300 border-slate-700 hover:border-emerald-500/40 text-sm">
+                      className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm">
                       <Settings className="w-4 h-4 mr-2" />
                       Settings
                     </Button>
                   </Link>
 
-                  <div className="text-xs text-slate-500 px-3">
+                  <div className="text-xs text-emerald-200/50 px-3">
                     Logged in as {user.full_name}
                     {user.is_expert && <span className="ml-2 text-green-600">✓ Expert</span>}
                     {user.role === 'admin' && <span className="ml-2 text-purple-600">⚡ Admin</span>}
@@ -662,7 +662,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                     variant="outline"
                     size="sm"
                     onClick={handleLogout}
-                    className="w-full justify-start text-slate-300 hover:text-emerald-300 border-slate-700 hover:border-emerald-500/40 text-sm">
+                    className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm">
                     <LogOut className="w-4 h-4 mr-2" />
                     Logout
                   </Button>
@@ -750,11 +750,11 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 </div>
               )}
               
-              <div className="p-4 border-t border-slate-700/50 mt-auto">
+              <div className="p-4 border-t border-emerald-900/40 mt-auto">
                 <div className="space-y-3">
                   <Link to="/PrivacyPolicy" className="block text-xs text-slate-500 hover:text-slate-300 px-3 transition-colors">Privacy Policy</Link>
                   <Link to={createPageUrl("Membership")} className="block">
-                    <Button variant="outline" size="sm" className="w-full justify-start text-slate-300 hover:text-emerald-300 border-slate-700 hover:border-emerald-500/40 text-sm">
+                    <Button variant="outline" size="sm" className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm">
                       <Star className="w-4 h-4 mr-2 flex-shrink-0" />
                       <span className="truncate">Membership</span>
                     </Button>
@@ -762,7 +762,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                   <div>
                   <button
                    onClick={() => setShowTutorial(true)}
-                   className="w-full group flex items-center justify-start rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 border border-slate-700 text-slate-300 hover:text-emerald-300 hover:border-emerald-500/40"
+                   className="w-full group flex items-center justify-start rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 border border-emerald-900/60 text-emerald-100/80 hover:text-white hover:bg-emerald-900/40 hover:border-emerald-700/60"
                   >
                    <GraduationCap className="w-4 h-4 mr-2 flex-shrink-0" />
                    App Tutorial
@@ -784,13 +784,13 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                         <Button
                           variant="outline"
                           size="sm"
-                          className="w-full justify-start text-slate-300 hover:text-emerald-300 border-slate-700 hover:border-emerald-500/40 text-sm">
+                          className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm">
                           <Settings className="w-4 h-4 mr-2" />
                           Settings
                         </Button>
                       </Link>
 
-                      <div className="text-xs text-slate-500 px-3">
+                      <div className="text-xs text-emerald-200/50 px-3">
                         Logged in as {user.full_name}
                         {user.is_expert && <span className="ml-2 text-green-600">✓ Expert</span>}
                         {user.role === 'admin' && <span className="ml-2 text-purple-600">⚡ Admin</span>}
@@ -799,7 +799,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                         variant="outline"
                         size="sm"
                         onClick={handleLogout}
-                        className="w-full justify-start text-slate-300 hover:text-emerald-300 border-slate-700 hover:border-emerald-500/40 text-sm">
+                        className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm">
                         <LogOut className="w-4 h-4 mr-2" />
                         Logout
                       </Button>
