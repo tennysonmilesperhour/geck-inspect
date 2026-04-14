@@ -104,7 +104,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
           <Button
             size="sm"
             onClick={handleViewClick}
-            className="bg-blue-600/90 hover:bg-blue-700 text-white font-semibold shadow-lg backdrop-blur-sm text-xs h-8 w-8 sm:w-auto sm:px-3"
+            className="bg-slate-900/70 hover:bg-slate-800/80 text-emerald-300 border border-emerald-600/40 font-semibold shadow-lg backdrop-blur-sm text-xs h-8 w-8 sm:w-auto sm:px-3"
           >
             <Eye className="w-4 h-4" />
             <span className="hidden sm:inline sm:ml-1">View</span>
@@ -113,7 +113,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
             <Button
               size="sm"
               onClick={handleEditClick}
-              className="bg-white/90 hover:bg-white text-gray-900 font-semibold shadow-lg backdrop-blur-sm text-xs h-8 w-8 sm:w-auto sm:px-3"
+              className="bg-slate-900/70 hover:bg-slate-800/80 text-emerald-300 border border-emerald-600/40 font-semibold shadow-lg backdrop-blur-sm text-xs h-8 w-8 sm:w-auto sm:px-3"
             >
               <Edit className="w-4 h-4" />
               <span className="hidden sm:inline sm:ml-1">Edit</span>
