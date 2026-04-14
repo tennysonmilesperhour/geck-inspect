@@ -380,7 +380,7 @@ export default function MarketplaceSalesStats() {
     return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
   }, [soldGeckos, geckoCategories, priceOverrides]);
 
-  const tabTriggerClass = "data-[state=active]:bg-slate-700 data-[state=active]:text-white data-[state=active]:border data-[state=active]:border-slate-500 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 transition-colors";
+  const tabTriggerClass = "flex-1 data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-2 rounded-sm transition-colors";
 
   if (isLoading) {
     return (
@@ -421,7 +421,7 @@ export default function MarketplaceSalesStats() {
 
         <div className="bg-emerald-950/30 border border-emerald-900/40 rounded-xl p-4 md:p-6">
           <Tabs defaultValue="revenue">
-            <TabsList className="flex w-fit mx-auto bg-slate-900 border border-slate-700 h-10 rounded-md p-1 gap-1 mb-6">
+            <TabsList className="flex w-full max-w-xs mx-auto bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1 mb-6">
               <TabsTrigger value="revenue" className={`${tabTriggerClass} px-10`}>Revenue</TabsTrigger>
               <TabsTrigger value="costs" className={`${tabTriggerClass} px-10`}>Costs</TabsTrigger>
             </TabsList>

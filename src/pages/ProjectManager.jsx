@@ -193,7 +193,7 @@ export default function ProjectManager() {
                     <div className="text-center py-20"><Loader2 className="w-12 h-12 text-emerald-500 animate-spin mx-auto" /></div>
                 ) : (
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-                        <TabsList className="grid w-full grid-cols-5 bg-slate-900 border border-slate-800 h-12 p-1 mb-6 gap-1">
+                        <TabsList className="flex w-full bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1 mb-6">
                             {[
                                 { value: 'projects', icon: CalendarDays, label: 'Plans' },
                                 { value: 'future', icon: Calendar, label: 'Future Breeding', shortLabel: 'Future' },
@@ -204,16 +204,7 @@ export default function ProjectManager() {
                                 <TabsTrigger
                                     key={value}
                                     value={value}
-                                    className="
-                                        flex items-center justify-center gap-1.5 rounded-md
-                                        text-xs md:text-sm font-medium transition-colors
-                                        text-slate-400 hover:text-slate-200
-                                        data-[state=active]:bg-emerald-600
-                                        data-[state=active]:text-white
-                                        data-[state=active]:shadow-md
-                                        data-[state=active]:ring-1
-                                        data-[state=active]:ring-emerald-400/50
-                                    "
+                                    className="flex-1 flex items-center justify-center gap-1.5 data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-2 rounded-sm transition-colors"
                                 >
                                     <Icon className="w-4 h-4" />
                                     <span className="hidden sm:inline">{label}</span>

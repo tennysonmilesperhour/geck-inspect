@@ -8,16 +8,16 @@ export default function Marketplace() {
       <Tabs defaultValue="buy" className="w-full">
         <div className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-sm border-b border-slate-800">
           <div className="flex justify-center px-4 py-3">
-            <TabsList className="grid grid-cols-2 w-full max-w-xs bg-slate-900 border border-slate-800 p-1 h-10">
+            <TabsList className="flex w-full max-w-xs bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1">
               <TabsTrigger
                 value="buy"
-                className="text-slate-400 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-colors"
+                className="flex-1 data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-2 rounded-sm transition-colors"
               >
                 Buy Geckos
               </TabsTrigger>
               <TabsTrigger
                 value="sell"
-                className="text-slate-400 data-[state=active]:bg-emerald-600 data-[state=active]:text-white data-[state=active]:shadow-md transition-colors"
+                className="flex-1 data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-2 rounded-sm transition-colors"
               >
                 Sell Geckos
               </TabsTrigger>
