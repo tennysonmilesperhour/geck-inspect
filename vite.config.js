@@ -26,7 +26,6 @@ const fixAtAliasPlugin = {
 
 // https://vite.dev/config/
 export default defineConfig({
-  logLevel: 'error', // Suppress warnings, only show errors
   plugins: [
     base44({
       // Support for legacy code that imports the base44 SDK with @/integrations, @/entities, etc.
@@ -36,27 +35,4 @@ export default defineConfig({
     fixAtAliasPlugin,
     react(),
   ],
-  build: {
-    rollupOptions: {
-      output: {
-        manualChunks: {
-          // Radix UI primitives — used on almost every page, so a shared
-          // chunk avoids duplicating them across lazy route chunks.
-          'radix': [
-            '@radix-ui/react-dialog',
-            '@radix-ui/react-dropdown-menu',
-            '@radix-ui/react-select',
-            '@radix-ui/react-tabs',
-            '@radix-ui/react-toast',
-            '@radix-ui/react-tooltip',
-            '@radix-ui/react-popover',
-          ],
-          // Heavy visualization libs — kept out of the main bundle.
-          'charts': ['recharts'],
-          'motion': ['framer-motion'],
-          'pdf': ['html2canvas', 'jspdf'],
-        },
-      },
-    },
-  },
 });
