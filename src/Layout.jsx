@@ -460,12 +460,25 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     const enabled = pageConfigs
       .filter(p => p.is_enabled)
       .sort((a, b) => (a.order_position ?? 0) - (b.order_position ?? 0));
-    
-    return {
+
+    const dbNav = {
       collection: enabled.filter(p => p.category === 'collection'),
       tools: enabled.filter(p => p.category === 'tools'),
       public: enabled.filter(p => p.category === 'public')
     };
+
+    // Merge fallback items that aren't in the DB yet so new pages
+    // (like BreederShipping) always appear in the sidebar.
+    for (const category of ['collection', 'tools', 'public']) {
+      const dbNames = new Set(dbNav[category].map(p => p.page_name));
+      for (const fallback of (FALLBACK_NAV_ITEMS[category] || [])) {
+        if (!dbNames.has(fallback.page_name)) {
+          dbNav[category].push(fallback);
+        }
+      }
+    }
+
+    return dbNav;
   };
 
   const navItems = getNavItems();
