@@ -8,10 +8,11 @@
  */
 import { useMemo } from 'react';
 
-// Co-dominant traits (visual in single copy, super in double)
+// Proven incomplete-dominant traits (visual in single copy, super in double).
+// Kept in sync with GeneticCalculator CO_DOM_TRAITS.
 const CO_DOM_TRAITS = [
-  'Lilly White', 'Axanthic', 'Soft Scale', 'Moonglow',
-  'Cappuccino', 'Hypo', 'Translucent', 'White Wall', 'Empty Back',
+  'Lilly White', 'Axanthic', 'Cappuccino', 'Soft Scale', 'Moonglow',
+  'Empty Back', 'White Wall',
 ];
 
 function inferCopies(trait, tags) {

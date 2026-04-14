@@ -136,8 +136,10 @@ export default function MarketplaceBuyPage() {
     const [activeFilters, setActiveFilters] = useState(new Set());
 
     const MORPH_FILTERS = [
-        'Lilly White', 'Axanthic', 'Cappuccino', 'Soft Scale', 'Dalmatian',
-        'Harlequin', 'Pinstripe', 'Flame', 'Tiger', 'Patternless', 'Bicolor',
+        'Lilly White', 'Axanthic', 'Cappuccino', 'Soft Scale', 'Moonglow',
+        'Frappuccino', 'Harlequin', 'Extreme Harlequin', 'Pinstripe',
+        'Dalmatian', 'Super Dalmatian', 'Flame', 'Tiger', 'Patternless',
+        'Bicolor', 'Tricolor', 'Empty Back', 'White Wall',
     ];
 
     const toggleFilter = (morph) => {
