@@ -647,7 +647,8 @@ export default function MarketplaceSalesStats() {
       setSaleMode(null);
     } catch (error) {
       console.error('Failed to add manual sale:', error);
-      toast({ title: "Error", description: "Could not add sale. Please try again.", variant: "destructive" });
+      const msg = error?.message || error?.details || JSON.stringify(error);
+      toast({ title: "Error", description: `Could not add sale: ${msg}`, variant: "destructive" });
     } finally {
       setIsAddingSale(false);
     }
