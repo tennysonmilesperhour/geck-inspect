@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { WeightRecord, BreedingPlan, Egg, Gecko, GeckoEvent, GeckoImage } from '@/entities/all';
 import { format, differenceInMonths } from 'date-fns';
-import { X, Plus, Trash2, LineChart, Loader2, Award, GitBranch, Calendar, Baby, Users, Edit, Eye, EyeOff, History, Archive, ArchiveRestore, ChevronLeft, ChevronRight, Camera } from 'lucide-react';
+import { X, Plus, Trash2, LineChart, Loader2, Award, GitBranch, Calendar, Baby, Users, Edit, Eye, EyeOff, History, Archive, ArchiveRestore, ChevronLeft, ChevronRight, Camera, QrCode, ArrowRightLeft, ExternalLink } from 'lucide-react';
 import LoadingSpinner from '../shared/LoadingSpinner';
 import EventTracker from './EventTracker';
 import { Switch } from '@/components/ui/switch';
@@ -18,6 +18,8 @@ import {
 } from '@/lib/certificateUtils';
 import { toast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
+import { generatePassportCode } from '@/lib/passportUtils';
+import { supabase } from '@/lib/supabaseClient';
 import { createPageUrl } from '@/utils';
 
 export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onArchive, allGeckos = [], currentUser = null }) {
@@ -592,6 +594,77 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                     ) : (
                       <><GitBranch className="w-4 h-4 mr-2" /> Lineage Certificate</>
                     )}
+                  </Button>
+                </div>
+
+                {/* Passport & Transfer Section */}
+                <div className="border border-slate-700 rounded-lg p-3 space-y-2">
+                  <p className="text-xs text-slate-400 uppercase tracking-wider font-medium mb-2">Passport & Transfer</p>
+                  {gecko.passport_code ? (
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      <Button
+                        variant="outline"
+                        onClick={() => window.open(`/passport/${gecko.passport_code}`, '_blank')}
+                        className="border-emerald-700 text-emerald-300 hover:bg-emerald-900/20"
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        View Passport
+                      </Button>
+                      <Button
+                        variant="outline"
+                        onClick={() => window.open(`/passport/${gecko.passport_code}/qr`, '_blank')}
+                        className="border-slate-600 hover:bg-slate-800"
+                      >
+                        <QrCode className="w-4 h-4 mr-2" />
+                        QR Code
+                      </Button>
+                    </div>
+                  ) : (
+                    <Button
+                      variant="outline"
+                      onClick={async () => {
+                        const code = generatePassportCode();
+                        await Gecko.update(gecko.id, { passport_code: code, is_public: true });
+                        toast({ title: 'Passport created', description: `Code: ${code}` });
+                        if (onUpdate) onUpdate();
+                      }}
+                      className="w-full border-emerald-700 text-emerald-300 hover:bg-emerald-900/20"
+                    >
+                      <QrCode className="w-4 h-4 mr-2" />
+                      Generate Passport
+                    </Button>
+                  )}
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      const email = prompt('Enter the recipient\'s email address:');
+                      if (!email) return;
+                      const price = prompt('Sale price (optional, leave blank to skip):');
+                      const msg = prompt('Message for the buyer (optional):');
+                      const token = crypto.randomUUID();
+                      supabase.from('transfer_requests').insert({
+                        animal_id: gecko.id,
+                        from_user_id: null,
+                        to_email: email,
+                        token,
+                        sale_price: price ? Number(price) : null,
+                        message: msg || null,
+                        created_by: gecko.created_by,
+                        expires_at: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(),
+                      }).then(({ error }) => {
+                        if (error) {
+                          toast({ title: 'Transfer failed', description: error.message, variant: 'destructive' });
+                        } else {
+                          const claimUrl = `${window.location.origin}/claim/${token}`;
+                          navigator.clipboard.writeText(claimUrl);
+                          toast({ title: 'Transfer initiated!', description: `Claim link copied to clipboard. Share it with ${email}. Expires in 72 hours.` });
+                        }
+                      });
+                    }}
+                    className="w-full border-amber-600 text-amber-400 hover:bg-amber-900/20"
+                  >
+                    <ArrowRightLeft className="w-4 h-4 mr-2" />
+                    Transfer Ownership
                   </Button>
                 </div>
 
