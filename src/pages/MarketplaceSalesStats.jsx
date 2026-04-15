@@ -771,13 +771,15 @@ export default function MarketplaceSalesStats() {
             </TabsList>
 
             <TabsContent value="revenue" className="space-y-4">
-              <Button onClick={() => setAddSaleModalOpen(true)} className="bg-slate-600 hover:bg-slate-500 text-white h-9">
+              <Button onClick={() => setAddSaleModalOpen(true)} className="bg-emerald-600 hover:bg-emerald-500 text-white h-9">
                 <Plus className="w-4 h-4 mr-2" />Add Sale
               </Button>
 
               {addSaleModalOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-                  <div className="bg-slate-900 border border-slate-700 rounded-xl p-8 max-w-lg w-full">
+                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4"
+                     onClick={(e) => { if (e.target === e.currentTarget) setAddSaleModalOpen(false); }}>
+                  <div className="bg-slate-900 border border-slate-700 rounded-xl p-8 max-w-lg w-full"
+                       onClick={(e) => e.stopPropagation()}>
                     <h2 className="text-2xl font-bold text-slate-100 mb-2">Add Gecko Sale</h2>
                     <p className="text-slate-400 text-sm mb-6">Choose how you'd like to add a sale to your records</p>
                     <div className="grid grid-cols-2 gap-4 mb-4">
@@ -865,7 +867,7 @@ export default function MarketplaceSalesStats() {
               <div className="flex items-center justify-between">
                 <h3 className="text-base font-semibold text-slate-100">Sold Geckos by Quarter</h3>
                 {Object.keys(priceOverrides).length > 0 && (
-                  <Button onClick={handleSaveAllPrices} disabled={isSaving} size="sm" className="gap-1.5 h-8 bg-slate-600 hover:bg-slate-500 text-white">
+                  <Button onClick={handleSaveAllPrices} disabled={isSaving} size="sm" className="gap-1.5 h-8 bg-emerald-600 hover:bg-emerald-500 text-white">
                     <Save className="w-3.5 h-3.5" />{isSaving ? 'Saving...' : 'Save Prices'}
                   </Button>
                 )}
@@ -940,7 +942,7 @@ export default function MarketplaceSalesStats() {
                   </div>
                 </div>
                 <div className="pt-2">
-                  <Button onClick={handleAddCost} className="bg-slate-600 hover:bg-slate-500 text-white h-9">
+                  <Button onClick={handleAddCost} className="bg-emerald-600 hover:bg-emerald-500 text-white h-9">
                     <Plus className="w-4 h-4 mr-2" />Add Cost
                   </Button>
                 </div>
