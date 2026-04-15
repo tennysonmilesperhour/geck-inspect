@@ -186,6 +186,7 @@ const MOCK_REGIONS = [
   { id: 'uk', name: 'United Kingdom', flag: '🇬🇧', __mock: true },
   { id: 'eu', name: 'Europe', flag: '🇪🇺', __mock: true },
   { id: 'australia', name: 'Australia', flag: '🇦🇺', __mock: true },
+  { id: 'korea', name: 'South Korea', flag: '🇰🇷', __mock: true },
   { id: 'asia', name: 'Asia Pacific', flag: '🌏', __mock: true },
 ];
 
