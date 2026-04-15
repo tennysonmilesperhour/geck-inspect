@@ -461,7 +461,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     { page_name: "Forum", display_name: "Forum", icon: "MessageSquare", category: "public", requires_auth: false, is_enabled: true, order: 4 },
     { page_name: "Gallery", display_name: "Image Gallery", icon: "Images", category: "public", requires_auth: false, is_enabled: true, order: 5 },
     { page_name: "Marketplace", display_name: "Marketplace", icon: "ShoppingCart", category: "public", requires_auth: false, is_enabled: true, order: 6 },
-    { page_name: "MarketplaceSalesStats", display_name: "Sales Stats", icon: "BarChart3", category: "public", requires_auth: true, is_enabled: true, order: 7 },
+    { page_name: "MarketplaceSalesStats", display_name: "Business Tools", icon: "BarChart3", category: "public", requires_auth: true, is_enabled: true, order: 7 },
     { page_name: "BreederShipping", display_name: "Shipping", icon: "Truck", category: "public", requires_auth: true, is_enabled: true, order: 8 },
     ],
   };

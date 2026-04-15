@@ -13,8 +13,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import {
   DollarSign, TrendingUp, AlertCircle, Trash2, Plus, Save,
-  ChevronDown, ChevronUp, Tag, Calendar, Edit2, X, Check
+  ChevronDown, ChevronUp, Tag, Calendar, Edit2, X, Check,
+  Globe, Lock, ArrowRight, BarChart3,
 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { format, getQuarter, getYear } from 'date-fns';
 import GeckoSelectionModal from '../components/marketplace/GeckoSelectionModal';
 
@@ -160,6 +162,212 @@ function QuarterSection({ quarterKey, items, onDelete: _onDelete, onUpdate: _onU
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
+// Market Analytics — enterprise-gated tab with mock data
+// ---------------------------------------------------------------------------
+// All mock data is tagged with __mock: true so it can be cleanly
+// identified and removed when real market data pipelines are wired up.
+// The architecture expects a future data source that provides:
+//   - Regional market snapshots (avg price, volume, trend by region)
+//   - Category breakdowns (morph, sex, age bracket)
+//   - Time-series price history
+//   - Cross-region comparisons
+
+const MOCK_REGIONS = [
+  { id: 'us_west', name: 'US West Coast', flag: '🇺🇸', __mock: true },
+  { id: 'us_east', name: 'US East Coast', flag: '🇺🇸', __mock: true },
+  { id: 'us_south', name: 'US South', flag: '🇺🇸', __mock: true },
+  { id: 'us_midwest', name: 'US Midwest', flag: '🇺🇸', __mock: true },
+  { id: 'canada', name: 'Canada', flag: '🇨🇦', __mock: true },
+  { id: 'uk', name: 'United Kingdom', flag: '🇬🇧', __mock: true },
+  { id: 'eu_west', name: 'Western Europe', flag: '🇪🇺', __mock: true },
+  { id: 'eu_east', name: 'Eastern Europe', flag: '🇪🇺', __mock: true },
+  { id: 'australia', name: 'Australia', flag: '🇦🇺', __mock: true },
+  { id: 'asia', name: 'Asia Pacific', flag: '🌏', __mock: true },
+];
+
+const MOCK_CATEGORIES = [
+  'Lilly White', 'Axanthic', 'Cappuccino', 'Soft Scale', 'Harlequin',
+  'Dalmatian', 'Pinstripe', 'Flame', 'Tiger', 'Patternless',
+];
+
+function generateMockMarketData() {
+  // __mock: true on every record so it can be identified for removal
+  return MOCK_REGIONS.map((region) => ({
+    ...region,
+    avgPrice: Math.round(150 + Math.random() * 350),
+    volume: Math.round(50 + Math.random() * 500),
+    trend: +((-15 + Math.random() * 30).toFixed(1)),
+    topMorphs: MOCK_CATEGORIES
+      .sort(() => Math.random() - 0.5)
+      .slice(0, 5)
+      .map((morph) => ({
+        name: morph,
+        avgPrice: Math.round(100 + Math.random() * 600),
+        listings: Math.round(5 + Math.random() * 80),
+        trend: +((-20 + Math.random() * 40).toFixed(1)),
+        __mock: true,
+      })),
+  }));
+}
+
+function MarketAnalyticsTab({ user }) {
+  const [selectedRegion, setSelectedRegion] = useState(null);
+  const [marketData] = useState(() => generateMockMarketData());
+
+  const tier = user?.membership_tier || 'free';
+  const isAdmin = user?.role === 'admin';
+  const hasAccess = tier === 'enterprise' || isAdmin;
+
+  if (!hasAccess) {
+    return (
+      <div className="py-16 text-center space-y-5">
+        <div className="mx-auto w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+          <Lock className="w-8 h-8 text-emerald-400" />
+        </div>
+        <h3 className="text-xl font-bold text-white">Enterprise Feature</h3>
+        <p className="text-slate-400 max-w-md mx-auto leading-relaxed">
+          Market Analytics provides real-time pricing trends, regional comparisons, and
+          morph demand intelligence across global markets. Available on the Enterprise tier.
+        </p>
+        <Link to={createPageUrl('Membership')}>
+          <Button className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-6">
+            View plans <ArrowRight className="w-4 h-4 ml-2" />
+          </Button>
+        </Link>
+      </div>
+    );
+  }
+
+  const activeRegion = selectedRegion
+    ? marketData.find((r) => r.id === selectedRegion)
+    : null;
+
+  return (
+    <div className="space-y-6">
+      {/* Demo banner */}
+      <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 flex items-start gap-2">
+        <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+        <p className="text-xs text-slate-400 leading-relaxed">
+          <span className="text-amber-300 font-semibold">Preview data.</span>{' '}
+          Market analytics is showing simulated data while real market feeds are being integrated.
+          All mock data will be replaced with live pricing when available.
+        </p>
+      </div>
+
+      {/* Global overview */}
+      <div>
+        <h3 className="text-base font-semibold text-slate-100 mb-3 flex items-center gap-2">
+          <Globe className="w-4 h-4 text-emerald-400" />
+          {selectedRegion ? 'Regional Detail' : 'Global Market Overview'}
+        </h3>
+
+        {selectedRegion && (
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setSelectedRegion(null)}
+            className="mb-4"
+          >
+            ← Back to global view
+          </Button>
+        )}
+
+        {!selectedRegion ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            {marketData.map((region) => (
+              <button
+                key={region.id}
+                onClick={() => setSelectedRegion(region.id)}
+                className="text-left rounded-lg border border-emerald-900/40 bg-emerald-950/20 p-4 hover:border-emerald-500/40 hover:bg-emerald-950/40 transition-colors"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <div className="flex items-center gap-2">
+                    <span className="text-lg">{region.flag}</span>
+                    <span className="text-sm font-semibold text-slate-200">{region.name}</span>
+                  </div>
+                  <span className={`text-xs font-bold ${region.trend >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
+                    {region.trend >= 0 ? '↑' : '↓'} {Math.abs(region.trend)}%
+                  </span>
+                </div>
+                <div className="flex items-center gap-4 text-xs text-slate-400">
+                  <span>Avg: <span className="text-white font-semibold">${region.avgPrice}</span></span>
+                  <span>Volume: <span className="text-white font-semibold">{region.volume}</span> listings</span>
+                </div>
+              </button>
+            ))}
+          </div>
+        ) : activeRegion ? (
+          <div className="space-y-4">
+            {/* Region header */}
+            <div className="rounded-lg border border-emerald-900/40 bg-emerald-950/20 p-5">
+              <div className="flex items-center gap-3 mb-3">
+                <span className="text-2xl">{activeRegion.flag}</span>
+                <div>
+                  <h4 className="text-lg font-bold text-white">{activeRegion.name}</h4>
+                  <p className="text-xs text-slate-400">
+                    {activeRegion.volume} active listings · ${activeRegion.avgPrice} average price
+                  </p>
+                </div>
+                <span className={`ml-auto text-sm font-bold px-2 py-0.5 rounded-full ${
+                  activeRegion.trend >= 0
+                    ? 'bg-emerald-500/15 text-emerald-400'
+                    : 'bg-red-500/15 text-red-400'
+                }`}>
+                  {activeRegion.trend >= 0 ? '↑' : '↓'} {Math.abs(activeRegion.trend)}% YoY
+                </span>
+              </div>
+              <div className="grid grid-cols-3 gap-3 mt-4">
+                <div className="rounded-md bg-slate-900/50 p-3 text-center">
+                  <p className="text-2xl font-bold text-white">${activeRegion.avgPrice}</p>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wider mt-1">Avg Price</p>
+                </div>
+                <div className="rounded-md bg-slate-900/50 p-3 text-center">
+                  <p className="text-2xl font-bold text-white">{activeRegion.volume}</p>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wider mt-1">Listings</p>
+                </div>
+                <div className="rounded-md bg-slate-900/50 p-3 text-center">
+                  <p className="text-2xl font-bold text-white">{activeRegion.topMorphs.length}</p>
+                  <p className="text-[10px] text-slate-500 uppercase tracking-wider mt-1">Top Morphs</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Morph breakdown */}
+            <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-emerald-400" />
+              Morph Category Breakdown
+            </h4>
+            <div className="space-y-2">
+              {activeRegion.topMorphs.map((morph) => (
+                <div
+                  key={morph.name}
+                  className="flex items-center gap-3 rounded-lg border border-emerald-900/30 bg-emerald-950/10 px-4 py-3"
+                >
+                  <span className="text-sm font-medium text-slate-200 w-32 truncate">{morph.name}</span>
+                  <div className="flex-1 h-2 bg-slate-800 rounded-full overflow-hidden">
+                    <div
+                      className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-full"
+                      style={{ width: `${Math.min(100, (morph.avgPrice / 700) * 100)}%` }}
+                    />
+                  </div>
+                  <span className="text-sm font-bold text-white w-16 text-right">${morph.avgPrice}</span>
+                  <span className="text-xs text-slate-500 w-20 text-right">{morph.listings} listed</span>
+                  <span className={`text-xs font-semibold w-12 text-right ${
+                    morph.trend >= 0 ? 'text-emerald-400' : 'text-red-400'
+                  }`}>
+                    {morph.trend >= 0 ? '+' : ''}{morph.trend}%
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </div>
     </div>
   );
 }
@@ -407,14 +615,14 @@ export default function MarketplaceSalesStats() {
               </div>
               <div>
                 <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent tracking-tight">
-                  Sales Stats
+                  Business Tools
                 </h1>
                 <p className="text-sm text-slate-400 mt-1">
-                  Track revenue, costs, and profitability across your breeding operation.
+                  Revenue tracking, cost management, and market intelligence for your breeding operation.
                 </p>
               </div>
             </div>
-            <PageSettingsPanel title="Sales Stats Settings">
+            <PageSettingsPanel title="Business Tools Settings">
               <p className="text-[11px] text-slate-500 leading-relaxed">
                 Revenue categories and cost tracking preferences. Quarterly breakdowns update automatically.
               </p>
@@ -448,9 +656,13 @@ export default function MarketplaceSalesStats() {
 
         <div className="bg-emerald-950/30 border border-emerald-900/40 rounded-xl p-4 md:p-6">
           <Tabs defaultValue="revenue">
-            <TabsList className="flex w-full max-w-xs mx-auto bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1 mb-6">
-              <TabsTrigger value="revenue" className={`${tabTriggerClass} px-10`}>Revenue</TabsTrigger>
-              <TabsTrigger value="costs" className={`${tabTriggerClass} px-10`}>Costs</TabsTrigger>
+            <TabsList className="flex w-full max-w-md mx-auto bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1 mb-6">
+              <TabsTrigger value="revenue" className={tabTriggerClass}>Revenue</TabsTrigger>
+              <TabsTrigger value="costs" className={tabTriggerClass}>Costs</TabsTrigger>
+              <TabsTrigger value="analytics" className={tabTriggerClass}>
+                <Globe className="w-3.5 h-3.5 mr-1" />
+                Market Analytics
+              </TabsTrigger>
             </TabsList>
 
             <TabsContent value="revenue" className="space-y-4">
@@ -663,6 +875,11 @@ export default function MarketplaceSalesStats() {
                   </div>
                 </div>
               )}
+            </TabsContent>
+
+            {/* Market Analytics — Enterprise tier only */}
+            <TabsContent value="analytics" className="space-y-6">
+              <MarketAnalyticsTab user={user} />
             </TabsContent>
           </Tabs>
         </div>
