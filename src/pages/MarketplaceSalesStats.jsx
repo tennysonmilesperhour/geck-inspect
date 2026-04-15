@@ -181,14 +181,10 @@ function QuarterSection({ quarterKey, items, onDelete: _onDelete, onUpdate: _onU
 //   - Cross-region comparisons
 
 const MOCK_REGIONS = [
-  { id: 'us_west', name: 'US West Coast', flag: '🇺🇸', __mock: true },
-  { id: 'us_east', name: 'US East Coast', flag: '🇺🇸', __mock: true },
-  { id: 'us_south', name: 'US South', flag: '🇺🇸', __mock: true },
-  { id: 'us_midwest', name: 'US Midwest', flag: '🇺🇸', __mock: true },
+  { id: 'us', name: 'United States', flag: '🇺🇸', __mock: true },
   { id: 'canada', name: 'Canada', flag: '🇨🇦', __mock: true },
   { id: 'uk', name: 'United Kingdom', flag: '🇬🇧', __mock: true },
-  { id: 'eu_west', name: 'Western Europe', flag: '🇪🇺', __mock: true },
-  { id: 'eu_east', name: 'Eastern Europe', flag: '🇪🇺', __mock: true },
+  { id: 'eu', name: 'Europe', flag: '🇪🇺', __mock: true },
   { id: 'australia', name: 'Australia', flag: '🇦🇺', __mock: true },
   { id: 'asia', name: 'Asia Pacific', flag: '🌏', __mock: true },
 ];
