@@ -19,7 +19,7 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import {
-  DollarSign, TrendingUp, AlertCircle, Trash2, Plus, Save,
+  DollarSign, TrendingUp, AlertCircle, Trash2, Plus, Save, Loader2,
   ChevronDown, ChevronUp, Tag, Calendar, Edit2, X, Check,
   Globe, Lock, ArrowRight, BarChart3,
 } from 'lucide-react';
@@ -603,11 +603,13 @@ export default function MarketplaceSalesStats() {
   // an "Other" category item). Creates a minimal archived Gecko record
   // so the sale flows through the same revenueByQuarter pipeline as
   // from-collection sales.
+  const [isAddingSale, setIsAddingSale] = useState(false);
   const handleAddManualRevenue = async () => {
-    if (!newRevenue.name.trim() || !newRevenue.amount) {
+    if (!newRevenue.name.trim() || !newRevenue.amount || isAddingSale) {
       return;
     }
     const price = parseFloat(newRevenue.amount) || 0;
+    setIsAddingSale(true);
     try {
       const created = await Gecko.create({
         name: newRevenue.name.trim(),
@@ -635,6 +637,7 @@ export default function MarketplaceSalesStats() {
       });
 
       setSoldGeckos((prev) => [created, ...prev]);
+      toast({ title: "Sale Added", description: `${newRevenue.name.trim()} — $${price.toFixed(2)}` });
       setNewRevenue({
         name: '',
         amount: '',
@@ -644,6 +647,9 @@ export default function MarketplaceSalesStats() {
       setSaleMode(null);
     } catch (error) {
       console.error('Failed to add manual sale:', error);
+      toast({ title: "Error", description: "Could not add sale. Please try again.", variant: "destructive" });
+    } finally {
+      setIsAddingSale(false);
     }
   };
 
@@ -855,10 +861,11 @@ export default function MarketplaceSalesStats() {
                     </Button>
                     <Button
                       onClick={handleAddManualRevenue}
-                      disabled={!newRevenue.name.trim() || !newRevenue.amount}
+                      disabled={!newRevenue.name.trim() || !newRevenue.amount || isAddingSale}
                       className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white h-9 disabled:opacity-50"
                     >
-                      <Plus className="w-4 h-4 mr-2" />Add Sale
+                      {isAddingSale ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
+                      {isAddingSale ? 'Adding...' : 'Add Sale'}
                     </Button>
                   </div>
                 </div>
