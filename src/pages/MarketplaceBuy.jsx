@@ -5,6 +5,9 @@ import { base44 } from '@/api/base44Client';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
+import usePageSettings from '@/hooks/usePageSettings';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import {
     Select,
@@ -122,6 +125,11 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
 };
 
 export default function MarketplaceBuyPage() {
+    const [buyPrefs, setBuyPrefs] = usePageSettings('marketplace_buy_prefs', {
+        cardSize: 'regular',
+        defaultSort: 'newest',
+        defaultSexFilter: 'all',
+    });
     const [geckos, setGeckos] = useState([]);
     const [owners, setOwners] = useState({});
     const [isLoading, setIsLoading] = useState(true);
@@ -131,8 +139,8 @@ export default function MarketplaceBuyPage() {
     const [likedGeckoIds, setLikedGeckoIds] = useState(new Set());
     const [geckoOffset, setGeckoOffset] = useState(0);
     const [hasMoreGeckos, setHasMoreGeckos] = useState(true);
-    const [sexFilter, setSexFilter] = useState('all');
-    const [sortBy, setSortBy] = useState('newest');
+    const [sexFilter, setSexFilter] = useState(buyPrefs.defaultSexFilter);
+    const [sortBy, setSortBy] = useState(buyPrefs.defaultSort);
     const [activeFilters, setActiveFilters] = useState(new Set());
 
     const MORPH_FILTERS = [
@@ -148,18 +156,8 @@ export default function MarketplaceBuyPage() {
             return next;
         });
     };
-    // Persist the card size preference so browsers who prefer one density
-    // don't have to flip it every visit. Defaults to 'regular' (tighter,
-    // matches MyGeckos) for maximum geckos-per-viewport.
-    const [cardSize, setCardSize] = useState(() => {
-        if (typeof window === 'undefined') return 'regular';
-        return window.localStorage?.getItem('marketplaceBuyCardSize') || 'regular';
-    });
-    useEffect(() => {
-        if (typeof window !== 'undefined') {
-            window.localStorage?.setItem('marketplaceBuyCardSize', cardSize);
-        }
-    }, [cardSize]);
+    const cardSize = buyPrefs.cardSize;
+    const setCardSize = (v) => setBuyPrefs({ cardSize: v });
     const navigate = useNavigate();
 
     const fetchGeckoBatch = useCallback(async (offset = 0, append = false) => {
@@ -344,9 +342,47 @@ export default function MarketplaceBuyPage() {
                         </p>
                     </div>
                     <PageSettingsPanel title="Marketplace Settings">
-                        <p className="text-[11px] text-slate-500 leading-relaxed">
-                            Card size and sort preferences are saved automatically. Default sort can also be changed in the main Settings page.
-                        </p>
+                        <div>
+                            <Label className="text-slate-300 text-sm mb-1 block">Card Size</Label>
+                            <div className="flex gap-1">
+                                {[['regular', 'Compact'], ['large', 'Spacious']].map(([val, lbl]) => (
+                                    <button
+                                        key={val}
+                                        onClick={() => setBuyPrefs({ cardSize: val })}
+                                        className={`px-3 py-1 text-xs rounded ${buyPrefs.cardSize === val ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+                                    >
+                                        {lbl}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div>
+                            <Label className="text-slate-300 text-sm mb-1 block">Default Sort</Label>
+                            <Select value={buyPrefs.defaultSort} onValueChange={v => { setBuyPrefs({ defaultSort: v }); setSortBy(v); }}>
+                                <SelectTrigger className="w-full h-8 text-xs">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="newest">Newest First</SelectItem>
+                                    <SelectItem value="price_low">Price (Low-High)</SelectItem>
+                                    <SelectItem value="price_high">Price (High-Low)</SelectItem>
+                                    <SelectItem value="name">Name (A-Z)</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label className="text-slate-300 text-sm mb-1 block">Default Sex Filter</Label>
+                            <Select value={buyPrefs.defaultSexFilter} onValueChange={v => { setBuyPrefs({ defaultSexFilter: v }); setSexFilter(v); }}>
+                                <SelectTrigger className="w-full h-8 text-xs">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="all">All</SelectItem>
+                                    <SelectItem value="Male">Male</SelectItem>
+                                    <SelectItem value="Female">Female</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </PageSettingsPanel>
                 </header>
 

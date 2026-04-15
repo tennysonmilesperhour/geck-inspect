@@ -11,11 +11,20 @@ import ReptileForm from '../components/other-reptiles/ReptileForm';
 import ReptileDetailModal from '../components/other-reptiles/ReptileDetailModal';
 import PlanLimitModal, { checkPlanLimit, getOtherReptileLimit } from '@/components/subscription/PlanLimitChecker';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
+import usePageSettings from '@/hooks/usePageSettings';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
 import { AnimatePresence, motion } from 'framer-motion';
 import { differenceInDays } from 'date-fns';
 
 export default function OtherReptilesPage() {
+    const [reptilePrefs, setReptilePrefs] = usePageSettings('other_reptiles_prefs', {
+        sortMode: 'feeding_priority',
+        showArchivedDefault: false,
+        feedingAlertDays: '2',
+    });
     const [reptiles, setReptiles] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [user, setUser] = useState(null);
@@ -23,7 +32,7 @@ export default function OtherReptilesPage() {
     const [selectedReptile, setSelectedReptile] = useState(null);
     const [searchTerm, setSearchTerm] = useState('');
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
-    const [showArchived, setShowArchived] = useState(false);
+    const [showArchived, setShowArchived] = useState(reptilePrefs.showArchivedDefault);
     const [showLimitModal, setShowLimitModal] = useState(false);
 
     // Check and create feeding notifications for overdue/due reptiles
@@ -186,11 +195,10 @@ export default function OtherReptilesPage() {
         const daysSinceLastFed = Math.floor((today - lastFed) / (1000 * 60 * 60 * 24));
         const daysUntilNextFeed = (reptile.feeding_interval_days || 7) - daysSinceLastFed;
 
+        const alertThreshold = Number(reptilePrefs.feedingAlertDays) || 2;
         if (daysUntilNextFeed < 0) {
-            // Overdue - highest priority (sort by most overdue first)
             return { priority: 0, daysUntil: daysUntilNextFeed };
-        } else if (daysUntilNextFeed <= 1) {
-            // Due today or tomorrow - second priority
+        } else if (daysUntilNextFeed <= alertThreshold) {
             return { priority: 1, daysUntil: daysUntilNextFeed };
         } else {
             // Not due yet - sort by soonest to latest
@@ -206,15 +214,13 @@ export default function OtherReptilesPage() {
             reptile.morph?.toLowerCase().includes(searchTerm.toLowerCase())
         )
         .sort((a, b) => {
+            if (reptilePrefs.sortMode === 'name') return (a.name || '').localeCompare(b.name || '');
+            if (reptilePrefs.sortMode === 'species') return (a.species || '').localeCompare(b.species || '');
+            if (reptilePrefs.sortMode === 'date_added') return new Date(b.created_date) - new Date(a.created_date);
+            // Default: feeding_priority
             const aPriority = getFeedingPriority(a);
             const bPriority = getFeedingPriority(b);
-            
-            // First sort by priority group
-            if (aPriority.priority !== bPriority.priority) {
-                return aPriority.priority - bPriority.priority;
-            }
-            
-            // Within same priority, sort by days until next feed
+            if (aPriority.priority !== bPriority.priority) return aPriority.priority - bPriority.priority;
             return aPriority.daysUntil - bPriority.daysUntil;
         });
 
@@ -239,9 +245,38 @@ export default function OtherReptilesPage() {
                     </div>
                     <div className="flex gap-2">
                         <PageSettingsPanel title="Reptile Settings">
-                            <p className="text-[11px] text-slate-500 leading-relaxed">
-                                Default sort order for other reptiles can be changed in the main Settings page.
-                            </p>
+                            <div>
+                                <Label className="text-slate-300 text-sm mb-1 block">Sort By</Label>
+                                <Select value={reptilePrefs.sortMode} onValueChange={v => setReptilePrefs({ sortMode: v })}>
+                                    <SelectTrigger className="w-full h-8 text-xs">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="feeding_priority">Feeding Priority</SelectItem>
+                                        <SelectItem value="name">Name (A-Z)</SelectItem>
+                                        <SelectItem value="species">Species</SelectItem>
+                                        <SelectItem value="date_added">Date Added</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <Label className="text-slate-300 text-sm">Show Archived by Default</Label>
+                                <Switch checked={reptilePrefs.showArchivedDefault} onCheckedChange={v => { setReptilePrefs({ showArchivedDefault: v }); setShowArchived(v); }} />
+                            </div>
+                            <div>
+                                <Label className="text-slate-300 text-sm mb-1 block">Feeding Alert (days before)</Label>
+                                <div className="flex gap-1">
+                                    {['1', '2', '3', '5'].map(d => (
+                                        <button
+                                            key={d}
+                                            onClick={() => setReptilePrefs({ feedingAlertDays: d })}
+                                            className={`px-3 py-1 text-xs rounded ${reptilePrefs.feedingAlertDays === d ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+                                        >
+                                            {d}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
                         </PageSettingsPanel>
                         <Button
                             variant="outline"

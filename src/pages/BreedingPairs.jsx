@@ -5,6 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { HeartHandshake, Plus, Egg as EggIcon, Sparkles, Pencil, Trash2, Calendar } from 'lucide-react';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
+import usePageSettings from '@/hooks/usePageSettings';
+import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -37,6 +39,11 @@ const createGoogleCalendarLink = (title, start, end, description, location) => {
 };
 
 export default function BreedingPairsPage() {
+    const [pairsPrefs, setPairsPrefs] = usePageSettings('breeding_pairs_prefs', {
+        sortBy: '-created_date',
+        showEstimatedDates: true,
+        compactCards: false,
+    });
     const [_user, setUser] = useState(null);
     const [geckos, setGeckos] = useState([]);
     const [breedingPlans, setBreedingPlans] = useState([]);
@@ -53,7 +60,7 @@ export default function BreedingPairsPage() {
             if (currentUser) {
                 const [userGeckos, plans, userEggs] = await Promise.all([
                     Gecko.filter({ created_by: currentUser.email }),
-                    BreedingPlan.filter({ created_by: currentUser.email }, "-created_date"),
+                    BreedingPlan.filter({ created_by: currentUser.email }, pairsPrefs.sortBy),
                     Egg.filter({ created_by: currentUser.email })
                 ]);
                 setGeckos(userGeckos);
@@ -170,9 +177,27 @@ export default function BreedingPairsPage() {
                     </div>
                     <div className="flex gap-2">
                         <PageSettingsPanel title="Breeding Pairs Settings">
-                            <p className="text-[11px] text-slate-500 leading-relaxed">
-                                Breeding sort preferences and plan defaults can be configured in the main Settings page.
-                            </p>
+                            <div>
+                                <Label className="text-slate-300 text-sm mb-1 block">Sort By</Label>
+                                <Select value={pairsPrefs.sortBy} onValueChange={v => setPairsPrefs({ sortBy: v })}>
+                                    <SelectTrigger className="w-full h-8 text-xs">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="-created_date">Newest First</SelectItem>
+                                        <SelectItem value="created_date">Oldest First</SelectItem>
+                                        <SelectItem value="status">Status</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <Label className="text-slate-300 text-sm">Show Estimated Dates</Label>
+                                <Switch checked={pairsPrefs.showEstimatedDates} onCheckedChange={v => setPairsPrefs({ showEstimatedDates: v })} />
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <Label className="text-slate-300 text-sm">Compact Cards</Label>
+                                <Switch checked={pairsPrefs.compactCards} onCheckedChange={v => setPairsPrefs({ compactCards: v })} />
+                            </div>
                         </PageSettingsPanel>
                         <PlanPairingForm males={males} females={females} onPlanCreated={loadData} />
                     </div>
@@ -190,7 +215,7 @@ export default function BreedingPairsPage() {
                         </CardContent>
                     </Card>
                 ) : (
-                    <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                    <div className={`grid grid-cols-1 ${pairsPrefs.compactCards ? 'lg:grid-cols-3 gap-4' : 'lg:grid-cols-2 gap-8'}`}>
                         {breedingPlans.map(plan => {
                             const sire = geckos.find(g => g.id === plan.sire_id);
                             const dam = geckos.find(g => g.id === plan.dam_id);
@@ -207,6 +232,8 @@ export default function BreedingPairsPage() {
                                     onHatch={handleHatch}
                                     onEdit={handleEditPlan}
                                     onDelete={handleDeletePlan}
+                                    showEstimatedDates={pairsPrefs.showEstimatedDates}
+                                    compact={pairsPrefs.compactCards}
                                 />
                             );
                         })}
@@ -395,7 +422,7 @@ function EditBreedingPlanModal({ plan, males, females, onSave, onClose }) {
     );
 }
 
-function BreedingPlanCard({ plan, sire, dam, eggs, onDataRefresh, onHatch, onEdit, onDelete }) {
+function BreedingPlanCard({ plan, sire, dam, eggs, onDataRefresh, onHatch, onEdit, onDelete, showEstimatedDates = true, compact = false }) {
      const [planToDelete, setPlanToDelete] = useState(null);
 
      const handleConfirmDelete = async () => {
@@ -490,7 +517,7 @@ function BreedingPlanCard({ plan, sire, dam, eggs, onDataRefresh, onHatch, onEdi
                 </div>
 
                 {/* Calendar Integration */}
-                <div className="mt-4 p-3 bg-slate-800 rounded-lg">
+                {showEstimatedDates && <div className="mt-4 p-3 bg-slate-800 rounded-lg">
                     <h4 className="font-semibold text-slate-100 mb-2 flex items-center gap-2">
                         <Calendar className="w-4 h-4" />
                         Add to Calendar
@@ -519,7 +546,7 @@ function BreedingPlanCard({ plan, sire, dam, eggs, onDataRefresh, onHatch, onEdi
                             🐣 Hatch Estimate
                         </Button>
                     </div>
-                </div>
+                </div>}
             </CardContent>
         </Card>
     );

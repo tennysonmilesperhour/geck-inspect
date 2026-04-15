@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import MorphMarketSync from '@/components/marketplace/MorphMarketSync';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
+import usePageSettings from '@/hooks/usePageSettings';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -267,6 +268,11 @@ function ListingCard({ gecko, user: _user, onEdit, onToggleVisible, onUnlist, on
 }
 
 export default function MarketplaceSellPage() {
+  const [sellerPrefs, setSellerPrefs] = usePageSettings('marketplace_sell_prefs', {
+    defaultVisibility: true,
+    defaultStatus: 'For Sale',
+    showPriceOnCards: true,
+  });
   const [user, setUser] = useState(null);
   const [allGeckos, setAllGeckos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -458,13 +464,27 @@ export default function MarketplaceSellPage() {
           <div className="flex gap-2">
             <PageSettingsPanel title="Seller Settings">
               <div className="flex items-center justify-between">
-                <span className="text-slate-300 text-sm">Default visibility</span>
-                <span className="text-xs text-slate-500">Public</span>
+                <Label className="text-slate-300 text-sm">Default Visibility</Label>
+                <Switch checked={sellerPrefs.defaultVisibility} onCheckedChange={v => setSellerPrefs({ defaultVisibility: v })} />
               </div>
-              <p className="text-[11px] text-slate-500 leading-relaxed">
-                New listings default to visible on the marketplace. Toggle individual listings
-                off from their cards.
-              </p>
+              <p className="text-[10px] text-slate-500">{sellerPrefs.defaultVisibility ? 'New listings will be publicly visible' : 'New listings will start as hidden drafts'}</p>
+              <div>
+                <Label className="text-slate-300 text-sm mb-1 block">Default Status</Label>
+                <Select value={sellerPrefs.defaultStatus} onValueChange={v => setSellerPrefs({ defaultStatus: v })}>
+                  <SelectTrigger className="w-full h-8 text-xs">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="For Sale">For Sale</SelectItem>
+                    <SelectItem value="Pet">Pet</SelectItem>
+                    <SelectItem value="Holdback">Holdback</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="text-slate-300 text-sm">Show Price on Cards</Label>
+                <Switch checked={sellerPrefs.showPriceOnCards} onCheckedChange={v => setSellerPrefs({ showPriceOnCards: v })} />
+              </div>
             </PageSettingsPanel>
             <Link to={createPageUrl('MyGeckos')}>
               <Button

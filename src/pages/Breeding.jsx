@@ -7,11 +7,13 @@ import PlanLimitModal, { checkPlanLimit } from '@/components/subscription/PlanLi
 import BreedingPlanCard from '../components/breeding/BreedingPlanCard';
 import GeneticCalculatorTab from '../components/breeding/GeneticCalculatorTab';
 import { Button } from '@/components/ui/button';
+import { Switch } from '@/components/ui/switch';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { PlusCircle, GitBranch, Heart, ChevronDown, ChevronUp, Calendar as CalendarIcon, Archive, ListTree, Search, Dna, Moon } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
+import usePageSettings from '@/hooks/usePageSettings';
 import Hatchery from '../components/breeding/Hatchery';
 import {
   Dialog,
@@ -33,6 +35,11 @@ const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
 
 export default function BreedingPage() {
     const { toast } = useToast();
+    const [breedingPrefs, setBreedingPrefs] = usePageSettings('breeding_prefs', {
+        defaultTab: 'active',
+        defaultSort: 'newest',
+        autoExpandCards: false,
+    });
     const [breedingPlans, setBreedingPlans] = useState([]);
     const [geckos, setGeckos] = useState([]);
     const [allEggs, setAllEggs] = useState([]);
@@ -40,14 +47,14 @@ export default function BreedingPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [isModalOpen, setIsModalOpen] = useState(false);
     const [expandedPlanIds, setExpandedPlanIds] = useState(new Set());
-    const [activeTab, setActiveTab] = useState('active');
+    const [activeTab, setActiveTab] = useState(breedingPrefs.defaultTab);
 
-    const [expandAllActive, setExpandAllActive] = useState(false);
+    const [expandAllActive, setExpandAllActive] = useState(breedingPrefs.autoExpandCards);
     const [expandAllArchive, setExpandAllArchive] = useState(false);
-    
+
     const [searchTerm, setSearchTerm] = useState('');
     const [debouncedSearchTerm, setDebouncedSearchTerm] = useState('');
-    const [sortBy, setSortBy] = useState('newest');
+    const [sortBy, setSortBy] = useState(breedingPrefs.defaultSort);
 
     // Debounce search input by 300ms
     useEffect(() => {
@@ -426,18 +433,38 @@ export default function BreedingPage() {
                     </div>
                     <div className="flex gap-2 w-full md:w-auto">
                         <PageSettingsPanel title="Breeding Settings">
+                            <div>
+                                <Label className="text-slate-300 text-sm mb-1 block">Default Tab</Label>
+                                <Select value={breedingPrefs.defaultTab} onValueChange={v => { setBreedingPrefs({ defaultTab: v }); setActiveTab(v); }}>
+                                    <SelectTrigger className="w-full h-8 text-xs">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="active">Active Plans</SelectItem>
+                                        <SelectItem value="hatchery">Hatchery</SelectItem>
+                                        <SelectItem value="genetics">Genetics</SelectItem>
+                                        <SelectItem value="archive">Archive</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div>
+                                <Label className="text-slate-300 text-sm mb-1 block">Default Sort</Label>
+                                <Select value={breedingPrefs.defaultSort} onValueChange={v => { setBreedingPrefs({ defaultSort: v }); setSortBy(v); }}>
+                                    <SelectTrigger className="w-full h-8 text-xs">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="newest">Newest First</SelectItem>
+                                        <SelectItem value="eggs_low">Eggs (Low-High)</SelectItem>
+                                        <SelectItem value="eggs_high">Eggs (High-Low)</SelectItem>
+                                        <SelectItem value="last_egg_recent">Last Egg (Recent)</SelectItem>
+                                        <SelectItem value="species">Species (A-Z)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
                             <div className="flex items-center justify-between">
-                                <span className="text-slate-300 text-sm">Default tab</span>
-                                <select
-                                    value={activeTab}
-                                    onChange={(e) => setActiveTab(e.target.value)}
-                                    className="h-7 rounded-md bg-slate-800 border border-slate-600 text-slate-100 text-xs px-2"
-                                >
-                                    <option value="active">Active</option>
-                                    <option value="hatchery">Hatchery</option>
-                                    <option value="genetics">Genetics</option>
-                                    <option value="archive">Archive</option>
-                                </select>
+                                <Label className="text-slate-300 text-sm">Auto-expand Cards</Label>
+                                <Switch checked={breedingPrefs.autoExpandCards} onCheckedChange={v => { setBreedingPrefs({ autoExpandCards: v }); setExpandAllActive(v); }} />
                             </div>
                         </PageSettingsPanel>
                         <Button onClick={() => setIsModalOpen(true)} className="flex-1 md:flex-none">
