@@ -15,6 +15,10 @@ import {
   Activity,
   ChevronRight,
   LifeBuoy,
+  Truck,
+  Globe,
+  FileSpreadsheet,
+  Shield,
 } from 'lucide-react';
 
 import AdminOverview from '@/components/admin/AdminOverview';
@@ -77,15 +81,17 @@ const NAV_GROUPS = [
     ],
   },
   {
-    label: 'Insights',
+    label: 'Marketplace',
     items: [
       { id: 'analytics', label: 'Analytics', icon: BarChart2 },
-      { id: 'scraped_data', label: 'Scraped data', icon: Database },
+      { id: 'shipping', label: 'Shipping config', icon: Truck },
+      { id: 'market_data', label: 'Market data', icon: Globe },
     ],
   },
   {
     label: 'System',
     items: [
+      { id: 'scraped_data', label: 'Scraped data', icon: Database },
       { id: 'system', label: 'Health & build', icon: Activity },
     ],
   },
@@ -102,9 +108,26 @@ const SECTION_TITLES = {
   pages: 'Page management',
   morph_submissions: 'Morph submissions',
   analytics: 'Analytics',
+  shipping: 'Shipping configuration',
+  market_data: 'Market data management',
   scraped_data: 'Scraped data review',
   system: 'System health',
 };
+
+function AdminPlaceholder({ title, description, icon: Icon }) {
+  return (
+    <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-8 text-center space-y-4">
+      <div className="mx-auto w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
+        <Icon className="w-7 h-7 text-emerald-400" />
+      </div>
+      <h3 className="text-xl font-bold text-white">{title}</h3>
+      <p className="text-sm text-slate-400 max-w-lg mx-auto leading-relaxed">{description}</p>
+      <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/10 border border-amber-500/30 px-3 py-1 text-xs font-semibold text-amber-300">
+        Coming soon
+      </div>
+    </div>
+  );
+}
 
 export default function AdminPanel() {
   const { user, isLoadingAuth } = useAuth();
@@ -163,6 +186,10 @@ export default function AdminPanel() {
         return <MorphSubmissionReview />;
       case 'analytics':
         return <AnalyticsDashboard />;
+      case 'shipping':
+        return <AdminPlaceholder title="Shipping Configuration" description="Manage the Zero's Geckos shipping integration. Configure API credentials, default carrier settings, and monitor shipment status. This section will be fully functional once the partnership is finalized." icon={Truck} />;
+      case 'market_data':
+        return <AdminPlaceholder title="Market Data Management" description="Manage data sources for the Market Analytics tab in Business Tools. Configure regional feeds, set data refresh intervals, and review pricing data quality. This section will be activated when real market data pipelines are connected." icon={Globe} />;
       case 'scraped_data':
         return <ScrapedDataReview />;
       case 'system':
@@ -178,9 +205,14 @@ export default function AdminPanel() {
         {/* Sidebar */}
         <aside className="lg:w-64 shrink-0">
           <div className="lg:sticky lg:top-6 space-y-6">
-            <div>
-              <h1 className="text-2xl font-bold text-white">Admin</h1>
-              <p className="text-xs text-slate-500 mt-0.5">Geck Inspect control center</p>
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
+                <Shield className="w-5 h-5 text-emerald-400" />
+              </div>
+              <div>
+                <h1 className="text-xl font-bold text-white">Admin Panel</h1>
+                <p className="text-[10px] text-slate-500 mt-0.5">Geck Inspect control center</p>
+              </div>
             </div>
             <nav className="space-y-5">
               {NAV_GROUPS.map((group, idx) => (
