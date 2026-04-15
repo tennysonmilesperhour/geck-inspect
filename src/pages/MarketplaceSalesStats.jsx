@@ -6,6 +6,9 @@ import { Gecko, MarketplaceCost } from '@/entities/all';
 import { toast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
+import usePageSettings from '@/hooks/usePageSettings';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -373,6 +376,11 @@ function MarketAnalyticsTab({ user }) {
 }
 
 export default function MarketplaceSalesStats() {
+  const [statsPrefs, setStatsPrefs] = usePageSettings('sales_stats_prefs', {
+    defaultTab: 'revenue',
+    expandQuarters: true,
+    currency: '$',
+  });
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [soldGeckos, setSoldGeckos] = useState([]);
@@ -622,10 +630,39 @@ export default function MarketplaceSalesStats() {
                 </p>
               </div>
             </div>
-            <PageSettingsPanel title="Business Tools Settings">
-              <p className="text-[11px] text-slate-500 leading-relaxed">
-                Revenue categories and cost tracking preferences. Quarterly breakdowns update automatically.
-              </p>
+            <PageSettingsPanel title="Sales Stats Settings">
+              <div>
+                <Label className="text-slate-300 text-sm mb-1 block">Default Tab</Label>
+                <div className="flex gap-1">
+                  {[['revenue', 'Revenue'], ['costs', 'Costs']].map(([val, lbl]) => (
+                    <button
+                      key={val}
+                      onClick={() => setStatsPrefs({ defaultTab: val })}
+                      className={`px-3 py-1 text-xs rounded ${statsPrefs.defaultTab === val ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+                    >
+                      {lbl}
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="flex items-center justify-between">
+                <Label className="text-slate-300 text-sm">Expand Quarters</Label>
+                <Switch checked={statsPrefs.expandQuarters} onCheckedChange={v => setStatsPrefs({ expandQuarters: v })} />
+              </div>
+              <div>
+                <Label className="text-slate-300 text-sm mb-1 block">Currency</Label>
+                <div className="flex gap-1">
+                  {['$', '\u20AC', '\u00A3', '\u00A5'].map(c => (
+                    <button
+                      key={c}
+                      onClick={() => setStatsPrefs({ currency: c })}
+                      className={`px-3 py-1 text-xs rounded ${statsPrefs.currency === c ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+                    >
+                      {c}
+                    </button>
+                  ))}
+                </div>
+              </div>
             </PageSettingsPanel>
           </div>
         </div>
@@ -635,10 +672,10 @@ export default function MarketplaceSalesStats() {
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
-            { label: 'Total Revenue', value: `$${totalRevenue.toFixed(2)}`, sub: `${soldGeckos.length} geckos sold`, color: 'text-emerald-400', Icon: DollarSign },
-            { label: 'YTD Revenue', value: `$${ytdRevenue.toFixed(2)}`, sub: 'Year to date', color: 'text-blue-400', Icon: TrendingUp },
-            { label: 'Total Costs', value: `$${totalCosts.toFixed(2)}`, sub: `${costs.length} entries`, color: 'text-orange-400', Icon: DollarSign },
-            { label: 'Net Profit', value: `$${netProfit.toFixed(2)}`, sub: 'All time', color: netProfit >= 0 ? 'text-emerald-400' : 'text-red-400', Icon: TrendingUp },
+            { label: 'Total Revenue', value: `${statsPrefs.currency}${totalRevenue.toFixed(2)}`, sub: `${soldGeckos.length} geckos sold`, color: 'text-emerald-400', Icon: DollarSign },
+            { label: 'YTD Revenue', value: `${statsPrefs.currency}${ytdRevenue.toFixed(2)}`, sub: 'Year to date', color: 'text-blue-400', Icon: TrendingUp },
+            { label: 'Total Costs', value: `${statsPrefs.currency}${totalCosts.toFixed(2)}`, sub: `${costs.length} entries`, color: 'text-orange-400', Icon: DollarSign },
+            { label: 'Net Profit', value: `${statsPrefs.currency}${netProfit.toFixed(2)}`, sub: 'All time', color: netProfit >= 0 ? 'text-emerald-400' : 'text-red-400', Icon: TrendingUp },
           ].map(({ label, value, sub, color, Icon }) => (
             <Card key={label} className="bg-emerald-950/40 border-emerald-900/50">
               <CardHeader className="pb-2 pt-4 px-4">
@@ -655,7 +692,7 @@ export default function MarketplaceSalesStats() {
         </div>
 
         <div className="bg-emerald-950/30 border border-emerald-900/40 rounded-xl p-4 md:p-6">
-          <Tabs defaultValue="revenue">
+          <Tabs defaultValue={statsPrefs.defaultTab}>
             <TabsList className="flex w-full max-w-md mx-auto bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1 mb-6">
               <TabsTrigger value="revenue" className={tabTriggerClass}>Revenue</TabsTrigger>
               <TabsTrigger value="costs" className={tabTriggerClass}>Costs</TabsTrigger>

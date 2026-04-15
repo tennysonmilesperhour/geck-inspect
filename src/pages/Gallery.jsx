@@ -6,19 +6,26 @@ import ImageDetailModal from '../components/gallery/ImageDetailModal';
 import { ImageOff, Loader2 } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
+import usePageSettings from '@/hooks/usePageSettings';
 import EmptyState from '../components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 const BATCH_SIZE = 24;
 
 export default function Gallery() {
+    const [galleryPrefs, setGalleryPrefs] = usePageSettings('gallery_prefs', {
+        gridColumns: '6',
+        defaultSort: '-created_date',
+    });
     const [images, setImages] = useState([]);
     const [users, setUsers] = useState([]);
     const [filters, setFilters] = useState({
         primary_morph: 'all',
         secondary_traits: [],
         base_color: 'all',
-        sort: '-created_date'
+        sort: galleryPrefs.defaultSort,
     });
     const [selectedImageData, setSelectedImageData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -98,9 +105,32 @@ export default function Gallery() {
                         <p className="text-slate-400">Explore user-submitted gecko images. Use the filters to find specific morphs and traits.</p>
                     </div>
                     <PageSettingsPanel title="Gallery Settings">
-                        <p className="text-[11px] text-slate-500 leading-relaxed">
-                            Sort and display preferences for the gallery. Default sort can be changed in the main Settings page.
-                        </p>
+                        <div>
+                            <Label className="text-slate-300 text-sm mb-1 block">Grid Columns</Label>
+                            <div className="flex gap-1">
+                                {['3', '4', '6'].map(cols => (
+                                    <button
+                                        key={cols}
+                                        onClick={() => setGalleryPrefs({ gridColumns: cols })}
+                                        className={`px-3 py-1 text-xs rounded ${galleryPrefs.gridColumns === cols ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+                                    >
+                                        {cols}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div>
+                            <Label className="text-slate-300 text-sm mb-1 block">Default Sort</Label>
+                            <Select value={galleryPrefs.defaultSort} onValueChange={v => { setGalleryPrefs({ defaultSort: v }); setFilters(f => ({ ...f, sort: v })); }}>
+                                <SelectTrigger className="w-full h-8 text-xs">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                    <SelectItem value="-created_date">Newest First</SelectItem>
+                                    <SelectItem value="-likes">Most Liked</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </PageSettingsPanel>
                 </div>
 
@@ -114,7 +144,7 @@ export default function Gallery() {
                     </div>
                 ) : images.length > 0 ? (
                     <>
-                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4">
+                        <div className={`grid grid-cols-2 gap-4 ${galleryPrefs.gridColumns === '3' ? 'md:grid-cols-3' : galleryPrefs.gridColumns === '4' ? 'md:grid-cols-3 lg:grid-cols-4' : 'md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6'}`}>
                             {images.map(image => (
                                 <ImageCard
                                     key={image.id}
