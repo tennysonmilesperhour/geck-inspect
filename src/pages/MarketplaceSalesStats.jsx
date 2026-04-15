@@ -3,6 +3,10 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { Gecko, MarketplaceCost } from '@/entities/all';
+import {
+  LineChart, Line, AreaChart, Area, BarChart, Bar,
+  XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend,
+} from 'recharts';
 import { toast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
@@ -175,11 +179,6 @@ function QuarterSection({ quarterKey, items, onDelete: _onDelete, onUpdate: _onU
 // ---------------------------------------------------------------------------
 // All mock data tagged with __mock: true for clean removal when real
 // data pipelines are connected.
-
-import {
-  LineChart, Line, AreaChart, Area, BarChart, Bar,
-  XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend,
-} from 'recharts';
 
 const MORPHS_WITH_DATA = [
   'Lilly White', 'Axanthic', 'Cappuccino', 'Soft Scale', 'Harlequin',
@@ -363,7 +362,7 @@ function MarketAnalyticsTab({ user }) {
               <CartesianGrid strokeDasharray="3 3" stroke="#1a4034" />
               <XAxis dataKey="month" tick={{ fill: '#6b8f80', fontSize: 11 }} />
               <YAxis tick={{ fill: '#6b8f80', fontSize: 11 }} tickFormatter={v => `$${v}`} />
-              <Tooltip
+              <RechartsTooltip
                 contentStyle={{ background: '#0c2a1f', border: '1px solid #1a4034', borderRadius: 8 }}
                 labelStyle={{ color: '#d1fae5' }}
                 itemStyle={{ color: '#a7f3d0' }}
@@ -388,7 +387,7 @@ function MarketAnalyticsTab({ user }) {
               <CartesianGrid strokeDasharray="3 3" stroke="#1a4034" />
               <XAxis dataKey="month" tick={{ fill: '#6b8f80', fontSize: 11 }} />
               <YAxis tick={{ fill: '#6b8f80', fontSize: 11 }} />
-              <Tooltip contentStyle={{ background: '#0c2a1f', border: '1px solid #1a4034', borderRadius: 8 }} labelStyle={{ color: '#d1fae5' }} />
+              <RechartsTooltip contentStyle={{ background: '#0c2a1f', border: '1px solid #1a4034', borderRadius: 8 }} labelStyle={{ color: '#d1fae5' }} />
               <Bar dataKey="volume" fill="#10b981" radius={[4, 4, 0, 0]} name="Listings" />
             </BarChart>
           </ResponsiveContainer>
