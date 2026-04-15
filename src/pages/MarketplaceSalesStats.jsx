@@ -253,26 +253,6 @@ function MarketAnalyticsTab({ user }) {
   const isAdmin = user?.role === 'admin';
   const hasAccess = tier === 'enterprise' || isAdmin;
 
-  if (!hasAccess) {
-    return (
-      <div className="py-16 text-center space-y-5">
-        <div className="mx-auto w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-          <Lock className="w-8 h-8 text-emerald-400" />
-        </div>
-        <h3 className="text-xl font-bold text-white">Enterprise Feature</h3>
-        <p className="text-slate-400 max-w-md mx-auto leading-relaxed">
-          Market Analytics provides pricing trends, listing duration stats, and
-          morph demand intelligence. Available on the Enterprise tier.
-        </p>
-        <Link to={createPageUrl('Membership')}>
-          <Button className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-6">
-            View plans <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
-        </Link>
-      </div>
-    );
-  }
-
   const activeMorphStats = morphStats.find(m => m.name === selectedMorph) || morphStats[0];
 
   const handleMorphChange = (morph) => {
@@ -282,6 +262,27 @@ function MarketAnalyticsTab({ user }) {
 
   return (
     <div className="space-y-6">
+      {/* Enterprise upsell banner — shown for non-enterprise users */}
+      {!hasAccess && (
+        <div className="rounded-xl border border-emerald-500/20 bg-emerald-950/20 p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
+          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
+            <Lock className="w-6 h-6 text-emerald-400" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-sm font-bold text-white">Enterprise Feature Preview</h3>
+            <p className="text-xs text-slate-400 mt-0.5">
+              You're viewing Market Analytics with sample data. Upgrade to Enterprise for live market feeds updated in real time.
+            </p>
+          </div>
+          <Link to={createPageUrl('Membership')}>
+            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shrink-0">
+              View plans <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+            </Button>
+          </Link>
+        </div>
+      )}
+
+      {/* Demo data banner */}
       <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 flex items-start gap-2">
         <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
         <p className="text-xs text-slate-400 leading-relaxed">
