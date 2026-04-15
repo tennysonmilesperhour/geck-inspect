@@ -5,6 +5,8 @@ import { base44 as base44Client } from '@/api/base44Client';
 import { Loader2, Search, ZoomIn, ZoomOut, GitBranch, Heart, Users2, Edit2, Upload } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
+import usePageSettings from '@/hooks/usePageSettings';
+import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
@@ -132,6 +134,11 @@ const UnknownCardNode = ({ size = 'normal' }) => {
 
 
 export default function Lineage() {
+    const [lineagePrefs, setLineagePrefs] = usePageSettings('lineage_prefs', {
+        defaultGenerations: '3',
+        defaultZoom: '100',
+        showUnknownParents: true,
+    });
     const location = useLocation();
     const [myGeckos, setMyGeckos] = useState([]);
     const [allGeckosMap, setAllGeckosMap] = useState({});
@@ -149,8 +156,8 @@ export default function Lineage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [showSuggestions, setShowSuggestions] = useState(false);
     const searchRef = useRef(null);
-    const [scale, setScale] = useState(1);
-    const [generations, setGenerations] = useState(3);
+    const [scale, setScale] = useState(Number(lineagePrefs.defaultZoom) / 100);
+    const [generations, setGenerations] = useState(Number(lineagePrefs.defaultGenerations));
     const mainContentRef = useRef(null);
     
     // Touch/pinch zoom state
@@ -618,9 +625,38 @@ export default function Lineage() {
                             </SelectContent>
                         </Select>
                         <PageSettingsPanel title="Lineage Settings">
-                            <p className="text-[11px] text-slate-500 leading-relaxed">
-                                Lineage display preferences and zoom settings. Default generation depth can be adjusted above.
-                            </p>
+                            <div>
+                                <Label className="text-slate-300 text-sm mb-1 block">Default Generations</Label>
+                                <div className="flex gap-1">
+                                    {['2', '3', '4', '5'].map(n => (
+                                        <button
+                                            key={n}
+                                            onClick={() => { setLineagePrefs({ defaultGenerations: n }); setGenerations(Number(n)); }}
+                                            className={`px-3 py-1 text-xs rounded ${lineagePrefs.defaultGenerations === n ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+                                        >
+                                            {n}
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div>
+                                <Label className="text-slate-300 text-sm mb-1 block">Default Zoom</Label>
+                                <div className="flex gap-1">
+                                    {['50', '75', '100', '125'].map(z => (
+                                        <button
+                                            key={z}
+                                            onClick={() => { setLineagePrefs({ defaultZoom: z }); setScale(Number(z) / 100); }}
+                                            className={`px-2 py-1 text-xs rounded ${lineagePrefs.defaultZoom === z ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+                                        >
+                                            {z}%
+                                        </button>
+                                    ))}
+                                </div>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <Label className="text-slate-300 text-sm">Show Unknown Parents</Label>
+                                <Switch checked={lineagePrefs.showUnknownParents} onCheckedChange={v => setLineagePrefs({ showUnknownParents: v })} />
+                            </div>
                         </PageSettingsPanel>
                     </div>
                 </div>

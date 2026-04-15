@@ -6,6 +6,9 @@ import { useToast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
+import usePageSettings from '@/hooks/usePageSettings';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
@@ -34,6 +37,10 @@ const BUBBLE_INK_MUTED = '#6b6658';
 
 export default function MessagesPage() {
     const { toast } = useToast();
+    const [msgPrefs, setMsgPrefs] = usePageSettings('messages_prefs', {
+        previewLines: '1',
+        enterToSend: true,
+    });
     const [currentUser, setCurrentUser] = useState(null);
     const [selectedConversation, setSelectedConversation] = useState(null);
     const [conversations, setConversations] = useState([]);
@@ -237,8 +244,26 @@ export default function MessagesPage() {
                         <h1 className="text-4xl font-bold text-slate-100">Messages</h1>
                     </div>
                     <PageSettingsPanel title="Message Settings">
-                        <p className="text-[11px] text-slate-500 leading-relaxed">
-                            Email notifications for new messages can be toggled in the main Settings page.
+                        <div>
+                            <Label className="text-slate-300 text-sm mb-1 block">Preview Lines</Label>
+                            <div className="flex gap-1">
+                                {['1', '2', '3'].map(n => (
+                                    <button
+                                        key={n}
+                                        onClick={() => setMsgPrefs({ previewLines: n })}
+                                        className={`px-3 py-1 text-xs rounded ${msgPrefs.previewLines === n ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+                                    >
+                                        {n}
+                                    </button>
+                                ))}
+                            </div>
+                        </div>
+                        <div className="flex items-center justify-between">
+                            <Label className="text-slate-300 text-sm">Enter to Send</Label>
+                            <Switch checked={msgPrefs.enterToSend} onCheckedChange={v => setMsgPrefs({ enterToSend: v })} />
+                        </div>
+                        <p className="text-[10px] text-slate-500">
+                            {msgPrefs.enterToSend ? 'Press Enter to send, Shift+Enter for new line' : 'Press Shift+Enter to send'}
                         </p>
                     </PageSettingsPanel>
                 </div>
@@ -292,8 +317,8 @@ export default function MessagesPage() {
                                                                 )}
                                                             </div>
                                                             {conversation.latestMessage && (
-                                                                <div className="text-sm text-slate-400 truncate max-w-[220px]">
-                                                                    {conversation.latestMessage.content.substring(0, 60)}
+                                                                <div className={`text-sm text-slate-400 max-w-[220px] ${msgPrefs.previewLines === '1' ? 'truncate' : msgPrefs.previewLines === '2' ? 'line-clamp-2' : 'line-clamp-3'}`}>
+                                                                    {conversation.latestMessage.content.substring(0, 120)}
                                                                 </div>
                                                             )}
                                                         </div>
@@ -401,7 +426,10 @@ export default function MessagesPage() {
                                                     value={newMessage}
                                                     onChange={(e) => setNewMessage(e.target.value)}
                                                     onKeyDown={(e) => {
-                                                        if (e.key === 'Enter' && !e.shiftKey) {
+                                                        if (msgPrefs.enterToSend && e.key === 'Enter' && !e.shiftKey) {
+                                                            e.preventDefault();
+                                                            sendMessage();
+                                                        } else if (!msgPrefs.enterToSend && e.key === 'Enter' && e.shiftKey) {
                                                             e.preventDefault();
                                                             sendMessage();
                                                         }

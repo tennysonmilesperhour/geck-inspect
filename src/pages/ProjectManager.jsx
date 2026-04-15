@@ -15,6 +15,8 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { PlusCircle, Loader2, CalendarDays, Trash2, Plus, ChevronDown, ChevronUp, Calendar, RepeatIcon, Utensils, StickyNote } from 'lucide-react';
 import EmptyState from '../components/shared/EmptyState';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
+import usePageSettings from '@/hooks/usePageSettings';
+import { Switch } from '@/components/ui/switch';
 import { format } from 'date-fns';
 import ProjectCalendar from '../components/project-manager/ProjectCalendar';
 import FeedingGroupManager from '../components/project-manager/FeedingGroupManager';
@@ -22,6 +24,11 @@ import StickyNotes from '../components/project-manager/StickyNotes';
 import FutureBreedingPlans from '../components/project-manager/FutureBreedingPlans';
 
 export default function ProjectManager() {
+    const [plannerPrefs, setPlannerPrefs] = usePageSettings('planner_prefs', {
+        defaultTab: 'calendar',
+        showCompletedTasks: true,
+        compactView: false,
+    });
     const [projects, setProjects] = useState([]);
     const [tasks, setTasks] = useState([]);
     const [geckos, setGeckos] = useState([]);
@@ -29,11 +36,7 @@ export default function ProjectManager() {
     const [feedingGroups, setFeedingGroups] = useState([]);
     const [otherReptiles, setOtherReptiles] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    // Controlled tab state so child actions (like "Mark Fed Today" in the
-    // Feeding tab) can refresh data without unmounting the Tabs shell and
-    // snapping the user back to the Plans tab. Defaults to 'calendar' so
-    // opening Season Planner always lands on the monthly calendar view.
-    const [activeTab, setActiveTab] = useState('calendar');
+    const [activeTab, setActiveTab] = useState(plannerPrefs.defaultTab);
     const [currentUserEmail, setCurrentUserEmail] = useState(null);
 
     useEffect(() => {
@@ -292,9 +295,29 @@ export default function ProjectManager() {
                     </div>
                     <div className="flex gap-2 w-full md:w-auto">
                         <PageSettingsPanel title="Planner Settings">
-                            <p className="text-[11px] text-slate-500 leading-relaxed">
-                                Feeding alert thresholds and calendar alert preferences can be adjusted in the main Settings page.
-                            </p>
+                            <div>
+                                <Label className="text-slate-300 text-sm mb-1 block">Default Tab</Label>
+                                <Select value={plannerPrefs.defaultTab} onValueChange={v => { setPlannerPrefs({ defaultTab: v }); setActiveTab(v); }}>
+                                    <SelectTrigger className="w-full h-8 text-xs">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="plans">Plans</SelectItem>
+                                        <SelectItem value="future">Future Breeding</SelectItem>
+                                        <SelectItem value="calendar">Calendar</SelectItem>
+                                        <SelectItem value="feeding">Feeding Groups</SelectItem>
+                                        <SelectItem value="notes">Notes</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <Label className="text-slate-300 text-sm">Show Completed Tasks</Label>
+                                <Switch checked={plannerPrefs.showCompletedTasks} onCheckedChange={v => setPlannerPrefs({ showCompletedTasks: v })} />
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <Label className="text-slate-300 text-sm">Compact View</Label>
+                                <Switch checked={plannerPrefs.compactView} onCheckedChange={v => setPlannerPrefs({ compactView: v })} />
+                            </div>
                         </PageSettingsPanel>
                         <Button onClick={handleNewPlan} className="bg-emerald-600 hover:bg-emerald-700 flex-1 md:flex-none">
                             <PlusCircle className="w-5 h-5 mr-2" />
@@ -369,8 +392,8 @@ export default function ProjectManager() {
                                                 {isExpanded && (
                                                     <CardContent className="border-t border-slate-700 pt-4">
                                                         <div className="space-y-2 mb-4">
-                                                            {projectTasks.map(task => (
-                                                                <div key={task.id} className="flex items-center gap-3 p-3 bg-slate-800 rounded-lg">
+                                                            {projectTasks.filter(t => plannerPrefs.showCompletedTasks || !t.is_completed).map(task => (
+                                                                <div key={task.id} className={`flex items-center gap-3 ${plannerPrefs.compactView ? 'p-2' : 'p-3'} bg-slate-800 rounded-lg`}>
                                                                     <Checkbox checked={task.is_completed} onCheckedChange={() => handleToggleTask(task.id, task.is_completed)} />
                                                                     <div className="flex-1 min-w-0">
                                                                         <div className="flex items-center gap-2">

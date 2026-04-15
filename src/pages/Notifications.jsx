@@ -1,9 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Notification, User } from '@/entities/all';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
+import usePageSettings from '@/hooks/usePageSettings';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import {
     Bell,
     MessageSquare,
@@ -76,6 +79,11 @@ const typeLabels = {
 };
 
 export default function NotificationsPage() {
+    const [notifPrefs, setNotifPrefs] = usePageSettings('notifications_prefs', {
+        autoMarkRead: false,
+        groupByType: false,
+        showUnreadOnly: false,
+    });
     const [notifications, setNotifications] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [user, setUser] = useState(null);
@@ -96,6 +104,17 @@ export default function NotificationsPage() {
                     '-created_date'
                 );
                 setNotifications(userNotifications);
+
+                // Auto-mark-read on view
+                if (notifPrefs.autoMarkRead) {
+                    const unread = userNotifications.filter(n => !n.is_read);
+                    if (unread.length > 0) {
+                        Promise.all(unread.map(n => Notification.update(n.id, { is_read: true }))).then(() => {
+                            setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+                            emitCountChanged();
+                        }).catch(() => {});
+                    }
+                }
             } catch (error) {
                 console.error('Failed to load notifications:', error);
                 setUser(null);
@@ -178,6 +197,17 @@ export default function NotificationsPage() {
 
     const unreadCount = notifications.filter((n) => !n.is_read).length;
 
+    const displayNotifications = useMemo(() => {
+        let list = notifPrefs.showUnreadOnly ? notifications.filter(n => !n.is_read) : notifications;
+        if (notifPrefs.groupByType) {
+            list = [...list].sort((a, b) => {
+                if (a.type !== b.type) return (a.type || '').localeCompare(b.type || '');
+                return new Date(b.created_date) - new Date(a.created_date);
+            });
+        }
+        return list;
+    }, [notifications, notifPrefs.showUnreadOnly, notifPrefs.groupByType]);
+
     return (
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
             <div className="max-w-4xl mx-auto space-y-6">
@@ -199,9 +229,19 @@ export default function NotificationsPage() {
                     </div>
                     <div className="flex gap-2 shrink-0">
                         <PageSettingsPanel title="Notification Settings">
-                            <p className="text-[11px] text-slate-500 leading-relaxed">
-                                Choose which notifications you receive and how you're alerted in the main Settings page.
-                            </p>
+                            <div className="flex items-center justify-between">
+                                <Label className="text-slate-300 text-sm">Auto-mark as Read</Label>
+                                <Switch checked={notifPrefs.autoMarkRead} onCheckedChange={v => setNotifPrefs({ autoMarkRead: v })} />
+                            </div>
+                            <p className="text-[10px] text-slate-500 -mt-1">Mark notifications read when you view them</p>
+                            <div className="flex items-center justify-between">
+                                <Label className="text-slate-300 text-sm">Group by Type</Label>
+                                <Switch checked={notifPrefs.groupByType} onCheckedChange={v => setNotifPrefs({ groupByType: v })} />
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <Label className="text-slate-300 text-sm">Unread Only</Label>
+                                <Switch checked={notifPrefs.showUnreadOnly} onCheckedChange={v => setNotifPrefs({ showUnreadOnly: v })} />
+                            </div>
                         </PageSettingsPanel>
                         <Button
                             onClick={markAllAsRead}
@@ -217,15 +257,15 @@ export default function NotificationsPage() {
 
                 <Card className="bg-slate-900 border-slate-800">
                     <CardContent className="p-4 md:p-6">
-                        {notifications.length === 0 ? (
+                        {displayNotifications.length === 0 ? (
                             <EmptyState
                                 icon={Bell}
-                                title="No notifications"
-                                message="New notifications will appear here."
+                                title={notifPrefs.showUnreadOnly ? "No unread notifications" : "No notifications"}
+                                message={notifPrefs.showUnreadOnly ? "Toggle 'Unread Only' off in settings to see all." : "New notifications will appear here."}
                             />
                         ) : (
                             <div className="space-y-2">
-                                {notifications.map((notification) => {
+                                {displayNotifications.map((notification) => {
                                     const isUnread = !notification.is_read;
                                     return (
                                         <div

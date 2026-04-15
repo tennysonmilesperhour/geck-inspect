@@ -3,6 +3,9 @@ import { ForumCategory, ForumPost, User } from '@/entities/all';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
+import usePageSettings from '@/hooks/usePageSettings';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
@@ -36,6 +39,11 @@ import { formatDistanceToNow } from 'date-fns';
  * every mount.
  */
 export default function ForumPage() {
+    const [forumPrefs, setForumPrefs] = usePageSettings('forum_prefs', {
+        sortOrder: 'newest',
+        collapseCategories: false,
+        showPinnedFirst: true,
+    });
     const [categories, setCategories] = useState([]);
     const [posts, setPosts] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
@@ -44,6 +52,7 @@ export default function ForumPage() {
     const [newPost, setNewPost] = useState({ title: '', content: '', category_id: '' });
     const [isPosting, setIsPosting] = useState(false);
     const [search, setSearch] = useState('');
+    const [collapsedCats, setCollapsedCats] = useState(new Set());
 
     const loadData = async () => {
         setIsLoading(true);
@@ -99,15 +108,27 @@ export default function ForumPage() {
     };
 
     const filteredPosts = useMemo(() => {
-        if (!search.trim()) return posts;
-        const q = search.toLowerCase();
-        return posts.filter(
-            (p) =>
-                p.title?.toLowerCase().includes(q) ||
-                p.content?.toLowerCase().includes(q) ||
-                p.author_name?.toLowerCase().includes(q)
-        );
-    }, [posts, search]);
+        let list = posts;
+        if (search.trim()) {
+            const q = search.toLowerCase();
+            list = list.filter(
+                (p) =>
+                    p.title?.toLowerCase().includes(q) ||
+                    p.content?.toLowerCase().includes(q) ||
+                    p.author_name?.toLowerCase().includes(q)
+            );
+        }
+        list = [...list].sort((a, b) => {
+            if (forumPrefs.showPinnedFirst) {
+                if (a.is_pinned && !b.is_pinned) return -1;
+                if (!a.is_pinned && b.is_pinned) return 1;
+            }
+            if (forumPrefs.sortOrder === 'oldest') return new Date(a.created_date) - new Date(b.created_date);
+            if (forumPrefs.sortOrder === 'most_viewed') return (b.view_count || 0) - (a.view_count || 0);
+            return new Date(b.created_date) - new Date(a.created_date);
+        });
+        return list;
+    }, [posts, search, forumPrefs.sortOrder, forumPrefs.showPinnedFirst]);
 
     if (isLoading) {
         return (
@@ -135,9 +156,27 @@ export default function ForumPage() {
                     </div>
                     <div className="flex gap-2 shrink-0">
                         <PageSettingsPanel title="Forum Settings">
-                            <p className="text-[11px] text-slate-500 leading-relaxed">
-                                Notification preferences for forum activity can be configured in the main Settings page.
-                            </p>
+                            <div>
+                                <Label className="text-slate-300 text-sm mb-1 block">Sort Posts</Label>
+                                <Select value={forumPrefs.sortOrder} onValueChange={v => setForumPrefs({ sortOrder: v })}>
+                                    <SelectTrigger className="w-full h-8 text-xs">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="newest">Newest First</SelectItem>
+                                        <SelectItem value="oldest">Oldest First</SelectItem>
+                                        <SelectItem value="most_viewed">Most Viewed</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <Label className="text-slate-300 text-sm">Pinned Posts First</Label>
+                                <Switch checked={forumPrefs.showPinnedFirst} onCheckedChange={v => setForumPrefs({ showPinnedFirst: v })} />
+                            </div>
+                            <div className="flex items-center justify-between">
+                                <Label className="text-slate-300 text-sm">Collapse Categories</Label>
+                                <Switch checked={forumPrefs.collapseCategories} onCheckedChange={v => setForumPrefs({ collapseCategories: v })} />
+                            </div>
                         </PageSettingsPanel>
                     {currentUser && (
                         <Button
@@ -235,12 +274,23 @@ export default function ForumPage() {
                 {categories.map((category) => {
                     const categoryPosts = filteredPosts.filter((p) => p.category_id === category.id);
                     if (categoryPosts.length === 0) return null;
+                    const isCatCollapsed = forumPrefs.collapseCategories
+                        ? !collapsedCats.has(category.id)
+                        : collapsedCats.has(category.id);
                     return (
                         <div key={category.id}>
-                            <h2 className="text-xl md:text-2xl font-bold text-slate-200 mb-3">
+                            <h2
+                                className="text-xl md:text-2xl font-bold text-slate-200 mb-3 cursor-pointer flex items-center gap-2 select-none"
+                                onClick={() => setCollapsedCats(prev => {
+                                    const next = new Set(prev);
+                                    next.has(category.id) ? next.delete(category.id) : next.add(category.id);
+                                    return next;
+                                })}
+                            >
                                 {category.name}
+                                <span className="text-sm text-slate-500 font-normal">({categoryPosts.length})</span>
                             </h2>
-                            <Card className="bg-slate-900 border-slate-800">
+                            {!isCatCollapsed && <Card className="bg-slate-900 border-slate-800">
                                 <CardContent className="p-0 divide-y divide-slate-800">
                                     {categoryPosts.map((post) => (
                                         <div
@@ -276,7 +326,7 @@ export default function ForumPage() {
                                         </div>
                                     ))}
                                 </CardContent>
-                            </Card>
+                            </Card>}
                         </div>
                     );
                 })}

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
+import usePageSettings from '@/hooks/usePageSettings';
 import { User, Gecko, GeckoImage, ForumPost, GeckoOfTheDay as GotdEntity } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import {
@@ -13,6 +14,8 @@ import {
     Camera,
     Crown,
 } from 'lucide-react';
+import { Switch } from '@/components/ui/switch';
+import { Label } from '@/components/ui/label';
 import StatsCard from '../components/dashboard/StatsCard';
 import RecentActivity from '../components/dashboard/RecentActivity';
 import FeaturedBreeders from '../components/dashboard/FeaturedBreeders';
@@ -52,6 +55,13 @@ import { format } from 'date-fns';
  */
 
 export default function Dashboard() {
+    const [dashPrefs, setDashPrefs] = usePageSettings('dashboard_prefs', {
+        showGeckoOfTheDay: true,
+        showFeaturedBreeders: true,
+        showCommunityPulse: true,
+        showHatchery: true,
+        compactStats: false,
+    });
     const [stats, setStats] = useState({ users: 0, geckos: 0, images: 0, posts: 0, verifiedImages: 0 });
     const [isLoading, setIsLoading] = useState(true);
     const [user, setUser] = useState(null);
@@ -247,9 +257,26 @@ export default function Dashboard() {
                                         </Link>
                                     )}
                                     <PageSettingsPanel title="Dashboard Settings">
-                                        <p className="text-[11px] text-slate-500 leading-relaxed">
-                                            Customize notification preferences, calendar alerts, and featured breeder settings from the main Settings page.
-                                        </p>
+                                        <div className="flex items-center justify-between">
+                                            <Label className="text-slate-300 text-sm">Gecko of the Day</Label>
+                                            <Switch checked={dashPrefs.showGeckoOfTheDay} onCheckedChange={v => setDashPrefs({ showGeckoOfTheDay: v })} />
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <Label className="text-slate-300 text-sm">Featured Breeders</Label>
+                                            <Switch checked={dashPrefs.showFeaturedBreeders} onCheckedChange={v => setDashPrefs({ showFeaturedBreeders: v })} />
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <Label className="text-slate-300 text-sm">Community Pulse</Label>
+                                            <Switch checked={dashPrefs.showCommunityPulse} onCheckedChange={v => setDashPrefs({ showCommunityPulse: v })} />
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <Label className="text-slate-300 text-sm">Hatchery Widget</Label>
+                                            <Switch checked={dashPrefs.showHatchery} onCheckedChange={v => setDashPrefs({ showHatchery: v })} />
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <Label className="text-slate-300 text-sm">Compact Stats</Label>
+                                            <Switch checked={dashPrefs.compactStats} onCheckedChange={v => setDashPrefs({ compactStats: v })} />
+                                        </div>
                                     </PageSettingsPanel>
                                 </div>
                             </div>
@@ -258,43 +285,43 @@ export default function Dashboard() {
 
                     {/* STATS STRIP */}
                     {isLoading ? (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 ${dashPrefs.compactStats ? 'max-w-3xl' : ''}`}>
                             {[...Array(4)].map((_, i) => (
                                 <div
                                     key={i}
-                                    className="h-28 rounded-2xl border border-slate-800 bg-slate-900/50 animate-pulse"
+                                    className={`${dashPrefs.compactStats ? 'h-16' : 'h-28'} rounded-2xl border border-slate-800 bg-slate-900/50 animate-pulse`}
                                 />
                             ))}
                         </div>
                     ) : (
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                        <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 ${dashPrefs.compactStats ? 'max-w-3xl' : ''}`}>
                             <StatsCard
                                 title="Community Members"
                                 value={stats.users.toLocaleString()}
                                 icon={Users}
                                 gradient="from-cyan-500 to-blue-600"
-                                description="Active keepers"
+                                description={dashPrefs.compactStats ? '' : 'Active keepers'}
                             />
                             <StatsCard
                                 title="Geckos Tracked"
                                 value={stats.geckos.toLocaleString()}
                                 icon={GitBranch}
                                 gradient="from-emerald-500 to-green-600"
-                                description="Across collections"
+                                description={dashPrefs.compactStats ? '' : 'Across collections'}
                             />
                             <StatsCard
                                 title="Recent Uploads"
                                 value={stats.images.toLocaleString()}
                                 icon={Camera}
                                 gradient="from-amber-500 to-orange-600"
-                                description="Last 20 photos"
+                                description={dashPrefs.compactStats ? '' : 'Last 20 photos'}
                             />
                             <StatsCard
                                 title="Forum Buzz"
                                 value={stats.posts.toLocaleString()}
                                 icon={MessageSquare}
                                 gradient="from-violet-500 to-purple-600"
-                                description="Recent discussions"
+                                description={dashPrefs.compactStats ? '' : 'Recent discussions'}
                             />
                         </div>
                     )}
@@ -304,16 +331,18 @@ export default function Dashboard() {
                         {/* Left column — Next Actions + Community Pulse */}
                         <div className="xl:col-span-4 space-y-6">
                             <NextActions currentUserEmail={user?.email} />
-                            <CommunityPulse />
+                            {dashPrefs.showCommunityPulse && <CommunityPulse />}
                         </div>
 
                         {/* Middle column — Gecko of the Day hero */}
                         <div className="xl:col-span-5 space-y-6">
-                            <GeckoOfTheDayComponent
-                                geckoOfTheDay={geckoOfTheDay}
-                                fallbackGecko={fallbackGecko}
-                                onImageSelect={handleImageSelect}
-                            />
+                            {dashPrefs.showGeckoOfTheDay && (
+                                <GeckoOfTheDayComponent
+                                    geckoOfTheDay={geckoOfTheDay}
+                                    fallbackGecko={fallbackGecko}
+                                    onImageSelect={handleImageSelect}
+                                />
+                            )}
                             <RecentActivity
                                 geckoImages={recentImages}
                                 isLoading={isLoading}
@@ -324,9 +353,9 @@ export default function Dashboard() {
 
                         {/* Right column — Featured breeders + hatchery */}
                         <div className="xl:col-span-3 space-y-6">
-                            <FeaturedBreeders />
+                            {dashPrefs.showFeaturedBreeders && <FeaturedBreeders />}
 
-                            <Card className="gecko-card">
+                            {dashPrefs.showHatchery && <Card className="gecko-card">
                                 <CardContent className="p-5 space-y-4">
                                     <div className="flex items-center gap-2 text-gecko-text">
                                         <Egg className="w-5 h-5 text-amber-400" />
@@ -370,7 +399,7 @@ export default function Dashboard() {
                                         </div>
                                     </div>
                                 </CardContent>
-                            </Card>
+                            </Card>}
 
                             {/* New-user onboarding card only when relevant */}
                             {user && (
