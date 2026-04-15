@@ -24,6 +24,7 @@ const MORPH_CATEGORIES = {
     morphs: [
       "Lilly White", "Super Lilly White",
       "Axanthic",
+      "Albino",
       "Cappuccino", "Super Cappuccino",
       "Soft Scale", "Super Soft Scale",
       "Moonglow",
@@ -50,6 +51,7 @@ const MORPH_CATEGORIES = {
     morphs: [
       "Het Lilly White", "Possible Het Lilly White",
       "Het Axanthic", "Possible Het Axanthic",
+      "Het Albino", "Possible Het Albino",
       "Het Cappuccino", "Possible Het Cappuccino",
       "Het Soft Scale", "Possible Het Soft Scale",
       "Het Moonglow", "Possible Het Moonglow",

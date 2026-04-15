@@ -136,7 +136,7 @@ export default function MarketplaceBuyPage() {
     const [activeFilters, setActiveFilters] = useState(new Set());
 
     const MORPH_FILTERS = [
-        'Lilly White', 'Axanthic', 'Cappuccino', 'Soft Scale', 'Moonglow',
+        'Lilly White', 'Axanthic', 'Albino', 'Cappuccino', 'Soft Scale', 'Moonglow',
         'Frappuccino', 'Harlequin', 'Extreme Harlequin', 'Pinstripe',
         'Dalmatian', 'Super Dalmatian', 'Flame', 'Tiger', 'Patternless',
         'Bicolor', 'Tricolor', 'Empty Back', 'White Wall',
