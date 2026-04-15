@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Settings, X, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -11,6 +11,9 @@ import { Button } from '@/components/ui/button';
  * page-specific settings. A footer link directs users to the main
  * Settings page for account-wide preferences.
  *
+ * The panel is rendered with fixed positioning so it always floats
+ * above page content regardless of parent stacking contexts.
+ *
  * Usage:
  *   <PageSettingsPanel title="My Geckos Settings">
  *     <div>...your settings controls...</div>
@@ -18,10 +21,22 @@ import { Button } from '@/components/ui/button';
  */
 export default function PageSettingsPanel({ title = 'Page Settings', children, className = '' }) {
     const [open, setOpen] = useState(false);
+    const btnRef = useRef(null);
+
+    const getPanelStyle = () => {
+        if (!btnRef.current) return {};
+        const rect = btnRef.current.getBoundingClientRect();
+        return {
+            position: 'fixed',
+            top: rect.bottom + 8,
+            right: Math.max(8, window.innerWidth - rect.right),
+        };
+    };
 
     return (
-        <div className={`relative ${className}`}>
+        <div className={`${className}`}>
             <Button
+                ref={btnRef}
                 variant="outline"
                 size="sm"
                 onClick={() => setOpen(o => !o)}
@@ -35,9 +50,9 @@ export default function PageSettingsPanel({ title = 'Page Settings', children, c
             {open && (
                 <>
                     {/* Backdrop */}
-                    <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
+                    <div className="fixed inset-0 z-[9998]" onClick={() => setOpen(false)} />
                     {/* Panel */}
-                    <div className="absolute right-0 top-full mt-2 z-50 w-72 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-4 space-y-3">
+                    <div style={getPanelStyle()} className="z-[9999] w-72 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-4 space-y-3">
                         <div className="flex items-center justify-between mb-1">
                             <h3 className="text-slate-100 font-semibold text-sm flex items-center gap-2">
                                 <Settings className="w-4 h-4 text-emerald-400" />
