@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import Seo from '@/components/seo/Seo';
 import { useLocation } from 'react-router-dom';
 import { Gecko, BreedingPlan, LineagePlaceholder } from '@/entities/all';
 import { base44 as base44Client } from '@/api/base44Client';
@@ -554,6 +555,13 @@ export default function Lineage() {
 
     return (
         <div className="flex flex-col h-screen bg-slate-950 text-slate-200 overflow-hidden">
+            <Seo
+                title="Lineage Tree"
+                description="Visualize your crested gecko family trees with an interactive lineage explorer. Trace ancestry across generations."
+                path="/Lineage"
+                noIndex
+                keywords={['gecko lineage', 'pedigree tree', 'ancestry tracker', 'gecko family tree']}
+            />
             <header className="p-3 md:p-4 border-b border-slate-700 flex-shrink-0 z-20 bg-slate-950/80 backdrop-blur-sm">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:justify-start items-center gap-3">
                     <div className="text-center md:text-left md:mr-6">

@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
+import Seo from '@/components/seo/Seo';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import usePageSettings from '@/hooks/usePageSettings';
 import { User, Gecko, GeckoImage, ForumPost, GeckoOfTheDay as GotdEntity } from '@/entities/all';
@@ -184,6 +185,13 @@ export default function Dashboard() {
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-emerald-950/30 to-slate-900 relative overflow-hidden">
+            <Seo
+                title="Dashboard"
+                description="Your crested gecko breeding dashboard — track your collection, hatchery stats, community activity, and gecko of the day."
+                path="/Dashboard"
+                noIndex
+                keywords={['gecko dashboard', 'breeding tracker', 'hatchery stats']}
+            />
             {/* Ambient background */}
             <div className="absolute inset-0 gecko-scale-pattern opacity-5 pointer-events-none" />
             <div className="absolute top-0 right-0 w-[32rem] h-[32rem] bg-gradient-radial from-emerald-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />

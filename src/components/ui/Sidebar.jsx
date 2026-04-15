@@ -58,7 +58,7 @@ export function Sidebar({ children, className }) {
                 <aside className={`flex flex-col h-full w-72 shadow-lg ${className}`}>
                     {children}
                 </aside>
-                <div className="flex-1 bg-black/50" onClick={toggleSidebar}></div>
+                <div className="flex-1 bg-black/20 backdrop-blur-sm" onClick={toggleSidebar}></div>
             </div>
         </>
     );

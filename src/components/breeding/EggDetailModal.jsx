@@ -15,7 +15,8 @@ export default function EggDetailModal({ egg, breedingPlan, sire, dam, onClose, 
         lay_date: egg.lay_date,
         hatch_date_expected: egg.hatch_date_expected,
         hatch_date_actual: egg.hatch_date_actual || '',
-        status: egg.status
+        status: egg.status,
+        grade: egg.grade || '',
     });
 
     const daysIncubating = differenceInDays(new Date(), new Date(egg.lay_date));
@@ -45,7 +46,7 @@ export default function EggDetailModal({ egg, breedingPlan, sire, dam, onClose, 
 
     return (
         <Dialog open={true} onOpenChange={onClose}>
-            <DialogContent className="bg-slate-900 border-slate-700 text-slate-100 max-w-2xl">
+            <DialogContent className="bg-slate-900 border-slate-700 text-slate-100 max-w-2xl w-[95vw] sm:w-full">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2">
                         <EggIcon className="w-6 h-6 text-emerald-400" />
@@ -109,25 +110,46 @@ export default function EggDetailModal({ egg, breedingPlan, sire, dam, onClose, 
                         )}
                     </div>
 
-                    {/* Status */}
-                    <div>
-                        <Label>Status</Label>
-                        <Select 
-                            value={editData.status} 
-                            onValueChange={(v) => setEditData({ ...editData, status: v })}
-                            disabled={!isEditing}
-                        >
-                            <SelectTrigger className="bg-slate-800 border-slate-600">
-                                <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent className="bg-slate-800 border-slate-600">
-                                <SelectItem value="Incubating">Incubating</SelectItem>
-                                <SelectItem value="Hatched">Hatched</SelectItem>
-                                <SelectItem value="Slug">Slug</SelectItem>
-                                <SelectItem value="Infertile">Infertile</SelectItem>
-                                <SelectItem value="Stillbirth">Stillbirth</SelectItem>
-                            </SelectContent>
-                        </Select>
+                    {/* Status & Grade */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div>
+                            <Label>Status</Label>
+                            <Select
+                                value={editData.status}
+                                onValueChange={(v) => setEditData({ ...editData, status: v })}
+                                disabled={!isEditing}
+                            >
+                                <SelectTrigger className="bg-slate-800 border-slate-600">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-800 border-slate-600">
+                                    <SelectItem value="Incubating">Incubating</SelectItem>
+                                    <SelectItem value="Hatched">Hatched</SelectItem>
+                                    <SelectItem value="Slug">Slug</SelectItem>
+                                    <SelectItem value="Infertile">Infertile</SelectItem>
+                                    <SelectItem value="Stillbirth">Stillbirth</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
+                        <div>
+                            <Label>Egg Grade</Label>
+                            <Select
+                                value={editData.grade || ''}
+                                onValueChange={(v) => setEditData({ ...editData, grade: v })}
+                                disabled={!isEditing}
+                            >
+                                <SelectTrigger className="bg-slate-800 border-slate-600">
+                                    <SelectValue placeholder="No grade" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-800 border-slate-600">
+                                    <SelectItem value="A+">A+ — Excellent</SelectItem>
+                                    <SelectItem value="A">A — Great</SelectItem>
+                                    <SelectItem value="B">B — Good</SelectItem>
+                                    <SelectItem value="C">C — Fair</SelectItem>
+                                    <SelectItem value="D">D — Poor</SelectItem>
+                                </SelectContent>
+                            </Select>
+                        </div>
                     </div>
                 </div>
 
