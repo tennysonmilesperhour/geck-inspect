@@ -112,10 +112,10 @@ export default function ProjectManager() {
             await Project.create(newProject);
             setIsProjectModalOpen(false);
             setNewProject({ name: '', description: '', category: 'custom', related_gecko_id: '', related_breeding_plan_id: '', custom_relation: '', status: 'active', due_date: '', color: '#10b981' });
-            loadData();
+            loadData({ background: true });
         } catch (error) { console.error("Failed to create project:", error); }
     };
-    
+
     const handleCreateTask = async () => {
         if (!newTask.title) return;
         try {
@@ -124,7 +124,7 @@ export default function ProjectManager() {
             await Task.create(taskData);
             setIsTaskModalOpen(false);
             setNewTask({ project_id: '', title: '', description: '', due_date: '', is_recurring: false, recurring_interval_days: 7, reminder_enabled: false, reminder_days_before: 1 });
-            loadData();
+            loadData({ background: true });
         } catch (error) { console.error("Failed to create task:", error); }
     };
     
@@ -143,23 +143,23 @@ export default function ProjectManager() {
                 }
             } else { updateData.completed_date = null; }
             await Task.update(taskId, updateData);
-            loadData();
+            loadData({ background: true });
         } catch (error) { console.error("Failed to toggle task:", error); }
     };
-    
+
     const handleDeleteTask = async () => {
         if (!taskToDelete) return;
-        try { await Task.delete(taskToDelete); loadData(); } catch (error) { console.error("Failed to delete task:", error); }
+        try { await Task.delete(taskToDelete); loadData({ background: true }); } catch (error) { console.error("Failed to delete task:", error); }
         setTaskToDelete(null);
     };
-    
+
     const handleDeleteProject = async () => {
         if (!projectToDelete) return;
         try {
             const projectTasks = tasks.filter(t => t.project_id === projectToDelete);
             await Promise.all(projectTasks.map(t => Task.delete(t.id)));
             await Project.delete(projectToDelete);
-            loadData();
+            loadData({ background: true });
         } catch (error) { console.error("Failed to delete project:", error); }
         setProjectToDelete(null);
     };
