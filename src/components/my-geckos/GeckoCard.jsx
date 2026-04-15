@@ -149,11 +149,6 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
             </div>
           )}
         </div>
-        {gecko.incubation_days && (
-          <div className="text-xs text-blue-400 font-semibold">
-            {gecko.incubation_days} days incubated
-          </div>
-        )}
         {gecko.sex === 'Female' && gecko.is_gravid && (
           <Badge className="bg-pink-700 text-pink-100 text-xs w-fit flex items-center gap-1">
             <Heart className="w-3 h-3" /> Gravid

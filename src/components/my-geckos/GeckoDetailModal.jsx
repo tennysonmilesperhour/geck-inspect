@@ -417,6 +417,12 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                       {gecko.hatch_date ? format(new Date(gecko.hatch_date), 'PPP') : 'Unknown'}
                     </p>
                   </div>
+                  {gecko.incubation_days && (
+                    <div>
+                      <span className="text-slate-400">Incubation:</span>
+                      <p className="font-medium text-blue-400">{gecko.incubation_days} days</p>
+                    </div>
+                  )}
                   <div>
                     <span className="text-slate-400">Current Weight:</span>
                     <p className="font-medium">
