@@ -483,9 +483,26 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     };
 
     // Merge fallback items that aren't in the DB yet so new pages
-    // (like BreederShipping) always appear in the sidebar.
+    // (like BreederShipping) always appear in the sidebar. Also apply
+    // display_name updates from fallback for existing items (e.g.
+    // "Sales Stats" → "Business Tools").
+    const fallbackLookup = {};
+    for (const category of ['collection', 'tools', 'public']) {
+      for (const f of (FALLBACK_NAV_ITEMS[category] || [])) {
+        fallbackLookup[f.page_name] = f;
+      }
+    }
     for (const category of ['collection', 'tools', 'public']) {
       const dbNames = new Set(dbNav[category].map(p => p.page_name));
+      // Update existing items with fallback display_name if changed
+      dbNav[category] = dbNav[category].map(p => {
+        const fb = fallbackLookup[p.page_name];
+        if (fb && fb.display_name !== p.display_name) {
+          return { ...p, display_name: fb.display_name, icon: fb.icon };
+        }
+        return p;
+      });
+      // Add missing items
       for (const fallback of (FALLBACK_NAV_ITEMS[category] || [])) {
         if (!dbNames.has(fallback.page_name)) {
           dbNav[category].push(fallback);
