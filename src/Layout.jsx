@@ -453,6 +453,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       { page_name: "BreederConsultant", display_name: "AI Consultant", icon: "FlaskConical", category: "tools", requires_auth: false, is_enabled: true, order: 3 },
       { page_name: "ProjectManager", display_name: "Season Planner", icon: "CalendarDays", category: "tools", requires_auth: true, is_enabled: true, order: 4 },
       { page_name: "GeneticsGuide", display_name: "Genetics Guide", icon: "Dna", category: "tools", requires_auth: false, is_enabled: true, order: 5 },
+      { page_name: "MarketplaceSalesStats", display_name: "Business Tools", icon: "BarChart3", category: "tools", requires_auth: true, is_enabled: true, order: 6 },
     ],
     public: [
     { page_name: "Dashboard", display_name: "Dashboard", icon: "BarChart3", category: "public", requires_auth: false, is_enabled: true, order: 1 },
@@ -461,8 +462,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     { page_name: "Forum", display_name: "Forum", icon: "MessageSquare", category: "public", requires_auth: false, is_enabled: true, order: 4 },
     { page_name: "Gallery", display_name: "Image Gallery", icon: "Images", category: "public", requires_auth: false, is_enabled: true, order: 5 },
     { page_name: "Marketplace", display_name: "Marketplace", icon: "ShoppingCart", category: "public", requires_auth: false, is_enabled: true, order: 6 },
-    { page_name: "MarketplaceSalesStats", display_name: "Business Tools", icon: "BarChart3", category: "public", requires_auth: true, is_enabled: true, order: 7 },
-    { page_name: "BreederShipping", display_name: "Shipping", icon: "Truck", category: "public", requires_auth: true, is_enabled: true, order: 8 },
+    { page_name: "BreederShipping", display_name: "Shipping", icon: "Truck", category: "public", requires_auth: true, is_enabled: true, order: 7 },
     ],
   };
 
@@ -476,33 +476,41 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       .filter(p => p.is_enabled)
       .sort((a, b) => (a.order_position ?? 0) - (b.order_position ?? 0));
 
-    const dbNav = {
-      collection: enabled.filter(p => p.category === 'collection'),
-      tools: enabled.filter(p => p.category === 'tools'),
-      public: enabled.filter(p => p.category === 'public')
-    };
-
-    // Merge fallback items that aren't in the DB yet so new pages
-    // (like BreederShipping) always appear in the sidebar. Also apply
-    // display_name updates from fallback for existing items (e.g.
-    // "Sales Stats" → "Business Tools").
-    const fallbackLookup = {};
+    // Build a lookup of fallback items keyed by page_name so we can
+    // detect renames and category moves.
+    const fallbackByName = {};
     for (const category of ['collection', 'tools', 'public']) {
       for (const f of (FALLBACK_NAV_ITEMS[category] || [])) {
-        fallbackLookup[f.page_name] = f;
+        fallbackByName[f.page_name] = { ...f, _category: category };
       }
     }
+
+    // Filter DB items: if the fallback has moved a page to a different
+    // category, remove the DB version so only the fallback version
+    // appears (in the correct section).
+    const filteredEnabled = enabled.filter(p => {
+      const fb = fallbackByName[p.page_name];
+      if (fb && fb._category !== p.category) return false; // moved
+      return true;
+    });
+
+    const dbNav = {
+      collection: filteredEnabled.filter(p => p.category === 'collection'),
+      tools: filteredEnabled.filter(p => p.category === 'tools'),
+      public: filteredEnabled.filter(p => p.category === 'public')
+    };
+
+    // Merge fallback items: update display_name for existing entries,
+    // add missing entries.
     for (const category of ['collection', 'tools', 'public']) {
       const dbNames = new Set(dbNav[category].map(p => p.page_name));
-      // Update existing items with fallback display_name if changed
       dbNav[category] = dbNav[category].map(p => {
-        const fb = fallbackLookup[p.page_name];
-        if (fb && fb.display_name !== p.display_name) {
+        const fb = fallbackByName[p.page_name];
+        if (fb && (fb.display_name !== p.display_name || fb.icon !== p.icon)) {
           return { ...p, display_name: fb.display_name, icon: fb.icon };
         }
         return p;
       });
-      // Add missing items
       for (const fallback of (FALLBACK_NAV_ITEMS[category] || [])) {
         if (!dbNames.has(fallback.page_name)) {
           dbNav[category].push(fallback);
