@@ -427,38 +427,16 @@ html, body, #root {
                              made dropdowns invisible until clicked. Removed. */
 
           .gecko-card {
-            background: rgba(6, 95, 70, 0.4);
-            backdrop-filter: blur(15px) saturate(180%);
-            border: 1px solid var(--gecko-border);
+            background: #163026;
+            border: 1px solid rgba(134, 239, 172, 0.15);
             border-radius: 16px;
             overflow: hidden;
-            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-            position: relative;
-          }
-
-          .gecko-card::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            right: 0;
-            height: 1px;
-            background: linear-gradient(90deg, transparent, var(--gecko-primary), transparent);
-            opacity: 0;
-            transition: opacity 0.3s ease;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
           }
 
           .gecko-card:hover {
-            transform: translateY(-8px) scale(1.02);
             border-color: var(--gecko-accent);
-            box-shadow: 
-              0 20px 40px rgba(0, 0, 0, 0.4),
-              0 0 60px rgba(134, 239, 172, 0.2),
-              inset 0 1px 0 rgba(134, 239, 172, 0.1);
-          }
-
-          .gecko-card:hover::before {
-            opacity: 1;
+            box-shadow: 0 0 20px rgba(134, 239, 172, 0.1);
           }
 
           .sidebar-nav-item {

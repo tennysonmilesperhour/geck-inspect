@@ -636,13 +636,15 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 </Button>
               </Link>
               <div className="block">
-                <button
-                 onClick={() => setShowTutorial(true)}
-                 className="w-full group flex items-center justify-start rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 border border-emerald-900/60 text-emerald-100/80 hover:text-white hover:bg-emerald-900/40 hover:border-emerald-700/60"
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowTutorial(true)}
+                  className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm"
                 >
-                 <GraduationCap className="w-4 h-4 mr-2 flex-shrink-0" />
-                 App Tutorial
-                </button>
+                  <GraduationCap className="w-4 h-4 mr-2 flex-shrink-0" />
+                  App Tutorial
+                </Button>
               </div>
 
               {user ?
@@ -773,13 +775,15 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                     </Button>
                   </Link>
                   <div>
-                  <button
-                   onClick={() => setShowTutorial(true)}
-                   className="w-full group flex items-center justify-start rounded-md px-3 py-2 text-sm font-medium transition-colors duration-200 border border-emerald-900/60 text-emerald-100/80 hover:text-white hover:bg-emerald-900/40 hover:border-emerald-700/60"
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowTutorial(true)}
+                    className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm"
                   >
-                   <GraduationCap className="w-4 h-4 mr-2 flex-shrink-0" />
-                   App Tutorial
-                  </button>
+                    <GraduationCap className="w-4 h-4 mr-2 flex-shrink-0" />
+                    App Tutorial
+                  </Button>
                   </div>
 
                   {user ?
