@@ -1,5 +1,5 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { Project, Task, Gecko, BreedingPlan, FeedingGroup, OtherReptile } from '@/entities/all';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { Project, Task, Gecko, BreedingPlan, FeedingGroup, OtherReptile, Notification, User } from '@/entities/all';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -20,7 +20,6 @@ import ProjectCalendar from '../components/project-manager/ProjectCalendar';
 import FeedingGroupManager from '../components/project-manager/FeedingGroupManager';
 import StickyNotes from '../components/project-manager/StickyNotes';
 import FutureBreedingPlans from '../components/project-manager/FutureBreedingPlans';
-import { User } from '@/entities/all';
 
 export default function ProjectManager() {
     const [projects, setProjects] = useState([]);
@@ -105,7 +104,101 @@ export default function ProjectManager() {
         }
         if (!background) setIsLoading(false);
     };
-    
+
+    // ── Task / project due-date notifications ────────────────────────
+    // Runs once on mount. For each task or project with a due date that
+    // is today or past (and not completed/archived), creates an in-app
+    // notification — deduped by a daily key so the same reminder isn't
+    // created twice in one session.
+    const checkDueDateNotifications = useCallback(async (
+      taskList, projectList, userEmail
+    ) => {
+      if (!userEmail) return;
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const todayStr = today.toISOString().split('T')[0];
+
+      // Collect items that need a notification
+      const reminders = [];
+
+      for (const task of taskList) {
+        if (task.is_completed) continue;
+        const dueDate = task.is_recurring ? task.next_due_date : task.due_date;
+        if (!dueDate) continue;
+        const due = new Date(dueDate);
+        due.setHours(0, 0, 0, 0);
+        if (due <= today) {
+          const daysOverdue = Math.round((today - due) / 86400000);
+          reminders.push({
+            dedupKey: `task_${task.id}_${todayStr}`,
+            content: daysOverdue === 0
+              ? `Task "${task.title}" is due today${task.is_recurring ? ' (recurring)' : ''}`
+              : `Task "${task.title}" is ${daysOverdue} day${daysOverdue === 1 ? '' : 's'} overdue${task.is_recurring ? ' (recurring)' : ''}`,
+            link: '/ProjectManager',
+            metadata: { task_id: task.id, type: 'task_due_reminder' },
+          });
+        }
+      }
+
+      for (const project of projectList) {
+        if (project.status === 'completed') continue;
+        if (!project.due_date) continue;
+        const due = new Date(project.due_date);
+        due.setHours(0, 0, 0, 0);
+        if (due <= today) {
+          const daysOverdue = Math.round((today - due) / 86400000);
+          reminders.push({
+            dedupKey: `project_${project.id}_${todayStr}`,
+            content: daysOverdue === 0
+              ? `Plan "${project.name}" is due today`
+              : `Plan "${project.name}" is ${daysOverdue} day${daysOverdue === 1 ? '' : 's'} overdue`,
+            link: '/ProjectManager',
+            metadata: { project_id: project.id, type: 'project_due_reminder' },
+          });
+        }
+      }
+
+      if (reminders.length === 0) return;
+
+      // Fetch today's existing notifications to dedup
+      try {
+        const existing = await Notification.filter({ user_email: userEmail });
+        const existingKeys = new Set(
+          existing
+            .filter(n => n.created_date?.startsWith(todayStr))
+            .map(n => {
+              const m = n.metadata || {};
+              if (m.type === 'task_due_reminder') return `task_${m.task_id}_${todayStr}`;
+              if (m.type === 'project_due_reminder') return `project_${m.project_id}_${todayStr}`;
+              return null;
+            })
+            .filter(Boolean)
+        );
+
+        for (const r of reminders) {
+          if (existingKeys.has(r.dedupKey)) continue;
+          await Notification.create({
+            user_email: userEmail,
+            type: 'announcement',
+            content: r.content,
+            link: r.link,
+            metadata: r.metadata,
+          });
+        }
+      } catch (e) {
+        console.warn('Failed to create due-date notifications:', e);
+      }
+    }, []);
+
+    // Fire notification check after initial data load
+    useEffect(() => {
+      if (!isLoading && tasks.length + projects.length > 0) {
+        User.me().then(u => {
+          if (u?.email) checkDueDateNotifications(tasks, projects, u.email);
+        }).catch(() => {});
+      }
+    }, [isLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+
     const handleCreateProject = async () => {
         if (!newProject.name) return;
         try {
