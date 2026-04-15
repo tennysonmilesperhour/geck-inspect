@@ -20,7 +20,7 @@ Deno.serve(async (req) => {
         }
 
         const body = await req.json();
-        const { fileUrl, importMode = 'create_and_update' } = body;
+        const { fileUrl, importMode = 'create_and_update', fieldMapping } = body;
 
         if (!fileUrl) {
             return new Response(JSON.stringify({ error: 'File URL is required' }), {
@@ -29,31 +29,37 @@ Deno.serve(async (req) => {
             });
         }
 
-        // Define the expected CSV schema
+        // The canonical gecko field keys the importer understands.
+        const GECKO_FIELD_KEYS = [
+            'name', 'gecko_id_code', 'sex', 'hatch_date', 'status',
+            'morphs_traits', 'notes', 'custom_category', 'asking_price',
+            'sire_id_code', 'dam_id_code', 'current_weight_grams',
+            'weight_date', 'last_shed_date', 'breeding_notes',
+            'health_notes', 'acquisition_date', 'acquisition_source'
+        ];
+
+        // Build the JSON schema for CSV extraction.
+        // When a fieldMapping is provided, use the *original* CSV column names
+        // as schema keys so the extractor reads the user's headers verbatim.
+        // Otherwise fall back to the canonical keys (matches our template).
+        const schemaProperties: Record<string, { type: string }> = {};
+
+        if (fieldMapping && typeof fieldMapping === 'object' && Object.keys(fieldMapping).length > 0) {
+            // fieldMapping: { "User Column": "gecko_field_key", ... }
+            for (const csvColumn of Object.keys(fieldMapping)) {
+                schemaProperties[csvColumn] = { type: "string" };
+            }
+        } else {
+            for (const key of GECKO_FIELD_KEYS) {
+                schemaProperties[key] = { type: "string" };
+            }
+        }
+
         const csvSchema = {
             type: "array",
             items: {
                 type: "object",
-                properties: {
-                    name: { type: "string" },
-                    gecko_id_code: { type: "string" },
-                    sex: { type: "string" },
-                    hatch_date: { type: "string" },
-                    status: { type: "string" },
-                    morphs_traits: { type: "string" },
-                    notes: { type: "string" },
-                    custom_category: { type: "string" },
-                    asking_price: { type: "string" },
-                    sire_id_code: { type: "string" },
-                    dam_id_code: { type: "string" },
-                    current_weight_grams: { type: "string" },
-                    weight_date: { type: "string" },
-                    last_shed_date: { type: "string" },
-                    breeding_notes: { type: "string" },
-                    health_notes: { type: "string" },
-                    acquisition_date: { type: "string" },
-                    acquisition_source: { type: "string" }
-                }
+                properties: schemaProperties
             }
         };
 
@@ -64,16 +70,30 @@ Deno.serve(async (req) => {
         });
 
         if (extractResult.status !== 'success') {
-            return new Response(JSON.stringify({ 
+            return new Response(JSON.stringify({
                 error: 'Failed to parse CSV file',
-                details: extractResult.details 
+                details: extractResult.details
             }), {
                 status: 400,
                 headers: { 'Content-Type': 'application/json' }
             });
         }
 
-        const csvData = extractResult.output;
+        // If a custom field mapping was provided, remap each row from
+        // the user's CSV column names to the canonical gecko field keys.
+        let csvData = extractResult.output;
+
+        if (fieldMapping && typeof fieldMapping === 'object' && Object.keys(fieldMapping).length > 0) {
+            csvData = csvData.map((row: Record<string, any>) => {
+                const mapped: Record<string, any> = {};
+                for (const [csvColumn, geckoField] of Object.entries(fieldMapping)) {
+                    if (geckoField && row[csvColumn] !== undefined) {
+                        mapped[geckoField as string] = row[csvColumn];
+                    }
+                }
+                return mapped;
+            });
+        }
         const results = {
             processed: 0,
             created: 0,
