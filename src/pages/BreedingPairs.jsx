@@ -56,7 +56,7 @@ export default function BreedingPairsPage() {
                     BreedingPlan.filter({ created_by: currentUser.email }, "-created_date"),
                     Egg.filter({ created_by: currentUser.email })
                 ]);
-                setGeckos(userGeckos);
+                setGeckos(userGeckos.filter(g => !g.is_revenue_entry));
                 setBreedingPlans(plans);
                 setEggs(userEggs);
             }

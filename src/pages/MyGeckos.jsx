@@ -170,9 +170,10 @@ export default function MyGeckosPage() {
                 ]);
             });
 
-            geckosCache.set(cacheKey, userGeckos);
+            const filteredGeckos = userGeckos.filter(g => !g.is_revenue_entry);
+            geckosCache.set(cacheKey, filteredGeckos);
             geckosCache.set(`weights_${user.email}`, userWeights);
-            setGeckos(userGeckos);
+            setGeckos(filteredGeckos);
             setWeightRecords(userWeights);
         } catch (error) {
             console.error('Failed to load geckos:', error);

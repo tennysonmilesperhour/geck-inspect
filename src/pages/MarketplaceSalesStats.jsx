@@ -334,6 +334,7 @@ export default function MarketplaceSalesStats() {
         archived_date: newRevenue.date || new Date().toISOString().split('T')[0],
         asking_price: price,
         is_public: false,
+        is_revenue_entry: true,
         notes: `Manual sale entry (${newRevenue.category})`,
       });
 

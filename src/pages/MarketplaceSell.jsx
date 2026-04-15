@@ -293,7 +293,7 @@ export default function MarketplaceSellPage() {
             { created_by: currentUser.email },
             '-created_date'
           );
-          setAllGeckos(userGeckos);
+          setAllGeckos(userGeckos.filter(g => !g.is_revenue_entry));
         }
       } catch (error) {
         console.error('Failed to load data:', error);

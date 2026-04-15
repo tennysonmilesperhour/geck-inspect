@@ -116,7 +116,7 @@ export default function BreedingPage() {
                 BreedingPlan.filter({ created_by: currentUser.email }, '-created_date'),
                 Egg.filter({ created_by: currentUser.email })
             ]);
-            setGeckos(geckosData);
+            setGeckos(geckosData.filter(g => !g.is_revenue_entry));
             setAllEggs(eggsData);
             setBreedingPlans(plansData.sort((a,b) => new Date(b.created_date) - new Date(a.created_date)));
         } catch (error) {

@@ -96,7 +96,7 @@ export default function ProjectManager() {
             ]);
             setProjects(projectsData);
             setTasks(tasksData);
-            setGeckos(geckosData);
+            setGeckos(geckosData.filter(g => !g.is_revenue_entry));
             setBreedingPlans(plansData);
             setFeedingGroups(feedingData);
             setOtherReptiles(reptilesData);
