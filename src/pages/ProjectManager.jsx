@@ -393,7 +393,7 @@ export default function ProjectManager() {
                                                     <CardContent className="border-t border-slate-700 pt-4">
                                                         <div className="space-y-2 mb-4">
                                                             {projectTasks.filter(t => plannerPrefs.showCompletedTasks || !t.is_completed).map(task => (
-                                                                <div key={task.id} className={`flex items-center gap-3 ${plannerPrefs.compactView ? 'p-2' : 'p-3'} bg-slate-800 rounded-lg`}
+                                                                <div key={task.id} className={`flex items-center gap-3 ${plannerPrefs.compactView ? 'p-2' : 'p-3'} bg-slate-800 rounded-lg`}>
                                                                     <Checkbox checked={task.is_completed} onCheckedChange={() => handleToggleTask(task.id, task.is_completed)} />
                                                                     <div className="flex-1 min-w-0">
                                                                         <div className="flex items-center gap-2">
