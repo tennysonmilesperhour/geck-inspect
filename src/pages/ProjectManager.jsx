@@ -98,7 +98,7 @@ export default function ProjectManager() {
             ]);
             setProjects(projectsData);
             setTasks(tasksData);
-            setGeckos(geckosData.filter(g => !g.is_revenue_entry));
+            setGeckos(geckosData.filter(g => !g.notes?.startsWith('[Manual sale]')));
             setBreedingPlans(plansData);
             setFeedingGroups(feedingData);
             setOtherReptiles(reptilesData);

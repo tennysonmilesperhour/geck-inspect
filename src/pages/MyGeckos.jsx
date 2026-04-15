@@ -171,7 +171,7 @@ export default function MyGeckosPage() {
                 ]);
             });
 
-            const filteredGeckos = userGeckos.filter(g => !g.is_revenue_entry);
+            const filteredGeckos = userGeckos.filter(g => !g.notes?.startsWith('[Manual sale]'));
             geckosCache.set(cacheKey, filteredGeckos);
             geckosCache.set(`weights_${user.email}`, userWeights);
             setGeckos(filteredGeckos);

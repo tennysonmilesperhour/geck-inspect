@@ -220,8 +220,8 @@ export default function Lineage() {
                 console.warn("Could not load breeding plans:", error);
             }
             
-            setMyGeckos(userGeckos.filter(g => !g.is_revenue_entry));
-            setAllGeckosMap(Object.fromEntries(allVisibleGeckos.filter(g => !g.is_revenue_entry).map(g => [g.id, g])));
+            setMyGeckos(userGeckos.filter(g => !g.notes?.startsWith('[Manual sale]')));
+            setAllGeckosMap(Object.fromEntries(allVisibleGeckos.filter(g => !g.notes?.startsWith('[Manual sale]')).map(g => [g.id, g])));
             setAllBreedingPlans(breedingPlans);
             
             const placeholderMap = {};
