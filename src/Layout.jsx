@@ -22,6 +22,7 @@ import {
 import TutorialModal from "@/components/tutorial/TutorialModal";
 import CommandPalette from "@/components/command-palette/CommandPalette";
 import FeedingAlertSystem from "@/components/feeding/FeedingAlertSystem";
+import NotificationPopover from "@/components/notifications/NotificationPopover";
 import {
   Sidebar,
   SidebarHeader,
@@ -59,6 +60,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   const [_pinnedPosts, setPinnedPosts] = useState([]);
   const [unreadMessages, setUnreadMessages] = useState(0);
   const [unreadNotificationsCount, setUnreadNotificationsCount] = useState(0);
+  const [recentNotifications, setRecentNotifications] = useState([]);
   const [appLogo, setAppLogo] = useState(null);
   const [pageConfigs, setPageConfigs] = useState([]);
   const [showTutorial, setShowTutorial] = useState(false);
@@ -152,6 +154,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           const cached = dataCache.get(cacheKey);
           if (cached) {
             setUnreadNotificationsCount(cached.length);
+            setRecentNotifications(cached);
             return;
           }
         }
@@ -164,6 +167,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           if (unreadNotifications) {
             dataCache.set(cacheKey, unreadNotifications);
             setUnreadNotificationsCount(unreadNotifications.length);
+            setRecentNotifications(unreadNotifications);
             errorCount = 0;
           }
         }
@@ -369,6 +373,17 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       await logout();
     } catch (error) {
       console.error("Logout failed:", error);
+    }
+  };
+
+  const handleMarkNotificationRead = async (notificationId) => {
+    try {
+      await base44.entities.Notification.update(notificationId, { is_read: true });
+      setRecentNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+      setUnreadNotificationsCount((c) => Math.max(0, c - 1));
+      window.dispatchEvent(new CustomEvent('unread_counts_changed', { detail: { kind: 'notifications' } }));
+    } catch (e) {
+      console.warn('Failed to mark notification read:', e);
     }
   };
 
@@ -846,14 +861,11 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                         </span>
                       )}
                     </Link>
-                    <Link to={createPageUrl("Notifications")} className="gecko-header-action" aria-label="Notifications">
-                      <Bell />
-                      {unreadNotificationsCount > 0 && (
-                        <span className="notification-badge">
-                          {unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}
-                        </span>
-                      )}
-                    </Link>
+                    <NotificationPopover
+                      notifications={recentNotifications}
+                      unreadCount={unreadNotificationsCount}
+                      onMarkRead={handleMarkNotificationRead}
+                    />
                     <Link to={createPageUrl("MyProfile")} className="gecko-header-action" aria-label="Profile">
                       <Users />
                     </Link>
@@ -892,14 +904,11 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                         </span>
                       )}
                     </Link>
-                    <Link to={createPageUrl("Notifications")} className="gecko-header-action" aria-label="Notifications">
-                      <Bell />
-                      {unreadNotificationsCount > 0 && (
-                        <span className="notification-badge">
-                          {unreadNotificationsCount > 99 ? '99+' : unreadNotificationsCount}
-                        </span>
-                      )}
-                    </Link>
+                    <NotificationPopover
+                      notifications={recentNotifications}
+                      unreadCount={unreadNotificationsCount}
+                      onMarkRead={handleMarkNotificationRead}
+                    />
                     <Link to={createPageUrl("MyProfile")} className="gecko-header-action" aria-label="Profile">
                       <Users />
                     </Link>
