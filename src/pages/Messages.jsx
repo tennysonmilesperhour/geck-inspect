@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import Seo from '@/components/seo/Seo';
 import { DirectMessage, User } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
 import { notifyNewMessage } from '@/components/notifications/NotificationService';
@@ -235,6 +236,7 @@ export default function MessagesPage() {
 
     return (
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+            <Seo title="Messages" description="Direct messages with fellow gecko breeders." path="/Messages" noIndex />
             <div className="max-w-6xl mx-auto">
                 <div className="flex items-center justify-between mb-8">
                     <div className="flex items-center gap-3">

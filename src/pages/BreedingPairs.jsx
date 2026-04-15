@@ -555,16 +555,19 @@ function BreedingPlanCard({ plan, sire, dam, eggs, onDataRefresh, onHatch, onEdi
 function AddEggForm({ planId, onEggAdded, sire: _sire, dam: _dam }) {
     const [isOpen, setIsOpen] = useState(false);
     const [layDate, setLayDate] = useState(new Date());
+    const [grade, setGrade] = useState('');
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const expectedHatch = addDays(layDate, 75); // 75 days is a common incubation period
-        await Egg.create({
+        const expectedHatch = addDays(layDate, 75);
+        const eggData = {
             breeding_plan_id: planId,
             lay_date: format(layDate, 'yyyy-MM-dd'),
             hatch_date_expected: format(expectedHatch, 'yyyy-MM-dd'),
             status: 'Incubating',
-        });
+        };
+        if (grade) eggData.grade = grade;
+        await Egg.create(eggData);
 
         // Calendar event for expected hatch from specific egg is not generated here.
         // It can be triggered manually from the card or managed as an estimate for the pair.
@@ -587,6 +590,19 @@ function AddEggForm({ planId, onEggAdded, sire: _sire, dam: _dam }) {
                             date={layDate}
                             onDateChange={setLayDate}
                         />
+                    </div>
+                    <div>
+                        <Label>Egg Grade (optional)</Label>
+                        <Select value={grade} onValueChange={setGrade}>
+                            <SelectTrigger><SelectValue placeholder="Select grade" /></SelectTrigger>
+                            <SelectContent>
+                                <SelectItem value="A+">A+ — Excellent</SelectItem>
+                                <SelectItem value="A">A — Great</SelectItem>
+                                <SelectItem value="B">B — Good</SelectItem>
+                                <SelectItem value="C">C — Fair</SelectItem>
+                                <SelectItem value="D">D — Poor</SelectItem>
+                            </SelectContent>
+                        </Select>
                     </div>
                     <Button type="submit" className="w-full">Save Egg</Button>
                 </form>

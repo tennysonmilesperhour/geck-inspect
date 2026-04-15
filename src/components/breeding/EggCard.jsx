@@ -1,10 +1,20 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar, Clock, Baby, CheckCircle } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
 import { createGeckoFromEgg } from '@/functions/createGeckoFromEgg';
+import { Egg as EggEntity } from '@/entities/all';
 import { toast } from '@/components/ui/use-toast';
+
+const GRADE_COLORS = {
+  'A+': 'bg-emerald-500 text-white',
+  'A': 'bg-green-500 text-white',
+  'B': 'bg-blue-500 text-white',
+  'C': 'bg-yellow-500 text-black',
+  'D': 'bg-red-500 text-white',
+};
 
 export default function EggCard({ egg, breedingPlan: _breedingPlan, onUpdate }) {
   const getStatusColor = (status) => {
@@ -51,7 +61,7 @@ export default function EggCard({ egg, breedingPlan: _breedingPlan, onUpdate }) 
 
   return (
     <Card className="bg-slate-800 border-slate-700">
-      <CardContent className="p-4">
+      <CardContent className="p-3 sm:p-4">
         <div className="flex justify-between items-start mb-3">
           <div>
             <p className="text-slate-300 font-medium">
@@ -61,9 +71,42 @@ export default function EggCard({ egg, breedingPlan: _breedingPlan, onUpdate }) 
               Laid: {format(new Date(egg.lay_date), 'MMM d, yyyy')}
             </p>
           </div>
-          <Badge className={`${getStatusColor(egg.status)} text-white`}>
-            {egg.status}
-          </Badge>
+          <div className="flex items-center gap-1.5">
+            {egg.grade && (
+              <Badge className={`${GRADE_COLORS[egg.grade] || 'bg-slate-600 text-white'} text-xs font-bold px-1.5`}>
+                {egg.grade}
+              </Badge>
+            )}
+            <Badge className={`${getStatusColor(egg.status)} text-white`}>
+              {egg.status}
+            </Badge>
+          </div>
+        </div>
+
+        {/* Egg Grade */}
+        <div className="mb-3">
+          <Select
+            value={egg.grade || ''}
+            onValueChange={async (v) => {
+              try {
+                await EggEntity.update(egg.id, { grade: v });
+                if (onUpdate) onUpdate();
+              } catch (e) {
+                toast({ title: 'Error', description: 'Failed to update grade', variant: 'destructive' });
+              }
+            }}
+          >
+            <SelectTrigger className="h-7 text-xs bg-slate-700 border-slate-600 w-28">
+              <SelectValue placeholder="Rate egg" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="A+">A+ — Excellent</SelectItem>
+              <SelectItem value="A">A — Great</SelectItem>
+              <SelectItem value="B">B — Good</SelectItem>
+              <SelectItem value="C">C — Fair</SelectItem>
+              <SelectItem value="D">D — Poor</SelectItem>
+            </SelectContent>
+          </Select>
         </div>
 
         {egg.hatch_date_expected && egg.status === 'Incubating' && (

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, Suspense } from 'react';
+import Seo from '@/components/seo/Seo';
 import { Gecko, BreedingPlan, Egg } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import { notifyFollowersNewBreedingPlan } from '@/components/notifications/NotificationService';
@@ -422,6 +423,13 @@ export default function BreedingPage() {
 
     return (
         <div className="p-4 md:p-8 bg-slate-950 min-h-screen">
+            <Seo
+                title="Breeding Management"
+                description="Plan and track your crested gecko breeding projects — manage pairings, monitor eggs, and use the genetics calculator."
+                path="/Breeding"
+                noIndex
+                keywords={['gecko breeding', 'breeding planner', 'genetics calculator', 'hatchery']}
+            />
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                     <div>

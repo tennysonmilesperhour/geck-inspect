@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import Seo from '@/components/seo/Seo';
 import { ForumCategory, ForumPost, User } from '@/entities/all';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -143,6 +144,12 @@ export default function ForumPage() {
 
     return (
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+            <Seo
+                title="Community Forum"
+                description="Connect with fellow crested gecko enthusiasts. Discuss breeding, morphs, care tips, and share your gecko stories."
+                path="/Forum"
+                keywords={['gecko forum', 'crested gecko community', 'reptile discussion', 'breeder forum']}
+            />
             <div className="max-w-6xl mx-auto space-y-6">
                 {/* Header */}
                 <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">

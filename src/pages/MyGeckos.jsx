@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import Seo from '@/components/seo/Seo';
 import { Gecko, WeightRecord, FeedingGroup } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import { PlusCircle, Search, Users, Grid3x3, List, ArrowUpDown, Archive, ArchiveRestore, Download, FileText, FileSpreadsheet } from 'lucide-react';
@@ -556,6 +557,13 @@ export default function MyGeckosPage() {
 
     return (
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+            <Seo
+                title="My Geckos"
+                description="Manage your crested gecko collection — track morphs, weights, breeding history, and care records."
+                path="/MyGeckos"
+                noIndex
+                keywords={['gecko collection', 'crested gecko tracker', 'morph tracker']}
+            />
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                     <div>

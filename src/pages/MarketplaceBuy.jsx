@@ -1,4 +1,5 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import Seo from '@/components/seo/Seo';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
 import { Gecko, User, MarketplaceLike } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
@@ -333,6 +334,12 @@ export default function MarketplaceBuyPage() {
 
     return (
         <div className="p-4 md:p-8 bg-slate-950 min-h-screen">
+            <Seo
+                title="Marketplace — Buy Geckos"
+                description="Browse crested geckos for sale from trusted breeders. Filter by morph, sex, and price to find your next gecko."
+                path="/MarketplaceBuy"
+                keywords={['buy crested gecko', 'gecko for sale', 'crested gecko marketplace', 'gecko breeder listings']}
+            />
             <div className="max-w-7xl mx-auto">
                 <header className="mb-6 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
                     <div>

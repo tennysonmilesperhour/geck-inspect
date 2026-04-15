@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import Seo from '@/components/seo/Seo';
 import { base44 } from '@/api/base44Client';
 import GalleryFilters from '../components/gallery/GalleryFilters';
 import ImageCard from '../components/gallery/ImageCard';
@@ -98,6 +99,12 @@ export default function Gallery() {
 
     return (
         <div className="p-4 md:p-8 bg-slate-950 min-h-screen">
+            <Seo
+                title="Image Gallery"
+                description="Browse stunning crested gecko photos from breeders worldwide. Filter by morph, color, and trait to find your favorite cresties."
+                path="/Gallery"
+                keywords={['gecko photos', 'crested gecko gallery', 'morph photos', 'reptile images']}
+            />
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
                     <div>

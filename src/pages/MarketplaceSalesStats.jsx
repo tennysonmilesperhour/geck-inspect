@@ -222,30 +222,6 @@ function MarketAnalyticsTab({ user }) {
   const [selectedRegion, setSelectedRegion] = useState(null);
   const [marketData] = useState(() => generateMockMarketData());
 
-  const tier = user?.membership_tier || 'free';
-  const isAdmin = user?.role === 'admin';
-  const hasAccess = tier === 'enterprise' || isAdmin;
-
-  if (!hasAccess) {
-    return (
-      <div className="py-16 text-center space-y-5">
-        <div className="mx-auto w-16 h-16 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-          <Lock className="w-8 h-8 text-emerald-400" />
-        </div>
-        <h3 className="text-xl font-bold text-white">Enterprise Feature</h3>
-        <p className="text-slate-400 max-w-md mx-auto leading-relaxed">
-          Market Analytics provides real-time pricing trends, regional comparisons, and
-          morph demand intelligence across global markets. Available on the Enterprise tier.
-        </p>
-        <Link to={createPageUrl('Membership')}>
-          <Button className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-6">
-            View plans <ArrowRight className="w-4 h-4 ml-2" />
-          </Button>
-        </Link>
-      </div>
-    );
-  }
-
   const activeRegion = selectedRegion
     ? marketData.find((r) => r.id === selectedRegion)
     : null;

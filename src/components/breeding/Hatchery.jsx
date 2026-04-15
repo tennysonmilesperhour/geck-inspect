@@ -304,9 +304,16 @@ export default function Hatchery() {
                             <CardContent className="p-4 space-y-3">
                                 <div className="flex items-center justify-between">
                                     <EggIcon className="w-6 h-6 text-emerald-400" />
-                                    <Badge className={`${getStatusColor(egg.status)} text-white`}>
-                                        {egg.status}
-                                    </Badge>
+                                    <div className="flex items-center gap-1">
+                                        {egg.grade && (
+                                            <Badge className={`text-xs font-bold px-1.5 ${egg.grade === 'A+' ? 'bg-emerald-500 text-white' : egg.grade === 'A' ? 'bg-green-500 text-white' : egg.grade === 'B' ? 'bg-blue-500 text-white' : egg.grade === 'C' ? 'bg-yellow-500 text-black' : 'bg-red-500 text-white'}`}>
+                                                {egg.grade}
+                                            </Badge>
+                                        )}
+                                        <Badge className={`${getStatusColor(egg.status)} text-white`}>
+                                            {egg.status}
+                                        </Badge>
+                                    </div>
                                 </div>
 
                                 <div>

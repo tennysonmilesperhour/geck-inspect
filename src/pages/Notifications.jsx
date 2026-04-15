@@ -1,4 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
+import Seo from '@/components/seo/Seo';
 import { Notification, User } from '@/entities/all';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -210,6 +211,7 @@ export default function NotificationsPage() {
 
     return (
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+            <Seo title="Notifications" description="Stay updated with your gecko community activity." path="/Notifications" noIndex />
             <div className="max-w-4xl mx-auto space-y-6">
                 <div className="flex items-center justify-between gap-4">
                     <div className="flex items-center gap-3">
