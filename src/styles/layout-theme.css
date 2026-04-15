@@ -331,24 +331,12 @@ html, body, #root {
             box-shadow: 0 0 0 2px rgba(134, 239, 172, 0.15) !important;
           }
 
-          .dark .text-slate-100,
-          .dark .text-slate-200,
-          .dark .text-white {
-            color: var(--gecko-text) !important;
-            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
-          }
-
-          .dark .text-slate-400,
-          .dark .text-slate-500,
-          .dark .text-gray-400,
-          .dark .text-gray-500 {
-            color: var(--gecko-text-muted) !important;
-          }
-
-          .dark .border-slate-700,
-          .dark .border-gray-700 {
-            border-color: var(--gecko-border) !important;
-          }
+          /* Removed: !important overrides for text-slate-*, text-gray-*,
+             and border-slate/gray-700. These conflicted with the
+             tailwind.config.js palette override — slate/gray are already
+             remapped to emerald-tinted values at build time. Keeping
+             these CSS rules would double-override with slightly different
+             greens, causing visual inconsistency. */
 
           .dark [data-state="checked"] {
             background-color: var(--gecko-accent) !important;

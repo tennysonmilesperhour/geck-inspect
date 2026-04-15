@@ -71,7 +71,7 @@ function OrderRow({ order }) {
           </div>
           <div className="text-right shrink-0 space-y-1">
             {order.price != null && (
-              <p className="text-sm font-semibold text-white">${order.price.toFixed(2)}</p>
+              <p className="text-sm font-semibold text-white">${Number(order.price).toFixed(2)}</p>
             )}
             {order.estimated_delivery && (
               <p className="text-[10px] text-slate-500 flex items-center gap-1 justify-end">

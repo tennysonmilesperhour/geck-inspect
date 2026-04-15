@@ -191,7 +191,12 @@ export default function BreederShipping() {
         estimated_delivery: result.estimatedDelivery,
         status: result.status,
         price: activeQuote?.price || null,
-        recipient_name: null, // filled from form but we don't pass it through here
+        recipient_name: result._recipient?.name || null,
+        recipient_city: result._recipient?.city || null,
+        recipient_state: result._recipient?.state || null,
+        recipient_zip: result._recipient?.zip || null,
+        sender_name: result._sender?.name || null,
+        sender_zip: result._sender?.zip || null,
         created_by: user?.email,
         created_date: new Date().toISOString(),
         updated_date: new Date().toISOString(),
@@ -210,6 +215,24 @@ export default function BreederShipping() {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center">
         <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
+      </div>
+    );
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center p-6">
+        <div className="max-w-md text-center space-y-5">
+          <Truck className="w-12 h-12 text-emerald-400 mx-auto" />
+          <h2 className="text-2xl font-bold text-white">Sign in to access shipping</h2>
+          <p className="text-slate-400">Log in to your Geck Inspect account to book shipments and track packages.</p>
+          <Link to={createPageUrl('AuthPortal')}>
+            <Button className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold px-6">
+              Sign in
+              <ArrowRight className="w-4 h-4 ml-2" />
+            </Button>
+          </Link>
+        </div>
       </div>
     );
   }

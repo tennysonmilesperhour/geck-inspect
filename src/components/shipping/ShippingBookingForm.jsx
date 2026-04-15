@@ -7,6 +7,73 @@ import { Loader2, Package, CheckCircle2 } from 'lucide-react';
 import { bookShipment, IS_DEMO } from '@/integrations/ShipZeros';
 import { User } from '@/entities/all';
 
+// Hoisted outside the component so React doesn't remount inputs on
+// every parent re-render (which would cause focus loss on keystroke).
+function AddressFields({ values, onChange, prefix }) {
+  return (
+    <div className="space-y-3">
+      <div>
+        <Label className="text-slate-400 text-xs">{prefix} name</Label>
+        <Input
+          value={values.name}
+          onChange={(e) => onChange('name', e.target.value)}
+          placeholder="Full name"
+          className="bg-slate-950 border-slate-700 text-slate-100 h-9"
+        />
+      </div>
+      <div>
+        <Label className="text-slate-400 text-xs">Street address</Label>
+        <Input
+          value={values.address}
+          onChange={(e) => onChange('address', e.target.value)}
+          placeholder="123 Main St"
+          className="bg-slate-950 border-slate-700 text-slate-100 h-9"
+        />
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        <div>
+          <Label className="text-slate-400 text-xs">City</Label>
+          <Input
+            value={values.city}
+            onChange={(e) => onChange('city', e.target.value)}
+            placeholder="City"
+            className="bg-slate-950 border-slate-700 text-slate-100 h-9"
+          />
+        </div>
+        <div>
+          <Label className="text-slate-400 text-xs">State</Label>
+          <Input
+            value={values.state}
+            onChange={(e) => onChange('state', e.target.value.toUpperCase().slice(0, 2))}
+            placeholder="CA"
+            maxLength={2}
+            className="bg-slate-950 border-slate-700 text-slate-100 h-9"
+          />
+        </div>
+        <div>
+          <Label className="text-slate-400 text-xs">ZIP</Label>
+          <Input
+            value={values.zip}
+            onChange={(e) => onChange('zip', e.target.value.replace(/\D/g, '').slice(0, 5))}
+            placeholder="90210"
+            maxLength={5}
+            className="bg-slate-950 border-slate-700 text-slate-100 h-9"
+          />
+        </div>
+      </div>
+      <div>
+        <Label className="text-slate-400 text-xs">Phone</Label>
+        <Input
+          value={values.phone}
+          onChange={(e) => onChange('phone', e.target.value.replace(/[^0-9() +-]/g, ''))}
+          placeholder="(555) 123-4567"
+          className="bg-slate-950 border-slate-700 text-slate-100 h-9"
+        />
+      </div>
+    </div>
+  );
+}
+
 export default function ShippingBookingForm({ quote, onBooked }) {
   const [sender, setSender] = useState({
     name: '',
@@ -74,7 +141,7 @@ export default function ShippingBookingForm({ quote, onBooked }) {
         notes,
       });
       setResult(res);
-      onBooked?.(res);
+      onBooked?.({ ...res, _recipient: recipient, _sender: sender });
     } catch (err) {
       setError(err.message || 'Booking failed');
     }
@@ -114,69 +181,6 @@ export default function ShippingBookingForm({ quote, onBooked }) {
       </div>
     );
   }
-
-  const AddressFields = ({ values, onChange, prefix }) => (
-    <div className="space-y-3">
-      <div>
-        <Label className="text-slate-400 text-xs">{prefix} name</Label>
-        <Input
-          value={values.name}
-          onChange={(e) => onChange('name', e.target.value)}
-          placeholder="Full name"
-          className="bg-slate-950 border-slate-700 text-slate-100 h-9"
-        />
-      </div>
-      <div>
-        <Label className="text-slate-400 text-xs">Street address</Label>
-        <Input
-          value={values.address}
-          onChange={(e) => onChange('address', e.target.value)}
-          placeholder="123 Main St"
-          className="bg-slate-950 border-slate-700 text-slate-100 h-9"
-        />
-      </div>
-      <div className="grid grid-cols-3 gap-2">
-        <div>
-          <Label className="text-slate-400 text-xs">City</Label>
-          <Input
-            value={values.city}
-            onChange={(e) => onChange('city', e.target.value)}
-            placeholder="City"
-            className="bg-slate-950 border-slate-700 text-slate-100 h-9"
-          />
-        </div>
-        <div>
-          <Label className="text-slate-400 text-xs">State</Label>
-          <Input
-            value={values.state}
-            onChange={(e) => onChange('state', e.target.value.toUpperCase().slice(0, 2))}
-            placeholder="CA"
-            maxLength={2}
-            className="bg-slate-950 border-slate-700 text-slate-100 h-9"
-          />
-        </div>
-        <div>
-          <Label className="text-slate-400 text-xs">ZIP</Label>
-          <Input
-            value={values.zip}
-            onChange={(e) => onChange('zip', e.target.value.replace(/\D/g, '').slice(0, 5))}
-            placeholder="90210"
-            maxLength={5}
-            className="bg-slate-950 border-slate-700 text-slate-100 h-9"
-          />
-        </div>
-      </div>
-      <div>
-        <Label className="text-slate-400 text-xs">Phone</Label>
-        <Input
-          value={values.phone}
-          onChange={(e) => onChange('phone', e.target.value)}
-          placeholder="(555) 123-4567"
-          className="bg-slate-950 border-slate-700 text-slate-100 h-9"
-        />
-      </div>
-    </div>
-  );
 
   return (
     <form onSubmit={handleBook} className="space-y-6">

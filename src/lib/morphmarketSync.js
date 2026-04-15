@@ -181,14 +181,18 @@ export function exportMorphMarketCSV(geckos, { filename } = {}) {
  */
 export function parseMorphMarketCSV(csvText) {
   const warnings = [];
-  const lines = csvText.split(/\r?\n/).filter((l) => l.trim());
-  if (lines.length < 2) {
+
+  // Split into records respecting quoted fields that may contain
+  // newlines. We walk character-by-character tracking quote state
+  // instead of splitting on \n which breaks multiline descriptions.
+  const records_raw = splitCSVRecords(csvText);
+  if (records_raw.length < 2) {
     warnings.push('File appears empty or has only a header row.');
     return { records: [], warnings };
   }
 
   // Parse header
-  const headerLine = lines[0];
+  const headerLine = records_raw[0];
   const headers = parseCSVLine(headerLine).map((h) => h.trim());
 
   // Build column index map
@@ -198,8 +202,8 @@ export function parseMorphMarketCSV(csvText) {
   });
 
   const records = [];
-  for (let i = 1; i < lines.length; i++) {
-    const fields = parseCSVLine(lines[i]);
+  for (let i = 1; i < records_raw.length; i++) {
+    const fields = parseCSVLine(records_raw[i]);
     if (fields.length === 0) continue;
 
     const get = (name) => {
@@ -268,6 +272,46 @@ export function parseMorphMarketCSV(csvText) {
   }
 
   return { records, warnings };
+}
+
+/**
+ * Split raw CSV text into record strings, correctly handling newlines
+ * inside quoted fields (e.g. multiline MorphMarket descriptions).
+ */
+function splitCSVRecords(text) {
+  const records = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (i + 1 < text.length && text[i + 1] === '"') {
+          current += '""';
+          i++;
+        } else {
+          inQuotes = false;
+          current += ch;
+        }
+      } else {
+        current += ch;
+      }
+    } else {
+      if (ch === '"') {
+        inQuotes = true;
+        current += ch;
+      } else if (ch === '\n' || (ch === '\r' && text[i + 1] === '\n')) {
+        if (ch === '\r') i++; // skip the \n in \r\n
+        if (current.trim()) records.push(current);
+        current = '';
+      } else {
+        current += ch;
+      }
+    }
+  }
+  if (current.trim()) records.push(current);
+  return records;
 }
 
 /**
