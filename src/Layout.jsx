@@ -153,8 +153,11 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         if (!forceRefresh) {
           const cached = dataCache.get(cacheKey);
           if (cached) {
-            setUnreadNotificationsCount(cached.length);
-            setRecentNotifications(cached);
+            const filteredCached = cached.filter(
+              n => !dismissedNotificationIds.current.has(n.id)
+            );
+            setUnreadNotificationsCount(filteredCached.length);
+            setRecentNotifications(filteredCached);
             return;
           }
         }
@@ -165,9 +168,13 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
             base44.entities.Notification.filter({ user_email: user.email, is_read: false })
           );
           if (unreadNotifications) {
-            dataCache.set(cacheKey, unreadNotifications);
-            setUnreadNotificationsCount(unreadNotifications.length);
-            setRecentNotifications(unreadNotifications);
+            // Filter out any notifications the user dismissed this session
+            const filtered = unreadNotifications.filter(
+              n => !dismissedNotificationIds.current.has(n.id)
+            );
+            dataCache.set(cacheKey, filtered);
+            setUnreadNotificationsCount(filtered.length);
+            setRecentNotifications(filtered);
             errorCount = 0;
           }
         }
@@ -376,15 +383,25 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     }
   };
 
+  // IDs of notifications the user dismissed this session — prevents
+  // them from reappearing in the popover even if the server re-fetch
+  // race condition returns them before the DB write propagates.
+  const dismissedNotificationIds = useRef(new Set());
+
   const handleMarkNotificationRead = async (notificationId) => {
+    // Immediately remove from local state and track as dismissed
+    dismissedNotificationIds.current.add(notificationId);
+    setRecentNotifications((prev) => prev.filter((n) => n.id !== notificationId));
+    setUnreadNotificationsCount((c) => Math.max(0, c - 1));
     try {
       await base44.entities.Notification.update(notificationId, { is_read: true });
-      setRecentNotifications((prev) => prev.filter((n) => n.id !== notificationId));
-      setUnreadNotificationsCount((c) => Math.max(0, c - 1));
-      window.dispatchEvent(new CustomEvent('unread_counts_changed', { detail: { kind: 'notifications' } }));
+      // Clear cache so the next poll gets fresh data (after DB write)
+      const cacheKey = `notifications_${user?.email}`;
+      dataCache.clear(cacheKey);
     } catch (e) {
       console.warn('Failed to mark notification read:', e);
     }
+    window.dispatchEvent(new CustomEvent('unread_counts_changed', { detail: { kind: 'notifications' } }));
   };
 
   const handleLoginPrompt = (featureName) => {
