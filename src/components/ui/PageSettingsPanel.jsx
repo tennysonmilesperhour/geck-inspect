@@ -38,13 +38,12 @@ export default function PageSettingsPanel({ title = 'Page Settings', children, c
             <Button
                 ref={btnRef}
                 variant="outline"
-                size="sm"
+                size="icon"
                 onClick={() => setOpen(o => !o)}
-                className="border-slate-600 hover:bg-slate-800 text-slate-300 gap-1.5"
+                className="border-slate-600 hover:bg-slate-800 text-slate-300 h-8 w-8"
                 title={title}
             >
                 <Settings className="w-4 h-4" />
-                <span className="hidden sm:inline">Settings</span>
             </Button>
 
             {open && (

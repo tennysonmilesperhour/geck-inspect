@@ -66,6 +66,10 @@ const AuthenticatedApp = () => {
       const disabled = new Set(
         configs.filter(c => c.is_enabled === false).map(c => c.page_name)
       );
+      // Never disable essential navigation targets
+      ['Membership', 'Settings', 'AuthPortal', 'Notifications', 'Messages'].forEach(
+        p => disabled.delete(p)
+      );
       setDisabledPages(disabled);
     }).catch(() => {});
   }, [isAuthenticated]);

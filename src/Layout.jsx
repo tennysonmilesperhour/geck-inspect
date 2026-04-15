@@ -386,11 +386,25 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   // IDs of notifications the user dismissed this session — prevents
   // them from reappearing in the popover even if the server re-fetch
   // race condition returns them before the DB write propagates.
-  const dismissedNotificationIds = useRef(new Set());
+  // Persist dismissed notification IDs in sessionStorage so they
+  // survive page navigations / redirects within the same session.
+  const dismissedNotificationIds = useRef(() => {
+    try {
+      const stored = sessionStorage.getItem('geck_dismissed_notifs');
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch { return new Set(); }
+  });
+  // Lazy-init the ref (useRef doesn't call functions)
+  if (typeof dismissedNotificationIds.current === 'function') {
+    dismissedNotificationIds.current = dismissedNotificationIds.current();
+  }
 
   const handleMarkNotificationRead = async (notificationId) => {
     // Immediately remove from local state and track as dismissed
     dismissedNotificationIds.current.add(notificationId);
+    try {
+      sessionStorage.setItem('geck_dismissed_notifs', JSON.stringify([...dismissedNotificationIds.current]));
+    } catch {}
     setRecentNotifications((prev) => prev.filter((n) => n.id !== notificationId));
     setUnreadNotificationsCount((c) => Math.max(0, c - 1));
     try {
