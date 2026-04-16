@@ -567,7 +567,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                 setSireInput(`${s.name} (${s.gecko_id_code || 'No ID'})`);
                                 setSireId(s.id);
                             }}
-                            geckos={userGeckos.filter((g) => g.sex === 'Male' && g.id !== gecko?.id)}
+                            geckos={userGeckos.filter((g) => g.sex === 'Male' && g.id !== gecko?.id && !g.archived && !g.notes?.startsWith('[Manual sale]'))}
                             disabled={isArchived}
                         />
                         <ParentAutocomplete
@@ -580,7 +580,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                 setDamInput(`${d.name} (${d.gecko_id_code || 'No ID'})`);
                                 setDamId(d.id);
                             }}
-                            geckos={userGeckos.filter((g) => g.sex === 'Female' && g.id !== gecko?.id)}
+                            geckos={userGeckos.filter((g) => g.sex === 'Female' && g.id !== gecko?.id && !g.archived && !g.notes?.startsWith('[Manual sale]'))}
                             disabled={isArchived}
                         />
                     </div>

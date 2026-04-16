@@ -22,7 +22,7 @@ import { generatePassportCode } from '@/lib/passportUtils';
 import { supabase } from '@/lib/supabaseClient';
 import { createPageUrl } from '@/utils';
 
-export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onArchive, allGeckos = [], currentUser = null }) {
+export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onArchive, onDelete, allGeckos = [], currentUser = null }) {
   const navigate = useNavigate();
 
   const handleLineageClick = () => {
@@ -723,6 +723,44 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                         <><Archive className="w-4 h-4 mr-2" /> Archive</>
                       )}
                     </Button>
+
+                    {/* Permanent delete — only for archived geckos */}
+                    {gecko.archived && onDelete && (
+                      <AlertDialog>
+                        <AlertDialogTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className="w-full border-red-800 text-red-400 hover:bg-red-950/40 hover:text-red-300"
+                          >
+                            <Trash2 className="w-4 h-4 mr-2" />
+                            Permanently Delete
+                          </Button>
+                        </AlertDialogTrigger>
+                        <AlertDialogContent className="bg-slate-900 border-slate-700">
+                          <AlertDialogHeader>
+                            <AlertDialogTitle className="text-slate-100">
+                              Permanently delete {gecko.name}?
+                            </AlertDialogTitle>
+                            <AlertDialogDescription className="text-slate-400">
+                              This will <strong className="text-red-400">permanently remove</strong>{' '}
+                              <strong>{gecko.name}</strong> and all associated data from your
+                              collection. This action cannot be undone.
+                            </AlertDialogDescription>
+                          </AlertDialogHeader>
+                          <AlertDialogFooter>
+                            <AlertDialogCancel className="bg-slate-800 text-slate-200 border-slate-600">
+                              Cancel
+                            </AlertDialogCancel>
+                            <AlertDialogAction
+                              onClick={() => onDelete(gecko.id)}
+                              className="bg-red-700 hover:bg-red-800"
+                            >
+                              Delete Forever
+                            </AlertDialogAction>
+                          </AlertDialogFooter>
+                        </AlertDialogContent>
+                      </AlertDialog>
+                    )}
                   </div>
                 )}
               </div>

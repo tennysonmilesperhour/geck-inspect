@@ -543,7 +543,10 @@ export default function MyGeckosPage() {
     // need to re-fetch from Supabase every time the user types.
 
     const searchFiltered = geckos
-        .filter(gecko => showArchived ? gecko.archived : (!gecko.archived && gecko.status !== 'Sold'))
+        .filter(gecko => showArchived
+            ? (gecko.archived || gecko.status === 'Sold')
+            : (!gecko.archived && gecko.status !== 'Sold')
+        )
         .filter(gecko => {
             const term = searchTerm.toLowerCase();
             return (
@@ -1071,6 +1074,7 @@ export default function MyGeckosPage() {
                         onUpdate={() => loadGeckos(true)}
                         onEdit={handleEdit}
                         onArchive={handleArchiveGecko}
+                        onDelete={handleDelete}
                     />
                 )}
 
