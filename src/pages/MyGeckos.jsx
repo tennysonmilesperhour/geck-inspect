@@ -15,7 +15,9 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import PageSettingsPanel from '../components/ui/PageSettingsPanel';
+import usePageSettings from '@/hooks/usePageSettings';
 import { Switch } from '@/components/ui/switch';
+import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import GeckoCard from '../components/my-geckos/GeckoCard';
 import GeckoForm from '../components/my-geckos/GeckoForm';
@@ -122,6 +124,11 @@ export default function MyGeckosPage() {
     const [showArchived, setShowArchived] = useState(false);
     const [archiveDialogGeckoId, setArchiveDialogGeckoId] = useState(null);
     const [feedingGroups, setFeedingGroups] = useState([]);
+    const [idSettings, setIdSettings] = usePageSettings('gecko_id_settings', {
+        founderFormat: '{PREFIX}-{NNN}',
+        hatchlingFormat: '{SIRE}{DAM}{NUM}{LETTER}{YY}',
+        prefix: '',
+    });
 
     // No incremental paging — the dual server-side offset + client-side
     // visibleCount that used to live here was producing random counts and
@@ -610,6 +617,41 @@ export default function MyGeckosPage() {
                                         </SelectContent>
                                         </Select>
                                         </div>
+                                        <div className="border-t border-slate-700 pt-3 mt-1">
+                                            <Label className="text-slate-300 text-sm font-medium block mb-2">Gecko ID Format</Label>
+                                            <div className="space-y-2">
+                                                <div>
+                                                    <Label className="text-slate-400 text-xs block mb-1">Founder (no parents)</Label>
+                                                    <Input
+                                                        value={idSettings.founderFormat}
+                                                        onChange={e => setIdSettings({ founderFormat: e.target.value })}
+                                                        placeholder="{PREFIX}-{NNN}"
+                                                        className="h-7 text-xs bg-slate-800 border-slate-600 text-slate-200 font-mono"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label className="text-slate-400 text-xs block mb-1">Hatchling (with parents)</Label>
+                                                    <Input
+                                                        value={idSettings.hatchlingFormat}
+                                                        onChange={e => setIdSettings({ hatchlingFormat: e.target.value })}
+                                                        placeholder="{SIRE}{DAM}{NUM}{LETTER}{YY}"
+                                                        className="h-7 text-xs bg-slate-800 border-slate-600 text-slate-200 font-mono"
+                                                    />
+                                                </div>
+                                                <div>
+                                                    <Label className="text-slate-400 text-xs block mb-1">Custom prefix override</Label>
+                                                    <Input
+                                                        value={idSettings.prefix}
+                                                        onChange={e => setIdSettings({ prefix: e.target.value })}
+                                                        placeholder="e.g., GI, TMP (leave blank for breeder name)"
+                                                        className="h-7 text-xs bg-slate-800 border-slate-600 text-slate-200"
+                                                    />
+                                                </div>
+                                                <p className="text-[10px] text-slate-500 leading-tight">
+                                                    Tokens: {'{PREFIX}'} {'{NNN}'} {'{SIRE}'} {'{DAM}'} {'{NUM}'} {'{LETTER}'} {'{YY}'} {'{YYYY}'}. Free text is kept as-is.
+                                                </p>
+                                            </div>
+                                        </div>
                                         </PageSettingsPanel>
                         {/* All header buttons use explicit emerald styling with
                              arbitrary rgba() values so they render consistently
@@ -1005,6 +1047,7 @@ export default function MyGeckosPage() {
                                         onCancel={handleFormCancel}
                                         onDelete={handleDelete}
                                         feedingGroups={feedingGroups}
+                                        idSettings={idSettings}
                                     />
                                 </motion.div>
                             )}

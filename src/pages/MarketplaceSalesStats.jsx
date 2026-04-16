@@ -452,6 +452,7 @@ export default function MarketplaceSalesStats() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [soldGeckos, setSoldGeckos] = useState([]);
+  const [manualSales, setManualSales] = useState([]);
   const [priceOverrides, setPriceOverrides] = useState({});
   const [costs, setCosts] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -481,7 +482,11 @@ export default function MarketplaceSalesStats() {
         setUser(currentUser);
 
         const allGeckos = await Gecko.filter({ created_by: currentUser.email });
-        setSoldGeckos(allGeckos.filter(g => (g.archived && g.archive_reason === 'sold') || g.status === 'Sold'));
+        // Only real sold geckos — exclude fake records created by old manual-sale flow
+        setSoldGeckos(allGeckos.filter(g =>
+          ((g.archived && g.archive_reason === 'sold') || g.status === 'Sold') &&
+          !g.notes?.startsWith('[Manual sale]')
+        ));
 
         let dbCosts = [];
         try {
@@ -509,7 +514,9 @@ export default function MarketplaceSalesStats() {
           } catch (e) { console.warn('Migration failed:', e); }
         }
 
-        setCosts(dbCosts);
+        // Separate manual sales (type === 'sale') from expense costs
+        setManualSales(dbCosts.filter(c => c.type === 'sale'));
+        setCosts(dbCosts.filter(c => c.type !== 'sale'));
       } catch (error) {
         console.error('Failed to load stats:', error);
       } finally {
@@ -524,13 +531,16 @@ export default function MarketplaceSalesStats() {
     return gecko.asking_price ? parseFloat(gecko.asking_price) : 0;
   };
 
-  const totalRevenue = soldGeckos.reduce((sum, g) => sum + getPrice(g), 0);
+  const manualSalesTotal = manualSales.reduce((sum, s) => sum + Number(s.amount), 0);
+  const totalRevenue = soldGeckos.reduce((sum, g) => sum + getPrice(g), 0) + manualSalesTotal;
   const totalCosts = costs.reduce((sum, c) => sum + Number(c.amount), 0);
   const netProfit = totalRevenue - totalCosts;
   const currentYear = new Date().getFullYear();
   const ytdRevenue = soldGeckos.reduce((sum, g) => {
     const yr = g.archived_date ? new Date(g.archived_date).getFullYear() : new Date(g.updated_date).getFullYear();
     return yr === currentYear ? sum + getPrice(g) : sum;
+  }, 0) + manualSales.reduce((sum, s) => {
+    return s.date && new Date(s.date).getFullYear() === currentYear ? sum + Number(s.amount) : sum;
   }, 0);
 
   const handleSaveAllPrices = async () => {
@@ -600,9 +610,8 @@ export default function MarketplaceSalesStats() {
 
   // Manual "Add Sale" — for sales of animals that were never added to
   // the collection (e.g. rehoming a gecko you helped a friend list, or
-  // an "Other" category item). Creates a minimal archived Gecko record
-  // so the sale flows through the same revenueByQuarter pipeline as
-  // from-collection sales.
+  // an "Other" category item). Stored as a MarketplaceCost record with
+  // type='sale' so it doesn't pollute the gecko collection / archive.
   const [isAddingSale, setIsAddingSale] = useState(false);
   const handleAddManualRevenue = async () => {
     if (!newRevenue.name.trim() || !newRevenue.amount || isAddingSale) {
@@ -611,31 +620,16 @@ export default function MarketplaceSalesStats() {
     const price = parseFloat(newRevenue.amount) || 0;
     setIsAddingSale(true);
     try {
-      const created = await Gecko.create({
-        name: newRevenue.name.trim(),
-        sex: 'Unsexed',
-        status: 'Sold',
-        archived: true,
-        archive_reason: 'sold',
-        archived_date: newRevenue.date || new Date().toISOString().split('T')[0],
-        asking_price: price,
-        is_public: false,
-        notes: `[Manual sale] ${newRevenue.category}`,
+      const created = await MarketplaceCost.create({
+        user_email: user.email,
+        description: newRevenue.name.trim(),
+        amount: price,
+        date: newRevenue.date || new Date().toISOString().split('T')[0],
+        category: newRevenue.category || 'produced_in_house',
+        type: 'sale',
       });
 
-      // Track the category override so revenueByQuarter picks up the
-      // right bucket instead of falling back to "General".
-      setGeckoCategories((prev) => {
-        const updated = { ...prev, [created.id]: newRevenue.category };
-        try {
-          localStorage.setItem('marketplace_gecko_categories', JSON.stringify(updated));
-        } catch (e) {
-          console.warn('localStorage write failed:', e);
-        }
-        return updated;
-      });
-
-      setSoldGeckos((prev) => [created, ...prev]);
+      setManualSales((prev) => [created, ...prev]);
       toast({ title: "Sale Added", description: `${newRevenue.name.trim()} — $${price.toFixed(2)}` });
       setNewRevenue({
         name: '',
@@ -671,8 +665,22 @@ export default function MarketplaceSalesStats() {
       if (!groups[key]) groups[key] = [];
       groups[key].push({ ...gecko, category: geckoCategories[gecko.id] || 'General', amount: getPrice(gecko) });
     });
+    // Merge manual sales into the same quarter groups
+    manualSales.forEach(sale => {
+      const key = getQuarterKey(sale.date);
+      if (!groups[key]) groups[key] = [];
+      groups[key].push({
+        id: sale.id,
+        name: sale.description,
+        archived_date: sale.date,
+        asking_price: sale.amount,
+        category: sale.category || 'General',
+        amount: Number(sale.amount),
+        isManualSale: true,
+      });
+    });
     return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
-  }, [soldGeckos, geckoCategories, priceOverrides]);
+  }, [soldGeckos, geckoCategories, priceOverrides, manualSales]);
 
   const tabTriggerClass = "flex-1 data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-2 rounded-sm transition-colors";
 
@@ -746,7 +754,7 @@ export default function MarketplaceSalesStats() {
 
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {[
-            { label: 'Total Revenue', value: `${statsPrefs.currency}${totalRevenue.toFixed(2)}`, sub: `${soldGeckos.length} geckos sold`, color: 'text-emerald-400', Icon: DollarSign },
+            { label: 'Total Revenue', value: `${statsPrefs.currency}${totalRevenue.toFixed(2)}`, sub: `${soldGeckos.length} sold${manualSales.length ? ` + ${manualSales.length} manual` : ''}`, color: 'text-emerald-400', Icon: DollarSign },
             { label: 'YTD Revenue', value: `${statsPrefs.currency}${ytdRevenue.toFixed(2)}`, sub: 'Year to date', color: 'text-blue-400', Icon: TrendingUp },
             { label: 'Total Costs', value: `${statsPrefs.currency}${totalCosts.toFixed(2)}`, sub: `${costs.length} entries`, color: 'text-orange-400', Icon: DollarSign },
             { label: 'Net Profit', value: `${statsPrefs.currency}${netProfit.toFixed(2)}`, sub: 'All time', color: netProfit >= 0 ? 'text-emerald-400' : 'text-red-400', Icon: TrendingUp },
@@ -879,7 +887,7 @@ export default function MarketplaceSalesStats() {
                   </Button>
                 )}
               </div>
-              {soldGeckos.length === 0 ? (
+              {soldGeckos.length === 0 && manualSales.length === 0 ? (
                 <div className="text-center py-10">
                   <AlertCircle className="w-8 h-8 text-slate-500 mx-auto mb-2" />
                   <p className="text-slate-400">No sold geckos found.</p>
@@ -888,29 +896,44 @@ export default function MarketplaceSalesStats() {
                 <div className="space-y-3">
                   {revenueByQuarter.map(([key, geckos]) => (
                     <QuarterSection key={key} quarterKey={key} items={geckos}
-                      renderItem={(gecko) => (
-                        <div key={gecko.id} className="bg-slate-800/60 border border-slate-700/50 p-3 rounded-lg">
+                      renderItem={(item) => (
+                        <div key={item.id} className="bg-slate-800/60 border border-slate-700/50 p-3 rounded-lg">
                           <div className="flex items-center gap-3">
-                            <img src={gecko.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'} alt={gecko.name}
-                              className="w-9 h-9 rounded object-cover flex-shrink-0" />
+                            {item.isManualSale ? (
+                              <div className="w-9 h-9 rounded bg-emerald-900/40 border border-emerald-700/30 flex items-center justify-center flex-shrink-0">
+                                <DollarSign className="w-4 h-4 text-emerald-400" />
+                              </div>
+                            ) : (
+                              <img src={item.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'} alt={item.name}
+                                className="w-9 h-9 rounded object-cover flex-shrink-0" />
+                            )}
                             <div className="flex-1 min-w-0">
-                              <p className="font-medium text-slate-100 text-sm truncate">{gecko.name}</p>
-                              <p className="text-xs text-slate-500">{gecko.archived_date ? format(new Date(gecko.archived_date), 'MMM d, yyyy') : '—'}</p>
+                              <p className="font-medium text-slate-100 text-sm truncate">{item.name}</p>
+                              <p className="text-xs text-slate-500">
+                                {item.archived_date ? format(new Date(item.archived_date), 'MMM d, yyyy') : '—'}
+                                {item.isManualSale && <span className="ml-1 text-emerald-500/70">(manual)</span>}
+                              </p>
                             </div>
-                            <select value={geckoCategories[gecko.id] || 'other'}
-                              onChange={e => handleGeckoCategoryChange(gecko.id, e.target.value)}
-                              className="h-7 text-xs rounded bg-slate-700 border border-slate-600 text-slate-300 px-1.5">
-                              {COST_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                            </select>
-                            <div className="flex items-center gap-1.5 flex-shrink-0">
-                              <span className="text-slate-400 text-xs">$</span>
-                              <Input type="number" step="0.01"
-                                value={priceOverrides[gecko.id] !== undefined ? priceOverrides[gecko.id] : (gecko.asking_price || '')}
-                                onChange={e => setPriceOverrides(prev => ({ ...prev, [gecko.id]: e.target.value }))}
-                                placeholder="0.00"
-                                className="bg-slate-700 border-slate-600 text-slate-100 h-7 text-xs w-20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-                            </div>
-                            <p className="text-emerald-400 font-semibold text-sm w-16 text-right">${getPrice(gecko).toFixed(2)}</p>
+                            {!item.isManualSale && (
+                              <select value={geckoCategories[item.id] || 'other'}
+                                onChange={e => handleGeckoCategoryChange(item.id, e.target.value)}
+                                className="h-7 text-xs rounded bg-slate-700 border border-slate-600 text-slate-300 px-1.5">
+                                {COST_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                              </select>
+                            )}
+                            {item.isManualSale ? (
+                              <span className="text-xs text-slate-400 px-1.5">{_getRevenueCategory(item.category)}</span>
+                            ) : (
+                              <div className="flex items-center gap-1.5 flex-shrink-0">
+                                <span className="text-slate-400 text-xs">$</span>
+                                <Input type="number" step="0.01"
+                                  value={priceOverrides[item.id] !== undefined ? priceOverrides[item.id] : (item.asking_price || '')}
+                                  onChange={e => setPriceOverrides(prev => ({ ...prev, [item.id]: e.target.value }))}
+                                  placeholder="0.00"
+                                  className="bg-slate-700 border-slate-600 text-slate-100 h-7 text-xs w-20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                              </div>
+                            )}
+                            <p className="text-emerald-400 font-semibold text-sm w-16 text-right">${(item.amount || 0).toFixed(2)}</p>
                           </div>
                         </div>
                       )} />

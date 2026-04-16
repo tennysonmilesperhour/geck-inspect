@@ -35,7 +35,7 @@ import ParentAutocomplete from './form/ParentAutocomplete';
 // Back-compat alias so the rest of this file doesn't need to change
 const initialFormData = INITIAL_FORM_DATA;
 
-export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, onCancel, isHatching = false, onDelete, breedingPlan = null, feedingGroups: feedingGroupsProp = null }) {
+export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, onCancel, isHatching = false, onDelete, breedingPlan = null, feedingGroups: feedingGroupsProp = null, idSettings = null }) {
     const { toast } = useToast();
     const isArchived = gecko?.archived;
     const [formData, setFormData] = useState(initialFormData);
@@ -145,7 +145,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
         } else {
             // We are creating a new gecko from scratch. Generate ID and set initial state.
             const generateIdAndSet = async () => {
-                const newId = await generateNextGeckoId(currentUser, userGeckos);
+                const newId = await generateNextGeckoId(currentUser, userGeckos, null, null, '', '', idSettings);
                 setFormData({
                     ...initialFormData,
                     gecko_id_code: newId
@@ -171,7 +171,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
             if (isHatching && gecko && !gecko.id && !formData.gecko_id_code && breedingPlan) {
                 const sire = userGeckos.find(g => g.id === breedingPlan.sire_id);
                 const dam = userGeckos.find(g => g.id === breedingPlan.dam_id);
-                const newId = await generateNextGeckoId(currentUser, userGeckos, sire, dam);
+                const newId = await generateNextGeckoId(currentUser, userGeckos, sire, dam, '', '', idSettings);
                 setFormData(prev => ({ ...prev, gecko_id_code: newId }));
             }
         };
