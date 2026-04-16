@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Seo from '@/components/seo/Seo';
-import { Gecko, WeightRecord, FeedingGroup } from '@/entities/all';
+import { Gecko, WeightRecord, FeedingGroup, MarketplaceCost } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import { PlusCircle, Search, Users, Grid3x3, List, ArrowUpDown, Archive, ArchiveRestore, Download, FileText, FileSpreadsheet } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
@@ -275,17 +275,36 @@ export default function MyGeckosPage() {
 
     const handleDelete = async (geckoId) => {
         try {
+            const geckoToDelete = geckos.find(g => g.id === geckoId);
+
+            // Preserve revenue data for sold geckos before deletion
+            if (geckoToDelete && user) {
+                const wasSold = geckoToDelete.status === 'Sold' || geckoToDelete.archive_reason === 'sold';
+                const price = geckoToDelete.asking_price;
+                if (wasSold && price && price > 0) {
+                    try {
+                        await MarketplaceCost.create({
+                            user_email: user.email,
+                            description: geckoToDelete.name || 'Deleted gecko',
+                            amount: price,
+                            date: geckoToDelete.archived_date || geckoToDelete.updated_date?.split('T')[0] || new Date().toISOString().split('T')[0],
+                            category: 'sale:produced_in_house',
+                        });
+                    } catch (e) {
+                        console.warn('Could not preserve revenue record:', e);
+                    }
+                }
+            }
+
             await retryWithBackoff(async () => {
                 return await Gecko.delete(geckoId);
             });
 
-            // Update local state immediately for better UX
             setGeckos(prev => prev.filter(g => g.id !== geckoId));
             setSelectedGecko(null);
             setIsFormOpen(false);
             setIsDetailModalOpen(false);
 
-            // Invalidate cache
             if (user) {
                 const cacheKey = `geckos_${user.email}`;
                 geckosCache.invalidate(cacheKey);
@@ -293,7 +312,7 @@ export default function MyGeckosPage() {
 
             toast({
                 title: "Gecko Deleted",
-                description: "The gecko has been successfully removed from your collection.",
+                description: "The gecko has been permanently removed. Revenue data was preserved in business tools.",
             });
         } catch (error) {
             console.error("Failed to delete gecko:", error);

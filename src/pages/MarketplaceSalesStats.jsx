@@ -514,9 +514,9 @@ export default function MarketplaceSalesStats() {
           } catch (e) { console.warn('Migration failed:', e); }
         }
 
-        // Separate manual sales (type === 'sale') from expense costs
-        setManualSales(dbCosts.filter(c => c.type === 'sale'));
-        setCosts(dbCosts.filter(c => c.type !== 'sale'));
+        // Separate manual sales (category prefixed with 'sale:') from expense costs
+        setManualSales(dbCosts.filter(c => c.category?.startsWith('sale:')));
+        setCosts(dbCosts.filter(c => !c.category?.startsWith('sale:')));
       } catch (error) {
         console.error('Failed to load stats:', error);
       } finally {
@@ -625,8 +625,7 @@ export default function MarketplaceSalesStats() {
         description: newRevenue.name.trim(),
         amount: price,
         date: newRevenue.date || new Date().toISOString().split('T')[0],
-        category: newRevenue.category || 'produced_in_house',
-        type: 'sale',
+        category: 'sale:' + (newRevenue.category || 'produced_in_house'),
       });
 
       setManualSales((prev) => [created, ...prev]);
@@ -674,7 +673,7 @@ export default function MarketplaceSalesStats() {
         name: sale.description,
         archived_date: sale.date,
         asking_price: sale.amount,
-        category: sale.category || 'General',
+        category: (sale.category || '').replace(/^sale:/, '') || 'General',
         amount: Number(sale.amount),
         isManualSale: true,
       });
