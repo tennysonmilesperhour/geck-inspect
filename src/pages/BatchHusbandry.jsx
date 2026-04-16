@@ -624,7 +624,7 @@ export default function BatchHusbandry() {
       ]);
 
       setGroups(userGroups);
-      setGeckos(userGeckos);
+      setGeckos(userGeckos.filter(g => !g.archived));
       setFeedingRecords(userFeedings);
       setWeightRecords(userWeights);
     } catch (err) {

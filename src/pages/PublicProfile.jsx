@@ -82,7 +82,7 @@ export default function PublicProfile() {
                 
                 // Fetch user's public geckos and their weight records
                 const [geckos, weights] = await Promise.all([
-                    Gecko.filter({ created_by: user.email, is_public: true }),
+                    Gecko.filter({ created_by: user.email, is_public: true, archived: false }),
                     WeightRecord.filter({ created_by: user.email }).catch(() => [])
                 ]);
                 setUserGeckos(geckos);

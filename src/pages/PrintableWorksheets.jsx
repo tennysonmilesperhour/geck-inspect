@@ -524,7 +524,7 @@ export default function PrintableWorksheets() {
         return;
       }
       const userGeckos = await Gecko.filter({ created_by: currentUser.email });
-      setGeckos(userGeckos);
+      setGeckos(userGeckos.filter(g => !g.archived));
     } catch (err) {
       console.error('Failed to load geckos:', err);
     }

@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Bell, ArrowRight, Check, Award, Shield, ImagePlus, User as UserIcon, MessageSquare, Star, ShoppingCart } from 'lucide-react';
@@ -29,12 +30,25 @@ const ICONS = {
  */
 export default function NotificationPopover({ notifications = [], unreadCount = 0, onMarkRead }) {
   const [open, setOpen] = useState(false);
+  const buttonRef = useRef(null);
+  const [position, setPosition] = useState({ top: 0, right: 0 });
+
+  useEffect(() => {
+    if (open && buttonRef.current) {
+      const rect = buttonRef.current.getBoundingClientRect();
+      setPosition({
+        top: rect.bottom + 8,
+        right: window.innerWidth - rect.right,
+      });
+    }
+  }, [open]);
 
   const recent = notifications.slice(0, 5);
 
   return (
     <div className="relative">
       <button
+        ref={buttonRef}
         onClick={() => setOpen((o) => !o)}
         className="gecko-header-action"
         aria-label="Notifications"
@@ -47,10 +61,13 @@ export default function NotificationPopover({ notifications = [], unreadCount = 
         )}
       </button>
 
-      {open && (
+      {open && createPortal(
         <>
-          <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-2 z-50 w-80 rounded-xl border border-emerald-900/40 bg-slate-950 shadow-2xl overflow-hidden">
+          <div className="fixed inset-0 z-[200]" onClick={() => setOpen(false)} />
+          <div
+            className="fixed z-[201] w-80 rounded-xl border border-emerald-900/40 bg-slate-950 shadow-2xl overflow-hidden"
+            style={{ top: position.top, right: position.right }}
+          >
             {/* Header */}
             <div className="flex items-center justify-between px-4 py-3 border-b border-emerald-900/30">
               <h3 className="text-sm font-semibold text-slate-100">Notifications</h3>
@@ -116,7 +133,8 @@ export default function NotificationPopover({ notifications = [], unreadCount = 
               <ArrowRight className="w-3 h-3" />
             </Link>
           </div>
-        </>
+        </>,
+        document.body
       )}
     </div>
   );

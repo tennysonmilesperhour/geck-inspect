@@ -63,7 +63,7 @@ export default function BreedingPairsPage() {
                     BreedingPlan.filter({ created_by: currentUser.email }, pairsPrefs.sortBy),
                     Egg.filter({ created_by: currentUser.email })
                 ]);
-                setGeckos(userGeckos.filter(g => !g.notes?.startsWith('[Manual sale]')));
+                setGeckos(userGeckos.filter(g => !g.notes?.startsWith('[Manual sale]') && !g.archived));
                 setBreedingPlans(plans);
                 setEggs(userEggs);
             }
