@@ -11,6 +11,21 @@
  */
 import { supabase } from '@/lib/supabaseClient';
 
+/**
+ * If a Supabase query fails with a JWT / auth error, try refreshing the
+ * session once and re-run the query. This handles the common case where a
+ * long-idle tab has an expired access token that Supabase's auto-refresh
+ * hasn't replaced yet.
+ */
+async function withAuthRetry(queryFn) {
+  const result = await queryFn();
+  if (result.error && (result.error.code === 'PGRST301' || result.error.message?.includes('JWT'))) {
+    const { error: refreshErr } = await supabase.auth.refreshSession();
+    if (!refreshErr) return queryFn();
+  }
+  return result;
+}
+
 export const TABLE_MAP = {
   AppSettings: 'app_settings',
   BreedingPlan: 'breeding_plans',
@@ -135,31 +150,33 @@ function createEntityClient(entityName) {
 
   return {
     async filter(filterObj = {}, sort = null, limit = null, skip = null) {
-      let query = supabase.from(tableName).select('*');
-      query = applyFilter(query, filterObj);
+      const run = () => {
+        let query = supabase.from(tableName).select('*');
+        query = applyFilter(query, filterObj);
 
-      const sorts = parseSort(sort);
-      for (const { column, ascending } of sorts) {
-        query = query.order(column, { ascending, nullsFirst: false });
-      }
+        const sorts = parseSort(sort);
+        for (const { column, ascending } of sorts) {
+          query = query.order(column, { ascending, nullsFirst: false });
+        }
 
-      if (skip && limit) {
-        query = query.range(skip, skip + limit - 1);
-      } else if (limit) {
-        query = query.limit(limit);
-      }
+        if (skip && limit) {
+          query = query.range(skip, skip + limit - 1);
+        } else if (limit) {
+          query = query.limit(limit);
+        }
 
-      const { data, error } = await query;
+        return query;
+      };
+
+      const { data, error } = await withAuthRetry(run);
       if (error) throw error;
       return data || [];
     },
 
     async get(id) {
-      const { data, error } = await supabase
-        .from(tableName)
-        .select('*')
-        .eq('id', id)
-        .maybeSingle();
+      const { data, error } = await withAuthRetry(() =>
+        supabase.from(tableName).select('*').eq('id', id).maybeSingle()
+      );
       if (error) throw error;
       return data;
     },
@@ -169,16 +186,18 @@ function createEntityClient(entityName) {
       const email = user?.email || null;
       const now = new Date().toISOString();
 
-      const { data, error } = await supabase
-        .from(tableName)
-        .insert({
-          ...record,
-          created_by: email,
-          created_date: record.created_date || now,
-          updated_date: now,
-        })
-        .select()
-        .single();
+      const { data, error } = await withAuthRetry(() =>
+        supabase
+          .from(tableName)
+          .insert({
+            ...record,
+            created_by: email,
+            created_date: record.created_date || now,
+            updated_date: now,
+          })
+          .select()
+          .single()
+      );
       if (error) throw error;
       return data;
     },
@@ -189,23 +208,22 @@ function createEntityClient(entityName) {
       const cleaned = Object.fromEntries(
         Object.entries(record).filter(([, v]) => v !== undefined)
       );
-      const { data, error } = await supabase
-        .from(tableName)
-        .update({ ...cleaned, updated_date: now })
-        .eq('id', id)
-        .select()
-        .single();
+      const { data, error } = await withAuthRetry(() =>
+        supabase
+          .from(tableName)
+          .update({ ...cleaned, updated_date: now })
+          .eq('id', id)
+          .select()
+          .single()
+      );
       if (error) throw error;
       return data;
     },
 
     async delete(id) {
-      const { data, error } = await supabase
-        .from(tableName)
-        .delete()
-        .eq('id', id)
-        .select()
-        .single();
+      const { data, error } = await withAuthRetry(() =>
+        supabase.from(tableName).delete().eq('id', id).select().single()
+      );
       if (error) throw error;
       return data;
     },

@@ -70,7 +70,7 @@ export const AuthProvider = ({ children }) => {
   // old one closed the flag will be gone and the Supabase session
   // token in localStorage is what keeps the user logged in.
   // We listen for `beforeunload` and mark a timestamp; on next mount
-  // if the gap is >2s the tab was actually closed (not just refreshed).
+  // if the gap is >10s the tab was actually closed (not just refreshed).
   useEffect(() => {
     const handleBeforeUnload = () => {
       if (sessionStorage.getItem('geck_inspect_ephemeral_session') === '1') {
@@ -80,18 +80,39 @@ export const AuthProvider = ({ children }) => {
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     // On mount: if ephemeral flag existed AND the tab was closed (not
-    // a refresh), sign out. A refresh round-trips in <2 seconds.
+    // a refresh), sign out. Using 10s threshold to avoid false positives
+    // on slow connections or heavy pages.
     const unloadTs = localStorage.getItem('geck_inspect_unload_ts');
     if (
       unloadTs &&
       !sessionStorage.getItem('geck_inspect_ephemeral_session') &&
-      Date.now() - Number(unloadTs) > 2000
+      Date.now() - Number(unloadTs) > 10000
     ) {
       localStorage.removeItem('geck_inspect_unload_ts');
       supabase.auth.signOut();
     }
 
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, []);
+
+  // Proactively refresh the session when the tab regains visibility.
+  // Without this, a tab left in the background can accumulate an expired
+  // JWT — and every API call fails with 401 until the user hard-refreshes.
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        supabase.auth.getSession().then(({ data: { session } }) => {
+          if (session?.user) {
+            buildUser(session.user).then((enriched) => {
+              setUser(enriched);
+              identifyUser(enriched);
+            });
+          }
+        });
+      }
+    };
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
   }, []);
 
   const logout = async (shouldRedirect = true) => {
