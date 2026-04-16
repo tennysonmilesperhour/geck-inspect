@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Egg, BreedingPlan, User } from '@/entities/all';
 import { Button } from '@/components/ui/button';
 import { Card, CardFooter, CardHeader } from '@/components/ui/card';
@@ -10,12 +10,20 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
   PlusCircle,
   Edit,
+  Trash2,
   ChevronDown,
   ChevronUp,
   Egg as EggIcon,
@@ -319,6 +327,17 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                     </div>
                 </CardHeader>
 
+                {/* Edit modal rendered outside isExpanded so it works from the footer button */}
+                {isEditModalOpen && (
+                    <PlanEditDialog
+                        plan={plan}
+                        isOpen={isEditModalOpen}
+                        onOpenChange={setIsEditModalOpen}
+                        onPlanUpdate={onPlanUpdate}
+                        onPlanDelete={onPlanDelete}
+                    />
+                )}
+
                 {isExpanded && (
                     <>
                         {plan.copulation_events && plan.copulation_events.length > 0 && (
@@ -558,5 +577,87 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                 </DialogContent>
             </Dialog>
         </>
+    );
+}
+
+function PlanEditDialog({ plan, isOpen, onOpenChange, onPlanUpdate, onPlanDelete }) {
+    const [editedPlan, setEditedPlan] = useState(plan);
+
+    useEffect(() => { setEditedPlan(plan); }, [plan]);
+
+    const handleSave = async () => {
+        await onPlanUpdate(editedPlan);
+        onOpenChange(false);
+    };
+
+    return (
+        <Dialog open={isOpen} onOpenChange={onOpenChange}>
+            <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-lg">
+                <DialogHeader>
+                    <DialogTitle>Edit Breeding Plan</DialogTitle>
+                </DialogHeader>
+                <div className="grid gap-4 py-4">
+                    <div className="space-y-2">
+                        <Label htmlFor="breeding_id">Breeding ID</Label>
+                        <Input
+                            id="breeding_id"
+                            placeholder="e.g., BP001, Flame-01, etc."
+                            value={editedPlan.breeding_id || ''}
+                            onChange={e => setEditedPlan({ ...editedPlan, breeding_id: e.target.value })}
+                            className="bg-slate-800 border-slate-600"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="pairing_date">Pairing Date</Label>
+                        <Input
+                            id="pairing_date"
+                            type="date"
+                            value={editedPlan.pairing_date ? format(new Date(editedPlan.pairing_date), 'yyyy-MM-dd') : ''}
+                            onChange={e => setEditedPlan({ ...editedPlan, pairing_date: e.target.value })}
+                            className="bg-slate-800 border-slate-600"
+                        />
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="status">Status</Label>
+                        <Select value={editedPlan.status} onValueChange={v => setEditedPlan({ ...editedPlan, status: v })}>
+                            <SelectTrigger className="bg-slate-800 border-slate-600"><SelectValue /></SelectTrigger>
+                            <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
+                                <SelectItem value="Planned">Planned</SelectItem>
+                                <SelectItem value="Active">Active</SelectItem>
+                                <SelectItem value="Successful">Successful</SelectItem>
+                                <SelectItem value="Failed">Failed</SelectItem>
+                            </SelectContent>
+                        </Select>
+                    </div>
+                    <div className="space-y-2">
+                        <Label htmlFor="expected_lay_interval">Expected Lay Interval (days)</Label>
+                        <p className="text-xs text-slate-400">Card glows when this many days have passed since the last egg lay.</p>
+                        <Input
+                            id="expected_lay_interval"
+                            type="number"
+                            min="1"
+                            max="90"
+                            value={editedPlan.expected_lay_interval ?? 31}
+                            onChange={e => setEditedPlan({ ...editedPlan, expected_lay_interval: parseInt(e.target.value) || 31 })}
+                            className="bg-slate-800 border-slate-600"
+                        />
+                    </div>
+                </div>
+                <DialogFooter className="flex-col sm:flex-row gap-2">
+                    <Button
+                        variant="destructive"
+                        onClick={() => {
+                            onPlanDelete(plan.id);
+                            onOpenChange(false);
+                        }}
+                        className="w-full sm:w-auto"
+                    >
+                        <Trash2 size={14} className="mr-2" />
+                        Delete Plan
+                    </Button>
+                    <Button onClick={handleSave} className="w-full sm:w-auto">Save Changes</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     );
 }
