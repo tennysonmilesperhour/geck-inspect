@@ -11,10 +11,9 @@ import {
     Upload, Download, FileSpreadsheet, AlertTriangle, Loader2,
     ArrowLeft, ArrowRight, Check, Columns3, Sparkles,
 } from 'lucide-react';
-import { UploadFile } from '@/integrations/Core';
 import { importGeckosFromCSV } from '@/functions/importGeckosFromCSV';
 import { generateCSVTemplate } from '@/functions/generateCSVTemplate';
-import { parseCSV, readFileAsText, buildCSV, transformRows } from './csv/csvParser';
+import { parseCSV, readFileAsText, transformRows } from './csv/csvParser';
 import { autoMapColumns, TEMPLATE_FIELDS, requiredFieldsCovered } from './csv/columnMapper';
 import CSVColumnMapper from './csv/CSVColumnMapper';
 
@@ -36,7 +35,6 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
     const [sourceRows, setSourceRows] = useState([]);
     const [mapping, setMapping] = useState({});
     const [importMode, setImportMode] = useState('create_and_update');
-    const [isUploading, setIsUploading] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
     const [importResults, setImportResults] = useState(null);
     const [useDirectFormat, setUseDirectFormat] = useState(false); // skip mapping for exact-template CSVs
@@ -96,28 +94,14 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
     // ------------------------------------------- step 2 → 3: run the import
     const handleImport = async () => {
         setStep('import');
-        setIsUploading(true);
+        setIsImporting(true);
 
         try {
-            let uploadBlob;
+            // Build row objects from the mapping
+            const templateKeys = TEMPLATE_FIELDS.map(f => f.key);
+            const rowObjects = transformRows(mapping, sourceHeaders, sourceRows, templateKeys);
 
-            if (useDirectFormat) {
-                // File already matches template — upload as-is
-                uploadBlob = file;
-            } else {
-                // Transform via the mapping
-                const templateKeys = TEMPLATE_FIELDS.map(f => f.key);
-                const transformed = transformRows(mapping, sourceHeaders, sourceRows, templateKeys);
-                const csvText = buildCSV(templateKeys, transformed);
-                uploadBlob = new File([csvText], 'translated_import.csv', { type: 'text/csv' });
-            }
-
-            const { file_url } = await UploadFile({ file: uploadBlob });
-
-            setIsUploading(false);
-            setIsImporting(true);
-
-            const { data } = await importGeckosFromCSV({ fileUrl: file_url, importMode });
+            const { data } = await importGeckosFromCSV({ rows: rowObjects, importMode });
 
             setImportResults(data.results);
             setStep('results');
@@ -137,7 +121,6 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
             setStep('results');
         }
 
-        setIsUploading(false);
         setIsImporting(false);
     };
 
@@ -423,7 +406,7 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
                                 <Loader2 className="w-10 h-10 text-emerald-400 animate-spin" />
                                 <div className="text-center">
                                     <p className="text-slate-200 font-medium">
-                                        {isUploading ? 'Uploading your data...' : 'Importing geckos...'}
+                                        Importing geckos...
                                     </p>
                                     <p className="text-xs text-slate-500 mt-1">
                                         Processing {sourceRows.length} rows. This may take a moment.
