@@ -42,6 +42,7 @@ export default function BreedingPage() {
         autoExpandCards: false,
     });
     const [breedingPlans, setBreedingPlans] = useState([]);
+    const [allGeckos, setAllGeckos] = useState([]);
     const [geckos, setGeckos] = useState([]);
     const [allEggs, setAllEggs] = useState([]);
     const [showPairLimitModal, setShowPairLimitModal] = useState(false);
@@ -124,7 +125,9 @@ export default function BreedingPage() {
                 BreedingPlan.filter({ created_by: currentUser.email }, '-created_date'),
                 Egg.filter({ created_by: currentUser.email })
             ]);
-            setGeckos(geckosData.filter(g => !g.notes?.startsWith('[Manual sale]') && !g.archived));
+            const filtered = geckosData.filter(g => !g.notes?.startsWith('[Manual sale]'));
+            setAllGeckos(filtered);
+            setGeckos(filtered.filter(g => !g.archived));
             setAllEggs(eggsData);
             setBreedingPlans(plansData.sort((a,b) => new Date(b.created_date) - new Date(a.created_date)));
         } catch (error) {
@@ -289,8 +292,8 @@ export default function BreedingPage() {
     const filterAndSortPlans = (plans) => {
         // Filter by search term
         let filtered = plans.filter(plan => {
-            const sire = geckos.find(g => g.id === plan.sire_id);
-            const dam = geckos.find(g => g.id === plan.dam_id);
+            const sire = allGeckos.find(g => g.id === plan.sire_id);
+            const dam = allGeckos.find(g => g.id === plan.dam_id);
             const searchLower = debouncedSearchTerm.toLowerCase();
             
             return (
@@ -332,8 +335,8 @@ export default function BreedingPage() {
                 case 'laying_dormant':
                     return (b.laying_active === false ? 1 : 0) - (a.laying_active === false ? 1 : 0);
                 case 'species': {
-                    const sireA = geckos.find(g => g.id === a.sire_id);
-                    const sireB = geckos.find(g => g.id === b.sire_id);
+                    const sireA = allGeckos.find(g => g.id === a.sire_id);
+                    const sireB = allGeckos.find(g => g.id === b.sire_id);
                     const spA = sireA?.species || 'Crested Gecko';
                     const spB = sireB?.species || 'Crested Gecko';
                     return spA.localeCompare(spB);
@@ -367,7 +370,7 @@ export default function BreedingPage() {
         const archived = breedingPlans.filter(plan => plan.archived);
         setFilteredActivePlans(filterAndSortPlans(active));
         setFilteredArchivedPlans(filterAndSortPlans(archived));
-    }, [breedingPlans, allEggs, debouncedSearchTerm, sortBy, geckos]);
+    }, [breedingPlans, allEggs, debouncedSearchTerm, sortBy, allGeckos]);
     
     const activePlans = filteredActivePlans;
     const archivedPlans = filteredArchivedPlans;
@@ -573,7 +576,7 @@ export default function BreedingPage() {
                                     {sortBy === 'species' ? (
                                         (() => {
                                             const bySpecies = activePlans.reduce((acc, plan) => {
-                                                const sire = geckos.find(g => g.id === plan.sire_id);
+                                                const sire = allGeckos.find(g => g.id === plan.sire_id);
                                                 const sp = sire?.species || 'Crested Gecko';
                                                 if (!acc[sp]) acc[sp] = [];
                                                 acc[sp].push(plan);
@@ -589,7 +592,7 @@ export default function BreedingPage() {
                                                             </h2>
                                                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
                                                                                 {plans.map(plan => (
-                                                                                    <BreedingPlanCard key={plan.id} plan={plan} geckos={geckos} planEggs={allEggs.filter(e => e.breeding_plan_id === plan.id)} onPlanUpdate={loadData} onPlanDelete={handleDeletePlan} onPlanArchive={handleArchivePlan} isExpanded={isPlanExpanded(plan.id)} onToggleExpanded={handleToggleExpanded} showArchiveButton={true} />
+                                                                                    <BreedingPlanCard key={plan.id} plan={plan} geckos={allGeckos} planEggs={allEggs.filter(e => e.breeding_plan_id === plan.id)} onPlanUpdate={loadData} onPlanDelete={handleDeletePlan} onPlanArchive={handleArchivePlan} isExpanded={isPlanExpanded(plan.id)} onToggleExpanded={handleToggleExpanded} showArchiveButton={true} />
                                                                                 ))}
                                                             </div>
                                                         </div>
@@ -608,7 +611,7 @@ export default function BreedingPage() {
                                                         <BreedingPlanCard
                                                             key={plan.id}
                                                             plan={plan}
-                                                            geckos={geckos}
+                                                            geckos={allGeckos}
                                                             planEggs={allEggs.filter(e => e.breeding_plan_id === plan.id)}
                                                             onPlanUpdate={loadData}
                                                             onPlanDelete={handleDeletePlan}
@@ -630,7 +633,7 @@ export default function BreedingPage() {
                                                                 <BreedingPlanCard
                                                                     key={plan.id}
                                                                     plan={plan}
-                                                                    geckos={geckos}
+                                                                    geckos={allGeckos}
                                                                     planEggs={allEggs.filter(e => e.breeding_plan_id === plan.id)}
                                                                     onPlanUpdate={loadData}
                                                                     onPlanDelete={handleDeletePlan}
@@ -724,7 +727,7 @@ export default function BreedingPage() {
                                                         <BreedingPlanCard
                                                             key={plan.id}
                                                             plan={plan}
-                                                            geckos={geckos}
+                                                            geckos={allGeckos}
                                                             planEggs={allEggs.filter(e => e.breeding_plan_id === plan.id)}
                                                             onPlanUpdate={loadData}
                                                             onPlanDelete={handleDeletePlan}
