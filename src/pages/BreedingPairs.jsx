@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import { User, Gecko, BreedingPlan, Egg } from '@/entities/all';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -161,6 +161,48 @@ export default function BreedingPairsPage() {
         }
     };
 
+    // Client-side sorting for egg-based sort options
+    const sortedPlans = useMemo(() => {
+        const eggSorts = ['oldest_egg', 'newest_egg', 'most_eggs'];
+        if (!eggSorts.includes(pairsPrefs.sortBy)) return breedingPlans;
+
+        const getEggsForPlan = (planId) => eggs.filter(e => e.breeding_plan_id === planId && !e.archived);
+
+        return [...breedingPlans].sort((a, b) => {
+            const aEggs = getEggsForPlan(a.id);
+            const bEggs = getEggsForPlan(b.id);
+
+            if (pairsPrefs.sortBy === 'most_eggs') {
+                return bEggs.length - aEggs.length;
+            }
+
+            // oldest_egg: plan whose earliest egg is oldest first
+            // newest_egg: plan whose most recent egg is newest first
+            const getDate = (planEggs, pickFn) => {
+                if (planEggs.length === 0) return null;
+                const dates = planEggs.map(e => new Date(e.lay_date).getTime()).filter(d => !isNaN(d));
+                return dates.length > 0 ? pickFn(...dates) : null;
+            };
+
+            if (pairsPrefs.sortBy === 'oldest_egg') {
+                const aOldest = getDate(aEggs, Math.min);
+                const bOldest = getDate(bEggs, Math.min);
+                if (aOldest == null && bOldest == null) return 0;
+                if (aOldest == null) return 1;
+                if (bOldest == null) return -1;
+                return aOldest - bOldest;
+            }
+
+            // newest_egg
+            const aNewest = getDate(aEggs, Math.max);
+            const bNewest = getDate(bEggs, Math.max);
+            if (aNewest == null && bNewest == null) return 0;
+            if (aNewest == null) return 1;
+            if (bNewest == null) return -1;
+            return bNewest - aNewest;
+        });
+    }, [breedingPlans, eggs, pairsPrefs.sortBy]);
+
     return (
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
             <div className="max-w-7xl mx-auto">
@@ -187,6 +229,9 @@ export default function BreedingPairsPage() {
                                         <SelectItem value="-created_date">Newest First</SelectItem>
                                         <SelectItem value="created_date">Oldest First</SelectItem>
                                         <SelectItem value="status">Status</SelectItem>
+                                        <SelectItem value="oldest_egg">Oldest Egg Drop</SelectItem>
+                                        <SelectItem value="newest_egg">Newest Egg Drop</SelectItem>
+                                        <SelectItem value="most_eggs">Most Eggs</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>
@@ -206,7 +251,7 @@ export default function BreedingPairsPage() {
                 {/* Content */}
                 {isLoading ? (
                     <div className="text-center text-slate-400">Loading breeding pairs...</div>
-                ) : breedingPlans.length === 0 ? (
+                ) : sortedPlans.length === 0 ? (
                      <Card className="text-center py-16 bg-slate-900 rounded-lg border border-slate-700">
                         <CardContent>
                             <HeartHandshake className="w-16 h-16 mx-auto mb-4 text-slate-500" />
@@ -216,7 +261,7 @@ export default function BreedingPairsPage() {
                     </Card>
                 ) : (
                     <div className={`grid grid-cols-1 ${pairsPrefs.compactCards ? 'lg:grid-cols-3 gap-4' : 'lg:grid-cols-2 gap-8'}`}>
-                        {breedingPlans.map(plan => {
+                        {sortedPlans.map(plan => {
                             const sire = geckos.find(g => g.id === plan.sire_id);
                             const dam = geckos.find(g => g.id === plan.dam_id);
                             const planEggs = eggs.filter(e => e.breeding_plan_id === plan.id);
