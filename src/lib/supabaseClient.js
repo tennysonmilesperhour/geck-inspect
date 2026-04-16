@@ -8,7 +8,26 @@ const SUPABASE_ANON_KEY =
   import.meta.env.VITE_SUPABASE_ANON_KEY ||
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tdWdsZnBoaHdsYWx1eWZ5eHNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MjA5MTksImV4cCI6MjA5MTA5NjkxOX0.mbjrSDZoEvQwPBiZbRtzjC04viNmSJ7sABDJQK9TmIM';
 
-export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+// Wrap the global fetch with a 30-second timeout so Supabase requests
+// don't hang indefinitely on flaky connections.
+const fetchWithTimeout = (url, options = {}) => {
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  return fetch(url, { ...options, signal: controller.signal }).finally(() =>
+    clearTimeout(timeoutId)
+  );
+};
+
+export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+  auth: {
+    autoRefreshToken: true,
+    persistSession: true,
+    detectSessionInUrl: true,
+  },
+  global: {
+    fetch: fetchWithTimeout,
+  },
+});
 
 /**
  * Converts a Supabase user object into the flat shape the rest of the
