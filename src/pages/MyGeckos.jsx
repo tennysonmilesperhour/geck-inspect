@@ -123,12 +123,12 @@ export default function MyGeckosPage() {
     const [archiveDialogGeckoId, setArchiveDialogGeckoId] = useState(null);
     const [feedingGroups, setFeedingGroups] = useState([]);
 
-    // Hard cap on how many geckos we fetch in one go. Most keepers are well
-    // under this, and even at 100 the payload is tiny. No incremental paging
-    // — the dual server-side offset + client-side visibleCount that used to
-    // live here was producing random counts and losing its "Load more" button
-    // on re-renders. Simple batch fetch is correct and snappy.
-    const GECKO_FETCH_LIMIT = 100;
+    // No incremental paging — the dual server-side offset + client-side
+    // visibleCount that used to live here was producing random counts and
+    // losing its "Load more" button on re-renders. Simple batch fetch is
+    // correct and snappy. 500 is generous enough to include archived geckos
+    // that might have old created_date values.
+    const GECKO_FETCH_LIMIT = 500;
 
     useEffect(() => {
         FeedingGroup.list().then(setFeedingGroups).catch(() => {});
@@ -312,9 +312,14 @@ export default function MyGeckosPage() {
 
             await retryWithBackoff(async () => Gecko.update(geckoId, updateData));
 
+            // Optimistic local update so the gecko immediately moves
+            // between active / archive views without waiting for a refetch.
+            setGeckos(prev => prev.map(g => g.id === geckoId ? { ...g, ...updateData } : g));
+
             if (user) geckosCache.invalidate(`geckos_${user.email}`);
 
-            await loadGeckos(true);
+            // Background refetch to stay in sync with the DB.
+            loadGeckos(true);
             setIsDetailModalOpen(false);
             setSelectedGecko(null);
             setArchiveDialogGeckoId(null);
@@ -616,7 +621,7 @@ export default function MyGeckosPage() {
                              with a grey border, misaligned against its siblings. */}
                         <Button
                             variant="outline"
-                            onClick={() => { setShowArchived(!showArchived); loadGeckos(true); }}
+                            onClick={() => setShowArchived(!showArchived)}
                             className="border-emerald-700/60 bg-[rgba(6,95,70,0.35)] text-slate-100 hover:bg-[rgba(4,120,87,0.5)] hover:border-emerald-500/70"
                         >
                             {showArchived ? (

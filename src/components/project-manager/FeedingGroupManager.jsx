@@ -72,7 +72,8 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
         const { base44 } = await import('@/api/base44Client');
         const currentUser = await base44.auth.me();
         if (!currentUser) return;
-        const myGeckos = await Gecko.filter({ created_by: currentUser.email });
+        const allGeckos = await Gecko.filter({ created_by: currentUser.email });
+        const myGeckos = allGeckos.filter(g => !g.archived);
         const { auto_weight_min_g: min, auto_weight_max_g: max } = groupData;
         await Promise.all(myGeckos.map(async (g) => {
             // Treat null/undefined weight_grams as 0 so geckos with no weight record

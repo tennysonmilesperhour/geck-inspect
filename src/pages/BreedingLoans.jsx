@@ -485,7 +485,7 @@ export default function BreedingLoans() {
         BreedingLoan.filter({ borrower_email: email }),
       ]);
 
-      setGeckos(userGeckos);
+      setGeckos(userGeckos.filter(g => !g.archived));
 
       // Merge and deduplicate
       const allLoans = [...lentLoans];

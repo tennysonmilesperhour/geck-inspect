@@ -47,7 +47,7 @@ export default function MyListingsPage() {
                 setUser(currentUser);
 
                 const userGeckos = await Gecko.filter({ created_by: currentUser.email }, '-created_date');
-                const marketplaceGeckos = userGeckos.filter(g => g.status === 'For Sale' || g.status === 'Sold');
+                const marketplaceGeckos = userGeckos.filter(g => !g.archived && (g.status === 'For Sale' || g.status === 'Sold'));
                 setGeckos(marketplaceGeckos);
 
                 // Calculate analytics with real data

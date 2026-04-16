@@ -124,7 +124,7 @@ export default function BreedingPage() {
                 BreedingPlan.filter({ created_by: currentUser.email }, '-created_date'),
                 Egg.filter({ created_by: currentUser.email })
             ]);
-            setGeckos(geckosData.filter(g => !g.notes?.startsWith('[Manual sale]')));
+            setGeckos(geckosData.filter(g => !g.notes?.startsWith('[Manual sale]') && !g.archived));
             setAllEggs(eggsData);
             setBreedingPlans(plansData.sort((a,b) => new Date(b.created_date) - new Date(a.created_date)));
         } catch (error) {
