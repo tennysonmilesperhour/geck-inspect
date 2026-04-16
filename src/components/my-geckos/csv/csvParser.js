@@ -7,9 +7,13 @@
 
 /**
  * Parse a CSV string into { headers: string[], rows: string[][] }.
- * Handles quoted fields, embedded commas, and newlines inside quotes.
+ * Handles quoted fields, embedded commas, newlines inside quotes, and BOM.
  */
 export function parseCSV(text) {
+  // Strip BOM (Excel/Google Sheets often add this)
+  if (text.charCodeAt(0) === 0xFEFF) {
+    text = text.slice(1);
+  }
   const rows = [];
   let current = '';
   let inQuotes = false;

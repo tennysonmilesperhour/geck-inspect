@@ -55,11 +55,12 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
         const selectedFile = e.target.files[0];
         if (!selectedFile) return;
 
-        // Accept .csv or text/csv or any text file with .csv extension
-        const isCSV = selectedFile.type === 'text/csv' ||
+        // Accept .csv extension or common CSV MIME types
+        const csvMimeTypes = ['text/csv', 'application/vnd.ms-excel', 'text/plain', 'application/csv'];
+        const isCSV = csvMimeTypes.includes(selectedFile.type) ||
                       selectedFile.name.toLowerCase().endsWith('.csv');
         if (!isCSV) {
-            toast({ title: 'Invalid File', description: 'Please select a valid CSV file.', variant: 'destructive' });
+            toast({ title: 'Invalid File', description: 'Please select a CSV file (.csv).', variant: 'destructive' });
             return;
         }
 
@@ -246,30 +247,53 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
                         {/* =================== STEP: UPLOAD =================== */}
                         {step === 'upload' && (
                             <div className="space-y-4">
-                                {/* File picker */}
+                                {/* File picker — prominent drop zone */}
                                 <div>
                                     <Label htmlFor="csv-file" className="text-slate-300">Select CSV File</Label>
-                                    <Input
-                                        id="csv-file"
-                                        type="file"
-                                        accept=".csv"
-                                        onChange={handleFileSelect}
-                                        className="mt-2 border-slate-700 bg-slate-800/50 text-slate-200 file:text-emerald-300 file:bg-emerald-900/40 file:border-0 file:rounded file:px-3 file:py-1 file:mr-3 file:text-xs file:font-medium hover:file:bg-emerald-900/60"
-                                    />
-                                    {file && sourceHeaders.length > 0 && (
-                                        <div className="mt-3 space-y-2">
-                                            <p className="text-sm text-emerald-400 flex items-center gap-1.5">
-                                                <Check className="w-4 h-4" />
-                                                {file.name} — {sourceRows.length} rows, {sourceHeaders.length} columns detected
-                                            </p>
-                                            {useDirectFormat && (
-                                                <p className="text-xs text-emerald-500/80 flex items-center gap-1.5">
-                                                    <Sparkles className="w-3.5 h-3.5" />
-                                                    Columns match our template exactly — you can skip mapping!
+                                    <label
+                                        htmlFor="csv-file"
+                                        className={`mt-2 flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed p-6 cursor-pointer transition-colors ${
+                                            file && sourceHeaders.length > 0
+                                                ? 'border-emerald-600 bg-emerald-950/30'
+                                                : 'border-slate-600 bg-slate-800/40 hover:border-emerald-700 hover:bg-slate-800/60'
+                                        }`}
+                                    >
+                                        {file && sourceHeaders.length > 0 ? (
+                                            <>
+                                                <FileSpreadsheet className="w-8 h-8 text-emerald-400" />
+                                                <p className="text-sm text-emerald-400 font-medium flex items-center gap-1.5">
+                                                    <Check className="w-4 h-4" />
+                                                    {file.name}
                                                 </p>
-                                            )}
-                                        </div>
-                                    )}
+                                                <p className="text-xs text-emerald-500/80">
+                                                    {sourceRows.length} rows, {sourceHeaders.length} columns detected
+                                                </p>
+                                                {useDirectFormat && (
+                                                    <p className="text-xs text-emerald-500/60 flex items-center gap-1.5">
+                                                        <Sparkles className="w-3.5 h-3.5" />
+                                                        Columns match our template — you can skip mapping!
+                                                    </p>
+                                                )}
+                                            </>
+                                        ) : (
+                                            <>
+                                                <Upload className="w-8 h-8 text-slate-400" />
+                                                <p className="text-sm text-slate-300 font-medium">
+                                                    Click to choose a CSV file
+                                                </p>
+                                                <p className="text-xs text-slate-500">
+                                                    Any spreadsheet format works — we'll help you map the columns
+                                                </p>
+                                            </>
+                                        )}
+                                        <input
+                                            id="csv-file"
+                                            type="file"
+                                            accept=".csv,text/csv,application/vnd.ms-excel"
+                                            onChange={handleFileSelect}
+                                            className="sr-only"
+                                        />
+                                    </label>
                                 </div>
 
                                 {/* Import mode */}
