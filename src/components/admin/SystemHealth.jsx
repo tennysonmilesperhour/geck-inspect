@@ -13,12 +13,9 @@ import { CheckCircle2, XCircle, Loader2, RefreshCw, ExternalLink } from 'lucide-
  * checkmark here means "the live app is talking to Supabase right now".
  */
 
-const ENV_KEYS = [
-  'VITE_SUPABASE_URL',
-  'VITE_SUPABASE_ANON_KEY',
-  'VITE_POSTHOG_KEY',
-  'VITE_POSTHOG_HOST',
-];
+const REQUIRED_ENV_KEYS = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
+// PostHog is opt-in — the client no-ops when these are unset (see src/lib/posthog.js).
+const OPTIONAL_ENV_KEYS = ['VITE_POSTHOG_KEY', 'VITE_POSTHOG_HOST'];
 
 function getEnv(key) {
   try {
@@ -56,15 +53,24 @@ async function pingAuth() {
 }
 
 function checkEnv() {
-  const missing = ENV_KEYS.filter((k) => !getEnv(k));
-  if (missing.length === 0) {
-    return { ok: true, label: 'Environment variables', detail: `all ${ENV_KEYS.length} keys set` };
+  const missingRequired = REQUIRED_ENV_KEYS.filter((k) => !getEnv(k));
+  if (missingRequired.length > 0) {
+    return {
+      ok: false,
+      label: 'Environment variables',
+      detail: `missing required: ${missingRequired.join(', ')}`,
+    };
   }
-  return {
-    ok: false,
-    label: 'Environment variables',
-    detail: `missing: ${missing.join(', ')}`,
-  };
+  const missingOptional = OPTIONAL_ENV_KEYS.filter((k) => !getEnv(k));
+  if (missingOptional.length > 0) {
+    return {
+      ok: true,
+      label: 'Environment variables',
+      detail: `${REQUIRED_ENV_KEYS.length} required set; optional unset: ${missingOptional.join(', ')}`,
+    };
+  }
+  const total = REQUIRED_ENV_KEYS.length + OPTIONAL_ENV_KEYS.length;
+  return { ok: true, label: 'Environment variables', detail: `all ${total} keys set` };
 }
 
 function HealthRow({ result }) {
