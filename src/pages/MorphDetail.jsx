@@ -27,6 +27,7 @@ import {
   PRICE_TIERS,
 } from '@/data/morph-guide';
 import { authorSchema, bylineText, editorialFor } from '@/lib/editorial';
+import { morphFaq, morphFaqSchema } from '@/lib/morphFaq';
 
 const LOGO_URL = APP_LOGO_URL;
 
@@ -219,6 +220,12 @@ export default function MorphDetail() {
           url: 'https://geckinspect.com/MorphGuide',
         },
       },
+      // FAQ schema is included inside @graph so Google can associate
+      // it with the Article's canonical URL without a second script
+      // tag. The FAQ renders visibly below the morph article body.
+      ...(morphFaqSchema(localMorph || { slug, name: morphName, summary: record.description })
+        ? [morphFaqSchema(localMorph || { slug, name: morphName, summary: record.description })]
+        : []),
       (() => {
         const editorial = editorialFor(`/MorphGuide/${slug}`);
         return {
@@ -559,6 +566,39 @@ export default function MorphDetail() {
               </div>
             </section>
           )}
+
+          {/* FAQ — generated from the structured morph data. Surfaces
+              in Google's "People also ask" and in AI Overviews / Perplexity
+              answer extraction via the FAQPage JSON-LD emitted alongside
+              the Article schema. */}
+          {(() => {
+            const faqs = morphFaq(localMorph || { slug, name: morphName, summary: record.description });
+            if (!faqs.length) return null;
+            return (
+              <section className="mb-10" id="faq">
+                <h2 className="text-2xl font-bold text-white mb-4 flex items-center gap-2">
+                  <BookOpen className="w-5 h-5 text-emerald-400" />
+                  Frequently asked questions about {morphName}
+                </h2>
+                <div className="space-y-3">
+                  {faqs.map(({ question, answer }) => (
+                    <details
+                      key={question}
+                      className="group rounded-xl border border-slate-800 bg-slate-900/50 hover:border-slate-700 open:border-emerald-500/30 p-5 transition-colors"
+                    >
+                      <summary className="cursor-pointer list-none flex items-start justify-between gap-4">
+                        <h3 className="text-base md:text-lg font-semibold text-slate-100 leading-snug">
+                          {question}
+                        </h3>
+                        <span className="text-slate-500 group-open:rotate-180 transition-transform flex-shrink-0">▾</span>
+                      </summary>
+                      <p className="mt-3 text-slate-300 leading-relaxed">{answer}</p>
+                    </details>
+                  ))}
+                </div>
+              </section>
+            );
+          })()}
 
           {/* CTA */}
           <section className="mt-12 rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 via-slate-900/60 to-slate-900/40 p-6 md:p-8">
