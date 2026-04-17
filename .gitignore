@@ -2,6 +2,10 @@
 .env
 .env.*
 
+# Supabase CLI working state (local link cache, dump snapshots)
+supabase/.temp/
+supabase/.branches/
+
 # Logs
 logs
 *.log

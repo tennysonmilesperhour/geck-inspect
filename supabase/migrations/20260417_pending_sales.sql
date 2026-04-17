@@ -34,6 +34,7 @@ CREATE INDEX IF NOT EXISTS idx_pending_sales_gecko ON pending_sales(gecko_id);
 
 ALTER TABLE pending_sales ENABLE ROW LEVEL SECURITY;
 
+DROP POLICY IF EXISTS "Users can manage their own pending sales" ON pending_sales;
 CREATE POLICY "Users can manage their own pending sales"
   ON pending_sales FOR ALL
   USING (user_email = (auth.jwt() ->> 'email'))

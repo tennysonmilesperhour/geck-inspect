@@ -108,16 +108,26 @@ ALTER TABLE vet_records ENABLE ROW LEVEL SECURITY;
 ALTER TABLE transfer_requests ENABLE ROW LEVEL SECURITY;
 
 -- Public read for passport-visible data
+DROP POLICY IF EXISTS "Public can read ownership records" ON ownership_records;
 CREATE POLICY "Public can read ownership records" ON ownership_records FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public can read feeding records" ON feeding_records;
 CREATE POLICY "Public can read feeding records" ON feeding_records FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public can read shed records" ON shed_records;
 CREATE POLICY "Public can read shed records" ON shed_records FOR SELECT USING (true);
+DROP POLICY IF EXISTS "Public can read vet records" ON vet_records;
 CREATE POLICY "Public can read vet records" ON vet_records FOR SELECT USING (true);
 
 -- Owners can insert/update their own records
+DROP POLICY IF EXISTS "Users manage own ownership records" ON ownership_records;
 CREATE POLICY "Users manage own ownership records" ON ownership_records FOR ALL USING (created_by = auth.jwt()->>'email');
+DROP POLICY IF EXISTS "Users manage own feeding records" ON feeding_records;
 CREATE POLICY "Users manage own feeding records" ON feeding_records FOR ALL USING (created_by = auth.jwt()->>'email');
+DROP POLICY IF EXISTS "Users manage own shed records" ON shed_records;
 CREATE POLICY "Users manage own shed records" ON shed_records FOR ALL USING (created_by = auth.jwt()->>'email');
+DROP POLICY IF EXISTS "Users manage own vet records" ON vet_records;
 CREATE POLICY "Users manage own vet records" ON vet_records FOR ALL USING (created_by = auth.jwt()->>'email');
+DROP POLICY IF EXISTS "Users manage own transfer requests" ON transfer_requests;
 CREATE POLICY "Users manage own transfer requests" ON transfer_requests FOR ALL USING (created_by = auth.jwt()->>'email');
 -- Anyone can read transfer requests (needed for claim flow)
+DROP POLICY IF EXISTS "Public can read transfer requests" ON transfer_requests;
 CREATE POLICY "Public can read transfer requests" ON transfer_requests FOR SELECT USING (true);
