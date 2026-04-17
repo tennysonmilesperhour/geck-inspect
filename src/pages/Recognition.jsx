@@ -66,20 +66,17 @@ export default function Recognition() {
   };
 
   const analyze = async () => {
-    if (!file && !uploadedUrl) return;
+    if (!uploadedUrl) {
+      setError('Please wait for the image to finish uploading before analyzing.');
+      return;
+    }
     setIsAnalyzing(true);
     setError(null);
     setAnalysis(null);
     try {
-      const { data, error: funcError } = await recognizeGeckoMorph({
-        imageFile: file,
-        imageUrl: uploadedUrl,
-      });
+      const { data, error: funcError } = await recognizeGeckoMorph({ imageUrl: uploadedUrl });
       if (funcError) throw new Error(funcError.message || String(funcError));
-      // The backend has historically returned either the raw analysis object
-      // or { success, analysis }. Handle both.
-      const result = data?.analysis || data;
-      setAnalysis(result);
+      setAnalysis(data);
     } catch (err) {
       console.error('Analysis error:', err);
       setError(err.message || 'AI analysis failed. Try another photo or check your connection.');
