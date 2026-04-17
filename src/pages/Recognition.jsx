@@ -1,81 +1,43 @@
-import { useEffect, useRef, useState } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Upload, X, Loader2, Sparkles, Camera, ArrowRight } from 'lucide-react';
-import { recognizeGeckoMorph } from '../functions/recognizeGeckoMorph';
-import { UploadFile } from '@/integrations/Core';
+import { Loader2, Sparkles, ArrowRight, Camera } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { recognizeGeckoMorph } from '../functions/recognizeGeckoMorph';
 
 import MorphCorrectionPanel from '../components/morph-id/MorphCorrectionPanel';
 import PhotoTipsCard from '../components/morph-id/PhotoTipsCard';
 import SimilarGeckosStrip from '../components/morph-id/SimilarGeckosStrip';
+import MultiPhotoUploader, { MAX_PHOTOS } from '../components/morph-id/MultiPhotoUploader';
+import PhotoSlideshow from '../components/morph-id/PhotoSlideshow';
 
 export default function Recognition() {
   const { toast } = useToast();
-  const fileInputRef = useRef(null);
-  const [file, setFile] = useState(null);
-  const [preview, setPreview] = useState(null);
-  const [uploadedUrl, setUploadedUrl] = useState(null);
-  const [isUploading, setIsUploading] = useState(false);
+  const [imageUrls, setImageUrls] = useState([]);
   const [analysis, setAnalysis] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState(null);
   const [savedOnce, setSavedOnce] = useState(false);
 
-  useEffect(() => () => {
-    if (preview) URL.revokeObjectURL(preview);
-  }, [preview]);
+  const primaryUrl = imageUrls[0] || null;
 
   const reset = () => {
-    setFile(null);
-    setPreview(null);
-    setUploadedUrl(null);
+    setImageUrls([]);
     setAnalysis(null);
     setError(null);
     setSavedOnce(false);
-    if (fileInputRef.current) fileInputRef.current.value = '';
-  };
-
-  const pickFile = async (f) => {
-    if (!f) return;
-    setFile(f);
-    setPreview(URL.createObjectURL(f));
-    setAnalysis(null);
-    setError(null);
-    setSavedOnce(false);
-    setIsUploading(true);
-    try {
-      const { file_url } = await UploadFile({ file: f });
-      setUploadedUrl(file_url);
-    } catch (err) {
-      // Non-fatal: we can still try recognition with the raw file.
-      console.warn('Upload failed, continuing with raw file:', err);
-      toast({
-        title: 'Could not upload to storage',
-        description: 'Analysis will still run, but you won’t be able to save corrections.',
-        variant: 'destructive',
-      });
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
-  const onFileChange = (e) => pickFile(e.target.files?.[0]);
-  const onDrop = (e) => {
-    e.preventDefault();
-    pickFile(e.dataTransfer.files?.[0]);
   };
 
   const analyze = async () => {
-    if (!uploadedUrl) {
-      setError('Please wait for the image to finish uploading before analyzing.');
+    if (imageUrls.length === 0) {
+      setError('Upload at least one photo before analyzing.');
       return;
     }
     setIsAnalyzing(true);
     setError(null);
     setAnalysis(null);
     try {
-      const { data, error: funcError } = await recognizeGeckoMorph({ imageUrl: uploadedUrl });
+      const { data, error: funcError } = await recognizeGeckoMorph({ imageUrls });
       if (funcError) throw new Error(funcError.message || String(funcError));
       setAnalysis(data);
     } catch (err) {
@@ -98,10 +60,10 @@ export default function Recognition() {
             </div>
             <CardTitle className="text-3xl font-bold text-slate-100">AI Morph ID</CardTitle>
             <p className="text-slate-400 max-w-2xl mx-auto mt-2">
-              Drop a photo of your crested gecko. Our model calls out the primary
-              morph, pattern, color, and traits. Agree or correct the call —
-              either way you’re helping the next generation of the model get
-              sharper.
+              Drop up to {MAX_PHOTOS} photos of the same crested gecko — different
+              angles, fired up vs fired down, close-ups. The model synthesizes
+              across all of them, and you save one feedback record covering the
+              whole set.
             </p>
           </CardHeader>
         </Card>
@@ -110,46 +72,21 @@ export default function Recognition() {
 
         <Card className="bg-slate-900 border-slate-700">
           <CardContent className="p-6 space-y-5">
-            {!preview ? (
-              <div
-                className="flex flex-col items-center justify-center p-12 border-2 border-dashed border-slate-600 rounded-lg text-center cursor-pointer hover:border-emerald-500 hover:bg-slate-800/50 transition-colors"
-                onDragOver={(e) => e.preventDefault()}
-                onDrop={onDrop}
-                onClick={() => fileInputRef.current?.click()}
-              >
-                <Upload className="w-12 h-12 text-slate-500 mb-4" />
-                <h3 className="text-xl font-semibold text-slate-200">Drop, or click to upload</h3>
-                <p className="text-slate-400">PNG, JPG, WEBP up to 10 MB</p>
-                <input
-                  type="file"
-                  ref={fileInputRef}
-                  onChange={onFileChange}
-                  className="hidden"
-                  accept="image/png, image/jpeg, image/webp"
-                />
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6 items-start">
-                <div className="relative">
-                  <img
-                    src={preview}
-                    alt="Gecko preview"
-                    className="rounded-lg max-h-[400px] object-contain border border-slate-700 bg-slate-800"
-                  />
-                  <Button
-                    variant="destructive"
-                    size="icon"
-                    className="absolute top-2 right-2 rounded-full"
-                    onClick={reset}
-                  >
-                    <X className="w-5 h-5" />
-                  </Button>
-                  {isUploading && (
-                    <div className="absolute inset-0 bg-slate-900/70 rounded-lg flex items-center justify-center">
-                      <Loader2 className="w-6 h-6 animate-spin text-emerald-400" />
-                      <span className="ml-2 text-slate-200 text-sm">Uploading…</span>
-                    </div>
-                  )}
+            <MultiPhotoUploader
+              value={imageUrls}
+              onChange={(urls) => {
+                setImageUrls(urls);
+                setAnalysis(null);
+                setError(null);
+                setSavedOnce(false);
+              }}
+              label="Gecko photos"
+            />
+
+            {imageUrls.length > 0 && (
+              <div className="pt-4 border-t border-slate-700 grid grid-cols-1 md:grid-cols-[auto_1fr] gap-6 items-start">
+                <div className="w-full md:w-80">
+                  <PhotoSlideshow urls={imageUrls} alt="Gecko under review" maxHeightClass="max-h-[320px]" />
                 </div>
                 <div className="space-y-3">
                   <div>
@@ -157,17 +94,14 @@ export default function Recognition() {
                       Ready to analyze
                     </p>
                     <p className="text-slate-200 text-sm">
-                      {file?.name}
-                      {uploadedUrl && (
-                        <span className="text-emerald-400"> · uploaded</span>
-                      )}
+                      {imageUrls.length} photo{imageUrls.length !== 1 ? 's' : ''} · primary is the one used as cover.
                     </p>
                   </div>
                   <div className="flex flex-wrap gap-3">
                     <Button
                       size="lg"
                       onClick={analyze}
-                      disabled={isAnalyzing || isUploading}
+                      disabled={isAnalyzing}
                       className="bg-emerald-600 hover:bg-emerald-700"
                     >
                       {isAnalyzing ? (
@@ -177,12 +111,11 @@ export default function Recognition() {
                       )}
                     </Button>
                     <Button variant="outline" size="lg" onClick={reset}>
-                      <Camera className="mr-2 h-4 w-4" /> Try another
+                      <Camera className="mr-2 h-4 w-4" /> Start over
                     </Button>
                   </div>
                   <p className="text-xs text-slate-500">
-                    Takes ~5–15 seconds. Your photo is stored so you can save
-                    corrections to training data.
+                    Takes ~5–15 seconds. All uploaded photos are stored so you can save corrections to training data as one submission.
                   </p>
                 </div>
               </div>
@@ -199,7 +132,8 @@ export default function Recognition() {
         {analysis && (
           <MorphCorrectionPanel
             result={analysis}
-            imageUrl={uploadedUrl}
+            imageUrl={primaryUrl}
+            imageUrls={imageUrls}
             onSaved={() => {
               setSavedOnce(true);
               toast({
@@ -210,7 +144,7 @@ export default function Recognition() {
           />
         )}
 
-        {analysis && uploadedUrl && <SimilarGeckosStrip imageUrl={uploadedUrl} />}
+        {analysis && primaryUrl && <SimilarGeckosStrip imageUrl={primaryUrl} />}
 
         {savedOnce && (
           <Card className="bg-emerald-950/30 border-emerald-800">

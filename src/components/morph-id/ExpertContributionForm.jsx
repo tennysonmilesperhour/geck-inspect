@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { User } from '@/entities/all';
-import { UploadFile } from '@/integrations/Core';
 import { saveGeckoImageWithMeta } from './persistence';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -9,7 +8,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import {
-  Upload, Loader2, CheckCircle2, Camera, Sparkles, Info,
+  Loader2, CheckCircle2, Camera, Sparkles, Info,
 } from 'lucide-react';
 
 import {
@@ -24,6 +23,8 @@ import TraitPicker from './TraitPicker';
 import PhotoQualityInputs from './PhotoQualityInputs';
 import GeneticsContextInputs from './GeneticsContextInputs';
 import ConfidenceSlider from './ConfidenceSlider';
+import MultiPhotoUploader from './MultiPhotoUploader';
+import PhotoSlideshow from './PhotoSlideshow';
 
 const EMPTY_STATE = {
   primary_morph: '',
@@ -43,17 +44,19 @@ const EMPTY_STATE = {
   },
 };
 
+function initialUrlsFromPrefill(prefill) {
+  if (!prefill) return [];
+  if (Array.isArray(prefill.image_urls) && prefill.image_urls.length) return prefill.image_urls;
+  if (prefill.image_url) return [prefill.image_url];
+  return [];
+}
+
 export default function ExpertContributionForm({ prefill, onSaved }) {
   const [state, setState] = useState({ ...EMPTY_STATE, ...prefill });
-  const [file, setFile] = useState(null);
-  const [imageUrl, setImageUrl] = useState(prefill?.image_url || null);
-  const [isUploading, setIsUploading] = useState(false);
+  const [imageUrls, setImageUrls] = useState(() => initialUrlsFromPrefill(prefill));
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
 
-  // Let a parent push a fresh prefill after mount (e.g. from WebImportPanel
-  // on /training). We merge so the user's partial edits survive unless the
-  // prefill explicitly overrides them.
   useEffect(() => {
     if (!prefill) return;
     setState((s) => ({
@@ -62,30 +65,15 @@ export default function ExpertContributionForm({ prefill, onSaved }) {
       photo:         { ...s.photo,         ...(prefill.photo || {}) },
       geneticsCtx:   { ...s.geneticsCtx,   ...(prefill.geneticsCtx || {}) },
     }));
-    if (prefill.image_url) setImageUrl(prefill.image_url);
+    const prefillUrls = initialUrlsFromPrefill(prefill);
+    if (prefillUrls.length) setImageUrls(prefillUrls);
   }, [prefill]);
 
   const set = (k, v) => setState((s) => ({ ...s, [k]: v }));
 
-  const handleFile = async (e) => {
-    const f = e.target.files?.[0];
-    if (!f) return;
-    setFile(f);
-    setIsUploading(true);
-    try {
-      const { file_url } = await UploadFile({ file: f });
-      setImageUrl(file_url);
-      toast({ title: 'Uploaded', description: 'Image ready. Fill in traits to submit.' });
-    } catch (err) {
-      toast({ title: 'Upload failed', description: err.message, variant: 'destructive' });
-    } finally {
-      setIsUploading(false);
-    }
-  };
-
   const submit = async () => {
-    if (!imageUrl) {
-      toast({ title: 'No image', description: 'Upload a photo first.', variant: 'destructive' });
+    if (imageUrls.length === 0) {
+      toast({ title: 'No image', description: 'Upload at least one photo first.', variant: 'destructive' });
       return;
     }
     if (!state.primary_morph) {
@@ -96,7 +84,8 @@ export default function ExpertContributionForm({ prefill, onSaved }) {
     try {
       const user = await User.me().catch(() => null);
       const record = {
-        image_url: imageUrl,
+        image_url: imageUrls[0],
+        image_urls: imageUrls,
         user_id: user?.id || null,
         primary_morph: state.primary_morph,
         secondary_morph: state.genetics?.[0] || null,
@@ -114,6 +103,7 @@ export default function ExpertContributionForm({ prefill, onSaved }) {
           genetic_traits: state.genetics,
           photo: state.photo,
           genetics: state.geneticsCtx,
+          photo_count: imageUrls.length,
         },
         verified: false,
       };
@@ -123,8 +113,7 @@ export default function ExpertContributionForm({ prefill, onSaved }) {
       toast({ title: 'Submitted', description: 'Thanks — queued for peer review.' });
       onSaved?.(saved);
       setState({ ...EMPTY_STATE });
-      setFile(null);
-      setImageUrl(null);
+      setImageUrls([]);
     } catch (err) {
       toast({ title: 'Save failed', description: err.message, variant: 'destructive' });
     } finally {
@@ -138,42 +127,16 @@ export default function ExpertContributionForm({ prefill, onSaved }) {
         <Card className="bg-slate-900 border-slate-700">
           <CardHeader>
             <CardTitle className="text-slate-100 flex items-center gap-2">
-              <Camera className="w-5 h-5" /> Image
+              <Camera className="w-5 h-5" /> Photos
             </CardTitle>
           </CardHeader>
-          <CardContent className="space-y-3">
-            {!imageUrl ? (
-              <label className="flex flex-col items-center justify-center p-10 border-2 border-dashed border-slate-600 rounded-lg text-center cursor-pointer hover:border-emerald-500 hover:bg-slate-800/50 transition-colors">
-                <Upload className="w-10 h-10 text-slate-500 mb-3" />
-                <span className="text-slate-200 font-medium">
-                  {isUploading ? 'Uploading…' : 'Drop / pick a photo'}
-                </span>
-                <span className="text-xs text-slate-500">JPG / PNG / WEBP, up to 10MB</span>
-                <input
-                  type="file"
-                  accept="image/*"
-                  onChange={handleFile}
-                  className="hidden"
-                  disabled={isUploading}
-                />
-              </label>
-            ) : (
-              <div className="relative">
-                <img src={imageUrl} alt="Gecko preview" className="w-full rounded-lg border border-slate-700" />
-                <Button
-                  variant="secondary"
-                  size="sm"
-                  className="absolute top-2 right-2"
-                  onClick={() => { setImageUrl(null); setFile(null); }}
-                >
-                  Replace
-                </Button>
+          <CardContent className="space-y-4">
+            <MultiPhotoUploader value={imageUrls} onChange={setImageUrls} />
+            {imageUrls.length > 0 && (
+              <div>
+                <Label className="text-slate-300 text-xs uppercase tracking-wide mb-2 block">Preview slideshow</Label>
+                <PhotoSlideshow urls={imageUrls} alt="Contribution preview" maxHeightClass="max-h-[360px]" />
               </div>
-            )}
-            {file && (
-              <p className="text-xs text-slate-400">
-                {file.name} · {(file.size / 1024).toFixed(0)} KB
-              </p>
             )}
           </CardContent>
         </Card>
@@ -295,7 +258,7 @@ export default function ExpertContributionForm({ prefill, onSaved }) {
 
             <Button
               onClick={submit}
-              disabled={!imageUrl || !state.primary_morph || isSaving}
+              disabled={imageUrls.length === 0 || !state.primary_morph || isSaving}
               className="w-full bg-emerald-600 hover:bg-emerald-700"
             >
               {isSaving ? (

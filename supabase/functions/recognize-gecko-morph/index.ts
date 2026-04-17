@@ -103,7 +103,15 @@ function clampToTaxonomy(raw: Record<string, unknown>) {
   };
 }
 
-async function callClaude(imageUrl: string) {
+async function callClaude(imageUrls: string[]) {
+  const imageBlocks = imageUrls.map((url) => ({
+    type: "image",
+    source: { type: "url", url },
+  }));
+  const multiNote = imageUrls.length > 1
+    ? `\n\nNOTE: ${imageUrls.length} photos of the SAME animal are attached (different angles / fired states / lighting). Synthesize across them — e.g. compare fired-up vs fired-down color, check pattern continuity from multiple sides. Don't treat them as different geckos.`
+    : "";
+
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -119,8 +127,8 @@ async function callClaude(imageUrl: string) {
       messages: [{
         role: "user",
         content: [
-          { type: "image", source: { type: "url", url: imageUrl } },
-          { type: "text", text: buildInstructions() },
+          ...imageBlocks,
+          { type: "text", text: buildInstructions() + multiNote },
         ],
       }],
     }),
@@ -147,14 +155,23 @@ serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
-    const imageUrl = body?.imageUrl;
-    if (!imageUrl || typeof imageUrl !== "string") {
-      return json({ error: "imageUrl (string) is required" }, 400);
-    }
 
-    const raw = await callClaude(imageUrl);
+    // Accept either `imageUrls: string[]` (new) or `imageUrl: string` (legacy
+    // single-photo callers). Normalize to an array, cap at 5 to match UI.
+    let imageUrls: string[] = [];
+    if (Array.isArray(body?.imageUrls)) {
+      imageUrls = body.imageUrls.filter((u: unknown) => typeof u === "string" && u);
+    } else if (typeof body?.imageUrl === "string") {
+      imageUrls = [body.imageUrl];
+    }
+    if (imageUrls.length === 0) {
+      return json({ error: "imageUrls (string[]) or imageUrl (string) is required" }, 400);
+    }
+    imageUrls = imageUrls.slice(0, 5);
+
+    const raw = await callClaude(imageUrls);
     const analysis = clampToTaxonomy(raw);
-    return json({ success: true, analysis, model: CLAUDE_MODEL });
+    return json({ success: true, analysis, model: CLAUDE_MODEL, photo_count: imageUrls.length });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return json({ error: message }, 500);

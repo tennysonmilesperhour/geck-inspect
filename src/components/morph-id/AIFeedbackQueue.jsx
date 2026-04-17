@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { formatDistanceToNowStrict } from 'date-fns';
-import { GeckoImage, User } from '@/entities/all';
+import { GeckoImage } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -8,34 +8,51 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import {
   Loader2, Check, X as XIcon, ChevronLeft, ChevronRight,
-  RefreshCw, Scale, ShieldCheck,
+  RefreshCw, Scale, ShieldCheck, Plus,
 } from 'lucide-react';
 
 import MorphPicker from './MorphPicker';
 import TraitPicker from './TraitPicker';
+import PhotoSlideshow from './PhotoSlideshow';
 import { labelFor, TAXONOMY_VERSION } from './morphTaxonomy';
+
+function urlsFor(row) {
+  if (Array.isArray(row?.image_urls) && row.image_urls.length > 0) return row.image_urls;
+  const fallback = row?.training_meta?.image_urls;
+  if (Array.isArray(fallback) && fallback.length > 0) return fallback;
+  return row?.image_url ? [row.image_url] : [];
+}
+
+function describeOutcome(action, result) {
+  if (action === 'reject') return 'Rejection recorded. Sample stays unverified.';
+  if (result?.verified) return 'Consensus reached — sample promoted to training-grade.';
+  const count = result?.approve_count ?? 1;
+  return `Approval recorded (${count}/2). Needs one more reviewer to verify.`;
+}
+
+const PAGE_SIZE = 25;
 
 export default function AIFeedbackQueue() {
   const { toast } = useToast();
   const [queue, setQueue] = useState([]);
   const [idx, setIdx] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [hasMore, setHasMore] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
-  const [reviewer, setReviewer] = useState(null);
   const [isExpertReviewer, setIsExpertReviewer] = useState(false);
   const [edits, setEdits] = useState(null);
 
   const load = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [me, rows, expertRpc] = await Promise.all([
-        User.me().catch(() => null),
-        GeckoImage.filter({ verified: false }, 'created_date', 25).catch(() => []),
+      const [rows, expertRpc] = await Promise.all([
+        GeckoImage.filter({ verified: false }, 'created_date', PAGE_SIZE).catch(() => []),
         supabase.rpc('is_expert_reviewer').then((r) => r.data).catch(() => false),
       ]);
-      setReviewer(me);
       setIsExpertReviewer(Boolean(expertRpc));
       setQueue(rows || []);
+      setHasMore((rows || []).length === PAGE_SIZE);
       setIdx(0);
     } catch (err) {
       toast({ title: 'Failed to load queue', description: err.message, variant: 'destructive' });
@@ -43,6 +60,25 @@ export default function AIFeedbackQueue() {
       setIsLoading(false);
     }
   }, [toast]);
+
+  const loadMore = useCallback(async () => {
+    setIsLoadingMore(true);
+    try {
+      const next = await GeckoImage.filter(
+        { verified: false },
+        'created_date',
+        PAGE_SIZE,
+        queue.length,
+      ).catch(() => []);
+      const dedup = (next || []).filter((r) => !queue.some((q) => q.id === r.id));
+      setQueue((prev) => [...prev, ...dedup]);
+      setHasMore(dedup.length === PAGE_SIZE);
+    } catch (err) {
+      toast({ title: 'Failed to load more', description: err.message, variant: 'destructive' });
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [queue, toast]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -63,34 +99,31 @@ export default function AIFeedbackQueue() {
     if (!current) return;
     setIsSaving(true);
     try {
-      if (action === 'reject') {
-        await GeckoImage.update(current.id, {
-          verified: false,
-          notes: [
-            current.notes,
-            `\n[rejected by reviewer ${reviewer?.email || 'anon'} @ ${new Date().toISOString()}]`,
-          ].filter(Boolean).join(''),
-        });
-      } else {
-        await GeckoImage.update(current.id, {
-          verified: true,
-          primary_morph: edits?.primary_morph || current.primary_morph,
-          secondary_traits: edits?.secondary_traits || current.secondary_traits,
-          notes: [
-            current.notes,
-            `\n[approved by reviewer ${reviewer?.email || 'anon'} @ ${new Date().toISOString()} · taxonomy ${TAXONOMY_VERSION}]`,
-          ].filter(Boolean).join(''),
-        });
-      }
+      const { data, error } = await supabase.rpc('review_gecko_image', {
+        p_image_id: current.id,
+        p_verdict: action,
+        p_primary_morph: edits?.primary_morph || current.primary_morph,
+        p_secondary_traits: edits?.secondary_traits || current.secondary_traits || [],
+        p_edits: { taxonomy_version: TAXONOMY_VERSION, edits },
+        p_notes: null,
+      });
+      if (error) throw error;
+
       toast({
         title: action === 'reject' ? 'Rejected' : 'Approved',
-        description: action === 'reject'
-          ? 'Sample kept but marked unverified.'
-          : 'Sample promoted to training-grade.',
+        description: describeOutcome(action, data),
       });
-      const next = queue.filter((q) => q.id !== current.id);
-      setQueue(next);
-      setIdx((i) => Math.min(i, Math.max(0, next.length - 1)));
+
+      // Once a sample is rejected or has reached consensus, it leaves the
+      // unverified queue. Otherwise keep it visible so a second reviewer can
+      // confirm the same row.
+      if (action === 'reject' || data?.verified) {
+        const next = queue.filter((q) => q.id !== current.id);
+        setQueue(next);
+        setIdx((i) => Math.min(i, Math.max(0, next.length - 1)));
+      } else {
+        step(1);
+      }
     } catch (err) {
       toast({ title: 'Save failed', description: err.message, variant: 'destructive' });
     } finally {
@@ -149,12 +182,14 @@ export default function AIFeedbackQueue() {
       <CardContent className="space-y-5">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div>
-            <img
-              src={current.image_url}
+            <PhotoSlideshow
+              urls={urlsFor(current)}
               alt="Sample awaiting review"
-              className="w-full rounded-lg border border-slate-700 object-contain max-h-[500px] bg-slate-800"
             />
-            <p className="text-xs text-slate-500 mt-2">Submitted {submittedAgo}</p>
+            <p className="text-xs text-slate-500 mt-2">
+              Submitted {submittedAgo}
+              {urlsFor(current).length > 1 && ` · ${urlsFor(current).length} photos`}
+            </p>
           </div>
 
           <div className="space-y-4">
@@ -244,6 +279,19 @@ export default function AIFeedbackQueue() {
             </span>
           )}
           <div className="flex-1" />
+          {hasMore && idx >= queue.length - 3 && (
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={loadMore}
+              disabled={isLoadingMore}
+            >
+              {isLoadingMore
+                ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                : <Plus className="w-4 h-4 mr-2" />}
+              Load more
+            </Button>
+          )}
           <Button variant="ghost" size="sm" onClick={() => step(1)} disabled={idx >= queue.length - 1}>
             Next <ChevronRight className="w-4 h-4 ml-1" />
           </Button>

@@ -33,7 +33,7 @@ function normalizeFromAI(result) {
   };
 }
 
-export default function MorphCorrectionPanel({ result, imageUrl, onSaved }) {
+export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, onSaved }) {
   const { toast } = useToast();
   const [editing, setEditing] = useState(false);
   const [state, setState] = useState(() => normalizeFromAI(result));
@@ -61,8 +61,10 @@ export default function MorphCorrectionPanel({ result, imageUrl, onSaved }) {
       const user = await User.me().catch(() => null);
       const provenance = verdict === 'agree' ? 'community' : 'ai_then_expert';
       const confidence = verdict === 'agree' ? state.ai_confidence : reviewerConfidence;
+      const urls = (imageUrls && imageUrls.length > 0) ? imageUrls : [imageUrl];
       const record = {
-        image_url: imageUrl,
+        image_url: urls[0],
+        image_urls: urls,
         user_id: user?.id || null,
         primary_morph: state.primary_morph,
         secondary_morph: state.genetics?.[0] || null,
@@ -80,6 +82,7 @@ export default function MorphCorrectionPanel({ result, imageUrl, onSaved }) {
           ai_original: result,
           reviewer_verdict: verdict,
           reviewer_edits: state,
+          photo_count: urls.length,
         },
       };
       const saved = await saveGeckoImageWithMeta(record);

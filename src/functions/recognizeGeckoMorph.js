@@ -1,18 +1,22 @@
 import { supabase } from '@/lib/supabaseClient';
 
-// Calls the Supabase edge function `recognize-gecko-morph`, which proxies
-// to an open-weights VLM (Qwen2.5-VL via Replicate by default) and clamps
-// the output to our canonical taxonomy. Takes { imageUrl } — the caller
-// must have uploaded the image first (Recognition.jsx does this).
-export async function recognizeGeckoMorph({ imageUrl } = {}) {
-  if (!imageUrl) {
-    return { data: null, error: new Error('imageUrl is required') };
+// Calls the Supabase edge function `recognize-gecko-morph`, which routes
+// to Claude vision and clamps the output to our canonical taxonomy.
+//
+// Accepts either { imageUrl: string } or { imageUrls: string[] } (up to 5).
+// Claude synthesizes across multiple photos of the same gecko.
+export async function recognizeGeckoMorph({ imageUrl, imageUrls } = {}) {
+  const urls = Array.isArray(imageUrls) && imageUrls.length
+    ? imageUrls
+    : imageUrl ? [imageUrl] : [];
+  if (urls.length === 0) {
+    return { data: null, error: new Error('imageUrl(s) required') };
   }
+
   const { data, error } = await supabase.functions.invoke('recognize-gecko-morph', {
-    body: { imageUrl },
+    body: { imageUrls: urls },
   });
   if (error) {
-    // Supabase wraps the body inside `error.context` on non-2xx responses.
     let detail = error.message;
     const ctx = error.context;
     if (ctx && typeof ctx.text === 'function') {
