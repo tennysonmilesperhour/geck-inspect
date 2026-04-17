@@ -1,0 +1,1 @@
+-- Remote-only migration snapshot placeholder.
