@@ -1372,20 +1372,23 @@ export default function Lineage() {
                                 {renderTree(lineage, 1)}
                             </div>
 
-                            {/* Offspring Column (Right) */}
-                            <div className={`flex-shrink-0 order-3 ${sidePanelWidth}`}>
+                            {/* Offspring Column (Right) — top-anchored so many
+                                offspring grow downward instead of pushing the
+                                tree off-screen. Wraps into rows of 10 on mobile
+                                and 6 on desktop. */}
+                            <div className="order-3 md:self-start">
                                 {offspring.length > 0 && (
                                     <div className="bg-emerald-950/50 rounded-lg p-2 md:p-3 border border-emerald-800">
                                         <h2 className="text-sm font-bold mb-2 flex items-center justify-center gap-1 text-blue-400">
                                             <Users2 className="w-4 h-4" /> Offspring
                                         </h2>
-                                        <div className={`flex md:grid items-center justify-center gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0 ${sidePanelGridCols}`}>
+                                        <div className="grid grid-cols-10 md:grid-cols-6 gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
                                             {offspring.map(child => (
                                                 <GeckoCardNode
                                                     key={child.id}
                                                     gecko={child}
                                                     onNodeClick={handleSelectGecko}
-                                                    size={sidePanelCardSize}
+                                                    size="tiny"
                                                 />
                                             ))}
                                         </div>
