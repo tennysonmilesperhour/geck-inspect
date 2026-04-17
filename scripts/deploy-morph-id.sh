@@ -78,7 +78,7 @@ done
 # ---- 3. Reminders that require hands-on-keyboard --------------------------
 cat <<EOF
 
-$YEL— Hands-on-keyboard steps (not automated on purpose):$RST
+${YEL}-- Hands-on-keyboard steps (not automated on purpose):${RST}
   1. Apply the RLS + role setup by copy-pasting
      ${DIM}supabase/migrations/README_training_rls_prod.md${RST}
      into the Supabase SQL editor (prod project).
