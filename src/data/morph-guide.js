@@ -525,7 +525,7 @@ export const MORPHS = [
     ],
     history:
       'Proven by AC Reptiles and collaborating breeders in the early 2020s after years of line development.',
-    combinesWith: ['lilly-white', 'super-lilly-white', 'white-wall-white-spot', 'soft-scale', 'axanthic'],
+    combinesWith: ['lilly-white', 'white-wall-white-spot', 'soft-scale', 'axanthic'],
   },
   {
     slug: 'white-wall-white-spot',
@@ -625,25 +625,6 @@ export const MORPHS = [
     notes:
       'Never pair two visual lilly whites unless you accept that roughly 1/4 of eggs will fail to develop — this is the homozygous lethal phenotype.',
   },
-  {
-    slug: 'super-lilly-white',
-    name: 'Super Lilly White',
-    aliases: ['Super Lilly', 'SLW'],
-    category: 'structure',
-    inheritance: 'incomplete-dominant',
-    rarity: 'very_rare',
-    priceTier: '$$$$',
-    priceRange: 'Not viable',
-    summary:
-      'Homozygous lilly white — a lethal allele. Embryos do not develop.',
-    description:
-      'The homozygous form of lilly white is a lethal allele. Two copies in the embryo cause developmental failure and no viable animals hatch. Listed here for educational completeness — never appears in commercial breeding stock because it cannot exist as a living animal.',
-    keyFeatures: [
-      'Lethal in the homozygous state',
-      'Pairing visual × visual produces approximately 25% failed eggs, 50% visual offspring, 25% non-carrier siblings',
-    ],
-  },
-
   // ---------- COLOR MODIFIERS ----------
   {
     slug: 'axanthic',

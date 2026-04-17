@@ -119,7 +119,6 @@ export const KNOWN_MORPH_SLUGS = [
   'red-base',
   'soft-scale',
   'super-dalmatian',
-  'super-lilly-white',
   'super-soft-scale',
   'tiger',
   'tiger-brindle',
