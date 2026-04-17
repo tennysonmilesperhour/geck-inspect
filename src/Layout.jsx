@@ -1007,6 +1007,8 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
             </div>
           </header>
 
+          <GuestBanner />
+
           <div className="flex-1 overflow-auto overflow-x-hidden">
             {children}
           </div>
