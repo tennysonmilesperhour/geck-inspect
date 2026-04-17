@@ -45,7 +45,7 @@ CREATE OR REPLACE FUNCTION public.nearest_training_samples(
   match_count INT DEFAULT 6,
   verified_only BOOLEAN DEFAULT true
 ) RETURNS TABLE (
-  id UUID,
+  id TEXT,
   image_url TEXT,
   primary_morph TEXT,
   secondary_traits TEXT[],
