@@ -8,6 +8,7 @@ import { useToast } from '@/components/ui/use-toast';
 
 import MorphCorrectionPanel from '../components/morph-id/MorphCorrectionPanel';
 import PhotoTipsCard from '../components/morph-id/PhotoTipsCard';
+import SimilarGeckosStrip from '../components/morph-id/SimilarGeckosStrip';
 
 export default function Recognition() {
   const { toast } = useToast();
@@ -208,6 +209,8 @@ export default function Recognition() {
             }}
           />
         )}
+
+        {analysis && uploadedUrl && <SimilarGeckosStrip imageUrl={uploadedUrl} />}
 
         {savedOnce && (
           <Card className="bg-emerald-950/30 border-emerald-800">
