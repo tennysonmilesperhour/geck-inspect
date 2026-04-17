@@ -17,6 +17,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Area,
   AreaChart,
@@ -425,7 +426,24 @@ export default function AnalyticsDashboard() {
         </div>
       </div>
 
-      {/* KPI cards */}
+      <Tabs defaultValue="growth" className="w-full">
+        <TabsList className="bg-slate-900 border border-slate-800">
+          <TabsTrigger value="growth" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-400">
+            Growth
+          </TabsTrigger>
+          <TabsTrigger value="engagement" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-400">
+            Engagement
+          </TabsTrigger>
+          <TabsTrigger value="features" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-400">
+            Features
+          </TabsTrigger>
+          <TabsTrigger value="errors" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-400">
+            Errors
+          </TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="growth" className="space-y-6 mt-4">
+          {/* KPI cards */}
       <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
         <KpiCard
           label="New signups"
@@ -644,6 +662,32 @@ export default function AnalyticsDashboard() {
           )}
         </CardContent>
       </Card>
+        </TabsContent>
+
+        <TabsContent value="engagement" className="space-y-6 mt-4">
+          <Card className="bg-slate-900 border-slate-800">
+            <CardContent className="p-10 text-center text-sm text-slate-500">
+              Engagement metrics coming soon — active users by day, top pages, session counts.
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="features" className="space-y-6 mt-4">
+          <Card className="bg-slate-900 border-slate-800">
+            <CardContent className="p-10 text-center text-sm text-slate-500">
+              Feature usage coming soon — event frequency pulled from telemetry.
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        <TabsContent value="errors" className="space-y-6 mt-4">
+          <Card className="bg-slate-900 border-slate-800">
+            <CardContent className="p-10 text-center text-sm text-slate-500">
+              Error logs coming soon.
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
