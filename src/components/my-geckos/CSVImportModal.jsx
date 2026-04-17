@@ -35,6 +35,8 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
     const [sourceRows, setSourceRows] = useState([]);
     const [mapping, setMapping] = useState({});
     const [importMode, setImportMode] = useState('create_and_update');
+    const [createBreedingPairs, setCreateBreedingPairs] = useState(false);
+    const [importEggs, setImportEggs] = useState(false);
     const [isImporting, setIsImporting] = useState(false);
     const [importResults, setImportResults] = useState(null);
     const [useDirectFormat, setUseDirectFormat] = useState(false); // skip mapping for exact-template CSVs
@@ -48,6 +50,8 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
         setMapping({});
         setImportResults(null);
         setUseDirectFormat(false);
+        setCreateBreedingPairs(false);
+        setImportEggs(false);
     }, []);
 
     // --------------------------------------------------- step 1: file selected
@@ -102,7 +106,12 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
             const templateKeys = TEMPLATE_FIELDS.map(f => f.key);
             const rowObjects = transformRows(mapping, sourceHeaders, sourceRows, templateKeys);
 
-            const { data } = await importGeckosFromCSV({ rows: rowObjects, importMode });
+            const { data } = await importGeckosFromCSV({
+                rows: rowObjects,
+                importMode,
+                createBreedingPairs,
+                importEggs,
+            });
 
             setImportResults(data.results);
             setStep('results');
@@ -191,7 +200,8 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
                                     <li>Lineage relationships (sire / dam ID codes)</li>
                                     <li>Current weight and tracking data</li>
                                     <li>Categories, pricing, and notes</li>
-                                    <li>Health and breeding tracking</li>
+                                    <li>Breeding pairs (pairing date, breeding season)</li>
+                                    <li>Egg history (lay date, clutch number, egg status)</li>
                                 </ul>
                             </div>
                         </div>
@@ -329,6 +339,44 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
                                     </div>
                                 </div>
 
+                                {/* Breeding / lineage import options */}
+                                <div>
+                                    <Label className="text-slate-300">Breeding &amp; Lineage</Label>
+                                    <p className="text-xs text-slate-500 mt-0.5 mb-2">
+                                        Optional — build out breeding pairs and egg history from the same CSV.
+                                    </p>
+                                    <div className="grid grid-cols-1 gap-2">
+                                        <label className="flex items-start gap-2.5 cursor-pointer group">
+                                            <input
+                                                type="checkbox"
+                                                checked={createBreedingPairs}
+                                                onChange={(e) => setCreateBreedingPairs(e.target.checked)}
+                                                className="accent-emerald-500 mt-0.5"
+                                            />
+                                            <span className="text-sm text-slate-300 group-hover:text-slate-100">
+                                                Auto-create breeding pairs from sire / dam references
+                                                <span className="block text-xs text-slate-500">
+                                                    For every row with a resolved sire and dam, upsert a breeding pair. Uses Pairing Date / Breeding Season columns if mapped.
+                                                </span>
+                                            </span>
+                                        </label>
+                                        <label className="flex items-start gap-2.5 cursor-pointer group">
+                                            <input
+                                                type="checkbox"
+                                                checked={importEggs}
+                                                onChange={(e) => setImportEggs(e.target.checked)}
+                                                className="accent-emerald-500 mt-0.5"
+                                            />
+                                            <span className="text-sm text-slate-300 group-hover:text-slate-100">
+                                                Import egg records (lay date, clutch, status)
+                                                <span className="block text-xs text-slate-500">
+                                                    Needs an Egg Lay Date column and a breeding pair (enable the option above or pre-create the pair). Links each egg to the hatched offspring.
+                                                </span>
+                                            </span>
+                                        </label>
+                                    </div>
+                                </div>
+
                                 <Alert className="bg-amber-950/30 border-amber-800/50 text-amber-200">
                                     <AlertTriangle className="h-4 w-4 text-amber-400" />
                                     <AlertDescription className="text-amber-200/90 text-sm">
@@ -449,6 +497,12 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
                                     <StatCard value={importResults.updated}   label="Updated"   color="amber" />
                                     <StatCard value={importResults.errors?.length ?? 0} label="Errors" color="red" />
                                 </div>
+                                {(importResults.pairsCreated > 0 || importResults.eggsCreated > 0) && (
+                                    <div className="grid grid-cols-2 gap-3">
+                                        <StatCard value={importResults.pairsCreated ?? 0} label="Breeding Pairs" color="green" />
+                                        <StatCard value={importResults.eggsCreated ?? 0}  label="Eggs"            color="green" />
+                                    </div>
+                                )}
 
                                 {/* Errors */}
                                 {importResults.errors?.length > 0 && (

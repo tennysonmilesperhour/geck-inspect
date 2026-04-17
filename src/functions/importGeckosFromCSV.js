@@ -8,10 +8,24 @@
  *   - create_and_update: match by gecko_id_code, update if exists, create if not
  *   - create_only: skip rows whose gecko_id_code already exists
  */
-import { Gecko } from '@/entities/all';
+import { Gecko, BreedingPlan, Egg } from '@/entities/all';
 
 const VALID_SEX = ['Male', 'Female', 'Unsexed'];
 const VALID_STATUS = ['Pet', 'Future Breeder', 'Holdback', 'Ready to Breed', 'Proven', 'For Sale', 'Sold'];
+const VALID_EGG_STATUS = ['Incubating', 'Hatched', 'Slug', 'Infertile', 'Stillbirth'];
+
+function normaliseEggStatus(raw, hasHatchedGecko) {
+  if (!raw) return hasHatchedGecko ? 'Hatched' : 'Incubating';
+  const lower = String(raw).trim().toLowerCase();
+  const match = VALID_EGG_STATUS.find(s => s.toLowerCase() === lower);
+  if (match) return match;
+  if (lower === 'hatch' || lower === 'hatched out') return 'Hatched';
+  if (lower === 'incubating' || lower === 'incubation' || lower === 'in incubation') return 'Incubating';
+  if (lower === 'dud' || lower === 'slug') return 'Slug';
+  if (lower === 'infertile' || lower === 'unfertile') return 'Infertile';
+  if (lower === 'stillborn' || lower === 'stillbirth' || lower === 'died') return 'Stillbirth';
+  return hasHatchedGecko ? 'Hatched' : 'Incubating';
+}
 
 /**
  * Normalise a sex value from common CSV variants.
@@ -107,14 +121,23 @@ function parseMorphTags(raw) {
  *
  * @param {Object[]} rows — array of row objects keyed by template field names
  * @param {Object} options
- * @param {string} options.importMode — 'create_and_update' or 'create_only'
- * @returns {{ success: boolean, results: { processed, created, updated, errors, warnings } }}
+ * @param {string}  options.importMode — 'create_and_update' or 'create_only'
+ * @param {boolean} options.createBreedingPairs — upsert BreedingPlan for each (sire, dam) pair resolved from rows
+ * @param {boolean} options.importEggs — create Egg records from rows that have egg_lay_date + a resolved pair
+ * @returns {{ success: boolean, results: { processed, created, updated, pairsCreated, eggsCreated, errors, warnings } }}
  */
-export async function importGeckosFromCSV({ rows, importMode = 'create_and_update' }) {
+export async function importGeckosFromCSV({
+  rows,
+  importMode = 'create_and_update',
+  createBreedingPairs = false,
+  importEggs = false,
+}) {
   const results = {
     processed: 0,
     created: 0,
     updated: 0,
+    pairsCreated: 0,
+    eggsCreated: 0,
     errors: [],
     warnings: [],
   };
@@ -140,6 +163,10 @@ export async function importGeckosFromCSV({ rows, importMode = 'create_and_updat
     if (g.gecko_id_code) byIdCode.set(g.gecko_id_code.toLowerCase().trim(), g);
     if (g.id) byId.set(g.id, g);
   }
+
+  // Per-row breeding context captured during the gecko pass, consumed by the
+  // pair/egg passes that run after all geckos have been upserted.
+  const rowBreedingInfo = [];
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
@@ -225,26 +252,130 @@ export async function importGeckosFromCSV({ rows, importMode = 'create_and_updat
         Object.entries(geckoData).filter(([, v]) => v !== undefined)
       );
 
+      let geckoRecord;
       if (existing) {
         // Update existing
         await Gecko.update(existing.id, cleanData);
         results.updated++;
-        // Update local map in case later rows reference this gecko
-        const updated = { ...existing, ...cleanData };
-        if (geckoIdCode) byIdCode.set(geckoIdCode.toLowerCase(), updated);
-        byId.set(existing.id, updated);
+        geckoRecord = { ...existing, ...cleanData };
+        if (geckoIdCode) byIdCode.set(geckoIdCode.toLowerCase(), geckoRecord);
+        byId.set(existing.id, geckoRecord);
       } else {
         // Create new
-        const created = await Gecko.create(cleanData);
+        geckoRecord = await Gecko.create(cleanData);
         results.created++;
-        // Add to local maps for lineage resolution of later rows
-        if (created.gecko_id_code) {
-          byIdCode.set(created.gecko_id_code.toLowerCase(), created);
+        if (geckoRecord.gecko_id_code) {
+          byIdCode.set(geckoRecord.gecko_id_code.toLowerCase(), geckoRecord);
         }
-        if (created.id) byId.set(created.id, created);
+        if (geckoRecord.id) byId.set(geckoRecord.id, geckoRecord);
+      }
+
+      // Stash breeding info for the post-passes if the row had any useful bits.
+      if (sireId && damId) {
+        rowBreedingInfo.push({
+          rowLabel,
+          geckoId: geckoRecord.id,
+          geckoHatchDate: geckoRecord.hatch_date || null,
+          sireId,
+          damId,
+          pairingDate: parseDate(row.pairing_date),
+          breedingSeason: (row.breeding_season || '').trim() || null,
+          eggLayDate: parseDate(row.egg_lay_date),
+          eggStatusRaw: row.egg_status,
+          clutchNumber: (row.clutch_number || '').toString().trim() || null,
+        });
+      } else if ((importEggs || createBreedingPairs) && (row.egg_lay_date || row.pairing_date)) {
+        results.warnings.push(
+          `${rowLabel}: breeding/egg columns were provided but sire and dam could not both be resolved — skipping pair/egg creation for this row.`
+        );
       }
     } catch (err) {
       results.errors.push(`${rowLabel}: ${err.message}`);
+    }
+  }
+
+  // --- Pass 2: upsert breeding pairs (BreedingPlan) ---------------------------
+  // Key each unique pair by "sire_id::dam_id" to dedupe across rows. If a plan
+  // already exists in the DB for that pair, reuse it; otherwise create one.
+  const planByPairKey = new Map();
+  if (createBreedingPairs || importEggs) {
+    let existingPlans = [];
+    try {
+      existingPlans = await BreedingPlan.filter({});
+    } catch (err) {
+      results.warnings.push('Could not load existing breeding plans: ' + err.message);
+    }
+    for (const p of existingPlans) {
+      if (p.sire_id && p.dam_id) {
+        planByPairKey.set(`${p.sire_id}::${p.dam_id}`, p);
+      }
+    }
+
+    if (createBreedingPairs) {
+      const seenNew = new Set();
+      for (const info of rowBreedingInfo) {
+        const key = `${info.sireId}::${info.damId}`;
+        if (planByPairKey.has(key) || seenNew.has(key)) continue;
+        seenNew.add(key);
+        try {
+          const plan = await BreedingPlan.create({
+            sire_id: info.sireId,
+            dam_id: info.damId,
+            pairing_date: info.pairingDate || undefined,
+            breeding_season: info.breedingSeason || undefined,
+            status: 'Planned',
+          });
+          planByPairKey.set(key, plan);
+          results.pairsCreated++;
+        } catch (err) {
+          results.warnings.push(`${info.rowLabel}: could not create breeding pair — ${err.message}`);
+        }
+      }
+    }
+  }
+
+  // --- Pass 3: create egg records --------------------------------------------
+  // Only for rows that have an egg_lay_date and resolved to a breeding plan
+  // (either pre-existing or freshly created). Skip if an egg already links to
+  // the same gecko, to keep re-imports idempotent.
+  if (importEggs) {
+    let existingEggs = [];
+    try {
+      existingEggs = await Egg.filter({});
+    } catch (err) {
+      results.warnings.push('Could not load existing eggs: ' + err.message);
+    }
+    const eggByGeckoId = new Map();
+    for (const e of existingEggs) {
+      if (e.gecko_id) eggByGeckoId.set(e.gecko_id, e);
+    }
+
+    for (const info of rowBreedingInfo) {
+      if (!info.eggLayDate) continue;
+      const key = `${info.sireId}::${info.damId}`;
+      const plan = planByPairKey.get(key);
+      if (!plan) {
+        results.warnings.push(
+          `${info.rowLabel}: egg has a lay date but no breeding pair — enable "Auto-create breeding pairs" or pre-create the pair.`
+        );
+        continue;
+      }
+      if (eggByGeckoId.has(info.geckoId)) continue; // idempotent re-import
+
+      try {
+        const egg = await Egg.create({
+          breeding_plan_id: plan.id,
+          lay_date: info.eggLayDate,
+          status: normaliseEggStatus(info.eggStatusRaw, !!info.geckoHatchDate),
+          hatch_date_actual: info.geckoHatchDate || undefined,
+          gecko_id: info.geckoId || undefined,
+          clutch_number: info.clutchNumber || undefined,
+        });
+        eggByGeckoId.set(info.geckoId, egg);
+        results.eggsCreated++;
+      } catch (err) {
+        results.warnings.push(`${info.rowLabel}: could not create egg — ${err.message}`);
+      }
     }
   }
 

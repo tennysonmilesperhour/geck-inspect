@@ -28,6 +28,13 @@ export const TEMPLATE_FIELDS = [
   { key: 'breeder_name',    label: 'Breeder Name',    required: false },
   { key: 'genetics_notes',  label: 'Genetics Notes',  required: false },
   { key: 'estimated_hatch_year', label: 'Estimated Hatch Year', required: false },
+
+  // --- Breeding / egg columns (used only when the corresponding import option is on) ---
+  { key: 'pairing_date',    label: 'Pairing Date',    required: false, group: 'breeding' },
+  { key: 'breeding_season', label: 'Breeding Season', required: false, group: 'breeding' },
+  { key: 'egg_lay_date',    label: 'Egg Lay Date',    required: false, group: 'eggs' },
+  { key: 'egg_status',      label: 'Egg Status',      required: false, group: 'eggs' },
+  { key: 'clutch_number',   label: 'Clutch Number',   required: false, group: 'eggs' },
 ];
 
 /**
@@ -195,6 +202,39 @@ const ALIAS_MAP = [
   ['year',              'estimated_hatch_year'],
   ['year born',         'estimated_hatch_year'],
   ['year hatched',      'estimated_hatch_year'],
+
+  // Pairing date (for breeding_plans)
+  ['pairing date',      'pairing_date'],
+  ['paired on',         'pairing_date'],
+  ['paired date',       'pairing_date'],
+  ['breeding date',     'pairing_date'],
+  ['pair date',         'pairing_date'],
+  ['date paired',       'pairing_date'],
+  ['introduction date', 'pairing_date'],
+
+  // Breeding season
+  ['breeding season',   'breeding_season'],
+  ['season',            'breeding_season'],
+  ['breed season',      'breeding_season'],
+
+  // Egg lay date
+  ['egg lay date',      'egg_lay_date'],
+  ['lay date',          'egg_lay_date'],
+  ['laid on',           'egg_lay_date'],
+  ['date laid',         'egg_lay_date'],
+  ['laid',              'egg_lay_date'],
+  ['egg laid',          'egg_lay_date'],
+  ['oviposition date',  'egg_lay_date'],
+
+  // Egg status
+  ['egg status',        'egg_status'],
+  ['incubation status', 'egg_status'],
+
+  // Clutch number
+  ['clutch number',     'clutch_number'],
+  ['clutch no',         'clutch_number'],
+  ['clutch',            'clutch_number'],
+  ['clutch id',         'clutch_number'],
 ];
 
 /**
