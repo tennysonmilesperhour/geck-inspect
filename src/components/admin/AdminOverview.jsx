@@ -9,7 +9,34 @@ import {
 } from '@/entities/all';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2, Users, Camera, MessageSquare, Database, Sparkles, Bell, Activity } from 'lucide-react';
-import { formatDistanceToNow } from 'date-fns';
+import { formatDistanceToNow, format, startOfDay, subDays } from 'date-fns';
+import { Area, AreaChart, ResponsiveContainer } from 'recharts';
+
+const SPARK_COLORS = {
+  emerald: '#10b981',
+  blue: '#3b82f6',
+  amber: '#f59e0b',
+  purple: '#a855f7',
+  rose: '#f43f5e',
+  slate: '#94a3b8',
+};
+
+function dailySeries(list, days = 30) {
+  const buckets = Array.from({ length: days }, (_, i) => {
+    const day = startOfDay(subDays(new Date(), days - 1 - i));
+    return { key: format(day, 'yyyy-MM-dd'), value: 0 };
+  });
+  const idx = new Map(buckets.map((b, i) => [b.key, i]));
+  for (const item of list || []) {
+    if (!item?.created_date) continue;
+    const t = new Date(item.created_date);
+    if (isNaN(t.getTime())) continue;
+    const k = format(startOfDay(t), 'yyyy-MM-dd');
+    const i = idx.get(k);
+    if (i !== undefined) buckets[i].value += 1;
+  }
+  return buckets;
+}
 
 /**
  * Admin landing screen — at-a-glance KPIs and recent activity feed.
@@ -19,7 +46,7 @@ import { formatDistanceToNow } from 'date-fns';
  * section from there.
  */
 
-function StatCard({ icon: Icon, label, value, sublabel, accent = 'emerald' }) {
+function StatCard({ icon: Icon, label, value, sublabel, accent = 'emerald', series }) {
   const accentMap = {
     emerald: 'text-emerald-400 bg-emerald-500/10 border-emerald-500/30',
     blue: 'text-blue-400 bg-blue-500/10 border-blue-500/30',
@@ -28,9 +55,11 @@ function StatCard({ icon: Icon, label, value, sublabel, accent = 'emerald' }) {
     rose: 'text-rose-400 bg-rose-500/10 border-rose-500/30',
     slate: 'text-slate-300 bg-slate-700/30 border-slate-600',
   };
+  const strokeColor = SPARK_COLORS[accent] || SPARK_COLORS.emerald;
+  const gradId = `spark-${accent}`;
   return (
-    <Card className="bg-slate-900 border-slate-800">
-      <CardContent className="p-5">
+    <Card className="bg-slate-900 border-slate-800 overflow-hidden">
+      <CardContent className="p-5 pb-0">
         <div className="flex items-start justify-between">
           <div>
             <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">{label}</p>
@@ -41,6 +70,30 @@ function StatCard({ icon: Icon, label, value, sublabel, accent = 'emerald' }) {
             <Icon className="w-5 h-5" />
           </div>
         </div>
+        {series && series.length > 0 ? (
+          <div className="mt-3 -mx-5 h-10">
+            <ResponsiveContainer width="100%" height="100%">
+              <AreaChart data={series} margin={{ top: 4, right: 0, bottom: 0, left: 0 }}>
+                <defs>
+                  <linearGradient id={gradId} x1="0" y1="0" x2="0" y2="1">
+                    <stop offset="0%" stopColor={strokeColor} stopOpacity={0.45} />
+                    <stop offset="100%" stopColor={strokeColor} stopOpacity={0} />
+                  </linearGradient>
+                </defs>
+                <Area
+                  type="monotone"
+                  dataKey="value"
+                  stroke={strokeColor}
+                  strokeWidth={1.5}
+                  fill={`url(#${gradId})`}
+                  isAnimationActive={false}
+                />
+              </AreaChart>
+            </ResponsiveContainer>
+          </div>
+        ) : (
+          <div className="h-5" />
+        )}
       </CardContent>
     </Card>
   );
@@ -92,6 +145,11 @@ export default function AdminOverview({ onNavigate }) {
           totalMorphs: morphs.length,
           adminCount: users.filter((u) => u.role === 'admin').length,
           expertCount: users.filter((u) => u.is_expert).length,
+          usersSeries: dailySeries(users, 30),
+          geckosSeries: dailySeries(geckos, 30),
+          imagesSeries: dailySeries(images, 30),
+          postsSeries: dailySeries(posts, 30),
+          commentsSeries: dailySeries(comments, 30),
         });
 
         const sortByDateDesc = (a, b) =>
@@ -125,6 +183,7 @@ export default function AdminOverview({ onNavigate }) {
           value={stats.totalUsers}
           sublabel={`+${stats.newUsers7d} this week`}
           accent="emerald"
+          series={stats.usersSeries}
         />
         <StatCard
           icon={Database}
@@ -132,6 +191,7 @@ export default function AdminOverview({ onNavigate }) {
           value={stats.totalGeckos}
           sublabel={`+${stats.newGeckos7d} this week`}
           accent="blue"
+          series={stats.geckosSeries}
         />
         <StatCard
           icon={Camera}
@@ -139,6 +199,7 @@ export default function AdminOverview({ onNavigate }) {
           value={stats.totalImages}
           sublabel={`+${stats.newImages7d} this week`}
           accent="purple"
+          series={stats.imagesSeries}
         />
         <StatCard
           icon={MessageSquare}
@@ -146,6 +207,7 @@ export default function AdminOverview({ onNavigate }) {
           value={stats.totalPosts}
           sublabel={`+${stats.newPosts7d} this week`}
           accent="amber"
+          series={stats.postsSeries}
         />
         <StatCard
           icon={Sparkles}
@@ -160,6 +222,7 @@ export default function AdminOverview({ onNavigate }) {
           value={stats.totalComments}
           sublabel="all-time"
           accent="slate"
+          series={stats.commentsSeries}
         />
         <StatCard
           icon={Users}
