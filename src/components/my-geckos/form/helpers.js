@@ -16,6 +16,10 @@ import { generateHatchedGeckoId, generateFounderGeckoId } from '@/components/sha
  *   {LETTER}  — clutch egg letter (a, b, c …)
  *   {YY}      — 2-digit year
  *   {YYYY}    — 4-digit year
+ *   {LINE}    — prefix of the oldest founder ancestor (sire-side by default)
+ *   {PARENT}  — full gecko_id_code of the direct parent (sire preferred)
+ *   {SEX}     — m / f / u
+ *   {CLUTCH}  — clutch number (same as NUM when clutch entity not present)
  *
  * Any text outside tokens is kept as-is, so "{PREFIX}-{NNN}" → "JOH-001".
  */
@@ -28,7 +32,49 @@ function applyFormat(format, vars) {
     .replace(/\{NUM\}/g, vars.num != null ? String(vars.num) : '1')
     .replace(/\{LETTER\}/g, vars.letter || 'a')
     .replace(/\{YYYY\}/g, vars.yyyy || String(new Date().getFullYear()))
-    .replace(/\{YY\}/g, vars.yy || String(new Date().getFullYear()).slice(-2));
+    .replace(/\{YY\}/g, vars.yy || String(new Date().getFullYear()).slice(-2))
+    .replace(/\{LINE\}/g, vars.line || vars.prefix || '???')
+    .replace(/\{PARENT\}/g, vars.parent || '')
+    .replace(/\{SEX\}/g, vars.sex || 'u')
+    .replace(/\{CLUTCH\}/g, vars.clutch != null ? String(vars.clutch) : (vars.num != null ? String(vars.num) : '1'));
+}
+
+/**
+ * Extract a short prefix from a gecko_id_code — the contiguous leading
+ * alphabetic characters, max 4. Falls back to the first 3 alphanumeric
+ * chars if no leading alpha run exists. Used by resolveLinePrefix.
+ */
+function leadingAlphaPrefix(code) {
+  if (!code) return null;
+  const m = /^[A-Za-z]{1,4}/.exec(code);
+  if (m) return m[0];
+  const fallback = code.replace(/[^A-Za-z0-9]/g, '').slice(0, 3);
+  return fallback || null;
+}
+
+/**
+ * Walk up the lineage on the chosen side until a founder (no sire_id and
+ * no dam_id) is reached, then return the prefix embedded in that founder's
+ * gecko_id_code. Side can be 'sire' (default) or 'dam'. Cycles and missing
+ * records short-circuit and return null so callers can fall back.
+ */
+export function resolveLinePrefix(startGecko, allGeckos, side = 'sire', depthCap = 10) {
+  if (!startGecko) return null;
+  const byId = new Map((allGeckos || []).map((g) => [g.id, g]));
+  let current = startGecko;
+  const seen = new Set();
+  for (let i = 0; i < depthCap; i++) {
+    if (!current || seen.has(current.id)) return null;
+    seen.add(current.id);
+    const parentId = side === 'dam' ? current.dam_id : current.sire_id;
+    if (!parentId) {
+      return leadingAlphaPrefix(current.gecko_id_code);
+    }
+    const parent = byId.get(parentId);
+    if (!parent) return leadingAlphaPrefix(current.gecko_id_code);
+    current = parent;
+  }
+  return leadingAlphaPrefix(current?.gecko_id_code);
 }
 
 function firstTwoTitleCase(name) {
@@ -72,8 +118,10 @@ export async function generateNextGeckoId(user, allGeckos, sire = null, dam = nu
 
     if (hasCustomFormat && idSettings.hatchlingFormat) {
       const eggLetter = ((offspringNumber - 1) % 2) === 0 ? 'a' : 'b';
+      const sirePrefix = getPrefix(user, idSettings.prefix);
+      const line = resolveLinePrefix(sire, allGeckos, 'sire') || sirePrefix;
       return applyFormat(idSettings.hatchlingFormat, {
-        prefix: getPrefix(user, idSettings.prefix),
+        prefix: sirePrefix,
         nnn: String(offspringNumber).padStart(3, '0'),
         sire: firstTwoTitleCase(sire.name),
         dam: firstTwoTitleCase(dam.name),
@@ -81,6 +129,10 @@ export async function generateNextGeckoId(user, allGeckos, sire = null, dam = nu
         letter: eggLetter,
         yy: String(year).slice(-2),
         yyyy: String(year),
+        line,
+        parent: sire.gecko_id_code || dam.gecko_id_code || '',
+        sex: 'u',
+        clutch: offspringNumber,
       });
     }
     return generateHatchedGeckoId(sire, dam, offspringNumber, year);
@@ -89,8 +141,9 @@ export async function generateNextGeckoId(user, allGeckos, sire = null, dam = nu
   // ── Hatchling (free-text parent names) ───────────────────────────
   if (sireName || damName) {
     if (hasCustomFormat && idSettings.hatchlingFormat) {
+      const prefix = getPrefix(user, idSettings.prefix);
       return applyFormat(idSettings.hatchlingFormat, {
-        prefix: getPrefix(user, idSettings.prefix),
+        prefix,
         nnn: '001',
         sire: firstTwoTitleCase(sireName),
         dam: firstTwoTitleCase(damName),
@@ -98,6 +151,10 @@ export async function generateNextGeckoId(user, allGeckos, sire = null, dam = nu
         letter: 'a',
         yy: String(new Date().getFullYear()).slice(-2),
         yyyy: String(new Date().getFullYear()),
+        line: prefix,
+        parent: '',
+        sex: 'u',
+        clutch: 1,
       });
     }
     return generateHatchedGeckoId(
@@ -123,6 +180,10 @@ export async function generateNextGeckoId(user, allGeckos, sire = null, dam = nu
       letter: 'a',
       yy: String(new Date().getFullYear()).slice(-2),
       yyyy: String(new Date().getFullYear()),
+      line: prefix,
+      parent: '',
+      sex: 'u',
+      clutch: seqNum,
     });
   }
 
