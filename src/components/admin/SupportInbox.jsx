@@ -32,6 +32,10 @@ import {
     Trash2,
     Send,
     User as UserIcon,
+    Heart,
+    Bug,
+    Lightbulb,
+    Star,
 } from 'lucide-react';
 import { formatDistanceToNowStrict, format } from 'date-fns';
 
@@ -53,6 +57,42 @@ const STATUSES = [
     { value: 'archived', label: 'Archived', color: 'bg-slate-700/40 text-slate-300 border-slate-600', icon: ArchiveIcon },
 ];
 
+const SOURCES = [
+    { value: 'all', label: 'All', color: 'border-slate-700 text-slate-300', icon: Inbox },
+    { value: 'support', label: 'Support', color: 'border-emerald-500/40 text-emerald-300 bg-emerald-500/10', icon: LifeBuoy },
+    { value: 'feedback', label: 'Feedback', color: 'border-purple-500/40 text-purple-300 bg-purple-500/10', icon: Heart },
+    { value: 'bug_report', label: 'Bug', color: 'border-rose-500/40 text-rose-300 bg-rose-500/10', icon: Bug },
+    { value: 'feature_request', label: 'Feature req.', color: 'border-amber-500/40 text-amber-300 bg-amber-500/10', icon: Lightbulb },
+];
+
+function SourceBadge({ source }) {
+    const meta = SOURCES.find((s) => s.value === source);
+    if (!meta || meta.value === 'all') return null;
+    const Icon = meta.icon;
+    return (
+        <Badge variant="outline" className={`border ${meta.color} text-[10px] uppercase tracking-wider`}>
+            <Icon className="w-3 h-3 mr-1" />
+            {meta.label}
+        </Badge>
+    );
+}
+
+function RatingStars({ value }) {
+    if (!value) return null;
+    return (
+        <span className="inline-flex items-center gap-0.5">
+            {[1, 2, 3, 4, 5].map((n) => (
+                <Star
+                    key={n}
+                    className={`w-3 h-3 ${
+                        n <= value ? 'fill-amber-400 text-amber-400' : 'text-slate-700'
+                    }`}
+                />
+            ))}
+        </span>
+    );
+}
+
 function StatusBadge({ status }) {
     const meta = STATUSES.find((s) => s.value === status) || STATUSES[0];
     const Icon = meta.icon;
@@ -68,6 +108,7 @@ export default function SupportInbox() {
     const [messages, setMessages] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [activeStatus, setActiveStatus] = useState('new');
+    const [activeSource, setActiveSource] = useState('all');
     const [search, setSearch] = useState('');
     const [selected, setSelected] = useState(null);
     const [adminNotes, setAdminNotes] = useState('');
@@ -102,8 +143,20 @@ export default function SupportInbox() {
         return c;
     }, [messages]);
 
+    const sourceCounts = useMemo(() => {
+        const c = { all: messages.length, support: 0, feedback: 0, bug_report: 0, feature_request: 0 };
+        for (const m of messages) {
+            const src = m.source || 'support';
+            if (src in c) c[src]++;
+        }
+        return c;
+    }, [messages]);
+
     const filtered = useMemo(() => {
         let list = messages.filter((m) => m.status === activeStatus);
+        if (activeSource !== 'all') {
+            list = list.filter((m) => (m.source || 'support') === activeSource);
+        }
         if (search) {
             const q = search.toLowerCase();
             list = list.filter(
@@ -114,7 +167,7 @@ export default function SupportInbox() {
             );
         }
         return list;
-    }, [messages, activeStatus, search]);
+    }, [messages, activeStatus, activeSource, search]);
 
     const openMessage = (msg) => {
         setSelected(msg);
@@ -184,7 +237,7 @@ export default function SupportInbox() {
                 </p>
             </CardHeader>
             <CardContent>
-                <div className="flex flex-wrap gap-2 mb-4">
+                <div className="flex flex-wrap gap-2 mb-3">
                     {STATUSES.map((s) => {
                         const Icon = s.icon;
                         const isActive = activeStatus === s.value;
@@ -201,6 +254,29 @@ export default function SupportInbox() {
                                 <Icon className="w-3 h-3" />
                                 {s.label}
                                 <span className="text-[10px] opacity-80">({counts[s.value] || 0})</span>
+                            </button>
+                        );
+                    })}
+                </div>
+                <div className="flex flex-wrap gap-2 mb-4 pb-3 border-b border-slate-800">
+                    {SOURCES.map((s) => {
+                        const Icon = s.icon;
+                        const isActive = activeSource === s.value;
+                        return (
+                            <button
+                                key={s.value}
+                                onClick={() => setActiveSource(s.value)}
+                                className={`flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-[11px] font-medium transition-colors ${
+                                    isActive
+                                        ? s.color
+                                        : 'border-slate-800 bg-slate-900 text-slate-500 hover:bg-slate-800'
+                                }`}
+                            >
+                                <Icon className="w-3 h-3" />
+                                {s.label}
+                                <span className="text-[10px] opacity-80">
+                                    ({sourceCounts[s.value] || 0})
+                                </span>
                             </button>
                         );
                     })}
@@ -245,12 +321,19 @@ export default function SupportInbox() {
                                             {msg.subject}
                                         </p>
                                         <StatusBadge status={msg.status} />
+                                        <SourceBadge source={msg.source || 'support'} />
+                                        <RatingStars value={msg.rating} />
                                     </div>
                                     <p className="text-xs text-slate-500 mt-0.5 truncate">
                                         {msg.user_email || '(anonymous)'} ·{' '}
                                         {formatDistanceToNowStrict(new Date(msg.created_date), {
                                             addSuffix: true,
                                         })}
+                                        {msg.page && (
+                                            <span className="ml-2 text-slate-600">
+                                                · from {msg.page}
+                                            </span>
+                                        )}
                                     </p>
                                     <p className="text-xs text-slate-400 line-clamp-2 mt-1">{msg.body}</p>
                                 </div>
@@ -269,11 +352,20 @@ export default function SupportInbox() {
                                 <DialogTitle className="flex items-center gap-2 flex-wrap">
                                     {selected.subject}
                                     <StatusBadge status={selected.status} />
+                                    <SourceBadge source={selected.source || 'support'} />
                                 </DialogTitle>
                                 <DialogDescription className="text-slate-400">
                                     From <span className="text-slate-200">{selected.user_email || '(anonymous)'}</span>
                                     {' · '}
                                     {format(new Date(selected.created_date), 'PPp')}
+                                    {selected.page && (
+                                        <span className="ml-2 text-slate-500">· {selected.page}</span>
+                                    )}
+                                    {selected.rating && (
+                                        <span className="ml-2 inline-flex items-center gap-1">
+                                            · <RatingStars value={selected.rating} />
+                                        </span>
+                                    )}
                                 </DialogDescription>
                             </DialogHeader>
 

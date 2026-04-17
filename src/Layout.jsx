@@ -24,6 +24,7 @@ import CommandPalette from "@/components/command-palette/CommandPalette";
 import FeedingAlertSystem from "@/components/feeding/FeedingAlertSystem";
 import NotificationPopover from "@/components/notifications/NotificationPopover";
 import GuestMockDisclaimer from "@/components/auth/GuestMockDisclaimer";
+import FeedbackWidget from "@/components/feedback/FeedbackWidget";
 import {
   Sidebar,
   SidebarHeader,
@@ -498,18 +499,27 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     ],
   };
 
-  // Build navigation from PageConfig
+  // Build navigation from PageConfig.
+  //
+  // The DB is the source of truth for ordering and visibility. Fallback
+  // items are ONLY used to populate the sidebar when a brand-new page
+  // hasn't been seeded into page_config yet. If page_config explicitly
+  // marks a page as disabled (is_enabled=false), it stays hidden — even
+  // for admins. The previous version re-merged fallback items back in,
+  // which is why disabled pages still appeared in the admin sidebar.
   const getNavItems = () => {
     if (!Array.isArray(pageConfigs) || pageConfigs.length === 0) {
       return FALLBACK_NAV_ITEMS;
     }
 
-    const enabled = pageConfigs
-      .filter(p => p.is_enabled)
-      .sort((a, b) => (a.order_position ?? 0) - (b.order_position ?? 0));
+    // Index DB rows by page_name so we can detect what's NOT seeded yet.
+    const dbByName = {};
+    for (const p of pageConfigs) {
+      if (p?.page_name) dbByName[p.page_name] = p;
+    }
 
-    // Build a lookup of fallback items keyed by page_name so we can
-    // detect renames and category moves.
+    // Index fallback items by page_name so we can preserve the
+    // canonical display_name / icon across renames.
     const fallbackByName = {};
     for (const category of ['collection', 'tools', 'public']) {
       for (const f of (FALLBACK_NAV_ITEMS[category] || [])) {
@@ -517,25 +527,19 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       }
     }
 
-    // Filter DB items: if the fallback has moved a page to a different
-    // category, remove the DB version so only the fallback version
-    // appears (in the correct section).
-    const filteredEnabled = enabled.filter(p => {
-      const fb = fallbackByName[p.page_name];
-      if (fb && fb._category !== p.category) return false; // moved
-      return true;
-    });
+    // Start with the DB rows that are explicitly enabled.
+    const enabled = pageConfigs
+      .filter(p => p.is_enabled !== false)
+      .sort((a, b) => (a.order_position ?? 0) - (b.order_position ?? 0));
 
     const dbNav = {
-      collection: filteredEnabled.filter(p => p.category === 'collection'),
-      tools: filteredEnabled.filter(p => p.category === 'tools'),
-      public: filteredEnabled.filter(p => p.category === 'public')
+      collection: enabled.filter(p => p.category === 'collection'),
+      tools: enabled.filter(p => p.category === 'tools'),
+      public: enabled.filter(p => p.category === 'public'),
     };
 
-    // Merge fallback items: update display_name for existing entries,
-    // add missing entries.
+    // Update display_name / icon from the fallback (canonical labels).
     for (const category of ['collection', 'tools', 'public']) {
-      const dbNames = new Set(dbNav[category].map(p => p.page_name));
       dbNav[category] = dbNav[category].map(p => {
         const fb = fallbackByName[p.page_name];
         if (fb && (fb.display_name !== p.display_name || fb.icon !== p.icon)) {
@@ -543,8 +547,16 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         }
         return p;
       });
+    }
+
+    // Seed: if a fallback item has NEVER been written to page_config
+    // (brand-new page that an admin hasn't touched yet), surface it so
+    // the sidebar isn't missing entries on a first deploy. Fallbacks
+    // are NOT used to override an existing DB row — meaning a disabled
+    // page stays disabled.
+    for (const category of ['collection', 'tools', 'public']) {
       for (const fallback of (FALLBACK_NAV_ITEMS[category] || [])) {
-        if (!dbNames.has(fallback.page_name)) {
+        if (!dbByName[fallback.page_name]) {
           dbNav[category].push(fallback);
         }
       }
@@ -1015,6 +1027,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       <CommandPalette />
       <FeedingAlertSystem user={user} enabled={user?.feeding_alerts_enabled !== false} />
       <GuestMockDisclaimer />
+      {user && <FeedbackWidget />}
     </>
     );
           }
