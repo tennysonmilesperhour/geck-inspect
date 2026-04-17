@@ -1,26 +1,42 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import { CareGuideSection } from '@/entities/all';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
   Heart,
   Home,
   Utensils,
   Hand,
-  Users,
   Info,
-  ExternalLink,
   BookOpen,
-  AlertCircle,
-  CheckCircle,
-  Thermometer,
-  Droplets,
-  Clock,
-  Scale
+  Scale,
+  Users,
+  Search,
+  ExternalLink,
+  ChevronRight,
+  Sparkles,
 } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
+import { CARE_CATEGORIES } from '@/data/care-guide';
+import ContentBlock from '@/components/careguide/ContentBlock';
+
+const CATEGORY_ICONS = {
+  overview: Info,
+  housing: Home,
+  feeding: Utensils,
+  handling: Hand,
+  health: Heart,
+  'life-stages': Scale,
+  breeding: Users,
+};
+
+const LEVEL_STYLES = {
+  beginner: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
+  intermediate: 'bg-sky-500/15 text-sky-300 border-sky-500/30',
+  advanced: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
+};
 
 const CARE_GUIDE_JSON_LD = {
   '@context': 'https://schema.org',
@@ -53,7 +69,7 @@ const CARE_GUIDE_JSON_LD = {
           name: 'How big of an enclosure does a crested gecko need?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'An adult crested gecko needs a minimum of an 18x18x24 inch vertical terrarium. Hatchlings should start in a smaller 6-qt tub or 12x12x18 inch juvenile enclosure to reduce stress and make feeding easier to monitor. Vertical height matters more than floor space because crested geckos are arboreal.',
+            text: 'An adult crested gecko needs a minimum of an 18x18x24 inch vertical terrarium. Hatchlings should start in a 6-qt tub or 12x12x18 inch juvenile enclosure to reduce stress. Vertical height matters more than floor space because crested geckos are arboreal.',
           },
         },
         {
@@ -61,7 +77,7 @@ const CARE_GUIDE_JSON_LD = {
           name: 'Do crested geckos need heat or UVB lighting?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Crested geckos thrive at room temperature (72-78°F) and usually do not need supplemental heat in most homes. They do not strictly require UVB lighting because complete crested gecko diets (CGD) contain vitamin D3, but low-level UVB is enriching and beneficial. Avoid temperatures above 82°F, which are stressful and potentially fatal.',
+            text: 'Crested geckos thrive at room temperature (72-78°F) and usually do not need supplemental heat. They do not strictly require UVB because complete CGD contains vitamin D3, but low-level UVB is enriching and beneficial. Avoid temperatures above 82°F.',
           },
         },
         {
@@ -69,7 +85,7 @@ const CARE_GUIDE_JSON_LD = {
           name: 'What do crested geckos eat?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'The primary diet is commercial Crested Gecko Diet (CGD) — a complete powdered food mixed with water. Popular brands include Pangea, Repashy, and Black Panther Zoological. Insects like dubia roaches or black soldier fly larvae can be offered 1-2 times per week as optional enrichment, but are not required. Fresh fruit should only be offered rarely as a treat.',
+            text: 'The primary diet is commercial Crested Gecko Diet (CGD) — a complete powdered food mixed with water. Popular brands include Pangea, Repashy, and Black Panther Zoological. Insects like dubia roaches or black soldier fly larvae can be offered 1–2 times per week as enrichment.',
           },
         },
         {
@@ -85,7 +101,7 @@ const CARE_GUIDE_JSON_LD = {
           name: 'Do crested geckos regrow their tails?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'No. Unlike leopard geckos and many other species, crested geckos do not regrow their tails once dropped. Tail loss (autotomy) is a predator-escape response and is permanent. Tailless crested geckos are extremely common in the hobby and live normal, healthy lives.',
+            text: 'No. Crested geckos do not regrow their tails once dropped. Tail loss is a predator-escape response and is permanent. Tailless crested geckos live normal, healthy lives.',
           },
         },
         {
@@ -93,7 +109,7 @@ const CARE_GUIDE_JSON_LD = {
           name: 'When can crested geckos be bred?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Females should not be bred until they reach 35-40 grams and at least 18 months of age to avoid calcium depletion and egg-binding. Males can breed earlier once they reach 25-30 grams of healthy weight. Never breed undersized or underage females.',
+            text: 'Females should not be bred until they reach 40 grams and at least 18 months of age to avoid calcium depletion and egg-binding. Males can breed earlier once they reach 25–30 grams at 12+ months.',
           },
         },
       ],
@@ -101,173 +117,233 @@ const CARE_GUIDE_JSON_LD = {
   ],
 };
 
-const categoryIcons = {
-  housing: <Home className="w-6 h-6" />,
-  feeding: <Utensils className="w-6 h-6" />,
-  handling: <Hand className="w-6 h-6" />,
-  breeding: <Users className="w-6 h-6" />,
-  health: <Heart className="w-6 h-6" />,
-  general: <Info className="w-6 h-6" />,
-};
-
-const categoryDescriptions = {
-  general: "Essential information for new gecko keepers and general care principles",
-  housing: "Proper terrarium setup, lighting, heating, and environmental requirements",
-  feeding: "Diet, feeding schedules, supplements, and nutrition guidelines",
-  handling: "Safe handling techniques, behavior understanding, and bonding",
-  health: "Health monitoring, common issues, veterinary care, and preventive measures",
-  breeding: "Breeding requirements, egg care, incubation, and hatchling care"
-};
-
-const categoryColors = {
-  general: "bg-blue-100 text-blue-800 border-blue-200",
-  housing: "bg-green-100 text-green-800 border-green-200",
-  feeding: "bg-orange-100 text-orange-800 border-orange-200",
-  handling: "bg-purple-100 text-purple-800 border-purple-200",
-  health: "bg-red-100 text-red-800 border-red-200",
-  breeding: "bg-pink-100 text-pink-800 border-pink-200"
-};
-
-// Safe content renderer using ReactMarkdown — no dangerouslySetInnerHTML,
-// no raw HTML injection. ReactMarkdown sanitizes by default.
-const ContentRenderer = ({ content }) => {
-  if (!content) return null;
-
+function CategoryNav({ categories, activeId, onSelect, sectionCounts }) {
   return (
-    <ReactMarkdown
-      className="prose prose-invert max-w-none prose-headings:text-slate-100 prose-p:text-slate-300 prose-li:text-slate-300 prose-strong:text-slate-100"
-      components={{
-        h1: ({ children }) => <h1 className="text-3xl font-bold text-slate-100 mt-10 mb-5">{children}</h1>,
-        h2: ({ children }) => (
-          <h2 className="text-2xl font-bold text-slate-100 mt-8 mb-4 flex items-center gap-2">
-            <span className="w-2 h-7 bg-emerald-500 rounded" />
-            {children}
-          </h2>
-        ),
-        h3: ({ children }) => (
-          <h3 className="text-xl font-semibold text-slate-100 mt-6 mb-3 flex items-center gap-2">
-            <span className="w-1 h-6 bg-emerald-500 rounded" />
-            {children}
-          </h3>
-        ),
-        p: ({ children }) => <p className="text-slate-300 leading-relaxed mb-4">{children}</p>,
-        li: ({ children }) => (
-          <li className="text-slate-300 mb-2 flex items-start gap-2">
-            <span className="w-2 h-2 bg-emerald-400 rounded-full mt-2 flex-shrink-0" />
-            <span>{children}</span>
-          </li>
-        ),
-        ul: ({ children }) => <ul className="space-y-2 my-4 ml-2 list-none">{children}</ul>,
-        strong: ({ children }) => <strong className="font-semibold text-slate-100">{children}</strong>,
-        em: ({ children }) => <em className="italic text-slate-300">{children}</em>,
-      }}
-    >
-      {content}
-    </ReactMarkdown>
+    <nav className="rounded-2xl border border-slate-800 bg-slate-900/60 p-2 sticky top-4">
+      <div className="px-3 pt-2 pb-1 text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+        Care Topics
+      </div>
+      <div className="space-y-1">
+        {categories.map((cat) => {
+          const Icon = CATEGORY_ICONS[cat.id] || Info;
+          const active = cat.id === activeId;
+          return (
+            <button
+              key={cat.id}
+              type="button"
+              onClick={() => onSelect(cat.id)}
+              className={`w-full flex items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors ${
+                active
+                  ? 'bg-emerald-600/15 border border-emerald-500/30 text-emerald-200'
+                  : 'border border-transparent text-slate-300 hover:bg-slate-800/60 hover:text-slate-100'
+              }`}
+            >
+              <Icon
+                className={`w-4 h-4 flex-shrink-0 ${active ? 'text-emerald-300' : 'text-slate-400'}`}
+              />
+              <span className="text-sm font-medium flex-1 truncate">{cat.label}</span>
+              {sectionCounts[cat.id] > 0 && (
+                <Badge
+                  variant="outline"
+                  className={`text-[10px] font-semibold ${
+                    active
+                      ? 'border-emerald-500/40 text-emerald-300'
+                      : 'border-slate-700 text-slate-400'
+                  }`}
+                >
+                  {sectionCounts[cat.id]}
+                </Badge>
+              )}
+            </button>
+          );
+        })}
+      </div>
+    </nav>
   );
-};
+}
 
-const QuickFactsBox = ({ category }) => {
-  const quickFacts = {
-    housing: [
-      { icon: <Scale className="w-4 h-4" />, label: "Minimum Tank Size", value: "20 gallons (tall)" },
-      { icon: <Thermometer className="w-4 h-4" />, label: "Temperature", value: "72-78°F" },
-      { icon: <Droplets className="w-4 h-4" />, label: "Humidity", value: "60-80%" },
-    ],
-    feeding: [
-      { icon: <Clock className="w-4 h-4" />, label: "Adult Feeding", value: "Every 2-3 days" },
-      { icon: <Utensils className="w-4 h-4" />, label: "Juvenile Feeding", value: "Daily" },
-      { icon: <Heart className="w-4 h-4" />, label: "Primary Diet", value: "Commercial CGD" },
-    ],
-    health: [
-      { icon: <CheckCircle className="w-4 h-4" />, label: "Vet Checkups", value: "Annual" },
-      { icon: <Scale className="w-4 h-4" />, label: "Weight Monitoring", value: "Monthly" },
-      { icon: <AlertCircle className="w-4 h-4" />, label: "Signs to Watch", value: "Lethargy, loss of appetite" },
-    ]
-  };
-
-  const facts = quickFacts[category];
-  if (!facts) return null;
-
+function QuickFactsGrid({ facts }) {
+  if (!facts || facts.length === 0) return null;
   return (
-    <div className="bg-slate-800/50 rounded-lg p-4 border border-slate-600">
-      <h4 className="font-semibold text-slate-200 mb-3 flex items-center gap-2">
-        <Info className="w-4 h-4 text-emerald-400" />
-        Quick Facts
-      </h4>
-      <div className="space-y-2">
-        {facts.map((fact, index) => (
-          <div key={index} className="flex items-center gap-3 text-sm">
-            <span className="text-emerald-400">{fact.icon}</span>
-            <span className="text-slate-400 min-w-0 flex-1">{fact.label}:</span>
-            <span className="text-slate-200 font-medium">{fact.value}</span>
+    <div className="rounded-2xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950/30 to-slate-900/60 p-5 md:p-6">
+      <div className="flex items-center gap-2 mb-4 text-emerald-300">
+        <Sparkles className="w-4 h-4" />
+        <span className="text-xs font-semibold uppercase tracking-wider">Quick facts</span>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2">
+        {facts.map((fact, i) => (
+          <div
+            key={i}
+            className="rounded-lg border border-slate-800 bg-slate-900/60 px-3 py-2.5"
+          >
+            <div className="text-[11px] uppercase tracking-wider text-slate-500 mb-0.5">
+              {fact.label}
+            </div>
+            <div className="text-sm font-semibold text-slate-100">{fact.value}</div>
           </div>
         ))}
       </div>
     </div>
   );
-};
+}
+
+function SectionCard({ section }) {
+  const levelClass = LEVEL_STYLES[section.level] || LEVEL_STYLES.beginner;
+  return (
+    <article
+      id={section.id}
+      className="scroll-mt-24 rounded-2xl border border-slate-800 bg-slate-900/40 p-6 md:p-8"
+    >
+      <header className="mb-5 flex flex-wrap items-center gap-3">
+        <h3 className="text-2xl md:text-[28px] font-bold text-slate-100">
+          {section.title}
+        </h3>
+        {section.level && (
+          <span
+            className={`inline-flex items-center rounded-full border px-2.5 py-0.5 text-[11px] font-semibold capitalize ${levelClass}`}
+          >
+            {section.level}
+          </span>
+        )}
+      </header>
+      <div className="space-y-5">
+        {section.body.map((block, i) => (
+          <ContentBlock key={i} block={block} />
+        ))}
+      </div>
+    </article>
+  );
+}
+
+function CommunitySection({ section }) {
+  if (!section) return null;
+  return (
+    <article className="rounded-2xl border border-slate-800 bg-slate-900/40 p-6 md:p-8">
+      <header className="mb-5 flex items-center gap-3">
+        <h3 className="text-2xl font-bold text-slate-100">{section.title}</h3>
+        <span className="inline-flex items-center rounded-full border border-slate-700 px-2.5 py-0.5 text-[11px] font-semibold text-slate-400">
+          Community
+        </span>
+      </header>
+      {section.image_urls?.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 mb-5">
+          {section.image_urls.map((url, i) => (
+            <img
+              key={i}
+              src={url}
+              alt={`${section.title} ${i + 1}`}
+              className="rounded-lg border border-slate-700 object-cover w-full h-44"
+              loading="lazy"
+            />
+          ))}
+        </div>
+      )}
+      <div className="prose prose-invert max-w-none prose-p:text-slate-300 prose-li:text-slate-300 prose-headings:text-slate-100 prose-strong:text-slate-100">
+        <ReactMarkdown>{section.content || ''}</ReactMarkdown>
+      </div>
+      {section.source_url && (
+        <a
+          href={section.source_url}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="mt-4 inline-flex items-center gap-1.5 text-sm text-emerald-400 hover:text-emerald-300"
+        >
+          <ExternalLink className="w-3.5 h-3.5" />
+          Source
+        </a>
+      )}
+    </article>
+  );
+}
 
 export default function CareGuidePage() {
-  const [sections, setSections] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [activeId, setActiveId] = useState(CARE_CATEGORIES[0].id);
+  const [dbSections, setDbSections] = useState([]);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
-    const fetchSections = async () => {
-      setIsLoading(true);
+    let cancelled = false;
+    (async () => {
       try {
-        const fetchedSections = await CareGuideSection.filter({ is_published: true });
-        // Sort sections by category order first, then by their specific order_position
-        const categoryOrder = ["general", "housing", "feeding", "handling", "health", "breeding"];
-        fetchedSections.sort((a, b) => {
-          const catAIndex = categoryOrder.indexOf(a.category);
-          const catBIndex = categoryOrder.indexOf(b.category);
-          if (catAIndex !== catBIndex) {
-            return catAIndex - catBIndex;
-          }
-          return a.order_position - b.order_position;
-        });
-        setSections(fetchedSections);
-        if (fetchedSections.length > 0) {
-          setSelectedCategory(fetchedSections[0].category);
-        }
-      } catch (error) {
-        console.error("Failed to load care guide sections:", error);
+        const fetched = await CareGuideSection.filter({ is_published: true });
+        if (!cancelled) setDbSections(Array.isArray(fetched) ? fetched : []);
+      } catch (err) {
+        console.error('CareGuide DB fetch failed:', err);
       }
-      setIsLoading(false);
+    })();
+    return () => {
+      cancelled = true;
     };
-    fetchSections();
   }, []);
 
-  const groupedSections = sections.reduce((acc, section) => {
-    (acc[section.category] = acc[section.category] || []).push(section);
-    return acc;
-  }, {});
+  // Map DB sections into categories so they show up alongside the
+  // authoritative local sections.
+  const dbByCategory = useMemo(() => {
+    const map = {};
+    for (const s of dbSections) {
+      const cat = (s.category || 'general').toLowerCase();
+      const normalized = cat === 'general' ? 'overview' : cat;
+      (map[normalized] ||= []).push(s);
+    }
+    for (const k of Object.keys(map)) {
+      map[k].sort((a, b) => (a.order_position || 0) - (b.order_position || 0));
+    }
+    return map;
+  }, [dbSections]);
 
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-slate-950 p-4 md:p-8">
-        <div className="max-w-6xl mx-auto text-center text-slate-400">
-          <div className="animate-pulse space-y-4">
-            <div className="h-8 bg-slate-800 rounded w-1/3 mx-auto"></div>
-            <div className="h-4 bg-slate-800 rounded w-2/3 mx-auto"></div>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-8">
-              {[...Array(6)].map((_, i) => (
-                <div key={i} className="h-32 bg-slate-800 rounded"></div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  }
+  const sectionCounts = useMemo(() => {
+    const counts = {};
+    CARE_CATEGORIES.forEach((c) => {
+      counts[c.id] = c.sections.length + (dbByCategory[c.id]?.length || 0);
+    });
+    return counts;
+  }, [dbByCategory]);
+
+  const activeCategory =
+    CARE_CATEGORIES.find((c) => c.id === activeId) || CARE_CATEGORIES[0];
+
+  // Search filtering: search across the active category's sections (local + DB).
+  const q = searchTerm.trim().toLowerCase();
+  const localSections = useMemo(() => {
+    if (!q) return activeCategory.sections;
+    return activeCategory.sections.filter((s) => {
+      if (s.title.toLowerCase().includes(q)) return true;
+      return s.body.some((block) => {
+        if (block.type === 'p') return block.text?.toLowerCase().includes(q);
+        if (block.type === 'ul' || block.type === 'ol')
+          return block.items.some((it) => it.toLowerCase().includes(q));
+        if (block.type === 'callout')
+          return (
+            block.title?.toLowerCase().includes(q) ||
+            block.items.some((it) => it.toLowerCase().includes(q))
+          );
+        if (block.type === 'dl')
+          return block.items.some(
+            (it) =>
+              it.term.toLowerCase().includes(q) ||
+              it.def.toLowerCase().includes(q),
+          );
+        if (block.type === 'table')
+          return block.rows.some((row) =>
+            row.some((c) => String(c).toLowerCase().includes(q)),
+          );
+        return false;
+      });
+    });
+  }, [activeCategory, q]);
+
+  const communitySections = dbByCategory[activeCategory.id] || [];
+
+  const totalLocalSections = useMemo(
+    () => CARE_CATEGORIES.reduce((n, c) => n + c.sections.length, 0),
+    [],
+  );
 
   return (
     <>
       <Seo
         title="Crested Gecko Care Guide"
-        description="Comprehensive crested gecko (Correlophus ciliatus) care guide — housing setups, ideal temperature and humidity ranges, diet including Repashy and Pangea, handling, common health issues, shedding, tail loss and regrowth, breeding season prep, egg incubation, and hatchling care. Everything a new or experienced keeper needs to know."
+        description="Comprehensive crested gecko (Correlophus ciliatus) care guide — housing setups, temperature and humidity ranges, diet with CGD brand comparison, handling, common health issues, shedding, tail loss, breeding readiness, egg incubation, and hatchling care."
         path="/CareGuide"
         imageAlt="Crested gecko care and husbandry reference"
         keywords={[
@@ -276,8 +352,8 @@ export default function CareGuidePage() {
           'crestie care sheet',
           'Correlophus ciliatus care',
           'crested gecko diet',
-          'Repashy crested gecko',
-          'Pangea crested gecko diet',
+          'Pangea CGD',
+          'Repashy CGD',
           'crested gecko humidity',
           'crested gecko temperature',
           'crested gecko housing',
@@ -285,141 +361,137 @@ export default function CareGuidePage() {
           'crested gecko shedding',
           'crested gecko tail loss',
           'crested gecko hatchling care',
+          'crested gecko breeding',
           'crested gecko lifespan',
-          'first time gecko keeper',
         ]}
         jsonLd={CARE_GUIDE_JSON_LD}
       />
-    <div className="min-h-screen bg-slate-950">
-      {/* Hero Section */}
-      <div className="bg-gradient-to-br from-emerald-900/30 to-slate-900 border-b border-slate-800">
-        <div className="max-w-6xl mx-auto p-6 md:p-8">
-          <div className="text-center space-y-4">
-            <div className="inline-flex items-center gap-3 bg-emerald-900/30 px-4 py-2 rounded-full border border-emerald-700/30">
-              <BookOpen className="w-5 h-5 text-emerald-400" />
-              <span className="text-emerald-300 font-medium">Complete Care Guide</span>
+      <div className="min-h-screen bg-slate-950 text-slate-100">
+        {/* Hero */}
+        <section className="relative border-b border-slate-800/50 bg-gradient-to-br from-emerald-950/40 via-slate-900 to-slate-950">
+          <div className="absolute inset-0 pointer-events-none overflow-hidden">
+            <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" />
+          </div>
+          <div className="relative max-w-6xl mx-auto px-6 py-12 md:py-16">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300 mb-5">
+              <BookOpen className="w-3.5 h-3.5" />
+              Care Reference
             </div>
-            <h1 className="text-4xl md:text-5xl font-bold text-slate-100 leading-tight">
-              Crested Gecko Care
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-[1.05] mb-4 bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent">
+              Crested Gecko Care Guide
             </h1>
-            <p className="text-xl text-slate-300 max-w-3xl mx-auto">
-              Everything you need to know to provide the best care for your crested gecko,
-              from basic housing to advanced breeding techniques.
+            <p className="text-lg md:text-xl text-slate-300 max-w-3xl leading-relaxed">
+              Every dimension of crested gecko husbandry, from your first
+              hatchling to long-term breeding projects. Housing, diet, handling,
+              health, life stages, breeding — written for beginners, deep enough
+              for keepers with dozens of animals.
             </p>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-6xl mx-auto p-4 md:p-8">
-        {/* Category Navigation */}
-        <div className="sticky top-4 z-10 mb-8">
-          <div className="bg-slate-900/80 backdrop-blur-lg rounded-xl border border-slate-700 p-4">
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-              {Object.keys(groupedSections).map((category) => (
-                <Button
-                  key={category}
-                  variant={selectedCategory === category ? "default" : "outline"}
-                  onClick={() => setSelectedCategory(category)}
-                  className={`h-auto p-4 flex flex-col items-center gap-2 transition-all duration-200 ${
-                    selectedCategory === category 
-                      ? 'bg-emerald-600 hover:bg-emerald-700 text-white border-emerald-600' 
-                      : 'bg-slate-800 border-slate-600 hover:bg-slate-700 text-slate-200'
-                  }`}
-                >
-                  {categoryIcons[category]}
-                  <span className="capitalize text-sm font-medium">{category}</span>
-                  <Badge variant="secondary" className="text-xs">
-                    {groupedSections[category].length}
-                  </Badge>
-                </Button>
-              ))}
+            <div className="mt-5 flex flex-wrap items-center gap-2 text-xs text-slate-400">
+              <span>{totalLocalSections} topics</span>
+              <span>·</span>
+              <span>7 categories</span>
+              <span>·</span>
+              <span>Updated by experienced keepers</span>
             </div>
           </div>
-        </div>
+        </section>
 
-        {/* Content */}
-        {Object.keys(groupedSections).map(category => (
-          <div key={category} className={`${selectedCategory === category ? 'block' : 'hidden'} space-y-6`}>
-            {/* Category Header */}
-            <div className="text-center space-y-4 mb-8">
-              <div className="flex items-center justify-center gap-3">
-                <div className={`p-3 rounded-xl ${categoryColors[category]} border`}>
-                  {categoryIcons[category]}
-                </div>
-                <div>
-                  <h2 className="text-3xl font-bold text-slate-100 capitalize">{category}</h2>
-                  <p className="text-slate-400 mt-1">{categoryDescriptions[category]}</p>
-                </div>
-              </div>
+        <section className="max-w-6xl mx-auto px-4 md:px-6 py-10">
+          <div className="mb-6">
+            <div className="relative max-w-xl">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+              <Input
+                placeholder="Search within this topic..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                className="pl-10 bg-slate-900 border-slate-700 text-slate-200 placeholder:text-slate-500"
+              />
             </div>
+          </div>
 
-            {/* Quick Facts */}
-            {['housing', 'feeding', 'health'].includes(category) && (
-              <QuickFactsBox category={category} />
-            )}
+          <div className="grid grid-cols-1 lg:grid-cols-[240px_1fr] gap-8">
+            {/* Nav */}
+            <aside className="lg:block">
+              <CategoryNav
+                categories={CARE_CATEGORIES}
+                activeId={activeId}
+                onSelect={(id) => {
+                  setActiveId(id);
+                  setSearchTerm('');
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                sectionCounts={sectionCounts}
+              />
+            </aside>
 
-            {/* Sections */}
-            <div className="space-y-8">
-              {groupedSections[category].map((section, index) => (
-                <Card key={section.id} className="bg-slate-900/50 border-slate-700 shadow-xl overflow-hidden">
-                  <CardHeader className="pb-4">
-                    <div className="flex items-start justify-between">
-                      <div className="flex-1">
-                        <CardTitle className="text-2xl text-slate-100 mb-2 flex items-center gap-3">
-                          <span className="flex items-center justify-center w-8 h-8 bg-emerald-600 text-white rounded-lg text-sm font-bold">
-                            {index + 1}
-                          </span>
-                          {section.title}
-                        </CardTitle>
-                        {section.last_updated && (
-                          <div className="text-sm text-slate-500 flex items-center gap-2 mt-2">
-                            <Clock className="w-4 h-4" />
-                            Updated: {new Date(section.last_updated).toLocaleDateString()}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </CardHeader>
-                  
-                  <CardContent className="pt-0">
-                    {section.image_urls && section.image_urls.length > 0 && (
-                      <div className="mb-6 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                        {section.image_urls.map((url, imgIndex) => (
-                          <div key={imgIndex} className="relative group">
-                            <img 
-                              src={url} 
-                              alt={`${section.title} image ${imgIndex + 1}`} 
-                              className="rounded-lg object-cover w-full h-48 border border-slate-600 group-hover:border-emerald-500 transition-colors duration-200" 
-                            />
-                            <div className="absolute inset-0 bg-black bg-opacity-0 group-hover:bg-opacity-10 rounded-lg transition-all duration-200" />
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                    
-                    <ContentRenderer content={section.content} title={section.title} />
-                    
-                    {section.source_url && (
-                      <div className="mt-6 pt-4 border-t border-slate-700">
-                        <a 
-                          href={section.source_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
-                          className="inline-flex items-center gap-2 text-sm text-emerald-400 hover:text-emerald-300 transition-colors"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                          View Source
-                        </a>
-                      </div>
-                    )}
+            {/* Content */}
+            <main className="min-w-0 space-y-6">
+              <header>
+                <div className="flex items-center gap-2 text-xs text-slate-500 mb-3">
+                  <span>Care Guide</span>
+                  <ChevronRight className="w-3 h-3" />
+                  <span className="text-slate-300">{activeCategory.label}</span>
+                </div>
+                <h2 className="text-3xl md:text-4xl font-bold text-slate-100 mb-2">
+                  {activeCategory.label}
+                </h2>
+                <p className="text-slate-400 text-lg">{activeCategory.tagline}</p>
+              </header>
+
+              {activeCategory.quickFacts?.length > 0 && (
+                <QuickFactsGrid facts={activeCategory.quickFacts} />
+              )}
+
+              {localSections.length === 0 && communitySections.length === 0 ? (
+                <Card className="bg-slate-900/40 border-slate-800">
+                  <CardContent className="py-10 text-center text-slate-400">
+                    {q ? 'No topics match your search.' : 'No content yet for this category.'}
                   </CardContent>
                 </Card>
-              ))}
-            </div>
+              ) : (
+                <div className="space-y-6">
+                  {localSections.map((s) => (
+                    <SectionCard key={s.id} section={s} />
+                  ))}
+                  {communitySections.map((s) => (
+                    <CommunitySection key={s.id || s.title} section={s} />
+                  ))}
+                </div>
+              )}
+
+              {/* Cross-guide CTAs */}
+              <div className="mt-10 rounded-2xl border border-slate-800 bg-slate-900/40 p-6">
+                <h3 className="text-lg font-semibold text-slate-100 mb-3">
+                  Keep learning
+                </h3>
+                <div className="flex flex-wrap gap-2">
+                  <a
+                    href="/MorphGuide"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/50 hover:text-emerald-200 px-3 py-1.5 text-sm text-slate-300 transition-colors"
+                  >
+                    Morph Guide
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </a>
+                  <a
+                    href="/GeneticsGuide"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/50 hover:text-emerald-200 px-3 py-1.5 text-sm text-slate-300 transition-colors"
+                  >
+                    Genetics Guide
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </a>
+                  <a
+                    href="/Gallery"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/50 hover:text-emerald-200 px-3 py-1.5 text-sm text-slate-300 transition-colors"
+                  >
+                    Community Gallery
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </a>
+                </div>
+              </div>
+            </main>
           </div>
-        ))}
+        </section>
       </div>
-    </div>
     </>
   );
 }

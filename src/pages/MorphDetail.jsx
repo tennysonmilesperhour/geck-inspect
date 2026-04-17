@@ -20,6 +20,12 @@ import {
   pickBestMorphRecord,
   KNOWN_MORPH_SLUGS,
 } from '@/lib/morphUtils';
+import {
+  getMorph,
+  MORPH_CATEGORIES,
+  INHERITANCE,
+  PRICE_TIERS,
+} from '@/data/morph-guide';
 
 const LOGO_URL = APP_LOGO_URL;
 
@@ -84,13 +90,28 @@ export default function MorphDetail() {
           (r) => morphSlug(r.morph_name) === slug
         );
         const best = pickBestMorphRecord(matches);
+        const localMorph = getMorph(slug);
 
-        if (!best) {
+        // Fall back to local dataset if no DB record exists — our
+        // local morph-guide.js is the authoritative reference and
+        // covers every KNOWN_MORPH_SLUGS entry.
+        if (!best && !localMorph) {
           setNotFound(true);
           setIsLoading(false);
           return;
         }
-        setRecord(best);
+
+        setRecord(
+          best ||
+            (localMorph && {
+              morph_name: localMorph.name,
+              description: localMorph.description,
+              key_features: localMorph.keyFeatures,
+              rarity: localMorph.rarity,
+              example_image_url: null,
+              breeding_info: null,
+            }),
+        );
 
         // Related morphs: pull a small set of other morphs for cross-linking
         const others = {};
@@ -164,7 +185,21 @@ export default function MorphDetail() {
   const heroImage = sanitizeImage(record.example_image_url) || communityImages[0]?.image_url || DEFAULT_GECKO_IMAGE;
   const rarityLabel = RARITY_LABELS[record.rarity] || record.rarity || 'Unknown';
   const rarityColor = RARITY_COLORS[record.rarity] || 'bg-slate-700/40 text-slate-300 border-slate-600';
-  const keyFeatures = Array.isArray(record.key_features) ? record.key_features : [];
+  // Prefer local dataset's key features over DB field so the
+  // authoritative reference wins even if DB has sparse data.
+  const localMorph = getMorph(slug);
+  const keyFeatures = localMorph?.keyFeatures?.length
+    ? localMorph.keyFeatures
+    : Array.isArray(record.key_features)
+    ? record.key_features
+    : [];
+  const description = localMorph?.description || record.description;
+  const inheritance = localMorph?.inheritance
+    ? INHERITANCE[localMorph.inheritance]
+    : null;
+  const category = localMorph?.category
+    ? MORPH_CATEGORIES.find((c) => c.id === localMorph.category)
+    : null;
 
   // Schema.org: treat each morph as both an Article and a DefinedTerm. The
   // DefinedTerm is what makes the morph name itself a structured piece of
@@ -259,6 +294,25 @@ export default function MorphDetail() {
               <Star className="w-3 h-3" />
               {rarityLabel}
             </span>
+            {category && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs font-semibold text-slate-300">
+                {category.label}
+              </span>
+            )}
+            {inheritance && (
+              <span
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${inheritance.color}`}
+              >
+                <Dna className="w-3 h-3" />
+                {inheritance.label}
+              </span>
+            )}
+            {localMorph?.priceTier && (
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs font-semibold text-slate-200">
+                {localMorph.priceTier}
+                {localMorph.priceRange ? ` · ${localMorph.priceRange}` : ''}
+              </span>
+            )}
           </div>
 
           {/* Hero image */}
@@ -273,18 +327,62 @@ export default function MorphDetail() {
             </div>
           )}
 
+          {/* Summary (from local dataset if available) */}
+          {localMorph?.summary && (
+            <p className="text-lg md:text-xl text-slate-200 leading-relaxed mb-8 border-l-4 border-emerald-500/50 pl-4">
+              {localMorph.summary}
+            </p>
+          )}
+
           {/* Description */}
-          {record.description && (
+          {description && (
             <section className="mb-10">
               <h2 className="text-2xl font-bold text-white mb-3 flex items-center gap-2">
                 <BookOpen className="w-5 h-5 text-emerald-400" />
                 About the {morphName} morph
               </h2>
               <div className="text-slate-300 leading-relaxed space-y-3">
-                {record.description.split(/\n+/).map((p, i) => (
+                {description.split(/\n+/).map((p, i) => (
                   <p key={i}>{p}</p>
                 ))}
               </div>
+            </section>
+          )}
+
+          {/* Genetics + pricing at-a-glance */}
+          {(inheritance || localMorph?.priceTier) && (
+            <section className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-4">
+              {inheritance && (
+                <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-emerald-300 mb-2">
+                    <Dna className="w-3.5 h-3.5" />
+                    Inheritance
+                  </div>
+                  <div className="text-white font-semibold text-lg mb-1.5">
+                    {inheritance.label}
+                  </div>
+                  <p className="text-sm text-slate-400 leading-relaxed">
+                    {inheritance.description}
+                  </p>
+                </div>
+              )}
+              {localMorph?.priceTier && (
+                <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-5">
+                  <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-emerald-300 mb-2">
+                    <Star className="w-3.5 h-3.5" />
+                    Price tier
+                  </div>
+                  <div className="text-white font-semibold text-lg mb-1.5">
+                    {PRICE_TIERS[localMorph.priceTier]?.label || localMorph.priceTier}
+                  </div>
+                  <p className="text-sm text-slate-400 leading-relaxed">
+                    {localMorph.priceRange
+                      ? `Typical adult range: ${localMorph.priceRange}. `
+                      : ''}
+                    {PRICE_TIERS[localMorph.priceTier]?.description || ''}
+                  </p>
+                </div>
+              )}
             </section>
           )}
 
@@ -309,7 +407,80 @@ export default function MorphDetail() {
             </section>
           )}
 
-          {/* Breeding info */}
+          {/* Visual identifiers */}
+          {localMorph?.visualIdentifiers?.length > 0 && (
+            <section className="mb-10">
+              <h2 className="text-2xl font-bold text-white mb-3 flex items-center gap-2">
+                <Star className="w-5 h-5 text-emerald-400" />
+                How to identify a {morphName}
+              </h2>
+              <ul className="space-y-2">
+                {localMorph.visualIdentifiers.map((v, i) => (
+                  <li
+                    key={i}
+                    className="flex items-start gap-3 text-slate-300 leading-relaxed"
+                  >
+                    <span className="flex-shrink-0 w-1.5 h-1.5 rounded-full bg-emerald-400 mt-2" />
+                    <span>{v}</span>
+                  </li>
+                ))}
+              </ul>
+            </section>
+          )}
+
+          {/* History */}
+          {localMorph?.history && (
+            <section className="mb-10">
+              <h2 className="text-2xl font-bold text-white mb-3 flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-emerald-400" />
+                Origin and history
+              </h2>
+              <p className="text-slate-300 leading-relaxed">{localMorph.history}</p>
+            </section>
+          )}
+
+          {/* Combines with */}
+          {localMorph?.combinesWith?.length > 0 && (
+            <section className="mb-10">
+              <h2 className="text-2xl font-bold text-white mb-3 flex items-center gap-2">
+                <GitBranch className="w-5 h-5 text-emerald-400" />
+                Combines with
+              </h2>
+              <p className="text-sm text-slate-400 mb-4">
+                Common and compatible morph pairings that produce {morphName}-based combos.
+              </p>
+              <div className="flex flex-wrap gap-2">
+                {localMorph.combinesWith.map((s) => {
+                  const target = getMorph(s);
+                  const name = target?.name || morphDisplayName(s);
+                  return (
+                    <Link
+                      key={s}
+                      to={`/MorphGuide/${s}`}
+                      className="rounded-full border border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500/50 hover:bg-emerald-500/10 px-3 py-1.5 text-sm text-emerald-200 hover:text-emerald-100 transition-colors"
+                    >
+                      {name}
+                    </Link>
+                  );
+                })}
+              </div>
+            </section>
+          )}
+
+          {/* Notes / warnings */}
+          {localMorph?.notes && (
+            <section className="mb-10">
+              <div className="rounded-xl border border-amber-500/30 bg-amber-500/5 p-5">
+                <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-amber-300 mb-2">
+                  <Sparkles className="w-3.5 h-3.5" />
+                  Breeder note
+                </div>
+                <p className="text-slate-200 leading-relaxed">{localMorph.notes}</p>
+              </div>
+            </section>
+          )}
+
+          {/* Breeding info (from DB) */}
           {record.breeding_info && (
             <section className="mb-10">
               <h2 className="text-2xl font-bold text-white mb-3 flex items-center gap-2">

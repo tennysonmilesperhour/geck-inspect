@@ -10,10 +10,16 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, BookOpen, Filter, Dna, Sparkles, ArrowRight } from 'lucide-react';
+import { Search, BookOpen, Filter, Dna, Sparkles, ArrowRight, Info } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
 import { morphSlug, pickBestMorphRecord } from '@/lib/morphUtils';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
+import {
+  MORPHS,
+  MORPH_CATEGORIES,
+  INHERITANCE,
+  RARITY,
+} from '@/data/morph-guide';
 
 const MORPH_GUIDE_JSON_LD = {
   '@context': 'https://schema.org',
@@ -21,7 +27,7 @@ const MORPH_GUIDE_JSON_LD = {
   name: 'Crested Gecko Morph Guide',
   url: 'https://geckinspect.com/MorphGuide',
   description:
-    'Reference guide for crested gecko morphs: Harlequin, Dalmatian, Pinstripe, Lilly White, Flame, Cream, Brindle, Tiger, Cappuccino, Patternless, and more. Detailed morph descriptions, rarity, key features, and breeding information.',
+    'Complete reference for crested gecko morphs covering base colors, color modifiers, pattern types, structural traits, and named combinations. Includes inheritance model (recessive / co-dominant / incomplete-dominant / polygenic / line-bred), rarity, price tier, and combination notes.',
   about: {
     '@type': 'Thing',
     name: 'Crested gecko',
@@ -30,24 +36,7 @@ const MORPH_GUIDE_JSON_LD = {
   },
 };
 
-const RARITY_LABELS = {
-  common: 'Common',
-  uncommon: 'Uncommon',
-  rare: 'Rare',
-  very_rare: 'Very Rare',
-};
-
-const RARITY_COLORS = {
-  common: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/30',
-  uncommon: 'bg-blue-500/15 text-blue-300 border-blue-500/30',
-  rare: 'bg-amber-500/15 text-amber-300 border-amber-500/30',
-  very_rare: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
-};
-
-const RARITY_ORDER = { common: 1, uncommon: 2, rare: 3, very_rare: 4 };
-
-// Sanitize example_image_url — the same heuristic MorphDetail uses to skip
-// known-broken externals (YouTube thumbs, Wikipedia rate limits, etc.).
+// Skip known-broken external images.
 function sanitizeImage(url) {
   if (!url) return null;
   if (
@@ -60,104 +49,187 @@ function sanitizeImage(url) {
   return url;
 }
 
-function MorphGridCard({ slug, name, rarity, description, heroImage }) {
-  const rarityLabel = RARITY_LABELS[rarity] || rarity || 'Unknown';
-  const rarityColor = RARITY_COLORS[rarity] || 'bg-slate-700/40 text-slate-300 border-slate-600';
+function MorphCard({ morph }) {
+  const rarity = RARITY[morph.rarity] || RARITY.common;
+  const inh = INHERITANCE[morph.inheritance];
   return (
     <Link
-      to={`/MorphGuide/${slug}`}
+      to={`/MorphGuide/${morph.slug}`}
       className="group rounded-2xl overflow-hidden border border-slate-800 bg-slate-900/60 hover:border-emerald-500/50 hover:bg-slate-900 transition-all duration-200 flex flex-col"
     >
       <div className="aspect-[4/3] bg-slate-800 relative overflow-hidden">
         <img
-          src={heroImage || DEFAULT_GECKO_IMAGE}
-          alt={`${name} crested gecko morph`}
+          src={morph.heroImage || DEFAULT_GECKO_IMAGE}
+          alt={`${morph.name} crested gecko morph`}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           loading="lazy"
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/80 via-transparent to-transparent" />
-        <div className="absolute top-3 left-3">
-          <span className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${rarityColor}`}>
-            {rarityLabel}
+        <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/10 to-transparent" />
+        <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
+          <span
+            className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${rarity.color}`}
+          >
+            {rarity.label}
           </span>
+          {morph.priceTier && (
+            <span className="inline-flex items-center rounded-full border border-slate-700 bg-slate-950/70 px-2 py-1 text-[11px] font-semibold text-slate-300">
+              {morph.priceTier}
+            </span>
+          )}
         </div>
       </div>
       <div className="flex-1 p-5 flex flex-col">
         <h3 className="text-lg font-bold text-white mb-2 group-hover:text-emerald-300 transition-colors">
-          {name}
+          {morph.name}
         </h3>
         <p className="text-sm text-slate-400 leading-relaxed line-clamp-3 flex-1">
-          {description || 'Learn about this crested gecko morph — description, key features, and breeding information.'}
+          {morph.summary || morph.description || 'Crested gecko morph reference.'}
         </p>
-        <div className="mt-4 flex items-center gap-1.5 text-xs font-semibold text-emerald-400 group-hover:text-emerald-300">
-          Read guide
-          <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          {inh && (
+            <span
+              className={`inline-flex items-center rounded-md border px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide ${inh.color}`}
+            >
+              {inh.short}
+            </span>
+          )}
+          {morph.priceRange && (
+            <span className="text-[11px] text-slate-500">{morph.priceRange}</span>
+          )}
+          <span className="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-emerald-400 group-hover:text-emerald-300">
+            Read
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+          </span>
         </div>
       </div>
     </Link>
   );
 }
 
+function InheritanceLegend() {
+  return (
+    <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
+      <div className="flex items-center gap-2 mb-3 text-slate-300">
+        <Dna className="w-4 h-4 text-emerald-400" />
+        <span className="text-xs font-semibold uppercase tracking-wider">Inheritance models</span>
+      </div>
+      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+        {Object.values(INHERITANCE).map((i) => (
+          <div
+            key={i.id}
+            className="flex items-start gap-2 rounded-lg border border-slate-800 bg-slate-900/40 p-2"
+          >
+            <span
+              className={`mt-0.5 inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-semibold uppercase ${i.color}`}
+            >
+              {i.short}
+            </span>
+            <div className="text-[11px] text-slate-400 leading-snug">
+              <span className="text-slate-200 font-semibold">{i.label}</span>
+              <br />
+              {i.description}
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function MorphGuidePage() {
-  const [allRecords, setAllRecords] = useState([]);
+  const [dbRecords, setDbRecords] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
+  const [category, setCategory] = useState('all');
+  const [inheritanceFilter, setInheritanceFilter] = useState('all');
   const [rarityFilter, setRarityFilter] = useState('all');
   const [sortBy, setSortBy] = useState('rarity_rare_first');
   const [isLoading, setIsLoading] = useState(true);
+  const [showLegend, setShowLegend] = useState(false);
 
   useEffect(() => {
     (async () => {
       setIsLoading(true);
       try {
         const data = await MorphGuide.list();
-        setAllRecords(Array.isArray(data) ? data : []);
+        setDbRecords(Array.isArray(data) ? data : []);
       } catch (err) {
         console.error('Error loading morph guide:', err);
-        setAllRecords([]);
+        setDbRecords([]);
       }
       setIsLoading(false);
     })();
   }, []);
 
-  // Dedupe by slug and pick the best record per morph (longest description,
-  // has valid image, etc.). Memoized so filter/sort don't re-dedupe.
-  const uniqueMorphs = useMemo(() => {
+  // Index DB records by slug for quick lookup.
+  const dbBySlug = useMemo(() => {
     const bySlug = {};
-    for (const r of allRecords) {
+    for (const r of dbRecords) {
       const slug = morphSlug(r.morph_name);
       if (!slug) continue;
       (bySlug[slug] ||= []).push(r);
     }
-    return Object.entries(bySlug)
-      .map(([slug, records]) => {
-        const best = pickBestMorphRecord(records);
-        return {
-          slug,
-          name: best.morph_name,
-          rarity: best.rarity,
-          description: best.description,
-          heroImage: sanitizeImage(best.example_image_url),
-          keyFeatures: best.key_features,
-        };
-      })
-      .filter((m) => m.name);
-  }, [allRecords]);
+    const out = {};
+    for (const [slug, records] of Object.entries(bySlug)) {
+      out[slug] = pickBestMorphRecord(records);
+    }
+    return out;
+  }, [dbRecords]);
 
-  const filteredAndSorted = useMemo(() => {
-    let list = [...uniqueMorphs];
+  // Merge local + DB. Local morph-guide entries are the source of truth.
+  // Any DB record not covered by the local dataset is appended as-is so
+  // community additions still show up.
+  const allMorphs = useMemo(() => {
+    const localSlugs = new Set(MORPHS.map((m) => m.slug));
+    const merged = MORPHS.map((m) => {
+      const dbMatch = dbBySlug[m.slug];
+      return {
+        ...m,
+        heroImage: sanitizeImage(dbMatch?.example_image_url),
+        dbDescription: dbMatch?.description,
+        keyFeaturesDb: dbMatch?.key_features,
+      };
+    });
+    for (const [slug, rec] of Object.entries(dbBySlug)) {
+      if (localSlugs.has(slug)) continue;
+      merged.push({
+        slug,
+        name: rec.morph_name,
+        category: 'combo',
+        inheritance: 'line-bred',
+        rarity: rec.rarity || 'uncommon',
+        summary: rec.description?.slice(0, 180),
+        description: rec.description,
+        keyFeatures: rec.key_features || [],
+        heroImage: sanitizeImage(rec.example_image_url),
+        priceTier: null,
+        priceRange: null,
+      });
+    }
+    return merged;
+  }, [dbBySlug]);
 
+  const filtered = useMemo(() => {
+    let list = [...allMorphs];
+
+    if (category !== 'all') {
+      list = list.filter((m) => m.category === category);
+    }
+    if (inheritanceFilter !== 'all') {
+      list = list.filter((m) => m.inheritance === inheritanceFilter);
+    }
+    if (rarityFilter !== 'all') {
+      list = list.filter((m) => m.rarity === rarityFilter);
+    }
     if (searchTerm) {
       const q = searchTerm.toLowerCase();
       list = list.filter(
         (m) =>
           m.name.toLowerCase().includes(q) ||
+          m.aliases?.some((a) => a.toLowerCase().includes(q)) ||
+          (m.summary || '').toLowerCase().includes(q) ||
           (m.description || '').toLowerCase().includes(q) ||
-          (m.keyFeatures || []).some((f) => f.toLowerCase().includes(q))
+          (m.keyFeatures || []).some((f) => f.toLowerCase().includes(q)),
       );
-    }
-
-    if (rarityFilter !== 'all') {
-      list = list.filter((m) => m.rarity === rarityFilter);
     }
 
     list.sort((a, b) => {
@@ -168,40 +240,51 @@ export default function MorphGuidePage() {
           return b.name.localeCompare(a.name);
         case 'rarity_common_first':
           return (
-            (RARITY_ORDER[a.rarity] || 5) - (RARITY_ORDER[b.rarity] || 5) ||
+            (RARITY[a.rarity]?.order || 5) - (RARITY[b.rarity]?.order || 5) ||
+            a.name.localeCompare(b.name)
+          );
+        case 'price_low_first':
+          return (
+            (a.priceTier?.length || 9) - (b.priceTier?.length || 9) ||
+            a.name.localeCompare(b.name)
+          );
+        case 'price_high_first':
+          return (
+            (b.priceTier?.length || 0) - (a.priceTier?.length || 0) ||
             a.name.localeCompare(b.name)
           );
         case 'rarity_rare_first':
         default:
           return (
-            (RARITY_ORDER[b.rarity] || 0) - (RARITY_ORDER[a.rarity] || 0) ||
+            (RARITY[b.rarity]?.order || 0) - (RARITY[a.rarity]?.order || 0) ||
             a.name.localeCompare(b.name)
           );
       }
     });
 
     return list;
-  }, [uniqueMorphs, searchTerm, rarityFilter, sortBy]);
+  }, [allMorphs, category, inheritanceFilter, rarityFilter, searchTerm, sortBy]);
 
-  const rarityCounts = useMemo(() => {
-    const c = { common: 0, uncommon: 0, rare: 0, very_rare: 0 };
-    uniqueMorphs.forEach((m) => {
-      if (c[m.rarity] != null) c[m.rarity]++;
-    });
+  const categoryCounts = useMemo(() => {
+    const c = { all: allMorphs.length };
+    for (const cat of MORPH_CATEGORIES) {
+      c[cat.id] = allMorphs.filter((m) => m.category === cat.id).length;
+    }
     return c;
-  }, [uniqueMorphs]);
+  }, [allMorphs]);
 
   return (
     <>
       <Seo
         title="Crested Gecko Morph Guide"
-        description="Complete visual reference for every major crested gecko (Correlophus ciliatus) morph — Harlequin, Extreme Harlequin, Dalmatian, Pinstripe, Lilly White, Flame, Cream, Brindle, Tiger, Cappuccino, Frappuccino, Soft Scale, Patternless, Axanthic, and more. Rarity ratings, key identifying features, breeding information, and example photos for every proven morph and polygenic trait."
+        description="Complete reference for crested gecko (Correlophus ciliatus) morphs — base colors, color modifiers, pattern types, structural traits, and named combinations. Inheritance models (recessive, co-dominant, incomplete-dominant, polygenic, line-bred), rarity, price tier, and combination notes for Harlequin, Pinstripe, Dalmatian, Lilly White, Axanthic, Cappuccino, Soft Scale, White Wall, and more."
         path="/MorphGuide"
         imageAlt="Crested gecko morph reference guide"
         keywords={[
           'crested gecko morph guide',
           'gecko morph list',
           'crestie morphs',
+          'crested gecko genetics',
           'harlequin crested gecko',
           'extreme harlequin',
           'pinstripe gecko',
@@ -224,7 +307,11 @@ export default function MorphGuidePage() {
           'yellow base gecko',
           'olive gecko',
           'chocolate gecko',
+          'lavender gecko',
           'crested gecko rarity',
+          'crested gecko pricing',
+          'recessive crested gecko morph',
+          'incomplete dominant crested gecko',
         ]}
         jsonLd={MORPH_GUIDE_JSON_LD}
       />
@@ -243,22 +330,60 @@ export default function MorphGuidePage() {
               Crested Gecko Morph Guide
             </h1>
             <p className="text-lg md:text-xl text-slate-300 max-w-3xl leading-relaxed">
-              Every major crested gecko morph in one place. Descriptions, rarity,
-              key identifying features, and breeding information for Harlequin,
-              Pinstripe, Dalmatian, Lilly White, Flame, Cappuccino, Brindle,
-              Tiger, Patternless, and more.
+              Every major crested gecko morph, with the genetics, rarity, and
+              price tier that matter. Pattern, structure, base color, color
+              modifier, and named combinations — all in one place, structured
+              for keepers and breeders.
             </p>
           </div>
         </section>
 
-        <section className="max-w-6xl mx-auto px-6 py-10">
+        <section className="max-w-6xl mx-auto px-4 md:px-6 py-10 space-y-6">
+          {/* Category tabs */}
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setCategory('all')}
+              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ${
+                category === 'all'
+                  ? 'border-emerald-500/50 bg-emerald-600/20 text-emerald-200'
+                  : 'border-slate-700 bg-slate-900 text-slate-300 hover:border-emerald-500/30'
+              }`}
+            >
+              All
+              <span className="text-[10px] opacity-75">{categoryCounts.all}</span>
+            </button>
+            {MORPH_CATEGORIES.map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setCategory(cat.id)}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ${
+                  category === cat.id
+                    ? 'border-emerald-500/50 bg-emerald-600/20 text-emerald-200'
+                    : 'border-slate-700 bg-slate-900 text-slate-300 hover:border-emerald-500/30'
+                }`}
+              >
+                {cat.label}
+                <span className="text-[10px] opacity-75">{categoryCounts[cat.id] || 0}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* Active category blurb */}
+          {category !== 'all' && (
+            <p className="text-sm text-slate-400 -mt-2">
+              {MORPH_CATEGORIES.find((c) => c.id === category)?.blurb}
+            </p>
+          )}
+
           {/* Filters */}
-          <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-5 mb-8">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="relative flex-1">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <Input
-                  placeholder="Search morphs, features, or descriptions..."
+                  placeholder="Search morphs, features, or aliases..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   className="pl-10 bg-slate-950 border-slate-700 text-slate-200 placeholder:text-slate-500"
@@ -267,19 +392,32 @@ export default function MorphGuidePage() {
               <div className="flex gap-3 flex-wrap">
                 <div className="flex items-center gap-2">
                   <Filter className="w-4 h-4 text-slate-500" />
-                  <Select value={rarityFilter} onValueChange={setRarityFilter}>
-                    <SelectTrigger className="w-36 bg-slate-950 border-slate-700 text-slate-200">
-                      <SelectValue placeholder="Rarity" />
+                  <Select value={inheritanceFilter} onValueChange={setInheritanceFilter}>
+                    <SelectTrigger className="w-44 bg-slate-950 border-slate-700 text-slate-200">
+                      <SelectValue placeholder="Genetics" />
                     </SelectTrigger>
                     <SelectContent className="bg-slate-900 border-slate-700 text-slate-200">
-                      <SelectItem value="all">All Rarities</SelectItem>
-                      <SelectItem value="common">Common</SelectItem>
-                      <SelectItem value="uncommon">Uncommon</SelectItem>
-                      <SelectItem value="rare">Rare</SelectItem>
-                      <SelectItem value="very_rare">Very Rare</SelectItem>
+                      <SelectItem value="all">All genetics</SelectItem>
+                      {Object.values(INHERITANCE).map((i) => (
+                        <SelectItem key={i.id} value={i.id}>
+                          {i.label}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
+                <Select value={rarityFilter} onValueChange={setRarityFilter}>
+                  <SelectTrigger className="w-36 bg-slate-950 border-slate-700 text-slate-200">
+                    <SelectValue placeholder="Rarity" />
+                  </SelectTrigger>
+                  <SelectContent className="bg-slate-900 border-slate-700 text-slate-200">
+                    <SelectItem value="all">All rarities</SelectItem>
+                    <SelectItem value="common">Common</SelectItem>
+                    <SelectItem value="uncommon">Uncommon</SelectItem>
+                    <SelectItem value="rare">Rare</SelectItem>
+                    <SelectItem value="very_rare">Very rare</SelectItem>
+                  </SelectContent>
+                </Select>
                 <Select value={sortBy} onValueChange={setSortBy}>
                   <SelectTrigger className="w-44 bg-slate-950 border-slate-700 text-slate-200">
                     <SelectValue placeholder="Sort by" />
@@ -287,34 +425,38 @@ export default function MorphGuidePage() {
                   <SelectContent className="bg-slate-900 border-slate-700 text-slate-200">
                     <SelectItem value="rarity_rare_first">Rarest first</SelectItem>
                     <SelectItem value="rarity_common_first">Common first</SelectItem>
-                    <SelectItem value="alphabetical">A - Z</SelectItem>
-                    <SelectItem value="alphabetical_desc">Z - A</SelectItem>
+                    <SelectItem value="price_high_first">Price high to low</SelectItem>
+                    <SelectItem value="price_low_first">Price low to high</SelectItem>
+                    <SelectItem value="alphabetical">A–Z</SelectItem>
+                    <SelectItem value="alphabetical_desc">Z–A</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
             </div>
 
-            {/* Stats strip */}
-            <div className="mt-4 pt-4 border-t border-slate-800 flex flex-wrap items-center gap-4 text-xs">
+            <div className="mt-4 pt-4 border-t border-slate-800 flex flex-wrap items-center gap-3 text-xs">
               <span className="text-slate-400">
-                <span className="text-white font-semibold">{uniqueMorphs.length}</span> morphs in guide
+                <span className="text-white font-semibold">{filtered.length}</span> morphs shown
               </span>
               <span className="text-slate-500">·</span>
               <span className="text-slate-400">
-                Showing <span className="text-white font-semibold">{filteredAndSorted.length}</span>
+                <span className="text-white font-semibold">{allMorphs.length}</span> total in guide
               </span>
-              <span className="text-slate-500">·</span>
-              {['common', 'uncommon', 'rare', 'very_rare'].map((r) =>
-                rarityCounts[r] > 0 ? (
-                  <span
-                    key={r}
-                    className={`inline-flex items-center rounded-full border px-2 py-0.5 ${RARITY_COLORS[r]}`}
-                  >
-                    {RARITY_LABELS[r]}: {rarityCounts[r]}
-                  </span>
-                ) : null
-              )}
+              <button
+                type="button"
+                onClick={() => setShowLegend((x) => !x)}
+                className="ml-auto inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 text-xs font-semibold"
+              >
+                <Info className="w-3.5 h-3.5" />
+                {showLegend ? 'Hide' : 'Show'} genetics key
+              </button>
             </div>
+
+            {showLegend && (
+              <div className="mt-4">
+                <InheritanceLegend />
+              </div>
+            )}
           </div>
 
           {/* Grid */}
@@ -327,34 +469,36 @@ export default function MorphGuidePage() {
                 />
               ))}
             </div>
-          ) : filteredAndSorted.length === 0 ? (
+          ) : filtered.length === 0 ? (
             <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-12 text-center">
               <Dna className="w-12 h-12 text-slate-600 mx-auto mb-4" />
               <p className="text-slate-300 font-semibold mb-1">No morphs match those filters</p>
               <p className="text-slate-500 text-sm mb-5">
-                Try clearing the search or rarity filter.
+                Try clearing a filter or broadening your search.
               </p>
               <Button
                 variant="outline"
                 onClick={() => {
                   setSearchTerm('');
+                  setCategory('all');
+                  setInheritanceFilter('all');
                   setRarityFilter('all');
                 }}
                 className="bg-white text-slate-900 hover:bg-slate-100 hover:text-slate-900 border-white/40"
               >
-                Clear filters
+                Clear all filters
               </Button>
             </div>
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-              {filteredAndSorted.map((m) => (
-                <MorphGridCard key={m.slug} {...m} />
+              {filtered.map((m) => (
+                <MorphCard key={m.slug} morph={m} />
               ))}
             </div>
           )}
 
           {/* Related guides CTA */}
-          <div className="mt-16 rounded-2xl border border-slate-800 bg-slate-900/40 p-6 md:p-8">
+          <div className="mt-10 rounded-2xl border border-slate-800 bg-slate-900/40 p-6 md:p-8">
             <div className="flex items-center gap-2 mb-3 text-emerald-300">
               <Sparkles className="w-4 h-4" />
               <span className="text-xs font-semibold uppercase tracking-wider">Keep reading</span>
@@ -363,9 +507,9 @@ export default function MorphGuidePage() {
               Everything else you need to know about crested geckos
             </h2>
             <p className="text-slate-400 mb-6 max-w-2xl">
-              Morphs are just one piece of the hobby. Dive into care basics,
-              genetics, and the community gallery to see these morphs in real
-              animals from real keepers.
+              Morphs are one piece of the hobby. Dive into husbandry, the genetics
+              behind these traits, and the community gallery to see each morph in
+              real animals from real keepers.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link to="/CareGuide">
