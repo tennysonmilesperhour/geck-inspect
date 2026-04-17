@@ -464,6 +464,33 @@ html, body, #root {
             box-shadow: 0 0 25px rgba(134, 239, 172, 0.4), inset 0 0 15px rgba(134, 239, 172, 0.15) !important;
           }
 
+          /* Mobile sidebar glass theme: override shared nav/section
+             colors so they stay readable on the dark emerald backdrop
+             without affecting the desktop sidebar. */
+          .mobile-sidebar-glass {
+            box-shadow:
+              0 8px 32px rgba(0, 0, 0, 0.45),
+              inset 0 1px 0 rgba(255, 255, 255, 0.06);
+          }
+
+          .mobile-sidebar-glass .sidebar-nav-item {
+            color: rgb(209 250 229 / 0.85);
+          }
+
+          .mobile-sidebar-glass .sidebar-nav-item:not(.active):hover {
+            color: var(--gecko-primary) !important;
+          }
+
+          /* Section titles ("Collection", "Tools", "Admin") */
+          .mobile-sidebar-glass .text-sage-700 {
+            color: rgb(110 231 183 / 0.9) !important;
+          }
+
+          /* "Login" hint badge on auth-gated nav items */
+          .mobile-sidebar-glass .text-sage-500 {
+            color: rgb(167 243 208 / 0.7) !important;
+          }
+
           .gecko-progress {
             background: rgba(4, 120, 87, 0.3);
             border-radius: 8px;

@@ -622,9 +622,9 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       </a>
       <div className="flex h-screen bg-gray-100 dark:bg-gray-900 font-sans app-container-outline">
         {/* Mobile Sidebar */}
-        <Sidebar className="border-r border-sage-300 bg-sage-200/90 backdrop-blur-sm md:hidden z-50">
-          <SidebarHeader className="border-b border-sage-300 p-6">
-          <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-sage-300 hover:bg-sage-100 transition-colors duration-200">
+        <Sidebar className="mobile-sidebar-glass border-r border-emerald-800/40 bg-emerald-950/60 backdrop-blur-xl backdrop-saturate-150 md:hidden z-50">
+          <SidebarHeader className="border-b border-emerald-800/40 p-6">
+          <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-emerald-700/40 hover:bg-emerald-800/30 transition-colors duration-200">
           {appLogo && (
             <img 
               src={appLogo}
@@ -638,7 +638,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
               }}
             />
           )}
-              <span className="text-lg font-bold text-sage-800" style={{fontFamily: "'Righteous', cursive", letterSpacing: '0.03em'}}>Geck Inspect</span>
+              <span className="text-lg font-bold text-emerald-100" style={{fontFamily: "'Righteous', cursive", letterSpacing: '0.03em'}}>Geck Inspect</span>
             </Link>
           </SidebarHeader>
 
@@ -656,8 +656,8 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                           />
                     </Link>
                   <div className="flex-1">
-                    <Link to={createPageUrl('MyProfile')} className="font-medium text-sage-800 text-sm">{user.full_name}</Link>
-                    <p className="text-xs text-sage-600">{user.email}</p>
+                    <Link to={createPageUrl('MyProfile')} className="font-medium text-emerald-100 text-sm">{user.full_name}</Link>
+                    <p className="text-xs text-emerald-300/80">{user.email}</p>
                   </div>
                 </div>
               ) : (
@@ -668,7 +668,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                     <UserPlus className="w-4 h-4 mr-2" />
                     Sign Up / Login
                   </Button>
-                  <div className="text-xs text-sage-500 text-center">
+                  <div className="text-xs text-emerald-300/70 text-center">
                     Create an account to save your work and manage your gecko collection
                   </div>
                 </div>
