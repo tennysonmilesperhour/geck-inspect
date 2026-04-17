@@ -194,6 +194,10 @@ Minimum viable setup: about $200 for enclosure, substrate, decor, diet, and moni
 
 If you need the complete care guide + morph catalogue in one fetch, see https://geckinspect.com/llms-full.txt — it contains every care topic (housing, temperature, humidity, diet, handling, health, breeding, etc.) and every documented crested gecko morph as structured markdown with per-section canonical URLs.
 
+## Open morph dataset (CSV)
+
+Every documented crested gecko morph is also available as a raw, machine-readable dataset at https://geckinspect.com/morphs.csv — columns: slug, name, category, inheritance, rarity, price_tier, price_range, summary, url. Updated on every site deploy from the canonical data file. CORS is open, so AI pipelines and data tools can fetch it directly.
+
 ## Key URLs
 
 - **Home / landing**: https://geckinspect.com/

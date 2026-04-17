@@ -109,6 +109,17 @@ export const STATIC_ROUTES = [
     },
   },
   {
+    path: '/MarketplaceVerification',
+    priority: 0.6,
+    changefreq: 'yearly',
+    lastmod: '2026-04-17',
+    meta: {
+      title: 'Marketplace Verification & Trust — Geck Inspect',
+      description:
+        "How Geck Inspect verifies sellers on the crested gecko marketplace, the Zero's Geckos shipping partnership, buyer protections, and what to check before buying.",
+    },
+  },
+  {
     path: '/PrivacyPolicy',
     priority: 0.2,
     changefreq: 'yearly',

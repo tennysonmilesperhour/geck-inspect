@@ -1,0 +1,51 @@
+<!doctype html>
+<!--
+  Static 404 page.
+
+  Vercel serves this automatically for paths that miss every rule in
+  vercel.json, but because the SPA rewrites every path to /index.html,
+  this page is rarely reached. It ships anyway as a belt-and-braces
+  fallback, and because Googlebot / ClaudeBot may fetch /404.html
+  directly to sanity-check the site's 404 handling.
+
+  The <meta name="robots" content="noindex, nofollow"> here is the
+  belt; the X-Robots-Tag: noindex header set by vercel.json on unknown
+  paths would be the braces (tracked as a follow-up to enumerate
+  known routes).
+-->
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Page not found — Geck Inspect</title>
+    <meta name="description" content="The page you requested could not be found on Geck Inspect." />
+    <meta name="robots" content="noindex, nofollow" />
+    <link rel="canonical" href="https://geckinspect.com/" />
+    <style>
+      body{font-family:Inter,system-ui,sans-serif;background:#020617;color:#e2e8f0;min-height:100vh;margin:0;display:flex;align-items:center;justify-content:center;padding:32px 16px;}
+      main{max-width:560px;text-align:center;}
+      h1{font-size:4rem;color:#334155;margin:0 0 8px;font-weight:300;}
+      h2{color:#f1f5f9;font-size:1.5rem;margin:0 0 16px;}
+      p{color:#94a3b8;line-height:1.6;margin:0 0 24px;}
+      nav{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;}
+      a{color:#cbd5e1;border:1px solid #334155;background:#0f172a;padding:6px 12px;border-radius:9999px;text-decoration:none;font-size:0.875rem;}
+      a:hover{border-color:#10b981;color:#a7f3d0;}
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>404</h1>
+      <h2>Page not found</h2>
+      <p>That page does not exist on Geck Inspect. Try one of the links below to find what you're looking for.</p>
+      <nav>
+        <a href="/">Home</a>
+        <a href="/MorphGuide">Morph Guide</a>
+        <a href="/CareGuide">Care Guide</a>
+        <a href="/GeneticsGuide">Genetics</a>
+        <a href="/GeneticCalculatorTool">Calculator</a>
+        <a href="/About">About</a>
+        <a href="/Contact">Contact</a>
+      </nav>
+    </main>
+  </body>
+</html>

@@ -29,6 +29,10 @@ const GENETICS_GUIDE_JSON_LD = [
     dateModified: GENETICS_GUIDE_MODIFIED,
     author: EDITORIAL,
     reviewedBy: EDITORIAL,
+    speakable: {
+      '@type': 'SpeakableSpecification',
+      cssSelector: ['h1', 'article p:first-of-type'],
+    },
     inLanguage: 'en-US',
     about: [
       {

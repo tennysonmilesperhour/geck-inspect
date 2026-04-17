@@ -5,10 +5,28 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
 
-    <!-- Fonts: preconnect + non-blocking load (moved from CSS @import) -->
+    <!-- Fonts: preconnect + async CSS swap so the stylesheet doesn't
+         block first paint (CWV / LCP win). The `media="print"` trick
+         flips the media query back to `all` as soon as the CSS
+         download finishes; until then the font falls back to
+         system-ui, which matches Inter's metrics closely enough that
+         CLS stays near zero. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Righteous&family=Inter:wght@300;400;500;600;700&display=swap" />
+    <link
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Righteous&family=Inter:wght@300;400;500;600;700&display=swap"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Righteous&family=Inter:wght@300;400;500;600;700&display=swap"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Righteous&family=Inter:wght@300;400;500;600;700&display=swap" />
+    </noscript>
 
     <!-- Primary SEO -->
     <title>Geck Inspect — Crested Gecko Collection, Breeding &amp; Community Platform</title>

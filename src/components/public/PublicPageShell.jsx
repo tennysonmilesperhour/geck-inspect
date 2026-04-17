@@ -69,6 +69,7 @@ export function PublicFooter() {
           <ul className="space-y-2 text-slate-400">
             <li><Link to="/About" className="hover:text-white">About</Link></li>
             <li><Link to="/Contact" className="hover:text-white">Contact</Link></li>
+            <li><Link to="/MarketplaceVerification" className="hover:text-white">Marketplace Trust</Link></li>
             <li><Link to="/Terms" className="hover:text-white">Terms</Link></li>
             <li><Link to="/PrivacyPolicy" className="hover:text-white">Privacy</Link></li>
           </ul>

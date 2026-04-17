@@ -21,21 +21,34 @@ import {
   INHERITANCE,
   RARITY,
 } from '@/data/morph-guide';
+import RotatingMorphImage from '@/components/morphguide/RotatingMorphImage';
 
-const MORPH_GUIDE_JSON_LD = {
-  '@context': 'https://schema.org',
-  '@type': 'CollectionPage',
-  name: 'Crested Gecko Morph Guide',
-  url: 'https://geckinspect.com/MorphGuide',
-  description:
-    'Complete reference for crested gecko morphs covering base colors, color modifiers, pattern types, structural traits, and named combinations. Includes inheritance model (recessive / co-dominant / incomplete-dominant / polygenic / line-bred), rarity, price tier, and combination notes.',
-  about: {
-    '@type': 'Thing',
-    name: 'Crested gecko',
-    alternateName: 'Correlophus ciliatus',
-    sameAs: 'https://en.wikipedia.org/wiki/Crested_gecko',
+const MORPH_GUIDE_JSON_LD = [
+  {
+    '@type': 'CollectionPage',
+    '@id': 'https://geckinspect.com/MorphGuide#collection',
+    name: 'Crested Gecko Morph Guide',
+    url: 'https://geckinspect.com/MorphGuide',
+    description:
+      'Complete reference for crested gecko morphs covering base colors, color modifiers, pattern types, structural traits, and named combinations. Includes inheritance model (recessive / co-dominant / incomplete-dominant / polygenic / line-bred), rarity, price tier, and combination notes.',
+    about: {
+      '@type': 'Thing',
+      name: 'Crested gecko',
+      alternateName: 'Correlophus ciliatus',
+      sameAs: 'https://en.wikipedia.org/wiki/Crested_gecko',
+    },
+    isPartOf: { '@id': 'https://geckinspect.com/#website' },
+    publisher: { '@id': 'https://geckinspect.com/#organization' },
   },
-};
+  {
+    '@type': 'BreadcrumbList',
+    '@id': 'https://geckinspect.com/MorphGuide#breadcrumbs',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://geckinspect.com/' },
+      { '@type': 'ListItem', position: 2, name: 'Morph Guide', item: 'https://geckinspect.com/MorphGuide' },
+    ],
+  },
+];
 
 // Skip known-broken external images.
 function sanitizeImage(url) {
@@ -53,17 +66,19 @@ function sanitizeImage(url) {
 function MorphCard({ morph }) {
   const rarity = RARITY[morph.rarity] || RARITY.common;
   const inh = INHERITANCE[morph.inheritance];
+  const images = morph.heroImages && morph.heroImages.length > 0
+    ? morph.heroImages
+    : [morph.heroImage || DEFAULT_GECKO_IMAGE];
   return (
     <Link
       to={`/MorphGuide/${morph.slug}`}
       className="group rounded-2xl overflow-hidden border border-slate-800 bg-slate-900/60 hover:border-emerald-500/50 hover:bg-slate-900 transition-all duration-200 flex flex-col"
     >
       <div className="aspect-[4/3] bg-slate-800 relative overflow-hidden">
-        <img
-          src={morph.heroImage || DEFAULT_GECKO_IMAGE}
+        <RotatingMorphImage
+          images={images}
           alt={`${morph.name} crested gecko morph`}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/10 to-transparent" />
         <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
@@ -219,11 +234,12 @@ export default function MorphGuidePage() {
     return buckets;
   }, [communityImages]);
 
-  function findCommunityImage(name) {
-    if (!name) return null;
+  function findCommunityImages(name) {
+    if (!name) return [];
     const firstWord = name.toLowerCase().split(/\s+/)[0];
-    const hits = communityByKeyword[firstWord];
-    return hits?.[0] || null;
+    // Cap at 6 images per morph — plenty for a rotating preview,
+    // and keeps the DOM lightweight on morph-heavy pages.
+    return (communityByKeyword[firstWord] || []).slice(0, 6);
   }
 
   // Merge local + DB. Local morph-guide entries are the source of truth.
@@ -233,17 +249,24 @@ export default function MorphGuidePage() {
     const localSlugs = new Set(MORPHS.map((m) => m.slug));
     const merged = MORPHS.map((m) => {
       const dbMatch = dbBySlug[m.slug];
-      const heroImage =
-        sanitizeImage(dbMatch?.example_image_url) || findCommunityImage(m.name);
+      const dbImg = sanitizeImage(dbMatch?.example_image_url);
+      const communityImgs = findCommunityImages(m.name);
+      // Stack the curated DB image first (if any), then the community
+      // pool. Dedup happens inside RotatingMorphImage.
+      const heroImages = dbImg ? [dbImg, ...communityImgs] : communityImgs;
       return {
         ...m,
-        heroImage,
+        heroImage: heroImages[0] || null,
+        heroImages,
         dbDescription: dbMatch?.description,
         keyFeaturesDb: dbMatch?.key_features,
       };
     });
     for (const [slug, rec] of Object.entries(dbBySlug)) {
       if (localSlugs.has(slug)) continue;
+      const dbImg = sanitizeImage(rec.example_image_url);
+      const communityImgs = findCommunityImages(rec.morph_name);
+      const heroImages = dbImg ? [dbImg, ...communityImgs] : communityImgs;
       merged.push({
         slug,
         name: rec.morph_name,
@@ -253,14 +276,13 @@ export default function MorphGuidePage() {
         summary: rec.description?.slice(0, 180),
         description: rec.description,
         keyFeatures: rec.key_features || [],
-        heroImage:
-          sanitizeImage(rec.example_image_url) || findCommunityImage(rec.morph_name),
+        heroImage: heroImages[0] || null,
+        heroImages,
         priceTier: null,
         priceRange: null,
       });
     }
     return merged;
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dbBySlug, communityByKeyword]);
 
   const filtered = useMemo(() => {

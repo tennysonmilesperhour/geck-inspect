@@ -1,0 +1,30 @@
+slug,name,category,inheritance,rarity,price_tier,price_range,summary,url
+harlequin,Harlequin,pattern,polygenic,common,$$,$120–$400,High-contrast pattern morph with bold markings covering the legs and climbing high up the dorsum.,https://geckinspect.com/MorphGuide/harlequin
+extreme-harlequin,Extreme Harlequin,pattern,polygenic,uncommon,$$$,$350–$900,"The top tier of harlequin pattern — high-coverage, high-contrast, often with solid cream flanks and legs.",https://geckinspect.com/MorphGuide/extreme-harlequin
+pinstripe,Pinstripe,pattern,polygenic,common,$$,$120–$350,Raised cream scales running along the dorsal ridge from neck to tail base.,https://geckinspect.com/MorphGuide/pinstripe
+phantom-pinstripe,Phantom Pinstripe,pattern,polygenic,rare,$$$,"$500–$1,500",Raised dorsal scales that remain dark (unpigmented cream) while the flanks carry bright pattern — a reversed look.,https://geckinspect.com/MorphGuide/phantom-pinstripe
+dalmatian,Dalmatian,pattern,polygenic,common,$$,$100–$400,"Discrete dark spots scattered across the body — black is most common, red and occasionally white also occur.",https://geckinspect.com/MorphGuide/dalmatian
+super-dalmatian,Super Dalmatian,pattern,polygenic,uncommon,$$$,$300–$800,Extreme dalmatian with 100+ well-defined spots covering nearly the entire body.,https://geckinspect.com/MorphGuide/super-dalmatian
+flame,Flame,pattern,polygenic,common,$,$60–$180,A pattern type with color restricted to the dorsum — flanks stay a solid base color.,https://geckinspect.com/MorphGuide/flame
+tiger,Tiger,pattern,polygenic,uncommon,$$,$150–$400,"Horizontal dark banding across the dorsum, running perpendicular to the spine.",https://geckinspect.com/MorphGuide/tiger
+brindle,Brindle,pattern,polygenic,uncommon,$$,$180–$450,"Heavier, more irregular banding than tiger — often described as ""broken"" or ""marbled"" tiger.",https://geckinspect.com/MorphGuide/brindle
+extreme-brindle,Extreme Brindle,pattern,polygenic,rare,$$$,"$400–$1,000","Dominant, coverage-heavy brindle with dark pattern consuming most of the dorsum and flanks.",https://geckinspect.com/MorphGuide/extreme-brindle
+tiger-brindle,Tiger / Brindle,pattern,polygenic,uncommon,$$,$150–$400,"Intermediate expression between tiger and brindle — sold as a single ""T/B"" category in much of the hobby.",https://geckinspect.com/MorphGuide/tiger-brindle
+super-soft-scale,Super Soft Scale,structure,incomplete-dominant,rare,$$$$,"$1,200–$3,500",Homozygous form of soft scale — dramatically reduced scales and a near-leather appearance.,https://geckinspect.com/MorphGuide/super-soft-scale
+white-wall,White Wall,structure,incomplete-dominant,rare,$$$$,"$1,500–$4,000","Structural trait producing a bright white flank that does not fire down — hence ""wall of white.""",https://geckinspect.com/MorphGuide/white-wall
+white-wall-white-spot,White Wall White Spot,structure,incomplete-dominant,rare,$$$$,"$1,500–$4,000",Variant of white wall characterized by isolated bright white spots rather than a solid wall.,https://geckinspect.com/MorphGuide/white-wall-white-spot
+cappuccino,Cappuccino,structure,incomplete-dominant,uncommon,$$$,"$400–$1,200","Structural pattern trait creating a distinctive ""saddle"" mark on the back with a clean dorsal contrast.",https://geckinspect.com/MorphGuide/cappuccino
+frappuccino,Frappuccino,structure,incomplete-dominant,rare,$$$$,"$1,500–$3,500","Homozygous form of cappuccino — exaggerated saddle, muted pattern, and a distinctive pale body tone.",https://geckinspect.com/MorphGuide/frappuccino
+lilly-white,Lilly White,structure,incomplete-dominant,uncommon,$$$,$300–$900,Proven incomplete-dominant trait producing bold white markings — the super form is lethal.,https://geckinspect.com/MorphGuide/lilly-white
+hypo,Hypo (Hypomelanistic),color,line-bred,rare,$$$,"$500–$1,500","Line-bred trait reducing black pigment — warmer, brighter animals with pale bellies and reduced dark markings.",https://geckinspect.com/MorphGuide/hypo
+patternless,Patternless,color,line-bred,common,$,$50–$150,Line-bred trait for solid-colored animals with no discernible pattern — often the base for breeding projects.,https://geckinspect.com/MorphGuide/patternless
+moonglow,Moonglow,color,line-bred,rare,$$$,"$500–$1,500","Line-bred ultra-pale, near-white patternless animal — essentially a ""super-cream"" patternless with no visible markings.",https://geckinspect.com/MorphGuide/moonglow
+translucent,Translucent,color,line-bred,rare,$$$,"$400–$1,200",Line-bred trait producing a degree of skin translucency — organs and bone structure faintly visible.,https://geckinspect.com/MorphGuide/translucent
+orange-base,Orange Base,base,polygenic,uncommon,$$,$150–$350,Polygenic base color in warm orange tones — common and widely produced.,https://geckinspect.com/MorphGuide/orange-base
+yellow-base,Yellow Base,base,polygenic,common,$,$80–$200,Polygenic base color with bright yellow ground color — common and beginner-friendly.,https://geckinspect.com/MorphGuide/yellow-base
+olive,Olive,base,polygenic,uncommon,$$,$150–$400,Polygenic base color producing a distinctive olive-green or khaki tone.,https://geckinspect.com/MorphGuide/olive
+chocolate,Chocolate,base,polygenic,uncommon,$$,$150–$400,Polygenic base color with rich deep-brown tones — like dark chocolate.,https://geckinspect.com/MorphGuide/chocolate
+lavender,Lavender,base,polygenic,rare,$$$,"$400–$1,000",Polygenic base color showing an unusual purple-gray tone — rare and sought-after.,https://geckinspect.com/MorphGuide/lavender
+buckskin,Buckskin,base,polygenic,common,$,$60–$180,"Warm tan or leather-colored base — a classic ""starter"" color with pleasant earthy tones.",https://geckinspect.com/MorphGuide/buckskin
+tricolor,Tricolor,combo,polygenic,uncommon,$$$,$300–$800,Three-color combination: dark base + cream pattern + a third distinct color (usually red or orange).,https://geckinspect.com/MorphGuide/tricolor
+bicolor,Bicolor,combo,polygenic,common,$,$80–$200,Animal with two clear contrasting colors — typically a base plus one pattern color.,https://geckinspect.com/MorphGuide/bicolor

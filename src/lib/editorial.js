@@ -83,6 +83,7 @@ const PER_PATH = {
   '/About': { published: '2026-04-17', modified: '2026-04-17' },
   '/Contact': { published: '2026-04-17', modified: '2026-04-17' },
   '/Terms': { published: '2026-04-17', modified: '2026-04-17' },
+  '/MarketplaceVerification': { published: '2026-04-17', modified: '2026-04-17' },
   '/PrivacyPolicy': { published: '2025-06-01', modified: '2026-04-05' },
   '/CareGuide': { published: '2025-06-15', modified: '2026-04-17' },
   '/MorphGuide': { published: '2025-07-01', modified: '2026-04-17' },

@@ -58,6 +58,7 @@ const GeneticCalculatorTool = lazy(() => import('./pages/GeneticCalculatorTool')
 const About                 = lazy(() => import('./pages/About'));
 const Contact               = lazy(() => import('./pages/Contact'));
 const Terms                 = lazy(() => import('./pages/Terms'));
+const MarketplaceVerification = lazy(() => import('./pages/MarketplaceVerification'));
 
 // Special-case pages that need unique routing (no layout, param routes, etc.)
 const AdminMigration = lazy(() => import('./pages/AdminMigration'));
@@ -84,7 +85,7 @@ const LazyFallback = (
 );
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isAuthenticated, isGuest } = useAuth();
+  const { isLoadingAuth, isAuthenticated } = useAuth();
   const [disabledPages, setDisabledPages] = useState(new Set());
 
   // Load page configs to enforce is_enabled at the router level.
@@ -113,11 +114,11 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // When the visitor is NOT signed in and NOT in guest mode, the root
-  // URL shows the public landing page (good for SEO and first
-  // impressions), and any other route falls through to the login portal
-  // so protected pages stay gated behind auth.
-  if (!isAuthenticated && !isGuest) {
+  // When the visitor is NOT signed in, the root URL shows the public
+  // landing page (good for SEO and first impressions), and any other
+  // route falls through to the login portal so protected pages stay
+  // gated behind auth.
+  if (!isAuthenticated) {
     return (
       <Suspense fallback={LazyFallback}>
         <Routes>
@@ -137,6 +138,7 @@ const AuthenticatedApp = () => {
           <Route path="/About" element={<About />} />
           <Route path="/Contact" element={<Contact />} />
           <Route path="/Terms" element={<Terms />} />
+          <Route path="/MarketplaceVerification" element={<MarketplaceVerification />} />
           <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
           {/* Breeder is indexable under both /Breeder?slug= (legacy) and
               /Breeder/<slug> (clean, preferred); the page itself reads

@@ -119,6 +119,10 @@ export default function CareGuideTopic() {
       reviewedBy: authorSchema(),
       datePublished: editorial.published,
       dateModified: editorial.modified,
+      speakable: {
+        '@type': 'SpeakableSpecification',
+        cssSelector: ['h1', 'article p:first-of-type'],
+      },
       publisher: { '@id': ORG_ID },
     },
     breadcrumbSchema([

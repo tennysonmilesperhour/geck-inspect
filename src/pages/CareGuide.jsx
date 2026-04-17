@@ -45,6 +45,14 @@ const CARE_GUIDE_JSON_LD = {
   '@context': 'https://schema.org',
   '@graph': [
     {
+      '@type': 'BreadcrumbList',
+      '@id': 'https://geckinspect.com/CareGuide#breadcrumbs',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://geckinspect.com/' },
+        { '@type': 'ListItem', position: 2, name: 'Care Guide', item: 'https://geckinspect.com/CareGuide' },
+      ],
+    },
+    {
       '@type': 'Article',
       '@id': 'https://geckinspect.com/CareGuide#article',
       headline: 'Crested Gecko Care Guide — Complete Beginner to Advanced Reference',
@@ -61,6 +69,13 @@ const CARE_GUIDE_JSON_LD = {
       reviewedBy: authorSchema(),
       datePublished: CARE_GUIDE_EDITORIAL.published,
       dateModified: CARE_GUIDE_EDITORIAL.modified,
+      // speakable: picks out the intro paragraphs of the guide as
+      // voice-assistant-friendly content. Google Assistant honors the
+      // cssSelector form.
+      speakable: {
+        '@type': 'SpeakableSpecification',
+        cssSelector: ['h1', 'article p:first-of-type', '.prose p:first-of-type'],
+      },
       publisher: {
         '@type': 'Organization',
         name: 'Geck Inspect',
