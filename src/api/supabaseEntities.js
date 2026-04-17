@@ -10,7 +10,13 @@
  *   Entity.delete(id) → Object
  */
 import { supabase } from '@/lib/supabaseClient';
-import { blockIfGuest } from '@/lib/guestMode';
+import { blockIfGuest, isGuestMode } from '@/lib/guestMode';
+import {
+  guestMockFilter,
+  guestMockGet,
+  guestMockList,
+  isMockedEntity,
+} from '@/lib/guestMockData';
 
 export const TABLE_MAP = {
   AppSettings: 'app_settings',
@@ -136,6 +142,17 @@ function createEntityClient(entityName) {
 
   return {
     async filter(filterObj = {}, sort = null, limit = null, skip = null) {
+      // In guest mode, serve mocks for any entity we have mocks for and
+      // empty arrays for anything else. This avoids making anonymous
+      // calls to tables that would hit RLS and flood the console with
+      // 401s while the user is just browsing.
+      if (isGuestMode()) {
+        if (isMockedEntity(entityName)) {
+          return guestMockFilter(entityName, filterObj, sort, limit, skip);
+        }
+        return [];
+      }
+
       let query = supabase.from(tableName).select('*');
       query = applyFilter(query, filterObj);
 
@@ -156,6 +173,10 @@ function createEntityClient(entityName) {
     },
 
     async get(id) {
+      if (isGuestMode()) {
+        if (isMockedEntity(entityName)) return guestMockGet(entityName, id);
+        return null;
+      }
       const { data, error } = await supabase
         .from(tableName)
         .select('*')
@@ -215,6 +236,10 @@ function createEntityClient(entityName) {
     },
 
     async list(sort = null) {
+      if (isGuestMode()) {
+        if (isMockedEntity(entityName)) return guestMockList(entityName, sort);
+        return [];
+      }
       return this.filter({}, sort);
     },
   };

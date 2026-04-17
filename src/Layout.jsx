@@ -23,7 +23,7 @@ import TutorialModal from "@/components/tutorial/TutorialModal";
 import CommandPalette from "@/components/command-palette/CommandPalette";
 import FeedingAlertSystem from "@/components/feeding/FeedingAlertSystem";
 import NotificationPopover from "@/components/notifications/NotificationPopover";
-import GuestBanner from "@/components/auth/GuestBanner";
+import GuestMockDisclaimer from "@/components/auth/GuestMockDisclaimer";
 import {
   Sidebar,
   SidebarHeader,
@@ -980,8 +980,6 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
             </div>
           </header>
 
-          <GuestBanner />
-
           <div className="flex-1 overflow-auto overflow-x-hidden">
             {children}
           </div>
@@ -992,6 +990,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
       <CommandPalette />
       <FeedingAlertSystem user={user} enabled={user?.feeding_alerts_enabled !== false} />
+      <GuestMockDisclaimer />
     </>
     );
           }

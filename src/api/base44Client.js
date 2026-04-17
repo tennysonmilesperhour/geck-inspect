@@ -2,6 +2,7 @@ import { createClient } from '@base44/sdk';
 import { appParams } from '@/lib/app-params';
 import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
 import * as sbEntities from '@/api/supabaseEntities';
+import { isGuestMode, GUEST_USER, blockIfGuest } from '@/lib/guestMode';
 
 const { appId, serverUrl, token, functionsVersion } = appParams;
 
@@ -34,6 +35,10 @@ base44.auth = new Proxy(base44.auth, {
   get(target, prop) {
     if (prop === 'me') {
       return async () => {
+        // Guest mode has no real Supabase user; return the synthetic
+        // guest profile so pages that assume base44.auth.me() always
+        // resolves don't crash their first load.
+        if (isGuestMode()) return { ...GUEST_USER };
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) throw new Error('Not authenticated');
         return normalizeSupabaseUser(user);
@@ -47,6 +52,7 @@ base44.auth = new Proxy(base44.auth, {
     }
     if (prop === 'updateMe') {
       return async (data) => {
+        blockIfGuest('update your profile');
         const { data: { user }, error } = await supabase.auth.updateUser({ data });
         if (error) throw error;
         return normalizeSupabaseUser(user);
