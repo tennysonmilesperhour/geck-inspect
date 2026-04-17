@@ -66,6 +66,7 @@ export default function MyGeckosPage() {
         founderFormat: '{PREFIX}{NUM}-{YY}',
         hatchlingFormat: '{SIRE}{DAM}{NUM}{LETTER}{YY}',
         prefix: '',
+        inheritanceMode: 'breeder_prefix',
     });
 
     // No incremental paging — the dual server-side offset + client-side

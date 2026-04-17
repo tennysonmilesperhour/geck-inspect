@@ -77,6 +77,36 @@ export function resolveLinePrefix(startGecko, allGeckos, side = 'sire', depthCap
   return leadingAlphaPrefix(current?.gecko_id_code);
 }
 
+/**
+ * Supported inheritance modes. Determines what {LINE} resolves to for
+ * a hatchling given its sire + dam.
+ *
+ *   breeder_prefix  — always the breeder's own prefix (default)
+ *   sire_line       — paternal lineage (walk up sire_id)
+ *   dam_line        — maternal lineage (walk up dam_id)
+ *   founder_origin  — sire-side if available, else dam-side, else breeder
+ */
+export const INHERITANCE_MODES = ['breeder_prefix', 'sire_line', 'dam_line', 'founder_origin'];
+
+export function resolveLineForMode(user, sire, dam, allGeckos, mode, customPrefix) {
+  const breederPrefix = getPrefix(user, customPrefix);
+  switch (mode) {
+    case 'sire_line':
+      return resolveLinePrefix(sire, allGeckos, 'sire') || breederPrefix;
+    case 'dam_line':
+      return resolveLinePrefix(dam, allGeckos, 'dam') || breederPrefix;
+    case 'founder_origin':
+      return (
+        resolveLinePrefix(sire, allGeckos, 'sire') ||
+        resolveLinePrefix(dam, allGeckos, 'dam') ||
+        breederPrefix
+      );
+    case 'breeder_prefix':
+    default:
+      return breederPrefix;
+  }
+}
+
 function firstTwoTitleCase(name) {
   const clean = (name || '').replace(/[^A-Za-z0-9]/g, '');
   if (clean.length === 0) return '??';
@@ -119,7 +149,9 @@ export async function generateNextGeckoId(user, allGeckos, sire = null, dam = nu
     if (hasCustomFormat && idSettings.hatchlingFormat) {
       const eggLetter = ((offspringNumber - 1) % 2) === 0 ? 'a' : 'b';
       const sirePrefix = getPrefix(user, idSettings.prefix);
-      const line = resolveLinePrefix(sire, allGeckos, 'sire') || sirePrefix;
+      const line = resolveLineForMode(
+        user, sire, dam, allGeckos, idSettings.inheritanceMode, idSettings.prefix
+      );
       return applyFormat(idSettings.hatchlingFormat, {
         prefix: sirePrefix,
         nnn: String(offspringNumber).padStart(3, '0'),
