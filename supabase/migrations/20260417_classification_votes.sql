@@ -14,18 +14,51 @@
 --
 -- Idempotent.
 
+-- Create with minimal schema; add missing columns idempotently below so we
+-- don't clobber a pre-existing stub (e.g. from the Base44 migration) that
+-- might lack the columns this RPC references.
 CREATE TABLE IF NOT EXISTS public.classification_votes (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  gecko_image_id UUID NOT NULL REFERENCES public.gecko_images(id) ON DELETE CASCADE,
-  reviewer_email TEXT NOT NULL,
-  verdict TEXT NOT NULL CHECK (verdict IN ('approve', 'reject')),
-  primary_morph TEXT,
-  secondary_traits TEXT[] DEFAULT '{}',
-  edits JSONB DEFAULT '{}'::jsonb,
-  notes TEXT,
-  created_date TIMESTAMPTZ NOT NULL DEFAULT now(),
-  UNIQUE (gecko_image_id, reviewer_email)
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid()
 );
+
+ALTER TABLE public.classification_votes
+  ADD COLUMN IF NOT EXISTS gecko_image_id   UUID,
+  ADD COLUMN IF NOT EXISTS reviewer_email   TEXT,
+  ADD COLUMN IF NOT EXISTS verdict          TEXT,
+  ADD COLUMN IF NOT EXISTS primary_morph    TEXT,
+  ADD COLUMN IF NOT EXISTS secondary_traits TEXT[] DEFAULT '{}',
+  ADD COLUMN IF NOT EXISTS edits            JSONB  DEFAULT '{}'::jsonb,
+  ADD COLUMN IF NOT EXISTS notes            TEXT,
+  ADD COLUMN IF NOT EXISTS created_date     TIMESTAMPTZ DEFAULT now();
+
+-- verdict CHECK constraint (named so we can drop-and-recreate cleanly).
+ALTER TABLE public.classification_votes
+  DROP CONSTRAINT IF EXISTS classification_votes_verdict_chk;
+ALTER TABLE public.classification_votes
+  ADD  CONSTRAINT classification_votes_verdict_chk
+  CHECK (verdict IS NULL OR verdict IN ('approve','reject'));
+
+-- Unique (image, reviewer). Named so it's idempotent.
+ALTER TABLE public.classification_votes
+  DROP CONSTRAINT IF EXISTS classification_votes_image_reviewer_uk;
+ALTER TABLE public.classification_votes
+  ADD  CONSTRAINT classification_votes_image_reviewer_uk
+  UNIQUE (gecko_image_id, reviewer_email);
+
+-- Foreign key to gecko_images. Added last so existing data (if any) gets a
+-- chance to be cleaned up manually before we constrain it.
+DO $$ BEGIN
+  IF NOT EXISTS (
+    SELECT 1 FROM pg_constraint
+    WHERE conname = 'classification_votes_gecko_image_fk'
+  ) THEN
+    ALTER TABLE public.classification_votes
+      ADD CONSTRAINT classification_votes_gecko_image_fk
+      FOREIGN KEY (gecko_image_id)
+      REFERENCES public.gecko_images(id)
+      ON DELETE CASCADE;
+  END IF;
+END $$;
 
 CREATE INDEX IF NOT EXISTS idx_classification_votes_image
   ON public.classification_votes (gecko_image_id);
