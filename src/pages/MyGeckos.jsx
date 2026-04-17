@@ -63,7 +63,7 @@ export default function MyGeckosPage() {
     const [archiveDialogGeckoId, setArchiveDialogGeckoId] = useState(null);
     const [feedingGroups, setFeedingGroups] = useState([]);
     const [idSettings, setIdSettings] = usePageSettings('gecko_id_settings', {
-        founderFormat: '{PREFIX}-{NNN}',
+        founderFormat: '{PREFIX}{NUM}-{YY}',
         hatchlingFormat: '{SIRE}{DAM}{NUM}{LETTER}{YY}',
         prefix: '',
     });

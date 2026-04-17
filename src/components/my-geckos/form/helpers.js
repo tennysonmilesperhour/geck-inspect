@@ -56,7 +56,7 @@ function getPrefix(user, customPrefix) {
  */
 export async function generateNextGeckoId(user, allGeckos, sire = null, dam = null, sireName = '', damName = '', idSettings = null) {
   const hasCustomFormat = idSettings &&
-    (idSettings.founderFormat !== '{PREFIX}-{NNN}' ||
+    (idSettings.founderFormat !== '{PREFIX}{NUM}-{YY}' ||
      idSettings.hatchlingFormat !== '{SIRE}{DAM}{NUM}{LETTER}{YY}' ||
      idSettings.prefix);
 

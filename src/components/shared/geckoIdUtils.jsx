@@ -137,7 +137,11 @@ export function generateHatchedGeckoId(sire, dam, offspringNumber, year = new Da
 }
 
 /**
- * Founder gecko ID (no parents). Unchanged from the old behavior.
+ * Founder gecko ID (no parents).
+ *
+ * Rhymes with the hatchling default (`{SIRE}{DAM}{NUM}{LETTER}{YY}`) by
+ * using the breeder prefix in place of sire+dam and dropping the egg
+ * letter (founders have no clutch position): `{PREFIX}{NUM}-{YY}`.
  */
 export function generateFounderGeckoId(user, allGeckos) {
     const userPrefix = (user?.breeder_name || user?.email?.split('@')[0] || 'GECK')
@@ -145,5 +149,6 @@ export function generateFounderGeckoId(user, allGeckos) {
     const founderGeckos = allGeckos.filter(
         g => !g.sire_id && !g.dam_id && g.gecko_id_code?.startsWith(userPrefix)
     );
-    return `${userPrefix}-${String(founderGeckos.length + 1).padStart(3, '0')}`;
+    const yy = String(new Date().getFullYear()).slice(-2);
+    return `${userPrefix}${founderGeckos.length + 1}-${yy}`;
 }
