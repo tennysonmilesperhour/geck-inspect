@@ -7,6 +7,7 @@ import {
   ForumComment,
   BreedingPlan,
   DirectMessage,
+  UserEvent,
 } from '@/entities/all';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -43,6 +44,8 @@ import {
   MessageSquare,
   RefreshCw,
   Minus,
+  MousePointerClick,
+  Link2,
 } from 'lucide-react';
 import { format, subDays, startOfDay, differenceInDays } from 'date-fns';
 
@@ -169,7 +172,12 @@ export default function AnalyticsDashboard() {
   const fetchData = async () => {
     setIsLoading(true);
     try {
-      const [users, geckos, images, posts, comments, plans, messages] = await Promise.all([
+      // Pull telemetry scoped to 2× the longest selectable period so the
+      // in-memory aggregation below can still slice prior-vs-current windows.
+      const maxPeriod = Math.max(...PERIODS.map((p) => p.value));
+      const sinceIso = new Date(Date.now() - maxPeriod * 2 * 24 * 60 * 60 * 1000).toISOString();
+
+      const [users, geckos, images, posts, comments, plans, messages, events] = await Promise.all([
         User.list().catch(() => []),
         Gecko.list().catch(() => []),
         GeckoImage.list().catch(() => []),
@@ -177,8 +185,9 @@ export default function AnalyticsDashboard() {
         ForumComment.list().catch(() => []),
         BreedingPlan.list().catch(() => []),
         DirectMessage.list().catch(() => []),
+        UserEvent.filter({ created_date: { $gte: sinceIso } }, '-created_date', 20000).catch(() => []),
       ]);
-      setData({ users, geckos, images, posts, comments, plans, messages });
+      setData({ users, geckos, images, posts, comments, plans, messages, events });
     } catch (err) {
       console.error('Analytics load failed:', err);
     }
@@ -191,7 +200,7 @@ export default function AnalyticsDashboard() {
 
   const computed = useMemo(() => {
     if (!data) return null;
-    const { users, geckos, images, posts, comments, plans, messages } = data;
+    const { users, geckos, images, posts, comments, plans, messages, events } = data;
     const now = Date.now();
     const periodMs = period * 24 * 60 * 60 * 1000;
     const currFrom = now - periodMs;
@@ -340,6 +349,60 @@ export default function AnalyticsDashboard() {
       ? differenceInDays(new Date(), new Date(oldestUser.created_date))
       : 0;
 
+    // ------------------------------------------------------------------
+    // Engagement tab: derived from user_events telemetry.
+    // ------------------------------------------------------------------
+    const eventsList = Array.isArray(events) ? events : [];
+    const eventsInWindow = eventsList.filter((e) => {
+      const d = safeDate(e.created_date);
+      return d && d.getTime() >= currFrom;
+    });
+    const eventsInPrior = eventsList.filter((e) => {
+      const d = safeDate(e.created_date);
+      return d && d.getTime() >= prevFrom && d.getTime() < currFrom;
+    });
+
+    const totalEvents = eventsInWindow.length;
+    const totalEventsDelta = pctChange(totalEvents, eventsInPrior.length);
+
+    const sessionSet = new Set(
+      eventsInWindow.map((e) => e.session_id).filter(Boolean)
+    );
+    const priorSessionSet = new Set(
+      eventsInPrior.map((e) => e.session_id).filter(Boolean)
+    );
+    const totalSessions = sessionSet.size;
+    const totalSessionsDelta = pctChange(totalSessions, priorSessionSet.size);
+
+    // DAU per day — distinct user_email per day
+    const dauBuckets = {};
+    for (const e of eventsInWindow) {
+      const d = safeDate(e.created_date);
+      if (!d) continue;
+      const key = format(startOfDay(d), 'yyyy-MM-dd');
+      if (!dauBuckets[key]) dauBuckets[key] = new Set();
+      if (e.user_email) dauBuckets[key].add(e.user_email);
+    }
+    const dauSeries = buckets.map((b) => ({
+      date: b.label,
+      dau: dauBuckets[b.key] ? dauBuckets[b.key].size : 0,
+    }));
+
+    // Top pages in the window, by event count. Sessions column is the
+    // unique-session count on that page — more useful than raw hits
+    // because hot pages ping many events per visit.
+    const pageAgg = {};
+    for (const e of eventsInWindow) {
+      const p = e.page || '(unknown)';
+      if (!pageAgg[p]) pageAgg[p] = { page: p, events: 0, sessions: new Set() };
+      pageAgg[p].events += 1;
+      if (e.session_id) pageAgg[p].sessions.add(e.session_id);
+    }
+    const topPages = Object.values(pageAgg)
+      .map((r) => ({ page: r.page, events: r.events, sessions: r.sessions.size }))
+      .sort((a, b) => b.events - a.events)
+      .slice(0, 10);
+
     return {
       kpi: {
         users: kUsers,
@@ -364,6 +427,12 @@ export default function AnalyticsDashboard() {
       lastPeriodUsers: lastPeriodUserEmails.size,
       totalUsers: users.length,
       appAgeDays,
+      totalEvents,
+      totalEventsDelta,
+      totalSessions,
+      totalSessionsDelta,
+      dauSeries,
+      topPages,
     };
   }, [data, period]);
 
@@ -390,6 +459,12 @@ export default function AnalyticsDashboard() {
     lastPeriodUsers,
     totalUsers,
     appAgeDays,
+    totalEvents,
+    totalEventsDelta,
+    totalSessions,
+    totalSessionsDelta,
+    dauSeries,
+    topPages,
   } = computed;
 
   return (
@@ -665,11 +740,115 @@ export default function AnalyticsDashboard() {
         </TabsContent>
 
         <TabsContent value="engagement" className="space-y-6 mt-4">
-          <Card className="bg-slate-900 border-slate-800">
-            <CardContent className="p-10 text-center text-sm text-slate-500">
-              Engagement metrics coming soon — active users by day, top pages, session counts.
-            </CardContent>
-          </Card>
+          {/* Telemetry KPIs */}
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <Card className="bg-slate-900 border-slate-800">
+              <CardContent className="p-5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Active users</p>
+                <p className="text-3xl font-bold text-white mt-1.5">{activeCount.toLocaleString()}</p>
+                <p className="text-xs text-slate-500 mt-1">{activeRatio}% of total</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-slate-900 border-slate-800">
+              <CardContent className="p-5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Return rate</p>
+                <p className="text-3xl font-bold text-white mt-1.5">{retentionRate}%</p>
+                <p className="text-xs text-slate-500 mt-1">{lastPeriodUsers} signed up prior</p>
+              </CardContent>
+            </Card>
+            <KpiCard
+              label="Events recorded"
+              value={totalEvents}
+              delta={totalEventsDelta}
+              accent="purple"
+              sublabel="user_events rows"
+            />
+            <KpiCard
+              label="Sessions"
+              value={totalSessions}
+              delta={totalSessionsDelta}
+              accent="amber"
+              sublabel="distinct session IDs"
+            />
+          </div>
+
+          {totalEvents === 0 ? (
+            <Card className="bg-slate-900 border-slate-800">
+              <CardContent className="p-10 text-center text-sm text-slate-500">
+                No telemetry captured in this window yet. Events will appear once
+                users interact with instrumented pages.
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ChartCard
+                title="Daily active users"
+                icon={MousePointerClick}
+                subtitle="Distinct users per day from telemetry"
+              >
+                <ResponsiveContainer width="100%" height={260}>
+                  <AreaChart data={dauSeries}>
+                    <defs>
+                      <linearGradient id="dauGradient" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="0%" stopColor={PALETTE.blue} stopOpacity={0.55} />
+                        <stop offset="100%" stopColor={PALETTE.blue} stopOpacity={0} />
+                      </linearGradient>
+                    </defs>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" />
+                    <XAxis dataKey="date" stroke="#64748b" fontSize={10} tickLine={false} />
+                    <YAxis stroke="#64748b" fontSize={10} tickLine={false} allowDecimals={false} />
+                    <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+                    <Area
+                      type="monotone"
+                      dataKey="dau"
+                      stroke={PALETTE.blue}
+                      strokeWidth={2}
+                      fill="url(#dauGradient)"
+                    />
+                  </AreaChart>
+                </ResponsiveContainer>
+              </ChartCard>
+
+              <Card className="bg-slate-900 border-slate-800">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-slate-100 text-base flex items-center gap-2">
+                    <Link2 className="w-4 h-4 text-slate-400" />
+                    Top pages
+                  </CardTitle>
+                  <p className="text-xs text-slate-500">
+                    Most-viewed routes in the last {period} days
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  {topPages.length === 0 ? (
+                    <p className="text-sm text-slate-500 text-center py-6">
+                      No page events in this window.
+                    </p>
+                  ) : (
+                    <div className="space-y-1.5">
+                      {topPages.map((p, i) => (
+                        <div
+                          key={p.page}
+                          className="flex items-center gap-4 rounded-lg border border-slate-800 bg-slate-800/40 px-4 py-2"
+                        >
+                          <span className="text-xs font-bold text-slate-500 w-5">#{i + 1}</span>
+                          <p className="flex-1 min-w-0 text-sm font-medium text-slate-200 truncate">
+                            /{p.page}
+                          </p>
+                          <span className="text-xs text-slate-400 shrink-0">
+                            {p.events.toLocaleString()} events
+                          </span>
+                          <span className="text-xs text-slate-500 shrink-0">
+                            {p.sessions.toLocaleString()} sessions
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="features" className="space-y-6 mt-4">
