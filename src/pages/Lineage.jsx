@@ -3,7 +3,7 @@ import Seo from '@/components/seo/Seo';
 import { useLocation } from 'react-router-dom';
 import { Gecko, BreedingPlan, LineagePlaceholder } from '@/entities/all';
 import { base44 as base44Client } from '@/api/base44Client';
-import { Loader2, Search, ZoomIn, ZoomOut, GitBranch, Heart, Users2, Edit2, Upload, Download, AlertTriangle, ExternalLink, Dna, Calendar, Scale, Tag, X } from 'lucide-react';
+import { Loader2, Search, ZoomIn, ZoomOut, GitBranch, Heart, Users2, Edit2, Upload, Download, AlertTriangle, ExternalLink, Dna, Calendar, Scale, Tag, X, Link as LinkIcon, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import usePageSettings from '@/hooks/usePageSettings';
@@ -98,13 +98,64 @@ const findInbreedingOverlap = (lineage) => {
     return [...sireSet].filter((id) => damSet.has(id));
 };
 
+// Collect every path from `node` to each known ancestor id, measured in generations away.
+// Returns { ancestorId: [distance1, distance2, ...] } — a single ancestor can appear on
+// multiple paths if they recur in the tree.
+const collectAncestorDistances = (node, distance = 0, map = {}) => {
+    if (!node || node.isPlaceholder || !node.id) return map;
+    if (distance > 0) {
+        if (!map[node.id]) map[node.id] = [];
+        map[node.id].push(distance);
+    }
+    collectAncestorDistances(node.sire, distance + 1, map);
+    collectAncestorDistances(node.dam, distance + 1, map);
+    return map;
+};
+
+// Wright's coefficient of inbreeding.
+// F = Σ over common ancestors A of (0.5)^(n1 + n2 + 1) where n1, n2 are the
+// number of generations between the sire/dam and the common ancestor. We ignore
+// A's own inbreeding coefficient since we don't have it.
+const calculateCOI = (lineage) => {
+    if (!lineage?.sire || !lineage?.dam) return 0;
+    const sireDistances = collectAncestorDistances(lineage.sire);
+    const damDistances = collectAncestorDistances(lineage.dam);
+    let f = 0;
+    for (const id of Object.keys(sireDistances)) {
+        if (!damDistances[id]) continue;
+        for (const n1 of sireDistances[id]) {
+            for (const n2 of damDistances[id]) {
+                f += Math.pow(0.5, n1 + n2 + 1);
+            }
+        }
+    }
+    return f;
+};
+
 // Small stat pill used in the summary bar
-const StatPill = ({ label, value }) => (
-    <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-slate-800/60 border border-slate-700/70">
-        <span className="text-[11px] uppercase tracking-wide text-slate-400">{label}</span>
-        <span className="text-sm font-bold text-emerald-300">{value}</span>
-    </div>
-);
+const STAT_TONES = {
+    default: { border: 'border-slate-700/70', value: 'text-emerald-300' },
+    warning: { border: 'border-amber-500/60', value: 'text-amber-300' },
+    danger: { border: 'border-red-500/60', value: 'text-red-300' },
+};
+const StatPill = ({ label, value, tone = 'default', tooltip }) => {
+    const t = STAT_TONES[tone] || STAT_TONES.default;
+    const inner = (
+        <div className={`flex items-center justify-between px-3 py-2 rounded-lg bg-slate-800/60 border ${t.border}`}>
+            <span className="text-[11px] uppercase tracking-wide text-slate-400">{label}</span>
+            <span className={`text-sm font-bold ${t.value}`}>{value}</span>
+        </div>
+    );
+    if (!tooltip) return inner;
+    return (
+        <Tooltip delayDuration={300}>
+            <TooltipTrigger asChild>{inner}</TooltipTrigger>
+            <TooltipContent side="bottom" className="max-w-xs bg-slate-900/95 border border-slate-700 text-slate-100 text-xs p-2">
+                {tooltip}
+            </TooltipContent>
+        </Tooltip>
+    );
+};
 
 // Placeholder card for missing parents
 const PlaceholderCardNode = ({ parentName, placeholderData, onEdit, size = 'normal' }) => {
@@ -185,7 +236,18 @@ const PlaceholderCardNode = ({ parentName, placeholderData, onEdit, size = 'norm
 };
 
 // GeckoCardNode component
-const GeckoCardNode = ({ gecko, onNodeClick, isSelected, size = 'normal', isFaded = false, className = '' }) => {
+const GeckoCardNode = ({
+    gecko,
+    onNodeClick,
+    isSelected,
+    size = 'normal',
+    isFaded = false,
+    className = '',
+    isOnHighlightPath = false,
+    isDimmed = false,
+    onHoverEnter,
+    onHoverLeave,
+}) => {
     if (!gecko) {
         return <UnknownCardNode size={size} />;
     }
@@ -207,15 +269,22 @@ const GeckoCardNode = ({ gecko, onNodeClick, isSelected, size = 'normal', isFade
     const showDetails = size === 'normal';
     const showAgeBadge = size !== 'tiny' && age;
 
+    const highlightRing = isOnHighlightPath && !isSelected
+        ? 'ring-2 ring-amber-300 shadow-[0_0_14px_rgba(251,191,36,0.5)] z-10'
+        : '';
+    const dimClass = isDimmed ? 'opacity-40' : '';
+
     const card = (
         <motion.div
             initial={{ opacity: 0, scale: 0.9 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.25, ease: 'easeOut' }}
             className="flex-shrink-0"
+            onMouseEnter={onHoverEnter}
+            onMouseLeave={onHoverLeave}
         >
             <Card
-                className={`relative transition-all duration-300 overflow-hidden border-l-4 ${sexBorder} ${cardSize} ${className} ${isSelected ? 'ring-2 ring-emerald-400 shadow-2xl shadow-emerald-500/30 z-10' : 'shadow-lg'} bg-slate-800/80 backdrop-blur-sm border-slate-700 hover:shadow-xl hover:ring-2 hover:ring-emerald-500/50 cursor-pointer ${isFaded ? 'opacity-50' : ''}`}
+                className={`relative transition-all duration-300 overflow-hidden border-l-4 ${sexBorder} ${cardSize} ${className} ${isSelected ? 'ring-2 ring-emerald-400 shadow-2xl shadow-emerald-500/30 z-10' : highlightRing || 'shadow-lg'} ${dimClass} bg-slate-800/80 backdrop-blur-sm border-slate-700 hover:shadow-xl hover:ring-2 hover:ring-emerald-500/50 cursor-pointer ${isFaded ? 'opacity-50' : ''}`}
                 onClick={(e) => { e.stopPropagation(); onNodeClick(gecko.id); }}
             >
                 <div className="w-full h-full bg-slate-700 flex items-center justify-center">
@@ -369,9 +438,33 @@ export default function Lineage() {
     const [lineage, setLineage] = useState({});
     const [mates, setMates] = useState([]);
     const [offspring, setOffspring] = useState([]);
+    const [recentGeckoIds, setRecentGeckoIds] = useState(() => {
+        try {
+            const raw = localStorage.getItem('lineage_recent_geckos');
+            const parsed = raw ? JSON.parse(raw) : [];
+            return Array.isArray(parsed) ? parsed.slice(0, 8) : [];
+        } catch {
+            return [];
+        }
+    });
+    const pushRecentGecko = useCallback((geckoId) => {
+        if (!geckoId) return;
+        setRecentGeckoIds((prev) => {
+            const next = [geckoId, ...prev.filter((id) => id !== geckoId)].slice(0, 8);
+            try {
+                localStorage.setItem('lineage_recent_geckos', JSON.stringify(next));
+            } catch {
+                // ignore quota / privacy-mode failures
+            }
+            return next;
+        });
+    }, []);
     
     const [isLoading, setIsLoading] = useState(true);
     const [isLoadingLineage, setIsLoadingLineage] = useState(false);
+    // Hover path from root selected gecko down to the hovered ancestor, used
+    // to highlight the chain of cards connecting them.
+    const [highlightPath, setHighlightPath] = useState(null);
     
     const [searchTerm, setSearchTerm] = useState('');
     const [showSuggestions, setShowSuggestions] = useState(false);
@@ -515,7 +608,8 @@ export default function Lineage() {
         }
         setIsLoadingLineage(true);
         setSelectedGeckoId(geckoId);
-        
+        pushRecentGecko(geckoId);
+
         const lineageData = await getLineageFor(geckoId, generations);
         setLineage(lineageData || {});
 
@@ -538,7 +632,7 @@ export default function Lineage() {
         setMates(foundMates);
         
         setIsLoadingLineage(false);
-    }, [getLineageFor, allGeckosMap, allBreedingPlans, generations]);
+    }, [getLineageFor, allGeckosMap, allBreedingPlans, generations, pushRecentGecko]);
 
     // Re-fetch lineage when generations change
     useEffect(() => {
@@ -546,6 +640,36 @@ export default function Lineage() {
             handleSelectGecko(selectedGeckoId);
         }
     }, [generations]);
+
+    // Keyboard navigation: arrow keys jump between sire / dam / first offspring.
+    useEffect(() => {
+        if (!selectedGeckoId) return undefined;
+        const handler = (e) => {
+            const target = e.target;
+            const isEditable =
+                target &&
+                (target.tagName === 'INPUT' ||
+                    target.tagName === 'TEXTAREA' ||
+                    target.isContentEditable);
+            if (isEditable) return;
+            const current = allGeckosMap[selectedGeckoId];
+            if (!current) return;
+            let nextId = null;
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowUp') {
+                nextId = current.sire_id || current.dam_id;
+            } else if (e.key === 'ArrowRight') {
+                nextId = current.dam_id || current.sire_id;
+            } else if (e.key === 'ArrowDown') {
+                nextId = offspring[0]?.id;
+            }
+            if (nextId && allGeckosMap[nextId]) {
+                e.preventDefault();
+                handleSelectGecko(nextId);
+            }
+        };
+        window.addEventListener('keydown', handler);
+        return () => window.removeEventListener('keydown', handler);
+    }, [selectedGeckoId, allGeckosMap, offspring, handleSelectGecko]);
 
     // Stats derived from the currently rendered lineage tree
     const stats = useMemo(() => {
@@ -556,16 +680,51 @@ export default function Lineage() {
         const inbreedingAncestors = overlap
             .map((id) => allGeckosMap[id])
             .filter(Boolean);
+        const coi = calculateCOI(lineage);
         return {
             ancestorCount: Math.max(0, ancestorCount),
             depth,
             offspringCount: offspring.length,
             matesCount: mates.length,
             inbreedingAncestors,
+            coi,
         };
     }, [lineage, offspring, mates, allGeckosMap]);
 
     const selectedGecko = selectedGeckoId ? allGeckosMap[selectedGeckoId] : null;
+
+    // Resolve recent gecko IDs against the loaded gecko map, dropping any that
+    // aren't visible to the current user anymore.
+    const recentGeckos = useMemo(
+        () => recentGeckoIds.map((id) => allGeckosMap[id]).filter(Boolean),
+        [recentGeckoIds, allGeckosMap],
+    );
+
+    // Side panel layout scales with the tree's generation count so mates/offspring
+    // can expand laterally as the tree gets wider.
+    const sidePanelWidth =
+        generations >= 5 ? 'md:w-80' :
+        generations >= 4 ? 'md:w-60' :
+        'md:w-36';
+    const sidePanelGridCols =
+        generations >= 5 ? 'md:grid-cols-3' :
+        generations >= 4 ? 'md:grid-cols-2' :
+        'md:grid-cols-1';
+    const sidePanelCardSize = generations >= 4 ? 'tiny' : 'small';
+
+    // Copy shareable link (reuses ?geckoId= URL param the page already accepts)
+    const [copiedLink, setCopiedLink] = useState(false);
+    const handleCopyLink = async () => {
+        if (!selectedGeckoId) return;
+        const url = `${window.location.origin}/Lineage?geckoId=${selectedGeckoId}`;
+        try {
+            await navigator.clipboard.writeText(url);
+            setCopiedLink(true);
+            setTimeout(() => setCopiedLink(false), 1600);
+        } catch (error) {
+            console.error('Failed to copy link:', error);
+        }
+    };
 
     // PNG export via html2canvas
     const [isExporting, setIsExporting] = useState(false);
@@ -573,6 +732,9 @@ export default function Lineage() {
         const target = treeAreaRef.current;
         if (!target || !selectedGecko) return;
         setIsExporting(true);
+        // Temporarily reset CSS scale so html2canvas captures the real layout.
+        const previousTransform = target.style.transform;
+        target.style.transform = 'scale(1)';
         try {
             const canvas = await html2canvas(target, {
                 backgroundColor: '#020617',
@@ -589,8 +751,10 @@ export default function Lineage() {
             document.body.removeChild(link);
         } catch (error) {
             console.error('Failed to export lineage PNG:', error);
+        } finally {
+            target.style.transform = previousTransform;
+            setIsExporting(false);
         }
-        setIsExporting(false);
     };
 
     useEffect(() => {
@@ -670,7 +834,7 @@ export default function Lineage() {
     };
 
     // Render a single node (gecko or placeholder)
-    const renderNode = (gecko, generation) => {
+    const renderNode = (gecko, generation, path = []) => {
         if (!gecko) return null;
 
         const cardSize = getCardSize(generation);
@@ -689,12 +853,22 @@ export default function Lineage() {
             );
         }
 
+        // A card is on the highlight path when its own path is a prefix of the
+        // currently hovered card's path (including being equal to it).
+        const isOnHighlightPath = !!highlightPath &&
+            path.length <= highlightPath.length &&
+            path.every((step, i) => step === highlightPath[i]);
+
         return (
             <GeckoCardNode
                 gecko={gecko}
                 onNodeClick={handleSelectGecko}
                 isSelected={selectedGeckoId === gecko.id}
                 size={cardSize}
+                isOnHighlightPath={isOnHighlightPath}
+                isDimmed={!!highlightPath && !isOnHighlightPath}
+                onHoverEnter={() => setHighlightPath(path)}
+                onHoverLeave={() => setHighlightPath(null)}
             />
         );
     };
@@ -765,7 +939,7 @@ export default function Lineage() {
     };
 
     // Render the tree recursively - parents above, child below
-    const renderTree = (gecko, generation) => {
+    const renderTree = (gecko, generation, path = []) => {
         if (!gecko) return null;
 
         // Handle placeholders - they need their own parent tree
@@ -779,6 +953,21 @@ export default function Lineage() {
         const damVisible = gecko.dam && (showUnknown || !gecko.dam.isPlaceholder);
         const hasParents = sireVisible || damVisible;
 
+        // Connector brightness follows the hover path so the chain visibly glows.
+        const sireOnPath = !!highlightPath && highlightPath[path.length] === 'sire' && path.every((s, i) => s === highlightPath[i]);
+        const damOnPath = !!highlightPath && highlightPath[path.length] === 'dam' && path.every((s, i) => s === highlightPath[i]);
+        const trunkOnPath = sireOnPath || damOnPath;
+
+        const trunkClass = trunkOnPath
+            ? 'bg-gradient-to-b from-amber-300 to-amber-500 shadow-[0_0_10px_rgba(251,191,36,0.7)]'
+            : 'bg-gradient-to-b from-emerald-500/60 to-emerald-700/40 shadow-[0_0_6px_rgba(16,185,129,0.3)]';
+        const sireArmClass = sireOnPath
+            ? 'bg-gradient-to-r from-amber-400 to-amber-500 shadow-[0_0_6px_rgba(251,191,36,0.6)]'
+            : 'bg-gradient-to-r from-emerald-700/40 to-emerald-500/60';
+        const damArmClass = damOnPath
+            ? 'bg-gradient-to-l from-amber-400 to-amber-500 shadow-[0_0_6px_rgba(251,191,36,0.6)]'
+            : 'bg-gradient-to-l from-emerald-700/40 to-emerald-500/60';
+
         return (
             <div className="flex flex-col items-center">
                 {/* Parents Row */}
@@ -787,29 +976,29 @@ export default function Lineage() {
                         <div className="flex gap-2 md:gap-4">
                             {sireVisible && (
                                 <div className="flex flex-col items-center">
-                                    {renderTree(gecko.sire, generation + 1)}
+                                    {renderTree(gecko.sire, generation + 1, [...path, 'sire'])}
                                 </div>
                             )}
                             {damVisible && (
                                 <div className="flex flex-col items-center">
-                                    {renderTree(gecko.dam, generation + 1)}
+                                    {renderTree(gecko.dam, generation + 1, [...path, 'dam'])}
                                 </div>
                             )}
                         </div>
                         {/* Connecting lines */}
                         <div className="flex items-center justify-center w-full">
-                            <div className="h-4 w-[2px] bg-gradient-to-b from-emerald-500/60 to-emerald-700/40 shadow-[0_0_6px_rgba(16,185,129,0.3)]"></div>
+                            <div className={`h-4 w-[2px] ${trunkClass}`}></div>
                         </div>
                         <div className="flex items-center justify-center">
-                            <div className="w-1/4 h-[2px] bg-gradient-to-r from-emerald-700/40 to-emerald-500/60"></div>
-                            <div className="h-4 w-[2px] bg-gradient-to-b from-emerald-500/60 to-emerald-700/40 shadow-[0_0_6px_rgba(16,185,129,0.3)]"></div>
-                            <div className="w-1/4 h-[2px] bg-gradient-to-l from-emerald-700/40 to-emerald-500/60"></div>
+                            <div className={`w-1/4 h-[2px] ${sireArmClass}`}></div>
+                            <div className={`h-4 w-[2px] ${trunkClass}`}></div>
+                            <div className={`w-1/4 h-[2px] ${damArmClass}`}></div>
                         </div>
                     </>
                 )}
 
                 {/* Current Node */}
-                {renderNode(gecko, generation)}
+                {renderNode(gecko, generation, path)}
             </div>
         );
     };
@@ -906,6 +1095,21 @@ export default function Lineage() {
                                 <SelectItem value="5">5 Gen</SelectItem>
                             </SelectContent>
                         </Select>
+                        <Tooltip>
+                            <TooltipTrigger asChild>
+                                <Button
+                                    size="icon"
+                                    variant="outline"
+                                    onClick={handleCopyLink}
+                                    disabled={!selectedGeckoId}
+                                    className="h-10 w-10 bg-slate-800 border-slate-600 hover:bg-slate-700 disabled:opacity-40"
+                                    aria-label="Copy shareable link"
+                                >
+                                    {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <LinkIcon className="w-4 h-4" />}
+                                </Button>
+                            </TooltipTrigger>
+                            <TooltipContent>{copiedLink ? 'Link copied!' : 'Copy shareable link'}</TooltipContent>
+                        </Tooltip>
                         <Tooltip>
                             <TooltipTrigger asChild>
                                 <Button
@@ -1048,13 +1252,55 @@ export default function Lineage() {
                             </div>
                         </div>
 
+                        {/* Recently viewed breadcrumb */}
+                        {recentGeckos.length > 1 && (
+                            <div className="max-w-7xl mx-auto px-3 md:px-6 pb-2 flex items-center gap-2 overflow-x-auto">
+                                <span className="text-[10px] uppercase tracking-wide text-slate-500 flex-shrink-0">
+                                    Recent
+                                </span>
+                                {recentGeckos.map((g, i) => (
+                                    <button
+                                        key={g.id}
+                                        onClick={() => handleSelectGecko(g.id)}
+                                        className={`flex items-center gap-1.5 px-2 py-1 rounded-md border text-xs flex-shrink-0 transition-colors ${
+                                            g.id === selectedGeckoId
+                                                ? 'bg-emerald-600/20 border-emerald-500/60 text-emerald-200'
+                                                : 'bg-slate-800/60 border-slate-700 text-slate-300 hover:bg-slate-700'
+                                        }`}
+                                        title={g.gecko_id_code || g.name}
+                                    >
+                                        <img
+                                            src={g.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
+                                            alt=""
+                                            className="w-4 h-4 rounded-sm object-cover"
+                                            loading="lazy"
+                                        />
+                                        <span className="truncate max-w-[110px]">{g.name}</span>
+                                        {i < recentGeckos.length - 1 && (
+                                            <span className="text-slate-600 ml-1">·</span>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                        )}
+
                         {/* Stats bar */}
                         {stats && (
-                            <div className="max-w-7xl mx-auto px-3 md:px-6 pb-3 grid grid-cols-2 md:grid-cols-4 gap-2">
+                            <div className="max-w-7xl mx-auto px-3 md:px-6 pb-3 grid grid-cols-2 md:grid-cols-5 gap-2">
                                 <StatPill label="Known ancestors" value={stats.ancestorCount} />
                                 <StatPill label="Known depth" value={`${stats.depth}/${generations}`} />
                                 <StatPill label="Offspring" value={stats.offspringCount} />
                                 <StatPill label="Mates" value={stats.matesCount} />
+                                <StatPill
+                                    label="COI"
+                                    value={`${(stats.coi * 100).toFixed(stats.coi >= 0.01 ? 1 : 2)}%`}
+                                    tone={
+                                        stats.coi >= 0.25 ? 'danger' :
+                                        stats.coi >= 0.0625 ? 'warning' :
+                                        'default'
+                                    }
+                                    tooltip="Coefficient of inbreeding (Wright). Calculated only from known ancestors within the selected generation depth."
+                                />
                                 {stats.inbreedingAncestors.length > 0 && (
                                     <div className="col-span-2 md:col-span-4 flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-200 text-xs">
                                         <AlertTriangle className="w-4 h-4 flex-shrink-0" />
@@ -1098,21 +1344,21 @@ export default function Lineage() {
                             <Loader2 className="w-12 h-12 text-emerald-500 animate-spin" />
                         </div>
                     ) : selectedGeckoId && lineage?.id ? (
-                        <div className="flex flex-col md:flex-row gap-8">
+                        <div className={`flex flex-col md:flex-row gap-2 md:gap-3 md:items-end md:justify-center`}>
                             {/* Mates Column (Left) */}
-                            <div className="md:w-36 flex-shrink-0 order-2 md:order-1">
+                            <div className={`flex-shrink-0 order-2 md:order-1 ${sidePanelWidth}`}>
                                 {mates.length > 0 && (
-                                    <div className="bg-emerald-950/50 rounded-lg p-3 border border-emerald-800">
-                                        <h2 className="text-sm font-bold mb-3 flex items-center justify-center gap-1 text-pink-400">
+                                    <div className="bg-emerald-950/50 rounded-lg p-2 md:p-3 border border-emerald-800">
+                                        <h2 className="text-sm font-bold mb-2 flex items-center justify-center gap-1 text-pink-400">
                                             <Heart className="w-4 h-4" /> Mates
                                         </h2>
-                                        <div className="flex md:flex-col items-center justify-center gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
+                                        <div className={`flex md:grid items-center justify-center gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0 ${sidePanelGridCols}`}>
                                             {mates.map(mate => (
-                                                <GeckoCardNode 
-                                                    key={mate.id} 
-                                                    gecko={mate} 
-                                                    onNodeClick={handleSelectGecko} 
-                                                    size="small"
+                                                <GeckoCardNode
+                                                    key={mate.id}
+                                                    gecko={mate}
+                                                    onNodeClick={handleSelectGecko}
+                                                    size={sidePanelCardSize}
                                                 />
                                             ))}
                                         </div>
@@ -1121,25 +1367,25 @@ export default function Lineage() {
                             </div>
 
                             {/* Main Lineage Tree (Center) */}
-                            <div className="flex-1 flex flex-col items-center order-1 md:order-2">
+                            <div className="flex-shrink-0 flex flex-col items-center order-1 md:order-2">
                                 <h2 className="text-lg font-bold mb-4 text-emerald-400">Ancestry</h2>
                                 {renderTree(lineage, 1)}
                             </div>
 
                             {/* Offspring Column (Right) */}
-                            <div className="md:w-36 flex-shrink-0 order-3">
+                            <div className={`flex-shrink-0 order-3 ${sidePanelWidth}`}>
                                 {offspring.length > 0 && (
-                                    <div className="bg-emerald-950/50 rounded-lg p-3 border border-emerald-800">
-                                        <h2 className="text-sm font-bold mb-3 flex items-center justify-center gap-1 text-blue-400">
+                                    <div className="bg-emerald-950/50 rounded-lg p-2 md:p-3 border border-emerald-800">
+                                        <h2 className="text-sm font-bold mb-2 flex items-center justify-center gap-1 text-blue-400">
                                             <Users2 className="w-4 h-4" /> Offspring
                                         </h2>
-                                        <div className="flex md:flex-col items-center justify-center gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
+                                        <div className={`flex md:grid items-center justify-center gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0 ${sidePanelGridCols}`}>
                                             {offspring.map(child => (
-                                                <GeckoCardNode 
-                                                    key={child.id} 
-                                                    gecko={child} 
-                                                    onNodeClick={handleSelectGecko} 
-                                                    size="small"
+                                                <GeckoCardNode
+                                                    key={child.id}
+                                                    gecko={child}
+                                                    onNodeClick={handleSelectGecko}
+                                                    size={sidePanelCardSize}
                                                 />
                                             ))}
                                         </div>
