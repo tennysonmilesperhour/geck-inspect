@@ -31,72 +31,10 @@ import { Badge } from '@/components/ui/badge';
 import PlanLimitModal, { getGeckoLimit } from '../components/subscription/PlanLimitChecker';
 import { exportGeckosCSV, exportGeckosPDF } from '@/lib/exportUtils';
 import { captureEvent } from '@/lib/posthog';
+import { useGeckoFilters } from '@/hooks/useGeckoFilters';
+import { retryApiCall } from '@/lib/layoutCache';
 
 const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
-
-// Enhanced cache specifically for MyGeckos page
-class MyGeckosCache {
-    constructor() {
-        this.cache = new Map();
-        this.timestamps = new Map();
-        this.requestTimestamps = new Map();
-        this.CACHE_DURATION = 5 * 60 * 1000; // 5 minutes for user data
-        this.MIN_REQUEST_INTERVAL = 10000; // 10 seconds minimum between requests
-    }
-
-    canMakeRequest(key) {
-        const lastRequest = this.requestTimestamps.get(key);
-        return !lastRequest || (Date.now() - lastRequest) > this.MIN_REQUEST_INTERVAL;
-    }
-
-    markRequest(key) {
-        this.requestTimestamps.set(key, Date.now());
-    }
-
-    get(key) {
-        const timestamp = this.timestamps.get(key);
-        if (timestamp && (Date.now() - timestamp) < this.CACHE_DURATION) {
-            return this.cache.get(key);
-        }
-        return null;
-    }
-
-    set(key, data) {
-        this.cache.set(key, data);
-        this.timestamps.set(key, Date.now());
-    }
-
-    invalidate(key) {
-        this.cache.delete(key);
-        this.timestamps.delete(key);
-        this.requestTimestamps.delete(key);
-    }
-
-    clear() {
-        this.cache.clear();
-        this.timestamps.clear();
-        this.requestTimestamps.clear();
-    }
-}
-
-const geckosCache = new MyGeckosCache();
-
-// Retry function with exponential backoff
-const retryWithBackoff = async (fn, maxRetries = 3, initialDelay = 2000) => {
-    for (let attempt = 1; attempt <= maxRetries; attempt++) {
-        try {
-            return await fn();
-        } catch (error) {
-            if (error.response?.status === 429 && attempt < maxRetries) {
-                const delay = initialDelay * Math.pow(2, attempt - 1);
-                console.log(`Rate limited, waiting ${delay}ms before retry ${attempt}/${maxRetries}`);
-                await new Promise(resolve => setTimeout(resolve, delay));
-                continue;
-            }
-            throw error;
-        }
-    }
-};
 
 export default function MyGeckosPage() {
     const [geckos, setGeckos] = useState([]);
@@ -144,60 +82,25 @@ export default function MyGeckosPage() {
     // Load every gecko the current user owns, up to GECKO_FETCH_LIMIT. Reads
     // from the rate-limited cache when possible, otherwise does a single
     // Supabase round trip.
-    const loadGeckos = useCallback(async (forceRefresh = false) => {
+    const loadGeckos = useCallback(async () => {
         if (!user) return;
-
         setIsLoading(true);
-        const cacheKey = `geckos_${user.email}`;
-
         try {
-            if (!forceRefresh) {
-                const cachedGeckos = geckosCache.get(cacheKey);
-                if (cachedGeckos) {
-                    setGeckos(cachedGeckos);
-                    setIsLoading(false);
-                    return;
-                }
-            }
-
-            if (!geckosCache.canMakeRequest(cacheKey)) {
-                console.log('Rate limit protection: using existing data');
-                setIsLoading(false);
-                return;
-            }
-            geckosCache.markRequest(cacheKey);
-
-            const [userGeckos, userWeights] = await retryWithBackoff(async () => {
-                return await Promise.all([
-                    Gecko.filter(
-                        { created_by: user.email },
-                        '-created_date',
-                        GECKO_FETCH_LIMIT
-                    ),
+            const [userGeckos, userWeights] = await retryApiCall(async () =>
+                Promise.all([
+                    Gecko.filter({ created_by: user.email }, '-created_date', GECKO_FETCH_LIMIT),
                     WeightRecord.filter({ created_by: user.email }, '-record_date'),
-                ]);
-            });
-
-            const filteredGeckos = userGeckos.filter(g => !g.notes?.startsWith('[Manual sale]'));
-            geckosCache.set(cacheKey, filteredGeckos);
-            geckosCache.set(`weights_${user.email}`, userWeights);
-            setGeckos(filteredGeckos);
+                ])
+            );
+            setGeckos(userGeckos);
             setWeightRecords(userWeights);
         } catch (error) {
             console.error('Failed to load geckos:', error);
-            const fallbackGeckos = geckosCache.get(cacheKey);
-            const fallbackWeights = geckosCache.get(`weights_${user.email}`);
-            if (fallbackGeckos) {
-                setGeckos(fallbackGeckos);
-                if (fallbackWeights) setWeightRecords(fallbackWeights);
-            } else {
-                toast({
-                    title: 'Error Loading Geckos',
-                    description:
-                        'Unable to load your gecko collection. Please try again in a moment.',
-                    variant: 'destructive',
-                });
-            }
+            toast({
+                title: 'Error Loading Geckos',
+                description: 'Unable to load your gecko collection. Please try again in a moment.',
+                variant: 'destructive',
+            });
         } finally {
             setIsLoading(false);
         }
@@ -207,7 +110,7 @@ export default function MyGeckosPage() {
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const currentUser = await retryWithBackoff(async () => base44.auth.me());
+                const currentUser = await retryApiCall(async () => base44.auth.me());
                 setUser(currentUser);
             } catch (error) {
                 console.error("Failed to load initial user:", error);
@@ -233,8 +136,7 @@ export default function MyGeckosPage() {
     useEffect(() => {
         const handler = () => {
             if (!user?.email) return;
-            geckosCache.invalidate(`geckos_${user.email}`);
-            loadGeckos(true);
+            loadGeckos();
         };
         window.addEventListener('geckos_changed', handler);
         return () => window.removeEventListener('geckos_changed', handler);
@@ -262,7 +164,7 @@ export default function MyGeckosPage() {
         setIsDetailModalOpen(false);
         setSelectedGecko(null);
         // Refresh geckos when modal closes to show updated weight or other changes
-        loadGeckos(true);
+        loadGeckos();
     };
 
     const handleEdit = (gecko) => {
@@ -275,28 +177,7 @@ export default function MyGeckosPage() {
 
     const handleDelete = async (geckoId) => {
         try {
-            const geckoToDelete = geckos.find(g => g.id === geckoId);
-
-            // Preserve revenue data for sold geckos before deletion
-            if (geckoToDelete && user) {
-                const wasSold = geckoToDelete.status === 'Sold' || geckoToDelete.archive_reason === 'sold';
-                const price = geckoToDelete.asking_price;
-                if (wasSold && price && price > 0) {
-                    try {
-                        await MarketplaceCost.create({
-                            user_email: user.email,
-                            description: geckoToDelete.name || 'Deleted gecko',
-                            amount: price,
-                            date: geckoToDelete.archived_date || geckoToDelete.updated_date?.split('T')[0] || new Date().toISOString().split('T')[0],
-                            category: 'sale:produced_in_house',
-                        });
-                    } catch (e) {
-                        console.warn('Could not preserve revenue record:', e);
-                    }
-                }
-            }
-
-            await retryWithBackoff(async () => {
+            await retryApiCall(async () => {
                 return await Gecko.delete(geckoId);
             });
 
@@ -307,7 +188,6 @@ export default function MyGeckosPage() {
 
             if (user) {
                 const cacheKey = `geckos_${user.email}`;
-                geckosCache.invalidate(cacheKey);
             }
 
             toast({
@@ -336,16 +216,11 @@ export default function MyGeckosPage() {
                 ? { archived: true, archived_date: new Date().toISOString().split('T')[0], archive_reason: reason || null }
                 : { archived: false, archived_date: null, archive_reason: null };
 
-            await retryWithBackoff(async () => Gecko.update(geckoId, updateData));
+            await retryApiCall(async () => Gecko.update(geckoId, updateData));
 
-            // Optimistic local update so the gecko immediately moves
-            // between active / archive views without waiting for a refetch.
-            setGeckos(prev => prev.map(g => g.id === geckoId ? { ...g, ...updateData } : g));
+            if (user) ;
 
-            if (user) geckosCache.invalidate(`geckos_${user.email}`);
-
-            // Background refetch to stay in sync with the DB.
-            loadGeckos(true);
+            await loadGeckos();
             setIsDetailModalOpen(false);
             setSelectedGecko(null);
             setArchiveDialogGeckoId(null);
@@ -386,12 +261,11 @@ export default function MyGeckosPage() {
 
         if (user) {
             const cacheKey = `geckos_${user.email}`;
-            geckosCache.invalidate(cacheKey);
 
             // Restore scroll immediately after closing the form, then reload data
             window.scrollTo({ top: savedScroll, behavior: 'instant' });
             setTimeout(() => {
-                loadGeckos(true).then(() => {
+                loadGeckos().then(() => {
                     // Restore again after data reload in case layout shifted
                     window.scrollTo({ top: savedScroll, behavior: 'instant' });
                 });
@@ -413,137 +287,15 @@ export default function MyGeckosPage() {
         if (user) {
             // Invalidate cache and reload
             const cacheKey = `geckos_${user.email}`;
-            geckosCache.invalidate(cacheKey);
 
             // Add delay for import to complete
             setTimeout(() => {
-                loadGeckos(true);
+                loadGeckos();
             }, 1000);
         }
     };
 
-    const applyFilters = (geckosToFilter) => {
-        let result = [...geckosToFilter];
-
-        // Filter by sex
-        if (filters.sexes.length > 0) {
-            result = result.filter(g => filters.sexes.includes(g.sex));
-        }
-
-        // Filter by status
-        if (filters.statuses.length > 0) {
-            result = result.filter(g => filters.statuses.includes(g.status));
-        }
-
-        // Filter by weight range — use latest WeightRecord, fall back to gecko.weight_grams
-        const getLatestWeight = (g) => {
-            const records = weightRecords.filter(w => w.gecko_id === g.id);
-            if (records.length > 0) {
-                return [...records].sort((a, b) => new Date(b.record_date) - new Date(a.record_date))[0].weight_grams;
-            }
-            return g.weight_grams ?? null;
-        };
-        if (filters.weightMin) {
-            const min = parseFloat(filters.weightMin);
-            result = result.filter(g => { const w = getLatestWeight(g); return w !== null && w >= min; });
-        }
-        if (filters.weightMax) {
-            const max = parseFloat(filters.weightMax);
-            result = result.filter(g => { const w = getLatestWeight(g); return w !== null && w <= max; });
-        }
-
-        // Filter by traits (must have ALL selected traits)
-        if (filters.traits.length > 0) {
-            result = result.filter(g => {
-                if (!g.morphs_traits) return false;
-                const morphsLower = g.morphs_traits.toLowerCase();
-                return filters.traits.every(trait => morphsLower.includes(trait.toLowerCase()));
-            });
-        }
-
-        // Filter by morph tags
-        if (filters.morphTags && filters.morphTags.length > 0) {
-            result = result.filter(g => {
-                if (!g.morph_tags || g.morph_tags.length === 0) return false;
-                return filters.morphTags.every(tag => g.morph_tags.includes(tag));
-            });
-        }
-
-        // Filter by feeding group
-        if (filters.feedingGroupIds && filters.feedingGroupIds.length > 0) {
-            result = result.filter(g => filters.feedingGroupIds.includes(g.feeding_group_id));
-        }
-
-        // Filter by species
-        if (filters.species && filters.species.length > 0) {
-            result = result.filter(g => filters.species.includes(g.species || 'Crested Gecko'));
-        }
-
-        return result;
-    };
-
-    const getSortedGeckos = (geckosToSort) => {
-        const sorted = [...geckosToSort];
-        
-        switch(sortBy) {
-            case 'name':
-                return sorted.sort((a, b) => a.name.localeCompare(b.name));
-            case 'date_added':
-                return sorted.sort((a, b) => new Date(b.created_date).getTime() - new Date(a.created_date).getTime());
-            case 'hatch_date_newest':
-                return sorted.sort((a, b) => {
-                    if (!a.hatch_date && !b.hatch_date) return 0;
-                    if (!a.hatch_date) return 1;
-                    if (!b.hatch_date) return -1;
-                    return new Date(b.hatch_date).getTime() - new Date(a.hatch_date).getTime();
-                });
-            case 'hatch_date_oldest':
-                return sorted.sort((a, b) => {
-                    if (!a.hatch_date && !b.hatch_date) return 0;
-                    if (!a.hatch_date) return 1;
-                    if (!b.hatch_date) return -1;
-                    return new Date(a.hatch_date).getTime() - new Date(b.hatch_date).getTime();
-                });
-            case 'status':
-                const statusOrder = ['Proven', 'Ready to Breed', 'Future Breeder', 'Holdback', 'For Sale', 'Pet', 'Sold'];
-                return sorted.sort((a, b) => {
-                    const aIndex = statusOrder.indexOf(a.status);
-                    const bIndex = statusOrder.indexOf(b.status);
-                    if (aIndex === -1 && bIndex === -1) return a.status.localeCompare(b.status);
-                    if (aIndex === -1) return 1;
-                    if (bIndex === -1) return -1;
-                    return aIndex - bIndex;
-                });
-            case 'weight_heaviest':
-                return sorted.sort((a, b) => {
-                    const getW = (g) => { const r = weightRecords.filter(w => w.gecko_id === g.id); return r.length > 0 ? [...r].sort((x,y) => new Date(y.record_date)-new Date(x.record_date))[0].weight_grams : (g.weight_grams || 0); };
-                    return getW(b) - getW(a);
-                });
-            case 'weight_lightest':
-                return sorted.sort((a, b) => {
-                    const getW = (g) => { const r = weightRecords.filter(w => w.gecko_id === g.id); return r.length > 0 ? [...r].sort((x,y) => new Date(y.record_date)-new Date(x.record_date))[0].weight_grams : (g.weight_grams ?? Infinity); };
-                    const aW = getW(a); const bW = getW(b);
-                    if (aW === Infinity && bW === Infinity) return 0;
-                    if (aW === Infinity) return 1;
-                    if (bW === Infinity) return -1;
-                    return aW - bW;
-                });
-            case 'sex':
-                return sorted.sort((a, b) => {
-                    const sexOrder = { 'Male': 0, 'Female': 1, 'Unsexed': 2 };
-                    return (sexOrder[a.sex] || 3) - (sexOrder[b.sex] || 3);
-                });
-            case 'archive_reason':
-                return sorted.sort((a, b) => {
-                    const order = { 'death': 0, 'sold': 1, 'other': 2 };
-                    return (order[a.archive_reason] ?? 3) - (order[b.archive_reason] ?? 3);
-                });
-            case 'species':
-                return sorted.sort((a, b) => (a.species || 'Crested Gecko').localeCompare(b.species || 'Crested Gecko'));
-            default:
-                return sorted;
-        }
-    };
+    // Filtering + sorting extracted to useGeckoFilters hook
 
     const handleClearFilters = () => {
         setFilters({
@@ -558,25 +310,9 @@ export default function MyGeckosPage() {
         });
     };
 
-    // Filters + search + sort run purely client-side now, so there's no
-    // need to re-fetch from Supabase every time the user types.
-
-    const searchFiltered = geckos
-        .filter(gecko => showArchived
-            ? (gecko.archived || gecko.status === 'Sold')
-            : (!gecko.archived && gecko.status !== 'Sold')
-        )
-        .filter(gecko => {
-            const term = searchTerm.toLowerCase();
-            return (
-                gecko.name.toLowerCase().includes(term) ||
-                gecko.gecko_id_code?.toLowerCase().includes(term) ||
-                gecko.morphs_traits?.toLowerCase().includes(term) ||
-                (gecko.morph_tags || []).some(tag => tag.toLowerCase().includes(term))
-            );
-        });
-    
-    const filteredAndSortedGeckos = getSortedGeckos(applyFilters(searchFiltered));
+    const filteredAndSortedGeckos = useGeckoFilters(geckos, weightRecords, {
+        filters, sortBy, searchTerm, showArchived,
+    });
     // We render every gecko we've loaded; the server already capped the
     // fetch at GECKO_FETCH_LIMIT and filters/search are pure.
     const visibleGeckos = filteredAndSortedGeckos;
@@ -685,7 +421,7 @@ export default function MyGeckosPage() {
                              with a grey border, misaligned against its siblings. */}
                         <Button
                             variant="outline"
-                            onClick={() => setShowArchived(!showArchived)}
+                            onClick={() => { setShowArchived(!showArchived); loadGeckos(); }}
                             className="border-emerald-700/60 bg-[rgba(6,95,70,0.35)] text-slate-100 hover:bg-[rgba(4,120,87,0.5)] hover:border-emerald-500/70"
                         >
                             {showArchived ? (
@@ -1090,7 +826,7 @@ export default function MyGeckosPage() {
                         allGeckos={geckos}
                         currentUser={user}
                         onClose={handleCloseDetailModal}
-                        onUpdate={() => loadGeckos(true)}
+                        onUpdate={() => loadGeckos()}
                         onEdit={handleEdit}
                         onArchive={handleArchiveGecko}
                         onDelete={handleDelete}

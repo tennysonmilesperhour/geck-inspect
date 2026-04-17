@@ -313,30 +313,13 @@ html, body, #root {
              Previous overrides forced gradients + transforms on every
              emerald button, causing inconsistent appearance. */
 
-          .dark input,
-          .dark textarea,
-          .dark select,
-          .dark [role="combobox"] {
-            background: #0c2a1f !important;
-            border: 1px solid var(--gecko-border) !important;
-            color: var(--gecko-text) !important;
-            transition: border-color 0.2s ease;
-          }
+          /* Input, text, and border color overrides removed — now handled
+             by the slate/gray palette override in tailwind.config.js. */
 
-          .dark input:focus,
-          .dark textarea:focus,
-          .dark select:focus,
-          .dark [role="combobox"]:focus {
-            border-color: var(--gecko-accent) !important;
-            box-shadow: 0 0 0 2px rgba(134, 239, 172, 0.15) !important;
+          .dark .border-slate-700,
+          .dark .border-gray-700 {
+            border-color: var(--gecko-border) !important;
           }
-
-          /* Removed: !important overrides for text-slate-*, text-gray-*,
-             and border-slate/gray-700. These conflicted with the
-             tailwind.config.js palette override — slate/gray are already
-             remapped to emerald-tinted values at build time. Keeping
-             these CSS rules would double-override with slightly different
-             greens, causing visual inconsistency. */
 
           .dark [data-state="checked"] {
             background-color: var(--gecko-accent) !important;
