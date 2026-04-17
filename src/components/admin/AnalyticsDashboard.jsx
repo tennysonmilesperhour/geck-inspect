@@ -48,7 +48,7 @@ import {
   MousePointerClick,
   Link2,
 } from 'lucide-react';
-import { format, subDays, startOfDay, differenceInDays } from 'date-fns';
+import { format, subDays, startOfDay, differenceInDays, startOfWeek, addWeeks, subWeeks } from 'date-fns';
 
 /**
  * Analytics dashboard — focused on growth + usage, not vanity counts.
@@ -424,6 +424,68 @@ export default function AnalyticsDashboard() {
     const featureEvents = eventBreakdown.filter((r) => r.name !== 'page_view');
     const pageViewCount = eventBreakdown.find((r) => r.name === 'page_view')?.count || 0;
 
+    // ------------------------------------------------------------------
+    // Retention tab: weekly cohort grid.
+    //
+    // Rows are the last 8 signup weeks; columns are relative offsets W+0..W+4.
+    // A user counts as "active in W+N" if they produced any user_events row
+    // during that relative week. W+0 is the cohort size itself.
+    // ------------------------------------------------------------------
+    const COHORT_WEEKS = 8;
+    const FOLLOWUP_WEEKS = 4;
+    const weekStart = (d) => startOfWeek(d, { weekStartsOn: 1 }); // Monday
+    const thisWeekStart = weekStart(new Date());
+
+    // Pre-bucket user_events by (email, weekStartMs) for O(1) lookup
+    const activityByUserWeek = new Map();
+    for (const e of eventsList) {
+      const d = safeDate(e.created_date);
+      if (!d || !e.user_email) continue;
+      const wk = weekStart(d).getTime();
+      let set = activityByUserWeek.get(e.user_email);
+      if (!set) {
+        set = new Set();
+        activityByUserWeek.set(e.user_email, set);
+      }
+      set.add(wk);
+    }
+
+    const cohortRows = [];
+    for (let i = COHORT_WEEKS - 1; i >= 0; i--) {
+      const cohortStart = subWeeks(thisWeekStart, i);
+      const cohortEnd = addWeeks(cohortStart, 1);
+      const cohortUsersList = users.filter((u) => {
+        const d = safeDate(u.created_date);
+        return d && d >= cohortStart && d < cohortEnd;
+      });
+      const cohortEmailsArr = cohortUsersList.map((u) => u.email).filter(Boolean);
+      const cohortSize = cohortEmailsArr.length;
+
+      const followups = [];
+      for (let w = 1; w <= FOLLOWUP_WEEKS; w++) {
+        const followupStart = addWeeks(cohortStart, w);
+        // Only report weeks that have already fully elapsed
+        if (followupStart >= thisWeekStart) {
+          followups.push({ week: w, pct: null, active: null });
+          continue;
+        }
+        const followupWeekMs = followupStart.getTime();
+        let activeCount2 = 0;
+        for (const email of cohortEmailsArr) {
+          const weeks = activityByUserWeek.get(email);
+          if (weeks && weeks.has(followupWeekMs)) activeCount2++;
+        }
+        const pct = cohortSize > 0 ? Math.round((activeCount2 / cohortSize) * 100) : 0;
+        followups.push({ week: w, pct, active: activeCount2 });
+      }
+
+      cohortRows.push({
+        label: format(cohortStart, 'MMM d'),
+        size: cohortSize,
+        followups,
+      });
+    }
+
     return {
       kpi: {
         users: kUsers,
@@ -456,6 +518,7 @@ export default function AnalyticsDashboard() {
       topPages,
       featureEvents,
       pageViewCount,
+      cohortRows,
     };
   }, [data, period]);
 
@@ -490,6 +553,7 @@ export default function AnalyticsDashboard() {
     topPages,
     featureEvents,
     pageViewCount,
+    cohortRows,
   } = computed;
 
   return (
@@ -536,6 +600,9 @@ export default function AnalyticsDashboard() {
           </TabsTrigger>
           <TabsTrigger value="features" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-400">
             Features
+          </TabsTrigger>
+          <TabsTrigger value="retention" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-400">
+            Retention
           </TabsTrigger>
           <TabsTrigger value="errors" className="data-[state=active]:bg-slate-800 data-[state=active]:text-white text-slate-400">
             Errors
@@ -969,6 +1036,80 @@ export default function AnalyticsDashboard() {
               </Card>
             </div>
           )}
+        </TabsContent>
+
+        <TabsContent value="retention" className="space-y-6 mt-4">
+          <Card className="bg-slate-900 border-slate-800">
+            <CardHeader className="pb-2">
+              <CardTitle className="text-slate-100 text-base flex items-center gap-2">
+                <Users className="w-4 h-4 text-slate-400" />
+                Weekly cohort retention
+              </CardTitle>
+              <p className="text-xs text-slate-500">
+                % of each signup week still active (any user_event) in the following 4 weeks.
+                Incomplete weeks are left blank.
+              </p>
+            </CardHeader>
+            <CardContent>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm border-collapse">
+                  <thead>
+                    <tr className="text-left text-slate-400">
+                      <th className="py-2 pr-4 font-medium">Cohort week</th>
+                      <th className="py-2 px-3 font-medium text-right">Size</th>
+                      <th className="py-2 px-3 font-medium text-center">W+1</th>
+                      <th className="py-2 px-3 font-medium text-center">W+2</th>
+                      <th className="py-2 px-3 font-medium text-center">W+3</th>
+                      <th className="py-2 px-3 font-medium text-center">W+4</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {cohortRows.map((row) => (
+                      <tr key={row.label} className="border-t border-slate-800">
+                        <td className="py-2 pr-4 text-slate-300">{row.label}</td>
+                        <td className="py-2 px-3 text-right text-slate-200 font-semibold">
+                          {row.size}
+                        </td>
+                        {row.followups.map((f) => {
+                          if (f.pct === null) {
+                            return (
+                              <td key={f.week} className="py-2 px-3 text-center text-slate-600">
+                                —
+                              </td>
+                            );
+                          }
+                          if (row.size === 0) {
+                            return (
+                              <td key={f.week} className="py-2 px-3 text-center text-slate-600">
+                                0%
+                              </td>
+                            );
+                          }
+                          const intensity = Math.min(1, f.pct / 60);
+                          const bg = `rgba(16, 185, 129, ${(0.1 + intensity * 0.45).toFixed(2)})`;
+                          return (
+                            <td
+                              key={f.week}
+                              className="py-2 px-3 text-center text-slate-100 font-medium"
+                              style={{ backgroundColor: bg }}
+                              title={`${f.active}/${row.size} active`}
+                            >
+                              {f.pct}%
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+              {cohortRows.every((r) => r.size === 0) && (
+                <p className="text-xs text-slate-500 mt-4 text-center">
+                  No signups in the last {cohortRows.length} weeks.
+                </p>
+              )}
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="errors" className="space-y-6 mt-4">
