@@ -17,7 +17,7 @@ import { PageConfig } from "@/entities/PageConfig";
 import { useToast } from "@/components/ui/use-toast";
 import {
   Database, BookOpen, BarChart3, Upload, Users, HeartHandshake, Layers, LogOut, Search, Settings, UserPlus, Shield, MessageSquare, Bell, Mail, Heart, Menu, ShoppingCart, GitBranch, FlaskConical, Star, FolderKanban, GraduationCap, Dna,
-  Egg, LayoutGrid, CircleUser, UsersRound, Images, Tag, CalendarDays, Sparkles, Truck
+  Egg, LayoutGrid, CircleUser, UsersRound, Images, Tag, CalendarDays, Sparkles, Truck, ChevronDown
 } from "lucide-react";
 import TutorialModal from "@/components/tutorial/TutorialModal";
 import CommandPalette from "@/components/command-palette/CommandPalette";
@@ -697,6 +697,18 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
               </div>
             )}
           </SidebarBody>
+
+          {/* Scroll hint — a fade + bouncing chevron that overlaps the
+              end of the scrollable nav so users see, at a glance,
+              that there's more content above the footer. Pulled up
+              with negative margin so the gradient visually blends
+              into the last visible nav item. */}
+          <div
+            aria-hidden="true"
+            className="sidebar-scroll-hint pointer-events-none relative -mt-10 h-10 flex items-end justify-center bg-gradient-to-t from-emerald-950/70 via-emerald-950/25 to-transparent"
+          >
+            <ChevronDown className="w-4 h-4 text-emerald-300/80 animate-bounce mb-1" />
+          </div>
 
           <SidebarFooter className="p-4 border-t border-emerald-900/40">
             <div className="space-y-3">
