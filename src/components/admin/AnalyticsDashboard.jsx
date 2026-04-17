@@ -19,6 +19,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import ErrorLogsViewer from '@/components/admin/ErrorLogsViewer';
 import {
   Area,
   AreaChart,
@@ -971,11 +972,7 @@ export default function AnalyticsDashboard() {
         </TabsContent>
 
         <TabsContent value="errors" className="space-y-6 mt-4">
-          <Card className="bg-slate-900 border-slate-800">
-            <CardContent className="p-10 text-center text-sm text-slate-500">
-              Error logs coming soon.
-            </CardContent>
-          </Card>
+          <ErrorLogsViewer />
         </TabsContent>
       </Tabs>
     </div>
