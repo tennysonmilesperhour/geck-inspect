@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Eye, Edit, Calendar, Weight, Heart } from 'lucide-react';
 import { format } from 'date-fns';
+import WeightHealthBadge from '@/components/innovations/WeightHealthBadge';
 
 const DEFAULT_GECKO_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
 
@@ -138,6 +139,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
             <div className="flex items-center gap-1.5 text-emerald-400">
               <Weight className="w-3 h-3" />
               <span className="font-semibold">{latestWeight}g</span>
+              <WeightHealthBadge weightRecords={weightRecords.filter(w => w.gecko_id === gecko.id)} />
             </div>
           ) : null}
           {gecko.hatch_date && (

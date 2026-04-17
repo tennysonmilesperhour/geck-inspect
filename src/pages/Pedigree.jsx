@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Gecko } from '@/entities/all';
 import { Button } from '@/components/ui/button';
+import PedigreePosterExport from '@/components/innovations/PedigreePosterExport';
 import {
   ArrowLeft,
   GitBranch,
@@ -256,6 +257,7 @@ export default function Pedigree() {
   const location = useLocation();
   const navigate = useNavigate();
   const svgRef = useRef(null);
+  const treeContainerRef = useRef(null);
 
   const geckoId = useMemo(() => {
     const params = new URLSearchParams(location.search);
@@ -462,6 +464,10 @@ export default function Pedigree() {
                 <Download className="w-4 h-4 mr-2" />
                 SVG
               </Button>
+              <PedigreePosterExport
+                geckoName={rootGecko?.name}
+                pedigreeRef={treeContainerRef}
+              />
             </div>
           </div>
 
@@ -478,7 +484,7 @@ export default function Pedigree() {
         </header>
 
         {/* Pedigree canvas — horizontally scrollable, SVG scales with zoom */}
-        <div className="flex-1 overflow-auto p-6">
+        <div ref={treeContainerRef} className="flex-1 overflow-auto p-6">
           <div
             style={{
               width: canvasW * scale,
