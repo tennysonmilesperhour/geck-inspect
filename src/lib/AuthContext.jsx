@@ -1,6 +1,7 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
 import { identifyUser, resetUser } from '@/lib/posthog';
+import { isGuestMode, setGuestMode, GUEST_USER } from '@/lib/guestMode';
 
 const AuthContext = createContext();
 
@@ -22,12 +23,16 @@ async function buildUser(supabaseUser) {
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isGuest, setIsGuest] = useState(() => isGuestMode());
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
 
   useEffect(() => {
     // Hydrate from any existing session on mount
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
+        // A real session always wins over a stale guest flag.
+        setGuestMode(false);
+        setIsGuest(false);
         // Set basic user immediately so loading clears, then enrich with profile
         const basic = normalizeSupabaseUser(session.user);
         setUser(basic);
@@ -37,6 +42,10 @@ export const AuthProvider = ({ children }) => {
           setUser(enriched);
           identifyUser(enriched);
         });
+      } else if (isGuestMode()) {
+        // Keep guest mode alive across refreshes within the tab.
+        setUser(GUEST_USER);
+        setIsGuest(true);
       }
       setIsLoadingAuth(false);
     });
@@ -44,6 +53,8 @@ export const AuthProvider = ({ children }) => {
     // Keep auth state in sync with Supabase
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       if (session?.user) {
+        setGuestMode(false);
+        setIsGuest(false);
         const basic = normalizeSupabaseUser(session.user);
         setUser(basic);
         setIsAuthenticated(true);
@@ -53,9 +64,15 @@ export const AuthProvider = ({ children }) => {
           identifyUser(enriched);
         });
       } else {
-        setUser(null);
         setIsAuthenticated(false);
         resetUser();
+        if (isGuestMode()) {
+          setUser(GUEST_USER);
+          setIsGuest(true);
+        } else {
+          setUser(null);
+          setIsGuest(false);
+        }
       }
     });
 
@@ -96,6 +113,8 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async (shouldRedirect = true) => {
     await supabase.auth.signOut();
+    setGuestMode(false);
+    setIsGuest(false);
     setUser(null);
     setIsAuthenticated(false);
     resetUser();
@@ -108,10 +127,24 @@ export const AuthProvider = ({ children }) => {
     window.location.href = '/AuthPortal';
   };
 
+  const enterGuestMode = () => {
+    setGuestMode(true);
+    setUser(GUEST_USER);
+    setIsGuest(true);
+    setIsAuthenticated(false);
+  };
+
+  const exitGuestMode = () => {
+    setGuestMode(false);
+    setIsGuest(false);
+    setUser(null);
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
       isAuthenticated,
+      isGuest,
       isLoadingAuth,
       // Kept for API compatibility with components that destructure these
       isLoadingPublicSettings: false,
@@ -119,6 +152,8 @@ export const AuthProvider = ({ children }) => {
       appPublicSettings: null,
       logout,
       navigateToLogin,
+      enterGuestMode,
+      exitGuestMode,
       checkAppState: () => {},
     }}>
       {children}

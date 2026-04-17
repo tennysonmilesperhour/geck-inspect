@@ -10,6 +10,7 @@
  *   Entity.delete(id) → Object
  */
 import { supabase } from '@/lib/supabaseClient';
+import { blockIfGuest } from '@/lib/guestMode';
 
 export const TABLE_MAP = {
   AppSettings: 'app_settings',
@@ -165,6 +166,7 @@ function createEntityClient(entityName) {
     },
 
     async create(record) {
+      blockIfGuest('save changes');
       const { data: { user } } = await supabase.auth.getUser();
       const email = user?.email || null;
       const now = new Date().toISOString();
@@ -184,6 +186,7 @@ function createEntityClient(entityName) {
     },
 
     async update(id, record) {
+      blockIfGuest('save changes');
       const now = new Date().toISOString();
       // Remove undefined keys
       const cleaned = Object.fromEntries(
@@ -200,6 +203,7 @@ function createEntityClient(entityName) {
     },
 
     async delete(id) {
+      blockIfGuest('delete records');
       const { data, error } = await supabase
         .from(tableName)
         .delete()

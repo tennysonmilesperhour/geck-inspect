@@ -23,6 +23,7 @@ import TutorialModal from "@/components/tutorial/TutorialModal";
 import CommandPalette from "@/components/command-palette/CommandPalette";
 import FeedingAlertSystem from "@/components/feeding/FeedingAlertSystem";
 import NotificationPopover from "@/components/notifications/NotificationPopover";
+import GuestBanner from "@/components/auth/GuestBanner";
 import {
   Sidebar,
   SidebarHeader,
@@ -978,6 +979,8 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
               </div>
             </div>
           </header>
+
+          <GuestBanner />
 
           <div className="flex-1 overflow-auto overflow-x-hidden">
             {children}

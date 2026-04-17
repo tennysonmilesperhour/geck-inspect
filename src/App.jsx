@@ -54,7 +54,7 @@ const LazyFallback = (
 );
 
 const AuthenticatedApp = () => {
-  const { isLoadingAuth, isAuthenticated } = useAuth();
+  const { isLoadingAuth, isAuthenticated, isGuest } = useAuth();
   const [disabledPages, setDisabledPages] = useState(new Set());
 
   // Load page configs to enforce is_enabled at the router level.
@@ -83,11 +83,11 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // When the visitor is NOT signed in, the root URL shows the public
-  // landing page (good for SEO and first impressions), and any other
-  // route falls through to the login portal so protected pages stay
-  // gated behind auth.
-  if (!isAuthenticated) {
+  // When the visitor is NOT signed in and NOT in guest mode, the root
+  // URL shows the public landing page (good for SEO and first
+  // impressions), and any other route falls through to the login portal
+  // so protected pages stay gated behind auth.
+  if (!isAuthenticated && !isGuest) {
     return (
       <Suspense fallback={LazyFallback}>
         <Routes>
