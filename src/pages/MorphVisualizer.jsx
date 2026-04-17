@@ -1,6 +1,6 @@
 import { useMemo, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Layers, Sparkles, RotateCcw } from 'lucide-react';
+import { Layers, Sparkles, RotateCcw, HardHat, Eye, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 import { composePhenotype } from '../components/morph-visualizer/engine/compose';
@@ -33,6 +33,7 @@ function cloneSelections(s) {
 export default function MorphVisualizer() {
   const [selections, setSelections] = useState(() => cloneSelections(DEFAULT_SELECTIONS));
   const [activePresetId, setActivePresetId] = useState('wild_type');
+  const [view, setView] = useState('side');
 
   const phenotype = useMemo(() => composePhenotype(selections), [selections]);
 
@@ -124,24 +125,60 @@ export default function MorphVisualizer() {
           <div className="space-y-4 order-1 xl:order-2">
             <Card className="bg-slate-900 border-slate-700 shadow-2xl">
               <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
+                <div className="flex items-center justify-between flex-wrap gap-2">
                   <CardTitle className="flex items-center gap-2 text-slate-200 text-base">
                     <Sparkles className="w-5 h-5 text-emerald-400" />
                     Gecko Preview
                   </CardTitle>
-                  <Button
-                    onClick={reset}
-                    variant="outline"
-                    size="sm"
-                    className="text-xs bg-slate-800 border-slate-600 hover:bg-slate-700"
-                  >
-                    <RotateCcw className="w-3 h-3 mr-1" /> Reset
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {/* View toggle */}
+                    <div className="flex rounded-md border border-slate-700 bg-slate-800 overflow-hidden">
+                      <button
+                        onClick={() => setView('side')}
+                        className={`px-2.5 py-1 text-xs flex items-center gap-1 transition ${
+                          view === 'side'
+                            ? 'bg-emerald-700 text-white'
+                            : 'text-slate-300 hover:bg-slate-700'
+                        }`}
+                      >
+                        <Eye className="w-3 h-3" /> Side
+                      </button>
+                      <button
+                        onClick={() => setView('top')}
+                        className={`px-2.5 py-1 text-xs flex items-center gap-1 transition ${
+                          view === 'top'
+                            ? 'bg-emerald-700 text-white'
+                            : 'text-slate-300 hover:bg-slate-700'
+                        }`}
+                      >
+                        <Compass className="w-3 h-3" /> Top
+                      </button>
+                    </div>
+                    <Button
+                      onClick={reset}
+                      variant="outline"
+                      size="sm"
+                      className="text-xs bg-slate-800 border-slate-600 hover:bg-slate-700"
+                    >
+                      <RotateCcw className="w-3 h-3 mr-1" /> Reset
+                    </Button>
+                  </div>
                 </div>
               </CardHeader>
               <CardContent>
+                {/* Under construction banner */}
+                <div className="mb-3 flex items-center gap-2 rounded-md border border-amber-700/60 bg-amber-950/40 px-3 py-2 text-amber-200">
+                  <HardHat className="w-4 h-4 flex-shrink-0" />
+                  <div className="text-[12px] leading-snug">
+                    <span className="font-semibold">Under construction.</span>{' '}
+                    The gecko illustration is a playful work-in-progress — click around,
+                    stack morphs, load presets, break it in interesting ways. Your
+                    experiments help us tune what the final render should emphasize.
+                  </div>
+                </div>
+
                 <div className="aspect-[800/480] rounded-lg overflow-hidden bg-slate-800 border border-slate-700">
-                  <GeckoCanvas phenotype={phenotype} selections={selections} />
+                  <GeckoCanvas view={view} phenotype={phenotype} selections={selections} />
                 </div>
 
                 <div className="mt-4">
