@@ -36,8 +36,8 @@ ALTER TABLE pending_sales ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Users can manage their own pending sales"
   ON pending_sales FOR ALL
-  USING (user_email = (SELECT email FROM auth.users WHERE id = auth.uid()))
-  WITH CHECK (user_email = (SELECT email FROM auth.users WHERE id = auth.uid()));
+  USING (user_email = (auth.jwt() ->> 'email'))
+  WITH CHECK (user_email = (auth.jwt() ->> 'email'));
 
 -- Store policy field on user profiles
 ALTER TABLE profiles
