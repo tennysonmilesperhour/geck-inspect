@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { APP_LOGO_URL, DEFAULT_GECKO_IMAGE } from "@/lib/constants";
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
@@ -39,10 +39,16 @@ function GeckoTile({ gecko }) {
 
 export default function Breeder() {
   const location = useLocation();
+  const params = useParams();
+  // Support both the clean path form `/Breeder/<slug>` (preferred, what
+  // the sitemap and canonical now point at) and the legacy query-string
+  // form `/Breeder?slug=<slug>` (kept for inbound links that still exist).
+  // The path parameter wins if both are present.
   const slug = useMemo(() => {
-    const params = new URLSearchParams(location.search);
-    return (params.get('slug') || '').toLowerCase().trim();
-  }, [location.search]);
+    if (params?.slug) return params.slug.toLowerCase().trim();
+    const q = new URLSearchParams(location.search);
+    return (q.get('slug') || '').toLowerCase().trim();
+  }, [params?.slug, location.search]);
 
   const [geckos, setGeckos] = useState([]);
   const [uniqueOwners, setUniqueOwners] = useState(0);
@@ -129,24 +135,38 @@ export default function Breeder() {
     );
   }
 
-  const jsonLd = {
-    '@context': 'https://schema.org',
-    '@type': 'Organization',
-    name: displayName,
-    alternateName: slug,
-    url: `https://geckinspect.com/Breeder?slug=${slug}`,
-    description: `${displayName} is a crested gecko breeder referenced by keepers on Geck Inspect. ${geckos.length} gecko${
-      geckos.length === 1 ? '' : 's'
-    } in the Geck Inspect community trace their lineage back to ${displayName}.`,
-    logo: LOGO_URL,
-  };
+  // Canonical is the clean path form — query-string URLs redirect here
+  // in search results. BreadcrumbList gives crawlers the crumb trail
+  // even though the page itself renders breadcrumbs visually.
+  const breederUrl = `https://geckinspect.com/Breeder/${slug}`;
+  const jsonLd = [
+    {
+      '@type': 'Organization',
+      '@id': `${breederUrl}#breeder`,
+      name: displayName,
+      alternateName: slug,
+      url: breederUrl,
+      description: `${displayName} is a crested gecko breeder referenced by keepers on Geck Inspect. ${geckos.length} gecko${
+        geckos.length === 1 ? '' : 's'
+      } in the Geck Inspect community trace their lineage back to ${displayName}.`,
+      logo: LOGO_URL,
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://geckinspect.com/' },
+        { '@type': 'ListItem', position: 2, name: 'Breeders', item: 'https://geckinspect.com/#breeders' },
+        { '@type': 'ListItem', position: 3, name: displayName, item: breederUrl },
+      ],
+    },
+  ];
 
   return (
     <>
       <Seo
         title={`${displayName} — Crested Gecko Breeder`}
         description={`${displayName} is a crested gecko breeder referenced across the Geck Inspect community. Explore geckos whose lineage traces back to ${displayName}.`}
-        path={`/Breeder?slug=${slug}`}
+        path={`/Breeder/${slug}`}
         jsonLd={jsonLd}
       />
 

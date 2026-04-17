@@ -1,0 +1,334 @@
+#!/usr/bin/env node
+/**
+ * Per-route static HTML prerender for the Geck Inspect SPA.
+ *
+ * Why this exists
+ * ---------------
+ * The 2026-04 GEO audit's single highest-leverage finding: every route
+ * served the same 7,101-byte SPA shell, so GPTBot / ClaudeBot / CCBot
+ * (none of which execute JavaScript) saw zero body content on every URL
+ * and every page canonicalized to the homepage. This script fixes both
+ * issues without forcing a Next.js migration:
+ *
+ *   1. It writes a dedicated index.html into dist/<route>/index.html for
+ *      every indexable route, so Vercel's filesystem routing serves a
+ *      route-specific HTML document.
+ *   2. Each document carries route-specific <title>, <meta description>,
+ *      <link rel="canonical">, Open Graph tags, Twitter tags, and a
+ *      <noscript> body block with visible text content pulled from the
+ *      canonical data sources (morph-guide.js, care-guide.js, etc.).
+ *
+ * JS-executing crawlers (Googlebot) still hydrate the React SPA over the
+ * top of this static shell; react-helmet-async replaces the `<title>` and
+ * tags client-side, so nothing duplicates in the final DOM.
+ *
+ * Strategy for the <noscript> body
+ * --------------------------------
+ * We deliberately keep the <noscript> block short. The full content is
+ * also rendered via React once hydration completes, so shipping the
+ * entire article twice would bloat HTML and risk duplicate-keyword
+ * signals. The <noscript> block is optimized for the AI-crawler slice
+ * that never runs JS: the first 400–600 characters of substantive
+ * content, a canonical URL, key facts, and a link to sign up.
+ */
+
+import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
+import { resolve, join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { SITE_URL, STATIC_ROUTES, getMorphRoutes } from './seo-routes.mjs';
+
+const __dirname = fileURLToPath(new URL('.', import.meta.url));
+const REPO_ROOT = resolve(__dirname, '..');
+const DIST = resolve(REPO_ROOT, 'dist');
+
+if (!existsSync(DIST)) {
+  console.error('[prerender] dist/ does not exist — run `vite build` first.');
+  process.exit(1);
+}
+
+const SHELL_PATH = resolve(DIST, 'index.html');
+const SHELL_HTML = readFileSync(SHELL_PATH, 'utf8');
+
+const LOGO_URL =
+  'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png';
+
+/**
+ * Light-touch slug humanizer mirrored from morphUtils so the script has
+ * no runtime dependency on the Vite-resolved app bundle.
+ */
+function humanize(slug) {
+  return slug
+    .split('-')
+    .map((w) => (w.length <= 3 ? w.toUpperCase() : w[0].toUpperCase() + w.slice(1)))
+    .join(' ')
+    .replace(/\bAND\b/gi, 'and')
+    .replace(/\bThe\b/g, 'the');
+}
+
+/**
+ * Pull a MORPHS entry out of src/data/morph-guide.js without executing
+ * the file as JS. We parse the JS text with a tolerant regex that finds
+ * each `{ slug: 'x', ... }` block and extracts the fields we need for
+ * prerendering (name, summary, rarity, inheritance, category).
+ *
+ * Parsing the source file rather than importing it keeps this script
+ * dependency-free (no esbuild / tsx), but it means the regex has to
+ * match the current shape. If morph-guide.js's structure changes,
+ * update this parser.
+ */
+function loadMorphs() {
+  const src = readFileSync(resolve(REPO_ROOT, 'src/data/morph-guide.js'), 'utf8');
+  // Find `export const MORPHS = [` and take its array body.
+  const m = src.match(/export const MORPHS\s*=\s*\[([\s\S]*?)\n\];/);
+  if (!m) throw new Error('prerender: could not find MORPHS array');
+  const body = m[1];
+
+  // Split into per-morph objects. Each opens `  {` (two-space indent)
+  // and closes with a matching `  },`. Tolerant split — it's a data
+  // file we control.
+  const entries = body.split(/\n\s{2}\},\s*\n\s{2}\{/).map((chunk, i, arr) => {
+    let c = chunk;
+    if (i === 0) c = c.replace(/^\s*\{\s*/, '');
+    if (i === arr.length - 1) c = c.replace(/\s*\}\s*$/, '');
+    return c;
+  });
+
+  const result = {};
+  for (const chunk of entries) {
+    const getField = (field) => {
+      // Capture single-quoted strings (including multiline) and plain tokens.
+      const reStr = new RegExp(`${field}:\\s*'((?:\\\\.|[^'\\\\])*)'`, 's');
+      const hit = chunk.match(reStr);
+      return hit ? hit[1].replace(/\\'/g, "'") : null;
+    };
+    const slug = getField('slug');
+    if (!slug) continue;
+    result[slug] = {
+      slug,
+      name: getField('name') || humanize(slug),
+      summary: getField('summary'),
+      description: getField('description'),
+      rarity: getField('rarity'),
+      inheritance: getField('inheritance'),
+      category: getField('category'),
+    };
+  }
+  return result;
+}
+
+const MORPHS = loadMorphs();
+
+// ------- per-route metadata ------------------------------------------------
+
+const RARITY_LABEL = {
+  common: 'common',
+  uncommon: 'uncommon',
+  rare: 'rare',
+  very_rare: 'very rare',
+};
+
+function morphMeta(slug) {
+  const m = MORPHS[slug] || { name: humanize(slug) };
+  const name = m.name;
+  const rarity = RARITY_LABEL[m.rarity] || 'documented';
+  const desc =
+    m.summary ||
+    (m.description ? m.description.slice(0, 220).trim() + (m.description.length > 220 ? '…' : '') : null) ||
+    `${name} is a ${rarity} crested gecko morph. Every documented crested gecko (Correlophus ciliatus) morph has its own entry in the Geck Inspect morph guide with inheritance, visual identifiers, and breeding notes.`;
+  return {
+    title: `${name} Morph — Crested Gecko Guide`,
+    description: `${name} is a ${rarity} crested gecko morph. ${desc}`.slice(0, 320),
+    bodyHeading: `${name} crested gecko morph`,
+    bodyLead: desc,
+    bodyExtra: [
+      m.inheritance ? `Inheritance: ${m.inheritance}.` : null,
+      m.category ? `Category: ${m.category}.` : null,
+      'Covered in the Geck Inspect Morph Guide alongside every other documented crested gecko morph.',
+    ]
+      .filter(Boolean)
+      .join(' '),
+  };
+}
+
+function routeMeta(route) {
+  // Morph detail override
+  const morphMatch = route.path.match(/^\/MorphGuide\/([a-z0-9-]+)$/);
+  if (morphMatch) return morphMeta(morphMatch[1]);
+  const m = route.meta || {};
+  return {
+    title: m.title || 'Geck Inspect',
+    description:
+      m.description ||
+      'Geck Inspect is the professional platform for crested gecko breeders and keepers.',
+    bodyHeading: m.title || null,
+    bodyLead: m.description || null,
+    bodyExtra: null,
+  };
+}
+
+// ------- HTML mutation -----------------------------------------------------
+
+function injectMeta(html, route) {
+  const meta = routeMeta(route);
+  const canonical = `${SITE_URL}${route.path}`;
+  const titleFull = meta.title.includes('Geck Inspect') ? meta.title : `${meta.title} — Geck Inspect`;
+  const desc = meta.description.replace(/"/g, '&quot;');
+
+  // Rewrite the <title> (exact match on the shell's default title).
+  let out = html.replace(
+    /<title>[\s\S]*?<\/title>/,
+    `<title>${escapeHtml(titleFull)}</title>`,
+  );
+
+  // Replace the site-level <meta name="description"> with the route-specific one.
+  out = out.replace(
+    /<meta name="description" content="[^"]*"\s*\/>/,
+    `<meta name="description" content="${desc}" />`,
+  );
+
+  // Open Graph + Twitter swaps.
+  out = out.replace(
+    /<meta property="og:title" content="[^"]*"\s*\/>/,
+    `<meta property="og:title" content="${escapeHtml(titleFull)}" />`,
+  );
+  out = out.replace(
+    /<meta property="og:description" content="[^"]*"\s*\/>/,
+    `<meta property="og:description" content="${desc}" />`,
+  );
+  out = out.replace(
+    /<meta property="og:url" content="[^"]*"\s*\/>/,
+    `<meta property="og:url" content="${canonical}" />`,
+  );
+  out = out.replace(
+    /<meta name="twitter:title" content="[^"]*"\s*\/>/,
+    `<meta name="twitter:title" content="${escapeHtml(titleFull)}" />`,
+  );
+  out = out.replace(
+    /<meta name="twitter:description" content="[^"]*"\s*\/>/,
+    `<meta name="twitter:description" content="${desc}" />`,
+  );
+
+  // Insert the route's <link rel="canonical"> right after the hreflang block.
+  out = out.replace(
+    /(<link rel="alternate" hreflang="en"[^>]*\/>)/,
+    `$1\n    <link rel="canonical" href="${canonical}" />`,
+  );
+
+  return out;
+}
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/**
+ * Inject a <noscript> body block so non-JS crawlers see visible text on
+ * the page. Placed adjacent to the React root so SPA hydration doesn't
+ * clobber the noscript content — browsers ignore <noscript> when JS is
+ * enabled, and bots without JS see it as real content.
+ */
+function injectNoscriptBody(html, route) {
+  const meta = routeMeta(route);
+  const canonical = `${SITE_URL}${route.path}`;
+  const heading = meta.bodyHeading || 'Geck Inspect';
+  const lead = meta.bodyLead || '';
+  const extra = meta.bodyExtra || '';
+
+  const body = `
+    <noscript>
+      <style>
+        .geck-noscript-shell{font-family:Inter,system-ui,sans-serif;background:#020617;color:#e2e8f0;min-height:100vh;padding:32px 16px;}
+        .geck-noscript-shell a{color:#6ee7b7;}
+        .geck-noscript-shell main{max-width:720px;margin:0 auto;}
+        .geck-noscript-shell h1{color:#fff;font-size:2rem;line-height:1.2;margin:0 0 12px;}
+        .geck-noscript-shell p{line-height:1.6;margin:0 0 16px;}
+        .geck-noscript-shell nav{font-size:0.875rem;margin-bottom:24px;color:#94a3b8;}
+        .geck-noscript-shell nav a{margin-right:12px;}
+        .geck-noscript-shell footer{margin-top:40px;padding-top:20px;border-top:1px solid #1e293b;font-size:0.8125rem;color:#64748b;}
+      </style>
+      <div class="geck-noscript-shell">
+        <main>
+          <nav>
+            <a href="/">Home</a>
+            <a href="/MorphGuide">Morph Guide</a>
+            <a href="/CareGuide">Care Guide</a>
+            <a href="/GeneticsGuide">Genetics</a>
+            <a href="/GeneticCalculatorTool">Calculator</a>
+            <a href="/About">About</a>
+          </nav>
+          <h1>${escapeHtml(heading)}</h1>
+          ${lead ? `<p>${escapeHtml(lead)}</p>` : ''}
+          ${extra ? `<p>${escapeHtml(extra)}</p>` : ''}
+          <p>Canonical URL: <a href="${canonical}">${canonical}</a></p>
+          <p>
+            Geck Inspect is the professional platform for crested gecko
+            (<em>Correlophus ciliatus</em>) breeders and keepers — collection
+            management, breeding planning, AI-powered morph identification,
+            multi-generation lineage tracking, and a verified community.
+            Enable JavaScript to use the full interactive app, or
+            <a href="/AuthPortal">create a free account</a>.
+          </p>
+          <footer>
+            © ${new Date().getFullYear()} Geck Inspect · geckOS ·
+            <a href="/Terms">Terms</a> · <a href="/PrivacyPolicy">Privacy</a> ·
+            <a href="/Contact">Contact</a>
+          </footer>
+        </main>
+      </div>
+    </noscript>`;
+
+  // Insert the noscript block just before the React root element.
+  return html.replace(
+    /<div id="root"><\/div>/,
+    `${body}\n    <div id="root"></div>`,
+  );
+}
+
+// ------- write ------------------------------------------------------------
+
+function writeRoute(route) {
+  const html = injectNoscriptBody(injectMeta(SHELL_HTML, route), route);
+
+  let outPath;
+  if (route.path === '/') {
+    outPath = resolve(DIST, 'index.html');
+  } else {
+    const dir = resolve(DIST, route.path.replace(/^\//, ''));
+    mkdirSync(dir, { recursive: true });
+    outPath = join(dir, 'index.html');
+  }
+  writeFileSync(outPath, html, 'utf8');
+}
+
+function run() {
+  // Skip routes that are either not indexable or clearly auth-gated —
+  // we still want the SPA to handle them, but we don't need a prerendered
+  // HTML file pretending they have static content. Everything in the
+  // sitemap is eligible; noindex pages live in vercel.json X-Robots-Tag
+  // rules instead of this list.
+  const SKIP = new Set([
+    '/CommunityConnect',
+    '/Forum',
+    '/Gallery',
+    '/Marketplace',
+    '/MarketplaceBuy',
+    '/Shipping',
+    '/Giveaways',
+    '/Membership',
+    '/AuthPortal',
+    '/MorphVisualizer',
+  ]);
+
+  const routes = [...STATIC_ROUTES, ...getMorphRoutes()].filter(
+    (r) => !SKIP.has(r.path),
+  );
+
+  for (const route of routes) writeRoute(route);
+  console.log(`[prerender] wrote ${routes.length} route HTML files into dist/`);
+}
+
+run();

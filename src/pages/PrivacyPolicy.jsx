@@ -1,6 +1,8 @@
 import { Link } from 'react-router-dom';
 import { ArrowLeft, Shield } from 'lucide-react';
 import { createPageUrl } from '@/utils';
+import Seo from '@/components/seo/Seo';
+import { breadcrumbSchema } from '@/lib/organization-schema';
 
 const Section = ({ title, children }) => (
     <div className="space-y-3">
@@ -10,8 +12,32 @@ const Section = ({ title, children }) => (
 );
 
 export default function PrivacyPolicy() {
+    const jsonLd = [
+      {
+        '@context': 'https://schema.org',
+        '@type': 'WebPage',
+        '@id': 'https://geckinspect.com/PrivacyPolicy#webpage',
+        name: 'Geck Inspect Privacy Policy',
+        url: 'https://geckinspect.com/PrivacyPolicy',
+        description: 'Privacy policy for Geck Inspect describing what personal data we collect, how it is used, and your rights.',
+        dateModified: '2026-04-05',
+        isPartOf: { '@id': 'https://geckinspect.com/#website' },
+      },
+      breadcrumbSchema([
+        { name: 'Home', path: '/' },
+        { name: 'Privacy Policy', path: '/PrivacyPolicy' },
+      ]),
+    ];
     return (
         <div className="min-h-screen bg-slate-950 py-10 px-4">
+            <Seo
+              title="Privacy Policy"
+              description="How Geck Inspect collects, uses, and protects your personal information when you use the crested gecko tracking and breeding platform."
+              path="/PrivacyPolicy"
+              type="article"
+              modifiedTime="2026-04-05"
+              jsonLd={jsonLd}
+            />
             <div className="max-w-3xl mx-auto">
                 <Link to={createPageUrl('Dashboard')} className="inline-flex items-center gap-2 text-slate-400 hover:text-slate-200 text-sm mb-8 transition-colors">
                     <ArrowLeft className="w-4 h-4" /> Back to App

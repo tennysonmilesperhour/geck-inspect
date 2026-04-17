@@ -22,12 +22,31 @@ import Home from './pages/Home';
 
 // Lazy-loaded pages used in the unauthenticated route set.
 // (The authenticated set is driven entirely by pages.config.js.)
-const Breeder       = lazy(() => import('./pages/Breeder'));
-const Shipping      = lazy(() => import('./pages/Shipping'));
-const Giveaways     = lazy(() => import('./pages/Giveaways'));
-const MorphDetail   = lazy(() => import('./pages/MorphDetail'));
-const MorphGuideList = lazy(() => import('./pages/MorphGuide'));
-const PrivacyPolicy = lazy(() => import('./pages/PrivacyPolicy'));
+//
+// Every entry here is a page we *want* search engines + AI crawlers to
+// index. Auth-gating any of these would hand a blank login form to
+// crawlers and erase the SEO investment in that page's content +
+// structured data, so move pages OUT of this list carefully.
+const Breeder              = lazy(() => import('./pages/Breeder'));
+const Shipping             = lazy(() => import('./pages/Shipping'));
+const Giveaways            = lazy(() => import('./pages/Giveaways'));
+const MorphDetail          = lazy(() => import('./pages/MorphDetail'));
+const MorphGuideList       = lazy(() => import('./pages/MorphGuide'));
+const PrivacyPolicy        = lazy(() => import('./pages/PrivacyPolicy'));
+// Content pages that were previously auth-gated despite being in the
+// sitemap — moved public so crawlers (and humans without an account) can
+// actually read them. The pages render their own public header/footer
+// and link through to sign-up CTAs where relevant.
+const CareGuide             = lazy(() => import('./pages/CareGuide'));
+const GeneticsGuide         = lazy(() => import('./pages/GeneticsGuide'));
+const GeneticCalculatorTool = lazy(() => import('./pages/GeneticCalculatorTool'));
+// Programmatic-SEO static content pages (About / Contact / Terms).
+// These render a public header + footer so unauthenticated visitors
+// (and non-JS crawlers after prerender) see full chrome, not a blank
+// page.
+const About                 = lazy(() => import('./pages/About'));
+const Contact               = lazy(() => import('./pages/Contact'));
+const Terms                 = lazy(() => import('./pages/Terms'));
 
 // Special-case pages that need unique routing (no layout, param routes, etc.)
 const AdminMigration = lazy(() => import('./pages/AdminMigration'));
@@ -98,7 +117,17 @@ const AuthenticatedApp = () => {
           <Route path="/Giveaways" element={<Giveaways />} />
           <Route path="/MorphGuide" element={<MorphGuideList />} />
           <Route path="/MorphGuide/:slug" element={<MorphDetail />} />
+          <Route path="/CareGuide" element={<CareGuide />} />
+          <Route path="/GeneticsGuide" element={<GeneticsGuide />} />
+          <Route path="/GeneticCalculatorTool" element={<GeneticCalculatorTool />} />
+          <Route path="/About" element={<About />} />
+          <Route path="/Contact" element={<Contact />} />
+          <Route path="/Terms" element={<Terms />} />
           <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
+          {/* Breeder is indexable under both /Breeder?slug= (legacy) and
+              /Breeder/<slug> (clean, preferred); the page itself reads
+              whichever the router hands it. */}
+          <Route path="/Breeder/:slug" element={<Breeder />} />
           {/* P1 — Public passport pages (no auth needed) */}
           <Route path="/passport/:passportCode" element={<AnimalPassport />} />
           <Route path="/passport/:passportCode/qr" element={<PassportQR />} />

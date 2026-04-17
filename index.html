@@ -17,7 +17,18 @@
     <meta name="author" content="Geck Inspect" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1" />
-    <link rel="canonical" href="https://geckinspect.com/" />
+
+    <!-- NO hardcoded <link rel="canonical">. Per-route canonicals are
+         emitted by:
+           - scripts/prerender.mjs at build time (static HTML injected into
+             the prerendered index.html shipped for every indexable route,
+             which is what non-JS crawlers like GPTBot/ClaudeBot/CCBot see),
+           - src/components/seo/Seo.jsx at runtime via react-helmet-async
+             (what JS-executing crawlers like Googlebot see).
+         Shipping a global canonical here would tell every inner URL it
+         is actually the homepage (the pre-2026-04 audit bug). -->
+    <link rel="alternate" hreflang="x-default" href="https://geckinspect.com/" />
+    <link rel="alternate" hreflang="en" href="https://geckinspect.com/" />
 
     <!-- Auto-noindex on any host that isn't production. Keeps staging,
          preview deployments, and the vercel.app subdomain out of Google
@@ -64,63 +75,64 @@
     <meta name="twitter:description" content="The professional platform for crested gecko breeders and keepers. Track collections, plan breedings, identify morphs with AI, and connect with the community." />
     <meta name="twitter:image" content="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png" />
 
-    <!-- Structured data: Organization -->
-    <script type="application/ld+json">
+    <!-- Site-level structured data (Organization + WebSite). Page-specific
+         schema (Article, FAQPage, HowTo, Product, BreadcrumbList) is emitted
+         per-route by <Seo>; keeping these two here means they exist on every
+         page without the duplication penalty of shipping a page-specific
+         SoftwareApplication on morph/care/genetics URLs. -->
+
+    <!-- Organization: canonical entity record. The Seo component imports
+         the same shape from src/lib/organization-schema.js so sameAs stays
+         in sync across every page. Update there, not here. -->
+    <script type="application/ld+json" id="ld-organization">
     {
       "@context": "https://schema.org",
       "@type": "Organization",
+      "@id": "https://geckinspect.com/#organization",
       "name": "Geck Inspect",
-      "alternateName": "Geck Inspect — Crested Gecko Platform",
+      "alternateName": ["Geck Inspect — Crested Gecko Platform", "geckOS"],
       "url": "https://geckinspect.com/",
-      "logo": "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png",
+      "logo": {
+        "@type": "ImageObject",
+        "url": "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png",
+        "width": 512,
+        "height": 512
+      },
       "description": "Professional platform for crested gecko breeders and keepers, providing collection management, breeding planning, AI-powered morph identification, lineage tracking, and community tools.",
+      "knowsAbout": [
+        "Crested gecko",
+        "Correlophus ciliatus",
+        "Reptile husbandry",
+        "Gecko breeding",
+        "Morph genetics",
+        "Lineage tracking"
+      ],
       "sameAs": []
     }
     </script>
 
-    <!-- Structured data: WebSite with search action -->
-    <script type="application/ld+json">
+    <!-- WebSite: enables Google sitelinks search box and binds the site as
+         a first-class entity. The potentialAction target uses an internal
+         search URL pattern even if the UI doesn't surface a box yet, so
+         the structured data is valid and future-proof. -->
+    <script type="application/ld+json" id="ld-website">
     {
       "@context": "https://schema.org",
       "@type": "WebSite",
+      "@id": "https://geckinspect.com/#website",
       "name": "Geck Inspect",
       "url": "https://geckinspect.com/",
       "description": "The professional platform for crested gecko breeders and keepers. Track collections, plan breedings, identify morphs with AI, and connect with the community.",
       "inLanguage": "en-US",
-      "publisher": {
-        "@type": "Organization",
-        "name": "Geck Inspect"
+      "publisher": { "@id": "https://geckinspect.com/#organization" },
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": {
+          "@type": "EntryPoint",
+          "urlTemplate": "https://geckinspect.com/MorphGuide?q={search_term_string}"
+        },
+        "query-input": "required name=search_term_string"
       }
-    }
-    </script>
-
-    <!-- Structured data: SoftwareApplication -->
-    <script type="application/ld+json">
-    {
-      "@context": "https://schema.org",
-      "@type": "SoftwareApplication",
-      "name": "Geck Inspect",
-      "applicationCategory": "LifestyleApplication",
-      "applicationSubCategory": "Reptile Keeping, Gecko Breeding",
-      "operatingSystem": "Web",
-      "description": "Professional collection, breeding, and community platform for crested gecko breeders and keepers. Features include collection management, breeding pair planning, egg and hatchling tracking, weight/growth logging, AI-powered morph identification, lineage trees, and a community marketplace.",
-      "offers": {
-        "@type": "Offer",
-        "price": "0",
-        "priceCurrency": "USD"
-      },
-      "featureList": [
-        "Crested gecko collection management",
-        "Breeding pair planning and projections",
-        "Egg incubation and hatchling tracking",
-        "Weight and growth charting",
-        "AI-powered morph identification",
-        "Lineage and pedigree visualization",
-        "Community gallery and forums",
-        "Marketplace for breeders",
-        "Morph reference guides",
-        "Genetics calculator"
-      ]
     }
     </script>
   </head>
