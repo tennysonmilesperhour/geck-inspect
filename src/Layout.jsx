@@ -622,7 +622,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       </a>
       <div className="flex h-screen bg-gray-100 dark:bg-gray-900 font-sans app-container-outline">
         {/* Mobile Sidebar */}
-        <Sidebar className="mobile-sidebar-glass border-r border-emerald-800/40 bg-emerald-950/60 backdrop-blur-xl backdrop-saturate-150 md:hidden z-50">
+        <Sidebar className="mobile-sidebar-glass border-r border-emerald-800/40 bg-emerald-950/20 backdrop-blur-2xl backdrop-brightness-50 backdrop-saturate-150 md:hidden z-50">
           <SidebarHeader className="border-b border-emerald-800/40 p-6">
           <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-emerald-700/40 hover:bg-emerald-800/30 transition-colors duration-200">
           {appLogo && (
