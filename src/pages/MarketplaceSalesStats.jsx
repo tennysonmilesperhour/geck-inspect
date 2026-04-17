@@ -606,29 +606,46 @@ function PendingSalesTab({ user, pendingSales, setPendingSales, onCompleteSale, 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
               <Label className="text-xs text-slate-400">Gecko Name</Label>
-              <div className="flex gap-1.5 mt-1">
-                <Input value={newSale.gecko_name} onChange={e => setNewSale(f => ({ ...f, gecko_name: e.target.value }))}
-                  placeholder="Name or select from collection"
-                  className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm flex-1" />
-                <Button size="sm" variant="outline" onClick={() => setGeckoPickerOpen(!geckoPickerOpen)}
-                  className="h-9 border-slate-600 text-slate-300 hover:bg-slate-700 text-xs px-2 shrink-0">
-                  Pick
-                </Button>
+              <div className="relative mt-1">
+                <Input
+                  value={newSale.gecko_name}
+                  onChange={e => {
+                    setNewSale(f => ({ ...f, gecko_name: e.target.value, gecko_id: null }));
+                    setGeckoPickerOpen(true);
+                  }}
+                  onFocus={() => setGeckoPickerOpen(true)}
+                  onBlur={() => setTimeout(() => setGeckoPickerOpen(false), 150)}
+                  placeholder="Type to search collection or enter a new name"
+                  className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm w-full"
+                />
+                {geckoPickerOpen && (() => {
+                  const q = (newSale.gecko_name || '').trim().toLowerCase();
+                  const filtered = q
+                    ? availableGeckos.filter(g =>
+                        g.name?.toLowerCase().includes(q) ||
+                        g.gecko_id_code?.toLowerCase().includes(q) ||
+                        g.morphs_traits?.toLowerCase().includes(q)
+                      )
+                    : availableGeckos;
+                  return (
+                    <div className="absolute z-20 left-0 right-0 mt-1 bg-slate-700 border border-slate-600 rounded-lg max-h-48 overflow-y-auto shadow-lg">
+                      {filtered.length === 0 ? (
+                        <p className="text-xs text-slate-400 p-2">
+                          {q ? `No matches — "${newSale.gecko_name}" will be used as a manual entry` : 'No geckos in collection'}
+                        </p>
+                      ) : filtered.map(g => (
+                        <button key={g.id} type="button"
+                          onMouseDown={(e) => { e.preventDefault(); selectGeckoForSale(g); }}
+                          className="w-full text-left px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-600 flex items-center gap-2">
+                          {g.image_urls?.[0] && <img src={g.image_urls[0]} className="w-5 h-5 rounded object-cover" />}
+                          <span className="truncate">{g.name}</span>
+                          {g.asking_price && <span className="text-emerald-400 ml-auto">${g.asking_price}</span>}
+                        </button>
+                      ))}
+                    </div>
+                  );
+                })()}
               </div>
-              {geckoPickerOpen && (
-                <div className="mt-1.5 bg-slate-700 border border-slate-600 rounded-lg max-h-40 overflow-y-auto">
-                  {availableGeckos.length === 0 ? (
-                    <p className="text-xs text-slate-400 p-2">No geckos available</p>
-                  ) : availableGeckos.map(g => (
-                    <button key={g.id} onClick={() => selectGeckoForSale(g)}
-                      className="w-full text-left px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-600 flex items-center gap-2">
-                      {g.image_urls?.[0] && <img src={g.image_urls[0]} className="w-5 h-5 rounded object-cover" />}
-                      <span className="truncate">{g.name}</span>
-                      {g.asking_price && <span className="text-emerald-400 ml-auto">${g.asking_price}</span>}
-                    </button>
-                  ))}
-                </div>
-              )}
             </div>
             <div>
               <Label className="text-xs text-slate-400">Buyer Name</Label>
