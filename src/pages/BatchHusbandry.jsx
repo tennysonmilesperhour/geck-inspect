@@ -1,11 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { User, Gecko, FeedingGroup, FeedingRecord, WeightRecord } from '@/entities/all';
-import { supabase } from '@/lib/supabaseClient';
-import { useAuth } from '@/lib/AuthContext';
-import { format, differenceInDays, parseISO } from 'date-fns';
+import { format, differenceInDays } from 'date-fns';
 import {
   Utensils, Scale, ChevronLeft, CheckCircle2, AlertTriangle, Loader2,
-  Clock, Users, Droplets, X, Check, Minus,
+  Clock, Users, X, Check,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -591,8 +589,6 @@ function EmptyGroups() {
 /* ─── Main page ─────────────────────────────────────────────────── */
 
 export default function BatchHusbandry() {
-  const { user: authUser } = useAuth();
-  const [user, setUser] = useState(null);
   const [groups, setGroups] = useState([]);
   const [geckos, setGeckos] = useState([]);
   const [feedingRecords, setFeedingRecords] = useState([]);
@@ -608,7 +604,6 @@ export default function BatchHusbandry() {
     setIsLoading(true);
     try {
       const currentUser = await User.me();
-      setUser(currentUser);
       if (!currentUser) {
         setIsLoading(false);
         return;

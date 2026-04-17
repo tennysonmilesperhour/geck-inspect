@@ -69,7 +69,9 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
         if (feedingGroupsProp) {
             setFeedingGroups(feedingGroupsProp);
         } else {
-            FeedingGroup.list().then(setFeedingGroups).catch(() => {});
+            FeedingGroup.list()
+                .then(setFeedingGroups)
+                .catch((err) => console.error('Failed to load feeding groups:', err));
         }
     }, [feedingGroupsProp]);
 
@@ -255,10 +257,9 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
         }
     };
     
-    // Enhanced image upload with cropping capability. Uses a dedicated
-    // isUploadingImage flag so we don't confuse it with form save state —
-    // previously a failed upload would flicker isSaving which made the
-    // whole form look like it was submitting.
+    // Upload uses its own isUploadingImage flag so an upload failure
+    // doesn't flip the form's isSaving and make the form appear stuck
+    // in submit state.
     const handleImageUpload = async (e) => {
         const files = Array.from(e.target.files || []);
         // Always clear the input so re-selecting the same file still fires.

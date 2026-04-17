@@ -4,7 +4,6 @@
  * Renders a gecko's digital passport from the ?data= URL parameter.
  * No authentication required — anyone with the link can verify.
  */
-import React from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import { GeckoPassportViewer } from '@/components/innovations/GeckoPassport';
 import { ShieldCheck } from 'lucide-react';

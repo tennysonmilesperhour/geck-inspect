@@ -3,7 +3,6 @@ import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Bell, ArrowRight, Check, Award, Shield, ImagePlus, User as UserIcon, MessageSquare, Star, ShoppingCart } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { formatDistanceToNowStrict } from 'date-fns';
 
 const ICONS = {

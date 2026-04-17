@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
-import { User, Gecko, UserFollow, Notification, BreedingPlan, WeightRecord } from '@/entities/all';
+import { User, Gecko, UserFollow, BreedingPlan, WeightRecord } from '@/entities/all';
 import { notifyNewFollower } from '@/components/notifications/NotificationService';
 import { useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';

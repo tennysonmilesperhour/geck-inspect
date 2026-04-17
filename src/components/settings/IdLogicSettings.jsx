@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { GitBranch, RotateCcw, Users, User, Layers, Eye, HelpCircle } from 'lucide-react';
+import { GitBranch, RotateCcw, User, Layers, Eye, HelpCircle } from 'lucide-react';
 import { applyFormat } from '@/components/my-geckos/form/helpers';
 
 // Rendered against both format strings so the user can see immediate

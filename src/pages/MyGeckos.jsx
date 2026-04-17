@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Seo from '@/components/seo/Seo';
-import { Gecko, WeightRecord, FeedingGroup, MarketplaceCost } from '@/entities/all';
+import { Gecko, WeightRecord, FeedingGroup } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import { PlusCircle, Search, Users, Grid3x3, List, ArrowUpDown, Archive, ArchiveRestore, Download, FileText, FileSpreadsheet } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
@@ -17,7 +17,6 @@ import {
 import PageSettingsPanel from '../components/ui/PageSettingsPanel';
 import usePageSettings from '@/hooks/usePageSettings';
 import { Switch } from '@/components/ui/switch';
-import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
 import GeckoCard from '../components/my-geckos/GeckoCard';
 import GeckoForm from '../components/my-geckos/GeckoForm';
@@ -77,7 +76,9 @@ export default function MyGeckosPage() {
     const GECKO_FETCH_LIMIT = 500;
 
     useEffect(() => {
-        FeedingGroup.list().then(setFeedingGroups).catch(() => {});
+        FeedingGroup.list()
+            .then(setFeedingGroups)
+            .catch((err) => console.error('Failed to load feeding groups:', err));
     }, []);
 
     // Load every gecko the current user owns, up to GECKO_FETCH_LIMIT. Reads
@@ -187,10 +188,6 @@ export default function MyGeckosPage() {
             setIsFormOpen(false);
             setIsDetailModalOpen(false);
 
-            if (user) {
-                const cacheKey = `geckos_${user.email}`;
-            }
-
             toast({
                 title: "Gecko Deleted",
                 description: "The gecko has been permanently removed. Revenue data was preserved in business tools.",
@@ -261,13 +258,9 @@ export default function MyGeckosPage() {
         }));
 
         if (user) {
-            const cacheKey = `geckos_${user.email}`;
-
-            // Restore scroll immediately after closing the form, then reload data
             window.scrollTo({ top: savedScroll, behavior: 'instant' });
             setTimeout(() => {
                 loadGeckos().then(() => {
-                    // Restore again after data reload in case layout shifted
                     window.scrollTo({ top: savedScroll, behavior: 'instant' });
                 });
             }, 100);
@@ -286,10 +279,7 @@ export default function MyGeckosPage() {
 
     const handleImportComplete = async () => {
         if (user) {
-            // Invalidate cache and reload
-            const cacheKey = `geckos_${user.email}`;
-
-            // Add delay for import to complete
+            // Delay so the batch import finishes writing before we refetch.
             setTimeout(() => {
                 loadGeckos();
             }, 1000);

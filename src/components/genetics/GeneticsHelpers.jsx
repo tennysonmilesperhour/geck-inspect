@@ -2,7 +2,6 @@
  * Small helper components used by the GeneticsGuide sections data
  * and the GeneticsGuide page itself.
  */
-import React from 'react';
 
 export function Callout({ items }) {
   return (

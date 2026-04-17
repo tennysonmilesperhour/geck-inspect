@@ -6,17 +6,8 @@ import { createPageUrl } from "@/utils";
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import { APP_LOGO_URL } from '@/lib/constants';
-import { GeckoImage } from "@/entities/GeckoImage";
-import { User } from "@/entities/User";
-import { Gecko } from "@/entities/Gecko";
-import { ForumPost } from "@/entities/ForumPost";
-import { Notification } from "@/entities/Notification";
-import { DirectMessage } from "@/entities/DirectMessage";
-import { MorphReferenceImage } from "@/entities/MorphReferenceImage";
-import { PageConfig } from "@/entities/PageConfig";
-import { useToast } from "@/components/ui/use-toast";
 import {
-  Database, BookOpen, BarChart3, Upload, Users, HeartHandshake, Layers, LogOut, Search, Settings, UserPlus, Shield, MessageSquare, Bell, Mail, Heart, Menu, ShoppingCart, GitBranch, FlaskConical, Star, FolderKanban, GraduationCap, Dna,
+  Database, BookOpen, BarChart3, Upload, Users, HeartHandshake, Layers, LogOut, Search, Settings, UserPlus, Shield, MessageSquare, Mail, Heart, Menu, ShoppingCart, GitBranch, FlaskConical, Star, FolderKanban, GraduationCap, Dna,
   Egg, LayoutGrid, CircleUser, UsersRound, Images, Tag, CalendarDays, Sparkles, Truck, ChevronDown
 } from "lucide-react";
 import TutorialModal from "@/components/tutorial/TutorialModal";

@@ -1,4 +1,5 @@
-import React, { useEffect, useImperativeHandle, useMemo, useState, forwardRef } from 'react';
+import { useEffect, useImperativeHandle, useMemo, useState, forwardRef } from 'react';
+import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { FutureBreedingPlan } from '@/entities/all';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -33,7 +34,6 @@ import {
 } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import {
-  Plus,
   Trash2,
   Edit,
   Calendar as CalendarIcon,
@@ -67,8 +67,6 @@ const YEAR_OPTIONS = Array.from(
   { length: 8 },
   (_, i) => new Date().getFullYear() + i
 );
-
-const DEFAULT_GECKO_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
 
 // Parent thumbnail card used inside FutureBreedingPlan cards. Shows
 // the gecko's first photo (or a fallback), a ♂/♀ sex chip, and the

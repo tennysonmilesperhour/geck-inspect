@@ -33,7 +33,7 @@ export default function SupportContactCard({ title = 'Need help?' }) {
                 setUser(u);
                 if (u?.email) setEmail(u.email);
             })
-            .catch(() => {});
+            .catch((err) => console.error('SupportContactCard User.me failed:', err));
     }, []);
 
     const handleSubmit = async () => {

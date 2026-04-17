@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -65,14 +65,6 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
     }
     return slots;
   }, [gecko]);
-
-  // Get the image url for a given slot index (use assigned or default sequential)
-  const _getSlotImage = React.useCallback((slotIdx) => {
-    const imgIdx = slotImageMap[slotIdx] ?? Math.min(slotIdx, (gecko?.image_urls?.length ?? 1) - 1);
-    return gecko?.image_urls?.[imgIdx] || 'https://i.imgur.com/sw9gnDp.png';
-  }, [slotImageMap, gecko?.image_urls]);
-
-
 
   const loadEventHistory = async () => {
     if (!gecko) return;
@@ -148,10 +140,6 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
   };
 
   const [weightToDelete, setWeightToDelete] = useState(null);
-
-  const _handleDeleteWeight = (recordId) => {
-    setWeightToDelete(recordId);
-  };
 
   const handleConfirmDeleteWeight = async () => {
     if (!weightToDelete) return;

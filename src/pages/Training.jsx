@@ -32,9 +32,7 @@ export default function TrainingPage() {
     
     // Model testing
     const [testImage, setTestImage] = useState(null);
-    const [_testResult, setTestResult] = useState(null);
-    const [_isAnalyzing, setIsAnalyzing] = useState(false);
-    
+
     // LLM-based recognition
     const [llmAnalysis, setLlmAnalysis] = useState('');
     const [isLlmAnalyzing, setIsLlmAnalyzing] = useState(false);
@@ -87,7 +85,6 @@ export default function TrainingPage() {
         const file = e.target.files[0];
         if (file) {
             setTestImage(file);
-            setTestResult(null);
             setLlmAnalysis('');
         }
     };

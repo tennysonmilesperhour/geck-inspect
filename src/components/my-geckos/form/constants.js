@@ -52,4 +52,4 @@ export const INITIAL_FORM_DATA = {
   image_crop_data: {},
 };
 
-export const DEFAULT_GECKO_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
+export { DEFAULT_GECKO_IMAGE } from '@/lib/constants';

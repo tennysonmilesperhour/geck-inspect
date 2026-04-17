@@ -11,7 +11,7 @@
  *     pedigreeRef={ref}     // ref to the DOM node to capture
  *   />
  */
-import React, { useState } from 'react';
+import { useState } from 'react';
 import html2canvas from 'html2canvas';
 import { Button } from '@/components/ui/button';
 import { Download, Image as ImageIcon, Loader2 } from 'lucide-react';

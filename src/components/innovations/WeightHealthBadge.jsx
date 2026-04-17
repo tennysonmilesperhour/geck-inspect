@@ -7,7 +7,6 @@
  * Usage:
  *   <WeightHealthBadge weightRecords={gecko.weight_records} />
  */
-import React from 'react';
 import { useWeightHealthScore } from '@/hooks/useWeightHealthScore';
 import { TrendingUp, TrendingDown, Minus, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';

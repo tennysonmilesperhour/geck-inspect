@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Gecko, Egg, BreedingPlan, User } from '@/entities/all';
+import { Gecko, Egg } from '@/entities/all';
 import { Button } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
 import {
@@ -41,8 +41,6 @@ import { generateHatchedGeckoIdFromEgg } from '@/components/shared/geckoIdUtils'
 /**
  * Expanded-state view of a single breeding plan — shows all eggs with
  * editable lay/hatch dates, status dropdowns, and the Edit Plan modal.
- * Extracted from src/pages/Breeding.jsx as part of the hairball cleanup.
- * Body unchanged; only the imports are new.
  */
 export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulationModal, onOpenEggCheckModal, planEggs, isEditModalOpen, setIsEditModalOpen }) {
     const eggs = planEggs.filter(egg => !egg.archived).sort((a, b) => new Date(b.lay_date) - new Date(a.lay_date));
@@ -72,35 +70,6 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
             console.error("Failed to archive egg:", error);
         }
         setEggToDelete(null);
-    };
-
-    const _handleAddNewEggs = async (count) => {
-        const today = new Date();
-        const newLayDate = today.toISOString().split('T')[0];
-
-        // Load user preferences for hatch alert days
-        const currentUser = await User.me();
-        const hatchAlertDays = currentUser?.hatch_alert_days || 60;
-        const expectedHatch = addDays(today, hatchAlertDays);
-
-        try {
-            for (let i = 0; i < count; i++) {
-                await Egg.create({
-                    breeding_plan_id: plan.id,
-                    lay_date: newLayDate,
-                    hatch_date_expected: expectedHatch.toISOString().split('T')[0],
-                    status: 'Incubating'
-                });
-            }
-
-            // Update egg check count
-            const newCount = (plan.egg_check_count || 0) + 1;
-            await BreedingPlan.update(plan.id, { egg_check_count: newCount });
-
-            onPlanUpdate();
-        } catch (error) {
-            console.error("Failed to add eggs:", error);
-        }
     };
 
     const handleUpdateEggStatus = async (eggId, status) => {

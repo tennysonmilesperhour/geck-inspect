@@ -5,8 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Eye, Edit, Calendar, Weight, Heart } from 'lucide-react';
 import { format } from 'date-fns';
 import WeightHealthBadge from '@/components/innovations/WeightHealthBadge';
-
-const DEFAULT_GECKO_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
+import { getSexIcon, getSexColor } from '@/lib/utils';
+import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 
 export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [], onView, onEdit, isOwner = true }) {
   const feedingGroup = feedingGroups.find(g => g.id === gecko.feeding_group_id);
@@ -35,14 +35,6 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
       'Sold': 'bg-gradient-to-r from-gray-400 to-gray-600'
     };
     return `${colors[status] || 'bg-gray-500'} text-white shadow-lg`;
-  };
-
-  const getSexIcon = (sex) => {
-    return sex === 'Male' ? '♂' : sex === 'Female' ? '♀' : '?';
-  };
-
-  const getSexColor = (sex) => {
-    return sex === 'Male' ? 'text-blue-400' : sex === 'Female' ? 'text-pink-400' : 'text-gray-400';
   };
 
   const getArchiveReasonIcon = (reason) => {

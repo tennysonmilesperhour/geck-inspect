@@ -4,8 +4,7 @@ import { Label } from '@/components/ui/label';
 import { Badge } from '@/components/ui/badge';
 import { Filter, X } from 'lucide-react';
 import { MORPH_CATEGORIES } from './MorphIDSelector';
-
-const STATUS_OPTIONS = ['Pet', 'Future Breeder', 'Holdback', 'Ready to Breed', 'Proven', 'For Sale', 'Sold'];
+import { GECKO_STATUS_OPTIONS as STATUS_OPTIONS, GECKO_SEX_OPTIONS } from '@/lib/constants';
 const SPECIES_OPTIONS = [
     'Crested Gecko', 'Gargoyle Gecko', 'Giant Day Gecko', 'Gold Dust Day Gecko',
     'Leachianus Gecko', 'Mourning Gecko', 'Chahoua Gecko', 'Pictus Gecko',
@@ -127,7 +126,7 @@ export default function GeckoFilters({ filters, onFiltersChange, onClearFilters,
                     <div>
                         <Label className="text-slate-300 mb-2 block">Sex</Label>
                         <div className="flex gap-2">
-                            {['Male', 'Female', 'Unsexed'].map(sex => (
+                            {GECKO_SEX_OPTIONS.map(sex => (
                                 <button key={sex} onClick={() => handleSexToggle(sex)}
                                     className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${filters.sexes.includes(sex) ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'}`}>
                                     {sex}

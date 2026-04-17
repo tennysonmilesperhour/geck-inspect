@@ -17,7 +17,6 @@ import {
   LifeBuoy,
   Truck,
   Globe,
-  FileSpreadsheet,
   Shield,
   AlertOctagon,
 } from 'lucide-react';

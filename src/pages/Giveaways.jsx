@@ -1,5 +1,5 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { APP_LOGO_URL } from "@/lib/constants";
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { APP_LOGO_URL, DEFAULT_GECKO_IMAGE } from "@/lib/constants";
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { supabase } from '@/lib/supabaseClient';
@@ -39,9 +39,7 @@ import {
 import Seo from '@/components/seo/Seo';
 import { captureEvent } from '@/lib/posthog';
 
-const LOGO_URL =
-  APP_LOGO_URL;
-const DEFAULT_GECKO_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
+const LOGO_URL = APP_LOGO_URL;
 
 const ENTRY_METHOD_LABELS = {
   enter_on_site: 'Enter directly on Geck Inspect',

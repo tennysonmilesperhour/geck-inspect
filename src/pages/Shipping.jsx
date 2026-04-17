@@ -1,4 +1,3 @@
-import React from 'react';
 import { APP_LOGO_URL } from "@/lib/constants";
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';

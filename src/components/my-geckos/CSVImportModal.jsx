@@ -2,7 +2,6 @@ import { useState, useCallback } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -37,7 +36,6 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
     const [importMode, setImportMode] = useState('create_and_update');
     const [createBreedingPairs, setCreateBreedingPairs] = useState(false);
     const [importEggs, setImportEggs] = useState(false);
-    const [isImporting, setIsImporting] = useState(false);
     const [importResults, setImportResults] = useState(null);
     const [useDirectFormat, setUseDirectFormat] = useState(false); // skip mapping for exact-template CSVs
 
@@ -99,7 +97,6 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
     // ------------------------------------------- step 2 → 3: run the import
     const handleImport = async () => {
         setStep('import');
-        setIsImporting(true);
 
         try {
             // Build row objects from the mapping
@@ -130,8 +127,6 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
             });
             setStep('results');
         }
-
-        setIsImporting(false);
     };
 
     // ------------------------------------------------- template download

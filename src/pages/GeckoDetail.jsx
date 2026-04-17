@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
 import { Gecko, User, WeightRecord } from '@/entities/all';
 import { base44 } from '@/api/base44Client';

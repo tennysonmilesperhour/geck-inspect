@@ -15,12 +15,11 @@ import {
 } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
 import { breederSlug, looksLikeBreederName } from '@/lib/breederUtils';
+import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 
 // ---------------------------------------------------------------------------
 // Constants & layout math
 // ---------------------------------------------------------------------------
-
-const DEFAULT_GECKO_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
 
 // 4 generations: self + 2 parents + 4 grandparents + 8 great-grandparents = 15 nodes max.
 const GENERATIONS = 4;

@@ -110,10 +110,12 @@ export default function NotificationsPage() {
                 if (notifPrefs.autoMarkRead) {
                     const unread = userNotifications.filter(n => !n.is_read);
                     if (unread.length > 0) {
-                        Promise.all(unread.map(n => Notification.update(n.id, { is_read: true }))).then(() => {
-                            setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-                            emitCountChanged();
-                        }).catch(() => {});
+                        Promise.all(unread.map(n => Notification.update(n.id, { is_read: true })))
+                            .then(() => {
+                                setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
+                                emitCountChanged();
+                            })
+                            .catch((err) => console.error('Auto-mark-read failed:', err));
                     }
                 }
             } catch (error) {
@@ -170,6 +172,17 @@ export default function NotificationsPage() {
         }
     };
 
+    const displayNotifications = useMemo(() => {
+        let list = notifPrefs.showUnreadOnly ? notifications.filter(n => !n.is_read) : notifications;
+        if (notifPrefs.groupByType) {
+            list = [...list].sort((a, b) => {
+                if (a.type !== b.type) return (a.type || '').localeCompare(b.type || '');
+                return new Date(b.created_date) - new Date(a.created_date);
+            });
+        }
+        return list;
+    }, [notifications, notifPrefs.showUnreadOnly, notifPrefs.groupByType]);
+
     if (isLoading) {
         return (
             <div className="min-h-screen bg-slate-950 p-4 md:p-8">
@@ -197,17 +210,6 @@ export default function NotificationsPage() {
     }
 
     const unreadCount = notifications.filter((n) => !n.is_read).length;
-
-    const displayNotifications = useMemo(() => {
-        let list = notifPrefs.showUnreadOnly ? notifications.filter(n => !n.is_read) : notifications;
-        if (notifPrefs.groupByType) {
-            list = [...list].sort((a, b) => {
-                if (a.type !== b.type) return (a.type || '').localeCompare(b.type || '');
-                return new Date(b.created_date) - new Date(a.created_date);
-            });
-        }
-        return list;
-    }, [notifications, notifPrefs.showUnreadOnly, notifPrefs.groupByType]);
 
     return (
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">

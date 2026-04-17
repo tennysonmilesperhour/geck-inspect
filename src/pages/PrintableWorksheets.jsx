@@ -1,11 +1,9 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { User, Gecko, WeightRecord, FeedingRecord, ShedRecord } from '@/entities/all';
-import { supabase } from '@/lib/supabaseClient';
-import { useAuth } from '@/lib/AuthContext';
-import { format, parseISO, subDays, startOfWeek, addDays as dateAddDays } from 'date-fns';
+import { format, parseISO, startOfWeek, addDays as dateAddDays } from 'date-fns';
 import {
-  Printer, FileText, Stethoscope, Tag, GitBranch, ChevronDown,
-  Loader2, Calendar, Scale, Droplets, Utensils,
+  Printer, FileText, Stethoscope, Tag, GitBranch,
+  Loader2,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -496,8 +494,6 @@ function TemplateButton({ icon: Icon, label, description, active, onClick }) {
 /* ─── Main page ─────────────────────────────────────────────────── */
 
 export default function PrintableWorksheets() {
-  const { user: authUser } = useAuth();
-  const [user, setUser] = useState(null);
   const [geckos, setGeckos] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -518,7 +514,6 @@ export default function PrintableWorksheets() {
     setIsLoading(true);
     try {
       const currentUser = await User.me();
-      setUser(currentUser);
       if (!currentUser) {
         setIsLoading(false);
         return;

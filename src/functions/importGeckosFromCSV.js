@@ -9,9 +9,10 @@
  *   - create_only: skip rows whose gecko_id_code already exists
  */
 import { Gecko, BreedingPlan, Egg } from '@/entities/all';
+import { GECKO_STATUS_OPTIONS, GECKO_SEX_OPTIONS } from '@/lib/constants';
 
-const VALID_SEX = ['Male', 'Female', 'Unsexed'];
-const VALID_STATUS = ['Pet', 'Future Breeder', 'Holdback', 'Ready to Breed', 'Proven', 'For Sale', 'Sold'];
+const VALID_SEX = GECKO_SEX_OPTIONS;
+const VALID_STATUS = GECKO_STATUS_OPTIONS;
 const VALID_EGG_STATUS = ['Incubating', 'Hatched', 'Slug', 'Infertile', 'Stillbirth'];
 
 function normaliseEggStatus(raw, hasHatchedGecko) {

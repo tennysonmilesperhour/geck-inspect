@@ -13,8 +13,7 @@ import {
 import { Search, BookOpen, Filter, Dna, Sparkles, ArrowRight } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
 import { morphSlug, pickBestMorphRecord } from '@/lib/morphUtils';
-
-const DEFAULT_GECKO_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
+import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 
 const MORPH_GUIDE_JSON_LD = {
   '@context': 'https://schema.org',

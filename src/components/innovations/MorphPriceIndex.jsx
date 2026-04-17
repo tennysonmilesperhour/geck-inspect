@@ -9,11 +9,11 @@
  * Usage:
  *   <MorphPriceIndex morph="Lilly White" sellerPrice={450} />
  */
-import React, { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { MorphPriceCache } from '@/api/supabaseEntities';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { TrendingUp, TrendingDown, Minus, DollarSign, BarChart3 } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, BarChart3 } from 'lucide-react';
 
 function formatCurrency(n) {
   return `$${Math.round(n).toLocaleString()}`;

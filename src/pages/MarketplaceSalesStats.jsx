@@ -3,8 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { Gecko, MarketplaceCost, PendingSale } from '@/entities/all';
-import {
-  LineChart, Line, AreaChart, Area, BarChart, Bar,
+import { Line, AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend,
 } from 'recharts';
 import { toast } from '@/components/ui/use-toast';
@@ -12,7 +11,6 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import usePageSettings from '@/hooks/usePageSettings';
 import { Switch } from '@/components/ui/switch';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -189,7 +187,6 @@ function PendingSaleCard({ sale, onUpdate, onComplete, onCancel, onDelete }) {
   }, [sale, editing]);
 
   const payments = Array.isArray(form.payment_schedule) ? form.payment_schedule : [];
-  const totalScheduled = payments.reduce((s, p) => s + Number(p.amount || 0), 0);
   const totalPaid = payments.filter(p => p.paid).reduce((s, p) => s + Number(p.amount || 0), 0);
   const remaining = Number(form.reserve_price || 0) - totalPaid;
   const allPaid = remaining <= 0 && Number(form.reserve_price) > 0;

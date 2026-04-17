@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { User, Gecko } from '@/entities/all';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Crown, MapPin, ChevronRight, Sparkles } from 'lucide-react';
+import { DEFAULT_GECKO_IMAGE as DEFAULT_AVATAR } from '@/lib/constants';
 
 /**
  * Featured Breeders dashboard widget.
@@ -18,7 +19,6 @@ import { Crown, MapPin, ChevronRight, Sparkles } from 'lucide-react';
  * this to a materialized view.
  */
 
-const DEFAULT_AVATAR = 'https://i.imgur.com/sw9gnDp.png';
 const FEATURED_COUNT = 2;
 
 // Small deterministic PRNG. Given the same seed it always produces the

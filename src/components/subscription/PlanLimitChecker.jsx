@@ -14,8 +14,7 @@ import { createPageUrl } from '@/utils';
 // Grandfathered accounts keep `breeder` tier indefinitely — they never
 // get paywalled as long as subscription_status === 'grandfathered'.
 //
-// NOTE (Apr 2026): marketplace_sync moved OUT of Breeder and into the
-// Enterprise tier. Breeder users keep everything else.
+// marketplace_sync is Enterprise-only; Breeder does not include it.
 const PLAN_LIMITS = {
     free: {
         geckos: 10,

@@ -1,19 +1,7 @@
 import { Card } from '@/components/ui/card';
-import { createPageUrl } from '@/utils';
+import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 
-const DEFAULT_GECKO_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
-
-export default function ImageCard({ image, uploader, onImageSelect, onLike, thumbnail = false }) {
-  const _handleLike = (e) => {
-    e.stopPropagation();
-    if (onLike) {
-      onLike(image.id);
-    }
-  };
-
-  const _uploaderName = uploader?.full_name || 'Anonymous';
-  const _profileLink = uploader ? createPageUrl(`PublicProfile?userId=${uploader.id}`) : '#';
-
+export default function ImageCard({ image, onImageSelect, thumbnail = false }) {
   return (
     <Card 
       className="overflow-hidden group cursor-pointer bg-slate-900 border-slate-700 shadow-lg hover:shadow-emerald-500/10 transition-all duration-300"

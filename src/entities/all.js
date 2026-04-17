@@ -21,7 +21,9 @@ export const User = new Proxy({}, {
             .eq('email', user.email)
             .maybeSingle();
           if (profile) return { ...normalizeSupabaseUser(user), ...profile };
-        } catch {}
+        } catch (err) {
+          console.error('User.me profile enrichment failed:', err);
+        }
         return normalizeSupabaseUser(user);
       };
     }
@@ -38,7 +40,9 @@ export const User = new Proxy({}, {
         try {
           await supabase.from('profiles')
             .upsert({ email: user.email, ...data, updated_date: new Date().toISOString() }, { onConflict: 'email' });
-        } catch {}
+        } catch (err) {
+          console.error('updateMyUserData profile upsert failed:', err);
+        }
         return normalizeSupabaseUser(user);
       };
     }

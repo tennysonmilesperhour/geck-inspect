@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { format } from 'date-fns';
-import { TrendingUp, TrendingDown, Minus, DollarSign, BarChart3, Activity, ChevronDown, ChevronUp, Plus, X } from 'lucide-react';
+import { TrendingUp, TrendingDown, Minus, DollarSign, BarChart3, Activity, Plus, X } from 'lucide-react';
 
 const C = {
   forest: '#e2e8f0', moss: '#94a3b8', sage: '#10b981', paleSage: 'rgba(16,185,129,0.1)',

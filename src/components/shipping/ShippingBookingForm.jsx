@@ -105,7 +105,7 @@ export default function ShippingBookingForm({ quote, onBooked }) {
           name: u.full_name || prev.name,
         }));
       }
-    }).catch(() => {});
+    }).catch((err) => console.error('Failed to prefill sender from user:', err));
   }, []);
 
   const updateSender = (field, value) =>

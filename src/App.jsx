@@ -71,7 +71,7 @@ const AuthenticatedApp = () => {
         p => disabled.delete(p)
       );
       setDisabledPages(disabled);
-    }).catch(() => {});
+    }).catch((err) => console.error('Failed to load page configs:', err));
   }, [isAuthenticated]);
 
   // Show loading spinner while checking auth

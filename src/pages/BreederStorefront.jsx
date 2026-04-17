@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { format } from 'date-fns';
-import { MapPin, Calendar, ShieldCheck, Instagram, Globe, Facebook, Star, MessageSquare, Edit, Save, ExternalLink, FileText } from 'lucide-react';
+import { MapPin, ShieldCheck, Star, Edit, Save, FileText } from 'lucide-react';
 
 const C = { forest: '#e2e8f0', sage: '#10b981', paleSage: 'rgba(16,185,129,0.1)', warmWhite: '#020617', gold: '#f59e0b', goldLight: 'rgba(245,158,11,0.15)', slate: '#cbd5e1', muted: '#64748b', cardBg: '#0f172a', border: 'rgba(51,65,85,0.5)' };
 

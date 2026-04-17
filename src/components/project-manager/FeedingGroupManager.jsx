@@ -114,10 +114,8 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
         return differenceInDays(next, new Date());
     };
 
-    // Did the user mark this group fed today? Used to suppress the due-soon
-    // glow ring immediately after clicking "Mark Fed Today" — previously the
-    // ring stayed orange whenever the next feed landed "within 1 day", which
-    // on a daily interval is basically always.
+    // Suppress the due-soon glow immediately after "Mark Fed Today" so a
+    // daily-interval group doesn't perpetually stay in the "within 1 day" warn state.
     const wasFedToday = (group) => {
         if (!group.last_fed_date) return false;
         return group.last_fed_date === format(new Date(), 'yyyy-MM-dd');

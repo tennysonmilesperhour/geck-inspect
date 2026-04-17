@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { APP_LOGO_URL } from "@/lib/constants";
+import { useEffect, useMemo, useState } from 'react';
+import { APP_LOGO_URL, DEFAULT_GECKO_IMAGE } from "@/lib/constants";
 import { Link, useLocation } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { supabase } from '@/lib/supabaseClient';
@@ -8,9 +8,7 @@ import { ArrowLeft, ArrowRight, GitBranch, MapPin, ShieldCheck, Sparkles } from 
 import Seo from '@/components/seo/Seo';
 import { breederCanonical, breederDisplayName, breederSlug } from '@/lib/breederUtils';
 
-const LOGO_URL =
-  APP_LOGO_URL;
-const DEFAULT_GECKO_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
+const LOGO_URL = APP_LOGO_URL;
 
 function GeckoTile({ gecko }) {
   return (

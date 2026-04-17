@@ -15,8 +15,8 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-
-const DEFAULT_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
+import { getSexIcon, getSexColor } from '@/lib/utils';
+import { DEFAULT_GECKO_IMAGE as DEFAULT_IMAGE } from '@/lib/constants';
 
 export default function ReptileCard({ reptile, onView, onEdit, onFeedingComplete }) {
     const [showFedModal, setShowFedModal] = useState(false);
@@ -114,14 +114,6 @@ export default function ReptileCard({ reptile, onView, onEdit, onFeedingComplete
         } finally {
             setIsSaving(false);
         }
-    };
-
-    const getSexIcon = (sex) => {
-        return sex === 'Male' ? '♂' : sex === 'Female' ? '♀' : '?';
-    };
-
-    const getSexColor = (sex) => {
-        return sex === 'Male' ? 'text-blue-400' : sex === 'Female' ? 'text-pink-400' : 'text-gray-400';
     };
 
     const handleEventAdded = (eventData) => {

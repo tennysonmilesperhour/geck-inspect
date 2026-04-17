@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Project, Task, Gecko, BreedingPlan, FeedingGroup, OtherReptile, Notification, User } from '@/entities/all';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,7 +40,9 @@ export default function ProjectManager() {
     const [currentUserEmail, setCurrentUserEmail] = useState(null);
 
     useEffect(() => {
-        User.me().then((u) => setCurrentUserEmail(u?.email || null)).catch(() => {});
+        User.me()
+            .then((u) => setCurrentUserEmail(u?.email || null))
+            .catch((err) => console.error('Failed to load current user:', err));
     }, []);
     const [isProjectModalOpen, setIsProjectModalOpen] = useState(false);
     const [isTaskModalOpen, setIsTaskModalOpen] = useState(false);
@@ -196,11 +198,13 @@ export default function ProjectManager() {
     // Fire notification check after initial data load
     useEffect(() => {
       if (!isLoading && tasks.length + projects.length > 0) {
-        User.me().then(u => {
-          if (u?.email) checkDueDateNotifications(tasks, projects, u.email);
-        }).catch(() => {});
+        User.me()
+          .then(u => {
+            if (u?.email) checkDueDateNotifications(tasks, projects, u.email);
+          })
+          .catch((err) => console.error('Failed to check due-date notifications:', err));
       }
-    }, [isLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [isLoading]);  
 
     const handleCreateProject = async () => {
         if (!newProject.name) return;

@@ -1,11 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { User, Gecko, BreedingLoan } from '@/entities/all';
-import { supabase } from '@/lib/supabaseClient';
-import { useAuth } from '@/lib/AuthContext';
 import { format, isPast, parseISO } from 'date-fns';
 import {
-  Handshake, Plus, Calendar, AlertTriangle, CheckCircle2, Clock, ArrowLeftRight,
-  User as UserIcon, Mail, DollarSign, FileText, X, Loader2, Send,
+  Handshake, Plus, Calendar, AlertTriangle, CheckCircle2, ArrowLeftRight,
+  User as UserIcon, DollarSign, FileText, Loader2, Send,
 } from 'lucide-react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Button } from '@/components/ui/button';
@@ -60,17 +58,6 @@ function StatusBadge({ status }) {
     >
       {s.label}
     </span>
-  );
-}
-
-function SectionHeading({ children }) {
-  return (
-    <h2
-      className="text-xl mb-4"
-      style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}
-    >
-      {children}
-    </h2>
   );
 }
 
@@ -459,7 +446,6 @@ function EmptyLoans({ type }) {
 /* ─── Main page ─────────────────────────────────────────────────── */
 
 export default function BreedingLoans() {
-  const { user: authUser } = useAuth();
   const [user, setUser] = useState(null);
   const [geckos, setGeckos] = useState([]);
   const [loans, setLoans] = useState([]);

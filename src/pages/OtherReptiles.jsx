@@ -94,7 +94,8 @@ export default function OtherReptilesPage() {
             setReptiles(userReptiles);
             
             // Check for feeding notifications (non-blocking)
-            checkFeedingNotifications(userReptiles, user.email).catch(() => {});
+            checkFeedingNotifications(userReptiles, user.email)
+                .catch((err) => console.error('Feeding notification check failed:', err));
         } catch (error) {
             console.error("Failed to load reptiles:", error);
         }

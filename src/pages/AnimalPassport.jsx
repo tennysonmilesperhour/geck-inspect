@@ -1,6 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { Gecko, WeightRecord, OwnershipRecord, FeedingRecord, ShedRecord, VetRecord } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { format } from 'date-fns';
@@ -9,12 +8,10 @@ import {
 } from '@/lib/passportUtils';
 import { QRCodeSVG } from 'qrcode.react';
 import {
-  Calendar, Scale, Droplets, Heart, Stethoscope, ChevronLeft, ChevronRight,
-  ExternalLink, Copy, QrCode, ArrowRightLeft, ShieldCheck, Clock, Check, X,
-  GitBranch, User as UserIcon, Utensils
+  Calendar, Scale, Droplets, Heart, Stethoscope, ChevronLeft, ChevronRight, Copy, QrCode, ArrowRightLeft, ShieldCheck, Check, X, User as UserIcon, Utensils
 } from 'lucide-react';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, ReferenceLine
+  LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import { Helmet } from 'react-helmet-async';
 

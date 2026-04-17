@@ -17,8 +17,6 @@ import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, addDays } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
-import { useNavigate } from 'react-router-dom';
-
 import { generateHatchedGeckoIdFromEgg } from '@/components/shared/geckoIdUtils';
 
 // Helper to generate Google Calendar link
@@ -44,19 +42,16 @@ export default function BreedingPairsPage() {
         showEstimatedDates: true,
         compactCards: false,
     });
-    const [_user, setUser] = useState(null);
     const [geckos, setGeckos] = useState([]);
     const [breedingPlans, setBreedingPlans] = useState([]);
     const [eggs, setEggs] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const _navigate = useNavigate();
     const [editingPlan, setEditingPlan] = useState(null);
 
     const loadData = useCallback(async () => {
         setIsLoading(true);
         try {
             const currentUser = await User.me();
-            setUser(currentUser);
             if (currentUser) {
                 const [userGeckos, plans, userEggs] = await Promise.all([
                     Gecko.filter({ created_by: currentUser.email }),

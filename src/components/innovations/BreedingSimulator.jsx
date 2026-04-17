@@ -7,7 +7,7 @@
  *   - "At least one in clutch" probability per trait
  *   - Adjustable clutch size slider
  */
-import React, { useState } from 'react';
+import { useState } from 'react';
 import { useBreedingSimulator } from '@/hooks/useBreedingSimulator';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';

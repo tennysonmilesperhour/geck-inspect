@@ -25,8 +25,7 @@ import {
 import { differenceInMonths, format, parseISO } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import html2canvas from 'html2canvas';
-
-const DEFAULT_GECKO_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
+import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 
 // Status → color palette for status dot + badge
 const STATUS_COLORS = {
@@ -1088,7 +1087,7 @@ export default function Lineage() {
                                             onMouseDown={() => handleSearchSelect(gecko)}
                                         >
                                             <img
-                                                src={gecko.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'}
+                                                src={gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
                                                 alt={gecko.name}
                                                 className="w-9 h-9 rounded object-cover flex-shrink-0"
                                                 loading="lazy"

@@ -1,9 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { format } from 'date-fns';
-import { ArrowRightLeft, ShieldCheck, Clock, AlertCircle, Check } from 'lucide-react';
+import { ArrowRightLeft, ShieldCheck, Clock, Check } from 'lucide-react';
 
 const C = {
   forest: '#e2e8f0', moss: '#94a3b8', sage: '#10b981',

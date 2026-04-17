@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import Seo from '@/components/seo/Seo';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
 import { Gecko, User, MarketplaceLike } from '@/entities/all';
@@ -7,7 +7,6 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import usePageSettings from '@/hooks/usePageSettings';
-import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
 import {
@@ -23,15 +22,13 @@ import EmptyState from '../components/shared/EmptyState';
 import { useNavigate, Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import MessageUserButton from '../components/ui/MessageUserButton';
+import { getSexIcon, getSexColor } from '@/lib/utils';
 
 // Marketplace-specific Gecko Card. `size` switches between the two
 // grid densities: 'regular' mirrors MyGeckos' tighter look (more cards
 // per row, smaller type) and 'large' keeps the original spacious
 // 4-up layout.
 const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike, onViewLineage, size = 'large' }) => {
-    const getSexIcon = (sex) => sex === 'Male' ? '♂' : sex === 'Female' ? '♀' : '?';
-    const getSexColor = (sex) => sex === 'Male' ? 'text-blue-400' : sex === 'Female' ? 'text-pink-400' : 'text-gray-400';
-
     const isRegular = size === 'regular';
 
     return (
@@ -198,8 +195,8 @@ export default function MarketplaceBuyPage() {
                     try {
                         const userLikes = await MarketplaceLike.filter({ user_email: loggedInUser.email });
                         setLikedGeckoIds(new Set(userLikes.map(l => l.gecko_id)));
-                    } catch (_err) {
-                        console.log("Could not load likes");
+                    } catch (err) {
+                        console.error('Could not load marketplace likes:', err);
                     }
                 }
                 
@@ -213,8 +210,8 @@ export default function MarketplaceBuyPage() {
                             return acc;
                         }, {});
                         setOwners(ownersMap);
-                    } catch (_err) {
-                        console.log("Could not load owners");
+                    } catch (err) {
+                        console.error('Could not load marketplace owners:', err);
                         setOwners({});
                     }
                 } else {
@@ -244,8 +241,8 @@ export default function MarketplaceBuyPage() {
                     return acc;
                 }, {});
                 setOwners(prev => ({ ...prev, ...ownersMap }));
-            } catch (_err) {
-                console.log("Could not load owners");
+            } catch (err) {
+                console.error('Could not load marketplace owners (paginated):', err);
             }
         }
         

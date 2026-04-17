@@ -2,13 +2,11 @@ import { useState } from 'react';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { ChevronDown } from 'lucide-react';
-
-const DEFAULT_THUMB = 'https://i.imgur.com/sw9gnDp.png';
+import { DEFAULT_GECKO_IMAGE as DEFAULT_THUMB } from '@/lib/constants';
 
 /**
  * Controlled autocomplete input for picking a gecko's sire or dam from the
- * current user's collection. Previously this was two copy-pasted blocks in
- * GeckoForm; both are now collapsed into a single component.
+ * current user's collection.
  *
  * Props:
  *   id            — DOM id for the input (for label htmlFor)

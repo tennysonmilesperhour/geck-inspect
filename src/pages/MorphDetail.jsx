@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo, useState } from 'react';
-import { APP_LOGO_URL } from "@/lib/constants";
+import { useEffect, useMemo, useState } from 'react';
+import { APP_LOGO_URL, DEFAULT_GECKO_IMAGE } from "@/lib/constants";
 import { Link, useParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { supabase } from '@/lib/supabaseClient';
@@ -21,9 +21,7 @@ import {
   KNOWN_MORPH_SLUGS,
 } from '@/lib/morphUtils';
 
-const LOGO_URL =
-  APP_LOGO_URL;
-const DEFAULT_GECKO_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
+const LOGO_URL = APP_LOGO_URL;
 
 const RARITY_LABELS = {
   common: 'Common',
