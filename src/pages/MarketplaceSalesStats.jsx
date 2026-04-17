@@ -3,9 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
 import { Gecko, MarketplaceCost, PendingSale } from '@/entities/all';
-import { Line, AreaChart, Area, BarChart, Bar,
-  XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend,
-} from 'recharts';
 import { toast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
@@ -18,13 +15,12 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Badge } from '@/components/ui/badge';
 import {
   DollarSign, TrendingUp, AlertCircle, Trash2, Plus, Save, Loader2,
-  ChevronDown, ChevronUp, Tag, Calendar, Edit2, X, Check,
-  Globe, Lock, ArrowRight, BarChart3,
+  ChevronDown, ChevronUp, Tag, Calendar, Edit2, X, Check, Globe,
   Clock, Weight, Thermometer, Package, CheckCircle2,
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
 import { format, getQuarter, getYear } from 'date-fns';
 import GeckoSelectionModal from '../components/marketplace/GeckoSelectionModal';
+import MarketAnalytics from '@/components/market-analytics/MarketAnalytics';
 
 const QUARTER_LABELS = { 1: 'Q1 (Jan–Mar)', 2: 'Q2 (Apr–Jun)', 3: 'Q3 (Jul–Sep)', 4: 'Q4 (Oct–Dec)' };
 
@@ -785,274 +781,14 @@ function PendingSalesTab({ user, pendingSales, setPendingSales, onCompleteSale, 
 }
 
 // ---------------------------------------------------------------------------
-// Market Analytics — enterprise-gated tab with comprehensive mock data
+// Market Analytics lives in its own module at
+//   src/components/market-analytics/MarketAnalytics.jsx
+//   src/lib/marketAnalytics/*
+// so the data layer is cleanly separated from the visualization layer
+// and the analytics can later power API/alerts/AI recommendations
+// without changes to the Business Tools page.
 // ---------------------------------------------------------------------------
-// All mock data tagged with __mock: true for clean removal when real
-// data pipelines are connected.
 
-const MORPHS_WITH_DATA = [
-  'Lilly White', 'Axanthic', 'Cappuccino', 'Soft Scale', 'Harlequin',
-  'Dalmatian', 'Pinstripe', 'Flame', 'Tiger', 'Patternless',
-  'Empty Back', 'Moonglow', 'Bicolor', 'Brindle',
-];
-
-const WEIGHT_CLASSES = [
-  { value: 'all', label: 'All weights' },
-  { value: 'baby', label: 'Baby (< 5g)' },
-  { value: 'juvenile', label: 'Juvenile (5-15g)' },
-  { value: 'subadult', label: 'Sub-adult (15-30g)' },
-  { value: 'adult', label: 'Adult (30g+)' },
-];
-
-const SEX_OPTIONS = [
-  { value: 'all', label: 'All sexes' },
-  { value: 'male', label: 'Male only' },
-  { value: 'female', label: 'Female only' },
-  { value: 'unsexed', label: 'Unsexed only' },
-];
-
-function generatePriceHistory(morphName, __mock = true) {
-  const months = [];
-  const basePrice = 100 + (morphName.length * 30) + Math.random() * 200;
-  let price = basePrice;
-  for (let i = 11; i >= 0; i--) {
-    const d = new Date();
-    d.setMonth(d.getMonth() - i);
-    const drift = (Math.random() - 0.45) * 40;
-    price = Math.max(50, price + drift);
-    months.push({
-      month: d.toLocaleString('default', { month: 'short', year: '2-digit' }),
-      avg: Math.round(price),
-      median: Math.round(price * (0.85 + Math.random() * 0.3)),
-      low: Math.round(price * 0.4),
-      high: Math.round(price * (1.5 + Math.random() * 0.5)),
-      volume: Math.round(5 + Math.random() * 50),
-      __mock,
-    });
-  }
-  return months;
-}
-
-function generateMorphStats(__mock = true) {
-  return MORPHS_WITH_DATA.map(name => {
-    const avg = Math.round(100 + Math.random() * 400);
-    const median = Math.round(avg * (0.8 + Math.random() * 0.4));
-    return {
-      name,
-      avgPrice: avg,
-      medianPrice: median,
-      lowPrice: Math.round(avg * 0.3),
-      highPrice: Math.round(avg * (1.4 + Math.random() * 0.6)),
-      avgDaysListed: Math.round(3 + Math.random() * 45),
-      totalListings: Math.round(10 + Math.random() * 200),
-      activeListings: Math.round(2 + Math.random() * 30),
-      trend12m: +((-20 + Math.random() * 40).toFixed(1)),
-      __mock,
-    };
-  }).sort((a, b) => b.totalListings - a.totalListings);
-}
-
-function MarketAnalyticsTab({ user }) {
-  const [selectedMorph, setSelectedMorph] = useState(MORPHS_WITH_DATA[0]);
-  const [weightClass, setWeightClass] = useState('all');
-  const [sexFilter, setSexFilter] = useState('all');
-  const [morphStats] = useState(() => generateMorphStats());
-  const [priceHistory, setPriceHistory] = useState(() => generatePriceHistory(MORPHS_WITH_DATA[0]));
-
-  const tier = user?.membership_tier || 'free';
-  const isAdmin = user?.role === 'admin';
-  const hasAccess = tier === 'enterprise' || isAdmin;
-
-  const activeMorphStats = morphStats.find(m => m.name === selectedMorph) || morphStats[0];
-
-  const handleMorphChange = (morph) => {
-    setSelectedMorph(morph);
-    setPriceHistory(generatePriceHistory(morph));
-  };
-
-  return (
-    <div className="space-y-6">
-      {/* Enterprise upsell banner — shown for non-enterprise users */}
-      {!hasAccess && (
-        <div className="rounded-xl border border-emerald-500/20 bg-emerald-950/20 p-5 flex flex-col sm:flex-row items-start sm:items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
-            <Lock className="w-6 h-6 text-emerald-400" />
-          </div>
-          <div className="flex-1">
-            <h3 className="text-sm font-bold text-white">Enterprise Feature Preview</h3>
-            <p className="text-xs text-slate-400 mt-0.5">
-              You're viewing Market Analytics with sample data. Upgrade to Enterprise for live market feeds updated in real time.
-            </p>
-          </div>
-          <Link to={createPageUrl('Membership')}>
-            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shrink-0">
-              View plans <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-            </Button>
-          </Link>
-        </div>
-      )}
-
-      {/* Demo data banner */}
-      <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-3 flex items-start gap-2">
-        <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-        <p className="text-xs text-slate-400 leading-relaxed">
-          <span className="text-amber-300 font-semibold">Preview data.</span>{' '}
-          All charts show simulated data. Live market feeds will replace this when integrated.
-        </p>
-      </div>
-
-      {/* Filters */}
-      <div className="flex flex-wrap gap-3 items-end">
-        <div className="flex-1 min-w-[180px]">
-          <label className="text-xs text-slate-400 mb-1 block">Morph</label>
-          <select
-            value={selectedMorph}
-            onChange={e => handleMorphChange(e.target.value)}
-            className="w-full h-9 rounded-md bg-slate-900 border border-slate-700 text-slate-100 text-sm px-3"
-          >
-            {MORPHS_WITH_DATA.map(m => <option key={m} value={m}>{m}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="text-xs text-slate-400 mb-1 block">Weight class</label>
-          <select
-            value={weightClass}
-            onChange={e => setWeightClass(e.target.value)}
-            className="h-9 rounded-md bg-slate-900 border border-slate-700 text-slate-100 text-sm px-3"
-          >
-            {WEIGHT_CLASSES.map(w => <option key={w.value} value={w.value}>{w.label}</option>)}
-          </select>
-        </div>
-        <div>
-          <label className="text-xs text-slate-400 mb-1 block">Sex</label>
-          <select
-            value={sexFilter}
-            onChange={e => setSexFilter(e.target.value)}
-            className="h-9 rounded-md bg-slate-900 border border-slate-700 text-slate-100 text-sm px-3"
-          >
-            {SEX_OPTIONS.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
-          </select>
-        </div>
-      </div>
-
-      {/* Stats cards */}
-      <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-3">
-        {[
-          { label: 'Avg Price', value: `$${activeMorphStats.avgPrice}`, color: 'text-emerald-400' },
-          { label: 'Median', value: `$${activeMorphStats.medianPrice}`, color: 'text-blue-400' },
-          { label: 'Range', value: `$${activeMorphStats.lowPrice}-$${activeMorphStats.highPrice}`, color: 'text-slate-300' },
-          { label: 'Avg Days Listed', value: `${activeMorphStats.avgDaysListed}d`, color: 'text-amber-400' },
-          { label: 'Active Listings', value: activeMorphStats.activeListings, color: 'text-purple-400' },
-          { label: '12m Trend', value: `${activeMorphStats.trend12m > 0 ? '+' : ''}${activeMorphStats.trend12m}%`, color: activeMorphStats.trend12m >= 0 ? 'text-emerald-400' : 'text-red-400' },
-        ].map(s => (
-          <div key={s.label} className="rounded-lg border border-slate-800 bg-slate-900/50 p-3">
-            <p className="text-[10px] text-slate-500 uppercase tracking-wider">{s.label}</p>
-            <p className={`text-lg font-bold mt-0.5 ${s.color}`}>{s.value}</p>
-          </div>
-        ))}
-      </div>
-
-      {/* Price History Chart */}
-      <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
-        <h4 className="text-sm font-semibold text-slate-200 mb-4">
-          {selectedMorph} — 12-Month Price History
-        </h4>
-        <div className="h-64">
-          <ResponsiveContainer width="100%" height="100%">
-            <AreaChart data={priceHistory}>
-              <defs>
-                <linearGradient id="maAvgGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.3} />
-                  <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
-                </linearGradient>
-                <linearGradient id="maRangeGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#6366f1" stopOpacity={0.15} />
-                  <stop offset="95%" stopColor="#6366f1" stopOpacity={0} />
-                </linearGradient>
-              </defs>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1a4034" />
-              <XAxis dataKey="month" tick={{ fill: '#6b8f80', fontSize: 11 }} />
-              <YAxis tick={{ fill: '#6b8f80', fontSize: 11 }} tickFormatter={v => `$${v}`} />
-              <RechartsTooltip
-                contentStyle={{ background: '#0c2a1f', border: '1px solid #1a4034', borderRadius: 8 }}
-                labelStyle={{ color: '#d1fae5' }}
-                itemStyle={{ color: '#a7f3d0' }}
-                formatter={(v, name) => [`$${v}`, name]}
-              />
-              <Legend wrapperStyle={{ fontSize: 11 }} />
-              <Area type="monotone" dataKey="high" stroke="none" fill="url(#maRangeGrad)" name="High" />
-              <Area type="monotone" dataKey="avg" stroke="#10b981" strokeWidth={2} fill="url(#maAvgGrad)" name="Average" />
-              <Line type="monotone" dataKey="median" stroke="#8b5cf6" strokeWidth={1.5} strokeDasharray="4 2" dot={false} name="Median" />
-              <Line type="monotone" dataKey="low" stroke="#ef4444" strokeWidth={1} strokeDasharray="2 2" dot={false} name="Low" />
-            </AreaChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* Volume Chart */}
-      <div className="rounded-xl border border-slate-800 bg-slate-900/50 p-4">
-        <h4 className="text-sm font-semibold text-slate-200 mb-4">Monthly Listing Volume</h4>
-        <div className="h-40">
-          <ResponsiveContainer width="100%" height="100%">
-            <BarChart data={priceHistory}>
-              <CartesianGrid strokeDasharray="3 3" stroke="#1a4034" />
-              <XAxis dataKey="month" tick={{ fill: '#6b8f80', fontSize: 11 }} />
-              <YAxis tick={{ fill: '#6b8f80', fontSize: 11 }} />
-              <RechartsTooltip contentStyle={{ background: '#0c2a1f', border: '1px solid #1a4034', borderRadius: 8 }} labelStyle={{ color: '#d1fae5' }} />
-              <Bar dataKey="volume" fill="#10b981" radius={[4, 4, 0, 0]} name="Listings" />
-            </BarChart>
-          </ResponsiveContainer>
-        </div>
-      </div>
-
-      {/* All Morphs Comparison Table */}
-      <div className="rounded-xl border border-slate-800 bg-slate-900/50 overflow-hidden">
-        <div className="px-4 py-3 border-b border-slate-800">
-          <h4 className="text-sm font-semibold text-slate-200 flex items-center gap-2">
-            <BarChart3 className="w-4 h-4 text-emerald-400" />
-            All Morphs Comparison
-          </h4>
-        </div>
-        <div className="overflow-x-auto">
-          <table className="w-full text-xs">
-            <thead>
-              <tr className="border-b border-slate-800">
-                <th className="text-left px-4 py-2.5 text-slate-400 font-medium">Morph</th>
-                <th className="text-right px-3 py-2.5 text-slate-400 font-medium">Avg</th>
-                <th className="text-right px-3 py-2.5 text-slate-400 font-medium">Median</th>
-                <th className="text-right px-3 py-2.5 text-slate-400 font-medium">Range</th>
-                <th className="text-right px-3 py-2.5 text-slate-400 font-medium">Days Listed</th>
-                <th className="text-right px-3 py-2.5 text-slate-400 font-medium">Active</th>
-                <th className="text-right px-3 py-2.5 text-slate-400 font-medium">12m Trend</th>
-              </tr>
-            </thead>
-            <tbody>
-              {morphStats.map(m => (
-                <tr
-                  key={m.name}
-                  onClick={() => handleMorphChange(m.name)}
-                  className={`border-b border-slate-800/50 cursor-pointer transition-colors ${
-                    m.name === selectedMorph ? 'bg-emerald-950/30' : 'hover:bg-slate-800/30'
-                  }`}
-                >
-                  <td className="px-4 py-2.5 font-medium text-slate-200">{m.name}</td>
-                  <td className="text-right px-3 py-2.5 text-emerald-400 font-semibold">${m.avgPrice}</td>
-                  <td className="text-right px-3 py-2.5 text-slate-300">${m.medianPrice}</td>
-                  <td className="text-right px-3 py-2.5 text-slate-400">${m.lowPrice}-${m.highPrice}</td>
-                  <td className="text-right px-3 py-2.5 text-amber-400">{m.avgDaysListed}d</td>
-                  <td className="text-right px-3 py-2.5 text-slate-300">{m.activeListings}</td>
-                  <td className={`text-right px-3 py-2.5 font-semibold ${m.trend12m >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>
-                    {m.trend12m > 0 ? '+' : ''}{m.trend12m}%
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  );
-}
 export default function MarketplaceSalesStats() {
   const [statsPrefs, setStatsPrefs] = usePageSettings('sales_stats_prefs', {
     defaultTab: 'revenue',
@@ -1662,7 +1398,7 @@ export default function MarketplaceSalesStats() {
 
             {/* Market Analytics — Enterprise tier only */}
             <TabsContent value="analytics" className="space-y-6">
-              <MarketAnalyticsTab user={user} />
+              <MarketAnalytics user={user} />
             </TabsContent>
           </Tabs>
         </div>
