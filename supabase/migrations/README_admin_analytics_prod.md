@@ -3,14 +3,26 @@
 The `20260417_admin_analytics.sql` migration creates `error_logs` and
 `user_events`, which Supabase branch previews apply cleanly.
 
-The steps below **modify existing prod tables** (`support_messages`,
-`page_config`) that aren't in our migration history (they were created
-via the dashboard). Run them directly against **production** in the SQL
-editor after the preview migration lands.
+The steps below set up RLS policies (depend on `profiles` with a `role`
+column) and modify existing prod tables (`support_messages`,
+`page_config`) that aren't in our migration history. Run them directly
+against **production** in the SQL editor after the preview migration
+lands.
 
 ```sql
--- Admin read/update/delete on error_logs + user_events (prod only —
--- depends on the `profiles` table with a `role` column).
+-- Enable RLS + baseline policies on the new tables.
+ALTER TABLE public.error_logs ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.user_events ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "anyone can report errors" ON public.error_logs;
+CREATE POLICY "anyone can report errors" ON public.error_logs
+  FOR INSERT TO anon, authenticated WITH CHECK (true);
+
+DROP POLICY IF EXISTS "anyone can record events" ON public.user_events;
+CREATE POLICY "anyone can record events" ON public.user_events
+  FOR INSERT TO anon, authenticated WITH CHECK (true);
+
+-- Admin read/update/delete on error_logs + user_events.
 DROP POLICY IF EXISTS "admins can read error logs" ON public.error_logs;
 CREATE POLICY "admins can read error logs" ON public.error_logs
   FOR SELECT TO authenticated
