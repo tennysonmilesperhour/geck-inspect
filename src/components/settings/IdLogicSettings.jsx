@@ -1,8 +1,41 @@
+import { useMemo } from 'react';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
-import { GitBranch, RotateCcw, Users, User, Layers } from 'lucide-react';
+import { GitBranch, RotateCcw, Users, User, Layers, Eye, HelpCircle } from 'lucide-react';
+import { applyFormat } from '@/components/my-geckos/form/helpers';
+
+// Rendered against both format strings so the user can see immediate
+// feedback while editing. Sample numbers and parent names are fixed so
+// the output is easy to compare between edits.
+const SAMPLE_HATCHLINGS = [
+  { label: 'Jeff × Mindy, clutch 1', sire: 'Jeff', dam: 'Mindy', num: 1, letter: 'a' },
+  { label: 'Jeff × Mindy, clutch 2', sire: 'Jeff', dam: 'Mindy', num: 2, letter: 'b' },
+  { label: 'Turner × Anna, clutch 1', sire: 'Turner', dam: 'Anna', num: 1, letter: 'a' },
+];
+
+const TOKEN_REFERENCE = [
+  { token: '{PREFIX}', desc: 'Your breeder prefix (first 3 chars of breeder name / email, or the override below).' },
+  { token: '{NUM}', desc: 'Offspring or founder sequence number (1, 2, 3 …).' },
+  { token: '{NNN}', desc: 'Same as NUM but zero-padded to 3 digits (001, 002 …).' },
+  { token: '{SIRE}', desc: 'First two letters of sire’s name, title-cased (e.g. "Je").' },
+  { token: '{DAM}', desc: 'First two letters of dam’s name, title-cased (e.g. "Mi").' },
+  { token: '{LETTER}', desc: 'Egg letter within the clutch (a, b, c …).' },
+  { token: '{YY}', desc: '2-digit year of generation.' },
+  { token: '{YYYY}', desc: '4-digit year of generation.' },
+  { token: '{LINE}', desc: 'Prefix of the oldest ancestor on the side picked by your inheritance mode.' },
+  { token: '{PARENT}', desc: 'Full ID of the direct parent (sire preferred).' },
+  { token: '{SEX}', desc: 'm / f / u.' },
+  { token: '{CLUTCH}', desc: 'Clutch number (same as NUM unless a clutch entity is present).' },
+];
+
+const MODE_EXPLAINER = {
+  breeder_prefix: 'Every gecko — founder or offspring — carries your own breeder prefix. Simplest option; lineage is tracked via the sire/dam links, not in the ID.',
+  sire_line: 'A hatchling’s {LINE} token resolves to the prefix of the oldest paternal founder. Useful when you mainly track males as line anchors.',
+  dam_line: 'A hatchling’s {LINE} token resolves to the prefix of the oldest maternal founder. Useful when females anchor your lines.',
+  founder_origin: 'Tries the sire side first; if no paternal founder is recorded, falls back to the dam side, then your breeder prefix. Good for mixed collections.',
+};
 
 /**
  * Default settings shape. Consumers should spread this over any stored
@@ -47,6 +80,49 @@ export default function IdLogicSettings({ value, onChange }) {
 
   const set = (patch) => onChange?.({ ...settings, ...patch });
   const resetAll = () => onChange?.({ ...DEFAULT_ID_SETTINGS });
+
+  const previewPrefix = (settings.prefix || 'Joh').substring(0, 4).toUpperCase();
+  const yearNow = new Date().getFullYear();
+
+  const previews = useMemo(() => {
+    const founders = [1, 2, 3].map((n) => ({
+      label: `Founder #${n}`,
+      value: applyFormat(settings.founderFormat || DEFAULT_ID_SETTINGS.founderFormat, {
+        prefix: previewPrefix,
+        nnn: String(n).padStart(3, '0'),
+        num: n,
+        letter: 'a',
+        yy: String(yearNow).slice(-2),
+        yyyy: String(yearNow),
+        line: previewPrefix,
+        parent: '',
+        sex: 'u',
+        clutch: n,
+      }),
+    }));
+    const hatchlings = SAMPLE_HATCHLINGS.map((s) => {
+      const sireInit = s.sire.slice(0, 1).toUpperCase() + s.sire.slice(1, 2).toLowerCase();
+      const damInit = s.dam.slice(0, 1).toUpperCase() + s.dam.slice(1, 2).toLowerCase();
+      return {
+        label: s.label,
+        value: applyFormat(settings.hatchlingFormat || DEFAULT_ID_SETTINGS.hatchlingFormat, {
+          prefix: previewPrefix,
+          nnn: String(s.num).padStart(3, '0'),
+          sire: sireInit,
+          dam: damInit,
+          num: s.num,
+          letter: s.letter,
+          yy: String(yearNow).slice(-2),
+          yyyy: String(yearNow),
+          line: previewPrefix,
+          parent: `${sireInit}${damInit}1a${String(yearNow - 2).slice(-2)}`,
+          sex: 'u',
+          clutch: s.num,
+        }),
+      };
+    });
+    return { founders, hatchlings };
+  }, [settings.founderFormat, settings.hatchlingFormat, previewPrefix, yearNow]);
 
   return (
     <Card className="bg-slate-900 border-slate-800">
@@ -130,6 +206,63 @@ export default function IdLogicSettings({ value, onChange }) {
             <p className="text-xs text-slate-500 mt-1">
               Leave blank to auto-derive from your breeder name / email.
             </p>
+          </div>
+        </div>
+
+        {/* Live preview */}
+        <div className="space-y-3">
+          <Label className="text-slate-300 flex items-center gap-2">
+            <Eye className="w-4 h-4" /> Live preview
+          </Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+            <div className="rounded-lg border border-slate-800 bg-slate-800/40 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Founders</p>
+              <div className="space-y-1">
+                {previews.founders.map((row) => (
+                  <div key={row.label} className="flex items-center justify-between text-sm">
+                    <span className="text-slate-500">{row.label}</span>
+                    <span className="font-mono text-emerald-300">{row.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+            <div className="rounded-lg border border-slate-800 bg-slate-800/40 p-3">
+              <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-2">Hatchlings</p>
+              <div className="space-y-1">
+                {previews.hatchlings.map((row) => (
+                  <div key={row.label} className="flex items-center justify-between text-sm gap-3">
+                    <span className="text-slate-500 truncate">{row.label}</span>
+                    <span className="font-mono text-emerald-300 shrink-0">{row.value}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+          <p className="text-xs text-slate-500">
+            Previews use <span className="font-mono">{previewPrefix}</span> as the breeder prefix and the current year.
+            Your real IDs will use your own prefix and the parent data of each pairing.
+          </p>
+        </div>
+
+        {/* How this works */}
+        <div className="rounded-lg border border-slate-800 bg-slate-800/40 p-4 space-y-3">
+          <div className="flex items-center gap-2">
+            <HelpCircle className="w-4 h-4 text-slate-400" />
+            <p className="text-sm font-semibold text-slate-200">How this works</p>
+          </div>
+          <p className="text-xs text-slate-400 leading-relaxed">
+            {MODE_EXPLAINER[settings.inheritanceMode] || MODE_EXPLAINER.breeder_prefix}
+          </p>
+          <div>
+            <p className="text-xs font-semibold uppercase tracking-wider text-slate-500 mb-2">Tokens</p>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-4 gap-y-1.5">
+              {TOKEN_REFERENCE.map((t) => (
+                <div key={t.token} className="flex items-start gap-2 text-xs">
+                  <code className="text-emerald-300 shrink-0 w-20">{t.token}</code>
+                  <span className="text-slate-400 leading-snug">{t.desc}</span>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
 

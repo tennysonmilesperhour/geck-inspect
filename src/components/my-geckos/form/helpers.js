@@ -23,7 +23,7 @@ import { generateHatchedGeckoId, generateFounderGeckoId } from '@/components/sha
  *
  * Any text outside tokens is kept as-is, so "{PREFIX}-{NNN}" → "JOH-001".
  */
-function applyFormat(format, vars) {
+export function applyFormat(format, vars) {
   return format
     .replace(/\{PREFIX\}/g, vars.prefix || '???')
     .replace(/\{NNN\}/g, vars.nnn || '001')
