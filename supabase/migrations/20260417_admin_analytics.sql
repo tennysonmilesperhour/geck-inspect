@@ -1,5 +1,7 @@
 -- Admin Analytics, Error Logging, Feature Telemetry, Feedback
--- Run this against your Supabase project to enable the polished admin panel.
+-- Fully self-contained: guards all references to dashboard-managed tables
+-- (profiles, support_messages, page_config) so preview branches with no
+-- migration history still apply cleanly.
 
 -- ============================================================================
 -- 1. error_logs — global client error capture
@@ -30,45 +32,6 @@ CREATE INDEX IF NOT EXISTS error_logs_user_email_idx
 
 ALTER TABLE error_logs ENABLE ROW LEVEL SECURITY;
 
--- Anyone (incl. anonymous) may report an error — they're a useful signal.
-DROP POLICY IF EXISTS "anyone can report errors" ON error_logs;
-CREATE POLICY "anyone can report errors" ON error_logs
-  FOR INSERT TO anon, authenticated WITH CHECK (true);
-
--- Only admins can read or modify error logs.
-DROP POLICY IF EXISTS "admins can read error logs" ON error_logs;
-CREATE POLICY "admins can read error logs" ON error_logs
-  FOR SELECT TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.email = auth.jwt() ->> 'email'
-      AND profiles.role = 'admin'
-    )
-  );
-
-DROP POLICY IF EXISTS "admins can update error logs" ON error_logs;
-CREATE POLICY "admins can update error logs" ON error_logs
-  FOR UPDATE TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.email = auth.jwt() ->> 'email'
-      AND profiles.role = 'admin'
-    )
-  );
-
-DROP POLICY IF EXISTS "admins can delete error logs" ON error_logs;
-CREATE POLICY "admins can delete error logs" ON error_logs
-  FOR DELETE TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.email = auth.jwt() ->> 'email'
-      AND profiles.role = 'admin'
-    )
-  );
-
 -- ============================================================================
 -- 2. user_events — lightweight feature-usage telemetry
 -- ============================================================================
@@ -94,25 +57,83 @@ CREATE INDEX IF NOT EXISTS user_events_page_idx
 
 ALTER TABLE user_events ENABLE ROW LEVEL SECURITY;
 
-DROP POLICY IF EXISTS "anyone can record events" ON user_events;
-CREATE POLICY "anyone can record events" ON user_events
-  FOR INSERT TO anon, authenticated WITH CHECK (true);
+-- ============================================================================
+-- 3. RLS policies — anyone can insert; reads are admin-only.
+--     Policies referencing `profiles` are only created when that table
+--     exists. On preview branches without profiles, the admin-read
+--     policies are skipped (no harm — RLS with no SELECT policy simply
+--     denies reads, matching the intent).
+-- ============================================================================
+DO $$
+DECLARE
+  has_profiles BOOLEAN;
+BEGIN
+  SELECT EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'profiles'
+  ) INTO has_profiles;
 
-DROP POLICY IF EXISTS "admins can read events" ON user_events;
-CREATE POLICY "admins can read events" ON user_events
-  FOR SELECT TO authenticated
-  USING (
-    EXISTS (
-      SELECT 1 FROM profiles
-      WHERE profiles.email = auth.jwt() ->> 'email'
-      AND profiles.role = 'admin'
-    )
-  );
+  -- Anyone may insert an error or event. Telemetry is a signal; PII is
+  -- masked by the client already.
+  EXECUTE 'DROP POLICY IF EXISTS "anyone can report errors" ON error_logs';
+  EXECUTE $p$CREATE POLICY "anyone can report errors" ON error_logs
+    FOR INSERT TO anon, authenticated WITH CHECK (true)$p$;
+
+  EXECUTE 'DROP POLICY IF EXISTS "anyone can record events" ON user_events';
+  EXECUTE $p$CREATE POLICY "anyone can record events" ON user_events
+    FOR INSERT TO anon, authenticated WITH CHECK (true)$p$;
+
+  IF has_profiles THEN
+    EXECUTE 'DROP POLICY IF EXISTS "admins can read error logs" ON error_logs';
+    EXECUTE $p$CREATE POLICY "admins can read error logs" ON error_logs
+      FOR SELECT TO authenticated
+      USING (
+        EXISTS (
+          SELECT 1 FROM profiles
+          WHERE profiles.email = auth.jwt() ->> 'email'
+          AND profiles.role = 'admin'
+        )
+      )$p$;
+
+    EXECUTE 'DROP POLICY IF EXISTS "admins can update error logs" ON error_logs';
+    EXECUTE $p$CREATE POLICY "admins can update error logs" ON error_logs
+      FOR UPDATE TO authenticated
+      USING (
+        EXISTS (
+          SELECT 1 FROM profiles
+          WHERE profiles.email = auth.jwt() ->> 'email'
+          AND profiles.role = 'admin'
+        )
+      )$p$;
+
+    EXECUTE 'DROP POLICY IF EXISTS "admins can delete error logs" ON error_logs';
+    EXECUTE $p$CREATE POLICY "admins can delete error logs" ON error_logs
+      FOR DELETE TO authenticated
+      USING (
+        EXISTS (
+          SELECT 1 FROM profiles
+          WHERE profiles.email = auth.jwt() ->> 'email'
+          AND profiles.role = 'admin'
+        )
+      )$p$;
+
+    EXECUTE 'DROP POLICY IF EXISTS "admins can read events" ON user_events';
+    EXECUTE $p$CREATE POLICY "admins can read events" ON user_events
+      FOR SELECT TO authenticated
+      USING (
+        EXISTS (
+          SELECT 1 FROM profiles
+          WHERE profiles.email = auth.jwt() ->> 'email'
+          AND profiles.role = 'admin'
+        )
+      )$p$;
+  END IF;
+END
+$$;
 
 -- ============================================================================
--- 3. support_messages — add 'source' so feedback widget can be filtered
---     Guarded so the migration also runs cleanly on preview branches
---     that don't yet have the table (it's managed in the dashboard on prod).
+-- 4. support_messages — add source / page / rating for the feedback widget.
+--     Guarded so preview branches without the table skip cleanly.
 -- ============================================================================
 DO $$
 BEGIN
@@ -120,10 +141,10 @@ BEGIN
     SELECT 1 FROM information_schema.tables
     WHERE table_schema = 'public' AND table_name = 'support_messages'
   ) THEN
-    ALTER TABLE support_messages
-      ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'support';
+    ALTER TABLE support_messages ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'support';
+    ALTER TABLE support_messages ADD COLUMN IF NOT EXISTS page TEXT;
+    ALTER TABLE support_messages ADD COLUMN IF NOT EXISTS rating INTEGER;
 
-    -- Add the CHECK constraint only if it doesn't already exist.
     IF NOT EXISTS (
       SELECT 1 FROM pg_constraint WHERE conname = 'support_messages_source_check'
     ) THEN
@@ -131,12 +152,6 @@ BEGIN
         ADD CONSTRAINT support_messages_source_check
         CHECK (source IN ('support', 'feedback', 'bug_report', 'feature_request'));
     END IF;
-
-    ALTER TABLE support_messages
-      ADD COLUMN IF NOT EXISTS page TEXT;
-
-    ALTER TABLE support_messages
-      ADD COLUMN IF NOT EXISTS rating INTEGER;
 
     IF NOT EXISTS (
       SELECT 1 FROM pg_constraint WHERE conname = 'support_messages_rating_check'
@@ -153,8 +168,7 @@ END
 $$;
 
 -- ============================================================================
--- 4. page_config — guarded backfill on the off-chance this migration runs
---     on a fresh branch without the table.
+-- 5. page_config — default category / order_position backfill.
 -- ============================================================================
 DO $$
 BEGIN
@@ -169,7 +183,7 @@ END
 $$;
 
 -- ============================================================================
--- 5. Convenience view — daily active users last 90 days
+-- 6. Daily-activity view for the analytics dashboard.
 -- ============================================================================
 CREATE OR REPLACE VIEW v_daily_activity AS
 SELECT
