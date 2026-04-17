@@ -15,6 +15,12 @@ import {
   Images,
   ArrowRight,
   Eye,
+  Egg,
+  CalendarDays,
+  Truck,
+  Shield,
+  Scale,
+  FileSpreadsheet,
 } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
 
@@ -58,6 +64,54 @@ const FEATURES = [
     icon: ShoppingCart,
     title: 'Verified Marketplace',
     desc: 'Buy and sell crested geckos from keepers you can verify — with full lineage, weight history, and photo history attached to every listing.',
+  },
+];
+
+const INNOVATIVE_FEATURES = [
+  {
+    icon: Egg,
+    title: 'Egg &amp; Incubation Timeline',
+    desc: 'Log every clutch, auto-track incubation days, and get hatch alerts. Eggs promote to hatchling records the day they emerge — lineage and clutch already wired up.',
+  },
+  {
+    icon: CalendarDays,
+    title: 'Season Planner',
+    desc: 'Plan every pairing, feeding group, vet check, and cooldown for the season. Due-date notifications so nothing slips through on a 200-animal schedule.',
+  },
+  {
+    icon: LineChartIcon,
+    title: 'Market Analytics',
+    desc: 'See which morph combos are actually moving, at what price, across regions. Real sales data from the hobby — not guesswork, not last year&rsquo;s wiki.',
+  },
+  {
+    icon: Images,
+    title: 'Photo Timeline per Gecko',
+    desc: 'Every photo stays with its gecko. Watch a hatchling morph out into adulthood in one auto-advancing slideshow — the history a buyer actually wants to see.',
+  },
+  {
+    icon: Truck,
+    title: 'Built-in Reptile Shipping',
+    desc: 'Breeder-tier accounts ship through integrated reptile-safe couriers. Rates, labels, and buyer notifications without a separate account or portal.',
+  },
+  {
+    icon: Shield,
+    title: 'Verified Expert Network',
+    desc: 'Ask vetted breeders and morph specialists for IDs, breeding advice, or project planning. Expert status is earned through real contributions, not purchased.',
+  },
+  {
+    icon: Scale,
+    title: 'Lineage Pedigrees &amp; Transfers',
+    desc: 'Every gecko carries a digital passport — parents, hatch date, weight history, photos. Transfer full provenance to the new owner when you sell, in one click.',
+  },
+  {
+    icon: FileSpreadsheet,
+    title: 'MorphMarket &amp; CSV Sync',
+    desc: 'Import existing records from a spreadsheet, sync listings to MorphMarket and Palm Street, and export your whole roster to CSV or PDF whenever you want.',
+  },
+  {
+    icon: Sparkles,
+    title: 'Genetics &amp; Trait Projections',
+    desc: 'Project punnett outcomes across co-dominant, recessive, and polygenic traits before you pair. Stop breeding blind — see the range of possible offspring first.',
   },
 ];
 
@@ -335,61 +389,45 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Featured morphs — visual entry points into the per-morph pages.
-            Each card hard-codes the slug so the landing page doesn't need
-            a DB fetch, and the morph description is short and AI-friendly. */}
+        {/* Second feature grid — the innovative/unique capabilities that
+            differentiate Geck Inspect from a spreadsheet or a generic
+            reptile app. Same card style as the first grid so the first
+            few scrolls read as one confident feature tour. */}
         <section className="relative z-10 max-w-6xl mx-auto px-6 pb-24">
-          <div className="text-center mb-12">
+          <div className="text-center mb-14">
             <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300 mb-4">
-              <Dna className="w-3.5 h-3.5" />
-              Featured morphs
+              <Sparkles className="w-3.5 h-3.5" />
+              Built for the hobby, not adapted to it
             </div>
-            <h2 className="text-3xl md:text-4xl font-bold text-white mb-3">
-              Explore the crested gecko morph universe
+            <h2 className="text-3xl md:text-4xl font-bold mb-3">
+              Tools you won&rsquo;t find anywhere else
             </h2>
             <p className="text-slate-400 max-w-2xl mx-auto">
-              From classic Harlequins to rare Lilly Whites, every major morph has its own page with descriptions, rarity, key features, and breeding info.
+              Every feature is built around how keepers and breeders actually work — from a single hatchling&rsquo;s first weigh-in to a 200-animal breeding season.
             </p>
           </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {[
-              { slug: 'harlequin',         name: 'Harlequin',         blurb: 'Extensive pattern on sides and legs' },
-              { slug: 'pinstripe',         name: 'Pinstripe',         blurb: 'Raised dorsal scales running head to tail' },
-              { slug: 'dalmatian',         name: 'Dalmatian',         blurb: 'Spots scattered across the body' },
-              { slug: 'lilly-white',       name: 'Lilly White',       blurb: 'Co-dominant white body markings' },
-              { slug: 'cappuccino',        name: 'Cappuccino',        blurb: 'Recessive coffee-brown color' },
-              { slug: 'flame',             name: 'Flame',             blurb: 'Classic dorsal stripe morph' },
-              { slug: 'brindle',           name: 'Brindle',           blurb: 'Fine chaotic marbled striping' },
-              { slug: 'axanthic',          name: 'Axanthic',          blurb: 'Black, white, and gray only' },
-            ].map((m) => (
-              <Link
-                key={m.slug}
-                to={`/MorphGuide/${m.slug}`}
-                className="group gecko-card p-5 transition-all"
-              >
-                <div className="text-sm font-bold text-white mb-1 group-hover:text-emerald-300 transition-colors">
-                  {m.name}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {INNOVATIVE_FEATURES.map((f) => {
+              const Icon = f.icon;
+              return (
+                <div
+                  key={f.title}
+                  className="group gecko-card backdrop-blur p-6 transition-all duration-200"
+                >
+                  <div className="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-400/25 flex items-center justify-center mb-4 group-hover:bg-emerald-500/25 group-hover:border-emerald-300/40 transition-colors">
+                    <Icon className="w-6 h-6 text-emerald-300" />
+                  </div>
+                  <h3
+                    className="text-lg font-semibold text-white mb-2"
+                    dangerouslySetInnerHTML={{ __html: f.title }}
+                  />
+                  <p
+                    className="text-sm text-slate-400 leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: f.desc }}
+                  />
                 </div>
-                <div className="text-xs text-slate-300 leading-relaxed line-clamp-2">
-                  {m.blurb}
-                </div>
-                <div className="mt-3 inline-flex items-center gap-1 text-[11px] font-semibold text-emerald-300 group-hover:text-emerald-200">
-                  Read guide
-                  <ArrowRight className="w-3 h-3 group-hover:translate-x-0.5 transition-transform" />
-                </div>
-              </Link>
-            ))}
-          </div>
-          <div className="text-center mt-8">
-            <Link to="/MorphGuide">
-              <Button
-                variant="outline"
-                className="bg-emerald-950/40 text-emerald-100 hover:bg-emerald-900/60 hover:text-white border-emerald-500/40 font-semibold backdrop-blur"
-              >
-                View all morphs
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
-            </Link>
+              );
+            })}
           </div>
         </section>
 
