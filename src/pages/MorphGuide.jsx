@@ -12,6 +12,7 @@ import {
 } from '@/components/ui/select';
 import { Search, BookOpen, Filter, Dna, Sparkles, ArrowRight, Info } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
+import { supabase } from '@/lib/supabaseClient';
 import { morphSlug, pickBestMorphRecord } from '@/lib/morphUtils';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import {
@@ -20,6 +21,7 @@ import {
   INHERITANCE,
   RARITY,
 } from '@/data/morph-guide';
+import RotatingMorphImage from '@/components/morphguide/RotatingMorphImage';
 
 const MORPH_GUIDE_JSON_LD = {
   '@context': 'https://schema.org',
@@ -52,17 +54,19 @@ function sanitizeImage(url) {
 function MorphCard({ morph }) {
   const rarity = RARITY[morph.rarity] || RARITY.common;
   const inh = INHERITANCE[morph.inheritance];
+  const images = morph.heroImages && morph.heroImages.length > 0
+    ? morph.heroImages
+    : [morph.heroImage || DEFAULT_GECKO_IMAGE];
   return (
     <Link
       to={`/MorphGuide/${morph.slug}`}
       className="group rounded-2xl overflow-hidden border border-slate-800 bg-slate-900/60 hover:border-emerald-500/50 hover:bg-slate-900 transition-all duration-200 flex flex-col"
     >
       <div className="aspect-[4/3] bg-slate-800 relative overflow-hidden">
-        <img
-          src={morph.heroImage || DEFAULT_GECKO_IMAGE}
+        <RotatingMorphImage
+          images={images}
           alt={`${morph.name} crested gecko morph`}
           className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-          loading="lazy"
         />
         <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/10 to-transparent" />
         <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
@@ -138,6 +142,7 @@ function InheritanceLegend() {
 
 export default function MorphGuidePage() {
   const [dbRecords, setDbRecords] = useState([]);
+  const [communityImages, setCommunityImages] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('all');
   const [inheritanceFilter, setInheritanceFilter] = useState('all');
@@ -160,6 +165,31 @@ export default function MorphGuidePage() {
     })();
   }, []);
 
+  // Pull community gecko photos tagged with a primary_morph so we can
+  // use them as card thumbnails when the morph_guides row doesn't have
+  // its own example_image_url. Same source MorphDetail already uses for
+  // its community gallery strip — just surfaced earlier on the list.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('gecko_images')
+          .select('image_url, primary_morph')
+          .not('primary_morph', 'is', null)
+          .not('image_url', 'is', null)
+          .limit(500);
+        if (!cancelled) setCommunityImages(data || []);
+      } catch (err) {
+        console.error('Community images fetch failed:', err);
+        if (!cancelled) setCommunityImages([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Index DB records by slug for quick lookup.
   const dbBySlug = useMemo(() => {
     const bySlug = {};
@@ -175,6 +205,31 @@ export default function MorphGuidePage() {
     return out;
   }, [dbRecords]);
 
+  // Bucket community images by morph keyword (first word of morph name,
+  // lower-cased). Uses the same matcher MorphDetail uses so coverage is
+  // consistent between list and detail views.
+  const communityByKeyword = useMemo(() => {
+    const buckets = {};
+    for (const img of communityImages) {
+      const tag = (img.primary_morph || '').toLowerCase();
+      if (!tag || !img.image_url) continue;
+      // Index on every word in the tag so a "harlequin pinstripe" photo
+      // falls under both "harlequin" and "pinstripe".
+      for (const word of tag.split(/[\s/,]+/).filter(Boolean)) {
+        (buckets[word] ||= []).push(img.image_url);
+      }
+    }
+    return buckets;
+  }, [communityImages]);
+
+  function findCommunityImages(name) {
+    if (!name) return [];
+    const firstWord = name.toLowerCase().split(/\s+/)[0];
+    // Cap at 6 images per morph — plenty for a rotating preview,
+    // and keeps the DOM lightweight on morph-heavy pages.
+    return (communityByKeyword[firstWord] || []).slice(0, 6);
+  }
+
   // Merge local + DB. Local morph-guide entries are the source of truth.
   // Any DB record not covered by the local dataset is appended as-is so
   // community additions still show up.
@@ -182,15 +237,24 @@ export default function MorphGuidePage() {
     const localSlugs = new Set(MORPHS.map((m) => m.slug));
     const merged = MORPHS.map((m) => {
       const dbMatch = dbBySlug[m.slug];
+      const dbImg = sanitizeImage(dbMatch?.example_image_url);
+      const communityImgs = findCommunityImages(m.name);
+      // Stack the curated DB image first (if any), then the community
+      // pool. Dedup happens inside RotatingMorphImage.
+      const heroImages = dbImg ? [dbImg, ...communityImgs] : communityImgs;
       return {
         ...m,
-        heroImage: sanitizeImage(dbMatch?.example_image_url),
+        heroImage: heroImages[0] || null,
+        heroImages,
         dbDescription: dbMatch?.description,
         keyFeaturesDb: dbMatch?.key_features,
       };
     });
     for (const [slug, rec] of Object.entries(dbBySlug)) {
       if (localSlugs.has(slug)) continue;
+      const dbImg = sanitizeImage(rec.example_image_url);
+      const communityImgs = findCommunityImages(rec.morph_name);
+      const heroImages = dbImg ? [dbImg, ...communityImgs] : communityImgs;
       merged.push({
         slug,
         name: rec.morph_name,
@@ -200,13 +264,14 @@ export default function MorphGuidePage() {
         summary: rec.description?.slice(0, 180),
         description: rec.description,
         keyFeatures: rec.key_features || [],
-        heroImage: sanitizeImage(rec.example_image_url),
+        heroImage: heroImages[0] || null,
+        heroImages,
         priceTier: null,
         priceRange: null,
       });
     }
     return merged;
-  }, [dbBySlug]);
+  }, [dbBySlug, communityByKeyword]);
 
   const filtered = useMemo(() => {
     let list = [...allMorphs];

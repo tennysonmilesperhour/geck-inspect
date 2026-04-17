@@ -145,11 +145,21 @@ module.exports = {
   				to: {
   					height: '0'
   				}
+  			},
+  			'morph-slide-in-right': {
+  				'0%': { transform: 'translateX(100%)', opacity: '0' },
+  				'100%': { transform: 'translateX(0)', opacity: '1' }
+  			},
+  			'morph-slide-out-left': {
+  				'0%': { transform: 'translateX(0)', opacity: '1' },
+  				'100%': { transform: 'translateX(-100%)', opacity: '0' }
   			}
   		},
   		animation: {
   			'accordion-down': 'accordion-down 0.2s ease-out',
-  			'accordion-up': 'accordion-up 0.2s ease-out'
+  			'accordion-up': 'accordion-up 0.2s ease-out',
+  			'morph-slide-in-right': 'morph-slide-in-right 0.7s cubic-bezier(0.22, 1, 0.36, 1)',
+  			'morph-slide-out-left': 'morph-slide-out-left 0.7s cubic-bezier(0.22, 1, 0.36, 1)'
   		}
   	}
   },
