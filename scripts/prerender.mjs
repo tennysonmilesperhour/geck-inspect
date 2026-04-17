@@ -35,7 +35,12 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { resolve, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { SITE_URL, STATIC_ROUTES, getMorphRoutes } from './seo-routes.mjs';
+import {
+  SITE_URL,
+  STATIC_ROUTES,
+  getMorphRoutes,
+  getCareTopicRoutes,
+} from './seo-routes.mjs';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
@@ -118,6 +123,36 @@ function loadMorphs() {
 
 const MORPHS = loadMorphs();
 
+/**
+ * Parse the care-guide.js sections so per-topic prerendered HTML ships
+ * with substantive noscript content. We extract each section's title
+ * and the first two `type: 'p'` paragraph texts under it. Good enough
+ * for AI-crawler ingestion even without running the React renderer.
+ */
+function loadCareSections() {
+  const src = readFileSync(resolve(REPO_ROOT, 'src/data/care-guide.js'), 'utf8');
+  // Grab blocks of `id: '...', title: '...'` plus the nearest following
+  // paragraph text. The care-guide file uses a consistent shape so a
+  // tolerant regex handles it without a full JS parser.
+  const out = {};
+  const re =
+    /id:\s*'([a-z0-9-]+)',\s*\n\s*title:\s*'([^']+)'[\s\S]*?body:\s*\[([\s\S]*?)\n\s*\],\s*\n\s*\},/g;
+  let m;
+  while ((m = re.exec(src)) !== null) {
+    const id = m[1];
+    const title = m[2];
+    const body = m[3];
+    // First paragraph texts in the body.
+    const paras = [...body.matchAll(/type:\s*'p',\s*\n\s*text:\s*'((?:\\.|[^'\\])*)'/g)]
+      .map((p) => p[1].replace(/\\'/g, "'"))
+      .slice(0, 2);
+    out[id] = { id, title, summary: paras.join(' ') };
+  }
+  return out;
+}
+
+const CARE_SECTIONS = loadCareSections();
+
 // ------- per-route metadata ------------------------------------------------
 
 const RARITY_LABEL = {
@@ -150,10 +185,32 @@ function morphMeta(slug) {
   };
 }
 
+function careTopicMeta(id) {
+  const section = CARE_SECTIONS[id];
+  const title = section?.title || id;
+  const summary =
+    section?.summary ||
+    `${title} — part of the Geck Inspect crested gecko care guide.`;
+  // Clamp to the soft description limit Google actually renders.
+  const description =
+    `${title} — crested gecko care guide. ${summary}`.slice(0, 320);
+  return {
+    title: `${title} — Crested Gecko Care`,
+    description,
+    bodyHeading: `${title} — crested gecko care`,
+    bodyLead: summary,
+    bodyExtra:
+      'Full care reference: housing, diet, humidity, handling, health, breeding, and life-stage guidance for Correlophus ciliatus. Every topic in the Geck Inspect care guide has its own URL so you can share or bookmark it.',
+  };
+}
+
 function routeMeta(route) {
   // Morph detail override
   const morphMatch = route.path.match(/^\/MorphGuide\/([a-z0-9-]+)$/);
   if (morphMatch) return morphMeta(morphMatch[1]);
+  // Care topic override
+  const careMatch = route.path.match(/^\/CareGuide\/([a-z0-9-]+)$/);
+  if (careMatch) return careTopicMeta(careMatch[1]);
   const m = route.meta || {};
   return {
     title: m.title || 'Geck Inspect',
@@ -323,9 +380,11 @@ function run() {
     '/MorphVisualizer',
   ]);
 
-  const routes = [...STATIC_ROUTES, ...getMorphRoutes()].filter(
-    (r) => !SKIP.has(r.path),
-  );
+  const routes = [
+    ...STATIC_ROUTES,
+    ...getMorphRoutes(),
+    ...getCareTopicRoutes(),
+  ].filter((r) => !SKIP.has(r.path));
 
   for (const route of routes) writeRoute(route);
   console.log(`[prerender] wrote ${routes.length} route HTML files into dist/`);

@@ -38,6 +38,7 @@ const PrivacyPolicy        = lazy(() => import('./pages/PrivacyPolicy'));
 // actually read them. The pages render their own public header/footer
 // and link through to sign-up CTAs where relevant.
 const CareGuide             = lazy(() => import('./pages/CareGuide'));
+const CareGuideTopic        = lazy(() => import('./pages/CareGuideTopic'));
 const GeneticsGuide         = lazy(() => import('./pages/GeneticsGuide'));
 const GeneticCalculatorTool = lazy(() => import('./pages/GeneticCalculatorTool'));
 // Programmatic-SEO static content pages (About / Contact / Terms).
@@ -118,6 +119,7 @@ const AuthenticatedApp = () => {
           <Route path="/MorphGuide" element={<MorphGuideList />} />
           <Route path="/MorphGuide/:slug" element={<MorphDetail />} />
           <Route path="/CareGuide" element={<CareGuide />} />
+          <Route path="/CareGuide/:topic" element={<CareGuideTopic />} />
           <Route path="/GeneticsGuide" element={<GeneticsGuide />} />
           <Route path="/GeneticCalculatorTool" element={<GeneticCalculatorTool />} />
           <Route path="/About" element={<About />} />

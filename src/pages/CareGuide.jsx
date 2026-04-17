@@ -196,7 +196,16 @@ function SectionCard({ section }) {
     >
       <header className="mb-5 flex flex-wrap items-center gap-3">
         <h3 className="text-2xl md:text-[28px] font-bold text-slate-100">
-          {section.title}
+          {/* Deep-link the heading to the topic's standalone page so
+              crawlers find 34 new indexable URLs and human readers can
+              share a link to the specific topic. The standalone page is
+              rendered by src/pages/CareGuideTopic.jsx. */}
+          <a
+            href={`/CareGuide/${section.id}`}
+            className="hover:text-emerald-300 transition-colors"
+          >
+            {section.title}
+          </a>
         </h3>
         {section.level && (
           <span
@@ -211,6 +220,14 @@ function SectionCard({ section }) {
           <ContentBlock key={i} block={block} />
         ))}
       </div>
+      <footer className="mt-5 pt-4 border-t border-slate-800/60 text-xs text-slate-500">
+        <a
+          href={`/CareGuide/${section.id}`}
+          className="text-emerald-300 hover:text-emerald-200 font-semibold"
+        >
+          Permalink: /CareGuide/{section.id} →
+        </a>
+      </footer>
     </article>
   );
 }
