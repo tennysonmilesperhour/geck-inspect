@@ -30,6 +30,53 @@ const TOKEN_REFERENCE = [
   { token: '{CLUTCH}', desc: 'Clutch number (same as NUM unless a clutch entity is present).' },
 ];
 
+const PRESETS = [
+  {
+    id: 'default',
+    label: 'Geck Inspect default',
+    blurb: 'Breeder prefix + parent initials on hatchlings',
+    settings: {
+      founderFormat: '{PREFIX}{NUM}-{YY}',
+      hatchlingFormat: '{SIRE}{DAM}{NUM}{LETTER}{YY}',
+      prefix: '',
+      inheritanceMode: 'breeder_prefix',
+    },
+  },
+  {
+    id: 'simple_numeric',
+    label: 'Simple numeric',
+    blurb: 'Just breeder prefix + an auto-incrementing number',
+    settings: {
+      founderFormat: '{PREFIX}-{NNN}',
+      hatchlingFormat: '{PREFIX}-{NNN}',
+      prefix: '',
+      inheritanceMode: 'breeder_prefix',
+    },
+  },
+  {
+    id: 'sire_line',
+    label: 'Line tracking',
+    blurb: 'Hatchlings carry the paternal founder’s prefix',
+    settings: {
+      founderFormat: '{PREFIX}{NUM}-{YY}',
+      hatchlingFormat: '{LINE}-{NUM}{LETTER}{YY}',
+      prefix: '',
+      inheritanceMode: 'sire_line',
+    },
+  },
+  {
+    id: 'year_first',
+    label: 'Year first',
+    blurb: 'IDs sort naturally by year, then by breeder/parents',
+    settings: {
+      founderFormat: '{YY}-{PREFIX}{NNN}',
+      hatchlingFormat: '{YY}-{SIRE}{DAM}{NUM}{LETTER}',
+      prefix: '',
+      inheritanceMode: 'breeder_prefix',
+    },
+  },
+];
+
 const MODE_EXPLAINER = {
   breeder_prefix: 'Every gecko — founder or offspring — carries your own breeder prefix. Simplest option; lineage is tracked via the sire/dam links, not in the ID.',
   sire_line: 'A hatchling’s {LINE} token resolves to the prefix of the oldest paternal founder. Useful when you mainly track males as line anchors.',
@@ -136,6 +183,27 @@ export default function IdLogicSettings({ value, onChange }) {
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Presets */}
+        <div className="space-y-3">
+          <Label className="text-slate-300">Start from a preset</Label>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-2">
+            {PRESETS.map((p) => (
+              <button
+                key={p.id}
+                type="button"
+                onClick={() => onChange?.({ ...p.settings })}
+                className="text-left rounded-lg border border-slate-700 bg-slate-800/40 hover:border-emerald-500/40 hover:bg-slate-800 px-3 py-2 transition-colors"
+              >
+                <p className="text-sm font-semibold text-slate-200">{p.label}</p>
+                <p className="text-xs text-slate-500 mt-0.5 leading-snug">{p.blurb}</p>
+              </button>
+            ))}
+          </div>
+          <p className="text-xs text-slate-500">
+            Each preset overwrites the fields below. Already have your own format? Skip this and type it in directly.
+          </p>
+        </div>
+
         {/* Inheritance mode */}
         <div className="space-y-3">
           <Label className="text-slate-300">Inheritance mode</Label>
