@@ -62,7 +62,7 @@ export default function MyGeckosPage() {
     const [showArchived, setShowArchived] = useState(false);
     const [archiveDialogGeckoId, setArchiveDialogGeckoId] = useState(null);
     const [feedingGroups, setFeedingGroups] = useState([]);
-    const [idSettings, setIdSettings] = usePageSettings('gecko_id_settings', {
+    const [idSettings] = usePageSettings('gecko_id_settings', {
         founderFormat: '{PREFIX}{NUM}-{YY}',
         hatchlingFormat: '{SIRE}{DAM}{NUM}{LETTER}{YY}',
         prefix: '',
@@ -377,39 +377,16 @@ export default function MyGeckosPage() {
                                         </Select>
                                         </div>
                                         <div className="border-t border-slate-700 pt-3 mt-1">
-                                            <Label className="text-slate-300 text-sm font-medium block mb-2">Gecko ID Format</Label>
-                                            <div className="space-y-2">
-                                                <div>
-                                                    <Label className="text-slate-400 text-xs block mb-1">Founder (no parents)</Label>
-                                                    <Input
-                                                        value={idSettings.founderFormat}
-                                                        onChange={e => setIdSettings({ founderFormat: e.target.value })}
-                                                        placeholder="{PREFIX}-{NNN}"
-                                                        className="h-7 text-xs bg-slate-800 border-slate-600 text-slate-200 font-mono"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <Label className="text-slate-400 text-xs block mb-1">Hatchling (with parents)</Label>
-                                                    <Input
-                                                        value={idSettings.hatchlingFormat}
-                                                        onChange={e => setIdSettings({ hatchlingFormat: e.target.value })}
-                                                        placeholder="{SIRE}{DAM}{NUM}{LETTER}{YY}"
-                                                        className="h-7 text-xs bg-slate-800 border-slate-600 text-slate-200 font-mono"
-                                                    />
-                                                </div>
-                                                <div>
-                                                    <Label className="text-slate-400 text-xs block mb-1">Custom prefix override</Label>
-                                                    <Input
-                                                        value={idSettings.prefix}
-                                                        onChange={e => setIdSettings({ prefix: e.target.value })}
-                                                        placeholder="e.g., GI, TMP (leave blank for breeder name)"
-                                                        className="h-7 text-xs bg-slate-800 border-slate-600 text-slate-200"
-                                                    />
-                                                </div>
-                                                <p className="text-[10px] text-slate-500 leading-tight">
-                                                    Tokens: {'{PREFIX}'} {'{NNN}'} {'{SIRE}'} {'{DAM}'} {'{NUM}'} {'{LETTER}'} {'{YY}'} {'{YYYY}'}. Free text is kept as-is.
-                                                </p>
-                                            </div>
+                                            <Label className="text-slate-300 text-sm font-medium block mb-1">Gecko ID Format</Label>
+                                            <p className="text-[11px] text-slate-500 leading-snug mb-2">
+                                                The full customizer — inheritance modes, presets, and live preview — lives in Settings.
+                                            </p>
+                                            <a
+                                                href="/Settings#id-logic"
+                                                className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-300 hover:text-emerald-200"
+                                            >
+                                                Customize ID logic →
+                                            </a>
                                         </div>
                                         </PageSettingsPanel>
                         {/* All header buttons use explicit emerald styling with
