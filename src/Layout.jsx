@@ -1007,8 +1007,6 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
             </div>
           </header>
 
-          <GuestBanner />
-
           <div className="flex-1 overflow-auto overflow-x-hidden">
             {children}
           </div>
@@ -1020,7 +1018,10 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       <CommandPalette />
       <FeedingAlertSystem user={user} enabled={user?.feeding_alerts_enabled !== false} />
       <GuestMockDisclaimer />
+<<<<<<< HEAD
       {user && <FeedbackWidget />}
+=======
+>>>>>>> 5abe9ba (Populate guest mode with mock data and a yellow demo disclaimer)
     </>
     );
           }
