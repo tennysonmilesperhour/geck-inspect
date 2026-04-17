@@ -6,179 +6,151 @@
  * on a branch, head facing right, tail trailing left — the most recognizable
  * angle for morph ID.
  *
- * Each anatomical region is a SEPARATE path so pattern layers can be clipped
- * to just the dorsum, flanks, belly, legs, head, etc. — the pieces needed to
- * accurately place patterns like pinstripe (dorsal edges) vs flame (flanks).
+ * The silhouette is intentionally built from smooth, geometric curves rather
+ * than a single hand-drawn loop. That gives a clean, predictable illustration
+ * that reads well at any zoom and layers cleanly under pattern overlays.
  */
 
 export const VIEWBOX = '0 0 800 480';
 
-// ---- Silhouette (full gecko body + legs + head; used as master clip) ----
-// Stylized side profile with prominent supraorbital crests, chunky head,
-// plump body, four splayed limbs and tapered tail.
+// Key anatomical reference points — used by both paths and helpers.
+export const BODY_ELLIPSE  = { cx: 395, cy: 252, rx: 235, ry: 58 };
+export const HEAD_ELLIPSE  = { cx: 666, cy: 208, rx: 72,  ry: 48 };
+export const NECK_JOIN_X   = 600;
+export const DORSUM_TOP_Y  = 200;
+export const BELLY_BOT_Y   = 308;
+
+// Single silhouette = body ellipse + head ellipse + tail bulge.
+// We express it as a series of cubic curves for a smooth outline.
 export const BODY_PATH = `
-  M 75,235
-  C 55,230 35,245 40,258
-  C 45,270 70,278 95,270
-  C 120,282 150,290 190,292
-  L 255,298
-  C 300,302 360,305 420,305
-  C 470,303 520,300 560,293
-  L 605,282
-  C 625,280 645,280 660,275
-  C 680,268 700,256 715,240
-  C 735,218 740,200 728,184
-  C 715,168 685,158 660,164
-  C 640,168 628,175 620,180
-  L 585,182
-  C 530,180 470,178 420,180
-  C 370,182 320,188 280,192
-  L 220,200
-  C 175,205 140,215 110,222
-  L 85,228
-  Z
+  M 738,215
+  C 745,188 728,165 700,158
+  C 670,152 636,158 616,178
+  C 610,184 596,190 580,192
+  L 330,204
+  C 260,208 195,212 155,210
+  C 115,208 90,200 75,218
+  C 60,238 55,258 65,276
+  C 80,298 130,308 200,312
+  L 440,310
+  C 520,308 580,300 612,290
+  C 632,284 655,280 680,270
+  C 710,258 732,242 738,215 Z
 `;
 
-// ---- Dorsum (top 30% band of the body — receives dorsal pattern) ----
-export const DORSUM_PATH = `
-  M 80,230
-  C 115,210 155,198 215,192
-  L 285,186
-  C 350,182 430,180 500,182
-  L 585,184
-  C 615,184 645,180 670,174
-  C 690,170 705,170 715,180
-  C 725,190 722,205 705,215
-  L 680,222
-  C 650,230 615,232 585,232
-  L 460,232
-  C 380,230 300,230 230,235
-  L 160,242
-  C 120,245 95,247 80,240
-  Z
-`;
-
-// ---- Flanks (middle band — receives harlequin / tiger / flame) ----
-export const FLANKS_PATH = `
-  M 78,255
-  C 120,252 170,252 220,255
-  L 300,260
-  C 380,262 460,262 540,258
-  L 615,252
-  C 645,250 670,252 690,250
-  L 705,260
-  C 692,275 665,282 625,282
-  L 520,292
-  C 440,298 350,302 270,298
-  L 180,290
-  C 130,286 95,278 72,268
-  Z
-`;
-
-// ---- Belly (bottom edge and underside — receives white wall, fringe) ----
-export const BELLY_PATH = `
-  M 95,272
-  C 140,285 200,294 280,300
-  L 420,305
-  C 500,303 560,298 610,287
-  C 630,290 660,290 690,285
-  L 700,295
-  C 685,310 650,320 610,318
-  L 480,322
-  C 380,322 270,318 200,308
-  L 130,298
-  C 110,295 95,290 95,272
-  Z
-`;
-
-// ---- Head (separate so it can tint differently — e.g. cappuccino dorsum) ----
+// Head region, used by layers that want to tint only the head.
 export const HEAD_PATH = `
-  M 595,175
-  C 615,165 640,158 670,158
-  C 700,158 725,172 730,195
-  C 732,215 720,232 700,240
-  C 680,246 660,247 640,244
-  C 625,241 615,236 605,228
-  L 595,210
-  C 590,198 585,185 595,175
+  M 598,188
+  C 610,170 640,156 668,156
+  C 696,156 720,170 730,195
+  C 736,215 726,238 700,250
+  C 678,258 656,258 635,252
+  C 618,248 605,236 598,220
+  C 592,208 592,196 598,188 Z
+`;
+
+// ---- Dorsum band (top ~35%, clipped to body) ----
+export const DORSUM_PATH = `
+  M 60,215
+  C 200,195 420,188 600,194
+  C 680,196 720,205 730,215
+  L 730,248
+  C 600,240 400,240 200,248
+  C 110,252 70,250 60,240 Z
+`;
+
+// ---- Flanks band (middle — clipped to body) ----
+export const FLANKS_PATH = `
+  M 55,248
+  L 735,248
+  L 735,285
+  L 55,285
   Z
 `;
 
-// ---- Crests (scale ridges atop the head, running down the nape) ----
-// A sequence of small triangular spikes along the dorsal ridge.
+// ---- Belly band (bottom — clipped to body) ----
+export const BELLY_PATH = `
+  M 55,282
+  L 735,282
+  L 735,325
+  L 55,325
+  Z
+`;
+
+// ---- Crest spikes — dorsal ridge from hip to crown ----
 export function crestSpikes() {
   const spikes = [];
-  // Dorsal ridge spikes from tail-base to top of head
-  for (let i = 0; i < 42; i += 1) {
-    const t = i / 41;
-    // Arc from (120, 198) over the back to (670, 155)
-    const x = 120 + t * 550;
-    // Slight arc upward in the middle
-    const y = 198 - Math.sin(t * Math.PI) * 22 - t * 3;
-    const h = 6 + Math.sin(t * Math.PI) * 3;
+  const startX = 165, endX = 670;
+  const startY = 208, endY = 162;
+  for (let i = 0; i < 46; i += 1) {
+    const t = i / 45;
+    const x = startX + t * (endX - startX);
+    // Gentle arch rising at the center to trace the gecko's curved back
+    const y = startY + t * (endY - startY) - Math.sin(t * Math.PI) * 8;
+    const h = 5 + Math.sin(t * Math.PI) * 2.5;
     spikes.push({ x, y, h });
   }
   return spikes;
 }
 
-// Supraorbital crest — the signature "eyelash" ridge above each eye.
+// Supraorbital crest — the signature "eyelash" ridge above the eye.
 export const SUPRAORBITAL_PATH = `
-  M 660,162
-  C 672,154 688,152 700,156
-  C 710,159 715,165 712,170
-  C 708,175 695,170 685,170
-  C 675,170 665,172 660,162 Z
+  M 648,164
+  C 666,156 688,154 706,160
+  C 718,164 724,172 718,180
+  C 706,184 690,182 674,180
+  C 662,179 648,174 648,164 Z
 `;
 
-// ---- Legs (four legs — front-right, front-left-far, back-right, back-left-far) ----
-// Near legs are drawn in full; far legs are partially hidden behind the body.
+// ---- Legs ----
+// Near legs drawn in full; far legs partially hidden.
 export const LEG_FRONT_NEAR_PATH = `
-  M 595,268
-  C 598,295 595,320 585,345
-  C 578,365 575,385 583,400
-  L 605,402
-  C 618,390 625,368 625,345
-  C 625,320 620,292 612,268
+  M 598,280
+  C 602,308 598,338 588,358
+  C 580,378 578,392 588,400
+  L 610,400
+  C 622,388 628,365 628,340
+  C 628,315 622,295 614,278
   Z
 `;
 
 export const LEG_FRONT_FAR_PATH = `
-  M 615,275
-  C 620,305 620,335 612,362
-  C 606,382 605,395 612,402
-  L 625,401
-  C 632,390 635,368 635,342
-  C 635,315 630,292 625,275
+  M 618,286
+  C 622,314 622,342 614,368
+  C 608,386 608,396 616,402
+  L 629,400
+  C 636,390 638,368 636,344
+  C 636,320 632,298 628,284
   Z
 `;
 
 export const LEG_BACK_NEAR_PATH = `
-  M 180,285
-  C 178,310 170,340 175,370
-  C 178,390 185,400 195,400
-  L 215,400
-  C 220,390 225,365 225,335
-  C 225,310 220,290 215,278
+  M 170,288
+  C 168,314 160,344 164,372
+  C 168,392 178,402 188,400
+  L 208,400
+  C 214,390 218,365 218,335
+  C 218,312 212,292 206,280
   Z
 `;
 
 export const LEG_BACK_FAR_PATH = `
-  M 215,290
-  C 218,315 215,345 218,370
-  C 220,385 225,395 232,398
-  L 245,395
-  C 248,385 248,360 245,335
-  C 242,310 238,290 232,280
+  M 208,294
+  C 212,320 210,348 212,372
+  C 214,388 220,398 227,400
+  L 240,396
+  C 242,386 242,360 240,336
+  C 238,314 234,294 230,282
   Z
 `;
 
-// Toe pads (lamellae) — simple rounded fingers at each foot
-export function toePads(cx, cy, count = 4, spread = 22, size = 6) {
+// Toe pads (lamellae) — signature wide gecko feet.
+export function toePads(cx, cy, count = 5, spread = 11, size = 3.2) {
   const pads = [];
   for (let i = 0; i < count; i += 1) {
-    const a = -Math.PI / 2 + (i - (count - 1) / 2) * 0.35;
+    const a = -Math.PI / 2 + (i - (count - 1) / 2) * 0.32;
     const px = cx + Math.cos(a) * spread;
-    const py = cy + Math.sin(a) * spread + 8;
+    const py = cy + Math.sin(a) * spread + 6;
     pads.push({ cx: px, cy: py, r: size });
   }
   return pads;
@@ -186,21 +158,21 @@ export function toePads(cx, cy, count = 4, spread = 22, size = 6) {
 
 // ---- Tail (curved, tapering) ----
 export const TAIL_PATH = `
-  M 85,245
-  C 55,240 30,235 15,215
-  C 5,200 8,180 25,175
-  C 45,172 60,185 70,200
-  C 78,212 85,225 90,238
+  M 82,245
+  C 54,240 28,230 18,210
+  C 10,195 20,178 38,176
+  C 58,174 72,188 82,204
+  C 90,218 92,232 92,244
   Z
 `;
 
 // ---- Eye ----
-export const EYE_CENTER = { cx: 687, cy: 192 };
-export const EYE_RADIUS = 11;
+export const EYE_CENTER = { cx: 682, cy: 196 };
+export const EYE_RADIUS = 12;
 
-// ---- Nostril + mouth (tiny details) ----
-export const NOSTRIL = { cx: 725, cy: 210 };
-export const MOUTH_PATH = `M 695,228 C 710,235 720,234 727,228`;
+// ---- Nostril + mouth ----
+export const NOSTRIL = { cx: 722, cy: 212 };
+export const MOUTH_PATH = `M 686,232 C 700,240 718,238 724,228`;
 
 // ---- Branch (perch) ----
 export const BRANCH_PATH = `
@@ -212,7 +184,7 @@ export const BRANCH_PATH = `
   Z
 `;
 
-// Utility — simple seeded PRNG so dalmatian/LW splotches stay stable across renders.
+// Utility — seeded PRNG so dalmatian/LW splotches stay stable across renders.
 export function mulberry32(seed) {
   let a = seed >>> 0;
   return function () {
@@ -222,3 +194,6 @@ export function mulberry32(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
+
+// Shared clip-path id — use it anywhere patterns need to stay on the body.
+export const BODY_CLIP_ID = 'gecko-body-clip';
