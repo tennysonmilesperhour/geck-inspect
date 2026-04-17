@@ -19,6 +19,7 @@ import {
   Globe,
   FileSpreadsheet,
   Shield,
+  AlertOctagon,
 } from 'lucide-react';
 
 import AdminOverview from '@/components/admin/AdminOverview';
@@ -33,6 +34,7 @@ import PageManagement from '@/components/admin/PageManagement';
 import MorphSubmissionReview from '@/components/admin/MorphSubmissionReview';
 import SystemHealth from '@/components/admin/SystemHealth';
 import SupportInbox from '@/components/admin/SupportInbox';
+import ErrorLogsViewer from '@/components/admin/ErrorLogsViewer';
 
 /**
  * Admin Panel — sidebar layout grouped by responsibility.
@@ -92,6 +94,7 @@ const NAV_GROUPS = [
     label: 'System',
     items: [
       { id: 'scraped_data', label: 'Scraped data', icon: Database },
+      { id: 'errors', label: 'Error logs', icon: AlertOctagon },
       { id: 'system', label: 'Health & build', icon: Activity },
     ],
   },
@@ -111,6 +114,7 @@ const SECTION_TITLES = {
   shipping: 'Shipping configuration',
   market_data: 'Market data management',
   scraped_data: 'Scraped data review',
+  errors: 'Error logs',
   system: 'System health',
 };
 
@@ -192,6 +196,8 @@ export default function AdminPanel() {
         return <AdminPlaceholder title="Market Data Management" description="Manage data sources for the Market Analytics tab in Business Tools. Configure regional feeds, set data refresh intervals, and review pricing data quality. This section will be activated when real market data pipelines are connected." icon={Globe} />;
       case 'scraped_data':
         return <ScrapedDataReview />;
+      case 'errors':
+        return <ErrorLogsViewer />;
       case 'system':
         return <SystemHealth />;
       default:
