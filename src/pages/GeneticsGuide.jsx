@@ -7,6 +7,7 @@ import { Dna, ArrowUp, Search } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
 import { Subsection } from '@/components/genetics/GeneticsHelpers';
 import { GENETICS_GUIDE_JSON_LD, GENETICS_GUIDE_PUBLISHED, GENETICS_GUIDE_MODIFIED } from "@/data/genetics-jsonld";
+import { bylineText } from '@/lib/editorial';
 import { SECTIONS } from "@/data/genetics-sections.jsx";
 import { GLOSSARY_GROUPS, GLOSSARY } from "@/data/genetics-glossary";
 
@@ -177,6 +178,7 @@ export default function GeneticsGuide() {
                   An interactive educational reference for understanding crested gecko
                   genetics, morphs, and selective breeding.
                 </p>
+                <p className="text-xs text-slate-500 mt-2">{bylineText('/GeneticsGuide')}</p>
               </div>
             </div>
             <div className="mt-6">

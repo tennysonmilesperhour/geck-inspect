@@ -7,6 +7,7 @@ import ContentBlock from '@/components/careguide/ContentBlock';
 import PublicPageShell from '@/components/public/PublicPageShell';
 import { CARE_CATEGORIES } from '@/data/care-guide';
 import { breadcrumbSchema, ORG_ID, SITE_URL } from '@/lib/organization-schema';
+import { authorSchema, bylineText, editorialFor } from '@/lib/editorial';
 import { createPageUrl } from '@/utils';
 
 /**
@@ -93,6 +94,7 @@ export default function CareGuideTopic() {
   const url = `${SITE_URL}${path}`;
   const description = sectionPlainText(section) ||
     `${section.title} — crested gecko care guide section from Geck Inspect.`;
+  const editorial = editorialFor(path);
 
   const jsonLd = [
     {
@@ -113,6 +115,10 @@ export default function CareGuideTopic() {
         '@type': 'Article',
         '@id': 'https://geckinspect.com/CareGuide#article',
       },
+      author: authorSchema(),
+      reviewedBy: authorSchema(),
+      datePublished: editorial.published,
+      dateModified: editorial.modified,
       publisher: { '@id': ORG_ID },
     },
     breadcrumbSchema([
@@ -158,10 +164,11 @@ export default function CareGuideTopic() {
           {section.title}
         </h1>
 
-        <p className="text-slate-400 text-sm mb-8 max-w-2xl">
+        <p className="text-slate-400 text-sm mb-2 max-w-2xl">
           Part of the Geck Inspect <Link to="/CareGuide" className="text-emerald-300 hover:underline">crested gecko care guide</Link>
           {category ? <> — <Link to={`/CareGuide#${category.id}`} className="text-emerald-300 hover:underline">{category.label} section</Link></> : null}.
         </p>
+        <p className="text-xs text-slate-500 mb-8">{bylineText(path)}</p>
 
         <div className="space-y-5 text-slate-300 leading-relaxed">
           {(section.body || []).map((block, i) => (

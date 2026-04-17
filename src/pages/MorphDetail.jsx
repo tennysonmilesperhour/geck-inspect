@@ -26,6 +26,7 @@ import {
   INHERITANCE,
   PRICE_TIERS,
 } from '@/data/morph-guide';
+import { authorSchema, bylineText, editorialFor } from '@/lib/editorial';
 
 const LOGO_URL = APP_LOGO_URL;
 
@@ -218,26 +219,33 @@ export default function MorphDetail() {
           url: 'https://geckinspect.com/MorphGuide',
         },
       },
-      {
-        '@type': 'Article',
-        '@id': `https://geckinspect.com/MorphGuide/${slug}#article`,
-        headline: `${morphName} — Crested Gecko Morph Guide`,
-        description: record.description?.slice(0, 280),
-        url: `https://geckinspect.com/MorphGuide/${slug}`,
-        image: heroImage,
-        about: {
-          '@type': 'Thing',
-          name: 'Crested gecko',
-          alternateName: 'Correlophus ciliatus',
-          sameAs: 'https://en.wikipedia.org/wiki/Crested_gecko',
-        },
-        mentions: [{ '@id': `https://geckinspect.com/MorphGuide/${slug}#term` }],
-        publisher: {
-          '@type': 'Organization',
-          name: 'Geck Inspect',
-          logo: LOGO_URL,
-        },
-      },
+      (() => {
+        const editorial = editorialFor(`/MorphGuide/${slug}`);
+        return {
+          '@type': 'Article',
+          '@id': `https://geckinspect.com/MorphGuide/${slug}#article`,
+          headline: `${morphName} — Crested Gecko Morph Guide`,
+          description: record.description?.slice(0, 280),
+          url: `https://geckinspect.com/MorphGuide/${slug}`,
+          image: heroImage,
+          about: {
+            '@type': 'Thing',
+            name: 'Crested gecko',
+            alternateName: 'Correlophus ciliatus',
+            sameAs: 'https://en.wikipedia.org/wiki/Crested_gecko',
+          },
+          mentions: [{ '@id': `https://geckinspect.com/MorphGuide/${slug}#term` }],
+          author: authorSchema(),
+          reviewedBy: authorSchema(),
+          datePublished: editorial.published,
+          dateModified: editorial.modified,
+          publisher: {
+            '@type': 'Organization',
+            name: 'Geck Inspect',
+            logo: LOGO_URL,
+          },
+        };
+      })(),
     ],
   };
 
@@ -288,6 +296,8 @@ export default function MorphDetail() {
           <h1 className="text-4xl md:text-6xl font-bold tracking-tight mb-4 bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent">
             {morphName}
           </h1>
+
+          <p className="text-xs text-slate-500 mb-4">{bylineText(`/MorphGuide/${slug}`)}</p>
 
           <div className="flex flex-wrap gap-2 mb-8">
             <span className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${rarityColor}`}>

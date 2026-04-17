@@ -4,7 +4,18 @@
  */
 
 const GENETICS_GUIDE_PUBLISHED = '2025-09-15T00:00:00Z';
-const GENETICS_GUIDE_MODIFIED = '2026-04-11T00:00:00Z';
+const GENETICS_GUIDE_MODIFIED = '2026-04-17T00:00:00Z';
+
+// Editorial author identity. Mirrors the shape in src/lib/editorial.js —
+// kept inline here because this file is consumed both by JSX (for JSON-LD
+// rendering) and by build-time tooling that must not import React.
+const EDITORIAL = {
+  '@type': 'Organization',
+  '@id': 'https://geckinspect.com/#editorial',
+  name: 'Geck Inspect Editorial',
+  url: 'https://geckinspect.com/About',
+  parentOrganization: { '@id': 'https://geckinspect.com/#organization' },
+};
 
 const GENETICS_GUIDE_JSON_LD = [
   {
@@ -16,6 +27,8 @@ const GENETICS_GUIDE_JSON_LD = [
     url: 'https://geckinspect.com/GeneticsGuide',
     datePublished: GENETICS_GUIDE_PUBLISHED,
     dateModified: GENETICS_GUIDE_MODIFIED,
+    author: EDITORIAL,
+    reviewedBy: EDITORIAL,
     inLanguage: 'en-US',
     about: [
       {

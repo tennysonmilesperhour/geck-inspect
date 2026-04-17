@@ -21,6 +21,7 @@ import {
 import Seo from '@/components/seo/Seo';
 import { CARE_CATEGORIES } from '@/data/care-guide';
 import ContentBlock from '@/components/careguide/ContentBlock';
+import { authorSchema, bylineText, editorialFor } from '@/lib/editorial';
 
 const CATEGORY_ICONS = {
   overview: Info,
@@ -38,6 +39,8 @@ const LEVEL_STYLES = {
   advanced: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
 };
 
+const CARE_GUIDE_EDITORIAL = editorialFor('/CareGuide');
+
 const CARE_GUIDE_JSON_LD = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -54,6 +57,10 @@ const CARE_GUIDE_JSON_LD = {
         alternateName: 'Correlophus ciliatus',
         sameAs: 'https://en.wikipedia.org/wiki/Crested_gecko',
       },
+      author: authorSchema(),
+      reviewedBy: authorSchema(),
+      datePublished: CARE_GUIDE_EDITORIAL.published,
+      dateModified: CARE_GUIDE_EDITORIAL.modified,
       publisher: {
         '@type': 'Organization',
         name: 'Geck Inspect',
@@ -407,9 +414,8 @@ export default function CareGuidePage() {
               <span>{totalLocalSections} topics</span>
               <span>·</span>
               <span>7 categories</span>
-              <span>·</span>
-              <span>Updated by experienced keepers</span>
             </div>
+            <p className="mt-2 text-xs text-slate-500">{bylineText('/CareGuide')}</p>
           </div>
         </section>
 
