@@ -22,7 +22,7 @@ import {
   DollarSign, TrendingUp, AlertCircle, Trash2, Plus, Save, Loader2,
   ChevronDown, ChevronUp, Tag, Calendar, Edit2, X, Check,
   Globe, Lock, ArrowRight, BarChart3,
-  Clock, Weight, Thermometer, Package, CheckCircle2, Archive,
+  Clock, Weight, Thermometer, Package, CheckCircle2,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { format, getQuarter, getYear } from 'date-fns';
@@ -183,6 +183,10 @@ function PendingSaleCard({ sale, onUpdate, onComplete, onCancel, onDelete }) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState(sale);
   const [savingPayment, setSavingPayment] = useState(null);
+
+  useEffect(() => {
+    if (!editing) setForm(sale);
+  }, [sale, editing]);
 
   const payments = Array.isArray(form.payment_schedule) ? form.payment_schedule : [];
   const totalScheduled = payments.reduce((s, p) => s + Number(p.amount || 0), 0);
