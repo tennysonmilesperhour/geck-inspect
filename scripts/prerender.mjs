@@ -226,6 +226,21 @@ function routeMeta(route) {
 
 // ------- HTML mutation -----------------------------------------------------
 
+// Hero image preloads. Mirrors the static URLs the pages render so the
+// browser can start fetching the LCP candidate before the JS bundle
+// evaluates. Keep this list tight — every preload is a mandatory high
+// priority fetch, and preloading something the page doesn't use hurts
+// LCP instead of helping it.
+//
+// Source URLs:
+//   /           → src/pages/Home.jsx BACKGROUND_IMAGE
+//   /MorphGuide → src/pages/MorphGuide.jsx MORPH_GUIDE_HERO (mirrored below)
+const HERO_PRELOADS = {
+  '/': 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=2400&q=80',
+  '/MorphGuide':
+    'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=2400&q=80',
+};
+
 function injectMeta(html, route) {
   const meta = routeMeta(route);
   const canonical = `${SITE_URL}${route.path}`;
@@ -271,6 +286,19 @@ function injectMeta(html, route) {
     /(<link rel="alternate" hreflang="en"[^>]*\/>)/,
     `$1\n    <link rel="canonical" href="${canonical}" />`,
   );
+
+  // Route-specific hero image preload. Only emits for routes listed in
+  // HERO_PRELOADS so we don't waste a mandatory fetch on pages that
+  // don't render that image. `fetchpriority="high"` nudges the browser
+  // to start the request before the React bundle evaluates, which is
+  // where the Lighthouse mobile LCP win comes from.
+  const heroUrl = HERO_PRELOADS[route.path];
+  if (heroUrl) {
+    out = out.replace(
+      /(<link rel="canonical" href="[^"]*"\s*\/>)/,
+      `$1\n    <link rel="preload" as="image" href="${heroUrl}" fetchpriority="high" />`,
+    );
+  }
 
   return out;
 }

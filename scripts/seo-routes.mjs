@@ -2,18 +2,27 @@
  * Shared route manifest for SEO tooling.
  *
  * Consumed by:
- *   - scripts/build-sitemap.mjs  → emits public/sitemap.xml with <lastmod>
- *   - scripts/prerender.mjs      → emits route-specific static HTML into dist/
+ *   - scripts/build-sitemap.mjs      → emits public/sitemap.xml with <lastmod>
+ *   - scripts/prerender.mjs          → emits route-specific static HTML into dist/
+ *   - scripts/build-vercel-json.mjs  → emits vercel.json with enumerated SPA
+ *                                      rewrites so unknown paths fall through
+ *                                      to /404.html (real HTTP 404).
  *
  * Adding a new indexable URL:
  *   1. Append an object here with { path, priority, changefreq, lastmod, meta? }
  *   2. Optionally supply meta { title, description, ogImage } so the
  *      prerenderer can inject it without the route having to render React.
- *   3. Re-run `pnpm build` — sitemap and prerendered HTML update together.
+ *   3. Re-run `pnpm build` — sitemap, prerendered HTML, and vercel.json
+ *      update together.
  *
  * Morph pages are NOT listed here individually — they're expanded from
  * the canonical MORPHS dataset in src/data/morph-guide.js so adding a
  * new morph automatically lights up a crawlable URL.
+ *
+ * Authenticated-only pages (Dashboard, Settings, AdminPanel, etc.) are
+ * parsed out of src/pages.config.js so that adding a page there stays
+ * a one-line change — the SPA rewrite list in vercel.json picks it up
+ * automatically on the next build.
  */
 
 import { readFileSync } from 'node:fs';
@@ -331,4 +340,81 @@ export function getAllRoutes() {
     ...getMorphTaxonomyRoutes(),
     ...getCareTopicRoutes(),
   ];
+}
+
+// -----------------------------------------------------------------------
+// SPA route enumeration for vercel.json
+// -----------------------------------------------------------------------
+// These helpers exist so `scripts/build-vercel-json.mjs` can list every
+// known SPA path as an explicit rewrite to /index.html. Paths NOT in
+// this list fall through to Vercel's default 404 handler, which serves
+// /public/404.html with a real HTTP 404 status. Previously the
+// catch-all `(.*)` rewrite returned 200 for every unknown path, which
+// Bing and some AI crawlers penalize as soft-404.
+//
+// Source of truth for authenticated pages is src/pages.config.js — we
+// parse its PAGES object so adding a route there auto-propagates here.
+
+// Pages that are always rendered inside <AuthenticatedApp> but live at
+// /<Key>. The React router mounts `/Home` in the unauthenticated branch
+// too, so list it here for completeness.
+const AUTH_EXTRA_STATIC_PATHS = ['/Home', '/AdminMigration'];
+
+// Vercel `source` patterns for parametric routes. Specific patterns
+// (prefix-disambiguated) are listed before looser ones so that Vercel's
+// first-match order doesn't accidentally send `/MorphGuide/category/x`
+// into the `/MorphGuide/:slug` rewrite. Vercel matches rewrites in
+// order, so keep the ordering hierarchical.
+const DYNAMIC_ROUTE_PATTERNS = [
+  '/MorphGuide/category/:categoryId',
+  '/MorphGuide/inheritance/:inheritanceId',
+  '/MorphGuide/:slug',
+  '/CareGuide/:topic',
+  '/Breeder/:slug',
+  '/passport/:passportCode/qr',
+  '/passport/:passportCode',
+  '/claim/:token',
+];
+
+function loadAuthenticatedPagePaths() {
+  const src = readFileSync(resolve(REPO_ROOT, 'src/pages.config.js'), 'utf8');
+  // Extract the `PAGES = { "Key": ... }` block and pull every quoted key.
+  const m = src.match(/export const PAGES\s*=\s*\{([\s\S]*?)\}\s*\n/);
+  if (!m) {
+    throw new Error('seo-routes: could not find PAGES object in src/pages.config.js');
+  }
+  const body = m[1];
+  const keys = [...body.matchAll(/"([A-Za-z0-9_]+)"\s*:/g)].map((hit) => hit[1]);
+  if (keys.length === 0) {
+    throw new Error('seo-routes: PAGES object has no entries');
+  }
+  return [...new Set(keys)].map((k) => `/${k}`);
+}
+
+// Ordered list of Vercel `source` patterns covering every SPA path.
+// Order: root + root alias → static landing routes → auth-only pages
+// (AdminPanel, Dashboard, Settings, …) → programmatic static pages
+// (care topics, morph taxonomy, morph details) → parametric patterns
+// last so their greedier `:param` matchers don't swallow a specific
+// prefix before it's had a chance to match.
+export function getAllSpaPathPatterns() {
+  const seen = new Set();
+  const out = [];
+  const push = (path) => {
+    if (!seen.has(path)) {
+      seen.add(path);
+      out.push(path);
+    }
+  };
+
+  push('/');
+  for (const r of STATIC_ROUTES) push(r.path);
+  for (const p of AUTH_EXTRA_STATIC_PATHS) push(p);
+  for (const p of loadAuthenticatedPagePaths()) push(p);
+  for (const r of getMorphTaxonomyRoutes()) push(r.path);
+  for (const r of getCareTopicRoutes()) push(r.path);
+  for (const r of getMorphRoutes()) push(r.path);
+  for (const p of DYNAMIC_ROUTE_PATTERNS) push(p);
+
+  return out;
 }
