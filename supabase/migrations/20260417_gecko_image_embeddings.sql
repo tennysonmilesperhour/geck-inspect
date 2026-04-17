@@ -7,16 +7,20 @@
 --
 -- SigLIP2-base produces 768-dim unit-norm vectors. If you swap to a
 -- different encoder, adjust the dimension and recreate the index.
+--
+-- Note: Supabase installs the vector extension into the `extensions`
+-- schema, not `public`. Types and operator classes must be schema-qualified
+-- as `extensions.vector` / `extensions.vector_cosine_ops`.
 
 -- 1. Extension --------------------------------------------------------------
-CREATE EXTENSION IF NOT EXISTS vector;
+CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA extensions;
 
 -- 2. Column -----------------------------------------------------------------
 -- Nullable — backfill happens asynchronously via the edge function or an
 -- offline batch job. Missing embeddings just mean the image doesn't show
 -- up in kNN results until backfilled.
 ALTER TABLE IF EXISTS public.gecko_images
-  ADD COLUMN IF NOT EXISTS image_embedding vector(768);
+  ADD COLUMN IF NOT EXISTS image_embedding extensions.vector(768);
 
 -- 3. Trackers so we know how many rows still need embedding ----------------
 ALTER TABLE IF EXISTS public.gecko_images
@@ -29,7 +33,7 @@ ALTER TABLE IF EXISTS public.gecko_images
 -- the ecosystem.
 CREATE INDEX IF NOT EXISTS idx_gecko_images_embedding
   ON public.gecko_images
-  USING hnsw (image_embedding vector_cosine_ops)
+  USING hnsw (image_embedding extensions.vector_cosine_ops)
   WITH (m = 16, ef_construction = 64);
 
 -- 5. Nearest-neighbours RPC -------------------------------------------------
@@ -37,7 +41,7 @@ CREATE INDEX IF NOT EXISTS idx_gecko_images_embedding
 -- similarity to the query vector. Verified-only by default so /recognition
 -- doesn't surface unreviewed labels as "expert matches".
 CREATE OR REPLACE FUNCTION public.nearest_training_samples(
-  query_embedding vector(768),
+  query_embedding extensions.vector(768),
   match_count INT DEFAULT 6,
   verified_only BOOLEAN DEFAULT true
 ) RETURNS TABLE (
@@ -51,7 +55,7 @@ CREATE OR REPLACE FUNCTION public.nearest_training_samples(
   LANGUAGE sql
   STABLE
   SECURITY DEFINER
-  SET search_path = public
+  SET search_path = public, extensions
 AS $$
   SELECT
     g.id,
@@ -67,5 +71,5 @@ AS $$
   LIMIT GREATEST(1, LEAST(match_count, 24));
 $$;
 
-GRANT EXECUTE ON FUNCTION public.nearest_training_samples(vector, INT, BOOLEAN)
+GRANT EXECUTE ON FUNCTION public.nearest_training_samples(extensions.vector, INT, BOOLEAN)
   TO anon, authenticated;
