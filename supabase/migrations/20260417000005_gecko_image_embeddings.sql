@@ -48,7 +48,7 @@ CREATE OR REPLACE FUNCTION public.nearest_training_samples(
   id TEXT,
   image_url TEXT,
   primary_morph TEXT,
-  secondary_traits TEXT[],
+  secondary_traits JSONB,
   base_color TEXT,
   similarity FLOAT
 )
