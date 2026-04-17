@@ -42,23 +42,52 @@ function normalize(vec: number[]): number[] {
   return vec.map((v) => v / n);
 }
 
-async function callReplicate(imageUrl: string) {
+async function resolveVersion(model: string): Promise<string | null> {
+  const colon = model.indexOf(":");
+  if (colon !== -1) return model.slice(colon + 1);
   const res = await fetch(
-    `https://api.replicate.com/v1/models/${SIGLIP_MODEL}/predictions`,
-    {
-      method: "POST",
-      headers: {
-        Authorization: `Token ${REPLICATE_API_TOKEN}`,
-        "Content-Type": "application/json",
-        Prefer: "wait=60",
-      },
-      body: JSON.stringify({ input: { image: imageUrl } }),
-    },
+    `https://api.replicate.com/v1/models/${model}`,
+    { headers: { Authorization: `Token ${REPLICATE_API_TOKEN}` } },
   );
-  if (!res.ok) {
-    throw new Error(`Replicate ${res.status}: ${(await res.text()).slice(0, 400)}`);
+  if (!res.ok) return null;
+  const body = await res.json();
+  return body?.latest_version?.id || null;
+}
+
+async function callReplicate(imageUrl: string) {
+  const modelPath = SIGLIP_MODEL.includes(":") ? SIGLIP_MODEL.split(":")[0] : SIGLIP_MODEL;
+  const headers = {
+    Authorization: `Token ${REPLICATE_API_TOKEN}`,
+    "Content-Type": "application/json",
+    Prefer: "wait=60",
+  };
+  const input = { image: imageUrl };
+
+  let pred: Record<string, unknown>;
+  const primary = await fetch(
+    `https://api.replicate.com/v1/models/${modelPath}/predictions`,
+    { method: "POST", headers, body: JSON.stringify({ input }) },
+  );
+  if (primary.ok) {
+    pred = await primary.json();
+  } else if (primary.status === 404 || primary.status === 422) {
+    const version = await resolveVersion(SIGLIP_MODEL);
+    if (!version) {
+      throw new Error(
+        `Replicate ${primary.status}: model "${SIGLIP_MODEL}" has no official version and latest_version was not resolvable`,
+      );
+    }
+    const fallback = await fetch(
+      `https://api.replicate.com/v1/predictions`,
+      { method: "POST", headers, body: JSON.stringify({ version, input }) },
+    );
+    if (!fallback.ok) {
+      throw new Error(`Replicate ${fallback.status}: ${(await fallback.text()).slice(0, 400)}`);
+    }
+    pred = await fallback.json();
+  } else {
+    throw new Error(`Replicate ${primary.status}: ${(await primary.text()).slice(0, 400)}`);
   }
-  const pred = await res.json();
 
   // Different encoder containers return embeddings in slightly different
   // shapes. Accept any of:

@@ -108,28 +108,64 @@ function clampToTaxonomy(raw: Record<string, unknown>) {
   };
 }
 
-async function callReplicate(imageUrl: string, prompt: string) {
+async function resolveVersion(model: string): Promise<string | null> {
+  // If the caller already pinned a version (owner/name:hash), use it.
+  const colon = model.indexOf(":");
+  if (colon !== -1) return model.slice(colon + 1);
+
+  // Otherwise look up the latest published version.
   const res = await fetch(
-    `https://api.replicate.com/v1/models/${REPLICATE_MODEL}/predictions`,
+    `https://api.replicate.com/v1/models/${model}`,
+    { headers: { Authorization: `Token ${REPLICATE_API_TOKEN}` } },
+  );
+  if (!res.ok) return null;
+  const body = await res.json();
+  return body?.latest_version?.id || null;
+}
+
+async function callReplicate(imageUrl: string, prompt: string) {
+  const modelSpec = REPLICATE_MODEL;
+  const modelPath = modelSpec.includes(":") ? modelSpec.split(":")[0] : modelSpec;
+
+  // Try the official /models endpoint first — works for models with an
+  // "official" version set. Falls back to the version-pinned /predictions
+  // endpoint for community models that don't have one.
+  const input = { image: imageUrl, prompt, max_new_tokens: 600 };
+  const headers = {
+    Authorization: `Token ${REPLICATE_API_TOKEN}`,
+    "Content-Type": "application/json",
+    Prefer: "wait=60",
+  };
+
+  const primary = await fetch(
+    `https://api.replicate.com/v1/models/${modelPath}/predictions`,
+    { method: "POST", headers, body: JSON.stringify({ input }) },
+  );
+  if (primary.ok) return primary.json();
+
+  if (primary.status !== 404 && primary.status !== 422) {
+    throw new Error(`Replicate ${primary.status}: ${(await primary.text()).slice(0, 500)}`);
+  }
+
+  const version = await resolveVersion(modelSpec);
+  if (!version) {
+    throw new Error(
+      `Replicate ${primary.status}: model "${modelSpec}" has no official version and a latest_version could not be resolved`,
+    );
+  }
+
+  const fallback = await fetch(
+    `https://api.replicate.com/v1/predictions`,
     {
       method: "POST",
-      headers: {
-        Authorization: `Token ${REPLICATE_API_TOKEN}`,
-        "Content-Type": "application/json",
-        // Replicate will block up to ~60s waiting for the prediction,
-        // avoiding us having to poll for most requests.
-        Prefer: "wait=60",
-      },
-      body: JSON.stringify({
-        input: { image: imageUrl, prompt, max_new_tokens: 600 },
-      }),
+      headers,
+      body: JSON.stringify({ version, input }),
     },
   );
-  if (!res.ok) {
-    const body = await res.text();
-    throw new Error(`Replicate ${res.status}: ${body.slice(0, 500)}`);
+  if (!fallback.ok) {
+    throw new Error(`Replicate ${fallback.status}: ${(await fallback.text()).slice(0, 500)}`);
   }
-  return res.json();
+  return fallback.json();
 }
 
 async function pollUntilDone(getUrl: string, deadlineMs: number) {
