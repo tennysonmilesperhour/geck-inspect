@@ -6,7 +6,7 @@ import { useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Users, MapPin, Globe, UserPlus, UserMinus, ShoppingCart, GitBranch, Heart, Instagram, Facebook, Youtube } from 'lucide-react';
+import { Loader2, Users, MapPin, Globe, UserPlus, UserMinus, ShoppingCart, GitBranch, Heart, Instagram, Facebook, Youtube, FileText } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { createPageUrl } from '@/utils';
 import { useNavigate } from 'react-router-dom';
@@ -271,6 +271,15 @@ export default function PublicProfile() {
                             )}
                         </CardContent>
                     </Card>
+
+                    {profileUser.store_policy && (
+                        <Card className="bg-slate-900 border-slate-700">
+                            <CardHeader><CardTitle className="text-slate-200 flex items-center gap-2"><FileText className="w-4 h-4" />Store Policy</CardTitle></CardHeader>
+                            <CardContent>
+                                <p className="text-sm text-slate-300 whitespace-pre-wrap">{profileUser.store_policy}</p>
+                            </CardContent>
+                        </Card>
+                    )}
                 </div>
                 <div className="md:col-span-2">
                     <Tabs defaultValue="for-sale" className="w-full">
