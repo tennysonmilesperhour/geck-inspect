@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { format } from 'date-fns';
-import { MapPin, Calendar, ShieldCheck, Instagram, Globe, Facebook, Star, MessageSquare, Edit, Save, ExternalLink } from 'lucide-react';
+import { MapPin, Calendar, ShieldCheck, Instagram, Globe, Facebook, Star, MessageSquare, Edit, Save, ExternalLink, FileText } from 'lucide-react';
 
 const C = { forest: '#e2e8f0', sage: '#10b981', paleSage: 'rgba(16,185,129,0.1)', warmWhite: '#020617', gold: '#f59e0b', goldLight: 'rgba(245,158,11,0.15)', slate: '#cbd5e1', muted: '#64748b', cardBg: '#0f172a', border: 'rgba(51,65,85,0.5)' };
 
@@ -15,6 +15,7 @@ export default function BreederStorefront() {
   const [profile, setProfile] = useState(null);
   const [reviews, setReviews] = useState([]);
   const [forSale, setForSale] = useState([]);
+  const [storePolicy, setStorePolicy] = useState('');
   const [loading, setLoading] = useState(true);
   const [editing, setEditing] = useState(false);
   const [editForm, setEditForm] = useState({});
@@ -43,6 +44,8 @@ export default function BreederStorefront() {
           const { data: geckos } = await supabase.from('geckos').select('id, name, morphs_traits, image_urls, asking_price, passport_code, sex, status')
             .eq('created_by', ownerEmail).or('status.ilike.%sale%,status.eq.For Sale');
           setForSale(geckos || []);
+          const { data: ownerProfile } = await supabase.from('profiles').select('store_policy').eq('email', ownerEmail).maybeSingle();
+          if (ownerProfile?.store_policy) setStorePolicy(ownerProfile.store_policy);
         }
         setEditForm({ display_name: p.display_name || '', bio: p.bio || '', location: p.location || '', years_breeding: p.years_breeding || '', specialty_morphs: (p.specialty_morphs || []).join(', ') });
       }
@@ -170,6 +173,18 @@ export default function BreederStorefront() {
           </div>
         ) : (
           <p className="text-sm text-center py-8 mb-8" style={{ color: C.muted }}>No geckos currently for sale</p>
+        )}
+
+        {/* Store Policy */}
+        {storePolicy && (
+          <div className="mb-8">
+            <h2 className="text-xl mb-4 flex items-center gap-2" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>
+              <FileText size={20} /> Store Policy
+            </h2>
+            <div className="rounded-xl border p-5" style={{ borderColor: 'rgba(51,65,85,0.5)', backgroundColor: C.cardBg }}>
+              <p className="text-sm whitespace-pre-wrap" style={{ color: C.slate }}>{storePolicy}</p>
+            </div>
+          </div>
         )}
 
         {/* Reviews */}

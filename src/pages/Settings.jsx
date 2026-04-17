@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Settings, Upload, Save, Globe, Eye, X, Camera, Mail, Calendar, Loader2, Search, Trash2, AlertTriangle, ArrowUpDown, Clock, Crown
+  Settings, Upload, Save, Globe, Eye, X, Camera, Mail, Calendar, Loader2, Search, Trash2, AlertTriangle, ArrowUpDown, Clock, Crown, FileText
 } from 'lucide-react';
 import {
   AlertDialog,
@@ -111,6 +111,7 @@ const initialFormData = {
     default_breeding_sort: '-created_date',
     hatch_alert_days: 60,
     is_featured_breeder: false,
+    store_policy: '',
 };
 
 const notificationTypes = [
@@ -187,6 +188,7 @@ export default function SettingsPage() {
                         default_breeding_sort: currentUser.default_breeding_sort || '-created_date',
                         hatch_alert_days: currentUser.hatch_alert_days || 60,
                         is_featured_breeder: currentUser.is_featured_breeder === true,
+                        store_policy: currentUser.store_policy || '',
                     });
                 }
             } catch (error) {
@@ -317,6 +319,7 @@ export default function SettingsPage() {
         { id: 'basic-information', label: 'Basic Info' },
         { id: 'contact-information', label: 'Contact' },
         { id: 'social-media', label: 'Social' },
+        { id: 'store-policy', label: 'Store Policy' },
         { id: 'privacy-settings', label: 'Privacy' },
         ...((user?.membership_tier === 'breeder' || user?.subscription_status === 'grandfathered')
             ? [{ id: 'breeder-perks', label: 'Breeder Perks' }]
@@ -496,6 +499,31 @@ export default function SettingsPage() {
                             <div><Label htmlFor="facebook_url" className="text-slate-300">Facebook URL</Label><Input id="facebook_url" value={formData.facebook_url} onChange={(e) => handleChange('facebook_url', e.target.value)} placeholder="https://facebook.com/yourpage" className="bg-slate-800 border-slate-600 text-slate-100" /></div>
                             <div><Label htmlFor="youtube_url" className="text-slate-300">YouTube Channel</Label><Input id="youtube_url" value={formData.youtube_url} onChange={(e) => handleChange('youtube_url', e.target.value)} placeholder="https://youtube.com/yourchannel" className="bg-slate-800 border-slate-600 text-slate-100" /></div>
                             <div><Label htmlFor="tiktok_handle" className="text-slate-300">TikTok Handle</Label><Input id="tiktok_handle" value={formData.tiktok_handle} onChange={(e) => handleChange('tiktok_handle', e.target.value)} placeholder="username (no @)" className="bg-slate-800 border-slate-600 text-slate-100" /></div>
+                        </div>
+                    </CardContent>
+                </Card>
+                </section>
+
+                <section id="store-policy">
+                <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+                    <CardHeader>
+                        <CardTitle className="text-slate-100 flex items-center gap-2"><FileText className="w-5 h-5"/>Store Policy</CardTitle>
+                        <CardDescription className="text-slate-400">
+                            Set your store policies for buyers — shipping terms, payment plans, health guarantees, return policy, etc. This will be visible on your public profile and storefront.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        <div>
+                            <Label htmlFor="store_policy" className="text-slate-300">Store Policy</Label>
+                            <Textarea
+                                id="store_policy"
+                                value={formData.store_policy}
+                                onChange={(e) => handleChange('store_policy', e.target.value)}
+                                placeholder={"Example:\n\n• Shipping: Live arrival guaranteed. Ships FedEx Priority Overnight, Mon–Wed only. Shipping cost is buyer's responsibility.\n\n• Payment Plans: 50% deposit required to reserve. Remaining balance due before shipping. Non-refundable deposit.\n\n• Health Guarantee: 7-day health guarantee from date of arrival. Buyer must provide photos within 24 hours of delivery.\n\n• Returns: No returns after 7 days. All sales final once gecko has been feeding for the buyer.\n\n• Weight Minimum: Geckos will not ship under 3g for babies or under target weight specified in the reserve."}
+                                rows={10}
+                                className="bg-slate-800 border-slate-600 text-slate-100 mt-1"
+                            />
+                            <p className="text-xs text-slate-500 mt-1.5">Supports plain text. Tip: Use bullet points or sections to keep it organized.</p>
                         </div>
                     </CardContent>
                 </Card>

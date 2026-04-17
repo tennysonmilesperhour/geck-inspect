@@ -6,7 +6,7 @@
 CREATE TABLE IF NOT EXISTS pending_sales (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_email TEXT NOT NULL,
-  gecko_id UUID REFERENCES geckos(id) ON DELETE SET NULL,
+  gecko_id UUID,
   gecko_name TEXT NOT NULL,
   buyer_name TEXT,
   reserve_price NUMERIC(10,2) NOT NULL DEFAULT 0,
@@ -38,3 +38,7 @@ CREATE POLICY "Users can manage their own pending sales"
   ON pending_sales FOR ALL
   USING (user_email = (SELECT email FROM auth.users WHERE id = auth.uid()))
   WITH CHECK (user_email = (SELECT email FROM auth.users WHERE id = auth.uid()));
+
+-- Store policy field on user profiles
+ALTER TABLE profiles
+  ADD COLUMN IF NOT EXISTS store_policy TEXT;
