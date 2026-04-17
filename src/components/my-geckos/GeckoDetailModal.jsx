@@ -774,12 +774,12 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
             <div className="space-y-6">
               {/* Action Buttons */}
               <div className="space-y-3">
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="space-y-2">
                   <Button
                     onClick={() => handleGenerateCertificate('ownership')}
                     disabled={isGeneratingCert}
                     variant="outline"
-                    className="border-emerald-700 text-emerald-300 hover:bg-emerald-900/20"
+                    className="w-full border-emerald-700 text-emerald-300 hover:bg-emerald-900/20"
                   >
                     {isGeneratingCert ? (
                       <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
@@ -791,7 +791,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                     onClick={() => handleGenerateCertificate('lineage')}
                     disabled={isGeneratingCert}
                     variant="outline"
-                    className="border-emerald-700 text-emerald-300 hover:bg-emerald-900/20"
+                    className="w-full border-emerald-700 text-emerald-300 hover:bg-emerald-900/20"
                   >
                     {isGeneratingCert ? (
                       <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
