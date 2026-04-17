@@ -40,6 +40,7 @@ import {
   STATIC_ROUTES,
   getMorphRoutes,
   getCareTopicRoutes,
+  getMorphTaxonomyRoutes,
 } from './seo-routes.mjs';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -383,6 +384,7 @@ function run() {
   const routes = [
     ...STATIC_ROUTES,
     ...getMorphRoutes(),
+    ...getMorphTaxonomyRoutes(),
     ...getCareTopicRoutes(),
   ].filter((r) => !SKIP.has(r.path));
 

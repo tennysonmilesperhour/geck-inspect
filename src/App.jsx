@@ -32,6 +32,16 @@ const Shipping             = lazy(() => import('./pages/Shipping'));
 const Giveaways            = lazy(() => import('./pages/Giveaways'));
 const MorphDetail          = lazy(() => import('./pages/MorphDetail'));
 const MorphGuideList       = lazy(() => import('./pages/MorphGuide'));
+// Programmatic taxonomy hubs: /MorphGuide/category/<id> and
+// /MorphGuide/inheritance/<id>. Two routes, one module — the module
+// exports named components per variant so each route resolves its
+// expected param shape via useParams() directly.
+const MorphCategoryHub     = lazy(() =>
+  import('./pages/MorphTaxonomyHub').then((m) => ({ default: m.MorphCategoryHub })),
+);
+const MorphInheritanceHub  = lazy(() =>
+  import('./pages/MorphTaxonomyHub').then((m) => ({ default: m.MorphInheritanceHub })),
+);
 const PrivacyPolicy        = lazy(() => import('./pages/PrivacyPolicy'));
 // Content pages that were previously auth-gated despite being in the
 // sitemap — moved public so crawlers (and humans without an account) can
@@ -117,6 +127,8 @@ const AuthenticatedApp = () => {
           <Route path="/Shipping" element={<Shipping />} />
           <Route path="/Giveaways" element={<Giveaways />} />
           <Route path="/MorphGuide" element={<MorphGuideList />} />
+          <Route path="/MorphGuide/category/:categoryId" element={<MorphCategoryHub />} />
+          <Route path="/MorphGuide/inheritance/:inheritanceId" element={<MorphInheritanceHub />} />
           <Route path="/MorphGuide/:slug" element={<MorphDetail />} />
           <Route path="/CareGuide" element={<CareGuide />} />
           <Route path="/CareGuide/:topic" element={<CareGuideTopic />} />

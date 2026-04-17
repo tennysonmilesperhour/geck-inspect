@@ -295,17 +295,23 @@ export default function MorphDetail() {
               {rarityLabel}
             </span>
             {category && (
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs font-semibold text-slate-300">
+              // Link the category pill to the taxonomy hub so crawlers
+              // get one more path into the programmatic SEO graph.
+              <Link
+                to={`/MorphGuide/category/${category.id}`}
+                className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs font-semibold text-slate-300 hover:border-emerald-500/50 hover:text-emerald-200 transition-colors"
+              >
                 {category.label}
-              </span>
+              </Link>
             )}
             {inheritance && (
-              <span
-                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold ${inheritance.color}`}
+              <Link
+                to={`/MorphGuide/inheritance/${inheritance.id}`}
+                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold hover:brightness-125 transition ${inheritance.color}`}
               >
                 <Dna className="w-3 h-3" />
                 {inheritance.label}
-              </span>
+              </Link>
             )}
             {localMorph?.priceTier && (
               <span className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs font-semibold text-slate-200">

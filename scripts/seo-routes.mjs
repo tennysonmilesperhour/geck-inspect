@@ -250,6 +250,51 @@ export function getMorphRoutes() {
   }));
 }
 
+// Morph taxonomy hub pages — one per category and per inheritance
+// mode. Small, high-quality hubs that keep the internal link graph
+// dense and capture "all recessive crested gecko morphs" style
+// queries.
+const MORPH_CATEGORIES_META = [
+  { id: 'pattern', label: 'Pattern morphs' },
+  { id: 'base', label: 'Base color morphs' },
+  { id: 'color', label: 'Color modifier morphs' },
+  { id: 'structure', label: 'Structural morphs' },
+  { id: 'combo', label: 'Combination morphs' },
+];
+
+const MORPH_INHERITANCES_META = [
+  { id: 'recessive', label: 'Recessive crested gecko morphs' },
+  { id: 'co-dominant', label: 'Co-dominant crested gecko morphs' },
+  { id: 'incomplete-dominant', label: 'Incomplete-dominant crested gecko morphs' },
+  { id: 'dominant', label: 'Dominant crested gecko morphs' },
+  { id: 'polygenic', label: 'Polygenic crested gecko morphs' },
+  { id: 'line-bred', label: 'Line-bred crested gecko morphs' },
+];
+
+export function getMorphTaxonomyRoutes() {
+  const cats = MORPH_CATEGORIES_META.map(({ id, label }) => ({
+    path: `/MorphGuide/category/${id}`,
+    priority: 0.8,
+    changefreq: 'weekly',
+    lastmod: TODAY,
+    meta: {
+      title: `${label} — Crested Gecko Morph Guide`,
+      description: `Every crested gecko ${label.toLowerCase()} in one place — inheritance, rarity, and deep links to per-morph detail pages.`,
+    },
+  }));
+  const inhs = MORPH_INHERITANCES_META.map(({ id, label }) => ({
+    path: `/MorphGuide/inheritance/${id}`,
+    priority: 0.8,
+    changefreq: 'weekly',
+    lastmod: TODAY,
+    meta: {
+      title: label,
+      description: `${label} grouped by inheritance mode. Complete list with rarity, visual cues, and links to per-morph detail pages.`,
+    },
+  }));
+  return [...cats, ...inhs];
+}
+
 // CareGuide topic pages are programmatically generated from the
 // care-guide.js sections. Priority is uniform 0.7 — high enough to keep
 // them crawled regularly, not so high that the long tail dominates the
@@ -269,5 +314,10 @@ export function getCareTopicRoutes() {
 }
 
 export function getAllRoutes() {
-  return [...STATIC_ROUTES, ...getMorphRoutes(), ...getCareTopicRoutes()];
+  return [
+    ...STATIC_ROUTES,
+    ...getMorphRoutes(),
+    ...getMorphTaxonomyRoutes(),
+    ...getCareTopicRoutes(),
+  ];
 }
