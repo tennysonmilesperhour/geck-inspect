@@ -712,6 +712,25 @@ export default function Lineage() {
         'md:grid-cols-1';
     const sidePanelCardSize = generations >= 4 ? 'tiny' : 'small';
 
+    // Track desktop vs mobile so the offspring column cap can match the user's
+    // "6 desktop / 10 mobile" request responsively.
+    const [isDesktop, setIsDesktop] = useState(
+        typeof window !== 'undefined' ? window.matchMedia('(min-width: 768px)').matches : true
+    );
+    useEffect(() => {
+        if (typeof window === 'undefined') return undefined;
+        const mq = window.matchMedia('(min-width: 768px)');
+        const handler = (e) => setIsDesktop(e.matches);
+        mq.addEventListener('change', handler);
+        return () => mq.removeEventListener('change', handler);
+    }, []);
+
+    // Offspring column uses the same card size as mates and gets clamped to
+    // mates.length rows (capped at 6 desktop / 10 mobile) so its panel height
+    // matches the mates panel, keeping their top edges aligned.
+    const offspringCap = isDesktop ? 6 : 10;
+    const offspringRows = Math.max(1, Math.min(mates.length || offspringCap, offspringCap));
+
     // Copy shareable link (reuses ?geckoId= URL param the page already accepts)
     const [copiedLink, setCopiedLink] = useState(false);
     const handleCopyLink = async () => {
@@ -1373,23 +1392,25 @@ export default function Lineage() {
                             </div>
 
                             {/* Offspring Column (Right) — column-flowing grid
-                                with fixed height (6 rows on desktop, 10 on
-                                mobile) so it extends rightward instead of
-                                downward. Shares mates' bottom-anchor so both
-                                side panels sit at the same baseline. */}
+                                whose row count matches mates so both panels
+                                have the same height and top edges line up.
+                                Capped at 6 rows desktop / 10 mobile. */}
                             <div className="order-3">
                                 {offspring.length > 0 && (
                                     <div className="bg-emerald-950/50 rounded-lg p-2 md:p-3 border border-emerald-800">
                                         <h2 className="text-sm font-bold mb-2 flex items-center justify-center gap-1 text-blue-400">
                                             <Users2 className="w-4 h-4" /> Offspring
                                         </h2>
-                                        <div className="grid grid-rows-10 md:grid-rows-6 grid-flow-col auto-cols-max gap-2 overflow-x-auto pb-2 md:pb-0">
+                                        <div
+                                            className="grid grid-flow-col auto-cols-max gap-2 overflow-x-auto pb-2 md:pb-0"
+                                            style={{ gridTemplateRows: `repeat(${offspringRows}, minmax(0, max-content))` }}
+                                        >
                                             {offspring.map(child => (
                                                 <GeckoCardNode
                                                     key={child.id}
                                                     gecko={child}
                                                     onNodeClick={handleSelectGecko}
-                                                    size="tiny"
+                                                    size={sidePanelCardSize}
                                                 />
                                             ))}
                                         </div>
