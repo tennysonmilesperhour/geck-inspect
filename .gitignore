@@ -35,3 +35,4 @@ GEO-follow-up.pdf
 *.sw?
 
 .env
+.vercel
