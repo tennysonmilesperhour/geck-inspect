@@ -1372,17 +1372,18 @@ export default function Lineage() {
                                 {renderTree(lineage, 1)}
                             </div>
 
-                            {/* Offspring Column (Right) — top-anchored so many
-                                offspring grow downward instead of pushing the
-                                tree off-screen. Wraps into rows of 10 on mobile
-                                and 6 on desktop. */}
-                            <div className="order-3 md:self-start">
+                            {/* Offspring Column (Right) — column-flowing grid
+                                with fixed height (6 rows on desktop, 10 on
+                                mobile) so it extends rightward instead of
+                                downward. Shares mates' bottom-anchor so both
+                                side panels sit at the same baseline. */}
+                            <div className="order-3">
                                 {offspring.length > 0 && (
                                     <div className="bg-emerald-950/50 rounded-lg p-2 md:p-3 border border-emerald-800">
                                         <h2 className="text-sm font-bold mb-2 flex items-center justify-center gap-1 text-blue-400">
                                             <Users2 className="w-4 h-4" /> Offspring
                                         </h2>
-                                        <div className="grid grid-cols-10 md:grid-cols-6 gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0">
+                                        <div className="grid grid-rows-10 md:grid-rows-6 grid-flow-col auto-cols-max gap-2 overflow-x-auto pb-2 md:pb-0">
                                             {offspring.map(child => (
                                                 <GeckoCardNode
                                                     key={child.id}
