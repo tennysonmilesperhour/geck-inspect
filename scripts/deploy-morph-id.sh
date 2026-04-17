@@ -52,8 +52,11 @@ run() {
 command -v supabase >/dev/null || die "supabase CLI not found. Install: https://supabase.com/docs/guides/cli"
 
 # ---- 1. Auto-applied migrations -------------------------------------------
-say "Applying SQL migrations (supabase db push)"
-run supabase db push
+# --include-all lets the CLI apply local migrations whose timestamps are
+# before the last remote-applied one. Without it, any backfill added to
+# the repo after an ad-hoc prod change refuses to deploy.
+say "Applying SQL migrations (supabase db push --include-all)"
+run supabase db push --include-all
 ok  "migrations applied"
 
 # ---- 2. Edge functions ----------------------------------------------------
