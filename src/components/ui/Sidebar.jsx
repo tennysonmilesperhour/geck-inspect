@@ -11,6 +11,22 @@ const SidebarContext = React.createContext();
 export function SidebarProvider({ children }) {
   const [isMobileOpen, setIsMobileOpen] = React.useState(false);
 
+  // Lock background page scroll while the mobile drawer is open so touch
+  // scroll gestures inside the drawer don't bleed through to the page
+  // behind it (an iOS Safari quirk with fixed overlays).
+  React.useEffect(() => {
+    if (!isMobileOpen) return;
+    const { body } = document;
+    const prevOverflow = body.style.overflow;
+    const prevOverscroll = body.style.overscrollBehavior;
+    body.style.overflow = 'hidden';
+    body.style.overscrollBehavior = 'contain';
+    return () => {
+      body.style.overflow = prevOverflow;
+      body.style.overscrollBehavior = prevOverscroll;
+    };
+  }, [isMobileOpen]);
+
   const toggleSidebar = () => {
     setIsMobileOpen(prev => !prev);
   };
@@ -54,8 +70,11 @@ export function Sidebar({ children, className }) {
             </aside>
 
             {/* Mobile Sidebar (overlay) */}
-            <div className={`fixed inset-0 z-40 flex md:hidden transition-transform duration-300 ease-in-out ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}>
-                <aside className={`flex flex-col h-full w-72 shadow-lg ${className}`}>
+            <div
+                className={`fixed inset-0 z-40 flex md:hidden transition-transform duration-300 ease-in-out ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}
+                style={{ overscrollBehavior: 'contain', touchAction: isMobileOpen ? 'pan-y' : 'none' }}
+            >
+                <aside className={`flex flex-col h-full w-72 shadow-lg ${className}`} style={{ overscrollBehavior: 'contain' }}>
                     {children}
                 </aside>
                 <div className="flex-1 bg-black/20 backdrop-blur-sm" onClick={toggleSidebar}></div>
