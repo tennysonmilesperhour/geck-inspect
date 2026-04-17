@@ -111,33 +111,62 @@ CREATE POLICY "admins can read events" ON user_events
 
 -- ============================================================================
 -- 3. support_messages — add 'source' so feedback widget can be filtered
+--     Guarded so the migration also runs cleanly on preview branches
+--     that don't yet have the table (it's managed in the dashboard on prod).
 -- ============================================================================
-ALTER TABLE support_messages
-  ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'support'
-    CHECK (source IN ('support', 'feedback', 'bug_report', 'feature_request'));
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'support_messages'
+  ) THEN
+    ALTER TABLE support_messages
+      ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'support';
 
-ALTER TABLE support_messages
-  ADD COLUMN IF NOT EXISTS page TEXT;
+    -- Add the CHECK constraint only if it doesn't already exist.
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_constraint WHERE conname = 'support_messages_source_check'
+    ) THEN
+      ALTER TABLE support_messages
+        ADD CONSTRAINT support_messages_source_check
+        CHECK (source IN ('support', 'feedback', 'bug_report', 'feature_request'));
+    END IF;
 
-ALTER TABLE support_messages
-  ADD COLUMN IF NOT EXISTS rating INTEGER CHECK (rating BETWEEN 1 AND 5);
+    ALTER TABLE support_messages
+      ADD COLUMN IF NOT EXISTS page TEXT;
 
-CREATE INDEX IF NOT EXISTS support_messages_source_idx
-  ON support_messages (source, created_date DESC);
+    ALTER TABLE support_messages
+      ADD COLUMN IF NOT EXISTS rating INTEGER;
+
+    IF NOT EXISTS (
+      SELECT 1 FROM pg_constraint WHERE conname = 'support_messages_rating_check'
+    ) THEN
+      ALTER TABLE support_messages
+        ADD CONSTRAINT support_messages_rating_check
+        CHECK (rating IS NULL OR (rating BETWEEN 1 AND 5));
+    END IF;
+
+    CREATE INDEX IF NOT EXISTS support_messages_source_idx
+      ON support_messages (source, created_date DESC);
+  END IF;
+END
+$$;
 
 -- ============================================================================
--- 4. page_config — ensure the 'public' category is supported and any new pages
---    get a default order_position.
+-- 4. page_config — guarded backfill on the off-chance this migration runs
+--     on a fresh branch without the table.
 -- ============================================================================
--- Backfill any pages currently missing a category — set them to 'public'.
-UPDATE page_config
-SET category = 'public'
-WHERE category IS NULL OR category = '';
-
--- Ensure order_position is non-null for sorting.
-UPDATE page_config
-SET order_position = 999
-WHERE order_position IS NULL;
+DO $$
+BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'page_config'
+  ) THEN
+    UPDATE page_config SET category = 'public' WHERE category IS NULL OR category = '';
+    UPDATE page_config SET order_position = 999 WHERE order_position IS NULL;
+  END IF;
+END
+$$;
 
 -- ============================================================================
 -- 5. Convenience view — daily active users last 90 days
