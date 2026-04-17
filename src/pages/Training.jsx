@@ -13,7 +13,6 @@ import {
 
 import ExpertContributionForm from '../components/morph-id/ExpertContributionForm';
 import AIFeedbackQueue from '../components/morph-id/AIFeedbackQueue';
-import WebImportPanel from '../components/morph-id/WebImportPanel';
 import {
   PRIMARY_MORPHS, GENETIC_TRAITS, TAXONOMY_VERSION, labelFor,
 } from '../components/morph-id/morphTaxonomy';
@@ -80,7 +79,6 @@ export default function TrainingPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [stats, setStats] = useState(EMPTY_STATS);
   const [reloadToken, setReloadToken] = useState(0);
-  const [contribPrefill, setContribPrefill] = useState(null);
 
   const reload = useCallback(() => setReloadToken((t) => t + 1), []);
 
@@ -175,8 +173,7 @@ export default function TrainingPage() {
                 axes you provide, the more weight the sample carries in training.
               </p>
             </div>
-            <WebImportPanel onApply={setContribPrefill} />
-            <ExpertContributionForm prefill={contribPrefill} onSaved={reload} />
+            <ExpertContributionForm onSaved={reload} />
           </TabsContent>
 
           <TabsContent value="review" className="space-y-4">

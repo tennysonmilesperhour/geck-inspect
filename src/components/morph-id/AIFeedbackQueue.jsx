@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from 'react';
 import { formatDistanceToNowStrict } from 'date-fns';
-import { GeckoImage } from '@/entities/all';
+import { GeckoImage, User } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -15,13 +15,6 @@ import MorphPicker from './MorphPicker';
 import TraitPicker from './TraitPicker';
 import { labelFor, TAXONOMY_VERSION } from './morphTaxonomy';
 
-function describeOutcome(action, result) {
-  if (action === 'reject') return 'Rejection recorded. Sample stays unverified.';
-  if (result?.verified) return 'Consensus reached — sample promoted to training-grade.';
-  const count = result?.approve_count ?? 1;
-  return `Approval recorded (${count}/2). Needs one more reviewer to verify.`;
-}
-
 const PAGE_SIZE = 25;
 
 export default function AIFeedbackQueue() {
@@ -32,16 +25,19 @@ export default function AIFeedbackQueue() {
   const [isLoadingMore, setIsLoadingMore] = useState(false);
   const [hasMore, setHasMore] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [reviewer, setReviewer] = useState(null);
   const [isExpertReviewer, setIsExpertReviewer] = useState(false);
   const [edits, setEdits] = useState(null);
 
   const load = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [rows, expertRpc] = await Promise.all([
+      const [me, rows, expertRpc] = await Promise.all([
+        User.me().catch(() => null),
         GeckoImage.filter({ verified: false }, 'created_date', PAGE_SIZE).catch(() => []),
         supabase.rpc('is_expert_reviewer').then((r) => r.data).catch(() => false),
       ]);
+      setReviewer(me);
       setIsExpertReviewer(Boolean(expertRpc));
       setQueue(rows || []);
       setHasMore((rows || []).length === PAGE_SIZE);
@@ -91,31 +87,34 @@ export default function AIFeedbackQueue() {
     if (!current) return;
     setIsSaving(true);
     try {
-      const { data, error } = await supabase.rpc('review_gecko_image', {
-        p_image_id: current.id,
-        p_verdict: action,
-        p_primary_morph: edits?.primary_morph || current.primary_morph,
-        p_secondary_traits: edits?.secondary_traits || current.secondary_traits || [],
-        p_edits: { taxonomy_version: TAXONOMY_VERSION, edits },
-        p_notes: null,
-      });
-      if (error) throw error;
-
+      if (action === 'reject') {
+        await GeckoImage.update(current.id, {
+          verified: false,
+          notes: [
+            current.notes,
+            `\n[rejected by reviewer ${reviewer?.email || 'anon'} @ ${new Date().toISOString()}]`,
+          ].filter(Boolean).join(''),
+        });
+      } else {
+        await GeckoImage.update(current.id, {
+          verified: true,
+          primary_morph: edits?.primary_morph || current.primary_morph,
+          secondary_traits: edits?.secondary_traits || current.secondary_traits,
+          notes: [
+            current.notes,
+            `\n[approved by reviewer ${reviewer?.email || 'anon'} @ ${new Date().toISOString()} · taxonomy ${TAXONOMY_VERSION}]`,
+          ].filter(Boolean).join(''),
+        });
+      }
       toast({
         title: action === 'reject' ? 'Rejected' : 'Approved',
-        description: describeOutcome(action, data),
+        description: action === 'reject'
+          ? 'Sample kept but marked unverified.'
+          : 'Sample promoted to training-grade.',
       });
-
-      // Once a sample is rejected or has reached consensus, it leaves the
-      // unverified queue. Otherwise keep it visible so a second reviewer can
-      // confirm the same row.
-      if (action === 'reject' || data?.verified) {
-        const next = queue.filter((q) => q.id !== current.id);
-        setQueue(next);
-        setIdx((i) => Math.min(i, Math.max(0, next.length - 1)));
-      } else {
-        step(1);
-      }
+      const next = queue.filter((q) => q.id !== current.id);
+      setQueue(next);
+      setIdx((i) => Math.min(i, Math.max(0, next.length - 1)));
     } catch (err) {
       toast({ title: 'Save failed', description: err.message, variant: 'destructive' });
     } finally {
