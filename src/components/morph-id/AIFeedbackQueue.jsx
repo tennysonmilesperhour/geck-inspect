@@ -8,22 +8,18 @@ import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/components/ui/use-toast';
 import {
   Loader2, Check, X as XIcon, ChevronLeft, ChevronRight,
-  RefreshCw, Scale, ShieldCheck, Plus,
+  RefreshCw, Scale, ShieldCheck,
 } from 'lucide-react';
 
 import MorphPicker from './MorphPicker';
 import TraitPicker from './TraitPicker';
 import { labelFor, TAXONOMY_VERSION } from './morphTaxonomy';
 
-const PAGE_SIZE = 25;
-
 export default function AIFeedbackQueue() {
   const { toast } = useToast();
   const [queue, setQueue] = useState([]);
   const [idx, setIdx] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
-  const [hasMore, setHasMore] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [reviewer, setReviewer] = useState(null);
   const [isExpertReviewer, setIsExpertReviewer] = useState(false);
@@ -34,13 +30,12 @@ export default function AIFeedbackQueue() {
     try {
       const [me, rows, expertRpc] = await Promise.all([
         User.me().catch(() => null),
-        GeckoImage.filter({ verified: false }, 'created_date', PAGE_SIZE).catch(() => []),
+        GeckoImage.filter({ verified: false }, 'created_date', 25).catch(() => []),
         supabase.rpc('is_expert_reviewer').then((r) => r.data).catch(() => false),
       ]);
       setReviewer(me);
       setIsExpertReviewer(Boolean(expertRpc));
       setQueue(rows || []);
-      setHasMore((rows || []).length === PAGE_SIZE);
       setIdx(0);
     } catch (err) {
       toast({ title: 'Failed to load queue', description: err.message, variant: 'destructive' });
@@ -48,25 +43,6 @@ export default function AIFeedbackQueue() {
       setIsLoading(false);
     }
   }, [toast]);
-
-  const loadMore = useCallback(async () => {
-    setIsLoadingMore(true);
-    try {
-      const next = await GeckoImage.filter(
-        { verified: false },
-        'created_date',
-        PAGE_SIZE,
-        queue.length,
-      ).catch(() => []);
-      const dedup = (next || []).filter((r) => !queue.some((q) => q.id === r.id));
-      setQueue((prev) => [...prev, ...dedup]);
-      setHasMore(dedup.length === PAGE_SIZE);
-    } catch (err) {
-      toast({ title: 'Failed to load more', description: err.message, variant: 'destructive' });
-    } finally {
-      setIsLoadingMore(false);
-    }
-  }, [queue, toast]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -268,19 +244,6 @@ export default function AIFeedbackQueue() {
             </span>
           )}
           <div className="flex-1" />
-          {hasMore && idx >= queue.length - 3 && (
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={loadMore}
-              disabled={isLoadingMore}
-            >
-              {isLoadingMore
-                ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                : <Plus className="w-4 h-4 mr-2" />}
-              Load more
-            </Button>
-          )}
           <Button variant="ghost" size="sm" onClick={() => step(1)} disabled={idx >= queue.length - 1}>
             Next <ChevronRight className="w-4 h-4 ml-1" />
           </Button>
