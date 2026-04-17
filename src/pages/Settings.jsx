@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { User } from '@/entities/User';
 import { UploadFile } from '@/integrations/Core';
 import { useToast } from "@/components/ui/use-toast";
+import usePageSettings from '@/hooks/usePageSettings';
+import IdLogicSettings, { DEFAULT_ID_SETTINGS } from '@/components/settings/IdLogicSettings';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -139,6 +141,7 @@ export default function SettingsPage() {
     const [formData, setFormData] = useState(initialFormData);
     const [isSaving, setIsSaving] = useState(false);
     const [newSpecialty, setNewSpecialty] = useState('');
+    const [idSettings, updateIdSettings] = usePageSettings('gecko_id_settings', DEFAULT_ID_SETTINGS);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -328,6 +331,7 @@ export default function SettingsPage() {
         { id: 'calendar-alerts', label: 'Calendar' },
         { id: 'feeding-alerts', label: 'Feeding Alerts' },
         { id: 'default-sorts', label: 'Defaults' },
+        { id: 'id-logic', label: 'Gecko IDs' },
         { id: 'danger-zone', label: 'Danger Zone' },
     ];
 
@@ -715,6 +719,10 @@ export default function SettingsPage() {
                         </div>
                     </CardContent>
                 </Card>
+                </section>
+
+                <section id="id-logic">
+                    <IdLogicSettings value={idSettings} onChange={(next) => updateIdSettings(next)} />
                 </section>
 
                 <section id="danger-zone">
