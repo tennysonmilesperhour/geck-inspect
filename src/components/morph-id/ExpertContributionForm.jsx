@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { User } from '@/entities/all';
 import { UploadFile } from '@/integrations/Core';
 import { saveGeckoImageWithMeta } from './persistence';
@@ -50,6 +50,20 @@ export default function ExpertContributionForm({ prefill, onSaved }) {
   const [isUploading, setIsUploading] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+
+  // Let a parent push a fresh prefill after mount (e.g. from WebImportPanel
+  // on /training). We merge so the user's partial edits survive unless the
+  // prefill explicitly overrides them.
+  useEffect(() => {
+    if (!prefill) return;
+    setState((s) => ({
+      ...s,
+      ...prefill,
+      photo:         { ...s.photo,         ...(prefill.photo || {}) },
+      geneticsCtx:   { ...s.geneticsCtx,   ...(prefill.geneticsCtx || {}) },
+    }));
+    if (prefill.image_url) setImageUrl(prefill.image_url);
+  }, [prefill]);
 
   const set = (k, v) => setState((s) => ({ ...s, [k]: v }));
 

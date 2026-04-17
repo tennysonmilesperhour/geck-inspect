@@ -1,5 +1,6 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { User, GeckoImage } from '@/entities/all';
+import { useCallback, useEffect, useState } from 'react';
+import { User } from '@/entities/all';
+import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Progress } from '@/components/ui/progress';
@@ -12,63 +13,63 @@ import {
 
 import ExpertContributionForm from '../components/morph-id/ExpertContributionForm';
 import AIFeedbackQueue from '../components/morph-id/AIFeedbackQueue';
+import WebImportPanel from '../components/morph-id/WebImportPanel';
 import {
   PRIMARY_MORPHS, GENETIC_TRAITS, TAXONOMY_VERSION, labelFor,
 } from '../components/morph-id/morphTaxonomy';
 
 const TRAINING_GOAL = 10_000;
 
-function computeStats(images) {
-  const morphs = new Set();
-  const morphCounts = new Map();
-  const geneticsSeen = new Set();
-  const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
-  let verifiedCount = 0;
-  let recentSubmissions = 0;
-  let totalConfidence = 0;
-  let confidenceSamples = 0;
+const EMPTY_STATS = {
+  totalImages: 0,
+  verifiedImages: 0,
+  morphCategories: 0,
+  recentSubmissions: 0,
+  topMorphs: [],
+  coveragePct: 0,
+  coveredCount: 0,
+  totalCategories: PRIMARY_MORPHS.length,
+  avgConfidence: null,
+  undersampled: [],
+  missingGenetics: [],
+};
 
-  for (const img of images) {
-    if (img.verified === true) verifiedCount += 1;
-    if (img.primary_morph) {
-      morphs.add(img.primary_morph);
-      morphCounts.set(img.primary_morph, (morphCounts.get(img.primary_morph) || 0) + 1);
-    }
-    if (img.secondary_morph) {
-      morphs.add(img.secondary_morph);
-      geneticsSeen.add(img.secondary_morph);
-    }
-    for (const g of img.training_meta?.genetic_traits || []) geneticsSeen.add(g);
-    if (typeof img.confidence_score === 'number') {
-      totalConfidence += img.confidence_score;
-      confidenceSamples += 1;
-    }
-    if (img.created_date && new Date(img.created_date).getTime() > oneWeekAgo) {
-      recentSubmissions += 1;
-    }
-  }
+// Shapes the raw `gecko_image_stats` RPC payload into what the UI renders,
+// joining the taxonomy in so labels / missing-trait computation stay on the
+// client (cheap, and keeps the SQL side label-agnostic).
+function adaptStats(raw) {
+  if (!raw) return EMPTY_STATS;
 
-  const topMorphs = [...morphCounts.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, 8)
-    .map(([id, count]) => ({ id, count, label: labelFor(id) }));
+  const top = (raw.top_morphs || []).map((m) => ({
+    id: m.id,
+    count: Number(m.count) || 0,
+    label: labelFor(m.id),
+  }));
 
-  const covered = PRIMARY_MORPHS.filter((m) => morphCounts.get(m.id) > 0).length;
+  const rawUndersampled = new Map(
+    (raw.undersampled_morphs || []).map((m) => [m.id, Number(m.count) || 0]),
+  );
+  // Include canonical morphs with ZERO samples too — the RPC only returns
+  // ids that appear in the table at all.
   const undersampled = PRIMARY_MORPHS
-    .map((m) => ({ ...m, count: morphCounts.get(m.id) || 0 }))
+    .map((m) => ({ ...m, count: rawUndersampled.get(m.id) ?? 0 }))
     .filter((m) => m.count < 5);
-  const missingGenetics = GENETIC_TRAITS.filter((g) => !geneticsSeen.has(g.id));
+
+  const covered = PRIMARY_MORPHS.length - undersampled.filter((m) => m.count === 0).length;
+
+  const seen = new Set(raw.seen_genetic_traits || []);
+  const missingGenetics = GENETIC_TRAITS.filter((g) => !seen.has(g.id));
 
   return {
-    totalImages: images.length,
-    verifiedImages: verifiedCount,
-    morphCategories: morphs.size,
-    recentSubmissions,
-    topMorphs,
+    totalImages: Number(raw.total) || 0,
+    verifiedImages: Number(raw.verified) || 0,
+    morphCategories: Number(raw.morph_categories_seen) || 0,
+    recentSubmissions: Number(raw.recent_week) || 0,
+    topMorphs: top,
     coveragePct: Math.round((covered / PRIMARY_MORPHS.length) * 100),
     coveredCount: covered,
     totalCategories: PRIMARY_MORPHS.length,
-    avgConfidence: confidenceSamples > 0 ? totalConfidence / confidenceSamples : null,
+    avgConfidence: raw.avg_confidence != null ? Number(raw.avg_confidence) : null,
     undersampled,
     missingGenetics,
   };
@@ -77,8 +78,9 @@ function computeStats(images) {
 export default function TrainingPage() {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [images, setImages] = useState([]);
+  const [stats, setStats] = useState(EMPTY_STATS);
   const [reloadToken, setReloadToken] = useState(0);
+  const [contribPrefill, setContribPrefill] = useState(null);
 
   const reload = useCallback(() => setReloadToken((t) => t + 1), []);
 
@@ -86,12 +88,12 @@ export default function TrainingPage() {
     const load = async () => {
       setIsLoading(true);
       try {
-        const [me, allImages] = await Promise.all([
+        const [me, statsRes] = await Promise.all([
           User.me().catch(() => null),
-          GeckoImage.list().catch(() => []),
+          supabase.rpc('gecko_image_stats').then((r) => r.data).catch(() => null),
         ]);
         setUser(me);
-        setImages(allImages || []);
+        setStats(adaptStats(statsRes));
       } catch (err) {
         console.error('Training data load failed:', err);
         setUser(null);
@@ -101,8 +103,6 @@ export default function TrainingPage() {
     };
     load();
   }, [reloadToken]);
-
-  const stats = useMemo(() => computeStats(images), [images]);
 
   if (!user && !isLoading) {
     return (
@@ -175,7 +175,8 @@ export default function TrainingPage() {
                 axes you provide, the more weight the sample carries in training.
               </p>
             </div>
-            <ExpertContributionForm onSaved={reload} />
+            <WebImportPanel onApply={setContribPrefill} />
+            <ExpertContributionForm prefill={contribPrefill} onSaved={reload} />
           </TabsContent>
 
           <TabsContent value="review" className="space-y-4">
