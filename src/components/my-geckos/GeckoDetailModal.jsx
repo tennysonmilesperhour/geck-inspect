@@ -263,6 +263,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
               entityId={gecko.id}
               entityType="gecko"
               EventEntity={GeckoEvent}
+              onEventAdded={loadEventHistory}
             />
             <Button
               variant="outline"
@@ -566,17 +567,213 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                 </div>
               </div>
 
+            </div>
+
+            {/* Middle Column: Weight & Breeding History */}
+            <div className="space-y-6">
+              {/* Weight Tracking */}
+              <div>
+                <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
+                  <LineChart className="w-5 h-5" />
+                  Weight History
+                </h3>
+                
+                {isLoading ? (
+                  <div className="flex items-center justify-center h-48">
+                    <LoadingSpinner size="md" />
+                  </div>
+                ) : chartData.length > 0 ? (
+                  <div className="space-y-4">
+                    <ResponsiveContainer width="100%" height={200}>
+                      <RechartsLineChart data={chartData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(134, 239, 172, 0.2)" />
+                        <XAxis dataKey="date" stroke="#a7f3d0" />
+                        <YAxis stroke="#a7f3d0" domain={['dataMin - 2', 'dataMax + 2']} unit="g"/>
+                        <Tooltip 
+                          contentStyle={{ backgroundColor: '#022c22', border: '1px solid rgba(134, 239, 172, 0.2)'}} 
+                          labelStyle={{ color: '#d1fae5' }}
+                          itemStyle={{ color: '#86efac' }}
+                          formatter={(value) => [`${value}g`, 'Weight']}
+                          labelFormatter={(label, payload) => payload[0]?.payload.fullDate || label}
+                        />
+                        <Legend wrapperStyle={{ color: '#d1fae5' }} />
+                        <Line type="monotone" dataKey="weight" stroke="#86efac" strokeWidth={2} dot={{r: 4}} activeDot={{ r: 8 }} />
+                      </RechartsLineChart>
+                    </ResponsiveContainer>
+                    
+                    <div className="max-h-32 overflow-y-auto space-y-2">
+                      {weightRecords.map(record => (
+                        <div key={record.id} className="flex justify-between items-center bg-slate-800 p-2 rounded text-sm">
+                          <span className="text-slate-300">{format(new Date(record.record_date), 'MMM d, yyyy')}</span>
+                          <span className="font-bold text-emerald-400">{record.weight_grams}g</span>
+                          <AlertDialog open={weightToDelete === record.id} onOpenChange={(open) => { if (!open) setWeightToDelete(null); }}>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setWeightToDelete(record.id)}>
+                                <Trash2 className="w-3 h-3 text-red-500"/>
+                              </Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent className="bg-slate-900 border-slate-700">
+                              <AlertDialogHeader>
+                                <AlertDialogTitle className="text-slate-100">Delete weight record?</AlertDialogTitle>
+                                <AlertDialogDescription className="text-slate-400">
+                                  This will permanently delete the weight record from {format(new Date(record.record_date), 'MMM d, yyyy')}. This cannot be undone.
+                                </AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <AlertDialogFooter>
+                                <AlertDialogCancel className="bg-slate-800 text-slate-200 border-slate-600">Cancel</AlertDialogCancel>
+                                <AlertDialogAction onClick={handleConfirmDeleteWeight} className="bg-red-700 hover:bg-red-800">
+                                  Delete
+                                </AlertDialogAction>
+                              </AlertDialogFooter>
+                            </AlertDialogContent>
+                          </AlertDialog>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                ) : (
+                  <p className="text-slate-400 text-center py-8">No weight records yet.</p>
+                )}
+
+                {/* Add Weight Record */}
+                {!showAddWeight ? (
+                  <Button onClick={() => setShowAddWeight(true)} variant="outline" size="sm" className="w-full mt-4">
+                    <Plus className="w-4 h-4 mr-2" /> Add Weight Record
+                  </Button>
+                ) : (
+                  <div className="space-y-3 mt-4">
+                    <Input
+                      type="number"
+                      placeholder="Weight in grams"
+                      value={newWeight}
+                      onChange={(e) => setNewWeight(e.target.value)}
+                      className="bg-slate-800 text-sm w-full"
+                    />
+                    <Button onClick={handleAddWeight} className="w-full">Save</Button>
+                  </div>
+                )}
+              </div>
+
+              {/* Breeding History */}
+              <div>
+                <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
+                  <Users className="w-5 h-5" />
+                  Breeding History
+                </h3>
+                
+                {breedingHistory.length > 0 ? (
+                  <div className="space-y-3">
+                    {breedingHistory.map(breeding => {
+                      const partner = gecko.sex === 'Male' 
+                        ? allGeckos.find(g => g.id === breeding.dam_id)
+                        : allGeckos.find(g => g.id === breeding.sire_id);
+                      
+                      return (
+                        <div key={breeding.id} className="bg-slate-800 p-3 rounded-lg">
+                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
+                            <span className="text-slate-300 font-medium">
+                              Paired with: {partner?.name || 'Unknown'}
+                            </span>
+                            <div className="flex items-center gap-2 mt-2 sm:mt-0">
+                              <Badge variant={breeding.status === 'Successful' ? 'default' : 'secondary'}>
+                                {breeding.status}
+                              </Badge>
+                              {breeding.is_public && (
+                                <Badge variant="outline" className="text-emerald-400 border-emerald-400">
+                                  Public
+                                </Badge>
+                              )}
+                            </div>
+                          </div>
+                          {breeding.pairing_date && (
+                            <p className="text-slate-400 text-sm">
+                              Paired: {format(new Date(breeding.pairing_date), 'PPP')}
+                            </p>
+                          )}
+                          <div className="flex items-center justify-between mt-2">
+                            <Label className="text-xs text-slate-500">Public Display</Label>
+                            <Switch
+                              checked={breeding.is_public}
+                              onCheckedChange={async (checked) => {
+                                try {
+                                  await BreedingPlan.update(breeding.id, { is_public: checked });
+                                  const updated = await Promise.allSettled([
+                                    WeightRecord.filter({ gecko_id: gecko.id }, '-record_date'),
+                                    Promise.all([
+                                      BreedingPlan.filter({ sire_id: gecko.id }, '-created_date'),
+                                      BreedingPlan.filter({ dam_id: gecko.id }, '-created_date')
+                                    ]).then(([sireBreedings, damBreedings]) => [...sireBreedings, ...damBreedings]),
+                                    gecko.sex === 'Female' ? Egg.filter({ 
+                                      breeding_plan_id: { $in: await BreedingPlan.filter({ dam_id: gecko.id }).then(plans => plans.map(p => p.id)) }
+                                    }, '-lay_date') : Promise.resolve([]),
+                                    Promise.all([
+                                      Gecko.filter({ sire_id: gecko.id }, '-hatch_date'),
+                                      Gecko.filter({ dam_id: gecko.id }, '-hatch_date')
+                                    ]).then(([sireOffspring, damOffspring]) => [...sireOffspring, ...damOffspring])
+                                  ]);
+                                  setBreedingHistory(updated[1].status === 'fulfilled' ? updated[1].value : []);
+                                } catch (error) {
+                                  console.error('Failed to update breeding plan:', error);
+                                }
+                              }}
+                            />
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-slate-400 text-center py-4">No breeding history recorded.</p>
+                )}
+              </div>
+
+              {/* Event History */}
+              <div>
+                <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
+                  <History className="w-5 h-5" />
+                  Event History
+                </h3>
+                {eventHistory.length > 0 ? (
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {eventHistory.map(event => {
+                      const eventIcons = {
+                        shed: '🦎',
+                        feeding: '🍽️',
+                        defecation: '💩',
+                        cage_cleaning: '🧹',
+                        bug_feeding: '🦗',
+                        custom: '✏️'
+                      };
+                      return (
+                        <div key={event.id} className="bg-slate-800 p-3 rounded-lg">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-lg">{eventIcons[event.event_type] || '📋'}</span>
+                              <span className="text-slate-200 font-medium text-sm capitalize">
+                                {event.event_type === 'custom' ? event.custom_event_name : event.event_type.replace('_', ' ')}
+                              </span>
+                            </div>
+                            <span className="text-slate-400 text-xs">
+                              {format(new Date(event.event_date), 'MMM d, yyyy h:mm a')}
+                            </span>
+                          </div>
+                          {event.notes && (
+                            <p className="text-slate-400 text-xs mt-1">{event.notes}</p>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                ) : (
+                  <p className="text-slate-400 text-center py-4 text-sm">No events recorded yet.</p>
+                )}
+              </div>
+            </div>
+
+            {/* Right Column: Actions, Parentage, Offspring, Eggs */}
+            <div className="space-y-6">
               {/* Action Buttons */}
               <div className="space-y-3">
-                <div className="mb-3">
-                  <EventTracker 
-                    entityId={gecko.id} 
-                    entityType="gecko" 
-                    EventEntity={GeckoEvent}
-                    onEventAdded={loadEventHistory}
-                  />
-                </div>
-
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                   <Button
                     onClick={() => handleGenerateCertificate('ownership')}
@@ -593,7 +790,8 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                   <Button
                     onClick={() => handleGenerateCertificate('lineage')}
                     disabled={isGeneratingCert}
-                    className="bg-emerald-700 hover:bg-emerald-800"
+                    variant="outline"
+                    className="border-emerald-700 text-emerald-300 hover:bg-emerald-900/20"
                   >
                     {isGeneratingCert ? (
                       <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
@@ -762,210 +960,6 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                       </AlertDialog>
                     )}
                   </div>
-                )}
-              </div>
-            </div>
-
-            {/* Middle Column: Weight & Breeding History */}
-            <div className="space-y-6">
-              {/* Weight Tracking */}
-              <div>
-                <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
-                  <LineChart className="w-5 h-5" />
-                  Weight History
-                </h3>
-                
-                {isLoading ? (
-                  <div className="flex items-center justify-center h-48">
-                    <LoadingSpinner size="md" />
-                  </div>
-                ) : chartData.length > 0 ? (
-                  <div className="space-y-4">
-                    <ResponsiveContainer width="100%" height={200}>
-                      <RechartsLineChart data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(134, 239, 172, 0.2)" />
-                        <XAxis dataKey="date" stroke="#a7f3d0" />
-                        <YAxis stroke="#a7f3d0" domain={['dataMin - 2', 'dataMax + 2']} unit="g"/>
-                        <Tooltip 
-                          contentStyle={{ backgroundColor: '#022c22', border: '1px solid rgba(134, 239, 172, 0.2)'}} 
-                          labelStyle={{ color: '#d1fae5' }}
-                          itemStyle={{ color: '#86efac' }}
-                          formatter={(value) => [`${value}g`, 'Weight']}
-                          labelFormatter={(label, payload) => payload[0]?.payload.fullDate || label}
-                        />
-                        <Legend wrapperStyle={{ color: '#d1fae5' }} />
-                        <Line type="monotone" dataKey="weight" stroke="#86efac" strokeWidth={2} dot={{r: 4}} activeDot={{ r: 8 }} />
-                      </RechartsLineChart>
-                    </ResponsiveContainer>
-                    
-                    <div className="max-h-32 overflow-y-auto space-y-2">
-                      {weightRecords.map(record => (
-                        <div key={record.id} className="flex justify-between items-center bg-slate-800 p-2 rounded text-sm">
-                          <span className="text-slate-300">{format(new Date(record.record_date), 'MMM d, yyyy')}</span>
-                          <span className="font-bold text-emerald-400">{record.weight_grams}g</span>
-                          <AlertDialog open={weightToDelete === record.id} onOpenChange={(open) => { if (!open) setWeightToDelete(null); }}>
-                            <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setWeightToDelete(record.id)}>
-                                <Trash2 className="w-3 h-3 text-red-500"/>
-                              </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent className="bg-slate-900 border-slate-700">
-                              <AlertDialogHeader>
-                                <AlertDialogTitle className="text-slate-100">Delete weight record?</AlertDialogTitle>
-                                <AlertDialogDescription className="text-slate-400">
-                                  This will permanently delete the weight record from {format(new Date(record.record_date), 'MMM d, yyyy')}. This cannot be undone.
-                                </AlertDialogDescription>
-                              </AlertDialogHeader>
-                              <AlertDialogFooter>
-                                <AlertDialogCancel className="bg-slate-800 text-slate-200 border-slate-600">Cancel</AlertDialogCancel>
-                                <AlertDialogAction onClick={handleConfirmDeleteWeight} className="bg-red-700 hover:bg-red-800">
-                                  Delete
-                                </AlertDialogAction>
-                              </AlertDialogFooter>
-                            </AlertDialogContent>
-                          </AlertDialog>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ) : (
-                  <p className="text-slate-400 text-center py-8">No weight records yet.</p>
-                )}
-
-                {/* Add Weight Record */}
-                {!showAddWeight ? (
-                  <Button onClick={() => setShowAddWeight(true)} variant="outline" size="sm" className="w-full mt-4">
-                    <Plus className="w-4 h-4 mr-2" /> Add Weight Record
-                  </Button>
-                ) : (
-                  <div className="space-y-3 mt-4">
-                    <Input
-                      type="number"
-                      placeholder="Weight in grams"
-                      value={newWeight}
-                      onChange={(e) => setNewWeight(e.target.value)}
-                      className="bg-slate-800 text-sm w-full"
-                    />
-                    <Button onClick={handleAddWeight} className="w-full">Save</Button>
-                  </div>
-                )}
-              </div>
-
-              {/* Breeding History */}
-              <div>
-                <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
-                  <Users className="w-5 h-5" />
-                  Breeding History
-                </h3>
-                
-                {breedingHistory.length > 0 ? (
-                  <div className="space-y-3">
-                    {breedingHistory.map(breeding => {
-                      const partner = gecko.sex === 'Male' 
-                        ? allGeckos.find(g => g.id === breeding.dam_id)
-                        : allGeckos.find(g => g.id === breeding.sire_id);
-                      
-                      return (
-                        <div key={breeding.id} className="bg-slate-800 p-3 rounded-lg">
-                          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-2">
-                            <span className="text-slate-300 font-medium">
-                              Paired with: {partner?.name || 'Unknown'}
-                            </span>
-                            <div className="flex items-center gap-2 mt-2 sm:mt-0">
-                              <Badge variant={breeding.status === 'Successful' ? 'default' : 'secondary'}>
-                                {breeding.status}
-                              </Badge>
-                              {breeding.is_public && (
-                                <Badge variant="outline" className="text-emerald-400 border-emerald-400">
-                                  Public
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
-                          {breeding.pairing_date && (
-                            <p className="text-slate-400 text-sm">
-                              Paired: {format(new Date(breeding.pairing_date), 'PPP')}
-                            </p>
-                          )}
-                          <div className="flex items-center justify-between mt-2">
-                            <Label className="text-xs text-slate-500">Public Display</Label>
-                            <Switch
-                              checked={breeding.is_public}
-                              onCheckedChange={async (checked) => {
-                                try {
-                                  await BreedingPlan.update(breeding.id, { is_public: checked });
-                                  const updated = await Promise.allSettled([
-                                    WeightRecord.filter({ gecko_id: gecko.id }, '-record_date'),
-                                    Promise.all([
-                                      BreedingPlan.filter({ sire_id: gecko.id }, '-created_date'),
-                                      BreedingPlan.filter({ dam_id: gecko.id }, '-created_date')
-                                    ]).then(([sireBreedings, damBreedings]) => [...sireBreedings, ...damBreedings]),
-                                    gecko.sex === 'Female' ? Egg.filter({ 
-                                      breeding_plan_id: { $in: await BreedingPlan.filter({ dam_id: gecko.id }).then(plans => plans.map(p => p.id)) }
-                                    }, '-lay_date') : Promise.resolve([]),
-                                    Promise.all([
-                                      Gecko.filter({ sire_id: gecko.id }, '-hatch_date'),
-                                      Gecko.filter({ dam_id: gecko.id }, '-hatch_date')
-                                    ]).then(([sireOffspring, damOffspring]) => [...sireOffspring, ...damOffspring])
-                                  ]);
-                                  setBreedingHistory(updated[1].status === 'fulfilled' ? updated[1].value : []);
-                                } catch (error) {
-                                  console.error('Failed to update breeding plan:', error);
-                                }
-                              }}
-                            />
-                          </div>
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-slate-400 text-center py-4">No breeding history recorded.</p>
-                )}
-              </div>
-            </div>
-
-            {/* Right Column: Event History, Parentage, Offspring, Eggs */}
-            <div className="space-y-6">
-              {/* Event History */}
-              <div>
-                <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
-                  <History className="w-5 h-5" />
-                  Event History
-                </h3>
-                {eventHistory.length > 0 ? (
-                  <div className="space-y-2 max-h-48 overflow-y-auto">
-                    {eventHistory.map(event => {
-                      const eventIcons = {
-                        shed: '🦎',
-                        feeding: '🍽️',
-                        defecation: '💩',
-                        cage_cleaning: '🧹',
-                        bug_feeding: '🦗',
-                        custom: '✏️'
-                      };
-                      return (
-                        <div key={event.id} className="bg-slate-800 p-3 rounded-lg">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              <span className="text-lg">{eventIcons[event.event_type] || '📋'}</span>
-                              <span className="text-slate-200 font-medium text-sm capitalize">
-                                {event.event_type === 'custom' ? event.custom_event_name : event.event_type.replace('_', ' ')}
-                              </span>
-                            </div>
-                            <span className="text-slate-400 text-xs">
-                              {format(new Date(event.event_date), 'MMM d, yyyy h:mm a')}
-                            </span>
-                          </div>
-                          {event.notes && (
-                            <p className="text-slate-400 text-xs mt-1">{event.notes}</p>
-                          )}
-                        </div>
-                      );
-                    })}
-                  </div>
-                ) : (
-                  <p className="text-slate-400 text-center py-4 text-sm">No events recorded yet.</p>
                 )}
               </div>
 
