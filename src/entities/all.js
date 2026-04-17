@@ -107,3 +107,5 @@ export const BreederProfile = sb.BreederProfile;
 export const BreederReview = sb.BreederReview;
 // Shipping — Zero's Geckos integration
 export const ShippingOrder = sb.ShippingOrder;
+// Pending Sales — reserve price system
+export const PendingSale = sb.PendingSale;

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { base44 } from '@/api/base44Client';
-import { Gecko, MarketplaceCost } from '@/entities/all';
+import { Gecko, MarketplaceCost, PendingSale } from '@/entities/all';
 import {
   LineChart, Line, AreaChart, Area, BarChart, Bar,
   XAxis, YAxis, CartesianGrid, Tooltip as RechartsTooltip, ResponsiveContainer, Legend,
@@ -22,6 +22,7 @@ import {
   DollarSign, TrendingUp, AlertCircle, Trash2, Plus, Save, Loader2,
   ChevronDown, ChevronUp, Tag, Calendar, Edit2, X, Check,
   Globe, Lock, ArrowRight, BarChart3,
+  Clock, Weight, Thermometer, Package, CheckCircle2, Archive,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { format, getQuarter, getYear } from 'date-fns';
@@ -173,6 +174,597 @@ function QuarterSection({ quarterKey, items, onDelete: _onDelete, onUpdate: _onU
   );
 }
 
+
+// ---------------------------------------------------------------------------
+// Pending Sales — reserve price system
+// ---------------------------------------------------------------------------
+
+function PendingSaleCard({ sale, onUpdate, onComplete, onCancel, onDelete }) {
+  const [editing, setEditing] = useState(false);
+  const [form, setForm] = useState(sale);
+  const [savingPayment, setSavingPayment] = useState(null);
+
+  const payments = Array.isArray(form.payment_schedule) ? form.payment_schedule : [];
+  const totalScheduled = payments.reduce((s, p) => s + Number(p.amount || 0), 0);
+  const totalPaid = payments.filter(p => p.paid).reduce((s, p) => s + Number(p.amount || 0), 0);
+  const remaining = Number(form.reserve_price || 0) - totalPaid;
+  const allPaid = remaining <= 0 && Number(form.reserve_price) > 0;
+
+  const handleSave = async () => {
+    const updated = {
+      ...form,
+      amount_paid: totalPaid,
+      payment_schedule: payments,
+    };
+    await onUpdate(sale.id, updated);
+    setEditing(false);
+  };
+
+  const togglePayment = async (idx) => {
+    setSavingPayment(idx);
+    const updated = [...payments];
+    updated[idx] = {
+      ...updated[idx],
+      paid: !updated[idx].paid,
+      paid_date: !updated[idx].paid ? new Date().toISOString().split('T')[0] : null,
+    };
+    const newPaid = updated.filter(p => p.paid).reduce((s, p) => s + Number(p.amount || 0), 0);
+    setForm(f => ({ ...f, payment_schedule: updated, amount_paid: newPaid }));
+    await onUpdate(sale.id, { payment_schedule: updated, amount_paid: newPaid });
+    setSavingPayment(null);
+  };
+
+  const addPayment = () => {
+    const updated = [...payments, { amount: '', due_date: '', paid: false, paid_date: null, note: '' }];
+    setForm(f => ({ ...f, payment_schedule: updated }));
+  };
+
+  const removePayment = (idx) => {
+    const updated = payments.filter((_, i) => i !== idx);
+    setForm(f => ({ ...f, payment_schedule: updated }));
+  };
+
+  const updatePayment = (idx, field, value) => {
+    const updated = [...payments];
+    updated[idx] = { ...updated[idx], [field]: value };
+    setForm(f => ({ ...f, payment_schedule: updated }));
+  };
+
+  if (editing) {
+    return (
+      <div className="bg-slate-800/80 border border-amber-700/40 rounded-xl p-5 space-y-4">
+        <div className="flex justify-between items-center">
+          <h3 className="text-sm font-bold text-slate-100">Edit Reserve — {form.gecko_name}</h3>
+          <button onClick={() => { setForm(sale); setEditing(false); }} className="text-slate-400 hover:text-slate-200"><X className="w-4 h-4" /></button>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <Label className="text-xs text-slate-400">Gecko Name</Label>
+            <Input value={form.gecko_name} onChange={e => setForm(f => ({ ...f, gecko_name: e.target.value }))}
+              className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1" />
+          </div>
+          <div>
+            <Label className="text-xs text-slate-400">Buyer Name</Label>
+            <Input value={form.buyer_name || ''} onChange={e => setForm(f => ({ ...f, buyer_name: e.target.value }))}
+              className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1" />
+          </div>
+          <div>
+            <Label className="text-xs text-slate-400">Reserve Price ($)</Label>
+            <Input type="number" step="0.01" value={form.reserve_price} onChange={e => setForm(f => ({ ...f, reserve_price: e.target.value }))}
+              className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+          </div>
+          <div>
+            <Label className="text-xs text-slate-400">Projected Ship Date</Label>
+            <Input type="date" value={form.projected_ship_date || ''} onChange={e => setForm(f => ({ ...f, projected_ship_date: e.target.value }))}
+              className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1" />
+          </div>
+          <div>
+            <Label className="text-xs text-slate-400">Target Weight (g)</Label>
+            <Input type="number" step="0.1" value={form.target_weight_grams || ''} onChange={e => setForm(f => ({ ...f, target_weight_grams: e.target.value }))}
+              placeholder="e.g. 35"
+              className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+          </div>
+          <div>
+            <Label className="text-xs text-slate-400">Current Weight (g)</Label>
+            <Input type="number" step="0.1" value={form.current_weight_grams || ''} onChange={e => setForm(f => ({ ...f, current_weight_grams: e.target.value }))}
+              placeholder="e.g. 22"
+              className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+          </div>
+          <div>
+            <Label className="text-xs text-slate-400">Temp Change From</Label>
+            <Input value={form.temp_change_from || ''} onChange={e => setForm(f => ({ ...f, temp_change_from: e.target.value }))}
+              placeholder="e.g. 72°F"
+              className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1" />
+          </div>
+          <div>
+            <Label className="text-xs text-slate-400">Temp Change To</Label>
+            <Input value={form.temp_change_to || ''} onChange={e => setForm(f => ({ ...f, temp_change_to: e.target.value }))}
+              placeholder="e.g. 55°F"
+              className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1" />
+          </div>
+        </div>
+
+        <div>
+          <Label className="text-xs text-slate-400">Notes</Label>
+          <Input value={form.notes || ''} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))}
+            className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1" />
+        </div>
+
+        {/* Payment schedule editor */}
+        <div className="space-y-2">
+          <div className="flex items-center justify-between">
+            <Label className="text-xs text-slate-300 font-semibold">Payment Schedule</Label>
+            <Button size="sm" variant="ghost" onClick={addPayment} className="h-7 text-xs text-emerald-400 hover:text-emerald-300">
+              <Plus className="w-3 h-3 mr-1" />Add Payment
+            </Button>
+          </div>
+          {payments.map((p, idx) => (
+            <div key={idx} className="grid grid-cols-[1fr_1fr_auto] gap-2 items-end">
+              <div>
+                <Input type="number" step="0.01" placeholder="Amount" value={p.amount}
+                  onChange={e => updatePayment(idx, 'amount', e.target.value)}
+                  className="bg-slate-700 border-slate-600 text-slate-100 h-8 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+              </div>
+              <div>
+                <Input type="date" value={p.due_date || ''} onChange={e => updatePayment(idx, 'due_date', e.target.value)}
+                  className="bg-slate-700 border-slate-600 text-slate-100 h-8 text-xs" />
+              </div>
+              <Button size="icon" variant="ghost" onClick={() => removePayment(idx)} className="h-8 w-8 text-red-400 hover:bg-red-900/20">
+                <Trash2 className="w-3 h-3" />
+              </Button>
+            </div>
+          ))}
+        </div>
+
+        <div className="flex gap-2 justify-end pt-2">
+          <Button variant="outline" onClick={() => { setForm(sale); setEditing(false); }} className="border-slate-600 text-slate-300 hover:bg-slate-800">Cancel</Button>
+          <Button onClick={handleSave} className="bg-emerald-600 hover:bg-emerald-500 text-white"><Save className="w-3.5 h-3.5 mr-1.5" />Save</Button>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="bg-slate-800/60 border border-amber-800/30 rounded-xl overflow-hidden">
+      <div className="p-4">
+        <div className="flex items-start justify-between gap-3">
+          <div className="min-w-0 flex-1">
+            <div className="flex items-center gap-2">
+              <h3 className="font-semibold text-slate-100 text-sm truncate">{sale.gecko_name}</h3>
+              {allPaid && <Badge className="bg-emerald-900/50 text-emerald-300 border-emerald-700/40 text-[10px]">Fully Paid</Badge>}
+            </div>
+            {sale.buyer_name && <p className="text-xs text-slate-400 mt-0.5">Buyer: {sale.buyer_name}</p>}
+          </div>
+          <div className="text-right flex-shrink-0">
+            <p className="text-lg font-bold text-amber-400">${Number(sale.reserve_price).toFixed(2)}</p>
+            <p className="text-[10px] text-slate-500">reserve price</p>
+          </div>
+        </div>
+
+        {/* Progress bar */}
+        {Number(sale.reserve_price) > 0 && (
+          <div className="mt-3">
+            <div className="flex justify-between text-[10px] text-slate-400 mb-1">
+              <span>${totalPaid.toFixed(2)} paid</span>
+              <span>${remaining > 0 ? remaining.toFixed(2) : '0.00'} remaining</span>
+            </div>
+            <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+              <div
+                className={`h-full rounded-full transition-all ${allPaid ? 'bg-emerald-500' : 'bg-amber-500'}`}
+                style={{ width: `${Math.min(100, (totalPaid / Number(sale.reserve_price)) * 100)}%` }}
+              />
+            </div>
+          </div>
+        )}
+
+        {/* Requirement chips */}
+        <div className="flex flex-wrap gap-2 mt-3">
+          {payments.length > 0 && (
+            <div className="flex items-center gap-1 text-[10px] rounded-full px-2 py-0.5 bg-slate-700/50 border border-slate-600/50">
+              <DollarSign className="w-3 h-3 text-amber-400" />
+              <span className="text-slate-300">{payments.filter(p => p.paid).length}/{payments.length} payments</span>
+            </div>
+          )}
+          {sale.target_weight_grams && (
+            <div className="flex items-center gap-1 text-[10px] rounded-full px-2 py-0.5 bg-slate-700/50 border border-slate-600/50">
+              <Weight className="w-3 h-3 text-blue-400" />
+              <span className="text-slate-300">
+                {sale.current_weight_grams ? `${sale.current_weight_grams}g / ` : ''}{sale.target_weight_grams}g
+              </span>
+            </div>
+          )}
+          {(sale.temp_change_from || sale.temp_change_to) && (
+            <div className="flex items-center gap-1 text-[10px] rounded-full px-2 py-0.5 bg-slate-700/50 border border-slate-600/50">
+              <Thermometer className="w-3 h-3 text-orange-400" />
+              <span className="text-slate-300">{sale.temp_change_from || '?'} → {sale.temp_change_to || '?'}</span>
+            </div>
+          )}
+          {sale.projected_ship_date && (
+            <div className="flex items-center gap-1 text-[10px] rounded-full px-2 py-0.5 bg-slate-700/50 border border-slate-600/50">
+              <Package className="w-3 h-3 text-purple-400" />
+              <span className="text-slate-300">Ship: {format(new Date(sale.projected_ship_date), 'MMM d, yyyy')}</span>
+            </div>
+          )}
+        </div>
+
+        {/* Payment schedule detail */}
+        {payments.length > 0 && (
+          <div className="mt-3 space-y-1.5">
+            {payments.map((p, idx) => (
+              <div key={idx} className="flex items-center gap-2 text-xs">
+                <button
+                  onClick={() => togglePayment(idx)}
+                  disabled={savingPayment === idx}
+                  className={`w-5 h-5 rounded border flex items-center justify-center flex-shrink-0 transition-colors ${
+                    p.paid
+                      ? 'bg-emerald-600 border-emerald-500 text-white'
+                      : 'bg-slate-700 border-slate-600 text-transparent hover:border-emerald-500'
+                  }`}
+                >
+                  {savingPayment === idx ? <Loader2 className="w-3 h-3 animate-spin text-slate-400" /> : <Check className="w-3 h-3" />}
+                </button>
+                <span className={`flex-1 ${p.paid ? 'text-slate-500 line-through' : 'text-slate-200'}`}>
+                  ${Number(p.amount).toFixed(2)}
+                  {p.due_date && <span className="text-slate-500 ml-1.5">due {format(new Date(p.due_date), 'MMM d')}</span>}
+                </span>
+                {p.paid && p.paid_date && <span className="text-emerald-500/70 text-[10px]">Paid {format(new Date(p.paid_date), 'MMM d')}</span>}
+              </div>
+            ))}
+          </div>
+        )}
+
+        {sale.notes && <p className="text-xs text-slate-500 mt-2 italic">{sale.notes}</p>}
+      </div>
+
+      {/* Actions */}
+      <div className="border-t border-slate-700/50 px-4 py-2.5 flex items-center gap-2 bg-slate-900/30">
+        <Button size="sm" variant="ghost" onClick={() => setEditing(true)} className="h-7 text-xs text-slate-300 hover:text-white hover:bg-slate-700">
+          <Edit2 className="w-3 h-3 mr-1" />Edit
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => onComplete(sale)}
+          className="h-7 text-xs text-emerald-400 hover:text-emerald-300 hover:bg-emerald-900/30">
+          <CheckCircle2 className="w-3 h-3 mr-1" />Complete Sale
+        </Button>
+        <Button size="sm" variant="ghost" onClick={() => onCancel(sale)}
+          className="h-7 text-xs text-amber-400 hover:text-amber-300 hover:bg-amber-900/20">
+          <X className="w-3 h-3 mr-1" />Cancel
+        </Button>
+        <div className="flex-1" />
+        <Button size="icon" variant="ghost" onClick={() => onDelete(sale.id)}
+          className="h-7 w-7 text-red-500 hover:bg-red-900/20">
+          <Trash2 className="w-3 h-3" />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
+function PendingSalesTab({ user, pendingSales, setPendingSales, onCompleteSale, allGeckos }) {
+  const [creating, setCreating] = useState(false);
+  const [geckoPickerOpen, setGeckoPickerOpen] = useState(false);
+  const [newSale, setNewSale] = useState({
+    gecko_name: '', buyer_name: '', reserve_price: '',
+    projected_ship_date: '', target_weight_grams: '', current_weight_grams: '',
+    temp_change_from: '', temp_change_to: '', notes: '',
+    payment_schedule: [],
+    // Toggle flags for which optional sections to show
+    _usePayments: false, _useWeight: false, _useTemp: false, _useShipDate: false,
+  });
+
+  const resetForm = () => {
+    setNewSale({
+      gecko_name: '', buyer_name: '', reserve_price: '',
+      projected_ship_date: '', target_weight_grams: '', current_weight_grams: '',
+      temp_change_from: '', temp_change_to: '', notes: '',
+      payment_schedule: [],
+      _usePayments: false, _useWeight: false, _useTemp: false, _useShipDate: false,
+    });
+    setCreating(false);
+  };
+
+  const handleCreate = async () => {
+    if (!newSale.gecko_name.trim() || !newSale.reserve_price) return;
+    try {
+      const record = {
+        user_email: user.email,
+        gecko_name: newSale.gecko_name.trim(),
+        buyer_name: newSale.buyer_name.trim() || null,
+        reserve_price: parseFloat(newSale.reserve_price) || 0,
+        amount_paid: 0,
+        payment_schedule: newSale._usePayments ? newSale.payment_schedule : [],
+        target_weight_grams: newSale._useWeight && newSale.target_weight_grams ? parseFloat(newSale.target_weight_grams) : null,
+        current_weight_grams: newSale._useWeight && newSale.current_weight_grams ? parseFloat(newSale.current_weight_grams) : null,
+        temp_change_from: newSale._useTemp ? newSale.temp_change_from || null : null,
+        temp_change_to: newSale._useTemp ? newSale.temp_change_to || null : null,
+        projected_ship_date: newSale._useShipDate ? newSale.projected_ship_date || null : null,
+        notes: newSale.notes || null,
+        gecko_id: newSale.gecko_id || null,
+        status: 'pending',
+      };
+      const created = await PendingSale.create(record);
+      setPendingSales(prev => [created, ...prev]);
+      toast({ title: 'Reserve created', description: `${record.gecko_name} — $${record.reserve_price.toFixed(2)}` });
+      resetForm();
+    } catch (err) {
+      console.error('Failed to create pending sale:', err);
+      toast({ title: 'Error', description: err.message || 'Could not create reserve.', variant: 'destructive' });
+    }
+  };
+
+  const handleUpdate = async (id, data) => {
+    try {
+      const cleaned = { ...data };
+      delete cleaned._usePayments; delete cleaned._useWeight; delete cleaned._useTemp; delete cleaned._useShipDate;
+      delete cleaned.id; delete cleaned.created_by; delete cleaned.created_date;
+      await PendingSale.update(id, cleaned);
+      setPendingSales(prev => prev.map(s => s.id === id ? { ...s, ...cleaned } : s));
+    } catch (err) {
+      toast({ title: 'Update failed', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const handleComplete = async (sale) => {
+    if (!confirm(`Complete sale for "${sale.gecko_name}"? This will move it to revenue and archive the gecko.`)) return;
+    try {
+      await PendingSale.update(sale.id, { status: 'completed', completed_date: new Date().toISOString() });
+      if (sale.gecko_id) {
+        try {
+          await Gecko.update(sale.gecko_id, {
+            status: 'Sold', archived: true, archive_reason: 'sold',
+            archived_date: new Date().toISOString().split('T')[0],
+            asking_price: parseFloat(sale.reserve_price) || 0,
+          });
+        } catch (e) { console.warn('Could not archive gecko:', e); }
+      }
+      const created = await MarketplaceCost.create({
+        user_email: user.email,
+        description: sale.gecko_name,
+        amount: parseFloat(sale.reserve_price) || 0,
+        date: new Date().toISOString().split('T')[0],
+        category: 'sale:produced_in_house',
+      });
+      setPendingSales(prev => prev.filter(s => s.id !== sale.id));
+      if (onCompleteSale) onCompleteSale(sale, created);
+      toast({ title: 'Sale completed', description: `${sale.gecko_name} added to revenue.` });
+    } catch (err) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const handleCancel = async (sale) => {
+    if (!confirm(`Cancel reserve for "${sale.gecko_name}"? The gecko will remain in your collection.`)) return;
+    try {
+      await PendingSale.update(sale.id, { status: 'cancelled' });
+      setPendingSales(prev => prev.filter(s => s.id !== sale.id));
+      toast({ title: 'Reserve cancelled' });
+    } catch (err) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const handleDelete = async (id) => {
+    if (!confirm('Permanently delete this pending sale record?')) return;
+    try {
+      await PendingSale.delete(id);
+      setPendingSales(prev => prev.filter(s => s.id !== id));
+      toast({ title: 'Deleted' });
+    } catch (err) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const selectGeckoForSale = (gecko) => {
+    setNewSale(f => ({
+      ...f,
+      gecko_name: gecko.name,
+      gecko_id: gecko.id,
+      reserve_price: gecko.asking_price || '',
+      current_weight_grams: gecko.weight || '',
+    }));
+    setGeckoPickerOpen(false);
+  };
+
+  const addPaymentToNew = () => {
+    setNewSale(f => ({
+      ...f,
+      payment_schedule: [...f.payment_schedule, { amount: '', due_date: '', paid: false, paid_date: null, note: '' }],
+    }));
+  };
+
+  const updateNewPayment = (idx, field, value) => {
+    setNewSale(f => {
+      const updated = [...f.payment_schedule];
+      updated[idx] = { ...updated[idx], [field]: value };
+      return { ...f, payment_schedule: updated };
+    });
+  };
+
+  const removeNewPayment = (idx) => {
+    setNewSale(f => ({ ...f, payment_schedule: f.payment_schedule.filter((_, i) => i !== idx) }));
+  };
+
+  const availableGeckos = (allGeckos || []).filter(g => !g.archived && g.status !== 'Sold');
+
+  return (
+    <div className="space-y-4">
+      <Button onClick={() => setCreating(true)} className="bg-amber-600 hover:bg-amber-500 text-white h-9">
+        <Plus className="w-4 h-4 mr-2" />New Reserve
+      </Button>
+
+      {creating && (
+        <div className="bg-slate-800/50 border border-amber-700/40 rounded-xl p-5 space-y-4">
+          <div className="flex justify-between items-center">
+            <h3 className="text-sm font-bold text-slate-100">Create Reserve / Pending Sale</h3>
+            <button onClick={resetForm} className="text-slate-400 hover:text-slate-200"><X className="w-4 h-4" /></button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <Label className="text-xs text-slate-400">Gecko Name</Label>
+              <div className="flex gap-1.5 mt-1">
+                <Input value={newSale.gecko_name} onChange={e => setNewSale(f => ({ ...f, gecko_name: e.target.value }))}
+                  placeholder="Name or select from collection"
+                  className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm flex-1" />
+                <Button size="sm" variant="outline" onClick={() => setGeckoPickerOpen(!geckoPickerOpen)}
+                  className="h-9 border-slate-600 text-slate-300 hover:bg-slate-700 text-xs px-2 shrink-0">
+                  Pick
+                </Button>
+              </div>
+              {geckoPickerOpen && (
+                <div className="mt-1.5 bg-slate-700 border border-slate-600 rounded-lg max-h-40 overflow-y-auto">
+                  {availableGeckos.length === 0 ? (
+                    <p className="text-xs text-slate-400 p-2">No geckos available</p>
+                  ) : availableGeckos.map(g => (
+                    <button key={g.id} onClick={() => selectGeckoForSale(g)}
+                      className="w-full text-left px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-600 flex items-center gap-2">
+                      {g.image_urls?.[0] && <img src={g.image_urls[0]} className="w-5 h-5 rounded object-cover" />}
+                      <span className="truncate">{g.name}</span>
+                      {g.asking_price && <span className="text-emerald-400 ml-auto">${g.asking_price}</span>}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <div>
+              <Label className="text-xs text-slate-400">Buyer Name</Label>
+              <Input value={newSale.buyer_name} onChange={e => setNewSale(f => ({ ...f, buyer_name: e.target.value }))}
+                placeholder="Optional" className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1" />
+            </div>
+            <div>
+              <Label className="text-xs text-slate-400">Reserve Price ($)</Label>
+              <Input type="number" step="0.01" value={newSale.reserve_price} onChange={e => setNewSale(f => ({ ...f, reserve_price: e.target.value }))}
+                placeholder="0.00"
+                className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+            </div>
+            <div>
+              <Label className="text-xs text-slate-400">Notes</Label>
+              <Input value={newSale.notes} onChange={e => setNewSale(f => ({ ...f, notes: e.target.value }))}
+                placeholder="Optional" className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1" />
+            </div>
+          </div>
+
+          {/* Optional section toggles */}
+          <div className="space-y-2">
+            <Label className="text-xs text-slate-300 font-semibold">Include (toggle as relevant)</Label>
+            <div className="flex flex-wrap gap-2">
+              {[
+                { key: '_usePayments', label: 'Payment Schedule', icon: DollarSign, active: 'bg-amber-900/40 border-amber-600/50 text-amber-300' },
+                { key: '_useWeight', label: 'Weight Requirement', icon: Weight, active: 'bg-blue-900/40 border-blue-600/50 text-blue-300' },
+                { key: '_useTemp', label: 'Temperature Change', icon: Thermometer, active: 'bg-orange-900/40 border-orange-600/50 text-orange-300' },
+                { key: '_useShipDate', label: 'Projected Ship Date', icon: Package, active: 'bg-purple-900/40 border-purple-600/50 text-purple-300' },
+              ].map(({ key, label, icon: Icon, active }) => (
+                <button key={key} onClick={() => setNewSale(f => ({ ...f, [key]: !f[key] }))}
+                  className={`flex items-center gap-1.5 text-xs rounded-full px-3 py-1.5 border transition-colors ${
+                    newSale[key]
+                      ? active
+                      : 'bg-slate-800 border-slate-600 text-slate-400 hover:text-slate-200'
+                  }`}>
+                  <Icon className="w-3 h-3" />{label}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Conditional sections */}
+          {newSale._usePayments && (
+            <div className="space-y-2 bg-slate-900/50 rounded-lg p-3 border border-slate-700/50">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs text-amber-400 font-semibold flex items-center gap-1"><DollarSign className="w-3 h-3" />Payment Schedule</Label>
+                <Button size="sm" variant="ghost" onClick={addPaymentToNew} className="h-6 text-[10px] text-emerald-400"><Plus className="w-3 h-3 mr-1" />Add</Button>
+              </div>
+              {newSale.payment_schedule.map((p, idx) => (
+                <div key={idx} className="grid grid-cols-[1fr_1fr_auto] gap-2">
+                  <Input type="number" step="0.01" placeholder="Amount" value={p.amount}
+                    onChange={e => updateNewPayment(idx, 'amount', e.target.value)}
+                    className="bg-slate-700 border-slate-600 text-slate-100 h-8 text-xs [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                  <Input type="date" value={p.due_date || ''} onChange={e => updateNewPayment(idx, 'due_date', e.target.value)}
+                    className="bg-slate-700 border-slate-600 text-slate-100 h-8 text-xs" />
+                  <Button size="icon" variant="ghost" onClick={() => removeNewPayment(idx)} className="h-8 w-8 text-red-400 hover:bg-red-900/20">
+                    <Trash2 className="w-3 h-3" />
+                  </Button>
+                </div>
+              ))}
+              {newSale.payment_schedule.length === 0 && <p className="text-[10px] text-slate-500">Click "Add" to schedule payments</p>}
+            </div>
+          )}
+
+          {newSale._useWeight && (
+            <div className="grid grid-cols-2 gap-3 bg-slate-900/50 rounded-lg p-3 border border-slate-700/50">
+              <div>
+                <Label className="text-xs text-blue-400 flex items-center gap-1"><Weight className="w-3 h-3" />Target Weight (g)</Label>
+                <Input type="number" step="0.1" value={newSale.target_weight_grams} onChange={e => setNewSale(f => ({ ...f, target_weight_grams: e.target.value }))}
+                  placeholder="e.g. 35"
+                  className="bg-slate-700 border-slate-600 text-slate-100 h-8 text-xs mt-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+              </div>
+              <div>
+                <Label className="text-xs text-blue-400 flex items-center gap-1"><Weight className="w-3 h-3" />Current Weight (g)</Label>
+                <Input type="number" step="0.1" value={newSale.current_weight_grams} onChange={e => setNewSale(f => ({ ...f, current_weight_grams: e.target.value }))}
+                  placeholder="e.g. 22"
+                  className="bg-slate-700 border-slate-600 text-slate-100 h-8 text-xs mt-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+              </div>
+            </div>
+          )}
+
+          {newSale._useTemp && (
+            <div className="grid grid-cols-2 gap-3 bg-slate-900/50 rounded-lg p-3 border border-slate-700/50">
+              <div>
+                <Label className="text-xs text-orange-400 flex items-center gap-1"><Thermometer className="w-3 h-3" />Temp From</Label>
+                <Input value={newSale.temp_change_from} onChange={e => setNewSale(f => ({ ...f, temp_change_from: e.target.value }))}
+                  placeholder="e.g. 72°F"
+                  className="bg-slate-700 border-slate-600 text-slate-100 h-8 text-xs mt-1" />
+              </div>
+              <div>
+                <Label className="text-xs text-orange-400 flex items-center gap-1"><Thermometer className="w-3 h-3" />Temp To</Label>
+                <Input value={newSale.temp_change_to} onChange={e => setNewSale(f => ({ ...f, temp_change_to: e.target.value }))}
+                  placeholder="e.g. 55°F"
+                  className="bg-slate-700 border-slate-600 text-slate-100 h-8 text-xs mt-1" />
+              </div>
+            </div>
+          )}
+
+          {newSale._useShipDate && (
+            <div className="bg-slate-900/50 rounded-lg p-3 border border-slate-700/50">
+              <Label className="text-xs text-purple-400 flex items-center gap-1"><Package className="w-3 h-3" />Projected Ship Date</Label>
+              <Input type="date" value={newSale.projected_ship_date} onChange={e => setNewSale(f => ({ ...f, projected_ship_date: e.target.value }))}
+                className="bg-slate-700 border-slate-600 text-slate-100 h-8 text-xs mt-1 max-w-xs" />
+            </div>
+          )}
+
+          <div className="flex gap-2 justify-end pt-2">
+            <Button variant="outline" onClick={resetForm} className="border-slate-600 text-slate-300 hover:bg-slate-800">Cancel</Button>
+            <Button onClick={handleCreate} disabled={!newSale.gecko_name.trim() || !newSale.reserve_price}
+              className="bg-amber-600 hover:bg-amber-500 text-white disabled:opacity-50">
+              <Plus className="w-4 h-4 mr-1.5" />Create Reserve
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Pending sales list */}
+      {pendingSales.length === 0 && !creating ? (
+        <div className="text-center py-10">
+          <Clock className="w-8 h-8 text-slate-500 mx-auto mb-2" />
+          <p className="text-slate-400">No pending sales.</p>
+          <p className="text-xs text-slate-500 mt-1">Create a reserve when a buyer pays a deposit or commits to a purchase.</p>
+        </div>
+      ) : (
+        <div className="space-y-3">
+          {pendingSales.map(sale => (
+            <PendingSaleCard
+              key={sale.id}
+              sale={sale}
+              onUpdate={handleUpdate}
+              onComplete={handleComplete}
+              onCancel={handleCancel}
+              onDelete={handleDelete}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 // ---------------------------------------------------------------------------
 // Market Analytics — enterprise-gated tab with comprehensive mock data
@@ -452,9 +1044,11 @@ export default function MarketplaceSalesStats() {
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
   const [soldGeckos, setSoldGeckos] = useState([]);
+  const [userGeckos, setUserGeckos] = useState([]);
   const [manualSales, setManualSales] = useState([]);
   const [priceOverrides, setPriceOverrides] = useState({});
   const [costs, setCosts] = useState([]);
+  const [pendingSales, setPendingSales] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
@@ -482,6 +1076,7 @@ export default function MarketplaceSalesStats() {
         setUser(currentUser);
 
         const allGeckos = await Gecko.filter({ created_by: currentUser.email });
+        setUserGeckos(allGeckos);
         // Only real sold geckos — exclude fake records created by old manual-sale flow
         setSoldGeckos(allGeckos.filter(g =>
           ((g.archived && g.archive_reason === 'sold') || g.status === 'Sold') &&
@@ -517,6 +1112,12 @@ export default function MarketplaceSalesStats() {
         // Separate manual sales (category prefixed with 'sale:') from expense costs
         setManualSales(dbCosts.filter(c => c.category?.startsWith('sale:')));
         setCosts(dbCosts.filter(c => !c.category?.startsWith('sale:')));
+
+        // Load pending sales
+        try {
+          const ps = await PendingSale.filter({ user_email: currentUser.email, status: 'pending' }, '-created_date');
+          setPendingSales(ps);
+        } catch (e) { console.error('Failed to load pending sales:', e); }
       } catch (error) {
         console.error('Failed to load stats:', error);
       } finally {
@@ -600,8 +1201,9 @@ export default function MarketplaceSalesStats() {
         });
       }
 
-      // Refresh sold geckos list
+      // Refresh geckos lists
       const allGeckos = await Gecko.filter({ created_by: user.email });
+      setUserGeckos(allGeckos);
       setSoldGeckos(allGeckos.filter(g => (g.archived && g.archive_reason === 'sold') || g.status === 'Sold'));
     } catch (error) {
       console.error('Failed to add geckos:', error);
@@ -715,7 +1317,7 @@ export default function MarketplaceSalesStats() {
               <div>
                 <Label className="text-slate-300 text-sm mb-1 block">Default Tab</Label>
                 <div className="flex gap-1">
-                  {[['revenue', 'Revenue'], ['costs', 'Costs']].map(([val, lbl]) => (
+                  {[['revenue', 'Revenue'], ['pending', 'Pending'], ['costs', 'Costs']].map(([val, lbl]) => (
                     <button
                       key={val}
                       onClick={() => setStatsPrefs({ defaultTab: val })}
@@ -751,9 +1353,10 @@ export default function MarketplaceSalesStats() {
 
       <div className="max-w-5xl mx-auto px-4 md:px-8 py-6 space-y-6">
 
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           {[
             { label: 'Total Revenue', value: `${statsPrefs.currency}${totalRevenue.toFixed(2)}`, sub: `${soldGeckos.length} sold${manualSales.length ? ` + ${manualSales.length} manual` : ''}`, color: 'text-emerald-400', Icon: DollarSign },
+            { label: 'Pending', value: `${statsPrefs.currency}${pendingSales.reduce((s, p) => s + Number(p.reserve_price || 0), 0).toFixed(2)}`, sub: `${pendingSales.length} reserve${pendingSales.length !== 1 ? 's' : ''}`, color: 'text-amber-400', Icon: Clock },
             { label: 'YTD Revenue', value: `${statsPrefs.currency}${ytdRevenue.toFixed(2)}`, sub: 'Year to date', color: 'text-blue-400', Icon: TrendingUp },
             { label: 'Total Costs', value: `${statsPrefs.currency}${totalCosts.toFixed(2)}`, sub: `${costs.length} entries`, color: 'text-orange-400', Icon: DollarSign },
             { label: 'Net Profit', value: `${statsPrefs.currency}${netProfit.toFixed(2)}`, sub: 'All time', color: netProfit >= 0 ? 'text-emerald-400' : 'text-red-400', Icon: TrendingUp },
@@ -774,8 +1377,12 @@ export default function MarketplaceSalesStats() {
 
         <div className="bg-emerald-950/30 border border-emerald-900/40 rounded-xl p-4 md:p-6">
           <Tabs defaultValue={statsPrefs.defaultTab}>
-            <TabsList className="flex w-full max-w-md mx-auto bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1 mb-6">
+            <TabsList className="flex w-full max-w-xl mx-auto bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1 mb-6">
               <TabsTrigger value="revenue" className={tabTriggerClass}>Revenue</TabsTrigger>
+              <TabsTrigger value="pending" className={tabTriggerClass}>
+                <Clock className="w-3.5 h-3.5 mr-1" />
+                Pending{pendingSales.length > 0 && ` (${pendingSales.length})`}
+              </TabsTrigger>
               <TabsTrigger value="costs" className={tabTriggerClass}>Costs</TabsTrigger>
               <TabsTrigger value="analytics" className={tabTriggerClass}>
                 <Globe className="w-3.5 h-3.5 mr-1" />
@@ -939,6 +1546,28 @@ export default function MarketplaceSalesStats() {
                   ))}
                 </div>
               )}
+            </TabsContent>
+
+            <TabsContent value="pending" className="space-y-4">
+              <PendingSalesTab
+                user={user}
+                pendingSales={pendingSales}
+                setPendingSales={setPendingSales}
+                allGeckos={userGeckos}
+                onCompleteSale={(sale, costRecord) => {
+                  setManualSales(prev => [costRecord, ...prev]);
+                  if (sale.gecko_id) {
+                    setSoldGeckos(prev => [...prev, {
+                      id: sale.gecko_id,
+                      name: sale.gecko_name,
+                      asking_price: sale.reserve_price,
+                      archived: true,
+                      archive_reason: 'sold',
+                      archived_date: new Date().toISOString().split('T')[0],
+                    }]);
+                  }
+                }}
+              />
             </TabsContent>
 
             <TabsContent value="costs" className="space-y-5">
