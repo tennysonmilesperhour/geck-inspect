@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import MorphPriceIndex from '@/components/innovations/MorphPriceIndex';
 import { Gecko, User } from '@/entities/all';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -709,6 +710,14 @@ export default function MarketplaceSellPage() {
                 className="bg-slate-950 border-slate-700 text-slate-100"
               />
             </div>
+
+            {/* Price intelligence — shows comparable sale prices */}
+            {editingGecko?.morphs_traits && (
+              <MorphPriceIndex
+                morph={editingGecko.morphs_traits.split(',')[0]?.trim() || editingGecko.morph_tags?.[0]}
+                sellerPrice={formData.asking_price ? parseFloat(formData.asking_price) : null}
+              />
+            )}
           </div>
           <DialogFooter>
             <Button
