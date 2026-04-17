@@ -403,6 +403,26 @@ export default function AnalyticsDashboard() {
       .sort((a, b) => b.events - a.events)
       .slice(0, 10);
 
+    // ------------------------------------------------------------------
+    // Features tab: event_name frequency. page_view is the most common
+    // event by design, so the chart/table are more useful when we split
+    // it out — "real" feature usage lives in the non-page_view rows.
+    // ------------------------------------------------------------------
+    const eventNameAgg = {};
+    for (const e of eventsInWindow) {
+      const name = e.event_name || '(unnamed)';
+      if (!eventNameAgg[name]) {
+        eventNameAgg[name] = { name, count: 0, users: new Set() };
+      }
+      eventNameAgg[name].count += 1;
+      if (e.user_email) eventNameAgg[name].users.add(e.user_email);
+    }
+    const eventBreakdown = Object.values(eventNameAgg)
+      .map((r) => ({ name: r.name, count: r.count, users: r.users.size }))
+      .sort((a, b) => b.count - a.count);
+    const featureEvents = eventBreakdown.filter((r) => r.name !== 'page_view');
+    const pageViewCount = eventBreakdown.find((r) => r.name === 'page_view')?.count || 0;
+
     return {
       kpi: {
         users: kUsers,
@@ -433,6 +453,8 @@ export default function AnalyticsDashboard() {
       totalSessionsDelta,
       dauSeries,
       topPages,
+      featureEvents,
+      pageViewCount,
     };
   }, [data, period]);
 
@@ -465,6 +487,8 @@ export default function AnalyticsDashboard() {
     totalSessionsDelta,
     dauSeries,
     topPages,
+    featureEvents,
+    pageViewCount,
   } = computed;
 
   return (
@@ -852,11 +876,98 @@ export default function AnalyticsDashboard() {
         </TabsContent>
 
         <TabsContent value="features" className="space-y-6 mt-4">
-          <Card className="bg-slate-900 border-slate-800">
-            <CardContent className="p-10 text-center text-sm text-slate-500">
-              Feature usage coming soon — event frequency pulled from telemetry.
-            </CardContent>
-          </Card>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="bg-slate-900 border-slate-800">
+              <CardContent className="p-5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Page views</p>
+                <p className="text-3xl font-bold text-white mt-1.5">{pageViewCount.toLocaleString()}</p>
+                <p className="text-xs text-slate-500 mt-1">page_view events in window</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-slate-900 border-slate-800">
+              <CardContent className="p-5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Feature events</p>
+                <p className="text-3xl font-bold text-white mt-1.5">
+                  {featureEvents.reduce((s, r) => s + r.count, 0).toLocaleString()}
+                </p>
+                <p className="text-xs text-slate-500 mt-1">all non-page_view events</p>
+              </CardContent>
+            </Card>
+            <Card className="bg-slate-900 border-slate-800">
+              <CardContent className="p-5">
+                <p className="text-xs font-semibold uppercase tracking-wider text-slate-400">Distinct features</p>
+                <p className="text-3xl font-bold text-white mt-1.5">{featureEvents.length.toLocaleString()}</p>
+                <p className="text-xs text-slate-500 mt-1">unique event names tracked</p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {featureEvents.length === 0 ? (
+            <Card className="bg-slate-900 border-slate-800">
+              <CardContent className="p-10 text-center text-sm text-slate-500">
+                No feature events recorded yet. Call <code className="text-slate-300">trackEvent(name, props)</code> from
+                user flows to see them here.
+              </CardContent>
+            </Card>
+          ) : (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <ChartCard
+                title="Top feature events"
+                icon={GitBranch}
+                subtitle={`Top ${Math.min(12, featureEvents.length)} event names by volume`}
+              >
+                <ResponsiveContainer width="100%" height={Math.max(260, featureEvents.slice(0, 12).length * 28)}>
+                  <BarChart data={featureEvents.slice(0, 12)} layout="vertical">
+                    <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" horizontal={false} />
+                    <XAxis type="number" stroke="#64748b" fontSize={10} tickLine={false} allowDecimals={false} />
+                    <YAxis
+                      type="category"
+                      dataKey="name"
+                      stroke="#94a3b8"
+                      fontSize={11}
+                      tickLine={false}
+                      width={140}
+                    />
+                    <Tooltip contentStyle={CHART_TOOLTIP_STYLE} />
+                    <Bar dataKey="count" fill={PALETTE.purple} radius={[0, 4, 4, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </ChartCard>
+
+              <Card className="bg-slate-900 border-slate-800">
+                <CardHeader className="pb-2">
+                  <CardTitle className="text-slate-100 text-base flex items-center gap-2">
+                    <Activity className="w-4 h-4 text-slate-400" />
+                    Event breakdown
+                  </CardTitle>
+                  <p className="text-xs text-slate-500">
+                    Per-event totals with unique-user reach
+                  </p>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-1.5 max-h-[340px] overflow-y-auto pr-1">
+                    {featureEvents.map((r, i) => (
+                      <div
+                        key={r.name}
+                        className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-800/40 px-4 py-2"
+                      >
+                        <span className="text-xs font-bold text-slate-500 w-5">#{i + 1}</span>
+                        <p className="flex-1 min-w-0 text-sm font-medium text-slate-200 truncate">
+                          {r.name}
+                        </p>
+                        <span className="text-xs text-slate-400 shrink-0">
+                          {r.count.toLocaleString()} events
+                        </span>
+                        <span className="text-xs text-slate-500 shrink-0">
+                          {r.users.toLocaleString()} users
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="errors" className="space-y-6 mt-4">
