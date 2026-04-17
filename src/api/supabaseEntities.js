@@ -83,6 +83,8 @@ export const TABLE_MAP = {
   BreederReview: 'breeder_reviews',
   // Shipping — Zero's Geckos integration
   ShippingOrder: 'shipping_orders',
+  // Pending Sales — reserve price system
+  PendingSale: 'pending_sales',
 };
 
 function parseSort(sort) {
@@ -286,3 +288,7 @@ export const QuestionVote = createEntityClient('QuestionVote');
 // P8 — Breeder Storefront
 export const BreederProfile = createEntityClient('BreederProfile');
 export const BreederReview = createEntityClient('BreederReview');
+// Shipping — Zero's Geckos integration
+export const ShippingOrder = createEntityClient('ShippingOrder');
+// Pending Sales — reserve price system
+export const PendingSale = createEntityClient('PendingSale');
