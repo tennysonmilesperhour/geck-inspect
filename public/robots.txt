@@ -84,3 +84,9 @@ Allow: /
 
 # Sitemap
 Sitemap: https://geckinspect.com/sitemap.xml
+
+# IndexNow key file (Bing / Yandex / Seznam push-indexing protocol).
+# Geck Inspect can notify search engines of URL changes by POSTing
+# to https://api.indexnow.org/indexnow?url=<url>&key=<this key>.
+# The key file below must remain publicly fetchable at the exact path.
+# IndexNow key: c9f2d53b0ac96f2ef77485a2b5d9b280
