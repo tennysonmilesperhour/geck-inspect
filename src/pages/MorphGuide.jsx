@@ -394,6 +394,45 @@ export default function MorphGuidePage() {
         </section>
 
         <section className="max-w-6xl mx-auto px-4 md:px-6 py-10 space-y-6">
+          {/* Browse-by block — real <Link>s to the taxonomy hubs so
+              crawlers can follow every branch of the morph taxonomy
+              even without running the client-side filter state. Each
+              linked destination is an indexable hub page with its own
+              CollectionPage + ItemList + BreadcrumbList JSON-LD. */}
+          <nav aria-label="Browse morphs by category and inheritance" className="rounded-2xl border border-slate-800 bg-slate-900/40 p-5">
+            <div className="text-xs font-semibold uppercase tracking-wider text-emerald-300 mb-3">Browse the morph guide</div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">By category</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {MORPH_CATEGORIES.map((c) => (
+                    <Link
+                      key={c.id}
+                      to={`/MorphGuide/category/${c.id}`}
+                      className="rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 hover:bg-slate-800 px-3 py-1 text-xs text-slate-300 hover:text-emerald-200 transition-colors"
+                    >
+                      {c.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+              <div>
+                <div className="text-[11px] font-semibold uppercase tracking-wider text-slate-400 mb-2">By inheritance</div>
+                <div className="flex flex-wrap gap-1.5">
+                  {Object.values(INHERITANCE).map((i) => (
+                    <Link
+                      key={i.id}
+                      to={`/MorphGuide/inheritance/${i.id}`}
+                      className="rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 hover:bg-slate-800 px-3 py-1 text-xs text-slate-300 hover:text-emerald-200 transition-colors"
+                    >
+                      {i.label}
+                    </Link>
+                  ))}
+                </div>
+              </div>
+            </div>
+          </nav>
+
           {/* Category tabs */}
           <div className="flex flex-wrap gap-2">
             <button

@@ -582,20 +582,54 @@ export default function Home() {
           </div>
         </section>
 
-        {/* Footer */}
+        {/* Footer — dense internal linking to every top-level public
+            surface. Crawlers pulling just the homepage now reach every
+            programmatic hub and content page within one hop. */}
         <footer className="relative z-10 border-t border-slate-800/50 mt-12">
-          <div className="max-w-6xl mx-auto px-6 py-10 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
-            <div className="flex items-center gap-3">
-              <img src={LOGO_URL} alt="Geck Inspect" className="h-6 w-6 rounded" />
-              <span>© {new Date().getFullYear()} Geck Inspect · geckOS</span>
+          <div className="max-w-6xl mx-auto px-6 py-12 grid grid-cols-2 md:grid-cols-5 gap-8 text-sm">
+            <div className="col-span-2">
+              <div className="flex items-center gap-3">
+                <img src={LOGO_URL} alt="Geck Inspect" className="h-8 w-8 rounded-lg" />
+                <span className="font-bold text-slate-100">Geck Inspect</span>
+              </div>
+              <p className="text-slate-500 mt-3 leading-relaxed max-w-md">
+                The professional platform for crested gecko (<em>Correlophus ciliatus</em>) breeders and keepers.
+              </p>
             </div>
-            <div className="flex items-center gap-6">
-              <Link to={createPageUrl('PrivacyPolicy')} className="hover:text-slate-300">
-                Privacy
-              </Link>
-              <Link to={createPageUrl('AuthPortal')} className="hover:text-slate-300">
-                Sign in
-              </Link>
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Reference</div>
+              <ul className="space-y-2 text-slate-400">
+                <li><Link to="/MorphGuide" className="hover:text-white">Morph Guide</Link></li>
+                <li><Link to="/CareGuide" className="hover:text-white">Care Guide</Link></li>
+                <li><Link to="/GeneticsGuide" className="hover:text-white">Genetics Guide</Link></li>
+                <li><Link to="/GeneticCalculatorTool" className="hover:text-white">Genetics Calculator</Link></li>
+              </ul>
+            </div>
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Browse morphs</div>
+              <ul className="space-y-2 text-slate-400">
+                <li><Link to="/MorphGuide/category/pattern" className="hover:text-white">Pattern morphs</Link></li>
+                <li><Link to="/MorphGuide/category/base" className="hover:text-white">Base colors</Link></li>
+                <li><Link to="/MorphGuide/inheritance/recessive" className="hover:text-white">Recessive morphs</Link></li>
+                <li><Link to="/MorphGuide/inheritance/co-dominant" className="hover:text-white">Co-dominant morphs</Link></li>
+                <li><Link to="/MorphGuide/inheritance/polygenic" className="hover:text-white">Polygenic morphs</Link></li>
+              </ul>
+            </div>
+            <div>
+              <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Company</div>
+              <ul className="space-y-2 text-slate-400">
+                <li><Link to="/About" className="hover:text-white">About</Link></li>
+                <li><Link to="/Contact" className="hover:text-white">Contact</Link></li>
+                <li><Link to="/Terms" className="hover:text-white">Terms</Link></li>
+                <li><Link to="/PrivacyPolicy" className="hover:text-white">Privacy</Link></li>
+                <li><Link to={createPageUrl('AuthPortal')} className="hover:text-white">Sign in</Link></li>
+              </ul>
+            </div>
+          </div>
+          <div className="border-t border-slate-800/50">
+            <div className="max-w-6xl mx-auto px-6 py-5 text-xs text-slate-500 flex flex-col md:flex-row items-center justify-between gap-2">
+              <span>© {new Date().getFullYear()} Geck Inspect · geckOS</span>
+              <span>Built for the crested gecko hobby.</span>
             </div>
           </div>
         </footer>
