@@ -228,7 +228,6 @@ function renderMarkdown(ctx) {
     lines.push(`Most recent research run: ${latestResearch.ranAt}`);
     lines.push('');
     lines.push(`- Reddit items:        ${latestResearch.signals.reddit ?? 0}`);
-    lines.push(`- MorphMarket items:   ${latestResearch.signals.morphmarket ?? 0}`);
     lines.push(`- Google autocomplete: ${latestResearch.signals.googleAc ?? 0}`);
     lines.push(`- Pangea forum:        ${latestResearch.signals.pangea ?? 0}`);
     lines.push(`- Bluesky:             ${latestResearch.signals.bluesky ?? 0}`);
