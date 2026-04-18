@@ -9,7 +9,7 @@
  * If Pangea changes their forum structure or goes offline, this module
  * returns an empty set and the research agent continues without it.
  */
-const UA = 'geckinspect-blog-pipeline/1.0 (+https://geckinspect.com)';
+const UA = 'Mozilla/5.0 (compatible; geckinspect-blog-pipeline/1.0; +https://geckinspect.com)';
 
 // Pangea's crested gecko sub-forum index — title + teaser per thread.
 const FORUM_URL = 'https://www.pangeareptile.com/forums/forums/crested-geckos.4/';

@@ -227,10 +227,14 @@ function renderMarkdown(ctx) {
   } else {
     lines.push(`Most recent research run: ${latestResearch.ranAt}`);
     lines.push('');
-    lines.push(`- Reddit items:       ${latestResearch.signals.reddit}`);
-    lines.push(`- MorphMarket items:  ${latestResearch.signals.morphmarket}`);
-    lines.push(`- Google autocomplete: ${latestResearch.signals.googleAc}`);
-    lines.push(`- Pangea forum:       ${latestResearch.signals.pangea}`);
+    lines.push(`- Reddit items:        ${latestResearch.signals.reddit ?? 0}`);
+    lines.push(`- MorphMarket items:   ${latestResearch.signals.morphmarket ?? 0}`);
+    lines.push(`- Google autocomplete: ${latestResearch.signals.googleAc ?? 0}`);
+    lines.push(`- Pangea forum:        ${latestResearch.signals.pangea ?? 0}`);
+    lines.push(`- Bluesky:             ${latestResearch.signals.bluesky ?? 0}`);
+    lines.push(`- Google Trends:       ${latestResearch.signals.googleTrends ?? 0}`);
+    lines.push(`- YouTube:             ${latestResearch.signals.youtube ?? 0}`);
+    lines.push(`- Breeder blogs:       ${latestResearch.signals.breederBlogs ?? 0}`);
     if (latestResearch.signals.errors && latestResearch.signals.errors.length > 0) {
       lines.push('');
       lines.push('Source errors to investigate:');

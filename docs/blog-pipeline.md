@@ -18,7 +18,7 @@ Without `ANTHROPIC_API_KEY`, the whole pipeline no-ops (the research + draft scr
 
 | Job            | Cron (UTC)          | What it does |
 |---|---|---|
-| `research`     | Mon/Wed/Fri 06:00   | Scrapes Reddit + MorphMarket + Google autocomplete + Pangea; uses Haiku 4.5 to score topics; appends 0-3 new topics to `docs/blog-queue.json`; commits. |
+| `research`     | Mon/Wed/Fri 06:00   | Scrapes Reddit + MorphMarket + Google autocomplete + Pangea forum + Bluesky + Google Trends + YouTube + breeder blog RSS (AC/LM/Pangea); uses Haiku 4.5 to score topics; appends 0-3 new topics to `docs/blog-queue.json`; commits. |
 | `draft`        | Mon/Wed/Fri 07:00   | Picks the highest-scored `new` topic; uses Sonnet 4.6 to write a full structured draft + self-critique; writes `content/blog-drafts/<slug>/`; opens a **draft PR** labelled `blog-draft`. |
 | `publish`      | on PR merge         | When a `blog-draft`-labelled PR merges, converts the draft markdown into a new `BLOG_POSTS` entry in `src/data/blog-posts.js`, deletes the draft dir, marks the queue entry `published`, commits to `main`. The regular `npm run build` step picks it up and regenerates sitemap + llms.txt + prerendered HTML + vercel.json rewrites. |
 | `weekly-report`| Monday 12:00        | Generates `docs/blog-reports/YYYY-Www.md` + commits; opens a GitHub Issue with the same content; emails the report to `BLOG_REPORT_EMAIL`. |
@@ -54,6 +54,10 @@ scripts/blog/lib/
   sources/morphmarket.mjs             — MorphMarket new-listings trait counter
   sources/google-ac.mjs               — Google autocomplete long-tail tree
   sources/pangea.mjs                  — Pangea crested-gecko forum index
+  sources/bluesky.mjs                 — Bluesky public search (no auth)
+  sources/google-trends.mjs           — Google Trends rising + top related
+  sources/youtube.mjs                 — YouTube search page (ytInitialData scrape)
+  sources/breeder-blogs.mjs           — AC Reptiles + LM Reptiles + Pangea blog RSS/Atom
 ```
 
 ## How to review a draft PR
@@ -123,10 +127,14 @@ The workflow runs are visible under **Actions → blog-pipeline**. Common failur
 
 ## Ethical + ToS notes
 
-- **Reddit:** public JSON endpoints, read-only, low volume (< 10 req/min). User-Agent identifies the bot. Compliant with Reddit's [public content policy](https://www.redditinc.com/policies/public-content-policy).
-- **MorphMarket:** fetches one category index page per run, no auth, no listing-detail crawling. User-Agent identifies the bot. If MorphMarket ops asks us to stop, contact email is in the UA string.
+- **Reddit:** public JSON endpoints, read-only, low volume (< 10 req/min). UA is a `Mozilla/5.0 (compatible; …)` string that includes the bot name + contact URL, matching the crawler convention Google, Bing, and Facebook use. Compliant with Reddit's [public content policy](https://www.redditinc.com/policies/public-content-policy).
+- **MorphMarket:** fetches one category index page per run, no auth, no listing-detail crawling. UA identifies the bot; contact email is in the UA string.
 - **Google autocomplete:** public suggest API, ~10 queries per run.
 - **Pangea Reptile forum:** public forum index, no login, one page per run.
+- **Bluesky:** public `searchPosts` XRPC endpoint, no auth, ~7 queries per run, well under the 3000/5-min public limit.
+- **Google Trends:** two undocumented-but-public Trends RPCs (explore + relatedsearches), ~8 calls per run. Response shape can drift — source returns empty on parse failure.
+- **YouTube:** scrapes the public search results page with a realistic browser UA and parses the embedded `ytInitialData` blob. Fragile by design; on failure we skip and move on.
+- **Breeder blogs:** Atom/RSS feeds published by LM Reptiles, AC Reptiles, and the Pangea blog. Standard WordPress/Shopify feed endpoints — no scraping, just the feed.
 - **Facebook / Discord:** deliberately skipped. Facebook groups + Discord servers are signal-rich but the ToS story is messy; not worth automating until we have explicit permission from each source.
 
 If any source operator asks us to stop scraping, remove the relevant source file and the research agent will proceed with the others.

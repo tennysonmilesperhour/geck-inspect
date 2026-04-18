@@ -3,9 +3,10 @@
  * Research pass — runs Monday/Wednesday/Friday at 06:00 UTC.
  *
  * Flow:
- *   1. Collect raw signals from Reddit, MorphMarket, Google autocomplete, Pangea.
+ *   1. Collect raw signals from Reddit, MorphMarket, Google autocomplete,
+ *      Pangea forum, Bluesky, Google Trends, YouTube, breeder blog feeds.
  *   2. Pass the full signal dump plus the list of already-published slugs to
- *      Haiku 4.5, which emits up to 3 scored topics via a strict tool schema.
+ *      Haiku 4.5, which emits up to 3 scored topics via a tool schema.
  *   3. Merge new topics into docs/blog-queue.json (dedupe by slug), save.
  *   4. Commit the updated queue so the draft pass can pick it up.
  *
@@ -27,6 +28,10 @@ import { collectRedditSignals } from './lib/sources/reddit.mjs';
 import { collectMorphMarketSignals } from './lib/sources/morphmarket.mjs';
 import { collectGoogleAutocomplete } from './lib/sources/google-ac.mjs';
 import { collectPangeaSignals } from './lib/sources/pangea.mjs';
+import { collectBlueskySignals } from './lib/sources/bluesky.mjs';
+import { collectGoogleTrendsSignals } from './lib/sources/google-trends.mjs';
+import { collectYouTubeSignals } from './lib/sources/youtube.mjs';
+import { collectBreederBlogSignals } from './lib/sources/breeder-blogs.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -167,13 +172,17 @@ async function main() {
 
   // 1. Gather signals (all in parallel; they're independent).
   console.log('[research] Collecting signals...');
-  const [reddit, morphmarket, googleAc, pangea] = await Promise.all([
+  const [reddit, morphmarket, googleAc, pangea, bluesky, googleTrends, youtube, breederBlogs] = await Promise.all([
     collectRedditSignals().catch((e) => ({ items: [], errors: [e.message] })),
     collectMorphMarketSignals().catch((e) => ({ items: [], error: e.message })),
     collectGoogleAutocomplete().catch((e) => ({ items: [], error: e.message })),
     collectPangeaSignals().catch((e) => ({ items: [], error: e.message })),
+    collectBlueskySignals().catch((e) => ({ items: [], errors: [e.message] })),
+    collectGoogleTrendsSignals().catch((e) => ({ items: [], errors: [e.message] })),
+    collectYouTubeSignals().catch((e) => ({ items: [], errors: [e.message] })),
+    collectBreederBlogSignals().catch((e) => ({ items: [], errors: [e.message] })),
   ]);
-  console.log(`[research] Signals: reddit=${reddit.items.length}, morphmarket=${morphmarket.items.length}, google-ac=${googleAc.items.length}, pangea=${pangea.items.length}`);
+  console.log(`[research] Signals: reddit=${reddit.items.length}, morphmarket=${morphmarket.items.length}, google-ac=${googleAc.items.length}, pangea=${pangea.items.length}, bluesky=${bluesky.items.length}, google-trends=${googleTrends.items.length}, youtube=${youtube.items.length}, breeder-blogs=${breederBlogs.items.length}`);
 
   // 2. Prepare scorer input.
   const queue = readQueue();
@@ -196,6 +205,18 @@ async function main() {
     '',
     `Pangea forum (${pangea.items.length} thread titles):`,
     JSON.stringify(pangea.items.slice(0, 30), null, 2),
+    '',
+    `Bluesky (${bluesky.items.length} posts, top-engagement first):`,
+    JSON.stringify(bluesky.items.slice(0, 40), null, 2),
+    '',
+    `Google Trends (${googleTrends.items.length} rising + top related queries):`,
+    JSON.stringify(googleTrends.items, null, 2),
+    '',
+    `YouTube (${youtube.items.length} recent videos):`,
+    JSON.stringify(youtube.items.slice(0, 30), null, 2),
+    '',
+    `Breeder blogs (${breederBlogs.items.length} recent posts — AC Reptiles, LM Reptiles, Pangea):`,
+    JSON.stringify(breederBlogs.items.slice(0, 20), null, 2),
   ].join('\n');
 
   // 3. Call the scorer.
@@ -273,11 +294,19 @@ async function main() {
       morphmarket: morphmarket.items.length,
       googleAc: googleAc.items.length,
       pangea: pangea.items.length,
+      bluesky: bluesky.items.length,
+      googleTrends: googleTrends.items.length,
+      youtube: youtube.items.length,
+      breederBlogs: breederBlogs.items.length,
       errors: [
         ...(reddit.errors || []),
         ...(morphmarket.error ? [`morphmarket: ${morphmarket.error}`] : []),
         ...(googleAc.error ? [`google-ac: ${googleAc.error}`] : []),
         ...(pangea.error ? [`pangea: ${pangea.error}`] : []),
+        ...(bluesky.errors || []),
+        ...(googleTrends.errors || []),
+        ...(youtube.errors || []),
+        ...(breederBlogs.errors || []),
       ],
     },
     costUsd: result.cost.totalUsd,

@@ -16,7 +16,7 @@
  *   - We don't need precise counts — order-of-magnitude is enough to
  *     inform topic scoring.
  */
-const UA = 'geckinspect-blog-pipeline/1.0 (+https://geckinspect.com)';
+const UA = 'Mozilla/5.0 (compatible; geckinspect-blog-pipeline/1.0; +https://geckinspect.com)';
 
 const LISTING_URL = 'https://www.morphmarket.com/us/c/reptiles/lizards/crested-geckos?state=for_sale&ordering=-posted_date';
 

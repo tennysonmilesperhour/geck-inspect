@@ -9,7 +9,7 @@
  * Output shape (matches the research agent's expected "evidence" schema):
  *   [{ source: 'reddit', url, title, snippet, score, commentCount, observedAt }]
  */
-const UA = 'geckinspect-blog-pipeline/1.0 (+https://geckinspect.com)';
+const UA = 'Mozilla/5.0 (compatible; geckinspect-blog-pipeline/1.0; +https://geckinspect.com)';
 
 const SUBREDDITS = [
   'CrestedGecko',
