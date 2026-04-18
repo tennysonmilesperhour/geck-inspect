@@ -4,19 +4,31 @@
 // visual pattern/morph labels from genetically proven/named traits and from
 // descriptive modifiers that combine orthogonally.
 //
+// Inheritance classifications follow the Foundation Genetics consensus
+// (Lil Monsters Reptiles + Geckological, 2020–2026). Canonical vocabulary
+// comes from `crested-gecko-app`:
+//   - "incomplete dominant" (NOT "codominant") for Lilly White, Cappuccino,
+//     Sable, Whiteout, Empty Back, Softscale, Fire.
+//   - "unconfirmed" for traits whose inheritance has not been breeding-proven
+//     (Marbling, Furry, Moonglow).
+// If you touch a classification here, mirror the change in
+// `crested-gecko-app/reference/ai-training-context.md` if relevant.
+//
 // Editing guidance: keep ids snake_case, keep lists sorted within a category,
 // and prefer adding new entries over mutating existing ids (ids are persisted
 // in the `gecko_images` table and used for label stability across versions).
 
-export const TAXONOMY_VERSION = '2026.04.17';
+export const TAXONOMY_VERSION = '2026.04.18';
 
 /**
  * Primary morph = the dominant visual pattern class.
- * "inheritance" is our best-current-community-understanding, not law.
- *   polygenic    = selectively bred, not a single allele
- *   codominant   = one copy has a visible effect, two copies is super form
- *   recessive    = only visible in homozygous animals
- *   line-bred    = named line (e.g. specific breeder), genetics unproven
+ * "inheritance" follows the Foundation Genetics consensus.
+ *   fixed_dominant      = present in every animal (e.g. Tiger); cannot be bred out
+ *   dominant            = one copy or two copies present the same phenotype
+ *   incomplete_dominant = one copy visible, two copies is a distinct super form
+ *   recessive           = only visible in homozygous animals
+ *   polygenic           = selectively bred, not a single allele
+ *   unconfirmed         = inheritance not breeding-proven yet
  */
 export const PRIMARY_MORPHS = [
   { id: 'patternless',        label: 'Patternless',            inheritance: 'polygenic',   notes: 'Solid dorsal, no flame/pinstripe/harlequin. Can still have fringe / crests.' },
@@ -45,22 +57,38 @@ export const PRIMARY_MORPHS = [
 ];
 
 /**
- * Named genetic traits — heritable, proven or proto, travel orthogonal to the
- * primary-morph pattern. Keep ids stable; they become training labels.
+ * Named genetic traits — heritable, proven or unconfirmed, travel orthogonal to
+ * the primary-morph pattern. Keep ids stable; they become training labels.
+ *
+ * `canonical_trait_id` points at the matching trait in `crested-gecko-app`
+ * (Foundation Genetics canonical form). Use that when you need inheritance,
+ * source citations, or Punnett math — this file is for UI labels only.
  */
 export const GENETIC_TRAITS = [
-  { id: 'lily_white',       label: 'Lily White',        inheritance: 'codominant',           notes: 'Kessler line. Lethal in super form. Heterozygous animals show characteristic white patterning.' },
-  { id: 'axanthic_vca',     label: 'Axanthic (VCA)',    inheritance: 'recessive',            notes: 'Vivid Creature Alternatives line. Removes yellow/red pigment; grey/black animal.' },
-  { id: 'axanthic_tsm',     label: 'Axanthic (TSM)',    inheritance: 'recessive',            notes: 'Different axanthic line; not compatible with VCA in some tests.' },
-  { id: 'cappuccino',       label: 'Cappuccino',        inheritance: 'codominant (proto)',   notes: 'Characteristic solid mocha/brown look, reduced pattern; super form theorized.' },
-  { id: 'frappuccino',      label: 'Frappuccino',       inheritance: 'proto',                notes: 'Related to cappuccino; often cappuccino + lily white expression.' },
-  { id: 'moonglow',         label: 'Moonglow',          inheritance: 'codominant (proto)',   notes: 'High-contrast white overlay, named line.' },
-  { id: 'soft_scale',       label: 'Soft Scale',        inheritance: 'recessive (proto)',    notes: 'Reduced/smoothed scalation, silky appearance.' },
-  { id: 'whiteout',         label: 'Whiteout',          inheritance: 'combo phenotype',      notes: 'Combo expression (often cappuccino + lily white). Near-white animal.' },
-  { id: 'empty_back',       label: 'Empty Back',        inheritance: 'phenotype',            notes: 'Dorsum nearly pattern-free despite pattern genes; often in lily white combos.' },
-  { id: 'white_wall',       label: 'White Wall',        inheritance: 'phenotype',            notes: 'Solid white flank / wall of white; lily white combo expression.' },
-  { id: 'hypo',             label: 'Hypo',              inheritance: 'proto',                notes: 'Reduced dark pigment; washed/pastel look.' },
-  { id: 'melanistic',       label: 'Melanistic',        inheritance: 'proto',                notes: 'Excess dark pigment, very dark animal.' },
+  { id: 'lily_white',       label: 'Lily White',        inheritance: 'incomplete_dominant',  canonical_trait_id: 'lilly_white',
+    notes: 'Foundation Genetics: incomplete dominant. Originated by Lilly Exotics (UK). Super Lilly White is LETHAL — never pair Lilly × Lilly. Canonical spelling is "Lilly White" (two Ls).' },
+  { id: 'axanthic_vca',     label: 'Axanthic (VCA)',    inheritance: 'recessive',            canonical_trait_id: 'axanthic',
+    notes: 'Simple recessive. Removes yellow/red pigment, retains melanin (not albinism). Proven by Altitude Exotics.' },
+  { id: 'axanthic_tsm',     label: 'Axanthic (TSM)',    inheritance: 'recessive',            canonical_trait_id: 'axanthic',
+    notes: 'Different axanthic line; cross-line compatibility unconfirmed in some tests.' },
+  { id: 'cappuccino',       label: 'Cappuccino',        inheritance: 'incomplete_dominant',  canonical_trait_id: 'cappuccino',
+    notes: 'Foundation Genetics: incomplete dominant (NOT codominant). Discovered by Reptile City Korea (Donald Hendrickson, ~2020). Super form = Super Cappuccino / Melanistic, with documented health concerns (reduced nostril size, breathing difficulty). Allelic with Sable and Highway.' },
+  { id: 'frappuccino',      label: 'Frappuccino',       inheritance: 'combo phenotype',
+    notes: 'Combo morph: Cappuccino + Lilly White. Not a single gene.' },
+  { id: 'moonglow',         label: 'Moonglow',          inheritance: 'unconfirmed',
+    notes: 'Informal / marketing term. Not a Foundation Genetics-proven trait. Use with caution and prefer listing proven traits (Lilly White, Hypo, Yellow Base, etc.) when present.' },
+  { id: 'soft_scale',       label: 'Soft Scale',        inheritance: 'incomplete_dominant',  canonical_trait_id: 'softscale',
+    notes: 'Foundation Genetics: incomplete dominant producing a matte finish and smoother scale texture. Super form is healthy with enhanced matte effect.' },
+  { id: 'whiteout',         label: 'Whiteout',          inheritance: 'incomplete_dominant',  canonical_trait_id: 'whiteout',
+    notes: 'Incomplete dominant, originated by AC Reptiles (Anthony Caponetto). Distinct locus from Lilly White. Super Whiteout is HEALTHY and freely breedable — strategic advantage over Lilly White for stacking white.' },
+  { id: 'empty_back',       label: 'Empty Back',        inheritance: 'incomplete_dominant',  canonical_trait_id: 'empty_back',
+    notes: 'Foundation Genetics: incomplete dominant. Clears dorsal pattern. Super form is healthy and further suppresses dorsal pattern.' },
+  { id: 'white_wall',       label: 'White Wall',        inheritance: 'phenotype',
+    notes: 'Solid white flank expression, commonly seen on Lilly White combos. Not an independent gene.' },
+  { id: 'hypo',             label: 'Hypo',              inheritance: 'dominant',             canonical_trait_id: 'hypo',
+    notes: 'Dominant trait that reduces melanin. Combines with Black Base → Lavender, Red Base → Pink, Yellow Base → Cream/C2.' },
+  { id: 'melanistic',       label: 'Melanistic',        inheritance: 'combo phenotype',      canonical_trait_id: 'cappuccino',
+    notes: 'Synonymous with Super Cappuccino — the homozygous form of Cappuccino. Has documented health concerns; breeding specifically for supers is not recommended.' },
 ];
 
 /**

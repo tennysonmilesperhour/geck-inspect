@@ -1,128 +1,79 @@
 import { useMemo } from 'react';
-import { Dna } from 'lucide-react';
+import { Dna, AlertTriangle } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import {
+  tagToGenotype,
+  predict,
+  getTrait,
+  TRAITS,
+} from 'crested-gecko-app';
 
-// Proven genetic traits — incomplete dominant (visual in single copy, super in double).
-// These are the only traits where Punnett-square math applies.
-const CO_DOM_TRAITS = new Set([
-  'Lilly White', 'Axanthic', 'Cappuccino', 'Soft Scale', 'Moonglow',
-  'Empty Back', 'White Wall',
-]);
+// Pick a representative Trait per locus for display labels. If a locus
+// houses multiple allelic traits (e.g. SABLE_COMPLEX), the first one
+// wins and the prediction's phenotype_label string already handles
+// compound / super labeling.
+const LOCUS_TO_TRAIT = (() => {
+  const m = new Map();
+  for (const t of TRAITS) if (!m.has(t.locus)) m.set(t.locus, t);
+  return m;
+})();
 
-// Polygenic / dominant / display traits — presence/absence only, no
-// Mendelian math. Kept in sync with MorphIDSelector categories.
-const DOM_TRAITS = new Set([
-  // Combo morphs
-  'Frappuccino', 'Super Cappuccino', 'Cappuccino Lilly White',
-  'Axanthic Lilly White', 'Axanthic Cappuccino',
-  'Soft Scale Lilly White', 'Soft Scale Cappuccino', 'Moonglow Lilly White',
-  // Base patterns
-  'Flame', 'Chevron Flame', 'Harlequin', 'Extreme Harlequin',
-  'Pinstripe', 'Full Pinstripe', 'Phantom Pinstripe',
-  'Tiger', 'Brindle', 'Extreme Brindle', 'Patternless',
-  'Bicolor', 'Tricolor', 'Phantom', 'Whiteout',
-  // Harlequin variants
-  'Red Harlequin', 'Extreme Red Harlequin', 'Yellow Harlequin',
-  'Cream Harlequin', 'Orange Harlequin', 'Halloween Harlequin',
-  // Pinstripe variants
-  'Partial Pinstripe', 'Dashed Pinstripe', 'Reverse Pinstripe',
-  'Quad Stripe', 'Super Stripe',
-  // Base colors
-  'Red Base', 'Dark Red Base', 'Orange Base', 'Yellow Base', 'Bright Yellow Base',
-  'Cream Base', 'Pink Base', 'Olive Base', 'Dark Olive Base', 'Green Base',
-  'Tan Base', 'Brown Base', 'Dark Brown Base', 'Chocolate Base',
-  'Buckskin Base', 'Lavender Base', 'Near Black Base',
-  // Color traits
-  'Hypo', 'Translucent', 'High White', 'High Contrast',
-  // Dalmatian & spots
-  'Dalmatian', 'Super Dalmatian', 'Ink Spots', 'Oil Spots',
-  'Red Spots', 'Confetti', 'Spots on Head', 'Dalmatian Tail',
-  // Structure
-  'Furred', 'Crowned',
-  // Body markings
-  'White Fringe', 'Kneecaps', 'Portholes', 'Drippy Dorsal',
-  'White Tipped Crests', 'Colored Crests', 'Side Stripe',
-  'Tiger Striping', 'Banded', 'Broken Banding',
-  'Chevron Pattern', 'Diamond Pattern', 'Reticulated', 'Mottled', 'Speckled',
-  // Display state
-  'Fired Up', 'Fired Down', 'Full Tail', 'Tailless',
-]);
-
-// For co-dominant traits, if one parent has the "Super" version infer double copy
-function inferCopies(traitName, morphTags) {
-  const superName = `Super ${traitName}`;
-  if (morphTags.includes(superName)) return 2; // homozygous
-  if (morphTags.includes(traitName)) return 1;  // heterozygous
-  return 0;
+function tagsToAnimal(id, tags) {
+  // tagToGenotype returns Partial<AnimalGenotype>; predict() treats missing
+  // loci as wild-type, so the partial is runtime-safe. Cast to satisfy the
+  // stricter TS signature on the shared Animal type.
+  const partial = tagToGenotype(tags || []).genotype;
+  const genotype = /** @type {import('crested-gecko-app').AnimalGenotype} */ (partial);
+  return {
+    id,
+    species: 'correlophus_ciliatus',
+    genotype,
+    status: 'active',
+    is_breeder: true,
+    owner_id: id,
+    created_at: '',
+    updated_at: '',
+  };
 }
 
-function calcCoDomOutcomes(sireCopies, damCopies, traitName) {
-  // Punnett: S = single (visual), N = normal, SS = super/homozygous
-  const sireAlleles = sireCopies === 2 ? ['S', 'S'] : sireCopies === 1 ? ['S', 'N'] : ['N', 'N'];
-  const damAlleles  = damCopies  === 2 ? ['S', 'S'] : damCopies  === 1 ? ['S', 'N'] : ['N', 'N'];
-
-  const results = {};
-  for (const sa of sireAlleles) {
-    for (const da of damAlleles) {
-      const combo = [sa, da].sort().join('');
-      results[combo] = (results[combo] || 0) + 1;
-    }
+function dominanceBadge(trait) {
+  switch (trait?.dominance) {
+    case 'incomplete_dominant': return { label: 'Incomplete dominant', cls: 'bg-purple-700 text-xs' };
+    case 'codominant':          return { label: 'Co-dominant',          cls: 'bg-purple-700 text-xs' };
+    case 'dominant':            return { label: 'Dominant',             cls: 'bg-slate-600 text-xs' };
+    case 'fixed_dominant':      return { label: 'Fixed dominant',       cls: 'bg-slate-600 text-xs' };
+    case 'recessive':           return { label: 'Recessive',            cls: 'bg-emerald-800 text-xs' };
+    case 'polygenic':           return { label: 'Polygenic',            cls: 'bg-slate-600 text-xs' };
+    case 'unconfirmed':         return { label: 'Unconfirmed',          cls: 'bg-amber-700 text-xs' };
+    default:                    return { label: 'Trait',                cls: 'bg-slate-600 text-xs' };
   }
-  const total = 4;
-  const outcomes = [];
-  for (const [combo, count] of Object.entries(results)) {
-    const pct = Math.round((count / total) * 100);
-    if (combo === 'SS') outcomes.push({ label: `Super ${traitName}`, pct, type: 'super' });
-    else if (combo === 'SN') outcomes.push({ label: traitName, pct, type: 'visual' });
-    else outcomes.push({ label: `Normal (no ${traitName})`, pct, type: 'normal' });
-  }
-  return outcomes.filter(o => o.pct > 0);
 }
 
-function calcDomOutcome(sireHas, damHas, traitName) {
-  if (!sireHas && !damHas) return [];
-  const prob = sireHas && damHas ? 75 : 50;
-  return [
-    { label: traitName, pct: prob, type: 'visual' },
-    { label: `No ${traitName}`, pct: 100 - prob, type: 'normal' }
-  ];
+function outcomeType(label, trait) {
+  if (!label) return 'normal';
+  const lower = label.toLowerCase();
+  if (lower === 'wild-type' || lower.startsWith('no ')) return 'normal';
+  if (lower.startsWith('super ')) return 'super';
+  if (trait?.super_form_name && lower.includes(trait.super_form_name.toLowerCase())) return 'super';
+  return 'visual';
+}
+
+function severityClasses(severity) {
+  if (severity === 'critical') return 'bg-red-950/70 border-red-700 text-red-100';
+  if (severity === 'caution')  return 'bg-amber-950/70 border-amber-700 text-amber-100';
+  return 'bg-slate-800 border-slate-600 text-slate-200';
 }
 
 export default function GeneticCalculator({ sire, dam }) {
-  const results = useMemo(() => {
-    if (!sire || !dam) return [];
-    const sireTagSet = new Set(sire.morph_tags || []);
-    const damTagSet  = new Set(dam.morph_tags  || []);
-    const allTraits  = new Set([...sireTagSet, ...damTagSet]);
+  const prediction = useMemo(() => {
+    if (!sire || !dam) return null;
+    const sireTags = sire.morph_tags || [];
+    const damTags = dam.morph_tags || [];
+    if (sireTags.length === 0 && damTags.length === 0) return null;
 
-    const output = [];
-
-    // Co-dominant traits
-    for (const trait of CO_DOM_TRAITS) {
-      const superTrait = `Super ${trait}`;
-      if (!allTraits.has(trait) && !allTraits.has(superTrait)) continue;
-
-      // Skip "Super X" entries — we handle them via base trait
-      if (trait.startsWith('Super ')) continue;
-
-      const sireCopies = inferCopies(trait, sire.morph_tags || []);
-      const damCopies  = inferCopies(trait, dam.morph_tags  || []);
-      if (sireCopies === 0 && damCopies === 0) continue;
-
-      const outcomes = calcCoDomOutcomes(sireCopies, damCopies, trait);
-      output.push({ trait, type: 'codom', outcomes });
-    }
-
-    // Dominant / polygenic traits
-    for (const trait of DOM_TRAITS) {
-      if (!allTraits.has(trait)) continue;
-      const sireHas = sireTagSet.has(trait);
-      const damHas  = damTagSet.has(trait);
-      const outcomes = calcDomOutcome(sireHas, damHas, trait);
-      if (outcomes.length) output.push({ trait, type: 'dom', outcomes });
-    }
-
-    return output;
+    const sireAnimal = tagsToAnimal(sire.id || 'sire', sireTags);
+    const damAnimal = tagsToAnimal(dam.id || 'dam', damTags);
+    return predict(sireAnimal, damAnimal);
   }, [sire, dam]);
 
   if (!sire || !dam) {
@@ -135,7 +86,7 @@ export default function GeneticCalculator({ sire, dam }) {
   }
 
   const sireTraits = sire.morph_tags || [];
-  const damTraits  = dam.morph_tags  || [];
+  const damTraits = dam.morph_tags || [];
 
   if (sireTraits.length === 0 && damTraits.length === 0) {
     return (
@@ -147,6 +98,12 @@ export default function GeneticCalculator({ sire, dam }) {
     );
   }
 
+  const warnings = prediction?.warnings || [];
+  // Only render loci where at least one outcome is not pure wild-type
+  const locusPredictions = (prediction?.locus_predictions || []).filter((lp) =>
+    lp.outcomes.some((o) => o.phenotype_label && o.phenotype_label !== 'Wild-type'),
+  );
+
   return (
     <div className="space-y-4">
       {/* Parent summary */}
@@ -154,7 +111,7 @@ export default function GeneticCalculator({ sire, dam }) {
         <div className="bg-slate-800 rounded-lg p-3">
           <p className="text-xs text-blue-400 font-semibold mb-1">♂ Sire — {sire.name}</p>
           <div className="flex flex-wrap gap-1">
-            {sireTraits.length ? sireTraits.map(t => (
+            {sireTraits.length ? sireTraits.map((t) => (
               <span key={t} className="text-xs bg-blue-900/60 border border-blue-700 text-blue-200 px-1.5 py-0.5 rounded">{t}</span>
             )) : <span className="text-xs text-slate-500">No tags</span>}
           </div>
@@ -162,59 +119,96 @@ export default function GeneticCalculator({ sire, dam }) {
         <div className="bg-slate-800 rounded-lg p-3">
           <p className="text-xs text-pink-400 font-semibold mb-1">♀ Dam — {dam.name}</p>
           <div className="flex flex-wrap gap-1">
-            {damTraits.length ? damTraits.map(t => (
+            {damTraits.length ? damTraits.map((t) => (
               <span key={t} className="text-xs bg-pink-900/60 border border-pink-700 text-pink-200 px-1.5 py-0.5 rounded">{t}</span>
             )) : <span className="text-xs text-slate-500">No tags</span>}
           </div>
         </div>
       </div>
 
-      {results.length === 0 && (
-        <div className="text-center py-8 text-slate-400 bg-slate-800 rounded-lg">
-          <p className="text-sm">No calculable trait interactions found.</p>
-          <p className="text-xs mt-1 text-slate-500">Traits carried by only one parent with no co-dominant interaction are shown below.</p>
+      {/* Warnings — critical safety info, always rendered, not filterable */}
+      {warnings.length > 0 && (
+        <div className="space-y-2">
+          {warnings.map((w) => (
+            <div key={w.code} className={'rounded-lg p-3 border flex items-start gap-2 ' + severityClasses(w.severity)}>
+              <AlertTriangle className={w.severity === 'critical' ? 'w-4 h-4 mt-0.5 flex-shrink-0 text-red-300' : 'w-4 h-4 mt-0.5 flex-shrink-0 text-amber-300'} />
+              <div className="text-sm leading-snug">
+                <span className="font-semibold uppercase tracking-wide text-xs mr-1">{w.severity}</span>
+                {w.message}
+                {w.source_url && (
+                  <>
+                    {' '}
+                    <a href={w.source_url} target="_blank" rel="noopener noreferrer" className="underline">
+                      source
+                    </a>
+                  </>
+                )}
+              </div>
+            </div>
+          ))}
         </div>
       )}
 
-      {results.map(({ trait, type, outcomes }) => (
-        <div key={trait} className="bg-slate-800 rounded-lg p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Dna className="w-4 h-4 text-purple-400" />
-            <span className="font-semibold text-slate-100">{trait}</span>
-            <Badge className={type === 'codom' ? 'bg-purple-700 text-xs' : 'bg-slate-600 text-xs'}>
-              {type === 'codom' ? 'Co-dominant' : 'Dominant'}
-            </Badge>
-          </div>
-          <div className="space-y-2">
-            {outcomes.map(({ label, pct, type: oType }) => (
-              <div key={label}>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className={
-                    oType === 'super' ? 'text-yellow-300 font-semibold' :
-                    oType === 'visual' ? 'text-emerald-300' :
-                    'text-slate-400'
-                  }>{label}</span>
-                  <span className="text-slate-300 font-mono">{pct}%</span>
-                </div>
-                <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-                  <div
-                    className={`h-full rounded-full transition-all ${
-                      oType === 'super' ? 'bg-yellow-400' :
-                      oType === 'visual' ? 'bg-emerald-500' :
-                      'bg-slate-600'
-                    }`}
-                    style={{ width: `${pct}%` }}
-                  />
-                </div>
-              </div>
-            ))}
-          </div>
+      {/* Per-locus predictions */}
+      {locusPredictions.length === 0 && (
+        <div className="text-center py-8 text-slate-400 bg-slate-800 rounded-lg">
+          <p className="text-sm">No calculable trait interactions found.</p>
+          <p className="text-xs mt-1 text-slate-500">
+            Neither parent's morph tags mapped to a genotype this calculator can reason about. Add known
+            proven traits (Lilly White, Cappuccino, Phantom, Dalmatian, Pinstripe, etc.) to refine.
+          </p>
         </div>
-      ))}
+      )}
+
+      {locusPredictions.map((lp) => {
+        const trait = LOCUS_TO_TRAIT.get(lp.locus) || getTrait(lp.trait);
+        const badge = dominanceBadge(trait);
+        return (
+          <div key={lp.locus} className="bg-slate-800 rounded-lg p-4">
+            <div className="flex items-center gap-2 mb-3">
+              <Dna className="w-4 h-4 text-purple-400" />
+              <span className="font-semibold text-slate-100">{trait?.name || lp.locus}</span>
+              <Badge className={badge.cls}>{badge.label}</Badge>
+            </div>
+            <div className="space-y-2">
+              {lp.outcomes
+                .filter((o) => o.probability > 0)
+                .sort((a, b) => b.probability - a.probability)
+                .map(({ genotype, probability, phenotype_label }) => {
+                  const pct = Math.round(probability * 100);
+                  const type = outcomeType(phenotype_label, trait);
+                  return (
+                    <div key={`${genotype[0]}|${genotype[1]}`}>
+                      <div className="flex justify-between text-sm mb-1">
+                        <span className={
+                          type === 'super' ? 'text-yellow-300 font-semibold' :
+                          type === 'visual' ? 'text-emerald-300' :
+                          'text-slate-400'
+                        }>{phenotype_label}</span>
+                        <span className="text-slate-300 font-mono">{pct}%</span>
+                      </div>
+                      <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
+                        <div
+                          className={`h-full rounded-full transition-all ${
+                            type === 'super' ? 'bg-yellow-400' :
+                            type === 'visual' ? 'bg-emerald-500' :
+                            'bg-slate-600'
+                          }`}
+                          style={{ width: `${pct}%` }}
+                        />
+                      </div>
+                    </div>
+                  );
+                })}
+            </div>
+          </div>
+        );
+      })}
 
       <p className="text-xs text-slate-500 text-center pt-2">
-        Probabilities are per-offspring. Co-dominant calculations use standard Punnett square ratios.
-        Polygenic traits show approximate inheritance likelihood.
+        Probabilities are per-offspring from Punnett-square math across independent loci, powered by the
+        Foundation Genetics consensus (<a className="underline" href="https://lmreptiles.com/fg-overview" target="_blank" rel="noopener noreferrer">lmreptiles.com/fg-overview</a>).
+        Morph tags are auto-converted to genotypes — add explicit zygosity context for exact results.
       </p>
     </div>
   );

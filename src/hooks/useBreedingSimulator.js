@@ -1,54 +1,41 @@
 /**
  * useBreedingSimulator — Monte Carlo breeding outcome simulation.
  *
- * Given two parent geckos, runs N virtual clutches and returns
- * phenotype probability distributions as histogram-ready data.
- *
- * Pure client-side math — no API calls, no storage.
+ * Computes exact per-offspring phenotype probabilities via the
+ * Foundation Genetics-backed `predict()` from `crested-gecko-app`,
+ * then samples N virtual clutches from that distribution to produce
+ * histogram-ready data. All genetic math lives in the shared module;
+ * this hook only handles the sampling + aggregation UI glue.
  */
 import { useMemo } from 'react';
+import { predict, tagToGenotype } from 'crested-gecko-app';
 
-// Proven incomplete-dominant traits (visual in single copy, super in double).
-// Kept in sync with GeneticCalculator CO_DOM_TRAITS.
-const CO_DOM_TRAITS = [
-  'Lilly White', 'Axanthic', 'Cappuccino', 'Soft Scale', 'Moonglow',
-  'Empty Back', 'White Wall',
-];
-
-function inferCopies(trait, tags) {
-  if (tags.includes(`Super ${trait}`)) return 2;
-  if (tags.includes(trait)) return 1;
-  return 0;
+function tagsToAnimal(id, tags) {
+  // tagToGenotype returns Partial<AnimalGenotype>; predict() treats missing
+  // loci as wild-type, so the partial is runtime-safe. Cast to satisfy the
+  // stricter TS signature on the shared Animal type.
+  const partial = tagToGenotype(tags || []).genotype;
+  const genotype = /** @type {import('crested-gecko-app').AnimalGenotype} */ (partial);
+  return {
+    id,
+    species: 'correlophus_ciliatus',
+    genotype,
+    status: 'active',
+    is_breeder: true,
+    owner_id: id,
+    created_at: '',
+    updated_at: '',
+  };
 }
 
-function simulateSingleOffspring(sireTraits, damTraits) {
-  const phenotype = new Set();
-
-  for (const trait of CO_DOM_TRAITS) {
-    const sireCopies = inferCopies(trait, sireTraits);
-    const damCopies = inferCopies(trait, damTraits);
-    if (sireCopies === 0 && damCopies === 0) continue;
-
-    const sireAlleles = sireCopies === 2 ? [1, 1] : sireCopies === 1 ? [1, 0] : [0, 0];
-    const damAlleles = damCopies === 2 ? [1, 1] : damCopies === 1 ? [1, 0] : [0, 0];
-
-    const fromSire = sireAlleles[Math.random() < 0.5 ? 0 : 1];
-    const fromDam = damAlleles[Math.random() < 0.5 ? 0 : 1];
-    const total = fromSire + fromDam;
-
-    if (total === 2) phenotype.add(`Super ${trait}`);
-    else if (total === 1) phenotype.add(trait);
+function sampleFromDistribution(phenotypes) {
+  const r = Math.random();
+  let cumulative = 0;
+  for (const p of phenotypes) {
+    cumulative += p.probability;
+    if (r <= cumulative) return p;
   }
-
-  return [...phenotype].sort().join(' + ') || 'Normal';
-}
-
-function simulateClutch(sireTraits, damTraits, clutchSize) {
-  const offspring = [];
-  for (let i = 0; i < clutchSize; i++) {
-    offspring.push(simulateSingleOffspring(sireTraits, damTraits));
-  }
-  return offspring;
+  return phenotypes[phenotypes.length - 1];
 }
 
 /**
@@ -58,39 +45,41 @@ function simulateClutch(sireTraits, damTraits, clutchSize) {
  * @param {object} dam - dam gecko with morph_tags[]
  * @param {number} [trials=1000] - number of virtual clutches
  * @param {number} [clutchSize=6] - eggs per clutch
- * @returns {{ phenotypeDist, traitProb, atLeastOneProb }}
+ * @returns {{ phenotypeDist, atLeastOneProb, trials, clutchSize, warnings } | null}
  */
 export function useBreedingSimulator(sire, dam, trials = 1000, clutchSize = 6) {
   return useMemo(() => {
     if (!sire || !dam) return null;
 
-    const sireTraits = sire.morph_tags || [];
-    const damTraits = dam.morph_tags || [];
+    const sireAnimal = tagsToAnimal(sire.id || 'sire', sire.morph_tags || []);
+    const damAnimal = tagsToAnimal(dam.id || 'dam', dam.morph_tags || []);
+    const prediction = predict(sireAnimal, damAnimal);
+    const phenotypes = prediction.offspring_phenotypes || [];
+    const warnings = prediction.warnings || [];
 
-    // Count how many times each phenotype appears across all offspring
-    const phenotypeCounts = {};
-    // Count how many clutches contain at least one of each trait
-    const traitInClutch = {};
+    if (phenotypes.length === 0) {
+      return { phenotypeDist: [], atLeastOneProb: [], trials, clutchSize, warnings };
+    }
+
     const totalOffspring = trials * clutchSize;
+    const phenotypeCounts = Object.create(null);
+    const comboInClutch = Object.create(null);
 
     for (let t = 0; t < trials; t++) {
-      const clutch = simulateClutch(sireTraits, damTraits, clutchSize);
-      const clutchTraitsSeen = new Set();
-
-      for (const pheno of clutch) {
-        phenotypeCounts[pheno] = (phenotypeCounts[pheno] || 0) + 1;
-        // Track individual traits for "at least one" probability
-        for (const part of pheno.split(' + ')) {
-          clutchTraitsSeen.add(part);
+      const combosSeenThisClutch = new Set();
+      for (let e = 0; e < clutchSize; e++) {
+        const sampled = sampleFromDistribution(phenotypes);
+        const label = sampled.phenotype_description || 'Wild-type';
+        phenotypeCounts[label] = (phenotypeCounts[label] || 0) + 1;
+        for (const combo of sampled.matching_combo_morphs) {
+          combosSeenThisClutch.add(combo);
         }
       }
-
-      for (const trait of clutchTraitsSeen) {
-        traitInClutch[trait] = (traitInClutch[trait] || 0) + 1;
+      for (const combo of combosSeenThisClutch) {
+        comboInClutch[combo] = (comboInClutch[combo] || 0) + 1;
       }
     }
 
-    // Phenotype distribution: what % of all offspring have this phenotype
     const phenotypeDist = Object.entries(phenotypeCounts)
       .map(([phenotype, count]) => ({
         phenotype,
@@ -99,15 +88,13 @@ export function useBreedingSimulator(sire, dam, trials = 1000, clutchSize = 6) {
       }))
       .sort((a, b) => b.count - a.count);
 
-    // Per-trait probability: what % of clutches contain at least one
-    const atLeastOneProb = Object.entries(traitInClutch)
-      .filter(([trait]) => trait !== 'Normal')
+    const atLeastOneProb = Object.entries(comboInClutch)
       .map(([trait, clutches]) => ({
         trait,
         probability: Math.round((clutches / trials) * 1000) / 10,
       }))
       .sort((a, b) => b.probability - a.probability);
 
-    return { phenotypeDist, atLeastOneProb, trials, clutchSize };
+    return { phenotypeDist, atLeastOneProb, trials, clutchSize, warnings };
   }, [sire, dam, trials, clutchSize]);
 }

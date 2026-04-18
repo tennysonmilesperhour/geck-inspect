@@ -12,7 +12,7 @@ import { useBreedingSimulator } from '@/hooks/useBreedingSimulator';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
-import { FlaskConical, Dna } from 'lucide-react';
+import { FlaskConical, Dna, AlertTriangle } from 'lucide-react';
 
 const BAR_COLORS = [
   'bg-emerald-500', 'bg-purple-500', 'bg-blue-500', 'bg-amber-500',
@@ -36,8 +36,14 @@ export default function BreedingSimulator({ sire, dam }) {
 
   if (!result) return null;
 
-  const { phenotypeDist, atLeastOneProb } = result;
+  const { phenotypeDist, atLeastOneProb, warnings = [] } = result;
   const maxPercent = Math.max(...phenotypeDist.map(d => d.percent), 1);
+
+  function severityClasses(severity) {
+    if (severity === 'critical') return 'bg-red-950/70 border-red-700 text-red-100';
+    if (severity === 'caution')  return 'bg-amber-950/70 border-amber-700 text-amber-100';
+    return 'bg-slate-800 border-slate-600 text-slate-200';
+  }
 
   return (
     <Card className="bg-slate-900 border-slate-700">
@@ -54,6 +60,30 @@ export default function BreedingSimulator({ sire, dam }) {
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
+        {/* Safety warnings — always rendered first when present */}
+        {warnings.length > 0 && (
+          <div className="space-y-2">
+            {warnings.map((w) => (
+              <div
+                key={w.code}
+                className={'rounded-lg p-3 border flex items-start gap-2 ' + severityClasses(w.severity)}
+              >
+                <AlertTriangle
+                  className={
+                    w.severity === 'critical'
+                      ? 'w-4 h-4 mt-0.5 flex-shrink-0 text-red-300'
+                      : 'w-4 h-4 mt-0.5 flex-shrink-0 text-amber-300'
+                  }
+                />
+                <div className="text-sm leading-snug">
+                  <span className="font-semibold uppercase tracking-wide text-xs mr-1">{w.severity}</span>
+                  {w.message}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
         {/* Clutch size slider */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
