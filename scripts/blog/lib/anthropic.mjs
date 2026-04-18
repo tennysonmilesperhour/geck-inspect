@@ -182,11 +182,15 @@ export async function callClaudeJson({
   schemaDescription,
   schema,
 }) {
+  // NOTE: we do NOT set `strict: true`. Strict-mode tool schemas reject
+  // `minItems`, `maxItems`, `minLength`, `maxLength`, `pattern`, etc. —
+  // constraints that are genuinely useful as model hints. Since we force
+  // tool use via tool_choice below, Claude reliably calls the tool without
+  // strict enforcement, and the constraints still bias generation.
   const tool = {
     name: schemaName,
     description: schemaDescription,
     input_schema: schema,
-    strict: true,
   };
   const result = await callClaude({
     model,
