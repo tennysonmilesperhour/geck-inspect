@@ -42,6 +42,7 @@ export default function BreedingPairsPage() {
         showEstimatedDates: true,
         compactCards: false,
     });
+    const [allGeckos, setAllGeckos] = useState([]);
     const [geckos, setGeckos] = useState([]);
     const [breedingPlans, setBreedingPlans] = useState([]);
     const [eggs, setEggs] = useState([]);
@@ -58,7 +59,9 @@ export default function BreedingPairsPage() {
                     BreedingPlan.filter({ created_by: currentUser.email }, pairsPrefs.sortBy),
                     Egg.filter({ created_by: currentUser.email })
                 ]);
-                setGeckos(userGeckos.filter(g => !g.notes?.startsWith('[Manual sale]') && !g.archived));
+                const filtered = userGeckos.filter(g => !g.notes?.startsWith('[Manual sale]'));
+                setAllGeckos(filtered);
+                setGeckos(filtered.filter(g => !g.archived));
                 setBreedingPlans(plans);
                 setEggs(userEggs);
             }
@@ -76,8 +79,8 @@ export default function BreedingPairsPage() {
     const females = geckos.filter(g => g.sex === 'Female');
 
     const handleHatch = async (egg, plan) => {
-        const sire = geckos.find(g => g.id === plan.sire_id);
-        const dam = geckos.find(g => g.id === plan.dam_id);
+        const sire = allGeckos.find(g => g.id === plan.sire_id);
+        const dam = allGeckos.find(g => g.id === plan.dam_id);
 
         if (!sire || !dam) {
             console.error("Sire or Dam not found for this plan.");
@@ -257,8 +260,8 @@ export default function BreedingPairsPage() {
                 ) : (
                     <div className={`grid grid-cols-1 ${pairsPrefs.compactCards ? 'lg:grid-cols-3 gap-4' : 'lg:grid-cols-2 gap-8'}`}>
                         {sortedPlans.map(plan => {
-                            const sire = geckos.find(g => g.id === plan.sire_id);
-                            const dam = geckos.find(g => g.id === plan.dam_id);
+                            const sire = allGeckos.find(g => g.id === plan.sire_id);
+                            const dam = allGeckos.find(g => g.id === plan.dam_id);
                             const planEggs = eggs.filter(e => e.breeding_plan_id === plan.id);
 
                             return (
