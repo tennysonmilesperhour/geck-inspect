@@ -126,6 +126,8 @@ jobs:
         run: |
           git config user.name  "geckinspect-blog-bot"
           git config user.email "blog-bot@users.noreply.github.com"
+          # Ensure the label exists before gh pr create references it.
+          gh label create blog-draft --color 6F42C1 --description "Auto-generated draft PR from blog-pipeline" 2>/dev/null || true
           BRANCH="blog-draft/${SLUG}-$(date -u +%Y%m%d)"
           git checkout -b "$BRANCH"
           git add "$DRAFT_DIR" docs/blog-queue.json docs/blog-budget.json
@@ -232,6 +234,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Idempotent label create — gh issue create errors hard if the
+          # label is missing, and there's no first-class "create if not
+          # exists" so we suppress the "already exists" error explicitly.
+          gh label create blog-report --color FFA500 --description "Auto-generated weekly report from blog-pipeline" 2>/dev/null || true
           TITLE=$(node -e "console.log(require('./docs/blog-reports/_latest-report.json').issueTitle)")
           BODY_FILE=$(node -e "console.log(require('./docs/blog-reports/_latest-report.json').reportPath)")
           gh issue create --title "$TITLE" --body-file "$BODY_FILE" --label blog-report
