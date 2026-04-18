@@ -1,0 +1,28 @@
+{
+  "$schema": "docs/blog-budget.schema.json",
+  "weeks": {
+    "2026-W16": {
+      "totalUsd": 0.009423,
+      "byModel": {
+        "claude-haiku-4-5": 0.009423
+      },
+      "byStop": {
+        "research-score": 0.009423
+      },
+      "log": [
+        {
+          "at": "2026-04-18T16:43:37.646Z",
+          "model": "claude-haiku-4-5",
+          "stopLabel": "research-score",
+          "usd": 0.009423,
+          "in": 8178,
+          "out": 249,
+          "cr": 0,
+          "cw": 0
+        }
+      ],
+      "firstCallAt": "2026-04-18T16:43:37.646Z",
+      "lastCallAt": "2026-04-18T16:43:37.646Z"
+    }
+  }
+}
