@@ -50,7 +50,7 @@ import {
 
 function LayoutContent({ children, currentPageName: _currentPageName }) {
   const location = useLocation();
-  const { user, logout } = useAuth();
+  const { user, logout, isGuest } = useAuth();
   const sidebarRef = useRef(null);
   const [imageCount, setImageCount] = useState(0);
   const [isLoading, setIsLoading] = useState(true);
@@ -599,7 +599,19 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                   }`}
               >
                 <IconComponent className="mr-2 h-5 w-5 flex-shrink-0" />
-                {item.display_name}
+                <span className="truncate">{item.display_name}</span>
+                {/* Guests keep `user` set (GUEST_USER) so the "Login"
+                    marker below doesn't trigger; instead we flag pages
+                    gated behind auth as view-only so the visitor knows
+                    upfront which tabs they can actually use.           */}
+                {isGuest && item.requires_auth && (
+                  <span
+                    className="ml-auto shrink-0 text-[9px] font-bold uppercase tracking-wider text-yellow-200 bg-yellow-400/15 border border-yellow-300/30 rounded px-1.5 py-0.5"
+                    title="Guests can view this page but cannot save changes"
+                  >
+                    view only
+                  </span>
+                )}
                 {item.requires_auth && !user && (
                   <span className="ml-auto text-xs text-sage-500">Login</span>
                 )}
