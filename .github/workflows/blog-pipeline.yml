@@ -1,0 +1,271 @@
+# Geck Inspect blog pipeline.
+#
+# Three independent jobs on a shared schedule so each can fail without
+# poisoning the others:
+#
+#   research       — Mon/Wed/Fri 06:00 UTC. Refreshes docs/blog-queue.json.
+#   draft          — Mon/Wed/Fri 07:00 UTC. Opens a draft PR per run.
+#   weekly-report  — Monday 12:00 UTC. Commits report + opens issue + emails.
+#
+# Secrets required (repo → Settings → Secrets and variables → Actions):
+#
+#   ANTHROPIC_API_KEY   — Claude API (Sonnet 4.6 + Haiku 4.5)
+#   RESEND_API_KEY      — Resend.com API key for weekly-report emails
+#   BLOG_REPORT_EMAIL   — recipient address (e.g. tennysontaggart@gmail.com)
+#
+# Publish (post-merge blog-posts.js rewrite) is a separate job that fires
+# on PR merge to main, keyed on the `blog-draft` label so we only run it
+# for pipeline-generated PRs.
+
+name: blog-pipeline
+
+on:
+  schedule:
+    # Research: Monday/Wednesday/Friday 06:00 UTC
+    - cron: '0 6 * * 1,3,5'
+    # Draft:    Monday/Wednesday/Friday 07:00 UTC
+    - cron: '0 7 * * 1,3,5'
+    # Weekly report: Monday 12:00 UTC
+    - cron: '0 12 * * 1'
+  workflow_dispatch:
+    inputs:
+      stage:
+        description: Which stage to run manually
+        required: true
+        default: research
+        type: choice
+        options:
+          - research
+          - draft
+          - weekly-report
+
+  # Post-merge: publish action fires when a blog-draft PR is merged.
+  pull_request:
+    types: [closed]
+
+permissions:
+  contents: write      # commit updates to queue, drafts, blog-posts.js
+  issues: write        # weekly-report opens issues
+  pull-requests: write # draft job opens draft PRs
+
+concurrency:
+  # Never run the same stage in parallel — they write the same files.
+  group: blog-pipeline-${{ github.event.schedule || github.event.inputs.stage || github.event.action }}
+  cancel-in-progress: false
+
+jobs:
+  research:
+    if: |
+      (github.event_name == 'schedule' && github.event.schedule == '0 6 * * 1,3,5') ||
+      (github.event_name == 'workflow_dispatch' && inputs.stage == 'research')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Anthropic SDK
+        run: npm install --no-save @anthropic-ai/sdk@^0.88.0
+      - name: Run research agent
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node scripts/blog/research.mjs
+      - name: Commit queue updates
+        run: |
+          git config user.name  "geckinspect-blog-bot"
+          git config user.email "blog-bot@users.noreply.github.com"
+          git add docs/blog-queue.json docs/blog-reports/_latest-research.json docs/blog-budget.json
+          if git diff --cached --quiet; then
+            echo "No queue changes this run."
+          else
+            git commit -m "blog: refresh topic queue (research pass)"
+            for i in 1 2 3 4; do
+              git pull --rebase origin main && git push origin main && break
+              sleep $((2 ** i))
+            done
+          fi
+
+  draft:
+    if: |
+      (github.event_name == 'schedule' && github.event.schedule == '0 7 * * 1,3,5') ||
+      (github.event_name == 'workflow_dispatch' && inputs.stage == 'draft')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Anthropic SDK
+        run: npm install --no-save @anthropic-ai/sdk@^0.88.0
+      - name: Run draft agent
+        id: draft
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: node scripts/blog/draft.mjs
+      - name: Check for new draft
+        id: check
+        run: |
+          if [ -f docs/blog-reports/_latest-draft.json ]; then
+            SLUG=$(node -e "console.log(require('./docs/blog-reports/_latest-draft.json').slug)")
+            DRAFT_DIR=$(node -e "console.log(require('./docs/blog-reports/_latest-draft.json').draftDir)")
+            TITLE=$(node -e "console.log(require('./docs/blog-reports/_latest-draft.json').title)")
+            echo "slug=$SLUG"          >> "$GITHUB_OUTPUT"
+            echo "draft_dir=$DRAFT_DIR" >> "$GITHUB_OUTPUT"
+            echo "title=$TITLE"         >> "$GITHUB_OUTPUT"
+            echo "has_draft=1"          >> "$GITHUB_OUTPUT"
+          else
+            echo "has_draft=0" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Open draft PR
+        if: steps.check.outputs.has_draft == '1'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SLUG:     ${{ steps.check.outputs.slug }}
+          DRAFT_DIR: ${{ steps.check.outputs.draft_dir }}
+          TITLE:    ${{ steps.check.outputs.title }}
+        run: |
+          git config user.name  "geckinspect-blog-bot"
+          git config user.email "blog-bot@users.noreply.github.com"
+          BRANCH="blog-draft/${SLUG}-$(date -u +%Y%m%d)"
+          git checkout -b "$BRANCH"
+          git add "$DRAFT_DIR" docs/blog-queue.json docs/blog-budget.json
+          git commit -m "blog: draft '${TITLE}' (${SLUG})"
+          git push -u origin "$BRANCH"
+
+          # PR body pulls from the self-critique + metadata so the reviewer
+          # sees the agent's concerns before reading the draft.
+          BODY=$(cat <<EOF
+          ## Draft: ${TITLE}
+
+          - **Slug:** \`${SLUG}\`
+          - **Draft dir:** [\`${DRAFT_DIR}\`](${DRAFT_DIR})
+          - **Full post markdown:** [\`${DRAFT_DIR}/post.md\`](${DRAFT_DIR}/post.md)
+          - **Self-critique + automated review notes:** [\`${DRAFT_DIR}/self-critique.md\`](${DRAFT_DIR}/self-critique.md)
+          - **Research evidence + topic metadata:** [\`${DRAFT_DIR}/metadata.json\`](${DRAFT_DIR}/metadata.json)
+
+          Review the draft; when ready, **merge this PR**. The post-merge publish job converts the draft into a new \`BLOG_POSTS\` entry in \`src/data/blog-posts.js\` and deletes the draft directory.
+
+          To reject: close this PR. The queue entry will stay marked \`drafted\`; edit \`docs/blog-queue.json\` to set \`status: rejected\` and a \`rejectionReason\` so the pipeline learns.
+
+          Generated by the blog pipeline. See \`docs/blog-pipeline.md\`.
+          EOF
+          )
+
+          gh pr create \
+            --base main \
+            --head "$BRANCH" \
+            --title "Blog draft: ${TITLE}" \
+            --body "$BODY" \
+            --label blog-draft \
+            --draft
+
+  publish:
+    # Runs when a blog-draft PR merges. The label check prevents this
+    # firing for unrelated PRs.
+    if: |
+      github.event_name == 'pull_request' &&
+      github.event.action == 'closed' &&
+      github.event.pull_request.merged == true &&
+      contains(github.event.pull_request.labels.*.name, 'blog-draft')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Derive slug from merged branch
+        id: slug
+        run: |
+          # Head branch is blog-draft/<slug>-YYYYMMDD; strip prefix + date
+          BRANCH="${{ github.event.pull_request.head.ref }}"
+          BARE="${BRANCH#blog-draft/}"
+          SLUG="${BARE%-*}"
+          echo "slug=$SLUG" >> "$GITHUB_OUTPUT"
+      - name: Run publish action
+        run: node scripts/blog/publish.mjs "${{ steps.slug.outputs.slug }}"
+      - name: Commit publish
+        run: |
+          git config user.name  "geckinspect-blog-bot"
+          git config user.email "blog-bot@users.noreply.github.com"
+          git add src/data/blog-posts.js docs/blog-queue.json content/blog-drafts
+          if git diff --cached --quiet; then
+            echo "Nothing to publish — draft directory probably already cleaned up."
+            exit 0
+          fi
+          git commit -m "blog: publish ${{ steps.slug.outputs.slug }}"
+          for i in 1 2 3 4; do
+            git pull --rebase origin main && git push origin main && break
+            sleep $((2 ** i))
+          done
+
+  weekly-report:
+    if: |
+      (github.event_name == 'schedule' && github.event.schedule == '0 12 * * 1') ||
+      (github.event_name == 'workflow_dispatch' && inputs.stage == 'weekly-report')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Anthropic SDK
+        run: npm install --no-save @anthropic-ai/sdk@^0.88.0
+      - name: Generate weekly report
+        run: node scripts/blog/weekly-report.mjs
+      - name: Commit report
+        run: |
+          git config user.name  "geckinspect-blog-bot"
+          git config user.email "blog-bot@users.noreply.github.com"
+          git add docs/blog-reports/
+          if git diff --cached --quiet; then
+            echo "Report unchanged."
+          else
+            git commit -m "blog: weekly report"
+            for i in 1 2 3 4; do
+              git pull --rebase origin main && git push origin main && break
+              sleep $((2 ** i))
+            done
+          fi
+      - name: Open weekly report issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          TITLE=$(node -e "console.log(require('./docs/blog-reports/_latest-report.json').issueTitle)")
+          BODY_FILE=$(node -e "console.log(require('./docs/blog-reports/_latest-report.json').reportPath)")
+          gh issue create --title "$TITLE" --body-file "$BODY_FILE" --label blog-report
+      - name: Email weekly report
+        env:
+          RESEND_API_KEY:    ${{ secrets.RESEND_API_KEY }}
+          BLOG_REPORT_EMAIL: ${{ secrets.BLOG_REPORT_EMAIL }}
+        run: |
+          if [ -z "$RESEND_API_KEY" ] || [ -z "$BLOG_REPORT_EMAIL" ]; then
+            echo "Resend secrets not configured; skipping email."
+            exit 0
+          fi
+          node - <<'EOF'
+          const fs = require('fs');
+          (async () => {
+            const sidecar = JSON.parse(fs.readFileSync('./docs/blog-reports/_latest-report.json', 'utf8'));
+            const body = fs.readFileSync(sidecar.reportPath, 'utf8');
+            const res = await fetch('https://api.resend.com/emails', {
+              method: 'POST',
+              headers: {
+                Authorization: 'Bearer ' + process.env.RESEND_API_KEY,
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                from: 'Geck Inspect blog bot <onboarding@resend.dev>',
+                to: [process.env.BLOG_REPORT_EMAIL],
+                subject: sidecar.issueTitle,
+                text: body,
+              }),
+            });
+            if (!res.ok) {
+              console.error('Resend error:', res.status, await res.text());
+              process.exit(1);
+            }
+            console.log('Resend OK');
+          })();
+          EOF

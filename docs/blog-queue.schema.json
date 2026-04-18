@@ -1,0 +1,101 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Geck Inspect blog topic queue",
+  "type": "object",
+  "required": ["lastUpdated", "topics"],
+  "properties": {
+    "lastUpdated": {
+      "type": ["string", "null"],
+      "format": "date-time"
+    },
+    "topics": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/topic" }
+    }
+  },
+  "definitions": {
+    "topic": {
+      "type": "object",
+      "required": [
+        "id",
+        "title",
+        "slug",
+        "category",
+        "status",
+        "score",
+        "createdAt",
+        "evidence",
+        "angleIdeas"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "ULID or date-hash. Stable across updates."
+        },
+        "title": {
+          "type": "string",
+          "description": "Working title. May be rewritten by the draft agent."
+        },
+        "slug": {
+          "type": "string",
+          "pattern": "^[a-z0-9-]+$"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["genetics", "breeding", "mythbusters", "identification"],
+          "description": "Matches BLOG_CATEGORIES in src/data/blog-posts.js"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "new",
+            "scheduled",
+            "drafting",
+            "drafted",
+            "published",
+            "rejected",
+            "duplicate"
+          ]
+        },
+        "score": {
+          "type": "object",
+          "required": ["total", "demand", "originality", "accuracyRisk", "voiceFit"],
+          "properties": {
+            "total": { "type": "number" },
+            "demand": { "type": "number", "description": "0-10 search volume / forum heat" },
+            "originality": { "type": "number", "description": "0-10 how much new ground" },
+            "accuracyRisk": { "type": "number", "description": "0-10 (higher = more risky / harder to verify)" },
+            "voiceFit": { "type": "number", "description": "0-10 fit for our voice" }
+          }
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "draftedAt": { "type": ["string", "null"], "format": "date-time" },
+        "publishedAt": { "type": ["string", "null"], "format": "date-time" },
+        "evidence": {
+          "type": "array",
+          "description": "Research signals that produced this topic. Stored so the weekly report can show why the agent picked it.",
+          "items": {
+            "type": "object",
+            "required": ["source", "snippet"],
+            "properties": {
+              "source": { "type": "string", "description": "reddit|morphmarket|pangea|google-ac|manual|etc" },
+              "url": { "type": ["string", "null"] },
+              "snippet": { "type": "string" },
+              "observedAt": { "type": ["string", "null"], "format": "date-time" }
+            }
+          }
+        },
+        "angleIdeas": {
+          "type": "array",
+          "description": "2-4 candidate angles the writer agent can pick between.",
+          "items": { "type": "string" }
+        },
+        "rejectionReason": { "type": ["string", "null"] },
+        "prUrl": { "type": ["string", "null"] }
+      }
+    }
+  }
+}
