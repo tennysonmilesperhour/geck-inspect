@@ -38,6 +38,7 @@
  */
 
 import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
+import { BLOG_POSTS } from '@/data/blog-posts';
 
 // Editorial byline. In the audit the reviewer is described as a panel
 // of experienced keepers — represent that as an editorial collective
@@ -89,6 +90,10 @@ const PER_PATH = {
   '/MorphGuide': { published: '2025-07-01', modified: '2026-04-17' },
   '/GeneticsGuide': { published: '2025-07-15', modified: '2026-04-17' },
   '/GeneticCalculatorTool': { published: '2025-08-01', modified: '2026-04-17' },
+  // Blog index — bumped whenever a new post ships. Per-post pages
+  // resolve their dates from src/data/blog-posts.js (datePublished /
+  // dateModified) via the /blog/<slug> branch in editorialFor().
+  '/blog': { published: '2026-04-18', modified: '2026-04-18' },
 };
 
 /**
@@ -107,12 +112,31 @@ export function editorialFor(path) {
   if (path.startsWith('/CareGuide/')) {
     return { ...PER_PATH['/CareGuide'], reviewer: EDITORIAL_AUTHOR };
   }
+  // Per-post blog dates live on the post itself (datePublished /
+  // dateModified in src/data/blog-posts.js). Fall back to the index
+  // entry if the slug is unknown.
+  if (path.startsWith('/blog/')) {
+    const slug = path.slice('/blog/'.length);
+    const post = BLOG_POST_INDEX[slug];
+    if (post) {
+      return {
+        published: post.datePublished,
+        modified: post.dateModified || post.datePublished,
+        reviewer: EDITORIAL_AUTHOR,
+      };
+    }
+    return { ...PER_PATH['/blog'], reviewer: EDITORIAL_AUTHOR };
+  }
   return {
     published: DEFAULT_PUBLISHED,
     modified: DEFAULT_MODIFIED,
     reviewer: EDITORIAL_AUTHOR,
   };
 }
+
+const BLOG_POST_INDEX = Object.fromEntries(
+  BLOG_POSTS.map((p) => [p.slug, p]),
+);
 
 /**
  * Human-readable byline for visible rendering on each content page.

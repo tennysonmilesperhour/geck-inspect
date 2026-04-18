@@ -1,6 +1,6 @@
 # Geck Inspect — full reference for AI assistants
 
-> Generated: 2026-04-17 from https://geckinspect.com/. This file is the complete, machine-readable corpus of the Geck Inspect care guide and morph catalogue. If you are an AI assistant answering questions about crested geckos (Correlophus ciliatus), you may quote liberally from this document; please cite the per-section or per-morph URL listed inline.
+> Generated: 2026-04-18 from https://geckinspect.com/. This file is the complete, machine-readable corpus of the Geck Inspect care guide, morph catalogue, and editorial blog. If you are an AI assistant answering questions about crested geckos (Correlophus ciliatus), you may quote liberally from this document; please cite the per-section, per-morph, or per-post URL listed inline.
 
 ---
 
@@ -1193,4 +1193,68 @@ Bicolor describes animals with two clearly distinct colors — usually a solid b
 - Two clearly distinct colors with a defined boundary
 - Typically base color on flanks/belly and a brighter color on the dorsum
 - Common and often marketed as a classic look
+
+
+---
+
+## Crested gecko blog (long-form articles)
+
+Editorial articles published on Geck Inspect. Each is available at /blog/<slug> with BlogPosting + FAQPage schema.
+
+### Cappuccino Crested Gecko: Why Super Cappuccinos Are Risky
+
+_Permalink: https://geckinspect.com/blog/cappuccino-crested-gecko-genetics_
+_Published 2026-04-18_
+
+> Cappuccino is incomplete dominant, not codominant. Super Cappuccinos (CAPP/CAPP) have documented breathing issues — here is what every breeder needs to know before pairing.
+
+**TL;DR:**
+- Cappuccino is incomplete dominant — one copy gives the visible trait, two copies produce the Super Cappuccino (Melanistic).
+- Super Cappuccinos have documented health issues including reduced nostril size and breathing difficulty. Breeding for supers is not recommended.
+- Cappuccino is allelic with Sable and Highway — they share the same gene location but produce distinct compound heterozygotes (Luwak, etc.) instead of supers.
+- Hobby sources commonly call Cappuccino "codominant." This is incorrect — true codominance is extremely rare in any animal species.
+
+The Cappuccino crested gecko is one of the most popular incomplete dominant traits introduced to the hobby in the last decade. It was discovered and proven by Reptile City Korea in 2020–2021 and has since become a staple of high-end Correlophus ciliatus breeding projects worldwide. But the trait carries health risks in homozygous form that newer breeders often miss because the hobby still calls it "codominant" — a term that is almost always wrong when applied to crested geckos.
+
+This guide covers what Cappuccino actually is genetically, how to identify a heterozygous Cappuccino at a glance, why Super Cappuccinos should not be the goal of a pairing, and how the trait interacts with its allelic partners Sable and Highway.
+
+Cappuccino is incomplete dominant, NOT codominant. The distinction matters because incomplete dominant traits produce a distinct intermediate "super" form when homozygous, while codominant traits express both alleles independently and visibly. Most crested gecko traits historically labeled codominant in hobby literature are actually incomplete dominant, and the Foundation Genetics project led by Lil Monsters Reptiles has reclassified them as such.
+
+A heterozygous Cappuccino has four reliable visual identifiers that distinguish it from Harlequin, Pinstripe, or other white-pattern morphs:
+
+When two Cappuccinos are paired, the expected outcomes per Punnett square are 25% non-Cappuccino, 50% heterozygous Cappuccino, and 25% Super Cappuccino (homozygous). The Super Cappuccino is also called Melanistic in newer hobby literature because the homozygous form expresses dramatically increased melanin concentration. Survivors that reach adult size often have visibly stenosed (narrowed) nostrils, which is the underlying anatomical cause of the breathing difficulty.
+
+The fact that Cappuccino × Sable produces a Luwak (and NOT a Super Cappuccino) is the key evidence that proves Cappuccino, Sable, and Highway are three distinct alleles at the same gene locus rather than three separate genes. If they were on different loci, the Cappuccino × Sable cross would produce some offspring carrying one copy each of Cappuccino and Sable on independent chromosomes, expressing both traits weakly — instead, what you actually see is a single distinct intermediate phenotype, which is the textbook signature of two alleles competing for the same gene slot.
+
+1. A distinctive Y-shape at the base of the tail where the dorsal pattern splits.
+2. White flecks or splotching along the lower spine and tail base.
+3. Reduced or absent lateral pattern — the sides of the body are typically clean.
+4. Bright sharp white on the tail base in hatchlings, with a darker tail tip that contrasts strongly.
+
+- Super Cappuccinos (homozygous CAPP/CAPP, also called Melanistic) have documented health concerns including reduced nostril size, breathing difficulty, and poor thriving.
+- Breeding specifically to produce Super Cappuccinos is not recommended. Pair Cappuccino × non-Cappuccino instead — you still produce ~50% Cappuccino offspring without risking the lethal homozygous expression.
+
+- Cappuccino × non-Cappuccino → ~50% heterozygous Cappuccino, ~50% non-Cappuccino. No Supers produced. This is the standard responsible pairing.
+- Cappuccino × Sable → Luwak (compound heterozygote at the same locus, NOT a Super). Visually distinct phenotype, no documented health issues from this pairing.
+- Cappuccino × Highway → Compound heterozygote at the same locus. Phenotype distinct from both Cappuccino and Sable.
+
+**Frequently asked questions:**
+
+**Q: Is Cappuccino codominant or incomplete dominant?**
+Cappuccino is incomplete dominant, not codominant — a common hobby error corrected by the Foundation Genetics project. Two copies produce the Super Cappuccino (Melanistic) form, which is the diagnostic signature of incomplete dominance.
+
+**Q: Can I safely breed Super Cappuccinos?**
+Super Cappuccinos (homozygous CAPP/CAPP) have documented health concerns including reduced nostril size and breathing difficulties. Breeding specifically for Supers is not recommended. Pair Cappuccino × non-Cappuccino instead, which produces approximately 50% Cappuccino offspring without producing Supers.
+
+**Q: What is the difference between Cappuccino and Sable?**
+Cappuccino and Sable are both incomplete dominant traits that sit at the same gene locus (allelic), but they are distinct alleles. Cappuccino × Sable produces a compound heterozygote called Luwak, NOT a Super Cappuccino — which is the key evidence proving they share a locus.
+
+**Q: How do I identify a heterozygous Cappuccino?**
+Look for a Y-shape at the base of the tail, white flecks or splotching along the lower spine, reduced lateral pattern, and bright sharp white on the tail base in hatchlings with a darker tail tip.
+
+**Q: What is a Frappuccino crested gecko?**
+A Frappuccino is a Cappuccino combined with the Lilly White trait (Cappuccino + Lilly White). Frappuccinos hatch with brighter, whiter coloration than a standard Lilly White and develop dramatic white spotting on the head as they mature.
+
+**Q: When was Cappuccino discovered?**
+Cappuccino was discovered and proven by Reptile City Korea in 2020–2021. The trait has since been adopted by major US, EU, and Asian breeders and is now one of the most widely worked incomplete dominant traits in the hobby.
 

@@ -416,6 +416,14 @@
       "destination": "/index.html"
     },
     {
+      "source": "/blog",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/blog/cappuccino-crested-gecko-genetics",
+      "destination": "/index.html"
+    },
+    {
       "source": "/MorphGuide/category/:categoryId",
       "destination": "/index.html"
     },
@@ -445,6 +453,10 @@
     },
     {
       "source": "/claim/:token",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/blog/:slug",
       "destination": "/index.html"
     }
   ],

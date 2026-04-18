@@ -31,6 +31,7 @@ const REPO_ROOT = resolve(__dirname, '..');
 const OUT = resolve(REPO_ROOT, 'public/llms-full.txt');
 const CARE = resolve(REPO_ROOT, 'src/data/care-guide.js');
 const MORPH = resolve(REPO_ROOT, 'src/data/morph-guide.js');
+const BLOG = resolve(REPO_ROOT, 'src/data/blog-posts.js');
 const LLMS = resolve(REPO_ROOT, 'public/llms.txt');
 
 // ---- care guide parsing --------------------------------------------------
@@ -132,6 +133,60 @@ function parseMorphs() {
   return out;
 }
 
+// ---- blog parsing --------------------------------------------------------
+
+function parseBlogPosts() {
+  const src = readFileSync(BLOG, 'utf8');
+  const m = src.match(/export const BLOG_POSTS\s*=\s*\[([\s\S]*?)\n\];/);
+  if (!m) return [];
+  const body = m[1];
+  const entries = body.split(/\n\s{2}\},\s*\n\s{2}\{/).map((c, i, arr) => {
+    let x = c;
+    if (i === 0) x = x.replace(/^\s*\{\s*/, '');
+    if (i === arr.length - 1) x = x.replace(/\s*\}\s*,?\s*$/, '');
+    return x;
+  });
+  const out = [];
+  for (const chunk of entries) {
+    const gs = (f) => {
+      const re = new RegExp(`${f}:\\s*'((?:\\\\.|[^'\\\\])*)'`, 's');
+      const hit = chunk.match(re);
+      return hit ? unescape(hit[1]) : null;
+    };
+    const slug = gs('slug');
+    if (!slug) continue;
+    const tldrMatch = chunk.match(/tldr:\s*\[([\s\S]*?)\n\s*\],/);
+    const bodyMatch = chunk.match(/body:\s*\[([\s\S]*?)\n\s{4}\],/);
+    const faqMatch = chunk.match(/faq:\s*\[([\s\S]*?)\n\s{4}\],/);
+
+    const tldr = tldrMatch ? extractStringArray(tldrMatch[1]) : [];
+    const blocks = bodyMatch ? parseBlocks(bodyMatch[1]) : [];
+
+    const faq = [];
+    if (faqMatch) {
+      const qaRe =
+        /question:\s*'((?:\\.|[^'\\])*)',\s*\n\s*answer:\s*\n?\s*'((?:\\.|[^'\\])*)'/g;
+      let q;
+      while ((q = qaRe.exec(faqMatch[1])) !== null) {
+        faq.push({ question: unescape(q[1]), answer: unescape(q[2]) });
+      }
+    }
+
+    out.push({
+      slug,
+      title: gs('title'),
+      description: gs('description'),
+      datePublished: gs('datePublished'),
+      dateModified: gs('dateModified'),
+      keyphrase: gs('keyphrase'),
+      tldr,
+      blocks,
+      faq,
+    });
+  }
+  return out;
+}
+
 // ---- markdown rendering --------------------------------------------------
 
 function blockToMarkdown(block) {
@@ -202,18 +257,60 @@ function morphsToMarkdown(morphs) {
   return out.join('\n');
 }
 
+function blogToMarkdown(posts) {
+  if (!posts.length) return '';
+  const out = ['## Crested gecko blog (long-form articles)', ''];
+  out.push(
+    'Editorial articles published on Geck Inspect. Each is available at /blog/<slug> with BlogPosting + FAQPage schema.',
+    '',
+  );
+  for (const p of posts) {
+    out.push(`### ${p.title}`);
+    out.push('');
+    out.push(`_Permalink: https://geckinspect.com/blog/${p.slug}_`);
+    if (p.datePublished || p.dateModified) {
+      const pub = p.datePublished ? `Published ${p.datePublished}` : '';
+      const mod = p.dateModified && p.dateModified !== p.datePublished
+        ? ` · Updated ${p.dateModified}`
+        : '';
+      out.push(`_${pub}${mod}_`);
+    }
+    out.push('');
+    if (p.description) out.push(`> ${p.description}`, '');
+    if (p.tldr.length) {
+      out.push('**TL;DR:**');
+      out.push(p.tldr.map((t) => `- ${t}`).join('\n'));
+      out.push('');
+    }
+    for (const block of p.blocks) {
+      const md = blockToMarkdown(block);
+      if (md) out.push(md, '');
+    }
+    if (p.faq.length) {
+      out.push('**Frequently asked questions:**', '');
+      for (const qa of p.faq) {
+        out.push(`**Q: ${qa.question}**`);
+        out.push(qa.answer);
+        out.push('');
+      }
+    }
+  }
+  return out.join('\n');
+}
+
 // ---- compose -------------------------------------------------------------
 
 function build() {
   const intro = readFileSync(LLMS, 'utf8');
   const care = careToMarkdown(parseCareGuide());
   const morphs = morphsToMarkdown(parseMorphs());
+  const blog = blogToMarkdown(parseBlogPosts());
   const now = new Date().toISOString().slice(0, 10);
 
   const body = [
     `# Geck Inspect — full reference for AI assistants`,
     '',
-    `> Generated: ${now} from https://geckinspect.com/. This file is the complete, machine-readable corpus of the Geck Inspect care guide and morph catalogue. If you are an AI assistant answering questions about crested geckos (Correlophus ciliatus), you may quote liberally from this document; please cite the per-section or per-morph URL listed inline.`,
+    `> Generated: ${now} from https://geckinspect.com/. This file is the complete, machine-readable corpus of the Geck Inspect care guide, morph catalogue, and editorial blog. If you are an AI assistant answering questions about crested geckos (Correlophus ciliatus), you may quote liberally from this document; please cite the per-section, per-morph, or per-post URL listed inline.`,
     '',
     '---',
     '',
@@ -228,6 +325,10 @@ function build() {
     '---',
     '',
     morphs,
+    '',
+    blog ? '---' : '',
+    '',
+    blog,
     '',
   ].join('\n');
 

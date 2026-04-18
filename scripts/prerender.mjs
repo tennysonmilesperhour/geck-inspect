@@ -41,6 +41,7 @@ import {
   getMorphRoutes,
   getCareTopicRoutes,
   getMorphTaxonomyRoutes,
+  getBlogRoutes,
 } from './seo-routes.mjs';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -154,6 +155,71 @@ function loadCareSections() {
 
 const CARE_SECTIONS = loadCareSections();
 
+/**
+ * Parse src/data/blog-posts.js into a slug → { title, description,
+ * tldrFirst, faqFirst } map for prerender body content. Pulls the
+ * first TL;DR bullet and the first FAQ question/answer pair so the
+ * <noscript> body has substantive, factual text rather than a generic
+ * stub.
+ */
+function loadBlogPosts() {
+  const src = readFileSync(resolve(REPO_ROOT, 'src/data/blog-posts.js'), 'utf8');
+  const m = src.match(/export const BLOG_POSTS\s*=\s*\[([\s\S]*?)\n\];/);
+  if (!m) return {};
+  const body = m[1];
+  const entries = body.split(/\n\s{2}\},\s*\n\s{2}\{/).map((c, i, arr) => {
+    let x = c;
+    if (i === 0) x = x.replace(/^\s*\{\s*/, '');
+    if (i === arr.length - 1) x = x.replace(/\s*\}\s*,?\s*$/, '');
+    return x;
+  });
+  const out = {};
+  for (const chunk of entries) {
+    const gs = (f) => {
+      const re = new RegExp(`${f}:\\s*'((?:\\\\.|[^'\\\\])*)'`, 's');
+      const hit = chunk.match(re);
+      return hit ? hit[1].replace(/\\'/g, "'") : null;
+    };
+    const slug = gs('slug');
+    if (!slug) continue;
+
+    // First tldr bullet — pull the first quoted string out of the
+    // tldr: [ ... ] array literal.
+    const tldrMatch = chunk.match(/tldr:\s*\[([\s\S]*?)\n\s*\],/);
+    let tldrFirst = null;
+    if (tldrMatch) {
+      const first = tldrMatch[1].match(/'((?:\\.|[^'\\])*)'/);
+      if (first) tldrFirst = first[1].replace(/\\'/g, "'");
+    }
+
+    // First FAQ entry. We look for `{ question: '...', answer: '...' }`
+    // inside the faq array.
+    const faqMatch = chunk.match(/faq:\s*\[([\s\S]*?)\n\s*\],/);
+    let faqFirst = null;
+    if (faqMatch) {
+      const fq = faqMatch[1].match(/question:\s*'((?:\\.|[^'\\])*)'/);
+      const fa = faqMatch[1].match(/answer:\s*'((?:\\.|[^'\\])*)'/);
+      if (fq && fa) {
+        faqFirst = {
+          question: fq[1].replace(/\\'/g, "'"),
+          answer: fa[1].replace(/\\'/g, "'"),
+        };
+      }
+    }
+
+    out[slug] = {
+      slug,
+      title: gs('title'),
+      description: gs('description'),
+      tldrFirst,
+      faqFirst,
+    };
+  }
+  return out;
+}
+
+const BLOG_POSTS = loadBlogPosts();
+
 // ------- per-route metadata ------------------------------------------------
 
 const RARITY_LABEL = {
@@ -205,6 +271,34 @@ function careTopicMeta(id) {
   };
 }
 
+function blogPostMeta(slug, route) {
+  const post = BLOG_POSTS[slug];
+  const fallbackTitle = route?.meta?.title || humanize(slug);
+  const fallbackDesc = route?.meta?.description || `${fallbackTitle} — long-form crested gecko article on Geck Inspect.`;
+  if (!post) {
+    return {
+      title: fallbackTitle,
+      description: fallbackDesc.slice(0, 320),
+      bodyHeading: fallbackTitle,
+      bodyLead: fallbackDesc,
+      bodyExtra: null,
+    };
+  }
+  // Compose the body extra from the first TL;DR bullet + first FAQ
+  // pair so the noscript shell ships substantive text for non-JS
+  // crawlers without duplicating the entire post.
+  const extraParts = [];
+  if (post.tldrFirst) extraParts.push(`TL;DR: ${post.tldrFirst}`);
+  if (post.faqFirst) extraParts.push(`Q: ${post.faqFirst.question} A: ${post.faqFirst.answer}`);
+  return {
+    title: post.title || fallbackTitle,
+    description: (post.description || fallbackDesc).slice(0, 320),
+    bodyHeading: post.title || fallbackTitle,
+    bodyLead: post.description || fallbackDesc,
+    bodyExtra: extraParts.join(' '),
+  };
+}
+
 function routeMeta(route) {
   // Morph detail override
   const morphMatch = route.path.match(/^\/MorphGuide\/([a-z0-9-]+)$/);
@@ -212,6 +306,9 @@ function routeMeta(route) {
   // Care topic override
   const careMatch = route.path.match(/^\/CareGuide\/([a-z0-9-]+)$/);
   if (careMatch) return careTopicMeta(careMatch[1]);
+  // Blog post override
+  const blogMatch = route.path.match(/^\/blog\/([a-z0-9-]+)$/);
+  if (blogMatch) return blogPostMeta(blogMatch[1], route);
   const m = route.meta || {};
   return {
     title: m.title || 'Geck Inspect',
@@ -344,6 +441,7 @@ function injectNoscriptBody(html, route) {
             <a href="/CareGuide">Care Guide</a>
             <a href="/GeneticsGuide">Genetics</a>
             <a href="/GeneticCalculatorTool">Calculator</a>
+            <a href="/blog">Blog</a>
             <a href="/About">About</a>
           </nav>
           <h1>${escapeHtml(heading)}</h1>
@@ -414,6 +512,7 @@ function run() {
     ...getMorphRoutes(),
     ...getMorphTaxonomyRoutes(),
     ...getCareTopicRoutes(),
+    ...getBlogRoutes(),
   ].filter((r) => !SKIP.has(r.path));
 
   for (const route of routes) writeRoute(route);
