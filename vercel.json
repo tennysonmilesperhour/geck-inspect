@@ -92,7 +92,23 @@
       "destination": "/index.html"
     },
     {
-      "source": "/HomePage",
+      "source": "/AdminPanel",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/Breeder",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/BreederConsultant",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/Breeding",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/BreedingPairs",
       "destination": "/index.html"
     },
     {
@@ -100,7 +116,119 @@
       "destination": "/index.html"
     },
     {
+      "source": "/ForumPost",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/GeckoDetail",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/LikedGeckos",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/Lineage",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/MarketplaceSalesStats",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/MarketplaceSell",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/Messages",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/MorphGuideSubmission",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/MyGeckos",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/MyListings",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/MyProfile",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/Notifications",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/OtherReptiles",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/Pedigree",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/ProjectManager",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/PublicProfile",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/Recognition",
+      "destination": "/index.html"
+    },
+    {
       "source": "/Settings",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/Subscription",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/TrainModel",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/Training",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/MarketPricing",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/BreedingROI",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/BreedingLoans",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/GeckAnswers",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/BatchHusbandry",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/PrintableWorksheets",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/BreederStorefront",
+      "destination": "/index.html"
+    },
+    {
+      "source": "/BreederShipping",
       "destination": "/index.html"
     },
     {

@@ -451,7 +451,12 @@ const DYNAMIC_ROUTE_PATTERNS = [
 function loadAuthenticatedPagePaths() {
   const src = readFileSync(resolve(REPO_ROOT, 'src/pages.config.js'), 'utf8');
   // Extract the `PAGES = { "Key": ... }` block and pull every quoted key.
-  const m = src.match(/export const PAGES\s*=\s*\{([\s\S]*?)\}\s*\n/);
+  // The leading `\n` anchors the match to a line-starting `export` so the
+  // JSDoc example at the top of pages.config.js (where `export const PAGES`
+  // is prefixed with ` * `) doesn't win the non-greedy match and starve
+  // vercel.json of every auth-gated route — that regression 404'd reloads
+  // on /MyGeckos, /Breeding, /ForumPost, etc.
+  const m = src.match(/\nexport const PAGES\s*=\s*\{([\s\S]*?)\n\}/);
   if (!m) {
     throw new Error('seo-routes: could not find PAGES object in src/pages.config.js');
   }
