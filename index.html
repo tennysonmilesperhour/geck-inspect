@@ -64,6 +64,28 @@
       })();
     </script>
 
+    <!-- Google Analytics 4 — prod hostnames only. Staging and preview
+         builds skip the script entirely so they don't pollute the GA
+         stream. `send_page_view: false` prevents a double pageview on
+         initial load; GA4PageTracker.jsx fires one explicit page_view
+         per React-Router navigation (including the first render). -->
+    <script>
+      (function () {
+        var h = location.hostname;
+        var isProd = h === 'geckinspect.com' || h === 'www.geckinspect.com';
+        if (!isProd) return;
+        var GA_ID = 'G-WLGHJ7KC2N';
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+        document.head.appendChild(s);
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { window.dataLayer.push(arguments); };
+        window.gtag('js', new Date());
+        window.gtag('config', GA_ID, { send_page_view: false });
+      })();
+    </script>
+
     <!-- Theme -->
     <meta name="theme-color" content="#064e3b" />
     <meta name="color-scheme" content="dark" />

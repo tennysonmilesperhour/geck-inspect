@@ -7,6 +7,7 @@ import { queryClientInstance } from '@/lib/query-client'
 import VisualEditAgent from '@/lib/VisualEditAgent'
 import NavigationTracker from '@/lib/NavigationTracker'
 import PostHogPageTracker from '@/lib/PostHogPageTracker'
+import GA4PageTracker from '@/lib/GA4PageTracker'
 import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
@@ -219,6 +220,7 @@ function App() {
             <ScrollToTop />
             <NavigationTracker />
             <PostHogPageTracker />
+            <GA4PageTracker />
             <AuthenticatedApp />
           </Router>
           <Toaster />
