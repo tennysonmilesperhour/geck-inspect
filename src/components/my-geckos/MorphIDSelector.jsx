@@ -6,11 +6,16 @@ import { Dna, ChevronDown, ChevronUp, Search } from 'lucide-react';
 /**
  * Comprehensive crested gecko morph/trait tag selector.
  *
- * Categories and traits sourced from:
- *   - MorphMarket Morphpedia (morphmarket.com/morphpedia/crested-geckos)
- *   - Lil Monsters Foundation Genetics (lmreptiles.com)
- *   - Fringemorphs (fringemorphs.com)
- *   - The Gecko Geek, CB Reptile, Zen Habitats, Moon Valley Reptiles
+ * Inheritance classifications follow the Foundation Genetics consensus
+ * (mirrored in `src/components/morph-id/morphTaxonomy.js` — the canonical
+ * in-repo reference). Trait list sourced from MorphMarket Morphpedia,
+ * Lil Monsters Foundation Genetics, Fringemorphs, and community glossaries.
+ *
+ * Notes on intentional omissions:
+ *   - Super Lilly White is embryonic-lethal (Lilly × Lilly loses ~25% of
+ *     eggs). No animal walks around as one, so it isn't a taggable state.
+ *   - Albino is not a proven crested gecko trait. Leucistic / axanthic
+ *     animals get mislabeled as albino; keep the axanthic tag instead.
  *
  * Traits are mutually exclusive where biologically appropriate (e.g. a
  * gecko can't be both Fired Up and Fired Down simultaneously) but the
@@ -22,14 +27,19 @@ const MORPH_CATEGORIES = {
     color: "bg-purple-900/50 border-purple-700",
     badge: "bg-purple-700",
     morphs: [
-      "Lilly White", "Super Lilly White",
-      "Axanthic",
-      "Albino",
+      "Lilly White",
       "Cappuccino", "Super Cappuccino",
       "Soft Scale", "Super Soft Scale",
       "Moonglow",
       "Empty Back", "Super Empty Back",
       "White Wall",
+    ],
+  },
+  "Proven Genetics (Recessive)": {
+    color: "bg-rose-900/50 border-rose-700",
+    badge: "bg-rose-700",
+    morphs: [
+      "Axanthic",
     ],
   },
   "Combo Morphs": {
@@ -51,7 +61,6 @@ const MORPH_CATEGORIES = {
     morphs: [
       "Het Lilly White", "Possible Het Lilly White",
       "Het Axanthic", "Possible Het Axanthic",
-      "Het Albino", "Possible Het Albino",
       "Het Cappuccino", "Possible Het Cappuccino",
       "Het Soft Scale", "Possible Het Soft Scale",
       "Het Moonglow", "Possible Het Moonglow",
