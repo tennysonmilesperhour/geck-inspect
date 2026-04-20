@@ -11,6 +11,7 @@ import { differenceInDays } from 'date-fns';
 export default function EggDetailModal({ egg, breedingPlan, sire, dam, onClose, onUpdate }) {
     const [isEditing, setIsEditing] = useState(false);
     const [isSaving, setIsSaving] = useState(false);
+    const [saveError, setSaveError] = useState(null);
     const [editData, setEditData] = useState({
         lay_date: egg.lay_date,
         hatch_date_expected: egg.hatch_date_expected,
@@ -26,20 +27,29 @@ export default function EggDetailModal({ egg, breedingPlan, sire, dam, onClose, 
 
     const handleSave = async () => {
         setIsSaving(true);
+        setSaveError(null);
         try {
-            const updatePayload = { ...editData };
-            
-            // Auto-archive if not incubating
+            // Supabase rejects empty strings for date columns and enum fields —
+            // convert them to null so the update goes through.
+            const updatePayload = {
+                lay_date: editData.lay_date || null,
+                hatch_date_expected: editData.hatch_date_expected || null,
+                hatch_date_actual: editData.hatch_date_actual || null,
+                status: editData.status,
+                grade: editData.grade || null,
+            };
+
             if (editData.status !== 'Incubating') {
                 updatePayload.archived = true;
                 updatePayload.archived_date = new Date().toISOString().split('T')[0];
             }
-            
+
             await Egg.update(egg.id, updatePayload);
             onUpdate();
             onClose();
         } catch (error) {
             console.error("Failed to update egg:", error);
+            setSaveError(error?.message || 'Failed to save changes. Please try again.');
         }
         setIsSaving(false);
     };
@@ -151,6 +161,12 @@ export default function EggDetailModal({ egg, breedingPlan, sire, dam, onClose, 
                             </Select>
                         </div>
                     </div>
+
+                    {saveError && (
+                        <div className="bg-red-900/30 border border-red-700 rounded-lg p-3 text-sm text-red-300">
+                            {saveError}
+                        </div>
+                    )}
                 </div>
 
                 <DialogFooter>
