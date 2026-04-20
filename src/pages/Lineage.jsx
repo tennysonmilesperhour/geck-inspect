@@ -3,6 +3,7 @@ import Seo from '@/components/seo/Seo';
 import { useLocation } from 'react-router-dom';
 import { Gecko, BreedingPlan, LineagePlaceholder } from '@/entities/all';
 import { base44 as base44Client } from '@/api/base44Client';
+import { uploadFile } from '@/lib/uploadFile';
 import { Loader2, Search, ZoomIn, ZoomOut, GitBranch, Heart, Users2, Edit2, Upload, Download, AlertTriangle, ExternalLink, Dna, Calendar, Scale, Tag, X, Link as LinkIcon, Check } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
@@ -805,7 +806,7 @@ export default function Lineage() {
         if (!file) return;
         setIsUploadingImage(true);
         try {
-            const { file_url } = await base44Client.integrations.Core.UploadFile({ file });
+            const { file_url } = await uploadFile({ file, folder: 'lineage-placeholders' });
             setPlaceholderForm(f => ({ ...f, image_url: file_url }));
         } catch (error) {
             console.error('Failed to upload image:', error);
