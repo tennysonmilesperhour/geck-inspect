@@ -429,7 +429,7 @@ export function getAllRoutes() {
 // Pages that are always rendered inside <AuthenticatedApp> but live at
 // /<Key>. The React router mounts `/Home` in the unauthenticated branch
 // too, so list it here for completeness.
-const AUTH_EXTRA_STATIC_PATHS = ['/Home', '/AdminMigration'];
+const AUTH_EXTRA_STATIC_PATHS = ['/Home'];
 
 // Vercel `source` patterns for parametric routes. Specific patterns
 // (prefix-disambiguated) are listed before looser ones so that Vercel's

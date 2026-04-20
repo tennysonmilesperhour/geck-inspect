@@ -36,7 +36,6 @@ const OUT_PATH = resolve(REPO_ROOT, 'vercel.json');
 // /Membership are still indexable as marketing surface.
 const NOINDEX_PAGES = [
   '/AdminPanel',
-  '/AdminMigration',
   '/Settings',
   '/Notifications',
   '/Messages',

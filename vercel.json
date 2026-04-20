@@ -88,10 +88,6 @@
       "destination": "/index.html"
     },
     {
-      "source": "/AdminMigration",
-      "destination": "/index.html"
-    },
-    {
       "source": "/AdminPanel",
       "destination": "/index.html"
     },
@@ -737,15 +733,6 @@
     },
     {
       "source": "/AdminPanel",
-      "headers": [
-        {
-          "key": "X-Robots-Tag",
-          "value": "noindex, nofollow"
-        }
-      ]
-    },
-    {
-      "source": "/AdminMigration",
       "headers": [
         {
           "key": "X-Robots-Tag",

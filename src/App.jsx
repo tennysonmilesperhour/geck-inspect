@@ -61,9 +61,6 @@ const Contact               = lazy(() => import('./pages/Contact'));
 const Terms                 = lazy(() => import('./pages/Terms'));
 const MarketplaceVerification = lazy(() => import('./pages/MarketplaceVerification'));
 
-// Special-case pages that need unique routing (no layout, param routes, etc.)
-const AdminMigration = lazy(() => import('./pages/AdminMigration'));
-
 // P1 — Animal Passport (public pages, no auth required)
 const AnimalPassport        = lazy(() => import('./pages/AnimalPassport'));
 const PassportQR            = lazy(() => import('./pages/PassportQR'));
@@ -193,7 +190,6 @@ const AuthenticatedApp = () => {
           <MorphDetail />
         </LayoutWrapper>
       } />
-      <Route path="/AdminMigration" element={<AdminMigration />} />
       {/* Editorial blog — accessible to authenticated users too */}
       <Route path="/blog" element={<BlogIndex />} />
       <Route path="/blog/:slug" element={<BlogPost />} />
