@@ -232,6 +232,10 @@
       "destination": "/index.html"
     },
     {
+      "source": "/ImageImport",
+      "destination": "/index.html"
+    },
+    {
       "source": "/MorphGuide/category/pattern",
       "destination": "/index.html"
     },

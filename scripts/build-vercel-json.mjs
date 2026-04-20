@@ -111,6 +111,17 @@ function buildConfig() {
     destination: '/index.html',
   }));
 
+  // Catch-all SPA rewrite. Vercel rewrites are matched in order, so this
+  // only fires when an incoming path matches none of the enumerated SPA
+  // patterns above. Needed so that a full-page reload on any route —
+  // including pages added between builds or dynamically-generated URLs —
+  // falls through to the SPA instead of serving /public/404.html.
+  //
+  // Restored in commit 80e9795 after a refresh-toast reload on
+  // /ImageImport returned 404 because the enumerated list didn't yet
+  // include it.
+  rewrites.push({ source: '/:path*', destination: '/index.html' });
+
   // NOTE: Do NOT add `_comment` (or any unknown top-level key) to the
   // returned object. Vercel's schema validator now rejects unknown
   // properties with "should NOT have additional property X", which
