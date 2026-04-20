@@ -47,6 +47,7 @@ import {
   fetchGa4TrafficSources,
   fetchGa4Summary,
 } from './growth/ga4.mjs';
+import { appendGapsToQueue } from './growth/blog-queue-feed.mjs';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
@@ -363,6 +364,13 @@ async function main() {
   });
   writeFileSync(outFile, md);
   console.log(`[growth-report] wrote ${outFile} · ${findings.page2Queries.length + findings.lowCtr.length + findings.queryGaps.length + findings.engagementLag.length} findings`);
+
+  // Feed query gaps into the blog pipeline so the existing research
+  // → draft → publish flow picks them up on its next run.
+  const added = appendGapsToQueue(findings.queryGaps);
+  if (added > 0) {
+    console.log(`[growth-report] appended ${added} query gap(s) to docs/blog-queue.json`);
+  }
 }
 
 main().catch((e) => {
