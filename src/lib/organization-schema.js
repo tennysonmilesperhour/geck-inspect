@@ -26,7 +26,7 @@ export const SITE_DESCRIPTION =
   'The professional platform for crested gecko breeders and keepers. Track collections, plan breedings, identify morphs with AI, and connect with the community.';
 
 export const LOGO_URL =
-  'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png';
+  'https://geckinspect.com/logo.png';
 
 // External profiles for Organization.sameAs. Every URL here is a signed
 // Geck Inspect presence that AI entity-recognition systems weigh heavily.

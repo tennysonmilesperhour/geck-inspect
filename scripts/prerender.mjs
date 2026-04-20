@@ -57,7 +57,7 @@ const SHELL_PATH = resolve(DIST, 'index.html');
 const SHELL_HTML = readFileSync(SHELL_PATH, 'utf8');
 
 const LOGO_URL =
-  'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png';
+  'https://geckinspect.com/logo.png';
 
 /**
  * Light-touch slug humanizer mirrored from morphUtils so the script has
