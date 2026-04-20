@@ -21,6 +21,12 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from '@/components/ui/tooltip';
+import {
   PlusCircle,
   Edit,
   Trash2,
@@ -429,39 +435,47 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                         </Button>
                     </div>
 
-                    <div className="flex gap-1 flex-wrap">
-                        {eggCounts.eggsLaid > 0 && (
-                            <div className="relative group/tip">
-                                <div className="bg-amber-100 text-amber-900 text-xs px-1.5 py-0.5 rounded flex items-center gap-1 cursor-default">
-                                    <EggIcon className="w-3 h-3" />
-                                    {eggCounts.eggsLaid}
-                                </div>
-                                <div className="pointer-events-none absolute bottom-full right-0 mb-1.5 px-2 py-1 bg-slate-800 text-slate-100 text-xs rounded shadow-lg whitespace-nowrap opacity-0 group-hover/tip:opacity-100 transition-opacity duration-150 z-50">
-                                    Eggs incubating
-                                </div>
-                            </div>
-                        )}
-                        {eggCounts.hatched > 0 && (
-                            <div className="relative group/tip">
-                                <div className="bg-green-600 text-white text-xs px-1.5 py-0.5 rounded cursor-default">
-                                    ✓ {eggCounts.hatched}
-                                </div>
-                                <div className="pointer-events-none absolute bottom-full right-0 mb-1.5 px-2 py-1 bg-slate-800 text-slate-100 text-xs rounded shadow-lg whitespace-nowrap opacity-0 group-hover/tip:opacity-100 transition-opacity duration-150 z-50">
-                                    Hatched
-                                </div>
-                            </div>
-                        )}
-                        {eggCounts.failed > 0 && (
-                            <div className="relative group/tip">
-                                <div className="bg-yellow-600 text-white text-xs px-1.5 py-0.5 rounded cursor-default">
-                                    ✗ {eggCounts.failed}
-                                </div>
-                                <div className="pointer-events-none absolute bottom-full right-0 mb-1.5 px-2 py-1 bg-slate-800 text-slate-100 text-xs rounded shadow-lg whitespace-nowrap opacity-0 group-hover/tip:opacity-100 transition-opacity duration-150 z-50">
-                                    Failed / Slug / Infertile
-                                </div>
-                            </div>
-                        )}
-                    </div>
+                    <TooltipProvider delayDuration={150}>
+                        <div className="flex gap-1 flex-wrap">
+                            {eggCounts.eggsLaid > 0 && (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <div className="bg-amber-100 text-amber-900 text-xs px-1.5 py-0.5 rounded flex items-center gap-1 cursor-default">
+                                            <EggIcon className="w-3 h-3" />
+                                            {eggCounts.eggsLaid}
+                                        </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="bg-slate-800 text-slate-100">
+                                        Eggs incubating
+                                    </TooltipContent>
+                                </Tooltip>
+                            )}
+                            {eggCounts.hatched > 0 && (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <div className="bg-green-600 text-white text-xs px-1.5 py-0.5 rounded cursor-default">
+                                            ✓ {eggCounts.hatched}
+                                        </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="bg-slate-800 text-slate-100">
+                                        Hatched
+                                    </TooltipContent>
+                                </Tooltip>
+                            )}
+                            {eggCounts.failed > 0 && (
+                                <Tooltip>
+                                    <TooltipTrigger asChild>
+                                        <div className="bg-yellow-600 text-white text-xs px-1.5 py-0.5 rounded cursor-default">
+                                            ✗ {eggCounts.failed}
+                                        </div>
+                                    </TooltipTrigger>
+                                    <TooltipContent side="top" className="bg-slate-800 text-slate-100">
+                                        Failed / Slug / Infertile
+                                    </TooltipContent>
+                                </Tooltip>
+                            )}
+                        </div>
+                    </TooltipProvider>
                 </CardFooter>
             </Card>
 
