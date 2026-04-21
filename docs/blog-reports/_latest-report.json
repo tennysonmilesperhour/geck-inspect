@@ -1,0 +1,20 @@
+{
+  "weekKey": "2026-W15",
+  "reportPath": "docs/blog-reports/2026-W15.md",
+  "generatedAt": "2026-04-18T17:22:05.093Z",
+  "stats": {
+    "published": 0,
+    "drafted": 0,
+    "rejected": 0,
+    "queueDepth": 0,
+    "avgScore": 0,
+    "budgetUsd": 0
+  },
+  "issueTitle": "Blog pipeline weekly report — 2026-W15",
+  "issueBody": "# Blog pipeline — weekly report 2026-W15\n\nGenerated 2026-04-18T17:22:05.093Z.\n\n## Headline\n\n- **Posts published:** 0 (target 3/week)\n- **Posts drafted:** 0\n- **Drafts rejected:** 0\n- **Queue depth:** 0\n- **Avg published score:** 0.00\n- **Spend last week:** $0.0000 / $10.00\n- **Spend this week so far:** $0.0094\n\n## What shipped\n\n_Nothing published this week._\n\n## In the queue\n\n_Queue is empty. Next research pass will refill._\n\n## Research signal health\n\nMost recent research run: 2026-04-18T16:43:29.353Z\n\n- Reddit items:       0\n- MorphMarket items:  0\n- Google autocomplete: 95\n- Pangea forum:       0\n\nSource errors to investigate:\n- CrestedGecko/hot: 403 Blocked\n- CrestedGecko/new: 403 Blocked\n- CrestedGecko/top-week: 403 Blocked\n- Reptiles/hot: 403 Blocked\n- Reptiles/new: 403 Blocked\n- Reptiles/top-week: 403 Blocked\n- morphmarket: 403 Forbidden\n- pangea: 404 Not Found\n\n## Budget detail\n\nSpend per model:\n\nSpend per pipeline stage:\n\n\n## Suggestions\n\n- No posts published last week. Either the drafts weren't merged, or the draft agent skipped every slot. Check the blog-draft PRs — any still open?\n- Queue is running low. The next research pass will refill, but if this persists for two weeks, widen the source list (Discord, FB public pages) or lower the score threshold.\n- Used less than 20% of the weekly budget. There's headroom for a second reviewer pass or longer drafts if desired.\n\n## How to intervene\n\n- **Kill a bad topic:** edit `docs/blog-queue.json`, set the topic's status to `rejected` and add a `rejectionReason`.\n- **Force a specific topic next:** reorder `docs/blog-queue.json`; the draft agent picks highest-scored `new`/`scheduled` entry.\n- **Pause the pipeline:** disable the workflow in GitHub Actions UI (Settings → Actions → blog-pipeline).\n- **Adjust voice:** edit `docs/blog-voice-examples.md` — the writer agent picks it up on the next run.\n- **Adjust style rules:** edit `docs/blog-style-guide.md`.\n- **Adjust budget cap:** edit `WEEKLY_CAP_USD` in `scripts/blog/lib/budget.mjs`.\n\n",
+  "suggestions": [
+    "No posts published last week. Either the drafts weren't merged, or the draft agent skipped every slot. Check the blog-draft PRs — any still open?",
+    "Queue is running low. The next research pass will refill, but if this persists for two weeks, widen the source list (Discord, FB public pages) or lower the score threshold.",
+    "Used less than 20% of the weekly budget. There's headroom for a second reviewer pass or longer drafts if desired."
+  ]
+}

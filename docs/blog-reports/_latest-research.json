@@ -1,0 +1,22 @@
+{
+  "ranAt": "2026-04-18T16:43:29.353Z",
+  "signals": {
+    "reddit": 0,
+    "morphmarket": 0,
+    "googleAc": 95,
+    "pangea": 0,
+    "errors": [
+      "CrestedGecko/hot: 403 Blocked",
+      "CrestedGecko/new: 403 Blocked",
+      "CrestedGecko/top-week: 403 Blocked",
+      "Reptiles/hot: 403 Blocked",
+      "Reptiles/new: 403 Blocked",
+      "Reptiles/top-week: 403 Blocked",
+      "morphmarket: 403 Forbidden",
+      "pangea: 404 Not Found"
+    ]
+  },
+  "costUsd": 0.009422999999999999,
+  "addedSlugs": [],
+  "rationale": "The signal set consists entirely of Google Autocomplete suggestions with zero Reddit forum threads, MorphMarket listings, or Pangea forum activity. While autocomplete volume is high (95 suggestions across morphs and care topics), autocomplete alone does not reliably indicate reader demand, debate, or breeding-specific confusion—the signals that typically ground our best blog topics. The suggestions are generic (prices, care, \"for sale\") and don't reveal concrete misconceptions, pairing outcomes, or breeder pain points. Without forum discussion showing disagreement or confusion, or MorphMarket activity around specific trait combinations, I cannot confidently propose a topic that meets our accuracy and voice standards. The Cappuccino slug is already published. Topics like \"breeding setup,\" \"morphs with pictures,\" and \"morph calculator\" are either general husbandry or pure listicles without a through-line. Recommending zero topics this week is the right call."
+}
