@@ -129,8 +129,6 @@ function buildConfig() {
   // in this file and in scripts/seo-routes.mjs instead.
   return {
     $schema: 'https://openapi.vercel.sh/vercel.json',
-    cleanUrls: true,
-    trailingSlash: false,
     rewrites,
   };
 }
