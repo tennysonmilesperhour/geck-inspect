@@ -5,5 +5,316 @@
       "source": "/(.*)",
       "destination": "/index.html"
     }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        {
+          "key": "Strict-Transport-Security",
+          "value": "max-age=63072000; includeSubDomains; preload"
+        },
+        {
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
+        },
+        {
+          "key": "X-Frame-Options",
+          "value": "SAMEORIGIN"
+        },
+        {
+          "key": "Referrer-Policy",
+          "value": "strict-origin-when-cross-origin"
+        },
+        {
+          "key": "Permissions-Policy",
+          "value": "accelerometer=(), autoplay=(self), camera=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(self), usb=(), interest-cohort=()"
+        },
+        {
+          "key": "Cross-Origin-Opener-Policy",
+          "value": "same-origin"
+        },
+        {
+          "key": "X-Robots-Tag",
+          "value": "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1"
+        }
+      ]
+    },
+    {
+      "source": "/(.*\\.html)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=0, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/assets/(.*)",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=31536000, immutable"
+        }
+      ]
+    },
+    {
+      "source": "/sitemap.xml",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "application/xml; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/robots.txt",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/plain; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=86400, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/llms.txt",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/llms-full.txt",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/markdown; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, must-revalidate"
+        }
+      ]
+    },
+    {
+      "source": "/morphs.csv",
+      "headers": [
+        {
+          "key": "Content-Type",
+          "value": "text/csv; charset=utf-8"
+        },
+        {
+          "key": "Cache-Control",
+          "value": "public, max-age=3600, must-revalidate"
+        },
+        {
+          "key": "Access-Control-Allow-Origin",
+          "value": "*"
+        }
+      ]
+    },
+    {
+      "source": "/AdminPanel",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/Settings",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/Notifications",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    },
+    {
+      "source": "/Messages",
+      "headers": [
+        {
+          "key": "X-Robots-Tag",
+          "value": "noindex, nofollow"
+        }
+      ]
+    }
+  ],
+  "redirects": [
+    {
+      "source": "/Breeder",
+      "has": [
+        {
+          "type": "query",
+          "key": "slug",
+          "value": "(?<slug>.+)"
+        }
+      ],
+      "destination": "/Breeder/:slug",
+      "permanent": true
+    },
+    {
+      "source": "/morphguide",
+      "destination": "/MorphGuide",
+      "permanent": true
+    },
+    {
+      "source": "/morphguide/:slug",
+      "destination": "/MorphGuide/:slug",
+      "permanent": true
+    },
+    {
+      "source": "/morphguide/category/:categoryId",
+      "destination": "/MorphGuide/category/:categoryId",
+      "permanent": true
+    },
+    {
+      "source": "/morphguide/inheritance/:inheritanceId",
+      "destination": "/MorphGuide/inheritance/:inheritanceId",
+      "permanent": true
+    },
+    {
+      "source": "/careguide",
+      "destination": "/CareGuide",
+      "permanent": true
+    },
+    {
+      "source": "/careguide/:topic",
+      "destination": "/CareGuide/:topic",
+      "permanent": true
+    },
+    {
+      "source": "/geneticsguide",
+      "destination": "/GeneticsGuide",
+      "permanent": true
+    },
+    {
+      "source": "/geneticcalculatortool",
+      "destination": "/GeneticCalculatorTool",
+      "permanent": true
+    },
+    {
+      "source": "/morphvisualizer",
+      "destination": "/MorphVisualizer",
+      "permanent": true
+    },
+    {
+      "source": "/marketplace",
+      "destination": "/Marketplace",
+      "permanent": true
+    },
+    {
+      "source": "/marketplacebuy",
+      "destination": "/MarketplaceBuy",
+      "permanent": true
+    },
+    {
+      "source": "/marketplaceverification",
+      "destination": "/MarketplaceVerification",
+      "permanent": true
+    },
+    {
+      "source": "/gallery",
+      "destination": "/Gallery",
+      "permanent": true
+    },
+    {
+      "source": "/forum",
+      "destination": "/Forum",
+      "permanent": true
+    },
+    {
+      "source": "/communityconnect",
+      "destination": "/CommunityConnect",
+      "permanent": true
+    },
+    {
+      "source": "/shipping",
+      "destination": "/Shipping",
+      "permanent": true
+    },
+    {
+      "source": "/giveaways",
+      "destination": "/Giveaways",
+      "permanent": true
+    },
+    {
+      "source": "/geckanswers",
+      "destination": "/GeckAnswers",
+      "permanent": true
+    },
+    {
+      "source": "/membership",
+      "destination": "/Membership",
+      "permanent": true
+    },
+    {
+      "source": "/about",
+      "destination": "/About",
+      "permanent": true
+    },
+    {
+      "source": "/contact",
+      "destination": "/Contact",
+      "permanent": true
+    },
+    {
+      "source": "/terms",
+      "destination": "/Terms",
+      "permanent": true
+    },
+    {
+      "source": "/privacypolicy",
+      "destination": "/PrivacyPolicy",
+      "permanent": true
+    },
+    {
+      "source": "/authportal",
+      "destination": "/AuthPortal",
+      "permanent": true
+    },
+    {
+      "source": "/breeder",
+      "destination": "/Breeder",
+      "permanent": true
+    },
+    {
+      "source": "/breeder/:slug",
+      "destination": "/Breeder/:slug",
+      "permanent": true
+    }
   ]
 }
