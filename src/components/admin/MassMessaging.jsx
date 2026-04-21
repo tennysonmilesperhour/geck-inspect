@@ -195,8 +195,12 @@ Return JSON: { "subject": "short email-style subject, under 70 chars", "content"
       let failures = 0;
       for (const user of targetUsers) {
         try {
+          // Send from the system identity instead of the admin's personal
+          // email so the admin's inbox doesn't end up with one outgoing
+          // conversation per recipient. Messages.jsx renders this sender
+          // as "Geck Inspect Team" with a System badge.
           await DirectMessage.create({
-            sender_email: adminEmail,
+            sender_email: 'system@geckinspect.com',
             recipient_email: user.email,
             content: `**${subject}**\n\n${content}`,
             message_type: 'system',
