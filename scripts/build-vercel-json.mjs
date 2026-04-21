@@ -109,22 +109,16 @@ const CASE_REDIRECTS = [
  *   - Security headers follow the 2026 OWASP baseline.
  */
 function buildConfig() {
-  const spaPatterns = getAllSpaPathPatterns();
-  const rewrites = spaPatterns.map((source) => ({
-    source,
-    destination: '/index.html',
-  }));
-
-  // Catch-all SPA rewrite. Vercel rewrites are matched in order, so this
-  // only fires when an incoming path matches none of the enumerated SPA
-  // patterns above. Needed so that a full-page reload on any route —
-  // including pages added between builds or dynamically-generated URLs —
-  // falls through to the SPA.
-  //
-  // Uses the regex-style `/(.*)` pattern Vercel's own Vite SPA docs
-  // recommend, not the named-param `/:path*`. The two should be
-  // equivalent, but `/(.*)` is the documented canonical form.
-  rewrites.push({ source: '/(.*)', destination: '/index.html' });
+  // 2026-04-21 debugging: the 147-entry enumerated rewrite list was
+  // emitted correctly but Vercel serves a 404 for every
+  // non-prerendered path (/MyGeckos, /Dashboard, /Settings, etc.)
+  // including random strings that should hit the catch-all. Stripping
+  // down to just the catch-all to see if the volume / ordering / other
+  // config fields were somehow suppressing rewrite matches. If this
+  // works, we'll rebuild the enumerated list; if it doesn't, the issue
+  // is elsewhere (framework preset override, a project-level Install
+  // / Build command, etc.).
+  const rewrites = [{ source: '/(.*)', destination: '/index.html' }];
 
   // NOTE: Do NOT add `_comment` (or any unknown top-level key) to the
   // returned object. Vercel's schema validator now rejects unknown
@@ -138,92 +132,6 @@ function buildConfig() {
     cleanUrls: true,
     trailingSlash: false,
     rewrites,
-    headers: [
-      {
-        source: '/(.*)',
-        headers: [
-          { key: 'Strict-Transport-Security', value: 'max-age=63072000; includeSubDomains; preload' },
-          { key: 'X-Content-Type-Options', value: 'nosniff' },
-          { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
-          { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
-          {
-            key: 'Permissions-Policy',
-            value:
-              'accelerometer=(), autoplay=(self), camera=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(self), usb=(), interest-cohort=()',
-          },
-          { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
-          {
-            key: 'X-Robots-Tag',
-            value: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
-          },
-        ],
-      },
-      {
-        source: '/(.*\\.html)',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' }],
-      },
-      {
-        source: '/',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=0, must-revalidate' }],
-      },
-      {
-        source: '/assets/(.*)',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
-      },
-      {
-        source: '/sitemap.xml',
-        headers: [
-          { key: 'Content-Type', value: 'application/xml; charset=utf-8' },
-          { key: 'Cache-Control', value: 'public, max-age=3600, must-revalidate' },
-        ],
-      },
-      {
-        source: '/robots.txt',
-        headers: [
-          { key: 'Content-Type', value: 'text/plain; charset=utf-8' },
-          { key: 'Cache-Control', value: 'public, max-age=86400, must-revalidate' },
-        ],
-      },
-      {
-        source: '/llms.txt',
-        headers: [
-          { key: 'Content-Type', value: 'text/markdown; charset=utf-8' },
-          { key: 'Cache-Control', value: 'public, max-age=3600, must-revalidate' },
-        ],
-      },
-      {
-        source: '/llms-full.txt',
-        headers: [
-          { key: 'Content-Type', value: 'text/markdown; charset=utf-8' },
-          { key: 'Cache-Control', value: 'public, max-age=3600, must-revalidate' },
-        ],
-      },
-      {
-        source: '/morphs.csv',
-        headers: [
-          { key: 'Content-Type', value: 'text/csv; charset=utf-8' },
-          { key: 'Cache-Control', value: 'public, max-age=3600, must-revalidate' },
-          { key: 'Access-Control-Allow-Origin', value: '*' },
-        ],
-      },
-      ...NOINDEX_PAGES.map((source) => ({
-        source,
-        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
-      })),
-    ],
-    redirects: [
-      {
-        source: '/Breeder',
-        has: [{ type: 'query', key: 'slug', value: '(?<slug>.+)' }],
-        destination: '/Breeder/:slug',
-        permanent: true,
-      },
-      ...CASE_REDIRECTS.map(({ from, to }) => ({
-        source: from,
-        destination: to,
-        permanent: true,
-      })),
-    ],
   };
 }
 
@@ -232,7 +140,7 @@ function main() {
   const body = JSON.stringify(config, null, 2) + '\n';
   writeFileSync(OUT_PATH, body, 'utf8');
   const count = config.rewrites.length;
-  console.log(`[vercel.json] wrote ${count} SPA rewrites + ${config.redirects.length} redirects`);
+  console.log(`[vercel.json] wrote ${count} SPA rewrites`);
 }
 
 main();
