@@ -415,11 +415,15 @@ html, body, #root {
              content stays at 16rem so icons stay at their original
              positions and text simply gets clipped by the rail's
              overflow:hidden. Text elements also fade out via opacity
-             for a smooth cross-fade. */
+             for a smooth cross-fade. `zoom` renders the whole column
+             at 85% of its CSS size so the menu + icons + font all
+             shrink uniformly without having to touch every Tailwind
+             text-*/size-*/padding utility. */
           .desktop-sidebar-inner {
             width: 16rem;
             overflow: hidden;
-            transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            zoom: 0.85;
+            transition: width 0.16s cubic-bezier(0.4, 0, 0.2, 1);
           }
           .desktop-sidebar-wrapper.is-collapsed .desktop-sidebar-inner {
             width: 4rem;
@@ -431,24 +435,24 @@ html, body, #root {
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item > span,
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item .ml-auto {
             opacity: 0;
-            transition: opacity 0.15s ease;
+            transition: opacity 0.08s ease;
           }
           .desktop-sidebar-wrapper:not(.is-collapsed) .sidebar-nav-item > span,
           .desktop-sidebar-wrapper:not(.is-collapsed) .sidebar-nav-item .ml-auto {
             opacity: 1;
-            transition: opacity 0.25s ease 0.1s;
+            transition: opacity 0.12s ease 0.04s;
           }
           /* Hide section titles, wordmark, user name/email, footer
              button labels, Privacy link, level badge, and "logged in
              as" caption while collapsed. */
           .desktop-sidebar-wrapper.is-collapsed .sidebar-collapse-hide {
             opacity: 0;
-            transition: opacity 0.15s ease;
+            transition: opacity 0.08s ease;
             pointer-events: none;
           }
           .desktop-sidebar-wrapper:not(.is-collapsed) .sidebar-collapse-hide {
             opacity: 1;
-            transition: opacity 0.25s ease 0.1s;
+            transition: opacity 0.12s ease 0.04s;
           }
           /* Section titles ("Collection", "Tools", "Admin") render
              via renderNavSection with text-sage-700 -- scope the hide
@@ -456,11 +460,11 @@ html, body, #root {
              with sage-700 in the sidebar. */
           .desktop-sidebar-wrapper.is-collapsed .uppercase.tracking-wider {
             opacity: 0;
-            transition: opacity 0.15s ease;
+            transition: opacity 0.08s ease;
           }
           .desktop-sidebar-wrapper:not(.is-collapsed) .uppercase.tracking-wider {
             opacity: 1;
-            transition: opacity 0.25s ease 0.1s;
+            transition: opacity 0.12s ease 0.04s;
           }
           /* Sidebar-nav-item hover: disable translate-x shift while
              collapsed so icons don't pop out of the rail. */
