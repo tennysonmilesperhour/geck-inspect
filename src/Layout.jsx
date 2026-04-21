@@ -674,7 +674,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       </a>
       <div className="flex h-screen bg-gray-100 dark:bg-gray-900 font-sans app-container-outline">
         {/* Mobile Sidebar */}
-        <Sidebar className="mobile-sidebar-glass border-r border-emerald-800/40 bg-emerald-950/25 backdrop-blur-sm md:hidden z-50">
+        <Sidebar className="mobile-sidebar-glass border-r border-emerald-800/40 bg-emerald-950/25 backdrop-blur-sm lg:hidden z-50">
           <SidebarHeader className="border-b border-emerald-800/40 p-6">
           <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-emerald-700/40 hover:bg-emerald-800/30 transition-colors duration-200">
           {appLogo && (
@@ -1001,7 +1001,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         </div>
 
         <main id="main-content" className={`flex-1 flex flex-col min-w-0 transition-[padding] duration-200 ease-out ${isSidebarLocked ? 'lg:pl-[13.6rem]' : 'lg:pl-[3.4rem]'}`}>
-          <header className="bg-sage-200/90 backdrop-blur-md border-b border-sage-300 px-4 py-3 md:hidden sticky top-0 z-10 gecko-header">
+          <header className="bg-sage-200/90 backdrop-blur-md border-b border-sage-300 px-4 py-3 lg:hidden sticky top-0 z-10 gecko-header">
             <div className="flex items-center justify-between gap-4">
               <button onClick={toggleSidebar} className="hover:bg-sage-200 p-2 rounded-lg transition-colors duration-200" aria-label="Toggle Sidebar">
                 <Menu className="w-5 h-5 text-sage-600" />
@@ -1037,7 +1037,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
             </div>
           </header>
 
-          <header className="bg-sage-200/90 backdrop-blur-md border-b border-sage-300 px-4 py-3 hidden md:flex sticky top-0 z-10 gecko-header">
+          <header className="bg-sage-200/90 backdrop-blur-md border-b border-sage-300 px-4 py-3 hidden lg:flex sticky top-0 z-10 gecko-header">
             <div className="flex items-center justify-between gap-4 w-full">
               {/* Command palette launcher */}
               <button
