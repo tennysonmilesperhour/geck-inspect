@@ -428,9 +428,16 @@ html, body, #root {
           .desktop-sidebar-wrapper.is-collapsed .desktop-sidebar-inner {
             width: 4rem;
           }
+          /* Keep the inner content laid out at full 16rem so icons
+             stay in their original positions even when the rail is
+             collapsed. Use min-width (NOT flex-shrink:0) because this
+             is a flex-col child — flex-shrink:0 on the main axis would
+             prevent the scroll container from shrinking to parent
+             height, which silently kills overflow-y: auto. */
           .desktop-sidebar-wrapper .desktop-sidebar-inner > div {
             width: 16rem;
-            flex-shrink: 0;
+            min-width: 16rem;
+            min-height: 0;
           }
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item > span,
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item .ml-auto {

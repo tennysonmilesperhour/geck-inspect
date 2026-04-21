@@ -842,8 +842,8 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           onMouseEnter={expandSidebar}
           onMouseLeave={scheduleCollapseSidebar}
         >
-          <div className="flex flex-col desktop-sidebar-inner mobile-sidebar-glass bg-emerald-950/25 backdrop-blur-sm border-r border-emerald-800/40">
-            <div className="flex flex-grow flex-col overflow-y-auto overflow-x-hidden pt-5" ref={sidebarRef}>
+          <div className="flex flex-col h-full desktop-sidebar-inner mobile-sidebar-glass bg-emerald-950/25 backdrop-blur-sm border-r border-emerald-800/40">
+            <div className="flex flex-grow flex-col overflow-y-auto overflow-x-hidden custom-scrollbar pt-5" ref={sidebarRef}>
               <div className="flex items-center flex-shrink-0 px-3 mb-4 desktop-sidebar-logo">
                 <Link to={createPageUrl("Dashboard")} className="flex items-center gap-3 w-full px-3 py-3 rounded-xl border border-emerald-700/40 bg-emerald-900/20 hover:bg-emerald-800/40 transition-colors duration-200">
                   {appLogo && (
