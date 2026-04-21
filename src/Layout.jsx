@@ -813,20 +813,22 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         {isSidebarCollapsed && (
           <div
             aria-hidden="true"
-            className="hidden lg:block fixed top-0 left-0 h-full w-3 z-30"
+            className="hidden lg:block fixed top-0 left-0 h-full w-3 z-40"
             onMouseEnter={expandSidebar}
           />
         )}
-        {/* Static sidebar for desktop */}
+        {/* Desktop sidebar — fixed, so the expanded panel overlays the
+            page instead of reflowing it. Main content gets enough
+            left-padding at lg breakpoint to clear the collapsed rail. */}
         <div
-          className={`hidden lg:flex lg:flex-shrink-0 desktop-sidebar-wrapper ${isSidebarCollapsed ? 'is-collapsed' : ''}`}
+          className={`hidden lg:flex fixed top-0 left-0 h-full z-40 desktop-sidebar-wrapper ${isSidebarCollapsed ? 'is-collapsed' : ''}`}
           onMouseEnter={expandSidebar}
           onMouseLeave={scheduleCollapseSidebar}
         >
-          <div className="flex flex-col desktop-sidebar-inner">
-            <div className="flex flex-grow flex-col overflow-y-auto overflow-x-hidden bg-white dark:bg-gray-800 pt-5 border-r border-gray-200 dark:border-gray-700" ref={sidebarRef}>
+          <div className="flex flex-col desktop-sidebar-inner mobile-sidebar-glass">
+            <div className="flex flex-grow flex-col overflow-y-auto overflow-x-hidden bg-emerald-950/90 backdrop-blur-md border-r border-emerald-800/40 pt-5" ref={sidebarRef}>
               <div className="flex items-center flex-shrink-0 px-6 mb-4">
-                <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-sage-300 dark:border-emerald-700/50 hover:bg-sage-100 dark:hover:bg-emerald-900/30 transition-colors duration-200">
+                <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-emerald-700/40 hover:bg-emerald-800/30 transition-colors duration-200">
                   {appLogo && (
                     <img
                       src={appLogo}
@@ -840,7 +842,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                       }}
                     />
                   )}
-                  <span className="text-lg font-bold text-sage-800 dark:text-sage-700 sidebar-collapse-hide" style={{fontFamily: "'Righteous', cursive", letterSpacing: '0.03em'}}>Geck Inspect</span>
+                  <span className="text-lg font-bold text-emerald-100 sidebar-collapse-hide" style={{fontFamily: "'Righteous', cursive", letterSpacing: '0.03em'}}>Geck Inspect</span>
                 </Link>
               </div>
 
@@ -857,8 +859,8 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                           />
                         </Link>
                     <div className="flex-1 sidebar-collapse-hide">
-                      <Link to={createPageUrl('MyProfile')} className="font-medium text-sage-800 dark:text-sage-700 text-sm">{user.full_name}</Link>
-                      <p className="text-xs text-sage-600 dark:text-sage-500">{user.email}</p>
+                      <Link to={createPageUrl('MyProfile')} className="font-medium text-emerald-100 text-sm">{user.full_name}</Link>
+                      <p className="text-xs text-emerald-300/80">{user.email}</p>
                     </div>
                   </div>
                 ) : (
@@ -869,7 +871,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                       <UserPlus className="w-4 h-4 mr-2" />
                       Sign Up / Login
                     </Button>
-                    <div className="text-xs text-sage-500 dark:text-sage-400 text-center">
+                    <div className="text-xs text-emerald-300/70 text-center">
                       Create an account to save your work and manage your gecko collection
                     </div>
                   </div>
@@ -963,7 +965,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           </div>
         </div>
 
-        <main id="main-content" className="flex-1 flex flex-col min-w-0">
+        <main id="main-content" className="flex-1 flex flex-col min-w-0 lg:pl-[3.4rem]">
           <header className="bg-sage-200/90 backdrop-blur-md border-b border-sage-300 px-4 py-3 md:hidden sticky top-0 z-10 gecko-header">
             <div className="flex items-center justify-between gap-4">
               <button onClick={toggleSidebar} className="hover:bg-sage-200 p-2 rounded-lg transition-colors duration-200" aria-label="Toggle Sidebar">
