@@ -81,14 +81,35 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
 
+// Spinner used for the in-Layout Suspense boundary — fills whatever
+// space the page slot has rather than the whole viewport, so the
+// sidebar + header stay visible while a lazy page chunk loads.
+const PageSuspenseFallback = (
+  <div className="flex-1 flex items-center justify-center">
+    <div className="w-8 h-8 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+  </div>
+);
+
 // Parent-route element that wraps authenticated pages in a single
 // Layout instance and renders the matched child via <Outlet/>. This
 // keeps the Layout (sidebar, header, hover state) mounted across
 // navigation — previously each Route.element created its own
 // LayoutWrapper, so React unmounted + remounted the entire Layout
 // (and reset the sidebar collapse state) on every link click.
+//
+// The inner Suspense is critical: lazy page chunks throw a promise
+// while loading, and the nearest Suspense boundary renders its
+// fallback in place of everything below it. Without this boundary,
+// the outer Suspense at Routes level would catch it and replace the
+// Layout with the global spinner — which is why first-time
+// navigations (uncached chunks) appeared to reload the menu while
+// repeat navigations (cached chunks) preserved state.
 const LayoutOutlet = () => Layout ? (
-  <Layout><Outlet /></Layout>
+  <Layout>
+    <Suspense fallback={PageSuspenseFallback}>
+      <Outlet />
+    </Suspense>
+  </Layout>
 ) : <Outlet />;
 
 const LazyFallback = (
