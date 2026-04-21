@@ -70,7 +70,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
   const scheduleCollapseSidebar = () => {
     if (collapseTimerRef.current) clearTimeout(collapseTimerRef.current);
-    collapseTimerRef.current = setTimeout(() => setIsSidebarCollapsed(true), 80);
+    collapseTimerRef.current = setTimeout(() => setIsSidebarCollapsed(true), 140);
   };
 
   useEffect(() => () => {

@@ -414,16 +414,16 @@ html, body, #root {
              The outer rail width animates from 16rem to 4rem; the inner
              content stays at 16rem so icons stay at their original
              positions and text simply gets clipped by the rail's
-             overflow:hidden. Text elements also fade out via opacity
-             for a smooth cross-fade. `zoom` renders the whole column
-             at 85% of its CSS size so the menu + icons + font all
-             shrink uniformly without having to touch every Tailwind
-             text-*/size-*/padding utility. */
+             overflow:hidden. `zoom` renders the whole column at 85%
+             of its CSS size so the menu + icons + font all shrink
+             uniformly without having to touch every Tailwind utility.
+             Curve is ease-out so expansion starts immediately instead
+             of easing in (which read as "loading" before movement). */
           .desktop-sidebar-inner {
             width: 16rem;
             overflow: hidden;
             zoom: 0.85;
-            transition: width 0.16s cubic-bezier(0.4, 0, 0.2, 1);
+            transition: width 0.22s cubic-bezier(0, 0, 0.2, 1);
           }
           .desktop-sidebar-wrapper.is-collapsed .desktop-sidebar-inner {
             width: 4rem;
@@ -435,41 +435,84 @@ html, body, #root {
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item > span,
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item .ml-auto {
             opacity: 0;
-            transition: opacity 0.08s ease;
+            transition: opacity 0.12s ease;
           }
           .desktop-sidebar-wrapper:not(.is-collapsed) .sidebar-nav-item > span,
           .desktop-sidebar-wrapper:not(.is-collapsed) .sidebar-nav-item .ml-auto {
             opacity: 1;
-            transition: opacity 0.12s ease 0.04s;
+            transition: opacity 0.18s ease 0.05s;
           }
           /* Hide section titles, wordmark, user name/email, footer
              button labels, Privacy link, level badge, and "logged in
-             as" caption while collapsed. */
+             as" caption while collapsed — AND collapse their box so
+             they don't leave behind empty vertical gaps in the rail. */
           .desktop-sidebar-wrapper.is-collapsed .sidebar-collapse-hide {
             opacity: 0;
-            transition: opacity 0.08s ease;
+            max-height: 0 !important;
+            margin-top: 0 !important;
+            margin-bottom: 0 !important;
+            padding-top: 0 !important;
+            padding-bottom: 0 !important;
+            border-top-width: 0 !important;
+            border-bottom-width: 0 !important;
+            overflow: hidden;
             pointer-events: none;
+            transition: opacity 0.12s ease,
+                        max-height 0.22s cubic-bezier(0, 0, 0.2, 1),
+                        margin 0.22s cubic-bezier(0, 0, 0.2, 1),
+                        padding 0.22s cubic-bezier(0, 0, 0.2, 1);
           }
           .desktop-sidebar-wrapper:not(.is-collapsed) .sidebar-collapse-hide {
             opacity: 1;
-            transition: opacity 0.12s ease 0.04s;
+            max-height: 12rem;
+            transition: opacity 0.18s ease 0.05s,
+                        max-height 0.22s cubic-bezier(0, 0, 0.2, 1),
+                        margin 0.22s cubic-bezier(0, 0, 0.2, 1),
+                        padding 0.22s cubic-bezier(0, 0, 0.2, 1);
           }
           /* Section titles ("Collection", "Tools", "Admin") render
              via renderNavSection with text-sage-700 -- scope the hide
-             specifically to those headers, not every element tinted
-             with sage-700 in the sidebar. */
+             specifically to those headers. Also collapse their height
+             so the rail reads as a clean icon stack when closed. */
           .desktop-sidebar-wrapper.is-collapsed .uppercase.tracking-wider {
             opacity: 0;
-            transition: opacity 0.08s ease;
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            overflow: hidden;
+            transition: opacity 0.12s ease,
+                        max-height 0.22s cubic-bezier(0, 0, 0.2, 1),
+                        padding 0.22s cubic-bezier(0, 0, 0.2, 1);
           }
           .desktop-sidebar-wrapper:not(.is-collapsed) .uppercase.tracking-wider {
             opacity: 1;
-            transition: opacity 0.12s ease 0.04s;
+            max-height: 2.5rem;
+            transition: opacity 0.18s ease 0.05s,
+                        max-height 0.22s cubic-bezier(0, 0, 0.2, 1),
+                        padding 0.22s cubic-bezier(0, 0, 0.2, 1);
           }
-          /* Sidebar-nav-item hover: disable translate-x shift while
-             collapsed so icons don't pop out of the rail. */
+          /* Sidebar-nav-item hover: disable translate-x shift, the
+             outer glow box-shadow, and the full-width background fill
+             while collapsed — otherwise the nav item's 16rem-wide
+             hover highlight clips into a hard rectangle and the glow
+             extends past the rail's right edge. Instead, show a
+             compact icon-sized pill on hover. */
+          .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item {
+            width: 2.75rem;
+          }
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item:hover {
             transform: none;
+            box-shadow: none !important;
+            background: rgba(16, 185, 129, 0.25) !important;
+          }
+          /* Icon-only footer buttons: strip the border/background so
+             the rail reads as a clean icon column instead of a row of
+             half-clipped button shells. */
+          .desktop-sidebar-wrapper.is-collapsed .mt-auto button,
+          .desktop-sidebar-wrapper.is-collapsed .mt-auto a > button {
+            border-color: transparent !important;
+            background: transparent !important;
+            box-shadow: none !important;
           }
 
           .sidebar-nav-item {
