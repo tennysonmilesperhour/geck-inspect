@@ -523,13 +523,20 @@ html, body, #root {
           }
           /* Logo tile: shows as a full-width card with icon + wordmark
              when the rail is expanded, and reduces to just the icon
-             (no border, no background fill) when collapsed so the rail
-             reads as a tidy icon column instead of a clipped card. */
+             (no border, no background fill, centered inside the 4rem
+             rail) when collapsed so the rail reads as a tidy icon
+             column instead of a clipped card. */
+          .desktop-sidebar-wrapper.is-collapsed .desktop-sidebar-logo {
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+          }
           .desktop-sidebar-wrapper.is-collapsed .desktop-sidebar-logo a {
             border-color: transparent !important;
             background: transparent !important;
-            padding-left: 0.5rem !important;
-            padding-right: 0.5rem !important;
+            width: 4rem !important;
+            padding: 0.5rem !important;
+            gap: 0 !important;
+            justify-content: center;
           }
 
           .sidebar-nav-item {
