@@ -19,53 +19,58 @@ module.exports = {
   			'3xl': '1.2rem'                      /* 19.2px  (was 24px)    */
   		},
   		colors: {
-  			// Override Tailwind's default blue-grey slate with emerald-tinted
-  			// neutral tones so every bg-slate-*, text-slate-*, border-slate-*
-  			// class matches the app's green theme automatically.
+  			// sage / slate / gray scales are driven by CSS variables
+  			// defined per-theme in src/index.css under :root[data-theme].
+  			// hsl(var(--x) / <alpha-value>) preserves Tailwind's opacity
+  			// modifier syntax (bg-slate-900/50 etc). Switching data-theme
+  			// on <html> re-tints every utility using these scales without
+  			// touching component code.
+  			//
+  			// `slate` and `gray` are overridden here (Tailwind's defaults
+  			// are blue-grey) so neutrals carry the active theme's hue.
+  			// `sage` is the brand accent scale (50 = darkest surface,
+  			// 900 = lightest text) matching the always-dark render model.
+  			// `earth` is a warm-accent palette intentionally NOT themed —
+  			// it stays orange across all themes for semantic alerts /
+  			// breeder perks / hatchling badges.
   			slate: {
-  				50:  '#f0fdf6',
-  				100: '#d1fae5',
-  				200: '#a7f3d0',
-  				300: '#6ee7b7',
-  				400: '#34d399',
-  				500: '#6b8f80',
-  				600: '#4a6e5e',
-  				700: '#243f35',
-  				800: '#1a3a2d',
-  				900: '#163026',
-  				950: '#0d1f17',
+  				50:  'hsl(var(--slate-50) / <alpha-value>)',
+  				100: 'hsl(var(--slate-100) / <alpha-value>)',
+  				200: 'hsl(var(--slate-200) / <alpha-value>)',
+  				300: 'hsl(var(--slate-300) / <alpha-value>)',
+  				400: 'hsl(var(--slate-400) / <alpha-value>)',
+  				500: 'hsl(var(--slate-500) / <alpha-value>)',
+  				600: 'hsl(var(--slate-600) / <alpha-value>)',
+  				700: 'hsl(var(--slate-700) / <alpha-value>)',
+  				800: 'hsl(var(--slate-800) / <alpha-value>)',
+  				900: 'hsl(var(--slate-900) / <alpha-value>)',
+  				950: 'hsl(var(--slate-950) / <alpha-value>)',
   			},
-  			// Gray also needs the same override — Tailwind's gray is
-  			// blue-tinted too and the Layout sidebar uses gray-* classes.
   			gray: {
-  				50:  '#f0fdf6',
-  				100: '#d1fae5',
-  				200: '#a7f3d0',
-  				300: '#6ee7b7',
-  				400: '#34d399',
-  				500: '#6b8f80',
-  				600: '#4a6e5e',
-  				700: '#243f35',
-  				800: '#1a3a2d',
-  				900: '#163026',
-  				950: '#0d1f17',
+  				50:  'hsl(var(--slate-50) / <alpha-value>)',
+  				100: 'hsl(var(--slate-100) / <alpha-value>)',
+  				200: 'hsl(var(--slate-200) / <alpha-value>)',
+  				300: 'hsl(var(--slate-300) / <alpha-value>)',
+  				400: 'hsl(var(--slate-400) / <alpha-value>)',
+  				500: 'hsl(var(--slate-500) / <alpha-value>)',
+  				600: 'hsl(var(--slate-600) / <alpha-value>)',
+  				700: 'hsl(var(--slate-700) / <alpha-value>)',
+  				800: 'hsl(var(--slate-800) / <alpha-value>)',
+  				900: 'hsl(var(--slate-900) / <alpha-value>)',
+  				950: 'hsl(var(--slate-950) / <alpha-value>)',
   			},
-  			// Sage: the brand green palette. Values are the dark-mode scale
-  			// (the app is always-dark) so text-sage-700 renders as light
-  			// green text and bg-sage-50 renders as a dark green surface.
   			sage: {
-  				50:  '#064e3b',
-  				100: '#065f46',
-  				200: '#047857',
-  				300: '#059669',
-  				400: '#10b981',
-  				500: '#34d399',
-  				600: '#6ee7b7',
-  				700: '#a7f3d0',
-  				800: '#d1fae5',
-  				900: '#ecfdf5',
+  				50:  'hsl(var(--sage-50) / <alpha-value>)',
+  				100: 'hsl(var(--sage-100) / <alpha-value>)',
+  				200: 'hsl(var(--sage-200) / <alpha-value>)',
+  				300: 'hsl(var(--sage-300) / <alpha-value>)',
+  				400: 'hsl(var(--sage-400) / <alpha-value>)',
+  				500: 'hsl(var(--sage-500) / <alpha-value>)',
+  				600: 'hsl(var(--sage-600) / <alpha-value>)',
+  				700: 'hsl(var(--sage-700) / <alpha-value>)',
+  				800: 'hsl(var(--sage-800) / <alpha-value>)',
+  				900: 'hsl(var(--sage-900) / <alpha-value>)',
   			},
-  			// Earth: the warm accent palette (orange/amber).
   			earth: {
   				50:  '#6f2e0c',
   				100: '#8e3a16',

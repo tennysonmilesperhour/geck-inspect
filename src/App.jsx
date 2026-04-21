@@ -12,6 +12,7 @@ import { pagesConfig } from './pages.config'
 import { BrowserRouter as Router, Route, Routes, Navigate, Outlet } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
+import { ThemeProvider } from '@/lib/ThemeContext';
 import UpdateNotification from '@/components/ui/UpdateNotification';
 import LoginPortal from '@/components/auth/LoginPortal';
 import ScrollToTop from '@/components/shared/ScrollToTop';
@@ -237,20 +238,22 @@ function App() {
 
   return (
     <HelmetProvider>
-      <AuthProvider>
-        <QueryClientProvider client={queryClientInstance}>
-          <Router>
-            <ScrollToTop />
-            <NavigationTracker />
-            <PostHogPageTracker />
-            <GA4PageTracker />
-            <AuthenticatedApp />
-          </Router>
-          <Toaster />
-          <VisualEditAgent />
-          <UpdateNotification />
-        </QueryClientProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <QueryClientProvider client={queryClientInstance}>
+            <Router>
+              <ScrollToTop />
+              <NavigationTracker />
+              <PostHogPageTracker />
+              <GA4PageTracker />
+              <AuthenticatedApp />
+            </Router>
+            <Toaster />
+            <VisualEditAgent />
+            <UpdateNotification />
+          </QueryClientProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </HelmetProvider>
   )
 }
