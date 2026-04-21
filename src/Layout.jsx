@@ -8,7 +8,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { APP_LOGO_URL } from '@/lib/constants';
 import {
   Database, BookOpen, BarChart3, Upload, Users, HeartHandshake, Layers, LogOut, Search, Settings, UserPlus, Shield, MessageSquare, Mail, Heart, Menu, ShoppingCart, GitBranch, FlaskConical, Star, FolderKanban, GraduationCap, Dna,
-  Egg, LayoutGrid, CircleUser, UsersRound, Images, Tag, CalendarDays, Sparkles, Truck, ChevronDown
+  Egg, LayoutGrid, CircleUser, UsersRound, Images, Tag, CalendarDays, Sparkles, Truck, ChevronDown, Pin, PinOff
 } from "lucide-react";
 import TutorialModal from "@/components/tutorial/TutorialModal";
 import CommandPalette from "@/components/command-palette/CommandPalette";
@@ -57,7 +57,11 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   const [appLogo, setAppLogo] = useState(null);
   const [pageConfigs, setPageConfigs] = useState([]);
   const [showTutorial, setShowTutorial] = useState(false);
-  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(true);
+  const [isSidebarLocked, setIsSidebarLocked] = useState(() => {
+    try { return localStorage.getItem('sidebar_locked') === '1'; }
+    catch { return false; }
+  });
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(!isSidebarLocked);
   const collapseTimerRef = useRef(null);
 
   const expandSidebar = () => {
@@ -69,8 +73,21 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   };
 
   const scheduleCollapseSidebar = () => {
+    if (isSidebarLocked) return;
     if (collapseTimerRef.current) clearTimeout(collapseTimerRef.current);
     collapseTimerRef.current = setTimeout(() => setIsSidebarCollapsed(true), 140);
+  };
+
+  const toggleSidebarLock = () => {
+    setIsSidebarLocked(prev => {
+      const next = !prev;
+      try { localStorage.setItem('sidebar_locked', next ? '1' : '0'); } catch {}
+      if (next) {
+        if (collapseTimerRef.current) clearTimeout(collapseTimerRef.current);
+        setIsSidebarCollapsed(false);
+      }
+      return next;
+    });
   };
 
   useEffect(() => () => {
@@ -825,15 +842,15 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           onMouseEnter={expandSidebar}
           onMouseLeave={scheduleCollapseSidebar}
         >
-          <div className="flex flex-col desktop-sidebar-inner mobile-sidebar-glass">
-            <div className="flex flex-grow flex-col overflow-y-auto overflow-x-hidden bg-emerald-950/90 backdrop-blur-md border-r border-emerald-800/40 pt-5" ref={sidebarRef}>
-              <div className="flex items-center flex-shrink-0 px-6 mb-4">
-                <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-emerald-700/40 hover:bg-emerald-800/30 transition-colors duration-200">
+          <div className="flex flex-col desktop-sidebar-inner mobile-sidebar-glass bg-emerald-950/25 backdrop-blur-sm border-r border-emerald-800/40">
+            <div className="flex flex-grow flex-col overflow-y-auto overflow-x-hidden pt-5" ref={sidebarRef}>
+              <div className="flex items-center flex-shrink-0 px-3 mb-4 desktop-sidebar-logo">
+                <Link to={createPageUrl("Dashboard")} className="flex items-center gap-3 w-full px-3 py-3 rounded-xl border border-emerald-700/40 bg-emerald-900/20 hover:bg-emerald-800/40 transition-colors duration-200">
                   {appLogo && (
                     <img
                       src={appLogo}
                       alt="Geck Inspect Logo"
-                      className="h-8 w-8 object-contain rounded-lg"
+                      className="h-10 w-10 object-contain rounded-lg flex-shrink-0"
                       loading="lazy"
                       decoding="async"
                       onError={(e) => {
@@ -842,7 +859,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                       }}
                     />
                   )}
-                  <span className="text-lg font-bold text-emerald-100 sidebar-collapse-hide" style={{fontFamily: "'Righteous', cursive", letterSpacing: '0.03em'}}>Geck Inspect</span>
+                  <span className="text-xl font-bold text-emerald-100 sidebar-collapse-hide whitespace-nowrap" style={{fontFamily: "'Righteous', cursive", letterSpacing: '0.03em'}}>Geck Inspect</span>
                 </Link>
               </div>
 
@@ -959,13 +976,27 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                       </Button>
                     </div> :
                     null}
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={toggleSidebarLock}
+                    title={isSidebarLocked ? "Unlock — sidebar will auto-collapse on mouse leave" : "Lock sidebar open"}
+                    aria-label={isSidebarLocked ? "Unlock sidebar" : "Lock sidebar open"}
+                    className="w-full justify-start text-emerald-100/70 hover:text-white hover:bg-emerald-800/30 text-xs sidebar-lock-toggle"
+                  >
+                    {isSidebarLocked
+                      ? <PinOff className="w-4 h-4 mr-2 text-emerald-300" />
+                      : <Pin className="w-4 h-4 mr-2" />}
+                    <span className="sidebar-collapse-hide">{isSidebarLocked ? "Unlock sidebar" : "Lock sidebar open"}</span>
+                  </Button>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <main id="main-content" className="flex-1 flex flex-col min-w-0 lg:pl-[3.4rem]">
+        <main id="main-content" className={`flex-1 flex flex-col min-w-0 transition-[padding] duration-200 ease-out ${isSidebarLocked ? 'lg:pl-[13.6rem]' : 'lg:pl-[3.4rem]'}`}>
           <header className="bg-sage-200/90 backdrop-blur-md border-b border-sage-300 px-4 py-3 md:hidden sticky top-0 z-10 gecko-header">
             <div className="flex items-center justify-between gap-4">
               <button onClick={toggleSidebar} className="hover:bg-sage-200 p-2 rounded-lg transition-colors duration-200" aria-label="Toggle Sidebar">

@@ -514,6 +514,16 @@ html, body, #root {
             background: transparent !important;
             box-shadow: none !important;
           }
+          /* Logo tile: shows as a full-width card with icon + wordmark
+             when the rail is expanded, and reduces to just the icon
+             (no border, no background fill) when collapsed so the rail
+             reads as a tidy icon column instead of a clipped card. */
+          .desktop-sidebar-wrapper.is-collapsed .desktop-sidebar-logo a {
+            border-color: transparent !important;
+            background: transparent !important;
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
+          }
 
           .sidebar-nav-item {
             backdrop-filter: blur(10px);
