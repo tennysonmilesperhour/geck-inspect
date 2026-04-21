@@ -16,6 +16,7 @@ import FeedingAlertSystem from "@/components/feeding/FeedingAlertSystem";
 import NotificationPopover from "@/components/notifications/NotificationPopover";
 import GuestMockDisclaimer from "@/components/auth/GuestMockDisclaimer";
 import FeedbackWidget from "@/components/feedback/FeedbackWidget";
+import InstallAppButton from "@/components/shared/InstallAppButton";
 import {
   Sidebar,
   SidebarHeader,
@@ -694,13 +695,16 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           </SidebarHeader>
 
           <SidebarBody ref={sidebarRef} className="flex-1 overflow-y-auto custom-scrollbar">
+            <div className="px-4 pt-2 pb-3 md:hidden">
+              <InstallAppButton />
+            </div>
             <div className="px-4 mb-4">
               {user ? (
                 <div className="flex items-center gap-3">
                   <Link to={createPageUrl('MyProfile')}>
-                      <img 
-                            src={user.profile_image_url || initialsAvatarUrl(user.full_name)} 
-                            alt="User avatar" 
+                      <img
+                            src={user.profile_image_url || initialsAvatarUrl(user.full_name)}
+                            alt="User avatar"
                             className="w-8 h-8 rounded-full object-cover"
                             loading="lazy"
                             decoding="async"
