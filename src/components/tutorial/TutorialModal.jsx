@@ -1,7 +1,7 @@
-import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight, X, Sparkles } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Sparkles, ArrowRightLeft, MessageSquare } from 'lucide-react';
 
 /**
  * Tutorial walkthrough — anchored tooltip tour.
@@ -78,65 +78,55 @@ const STEP_BLURBS = {
         title: 'Train Model',
         body: 'Help the AI improve by labeling gecko photos. Earn badges as you contribute to the training dataset.',
     },
-    Dashboard_default: {
-        title: 'Dashboard',
-        body: 'Your home base.',
+    MorphGuide: {
+        title: 'Morph Guide',
+        body: 'Browse every crested gecko morph with reference photos, inheritance notes, and visual examples. Use it to identify what you see in a gecko or to plan pairings.',
+    },
+    CareGuide: {
+        title: 'Care Guide',
+        body: 'Husbandry reference — enclosure setup, temperature and humidity ranges, feeding schedules, handling, and common health issues.',
+    },
+    Forum: {
+        title: 'Forum',
+        body: 'Community discussion board. Ask questions, share breeding results, post morph ID help requests, and chat with other keepers.',
+    },
+    Gallery: {
+        title: 'Image Gallery',
+        body: 'Community photo feed. Post pictures of your geckos, like other keepers\' shots, and browse morph examples tagged by trait.',
+    },
+    Marketplace: {
+        title: 'Marketplace',
+        body: 'Browse geckos for sale from breeders across the community. Filter by morph, price, age, and sex — or list your own animals to sell.',
+    },
+    BreederShipping: {
+        title: 'Shipping',
+        body: 'Manage shipping labels, box inventory, heat/cold packs, and live-arrival guarantees for animals you sell through the marketplace.',
     },
 };
 
-const TOOLTIP_WIDTH = 320;
-const TOOLTIP_GAP = 16;
+const TOOLTIP_WIDTH = 360;
 
-// Compute where the tooltip should sit next to the anchor rect.
-function computeTooltipPlacement(anchorRect) {
-    if (!anchorRect) {
-        return {
-            style: { top: 20, left: 20 },
-            arrowSide: null,
-        };
+// The tutorial card is pinned to a consistent spot in the viewport so
+// the Next/Back buttons don't chase the user's cursor around as the
+// highlight ring jumps between sidebar items. On wide screens we pin
+// it to the bottom-right; on narrow screens it becomes a centered
+// bottom sheet.
+function getPinnedCardStyle() {
+    if (typeof window === 'undefined') {
+        return { bottom: 24, right: 24, width: TOOLTIP_WIDTH };
     }
     const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const spaceRight = viewportWidth - anchorRect.right;
-    const spaceLeft = anchorRect.left;
-
-    // Prefer placing to the right of the sidebar item. If there isn't
-    // room, fall back to the left; if the anchor is mobile-centered,
-    // place below.
-    if (spaceRight >= TOOLTIP_WIDTH + TOOLTIP_GAP) {
+    if (viewportWidth < TOOLTIP_WIDTH + 64) {
         return {
-            style: {
-                top: Math.max(16, anchorRect.top + anchorRect.height / 2 - 60),
-                left: anchorRect.right + TOOLTIP_GAP,
-                width: TOOLTIP_WIDTH,
-            },
-            arrowSide: 'left',
+            bottom: 16,
+            left: 16,
+            right: 16,
         };
     }
-    if (spaceLeft >= TOOLTIP_WIDTH + TOOLTIP_GAP) {
-        return {
-            style: {
-                top: Math.max(16, anchorRect.top + anchorRect.height / 2 - 60),
-                left: anchorRect.left - TOOLTIP_WIDTH - TOOLTIP_GAP,
-                width: TOOLTIP_WIDTH,
-            },
-            arrowSide: 'right',
-        };
-    }
-    // Fallback: below the anchor
     return {
-        style: {
-            top: Math.min(viewportHeight - 200, anchorRect.bottom + TOOLTIP_GAP),
-            left: Math.max(
-                16,
-                Math.min(
-                    viewportWidth - TOOLTIP_WIDTH - 16,
-                    anchorRect.left + anchorRect.width / 2 - TOOLTIP_WIDTH / 2
-                )
-            ),
-            width: TOOLTIP_WIDTH,
-        },
-        arrowSide: 'top',
+        bottom: 24,
+        right: 24,
+        width: TOOLTIP_WIDTH,
     };
 }
 
@@ -144,7 +134,12 @@ export default function TutorialModal({ isOpen, onClose }) {
     const [steps, setSteps] = useState([]);
     const [stepIndex, setStepIndex] = useState(0);
     const [anchorRect, setAnchorRect] = useState(null);
+    const [migrationMode, setMigrationMode] = useState(false);
     const intervalRef = useRef(null);
+
+    useEffect(() => {
+        if (!isOpen) setMigrationMode(false);
+    }, [isOpen]);
 
     // Collect the list of actually-rendered nav items when the tutorial
     // opens. Everything that has a `data-tutorial-id` attribute is a
@@ -266,7 +261,12 @@ export default function TutorialModal({ isOpen, onClose }) {
         setStepIndex((s) => Math.max(s - 1, 0));
     };
 
-    const placement = useMemo(() => computeTooltipPlacement(anchorRect), [anchorRect]);
+    const [pinnedStyle, setPinnedStyle] = useState(() => getPinnedCardStyle());
+    useEffect(() => {
+        const update = () => setPinnedStyle(getPinnedCardStyle());
+        window.addEventListener('resize', update);
+        return () => window.removeEventListener('resize', update);
+    }, []);
 
     if (!isOpen || !currentStep) return null;
 
@@ -305,17 +305,18 @@ export default function TutorialModal({ isOpen, onClose }) {
         />
     ) : null;
 
-    // Intro/outro get a centered card. Anchored steps get a tooltip
-    // next to the highlighted sidebar item.
+    // Intro/outro get a centered card. Every anchored step uses the
+    // same pinned position so Next/Back don't move around under the
+    // cursor while the highlight ring jumps between sidebar items.
     const anchoredStyle =
         isIntro || isOutro
             ? {
                 top: '50%',
                 left: '50%',
                 transform: 'translate(-50%, -50%)',
-                width: 420,
+                width: 440,
               }
-            : placement.style;
+            : pinnedStyle;
 
     const card = (
         <div
@@ -343,8 +344,51 @@ export default function TutorialModal({ isOpen, onClose }) {
                     <Sparkles className="w-3 h-3" />
                     Step {stepIndex + 1} of {steps.length}
                 </div>
-                <h2 className="text-lg font-bold mt-2">{blurb.title}</h2>
-                <p className="text-sm text-slate-300 mt-1 leading-relaxed">{blurb.body}</p>
+                {isIntro && migrationMode ? (
+                    <>
+                        <h2 className="text-lg font-bold mt-2">Migrating an existing collection</h2>
+                        <p className="text-sm text-slate-300 mt-1 leading-relaxed">
+                            Bringing records over from another tracker (spreadsheet, iHerp, Morphmarket notes,
+                            a different app) is a first-class workflow. The tour below will call out the
+                            pages where migrated data lands — My Geckos, Breeding, Lineage, and My Profile —
+                            and the import points in each.
+                        </p>
+                        <p className="text-sm text-slate-300 mt-2 leading-relaxed">
+                            If you want a hand getting everything across cleanly, reach out and I&apos;ll
+                            help directly. I can also build new import/export features to fit the format
+                            your old data is in — just ask.
+                        </p>
+                        <div className="mt-3 flex flex-col gap-2">
+                            <a
+                                href="/Contact"
+                                className="inline-flex items-center justify-center gap-2 rounded-md border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-200 text-xs font-medium px-3 py-2"
+                            >
+                                <MessageSquare className="w-3.5 h-3.5" />
+                                Contact me about a migration
+                            </a>
+                            <button
+                                onClick={() => setMigrationMode(false)}
+                                className="text-xs text-slate-400 hover:text-slate-200 self-start"
+                            >
+                                Back to welcome
+                            </button>
+                        </div>
+                    </>
+                ) : (
+                    <>
+                        <h2 className="text-lg font-bold mt-2">{blurb.title}</h2>
+                        <p className="text-sm text-slate-300 mt-1 leading-relaxed">{blurb.body}</p>
+                        {isIntro && (
+                            <button
+                                onClick={() => setMigrationMode(true)}
+                                className="mt-3 w-full inline-flex items-center justify-center gap-2 rounded-md border border-slate-700 bg-slate-800/70 hover:bg-slate-700 text-slate-200 text-xs font-medium px-3 py-2"
+                            >
+                                <ArrowRightLeft className="w-3.5 h-3.5" />
+                                I&apos;m migrating an existing collection
+                            </button>
+                        )}
+                    </>
+                )}
             </div>
 
             <div className="flex items-center justify-between mt-4 gap-2">

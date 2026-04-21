@@ -1,7 +1,5 @@
 /**
  * Entity exports — all backed by Supabase.
- *
- * Data was migrated from Base44 via /AdminMigration.
  */
 import * as sb from '@/api/supabaseEntities';
 import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';

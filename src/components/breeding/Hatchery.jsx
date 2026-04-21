@@ -5,10 +5,11 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Egg as EggIcon, Search, Timer, Archive, ArchiveRestore } from 'lucide-react';
+import { Egg as EggIcon, Search, Timer, Archive, ArchiveRestore, Sparkles, XCircle } from 'lucide-react';
 import LoadingSpinner from '../shared/LoadingSpinner';
 import { format, differenceInDays } from 'date-fns';
 import EggDetailModal from './EggDetailModal';
+import { generateHatchedGeckoIdFromEgg } from '../shared/geckoIdUtils';
 
 export default function Hatchery() {
     const [eggs, setEggs] = useState([]);
@@ -151,13 +152,72 @@ export default function Hatchery() {
     const handleArchiveEgg = async (eggId, shouldArchive, e) => {
         e.stopPropagation();
         try {
-            await Egg.update(eggId, { 
+            await Egg.update(eggId, {
                 archived: shouldArchive,
                 archived_date: shouldArchive ? new Date().toISOString().split('T')[0] : null
             });
             await loadData();
         } catch (error) {
             console.error("Failed to archive egg:", error);
+        }
+    };
+
+    const handleHatchEgg = async (egg, e) => {
+        e.stopPropagation();
+        const plan = breedingPlans.find(p => p.id === egg.breeding_plan_id);
+        const sire = plan ? geckos.find(g => g.id === plan.sire_id) : null;
+        const dam = plan ? geckos.find(g => g.id === plan.dam_id) : null;
+
+        if (!plan || !sire || !dam) {
+            alert("Can't auto-hatch — this egg's breeding plan, sire, or dam is missing. Open the egg to mark it manually.");
+            return;
+        }
+
+        const today = format(new Date(), 'yyyy-MM-dd');
+        try {
+            const pairEggs = eggs.filter(e => e.breeding_plan_id === plan.id);
+            const newGeckoIdCode = generateHatchedGeckoIdFromEgg({
+                sire, dam, egg, allEggsForPair: pairEggs,
+            });
+
+            const newGecko = await Gecko.create({
+                name: `${sire.name} x ${dam.name} Hatchling`,
+                gecko_id_code: newGeckoIdCode,
+                hatch_date: today,
+                sex: 'Unsexed',
+                sire_id: sire.id,
+                dam_id: dam.id,
+                status: 'Pet',
+                morphs_traits: '',
+                notes: `Hatched from egg laid on ${format(new Date(egg.lay_date), 'PPP')}. From breeding pair: ${sire.name} x ${dam.name}.`,
+                image_urls: [],
+            });
+
+            await Egg.update(egg.id, {
+                status: 'Hatched',
+                hatch_date_actual: today,
+                gecko_id: newGecko.id,
+            });
+
+            await loadData();
+        } catch (error) {
+            console.error('Failed to hatch egg:', error);
+            alert(`Failed to hatch: ${error.message || 'unknown error'}`);
+        }
+    };
+
+    const handleMarkFailed = async (eggId, newStatus, e) => {
+        e.stopPropagation();
+        try {
+            await Egg.update(eggId, {
+                status: newStatus,
+                archived: true,
+                archived_date: new Date().toISOString().split('T')[0],
+            });
+            await loadData();
+        } catch (error) {
+            console.error('Failed to update egg status:', error);
+            alert(`Failed to update status: ${error.message || 'unknown error'}`);
         }
     };
 
@@ -361,6 +421,34 @@ export default function Hatchery() {
                                         <p className="text-xs text-emerald-400">
                                             → {hatchedGecko.name}
                                         </p>
+                                    </div>
+                                )}
+
+                                {egg.status === 'Incubating' && !egg.archived && (
+                                    <div className="pt-2 border-t border-slate-700 flex flex-wrap gap-1.5">
+                                        <Button
+                                            size="sm"
+                                            onClick={(e) => handleHatchEgg(egg, e)}
+                                            className="h-7 text-xs bg-green-600 hover:bg-green-700 text-white px-2"
+                                        >
+                                            <Sparkles className="w-3 h-3 mr-1" /> Hatched
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={(e) => handleMarkFailed(egg.id, 'Infertile', e)}
+                                            className="h-7 text-xs border-slate-600 text-slate-300 hover:bg-slate-700 px-2"
+                                        >
+                                            <XCircle className="w-3 h-3 mr-1" /> Infertile
+                                        </Button>
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={(e) => handleMarkFailed(egg.id, 'Slug', e)}
+                                            className="h-7 text-xs border-slate-600 text-slate-300 hover:bg-slate-700 px-2"
+                                        >
+                                            Slug
+                                        </Button>
                                     </div>
                                 )}
                             </CardContent>

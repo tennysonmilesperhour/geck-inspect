@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
+import ReactMarkdown from 'react-markdown';
 import Seo from '@/components/seo/Seo';
 import { DirectMessage, User } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
@@ -13,10 +14,81 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Mail, Send, Search, User as UserIcon, MessageSquare } from 'lucide-react';
+import { Mail, Send, Search, MessageSquare, ArrowLeft, Plus } from 'lucide-react';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogDescription,
+} from '@/components/ui/dialog';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
-import { format } from 'date-fns';
+import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
+import { format, isSameDay, isToday, isYesterday, differenceInMinutes } from 'date-fns';
+
+const SYSTEM_EMAIL = 'system@geckinspect.com';
+
+// Resolve the display name + avatar URL for a given email, preferring a
+// real profile when we have one and falling back to the email prefix +
+// auto-generated initials avatar. The system identity gets its own brand
+// label so it reads as "Geck Inspect Team" rather than "system".
+function resolveProfile(email, profileMap) {
+    if (email === SYSTEM_EMAIL) {
+        return {
+            displayName: 'Geck Inspect Team',
+            avatarUrl: initialsAvatarUrl('Geck Inspect', 64),
+            isSystem: true,
+        };
+    }
+    const profile = profileMap?.get(email);
+    const displayName = profile?.full_name || email.split('@')[0];
+    const avatarUrl =
+        profile?.profile_image_url || initialsAvatarUrl(displayName, 64);
+    return { displayName, avatarUrl, isSystem: false };
+}
+
+// Label shown in the sticky date divider between message groups.
+function formatDateDivider(date) {
+    if (isToday(date)) return 'Today';
+    if (isYesterday(date)) return 'Yesterday';
+    return format(date, 'MMMM d, yyyy');
+}
+
+// Compute per-message flags used for visual grouping:
+//   - showDateDivider: first message of a calendar day
+//   - isFirstInGroup:  new sender, OR >5min gap, OR new day
+//   - isLastInGroup:   bubble should render the timestamp footer
+// Walks the chronological list once, O(n).
+function annotateMessages(messages) {
+    const out = [];
+    for (let i = 0; i < messages.length; i++) {
+        const message = messages[i];
+        const prev = messages[i - 1];
+        const next = messages[i + 1];
+        const date = new Date(message.created_date);
+        const prevDate = prev ? new Date(prev.created_date) : null;
+        const nextDate = next ? new Date(next.created_date) : null;
+
+        const showDateDivider = !prev || !isSameDay(prevDate, date);
+        const sameSenderAsPrev =
+            prev && prev.sender_email === message.sender_email && !showDateDivider;
+        const recentAfterPrev =
+            prev && prevDate && differenceInMinutes(date, prevDate) <= 5;
+        const isFirstInGroup = !sameSenderAsPrev || !recentAfterPrev;
+
+        const sameSenderAsNext =
+            next && next.sender_email === message.sender_email;
+        const sameDayAsNext = next && isSameDay(nextDate, date);
+        const recentBeforeNext =
+            next && nextDate && differenceInMinutes(nextDate, date) <= 5;
+        const isLastInGroup =
+            !sameSenderAsNext || !sameDayAsNext || !recentBeforeNext;
+
+        out.push({ message, showDateDivider, isFirstInGroup, isLastInGroup, date });
+    }
+    return out;
+}
 
 /**
  * Messages page — dark slate shell to match the rest of the app, but
@@ -45,10 +117,75 @@ export default function MessagesPage() {
     const [currentUser, setCurrentUser] = useState(null);
     const [selectedConversation, setSelectedConversation] = useState(null);
     const [conversations, setConversations] = useState([]);
+    const [profileMap, setProfileMap] = useState(() => new Map());
     const [newMessage, setNewMessage] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
     const [isLoading, setIsLoading] = useState(true);
     const [isSending, setIsSending] = useState(false);
+    const [isComposeOpen, setIsComposeOpen] = useState(false);
+    const [composeSearch, setComposeSearch] = useState('');
+    const [allProfiles, setAllProfiles] = useState(null); // null = not yet loaded
+    const [isLoadingProfiles, setIsLoadingProfiles] = useState(false);
+    const scrollAnchorRef = useRef(null);
+
+    // Lazy-load the full user directory the first time the compose dialog
+    // opens. Small apps can get away with fetching everyone; if the user
+    // base ever gets big, swap this for a server-side ILIKE search.
+    const openCompose = async () => {
+        setIsComposeOpen(true);
+        setComposeSearch('');
+        if (allProfiles !== null || isLoadingProfiles) return;
+        setIsLoadingProfiles(true);
+        try {
+            const { data } = await supabase
+                .from('profiles')
+                .select('email, full_name, profile_image_url')
+                .order('full_name', { ascending: true })
+                .limit(2000);
+            setAllProfiles(data || []);
+        } catch (err) {
+            console.error('Failed to load user directory:', err);
+            setAllProfiles([]);
+        }
+        setIsLoadingProfiles(false);
+    };
+
+    const startConversationWith = (profile) => {
+        const existing = conversations.find((c) => c.email === profile.email);
+        if (existing) {
+            setSelectedConversation(existing);
+        } else {
+            setSelectedConversation({
+                email: profile.email,
+                messages: [],
+                latestMessage: null,
+                unreadCount: 0,
+                isSystem: false,
+            });
+            setProfileMap((prev) => {
+                const next = new Map(prev);
+                next.set(profile.email, profile);
+                return next;
+            });
+        }
+        setIsComposeOpen(false);
+    };
+
+    // Jump to the latest bubble whenever the visible conversation gains a
+    // new message or the user switches conversations. `instant` on open so
+    // you don't watch the view scroll; `smooth` on new-message so it reads
+    // as an arrival.
+    useEffect(() => {
+        const anchor = scrollAnchorRef.current;
+        if (!anchor) return;
+        anchor.scrollIntoView({ behavior: 'auto', block: 'end' });
+    }, [selectedConversation?.email]);
+
+    useEffect(() => {
+        const anchor = scrollAnchorRef.current;
+        if (!anchor) return;
+        anchor.scrollIntoView({ behavior: 'smooth', block: 'end' });
+    }, [selectedConversation?.messages?.length]);
 
     useEffect(() => {
         let currentUserRef = null;
@@ -90,16 +227,35 @@ export default function MessagesPage() {
 
                     return {
                         email,
-                        displayName: email === 'system@geckinspect.com' ? 'Geck Inspect Team' : email.split('@')[0],
                         messages: msgs.sort((a, b) => new Date(a.created_date) - new Date(b.created_date)),
                         latestMessage,
                         unreadCount,
-                        isSystem: email === 'system@geckinspect.com'
+                        isSystem: email === SYSTEM_EMAIL,
                     };
                 });
 
                 conversationList.sort((a, b) => new Date(b.latestMessage.created_date) - new Date(a.latestMessage.created_date));
                 setConversations(conversationList);
+
+                // Fetch display profiles for everyone in this inbox in one
+                // round trip so the list can show real names + avatars
+                // instead of email prefixes.
+                const otherEmails = conversationList
+                    .map((c) => c.email)
+                    .filter((e) => e && e !== SYSTEM_EMAIL);
+                if (otherEmails.length > 0) {
+                    const { data: profiles } = await supabase
+                        .from('profiles')
+                        .select('email, full_name, profile_image_url')
+                        .in('email', otherEmails);
+                    if (profiles) {
+                        setProfileMap((prev) => {
+                            const next = new Map(prev);
+                            for (const p of profiles) next.set(p.email, p);
+                            return next;
+                        });
+                    }
+                }
 
                 if (isInitial) {
                     const urlParams = new URLSearchParams(window.location.search);
@@ -134,10 +290,53 @@ export default function MessagesPage() {
         };
 
         loadData(true);
-        // Poll every 60s instead of 15s to reduce server load.
-        // TODO: Replace with Supabase Realtime channel for instant updates.
-        const interval = setInterval(() => loadData(false), 60000);
-        return () => clearInterval(interval);
+
+        // Realtime: any insert/update to direct_messages triggers a refresh.
+        // RLS should already scope the stream to rows this user can see; we
+        // still guard client-side because the channel fires before RLS
+        // filtering on some Supabase versions.
+        //
+        // We intentionally debounce: multiple events in a burst (e.g. when
+        // the admin blasts this user's cohort) collapse into one refetch.
+        let refreshTimer = null;
+        const scheduleRefresh = () => {
+            if (refreshTimer) return;
+            refreshTimer = setTimeout(() => {
+                refreshTimer = null;
+                loadData(false);
+            }, 250);
+        };
+
+        const relevant = (row) => {
+            if (!currentUserRef?.email) return false;
+            return (
+                row?.sender_email === currentUserRef.email ||
+                row?.recipient_email === currentUserRef.email
+            );
+        };
+
+        const channel = supabase
+            .channel('messages-page')
+            .on(
+                'postgres_changes',
+                { event: 'INSERT', schema: 'public', table: 'direct_messages' },
+                (payload) => {
+                    if (relevant(payload.new)) scheduleRefresh();
+                }
+            )
+            .on(
+                'postgres_changes',
+                { event: 'UPDATE', schema: 'public', table: 'direct_messages' },
+                (payload) => {
+                    if (relevant(payload.new) || relevant(payload.old)) scheduleRefresh();
+                }
+            )
+            .subscribe();
+
+        return () => {
+            if (refreshTimer) clearTimeout(refreshTimer);
+            supabase.removeChannel(channel);
+        };
     }, []);
 
     // Mark every unread message in the conversation as read and ping the
@@ -221,10 +420,15 @@ export default function MessagesPage() {
         setIsSending(false);
     };
 
-    const filteredConversations = conversations.filter(c =>
-        c.displayName.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        c.email.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredConversations = conversations.filter((c) => {
+        const term = searchTerm.toLowerCase();
+        if (!term) return true;
+        const { displayName } = resolveProfile(c.email, profileMap);
+        return (
+            displayName.toLowerCase().includes(term) ||
+            c.email.toLowerCase().includes(term)
+        );
+    });
 
     if (isLoading) {
         return (
@@ -271,10 +475,24 @@ export default function MessagesPage() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
-                    {/* Conversation list */}
-                    <Card className="bg-slate-900 border-slate-800">
+                    {/* Conversation list — hidden on mobile when a conversation is open */}
+                    <Card
+                        className={`bg-slate-900 border-slate-800 ${
+                            selectedConversation ? 'hidden lg:block' : 'block'
+                        }`}
+                    >
                         <CardHeader className="pb-4">
-                            <CardTitle className="text-lg text-slate-100">Conversations</CardTitle>
+                            <div className="flex items-center justify-between">
+                                <CardTitle className="text-lg text-slate-100">Conversations</CardTitle>
+                                <Button
+                                    size="sm"
+                                    onClick={openCompose}
+                                    className="bg-emerald-600 hover:bg-emerald-500 text-white h-8 px-3"
+                                >
+                                    <Plus className="w-4 h-4 mr-1" />
+                                    New
+                                </Button>
+                            </div>
                             <div className="relative">
                                 <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500" />
                                 <Input
@@ -296,6 +514,17 @@ export default function MessagesPage() {
                                 ) : (
                                     filteredConversations.map((conversation) => {
                                         const isActive = selectedConversation?.email === conversation.email;
+                                        const { displayName, avatarUrl } = resolveProfile(
+                                            conversation.email,
+                                            profileMap
+                                        );
+                                        // Strip markdown emphasis from the
+                                        // preview so broadcasts don't show
+                                        // literal asterisks in the list.
+                                        const previewText = (conversation.latestMessage?.content || '')
+                                            .replace(/[*_`#>]/g, '')
+                                            .replace(/\s+/g, ' ')
+                                            .trim();
                                         return (
                                             <div
                                                 key={conversation.email}
@@ -306,12 +535,15 @@ export default function MessagesPage() {
                                             >
                                                 <div className="flex items-center justify-between gap-2">
                                                     <div className="flex items-center gap-3 min-w-0">
-                                                        <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center shrink-0">
-                                                            <UserIcon className="w-5 h-5 text-slate-400" />
-                                                        </div>
+                                                        <img
+                                                            src={avatarUrl}
+                                                            alt=""
+                                                            className="w-10 h-10 rounded-full object-cover shrink-0 bg-slate-800"
+                                                            loading="lazy"
+                                                        />
                                                         <div className="min-w-0">
                                                             <div className="font-medium text-slate-100 flex items-center gap-2">
-                                                                <span className="truncate">{conversation.displayName}</span>
+                                                                <span className="truncate">{displayName}</span>
                                                                 {conversation.isSystem && (
                                                                     <Badge variant="secondary" className="text-[10px] bg-slate-700 text-slate-200 border-slate-600 shrink-0">
                                                                         System
@@ -320,7 +552,7 @@ export default function MessagesPage() {
                                                             </div>
                                                             {conversation.latestMessage && (
                                                                 <div className={`text-sm text-slate-400 max-w-[220px] ${msgPrefs.previewLines === '1' ? 'truncate' : msgPrefs.previewLines === '2' ? 'line-clamp-2' : 'line-clamp-3'}`}>
-                                                                    {conversation.latestMessage.content.substring(0, 120)}
+                                                                    {previewText.substring(0, 120)}
                                                                 </div>
                                                             )}
                                                         </div>
@@ -346,18 +578,38 @@ export default function MessagesPage() {
                         </CardContent>
                     </Card>
 
-                    {/* Message view */}
-                    <div className="lg:col-span-2">
-                        {selectedConversation ? (
+                    {/* Message view — hidden on mobile when no conversation selected */}
+                    <div
+                        className={`lg:col-span-2 ${
+                            selectedConversation ? 'block' : 'hidden lg:block'
+                        }`}
+                    >
+                        {selectedConversation ? (() => {
+                            const headerProfile = resolveProfile(
+                                selectedConversation.email,
+                                profileMap
+                            );
+                            return (
                             <Card className="bg-slate-900 border-slate-800 h-full flex flex-col">
                                 <CardHeader className="pb-4 border-b border-slate-800">
                                     <CardTitle className="flex items-center gap-3 text-slate-100">
-                                        <div className="w-10 h-10 bg-slate-800 rounded-full flex items-center justify-center">
-                                            <UserIcon className="w-5 h-5 text-slate-400" />
-                                        </div>
+                                        <button
+                                            type="button"
+                                            onClick={() => setSelectedConversation(null)}
+                                            aria-label="Back to conversations"
+                                            className="lg:hidden -ml-1 p-1 rounded-md hover:bg-slate-800 text-slate-300"
+                                        >
+                                            <ArrowLeft className="w-5 h-5" />
+                                        </button>
+                                        <img
+                                            src={headerProfile.avatarUrl}
+                                            alt=""
+                                            className="w-10 h-10 rounded-full object-cover bg-slate-800"
+                                            loading="lazy"
+                                        />
                                         <div className="min-w-0">
                                             <div className="flex items-center gap-2">
-                                                <span className="truncate">{selectedConversation.displayName}</span>
+                                                <span className="truncate">{headerProfile.displayName}</span>
                                                 {selectedConversation.isSystem && (
                                                     <Badge variant="secondary" className="text-xs bg-slate-700 text-slate-200 border-slate-600">
                                                         System
@@ -372,8 +624,9 @@ export default function MessagesPage() {
                                 </CardHeader>
 
                                 <CardContent className="flex-1 p-0 flex flex-col">
-                                    <div className="flex-1 overflow-y-auto p-4 space-y-4 max-h-[calc(100vh-450px)]">
-                                        {selectedConversation.messages.map((message) => {
+                                    <div className="flex-1 overflow-y-auto p-4 max-h-[calc(100vh-450px)]">
+                                        {annotateMessages(selectedConversation.messages).map(
+                                            ({ message, showDateDivider, isFirstInGroup, isLastInGroup, date }) => {
                                             const isMine = message.sender_email === currentUser.email;
                                             const isSystem = message.message_type === 'system';
                                             // Bubble: cream, black text — the only element that
@@ -396,28 +649,53 @@ export default function MessagesPage() {
                                                           borderColor: BUBBLE_INCOMING_BORDER,
                                                           color: BUBBLE_INK,
                                                       };
+                                            // Spacing: more air before a new group, tight within.
+                                            const wrapperSpacing = isFirstInGroup ? 'mt-4' : 'mt-0.5';
+                                            // Rounded corners flatten on the sender side for
+                                            // stacked bubbles so the cluster reads as one unit.
+                                            let cornerClasses = 'rounded-2xl';
+                                            if (!isFirstInGroup && !isLastInGroup) {
+                                                cornerClasses = isMine ? 'rounded-2xl rounded-tr-md rounded-br-md' : 'rounded-2xl rounded-tl-md rounded-bl-md';
+                                            } else if (!isFirstInGroup) {
+                                                cornerClasses = isMine ? 'rounded-2xl rounded-tr-md' : 'rounded-2xl rounded-tl-md';
+                                            } else if (!isLastInGroup) {
+                                                cornerClasses = isMine ? 'rounded-2xl rounded-br-md' : 'rounded-2xl rounded-bl-md';
+                                            }
                                             return (
-                                                <div
-                                                    key={message.id}
-                                                    className={`flex ${isMine ? 'justify-end' : 'justify-start'}`}
-                                                >
-                                                    <div
-                                                        className="max-w-xs lg:max-w-md px-4 py-2.5 rounded-2xl border shadow-sm"
-                                                        style={bubbleStyle}
-                                                    >
-                                                        <div className="whitespace-pre-wrap text-sm leading-relaxed">
-                                                            {message.content}
+                                                <div key={message.id}>
+                                                    {showDateDivider && (
+                                                        <div className="flex items-center my-4">
+                                                            <div className="flex-1 border-t border-slate-800" />
+                                                            <span className="px-3 text-[11px] uppercase tracking-wide text-slate-500">
+                                                                {formatDateDivider(date)}
+                                                            </span>
+                                                            <div className="flex-1 border-t border-slate-800" />
                                                         </div>
+                                                    )}
+                                                    <div
+                                                        className={`flex ${isMine ? 'justify-end' : 'justify-start'} ${wrapperSpacing}`}
+                                                    >
                                                         <div
-                                                            className="text-[10px] mt-1"
-                                                            style={{ color: BUBBLE_INK_MUTED }}
+                                                            className={`max-w-xs lg:max-w-md px-4 py-2.5 border shadow-sm ${cornerClasses}`}
+                                                            style={bubbleStyle}
                                                         >
-                                                            {format(new Date(message.created_date), 'MMM d, h:mm a')}
+                                                            <div className="prose prose-sm max-w-none text-sm leading-relaxed prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-headings:my-2 prose-headings:font-semibold prose-a:text-emerald-700 prose-strong:text-inherit">
+                                                                <ReactMarkdown>{message.content}</ReactMarkdown>
+                                                            </div>
+                                                            {isLastInGroup && (
+                                                                <div
+                                                                    className="text-[10px] mt-1"
+                                                                    style={{ color: BUBBLE_INK_MUTED }}
+                                                                >
+                                                                    {format(date, 'h:mm a')}
+                                                                </div>
+                                                            )}
                                                         </div>
                                                     </div>
                                                 </div>
                                             );
                                         })}
+                                        <div ref={scrollAnchorRef} />
                                     </div>
 
                                     {!selectedConversation.isSystem && (
@@ -451,7 +729,8 @@ export default function MessagesPage() {
                                     )}
                                 </CardContent>
                             </Card>
-                        ) : (
+                            );
+                        })() : (
                             <Card className="bg-slate-900 border-slate-800 h-full flex items-center justify-center">
                                 <EmptyState
                                     icon={MessageSquare}
@@ -463,6 +742,76 @@ export default function MessagesPage() {
                     </div>
                 </div>
             </div>
+
+            <Dialog open={isComposeOpen} onOpenChange={setIsComposeOpen}>
+                <DialogContent className="bg-slate-900 border-slate-800 text-slate-100 sm:max-w-md">
+                    <DialogHeader>
+                        <DialogTitle>New Message</DialogTitle>
+                        <DialogDescription className="text-slate-400">
+                            Pick someone to start a conversation with.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <div className="relative mt-2">
+                        <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-500" />
+                        <Input
+                            autoFocus
+                            placeholder="Search by name or email..."
+                            value={composeSearch}
+                            onChange={(e) => setComposeSearch(e.target.value)}
+                            className="pl-10 bg-slate-950 border-slate-700 text-slate-100"
+                        />
+                    </div>
+                    <div className="max-h-80 overflow-y-auto -mx-6 px-6">
+                        {isLoadingProfiles && (
+                            <div className="py-6 text-center text-sm text-slate-400">
+                                Loading directory...
+                            </div>
+                        )}
+                        {!isLoadingProfiles && allProfiles && (() => {
+                            const term = composeSearch.trim().toLowerCase();
+                            const results = allProfiles
+                                .filter((p) => p.email && p.email !== currentUser?.email)
+                                .filter((p) => {
+                                    if (!term) return true;
+                                    return (
+                                        (p.full_name || '').toLowerCase().includes(term) ||
+                                        p.email.toLowerCase().includes(term)
+                                    );
+                                })
+                                .slice(0, 50);
+                            if (results.length === 0) {
+                                return (
+                                    <div className="py-6 text-center text-sm text-slate-400">
+                                        {term ? 'No matches.' : 'No users found.'}
+                                    </div>
+                                );
+                            }
+                            return results.map((profile) => {
+                                const name = profile.full_name || profile.email.split('@')[0];
+                                return (
+                                    <button
+                                        key={profile.email}
+                                        type="button"
+                                        onClick={() => startConversationWith(profile)}
+                                        className="w-full flex items-center gap-3 py-2 px-2 rounded-md hover:bg-slate-800 text-left"
+                                    >
+                                        <img
+                                            src={profile.profile_image_url || initialsAvatarUrl(name, 64)}
+                                            alt=""
+                                            className="w-9 h-9 rounded-full object-cover bg-slate-800 shrink-0"
+                                            loading="lazy"
+                                        />
+                                        <div className="min-w-0">
+                                            <div className="text-sm text-slate-100 truncate">{name}</div>
+                                            <div className="text-xs text-slate-500 truncate">{profile.email}</div>
+                                        </div>
+                                    </button>
+                                );
+                            });
+                        })()}
+                    </div>
+                </DialogContent>
+            </Dialog>
         </div>
     );
 }

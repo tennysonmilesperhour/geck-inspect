@@ -1,0 +1,89 @@
+# Biweekly SEO audit for Geck Inspect.
+#
+# Runs the in-repo static analyzer (scripts/seo-audit.mjs) against a
+# full local build, then hits the PageSpeed Insights API for live
+# Lighthouse scores on the highest-value pages. Commits the merged
+# report to main so the docs/seo-audits/ history is the canonical
+# changelog of site-health drift.
+#
+# Complementary to blog-pipeline.yml:
+#   - blog-pipeline.yml handles CONTENT (research → draft → publish)
+#   - seo-audit.yml handles SITE HEALTH (title, description, schema,
+#     internal links, orphans, Core Web Vitals)
+#
+# Secrets used (optional):
+#   PAGESPEED_API_KEY — Google PageSpeed Insights API key. Without it
+#                       the workflow falls back to unauthenticated
+#                       requests, which work but are rate-limited to
+#                       ~25k/day across all unauthenticated callers.
+
+name: seo-audit
+
+on:
+  schedule:
+    # 1st and 15th of every month, 09:00 UTC.
+    - cron: '0 9 1,15 * *'
+  workflow_dispatch:
+    inputs:
+      skip_lighthouse:
+        description: Skip the PageSpeed Insights calls (faster dry-run)
+        required: false
+        default: 'false'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: seo-audit
+  cancel-in-progress: false
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Deep history so the "content diff since last audit" section
+          # has access to prior commits.
+          fetch-depth: 0
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build site
+        run: pnpm build
+        env:
+          # Let the audit run against the production build shape.
+          NODE_ENV: production
+
+      - name: Run static SEO audit
+        run: node scripts/seo-audit.mjs
+        # Exit 0 even on findings — the report is the deliverable.
+
+      - name: Run PageSpeed Insights Lighthouse
+        if: ${{ github.event.inputs.skip_lighthouse != 'true' }}
+        env:
+          PAGESPEED_API_KEY: ${{ secrets.PAGESPEED_API_KEY }}
+        run: node scripts/seo-lighthouse.mjs
+
+      - name: Commit report to main
+        run: |
+          git config user.name  "geckinspect-seo-bot"
+          git config user.email "seo-bot@users.noreply.github.com"
+          git add docs/seo-audits/
+          if git diff --cached --quiet; then
+            echo "Audit produced no new report content."
+          else
+            git commit -m "seo: biweekly audit $(date -u +%Y-%m-%d)"
+            for i in 1 2 3 4; do
+              git pull --rebase origin main && git push origin main && break
+              sleep $((2 ** i))
+            done
+          fi

@@ -36,7 +36,6 @@ const OUT_PATH = resolve(REPO_ROOT, 'vercel.json');
 // /Membership are still indexable as marketing surface.
 const NOINDEX_PAGES = [
   '/AdminPanel',
-  '/AdminMigration',
   '/Settings',
   '/Notifications',
   '/Messages',
@@ -90,14 +89,19 @@ const CASE_REDIRECTS = [
  *
  * Routing model:
  *   - Static files in /public (sitemap.xml, robots.txt, llms.txt,
- *     manifest.json, 404.html, morphs.csv) ship as-is.
+ *     manifest.json, morphs.csv) ship as-is.
  *   - Every known SPA path is rewritten to /index.html; React Router
  *     handles it client-side and scripts/prerender.mjs overwrites
  *     /index.html per route at build time with route-aware metadata.
- *   - Anything NOT on the rewrite list falls through to the Vercel
- *     default 404 handler, which serves /public/404.html with a real
- *     HTTP 404 status. That avoids the soft-404 penalty Bing and
- *     several AI crawlers apply to 200-status SPA shells.
+ *   - A catch-all `/(.*)` rewrite at the end of the rewrites array
+ *     hands any unknown path to the SPA too, so full-page reloads on
+ *     dynamic or newly-added routes return the React shell instead of
+ *     a server 404. PageNotFound.jsx renders the 404 UX and emits a
+ *     noindex meta for JS-executing crawlers. We previously shipped a
+ *     static /public/404.html for a "real HTTP 404" SEO signal, but
+ *     Vercel's filesystem step serves that file BEFORE the catch-all
+ *     rewrite fires, breaking refresh on every non-prerendered route
+ *     (Dashboard, MyGeckos, Settings, etc.). Removed 2026-04-21.
  *
  * Headers:
  *   - HTML is never cached at the CDN edge so a deploy rolls out immediately.
@@ -105,11 +109,19 @@ const CASE_REDIRECTS = [
  *   - Security headers follow the 2026 OWASP baseline.
  */
 function buildConfig() {
-  const spaPatterns = getAllSpaPathPatterns();
-  const rewrites = spaPatterns.map((source) => ({
-    source,
-    destination: '/index.html',
-  }));
+  // Single catch-all rewrite. Vercel's filesystem step runs before
+  // rewrites for paths that match an actual file (/About/index.html
+  // from prerender, /assets/*, etc.), so prerendered routes keep
+  // serving their route-specific HTML. Everything else — /MyGeckos,
+  // /Dashboard, dynamic routes, newly-added pages — falls through the
+  // catch-all into the SPA shell and React Router takes over.
+  //
+  // 2026-04-21: dropped `cleanUrls: true` because it silently disabled
+  // every rewrite (including this one) — /MyGeckos returned 404 even
+  // though the rewrite was emitted correctly. Without cleanUrls,
+  // /About still serves the prerendered /About/index.html via the
+  // filesystem step, so we lose nothing by removing it.
+  const rewrites = [{ source: '/(.*)', destination: '/index.html' }];
 
   // NOTE: Do NOT add `_comment` (or any unknown top-level key) to the
   // returned object. Vercel's schema validator now rejects unknown
@@ -120,8 +132,6 @@ function buildConfig() {
   // in this file and in scripts/seo-routes.mjs instead.
   return {
     $schema: 'https://openapi.vercel.sh/vercel.json',
-    cleanUrls: true,
-    trailingSlash: false,
     rewrites,
     headers: [
       {
@@ -190,10 +200,6 @@ function buildConfig() {
           { key: 'Cache-Control', value: 'public, max-age=3600, must-revalidate' },
           { key: 'Access-Control-Allow-Origin', value: '*' },
         ],
-      },
-      {
-        source: '/404.html',
-        headers: [{ key: 'X-Robots-Tag', value: 'noindex, nofollow' }],
       },
       ...NOINDEX_PAGES.map((source) => ({
         source,

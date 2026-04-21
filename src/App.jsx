@@ -7,10 +7,12 @@ import { queryClientInstance } from '@/lib/query-client'
 import VisualEditAgent from '@/lib/VisualEditAgent'
 import NavigationTracker from '@/lib/NavigationTracker'
 import PostHogPageTracker from '@/lib/PostHogPageTracker'
+import GA4PageTracker from '@/lib/GA4PageTracker'
 import { pagesConfig } from './pages.config'
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, Outlet } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
+import { ThemeProvider } from '@/lib/ThemeContext';
 import UpdateNotification from '@/components/ui/UpdateNotification';
 import LoginPortal from '@/components/auth/LoginPortal';
 import ScrollToTop from '@/components/shared/ScrollToTop';
@@ -60,15 +62,17 @@ const Contact               = lazy(() => import('./pages/Contact'));
 const Terms                 = lazy(() => import('./pages/Terms'));
 const MarketplaceVerification = lazy(() => import('./pages/MarketplaceVerification'));
 
-// Special-case pages that need unique routing (no layout, param routes, etc.)
-const AdminMigration = lazy(() => import('./pages/AdminMigration'));
-
 // P1 — Animal Passport (public pages, no auth required)
 const AnimalPassport        = lazy(() => import('./pages/AnimalPassport'));
 const PassportQR            = lazy(() => import('./pages/PassportQR'));
 const ClaimAnimal           = lazy(() => import('./pages/ClaimAnimal'));
 // P5 — Geck Answers (public read, auth to post)
 const GeckAnswersPublic     = lazy(() => import('./pages/GeckAnswers'));
+// Editorial blog — long-form genetics, breeding, and care articles. Lives
+// under /blog/<slug>, indexable, prerendered, and JSON-LD wired through
+// the same pipeline as MorphGuide / CareGuide topic pages.
+const BlogIndex             = lazy(() => import('./pages/BlogIndex'));
+const BlogPost              = lazy(() => import('./pages/BlogPost'));
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -77,6 +81,37 @@ const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
+
+// Spinner used for the in-Layout Suspense boundary — fills whatever
+// space the page slot has rather than the whole viewport, so the
+// sidebar + header stay visible while a lazy page chunk loads.
+const PageSuspenseFallback = (
+  <div className="flex-1 flex items-center justify-center">
+    <div className="w-8 h-8 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+  </div>
+);
+
+// Parent-route element that wraps authenticated pages in a single
+// Layout instance and renders the matched child via <Outlet/>. This
+// keeps the Layout (sidebar, header, hover state) mounted across
+// navigation — previously each Route.element created its own
+// LayoutWrapper, so React unmounted + remounted the entire Layout
+// (and reset the sidebar collapse state) on every link click.
+//
+// The inner Suspense is critical: lazy page chunks throw a promise
+// while loading, and the nearest Suspense boundary renders its
+// fallback in place of everything below it. Without this boundary,
+// the outer Suspense at Routes level would catch it and replace the
+// Layout with the global spinner — which is why first-time
+// navigations (uncached chunks) appeared to reload the menu while
+// repeat navigations (cached chunks) preserved state.
+const LayoutOutlet = () => Layout ? (
+  <Layout>
+    <Suspense fallback={PageSuspenseFallback}>
+      <Outlet />
+    </Suspense>
+  </Layout>
+) : <Outlet />;
 
 const LazyFallback = (
   <div className="fixed inset-0 flex items-center justify-center bg-slate-950">
@@ -150,46 +185,47 @@ const AuthenticatedApp = () => {
           <Route path="/claim/:token" element={<ClaimAnimal />} />
           {/* P5 — Geck Answers (public read) */}
           <Route path="/GeckAnswers" element={<GeckAnswersPublic />} />
+          {/* Editorial blog */}
+          <Route path="/blog" element={<BlogIndex />} />
+          <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="*" element={<LoginPortal />} />
         </Routes>
       </Suspense>
     );
   }
 
-  // Render the main app
+  // Render the main app.
+  //
+  // All pages that share the authenticated chrome (sidebar / header)
+  // live under one parent <Route element={<LayoutOutlet/>}> so the
+  // Layout instance is mounted ONCE and reused across navigation.
+  // Pages that render their own public chrome (blog, public passport,
+  // claim) stay as sibling routes without the Layout.
   return (
     <Suspense fallback={LazyFallback}>
     <Routes>
-      <Route path="/" element={
-        <LayoutWrapper currentPageName={mainPageKey}>
-          <MainPage />
-        </LayoutWrapper>
-      } />
-      {Object.entries(Pages).map(([path, Page]) => (
-        <Route
-          key={path}
-          path={`/${path}`}
-          element={
-            disabledPages.has(path)
-              ? <Navigate to="/" replace />
-              : <LayoutWrapper currentPageName={path}>
-                  <Page />
-                </LayoutWrapper>
-          }
-        />
-      ))}
+      <Route element={<LayoutOutlet />}>
+        <Route path="/" element={<MainPage />} />
+        {Object.entries(Pages).map(([path, Page]) => (
+          <Route
+            key={path}
+            path={`/${path}`}
+            element={
+              disabledPages.has(path)
+                ? <Navigate to="/" replace />
+                : <Page />
+            }
+          />
+        ))}
+        <Route path="/MorphGuide/:slug" element={<MorphDetail />} />
+        <Route path="/passport/:passportCode/qr" element={<PassportQR />} />
+      </Route>
 
-      <Route path="/MorphGuide/:slug" element={
-        <LayoutWrapper currentPageName="MorphGuide">
-          <MorphDetail />
-        </LayoutWrapper>
-      } />
-      <Route path="/AdminMigration" element={<AdminMigration />} />
+      {/* Editorial blog — accessible to authenticated users too */}
+      <Route path="/blog" element={<BlogIndex />} />
+      <Route path="/blog/:slug" element={<BlogPost />} />
       {/* P1 — Public passport pages (also available when authenticated) */}
       <Route path="/passport/:passportCode" element={<AnimalPassport />} />
-      <Route path="/passport/:passportCode/qr" element={
-        <LayoutWrapper currentPageName="PassportQR"><PassportQR /></LayoutWrapper>
-      } />
       <Route path="/claim/:token" element={<ClaimAnimal />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
@@ -202,19 +238,22 @@ function App() {
 
   return (
     <HelmetProvider>
-      <AuthProvider>
-        <QueryClientProvider client={queryClientInstance}>
-          <Router>
-            <ScrollToTop />
-            <NavigationTracker />
-            <PostHogPageTracker />
-            <AuthenticatedApp />
-          </Router>
-          <Toaster />
-          <VisualEditAgent />
-          <UpdateNotification />
-        </QueryClientProvider>
-      </AuthProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <QueryClientProvider client={queryClientInstance}>
+            <Router>
+              <ScrollToTop />
+              <NavigationTracker />
+              <PostHogPageTracker />
+              <GA4PageTracker />
+              <AuthenticatedApp />
+            </Router>
+            <Toaster />
+            <VisualEditAgent />
+            <UpdateNotification />
+          </QueryClientProvider>
+        </AuthProvider>
+      </ThemeProvider>
     </HelmetProvider>
   )
 }

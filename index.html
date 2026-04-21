@@ -64,7 +64,44 @@
       })();
     </script>
 
-    <!-- Theme -->
+    <!-- Google Analytics 4 — prod hostnames only. Staging and preview
+         builds skip the script entirely so they don't pollute the GA
+         stream. `send_page_view: false` prevents a double pageview on
+         initial load; GA4PageTracker.jsx fires one explicit page_view
+         per React-Router navigation (including the first render). -->
+    <script>
+      (function () {
+        var h = location.hostname;
+        var isProd = h === 'geckinspect.com' || h === 'www.geckinspect.com';
+        if (!isProd) return;
+        var GA_ID = 'G-WLGHJ7KC2N';
+        var s = document.createElement('script');
+        s.async = true;
+        s.src = 'https://www.googletagmanager.com/gtag/js?id=' + GA_ID;
+        document.head.appendChild(s);
+        window.dataLayer = window.dataLayer || [];
+        window.gtag = function () { window.dataLayer.push(arguments); };
+        window.gtag('js', new Date());
+        window.gtag('config', GA_ID, { send_page_view: false });
+      })();
+    </script>
+
+    <!-- Theme — apply persisted gecko-morph theme synchronously before
+         CSS/JS loads so users don't see a flash of the default palette. -->
+    <script>
+      (function () {
+        try {
+          var allowed = ['normal','tangerine','halloween-mask','blizzard','lavender','super-hypo'];
+          var stored = localStorage.getItem('geckinspect.theme');
+          var theme = allowed.indexOf(stored) !== -1 ? stored : 'normal';
+          document.documentElement.setAttribute('data-theme', theme);
+          document.documentElement.classList.add('dark');
+        } catch (e) {
+          document.documentElement.setAttribute('data-theme', 'normal');
+          document.documentElement.classList.add('dark');
+        }
+      })();
+    </script>
     <meta name="theme-color" content="#064e3b" />
     <meta name="color-scheme" content="dark" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
@@ -73,8 +110,8 @@
     <meta name="application-name" content="Geck Inspect" />
 
     <!-- Favicon / app icons (using current hosted logo; swap for local asset later) -->
-    <link rel="icon" type="image/png" href="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png" />
-    <link rel="apple-touch-icon" href="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png" />
+    <link rel="icon" type="image/png" href="https://geckinspect.com/logo.png" />
+    <link rel="apple-touch-icon" href="https://geckinspect.com/logo.png" />
     <link rel="manifest" href="/manifest.json" />
 
     <!-- Open Graph -->
@@ -83,7 +120,7 @@
     <meta property="og:title" content="Geck Inspect — Crested Gecko Collection, Breeding &amp; Community Platform" />
     <meta property="og:description" content="The professional platform for crested gecko breeders and keepers. Track collections, plan breedings, identify morphs with AI, and connect with the community." />
     <meta property="og:url" content="https://geckinspect.com/" />
-    <meta property="og:image" content="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png" />
+    <meta property="og:image" content="https://geckinspect.com/logo.png" />
     <meta property="og:image:alt" content="Geck Inspect logo" />
     <meta property="og:locale" content="en_US" />
 
@@ -91,7 +128,7 @@
     <meta name="twitter:card" content="summary_large_image" />
     <meta name="twitter:title" content="Geck Inspect — Crested Gecko Collection, Breeding &amp; Community Platform" />
     <meta name="twitter:description" content="The professional platform for crested gecko breeders and keepers. Track collections, plan breedings, identify morphs with AI, and connect with the community." />
-    <meta name="twitter:image" content="https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png" />
+    <meta name="twitter:image" content="https://geckinspect.com/logo.png" />
 
     <!-- Site-level structured data (Organization + WebSite). Page-specific
          schema (Article, FAQPage, HowTo, Product, BreadcrumbList) is emitted
@@ -112,7 +149,7 @@
       "url": "https://geckinspect.com/",
       "logo": {
         "@type": "ImageObject",
-        "url": "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png",
+        "url": "https://geckinspect.com/logo.png",
         "width": 512,
         "height": 512
       },

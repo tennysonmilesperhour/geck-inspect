@@ -19,7 +19,7 @@ const CALCULATOR_JSON_LD = [
     '@id': 'https://geckinspect.com/GeneticCalculatorTool#app',
     name: 'Crested Gecko Genetics Calculator',
     url: 'https://geckinspect.com/GeneticCalculatorTool',
-    description: 'Punnett-square-based genetics calculator for crested gecko (Correlophus ciliatus) breeders. Predicts offspring outcomes for co-dominant and recessive traits including Lilly White, Cappuccino, Axanthic, and Soft Scale.',
+    description: 'Punnett-square-based genetics calculator for crested gecko (Correlophus ciliatus) breeders. Predicts offspring outcomes for incomplete-dominant, recessive, and dominant traits including Lilly White, Cappuccino, Axanthic, Soft Scale, and Hypo.',
     applicationCategory: 'UtilitiesApplication',
     applicationSubCategory: 'Reptile Breeding Calculator',
     operatingSystem: 'Web',
@@ -88,7 +88,7 @@ export default function GeneticCalculatorTool() {
         <div className="p-4 md:p-8 bg-slate-950 min-h-screen">
             <Seo
               title="Crested Gecko Genetics Calculator"
-              description="Free Punnett-square genetics calculator for crested gecko breeders. Predict offspring outcomes for Lilly White (co-dominant, lethal super), Cappuccino (recessive), Axanthic (recessive), and Soft Scale (dominant). Built for the crested gecko hobby."
+              description="Free Punnett-square genetics calculator for crested gecko breeders. Predict offspring outcomes for Lilly White (incomplete-dominant, lethal super), Cappuccino (incomplete-dominant), Axanthic (recessive), Soft Scale (incomplete-dominant), and Hypo (dominant). Built for the crested gecko hobby."
               path="/GeneticCalculatorTool"
               imageAlt="Crested gecko genetics Punnett-square calculator"
               keywords={[
@@ -127,16 +127,17 @@ export default function GeneticCalculatorTool() {
                         <div>
                             <h2 className="text-xl font-bold text-slate-100 mb-2">What the calculator does</h2>
                             <p className="text-slate-400 text-sm leading-relaxed">
-                                Enter any pair of crested geckos with known trait genotypes and see a Punnett-square-based projection of expected offspring percentages. Supports co-dominant traits (Lilly White — including the lethal Super homozygous form), recessive traits (Cappuccino, Axanthic), and dominant traits (Soft Scale). The Monte Carlo simulator models a full breeding season so you can pressure-test a pairing before committing to it.
+                                Enter any pair of crested geckos with known trait genotypes and see a Punnett-square-based projection of expected offspring percentages. Supports incomplete-dominant traits (Lilly White — including the lethal Super homozygous form — Cappuccino, Soft Scale, Whiteout, Empty Back), recessive traits (Axanthic), and dominant traits (Hypo). The Monte Carlo simulator models a full breeding season so you can pressure-test a pairing before committing to it.
                             </p>
                         </div>
                         <div>
                             <h2 className="text-xl font-bold text-slate-100 mb-2">Which crested gecko traits follow Mendelian inheritance?</h2>
                             <ul className="text-slate-400 text-sm leading-relaxed space-y-1.5 list-disc pl-5">
-                                <li><strong className="text-slate-200">Lilly White</strong> — co-dominant; homozygous "Super Lilly White" is lethal in the egg.</li>
-                                <li><strong className="text-slate-200">Cappuccino</strong> — recessive; two het carriers produce ~25% visible cappuccino offspring.</li>
+                                <li><strong className="text-slate-200">Lilly White</strong> — incomplete-dominant; homozygous "Super Lilly White" is lethal in the egg.</li>
+                                <li><strong className="text-slate-200">Cappuccino</strong> — incomplete-dominant; heterozygotes show the partial phenotype and the homozygous Super Cappuccino (Melanistic) has documented health concerns.</li>
                                 <li><strong className="text-slate-200">Axanthic</strong> — recessive; removes red and yellow pigments entirely.</li>
-                                <li><strong className="text-slate-200">Soft Scale</strong> — dominant; homozygous Super Soft Scale is the maximum texture expression.</li>
+                                <li><strong className="text-slate-200">Soft Scale</strong> — incomplete-dominant; homozygous Super Soft Scale is the maximum texture expression and is healthy.</li>
+                                <li><strong className="text-slate-200">Hypo</strong> — dominant; reduces melanin and combines with base colors (e.g. Black → Lavender, Yellow → Cream).</li>
                             </ul>
                             <p className="text-slate-500 text-xs mt-3">Most other crested gecko "morphs" (Harlequin, Dalmatian, Pinstripe, Flame, etc.) are polygenic and do not follow a Punnett square. <Link to="/GeneticsGuide" className="text-purple-300 hover:underline">Read the genetics guide →</Link></p>
                         </div>

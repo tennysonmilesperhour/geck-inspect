@@ -8,7 +8,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { APP_LOGO_URL } from '@/lib/constants';
 import {
   Database, BookOpen, BarChart3, Upload, Users, HeartHandshake, Layers, LogOut, Search, Settings, UserPlus, Shield, MessageSquare, Mail, Heart, Menu, ShoppingCart, GitBranch, FlaskConical, Star, FolderKanban, GraduationCap, Dna,
-  Egg, LayoutGrid, CircleUser, UsersRound, Images, Tag, CalendarDays, Sparkles, Truck, ChevronDown
+  Egg, LayoutGrid, CircleUser, UsersRound, Images, Tag, CalendarDays, Sparkles, Truck, ChevronDown, Pin, PinOff
 } from "lucide-react";
 import TutorialModal from "@/components/tutorial/TutorialModal";
 import CommandPalette from "@/components/command-palette/CommandPalette";
@@ -16,6 +16,7 @@ import FeedingAlertSystem from "@/components/feeding/FeedingAlertSystem";
 import NotificationPopover from "@/components/notifications/NotificationPopover";
 import GuestMockDisclaimer from "@/components/auth/GuestMockDisclaimer";
 import FeedbackWidget from "@/components/feedback/FeedbackWidget";
+import InstallAppButton from "@/components/shared/InstallAppButton";
 import {
   Sidebar,
   SidebarHeader,
@@ -57,6 +58,42 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   const [appLogo, setAppLogo] = useState(null);
   const [pageConfigs, setPageConfigs] = useState([]);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [isSidebarLocked, setIsSidebarLocked] = useState(() => {
+    try { return localStorage.getItem('sidebar_locked') === '1'; }
+    catch { return false; }
+  });
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(!isSidebarLocked);
+  const collapseTimerRef = useRef(null);
+
+  const expandSidebar = () => {
+    if (collapseTimerRef.current) {
+      clearTimeout(collapseTimerRef.current);
+      collapseTimerRef.current = null;
+    }
+    setIsSidebarCollapsed(false);
+  };
+
+  const scheduleCollapseSidebar = () => {
+    if (isSidebarLocked) return;
+    if (collapseTimerRef.current) clearTimeout(collapseTimerRef.current);
+    collapseTimerRef.current = setTimeout(() => setIsSidebarCollapsed(true), 140);
+  };
+
+  const toggleSidebarLock = () => {
+    setIsSidebarLocked(prev => {
+      const next = !prev;
+      try { localStorage.setItem('sidebar_locked', next ? '1' : '0'); } catch {}
+      if (next) {
+        if (collapseTimerRef.current) clearTimeout(collapseTimerRef.current);
+        setIsSidebarCollapsed(false);
+      }
+      return next;
+    });
+  };
+
+  useEffect(() => () => {
+    if (collapseTimerRef.current) clearTimeout(collapseTimerRef.current);
+  }, []);
 
   const { toggleSidebar } = useSidebar();
 
@@ -658,13 +695,16 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           </SidebarHeader>
 
           <SidebarBody ref={sidebarRef} className="flex-1 overflow-y-auto custom-scrollbar">
+            <div className="px-4 pt-2 pb-3 md:hidden">
+              <InstallAppButton />
+            </div>
             <div className="px-4 mb-4">
               {user ? (
                 <div className="flex items-center gap-3">
                   <Link to={createPageUrl('MyProfile')}>
-                      <img 
-                            src={user.profile_image_url || initialsAvatarUrl(user.full_name)} 
-                            alt="User avatar" 
+                      <img
+                            src={user.profile_image_url || initialsAvatarUrl(user.full_name)}
+                            alt="User avatar"
                             className="w-8 h-8 rounded-full object-cover"
                             loading="lazy"
                             decoding="async"
@@ -787,17 +827,34 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         </Sidebar>
 
 
-        {/* Static sidebar for desktop */}
-        <div className="hidden lg:flex lg:flex-shrink-0">
-          <div className="flex w-64 flex-col">
-            <div className="flex flex-grow flex-col overflow-y-auto bg-white dark:bg-gray-800 pt-5 border-r border-gray-200 dark:border-gray-700" ref={sidebarRef}>
-              <div className="flex items-center flex-shrink-0 px-6 mb-4">
-                <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-sage-300 dark:border-emerald-700/50 hover:bg-sage-100 dark:hover:bg-emerald-900/30 transition-colors duration-200">
+        {/* Edge hover detector — expands the collapsed rail before the
+            cursor physically reaches it, giving a smoother feel. Only
+            mounted while collapsed so it can't intercept clicks on the
+            expanded sidebar's left edge. */}
+        {isSidebarCollapsed && (
+          <div
+            aria-hidden="true"
+            className="hidden lg:block fixed top-0 left-0 h-full w-3 z-40"
+            onMouseEnter={expandSidebar}
+          />
+        )}
+        {/* Desktop sidebar — fixed, so the expanded panel overlays the
+            page instead of reflowing it. Main content gets enough
+            left-padding at lg breakpoint to clear the collapsed rail. */}
+        <div
+          className={`hidden lg:flex fixed top-0 left-0 h-full z-40 desktop-sidebar-wrapper ${isSidebarCollapsed ? 'is-collapsed' : ''}`}
+          onMouseEnter={expandSidebar}
+          onMouseLeave={scheduleCollapseSidebar}
+        >
+          <div className="flex flex-col h-full desktop-sidebar-inner mobile-sidebar-glass bg-emerald-950/25 backdrop-blur-sm border-r border-emerald-800/40">
+            <div className="flex flex-grow flex-col overflow-y-auto overflow-x-hidden custom-scrollbar pt-5" ref={sidebarRef}>
+              <div className="flex items-center flex-shrink-0 px-3 mb-4 desktop-sidebar-logo">
+                <Link to={createPageUrl("Dashboard")} className="flex items-center gap-3 w-full px-3 py-3 rounded-xl border border-emerald-700/40 bg-emerald-900/20 hover:bg-emerald-800/40 transition-colors duration-200">
                   {appLogo && (
                     <img
                       src={appLogo}
                       alt="Geck Inspect Logo"
-                      className="h-8 w-8 object-contain rounded-lg"
+                      className="h-10 w-10 object-contain rounded-lg flex-shrink-0"
                       loading="lazy"
                       decoding="async"
                       onError={(e) => {
@@ -806,7 +863,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                       }}
                     />
                   )}
-                  <span className="text-lg font-bold text-sage-800 dark:text-sage-700" style={{fontFamily: "'Righteous', cursive", letterSpacing: '0.03em'}}>Geck Inspect</span>
+                  <span className="text-xl font-bold text-emerald-100 sidebar-collapse-hide whitespace-nowrap" style={{fontFamily: "'Righteous', cursive", letterSpacing: '0.03em'}}>Geck Inspect</span>
                 </Link>
               </div>
 
@@ -822,20 +879,20 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                             decoding="async"
                           />
                         </Link>
-                    <div className="flex-1">
-                      <Link to={createPageUrl('MyProfile')} className="font-medium text-sage-800 dark:text-sage-700 text-sm">{user.full_name}</Link>
-                      <p className="text-xs text-sage-600 dark:text-sage-500">{user.email}</p>
+                    <div className="flex-1 sidebar-collapse-hide">
+                      <Link to={createPageUrl('MyProfile')} className="font-medium text-emerald-100 text-sm">{user.full_name}</Link>
+                      <p className="text-xs text-emerald-300/80">{user.email}</p>
                     </div>
                   </div>
                 ) : (
-                  <div className="space-y-2">
+                  <div className="space-y-2 sidebar-collapse-hide">
                     <Button
                       onClick={handleLogin}
                       className="w-full bg-gradient-to-r from-sage-600 to-earth-600 hover:from-sage-700 hover:to-earth-700 shadow-lg text-sm">
                       <UserPlus className="w-4 h-4 mr-2" />
                       Sign Up / Login
                     </Button>
-                    <div className="text-xs text-sage-500 dark:text-sage-400 text-center">
+                    <div className="text-xs text-emerald-300/70 text-center">
                       Create an account to save your work and manage your gecko collection
                     </div>
                   </div>
@@ -858,19 +915,19 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                       }`}
                     >
                       <Shield className="mr-2 h-5 w-5 flex-shrink-0" />
-                      Admin Panel
+                      <span>Admin Panel</span>
                     </Link>
                   </nav>
                 </div>
               )}
-              
+
               <div className="p-4 border-t border-emerald-900/40 mt-auto">
                 <div className="space-y-3">
-                  <Link to="/PrivacyPolicy" className="block text-xs text-slate-500 hover:text-slate-300 px-3 transition-colors">Privacy Policy</Link>
+                  <Link to="/PrivacyPolicy" className="block text-xs text-slate-500 hover:text-slate-300 px-3 transition-colors sidebar-collapse-hide">Privacy Policy</Link>
                   <Link to={createPageUrl("Membership")} className="block">
                     <Button variant="outline" size="sm" className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm">
                       <Star className="w-4 h-4 mr-2 flex-shrink-0" />
-                      <span className="truncate">Membership</span>
+                      <span className="truncate sidebar-collapse-hide">Membership</span>
                     </Button>
                   </Link>
                   <div>
@@ -881,19 +938,21 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                     className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm"
                   >
                     <GraduationCap className="w-4 h-4 mr-2 flex-shrink-0" />
-                    App Tutorial
+                    <span className="sidebar-collapse-hide">App Tutorial</span>
                   </Button>
                   </div>
 
                   {user ?
                     <div className="space-y-3">
                       {sidebarBadge && (
-                        <UserBadge
-                          badge={sidebarBadge.badge}
-                          title={sidebarBadge.title}
-                          count={sidebarBadge.count}
-                          label={sidebarBadge.label}
-                        />
+                        <div className="sidebar-collapse-hide">
+                          <UserBadge
+                            badge={sidebarBadge.badge}
+                            title={sidebarBadge.title}
+                            count={sidebarBadge.count}
+                            label={sidebarBadge.label}
+                          />
+                        </div>
                       )}
 
                       <Link to={createPageUrl("Settings")} className="block">
@@ -902,11 +961,11 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                           size="sm"
                           className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm">
                           <Settings className="w-4 h-4 mr-2" />
-                          Settings
+                          <span className="sidebar-collapse-hide">Settings</span>
                         </Button>
                       </Link>
 
-                      <div className="text-xs text-emerald-200/50 px-3">
+                      <div className="text-xs text-emerald-200/50 px-3 sidebar-collapse-hide">
                         Logged in as {user.full_name}
                         {user.is_expert && <span className="ml-2 text-green-600">✓ Expert</span>}
                         {user.role === 'admin' && <span className="ml-2 text-purple-600">⚡ Admin</span>}
@@ -917,17 +976,31 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                         onClick={handleLogout}
                         className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm">
                         <LogOut className="w-4 h-4 mr-2" />
-                        Logout
+                        <span className="sidebar-collapse-hide">Logout</span>
                       </Button>
                     </div> :
                     null}
+
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={toggleSidebarLock}
+                    title={isSidebarLocked ? "Unlock — sidebar will auto-collapse on mouse leave" : "Lock sidebar open"}
+                    aria-label={isSidebarLocked ? "Unlock sidebar" : "Lock sidebar open"}
+                    className="w-full justify-start text-emerald-100/70 hover:text-white hover:bg-emerald-800/30 text-xs sidebar-lock-toggle"
+                  >
+                    {isSidebarLocked
+                      ? <PinOff className="w-4 h-4 mr-2 text-emerald-300" />
+                      : <Pin className="w-4 h-4 mr-2" />}
+                    <span className="sidebar-collapse-hide">{isSidebarLocked ? "Unlock sidebar" : "Lock sidebar open"}</span>
+                  </Button>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        <main id="main-content" className="flex-1 flex flex-col min-w-0">
+        <main id="main-content" className={`flex-1 flex flex-col min-w-0 transition-[padding] duration-200 ease-out ${isSidebarLocked ? 'lg:pl-[13.6rem]' : 'lg:pl-[3.4rem]'}`}>
           <header className="bg-sage-200/90 backdrop-blur-md border-b border-sage-300 px-4 py-3 md:hidden sticky top-0 z-10 gecko-header">
             <div className="flex items-center justify-between gap-4">
               <button onClick={toggleSidebar} className="hover:bg-sage-200 p-2 rounded-lg transition-colors duration-200" aria-label="Toggle Sidebar">

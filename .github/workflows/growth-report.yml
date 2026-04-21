@@ -1,0 +1,71 @@
+# Weekly growth report for Geck Inspect.
+#
+# Runs scripts/growth-report.mjs every Monday at 11:00 UTC (after
+# blog-pipeline's 06:00/07:00 research+draft window, so the blog-queue
+# hook in G5 can feed query gaps into the same day's draft cycle).
+#
+# Emits docs/growth-reports/YYYY-MM-DD.md and commits it to main so
+# the report history is the canonical record of Google's signals.
+#
+# Secrets required for a real report (placeholder mode otherwise):
+#   GOOGLE_SERVICE_ACCOUNT_JSON — service-account key JSON (paste contents)
+#   GA4_PROPERTY_ID             — GA4 numeric property id (e.g. 346789123)
+#   GSC_SITE_URL                — "sc-domain:geckinspect.com" (domain
+#                                 property) or "https://geckinspect.com/"
+#                                 (URL-prefix property)
+
+name: growth-report
+
+on:
+  schedule:
+    # Monday 11:00 UTC — after blog-pipeline research (06:00) and draft
+    # (07:00) on MWF, so the blog-queue feed from this job can influence
+    # the NEXT Wednesday's research pass.
+    - cron: '0 11 * * 1'
+  workflow_dispatch:
+    inputs:
+      verbose:
+        description: Print extra diagnostic output
+        required: false
+        default: 'false'
+
+permissions:
+  contents: write
+
+concurrency:
+  group: growth-report
+  cancel-in-progress: false
+
+jobs:
+  report:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Run growth report
+        env:
+          GOOGLE_SERVICE_ACCOUNT_JSON: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+          GA4_PROPERTY_ID:             ${{ secrets.GA4_PROPERTY_ID }}
+          GSC_SITE_URL:                ${{ secrets.GSC_SITE_URL }}
+        run: node scripts/growth-report.mjs
+
+      - name: Commit report
+        run: |
+          git config user.name  "geckinspect-growth-bot"
+          git config user.email "growth-bot@users.noreply.github.com"
+          git add docs/growth-reports/ docs/blog-queue.json
+          if git diff --cached --quiet; then
+            echo "Growth report produced no new content this week."
+          else
+            git commit -m "growth: weekly report $(date -u +%Y-%m-%d)"
+            for i in 1 2 3 4; do
+              git pull --rebase origin main && git push origin main && break
+              sleep $((2 ** i))
+            done
+          fi

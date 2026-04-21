@@ -115,6 +115,69 @@ const INNOVATIVE_FEATURES = [
   },
 ];
 
+// Single source of truth for the landing FAQ. Both the visible section
+// and the FAQPage JSON-LD below are derived from this array — Google
+// requires the two to match for rich-result eligibility, so keep them
+// in sync by editing this list only.
+const LANDING_FAQS = [
+  {
+    q: 'What is Geck Inspect?',
+    a: 'Geck Inspect is a free web platform built specifically for crested gecko keepers and breeders. It combines collection management, breeding planning, AI-powered morph identification, lineage tracking, a community gallery, a forum, and a verified marketplace into one tool. It is used by hobbyists with a single gecko through commercial breeders managing hundreds of animals.',
+  },
+  {
+    q: 'Is Geck Inspect free?',
+    a: 'Yes. Creating an account and using Geck Inspect is free. Premium membership tiers may unlock advanced features in the future, but the core collection tracking, breeding planning, and community features are free for all users.',
+  },
+  {
+    q: 'Can Geck Inspect identify the morph of my crested gecko?',
+    a: 'Yes. Geck Inspect has an AI-powered morph identification feature. Upload a photo of your gecko and the model will return a classification of primary morph, secondary traits, and base color. The classifier is trained on thousands of verified crested gecko photos from the community.',
+  },
+  {
+    q: 'How accurate is the AI crested gecko morph identifier?',
+    a: 'The morph identifier performs well on common primary morphs — Harlequin, Pinstripe, Dalmatian, Flame, and base colors — and reports a confidence score with every prediction. For ambiguous animals, expressing traits (partial pin, dal spotting, tiger, brindle) are returned as secondary tags. You can always request a human second-opinion from the verified expert network inside the app.',
+  },
+  {
+    q: 'Does Geck Inspect help with crested gecko breeding planning?',
+    a: 'Yes. You can plan pairings, track copulation events, schedule monthly egg checks, log eggs and incubation dates, auto-generate hatchling records when eggs hatch, and visualize multi-generation lineage trees and pedigree charts for any gecko in your collection.',
+  },
+  {
+    q: 'Can I track eggs, incubation, and hatch rates per clutch?',
+    a: 'Yes. Every pairing has its own clutch log. Geck Inspect records lay date, incubation temperature, days-to-hatch, and outcome for each egg. Eggs promote to hatchling records the day they emerge, with lineage and clutch automatically attached, and season-level hatch-rate stats roll up on the breeding dashboard.',
+  },
+  {
+    q: 'How do I track my crested gecko collection?',
+    a: "Create a free account, then add each gecko with name, ID code, sex, hatch date, weight, morph tags, photos, and optionally the sire/dam lineage. Geck Inspect tracks weight history, photos over time, feeding group, and breeding history automatically. You can export your roster as CSV or PDF at any time.",
+  },
+  {
+    q: 'Does Geck Inspect sync with MorphMarket or Palm Street?',
+    a: 'Yes. You can import an existing roster from a CSV export, and Geck Inspect can push listings with photos, weight history, and lineage to MorphMarket and Palm Street without retyping. Sold animals can be transferred with full provenance to the buyer in one click.',
+  },
+  {
+    q: 'Can I use Geck Inspect on my phone?',
+    a: 'Yes. Geck Inspect is a responsive web app designed to work on any modern phone or tablet browser — no app store install required. Photo uploads use the device camera directly, so you can weigh, photograph, and log a gecko entirely from your phone during feeding or maintenance.',
+  },
+  {
+    q: 'Is my collection data private, and can I export it?',
+    a: 'Yes. Your collection is private by default — only geckos you explicitly publish to the gallery, forum, or marketplace are visible to other users. You own your data and can export your full roster, weight history, breeding log, and photos as CSV or PDF at any time.',
+  },
+  {
+    q: 'How does the crested gecko genetics calculator work?',
+    a: 'The genetics calculator models co-dominant, recessive, and polygenic inheritance across the major crested gecko traits — Lilly White, Axanthic, Cappuccino, Super Dalmatian, Pinstripe, Harlequin, and more. Pick a sire and dam from your collection (or enter genotypes manually) and the calculator returns the full offspring distribution with expected percentages.',
+  },
+  {
+    q: 'How long do crested geckos live?',
+    a: 'In captivity, crested geckos (Correlophus ciliatus) routinely live 15 to 20 years with proper husbandry, and some well-kept animals have reached their mid-20s. Geck Inspect is built with that long lifespan in mind — weight history, photo timelines, and breeding records persist for the entire life of each gecko.',
+  },
+  {
+    q: 'What are the most popular crested gecko morphs?',
+    a: 'The most common primary morphs are Harlequin, Pinstripe, Dalmatian, Flame, and Patternless, often combined with base colors like red, olive, chocolate, buckskin, and yellow. High-demand recessive and co-dominant traits include Lilly White, Axanthic, Cappuccino, and Super Dalmatian. The in-app Morph Guide has photo-led references for every major morph.',
+  },
+  {
+    q: 'Does Geck Inspect support other reptiles besides crested geckos?',
+    a: 'Geck Inspect is purpose-built for crested geckos (Correlophus ciliatus) right now — the AI morph ID, genetics calculator, and morph guide are all tuned for the species. Support for gargoyle geckos (Rhacodactylus auriculatus) and Leachianus is on the roadmap; other reptiles are not currently planned.',
+  },
+];
+
 const LANDING_JSON_LD = {
   '@context': 'https://schema.org',
   '@graph': [
@@ -147,48 +210,11 @@ const LANDING_JSON_LD = {
     {
       '@type': 'FAQPage',
       '@id': 'https://geckinspect.com/#faq',
-      mainEntity: [
-        {
-          '@type': 'Question',
-          name: 'What is Geck Inspect?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: 'Geck Inspect is a free web platform built specifically for crested gecko keepers and breeders. It combines collection management, breeding planning, AI-powered morph identification, lineage tracking, a community gallery, a forum, and a verified marketplace into one tool. It is used by hobbyists with a single gecko through commercial breeders managing hundreds of animals.',
-          },
-        },
-        {
-          '@type': 'Question',
-          name: 'Is Geck Inspect free?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: 'Yes. Creating an account and using Geck Inspect is free. Premium membership tiers may unlock advanced features in the future, but the core collection tracking, breeding planning, and community features are free for all users.',
-          },
-        },
-        {
-          '@type': 'Question',
-          name: 'Can Geck Inspect identify the morph of my crested gecko?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: 'Yes. Geck Inspect has an AI-powered morph identification feature. Upload a photo of your gecko and the model will return a classification of primary morph, secondary traits, and base color. The classifier is trained on thousands of verified crested gecko photos from the community.',
-          },
-        },
-        {
-          '@type': 'Question',
-          name: 'Does Geck Inspect help with breeding planning?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: 'Yes. You can plan pairings, track copulation events, schedule monthly egg checks, log eggs and incubation dates, auto-generate hatchling records when eggs hatch, and visualize multi-generation lineage trees and pedigree charts for any gecko in your collection.',
-          },
-        },
-        {
-          '@type': 'Question',
-          name: 'How do I track my crested gecko collection?',
-          acceptedAnswer: {
-            '@type': 'Answer',
-            text: 'Create a free account, then add each gecko with name, ID code, sex, hatch date, weight, morph tags, photos, and optionally the sire/dam lineage. Geck Inspect tracks weight history, photos over time, feeding group, and breeding history automatically. You can export your roster as CSV or PDF at any time.',
-          },
-        },
-      ],
+      mainEntity: LANDING_FAQS.map((item) => ({
+        '@type': 'Question',
+        name: item.q,
+        acceptedAnswer: { '@type': 'Answer', text: item.a },
+      })),
     },
   ],
 };
@@ -509,28 +535,7 @@ export default function Home() {
             </p>
           </div>
           <div className="space-y-4">
-            {[
-              {
-                q: 'What is Geck Inspect?',
-                a: 'Geck Inspect is a free web platform built specifically for crested gecko keepers and breeders. It combines collection management, breeding planning, AI-powered morph identification, lineage tracking, a community gallery, a forum, and a verified marketplace into one tool. It is used by hobbyists with a single gecko through commercial breeders managing hundreds of animals.',
-              },
-              {
-                q: 'Is Geck Inspect free?',
-                a: 'Yes. Creating an account and using Geck Inspect is free. Premium membership tiers may unlock advanced features in the future, but the core collection tracking, breeding planning, and community features are free for all users.',
-              },
-              {
-                q: 'Can Geck Inspect identify the morph of my crested gecko?',
-                a: 'Yes. Geck Inspect has an AI-powered morph identification feature. Upload a photo of your gecko and the model will return a classification of primary morph, secondary traits, and base color. The classifier is trained on thousands of verified crested gecko photos from the community.',
-              },
-              {
-                q: 'Does Geck Inspect help with breeding planning?',
-                a: 'Yes. You can plan pairings, track copulation events, schedule monthly egg checks, log eggs and incubation dates, auto-generate hatchling records when eggs hatch, and visualize multi-generation lineage trees and pedigree charts for any gecko in your collection.',
-              },
-              {
-                q: 'How do I track my crested gecko collection?',
-                a: "Create a free account, then add each gecko with name, ID code, sex, hatch date, weight, morph tags, photos, and optionally the sire/dam lineage. Geck Inspect tracks weight history, photos over time, feeding group, and breeding history automatically. You can export your roster as CSV or PDF at any time.",
-              },
-            ].map((item, i) => (
+            {LANDING_FAQS.map((item, i) => (
               <details
                 key={i}
                 className="group gecko-card backdrop-blur-sm transition-colors"

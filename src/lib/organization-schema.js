@@ -26,7 +26,7 @@ export const SITE_DESCRIPTION =
   'The professional platform for crested gecko breeders and keepers. Track collections, plan breedings, identify morphs with AI, and connect with the community.';
 
 export const LOGO_URL =
-  'https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png';
+  'https://geckinspect.com/logo.png';
 
 // External profiles for Organization.sameAs. Every URL here is a signed
 // Geck Inspect presence that AI entity-recognition systems weigh heavily.
@@ -113,4 +113,83 @@ export function breadcrumbSchema(items) {
       item: `${SITE_URL}${c.path.startsWith('/') ? c.path : `/${c.path}`}`,
     })),
   };
+}
+
+/**
+ * Build a FAQPage schema object from a list of question/answer pairs.
+ * Pairs become Schema.org Question + acceptedAnswer entries that
+ * Google, Perplexity, and ChatGPT all parse to surface direct answers.
+ */
+export function faqPageSchema(pairs) {
+  return {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    mainEntity: pairs.map((p) => ({
+      '@type': 'Question',
+      name: p.question,
+      acceptedAnswer: { '@type': 'Answer', text: p.answer },
+    })),
+  };
+}
+
+/**
+ * Build a BlogPosting schema object for a single blog post.
+ *
+ * Bundles publisher identity, author byline, dates, and (optionally) a
+ * sibling FAQPage so a single <script type="application/ld+json"> tag
+ * can carry the entire structured-data payload for the post.
+ *
+ * Required:
+ *   post: { slug, title, description, datePublished, dateModified }
+ *   path: '/blog/<slug>'
+ *
+ * Optional:
+ *   author     — object with @type/@id/name (defaults to publisher org)
+ *   faq        — array of { question, answer } pairs; emits FAQPage entry
+ *   image      — image URL for the post hero (defaults to org logo)
+ *   keyphrase  — about/keywords primary term
+ */
+export function blogPostingSchema({ post, path, author, faq, image, keyphrase }) {
+  const url = `${SITE_URL}${path}`;
+  const posting = {
+    '@type': 'BlogPosting',
+    '@id': `${url}#article`,
+    mainEntityOfPage: url,
+    url,
+    headline: post.title,
+    description: post.description,
+    datePublished: post.datePublished,
+    dateModified: post.dateModified || post.datePublished,
+    inLanguage: 'en-US',
+    isPartOf: {
+      '@type': 'Blog',
+      '@id': `${SITE_URL}/blog#blog`,
+      name: `${SITE_NAME} Blog`,
+      url: `${SITE_URL}/blog`,
+    },
+    author: author || { '@id': ORG_ID },
+    publisher: { '@id': ORG_ID },
+    image: image || LOGO_URL,
+    about: {
+      '@type': 'Thing',
+      name: 'Crested gecko',
+      alternateName: 'Correlophus ciliatus',
+      sameAs: 'https://en.wikipedia.org/wiki/Crested_gecko',
+    },
+    keywords: keyphrase ? [keyphrase] : undefined,
+  };
+
+  const graph = [posting];
+  if (Array.isArray(faq) && faq.length > 0) {
+    graph.push({
+      '@type': 'FAQPage',
+      '@id': `${url}#faq`,
+      mainEntity: faq.map((p) => ({
+        '@type': 'Question',
+        name: p.question,
+        acceptedAnswer: { '@type': 'Answer', text: p.answer },
+      })),
+    });
+  }
+  return graph;
 }

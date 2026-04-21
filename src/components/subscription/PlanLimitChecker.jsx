@@ -52,7 +52,7 @@ const PLAN_LIMITS = {
             'advanced_breeding', 'calendar', 'weight_tracking', 'csv_export',
             'lineage_tree', 'breeding_analytics',
             'certificates', 'featured_breeder', 'shipping_integration', 'marketplace_sync',
-            'market_intelligence', 'breeding_roi',
+            'market_intelligence', 'breeding_roi', 'image_import',
         ],
     },
 };
@@ -74,6 +74,7 @@ const FEATURE_NAMES = {
     market_intelligence: 'Market Intelligence Dashboard',
     breeding_roi: 'Breeding ROI Projections',
     shipping_integration: 'Zero\u2019s Geckos Shipping Integration',
+    image_import: 'AI Image Import',
 };
 
 // Admins get enterprise-level access. Grandfathered accounts keep Breeder.

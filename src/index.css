@@ -154,6 +154,416 @@ button:focus-visible {
     --sidebar-accent-foreground: 240 4.8% 95.9%;
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Scrollbar tokens — per-theme overrides below re-tint these. */
+    --scrollbar-thumb: #4ade80;
+    --scrollbar-thumb-hover: #86efac;
+  }
+
+  /* ------------------------------------------------------------------
+     Gecko-morph color themes. Each :root[data-theme="x"] overrides the
+     shadcn HSL tokens + scrollbar tokens. The bootstrap script in
+     index.html sets data-theme synchronously before CSS loads so there
+     is no flash of the default palette. Selectors here have higher
+     specificity than .dark, so they win regardless of dark-class order.
+     ------------------------------------------------------------------ */
+
+  /* ------------------------------------------------------------------
+     Tailwind palette scales (sage / slate / gray) driven per-theme.
+     These back the bg-sage-*, text-slate-*, bg-gray-* utilities that
+     are hardcoded across ~280 places in the codebase. Each theme
+     redefines the scales so those utilities automatically re-tint.
+     Values are HSL triplets (no hsl() wrapper) so Tailwind's opacity
+     modifier (bg-sage-500/50) works via hsl(var(--sage-500) / <alpha>).
+
+     sage: dark→light (50 = darkest, 900 = lightest) — matches the
+       always-dark inverted scale the app was built against.
+     slate/gray: light→dark (50 = lightest, 950 = darkest) — standard
+       Tailwind direction; used for page backgrounds and neutrals.
+     ------------------------------------------------------------------ */
+
+  /* Normal — wild-type leopard gecko (emerald / forest greens). */
+  :root[data-theme="normal"] {
+    --background: 153 30% 4%;
+    --foreground: 0 0% 98%;
+    --card: 153 25% 6%;
+    --card-foreground: 0 0% 98%;
+    --popover: 153 25% 6%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 153 64% 52%;
+    --primary-foreground: 153 40% 8%;
+    --secondary: 153 20% 14%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 153 15% 14%;
+    --muted-foreground: 153 10% 65%;
+    --accent: 153 30% 18%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 45%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 153 40% 18%;
+    --input: 153 20% 15%;
+    --ring: 153 64% 52%;
+
+    --sidebar-background: 153 30% 7%;
+    --sidebar-foreground: 153 10% 88%;
+    --sidebar-primary: 153 64% 52%;
+    --sidebar-primary-foreground: 153 40% 8%;
+    --sidebar-accent: 153 20% 13%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 153 30% 15%;
+    --sidebar-ring: 153 64% 52%;
+
+    --chart-1: 153 64% 52%;
+    --chart-2: 168 60% 45%;
+    --chart-3: 120 40% 55%;
+    --chart-4: 90 50% 60%;
+    --chart-5: 180 55% 50%;
+
+    --sage-50:  161 86% 16%;
+    --sage-100: 159 87% 20%;
+    --sage-200: 158 93% 24%;
+    --sage-300: 159 92% 30%;
+    --sage-400: 159 84% 39%;
+    --sage-500: 157 72% 52%;
+    --sage-600: 156 72% 67%;
+    --sage-700: 156 73% 80%;
+    --sage-800: 152 76% 90%;
+    --sage-900: 149 80% 96%;
+
+    --slate-50:  150 80% 97%;
+    --slate-100: 152 76% 90%;
+    --slate-200: 156 73% 80%;
+    --slate-300: 156 72% 67%;
+    --slate-400: 157 72% 52%;
+    --slate-500: 155 15% 49%;
+    --slate-600: 148 19% 36%;
+    --slate-700: 150 27% 19%;
+    --slate-800: 150 37% 16%;
+    --slate-900: 152 34% 13%;
+    --slate-950: 152 39% 9%;
+
+    --scrollbar-thumb: #4ade80;
+    --scrollbar-thumb-hover: #86efac;
+  }
+
+  /* Tangerine — warm amber / dusk tones. */
+  :root[data-theme="tangerine"] {
+    --background: 24 35% 5%;
+    --foreground: 0 0% 98%;
+    --card: 24 30% 7%;
+    --card-foreground: 0 0% 98%;
+    --popover: 24 30% 7%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 28 92% 58%;
+    --primary-foreground: 24 40% 10%;
+    --secondary: 24 20% 15%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 24 15% 15%;
+    --muted-foreground: 28 15% 68%;
+    --accent: 28 35% 20%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 65% 48%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 24 35% 20%;
+    --input: 24 20% 15%;
+    --ring: 28 92% 58%;
+
+    --sidebar-background: 24 32% 8%;
+    --sidebar-foreground: 24 15% 88%;
+    --sidebar-primary: 28 92% 58%;
+    --sidebar-primary-foreground: 24 40% 10%;
+    --sidebar-accent: 24 20% 14%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 24 30% 16%;
+    --sidebar-ring: 28 92% 58%;
+
+    --chart-1: 28 92% 58%;
+    --chart-2: 14 80% 55%;
+    --chart-3: 42 85% 55%;
+    --chart-4: 2 75% 58%;
+    --chart-5: 52 80% 55%;
+
+    --sage-50:  24 80% 16%;
+    --sage-100: 26 82% 20%;
+    --sage-200: 27 85% 24%;
+    --sage-300: 28 88% 30%;
+    --sage-400: 28 90% 45%;
+    --sage-500: 28 92% 58%;
+    --sage-600: 30 90% 68%;
+    --sage-700: 32 85% 78%;
+    --sage-800: 32 80% 88%;
+    --sage-900: 34 85% 94%;
+
+    --slate-50:  34 85% 96%;
+    --slate-100: 32 80% 88%;
+    --slate-200: 32 85% 78%;
+    --slate-300: 30 90% 68%;
+    --slate-400: 28 92% 58%;
+    --slate-500: 26 20% 48%;
+    --slate-600: 24 24% 35%;
+    --slate-700: 22 30% 18%;
+    --slate-800: 22 35% 14%;
+    --slate-900: 22 38% 11%;
+    --slate-950: 22 40% 7%;
+
+    --scrollbar-thumb: #f59e0b;
+    --scrollbar-thumb-hover: #fbbf24;
+  }
+
+  /* Halloween Mask — bold red-orange contrast. */
+  :root[data-theme="halloween-mask"] {
+    --background: 10 40% 5%;
+    --foreground: 0 0% 98%;
+    --card: 10 35% 7%;
+    --card-foreground: 0 0% 98%;
+    --popover: 10 35% 7%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 8 85% 56%;
+    --primary-foreground: 10 40% 10%;
+    --secondary: 10 22% 15%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 10 15% 15%;
+    --muted-foreground: 10 18% 68%;
+    --accent: 8 35% 20%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 350 70% 50%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 8 40% 20%;
+    --input: 10 20% 15%;
+    --ring: 8 85% 56%;
+
+    --sidebar-background: 10 36% 8%;
+    --sidebar-foreground: 10 15% 88%;
+    --sidebar-primary: 8 85% 56%;
+    --sidebar-primary-foreground: 10 40% 10%;
+    --sidebar-accent: 10 22% 14%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 10 32% 16%;
+    --sidebar-ring: 8 85% 56%;
+
+    --chart-1: 8 85% 56%;
+    --chart-2: 22 80% 55%;
+    --chart-3: 352 70% 55%;
+    --chart-4: 38 85% 55%;
+    --chart-5: 15 75% 50%;
+
+    --sage-50:  8 80% 16%;
+    --sage-100: 8 82% 20%;
+    --sage-200: 8 85% 24%;
+    --sage-300: 8 85% 30%;
+    --sage-400: 8 85% 42%;
+    --sage-500: 8 85% 56%;
+    --sage-600: 10 82% 66%;
+    --sage-700: 12 80% 76%;
+    --sage-800: 14 78% 86%;
+    --sage-900: 16 80% 93%;
+
+    --slate-50:  16 80% 96%;
+    --slate-100: 14 78% 88%;
+    --slate-200: 12 80% 78%;
+    --slate-300: 10 82% 66%;
+    --slate-400: 8 85% 56%;
+    --slate-500: 8 20% 48%;
+    --slate-600: 8 24% 34%;
+    --slate-700: 10 30% 18%;
+    --slate-800: 10 35% 14%;
+    --slate-900: 10 38% 11%;
+    --slate-950: 10 42% 7%;
+
+    --scrollbar-thumb: #ef4444;
+    --scrollbar-thumb-hover: #f87171;
+  }
+
+  /* Blizzard — cool slate-blue patternless. */
+  :root[data-theme="blizzard"] {
+    --background: 215 25% 6%;
+    --foreground: 0 0% 98%;
+    --card: 215 22% 8%;
+    --card-foreground: 0 0% 98%;
+    --popover: 215 22% 8%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 210 85% 62%;
+    --primary-foreground: 215 30% 10%;
+    --secondary: 215 18% 15%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 215 14% 15%;
+    --muted-foreground: 215 12% 68%;
+    --accent: 210 30% 20%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 215 28% 20%;
+    --input: 215 18% 15%;
+    --ring: 210 85% 62%;
+
+    --sidebar-background: 215 25% 9%;
+    --sidebar-foreground: 215 12% 88%;
+    --sidebar-primary: 210 85% 62%;
+    --sidebar-primary-foreground: 215 30% 10%;
+    --sidebar-accent: 215 18% 14%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 215 22% 16%;
+    --sidebar-ring: 210 85% 62%;
+
+    --chart-1: 210 85% 62%;
+    --chart-2: 195 75% 55%;
+    --chart-3: 225 70% 62%;
+    --chart-4: 180 60% 50%;
+    --chart-5: 240 65% 65%;
+
+    --sage-50:  215 70% 16%;
+    --sage-100: 213 72% 20%;
+    --sage-200: 212 75% 26%;
+    --sage-300: 210 80% 35%;
+    --sage-400: 210 82% 48%;
+    --sage-500: 210 85% 62%;
+    --sage-600: 208 82% 72%;
+    --sage-700: 206 80% 82%;
+    --sage-800: 204 78% 90%;
+    --sage-900: 202 78% 95%;
+
+    --slate-50:  202 78% 96%;
+    --slate-100: 204 78% 90%;
+    --slate-200: 206 80% 82%;
+    --slate-300: 208 82% 72%;
+    --slate-400: 210 85% 62%;
+    --slate-500: 215 18% 50%;
+    --slate-600: 215 22% 36%;
+    --slate-700: 215 28% 20%;
+    --slate-800: 215 32% 16%;
+    --slate-900: 215 36% 12%;
+    --slate-950: 215 40% 8%;
+
+    --scrollbar-thumb: #60a5fa;
+    --scrollbar-thumb-hover: #93c5fd;
+  }
+
+  /* Lavender — soft violet Lavender Albino tones. */
+  :root[data-theme="lavender"] {
+    --background: 275 22% 6%;
+    --foreground: 0 0% 98%;
+    --card: 275 20% 8%;
+    --card-foreground: 0 0% 98%;
+    --popover: 275 20% 8%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 275 65% 68%;
+    --primary-foreground: 275 30% 10%;
+    --secondary: 275 16% 16%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 275 12% 16%;
+    --muted-foreground: 275 14% 70%;
+    --accent: 275 28% 22%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 275 25% 22%;
+    --input: 275 16% 16%;
+    --ring: 275 65% 68%;
+
+    --sidebar-background: 275 22% 9%;
+    --sidebar-foreground: 275 14% 88%;
+    --sidebar-primary: 275 65% 68%;
+    --sidebar-primary-foreground: 275 30% 10%;
+    --sidebar-accent: 275 16% 15%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 275 20% 17%;
+    --sidebar-ring: 275 65% 68%;
+
+    --chart-1: 275 65% 68%;
+    --chart-2: 290 60% 65%;
+    --chart-3: 258 55% 65%;
+    --chart-4: 310 55% 65%;
+    --chart-5: 240 50% 68%;
+
+    --sage-50:  275 55% 16%;
+    --sage-100: 274 58% 20%;
+    --sage-200: 274 60% 26%;
+    --sage-300: 274 62% 38%;
+    --sage-400: 275 64% 52%;
+    --sage-500: 275 65% 68%;
+    --sage-600: 274 62% 76%;
+    --sage-700: 272 60% 84%;
+    --sage-800: 270 58% 91%;
+    --sage-900: 268 60% 95%;
+
+    --slate-50:  268 60% 96%;
+    --slate-100: 270 58% 91%;
+    --slate-200: 272 60% 84%;
+    --slate-300: 274 62% 76%;
+    --slate-400: 275 65% 68%;
+    --slate-500: 275 14% 50%;
+    --slate-600: 275 18% 36%;
+    --slate-700: 275 24% 20%;
+    --slate-800: 275 28% 16%;
+    --slate-900: 275 32% 12%;
+    --slate-950: 275 36% 8%;
+
+    --scrollbar-thumb: #c084fc;
+    --scrollbar-thumb-hover: #d8b4fe;
+  }
+
+  /* Super Hypo — sunlit yellow Super Hypo Tangerine. */
+  :root[data-theme="super-hypo"] {
+    --background: 45 30% 5%;
+    --foreground: 0 0% 98%;
+    --card: 45 25% 7%;
+    --card-foreground: 0 0% 98%;
+    --popover: 45 25% 7%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 48 92% 58%;
+    --primary-foreground: 45 40% 10%;
+    --secondary: 45 20% 15%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 45 15% 15%;
+    --muted-foreground: 48 15% 68%;
+    --accent: 48 32% 20%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62% 45%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 45 32% 20%;
+    --input: 45 20% 15%;
+    --ring: 48 92% 58%;
+
+    --sidebar-background: 45 28% 8%;
+    --sidebar-foreground: 48 14% 88%;
+    --sidebar-primary: 48 92% 58%;
+    --sidebar-primary-foreground: 45 40% 10%;
+    --sidebar-accent: 45 20% 14%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 45 26% 16%;
+    --sidebar-ring: 48 92% 58%;
+
+    --chart-1: 48 92% 58%;
+    --chart-2: 38 88% 58%;
+    --chart-3: 60 80% 55%;
+    --chart-4: 28 85% 58%;
+    --chart-5: 90 70% 55%;
+
+    --sage-50:  45 75% 16%;
+    --sage-100: 46 78% 20%;
+    --sage-200: 47 82% 24%;
+    --sage-300: 48 85% 30%;
+    --sage-400: 48 88% 45%;
+    --sage-500: 48 92% 58%;
+    --sage-600: 50 90% 68%;
+    --sage-700: 52 85% 78%;
+    --sage-800: 54 80% 88%;
+    --sage-900: 56 82% 94%;
+
+    --slate-50:  56 82% 96%;
+    --slate-100: 54 80% 88%;
+    --slate-200: 52 85% 78%;
+    --slate-300: 50 90% 68%;
+    --slate-400: 48 92% 58%;
+    --slate-500: 48 18% 48%;
+    --slate-600: 46 22% 34%;
+    --slate-700: 46 28% 18%;
+    --slate-800: 45 32% 14%;
+    --slate-900: 45 36% 11%;
+    --slate-950: 45 40% 7%;
+
+    --scrollbar-thumb: #facc15;
+    --scrollbar-thumb-hover: #fde047;
   }
 
   /* P1 Design System — Passport & new feature pages */
@@ -181,7 +591,7 @@ button:focus-visible {
     @apply bg-background text-foreground;
     font-family: 'Inter', system-ui, sans-serif;
     scrollbar-width: thin;
-    scrollbar-color: #4ade80 transparent;
+    scrollbar-color: var(--scrollbar-thumb) transparent;
   }
 }
 
@@ -192,9 +602,9 @@ button:focus-visible {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: #4ade80;
+  background: var(--scrollbar-thumb);
   border-radius: 999px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: #86efac;
+  background: var(--scrollbar-thumb-hover);
 }

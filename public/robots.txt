@@ -6,7 +6,6 @@
 User-agent: *
 Allow: /
 Disallow: /AdminPanel
-Disallow: /AdminMigration
 Disallow: /Settings
 Disallow: /Messages
 Disallow: /Notifications

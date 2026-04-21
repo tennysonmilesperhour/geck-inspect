@@ -41,7 +41,9 @@ export default function GeneticsModal({ isOpen, onClose, sire, dam }) {
                 {/* Scrollable body */}
                 <div className="overflow-y-auto flex-1 p-5">
                     <p className="text-slate-400 text-sm mb-4">
-                        Estimated offspring trait probabilities based on each parent's Morph ID tags.
+                        Offspring trait probabilities from Punnett-square math across independent loci. Lethal
+                        (Lilly × Lilly) and severe-health (Cappuccino × Cappuccino, Highway × Highway) pairings
+                        are flagged automatically.
                     </p>
                     <GeneticCalculator sire={sire} dam={dam} />
                 </div>
