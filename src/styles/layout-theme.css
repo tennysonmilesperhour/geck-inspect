@@ -523,20 +523,23 @@ html, body, #root {
           }
           /* Logo tile: shows as a full-width card with icon + wordmark
              when the rail is expanded, and reduces to just the icon
-             (no border, no background fill, centered inside the 4rem
-             rail) when collapsed so the rail reads as a tidy icon
-             column instead of a clipped card. */
+             when collapsed. Icon is horizontally aligned with the
+             user profile picture below it (both centered at 2rem from
+             the rail's left edge — avatar is at px-4 + w-4 center,
+             logo wrapper gets the same 0.75rem outer padding and its
+             inner link shrinks to the icon's intrinsic 2.5rem so the
+             still-present wordmark span can't push things left). */
           .desktop-sidebar-wrapper.is-collapsed .desktop-sidebar-logo {
-            padding-left: 0 !important;
-            padding-right: 0 !important;
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
           }
           .desktop-sidebar-wrapper.is-collapsed .desktop-sidebar-logo a {
             border-color: transparent !important;
             background: transparent !important;
-            width: 4rem !important;
-            padding: 0.5rem !important;
+            width: 2.5rem !important;
+            padding: 0 !important;
             gap: 0 !important;
-            justify-content: center;
+            overflow: hidden;
           }
 
           .sidebar-nav-item {
