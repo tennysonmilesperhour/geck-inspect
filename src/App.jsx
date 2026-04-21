@@ -9,7 +9,7 @@ import NavigationTracker from '@/lib/NavigationTracker'
 import PostHogPageTracker from '@/lib/PostHogPageTracker'
 import GA4PageTracker from '@/lib/GA4PageTracker'
 import { pagesConfig } from './pages.config'
-import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, Outlet } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import UpdateNotification from '@/components/ui/UpdateNotification';
@@ -80,6 +80,16 @@ const MainPage = mainPageKey ? Pages[mainPageKey] : <></>;
 const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
+
+// Parent-route element that wraps authenticated pages in a single
+// Layout instance and renders the matched child via <Outlet/>. This
+// keeps the Layout (sidebar, header, hover state) mounted across
+// navigation — previously each Route.element created its own
+// LayoutWrapper, so React unmounted + remounted the entire Layout
+// (and reset the sidebar collapse state) on every link click.
+const LayoutOutlet = () => Layout ? (
+  <Layout><Outlet /></Layout>
+) : <Outlet />;
 
 const LazyFallback = (
   <div className="fixed inset-0 flex items-center justify-center bg-slate-950">
@@ -162,42 +172,38 @@ const AuthenticatedApp = () => {
     );
   }
 
-  // Render the main app
+  // Render the main app.
+  //
+  // All pages that share the authenticated chrome (sidebar / header)
+  // live under one parent <Route element={<LayoutOutlet/>}> so the
+  // Layout instance is mounted ONCE and reused across navigation.
+  // Pages that render their own public chrome (blog, public passport,
+  // claim) stay as sibling routes without the Layout.
   return (
     <Suspense fallback={LazyFallback}>
     <Routes>
-      <Route path="/" element={
-        <LayoutWrapper currentPageName={mainPageKey}>
-          <MainPage />
-        </LayoutWrapper>
-      } />
-      {Object.entries(Pages).map(([path, Page]) => (
-        <Route
-          key={path}
-          path={`/${path}`}
-          element={
-            disabledPages.has(path)
-              ? <Navigate to="/" replace />
-              : <LayoutWrapper currentPageName={path}>
-                  <Page />
-                </LayoutWrapper>
-          }
-        />
-      ))}
+      <Route element={<LayoutOutlet />}>
+        <Route path="/" element={<MainPage />} />
+        {Object.entries(Pages).map(([path, Page]) => (
+          <Route
+            key={path}
+            path={`/${path}`}
+            element={
+              disabledPages.has(path)
+                ? <Navigate to="/" replace />
+                : <Page />
+            }
+          />
+        ))}
+        <Route path="/MorphGuide/:slug" element={<MorphDetail />} />
+        <Route path="/passport/:passportCode/qr" element={<PassportQR />} />
+      </Route>
 
-      <Route path="/MorphGuide/:slug" element={
-        <LayoutWrapper currentPageName="MorphGuide">
-          <MorphDetail />
-        </LayoutWrapper>
-      } />
       {/* Editorial blog — accessible to authenticated users too */}
       <Route path="/blog" element={<BlogIndex />} />
       <Route path="/blog/:slug" element={<BlogPost />} />
       {/* P1 — Public passport pages (also available when authenticated) */}
       <Route path="/passport/:passportCode" element={<AnimalPassport />} />
-      <Route path="/passport/:passportCode/qr" element={
-        <LayoutWrapper currentPageName="PassportQR"><PassportQR /></LayoutWrapper>
-      } />
       <Route path="/claim/:token" element={<ClaimAnimal />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
