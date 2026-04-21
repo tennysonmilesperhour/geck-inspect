@@ -227,9 +227,7 @@ function renderMarkdown(ctx) {
   } else {
     lines.push(`Most recent research run: ${latestResearch.ranAt}`);
     lines.push('');
-    lines.push(`- Reddit items:        ${latestResearch.signals.reddit ?? 0}`);
     lines.push(`- Google autocomplete: ${latestResearch.signals.googleAc ?? 0}`);
-    lines.push(`- Pangea forum:        ${latestResearch.signals.pangea ?? 0}`);
     lines.push(`- Bluesky:             ${latestResearch.signals.bluesky ?? 0}`);
     lines.push(`- Google Trends:       ${latestResearch.signals.googleTrends ?? 0}`);
     lines.push(`- YouTube:             ${latestResearch.signals.youtube ?? 0}`);

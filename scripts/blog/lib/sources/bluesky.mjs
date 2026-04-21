@@ -8,9 +8,9 @@
  *
  * Why this is useful: Bluesky's reptile community has grown since 2024
  * as hobbyists migrated off Twitter. Posts skew toward breeder
- * announcements and real-time debate — signal that's harder to find on
- * Reddit (which leans pet-keeper questions) or Pangea (which leans
- * long-running project threads).
+ * announcements and real-time debate — the closest substitute for the
+ * forum/subreddit signal we used to pull from Reddit (bot-blocked) and
+ * the Pangea forum (offline).
  *
  * Rate limits: Bluesky applies per-IP limits (~3000/5min unauthenticated)
  * which we're nowhere near.

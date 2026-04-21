@@ -3,8 +3,8 @@
  * Research pass — runs Monday/Wednesday/Friday at 06:00 UTC.
  *
  * Flow:
- *   1. Collect raw signals from Reddit, Google autocomplete, Pangea forum,
- *      Bluesky, Google Trends, YouTube, and breeder blog feeds.
+ *   1. Collect raw signals from Google autocomplete, Bluesky, Google Trends,
+ *      YouTube, and breeder blog feeds.
  *   2. Pass the full signal dump plus the list of already-published slugs to
  *      Haiku 4.5, which emits up to 3 scored topics via a tool schema.
  *   3. Merge new topics into docs/blog-queue.json (dedupe by slug), save.
@@ -24,9 +24,7 @@ import { fileURLToPath } from 'node:url';
 import { MODELS, callClaudeJson } from './lib/anthropic.mjs';
 import { BudgetExceededError, currentWeekSpend } from './lib/budget.mjs';
 import { loadMorphSlugs, loadPublishedPostSlugs } from './lib/fact-check.mjs';
-import { collectRedditSignals } from './lib/sources/reddit.mjs';
 import { collectGoogleAutocomplete } from './lib/sources/google-ac.mjs';
-import { collectPangeaSignals } from './lib/sources/pangea.mjs';
 import { collectBlueskySignals } from './lib/sources/bluesky.mjs';
 import { collectGoogleTrendsSignals } from './lib/sources/google-trends.mjs';
 import { collectYouTubeSignals } from './lib/sources/youtube.mjs';
@@ -171,16 +169,14 @@ async function main() {
 
   // 1. Gather signals (all in parallel; they're independent).
   console.log('[research] Collecting signals...');
-  const [reddit, googleAc, pangea, bluesky, googleTrends, youtube, breederBlogs] = await Promise.all([
-    collectRedditSignals().catch((e) => ({ items: [], errors: [e.message] })),
+  const [googleAc, bluesky, googleTrends, youtube, breederBlogs] = await Promise.all([
     collectGoogleAutocomplete().catch((e) => ({ items: [], error: e.message })),
-    collectPangeaSignals().catch((e) => ({ items: [], error: e.message })),
     collectBlueskySignals().catch((e) => ({ items: [], errors: [e.message] })),
     collectGoogleTrendsSignals().catch((e) => ({ items: [], errors: [e.message] })),
     collectYouTubeSignals().catch((e) => ({ items: [], errors: [e.message] })),
     collectBreederBlogSignals().catch((e) => ({ items: [], errors: [e.message] })),
   ]);
-  console.log(`[research] Signals: reddit=${reddit.items.length}, google-ac=${googleAc.items.length}, pangea=${pangea.items.length}, bluesky=${bluesky.items.length}, google-trends=${googleTrends.items.length}, youtube=${youtube.items.length}, breeder-blogs=${breederBlogs.items.length}`);
+  console.log(`[research] Signals: google-ac=${googleAc.items.length}, bluesky=${bluesky.items.length}, google-trends=${googleTrends.items.length}, youtube=${youtube.items.length}, breeder-blogs=${breederBlogs.items.length}`);
 
   // 2. Prepare scorer input.
   const queue = readQueue();
@@ -192,14 +188,8 @@ async function main() {
   const userMessage = [
     'Here are the raw signals collected this run. Apply the rubric and emit up to 3 topics.',
     '',
-    `Reddit (${reddit.items.length} items, sample follows):`,
-    JSON.stringify(reddit.items.slice(0, 40), null, 2),
-    '',
     `Google autocomplete (${googleAc.items.length} suggestions, sample follows):`,
     JSON.stringify(googleAc.items.slice(0, 60), null, 2),
-    '',
-    `Pangea forum (${pangea.items.length} thread titles):`,
-    JSON.stringify(pangea.items.slice(0, 30), null, 2),
     '',
     `Bluesky (${bluesky.items.length} posts, top-engagement first):`,
     JSON.stringify(bluesky.items.slice(0, 40), null, 2),
@@ -285,17 +275,13 @@ async function main() {
   const summary = {
     ranAt: now.toISOString(),
     signals: {
-      reddit: reddit.items.length,
       googleAc: googleAc.items.length,
-      pangea: pangea.items.length,
       bluesky: bluesky.items.length,
       googleTrends: googleTrends.items.length,
       youtube: youtube.items.length,
       breederBlogs: breederBlogs.items.length,
       errors: [
-        ...(reddit.errors || []),
         ...(googleAc.error ? [`google-ac: ${googleAc.error}`] : []),
-        ...(pangea.error ? [`pangea: ${pangea.error}`] : []),
         ...(bluesky.errors || []),
         ...(googleTrends.errors || []),
         ...(youtube.errors || []),
