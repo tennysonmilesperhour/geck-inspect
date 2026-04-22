@@ -192,19 +192,19 @@ export function TrendDelta({ value, digits = 1 }) {
 // ------------ SectionHeader ------------------------------------------
 export function SectionHeader({ icon: Icon, title, subtitle, right }) {
   return (
-    <div className="flex items-start justify-between gap-3 mb-3">
-      <div className="flex items-start gap-2.5">
+    <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 sm:gap-3 mb-3">
+      <div className="flex items-start gap-2.5 min-w-0 flex-1">
         {Icon && (
           <div className="w-8 h-8 rounded-md bg-emerald-500/10 border border-emerald-500/25 flex items-center justify-center flex-shrink-0">
             <Icon className="w-4 h-4 text-emerald-300" />
           </div>
         )}
-        <div>
+        <div className="min-w-0 flex-1">
           <h3 className="text-sm font-semibold text-slate-100">{title}</h3>
           {subtitle && <p className="text-xs text-slate-500 mt-0.5">{subtitle}</p>}
         </div>
       </div>
-      {right}
+      {right && <div className="flex items-center gap-2 flex-wrap">{right}</div>}
     </div>
   );
 }

@@ -136,14 +136,14 @@ function QuarterSection({ quarterKey, items, onDelete: _onDelete, onUpdate: _onU
   return (
     <div className="bg-slate-800/60 border border-emerald-900/60 rounded-xl overflow-hidden">
       <button onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between px-4 py-3 hover:bg-slate-700/40 transition-colors">
-        <div className="flex items-center gap-3">
-          <Calendar className="w-4 h-4 text-emerald-500" />
-          <span className="font-semibold text-slate-100">{year} — {QUARTER_LABELS[quarter]}</span>
-          <Badge className="bg-emerald-900/50 text-emerald-300 border-emerald-800/40 text-xs">{items.length} entries</Badge>
+        className="w-full flex items-center justify-between gap-3 px-4 py-3 hover:bg-slate-700/40 transition-colors">
+        <div className="flex items-center gap-2 flex-wrap min-w-0 flex-1">
+          <Calendar className="w-4 h-4 text-emerald-500 flex-shrink-0" />
+          <span className="font-semibold text-slate-100 whitespace-nowrap">{year} — {QUARTER_LABELS[quarter]}</span>
+          <Badge className="bg-emerald-900/50 text-emerald-300 border-emerald-800/40 text-xs flex-shrink-0">{items.length} entries</Badge>
         </div>
-        <div className="flex items-center gap-3">
-          <span className="text-emerald-400 font-bold">${total.toFixed(2)}</span>
+        <div className="flex items-center gap-2 flex-shrink-0">
+          <span className="text-emerald-400 font-bold tabular-nums">${total.toFixed(2)}</span>
           {open ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
         </div>
       </button>
@@ -1037,7 +1037,7 @@ export default function MarketplaceSalesStats() {
     return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
   }, [soldGeckos, geckoCategories, priceOverrides, manualSales]);
 
-  const tabTriggerClass = "flex-1 data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-2 rounded-sm transition-colors";
+  const tabTriggerClass = "flex-shrink-0 md:flex-1 whitespace-nowrap data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-3 rounded-sm transition-colors";
 
   if (isLoading) {
     return (
@@ -1131,7 +1131,7 @@ export default function MarketplaceSalesStats() {
 
         <div className="bg-emerald-950/30 border border-emerald-900/40 rounded-xl p-4 md:p-6">
           <Tabs defaultValue={statsPrefs.defaultTab}>
-            <TabsList className="flex w-full max-w-xl mx-auto bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1 mb-6">
+            <TabsList className="flex w-full max-w-xl mx-auto bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1 mb-6 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
               <TabsTrigger value="revenue" className={tabTriggerClass}>Revenue</TabsTrigger>
               <TabsTrigger value="pending" className={tabTriggerClass}>
                 <Clock className="w-3.5 h-3.5 mr-1" />
@@ -1258,7 +1258,7 @@ export default function MarketplaceSalesStats() {
                     <QuarterSection key={key} quarterKey={key} items={geckos}
                       renderItem={(item) => (
                         <div key={item.id} className="bg-slate-800/60 border border-slate-700/50 p-3 rounded-lg">
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
                             {item.isManualSale ? (
                               <div className="w-9 h-9 rounded bg-emerald-900/40 border border-emerald-700/30 flex items-center justify-center flex-shrink-0">
                                 <DollarSign className="w-4 h-4 text-emerald-400" />
@@ -1267,33 +1267,35 @@ export default function MarketplaceSalesStats() {
                               <img src={item.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'} alt={item.name}
                                 className="w-9 h-9 rounded object-cover flex-shrink-0" />
                             )}
-                            <div className="flex-1 min-w-0">
+                            <div className="flex-1 min-w-[8rem]">
                               <p className="font-medium text-slate-100 text-sm truncate">{item.name}</p>
                               <p className="text-xs text-slate-500">
                                 {item.archived_date ? format(new Date(item.archived_date), 'MMM d, yyyy') : '—'}
                                 {item.isManualSale && <span className="ml-1 text-emerald-500/70">(manual)</span>}
                               </p>
                             </div>
-                            {!item.isManualSale && (
-                              <select value={geckoCategories[item.id] || 'other'}
-                                onChange={e => handleGeckoCategoryChange(item.id, e.target.value)}
-                                className="h-7 text-xs rounded bg-slate-700 border border-slate-600 text-slate-300 px-1.5">
-                                {COST_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                              </select>
-                            )}
-                            {item.isManualSale ? (
-                              <span className="text-xs text-slate-400 px-1.5">{_getRevenueCategory(item.category)}</span>
-                            ) : (
-                              <div className="flex items-center gap-1.5 flex-shrink-0">
-                                <span className="text-slate-400 text-xs">$</span>
-                                <Input type="number" step="0.01"
-                                  value={priceOverrides[item.id] !== undefined ? priceOverrides[item.id] : (item.asking_price || '')}
-                                  onChange={e => setPriceOverrides(prev => ({ ...prev, [item.id]: e.target.value }))}
-                                  placeholder="0.00"
-                                  className="bg-slate-700 border-slate-600 text-slate-100 h-7 text-xs w-20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-                              </div>
-                            )}
-                            <p className="text-emerald-400 font-semibold text-sm w-16 text-right">${(item.amount || 0).toFixed(2)}</p>
+                            <div className="flex items-center gap-2 ml-auto sm:ml-0 flex-shrink-0">
+                              {!item.isManualSale && (
+                                <select value={geckoCategories[item.id] || 'other'}
+                                  onChange={e => handleGeckoCategoryChange(item.id, e.target.value)}
+                                  className="h-7 text-xs rounded bg-slate-700 border border-slate-600 text-slate-300 px-1.5">
+                                  {COST_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                                </select>
+                              )}
+                              {item.isManualSale ? (
+                                <span className="text-xs text-slate-400 px-1.5 whitespace-nowrap">{_getRevenueCategory(item.category)}</span>
+                              ) : (
+                                <div className="flex items-center gap-1.5">
+                                  <span className="text-slate-400 text-xs">$</span>
+                                  <Input type="number" step="0.01"
+                                    value={priceOverrides[item.id] !== undefined ? priceOverrides[item.id] : (item.asking_price || '')}
+                                    onChange={e => setPriceOverrides(prev => ({ ...prev, [item.id]: e.target.value }))}
+                                    placeholder="0.00"
+                                    className="bg-slate-700 border-slate-600 text-slate-100 h-7 text-xs w-20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                </div>
+                              )}
+                              <p className="text-emerald-400 font-semibold text-sm min-w-[4rem] text-right tabular-nums">${(item.amount || 0).toFixed(2)}</p>
+                            </div>
                           </div>
                         </div>
                       )} />

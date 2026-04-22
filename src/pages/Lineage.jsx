@@ -1036,7 +1036,7 @@ export default function Lineage() {
 
     return (
         <TooltipProvider>
-        <div className="flex flex-col h-screen bg-slate-950 text-slate-200 overflow-hidden">
+        <div className="flex flex-col h-[100dvh] bg-slate-950 text-slate-200 overflow-hidden">
             <Seo
                 title="Lineage Tree"
                 description="Visualize your crested gecko family trees with an interactive lineage explorer. Trace ancestry across generations."
@@ -1044,7 +1044,7 @@ export default function Lineage() {
                 noIndex
                 keywords={['gecko lineage', 'pedigree tree', 'ancestry tracker', 'gecko family tree']}
             />
-            <header className="p-3 md:p-4 border-b border-slate-700 flex-shrink-0 z-20 bg-slate-950/80 backdrop-blur-sm">
+            <header className="px-3 pb-3 md:p-4 pt-[calc(0.75rem+env(safe-area-inset-top))] border-b border-slate-700 flex-shrink-0 z-20 bg-slate-950/80 backdrop-blur-sm">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:justify-start items-center gap-3">
                     <div className="text-center md:text-left md:mr-6">
                         <h1 className="text-xl md:text-2xl font-bold text-slate-100">Gecko Lineage</h1>
@@ -1337,7 +1337,7 @@ export default function Lineage() {
 
             <main
                 ref={mainContentRef}
-                className="flex-1 overflow-auto relative touch-none"
+                className="flex-1 overflow-auto relative [touch-action:pan-x_pan-y]"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
