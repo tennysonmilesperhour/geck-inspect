@@ -1002,7 +1002,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         </div>
 
         <main id="main-content" className={`flex-1 flex flex-col min-w-0 transition-[padding] duration-200 ease-out ${isSidebarLocked ? 'md:pl-[13.6rem]' : 'md:pl-[3.4rem]'}`}>
-          <header className="bg-sage-200/90 backdrop-blur-md border-b border-sage-300 px-4 py-2 md:hidden sticky top-0 z-10 gecko-header gecko-header-mobile">
+          <header className="bg-sage-200/90 backdrop-blur-md border-b border-sage-300 px-[max(1rem,env(safe-area-inset-left))] pb-2 pt-[calc(0.5rem+env(safe-area-inset-top))] md:hidden sticky top-0 z-10 gecko-header">
             <div className="flex items-center justify-between gap-4">
               <button
                 onClick={toggleSidebar}

@@ -677,18 +677,6 @@ html, body, #root {
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
           }
 
-          /* Mobile header: push content below the iOS status bar / notch
-             / Dynamic Island. With viewport-fit=cover in index.html,
-             env(safe-area-inset-top) returns the OS chrome height (e.g.
-             ~47px on a Dynamic Island iPhone, 0 on Android / non-notched
-             devices). Without this the hamburger + action icons sit
-             directly under the status bar and are hard to tap. */
-          .gecko-header-mobile {
-            padding-top: calc(0.5rem + env(safe-area-inset-top));
-            padding-left: calc(1rem + env(safe-area-inset-left));
-            padding-right: calc(1rem + env(safe-area-inset-right));
-          }
-
           /* Bottom-anchored floating action buttons (chat launcher,
              feedback widget, etc.) on mobile need to clear the iOS
              home indicator so they don't overlap and stay tappable. */
