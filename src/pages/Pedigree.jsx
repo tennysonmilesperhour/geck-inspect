@@ -268,6 +268,36 @@ export default function Pedigree() {
   const [errorMsg, setErrorMsg] = useState(null);
   const [scale, setScale] = useState(1);
 
+  // Pinch-to-zoom state (mobile). Two-finger gesture; single-finger
+  // panning is handled by the browser via [touch-action:pan-x_pan-y]
+  // on the scroll container, so no custom scroll logic needed.
+  const [initialDistance, setInitialDistance] = useState(null);
+  const [initialScale, setInitialScale] = useState(1);
+
+  const handleTouchStart = (e) => {
+    if (e.touches.length === 2) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      setInitialDistance(dist);
+      setInitialScale(scale);
+    }
+  };
+
+  const handleTouchMove = (e) => {
+    if (e.touches.length === 2 && initialDistance) {
+      const dist = Math.hypot(
+        e.touches[0].clientX - e.touches[1].clientX,
+        e.touches[0].clientY - e.touches[1].clientY
+      );
+      const newScale = Math.min(2, Math.max(0.3, initialScale * (dist / initialDistance)));
+      setScale(newScale);
+    }
+  };
+
+  const handleTouchEnd = () => setInitialDistance(null);
+
   useEffect(() => {
     if (!geckoId) {
       setIsLoading(false);
@@ -402,7 +432,7 @@ export default function Pedigree() {
 
       <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
         {/* Header */}
-        <header className="border-b border-slate-800/50 bg-slate-950/90 backdrop-blur-sm sticky top-0 z-10">
+        <header className="border-b border-slate-800/50 bg-slate-950/90 backdrop-blur-sm sticky top-0 z-10 pt-[env(safe-area-inset-top)]">
           <div className="max-w-7xl mx-auto px-6 py-4 flex flex-wrap items-center justify-between gap-4">
             <div className="flex items-center gap-4 min-w-0">
               <Link
@@ -422,38 +452,41 @@ export default function Pedigree() {
               </div>
             </div>
 
-            {/* Zoom + download controls */}
-            <div className="flex items-center gap-2">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setScale((s) => Math.max(0.3, s - 0.1))}
-                className="bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800"
-                title="Zoom out"
-              >
-                <ZoomOut className="w-4 h-4" />
-              </Button>
-              <span className="text-xs text-slate-400 w-10 text-center tabular-nums">
-                {Math.round(scale * 100)}%
-              </span>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setScale((s) => Math.min(2, s + 0.1))}
-                className="bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800"
-                title="Zoom in"
-              >
-                <ZoomIn className="w-4 h-4" />
-              </Button>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => setScale(1)}
-                className="bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800"
-                title="Reset zoom"
-              >
-                <RotateCcw className="w-4 h-4" />
-              </Button>
+            {/* Zoom + download controls. +/- and reset are desktop-only
+                — on mobile the user pinch-zooms. */}
+            <div className="flex items-center gap-2 flex-wrap">
+              <div className="hidden md:flex items-center gap-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setScale((s) => Math.max(0.3, s - 0.1))}
+                  className="bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800"
+                  title="Zoom out"
+                >
+                  <ZoomOut className="w-4 h-4" />
+                </Button>
+                <span className="text-xs text-slate-400 w-10 text-center tabular-nums">
+                  {Math.round(scale * 100)}%
+                </span>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setScale((s) => Math.min(2, s + 0.1))}
+                  className="bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800"
+                  title="Zoom in"
+                >
+                  <ZoomIn className="w-4 h-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setScale(1)}
+                  className="bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800"
+                  title="Reset zoom"
+                >
+                  <RotateCcw className="w-4 h-4" />
+                </Button>
+              </div>
               <Button
                 size="sm"
                 onClick={handleDownloadSVG}
@@ -482,8 +515,18 @@ export default function Pedigree() {
           </div>
         </header>
 
-        {/* Pedigree canvas — horizontally scrollable, SVG scales with zoom */}
-        <div ref={treeContainerRef} className="flex-1 overflow-auto p-6">
+        {/* Pedigree canvas — horizontally scrollable, SVG scales with zoom.
+            [touch-action:pan-x_pan-y] lets the browser handle one-finger
+            scrolling/panning while two-finger gestures fall through to
+            our pinch-zoom handlers. overscroll-contain stops the iOS
+            rubber-band bounce inside the viewer. */}
+        <div
+          ref={treeContainerRef}
+          className="flex-1 overflow-auto overscroll-contain [touch-action:pan-x_pan-y] p-3 md:p-6"
+          onTouchStart={handleTouchStart}
+          onTouchMove={handleTouchMove}
+          onTouchEnd={handleTouchEnd}
+        >
           <div
             style={{
               width: canvasW * scale,
