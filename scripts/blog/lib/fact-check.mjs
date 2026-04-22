@@ -29,7 +29,13 @@ const SOURCES = [
 
 function safeRead(relPath) {
   try {
-    return fs.readFileSync(path.join(REPO_ROOT, relPath), 'utf8');
+    const base = path.resolve(REPO_ROOT);
+    const target = path.resolve(base, relPath);
+    const relative = path.relative(base, target);
+    if (relative.startsWith('..') || path.isAbsolute(relative)) {
+      throw new Error('Invalid path');
+    }
+    return fs.readFileSync(target, 'utf8');
   } catch (err) {
     if (err.code === 'ENOENT') return null;
     throw err;
