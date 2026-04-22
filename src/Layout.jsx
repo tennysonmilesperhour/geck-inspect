@@ -1088,7 +1088,7 @@ function LayoutContent({ children, currentPageName }) {
 
                           @keyframes toast-fade-out {
                             from { opacity: 1; transform: translateY(0); }
-                            to { opacity: 0; transform: translateY(-10px); }
+                            to { opacity: 0; transform: translateY(10px); }
                           }
 
           .gecko-card {
