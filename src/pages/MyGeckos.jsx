@@ -558,12 +558,12 @@ export default function MyGeckosPage() {
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                     <div>
-                        <h1 className="text-4xl font-bold text-slate-100">
+                        <h1 className="text-2xl sm:text-4xl font-bold text-slate-100">
                             {showArchived ? 'Archived Geckos' : 'My Gecko Collection'}
                         </h1>
-                        <p className="text-slate-400 mt-1">Manage your geckos, track their lineage, and plan breedings.</p>
+                        <p className="text-sm sm:text-base text-slate-400 mt-1">Manage your geckos, track their lineage, and plan breedings.</p>
                     </div>
-                    <div className="flex gap-2 items-center">
+                    <div className="flex flex-wrap gap-2 items-center">
                         <PageSettingsPanel title="Collection Settings">
                             <div className="flex items-center justify-between">
                                 <Label className="text-slate-300 text-sm">Default View</Label>
@@ -625,7 +625,8 @@ export default function MyGeckosPage() {
                         {!showArchived && (
                             <>
                                 <Button variant="outline" className="border-emerald-700/60 bg-[rgba(6,95,70,0.35)] text-slate-100 hover:bg-[rgba(4,120,87,0.5)] hover:border-emerald-500/70" onClick={() => setIsImportModalOpen(true)}>
-                                    Import from CSV
+                                    <FileSpreadsheet className="w-4 h-4 sm:mr-2" />
+                                    <span className="hidden sm:inline">Import from CSV</span>
                                 </Button>
                                 <DropdownMenu>
                                     <DropdownMenuTrigger asChild>

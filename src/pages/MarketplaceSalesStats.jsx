@@ -414,9 +414,9 @@ export default function MarketplaceSalesStats() {
 
         <div className="bg-emerald-950/30 border border-emerald-900/40 rounded-xl p-4 md:p-6">
           <Tabs defaultValue="revenue">
-            <TabsList className="flex w-fit mx-auto bg-slate-900 border border-slate-700 h-10 rounded-md p-1 gap-1 mb-6">
-              <TabsTrigger value="revenue" className={`${tabTriggerClass} px-10`}>Revenue</TabsTrigger>
-              <TabsTrigger value="costs" className={`${tabTriggerClass} px-10`}>Costs</TabsTrigger>
+            <TabsList className="flex w-full sm:w-fit sm:mx-auto bg-slate-900 border border-slate-700 h-10 rounded-md p-1 gap-1 mb-6">
+              <TabsTrigger value="revenue" className={`${tabTriggerClass} flex-1 sm:flex-none sm:px-10`}>Revenue</TabsTrigger>
+              <TabsTrigger value="costs" className={`${tabTriggerClass} flex-1 sm:flex-none sm:px-10`}>Costs</TabsTrigger>
             </TabsList>
 
             <TabsContent value="revenue" className="space-y-4">

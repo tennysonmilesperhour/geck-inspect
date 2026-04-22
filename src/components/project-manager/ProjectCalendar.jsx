@@ -109,8 +109,11 @@ export default function ProjectCalendar({ tasks, projects, feedingGroups, otherR
 
             {/* Day labels */}
             <div className="grid grid-cols-7 border-b border-slate-700">
-                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => (
-                    <div key={d} className="text-center text-xs text-slate-500 py-2 font-medium">{d}</div>
+                {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((d, i) => (
+                    <div key={d} className="text-center text-xs text-slate-500 py-2 font-medium">
+                        <span className="hidden sm:inline">{d}</span>
+                        <span className="sm:hidden">{d[0]}</span>
+                    </div>
                 ))}
             </div>
 
@@ -130,16 +133,31 @@ export default function ProjectCalendar({ tasks, projects, feedingGroups, otherR
                     return (
                         <div
                             key={key}
-                            className={`border-b border-r border-slate-800 min-h-[80px] p-1 ${
+                            onClick={() => events.length > 0 && setExpandedDay(key)}
+                            className={`border-b border-r border-slate-800 min-h-[60px] sm:min-h-[80px] p-1 ${
                                 isToday ? 'bg-emerald-950/40' : ''
-                            }`}
+                            } ${events.length > 0 ? 'cursor-pointer hover:bg-slate-800/50' : ''}`}
                         >
-                            <div className={`text-xs font-medium mb-1 w-6 h-6 flex items-center justify-center rounded-full ${
+                            <div className={`text-[11px] sm:text-xs font-medium mb-1 w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center rounded-full ${
                                 isToday ? 'bg-emerald-500 text-white' : 'text-slate-400'
                             }`}>
                                 {format(day, 'd')}
                             </div>
-                            <div className="space-y-0.5">
+                            {/* Mobile: show colored dots */}
+                            <div className="sm:hidden flex flex-wrap gap-0.5">
+                                {events.slice(0, 4).map((ev, i) => (
+                                    <div
+                                        key={i}
+                                        className={`w-1.5 h-1.5 rounded-full ${ev.bgColor ? '' : ev.color}`}
+                                        style={ev.bgColor ? { backgroundColor: ev.bgColor } : {}}
+                                    />
+                                ))}
+                                {events.length > 4 && (
+                                    <span className="text-[8px] text-slate-500 leading-none">+{events.length - 4}</span>
+                                )}
+                            </div>
+                            {/* Desktop: show event labels */}
+                            <div className="hidden sm:block space-y-0.5">
                                 {events.slice(0, 3).map((ev, i) => (
                                     <div
                                         key={i}
@@ -151,13 +169,9 @@ export default function ProjectCalendar({ tasks, projects, feedingGroups, otherR
                                     </div>
                                 ))}
                                 {hasMore && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setExpandedDay(key)}
-                                        className="text-[10px] text-emerald-400 hover:text-emerald-300 hover:underline cursor-pointer w-full text-left"
-                                    >
+                                    <span className="text-[10px] text-emerald-400 w-full text-left block">
                                         +{events.length - 3} more
-                                    </button>
+                                    </span>
                                 )}
                             </div>
                         </div>
