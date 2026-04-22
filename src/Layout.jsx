@@ -13,6 +13,7 @@ import {
 import TutorialModal from "@/components/tutorial/TutorialModal";
 import CommandPalette from "@/components/command-palette/CommandPalette";
 import FeedingAlertSystem from "@/components/feeding/FeedingAlertSystem";
+import HatchAlertSystem from "@/components/breeding/HatchAlertSystem";
 import NotificationPopover from "@/components/notifications/NotificationPopover";
 import GuestMockDisclaimer from "@/components/auth/GuestMockDisclaimer";
 import FeedbackWidget from "@/components/feedback/FeedbackWidget";
@@ -1121,6 +1122,10 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
       <CommandPalette />
       <FeedingAlertSystem user={user} enabled={user?.feeding_alerts_enabled !== false} />
+      {/* Always run the hatch producer for signed-in users; per-channel
+          (push/email) opt-out lives in Settings → Notifications. The bell
+          notification is non-disruptive, so no separate master toggle. */}
+      <HatchAlertSystem user={user} enabled={Boolean(user?.email)} />
       <GuestMockDisclaimer />
       {user && <FeedbackWidget />}
     </>
