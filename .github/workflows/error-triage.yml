@@ -1,0 +1,108 @@
+# Nightly autonomous error-triage agent.
+#
+# Runs daily at 04:00 Arizona MST (UTC-7, no DST) = 11:00 UTC. GitHub
+# Actions cron can drift 5-30 minutes; that's fine for this schedule.
+# If you ever want Mountain-WITH-DST instead, the cron becomes
+#   0 10 * * 3-11  (DST active, 04:00 MDT)
+#   0 11 * * 12-2  (DST inactive, 04:00 MST)
+# — one schedule won't cover it because MT flips twice a year.
+#
+# Flow:
+#   1. scripts/error-triage/triage.mjs queries error_logs for the last
+#      24h, groups by signature, picks the top 3 past cooldown.
+#   2. For each, a tool-using Claude Sonnet agent investigates the repo
+#      and either proposes a patch or skips.
+#   3. Successful patches that clear `pnpm lint` + `pnpm typecheck` are
+#      pushed to branch `error-triage/<sig>-<date>` and opened as DRAFT
+#      PRs labelled `error-triage`.
+#   4. docs/error-triage-state.json is updated every run and committed
+#      back to main so the same signature doesn't retrigger.
+#
+# Secrets required (repo → Settings → Secrets and variables → Actions):
+#   ANTHROPIC_API_KEY           — already present for blog-pipeline
+#   SUPABASE_URL                — https://<project>.supabase.co
+#   SUPABASE_SERVICE_ROLE_KEY   — service role key; bypasses RLS. Only
+#                                 used to read error_logs. Do NOT reuse
+#                                 an anon key — RLS blocks reads for it.
+#
+# If any secret is missing the script runs in placeholder mode: it logs
+# a message, writes lastRun, and exits 0 without touching PRs.
+
+name: error-triage
+
+on:
+  schedule:
+    - cron: '0 11 * * *'
+  workflow_dispatch:
+    inputs:
+      placeholder:
+        description: Run in placeholder mode even when secrets are present
+        required: false
+        default: 'false'
+
+permissions:
+  contents: write
+  pull-requests: write
+
+concurrency:
+  group: error-triage
+  cancel-in-progress: false
+
+jobs:
+  triage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # The agent branches off main and the commit-state step writes
+          # back. Full history isn't needed but we want the merge base.
+          fetch-depth: 0
+          ref: main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+
+      # Full install — the agent runs pnpm lint + pnpm typecheck as its
+      # gate before opening a PR, both of which need devDependencies.
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # @anthropic-ai/sdk is only used by scheduled jobs (this one +
+      # blog-pipeline), so we keep it out of package.json and install
+      # just-in-time. --no-save leaves lockfile + manifest untouched.
+      - name: Install Anthropic SDK
+        run: npm install --no-save @anthropic-ai/sdk@^0.88.0
+
+      - name: Run error-triage agent
+        env:
+          ANTHROPIC_API_KEY:         ${{ secrets.ANTHROPIC_API_KEY }}
+          SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          GH_TOKEN:                  ${{ secrets.GITHUB_TOKEN }}
+          ERROR_TRIAGE_BASE_BRANCH:  main
+          ERROR_TRIAGE_PLACEHOLDER:  ${{ inputs.placeholder == 'true' && '1' || '' }}
+        run: node scripts/error-triage/triage.mjs
+
+      - name: Commit state file
+        run: |
+          git config user.name  "geckinspect-triage-bot"
+          git config user.email "triage-bot@users.noreply.github.com"
+          # The triage loop may have left us on a fix branch if gh pr
+          # create failed after push; return to main before committing
+          # the ledger.
+          git checkout main
+          git add docs/error-triage-state.json
+          if git diff --cached --quiet; then
+            echo "No state-file changes this run."
+          else
+            git commit -m "error-triage: refresh state ledger"
+            for i in 1 2 3 4; do
+              git pull --rebase origin main && git push origin main && break
+              sleep $((2 ** i))
+            done
+          fi
