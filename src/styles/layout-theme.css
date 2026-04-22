@@ -24,13 +24,21 @@ html, body, #root {
 
           /* Font loaded via <link> in index.html — duplicate @import removed. */
 
-          @supports (display-mode: standalone) {
-            .app-container-outline {
-              min-height: 100vh !important; /* Use min-height for safety */
-              padding-top: env(safe-area-inset-top) !important;
-              padding-bottom: env(safe-area-inset-bottom) !important;
-            }
-          }
+          /* Safe-area handling for notched iOS devices.
+             index.html sets viewport-fit=cover, so env(safe-area-inset-*)
+             returns non-zero values whenever the OS chrome (status bar,
+             home indicator, Dynamic Island) overlaps the viewport — both
+             in a regular Safari tab AND when installed as a PWA. The
+             previous @supports (display-mode: standalone) gate meant
+             browser users were missing the padding and the top nav was
+             being covered by the status bar. Apply the insets directly
+             to the chrome that needs them so page content isn't pushed
+             off-screen by the outer container. */
+
+          .safe-area-top { padding-top: env(safe-area-inset-top); }
+          .safe-area-bottom { padding-bottom: env(safe-area-inset-bottom); }
+          .safe-area-left { padding-left: env(safe-area-inset-left); }
+          .safe-area-right { padding-right: env(safe-area-inset-right); }
 
           .gecko-glow {
             box-shadow: 
@@ -348,11 +356,17 @@ html, body, #root {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            width: 36px;
-            height: 36px;
+            width: 40px;
+            height: 40px;
             border-radius: 9px;
             color: #a7f3d0;
             transition: background 0.15s ease, color 0.15s ease;
+            -webkit-tap-highlight-color: transparent;
+          }
+          /* On touch devices, bump the action buttons to 44x44 to meet
+             the iOS Human Interface Guidelines minimum tap target. */
+          @media (hover: none) and (pointer: coarse) {
+            .gecko-header-action { width: 44px; height: 44px; }
           }
           .gecko-header-action:hover {
             background: rgba(16, 185, 129, 0.25);
@@ -655,12 +669,31 @@ html, body, #root {
           }
 
           .gecko-header {
-            background: linear-gradient(135deg, 
-              rgba(6, 95, 70, 0.8) 0%, 
+            background: linear-gradient(135deg,
+              rgba(6, 95, 70, 0.8) 0%,
               rgba(4, 120, 87, 0.6) 100%);
             backdrop-filter: blur(20px) saturate(180%);
             border-bottom: 1px solid var(--gecko-border);
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+          }
+
+          /* Mobile header: push content below the iOS status bar / notch
+             / Dynamic Island. With viewport-fit=cover in index.html,
+             env(safe-area-inset-top) returns the OS chrome height (e.g.
+             ~47px on a Dynamic Island iPhone, 0 on Android / non-notched
+             devices). Without this the hamburger + action icons sit
+             directly under the status bar and are hard to tap. */
+          .gecko-header-mobile {
+            padding-top: calc(0.5rem + env(safe-area-inset-top));
+            padding-left: calc(1rem + env(safe-area-inset-left));
+            padding-right: calc(1rem + env(safe-area-inset-right));
+          }
+
+          /* Bottom-anchored floating action buttons (chat launcher,
+             feedback widget, etc.) on mobile need to clear the iOS
+             home indicator so they don't overlap and stay tappable. */
+          .mobile-bottom-safe {
+            padding-bottom: calc(1rem + env(safe-area-inset-bottom));
           }
 
           .custom-scrollbar {

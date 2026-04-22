@@ -753,8 +753,12 @@ export default function AnimalPassport() {
           {/* ─── Sticky footer action bar ──────────── */}
           {!isOwner && (
             <div
-              className="sticky bottom-0 py-4 px-4 -mx-4 flex gap-3 justify-center flex-wrap"
-              style={{ backgroundColor: C.warmWhite, borderTop: `1px solid ${C.paleSage}` }}
+              className="sticky bottom-0 pt-4 px-4 -mx-4 flex gap-3 justify-center flex-wrap"
+              style={{
+                backgroundColor: C.warmWhite,
+                borderTop: `1px solid ${C.paleSage}`,
+                paddingBottom: 'calc(1rem + env(safe-area-inset-bottom))',
+              }}
             >
               {status === 'for_sale' && (
                 <Link

@@ -676,7 +676,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       <div className="flex h-screen bg-gray-100 dark:bg-gray-900 font-sans app-container-outline">
         {/* Mobile Sidebar */}
         <Sidebar className="mobile-sidebar-glass border-r border-emerald-800/40 bg-emerald-950/25 backdrop-blur-sm md:hidden z-50">
-          <SidebarHeader className="border-b border-emerald-800/40 p-6">
+          <SidebarHeader className="border-b border-emerald-800/40 px-6 pb-6 pt-[calc(1.5rem+env(safe-area-inset-top))]">
           <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-emerald-700/40 hover:bg-emerald-800/30 transition-colors duration-200">
           {appLogo && (
             <img 
@@ -766,7 +766,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
             <ChevronDown className="w-4 h-4 text-emerald-300/80 animate-bounce mb-1" />
           </div>
 
-          <SidebarFooter className="p-4 border-t border-emerald-900/40">
+          <SidebarFooter className="px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-emerald-900/40">
             <div className="space-y-3">
               <Link to="/PrivacyPolicy" className="block text-xs text-slate-500 hover:text-slate-300 px-3 transition-colors">Privacy Policy</Link>
               <Link to={createPageUrl("Membership")} className="block">
@@ -1002,10 +1002,14 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         </div>
 
         <main id="main-content" className={`flex-1 flex flex-col min-w-0 transition-[padding] duration-200 ease-out ${isSidebarLocked ? 'md:pl-[13.6rem]' : 'md:pl-[3.4rem]'}`}>
-          <header className="bg-sage-200/90 backdrop-blur-md border-b border-sage-300 px-4 py-3 md:hidden sticky top-0 z-10 gecko-header">
+          <header className="bg-sage-200/90 backdrop-blur-md border-b border-sage-300 px-4 py-2 md:hidden sticky top-0 z-10 gecko-header gecko-header-mobile">
             <div className="flex items-center justify-between gap-4">
-              <button onClick={toggleSidebar} className="hover:bg-sage-200 p-2 rounded-lg transition-colors duration-200" aria-label="Toggle Sidebar">
-                <Menu className="w-5 h-5 text-sage-600" />
+              <button
+                onClick={toggleSidebar}
+                className="hover:bg-sage-200 rounded-lg transition-colors duration-200 inline-flex items-center justify-center w-11 h-11"
+                aria-label="Toggle Sidebar"
+              >
+                <Menu className="w-6 h-6 text-sage-600" />
               </button>
 
               <div className="flex items-center gap-2">
