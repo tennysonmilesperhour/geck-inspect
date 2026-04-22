@@ -1,22 +1,28 @@
 {
-  "ranAt": "2026-04-18T16:43:29.353Z",
+  "ranAt": "2026-04-22T10:49:07.006Z",
   "signals": {
-    "reddit": 0,
-    "morphmarket": 0,
     "googleAc": 95,
-    "pangea": 0,
+    "bluesky": 0,
+    "googleTrends": 0,
+    "youtube": 67,
+    "breederBlogs": 1,
     "errors": [
-      "CrestedGecko/hot: 403 Blocked",
-      "CrestedGecko/new: 403 Blocked",
-      "CrestedGecko/top-week: 403 Blocked",
-      "Reptiles/hot: 403 Blocked",
-      "Reptiles/new: 403 Blocked",
-      "Reptiles/top-week: 403 Blocked",
-      "morphmarket: 403 Forbidden",
-      "pangea: 404 Not Found"
+      "\"crested gecko\": 403 Forbidden",
+      "\"correlophus ciliatus\": 403 Forbidden",
+      "\"cappuccino gecko\": 403 Forbidden",
+      "\"lilly white gecko\": 403 Forbidden",
+      "\"axanthic gecko\": 403 Forbidden",
+      "\"gargoyle gecko\": 403 Forbidden",
+      "\"crested gecko morph\": 403 Forbidden",
+      "\"crested gecko\": explore: 429",
+      "\"crested gecko morph\": explore: 429",
+      "\"cappuccino gecko\": explore: 429",
+      "\"lilly white gecko\": explore: 429",
+      "Lil Monsters Reptiles: 404 Not Found",
+      "AC Reptiles: 404 Not Found"
     ]
   },
-  "costUsd": 0.009422999999999999,
+  "costUsd": 0.015682,
   "addedSlugs": [],
-  "rationale": "The signal set consists entirely of Google Autocomplete suggestions with zero Reddit forum threads, MorphMarket listings, or Pangea forum activity. While autocomplete volume is high (95 suggestions across morphs and care topics), autocomplete alone does not reliably indicate reader demand, debate, or breeding-specific confusion—the signals that typically ground our best blog topics. The suggestions are generic (prices, care, \"for sale\") and don't reveal concrete misconceptions, pairing outcomes, or breeder pain points. Without forum discussion showing disagreement or confusion, or MorphMarket activity around specific trait combinations, I cannot confidently propose a topic that meets our accuracy and voice standards. The Cappuccino slug is already published. Topics like \"breeding setup,\" \"morphs with pictures,\" and \"morph calculator\" are either general husbandry or pure listicles without a through-line. Recommending zero topics this week is the right call."
+  "rationale": "The signal set is dominated by Google autocomplete suggestions and YouTube metadata, with no forum threads, breeder debates, or genetics-specific search volume data. While there is clear user interest in morph identification, breeding calculators, and morph-specific traits (cappuccino, lilly white, axanthic dominance in the AC queries), the signals lack the depth needed to ground a high-confidence blog post. YouTube titles like \"Don't buy super cappuccino crested gecko it's a scam\" and \"WARNING, NEVER BREED THESE CRESTED GECKOS TOGETHER\" hint at controversy, but without transcripts or forum discussion showing the actual misconceptions, we cannot verify claims or develop a through-line. The one breeder blog post is a generic spring sale announcement. Crucially, cappuccino-crested-gecko-genetics is already published, and the generic morph guide content is well-covered by existing YouTube series. We need forum heat, actual breeder disagreement threads, or search-intent data showing breeders confused about specific genetics outcomes to justify a post that fits the voice."
 }
