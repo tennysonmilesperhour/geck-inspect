@@ -14,7 +14,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/badge';
-import { Mail, Send, Search, MessageSquare, ArrowLeft, Plus } from 'lucide-react';
+import { Mail, Send, Search, MessageSquare, ArrowLeft, Plus, MoreVertical, Trash2, CheckCircle2, Circle, X } from 'lucide-react';
 import {
     Dialog,
     DialogContent,
@@ -22,6 +22,22 @@ import {
     DialogTitle,
     DialogDescription,
 } from '@/components/ui/dialog';
+import {
+    AlertDialog,
+    AlertDialogAction,
+    AlertDialogCancel,
+    AlertDialogContent,
+    AlertDialogDescription,
+    AlertDialogFooter,
+    AlertDialogHeader,
+    AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
@@ -126,7 +142,118 @@ export default function MessagesPage() {
     const [composeSearch, setComposeSearch] = useState('');
     const [allProfiles, setAllProfiles] = useState(null); // null = not yet loaded
     const [isLoadingProfiles, setIsLoadingProfiles] = useState(false);
+    const [isSelectMode, setIsSelectMode] = useState(false);
+    const [selectedIds, setSelectedIds] = useState(() => new Set());
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
     const scrollAnchorRef = useRef(null);
+
+    // Exit select mode whenever the user switches conversations so an
+    // in-flight selection can't silently carry over to an unrelated one.
+    useEffect(() => {
+        setIsSelectMode(false);
+        setSelectedIds(new Set());
+    }, [selectedConversation?.email]);
+
+    const toggleSelected = (id) => {
+        setSelectedIds((prev) => {
+            const next = new Set(prev);
+            if (next.has(id)) next.delete(id);
+            else next.add(id);
+            return next;
+        });
+    };
+
+    // Remove a set of messages from local state without waiting for the
+    // realtime channel to round-trip — feels instant and avoids the brief
+    // period where deleted bubbles reappear before the channel fires.
+    const pruneMessagesLocally = (idsToRemove) => {
+        const idSet = idsToRemove instanceof Set ? idsToRemove : new Set(idsToRemove);
+        setConversations((prev) =>
+            prev
+                .map((c) => {
+                    const kept = c.messages.filter((m) => !idSet.has(m.id));
+                    if (kept.length === c.messages.length) return c;
+                    if (kept.length === 0) return null;
+                    const latestMessage = kept[kept.length - 1];
+                    const unreadCount = kept.filter(
+                        (m) => m.recipient_email === currentUser?.email && !m.is_read
+                    ).length;
+                    return { ...c, messages: kept, latestMessage, unreadCount };
+                })
+                .filter(Boolean)
+        );
+        setSelectedConversation((prev) => {
+            if (!prev) return prev;
+            const kept = prev.messages.filter((m) => !idSet.has(m.id));
+            if (kept.length === prev.messages.length) return prev;
+            return {
+                ...prev,
+                messages: kept,
+                latestMessage: kept[kept.length - 1] || null,
+            };
+        });
+    };
+
+    const deleteSelected = async () => {
+        if (selectedIds.size === 0) return;
+        const ids = Array.from(selectedIds);
+        setIsDeleting(true);
+        try {
+            const { error } = await supabase
+                .from('direct_messages')
+                .delete()
+                .in('id', ids);
+            if (error) throw error;
+            pruneMessagesLocally(ids);
+            setSelectedIds(new Set());
+            setIsSelectMode(false);
+            window.dispatchEvent(
+                new CustomEvent('unread_counts_changed', { detail: { kind: 'messages' } })
+            );
+            toast({ title: `Deleted ${ids.length} message${ids.length === 1 ? '' : 's'}.` });
+        } catch (error) {
+            console.error('Delete failed:', error);
+            toast({
+                title: 'Delete failed',
+                description: error.message || 'Please try again.',
+                variant: 'destructive',
+            });
+        }
+        setIsDeleting(false);
+    };
+
+    const deleteEntireConversation = async () => {
+        if (!selectedConversation) return;
+        const ids = selectedConversation.messages.map((m) => m.id);
+        if (ids.length === 0) {
+            setConfirmDeleteAll(false);
+            return;
+        }
+        setIsDeleting(true);
+        try {
+            const { error } = await supabase
+                .from('direct_messages')
+                .delete()
+                .in('id', ids);
+            if (error) throw error;
+            pruneMessagesLocally(ids);
+            setSelectedConversation(null);
+            setConfirmDeleteAll(false);
+            window.dispatchEvent(
+                new CustomEvent('unread_counts_changed', { detail: { kind: 'messages' } })
+            );
+            toast({ title: 'Conversation deleted.' });
+        } catch (error) {
+            console.error('Delete all failed:', error);
+            toast({
+                title: 'Delete failed',
+                description: error.message || 'Please try again.',
+                variant: 'destructive',
+            });
+        }
+        setIsDeleting(false);
+    };
 
     // Lazy-load the full user directory the first time the compose dialog
     // opens. Small apps can get away with fetching everyone; if the user
@@ -592,35 +719,68 @@ export default function MessagesPage() {
                             return (
                             <Card className="bg-slate-900 border-slate-800 h-full flex flex-col">
                                 <CardHeader className="pb-4 border-b border-slate-800">
-                                    <CardTitle className="flex items-center gap-3 text-slate-100">
-                                        <button
-                                            type="button"
-                                            onClick={() => setSelectedConversation(null)}
-                                            aria-label="Back to conversations"
-                                            className="lg:hidden -ml-1 p-1 rounded-md hover:bg-slate-800 text-slate-300"
-                                        >
-                                            <ArrowLeft className="w-5 h-5" />
-                                        </button>
-                                        <img
-                                            src={headerProfile.avatarUrl}
-                                            alt=""
-                                            className="w-10 h-10 rounded-full object-cover bg-slate-800"
-                                            loading="lazy"
-                                        />
-                                        <div className="min-w-0">
-                                            <div className="flex items-center gap-2">
-                                                <span className="truncate">{headerProfile.displayName}</span>
-                                                {selectedConversation.isSystem && (
-                                                    <Badge variant="secondary" className="text-xs bg-slate-700 text-slate-200 border-slate-600">
-                                                        System
-                                                    </Badge>
-                                                )}
+                                    <div className="flex items-center justify-between gap-3">
+                                        <CardTitle className="flex items-center gap-3 text-slate-100 min-w-0">
+                                            <button
+                                                type="button"
+                                                onClick={() => setSelectedConversation(null)}
+                                                aria-label="Back to conversations"
+                                                className="lg:hidden -ml-1 p-1 rounded-md hover:bg-slate-800 text-slate-300"
+                                            >
+                                                <ArrowLeft className="w-5 h-5" />
+                                            </button>
+                                            <img
+                                                src={headerProfile.avatarUrl}
+                                                alt=""
+                                                className="w-10 h-10 rounded-full object-cover bg-slate-800"
+                                                loading="lazy"
+                                            />
+                                            <div className="min-w-0">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="truncate">{headerProfile.displayName}</span>
+                                                    {selectedConversation.isSystem && (
+                                                        <Badge variant="secondary" className="text-xs bg-slate-700 text-slate-200 border-slate-600">
+                                                            System
+                                                        </Badge>
+                                                    )}
+                                                </div>
+                                                <div className="text-sm font-normal text-slate-400 truncate">
+                                                    {selectedConversation.email}
+                                                </div>
                                             </div>
-                                            <div className="text-sm font-normal text-slate-400 truncate">
-                                                {selectedConversation.email}
-                                            </div>
-                                        </div>
-                                    </CardTitle>
+                                        </CardTitle>
+                                        <DropdownMenu>
+                                            <DropdownMenuTrigger asChild>
+                                                <button
+                                                    type="button"
+                                                    aria-label="Conversation actions"
+                                                    className="p-2 rounded-md hover:bg-slate-800 text-slate-300 shrink-0"
+                                                >
+                                                    <MoreVertical className="w-5 h-5" />
+                                                </button>
+                                            </DropdownMenuTrigger>
+                                            <DropdownMenuContent align="end" className="bg-slate-900 border-slate-700 text-slate-100">
+                                                <DropdownMenuItem
+                                                    onSelect={() => {
+                                                        setIsSelectMode(true);
+                                                        setSelectedIds(new Set());
+                                                    }}
+                                                    className="focus:bg-slate-800 cursor-pointer"
+                                                >
+                                                    <CheckCircle2 className="w-4 h-4 mr-2" />
+                                                    Select messages
+                                                </DropdownMenuItem>
+                                                <DropdownMenuItem
+                                                    onSelect={() => setConfirmDeleteAll(true)}
+                                                    disabled={selectedConversation.messages.length === 0}
+                                                    className="focus:bg-slate-800 cursor-pointer text-red-400 focus:text-red-400"
+                                                >
+                                                    <Trash2 className="w-4 h-4 mr-2" />
+                                                    Delete all in conversation
+                                                </DropdownMenuItem>
+                                            </DropdownMenuContent>
+                                        </DropdownMenu>
+                                    </div>
                                 </CardHeader>
 
                                 <CardContent className="flex-1 p-0 flex flex-col">
@@ -661,6 +821,7 @@ export default function MessagesPage() {
                                             } else if (!isLastInGroup) {
                                                 cornerClasses = isMine ? 'rounded-2xl rounded-br-md' : 'rounded-2xl rounded-bl-md';
                                             }
+                                            const isSelected = selectedIds.has(message.id);
                                             return (
                                                 <div key={message.id}>
                                                     {showDateDivider && (
@@ -673,8 +834,22 @@ export default function MessagesPage() {
                                                         </div>
                                                     )}
                                                     <div
-                                                        className={`flex ${isMine ? 'justify-end' : 'justify-start'} ${wrapperSpacing}`}
+                                                        onClick={
+                                                            isSelectMode
+                                                                ? () => toggleSelected(message.id)
+                                                                : undefined
+                                                        }
+                                                        className={`flex items-center gap-2 ${isMine ? 'justify-end' : 'justify-start'} ${wrapperSpacing} ${
+                                                            isSelectMode ? 'cursor-pointer select-none' : ''
+                                                        } ${isSelected ? 'bg-emerald-900/20 -mx-4 px-4 py-1 rounded-md' : ''}`}
                                                     >
+                                                        {isSelectMode && !isMine && (
+                                                            isSelected ? (
+                                                                <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                                                            ) : (
+                                                                <Circle className="w-5 h-5 text-slate-500 shrink-0" />
+                                                            )
+                                                        )}
                                                         <div
                                                             className={`max-w-xs lg:max-w-md px-4 py-2.5 border shadow-sm ${cornerClasses}`}
                                                             style={bubbleStyle}
@@ -691,6 +866,13 @@ export default function MessagesPage() {
                                                                 </div>
                                                             )}
                                                         </div>
+                                                        {isSelectMode && isMine && (
+                                                            isSelected ? (
+                                                                <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
+                                                            ) : (
+                                                                <Circle className="w-5 h-5 text-slate-500 shrink-0" />
+                                                            )
+                                                        )}
                                                     </div>
                                                 </div>
                                             );
@@ -698,7 +880,34 @@ export default function MessagesPage() {
                                         <div ref={scrollAnchorRef} />
                                     </div>
 
-                                    {!selectedConversation.isSystem && (
+                                    {isSelectMode ? (
+                                        <div className="p-4 border-t border-slate-800 flex items-center justify-between gap-3">
+                                            <div className="text-sm text-slate-300">
+                                                {selectedIds.size} selected
+                                            </div>
+                                            <div className="flex gap-2">
+                                                <Button
+                                                    variant="outline"
+                                                    onClick={() => {
+                                                        setIsSelectMode(false);
+                                                        setSelectedIds(new Set());
+                                                    }}
+                                                    className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200"
+                                                >
+                                                    <X className="w-4 h-4 mr-2" />
+                                                    Cancel
+                                                </Button>
+                                                <Button
+                                                    onClick={deleteSelected}
+                                                    disabled={selectedIds.size === 0 || isDeleting}
+                                                    className="bg-red-600 hover:bg-red-500 text-white"
+                                                >
+                                                    <Trash2 className="w-4 h-4 mr-2" />
+                                                    Delete ({selectedIds.size})
+                                                </Button>
+                                            </div>
+                                        </div>
+                                    ) : !selectedConversation.isSystem ? (
                                         <div className="p-4 border-t border-slate-800">
                                             <div className="flex gap-3">
                                                 <Textarea
@@ -726,7 +935,7 @@ export default function MessagesPage() {
                                                 </Button>
                                             </div>
                                         </div>
-                                    )}
+                                    ) : null}
                                 </CardContent>
                             </Card>
                             );
@@ -742,6 +951,33 @@ export default function MessagesPage() {
                     </div>
                 </div>
             </div>
+
+            <AlertDialog open={confirmDeleteAll} onOpenChange={setConfirmDeleteAll}>
+                <AlertDialogContent className="bg-slate-900 border-slate-800 text-slate-100">
+                    <AlertDialogHeader>
+                        <AlertDialogTitle>Delete entire conversation?</AlertDialogTitle>
+                        <AlertDialogDescription className="text-slate-400">
+                            This permanently removes every message in this thread for both sides.
+                            This cannot be undone.
+                        </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                        <AlertDialogCancel className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200">
+                            Cancel
+                        </AlertDialogCancel>
+                        <AlertDialogAction
+                            onClick={(e) => {
+                                e.preventDefault();
+                                deleteEntireConversation();
+                            }}
+                            disabled={isDeleting}
+                            className="bg-red-600 hover:bg-red-500 text-white"
+                        >
+                            Delete conversation
+                        </AlertDialogAction>
+                    </AlertDialogFooter>
+                </AlertDialogContent>
+            </AlertDialog>
 
             <Dialog open={isComposeOpen} onOpenChange={setIsComposeOpen}>
                 <DialogContent className="bg-slate-900 border-slate-800 text-slate-100 sm:max-w-md">
