@@ -23,16 +23,6 @@ import {
     DialogDescription,
 } from '@/components/ui/dialog';
 import {
-    AlertDialog,
-    AlertDialogAction,
-    AlertDialogCancel,
-    AlertDialogContent,
-    AlertDialogDescription,
-    AlertDialogFooter,
-    AlertDialogHeader,
-    AlertDialogTitle,
-} from '@/components/ui/alert-dialog';
-import {
     DropdownMenu,
     DropdownMenuContent,
     DropdownMenuItem,
@@ -44,6 +34,19 @@ import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
 import { format, isSameDay, isToday, isYesterday, differenceInMinutes } from 'date-fns';
 
 const SYSTEM_EMAIL = 'system@geckinspect.com';
+
+// Users can delete their own messages for both sides within this window.
+// Outside the window, the message is locked — no UI affordance to delete
+// it. The client gate matches the intended server-side RLS policy.
+const UNSEND_WINDOW_MS = 5 * 60 * 1000;
+
+function canUnsend(message, myEmail, now = Date.now()) {
+    if (!message || !myEmail) return false;
+    if (message.sender_email !== myEmail) return false;
+    const createdMs = new Date(message.created_date).getTime();
+    if (Number.isNaN(createdMs)) return false;
+    return now - createdMs <= UNSEND_WINDOW_MS;
+}
 
 // Resolve the display name + avatar URL for a given email, preferring a
 // real profile when we have one and falling back to the email prefix +
@@ -145,8 +148,31 @@ export default function MessagesPage() {
     const [isSelectMode, setIsSelectMode] = useState(false);
     const [selectedIds, setSelectedIds] = useState(() => new Set());
     const [isDeleting, setIsDeleting] = useState(false);
-    const [confirmDeleteAll, setConfirmDeleteAll] = useState(false);
+    // Ticks every 30s so the unsend-window check re-evaluates and
+    // checkboxes on messages that just aged out of the window disappear.
+    const [nowTick, setNowTick] = useState(() => Date.now());
     const scrollAnchorRef = useRef(null);
+
+    useEffect(() => {
+        const id = setInterval(() => setNowTick(Date.now()), 30 * 1000);
+        return () => clearInterval(id);
+    }, []);
+
+    // When a message ages out of the unsend window, drop it from any
+    // in-flight selection so the "Delete (N)" button count stays honest.
+    useEffect(() => {
+        if (!isSelectMode) return;
+        setSelectedIds((prev) => {
+            if (prev.size === 0) return prev;
+            const next = new Set();
+            for (const message of selectedConversation?.messages || []) {
+                if (prev.has(message.id) && canUnsend(message, currentUser?.email, nowTick)) {
+                    next.add(message.id);
+                }
+            }
+            return next.size === prev.size ? prev : next;
+        });
+    }, [nowTick, isSelectMode, selectedConversation, currentUser?.email]);
 
     // Exit select mode whenever the user switches conversations so an
     // in-flight selection can't silently carry over to an unrelated one.
@@ -197,37 +223,20 @@ export default function MessagesPage() {
 
     const deleteSelected = async () => {
         if (selectedIds.size === 0) return;
-        const ids = Array.from(selectedIds);
-        setIsDeleting(true);
-        try {
-            const { error } = await supabase
-                .from('direct_messages')
-                .delete()
-                .in('id', ids);
-            if (error) throw error;
-            pruneMessagesLocally(ids);
-            setSelectedIds(new Set());
-            setIsSelectMode(false);
-            window.dispatchEvent(
-                new CustomEvent('unread_counts_changed', { detail: { kind: 'messages' } })
-            );
-            toast({ title: `Deleted ${ids.length} message${ids.length === 1 ? '' : 's'}.` });
-        } catch (error) {
-            console.error('Delete failed:', error);
+        // Re-check the unsend window at click time. A message could have
+        // aged out while the user was lingering in select mode.
+        const now = Date.now();
+        const eligibleIds = Array.from(selectedIds).filter((id) => {
+            const message = selectedConversation?.messages.find((m) => m.id === id);
+            return canUnsend(message, currentUser?.email, now);
+        });
+        if (eligibleIds.length === 0) {
             toast({
-                title: 'Delete failed',
-                description: error.message || 'Please try again.',
+                title: 'Nothing to unsend',
+                description: 'These messages are outside the 5-minute window.',
                 variant: 'destructive',
             });
-        }
-        setIsDeleting(false);
-    };
-
-    const deleteEntireConversation = async () => {
-        if (!selectedConversation) return;
-        const ids = selectedConversation.messages.map((m) => m.id);
-        if (ids.length === 0) {
-            setConfirmDeleteAll(false);
+            setSelectedIds(new Set());
             return;
         }
         setIsDeleting(true);
@@ -235,25 +244,28 @@ export default function MessagesPage() {
             const { error } = await supabase
                 .from('direct_messages')
                 .delete()
-                .in('id', ids);
+                .in('id', eligibleIds);
             if (error) throw error;
-            pruneMessagesLocally(ids);
-            setSelectedConversation(null);
-            setConfirmDeleteAll(false);
+            pruneMessagesLocally(eligibleIds);
+            setSelectedIds(new Set());
+            setIsSelectMode(false);
             window.dispatchEvent(
                 new CustomEvent('unread_counts_changed', { detail: { kind: 'messages' } })
             );
-            toast({ title: 'Conversation deleted.' });
-        } catch (error) {
-            console.error('Delete all failed:', error);
             toast({
-                title: 'Delete failed',
+                title: `Unsent ${eligibleIds.length} message${eligibleIds.length === 1 ? '' : 's'}.`,
+            });
+        } catch (error) {
+            console.error('Delete failed:', error);
+            toast({
+                title: 'Unsend failed',
                 description: error.message || 'Please try again.',
                 variant: 'destructive',
             });
         }
         setIsDeleting(false);
     };
+
 
     // Lazy-load the full user directory the first time the compose dialog
     // opens. Small apps can get away with fetching everyone; if the user
@@ -768,15 +780,7 @@ export default function MessagesPage() {
                                                     className="focus:bg-slate-800 cursor-pointer"
                                                 >
                                                     <CheckCircle2 className="w-4 h-4 mr-2" />
-                                                    Select messages
-                                                </DropdownMenuItem>
-                                                <DropdownMenuItem
-                                                    onSelect={() => setConfirmDeleteAll(true)}
-                                                    disabled={selectedConversation.messages.length === 0}
-                                                    className="focus:bg-slate-800 cursor-pointer text-red-400 focus:text-red-400"
-                                                >
-                                                    <Trash2 className="w-4 h-4 mr-2" />
-                                                    Delete all in conversation
+                                                    Unsend recent messages
                                                 </DropdownMenuItem>
                                             </DropdownMenuContent>
                                         </DropdownMenu>
@@ -822,6 +826,25 @@ export default function MessagesPage() {
                                                 cornerClasses = isMine ? 'rounded-2xl rounded-br-md' : 'rounded-2xl rounded-bl-md';
                                             }
                                             const isSelected = selectedIds.has(message.id);
+                                            const unsendable = canUnsend(
+                                                message,
+                                                currentUser?.email,
+                                                nowTick
+                                            );
+                                            // Countdown label shown on my own recent bubbles
+                                            // so there's a visible cue that the unsend window
+                                            // is ticking. Rendered as a second line beside
+                                            // the send time in the bubble footer.
+                                            const msLeft = unsendable
+                                                ? UNSEND_WINDOW_MS -
+                                                  (nowTick - new Date(message.created_date).getTime())
+                                                : 0;
+                                            const minutesLeft = Math.max(0, Math.ceil(msLeft / 60000));
+                                            const unsendCountdown = unsendable
+                                                ? minutesLeft <= 1
+                                                    ? '< 1 min left to unsend'
+                                                    : `${minutesLeft} min left to unsend`
+                                                : null;
                                             return (
                                                 <div key={message.id}>
                                                     {showDateDivider && (
@@ -835,21 +858,16 @@ export default function MessagesPage() {
                                                     )}
                                                     <div
                                                         onClick={
-                                                            isSelectMode
+                                                            isSelectMode && unsendable
                                                                 ? () => toggleSelected(message.id)
                                                                 : undefined
                                                         }
                                                         className={`flex items-center gap-2 ${isMine ? 'justify-end' : 'justify-start'} ${wrapperSpacing} ${
-                                                            isSelectMode ? 'cursor-pointer select-none' : ''
-                                                        } ${isSelected ? 'bg-emerald-900/20 -mx-4 px-4 py-1 rounded-md' : ''}`}
+                                                            isSelectMode && unsendable ? 'cursor-pointer select-none' : ''
+                                                        } ${isSelectMode && !unsendable ? 'opacity-70' : ''} ${
+                                                            isSelected ? 'bg-emerald-900/20 -mx-4 px-4 py-1 rounded-md' : ''
+                                                        }`}
                                                     >
-                                                        {isSelectMode && !isMine && (
-                                                            isSelected ? (
-                                                                <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
-                                                            ) : (
-                                                                <Circle className="w-5 h-5 text-slate-500 shrink-0" />
-                                                            )
-                                                        )}
                                                         <div
                                                             className={`max-w-xs lg:max-w-md px-4 py-2.5 border shadow-sm ${cornerClasses}`}
                                                             style={bubbleStyle}
@@ -857,16 +875,19 @@ export default function MessagesPage() {
                                                             <div className="prose prose-sm max-w-none text-sm leading-relaxed prose-p:my-1 prose-ul:my-1 prose-ol:my-1 prose-headings:my-2 prose-headings:font-semibold prose-a:text-emerald-700 prose-strong:text-inherit">
                                                                 <ReactMarkdown>{message.content}</ReactMarkdown>
                                                             </div>
-                                                            {isLastInGroup && (
+                                                            {(isLastInGroup || unsendCountdown) && (
                                                                 <div
-                                                                    className="text-[10px] mt-1"
+                                                                    className="text-[10px] mt-1 flex items-center gap-2 flex-wrap"
                                                                     style={{ color: BUBBLE_INK_MUTED }}
                                                                 >
-                                                                    {format(date, 'h:mm a')}
+                                                                    {isLastInGroup && <span>{format(date, 'h:mm a')}</span>}
+                                                                    {unsendCountdown && (
+                                                                        <span className="italic">{unsendCountdown}</span>
+                                                                    )}
                                                                 </div>
                                                             )}
                                                         </div>
-                                                        {isSelectMode && isMine && (
+                                                        {isSelectMode && isMine && unsendable && (
                                                             isSelected ? (
                                                                 <CheckCircle2 className="w-5 h-5 text-emerald-500 shrink-0" />
                                                             ) : (
@@ -903,7 +924,7 @@ export default function MessagesPage() {
                                                     className="bg-red-600 hover:bg-red-500 text-white"
                                                 >
                                                     <Trash2 className="w-4 h-4 mr-2" />
-                                                    Delete ({selectedIds.size})
+                                                    Unsend ({selectedIds.size})
                                                 </Button>
                                             </div>
                                         </div>
@@ -951,33 +972,6 @@ export default function MessagesPage() {
                     </div>
                 </div>
             </div>
-
-            <AlertDialog open={confirmDeleteAll} onOpenChange={setConfirmDeleteAll}>
-                <AlertDialogContent className="bg-slate-900 border-slate-800 text-slate-100">
-                    <AlertDialogHeader>
-                        <AlertDialogTitle>Delete entire conversation?</AlertDialogTitle>
-                        <AlertDialogDescription className="text-slate-400">
-                            This permanently removes every message in this thread for both sides.
-                            This cannot be undone.
-                        </AlertDialogDescription>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                        <AlertDialogCancel className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200">
-                            Cancel
-                        </AlertDialogCancel>
-                        <AlertDialogAction
-                            onClick={(e) => {
-                                e.preventDefault();
-                                deleteEntireConversation();
-                            }}
-                            disabled={isDeleting}
-                            className="bg-red-600 hover:bg-red-500 text-white"
-                        >
-                            Delete conversation
-                        </AlertDialogAction>
-                    </AlertDialogFooter>
-                </AlertDialogContent>
-            </AlertDialog>
 
             <Dialog open={isComposeOpen} onOpenChange={setIsComposeOpen}>
                 <DialogContent className="bg-slate-900 border-slate-800 text-slate-100 sm:max-w-md">
