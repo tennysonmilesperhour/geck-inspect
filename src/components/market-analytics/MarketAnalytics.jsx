@@ -49,8 +49,8 @@ const SUB_NAV = [
 const DEFAULT_FILTERS = {
   regions: [],                  // empty = all
   timeframe: '12m',
-  age_class: undefined,
-  lineage_tier: undefined,
+  age_class: [],                // empty = all; array for multi-select
+  lineage_tier: [],             // empty = all; array for multi-select
   sources: [],                  // empty = all
 };
 
@@ -233,7 +233,10 @@ function FilterBar({ filters, setFilters, presets, activePreset, onLoadPreset, o
         : [...f.sources, id],
     }));
   };
-  const anyFilter = filters.regions.length || filters.sources.length || filters.age_class || filters.lineage_tier || filters.timeframe !== '12m';
+  const anyFilter = filters.regions.length || filters.sources.length
+    || (filters.age_class && filters.age_class.length)
+    || (filters.lineage_tier && filters.lineage_tier.length)
+    || filters.timeframe !== '12m';
 
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2 flex flex-wrap items-center gap-2">
@@ -283,19 +286,19 @@ function FilterBar({ filters, setFilters, presets, activePreset, onLoadPreset, o
         </PopoverContent>
       </Popover>
 
-      {/* Age class */}
-      <PillSelect
+      {/* Age class (multi-select) */}
+      <MultiPillSelect
         label="Age"
-        value={filters.age_class}
+        values={filters.age_class || []}
         options={AGE_CLASSES.map((a) => [a.code, a.label])}
-        onChange={(v) => setFilters((f) => ({ ...f, age_class: v }))}
+        onChange={(next) => setFilters((f) => ({ ...f, age_class: next }))}
       />
-      {/* Lineage tier */}
-      <PillSelect
+      {/* Lineage tier (multi-select) */}
+      <MultiPillSelect
         label="Lineage"
-        value={filters.lineage_tier}
+        values={filters.lineage_tier || []}
         options={LINEAGE_TIERS.map((t) => [t.code, t.label])}
-        onChange={(v) => setFilters((f) => ({ ...f, lineage_tier: v }))}
+        onChange={(next) => setFilters((f) => ({ ...f, lineage_tier: next }))}
       />
 
       {/* Sources — internal vs external toggle popover */}
@@ -417,6 +420,67 @@ function TimeframeSelector({ value, onChange }) {
         </button>
       ))}
     </div>
+  );
+}
+
+function MultiPillSelect({ label, values, options, onChange }) {
+  const safe = Array.isArray(values) ? values : [];
+  const toggle = (code) => {
+    onChange(safe.includes(code) ? safe.filter((c) => c !== code) : [...safe, code]);
+  };
+  const summary = safe.length === 0
+    ? 'Any'
+    : safe.length === 1
+      ? (options.find(([c]) => c === safe[0])?.[1] || safe[0])
+      : `${safe.length} selected`;
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          className={`inline-flex items-center gap-1.5 text-xs rounded px-2 py-1 border transition-colors ${
+            safe.length > 0
+              ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-200'
+              : 'text-slate-200 hover:bg-slate-800 border-slate-700'
+          }`}
+        >
+          <span className="text-slate-500">{label}:</span>
+          <span className="truncate max-w-[140px]">{summary}</span>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="bg-slate-900 border-slate-700 text-slate-200 w-60 p-1 space-y-0.5">
+        {options.map(([code, lbl]) => {
+          const on = safe.includes(code);
+          return (
+            <button
+              key={code}
+              onClick={() => toggle(code)}
+              className={`w-full text-left text-xs px-2 py-1 rounded flex items-center gap-2 transition-colors ${
+                on ? 'bg-emerald-500/15 text-emerald-200' : 'hover:bg-slate-800 text-slate-300'
+              }`}
+            >
+              <span className={`inline-flex items-center justify-center w-3.5 h-3.5 rounded border ${
+                on ? 'bg-emerald-500/30 border-emerald-400' : 'border-slate-600'
+              }`}>
+                {on && <span className="block w-1.5 h-1.5 bg-emerald-300 rounded-sm" />}
+              </span>
+              <span className="flex-1">{lbl}</span>
+            </button>
+          );
+        })}
+        {safe.length > 0 && (
+          <>
+            <div className="h-px bg-slate-700/60 my-1" />
+            <button
+              onClick={() => onChange([])}
+              className="w-full text-left text-[11px] text-slate-400 hover:text-slate-200 px-2 py-1 rounded hover:bg-slate-800"
+            >
+              Clear {label.toLowerCase()}
+            </button>
+          </>
+        )}
+      </PopoverContent>
+    </Popover>
   );
 }
 

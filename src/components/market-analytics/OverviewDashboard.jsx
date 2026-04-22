@@ -137,17 +137,19 @@ export default function OverviewDashboard({
                     <div
                       ref={draggable.innerRef}
                       {...draggable.draggableProps}
-                      className={`relative group ${snapshot.isDragging ? 'opacity-90 ring-2 ring-emerald-500/40 rounded-xl' : ''}`}
+                      className={`flex items-stretch gap-0 rounded-xl ${snapshot.isDragging ? 'ring-2 ring-emerald-500/40 shadow-xl' : ''}`}
                     >
                       <div
                         {...draggable.dragHandleProps}
-                        className="absolute left-1 top-4 -translate-x-full pr-1 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity cursor-grab active:cursor-grabbing text-slate-500 hover:text-slate-300"
-                        aria-label={`Drag to reorder ${id}`}
+                        className="flex items-center justify-center w-8 bg-slate-900/40 border border-r-0 border-slate-800 rounded-l-xl text-slate-500 hover:bg-emerald-500/10 hover:text-emerald-300 cursor-grab active:cursor-grabbing transition-colors shrink-0"
+                        aria-label="Drag to reorder"
                         title="Drag to reorder"
                       >
                         <GripVertical className="w-4 h-4" />
                       </div>
-                      {renderCard(id)}
+                      <div className="flex-1 min-w-0 [&>div]:rounded-l-none [&>div]:border-l-0">
+                        {renderCard(id)}
+                      </div>
                     </div>
                   )}
                 </Draggable>

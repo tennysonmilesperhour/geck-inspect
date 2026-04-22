@@ -82,6 +82,14 @@ function median(arr) {
 function pct(a, b) { return b === 0 ? 0 : ((a - b) / b) * 100; }
 function uniq(arr) { return [...new Set(arr)]; }
 
+// Normalize a scalar-or-array filter value into an array of values.
+// Accepts: undefined/null (= no filter), 'foo', ['foo', 'bar']. This
+// lets query callers be lazy and the UI pass arrays for multi-select.
+function asList(v) {
+  if (v === undefined || v === null || v === '') return [];
+  return Array.isArray(v) ? v : [v];
+}
+
 function filterTx({ combo_id, region, regions, source_id, sources, timeframe, status, lineage_tier, age_class } = {}) {
   let out = tx();
   if (combo_id) out = out.filter((r) => r.combo_id === combo_id);
@@ -90,8 +98,10 @@ function filterTx({ combo_id, region, regions, source_id, sources, timeframe, st
   if (source_id) out = out.filter((r) => r.source_id === source_id);
   if (sources && sources.length) out = out.filter((r) => sources.includes(r.source_id));
   if (status) out = out.filter((r) => r.status === status);
-  if (lineage_tier) out = out.filter((r) => r.lineage_tier === lineage_tier);
-  if (age_class) out = out.filter((r) => r.age_class === age_class);
+  const lineages = asList(lineage_tier);
+  if (lineages.length) out = out.filter((r) => lineages.includes(r.lineage_tier));
+  const ages = asList(age_class);
+  if (ages.length) out = out.filter((r) => ages.includes(r.age_class));
   if (timeframe) out = out.filter((r) => withinTimeframe(r, timeframe));
   return out;
 }
