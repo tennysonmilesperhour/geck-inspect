@@ -4,7 +4,7 @@ import { useLocation } from 'react-router-dom';
 import { Gecko, BreedingPlan, LineagePlaceholder } from '@/entities/all';
 import { base44 as base44Client } from '@/api/base44Client';
 import { uploadFile } from '@/lib/uploadFile';
-import { Loader2, Search, ZoomIn, ZoomOut, GitBranch, Heart, Users2, Edit2, Upload, Download, AlertTriangle, ExternalLink, Dna, Calendar, Scale, Tag, X, Link as LinkIcon, Check } from 'lucide-react';
+import { Loader2, Search, ZoomIn, ZoomOut, GitBranch, Heart, Users2, Edit2, Upload, Download, AlertTriangle, ExternalLink, Dna, Calendar, Scale, Tag, X, Link as LinkIcon, Check, ChevronUp, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import usePageSettings from '@/hooks/usePageSettings';
@@ -477,6 +477,14 @@ export default function Lineage() {
     // Touch/pinch zoom state
     const [initialDistance, setInitialDistance] = useState(null);
     const [initialScale, setInitialScale] = useState(1);
+
+    // Detail-strip collapse: default collapsed on mobile so the tree
+    // gets the screen. On md+ the strip is a narrow band on the side
+    // and has plenty of room, so it stays open.
+    const [detailPanelOpen, setDetailPanelOpen] = useState(() => {
+        if (typeof window === 'undefined') return true;
+        return window.innerWidth >= 768;
+    });
     
     // Placeholder editing
     const [editingPlaceholder, setEditingPlaceholder] = useState(null);
@@ -1046,7 +1054,7 @@ export default function Lineage() {
             />
             <header className="px-3 pb-3 md:p-4 pt-[calc(0.75rem+env(safe-area-inset-top))] border-b border-slate-700 flex-shrink-0 z-20 bg-slate-950/80 backdrop-blur-sm">
                 <div className="max-w-7xl mx-auto flex flex-col md:flex-row md:justify-start items-center gap-3">
-                    <div className="text-center md:text-left md:mr-6">
+                    <div className="hidden md:block text-center md:text-left md:mr-6">
                         <h1 className="text-xl md:text-2xl font-bold text-slate-100">Gecko Lineage</h1>
                         <p className="text-slate-400 text-sm hidden md:block">
                             Select a gecko to view its family tree
@@ -1080,7 +1088,7 @@ export default function Lineage() {
                                 className="pl-9 w-full md:w-64 h-10"
                             />
                             {showSuggestions && filteredSelectableGeckos.length > 0 && (
-                                <div className="absolute top-full left-0 mt-1 bg-slate-900 border border-slate-600 rounded-lg shadow-2xl z-[99999] max-h-72 overflow-y-auto md:w-80 w-full">
+                                <div className="absolute top-full left-0 mt-1 bg-slate-900 border border-slate-600 rounded-lg shadow-2xl z-[99999] max-h-72 overflow-y-auto overflow-x-hidden overscroll-contain md:w-80 w-full [touch-action:pan-y]">
                                     {filteredSelectableGeckos.map((gecko, idx) => (
                                         <button
                                             key={gecko.id}
@@ -1182,10 +1190,25 @@ export default function Lineage() {
                 </div>
             </header>
 
+            {/* Selected-gecko collapse toggle (mobile only) */}
+            {selectedGecko && (
+                <button
+                    type="button"
+                    onClick={() => setDetailPanelOpen(o => !o)}
+                    className="md:hidden flex-shrink-0 flex items-center justify-center gap-1.5 w-full py-1.5 text-xs text-slate-400 bg-slate-900/60 border-b border-slate-800 hover:bg-slate-900/80 active:bg-slate-900 transition-colors"
+                    aria-expanded={detailPanelOpen}
+                    aria-controls="lineage-detail-strip"
+                >
+                    {detailPanelOpen ? <ChevronUp className="w-3.5 h-3.5" /> : <ChevronDown className="w-3.5 h-3.5" />}
+                    {detailPanelOpen ? 'Hide details' : `Show details for ${selectedGecko.name || 'selected gecko'}`}
+                </button>
+            )}
+
             {/* Selected gecko detail strip */}
             <AnimatePresence initial={false}>
-                {selectedGecko && (
+                {selectedGecko && detailPanelOpen && (
                     <motion.section
+                        id="lineage-detail-strip"
                         key="detail-strip"
                         initial={{ opacity: 0, height: 0 }}
                         animate={{ opacity: 1, height: 'auto' }}
@@ -1337,13 +1360,14 @@ export default function Lineage() {
 
             <main
                 ref={mainContentRef}
-                className="flex-1 overflow-auto relative [touch-action:pan-x_pan-y]"
+                className="flex-1 overflow-auto relative overscroll-contain [touch-action:pan-x_pan-y]"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
             >
-                {/* Zoom controls - moved to bottom left to avoid overlap */}
-                <div className="absolute bottom-4 left-4 z-10 flex items-center gap-2">
+                {/* Zoom controls — desktop only. Mobile users pinch-zoom with
+                    two fingers (native touch-action handles it). */}
+                <div className="hidden md:flex absolute bottom-4 left-4 z-10 items-center gap-2">
                     <Button size="icon" variant="outline" onClick={() => setScale(s => Math.max(0.3, s - 0.1))} className="bg-slate-800 border-slate-600">
                         <ZoomOut className="w-4 h-4" />
                     </Button>
