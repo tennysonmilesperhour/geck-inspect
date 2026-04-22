@@ -23,8 +23,9 @@ import {
 } from 'recharts';
 import {
   Activity, TrendingUp, TrendingDown, Gauge, CalendarDays, ArrowUpRight,
-  Pin, PinOff,
+  Pin, PinOff, GripVertical,
 } from 'lucide-react';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import {
   queryMarketIndex, queryTopMovers, queryPeakIndicators, queryMarketEvents,
 } from '@/lib/marketAnalytics/queries';
@@ -70,7 +71,8 @@ export default function OverviewDashboard({
   onDrillDown,
   pinnedCardIds = [],
   onTogglePin,
-  filterCardIds,  // when set, only render cards whose id is in this array
+  filterCardIds,  // when set, only render cards whose id is in this array, in that order (drag-reorderable)
+  onReorderCards, // called with the new id order on drag-end
 }) {
   const [index, setIndex] = useState(null);
   const [movers, setMovers] = useState({ up: [], down: [] });
@@ -91,32 +93,84 @@ export default function OverviewDashboard({
     return () => { mounted = false; };
   }, [filters.regions, filters.timeframe]);
 
-  const show = (id) => !filterCardIds || filterCardIds.includes(id);
   const pinProps = { pinnedIds: pinnedCardIds, onTogglePin };
 
-  const showIndex = show('market-index');
-  const showMovers = show('top-movers');
-  const showEvents = show('market-events');
-  const showPeaks = show('peak-indicators');
+  // Registry maps each pinnable id to its rendered card. Keeps the
+  // "render this by id" logic in one place for both the ordered
+  // (filtered) and canonical layouts.
+  const renderCard = (id) => {
+    switch (id) {
+      case 'market-index':    return <MarketIndexCard index={index} pinProps={pinProps} />;
+      case 'top-movers':      return <TopMoversCard movers={movers} onDrillDown={onDrillDown} pinProps={pinProps} />;
+      case 'market-events':   return <EventsCard events={events} pinProps={pinProps} />;
+      case 'peak-indicators': return <PeakIndicatorGrid peaks={peaks} onDrillDown={onDrillDown} pinProps={pinProps} />;
+      default:                return null;
+    }
+  };
 
+  // Pinned mode: render exactly the filtered ids in the given order,
+  // each wrapped in a Draggable so the user can reorder them.
+  if (filterCardIds) {
+    const validIds = filterCardIds.filter((id) => PINNABLE_OVERVIEW_CARDS.some((c) => c.id === id));
+
+    const handleDragEnd = (result) => {
+      if (!onReorderCards || !result.destination) return;
+      if (result.destination.index === result.source.index) return;
+      const next = [...validIds];
+      const [moved] = next.splice(result.source.index, 1);
+      next.splice(result.destination.index, 0, moved);
+      onReorderCards(next);
+    };
+
+    return (
+      <DragDropContext onDragEnd={handleDragEnd}>
+        <Droppable droppableId="pinned-cards">
+          {(droppable) => (
+            <div
+              ref={droppable.innerRef}
+              {...droppable.droppableProps}
+              className="space-y-5"
+            >
+              {validIds.map((id, idx) => (
+                <Draggable key={id} draggableId={id} index={idx}>
+                  {(draggable, snapshot) => (
+                    <div
+                      ref={draggable.innerRef}
+                      {...draggable.draggableProps}
+                      className={`relative group ${snapshot.isDragging ? 'opacity-90 ring-2 ring-emerald-500/40 rounded-xl' : ''}`}
+                    >
+                      <div
+                        {...draggable.dragHandleProps}
+                        className="absolute left-1 top-4 -translate-x-full pr-1 opacity-0 group-hover:opacity-100 focus:opacity-100 transition-opacity cursor-grab active:cursor-grabbing text-slate-500 hover:text-slate-300"
+                        aria-label={`Drag to reorder ${id}`}
+                        title="Drag to reorder"
+                      >
+                        <GripVertical className="w-4 h-4" />
+                      </div>
+                      {renderCard(id)}
+                    </div>
+                  )}
+                </Draggable>
+              ))}
+              {droppable.placeholder}
+            </div>
+          )}
+        </Droppable>
+      </DragDropContext>
+    );
+  }
+
+  // Canonical Overview layout — grid with TopMovers + Events side-by-side.
   return (
     <div className="space-y-5">
-      {showIndex && <MarketIndexCard index={index} pinProps={pinProps} />}
-      {(showMovers || showEvents) && (
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-          {showMovers && (
-            <div className={showEvents ? 'lg:col-span-2' : 'lg:col-span-3'}>
-              <TopMoversCard movers={movers} onDrillDown={onDrillDown} pinProps={pinProps} />
-            </div>
-          )}
-          {showEvents && (
-            <div className={showMovers ? '' : 'lg:col-span-3'}>
-              <EventsCard events={events} pinProps={pinProps} />
-            </div>
-          )}
+      {renderCard('market-index')}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+        <div className="lg:col-span-2">
+          {renderCard('top-movers')}
         </div>
-      )}
-      {showPeaks && <PeakIndicatorGrid peaks={peaks} onDrillDown={onDrillDown} pinProps={pinProps} />}
+        {renderCard('market-events')}
+      </div>
+      {renderCard('peak-indicators')}
     </div>
   );
 }

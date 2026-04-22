@@ -21,7 +21,7 @@ import { Button } from '@/components/ui/button';
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from '@/components/ui/popover';
-import usePageSettings from '@/hooks/usePageSettings';
+import useUserPreference from '@/hooks/useUserPreference';
 
 import OverviewDashboard from './OverviewDashboard';
 import TraitComboExplorer from './TraitComboExplorer';
@@ -62,19 +62,21 @@ export default function MarketAnalytics({ user }) {
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [drillCriteria, setDrillCriteria] = useState(null);
 
-  // Saved filter presets live in localStorage — per-browser rather than
-  // per-user since Market Analytics is a solo-operator tool. Shape:
+  // Saved filter presets. Signed-in users get cross-device sync via
+  // auth.users.user_metadata; guests fall back to localStorage. Shape:
   //   { saved: { [name]: filters }, active: name | null }
   // `active` clears the moment the user mutates filters, so the label
   // only reflects an unmodified preset.
-  const [presetState, setPresetState] = usePageSettings(
+  const [presetState, setPresetState] = useUserPreference(
+    user,
     'market_analytics_presets',
     { saved: {}, active: null }
   );
 
   // Pinned Overview cards. Stored separately from presets because they
   // track which KPIs the user wants to see at-a-glance, not filter state.
-  const [pinState, setPinState] = usePageSettings(
+  const [pinState, setPinState] = useUserPreference(
+    user,
     'market_analytics_pins',
     { ids: [] }
   );
@@ -91,6 +93,9 @@ export default function MarketAnalytics({ user }) {
         ? pinState.ids.filter((x) => x !== id)
         : [...pinState.ids, id],
     });
+  };
+  const reorderPins = (nextIds) => {
+    setPinState({ ids: nextIds });
   };
 
   const applyFilters = (next, activeName = null) => {
@@ -149,6 +154,7 @@ export default function MarketAnalytics({ user }) {
               pinnedCardIds={pinState.ids}
               onTogglePin={togglePin}
               filterCardIds={pinState.ids}
+              onReorderCards={reorderPins}
             />
           )
         )}
