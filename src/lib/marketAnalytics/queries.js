@@ -2,8 +2,12 @@
  * Market Analytics — Query Facade
  *
  * The ONLY interface visualization components use to fetch analytics
- * data. Every function is async so swapping the mock-fixtures backing
- * for a Supabase / Edge Function backend is a one-file change.
+ * data. Every exported query is async; data is loaded lazily from the
+ * remote snapshot (geck-data's /data/market.json) on first call, cached
+ * in memory, and transparently falls back to deterministic mock
+ * fixtures if the fetch fails (network error, CORS, 404, bad JSON,
+ * timeout). Views never need to know whether they're in live or
+ * preview mode — the shape is identical.
  *
  * Every returned aggregate includes:
  *   - the underlying `sample_size` (how many observations)
@@ -11,43 +15,25 @@
  *   - a `sources` array with the source_ids that contributed
  *   - a `__mock: true` marker when any fixtures were used
  *
- * This is deliberately mirror-shaped to what a real analytics DB would
- * return — views never need to know whether they're in mock or live mode.
+ * Call `getDataSource()` to ask whether the current data is 'live' or
+ * 'preview' (or null before first load). `ensureLoaded()` is exported
+ * for components that need to trigger / await the initial load.
  *
- * === LIVE DATA INTEGRATION (geck-data / geckintellect) =================
- * This facade is still on mock fixtures. To wire it up to the standalone
- * geck-data app (deployed at https://geckintellect.geckinspect.com), the
- * recommended pattern is a cached fetch of a published JSON snapshot:
- *
- *   async function loadSnapshot() {
- *     if (_cachedSnapshot && Date.now() - _cachedAt < 15 * 60_000) {
- *       return _cachedSnapshot;
- *     }
- *     const res = await fetch(
- *       'https://geckintellect.geckinspect.com/data/market.json',
- *       { cache: 'default' }
- *     );
- *     _cachedSnapshot = await res.json();
- *     _cachedAt = Date.now();
- *     return _cachedSnapshot;
+ * Expected snapshot schema (matches mockFixtures exactly):
+ *   {
+ *     version: 1,
+ *     generated_at: "ISO-8601 timestamp",
+ *     transactions: [{ id, combo_id, combo_name, traits, primary_morph,
+ *       region, age_class, lineage_tier, breeder_id, breeder_name, status,
+ *       ask_price, sold_price, time_on_market_days, date, source_id }, ...],
+ *     breeders: [{ id, name, tier, region, active_since, specialties }, ...],
+ *     supply_pipeline: [{ combo_id, combo_name, traits, active_pairs,
+ *       source_id, series: [{ month, label, projected_hatchlings }] }, ...],
+ *     demand_signals: {
+ *       "<morph name>": { morph, source_id, weekly: [{ week, searches, watchlist_adds }] }
+ *     },
+ *     market_events: [{ id, name, region, date, impact, kind, source_id }, ...]
  *   }
- *
- * Then each `query*` function awaits `loadSnapshot()` and filters/reduces
- * from there instead of calling `getTransactions()` / `getBreeders()` /
- * etc. from mockFixtures.js. Keep the return shape identical so none of
- * the visualization components need to change.
- *
- * Before making the swap, confirm with geck-data's owner:
- *   1. The snapshot URL and refresh cadence (daily? hourly?)
- *   2. The JSON schema matches what mockFixtures.js exposes — fields:
- *      transactions[], breeders[], supplyPipeline{}, demandSignals{},
- *      marketEvents[]
- *   3. CORS allows fetching from geckinspect.com
- *   4. Whether any observations need authenticated access (if yes, move
- *      the fetch behind a Supabase edge function that forwards the API
- *      key server-side instead of calling geck-data directly from the
- *      browser)
- * ========================================================================
  */
 
 import {
@@ -58,11 +44,102 @@ import { scoreConfidence, priceBand, peakScore, peakLabel, blendObservations } f
 import {
   getTransactions, getBreeders, getSupplyPipeline, getDemandSignals, getMarketEvents,
 } from './mockFixtures.js';
+import { MARKET_SNAPSHOT_URL } from '@/lib/constants';
+
+// ---------- Snapshot loader -------------------------------------------
+// Lazy, cached, timeout-bounded fetch of geck-data's market snapshot
+// with graceful fallback to mockFixtures on any failure. `_data` is
+// populated by ensureLoaded() before any query runs, then accessors
+// (tx, breeders, supply, demand, events) read from it synchronously.
+const SNAPSHOT_TIMEOUT_MS = 10_000;
+const SNAPSHOT_TTL_MS     = 15 * 60_000; // 15 min
+
+let _data = null;
+let _loadedAt = 0;
+let _loadPromise = null;
+let _dataSource = null; // null | 'live' | 'preview'
+let _generatedAt = null; // ISO-8601 timestamp if live snapshot provides it
+
+function buildFallbackData() {
+  return {
+    transactions:    getTransactions(),
+    breeders:        getBreeders(),
+    supply_pipeline: getSupplyPipeline(),
+    demand_signals:  getDemandSignals(),
+    market_events:   getMarketEvents(),
+  };
+}
+
+function coerceSnapshot(json) {
+  // Returns null if the snapshot doesn't have at minimum a
+  // transactions array. Any missing array/object fields get filled
+  // with empties so downstream accessors can't blow up.
+  if (!json || typeof json !== 'object' || !Array.isArray(json.transactions)) return null;
+  return {
+    transactions:    json.transactions,
+    breeders:        Array.isArray(json.breeders) ? json.breeders : [],
+    supply_pipeline: Array.isArray(json.supply_pipeline) ? json.supply_pipeline : [],
+    demand_signals:  (json.demand_signals && typeof json.demand_signals === 'object') ? json.demand_signals : {},
+    market_events:   Array.isArray(json.market_events) ? json.market_events : [],
+  };
+}
+
+export async function ensureLoaded() {
+  if (_data && Date.now() - _loadedAt < SNAPSHOT_TTL_MS) return _data;
+  if (_loadPromise) return _loadPromise;
+  _loadPromise = (async () => {
+    try {
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), SNAPSHOT_TIMEOUT_MS);
+      const res = await fetch(MARKET_SNAPSHOT_URL, {
+        cache: 'default',
+        credentials: 'omit',
+        signal: controller.signal,
+      });
+      clearTimeout(timeout);
+      if (!res.ok) throw new Error(`snapshot HTTP ${res.status}`);
+      const json = await res.json();
+      const coerced = coerceSnapshot(json);
+      if (!coerced) throw new Error('snapshot: missing transactions[]');
+      _data = coerced;
+      _dataSource = 'live';
+      _generatedAt = typeof json.generated_at === 'string' ? json.generated_at : null;
+    } catch {
+      // Silent fallback — any failure keeps the module working with
+      // preview data. No console noise (the banner tells the user).
+      _data = buildFallbackData();
+      _dataSource = 'preview';
+      _generatedAt = null;
+    }
+    _loadedAt = Date.now();
+    return _data;
+  })();
+  try {
+    return await _loadPromise;
+  } finally {
+    _loadPromise = null;
+  }
+}
+
+// Call to force a re-fetch on the next query (e.g. when the user
+// explicitly asks for fresh data). Not wired into the UI by default.
+export function invalidateSnapshot() {
+  _data = null;
+  _loadedAt = 0;
+  _dataSource = null;
+  _generatedAt = null;
+}
+
+export function getDataSource() { return _dataSource; }
+export function getSnapshotGeneratedAt() { return _generatedAt; }
 
 // ---------- Internal helpers ------------------------------------------
-const tx = () => getTransactions();
-const breeders = () => getBreeders();
-const brById = () => Object.fromEntries(breeders().map((b) => [b.id, b]));
+const tx       = () => _data?.transactions || [];
+const breeders = () => _data?.breeders     || [];
+const supply   = () => _data?.supply_pipeline || [];
+const demand   = () => _data?.demand_signals  || {};
+const events   = () => _data?.market_events   || [];
+const brById   = () => Object.fromEntries(breeders().map((b) => [b.id, b]));
 
 function timeframeMs(code) {
   const tf = TIMEFRAMES.find((t) => t.code === code) || TIMEFRAMES[3];
@@ -106,16 +183,17 @@ function filterTx({ combo_id, region, regions, source_id, sources, timeframe, st
   return out;
 }
 
-// Wrap a sync mock computation in a resolved Promise so callers can
-// simply `await` regardless of backend.
-const ok = (v) => Promise.resolve(v);
+// Identity — each exported query is already async, so plain return works.
+// Kept as a no-op wrapper for minimal churn in existing call sites.
+const ok = (v) => v;
 
 // ---------- Market Index ----------------------------------------------
 // A weighted basket of the high-value combos: a single number that
 // represents overall market health. Similar to Liv-ex 100 or StockX
 // Current Culture Index. Normalized so "1000" is the value at the
 // start of the timeframe.
-export function queryMarketIndex({ regions = [], timeframe = '12m' } = {}) {
+export async function queryMarketIndex({ regions = [], timeframe = '12m' } = {}) {
+  await ensureLoaded();
   const txAll = filterTx({ regions, timeframe, status: 'sold' });
   const months = monthKeysForTimeframe(timeframe);
   const byMonth = months.map((key) => {
@@ -157,7 +235,8 @@ function monthKeysForTimeframe(code) {
 // ---------- Top Movers -------------------------------------------------
 // For the overview: top N combos moving up and down, with 12-week
 // sparklines for each.
-export function queryTopMovers({ regions = [], timeframe = '90d', limit = 5 } = {}) {
+export async function queryTopMovers({ regions = [], timeframe = '90d', limit = 5 } = {}) {
+  await ensureLoaded();
   const combos = HIGH_VALUE_COMBOS.map((c) => {
     const soldRecent = filterTx({ combo_id: c.id, regions, timeframe, status: 'sold' });
     const soldPrior = filterTx({ combo_id: c.id, regions, status: 'sold' })
@@ -200,7 +279,8 @@ function buildSparkline(records, buckets) {
 }
 
 // ---------- Peak indicator per combo ---------------------------------
-export function queryPeakIndicators({ regions = [] } = {}) {
+export async function queryPeakIndicators({ regions = [] } = {}) {
+  await ensureLoaded();
   const out = HIGH_VALUE_COMBOS.map((c) => {
     const recent = filterTx({ combo_id: c.id, regions, timeframe: '90d', status: 'sold' });
     const older  = filterTx({ combo_id: c.id, regions, timeframe: '12m', status: 'sold' })
@@ -210,7 +290,7 @@ export function queryPeakIndicators({ regions = [] } = {}) {
     const priceMomentum = clamp(pct(recentAvg, olderAvg) / 30);          // +30% → +1
     const volumeMomentum = clamp(pct(recent.length, Math.max(1, older.length / 3)) / 50);
     // Supply pressure: use pipeline signal — normalized against a 50 baseline.
-    const pipe = getSupplyPipeline().find((p) => p.combo_id === c.id);
+    const pipe = supply().find((p) => p.combo_id === c.id);
     const upcoming = pipe ? pipe.series.slice(0, 3).reduce((s, m) => s + m.projected_hatchlings, 0) : 0;
     const supplyPressure = clamp((upcoming - 25) / 50);
     // Adoption breadth: how many distinct breeders produced this combo.
@@ -234,7 +314,8 @@ export function queryPeakIndicators({ regions = [] } = {}) {
 function clamp(v) { return Math.max(-1, Math.min(1, v)); }
 
 // ---------- Trait combos detail table --------------------------------
-export function queryTraitCombos({ regions = [], timeframe = '12m', age_class, lineage_tier, sources } = {}) {
+export async function queryTraitCombos({ regions = [], timeframe = '12m', age_class, lineage_tier, sources } = {}) {
+  await ensureLoaded();
   const out = HIGH_VALUE_COMBOS.map((c) => {
     const sold   = filterTx({ combo_id: c.id, regions, timeframe, status: 'sold',   age_class, lineage_tier, sources });
     const listed = filterTx({ combo_id: c.id, regions, timeframe, status: 'listed', age_class, lineage_tier, sources });
@@ -264,7 +345,8 @@ export function queryTraitCombos({ regions = [], timeframe = '12m', age_class, l
 }
 
 // ---------- Price history for one combo / region ---------------------
-export function queryPriceHistory({ combo_id, region, sources, timeframe = '12m' } = {}) {
+export async function queryPriceHistory({ combo_id, region, sources, timeframe = '12m' } = {}) {
+  await ensureLoaded();
   const records = filterTx({ combo_id, region, sources, timeframe });
   const months = monthKeysForTimeframe(timeframe);
   const series = months.map((key) => {
@@ -301,7 +383,8 @@ export function queryPriceHistory({ combo_id, region, sources, timeframe = '12m'
 }
 
 // ---------- Regional heatmap ------------------------------------------
-export function queryRegionalHeatmap({ timeframe = '12m', metric = 'median_sold' } = {}) {
+export async function queryRegionalHeatmap({ timeframe = '12m', metric = 'median_sold' } = {}) {
+  await ensureLoaded();
   const cells = [];
   HIGH_VALUE_COMBOS.forEach((c) => {
     REGIONS.forEach((r) => {
@@ -334,7 +417,8 @@ export function queryRegionalHeatmap({ timeframe = '12m', metric = 'median_sold'
 // then discount by the product of import_friction for both regions
 // (friction ~ risk). Only surface opportunities with meaningful sample
 // sizes on both sides.
-export function queryArbitrage({ timeframe = '6m', minSample = 4 } = {}) {
+export async function queryArbitrage({ timeframe = '6m', minSample = 4 } = {}) {
+  await ensureLoaded();
   const rows = [];
   HIGH_VALUE_COMBOS.forEach((c) => {
     const byRegion = REGIONS.map((r) => {
@@ -387,8 +471,9 @@ function estimateShipping(a, b) {
 }
 
 // ---------- Supply pipeline ------------------------------------------
-export function querySupplyPipeline({ combos } = {}) {
-  let data = getSupplyPipeline();
+export async function querySupplyPipeline({ combos } = {}) {
+  await ensureLoaded();
+  let data = supply();
   if (combos?.length) data = data.filter((d) => combos.includes(d.combo_id));
   // Attach a confidence based on active_pairs — more pairs logged = more
   // reliable forecast.
@@ -400,7 +485,8 @@ export function querySupplyPipeline({ combos } = {}) {
 }
 
 // ---------- Breeder market share / HHI --------------------------------
-export function queryBreederShare({ regions = [], timeframe = '12m' } = {}) {
+export async function queryBreederShare({ regions = [], timeframe = '12m' } = {}) {
+  await ensureLoaded();
   const records = filterTx({ regions, timeframe, status: 'sold' });
   const byBreeder = {};
   records.forEach((r) => {
@@ -433,9 +519,10 @@ export function queryBreederShare({ regions = [], timeframe = '12m' } = {}) {
 }
 
 // ---------- Transactions drilldown ------------------------------------
-export function queryTransactions({
+export async function queryTransactions({
   combo_id, region, regions, sources, timeframe, age_class, lineage_tier, limit = 50,
 } = {}) {
+  await ensureLoaded();
   const rows = filterTx({ combo_id, region, regions, sources, timeframe, age_class, lineage_tier })
     .sort((a, b) => b.date.localeCompare(a.date))
     .slice(0, limit);
@@ -443,8 +530,9 @@ export function queryTransactions({
 }
 
 // ---------- Demand signals --------------------------------------------
-export function queryDemandVelocity({ morphs } = {}) {
-  const all = getDemandSignals();
+export async function queryDemandVelocity({ morphs } = {}) {
+  await ensureLoaded();
+  const all = demand();
   const list = morphs?.length ? morphs.map((m) => all[m]).filter(Boolean) : Object.values(all);
   return ok(list.map((r) => ({
     ...r,
@@ -459,7 +547,10 @@ export function queryDemandVelocity({ morphs } = {}) {
 }
 
 // ---------- Market events (expo calendar, breeder releases) ----------
-export function queryMarketEvents() { return ok(getMarketEvents()); }
+export async function queryMarketEvents() {
+  await ensureLoaded();
+  return ok(events());
+}
 
 // ---------- Taxonomy passthrough (handy for UI selectors) ------------
 export function getAllCombos()    { return HIGH_VALUE_COMBOS; }
@@ -473,7 +564,8 @@ export function getAllTimeframes(){ return TIMEFRAMES; }
 // A demonstrative helper showing the blend: given the raw-source means
 // for one combo in one region, produce a blended price with full
 // contribution metadata.
-export function blendedHeadline({ combo_id, region }) {
+export async function blendedHeadline({ combo_id, region }) {
+  await ensureLoaded();
   const records = filterTx({ combo_id, region, timeframe: '12m', status: 'sold' });
   const bySource = {};
   records.forEach((r) => {

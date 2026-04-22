@@ -10,13 +10,15 @@
  * the same "preview data" banner and the single "view plans" CTA.
  */
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
   AlertCircle, LayoutDashboard, Layers, Map as MapIcon, Radar,
   Sprout, Users, Lock, ArrowRight, Settings2, X, Bookmark, Plus, Pin,
+  CheckCircle2,
 } from 'lucide-react';
+import { ensureLoaded, getDataSource, getSnapshotGeneratedAt } from '@/lib/marketAnalytics/queries';
 import { Button } from '@/components/ui/button';
 import {
   Popover, PopoverContent, PopoverTrigger,
@@ -204,15 +206,59 @@ function EnterpriseBanner() {
   );
 }
 function PreviewDataBanner() {
+  // null = still loading; 'live' = remote snapshot loaded; 'preview' = fell back to mocks
+  const [source, setSource] = useState(getDataSource());
+  const [generatedAt, setGeneratedAt] = useState(getSnapshotGeneratedAt());
+
+  useEffect(() => {
+    let mounted = true;
+    ensureLoaded().then(() => {
+      if (!mounted) return;
+      setSource(getDataSource());
+      setGeneratedAt(getSnapshotGeneratedAt());
+    });
+    return () => { mounted = false; };
+  }, []);
+
+  if (source === 'live') {
+    return (
+      <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/5 p-2.5 flex items-start gap-2">
+        <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0 mt-0.5" />
+        <p className="text-[11px] text-slate-400 leading-relaxed">
+          <span className="text-emerald-300 font-semibold">Live data.</span>{' '}
+          Pulled from the Market Intelligence snapshot
+          {generatedAt ? ` · generated ${formatGeneratedAt(generatedAt)}` : ''}.
+          Click any source badge to see where a specific figure came from.
+        </p>
+      </div>
+    );
+  }
+
+  // Default banner — shown while loading AND when we fall back to mocks.
   return (
     <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-2.5 flex items-start gap-2">
       <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
       <p className="text-[11px] text-slate-400 leading-relaxed">
         <span className="text-amber-300 font-semibold">Preview data.</span>{' '}
-        Every number is tagged with its source; click any badge to see where it came from. Fixtures are deterministic, so the same filter always returns the same numbers — when real pipelines connect, values will update and confidence will rise.
+        Every number is tagged with its source; click any badge to see where it came from. Fixtures are deterministic, so the same filter always returns the same numbers — when the Market Intelligence snapshot is available, values will update automatically and this banner turns green.
       </p>
     </div>
   );
+}
+
+function formatGeneratedAt(iso) {
+  try {
+    const d = new Date(iso);
+    const diffMs = Date.now() - d.getTime();
+    const mins = Math.round(diffMs / 60_000);
+    if (mins < 2) return 'just now';
+    if (mins < 60) return `${mins} min ago`;
+    const hours = Math.round(mins / 60);
+    if (hours < 48) return `${hours}h ago`;
+    return d.toLocaleDateString('en', { month: 'short', day: 'numeric', year: 'numeric' });
+  } catch {
+    return 'recently';
+  }
 }
 
 // ============ Filter Bar =============================================
