@@ -4,6 +4,7 @@ import { UploadFile } from '@/integrations/Core';
 import { useToast } from "@/components/ui/use-toast";
 import usePageSettings from '@/hooks/usePageSettings';
 import IdLogicSettings, { DEFAULT_ID_SETTINGS } from '@/components/settings/IdLogicSettings';
+import PushNotificationsCard from '@/components/settings/PushNotificationsCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -147,6 +148,8 @@ const initialFormData = {
     business_address: '',
     email_notifications_enabled: true,
     email_notification_types: ['level_up', 'expert_status', 'new_message', 'new_follower', 'following_activity', 'gecko_of_day', 'forum_replies', 'breeding_updates', 'announcements'],
+    push_notifications_enabled: false,
+    push_notification_types: ['new_message', 'marketplace_inquiry', 'hatch_alert', 'feeding_due', 'new_comment', 'new_reply', 'announcement'],
     calendar_alerts_enabled: true,
     calendar_alert_types: ['egg_lay_estimate', 'hatch_estimate', 'breeding_reminders', 'weight_check_reminders'],
     feeding_alerts_enabled: true,
@@ -163,6 +166,9 @@ const initialFormData = {
     store_policy: '',
 };
 
+// Email preference keys — legacy grouping-keys that predate the push
+// work. Keeping them stable so existing users don't get their
+// preferences silently reset.
 const notificationTypes = [
     { key: 'level_up', label: 'Level Up & Achievements', description: 'When you earn new badges or reach milestones' },
     { key: 'expert_status', label: 'Expert Status Updates', description: 'Changes to your expert verification status' },
@@ -173,6 +179,30 @@ const notificationTypes = [
     { key: 'forum_replies', label: 'Forum Activity', description: 'Replies to your forum posts and comments' },
     { key: 'breeding_updates', label: 'Breeding Updates', description: 'Updates about your breeding plans and outcomes' },
     { key: 'announcements', label: 'Platform Announcements', description: 'Important news and feature updates' }
+];
+
+// Push preference keys — these match the actual `Notification.type`
+// enum values stored in the notifications table (see
+// src/components/notifications/NotificationService.jsx call sites),
+// because the send-push edge function filters by that exact string.
+// New hatch/feeding types are declared here first; phase 5 wires
+// the producers that emit them.
+const pushNotificationTypes = [
+    { key: 'new_message', label: 'New Messages', description: 'Direct messages from other users' },
+    { key: 'marketplace_inquiry', label: 'Marketplace Inquiries', description: 'When someone asks about one of your listings' },
+    { key: 'hatch_alert', label: 'Hatch Alerts', description: 'When eggs in your incubator reach their hatch window' },
+    { key: 'feeding_due', label: 'Feeding Reminders', description: 'When a feeding group or reptile is overdue for feeding' },
+    { key: 'new_comment', label: 'Comments on Your Posts', description: 'Comments on your forum posts' },
+    { key: 'new_reply', label: 'Replies to You', description: 'Replies to your comments' },
+    { key: 'new_follower', label: 'New Followers', description: 'When someone starts following you' },
+    { key: 'new_gecko_listing', label: 'Following Activity — New Listings', description: 'When breeders you follow list new geckos' },
+    { key: 'new_breeding_plan', label: 'Following Activity — New Plans', description: 'When breeders you follow publish new breeding plans' },
+    { key: 'future_breeding_ready', label: 'Breeding Window Ready', description: 'When one of your future breeding plans enters its pairing window' },
+    { key: 'gecko_of_the_day', label: 'Gecko of the Day', description: 'When your gecko is featured' },
+    { key: 'level_up', label: 'Level Up & Achievements', description: 'New badges or milestones' },
+    { key: 'expert_status', label: 'Expert Status', description: 'Changes to your expert verification' },
+    { key: 'submission_approved', label: 'Morph Submissions', description: 'When your morph submission is approved' },
+    { key: 'announcement', label: 'Platform Announcements', description: 'Important news and feature updates' }
 ];
 
 const calendarAlertTypes = [
@@ -225,6 +255,8 @@ export default function SettingsPage() {
                         business_address: currentUser.business_address || '',
                         email_notifications_enabled: currentUser.email_notifications_enabled !== false,
                         email_notification_types: currentUser.email_notification_types || ['level_up', 'expert_status', 'new_message', 'new_follower', 'following_activity', 'gecko_of_day', 'forum_replies', 'breeding_updates', 'announcements'],
+                        push_notifications_enabled: currentUser.push_notifications_enabled === true,
+                        push_notification_types: currentUser.push_notification_types || ['new_message', 'marketplace_inquiry', 'hatch_alert', 'feeding_due', 'new_comment', 'new_reply', 'announcement'],
                         calendar_alerts_enabled: currentUser.calendar_alerts_enabled !== false,
                         calendar_alert_types: currentUser.calendar_alert_types || ['egg_lay_estimate', 'hatch_estimate', 'breeding_reminders', 'weight_check_reminders'],
                         feeding_alerts_enabled: currentUser.feeding_alerts_enabled !== false,
@@ -656,6 +688,17 @@ export default function SettingsPage() {
                     </CardContent>
                 </Card>
                 </section>
+
+                <PushNotificationsCard
+                    pushEnabled={formData.push_notifications_enabled}
+                    pushTypes={formData.push_notification_types}
+                    onToggleEnabled={(checked) => handleChange('push_notifications_enabled', checked)}
+                    onToggleType={(key) => toggleArrayItem('push_notification_types', key)}
+                    notificationTypes={pushNotificationTypes}
+                    userEmail={user?.email}
+                    renderSwitch={renderSwitch}
+                    renderNotificationSwitch={renderNotificationSwitch}
+                />
 
                 <section id="calendar-alerts">
                 <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
