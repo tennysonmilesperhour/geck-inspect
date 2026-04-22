@@ -1,8 +1,28 @@
 import { useState, useEffect } from 'react';
-import { FeedingGroup, OtherReptile } from '@/entities/all';
+import { FeedingGroup, OtherReptile, Notification } from '@/entities/all';
 import { Button } from '@/components/ui/button';
 import { X, CheckCircle2, Clock } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+
+// Dedup window: fire at most one push/email per entity per day. The
+// 5-minute polling loop would otherwise create 288 notifications a day
+// for a single overdue reptile. Key: geck_fed_notified_<alertId> →
+// ISO timestamp of last firing.
+const NOTIFY_DEDUP_HOURS = 24;
+function shouldNotify(alertId) {
+  try {
+    const key = `geck_fed_notified_${alertId}`;
+    const last = localStorage.getItem(key);
+    if (!last) return true;
+    const elapsedHours = (Date.now() - new Date(last).getTime()) / 36e5;
+    return elapsedHours >= NOTIFY_DEDUP_HOURS;
+  } catch { return true; }
+}
+function markNotified(alertId) {
+  try {
+    localStorage.setItem(`geck_fed_notified_${alertId}`, new Date().toISOString());
+  } catch {}
+}
 
 export default function FeedingAlertSystem({ user, enabled }) {
   const [alerts, setAlerts] = useState([]);
@@ -91,6 +111,35 @@ export default function FeedingAlertSystem({ user, enabled }) {
         });
 
         setAlerts(newAlerts);
+
+        // For every alert we haven't already pinged the user about in
+        // the last 24 hours, create a `feeding_due` notification row.
+        // The DB trigger fans out to push + email subject to the
+        // user's per-type preferences in Settings → Notifications.
+        for (const a of newAlerts) {
+          if (!shouldNotify(a.id)) continue;
+          const linkPath = a.type === 'feedingGroup'
+            ? '/BatchHusbandry'
+            : '/OtherReptiles';
+          try {
+            await Notification.create({
+              user_email: user.email,
+              type: 'feeding_due',
+              content: `${a.name} is ${a.daysOverdue} day${a.daysOverdue !== 1 ? 's' : ''} overdue for feeding`,
+              link: linkPath,
+              metadata: {
+                entity_type: a.type,
+                entity_id: a.entityId,
+                days_overdue: a.daysOverdue,
+              },
+              is_read: false,
+            });
+            markNotified(a.id);
+          } catch (err) {
+            // Don't break the toast UI if notification creation fails.
+            console.warn('feeding_due notification failed:', err);
+          }
+        }
       } catch (error) {
         console.error('Failed to load feeding alerts:', error);
       }
