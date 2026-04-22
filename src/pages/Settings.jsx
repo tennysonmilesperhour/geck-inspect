@@ -11,8 +11,16 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Settings, Upload, Save, Globe, Eye, X, Plus, Camera, Mail, Calendar, Loader2, Search, Trash2, AlertTriangle, ArrowUpDown, Clock, Crown
+  Settings, Upload, Save, Globe, Eye, X, Plus, Camera, Mail, Calendar, Loader2, Search, Trash2, AlertTriangle, ArrowUpDown, Clock, Crown, Bell, Smartphone
 } from 'lucide-react';
+import {
+  isPushSupported,
+  getPushPermissionState,
+  getExistingSubscription,
+  subscribeToPush,
+  unsubscribeFromPush,
+  isIOSStandalone,
+} from '@/lib/pushNotifications';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -101,6 +109,7 @@ const initialFormData = {
     calendar_alerts_enabled: true,
     calendar_alert_types: ['egg_lay_estimate', 'hatch_estimate', 'breeding_reminders', 'weight_check_reminders'],
     feeding_alerts_enabled: true,
+    push_notifications_enabled: true,
     palm_street_sync_enabled: false,
     email_on_new_follower: true,
     email_on_new_message: true,
@@ -138,6 +147,10 @@ export default function SettingsPage() {
     const [formData, setFormData] = useState(initialFormData);
     const [isSaving, setIsSaving] = useState(false);
     const [newSpecialty, setNewSpecialty] = useState('');
+    const [pushSupported, setPushSupported] = useState(false);
+    const [pushPermission, setPushPermission] = useState('default');
+    const [pushSubscribed, setPushSubscribed] = useState(false);
+    const [pushLoading, setPushLoading] = useState(false);
     const { toast } = useToast();
 
     useEffect(() => {
@@ -177,6 +190,7 @@ export default function SettingsPage() {
                         calendar_alerts_enabled: currentUser.calendar_alerts_enabled !== false,
                         calendar_alert_types: currentUser.calendar_alert_types || ['egg_lay_estimate', 'hatch_estimate', 'breeding_reminders', 'weight_check_reminders'],
                         feeding_alerts_enabled: currentUser.feeding_alerts_enabled !== false,
+                        push_notifications_enabled: currentUser.push_notifications_enabled !== false,
                         palm_street_sync_enabled: currentUser.palm_street_sync_enabled || false,
                         email_on_new_follower: currentUser.email_on_new_follower !== false, // Default true
                         email_on_new_message: currentUser.email_on_new_message !== false, // Default true
@@ -197,6 +211,47 @@ export default function SettingsPage() {
         };
         loadData();
     }, [toast]);
+
+    useEffect(() => {
+        const checkPush = async () => {
+            const supported = isPushSupported();
+            setPushSupported(supported);
+            if (supported) {
+                setPushPermission(getPushPermissionState());
+                const sub = await getExistingSubscription();
+                setPushSubscribed(!!sub);
+            }
+        };
+        checkPush();
+    }, []);
+
+    const handlePushToggle = async (enabled) => {
+        if (!user) return;
+        setPushLoading(true);
+        try {
+            if (enabled) {
+                await subscribeToPush(user.email);
+                setPushSubscribed(true);
+                setPushPermission('granted');
+                handleChange('push_notifications_enabled', true);
+                toast({ title: 'Push notifications enabled', description: 'You will now receive push notifications on this device.' });
+            } else {
+                await unsubscribeFromPush(user.email);
+                setPushSubscribed(false);
+                handleChange('push_notifications_enabled', false);
+                toast({ title: 'Push notifications disabled' });
+            }
+        } catch (e) {
+            console.error('Push toggle failed:', e);
+            if (e.message?.includes('denied')) {
+                setPushPermission('denied');
+                toast({ title: 'Permission denied', description: 'You blocked notifications. Reset in your browser settings.', variant: 'destructive' });
+            } else {
+                toast({ title: 'Error', description: e.message || 'Could not update push settings.', variant: 'destructive' });
+            }
+        }
+        setPushLoading(false);
+    };
 
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
@@ -321,6 +376,7 @@ export default function SettingsPage() {
         ...((user?.membership_tier === 'breeder' || user?.subscription_status === 'grandfathered')
             ? [{ id: 'breeder-perks', label: 'Breeder Perks' }]
             : []),
+        { id: 'push-notifications', label: 'Push' },
         { id: 'email-notifications', label: 'Email' },
         { id: 'calendar-alerts', label: 'Calendar' },
         { id: 'feeding-alerts', label: 'Feeding Alerts' },
@@ -538,6 +594,97 @@ export default function SettingsPage() {
                     </Card>
                 </section>
                 )}
+
+                <section id="push-notifications">
+                <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+                    <CardHeader>
+                        <CardTitle className="text-slate-100 flex items-center gap-2">
+                            <Smartphone className="w-5 h-5"/>
+                            Push Notifications
+                        </CardTitle>
+                        <CardDescription className="text-slate-400">
+                            Get notified on your device even when the app isn't open — feeding reminders, hatch alerts, messages, and more.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                        {(() => {
+                            const { isIOS, isStandalone } = isIOSStandalone();
+
+                            if (!pushSupported) {
+                                return (
+                                    <div className="rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                                        <p className="text-sm text-slate-400">
+                                            Push notifications are not supported in this browser.
+                                            {isIOS && ' On iOS, add this app to your Home Screen first, then enable notifications.'}
+                                        </p>
+                                    </div>
+                                );
+                            }
+
+                            if (isIOS && !isStandalone) {
+                                return (
+                                    <div className="rounded-lg border border-amber-500/30 bg-amber-900/10 p-4 space-y-2">
+                                        <p className="text-sm font-medium text-amber-200 flex items-center gap-2">
+                                            <Bell className="w-4 h-4" />
+                                            Add to Home Screen required
+                                        </p>
+                                        <p className="text-sm text-slate-400">
+                                            To receive push notifications on iOS, tap the <strong>Share</strong> button in Safari, then select <strong>"Add to Home Screen"</strong>. Open the app from there to enable push.
+                                        </p>
+                                    </div>
+                                );
+                            }
+
+                            if (pushPermission === 'denied') {
+                                return (
+                                    <div className="rounded-lg border border-rose-500/30 bg-rose-900/10 p-4 space-y-2">
+                                        <p className="text-sm font-medium text-rose-300 flex items-center gap-2">
+                                            <AlertTriangle className="w-4 h-4" />
+                                            Notifications blocked
+                                        </p>
+                                        <p className="text-sm text-slate-400">
+                                            You previously denied notification permissions. To re-enable, open your browser's site settings and allow notifications for this site, then reload the page.
+                                        </p>
+                                    </div>
+                                );
+                            }
+
+                            return (
+                                <div className="space-y-4">
+                                    <div className="flex items-center justify-between gap-4 rounded-lg border border-slate-700 bg-slate-800/50 p-4">
+                                        <div className="flex-1 min-w-0">
+                                            <Label htmlFor="push-toggle" className="text-slate-200 font-semibold text-sm">
+                                                Enable Push Notifications
+                                            </Label>
+                                            <p className="text-sm text-slate-400 mt-0.5">
+                                                Receive push alerts on this device for feeding reminders, hatch dates, messages, and more.
+                                            </p>
+                                        </div>
+                                        <div className="flex items-center gap-3 shrink-0">
+                                            {pushLoading && <Loader2 className="w-4 h-4 animate-spin text-emerald-400" />}
+                                            <Switch
+                                                id="push-toggle"
+                                                checked={pushSubscribed && formData.push_notifications_enabled}
+                                                onCheckedChange={handlePushToggle}
+                                                disabled={pushLoading}
+                                                className="data-[state=checked]:bg-emerald-500"
+                                            />
+                                            <Label htmlFor="push-toggle" className={`font-semibold text-sm ${pushSubscribed && formData.push_notifications_enabled ? 'text-emerald-400' : 'text-slate-500'}`}>
+                                                {pushSubscribed && formData.push_notifications_enabled ? 'On' : 'Off'}
+                                            </Label>
+                                        </div>
+                                    </div>
+                                    {pushSubscribed && formData.push_notifications_enabled && (
+                                        <p className="text-xs text-slate-500">
+                                            Push notifications are active on this device. To receive them on another device, open Settings on that device and enable push there too.
+                                        </p>
+                                    )}
+                                </div>
+                            );
+                        })()}
+                    </CardContent>
+                </Card>
+                </section>
 
                 <section id="email-notifications">
                 <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">

@@ -1,0 +1,28 @@
+{
+  "name": "Geck Inspect",
+  "short_name": "Geck Inspect",
+  "description": "Crested Gecko Collection, Breeding & Community Platform",
+  "start_url": "/Dashboard",
+  "display": "standalone",
+  "background_color": "#0a0f0a",
+  "theme_color": "#064e3b",
+  "orientation": "any",
+  "icons": [
+    {
+      "src": "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "https://qtrypzzcjebvfcihiynt.supabase.co/storage/v1/object/public/base44-prod/public/68929cdad944c572926ab6cb/2ba53d481_Inspect.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
