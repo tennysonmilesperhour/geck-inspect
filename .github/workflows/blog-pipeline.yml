@@ -179,9 +179,10 @@ jobs:
           node-version: '20'
       - name: Derive slug from merged branch
         id: slug
+        env:
+          BRANCH: ${{ github.event.pull_request.head.ref }}
         run: |
           # Head branch is blog-draft/<slug>-YYYYMMDD; strip prefix + date
-          BRANCH="${{ github.event.pull_request.head.ref }}"
           BARE="${BRANCH#blog-draft/}"
           SLUG="${BARE%-*}"
           echo "slug=$SLUG" >> "$GITHUB_OUTPUT"
