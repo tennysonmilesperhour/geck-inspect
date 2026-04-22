@@ -8,6 +8,8 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { useAuth } from "@/lib/AuthContext";
+import { subscribeToPush } from "@/lib/webPush";
 
 const DISMISSED_KEY = "geck_install_prompt_dismissed";
 
@@ -55,12 +57,14 @@ const notificationsSupported = () =>
  * can be dismissed independently.
  */
 export default function InstallAppButton() {
+  const { user } = useAuth();
   const [deferredPrompt, setDeferredPrompt] = useState(null);
   const [platform, setPlatform] = useState("other");
   const [installed, setInstalled] = useState(false);
   const [dismissed, setDismissed] = useState(false);
   const [showIosHelp, setShowIosHelp] = useState(false);
   const [showNotifHelp, setShowNotifHelp] = useState(false);
+  const [isSubscribing, setIsSubscribing] = useState(false);
   const [permission, setPermission] = useState(
     typeof Notification !== "undefined" ? Notification.permission : "default"
   );
@@ -135,26 +139,31 @@ export default function InstallAppButton() {
       setShowNotifHelp(true);
       return;
     }
+    if (isSubscribing) return;
+    setIsSubscribing(true);
     // Apple requires the permission call to happen in a user-gesture
     // handler (this click). Don't await anything async before it.
     try {
       const result = await Notification.requestPermission();
       setPermission(result);
-      if (result === "granted") {
-        // Touch the service worker so it's guaranteed ready when the
-        // later "subscribe to push" flow runs. Actual subscription
-        // storage is wired in the next phase.
-        try {
-          const reg = await navigator.serviceWorker.ready;
-          // eslint-disable-next-line no-unused-vars
-          const _ = reg; // keep reference live for Safari's iOS quirk
-        } catch {}
-      } else if (result === "denied") {
-        setShowNotifHelp(true);
+      if (result !== "granted") {
+        if (result === "denied") setShowNotifHelp(true);
+        return;
+      }
+      // Permission granted — subscribe the device with the push service
+      // and persist the resulting keys to Supabase. subscribeToPush is
+      // idempotent, so re-runs on the same device just upsert.
+      if (user?.email) {
+        const res = await subscribeToPush(user.email);
+        if (!res.ok && res.reason !== "no-vapid-key") {
+          console.warn("[push] subscribe failed:", res);
+        }
       }
     } catch (err) {
       console.warn("Notification permission request failed:", err);
       setShowNotifHelp(true);
+    } finally {
+      setIsSubscribing(false);
     }
   };
 
