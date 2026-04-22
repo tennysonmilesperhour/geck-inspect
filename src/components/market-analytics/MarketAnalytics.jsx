@@ -15,7 +15,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
   AlertCircle, LayoutDashboard, Layers, Map as MapIcon, Radar,
-  Sprout, Users, Lock, ArrowRight, Settings2, X, Bookmark, Plus,
+  Sprout, Users, Lock, ArrowRight, Settings2, X, Bookmark, Plus, Pin,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
@@ -37,6 +37,7 @@ import {
 import { DATA_SOURCES, SOURCE_KINDS } from '@/lib/marketAnalytics/sources';
 
 const SUB_NAV = [
+  { key: 'pinned',     label: 'Pinned',      icon: Pin },
   { key: 'overview',   label: 'Overview',    icon: LayoutDashboard },
   { key: 'combos',     label: 'Combos',      icon: Layers },
   { key: 'regional',   label: 'Regional',    icon: MapIcon },
@@ -58,7 +59,6 @@ export default function MarketAnalytics({ user }) {
   const isAdmin = user?.role === 'admin';
   const hasAccess = tier === 'enterprise' || isAdmin;
 
-  const [section, setSection] = useState('overview');
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [drillCriteria, setDrillCriteria] = useState(null);
 
@@ -71,6 +71,27 @@ export default function MarketAnalytics({ user }) {
     'market_analytics_presets',
     { saved: {}, active: null }
   );
+
+  // Pinned Overview cards. Stored separately from presets because they
+  // track which KPIs the user wants to see at-a-glance, not filter state.
+  const [pinState, setPinState] = usePageSettings(
+    'market_analytics_pins',
+    { ids: [] }
+  );
+
+  // Default to the Pinned tab if the user has any pins; otherwise the
+  // Overview is the better first view. Resolved once at mount so the
+  // section is stable as the user pins/unpins afterwards.
+  const [section, setSection] = useState(
+    () => (pinState.ids.length > 0 ? 'pinned' : 'overview')
+  );
+  const togglePin = (id) => {
+    setPinState({
+      ids: pinState.ids.includes(id)
+        ? pinState.ids.filter((x) => x !== id)
+        : [...pinState.ids, id],
+    });
+  };
 
   const applyFilters = (next, activeName = null) => {
     setFilters(next);
@@ -115,10 +136,30 @@ export default function MarketAnalytics({ user }) {
         onDeletePreset={deletePreset}
       />
 
-      <SubNav section={section} setSection={setSection} />
+      <SubNav section={section} setSection={setSection} pinnedCount={pinState.ids.length} />
 
       <div>
-        {section === 'overview'  && <OverviewDashboard filters={filters}    onDrillDown={openDrill} />}
+        {section === 'pinned'    && (
+          pinState.ids.length === 0 ? (
+            <PinnedEmptyState onGoToOverview={() => setSection('overview')} />
+          ) : (
+            <OverviewDashboard
+              filters={filters}
+              onDrillDown={openDrill}
+              pinnedCardIds={pinState.ids}
+              onTogglePin={togglePin}
+              filterCardIds={pinState.ids}
+            />
+          )
+        )}
+        {section === 'overview'  && (
+          <OverviewDashboard
+            filters={filters}
+            onDrillDown={openDrill}
+            pinnedCardIds={pinState.ids}
+            onTogglePin={togglePin}
+          />
+        )}
         {section === 'combos'    && <TraitComboExplorer filters={filters}   onDrillDown={openDrill} />}
         {section === 'regional'  && <RegionalHeatmap filters={filters}      onDrillDown={openDrill} />}
         {section === 'arbitrage' && <ArbitrageRadar filters={filters}       onDrillDown={openDrill} />}
@@ -437,12 +478,13 @@ function FilterDivider() {
 }
 
 // ============ Sub-nav ================================================
-function SubNav({ section, setSection }) {
+function SubNav({ section, setSection, pinnedCount = 0 }) {
   return (
     <div className="flex flex-wrap gap-1 rounded-lg border border-slate-800 bg-slate-900/60 p-1">
       {SUB_NAV.map((s) => {
         const Icon = s.icon;
         const on = section === s.key;
+        const showCount = s.key === 'pinned' && pinnedCount > 0;
         return (
           <button
             key={s.key}
@@ -452,10 +494,36 @@ function SubNav({ section, setSection }) {
                  : 'text-slate-300 hover:bg-slate-800 border border-transparent'
             }`}
           >
-            <Icon className="w-3.5 h-3.5" />{s.label}
+            <Icon className="w-3.5 h-3.5" />
+            {s.label}
+            {showCount && (
+              <span className="ml-0.5 text-[10px] bg-emerald-500/20 text-emerald-200 rounded px-1 py-0.5 tabular-nums">
+                {pinnedCount}
+              </span>
+            )}
           </button>
         );
       })}
+    </div>
+  );
+}
+
+function PinnedEmptyState({ onGoToOverview }) {
+  return (
+    <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/40 p-8 text-center">
+      <Pin className="w-6 h-6 text-slate-600 mx-auto mb-2" />
+      <h3 className="text-sm font-semibold text-slate-200 mb-1">No pinned cards yet</h3>
+      <p className="text-xs text-slate-500 max-w-md mx-auto mb-3">
+        Pin cards from the Overview tab to build your own at-a-glance dashboard.
+        Your pins are saved per browser and persist across sessions.
+      </p>
+      <Button
+        size="sm"
+        onClick={onGoToOverview}
+        className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold"
+      >
+        Go to Overview <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+      </Button>
     </div>
   );
 }

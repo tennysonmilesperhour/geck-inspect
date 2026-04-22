@@ -14,7 +14,12 @@ export const APP_LOGO_URL = 'https://geckinspect.com/logo.png';
 // subdomain so it deploys independently. The topbar launcher opens this
 // in a new tab; the in-app Business Tools Market Analytics module is the
 // "quick look" counterpart.
-export const MARKET_INTELLIGENCE_URL = 'https://geckintellect.geckinspect.com';
+//
+// Override per environment with VITE_MARKET_INTEL_URL (e.g. point
+// previews at a staging geck-data deployment). Falls back to the prod
+// subdomain when unset.
+export const MARKET_INTELLIGENCE_URL =
+  import.meta.env.VITE_MARKET_INTEL_URL || 'https://geckintellect.geckinspect.com';
 
 export const DEFAULT_GECKO_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
 

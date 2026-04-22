@@ -10,6 +10,10 @@
  *
  * Every number is drilled into by clicking — via the `onDrillDown`
  * callback that opens the TransactionDrilldown modal in the container.
+ *
+ * Cards here are pinnable — pass `pinnedCardIds` (array) + `onTogglePin`
+ * (function(id)) to enable the pin UI. When `filterCardIds` is provided,
+ * only cards whose id is in the set render (used by the "Pinned" tab).
  */
 
 import { useEffect, useState } from 'react';
@@ -19,6 +23,7 @@ import {
 } from 'recharts';
 import {
   Activity, TrendingUp, TrendingDown, Gauge, CalendarDays, ArrowUpRight,
+  Pin, PinOff,
 } from 'lucide-react';
 import {
   queryMarketIndex, queryTopMovers, queryPeakIndicators, queryMarketEvents,
@@ -29,7 +34,44 @@ import {
 } from './shared';
 import { peakLabel } from '@/lib/marketAnalytics/confidence';
 
-export default function OverviewDashboard({ filters, onDrillDown }) {
+// Canonical list of pinnable cards on this dashboard. The Pinned tab
+// filters by these IDs, so the order here is the order cards appear in
+// the Pinned view.
+export const PINNABLE_OVERVIEW_CARDS = [
+  { id: 'market-index',  label: 'Market Index' },
+  { id: 'top-movers',    label: 'Top Movers' },
+  { id: 'market-events', label: 'Market Calendar' },
+  { id: 'peak-indicators', label: 'Peak Indicators' },
+];
+
+function PinToggle({ id, pinnedIds, onTogglePin }) {
+  if (!onTogglePin) return null;
+  const isPinned = pinnedIds?.includes(id);
+  const Icon = isPinned ? PinOff : Pin;
+  return (
+    <button
+      type="button"
+      onClick={(e) => { e.stopPropagation(); onTogglePin(id); }}
+      className={`inline-flex items-center justify-center w-6 h-6 rounded transition-colors ${
+        isPinned
+          ? 'text-emerald-300 hover:bg-emerald-500/10'
+          : 'text-slate-500 hover:text-slate-200 hover:bg-slate-800'
+      }`}
+      aria-label={isPinned ? 'Unpin from dashboard' : 'Pin to dashboard'}
+      title={isPinned ? 'Unpin from Pinned dashboard' : 'Pin to Pinned dashboard'}
+    >
+      <Icon className="w-3.5 h-3.5" />
+    </button>
+  );
+}
+
+export default function OverviewDashboard({
+  filters,
+  onDrillDown,
+  pinnedCardIds = [],
+  onTogglePin,
+  filterCardIds,  // when set, only render cards whose id is in this array
+}) {
   const [index, setIndex] = useState(null);
   const [movers, setMovers] = useState({ up: [], down: [] });
   const [peaks, setPeaks] = useState([]);
@@ -49,22 +91,38 @@ export default function OverviewDashboard({ filters, onDrillDown }) {
     return () => { mounted = false; };
   }, [filters.regions, filters.timeframe]);
 
+  const show = (id) => !filterCardIds || filterCardIds.includes(id);
+  const pinProps = { pinnedIds: pinnedCardIds, onTogglePin };
+
+  const showIndex = show('market-index');
+  const showMovers = show('top-movers');
+  const showEvents = show('market-events');
+  const showPeaks = show('peak-indicators');
+
   return (
     <div className="space-y-5">
-      <MarketIndexCard index={index} />
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="lg:col-span-2">
-          <TopMoversCard movers={movers} onDrillDown={onDrillDown} />
+      {showIndex && <MarketIndexCard index={index} pinProps={pinProps} />}
+      {(showMovers || showEvents) && (
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          {showMovers && (
+            <div className={showEvents ? 'lg:col-span-2' : 'lg:col-span-3'}>
+              <TopMoversCard movers={movers} onDrillDown={onDrillDown} pinProps={pinProps} />
+            </div>
+          )}
+          {showEvents && (
+            <div className={showMovers ? '' : 'lg:col-span-3'}>
+              <EventsCard events={events} pinProps={pinProps} />
+            </div>
+          )}
         </div>
-        <EventsCard events={events} />
-      </div>
-      <PeakIndicatorGrid peaks={peaks} onDrillDown={onDrillDown} />
+      )}
+      {showPeaks && <PeakIndicatorGrid peaks={peaks} onDrillDown={onDrillDown} pinProps={pinProps} />}
     </div>
   );
 }
 
 // =================== Market Index ====================================
-function MarketIndexCard({ index }) {
+function MarketIndexCard({ index, pinProps }) {
   if (!index) return <Skeleton h={180} />;
   const change = index.change_pct ?? 0;
   return (
@@ -85,6 +143,7 @@ function MarketIndexCard({ index }) {
               <p>The Market Index is a Laspeyres-style basket: we sum the median monthly sold price of each high-value combo, weight it by the combo's 12-month volume share, and normalize the earliest month in view to 1,000. It's designed so a reading of 1,200 means the basket is up 20% from period start.</p>
               <p>We publish confidence alongside the headline — anything below 65 should be read as directional, not a precise signal.</p>
             </MethodologyPopover>
+            <PinToggle id="market-index" {...pinProps} />
           </div>
         }
       />
@@ -126,13 +185,14 @@ function MarketIndexCard({ index }) {
 }
 
 // =================== Top Movers ======================================
-function TopMoversCard({ movers, onDrillDown }) {
+function TopMoversCard({ movers, onDrillDown, pinProps }) {
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
       <SectionHeader
         icon={TrendingUp}
         title="Top Movers"
         subtitle="Largest price swings in the selected timeframe"
+        right={<PinToggle id="top-movers" {...pinProps} />}
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-5">
         <MoverColumn title="Appreciating" rows={movers.up} direction="up" onDrillDown={onDrillDown} />
@@ -180,7 +240,7 @@ function MoverColumn({ title, rows, direction, onDrillDown }) {
 }
 
 // =================== Events calendar =================================
-function EventsCard({ events }) {
+function EventsCard({ events, pinProps }) {
   const sorted = [...events].sort((a, b) => a.date.localeCompare(b.date));
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
@@ -188,6 +248,7 @@ function EventsCard({ events }) {
         icon={CalendarDays}
         title="Market Calendar"
         subtitle="Upcoming expos & breeder releases"
+        right={<PinToggle id="market-events" {...pinProps} />}
       />
       <div className="space-y-1.5">
         {sorted.slice(0, 6).map((e) => (
@@ -212,7 +273,7 @@ function formatEventDate(iso) {
 }
 
 // =================== Peak Indicators =================================
-function PeakIndicatorGrid({ peaks, onDrillDown }) {
+function PeakIndicatorGrid({ peaks, onDrillDown, pinProps }) {
   const sorted = [...peaks].sort((a, b) => b.score - a.score).slice(0, 6);
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
@@ -221,16 +282,19 @@ function PeakIndicatorGrid({ peaks, onDrillDown }) {
         title="Peak Indicator — Hold, Sell, or Accumulate"
         subtitle="Composite 0–100 score. Higher = market heat, lower = early / undervalued."
         right={
-          <MethodologyPopover title="How the peak score is calculated">
-            <p>Four components, each normalized to [-1, +1], then weighted:</p>
-            <ul className="list-disc pl-5 space-y-0.5 text-slate-300">
-              <li>Price momentum (90d vs 91-365d) — weight 45%</li>
-              <li>Volume momentum (sales acceleration) — weight 25%</li>
-              <li>Supply pressure (3-month projected hatchlings) — weight 20%</li>
-              <li>Breeder adoption breadth (distinct producers) — weight 10%</li>
-            </ul>
-            <p>Mapped from [-1, +1] to [0, 100]. This mirrors the "overheat" indicators on sneaker and watch indices — high scores are a sell signal, low scores accumulate.</p>
-          </MethodologyPopover>
+          <div className="flex items-center gap-2">
+            <MethodologyPopover title="How the peak score is calculated">
+              <p>Four components, each normalized to [-1, +1], then weighted:</p>
+              <ul className="list-disc pl-5 space-y-0.5 text-slate-300">
+                <li>Price momentum (90d vs 91-365d) — weight 45%</li>
+                <li>Volume momentum (sales acceleration) — weight 25%</li>
+                <li>Supply pressure (3-month projected hatchlings) — weight 20%</li>
+                <li>Breeder adoption breadth (distinct producers) — weight 10%</li>
+              </ul>
+              <p>Mapped from [-1, +1] to [0, 100]. This mirrors the "overheat" indicators on sneaker and watch indices — high scores are a sell signal, low scores accumulate.</p>
+            </MethodologyPopover>
+            <PinToggle id="peak-indicators" {...pinProps} />
+          </div>
         }
       />
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
