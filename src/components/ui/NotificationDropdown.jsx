@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import { Notification } from '@/entities/all';
-import { Bell, Check } from 'lucide-react';
+import { Bell, Check, ChevronRight, ChevronDown, Layers } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { formatDistanceToNow } from 'date-fns';
+import { groupNotifications } from '@/utils/groupNotifications';
 
 const NotificationDropdown = ({ user, unreadCount, setUnreadCount }) => {
     const [notifications, setNotifications] = useState([]);
     const [isOpen, setIsOpen] = useState(false);
     const [isLoading, setIsLoading] = useState(false);
+    const [expandedGroups, setExpandedGroups] = useState(new Set());
 
     const loadNotifications = useCallback(async () => {
         if (!user) return;
@@ -26,6 +28,7 @@ const NotificationDropdown = ({ user, unreadCount, setUnreadCount }) => {
 
     useEffect(() => {
         if (isOpen) {
+            setExpandedGroups(new Set());
             loadNotifications();
             const interval = setInterval(loadNotifications, 15000);
             return () => clearInterval(interval);
@@ -63,6 +66,22 @@ const NotificationDropdown = ({ user, unreadCount, setUnreadCount }) => {
         }
     };
 
+    const toggleGroup = (key, e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        setExpandedGroups(prev => {
+            const next = new Set(prev);
+            if (next.has(key)) {
+                next.delete(key);
+            } else {
+                next.add(key);
+            }
+            return next;
+        });
+    };
+
+    const grouped = groupNotifications(notifications);
+
     return (
         <div className="relative">
             <button onClick={() => setIsOpen(!isOpen)} className="relative p-2 rounded-full hover:bg-sage-200">
@@ -89,19 +108,85 @@ const NotificationDropdown = ({ user, unreadCount, setUnreadCount }) => {
                         <div className="p-4 text-center text-sage-600">No notifications yet.</div>
                     ) : (
                         <div className="max-h-96 overflow-y-auto">
-                            {notifications.map(notif => (
-                                <Link
-                                    to={notif.link || '#'}
-                                    key={notif.id}
-                                    className={`block p-3 border-b border-sage-100 hover:bg-sage-50 ${!notif.is_read ? 'bg-blue-50' : ''}`}
-                                    onClick={() => !notif.is_read && handleMarkAsRead(notif.id)}
-                                >
-                                    <p className="text-sm text-sage-700">{notif.content}</p>
-                                    <p className="text-xs text-sage-500 mt-1">
-                                        {formatDistanceToNow(new Date(notif.created_date), { addSuffix: true })}
-                                    </p>
-                                </Link>
-                            ))}
+                            {grouped.map(entry => {
+                                if (entry.kind === 'single') {
+                                    const notif = entry.notification;
+                                    return (
+                                        <Link
+                                            to={notif.link || '#'}
+                                            key={entry.key}
+                                            className={`block p-3 border-b border-sage-100 hover:bg-sage-50 ${!notif.is_read ? 'bg-blue-50' : ''}`}
+                                            onClick={() => !notif.is_read && handleMarkAsRead(notif.id)}
+                                        >
+                                            <p className="text-sm text-sage-700">{notif.content}</p>
+                                            <p className="text-xs text-sage-500 mt-1">
+                                                {formatDistanceToNow(new Date(notif.created_date), { addSuffix: true })}
+                                            </p>
+                                        </Link>
+                                    );
+                                }
+
+                                const isExpanded = expandedGroups.has(entry.key);
+                                return (
+                                    <div key={entry.key} className="border-b border-sage-100">
+                                        <div
+                                            className={`flex items-start gap-2 p-3 hover:bg-sage-50 ${entry.hasUnread ? 'bg-blue-50' : ''}`}
+                                        >
+                                            <button
+                                                onClick={(e) => toggleGroup(entry.key, e)}
+                                                className="shrink-0 mt-0.5 p-0.5 rounded hover:bg-sage-200 transition-colors"
+                                            >
+                                                {isExpanded ? (
+                                                    <ChevronDown className="w-4 h-4 text-blue-600" />
+                                                ) : (
+                                                    <ChevronRight className="w-4 h-4 text-sage-400" />
+                                                )}
+                                            </button>
+                                            <Link
+                                                to={entry.link || '#'}
+                                                className="flex-1 min-w-0"
+                                                onClick={() => {
+                                                    if (entry.hasUnread) {
+                                                        entry.notifications
+                                                            .filter(n => !n.is_read)
+                                                            .forEach(n => handleMarkAsRead(n.id));
+                                                    }
+                                                }}
+                                            >
+                                                <div className="flex items-center gap-1.5 mb-0.5">
+                                                    <Layers className="w-3 h-3 text-blue-500 shrink-0" />
+                                                    <span className="text-[11px] font-medium text-blue-600">
+                                                        {entry.notifications.length} notifications
+                                                    </span>
+                                                </div>
+                                                <p className="text-sm font-medium text-sage-700">
+                                                    {entry.summary}
+                                                </p>
+                                                <p className="text-xs text-sage-500 mt-1">
+                                                    {formatDistanceToNow(new Date(entry.createdDate), { addSuffix: true })}
+                                                </p>
+                                            </Link>
+                                        </div>
+                                        {isExpanded && (
+                                            <div className="bg-sage-50/50">
+                                                {entry.notifications.map(notif => (
+                                                    <Link
+                                                        to={notif.link || '#'}
+                                                        key={notif.id}
+                                                        className={`block p-2.5 pl-10 border-t border-sage-100 hover:bg-sage-100 ${!notif.is_read ? 'bg-blue-50/50' : ''}`}
+                                                        onClick={() => !notif.is_read && handleMarkAsRead(notif.id)}
+                                                    >
+                                                        <p className="text-xs text-sage-600">{notif.content}</p>
+                                                        <p className="text-[10px] text-sage-400 mt-0.5">
+                                                            {formatDistanceToNow(new Date(notif.created_date), { addSuffix: true })}
+                                                        </p>
+                                                    </Link>
+                                                ))}
+                                            </div>
+                                        )}
+                                    </div>
+                                );
+                            })}
                         </div>
                     )}
                     <div className="p-2 text-center border-t border-sage-200">

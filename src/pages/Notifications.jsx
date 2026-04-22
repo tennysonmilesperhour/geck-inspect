@@ -14,28 +14,15 @@ import {
     Star,
     ExternalLink,
     Trash2,
+    ChevronRight,
+    ChevronDown,
+    Layers,
 } from 'lucide-react';
 import EmptyState from '../components/shared/EmptyState';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useToast } from '@/components/ui/use-toast';
-
-/**
- * Notifications page — dark slate theme, matches the rest of the app.
- *
- * Each notification row has:
- *   - its icon/type badge + content + timestamp
- *   - a "Mark read" button (only for unread rows) that marks the row
- *     read WITHOUT navigating to the linked event. Fires
- *     'unread_counts_changed' so the Layout header badge updates
- *     immediately, which fixes the "red number doesn't go away" bug.
- *   - a separate link-out button that navigates to the triggering event
- *     if one was provided.
- *   - a delete button so users can clean up their feed.
- *
- * "Mark all as read" hits every unread row in parallel and then emits
- * the same event so the header badge clears without a page refresh.
- */
+import { groupNotifications } from '@/utils/groupNotifications';
 
 const notificationIcons = {
     level_up: <Award className="w-5 h-5 text-yellow-400" />,
@@ -69,10 +56,268 @@ const typeLabels = {
     future_breeding_ready: 'Breeding Ready',
 };
 
+function SingleNotificationRow({ notification, markAsRead, handleDelete }) {
+    const isUnread = !notification.is_read;
+    return (
+        <div
+            className={`flex items-start gap-3 p-3 rounded-lg border transition-colors ${
+                isUnread
+                    ? 'bg-slate-800 border-emerald-500/30'
+                    : 'bg-slate-800/40 border-slate-800 opacity-70'
+            }`}
+        >
+            <div className="shrink-0 mt-0.5">
+                {notificationIcons[notification.type] || (
+                    <Bell className="w-5 h-5 text-slate-400" />
+                )}
+            </div>
+            <div className="flex-1 min-w-0">
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                    <Badge
+                        variant="outline"
+                        className="text-[10px] uppercase tracking-wider border-slate-600 bg-slate-900 text-slate-300"
+                    >
+                        {typeLabels[notification.type] ||
+                            notification.type?.replace(/_/g, ' ')}
+                    </Badge>
+                    {isUnread && (
+                        <span className="w-2 h-2 bg-emerald-400 rounded-full shrink-0" />
+                    )}
+                </div>
+                <p className="text-sm text-slate-200 leading-relaxed">
+                    {notification.content}
+                </p>
+                <p className="text-[11px] text-slate-500 mt-1">
+                    {format(
+                        new Date(notification.created_date),
+                        "MMM d, yyyy 'at' h:mm a"
+                    )}
+                </p>
+            </div>
+            <div className="flex flex-col md:flex-row gap-1.5 shrink-0">
+                {isUnread && (
+                    <Button
+                        size="sm"
+                        variant="outline"
+                        onClick={() => markAsRead(notification.id)}
+                        className="h-7 text-xs border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200"
+                    >
+                        <Check className="w-3 h-3 mr-1" /> Read
+                    </Button>
+                )}
+                {notification.link && (
+                    <Link
+                        to={notification.link}
+                        onClick={() => isUnread && markAsRead(notification.id)}
+                    >
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            className="h-7 text-xs border-emerald-600/40 bg-emerald-900/20 hover:bg-emerald-900/40 text-emerald-300"
+                        >
+                            <ExternalLink className="w-3 h-3 mr-1" /> View
+                        </Button>
+                    </Link>
+                )}
+                <Button
+                    size="sm"
+                    variant="ghost"
+                    onClick={() => handleDelete(notification.id)}
+                    className="h-7 w-7 p-0 text-slate-500 hover:text-rose-400"
+                    title="Delete"
+                >
+                    <Trash2 className="w-3.5 h-3.5" />
+                </Button>
+            </div>
+        </div>
+    );
+}
+
+function GroupedNotificationRow({ group, markAsRead, handleDelete, expandedGroups, toggleGroup }) {
+    const isExpanded = expandedGroups.has(group.key);
+
+    const markGroupAsRead = async () => {
+        const unread = group.notifications.filter((n) => !n.is_read);
+        for (const n of unread) {
+            await markAsRead(n.id);
+        }
+    };
+
+    const deleteGroup = async () => {
+        for (const n of group.notifications) {
+            await handleDelete(n.id);
+        }
+    };
+
+    return (
+        <div className="space-y-0">
+            <div
+                className={`flex items-start gap-3 p-3 rounded-lg border transition-colors ${
+                    group.hasUnread
+                        ? 'bg-slate-800 border-emerald-500/30'
+                        : 'bg-slate-800/40 border-slate-800 opacity-70'
+                } ${isExpanded ? 'rounded-b-none border-b-0' : ''}`}
+            >
+                <button
+                    onClick={() => toggleGroup(group.key)}
+                    className="shrink-0 mt-0.5 p-0.5 rounded hover:bg-slate-700 transition-colors"
+                >
+                    {isExpanded ? (
+                        <ChevronDown className="w-5 h-5 text-emerald-400" />
+                    ) : (
+                        <ChevronRight className="w-5 h-5 text-slate-400" />
+                    )}
+                </button>
+                <div className="shrink-0 mt-0.5">
+                    {notificationIcons[group.type] || (
+                        <Bell className="w-5 h-5 text-slate-400" />
+                    )}
+                </div>
+                <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap mb-1">
+                        <Badge
+                            variant="outline"
+                            className="text-[10px] uppercase tracking-wider border-slate-600 bg-slate-900 text-slate-300"
+                        >
+                            {typeLabels[group.type] ||
+                                group.type?.replace(/_/g, ' ')}
+                        </Badge>
+                        <Badge
+                            variant="outline"
+                            className="text-[10px] border-emerald-600/40 bg-emerald-900/20 text-emerald-300"
+                        >
+                            <Layers className="w-2.5 h-2.5 mr-0.5" />
+                            {group.notifications.length}
+                        </Badge>
+                        {group.hasUnread && (
+                            <span className="w-2 h-2 bg-emerald-400 rounded-full shrink-0" />
+                        )}
+                    </div>
+                    <p className="text-sm text-slate-200 leading-relaxed font-medium">
+                        {group.summary}
+                    </p>
+                    <p className="text-[11px] text-slate-500 mt-1">
+                        {format(
+                            new Date(group.createdDate),
+                            "MMM d, yyyy 'at' h:mm a"
+                        )}
+                    </p>
+                </div>
+                <div className="flex flex-col md:flex-row gap-1.5 shrink-0">
+                    {group.hasUnread && (
+                        <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={markGroupAsRead}
+                            className="h-7 text-xs border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200"
+                        >
+                            <Check className="w-3 h-3 mr-1" /> Read All
+                        </Button>
+                    )}
+                    {group.link && (
+                        <Link
+                            to={group.link}
+                            onClick={() => group.hasUnread && markGroupAsRead()}
+                        >
+                            <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs border-emerald-600/40 bg-emerald-900/20 hover:bg-emerald-900/40 text-emerald-300"
+                            >
+                                <ExternalLink className="w-3 h-3 mr-1" /> View All
+                            </Button>
+                        </Link>
+                    )}
+                    <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={deleteGroup}
+                        className="h-7 w-7 p-0 text-slate-500 hover:text-rose-400"
+                        title="Delete all in group"
+                    >
+                        <Trash2 className="w-3.5 h-3.5" />
+                    </Button>
+                </div>
+            </div>
+            {isExpanded && (
+                <div
+                    className={`border border-t-0 rounded-b-lg overflow-hidden ${
+                        group.hasUnread ? 'border-emerald-500/30' : 'border-slate-800'
+                    }`}
+                >
+                    {group.notifications.map((notification) => {
+                        const isUnread = !notification.is_read;
+                        return (
+                            <div
+                                key={notification.id}
+                                className={`flex items-start gap-3 p-3 pl-12 border-t transition-colors ${
+                                    isUnread
+                                        ? 'bg-slate-800/60 border-slate-700/50'
+                                        : 'bg-slate-800/20 border-slate-800 opacity-70'
+                                }`}
+                            >
+                                <div className="flex-1 min-w-0">
+                                    <p className="text-sm text-slate-300 leading-relaxed">
+                                        {notification.content}
+                                    </p>
+                                    <p className="text-[11px] text-slate-500 mt-1">
+                                        {format(
+                                            new Date(notification.created_date),
+                                            "MMM d, yyyy 'at' h:mm a"
+                                        )}
+                                    </p>
+                                </div>
+                                <div className="flex flex-col md:flex-row gap-1.5 shrink-0">
+                                    {isUnread && (
+                                        <Button
+                                            size="sm"
+                                            variant="outline"
+                                            onClick={() => markAsRead(notification.id)}
+                                            className="h-7 text-xs border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200"
+                                        >
+                                            <Check className="w-3 h-3 mr-1" /> Read
+                                        </Button>
+                                    )}
+                                    {notification.link && (
+                                        <Link
+                                            to={notification.link}
+                                            onClick={() =>
+                                                isUnread && markAsRead(notification.id)
+                                            }
+                                        >
+                                            <Button
+                                                size="sm"
+                                                variant="outline"
+                                                className="h-7 text-xs border-emerald-600/40 bg-emerald-900/20 hover:bg-emerald-900/40 text-emerald-300"
+                                            >
+                                                <ExternalLink className="w-3 h-3 mr-1" /> View
+                                            </Button>
+                                        </Link>
+                                    )}
+                                    <Button
+                                        size="sm"
+                                        variant="ghost"
+                                        onClick={() => handleDelete(notification.id)}
+                                        className="h-7 w-7 p-0 text-slate-500 hover:text-rose-400"
+                                        title="Delete"
+                                    >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                    </Button>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+            )}
+        </div>
+    );
+}
+
 export default function NotificationsPage() {
     const [notifications, setNotifications] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [user, setUser] = useState(null);
+    const [expandedGroups, setExpandedGroups] = useState(new Set());
     const { toast } = useToast();
 
     useEffect(() => {
@@ -144,6 +389,20 @@ export default function NotificationsPage() {
         }
     };
 
+    const toggleGroup = (groupKey) => {
+        setExpandedGroups((prev) => {
+            const next = new Set(prev);
+            if (next.has(groupKey)) {
+                next.delete(groupKey);
+            } else {
+                next.add(groupKey);
+            }
+            return next;
+        });
+    };
+
+    const grouped = groupNotifications(notifications);
+
     if (isLoading) {
         return (
             <div className="min-h-screen bg-slate-950 p-4 md:p-8">
@@ -204,7 +463,7 @@ export default function NotificationsPage() {
 
                 <Card className="bg-slate-900 border-slate-800">
                     <CardContent className="p-4 md:p-6">
-                        {notifications.length === 0 ? (
+                        {grouped.length === 0 ? (
                             <EmptyState
                                 icon={Bell}
                                 title="No notifications"
@@ -212,81 +471,26 @@ export default function NotificationsPage() {
                             />
                         ) : (
                             <div className="space-y-2">
-                                {notifications.map((notification) => {
-                                    const isUnread = !notification.is_read;
+                                {grouped.map((entry) => {
+                                    if (entry.kind === 'single') {
+                                        return (
+                                            <SingleNotificationRow
+                                                key={entry.key}
+                                                notification={entry.notification}
+                                                markAsRead={markAsRead}
+                                                handleDelete={handleDelete}
+                                            />
+                                        );
+                                    }
                                     return (
-                                        <div
-                                            key={notification.id}
-                                            className={`flex items-start gap-3 p-3 rounded-lg border transition-colors ${
-                                                isUnread
-                                                    ? 'bg-slate-800 border-emerald-500/30'
-                                                    : 'bg-slate-800/40 border-slate-800 opacity-70'
-                                            }`}
-                                        >
-                                            <div className="shrink-0 mt-0.5">
-                                                {notificationIcons[notification.type] || (
-                                                    <Bell className="w-5 h-5 text-slate-400" />
-                                                )}
-                                            </div>
-                                            <div className="flex-1 min-w-0">
-                                                <div className="flex items-center gap-2 flex-wrap mb-1">
-                                                    <Badge
-                                                        variant="outline"
-                                                        className="text-[10px] uppercase tracking-wider border-slate-600 bg-slate-900 text-slate-300"
-                                                    >
-                                                        {typeLabels[notification.type] ||
-                                                            notification.type?.replace(/_/g, ' ')}
-                                                    </Badge>
-                                                    {isUnread && (
-                                                        <span className="w-2 h-2 bg-emerald-400 rounded-full shrink-0" />
-                                                    )}
-                                                </div>
-                                                <p className="text-sm text-slate-200 leading-relaxed">
-                                                    {notification.content}
-                                                </p>
-                                                <p className="text-[11px] text-slate-500 mt-1">
-                                                    {format(
-                                                        new Date(notification.created_date),
-                                                        "MMM d, yyyy 'at' h:mm a"
-                                                    )}
-                                                </p>
-                                            </div>
-                                            <div className="flex flex-col md:flex-row gap-1.5 shrink-0">
-                                                {isUnread && (
-                                                    <Button
-                                                        size="sm"
-                                                        variant="outline"
-                                                        onClick={() => markAsRead(notification.id)}
-                                                        className="h-7 text-xs border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200"
-                                                    >
-                                                        <Check className="w-3 h-3 mr-1" /> Read
-                                                    </Button>
-                                                )}
-                                                {notification.link && (
-                                                    <Link
-                                                        to={notification.link}
-                                                        onClick={() => isUnread && markAsRead(notification.id)}
-                                                    >
-                                                        <Button
-                                                            size="sm"
-                                                            variant="outline"
-                                                            className="h-7 text-xs border-emerald-600/40 bg-emerald-900/20 hover:bg-emerald-900/40 text-emerald-300"
-                                                        >
-                                                            <ExternalLink className="w-3 h-3 mr-1" /> View
-                                                        </Button>
-                                                    </Link>
-                                                )}
-                                                <Button
-                                                    size="sm"
-                                                    variant="ghost"
-                                                    onClick={() => handleDelete(notification.id)}
-                                                    className="h-7 w-7 p-0 text-slate-500 hover:text-rose-400"
-                                                    title="Delete"
-                                                >
-                                                    <Trash2 className="w-3.5 h-3.5" />
-                                                </Button>
-                                            </div>
-                                        </div>
+                                        <GroupedNotificationRow
+                                            key={entry.key}
+                                            group={entry}
+                                            markAsRead={markAsRead}
+                                            handleDelete={handleDelete}
+                                            expandedGroups={expandedGroups}
+                                            toggleGroup={toggleGroup}
+                                        />
                                     );
                                 })}
                             </div>
