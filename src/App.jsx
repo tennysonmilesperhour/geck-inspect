@@ -129,9 +129,19 @@ const AuthenticatedApp = () => {
     if (!isAuthenticated) return;
     base44.entities.PageConfig.list().then((configs) => {
       if (!Array.isArray(configs)) return;
-      const disabled = new Set(
-        configs.filter(c => c.is_enabled === false).map(c => c.page_name)
-      );
+      // Group by page_name so duplicate rows don't disable a page when
+      // the admin has already re-enabled one of the copies. A page is
+      // only considered disabled if NO row for that page_name is enabled.
+      const byName = new Map();
+      for (const c of configs) {
+        if (!c?.page_name) continue;
+        if (!byName.has(c.page_name)) byName.set(c.page_name, []);
+        byName.get(c.page_name).push(c);
+      }
+      const disabled = new Set();
+      for (const [name, rows] of byName.entries()) {
+        if (rows.every(r => r.is_enabled === false)) disabled.add(name);
+      }
       // Never disable essential navigation targets
       ['Membership', 'Settings', 'AuthPortal', 'Notifications', 'Messages'].forEach(
         p => disabled.delete(p)

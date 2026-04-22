@@ -21,6 +21,8 @@ import {
   Eye,
   Search,
   RotateCcw,
+  AlertTriangle,
+  Trash2,
 } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 
@@ -61,6 +63,46 @@ async function persistOrder(items) {
   );
 }
 
+// Pick the "best" row when the same page_name has multiple entries:
+// prefer an enabled row, then the most recently updated.
+function pickCanonical(rows) {
+  return rows.slice().sort((a, b) => {
+    const aEnabled = a.is_enabled !== false ? 1 : 0;
+    const bEnabled = b.is_enabled !== false ? 1 : 0;
+    if (aEnabled !== bEnabled) return bEnabled - aEnabled;
+    const aDate = new Date(a.updated_date || a.created_date || 0).getTime();
+    const bDate = new Date(b.updated_date || b.created_date || 0).getTime();
+    return bDate - aDate;
+  })[0];
+}
+
+// Split raw page rows into the one canonical row per page_name and the
+// duplicate rows that should be cleaned up. Rows with no page_name are
+// treated as their own "page" so they stay visible and deletable.
+function partitionDuplicates(rows) {
+  const byName = new Map();
+  for (const p of rows) {
+    const key = p.page_name || `__noname__${p.id}`;
+    if (!byName.has(key)) byName.set(key, []);
+    byName.get(key).push(p);
+  }
+  const canonical = [];
+  const duplicateIdsByName = new Map();
+  const duplicateIds = [];
+  for (const [name, group] of byName.entries()) {
+    if (group.length === 1) {
+      canonical.push(group[0]);
+      continue;
+    }
+    const winner = pickCanonical(group);
+    canonical.push(winner);
+    const losers = group.filter((r) => r.id !== winner.id).map((r) => r.id);
+    duplicateIdsByName.set(name, losers);
+    duplicateIds.push(...losers);
+  }
+  return { canonical, duplicateIds, duplicateIdsByName };
+}
+
 export default function PageManagement() {
   const [pages, setPages] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -89,6 +131,15 @@ export default function PageManagement() {
     loadPages();
   }, []);
 
+  // Collapse duplicate rows (same page_name) down to a single canonical
+  // row for display. The admin panel used to render one row per DB row,
+  // which is why "duplicates" appeared in the UI and why a toggle only
+  // flipped one of several matching rows.
+  const { canonical, duplicateIds, duplicateIdsByName } = useMemo(
+    () => partitionDuplicates(pages),
+    [pages]
+  );
+
   // Group + sort. Disabled pages live in the "hidden" bucket regardless
   // of their stored category so the admin can see at a glance what's off.
   const grouped = useMemo(() => {
@@ -101,7 +152,7 @@ export default function PageManagement() {
         p.page_name?.toLowerCase().includes(q)
       );
     };
-    for (const p of pages.filter(filterFn)) {
+    for (const p of canonical.filter(filterFn)) {
       if (p.is_enabled === false) {
         buckets.hidden.push(p);
       } else if (ACTIVE_CATEGORIES.includes(p.category)) {
@@ -117,7 +168,16 @@ export default function PageManagement() {
       );
     }
     return buckets;
-  }, [pages, search]);
+  }, [canonical, search]);
+
+  // All DB ids that share a page_name with the given row (including the
+  // row itself). Writes are fanned out to every matching row so state
+  // stays consistent even before the admin runs cleanup.
+  const siblingIdsFor = (page) => {
+    if (!page?.page_name) return [page.id];
+    const dups = duplicateIdsByName.get(page.page_name) || [];
+    return [page.id, ...dups];
+  };
 
   const counts = useMemo(() => ({
     collection: grouped.collection.length,
@@ -132,11 +192,15 @@ export default function PageManagement() {
   };
 
   const handleToggleEnabled = async (page, newValue) => {
+    const ids = siblingIdsFor(page);
+    const idSet = new Set(ids);
     setPages((prev) =>
-      prev.map((p) => (p.id === page.id ? { ...p, is_enabled: newValue } : p))
+      prev.map((p) => (idSet.has(p.id) ? { ...p, is_enabled: newValue } : p))
     );
     try {
-      await PageConfig.update(page.id, { is_enabled: newValue });
+      await Promise.all(
+        ids.map((id) => PageConfig.update(id, { is_enabled: newValue }))
+      );
       flashSaved();
     } catch (err) {
       console.error('Toggle failed:', err);
@@ -147,19 +211,18 @@ export default function PageManagement() {
 
   const handleCategoryChange = async (page, newCategory) => {
     const target = grouped[newCategory] || [];
+    const ids = siblingIdsFor(page);
+    const idSet = new Set(ids);
+    const patch = {
+      category: newCategory,
+      order_position: target.length,
+      is_enabled: true,
+    };
     setPages((prev) =>
-      prev.map((p) =>
-        p.id === page.id
-          ? { ...p, category: newCategory, order_position: target.length, is_enabled: true }
-          : p
-      )
+      prev.map((p) => (idSet.has(p.id) ? { ...p, ...patch } : p))
     );
     try {
-      await PageConfig.update(page.id, {
-        category: newCategory,
-        order_position: target.length,
-        is_enabled: true,
-      });
+      await Promise.all(ids.map((id) => PageConfig.update(id, patch)));
       flashSaved();
     } catch (err) {
       console.error('Category change failed:', err);
@@ -168,12 +231,42 @@ export default function PageManagement() {
     }
   };
 
+  const handleDeleteRow = async (page) => {
+    if (!confirm(`Delete "${page.display_name || page.page_name}" from page config? The sidebar will fall back to its default entry.`)) return;
+    const ids = siblingIdsFor(page);
+    setIsSaving(true);
+    try {
+      await Promise.all(ids.map((id) => PageConfig.delete(id)));
+      await loadPages();
+      toast({ title: 'Page removed' });
+    } catch (err) {
+      console.error('Delete failed:', err);
+      toast({ title: 'Delete failed', description: err.message, variant: 'destructive' });
+    }
+    setIsSaving(false);
+  };
+
+  const handleCleanupDuplicates = async () => {
+    if (duplicateIds.length === 0) return;
+    if (!confirm(`Delete ${duplicateIds.length} duplicate page row${duplicateIds.length === 1 ? '' : 's'}? The canonical entry for each page is kept.`)) return;
+    setIsSaving(true);
+    try {
+      await Promise.all(duplicateIds.map((id) => PageConfig.delete(id)));
+      await loadPages();
+      toast({ title: `Removed ${duplicateIds.length} duplicate row${duplicateIds.length === 1 ? '' : 's'}` });
+    } catch (err) {
+      console.error('Cleanup failed:', err);
+      toast({ title: 'Cleanup failed', description: err.message, variant: 'destructive' });
+    }
+    setIsSaving(false);
+  };
+
   const handleResetAll = async () => {
     if (!confirm('Re-enable every page and reset categories to default? This cannot be undone.')) return;
     setIsSaving(true);
     try {
       await Promise.all(
-        pages.map((p) => PageConfig.update(p.id, { is_enabled: true }))
+        canonical.map((p) => PageConfig.update(p.id, { is_enabled: true }))
       );
       await loadPages();
       toast({ title: 'All pages re-enabled' });
@@ -245,7 +338,11 @@ export default function PageManagement() {
 
     setIsSaving(true);
     try {
-      await PageConfig.update(moved.id, movePatch);
+      // Fan out the enable/category flip to every duplicate row for
+      // this page_name. Order_position only needs to be written to the
+      // canonical row; duplicates will be deleted by cleanup anyway.
+      const movedIds = siblingIdsFor(moved);
+      await Promise.all(movedIds.map((id) => PageConfig.update(id, movePatch)));
       if (srcCat === destCat) {
         await persistOrder(nextByCat[srcCat]);
       } else {
@@ -324,6 +421,15 @@ export default function PageManagement() {
             onCheckedChange={(v) => handleToggleEnabled(page, v)}
             aria-label={`Toggle ${page.display_name}`}
           />
+          <button
+            type="button"
+            onClick={() => handleDeleteRow(page)}
+            className="text-slate-500 hover:text-rose-400 p-1 rounded transition-colors"
+            aria-label={`Delete ${page.display_name}`}
+            title="Remove this page from page_config"
+          >
+            <Trash2 className="w-4 h-4" />
+          </button>
         </div>
       )}
     </Draggable>
@@ -381,6 +487,31 @@ export default function PageManagement() {
               className="pl-10 bg-slate-950 border-slate-700 text-slate-200"
             />
           </div>
+          {duplicateIds.length > 0 && (
+            <div className="mb-4 flex items-start gap-3 rounded-lg border border-amber-500/30 bg-amber-500/10 p-3">
+              <AlertTriangle className="w-5 h-5 text-amber-400 shrink-0 mt-0.5" />
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-semibold text-amber-200">
+                  {duplicateIds.length} duplicate row{duplicateIds.length === 1 ? '' : 's'} detected
+                </p>
+                <p className="text-xs text-amber-200/70 mt-0.5">
+                  Multiple <code className="text-amber-100">page_config</code> rows share the same page_name.
+                  Toggles and category changes are applied to every copy, but duplicates still clutter
+                  the DB and can cause inconsistent sidebar rendering. Clean up to keep a single canonical row per page.
+                </p>
+              </div>
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleCleanupDuplicates}
+                disabled={isSaving}
+                className="border-amber-500/40 bg-amber-500/20 hover:bg-amber-500/30 text-amber-100 shrink-0"
+              >
+                <Trash2 className="w-3.5 h-3.5 mr-1.5" />
+                Clean up {duplicateIds.length}
+              </Button>
+            </div>
+          )}
           <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6">
             {ALL_DROP_ZONES.map((cat) => (
               <div

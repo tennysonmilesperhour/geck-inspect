@@ -541,9 +541,33 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       return FALLBACK_NAV_ITEMS;
     }
 
+    // Dedupe page_config rows by page_name. Admins can end up with
+    // multiple rows sharing the same page_name (historical seeding bug);
+    // without this collapse the sidebar would render each copy as its
+    // own item. Preference: enabled row, then most recently updated.
+    const byName = new Map();
+    for (const p of pageConfigs) {
+      if (!p?.page_name) continue;
+      const prev = byName.get(p.page_name);
+      if (!prev) {
+        byName.set(p.page_name, p);
+        continue;
+      }
+      const prevEnabled = prev.is_enabled !== false;
+      const pEnabled = p.is_enabled !== false;
+      if (pEnabled && !prevEnabled) {
+        byName.set(p.page_name, p);
+      } else if (pEnabled === prevEnabled) {
+        const prevDate = new Date(prev.updated_date || prev.created_date || 0).getTime();
+        const pDate = new Date(p.updated_date || p.created_date || 0).getTime();
+        if (pDate > prevDate) byName.set(p.page_name, p);
+      }
+    }
+    const dedupedConfigs = Array.from(byName.values());
+
     // Index DB rows by page_name so we can detect what's NOT seeded yet.
     const dbByName = {};
-    for (const p of pageConfigs) {
+    for (const p of dedupedConfigs) {
       if (p?.page_name) dbByName[p.page_name] = p;
     }
 
@@ -557,7 +581,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     }
 
     // Start with the DB rows that are explicitly enabled.
-    const enabled = pageConfigs
+    const enabled = dedupedConfigs
       .filter(p => p.is_enabled !== false)
       .sort((a, b) => (a.order_position ?? 0) - (b.order_position ?? 0));
 
