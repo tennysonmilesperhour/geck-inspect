@@ -13,6 +13,41 @@
  *
  * This is deliberately mirror-shaped to what a real analytics DB would
  * return — views never need to know whether they're in mock or live mode.
+ *
+ * === LIVE DATA INTEGRATION (geck-data / geckintellect) =================
+ * This facade is still on mock fixtures. To wire it up to the standalone
+ * geck-data app (deployed at https://geckintellect.geckinspect.com), the
+ * recommended pattern is a cached fetch of a published JSON snapshot:
+ *
+ *   async function loadSnapshot() {
+ *     if (_cachedSnapshot && Date.now() - _cachedAt < 15 * 60_000) {
+ *       return _cachedSnapshot;
+ *     }
+ *     const res = await fetch(
+ *       'https://geckintellect.geckinspect.com/data/market.json',
+ *       { cache: 'default' }
+ *     );
+ *     _cachedSnapshot = await res.json();
+ *     _cachedAt = Date.now();
+ *     return _cachedSnapshot;
+ *   }
+ *
+ * Then each `query*` function awaits `loadSnapshot()` and filters/reduces
+ * from there instead of calling `getTransactions()` / `getBreeders()` /
+ * etc. from mockFixtures.js. Keep the return shape identical so none of
+ * the visualization components need to change.
+ *
+ * Before making the swap, confirm with geck-data's owner:
+ *   1. The snapshot URL and refresh cadence (daily? hourly?)
+ *   2. The JSON schema matches what mockFixtures.js exposes — fields:
+ *      transactions[], breeders[], supplyPipeline{}, demandSignals{},
+ *      marketEvents[]
+ *   3. CORS allows fetching from geckinspect.com
+ *   4. Whether any observations need authenticated access (if yes, move
+ *      the fetch behind a Supabase edge function that forwards the API
+ *      key server-side instead of calling geck-data directly from the
+ *      browser)
+ * ========================================================================
  */
 
 import {

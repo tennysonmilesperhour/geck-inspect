@@ -16,6 +16,7 @@ import FeedingAlertSystem from "@/components/feeding/FeedingAlertSystem";
 import NotificationPopover from "@/components/notifications/NotificationPopover";
 import GuestMockDisclaimer from "@/components/auth/GuestMockDisclaimer";
 import FeedbackWidget from "@/components/feedback/FeedbackWidget";
+import MarketIntelligenceButton from "@/components/shared/MarketIntelligenceButton";
 import InstallAppButton from "@/components/shared/InstallAppButton";
 import {
   Sidebar,
@@ -1010,6 +1011,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
               <div className="flex items-center gap-2">
                 {user ? (
                   <div className="gecko-header-actions">
+                    <MarketIntelligenceButton user={user} />
                     <Link to={createPageUrl("Messages")} className="gecko-header-action" aria-label="Messages">
                       <Mail />
                       {unreadMessages > 0 && (
@@ -1053,6 +1055,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
               <div className="flex items-center gap-2">
                 {user ? (
                   <div className="gecko-header-actions">
+                    <MarketIntelligenceButton user={user} />
                     <Link to={createPageUrl("Messages")} className="gecko-header-action" aria-label="Messages">
                       <Mail />
                       {unreadMessages > 0 && (

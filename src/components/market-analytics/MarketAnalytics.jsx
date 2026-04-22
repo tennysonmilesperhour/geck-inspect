@@ -15,12 +15,13 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
   AlertCircle, LayoutDashboard, Layers, Map as MapIcon, Radar,
-  Sprout, Users, Lock, ArrowRight, Settings2, X,
+  Sprout, Users, Lock, ArrowRight, Settings2, X, Bookmark, Plus,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import {
   Popover, PopoverContent, PopoverTrigger,
 } from '@/components/ui/popover';
+import usePageSettings from '@/hooks/usePageSettings';
 
 import OverviewDashboard from './OverviewDashboard';
 import TraitComboExplorer from './TraitComboExplorer';
@@ -61,6 +62,39 @@ export default function MarketAnalytics({ user }) {
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [drillCriteria, setDrillCriteria] = useState(null);
 
+  // Saved filter presets live in localStorage — per-browser rather than
+  // per-user since Market Analytics is a solo-operator tool. Shape:
+  //   { saved: { [name]: filters }, active: name | null }
+  // `active` clears the moment the user mutates filters, so the label
+  // only reflects an unmodified preset.
+  const [presetState, setPresetState] = usePageSettings(
+    'market_analytics_presets',
+    { saved: {}, active: null }
+  );
+
+  const applyFilters = (next, activeName = null) => {
+    setFilters(next);
+    setPresetState({ active: activeName });
+  };
+  const savePreset = (name) => {
+    if (!name) return;
+    setPresetState({
+      saved: { ...presetState.saved, [name]: filters },
+      active: name,
+    });
+  };
+  const loadPreset = (name) => {
+    const preset = presetState.saved[name];
+    if (preset) applyFilters({ ...DEFAULT_FILTERS, ...preset }, name);
+  };
+  const deletePreset = (name) => {
+    const { [name]: _removed, ...rest } = presetState.saved;
+    setPresetState({
+      saved: rest,
+      active: presetState.active === name ? null : presetState.active,
+    });
+  };
+
   const openDrill = (criteria) => setDrillCriteria({ ...filters, ...criteria });
   const closeDrill = () => setDrillCriteria(null);
 
@@ -69,7 +103,17 @@ export default function MarketAnalytics({ user }) {
       {!hasAccess && <EnterpriseBanner />}
       <PreviewDataBanner />
 
-      <FilterBar filters={filters} setFilters={setFilters} />
+      <FilterBar
+        filters={filters}
+        setFilters={(next) => applyFilters(
+          typeof next === 'function' ? next(filters) : next
+        )}
+        presets={presetState.saved}
+        activePreset={presetState.active}
+        onLoadPreset={loadPreset}
+        onSavePreset={savePreset}
+        onDeletePreset={deletePreset}
+      />
 
       <SubNav section={section} setSection={setSection} />
 
@@ -125,7 +169,7 @@ function PreviewDataBanner() {
 }
 
 // ============ Filter Bar =============================================
-function FilterBar({ filters, setFilters }) {
+function FilterBar({ filters, setFilters, presets, activePreset, onLoadPreset, onSavePreset, onDeletePreset }) {
   const toggleRegion = (code) => {
     setFilters((f) => ({
       ...f,
@@ -146,6 +190,17 @@ function FilterBar({ filters, setFilters }) {
 
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/60 px-3 py-2 flex flex-wrap items-center gap-2">
+      <FilterPresets
+        presets={presets}
+        activePreset={activePreset}
+        onLoadPreset={onLoadPreset}
+        onSavePreset={onSavePreset}
+        onDeletePreset={onDeletePreset}
+        canSave={!!anyFilter}
+      />
+
+      <FilterDivider />
+
       {/* Timeframe — always visible */}
       <TimeframeSelector value={filters.timeframe} onChange={(v) => setFilters((f) => ({ ...f, timeframe: v }))} />
 
@@ -220,6 +275,83 @@ function FilterBar({ filters, setFilters }) {
         </button>
       )}
     </div>
+  );
+}
+
+function FilterPresets({ presets, activePreset, onLoadPreset, onSavePreset, onDeletePreset, canSave }) {
+  const names = Object.keys(presets || {});
+  const hasSaved = names.length > 0;
+  const label = activePreset || (hasSaved ? 'Presets' : 'Save preset');
+
+  const handleSave = () => {
+    const name = (window.prompt('Name this preset:', activePreset || '') || '').trim();
+    if (name) onSavePreset(name);
+  };
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button
+          className={`inline-flex items-center gap-1.5 text-xs rounded px-2 py-1 border transition-colors ${
+            activePreset
+              ? 'bg-emerald-500/15 border-emerald-500/40 text-emerald-200'
+              : 'text-slate-200 hover:bg-slate-800 border-slate-700'
+          }`}
+          aria-label="Filter presets"
+        >
+          <Bookmark className="w-3.5 h-3.5" />
+          <span className="truncate max-w-[120px]">{label}</span>
+        </button>
+      </PopoverTrigger>
+      <PopoverContent className="bg-slate-900 border-slate-700 text-slate-200 w-64 p-2 space-y-1">
+        {hasSaved ? (
+          <div className="space-y-0.5">
+            {names.map((name) => {
+              const isActive = name === activePreset;
+              return (
+                <div
+                  key={name}
+                  className={`flex items-center gap-1 rounded px-1.5 py-0.5 ${
+                    isActive ? 'bg-emerald-500/15' : 'hover:bg-slate-800'
+                  }`}
+                >
+                  <button
+                    onClick={() => onLoadPreset(name)}
+                    className={`flex-1 text-left text-xs truncate ${
+                      isActive ? 'text-emerald-200' : 'text-slate-200'
+                    }`}
+                  >
+                    {name}
+                  </button>
+                  <button
+                    onClick={() => onDeletePreset(name)}
+                    className="text-slate-500 hover:text-red-300 shrink-0"
+                    aria-label={`Delete preset ${name}`}
+                    title="Delete preset"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
+                </div>
+              );
+            })}
+            <div className="h-px bg-slate-700/60 my-1" />
+          </div>
+        ) : (
+          <div className="text-[10px] text-slate-500 px-1.5 pb-1">
+            No saved presets yet. Set filters, then save.
+          </div>
+        )}
+        <button
+          onClick={handleSave}
+          disabled={!canSave && !activePreset}
+          className="w-full inline-flex items-center gap-1.5 text-xs px-2 py-1.5 rounded text-emerald-200 hover:bg-emerald-500/10 disabled:text-slate-600 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+          title={!canSave && !activePreset ? 'Change a filter first to save a preset' : 'Save the current filter state as a preset'}
+        >
+          <Plus className="w-3.5 h-3.5" />
+          {activePreset ? `Update "${activePreset}"` : 'Save current filters'}
+        </button>
+      </PopoverContent>
+    </Popover>
   );
 }
 
