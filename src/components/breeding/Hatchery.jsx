@@ -10,6 +10,7 @@ import LoadingSpinner from '../shared/LoadingSpinner';
 import { format, differenceInDays } from 'date-fns';
 import EggDetailModal from './EggDetailModal';
 import { generateHatchedGeckoIdFromEgg } from '../shared/geckoIdUtils';
+import { currentSeasonLabel, inferSeasonLabel } from '@/lib/seasons';
 
 export default function Hatchery() {
     const [eggs, setEggs] = useState([]);
@@ -221,14 +222,22 @@ export default function Hatchery() {
         }
     };
 
-    const currentYear = new Date().getFullYear();
+    const currentSeason = currentSeasonLabel();
+    const planSeasonById = breedingPlans.reduce((acc, p) => {
+        if (p?.id) acc[p.id] = p.breeding_season || null;
+        return acc;
+    }, {});
+    const eggSeason = (egg) => {
+        const fromPlan = egg.breeding_plan_id ? planSeasonById[egg.breeding_plan_id] : null;
+        return fromPlan || inferSeasonLabel(egg.lay_date);
+    };
     const allNonArchived = eggs.filter(e => !e.archived);
     const stats = {
         incubating: allNonArchived.filter(e => e.status === 'Incubating').length,
         hatchedTotal: eggs.filter(e => e.status === 'Hatched').length,
-        hatchedYTD: eggs.filter(e => e.status === 'Hatched' && e.hatch_date_actual && new Date(e.hatch_date_actual).getFullYear() === currentYear).length,
+        hatchedSeason: eggs.filter(e => e.status === 'Hatched' && eggSeason(e) === currentSeason).length,
         failedTotal: eggs.filter(e => ['Slug', 'Infertile', 'Stillbirth'].includes(e.status)).length,
-        failedYTD: eggs.filter(e => ['Slug', 'Infertile', 'Stillbirth'].includes(e.status) && e.lay_date && new Date(e.lay_date).getFullYear() === currentYear).length,
+        failedSeason: eggs.filter(e => ['Slug', 'Infertile', 'Stillbirth'].includes(e.status) && eggSeason(e) === currentSeason).length,
     };
 
     if (isLoading) {
@@ -252,16 +261,16 @@ export default function Hatchery() {
                     <p className="text-xs text-green-300 mt-1">Hatched (All Time)</p>
                 </div>
                 <div className="bg-emerald-900/30 border border-emerald-700/50 rounded-lg p-4 text-center">
-                    <p className="text-2xl font-bold text-emerald-400">{stats.hatchedYTD}</p>
-                    <p className="text-xs text-emerald-300 mt-1">Hatched (YTD)</p>
+                    <p className="text-2xl font-bold text-emerald-400">{stats.hatchedSeason}</p>
+                    <p className="text-xs text-emerald-300 mt-1">Hatched · {currentSeason}</p>
                 </div>
                 <div className="bg-red-900/30 border border-red-700/50 rounded-lg p-4 text-center">
                     <p className="text-2xl font-bold text-red-400">{stats.failedTotal}</p>
                     <p className="text-xs text-red-300 mt-1">Failed (All Time)</p>
                 </div>
                 <div className="bg-orange-900/30 border border-orange-700/50 rounded-lg p-4 text-center sm:col-span-1 col-span-2">
-                    <p className="text-2xl font-bold text-orange-400">{stats.failedYTD}</p>
-                    <p className="text-xs text-orange-300 mt-1">Failed (YTD)</p>
+                    <p className="text-2xl font-bold text-orange-400">{stats.failedSeason}</p>
+                    <p className="text-xs text-orange-300 mt-1">Failed · {currentSeason}</p>
                 </div>
             </div>
 

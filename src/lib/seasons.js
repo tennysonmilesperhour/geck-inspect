@@ -70,3 +70,75 @@ export function seasonStatus(season, year, now = new Date()) {
   if (now > window.end) return 'past';
   return 'active';
 }
+
+// ---------------------------------------------------------------------------
+// Stored-season helpers
+//
+// BreedingPlan.breeding_season is stored as "<year> <Season>" — e.g.
+// "2024 Spring", "2024 Summer", "2024 Fall", "2024 Winter" — by
+// Breeding.jsx's getCurrentSeason(). When we need to group eggs or
+// plans whose breeding_season field is blank, we fall back to inferring
+// from a date with the exact same rule:
+//
+//   Mar-May  -> Spring
+//   Jun-Aug  -> Summer
+//   Sep-Nov  -> Fall
+//   Dec/Jan/Feb -> Winter
+//
+// Winter is anchored to the calendar year of the date (Jan 2024 -> "2024
+// Winter"), matching how the archive already buckets plans. This keeps
+// all breeding-season strings in the app aligned.
+// ---------------------------------------------------------------------------
+
+const SEASON_NAME_BY_MONTH = [
+  'Winter', 'Winter',           // Jan, Feb
+  'Spring', 'Spring', 'Spring', // Mar, Apr, May
+  'Summer', 'Summer', 'Summer', // Jun, Jul, Aug
+  'Fall',   'Fall',   'Fall',   // Sep, Oct, Nov
+  'Winter',                     // Dec
+];
+
+/**
+ * Infer the "<year> <Season>" label from any Date (or ISO string).
+ * Returns null for invalid input.
+ */
+export function inferSeasonLabel(date) {
+  if (!date) return null;
+  const d = date instanceof Date ? date : new Date(date);
+  if (isNaN(d.getTime())) return null;
+  return `${d.getFullYear()} ${SEASON_NAME_BY_MONTH[d.getMonth()]}`;
+}
+
+/** "<year> <Season>" for right now. */
+export function currentSeasonLabel(now = new Date()) {
+  return inferSeasonLabel(now);
+}
+
+/**
+ * Parse a stored label into { year, season } — where `season` is the
+ * capitalized name ('Spring' | 'Summer' | 'Fall' | 'Winter') and `year`
+ * is a number. Returns null if the input doesn't parse.
+ */
+export function parseSeasonLabel(label) {
+  if (!label || typeof label !== 'string') return null;
+  const m = label.trim().match(/^(\d{4})\s+(Spring|Summer|Fall|Winter)$/i);
+  if (!m) return null;
+  const year = parseInt(m[1], 10);
+  const season = m[2][0].toUpperCase() + m[2].slice(1).toLowerCase();
+  return { year, season };
+}
+
+/**
+ * Chronological sort comparator for "<year> <Season>" labels.
+ * Unknown / malformed labels sort to the end.
+ */
+export function compareSeasonLabels(a, b) {
+  const pa = parseSeasonLabel(a);
+  const pb = parseSeasonLabel(b);
+  if (!pa && !pb) return 0;
+  if (!pa) return 1;
+  if (!pb) return -1;
+  if (pa.year !== pb.year) return pa.year - pb.year;
+  const order = { Winter: 0, Spring: 1, Summer: 2, Fall: 3 };
+  return order[pa.season] - order[pb.season];
+}

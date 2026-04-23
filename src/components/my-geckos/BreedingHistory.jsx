@@ -17,14 +17,25 @@ function formatWeight(min, max) {
 }
 
 /**
- * Per-year breeding summary for a female gecko: eggs laid, infertile/failed,
+ * Per-season breeding summary for a female gecko: eggs laid, infertile/failed,
  * hatched, her age that season, and the weight range she held during the
- * laying window. Renders nothing if there are no eggs on record.
+ * laying window. Renders a friendly empty state when there's nothing yet.
  */
-export default function BreedingHistory({ eggs = [], weightRecords = [], hatchDate = null }) {
+export default function BreedingHistory({
+  eggs = [],
+  breedingPlans = [],
+  weightRecords = [],
+  hatchDate = null,
+}) {
   const rows = useMemo(
-    () => summarizeBreedingHistory({ eggs, weightRecords, hatchDate }),
-    [eggs, weightRecords, hatchDate]
+    () =>
+      summarizeBreedingHistory({
+        eggs,
+        breedingPlans,
+        weightRecords,
+        hatchDate,
+      }),
+    [eggs, breedingPlans, weightRecords, hatchDate]
   );
   const totals = useMemo(() => breedingHistoryTotals(rows), [rows]);
 
@@ -77,11 +88,11 @@ export default function BreedingHistory({ eggs = [], weightRecords = [], hatchDa
         {display.map((row) => {
           const pending = row.incubating + row.unknown;
           return (
-            <div key={row.year} className="bg-slate-800 rounded-lg p-3">
+            <div key={row.seasonLabel} className="bg-slate-800 rounded-lg p-3">
               <div className="flex items-center justify-between mb-2">
                 <div>
                   <p className="text-slate-100 font-semibold text-sm">
-                    {row.year}
+                    {row.seasonLabel}
                     <span className="text-slate-500 font-normal text-xs ml-2">
                       Season #{row.seasonNumber}
                     </span>

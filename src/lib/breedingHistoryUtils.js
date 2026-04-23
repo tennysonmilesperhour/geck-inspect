@@ -1,8 +1,9 @@
 /**
  * Breeding-history aggregation for a single female.
  *
- * Given her eggs and weight records, rolls them up per calendar year so
- * the profile card / certificates can show at a glance:
+ * Given her eggs, her breeding plans, and weight records, rolls them up
+ * per breeding season so the profile card / certificates can show at a
+ * glance:
  *
  *   - how many eggs she laid
  *   - how many were infertile or failed (slug / stillbirth / infertile)
@@ -11,16 +12,26 @@
  *   - which season of her breeding career it was (1st, 2nd, ...)
  *   - her weight range during that season
  *
+ * Seasons are keyed on the BreedingPlan.breeding_season string
+ * ("2024 Spring", etc.). If a plan has no stored season, or an egg has
+ * no linked plan, we fall back to inferring the season from the lay date
+ * with the exact same month rule Breeding.jsx uses — so everything in
+ * the app groups under the same labels.
+ *
  * Status values in the eggs table: Incubating | Hatched | Infertile | Slug | Stillbirth
  * "Failed" buckets Slug + Stillbirth together with Infertile, matching the
  * existing Hatchery summary (see components/breeding/Hatchery.jsx).
  */
 
-const FAILED_STATUSES = new Set(['Infertile', 'Slug', 'Stillbirth']);
+import {
+  inferSeasonLabel,
+  parseSeasonLabel,
+  compareSeasonLabels,
+} from './seasons.js';
 
-// Window around the first/last lay date we consider part of the season
-// for weight-range purposes. A month either side captures the gravid
-// buildup and post-lay recovery without spilling into the next season.
+// Window around the first/last lay date we use for weight-range purposes.
+// A month either side captures the gravid buildup and post-lay recovery
+// without spilling into the next season.
 const SEASON_PAD_DAYS = 30;
 
 function toDate(value) {
@@ -46,41 +57,57 @@ function yearsBetween(from, to) {
  * Aggregate a female's eggs + weights into one row per breeding season.
  *
  * @param {object} params
- * @param {Array}  params.eggs — Egg rows for this dam (any shape, needs status + lay_date)
+ * @param {Array}  params.eggs — Egg rows for this dam (status, lay_date, breeding_plan_id)
+ * @param {Array}  [params.breedingPlans] — BreedingPlan rows (for breeding_season lookup)
  * @param {Array}  params.weightRecords — WeightRecord rows for this gecko
  * @param {string|Date|null} params.hatchDate — the gecko's hatch_date
  * @returns {Array<{
- *   year: number,
+ *   seasonLabel: string,       // e.g. "2024 Spring"
+ *   year: number|null,
+ *   seasonName: string|null,   // "Spring" | "Summer" | "Fall" | "Winter"
  *   ageYears: number|null,
- *   seasonNumber: number,
+ *   seasonNumber: number,      // 1st breeding season, 2nd, ...
  *   eggsLaid: number,
  *   hatched: number,
  *   infertile: number,
- *   failed: number,   // slug + stillbirth
+ *   failed: number,
  *   failedOrInfertile: number,
  *   incubating: number,
  *   unknown: number,
- *   hatchRate: number|null,  // 0..1, null if no resolved eggs yet
+ *   hatchRate: number|null,
  *   weightMin: number|null,
  *   weightMax: number|null,
  *   firstLayDate: string,
  *   lastLayDate: string,
  * }>}
  */
-export function summarizeBreedingHistory({ eggs = [], weightRecords = [], hatchDate = null } = {}) {
+export function summarizeBreedingHistory({
+  eggs = [],
+  breedingPlans = [],
+  weightRecords = [],
+  hatchDate = null,
+} = {}) {
   const dob = toDate(hatchDate);
-  const byYear = new Map();
+  const planById = new Map();
+  for (const plan of breedingPlans) {
+    if (plan?.id) planById.set(plan.id, plan);
+  }
+
+  const byLabel = new Map();
 
   for (const egg of eggs) {
     if (!egg || egg.archived) continue;
     const laid = toDate(egg.lay_date);
     if (!laid) continue;
-    const year = laid.getFullYear();
 
-    let bucket = byYear.get(year);
+    const plan = egg.breeding_plan_id ? planById.get(egg.breeding_plan_id) : null;
+    const label = plan?.breeding_season || inferSeasonLabel(laid);
+    if (!label) continue;
+
+    let bucket = byLabel.get(label);
     if (!bucket) {
       bucket = {
-        year,
+        seasonLabel: label,
         eggsLaid: 0,
         hatched: 0,
         infertile: 0,
@@ -90,7 +117,7 @@ export function summarizeBreedingHistory({ eggs = [], weightRecords = [], hatchD
         firstLay: laid,
         lastLay: laid,
       };
-      byYear.set(year, bucket);
+      byLabel.set(label, bucket);
     }
 
     bucket.eggsLaid += 1;
@@ -105,7 +132,10 @@ export function summarizeBreedingHistory({ eggs = [], weightRecords = [], hatchD
     else bucket.unknown += 1;
   }
 
-  const rows = Array.from(byYear.values()).sort((a, b) => a.year - b.year);
+  // Sort oldest-first so seasonNumber ordinals line up chronologically.
+  const rows = Array.from(byLabel.values()).sort((a, b) =>
+    compareSeasonLabels(a.seasonLabel, b.seasonLabel)
+  );
 
   return rows.map((b, idx) => {
     const windowStart = addDays(b.firstLay, -SEASON_PAD_DAYS);
@@ -125,12 +155,16 @@ export function summarizeBreedingHistory({ eggs = [], weightRecords = [], hatchD
     const resolved = b.hatched + b.infertile + b.failed;
     const hatchRate = resolved > 0 ? b.hatched / resolved : null;
 
-    // Age during this season: use the midpoint of the lay window.
+    // Age during this season: midpoint of the lay window.
     const midpoint = new Date((b.firstLay.getTime() + b.lastLay.getTime()) / 2);
     const ageYears = dob ? yearsBetween(dob, midpoint) : null;
 
+    const parsed = parseSeasonLabel(b.seasonLabel);
+
     return {
-      year: b.year,
+      seasonLabel: b.seasonLabel,
+      year: parsed?.year ?? null,
+      seasonName: parsed?.season ?? null,
       ageYears,
       seasonNumber: idx + 1,
       eggsLaid: b.eggsLaid,

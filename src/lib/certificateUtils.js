@@ -181,15 +181,15 @@ function drawBreedingHistorySection(doc, history, x, y, width) {
   );
   y += 6;
 
-  // Column layout — year | age | laid | hatched | inf/fail | weight range
+  // Column layout — season | age | # | laid | hatched | inf/fail | weight
   const cols = [
-    { key: 'year', label: 'Year', w: 0.12 },
-    { key: 'age', label: 'Age', w: 0.10 },
-    { key: 'season', label: 'Season #', w: 0.14 },
-    { key: 'laid', label: 'Laid', w: 0.11 },
-    { key: 'hatched', label: 'Hatched', w: 0.14 },
-    { key: 'failed', label: 'Inf/Fail', w: 0.13 },
-    { key: 'weight', label: 'Weight Range', w: 0.26 },
+    { key: 'season', label: 'Season', w: 0.20 },
+    { key: 'age', label: 'Age', w: 0.09 },
+    { key: 'ordinal', label: '#', w: 0.07 },
+    { key: 'laid', label: 'Laid', w: 0.10 },
+    { key: 'hatched', label: 'Hatched', w: 0.13 },
+    { key: 'failed', label: 'Inf/Fail', w: 0.12 },
+    { key: 'weight', label: 'Weight Range', w: 0.29 },
   ];
   const innerW = width - 4;
   let cx = x + 2;
@@ -220,7 +220,7 @@ function drawBreedingHistorySection(doc, history, x, y, width) {
           : `${row.weightMin}-${row.weightMax} g`
         : '-';
     const values = [
-      String(row.year),
+      row.seasonLabel,
       row.ageYears != null ? `${row.ageYears}y` : '-',
       `#${row.seasonNumber}`,
       String(row.eggsLaid),

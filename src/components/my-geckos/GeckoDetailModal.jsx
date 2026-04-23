@@ -197,6 +197,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
 
           const breedingHistoryProps = {
               eggs: eggHistory,
+              breedingPlans: breedingHistory,
               weightRecords,
               hatchDate: gecko.hatch_date,
           };
@@ -1003,10 +1004,11 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                 </div>
               )}
 
-              {/* Breeding History summary (per-year, females only) */}
+              {/* Breeding History summary (per-season, females only) */}
               {gecko.sex === 'Female' && (
                 <BreedingHistory
                   eggs={eggHistory}
+                  breedingPlans={breedingHistory}
                   weightRecords={weightRecords}
                   hatchDate={gecko.hatch_date}
                 />
