@@ -14,9 +14,10 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Settings, Upload, Save, Globe, Eye, X, Plus, Camera, Mail, Calendar, Loader2, Search, Trash2, AlertTriangle, ArrowUpDown, Clock, Crown, FileText, Palette, Check
+  Settings, Upload, Save, Globe, Eye, X, Camera, Mail, Calendar, Loader2, Search, Trash2, AlertTriangle, ArrowUpDown, Clock, Crown, FileText, Palette, Check, Star, Database
 } from 'lucide-react';
 import { useTheme } from '@/lib/ThemeContext';
+import { FALLBACK_NAV_ITEMS, NAV_ICON_MAP, FAVORITES_MAX, flattenNavItems } from '@/lib/navItems';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -121,6 +122,76 @@ function LookingForSection({ formData, handleChange }) {
     );
 }
 
+// Favorite Pages Section — lets the user pin up to FAVORITES_MAX pages
+// to a 2x2 grid at the top of the sidebar. Selected order is preserved
+// (click order = grid order).
+function FavoritePagesSection({ selected, onChange }) {
+    const allItems = flattenNavItems(FALLBACK_NAV_ITEMS);
+    const selectedSet = new Set(selected || []);
+    const atLimit = (selected?.length || 0) >= FAVORITES_MAX;
+
+    const toggle = (pageName) => {
+        if (selectedSet.has(pageName)) {
+            onChange(selected.filter((n) => n !== pageName));
+        } else {
+            if (atLimit) return;
+            onChange([...(selected || []), pageName]);
+        }
+    };
+
+    return (
+        <div className="space-y-4">
+            <p className="text-sm text-slate-400">
+                Pick up to {FAVORITES_MAX} pages to pin at the top of your sidebar in a
+                2x2 grid of larger buttons. Favorited pages are hidden from the
+                regular menu below. Click in the order you want them to appear.
+            </p>
+            <div className="text-xs text-slate-500">
+                {(selected?.length || 0)}/{FAVORITES_MAX} selected
+            </div>
+            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                {allItems.map((item) => {
+                    const checked = selectedSet.has(item.page_name);
+                    const position = checked ? selected.indexOf(item.page_name) + 1 : null;
+                    const disabled = !checked && atLimit;
+                    const IconComponent = NAV_ICON_MAP[item.icon] || Database;
+                    return (
+                        <button
+                            key={item.page_name}
+                            type="button"
+                            onClick={() => toggle(item.page_name)}
+                            disabled={disabled}
+                            aria-pressed={checked}
+                            className={`relative flex items-center gap-3 rounded-lg border px-3 py-3 text-left transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 ${
+                                checked
+                                    ? 'border-emerald-500 bg-emerald-900/30 text-emerald-100'
+                                    : disabled
+                                      ? 'border-slate-800 bg-slate-900/30 text-slate-500 cursor-not-allowed'
+                                      : 'border-slate-700 bg-slate-800/50 text-slate-200 hover:border-slate-500 hover:bg-slate-800'
+                            }`}
+                        >
+                            <IconComponent className="w-5 h-5 shrink-0" />
+                            <span className="text-sm font-medium truncate flex-1">
+                                {item.display_name}
+                            </span>
+                            {checked && (
+                                <span className="shrink-0 inline-flex items-center justify-center w-5 h-5 rounded-full bg-emerald-500 text-[10px] font-bold text-emerald-950">
+                                    {position}
+                                </span>
+                            )}
+                        </button>
+                    );
+                })}
+            </div>
+            {atLimit && (
+                <p className="text-xs text-amber-300">
+                    You've selected the maximum of {FAVORITES_MAX} favorites. Remove one to pick a different page.
+                </p>
+            )}
+        </div>
+    );
+}
+
 const initialFormData = {
     bio: '',
     location: '',
@@ -164,6 +235,7 @@ const initialFormData = {
     hatch_alert_days: 60,
     is_featured_breeder: false,
     store_policy: '',
+    favorite_page_names: [],
 };
 
 // Email preference keys — legacy grouping-keys that predate the push
@@ -271,6 +343,9 @@ export default function SettingsPage() {
                         hatch_alert_days: currentUser.hatch_alert_days || 60,
                         is_featured_breeder: currentUser.is_featured_breeder === true,
                         store_policy: currentUser.store_policy || '',
+                        favorite_page_names: Array.isArray(currentUser.favorite_page_names)
+                            ? currentUser.favorite_page_names.slice(0, FAVORITES_MAX)
+                            : [],
                     });
                 }
             } catch (error) {
@@ -398,6 +473,7 @@ export default function SettingsPage() {
 
     const sectionNav = [
         { id: 'appearance', label: 'Appearance' },
+        { id: 'favorite-pages', label: 'Favorite Pages' },
         { id: 'profile-photos', label: 'Profile Photos' },
         { id: 'basic-information', label: 'Basic Info' },
         { id: 'contact-information', label: 'Contact' },
@@ -483,6 +559,26 @@ export default function SettingsPage() {
                     </CardHeader>
                     <CardContent>
                         <AppearanceSection />
+                    </CardContent>
+                </Card>
+                </section>
+
+                <section id="favorite-pages">
+                <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+                    <CardHeader>
+                        <CardTitle className="text-slate-100 flex items-center gap-2">
+                            <Star className="w-5 h-5" />
+                            Favorite Pages
+                        </CardTitle>
+                        <CardDescription className="text-slate-400">
+                            Pin up to {FAVORITES_MAX} pages to the top of your sidebar as a 2x2 grid of larger buttons.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        <FavoritePagesSection
+                            selected={formData.favorite_page_names}
+                            onChange={(next) => handleChange('favorite_page_names', next)}
+                        />
                     </CardContent>
                 </Card>
                 </section>

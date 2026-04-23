@@ -7,8 +7,7 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import { APP_LOGO_URL } from '@/lib/constants';
 import {
-  Database, BookOpen, BarChart3, Upload, Users, HeartHandshake, Layers, LogOut, Search, Settings, UserPlus, Shield, MessageSquare, Mail, Heart, Menu, ShoppingCart, GitBranch, FlaskConical, Star, FolderKanban, GraduationCap, Dna,
-  Egg, LayoutGrid, CircleUser, UsersRound, Images, Tag, CalendarDays, Sparkles, Truck, ChevronDown, Pin, PinOff
+  Database, Users, LogOut, Search, Settings, UserPlus, Shield, Mail, Menu, Star, GraduationCap, ChevronDown, Pin, PinOff
 } from "lucide-react";
 import TutorialModal from "@/components/tutorial/TutorialModal";
 import CommandPalette from "@/components/command-palette/CommandPalette";
@@ -41,6 +40,12 @@ import {
   EXPERT_LEVELS,
   COMMUNITY_LEVELS,
 } from '@/lib/layoutConstants';
+import {
+  FALLBACK_NAV_ITEMS,
+  NAV_ICON_MAP,
+  FAVORITES_MAX,
+  flattenNavItems,
+} from '@/lib/navItems';
 
 
 function LayoutContent({ children, currentPageName: _currentPageName }) {
@@ -503,32 +508,6 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
   const sidebarBadge = getSidebarBadge();
 
-  const FALLBACK_NAV_ITEMS = {
-    collection: [
-    { page_name: "MyGeckos", display_name: "My Geckos", icon: "LayoutGrid", category: "collection", requires_auth: true, is_enabled: true, order: 1 },
-    { page_name: "Breeding", display_name: "Breeding", icon: "Egg", category: "collection", requires_auth: true, is_enabled: true, order: 2 },
-    { page_name: "Lineage", display_name: "Lineage", icon: "GitBranch", category: "collection", requires_auth: true, is_enabled: true, order: 3 },
-    { page_name: "MyProfile", display_name: "My Profile", icon: "CircleUser", category: "collection", requires_auth: true, is_enabled: true, order: 4 },
-    ],
-    tools: [
-      { page_name: "Recognition", display_name: "Morph ID", icon: "Search", category: "tools", requires_auth: false, is_enabled: true, order: 1 },
-      { page_name: "MorphVisualizer", display_name: "Morph Visualizer", icon: "Layers", category: "tools", requires_auth: false, is_enabled: true, order: 2 },
-      { page_name: "BreederConsultant", display_name: "AI Consultant", icon: "FlaskConical", category: "tools", requires_auth: false, is_enabled: true, order: 3 },
-      { page_name: "ProjectManager", display_name: "Season Planner", icon: "CalendarDays", category: "tools", requires_auth: true, is_enabled: true, order: 4 },
-      { page_name: "GeneticsGuide", display_name: "Genetics Guide", icon: "Dna", category: "tools", requires_auth: false, is_enabled: true, order: 5 },
-      { page_name: "MarketplaceSalesStats", display_name: "Business Tools", icon: "BarChart3", category: "tools", requires_auth: true, is_enabled: true, order: 6 },
-    ],
-    public: [
-    { page_name: "Dashboard", display_name: "Dashboard", icon: "BarChart3", category: "public", requires_auth: false, is_enabled: true, order: 1 },
-    { page_name: "MorphGuide", display_name: "Morph Guide", icon: "BookOpen", category: "public", requires_auth: false, is_enabled: true, order: 2 },
-    { page_name: "CareGuide", display_name: "Care Guide", icon: "Heart", category: "public", requires_auth: false, is_enabled: true, order: 3 },
-    { page_name: "Forum", display_name: "Forum", icon: "MessageSquare", category: "public", requires_auth: false, is_enabled: true, order: 4 },
-    { page_name: "Gallery", display_name: "Image Gallery", icon: "Images", category: "public", requires_auth: false, is_enabled: true, order: 5 },
-    { page_name: "Marketplace", display_name: "Marketplace", icon: "ShoppingCart", category: "public", requires_auth: false, is_enabled: true, order: 6 },
-    { page_name: "BreederShipping", display_name: "Shipping", icon: "Truck", category: "public", requires_auth: true, is_enabled: true, order: 7 },
-    ],
-  };
-
   // Build navigation from PageConfig.
   //
   // The DB is the source of truth for ordering and visibility. Fallback
@@ -619,7 +598,75 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     return dbNav;
   };
 
-  const navItems = getNavItems();
+  const rawNavItems = getNavItems();
+
+  // Favorite pages — user picks up to FAVORITES_MAX pages in Settings.
+  // Those get a prominent 2x2 grid at the top of the sidebar and are
+  // hidden from their original category section so they don't appear
+  // twice. Stored on auth.user_metadata + profiles.favorite_page_names.
+  const favoritePageNames = Array.isArray(user?.favorite_page_names)
+    ? user.favorite_page_names.slice(0, FAVORITES_MAX)
+    : [];
+  const favoriteSet = new Set(favoritePageNames);
+
+  // Resolve favorite page_names to actual nav items so we have
+  // display_name + icon. Preserve user's chosen order.
+  const allNavFlat = flattenNavItems(rawNavItems);
+  const favoriteItems = favoritePageNames
+    .map((name) => allNavFlat.find((item) => item.page_name === name))
+    .filter(Boolean);
+
+  // Strip favorites from the normal sections so they aren't rendered
+  // twice.
+  const navItems = {
+    collection: rawNavItems.collection.filter((i) => !favoriteSet.has(i.page_name)),
+    tools: rawNavItems.tools.filter((i) => !favoriteSet.has(i.page_name)),
+    public: rawNavItems.public.filter((i) => !favoriteSet.has(i.page_name)),
+  };
+
+  const renderFavoritesGrid = () => {
+    if (favoriteItems.length === 0) return null;
+    return (
+      <div className="px-3 mb-4">
+        <div className="text-xs font-semibold text-sage-700 uppercase tracking-wider px-1 pb-2 sidebar-collapse-hide">
+          Favorites
+        </div>
+        <div className="grid grid-cols-2 gap-2">
+          {favoriteItems.map((item) => {
+            const itemUrl = createPageUrl(item.page_name);
+            const isActive = location.pathname === itemUrl;
+            const IconComponent = NAV_ICON_MAP[item.icon] || Database;
+            const handleNavClick = (e) => {
+              if (item.requires_auth && !user) {
+                e.preventDefault();
+                handleLoginPrompt(item.display_name);
+                if (window.innerWidth < 768) toggleSidebar(false);
+              }
+            };
+            return (
+              <Link
+                key={item.page_name}
+                to={itemUrl}
+                onClick={handleNavClick}
+                data-tutorial-id={item.page_name}
+                data-tutorial-label={item.display_name}
+                className={`group flex flex-col items-center justify-center gap-2 rounded-lg border px-2 py-4 text-center transition-colors sidebar-nav-item favorite-tile ${
+                  isActive
+                    ? 'active border-emerald-500/60 bg-emerald-600/25 text-emerald-50'
+                    : 'border-emerald-800/40 bg-emerald-900/25 text-emerald-100 hover:bg-emerald-800/40 hover:border-emerald-700/60'
+                }`}
+              >
+                <IconComponent className="h-7 w-7 flex-shrink-0" />
+                <span className="text-[11px] font-semibold leading-tight line-clamp-2 sidebar-collapse-hide">
+                  {item.display_name}
+                </span>
+              </Link>
+            );
+          })}
+        </div>
+      </div>
+    );
+  };
 
   // Modified renderNavSection to handle auth requirements
   const renderNavSection = (items, title) => {
@@ -644,12 +691,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
               }
             };
 
-            const iconMap = {
-                                  BarChart3, Search, Layers, FlaskConical, BookOpen, Heart, MessageSquare,
-                                  Database, ShoppingCart, Users, GitBranch, Upload, Shield, HeartHandshake, FolderKanban, Dna, GraduationCap, Star, Settings,
-                                  Egg, LayoutGrid, CircleUser, UsersRound, Images, Tag, CalendarDays, Sparkles, Truck
-                                };
-                                const IconComponent = iconMap[item.icon] || Database;
+            const IconComponent = NAV_ICON_MAP[item.icon] || Database;
             
             return (
               <Link
@@ -755,7 +797,8 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 </div>
               )}
             </div>
-            
+
+            {renderFavoritesGrid()}
             {renderNavSection(navItems.collection, "Collection")}
             {renderNavSection(navItems.tools, "Tools")}
             {renderNavSection(navItems.public)}
@@ -925,6 +968,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 )}
               </div>
 
+              {renderFavoritesGrid()}
               {renderNavSection(navItems.collection, "Collection")}
               {renderNavSection(navItems.tools, "Tools")}
               {renderNavSection(navItems.public)}
