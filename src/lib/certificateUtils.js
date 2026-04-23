@@ -1,4 +1,8 @@
 import jsPDF from 'jspdf';
+import {
+  summarizeBreedingHistory,
+  breedingHistoryTotals,
+} from './breedingHistoryUtils';
 
 /**
  * Certificate PDF generators — ownership and lineage.
@@ -152,11 +156,94 @@ function drawRow(doc, label, value, x, y, maxWidth) {
   doc.text(lines[0] || '-', x, y + 5);
 }
 
+// Per-season breeding history table. Renders nothing and returns y unchanged
+// when there's no history to show (e.g. male, or no eggs on record).
+function drawBreedingHistorySection(doc, history, x, y, width) {
+  if (!history) return y;
+  const rows = summarizeBreedingHistory(history);
+  if (!rows.length) return y;
+
+  y = drawSection(doc, 'Breeding History', x, y, width);
+
+  const totals = breedingHistoryTotals(rows);
+  const hatchRatePct =
+    totals.hatchRate != null ? `${Math.round(totals.hatchRate * 100)}%` : '-';
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(60, 60, 60);
+  doc.text(
+    safeText(
+      `Lifetime: ${totals.seasons} season${totals.seasons === 1 ? '' : 's'} | ${totals.eggsLaid} laid | ${totals.hatched} hatched | hatch rate ${hatchRatePct}`
+    ),
+    x + 2,
+    y
+  );
+  y += 6;
+
+  // Column layout — year | age | laid | hatched | inf/fail | weight range
+  const cols = [
+    { key: 'year', label: 'Year', w: 0.12 },
+    { key: 'age', label: 'Age', w: 0.10 },
+    { key: 'season', label: 'Season #', w: 0.14 },
+    { key: 'laid', label: 'Laid', w: 0.11 },
+    { key: 'hatched', label: 'Hatched', w: 0.14 },
+    { key: 'failed', label: 'Inf/Fail', w: 0.13 },
+    { key: 'weight', label: 'Weight Range', w: 0.26 },
+  ];
+  const innerW = width - 4;
+  let cx = x + 2;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(120, 120, 120);
+  const headerY = y;
+  for (const c of cols) {
+    doc.text(safeText(c.label.toUpperCase()), cx, headerY);
+    cx += innerW * c.w;
+  }
+  y += 4;
+  doc.setDrawColor(200, 200, 200);
+  doc.setLineWidth(0.2);
+  doc.line(x + 2, y, x + 2 + innerW, y);
+  y += 3;
+
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(30, 30, 30);
+
+  // Newest season first — most relevant on a certificate.
+  for (const row of [...rows].reverse()) {
+    const weight =
+      row.weightMin != null && row.weightMax != null
+        ? row.weightMin === row.weightMax
+          ? `${row.weightMin} g`
+          : `${row.weightMin}-${row.weightMax} g`
+        : '-';
+    const values = [
+      String(row.year),
+      row.ageYears != null ? `${row.ageYears}y` : '-',
+      `#${row.seasonNumber}`,
+      String(row.eggsLaid),
+      String(row.hatched),
+      String(row.failedOrInfertile),
+      weight,
+    ];
+    cx = x + 2;
+    values.forEach((v, i) => {
+      doc.text(safeText(v), cx, y);
+      cx += innerW * cols[i].w;
+    });
+    y += 6;
+  }
+
+  return y + 4;
+}
+
 // ---------------------------------------------------------------------------
 // Public API
 // ---------------------------------------------------------------------------
 
-export function generateOwnershipCertificatePDF(gecko, owner) {
+export function generateOwnershipCertificatePDF(gecko, owner, opts = {}) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
   const { pageW, pageH, margin } = drawHeader(doc, 'Certificate of Ownership', owner);
 
@@ -210,6 +297,11 @@ export function generateOwnershipCertificatePDF(gecko, owner) {
   }
   y += 8;
 
+  // Breeding history (females only, if any records exist)
+  if (gecko?.sex === 'Female' && opts.breedingHistory) {
+    y = drawBreedingHistorySection(doc, opts.breedingHistory, innerX, y, blockW);
+  }
+
   // Attestation
   doc.setFont('helvetica', 'italic');
   doc.setFontSize(11);
@@ -228,7 +320,7 @@ export function generateOwnershipCertificatePDF(gecko, owner) {
   downloadPdfBlob(doc, `ownership-certificate-${slug}.pdf`);
 }
 
-export function generateLineageCertificatePDF({ gecko, sire, dam, grandparents = {}, owner }) {
+export function generateLineageCertificatePDF({ gecko, sire, dam, grandparents = {}, owner, breedingHistory }) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
   const { pageW, pageH, margin } = drawHeader(doc, 'Certificate of Lineage', owner);
 
@@ -305,6 +397,11 @@ export function generateLineageCertificatePDF({ gecko, sire, dam, grandparents =
       doc.text(safeText(gp[i]?.gecko_id_code) || '-', x, y + 10);
     }
     y += 16;
+  }
+
+  // Breeding history (females only, if any records exist)
+  if (gecko?.sex === 'Female' && breedingHistory) {
+    y = drawBreedingHistorySection(doc, breedingHistory, innerX, y, blockW);
   }
 
   // Owner section

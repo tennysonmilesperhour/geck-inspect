@@ -7,6 +7,7 @@ import { format, differenceInMonths } from 'date-fns';
 import { X, Plus, Trash2, LineChart, Loader2, Award, GitBranch, Calendar, Baby, Users, Edit, Eye, EyeOff, History, Archive, ArchiveRestore, ChevronLeft, ChevronRight, Camera, QrCode, ArrowRightLeft, ExternalLink } from 'lucide-react';
 import LoadingSpinner from '../shared/LoadingSpinner';
 import EventTracker from './EventTracker';
+import BreedingHistory from './BreedingHistory';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
@@ -194,8 +195,14 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
               gdD: dam ? getById(dam.dam_id) : null,
           };
 
+          const breedingHistoryProps = {
+              eggs: eggHistory,
+              weightRecords,
+              hatchDate: gecko.hatch_date,
+          };
+
           if (type === 'ownership') {
-              generateOwnershipCertificatePDF(gecko, currentUser);
+              generateOwnershipCertificatePDF(gecko, currentUser, { breedingHistory: breedingHistoryProps });
           } else {
               generateLineageCertificatePDF({
                   gecko,
@@ -203,6 +210,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                   dam,
                   grandparents,
                   owner: currentUser,
+                  breedingHistory: breedingHistoryProps,
               });
           }
 
@@ -993,6 +1001,15 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                     ))}
                   </div>
                 </div>
+              )}
+
+              {/* Breeding History summary (per-year, females only) */}
+              {gecko.sex === 'Female' && (
+                <BreedingHistory
+                  eggs={eggHistory}
+                  weightRecords={weightRecords}
+                  hatchDate={gecko.hatch_date}
+                />
               )}
 
               {/* Egg History (for females) */}
