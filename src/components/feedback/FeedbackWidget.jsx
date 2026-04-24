@@ -138,8 +138,7 @@ export default function FeedbackWidget() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Send feedback"
-        className="fixed right-5 z-[60] flex items-center gap-2 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/50 px-4 py-3 text-sm font-semibold transition-all hover:scale-105 active:scale-95 print:hidden"
-        style={{ bottom: 'calc(1.25rem + env(safe-area-inset-bottom))' }}
+        className="fixed right-5 z-[60] flex items-center gap-2 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/50 px-4 py-3 text-sm font-semibold transition-all hover:scale-105 active:scale-95 print:hidden bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-[calc(1.25rem+env(safe-area-inset-bottom))]"
       >
         <MessageSquare className="w-4 h-4" />
         <span className="hidden sm:inline">Feedback</span>

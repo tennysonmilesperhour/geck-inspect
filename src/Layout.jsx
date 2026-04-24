@@ -45,6 +45,8 @@ import {
   NAV_ICON_MAP,
   FAVORITES_MAX,
   flattenNavItems,
+  SECTIONS,
+  getSectionForPage,
 } from '@/lib/navItems';
 
 
@@ -101,6 +103,25 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   useEffect(() => () => {
     if (collapseTimerRef.current) clearTimeout(collapseTimerRef.current);
   }, []);
+
+  // Active section drives the top/bottom section bars + sidebar filter.
+  // If the URL points to a page in a section, that section wins. On
+  // section-agnostic pages (Dashboard, MyProfile, Settings) we fall back
+  // to the last section the user was in, so the sidebar doesn't go
+  // empty when they hit home.
+  const currentPageName = location.pathname.replace(/^\/+/, '').split('/')[0] || '';
+  const currentPageSection = getSectionForPage(currentPageName);
+  const [activeSectionId, setActiveSectionId] = useState(() => {
+    if (currentPageSection) return currentPageSection;
+    try { return localStorage.getItem('active_section') || SECTIONS[0].id; }
+    catch { return SECTIONS[0].id; }
+  });
+  useEffect(() => {
+    if (currentPageSection && currentPageSection !== activeSectionId) {
+      setActiveSectionId(currentPageSection);
+      try { localStorage.setItem('active_section', currentPageSection); } catch {}
+    }
+  }, [currentPageSection, activeSectionId]);
 
   const { toggleSidebar } = useSidebar();
 
@@ -624,6 +645,14 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     public: rawNavItems.public.filter((i) => !favoriteSet.has(i.page_name)),
   };
 
+  // Sidebar filtered to the active section. We flatten across the old
+  // category buckets (collection/tools/public) because sections are now
+  // the primary grouping — a single page can live anywhere in the DB
+  // category and still show up under its section.
+  const activeSection = SECTIONS.find((s) => s.id === activeSectionId) || SECTIONS[0];
+  const sectionNavItems = flattenNavItems(navItems)
+    .filter((item) => getSectionForPage(item.page_name) === activeSectionId);
+
   const renderFavoritesGrid = () => {
     if (favoriteItems.length === 0) return null;
     return (
@@ -799,9 +828,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
             </div>
 
             {renderFavoritesGrid()}
-            {renderNavSection(navItems.collection, "Collection")}
-            {renderNavSection(navItems.tools, "Tools")}
-            {renderNavSection(navItems.public)}
+            {renderNavSection(sectionNavItems, activeSection.label)}
             {user?.role === 'admin' && (
               <div className="mb-4">
                 <div className="text-xs font-semibold text-sage-700 uppercase tracking-wider px-4 py-2">Admin</div>
@@ -969,9 +996,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
               </div>
 
               {renderFavoritesGrid()}
-              {renderNavSection(navItems.collection, "Collection")}
-              {renderNavSection(navItems.tools, "Tools")}
-              {renderNavSection(navItems.public)}
+              {renderNavSection(sectionNavItems, activeSection.label)}
               {user?.role === 'admin' && (
                 <div className="mb-4">
                   <div className="text-xs font-semibold text-sage-700 uppercase tracking-wider px-4 py-2">Admin</div>
@@ -1113,19 +1138,47 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           </header>
 
           <header className="bg-sage-200/90 backdrop-blur-md border-b border-sage-300 px-4 py-3 hidden md:flex sticky top-0 z-10 gecko-header">
-            <div className="flex items-center justify-between gap-4 w-full">
+            <div className="flex items-center gap-4 w-full">
               {/* Command palette launcher */}
-              <button
-                type="button"
-                onClick={() => window.dispatchEvent(new CustomEvent('open_command_palette'))}
-                className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-emerald-700/40 bg-emerald-950/60 hover:bg-emerald-900/70 text-emerald-300 hover:text-emerald-200 transition-colors text-sm w-72 max-w-full"
-                aria-label="Open quick search"
-              >
-                <Search className="w-4 h-4" />
-                <span className="flex-1 text-left text-emerald-500/70">Quick search…</span>
-              </button>
+              <div className="flex-1 min-w-0 flex items-center">
+                <button
+                  type="button"
+                  onClick={() => window.dispatchEvent(new CustomEvent('open_command_palette'))}
+                  className="flex items-center gap-2 px-3 py-1.5 rounded-lg border border-emerald-700/40 bg-emerald-950/60 hover:bg-emerald-900/70 text-emerald-300 hover:text-emerald-200 transition-colors text-sm w-72 max-w-full"
+                  aria-label="Open quick search"
+                >
+                  <Search className="w-4 h-4" />
+                  <span className="flex-1 text-left text-emerald-500/70">Quick search…</span>
+                </button>
+              </div>
 
-              <div className="flex items-center gap-2">
+              {/* Section tabs (desktop) */}
+              <nav
+                className="flex items-center gap-1 bg-emerald-950/50 border border-emerald-800/50 rounded-xl p-1 shadow-inner"
+                aria-label="App sections"
+              >
+                {SECTIONS.map((section) => {
+                  const IconComponent = NAV_ICON_MAP[section.icon] || Database;
+                  const isActive = section.id === activeSectionId;
+                  return (
+                    <Link
+                      key={section.id}
+                      to={createPageUrl(section.defaultPage)}
+                      aria-current={isActive ? 'page' : undefined}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
+                        isActive
+                          ? 'bg-emerald-700/60 text-emerald-50 shadow-sm'
+                          : 'text-emerald-200/80 hover:text-emerald-100 hover:bg-emerald-800/40'
+                      }`}
+                    >
+                      <IconComponent className="h-4 w-4" />
+                      <span>{section.label}</span>
+                    </Link>
+                  );
+                })}
+              </nav>
+
+              <div className="flex-1 flex justify-end items-center gap-2">
                 {user ? (
                   <div className="gecko-header-actions">
                     <MarketIntelligenceButton user={user} />
@@ -1156,12 +1209,38 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
             </div>
           </header>
 
-          <div className="flex-1 overflow-auto overflow-x-hidden">
+          <div className="flex-1 overflow-auto overflow-x-hidden pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
             {children}
           </div>
 
 
           </main>
+
+        {/* Section tabs (mobile) — fixed bottom bar */}
+        <nav
+          className="fixed bottom-0 left-0 right-0 z-40 md:hidden flex border-t border-emerald-800/40 bg-emerald-950/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]"
+          aria-label="App sections"
+        >
+          {SECTIONS.map((section) => {
+            const IconComponent = NAV_ICON_MAP[section.icon] || Database;
+            const isActive = section.id === activeSectionId;
+            return (
+              <Link
+                key={section.id}
+                to={createPageUrl(section.defaultPage)}
+                aria-current={isActive ? 'page' : undefined}
+                className={`flex-1 flex flex-col items-center justify-center gap-1 py-2 text-[10px] font-semibold uppercase tracking-wider transition-colors ${
+                  isActive
+                    ? 'text-emerald-200 bg-emerald-800/40'
+                    : 'text-emerald-400/70 hover:text-emerald-200'
+                }`}
+              >
+                <IconComponent className="h-5 w-5" />
+                <span>{section.label}</span>
+              </Link>
+            );
+          })}
+        </nav>
       </div>
       <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
       <CommandPalette />
