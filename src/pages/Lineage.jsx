@@ -722,9 +722,21 @@ export default function Lineage() {
     // column doesn't dominate the layout.
     const matesCardSize = generations >= 4 ? 'tiny' : 'small';
 
-    // Offspring render as per-season sections (newest first); each section
-    // is a single vertical column of "nano" cards, stacked top-to-bottom
-    // so the panel extends downward rather than sideways.
+    // Offspring render as per-season sections (newest first). Within a
+    // section we fill columns top-to-bottom (so reading order stays
+    // vertical) and pick the row count adaptively: small broods bunch
+    // into a single short column, medium broods wrap into extra columns
+    // to stay compact, and only very large broods extend past the
+    // preferred row cap so the panel doesn't get uselessly tall.
+    const OFFSPRING_MAX_COLS = 4;
+    const OFFSPRING_PREFERRED_MAX_ROWS = 6;
+    const pickOffspringRows = (count) => {
+        if (count <= OFFSPRING_PREFERRED_MAX_ROWS) return Math.max(1, count);
+        return Math.max(
+            OFFSPRING_PREFERRED_MAX_ROWS,
+            Math.ceil(count / OFFSPRING_MAX_COLS),
+        );
+    };
     const offspringBySeason = useMemo(() => {
         const groups = new Map();
         for (const child of offspring) {
@@ -1418,9 +1430,12 @@ export default function Lineage() {
                             </div>
 
                             {/* Offspring Column (Right) — one section per
-                                hatch season (newest first); each section is
-                                a single vertical column of nano cards so the
-                                panel only grows top-to-bottom, never sideways. */}
+                                hatch season (newest first). Each section's
+                                grid fills columns top-to-bottom with an
+                                adaptive row count: few offspring bunch into
+                                one short column; many offspring wrap into
+                                up to 4 columns before the grid starts
+                                extending further down. */}
                             <div className="flex-shrink-0 order-3">
                                 {offspring.length > 0 && (
                                     <div className="bg-emerald-950/50 rounded-lg p-2 md:p-3 border border-emerald-800">
@@ -1428,27 +1443,33 @@ export default function Lineage() {
                                             <Users2 className="w-4 h-4" /> Offspring
                                         </h2>
                                         <div className="flex flex-col gap-2">
-                                            {offspringBySeason.map(([season, kids]) => (
-                                                <div
-                                                    key={season}
-                                                    className="rounded-md bg-slate-900/40 border border-emerald-900/50 p-1.5"
-                                                >
-                                                    <h3 className="text-[11px] font-semibold text-blue-300 mb-1 text-center">
-                                                        {season}
-                                                        <span className="ml-1 font-normal text-blue-400/60">({kids.length})</span>
-                                                    </h3>
-                                                    <div className="grid grid-cols-1 gap-1 justify-items-center">
-                                                        {kids.map(child => (
-                                                            <GeckoCardNode
-                                                                key={child.id}
-                                                                gecko={child}
-                                                                onNodeClick={handleSelectGecko}
-                                                                size="nano"
-                                                            />
-                                                        ))}
+                                            {offspringBySeason.map(([season, kids]) => {
+                                                const rows = pickOffspringRows(kids.length);
+                                                return (
+                                                    <div
+                                                        key={season}
+                                                        className="rounded-md bg-slate-900/40 border border-emerald-900/50 p-1.5"
+                                                    >
+                                                        <h3 className="text-[11px] font-semibold text-blue-300 mb-1 text-center">
+                                                            {season}
+                                                            <span className="ml-1 font-normal text-blue-400/60">({kids.length})</span>
+                                                        </h3>
+                                                        <div
+                                                            className="grid grid-flow-col auto-cols-max gap-1 justify-items-center"
+                                                            style={{ gridTemplateRows: `repeat(${rows}, minmax(0, max-content))` }}
+                                                        >
+                                                            {kids.map(child => (
+                                                                <GeckoCardNode
+                                                                    key={child.id}
+                                                                    gecko={child}
+                                                                    onNodeClick={handleSelectGecko}
+                                                                    size="nano"
+                                                                />
+                                                            ))}
+                                                        </div>
                                                     </div>
-                                                </div>
-                                            ))}
+                                                );
+                                            })}
                                         </div>
                                     </div>
                                 )}
