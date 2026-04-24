@@ -71,6 +71,27 @@ module.exports = {
   				800: 'hsl(var(--sage-800) / <alpha-value>)',
   				900: 'hsl(var(--sage-900) / <alpha-value>)',
   			},
+  			// emerald is the app's "brand accent" — overridden to read
+  			// CSS variables driven by the data-secondary attribute so
+  			// users can mix-and-match a theme (backgrounds/surfaces)
+  			// with an independent accent color. Defaults in :root
+  			// match Tailwind's stock emerald, so no visible change
+  			// until the user picks a non-"normal" accent. green-* is
+  			// deliberately left untouched so "success green" keeps
+  			// its semantic meaning across all accent choices.
+  			emerald: {
+  				50:  'hsl(var(--emerald-50) / <alpha-value>)',
+  				100: 'hsl(var(--emerald-100) / <alpha-value>)',
+  				200: 'hsl(var(--emerald-200) / <alpha-value>)',
+  				300: 'hsl(var(--emerald-300) / <alpha-value>)',
+  				400: 'hsl(var(--emerald-400) / <alpha-value>)',
+  				500: 'hsl(var(--emerald-500) / <alpha-value>)',
+  				600: 'hsl(var(--emerald-600) / <alpha-value>)',
+  				700: 'hsl(var(--emerald-700) / <alpha-value>)',
+  				800: 'hsl(var(--emerald-800) / <alpha-value>)',
+  				900: 'hsl(var(--emerald-900) / <alpha-value>)',
+  				950: 'hsl(var(--emerald-950) / <alpha-value>)',
+  			},
   			earth: {
   				50:  '#6f2e0c',
   				100: '#8e3a16',

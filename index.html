@@ -86,20 +86,22 @@
       })();
     </script>
 
-    <!-- Theme — apply persisted gecko-morph theme synchronously before
-         CSS/JS loads so users don't see a flash of the default palette. -->
+    <!-- Theme + accent — apply persisted choices synchronously before
+         CSS/JS loads so users don't see a flash of the default palette.
+         data-theme drives backgrounds/surfaces/sage/slate; data-secondary
+         drives the emerald accent palette. Both default to 'normal'. -->
     <script>
       (function () {
-        try {
-          var allowed = ['normal','tangerine','halloween-mask','blizzard','lavender','super-hypo'];
-          var stored = localStorage.getItem('geckinspect.theme');
-          var theme = allowed.indexOf(stored) !== -1 ? stored : 'normal';
-          document.documentElement.setAttribute('data-theme', theme);
-          document.documentElement.classList.add('dark');
-        } catch (e) {
-          document.documentElement.setAttribute('data-theme', 'normal');
-          document.documentElement.classList.add('dark');
+        var allowed = ['normal','tangerine','halloween-mask','blizzard','lavender','super-hypo'];
+        function pick(key) {
+          try {
+            var v = localStorage.getItem(key);
+            return allowed.indexOf(v) !== -1 ? v : 'normal';
+          } catch (e) { return 'normal'; }
         }
+        document.documentElement.setAttribute('data-theme', pick('geckinspect.theme'));
+        document.documentElement.setAttribute('data-secondary', pick('geckinspect.secondary'));
+        document.documentElement.classList.add('dark');
       })();
     </script>
     <meta name="theme-color" content="#064e3b" />

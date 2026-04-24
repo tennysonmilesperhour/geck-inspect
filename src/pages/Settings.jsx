@@ -30,47 +30,71 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-// Appearance / Theme Section — picks one of 6 gecko-morph color themes.
-// The ThemeProvider writes the choice to localStorage and sets
-// data-theme on <html>, so the rest of the app re-tints via CSS vars.
+// Appearance — two independent pickers. Theme drives backgrounds /
+// surfaces / sage / slate scales; Accent drives the emerald brand color
+// used on buttons, the sidebar, the feedback widget, etc. Mix and match
+// freely (e.g. Lavender theme + Tangerine accent). The ThemeProvider
+// writes both to localStorage and sets data-theme + data-secondary on
+// <html>, so the rest of the app re-tints via CSS vars.
 function AppearanceSection() {
-    const { theme, setTheme, themes } = useTheme();
-    return (
-        <div className="space-y-4">
-            <p className="text-sm text-slate-400">
-                Choose a color theme inspired by classic leopard gecko morphs. Your
-                selection is saved to this browser and applies everywhere in the app.
-            </p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                {themes.map((t) => {
-                    const selected = theme === t.id;
-                    return (
-                        <button
-                            key={t.id}
-                            type="button"
-                            onClick={() => setTheme(t.id)}
-                            aria-pressed={selected}
-                            className={`text-left rounded-lg border p-4 transition-colors flex items-start gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
-                                selected
-                                    ? 'border-primary bg-primary/10'
-                                    : 'border-slate-700 bg-slate-800/50 hover:border-slate-500'
-                            }`}
-                        >
-                            <span
-                                aria-hidden="true"
-                                className="mt-0.5 inline-block w-8 h-8 rounded-full border border-black/40 shrink-0"
-                                style={{ backgroundColor: t.swatch }}
-                            />
-                            <div className="flex-1 min-w-0">
-                                <div className="flex items-center gap-2">
-                                    <span className="font-medium text-slate-100">{t.label}</span>
-                                    {selected && <Check className="w-4 h-4 text-primary" />}
-                                </div>
-                                <p className="text-xs text-slate-400 mt-1">{t.description}</p>
+    const { theme, setTheme, themes, secondary, setSecondary, secondaryColors } = useTheme();
+    const renderGrid = (items, selectedId, onPick) => (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {items.map((t) => {
+                const selected = selectedId === t.id;
+                return (
+                    <button
+                        key={t.id}
+                        type="button"
+                        onClick={() => onPick(t.id)}
+                        aria-pressed={selected}
+                        className={`text-left rounded-lg border p-4 transition-colors flex items-start gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary ${
+                            selected
+                                ? 'border-primary bg-primary/10'
+                                : 'border-slate-700 bg-slate-800/50 hover:border-slate-500'
+                        }`}
+                    >
+                        <span
+                            aria-hidden="true"
+                            className="mt-0.5 inline-block w-8 h-8 rounded-full border border-black/40 shrink-0"
+                            style={{ backgroundColor: t.swatch }}
+                        />
+                        <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2">
+                                <span className="font-medium text-slate-100">{t.label}</span>
+                                {selected && <Check className="w-4 h-4 text-primary" />}
                             </div>
-                        </button>
-                    );
-                })}
+                            <p className="text-xs text-slate-400 mt-1">{t.description}</p>
+                        </div>
+                    </button>
+                );
+            })}
+        </div>
+    );
+
+    return (
+        <div className="space-y-8">
+            <div className="space-y-4">
+                <div>
+                    <h3 className="font-semibold text-slate-100">Theme</h3>
+                    <p className="text-sm text-slate-400 mt-1">
+                        Sets the overall mood — backgrounds, surfaces, and neutrals
+                        across the app.
+                    </p>
+                </div>
+                {renderGrid(themes, theme, setTheme)}
+            </div>
+
+            <div className="space-y-4">
+                <div>
+                    <h3 className="font-semibold text-slate-100">Accent color</h3>
+                    <p className="text-sm text-slate-400 mt-1">
+                        Sets the brand accent — sidebar highlights, primary buttons,
+                        the feedback widget, and other emerald-tinted chrome. Mix
+                        with any theme.
+                    </p>
+                </div>
+                {renderGrid(secondaryColors, secondary, setSecondary)}
             </div>
         </div>
     );

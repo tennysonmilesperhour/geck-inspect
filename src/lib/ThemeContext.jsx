@@ -45,43 +45,77 @@ export const DEFAULT_THEME = 'normal';
 const STORAGE_KEY = 'geckinspect.theme';
 const VALID_IDS = new Set(THEMES.map((t) => t.id));
 
-function readStoredTheme() {
-  if (typeof window === 'undefined') return DEFAULT_THEME;
+// Secondary "Accent color" — independent of the primary theme.
+// Reuses the same six morph IDs since each maps cleanly to a hue.
+// Picking 'normal' here keeps the app's stock emerald accent.
+export const DEFAULT_SECONDARY = 'normal';
+const SECONDARY_STORAGE_KEY = 'geckinspect.secondary';
+
+export const SECONDARY_COLORS = [
+  { id: 'normal',         label: 'Emerald',       swatch: '#10b981', description: 'Stock emerald — wild-type leopard gecko' },
+  { id: 'tangerine',      label: 'Tangerine',     swatch: '#ea8206', description: 'Warm amber accents' },
+  { id: 'halloween-mask', label: 'Halloween Mask', swatch: '#e53e1a', description: 'Bold red-orange accents' },
+  { id: 'blizzard',       label: 'Blizzard',      swatch: '#3b82f6', description: 'Cool sky-blue accents' },
+  { id: 'lavender',       label: 'Lavender',      swatch: '#a78bfa', description: 'Soft violet accents' },
+  { id: 'super-hypo',     label: 'Super Hypo',    swatch: '#eab308', description: 'Golden yellow accents' },
+];
+
+function readStored(key, validSet, fallback) {
+  if (typeof window === 'undefined') return fallback;
   try {
-    const stored = window.localStorage.getItem(STORAGE_KEY);
-    if (stored && VALID_IDS.has(stored)) return stored;
+    const stored = window.localStorage.getItem(key);
+    if (stored && validSet.has(stored)) return stored;
   } catch {}
-  return DEFAULT_THEME;
+  return fallback;
 }
 
-function applyThemeAttribute(themeId) {
+function applyAttribute(name, value) {
   if (typeof document === 'undefined') return;
-  document.documentElement.setAttribute('data-theme', themeId);
+  document.documentElement.setAttribute(name, value);
 }
 
 const ThemeContext = createContext({
   theme: DEFAULT_THEME,
   setTheme: () => {},
   themes: THEMES,
+  secondary: DEFAULT_SECONDARY,
+  setSecondary: () => {},
+  secondaryColors: SECONDARY_COLORS,
 });
 
 export const ThemeProvider = ({ children }) => {
-  const [theme, setThemeState] = useState(readStoredTheme);
+  const [theme, setThemeState] = useState(() =>
+    readStored(STORAGE_KEY, VALID_IDS, DEFAULT_THEME)
+  );
+  const [secondary, setSecondaryState] = useState(() =>
+    readStored(SECONDARY_STORAGE_KEY, VALID_IDS, DEFAULT_SECONDARY)
+  );
 
   useEffect(() => {
-    applyThemeAttribute(theme);
-    try {
-      window.localStorage.setItem(STORAGE_KEY, theme);
-    } catch {}
+    applyAttribute('data-theme', theme);
+    try { window.localStorage.setItem(STORAGE_KEY, theme); } catch {}
   }, [theme]);
+
+  useEffect(() => {
+    applyAttribute('data-secondary', secondary);
+    try { window.localStorage.setItem(SECONDARY_STORAGE_KEY, secondary); } catch {}
+  }, [secondary]);
 
   const setTheme = useCallback((nextId) => {
     if (!VALID_IDS.has(nextId)) return;
     setThemeState(nextId);
   }, []);
 
+  const setSecondary = useCallback((nextId) => {
+    if (!VALID_IDS.has(nextId)) return;
+    setSecondaryState(nextId);
+  }, []);
+
   return (
-    <ThemeContext.Provider value={{ theme, setTheme, themes: THEMES }}>
+    <ThemeContext.Provider value={{
+      theme, setTheme, themes: THEMES,
+      secondary, setSecondary, secondaryColors: SECONDARY_COLORS,
+    }}>
       {children}
     </ThemeContext.Provider>
   );
