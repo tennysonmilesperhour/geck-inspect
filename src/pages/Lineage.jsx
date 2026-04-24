@@ -1430,19 +1430,22 @@ export default function Lineage() {
                             </div>
 
                             {/* Offspring Column (Right) — one section per
-                                hatch season (newest first). Each section's
-                                grid fills columns top-to-bottom with an
-                                adaptive row count: few offspring bunch into
-                                one short column; many offspring wrap into
-                                up to 4 columns before the grid starts
-                                extending further down. */}
+                                hatch season (newest first), laid out side-by-
+                                side so seasons sit adjacent rather than
+                                stacked. Wraps to the next row on narrow
+                                viewports. Within each section, the grid fills
+                                columns top-to-bottom with an adaptive row
+                                count: few offspring bunch into one short
+                                column; many offspring wrap into up to 4
+                                columns before the grid starts extending
+                                further down. */}
                             <div className="flex-shrink-0 order-3">
                                 {offspring.length > 0 && (
                                     <div className="bg-emerald-950/50 rounded-lg p-2 md:p-3 border border-emerald-800">
                                         <h2 className="text-sm font-bold mb-2 flex items-center justify-center gap-1 text-blue-400">
                                             <Users2 className="w-4 h-4" /> Offspring
                                         </h2>
-                                        <div className="flex flex-col gap-2">
+                                        <div className="flex flex-row flex-wrap items-start gap-2">
                                             {offspringBySeason.map(([season, kids]) => {
                                                 const rows = pickOffspringRows(kids.length);
                                                 return (
