@@ -27,6 +27,7 @@ import { differenceInMonths, format, parseISO } from 'date-fns';
 import { motion, AnimatePresence } from 'framer-motion';
 import html2canvas from 'html2canvas';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
+import { inferSeasonLabel, compareSeasonLabels } from '@/lib/seasons';
 
 // Status → color palette for status dot + badge
 const STATUS_COLORS = {
@@ -254,6 +255,7 @@ const GeckoCardNode = ({
     const hasImage = gecko.image_urls && gecko.image_urls.length > 0;
 
     const sizes = {
+        nano: { card: 'w-14 h-20', name: 'text-[8px]', id: 'text-[7px]' },
         tiny: { card: 'w-24 h-28', name: 'text-[10px]', id: 'text-[9px]' },
         small: { card: 'w-28 h-32', name: 'text-xs', id: 'text-[10px]' },
         normal: { card: 'w-36 h-44', name: 'text-sm', id: 'text-xs' },
@@ -267,7 +269,8 @@ const GeckoCardNode = ({
     const age = formatAge(gecko.hatch_date);
     const morphTags = Array.isArray(gecko.morph_tags) ? gecko.morph_tags.filter(Boolean) : [];
     const showDetails = size === 'normal';
-    const showAgeBadge = size !== 'tiny' && age;
+    const showAgeBadge = size !== 'tiny' && size !== 'nano' && age;
+    const showBottomStrip = size !== 'nano';
 
     const highlightRing = isOnHighlightPath && !isSelected
         ? 'ring-2 ring-amber-300 shadow-[0_0_14px_rgba(251,191,36,0.5)] z-10'
@@ -323,19 +326,25 @@ const GeckoCardNode = ({
                     </div>
                 )}
 
-                <div className="absolute bottom-0 left-0 right-0 p-1 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
-                    <div className="flex items-center gap-0.5">
-                        <h4 className={`font-bold ${nameTextSize} text-white leading-tight truncate drop-shadow-md`}>
-                            {gecko.name}
-                        </h4>
-                        <span className={`font-bold ${nameTextSize} ${sexColor} drop-shadow-md`}>
-                            {sexIcon}
-                        </span>
+                {showBottomStrip ? (
+                    <div className="absolute bottom-0 left-0 right-0 p-1 bg-gradient-to-t from-black/90 via-black/60 to-transparent">
+                        <div className="flex items-center gap-0.5">
+                            <h4 className={`font-bold ${nameTextSize} text-white leading-tight truncate drop-shadow-md`}>
+                                {gecko.name}
+                            </h4>
+                            <span className={`font-bold ${nameTextSize} ${sexColor} drop-shadow-md`}>
+                                {sexIcon}
+                            </span>
+                        </div>
+                        <p className={`${idTextSize} text-white/90 truncate drop-shadow-md`}>
+                            {gecko.gecko_id_code || 'No ID'}
+                        </p>
                     </div>
-                    <p className={`${idTextSize} text-white/90 truncate drop-shadow-md`}>
-                        {gecko.gecko_id_code || 'No ID'}
-                    </p>
-                </div>
+                ) : (
+                    <div className={`absolute bottom-0 left-0 right-0 px-0.5 py-[1px] bg-black/70 text-center ${nameTextSize} font-bold text-white leading-tight truncate drop-shadow-md`}>
+                        {gecko.name}
+                    </div>
+                )}
             </Card>
         </motion.div>
     );
@@ -404,7 +413,7 @@ const GeckoCardNode = ({
 
 // Simplified UnknownCard
 const UnknownCardNode = ({ size = 'normal' }) => {
-     const cardSize = size === 'tiny' ? 'w-24 h-28' : size === 'small' ? 'w-28 h-32' : 'w-36 h-44';
+     const cardSize = size === 'nano' ? 'w-14 h-20' : size === 'tiny' ? 'w-24 h-28' : size === 'small' ? 'w-28 h-32' : 'w-36 h-44';
      return (
          <div className={`flex-shrink-0 relative overflow-hidden bg-slate-800/50 border-2 border-dashed border-slate-600 rounded-lg ${cardSize}`}>
              <img 
@@ -708,36 +717,29 @@ export default function Lineage() {
         [recentGeckoIds, allGeckosMap],
     );
 
-    // Side panel layout scales with the tree's generation count so mates/offspring
-    // can expand laterally as the tree gets wider.
-    const sidePanelWidth =
-        generations >= 5 ? 'md:w-80' :
-        generations >= 4 ? 'md:w-60' :
-        'md:w-36';
-    const sidePanelGridCols =
-        generations >= 5 ? 'md:grid-cols-3' :
-        generations >= 4 ? 'md:grid-cols-2' :
-        'md:grid-cols-1';
-    const sidePanelCardSize = generations >= 4 ? 'tiny' : 'small';
+    // Mates render as a single vertical column (matching the ancestry tree's
+    // top-to-bottom flow); card size shrinks a bit on deeper trees so the
+    // column doesn't dominate the layout.
+    const matesCardSize = generations >= 4 ? 'tiny' : 'small';
 
-    // Track desktop vs mobile so the offspring column cap can match the user's
-    // "6 desktop / 10 mobile" request responsively.
-    const [isDesktop, setIsDesktop] = useState(
-        typeof window !== 'undefined' ? window.matchMedia('(min-width: 768px)').matches : true
-    );
-    useEffect(() => {
-        if (typeof window === 'undefined') return undefined;
-        const mq = window.matchMedia('(min-width: 768px)');
-        const handler = (e) => setIsDesktop(e.matches);
-        mq.addEventListener('change', handler);
-        return () => mq.removeEventListener('change', handler);
-    }, []);
-
-    // Offspring column uses the same card size as mates and gets clamped to
-    // mates.length rows (capped at 6 desktop / 10 mobile) so its panel height
-    // matches the mates panel, keeping their top edges aligned.
-    const offspringCap = isDesktop ? 6 : 10;
-    const offspringRows = Math.max(1, Math.min(mates.length || offspringCap, offspringCap));
+    // Offspring render as per-season sections (newest first), each a compact
+    // 4-wide grid of "nano" cards so ~24 fit in the same footprint as a
+    // 2×6 block of mates at the mates' own card size.
+    const offspringBySeason = useMemo(() => {
+        const groups = new Map();
+        for (const child of offspring) {
+            const label = inferSeasonLabel(child.hatch_date) || 'Unknown season';
+            if (!groups.has(label)) groups.set(label, []);
+            groups.get(label).push(child);
+        }
+        const keys = [...groups.keys()].sort((a, b) => {
+            if (a === 'Unknown season') return 1;
+            if (b === 'Unknown season') return -1;
+            // Newest season first.
+            return -compareSeasonLabels(a, b);
+        });
+        return keys.map((k) => [k, groups.get(k)]);
+    }, [offspring]);
 
     // Copy shareable link (reuses ?geckoId= URL param the page already accepts)
     const [copiedLink, setCopiedLink] = useState(false);
@@ -1387,21 +1389,21 @@ export default function Lineage() {
                             <Loader2 className="w-12 h-12 text-emerald-500 animate-spin" />
                         </div>
                     ) : selectedGeckoId && lineage?.id ? (
-                        <div className={`flex flex-col md:flex-row gap-2 md:gap-3 md:items-end md:justify-center`}>
-                            {/* Mates Column (Left) */}
-                            <div className={`flex-shrink-0 order-2 md:order-1 ${sidePanelWidth}`}>
+                        <div className={`flex flex-col md:flex-row gap-2 md:gap-3 md:items-start md:justify-center`}>
+                            {/* Mates Column (Left) — single vertical column. */}
+                            <div className="flex-shrink-0 order-2 md:order-1">
                                 {mates.length > 0 && (
                                     <div className="bg-emerald-950/50 rounded-lg p-2 md:p-3 border border-emerald-800">
                                         <h2 className="text-sm font-bold mb-2 flex items-center justify-center gap-1 text-pink-400">
                                             <Heart className="w-4 h-4" /> Mates
                                         </h2>
-                                        <div className={`flex md:grid items-center justify-center gap-2 overflow-x-auto md:overflow-visible pb-2 md:pb-0 ${sidePanelGridCols}`}>
+                                        <div className="grid grid-cols-1 gap-2 justify-items-center">
                                             {mates.map(mate => (
                                                 <GeckoCardNode
                                                     key={mate.id}
                                                     gecko={mate}
                                                     onNodeClick={handleSelectGecko}
-                                                    size={sidePanelCardSize}
+                                                    size={matesCardSize}
                                                 />
                                             ))}
                                         </div>
@@ -1415,27 +1417,36 @@ export default function Lineage() {
                                 {renderTree(lineage, 1)}
                             </div>
 
-                            {/* Offspring Column (Right) — column-flowing grid
-                                whose row count matches mates so both panels
-                                have the same height and top edges line up.
-                                Capped at 6 rows desktop / 10 mobile. */}
-                            <div className="order-3">
+                            {/* Offspring Column (Right) — one section per
+                                hatch season (newest first), each a 4-wide
+                                grid of nano cards that grows downward. */}
+                            <div className="flex-shrink-0 order-3">
                                 {offspring.length > 0 && (
                                     <div className="bg-emerald-950/50 rounded-lg p-2 md:p-3 border border-emerald-800">
                                         <h2 className="text-sm font-bold mb-2 flex items-center justify-center gap-1 text-blue-400">
                                             <Users2 className="w-4 h-4" /> Offspring
                                         </h2>
-                                        <div
-                                            className="grid grid-flow-col auto-cols-max gap-2 overflow-x-auto pb-2 md:pb-0"
-                                            style={{ gridTemplateRows: `repeat(${offspringRows}, minmax(0, max-content))` }}
-                                        >
-                                            {offspring.map(child => (
-                                                <GeckoCardNode
-                                                    key={child.id}
-                                                    gecko={child}
-                                                    onNodeClick={handleSelectGecko}
-                                                    size={sidePanelCardSize}
-                                                />
+                                        <div className="flex flex-col gap-2">
+                                            {offspringBySeason.map(([season, kids]) => (
+                                                <div
+                                                    key={season}
+                                                    className="rounded-md bg-slate-900/40 border border-emerald-900/50 p-1.5"
+                                                >
+                                                    <h3 className="text-[11px] font-semibold text-blue-300 mb-1 text-center">
+                                                        {season}
+                                                        <span className="ml-1 font-normal text-blue-400/60">({kids.length})</span>
+                                                    </h3>
+                                                    <div className="grid grid-cols-4 gap-1 justify-items-center">
+                                                        {kids.map(child => (
+                                                            <GeckoCardNode
+                                                                key={child.id}
+                                                                gecko={child}
+                                                                onNodeClick={handleSelectGecko}
+                                                                size="nano"
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                </div>
                                             ))}
                                         </div>
                                     </div>
