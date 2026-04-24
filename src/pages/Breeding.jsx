@@ -455,7 +455,7 @@ export default function BreedingPage() {
                                     <SelectTrigger className="w-full h-8 text-xs">
                                         <SelectValue>{TAB_LABELS[breedingPrefs.defaultTab]}</SelectValue>
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="z-[99999]">
                                         {Object.entries(TAB_LABELS).map(([value, label]) => (
                                             <SelectItem key={value} value={value}>{label}</SelectItem>
                                         ))}
@@ -468,7 +468,7 @@ export default function BreedingPage() {
                                     <SelectTrigger className="w-full h-8 text-xs">
                                         <SelectValue>{SORT_LABELS[breedingPrefs.defaultSort]}</SelectValue>
                                     </SelectTrigger>
-                                    <SelectContent>
+                                    <SelectContent className="z-[99999]">
                                         {Object.entries(SORT_LABELS).map(([value, label]) => (
                                             <SelectItem key={value} value={value}>{label}</SelectItem>
                                         ))}
