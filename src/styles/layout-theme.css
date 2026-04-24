@@ -677,6 +677,89 @@ html, body, #root {
             box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
           }
 
+          /* Mobile-compact header: tighter paddings + smaller action
+             pills so the top bar reads as a slim glass ribbon rather
+             than a chunky toolbar on phones. */
+          .gecko-header--compact .gecko-header-actions {
+            gap: 0;
+            padding: 3px;
+            border-radius: 10px;
+            background: rgba(6, 78, 59, 0.55);
+            border-color: rgba(134, 239, 172, 0.18);
+          }
+          .gecko-header--compact .gecko-header-action {
+            width: 38px;
+            height: 38px;
+            border-radius: 8px;
+          }
+          /* Beat the generic coarse-pointer 44x44 bump above — scoped to
+             the compact header only so desktop/tablet still get the
+             comfier tap target. */
+          @media (hover: none) and (pointer: coarse) {
+            .gecko-header--compact .gecko-header-action {
+              width: 38px;
+              height: 38px;
+            }
+          }
+          .gecko-header--compact .gecko-header-action svg {
+            width: 18px;
+            height: 18px;
+          }
+
+          /* Bottom nav (mobile): mirror the sidebar's glass treatment —
+             semi-transparent emerald backdrop, soft inner top highlight,
+             and an accent bar above the active tab. */
+          .gecko-bottom-nav {
+            background: linear-gradient(180deg,
+              rgba(4, 47, 35, 0.55) 0%,
+              rgba(6, 78, 59, 0.55) 100%);
+            backdrop-filter: blur(18px) saturate(160%);
+            -webkit-backdrop-filter: blur(18px) saturate(160%);
+            border-top: 1px solid rgba(134, 239, 172, 0.18);
+            box-shadow:
+              0 -8px 32px rgba(0, 0, 0, 0.35),
+              inset 0 1px 0 rgba(255, 255, 255, 0.06);
+          }
+
+          .gecko-bottom-nav__item {
+            position: relative;
+            flex: 1 1 0%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            padding: 10px 4px;
+            font-size: 10px;
+            font-weight: 600;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            color: rgb(167 243 208 / 0.65);
+            transition: color 0.2s ease, background 0.2s ease;
+          }
+
+          .gecko-bottom-nav__item:hover {
+            color: rgb(209 250 229 / 0.95);
+            background: rgba(16, 185, 129, 0.08);
+          }
+
+          .gecko-bottom-nav__item.is-active {
+            color: var(--gecko-primary);
+            background: rgba(16, 185, 129, 0.15);
+          }
+
+          .gecko-bottom-nav__item.is-active::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 20%;
+            right: 20%;
+            height: 2px;
+            background: var(--gecko-accent);
+            border-radius: 0 0 2px 2px;
+            box-shadow: 0 0 10px rgba(134, 239, 172, 0.6);
+          }
+
           /* Bottom-anchored floating action buttons (chat launcher,
              feedback widget, etc.) on mobile need to clear the iOS
              home indicator so they don't overlap and stay tappable. */

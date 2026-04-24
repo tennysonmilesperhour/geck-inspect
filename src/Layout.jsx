@@ -1114,14 +1114,14 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         </div>
 
         <main id="main-content" className={`flex-1 flex flex-col min-w-0 transition-[padding] duration-200 ease-out ${isSidebarLocked ? 'md:pl-[13.6rem]' : 'md:pl-[3.4rem]'}`}>
-          <header className="bg-sage-200/90 backdrop-blur-md border-b border-sage-300 px-[max(1rem,env(safe-area-inset-left))] pb-2 pt-[calc(0.5rem+env(safe-area-inset-top))] md:hidden sticky top-0 z-10 gecko-header">
-            <div className="flex items-center justify-between gap-4">
+          <header className="bg-sage-200/90 backdrop-blur-md border-b border-sage-300 px-[max(0.75rem,env(safe-area-inset-left))] pb-1.5 pt-[calc(0.375rem+env(safe-area-inset-top))] md:hidden sticky top-0 z-10 gecko-header gecko-header--compact">
+            <div className="flex items-center justify-between gap-3">
               <button
                 onClick={toggleSidebar}
-                className="hover:bg-sage-200 rounded-lg transition-colors duration-200 inline-flex items-center justify-center w-11 h-11"
+                className="hover:bg-emerald-500/20 rounded-lg transition-colors duration-200 inline-flex items-center justify-center w-9 h-9 text-emerald-200 hover:text-emerald-50"
                 aria-label="Toggle Sidebar"
               >
-                <Menu className="w-6 h-6 text-sage-600" />
+                <Menu className="w-5 h-5" />
               </button>
 
               <div className="flex items-center gap-2">
@@ -1236,7 +1236,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
         {/* Section tabs (mobile) — fixed bottom bar */}
         <nav
-          className="fixed bottom-0 left-0 right-0 z-40 md:hidden flex border-t border-emerald-800/40 bg-emerald-950/95 backdrop-blur-md pb-[env(safe-area-inset-bottom)]"
+          className="gecko-bottom-nav fixed bottom-0 left-0 right-0 z-40 md:hidden flex pb-[env(safe-area-inset-bottom)]"
           aria-label="App sections"
         >
           {SECTIONS.map((section) => {
@@ -1247,11 +1247,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 key={section.id}
                 to={createPageUrl(section.defaultPage)}
                 aria-current={isActive ? 'page' : undefined}
-                className={`flex-1 flex flex-col items-center justify-center gap-1 py-2 text-[10px] font-semibold uppercase tracking-wider transition-colors ${
-                  isActive
-                    ? 'text-emerald-200 bg-emerald-800/40'
-                    : 'text-emerald-400/70 hover:text-emerald-200'
-                }`}
+                className={`gecko-bottom-nav__item ${isActive ? 'is-active' : ''}`}
               >
                 <IconComponent className="h-5 w-5" />
                 <span>{section.label}</span>
