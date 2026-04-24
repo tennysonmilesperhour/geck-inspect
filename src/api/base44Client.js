@@ -1,73 +1,87 @@
-import { createClient } from '@base44/sdk';
-import { appParams } from '@/lib/app-params';
+/**
+ * Pure Supabase-backed facade for `base44.*`.
+ *
+ * Older code across the app still imports `{ base44 }` and calls
+ * `base44.auth.me()`, `base44.entities.Gecko.filter(...)`, etc. This module
+ * used to instantiate `@base44/sdk`'s `createClient(...)`, which on every
+ * page load would:
+ *   - start a 60s heartbeat POSTing to https://base44.app/api/.../analytics/track/batch
+ *   - fire an init `me()` request to https://base44.app/api/.../entities/User/me
+ *   - open a websocket to base44.app
+ *   - rehydrate a `base44_access_token` from localStorage
+ *
+ * That meant every visit to /AuthPortal still talked to Base44's dead
+ * servers even though the login form itself uses Supabase. This file
+ * replaces the SDK entirely with Supabase calls, so nothing in the app
+ * runtime reaches base44.app anymore.
+ */
 import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
 import * as sbEntities from '@/api/supabaseEntities';
 import { isGuestMode, GUEST_USER, blockIfGuest } from '@/lib/guestMode';
 
-const { appId, serverUrl, token, functionsVersion } = appParams;
+const authFacade = {
+  async me() {
+    if (isGuestMode()) return { ...GUEST_USER };
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) throw new Error('Not authenticated');
+    return normalizeSupabaseUser(user);
+  },
+  async logout() {
+    return supabase.auth.signOut();
+  },
+  loginWithRedirect() {
+    window.location.href = '/AuthPortal';
+  },
+  redirectToLogin() {
+    window.location.href = '/AuthPortal';
+  },
+  async updateMe(data) {
+    blockIfGuest('update your profile');
+    const { data: { user }, error } = await supabase.auth.updateUser({ data });
+    if (error) throw error;
+    return normalizeSupabaseUser(user);
+  },
+  async isAuthenticated() {
+    if (isGuestMode()) return false;
+    const { data: { user } } = await supabase.auth.getUser();
+    return !!user;
+  },
+};
 
-const BASE44_SERVER = 'https://base44.app';
-const RESOLVED_APP_ID = appId || '68929cdad944c572926ab6cb';
-
-const appBaseUrl = import.meta.env.VITE_BASE44_APP_BASE_URL
-  || serverUrl
-  || BASE44_SERVER;
-
-const resolvedServerUrl = serverUrl || BASE44_SERVER;
-
-export const base44 = createClient({
-  appId: RESOLVED_APP_ID,
-  serverUrl: resolvedServerUrl,
-  token,
-  functionsVersion,
-  appBaseUrl,
-  requiresAuth: false
+const entitiesFacade = new Proxy({}, {
+  get(_target, entityName) {
+    if (typeof entityName !== 'string') return undefined;
+    if (entityName === 'User') return sbEntities.UserEntity;
+    return sbEntities[entityName];
+  },
 });
 
-// Override base44.auth so every page that calls base44.auth.me() / logout()
-// uses Supabase instead of Base44's dead auth servers.
-base44.auth = new Proxy(base44.auth, {
-  get(target, prop) {
-    if (prop === 'me') {
-      return async () => {
-        // Guest mode has no real Supabase user; return the synthetic
-        // guest profile so pages that assume base44.auth.me() always
-        // resolves don't crash their first load.
-        if (isGuestMode()) return { ...GUEST_USER };
-        const { data: { user } } = await supabase.auth.getUser();
-        if (!user) throw new Error('Not authenticated');
-        return normalizeSupabaseUser(user);
+const functionsFacade = {
+  async invoke(functionName, body) {
+    const { data, error } = await supabase.functions.invoke(functionName, { body });
+    if (error) throw error;
+    return { data };
+  },
+};
+
+const integrationsFacade = {
+  Core: new Proxy({}, {
+    get(_target, prop) {
+      return () => {
+        throw new Error(
+          `base44.integrations.Core.${String(prop)}() was removed during the Supabase migration.`
+        );
       };
-    }
-    if (prop === 'logout') {
-      return async () => supabase.auth.signOut();
-    }
-    if (prop === 'loginWithRedirect' || prop === 'redirectToLogin') {
-      return () => { window.location.href = '/AuthPortal'; };
-    }
-    if (prop === 'updateMe') {
-      return async (data) => {
-        blockIfGuest('update your profile');
-        const { data: { user }, error } = await supabase.auth.updateUser({ data });
-        if (error) throw error;
-        return normalizeSupabaseUser(user);
-      };
-    }
-    return target[prop];
-  }
-});
+    },
+  }),
+};
 
-// Redirect all base44.entities.* calls to Supabase so every page that
-// calls base44.entities.Gecko.filter() / .list() / etc. uses Supabase.
-base44.entities = new Proxy(base44.entities || {}, {
-  get(target, entityName) {
-    if (typeof entityName !== 'string') return target[entityName];
-    // Named exports in sbEntities match entity names exactly (e.g. sbEntities.Gecko)
-    // UserEntity covers the User entity
-    const sbEntity = entityName === 'User' ? sbEntities.UserEntity : sbEntities[entityName];
-    return sbEntity || target[entityName];
-  }
-});
+export const base44 = {
+  auth: authFacade,
+  entities: entitiesFacade,
+  functions: functionsFacade,
+  integrations: integrationsFacade,
+};
 
 export function redirectToLogin() {
   window.location.href = '/AuthPortal';
