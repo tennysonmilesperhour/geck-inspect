@@ -30,8 +30,8 @@ export const THEMES = [
   {
     id: 'lavender',
     label: 'Lavender',
-    description: 'Dusk lavender — lifted twilight surfaces with bright lilac primary and deep violet accents',
-    swatch: '#b188f0',
+    description: 'Deep violet base with pale-lavender accents — Lavender Albino tones',
+    swatch: '#c084fc',
   },
   {
     id: 'super-hypo',
