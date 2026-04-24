@@ -1,41 +1,45 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 
+// Each theme sets CSS custom properties via :root[data-theme="..."] in
+// src/index.css. `isLight` flips the Tailwind `dark` class so dark:*
+// variants turn off for light-mode themes.
 export const THEMES = [
   {
     id: 'normal',
     label: 'Normal',
-    description: 'Wild-type leopard gecko — emerald & forest greens',
-    swatch: '#34d399',
+    description: 'Wild-type leopard gecko — deep forest greens with umber accents',
+    swatch: '#2fb574',
   },
   {
     id: 'tangerine',
     label: 'Tangerine',
-    description: 'Bright orange Tangerine morph — amber & dusk tones',
-    swatch: '#f59e0b',
+    description: 'Dusk-to-ember warmth — bright amber on deep umber',
+    swatch: '#ea8206',
   },
   {
     id: 'halloween-mask',
     label: 'Halloween Mask',
-    description: 'Bold red-orange Halloween Mask contrast',
-    swatch: '#ef4444',
+    description: 'October night — glowing red-orange with bronze accents',
+    swatch: '#e53e1a',
   },
   {
     id: 'blizzard',
     label: 'Blizzard',
-    description: 'Cool slate-blue patternless Blizzard',
-    swatch: '#60a5fa',
+    description: 'Icy night — frost-cyan primary on cold near-black',
+    swatch: '#38a7f2',
   },
   {
     id: 'lavender',
     label: 'Lavender',
-    description: 'Soft violet Lavender Albino tones',
-    swatch: '#c084fc',
+    description: 'Light mode — pale lavender with darker lavender, slate, and dusty-blue accents',
+    swatch: '#8b6dcc',
+    isLight: true,
   },
   {
     id: 'super-hypo',
     label: 'Super Hypo',
-    description: 'Sunlit yellow Super Hypo Tangerine tones',
-    swatch: '#facc15',
+    description: 'High-noon sunlight — golden yellow with olive and bronze undertones',
+    swatch: '#e0b308',
   },
 ];
 
@@ -55,6 +59,14 @@ function readStoredTheme() {
 function applyThemeAttribute(themeId) {
   if (typeof document === 'undefined') return;
   document.documentElement.setAttribute('data-theme', themeId);
+  const theme = THEMES.find((t) => t.id === themeId);
+  const isLight = !!theme?.isLight;
+  // Light-mode themes drop the .dark class so Tailwind dark: variants
+  // don't fire. Must stay in sync with the bootstrap script in index.html.
+  document.documentElement.classList.toggle('dark', !isLight);
+  // Browser form controls / UA styling follow color-scheme.
+  const colorScheme = document.querySelector('meta[name="color-scheme"]');
+  if (colorScheme) colorScheme.setAttribute('content', isLight ? 'light' : 'dark');
 }
 
 const ThemeContext = createContext({

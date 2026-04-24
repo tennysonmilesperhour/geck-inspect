@@ -182,387 +182,409 @@ button:focus-visible {
        Tailwind direction; used for page backgrounds and neutrals.
      ------------------------------------------------------------------ */
 
-  /* Normal — wild-type leopard gecko (emerald / forest greens). */
+  /* Normal — wild-type leopard gecko. Deep forest floor with moss-green
+     primary and a touch of warm umber at the edges. */
   :root[data-theme="normal"] {
-    --background: 153 30% 4%;
-    --foreground: 0 0% 98%;
-    --card: 153 25% 6%;
-    --card-foreground: 0 0% 98%;
-    --popover: 153 25% 6%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 153 64% 52%;
-    --primary-foreground: 153 40% 8%;
-    --secondary: 153 20% 14%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 153 15% 14%;
-    --muted-foreground: 153 10% 65%;
-    --accent: 153 30% 18%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62.8% 45%;
+    --background: 156 38% 4%;
+    --foreground: 148 15% 96%;
+    --card: 156 32% 6%;
+    --card-foreground: 148 15% 96%;
+    --popover: 156 32% 6%;
+    --popover-foreground: 148 15% 96%;
+    --primary: 152 70% 48%;
+    --primary-foreground: 156 50% 8%;
+    --secondary: 154 22% 13%;
+    --secondary-foreground: 148 15% 96%;
+    --muted: 154 18% 13%;
+    --muted-foreground: 148 12% 68%;
+    --accent: 38 55% 28%;
+    --accent-foreground: 40 55% 94%;
+    --destructive: 0 68% 48%;
     --destructive-foreground: 0 0% 98%;
-    --border: 153 40% 18%;
-    --input: 153 20% 15%;
-    --ring: 153 64% 52%;
+    --border: 154 35% 17%;
+    --input: 154 22% 14%;
+    --ring: 152 70% 48%;
 
-    --sidebar-background: 153 30% 7%;
-    --sidebar-foreground: 153 10% 88%;
-    --sidebar-primary: 153 64% 52%;
-    --sidebar-primary-foreground: 153 40% 8%;
-    --sidebar-accent: 153 20% 13%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 153 30% 15%;
-    --sidebar-ring: 153 64% 52%;
+    --sidebar-background: 156 36% 6%;
+    --sidebar-foreground: 148 12% 88%;
+    --sidebar-primary: 152 70% 48%;
+    --sidebar-primary-foreground: 156 50% 8%;
+    --sidebar-accent: 154 22% 12%;
+    --sidebar-accent-foreground: 148 15% 96%;
+    --sidebar-border: 154 30% 14%;
+    --sidebar-ring: 152 70% 48%;
 
-    --chart-1: 153 64% 52%;
-    --chart-2: 168 60% 45%;
-    --chart-3: 120 40% 55%;
-    --chart-4: 90 50% 60%;
-    --chart-5: 180 55% 50%;
+    --chart-1: 152 70% 48%;
+    --chart-2: 168 62% 42%;
+    --chart-3: 38 72% 58%;
+    --chart-4: 88 52% 52%;
+    --chart-5: 192 58% 48%;
 
-    --sage-50:  161 86% 16%;
-    --sage-100: 159 87% 20%;
-    --sage-200: 158 93% 24%;
-    --sage-300: 159 92% 30%;
-    --sage-400: 159 84% 39%;
-    --sage-500: 157 72% 52%;
-    --sage-600: 156 72% 67%;
-    --sage-700: 156 73% 80%;
-    --sage-800: 152 76% 90%;
-    --sage-900: 149 80% 96%;
+    --sage-50:  160 82% 14%;
+    --sage-100: 158 84% 18%;
+    --sage-200: 156 88% 22%;
+    --sage-300: 154 86% 28%;
+    --sage-400: 153 78% 38%;
+    --sage-500: 152 70% 48%;
+    --sage-600: 152 68% 62%;
+    --sage-700: 152 68% 76%;
+    --sage-800: 150 72% 88%;
+    --sage-900: 148 78% 95%;
 
-    --slate-50:  150 80% 97%;
-    --slate-100: 152 76% 90%;
-    --slate-200: 156 73% 80%;
-    --slate-300: 156 72% 67%;
-    --slate-400: 157 72% 52%;
-    --slate-500: 155 15% 49%;
-    --slate-600: 148 19% 36%;
-    --slate-700: 150 27% 19%;
-    --slate-800: 150 37% 16%;
-    --slate-900: 152 34% 13%;
-    --slate-950: 152 39% 9%;
+    --slate-50:  148 70% 97%;
+    --slate-100: 150 68% 90%;
+    --slate-200: 152 60% 80%;
+    --slate-300: 152 52% 66%;
+    --slate-400: 152 42% 52%;
+    --slate-500: 152 20% 46%;
+    --slate-600: 152 24% 32%;
+    --slate-700: 154 30% 18%;
+    --slate-800: 154 36% 14%;
+    --slate-900: 156 38% 11%;
+    --slate-950: 156 42% 7%;
 
-    --scrollbar-thumb: #4ade80;
-    --scrollbar-thumb-hover: #86efac;
+    --scrollbar-thumb: #2fb574;
+    --scrollbar-thumb-hover: #4ade80;
   }
 
-  /* Tangerine — warm amber / dusk tones. */
+  /* Tangerine — dusk-to-ember warmth. Deep umber backgrounds, bright
+     amber primary, rose-red chart accents that evoke sunset horizon. */
   :root[data-theme="tangerine"] {
-    --background: 24 35% 5%;
-    --foreground: 0 0% 98%;
-    --card: 24 30% 7%;
-    --card-foreground: 0 0% 98%;
-    --popover: 24 30% 7%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 28 92% 58%;
-    --primary-foreground: 24 40% 10%;
-    --secondary: 24 20% 15%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 24 15% 15%;
-    --muted-foreground: 28 15% 68%;
-    --accent: 28 35% 20%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 65% 48%;
+    --background: 20 42% 5%;
+    --foreground: 30 25% 96%;
+    --card: 20 36% 7%;
+    --card-foreground: 30 25% 96%;
+    --popover: 20 36% 7%;
+    --popover-foreground: 30 25% 96%;
+    --primary: 26 95% 56%;
+    --primary-foreground: 20 50% 10%;
+    --secondary: 20 24% 14%;
+    --secondary-foreground: 30 25% 96%;
+    --muted: 20 18% 14%;
+    --muted-foreground: 28 20% 70%;
+    --accent: 350 40% 28%;
+    --accent-foreground: 20 30% 96%;
+    --destructive: 356 72% 50%;
     --destructive-foreground: 0 0% 98%;
-    --border: 24 35% 20%;
-    --input: 24 20% 15%;
-    --ring: 28 92% 58%;
+    --border: 22 38% 19%;
+    --input: 20 24% 14%;
+    --ring: 26 95% 56%;
 
-    --sidebar-background: 24 32% 8%;
-    --sidebar-foreground: 24 15% 88%;
-    --sidebar-primary: 28 92% 58%;
-    --sidebar-primary-foreground: 24 40% 10%;
-    --sidebar-accent: 24 20% 14%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 24 30% 16%;
-    --sidebar-ring: 28 92% 58%;
+    --sidebar-background: 20 40% 7%;
+    --sidebar-foreground: 28 18% 88%;
+    --sidebar-primary: 26 95% 56%;
+    --sidebar-primary-foreground: 20 50% 10%;
+    --sidebar-accent: 20 24% 13%;
+    --sidebar-accent-foreground: 30 25% 96%;
+    --sidebar-border: 22 34% 15%;
+    --sidebar-ring: 26 95% 56%;
 
-    --chart-1: 28 92% 58%;
-    --chart-2: 14 80% 55%;
-    --chart-3: 42 85% 55%;
-    --chart-4: 2 75% 58%;
-    --chart-5: 52 80% 55%;
+    --chart-1: 26 95% 56%;
+    --chart-2: 10 82% 54%;
+    --chart-3: 42 90% 56%;
+    --chart-4: 350 72% 58%;
+    --chart-5: 60 72% 50%;
 
-    --sage-50:  24 80% 16%;
-    --sage-100: 26 82% 20%;
-    --sage-200: 27 85% 24%;
-    --sage-300: 28 88% 30%;
-    --sage-400: 28 90% 45%;
-    --sage-500: 28 92% 58%;
-    --sage-600: 30 90% 68%;
-    --sage-700: 32 85% 78%;
-    --sage-800: 32 80% 88%;
-    --sage-900: 34 85% 94%;
+    --sage-50:  18 72% 14%;
+    --sage-100: 22 78% 18%;
+    --sage-200: 24 84% 22%;
+    --sage-300: 26 88% 30%;
+    --sage-400: 26 92% 44%;
+    --sage-500: 26 95% 56%;
+    --sage-600: 28 92% 68%;
+    --sage-700: 32 88% 78%;
+    --sage-800: 34 82% 88%;
+    --sage-900: 36 86% 94%;
 
-    --slate-50:  34 85% 96%;
-    --slate-100: 32 80% 88%;
-    --slate-200: 32 85% 78%;
-    --slate-300: 30 90% 68%;
-    --slate-400: 28 92% 58%;
-    --slate-500: 26 20% 48%;
-    --slate-600: 24 24% 35%;
-    --slate-700: 22 30% 18%;
-    --slate-800: 22 35% 14%;
-    --slate-900: 22 38% 11%;
-    --slate-950: 22 40% 7%;
+    --slate-50:  36 80% 96%;
+    --slate-100: 32 74% 88%;
+    --slate-200: 30 72% 78%;
+    --slate-300: 28 78% 66%;
+    --slate-400: 26 82% 54%;
+    --slate-500: 24 24% 48%;
+    --slate-600: 22 28% 34%;
+    --slate-700: 20 34% 18%;
+    --slate-800: 20 38% 13%;
+    --slate-900: 20 40% 10%;
+    --slate-950: 20 44% 6%;
 
-    --scrollbar-thumb: #f59e0b;
+    --scrollbar-thumb: #ea8206;
     --scrollbar-thumb-hover: #fbbf24;
   }
 
-  /* Halloween Mask — bold red-orange contrast. */
+  /* Halloween Mask — dramatic October night. Near-black backgrounds let
+     the glowing red-orange primary burn, with bronze/ember accents. */
   :root[data-theme="halloween-mask"] {
-    --background: 10 40% 5%;
-    --foreground: 0 0% 98%;
-    --card: 10 35% 7%;
-    --card-foreground: 0 0% 98%;
-    --popover: 10 35% 7%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 8 85% 56%;
-    --primary-foreground: 10 40% 10%;
-    --secondary: 10 22% 15%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 10 15% 15%;
-    --muted-foreground: 10 18% 68%;
-    --accent: 8 35% 20%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 350 70% 50%;
+    --background: 12 48% 4%;
+    --foreground: 20 20% 97%;
+    --card: 12 40% 6%;
+    --card-foreground: 20 20% 97%;
+    --popover: 12 40% 6%;
+    --popover-foreground: 20 20% 97%;
+    --primary: 10 90% 54%;
+    --primary-foreground: 12 48% 8%;
+    --secondary: 12 26% 14%;
+    --secondary-foreground: 20 20% 97%;
+    --muted: 12 18% 13%;
+    --muted-foreground: 16 22% 70%;
+    --accent: 34 65% 30%;
+    --accent-foreground: 40 40% 96%;
+    --destructive: 348 78% 52%;
     --destructive-foreground: 0 0% 98%;
-    --border: 8 40% 20%;
-    --input: 10 20% 15%;
-    --ring: 8 85% 56%;
+    --border: 10 45% 20%;
+    --input: 12 24% 14%;
+    --ring: 10 90% 54%;
 
-    --sidebar-background: 10 36% 8%;
-    --sidebar-foreground: 10 15% 88%;
-    --sidebar-primary: 8 85% 56%;
-    --sidebar-primary-foreground: 10 40% 10%;
-    --sidebar-accent: 10 22% 14%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 10 32% 16%;
-    --sidebar-ring: 8 85% 56%;
+    --sidebar-background: 12 44% 6%;
+    --sidebar-foreground: 18 16% 88%;
+    --sidebar-primary: 10 90% 54%;
+    --sidebar-primary-foreground: 12 48% 8%;
+    --sidebar-accent: 12 26% 13%;
+    --sidebar-accent-foreground: 20 20% 97%;
+    --sidebar-border: 10 38% 15%;
+    --sidebar-ring: 10 90% 54%;
 
-    --chart-1: 8 85% 56%;
-    --chart-2: 22 80% 55%;
-    --chart-3: 352 70% 55%;
-    --chart-4: 38 85% 55%;
-    --chart-5: 15 75% 50%;
+    --chart-1: 10 90% 54%;
+    --chart-2: 34 88% 56%;
+    --chart-3: 348 72% 56%;
+    --chart-4: 22 82% 52%;
+    --chart-5: 270 30% 40%;
 
-    --sage-50:  8 80% 16%;
-    --sage-100: 8 82% 20%;
-    --sage-200: 8 85% 24%;
-    --sage-300: 8 85% 30%;
-    --sage-400: 8 85% 42%;
-    --sage-500: 8 85% 56%;
-    --sage-600: 10 82% 66%;
-    --sage-700: 12 80% 76%;
-    --sage-800: 14 78% 86%;
-    --sage-900: 16 80% 93%;
+    --sage-50:  8 78% 14%;
+    --sage-100: 8 82% 18%;
+    --sage-200: 9 85% 22%;
+    --sage-300: 9 88% 28%;
+    --sage-400: 10 90% 40%;
+    --sage-500: 10 90% 54%;
+    --sage-600: 12 88% 66%;
+    --sage-700: 16 84% 76%;
+    --sage-800: 20 80% 86%;
+    --sage-900: 24 82% 93%;
 
-    --slate-50:  16 80% 96%;
-    --slate-100: 14 78% 88%;
-    --slate-200: 12 80% 78%;
-    --slate-300: 10 82% 66%;
-    --slate-400: 8 85% 56%;
-    --slate-500: 8 20% 48%;
-    --slate-600: 8 24% 34%;
-    --slate-700: 10 30% 18%;
-    --slate-800: 10 35% 14%;
-    --slate-900: 10 38% 11%;
-    --slate-950: 10 42% 7%;
+    --slate-50:  20 78% 96%;
+    --slate-100: 18 72% 88%;
+    --slate-200: 14 74% 78%;
+    --slate-300: 12 80% 66%;
+    --slate-400: 10 86% 54%;
+    --slate-500: 10 22% 46%;
+    --slate-600: 10 28% 32%;
+    --slate-700: 10 34% 17%;
+    --slate-800: 12 40% 12%;
+    --slate-900: 12 44% 9%;
+    --slate-950: 12 48% 6%;
 
-    --scrollbar-thumb: #ef4444;
+    --scrollbar-thumb: #e53e1a;
     --scrollbar-thumb-hover: #f87171;
   }
 
-  /* Blizzard — cool slate-blue patternless. */
+  /* Blizzard — icy night. Cold near-black with frost-cyan primary and
+     glacial blue-white highlights. Hue drifts from cyan at bright steps
+     toward indigo at dark steps for a subtle aurora. */
   :root[data-theme="blizzard"] {
-    --background: 215 25% 6%;
-    --foreground: 0 0% 98%;
-    --card: 215 22% 8%;
-    --card-foreground: 0 0% 98%;
-    --popover: 215 22% 8%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 210 85% 62%;
-    --primary-foreground: 215 30% 10%;
-    --secondary: 215 18% 15%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 215 14% 15%;
-    --muted-foreground: 215 12% 68%;
-    --accent: 210 30% 20%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62% 45%;
+    --background: 218 32% 5%;
+    --foreground: 200 25% 98%;
+    --card: 218 28% 7%;
+    --card-foreground: 200 25% 98%;
+    --popover: 218 28% 7%;
+    --popover-foreground: 200 25% 98%;
+    --primary: 202 92% 62%;
+    --primary-foreground: 218 40% 10%;
+    --secondary: 216 22% 14%;
+    --secondary-foreground: 200 25% 98%;
+    --muted: 216 16% 14%;
+    --muted-foreground: 210 18% 72%;
+    --accent: 188 60% 34%;
+    --accent-foreground: 200 30% 98%;
+    --destructive: 352 68% 50%;
     --destructive-foreground: 0 0% 98%;
-    --border: 215 28% 20%;
-    --input: 215 18% 15%;
-    --ring: 210 85% 62%;
+    --border: 214 32% 20%;
+    --input: 216 22% 14%;
+    --ring: 202 92% 62%;
 
-    --sidebar-background: 215 25% 9%;
-    --sidebar-foreground: 215 12% 88%;
-    --sidebar-primary: 210 85% 62%;
-    --sidebar-primary-foreground: 215 30% 10%;
-    --sidebar-accent: 215 18% 14%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 215 22% 16%;
-    --sidebar-ring: 210 85% 62%;
+    --sidebar-background: 218 30% 7%;
+    --sidebar-foreground: 210 16% 88%;
+    --sidebar-primary: 202 92% 62%;
+    --sidebar-primary-foreground: 218 40% 10%;
+    --sidebar-accent: 216 22% 13%;
+    --sidebar-accent-foreground: 200 25% 98%;
+    --sidebar-border: 214 28% 15%;
+    --sidebar-ring: 202 92% 62%;
 
-    --chart-1: 210 85% 62%;
-    --chart-2: 195 75% 55%;
-    --chart-3: 225 70% 62%;
-    --chart-4: 180 60% 50%;
-    --chart-5: 240 65% 65%;
+    --chart-1: 202 92% 62%;
+    --chart-2: 188 78% 52%;
+    --chart-3: 228 76% 66%;
+    --chart-4: 170 62% 48%;
+    --chart-5: 250 68% 68%;
 
-    --sage-50:  215 70% 16%;
-    --sage-100: 213 72% 20%;
-    --sage-200: 212 75% 26%;
-    --sage-300: 210 80% 35%;
-    --sage-400: 210 82% 48%;
-    --sage-500: 210 85% 62%;
-    --sage-600: 208 82% 72%;
-    --sage-700: 206 80% 82%;
-    --sage-800: 204 78% 90%;
-    --sage-900: 202 78% 95%;
+    --sage-50:  216 70% 16%;
+    --sage-100: 212 74% 20%;
+    --sage-200: 208 78% 26%;
+    --sage-300: 204 82% 34%;
+    --sage-400: 202 86% 48%;
+    --sage-500: 202 92% 62%;
+    --sage-600: 198 88% 72%;
+    --sage-700: 194 84% 82%;
+    --sage-800: 190 80% 90%;
+    --sage-900: 186 82% 95%;
 
-    --slate-50:  202 78% 96%;
-    --slate-100: 204 78% 90%;
-    --slate-200: 206 80% 82%;
-    --slate-300: 208 82% 72%;
-    --slate-400: 210 85% 62%;
-    --slate-500: 215 18% 50%;
-    --slate-600: 215 22% 36%;
-    --slate-700: 215 28% 20%;
-    --slate-800: 215 32% 16%;
-    --slate-900: 215 36% 12%;
-    --slate-950: 215 40% 8%;
+    --slate-50:  196 80% 97%;
+    --slate-100: 198 76% 90%;
+    --slate-200: 202 74% 80%;
+    --slate-300: 204 80% 68%;
+    --slate-400: 206 86% 58%;
+    --slate-500: 214 20% 50%;
+    --slate-600: 216 24% 34%;
+    --slate-700: 216 30% 18%;
+    --slate-800: 218 34% 14%;
+    --slate-900: 218 38% 10%;
+    --slate-950: 220 42% 7%;
 
-    --scrollbar-thumb: #60a5fa;
+    --scrollbar-thumb: #38a7f2;
     --scrollbar-thumb-hover: #93c5fd;
   }
 
-  /* Lavender — soft violet Lavender Albino tones. */
+  /* Lavender — the app's LIGHT MODE. Pale lavender surfaces with darker
+     lavender, slate-grey, and dusty-blue accents. Unlike the other themes,
+     slate/sage scales are flipped from the dark-mode convention so that
+     ~280 hardcoded `bg-slate-900` / `text-slate-100` usages auto-invert:
+       - slate-50 (typically light-text) → dark text token
+       - slate-950 (typically dark-surface) → near-white surface token
+     Result: components written against dark-mode tokens render correctly
+     on a light background without touching JSX. */
   :root[data-theme="lavender"] {
-    --background: 275 22% 6%;
-    --foreground: 0 0% 98%;
-    --card: 275 20% 8%;
-    --card-foreground: 0 0% 98%;
-    --popover: 275 20% 8%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 275 65% 68%;
-    --primary-foreground: 275 30% 10%;
-    --secondary: 275 16% 16%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 275 12% 16%;
-    --muted-foreground: 275 14% 70%;
-    --accent: 275 28% 22%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62% 45%;
+    --background: 275 40% 97%;
+    --foreground: 270 30% 16%;
+    --card: 275 50% 99%;
+    --card-foreground: 270 30% 16%;
+    --popover: 275 50% 99%;
+    --popover-foreground: 270 30% 16%;
+    --primary: 268 50% 46%;
+    --primary-foreground: 275 40% 98%;
+    --secondary: 272 35% 92%;
+    --secondary-foreground: 270 30% 22%;
+    --muted: 272 30% 93%;
+    --muted-foreground: 268 18% 42%;
+    --accent: 215 45% 58%;
+    --accent-foreground: 275 40% 98%;
+    --destructive: 352 68% 48%;
     --destructive-foreground: 0 0% 98%;
-    --border: 275 25% 22%;
-    --input: 275 16% 16%;
-    --ring: 275 65% 68%;
+    --border: 272 28% 86%;
+    --input: 272 30% 94%;
+    --ring: 268 50% 46%;
 
-    --sidebar-background: 275 22% 9%;
-    --sidebar-foreground: 275 14% 88%;
-    --sidebar-primary: 275 65% 68%;
-    --sidebar-primary-foreground: 275 30% 10%;
-    --sidebar-accent: 275 16% 15%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 275 20% 17%;
-    --sidebar-ring: 275 65% 68%;
+    --sidebar-background: 275 45% 96%;
+    --sidebar-foreground: 270 28% 22%;
+    --sidebar-primary: 268 50% 46%;
+    --sidebar-primary-foreground: 275 40% 98%;
+    --sidebar-accent: 272 32% 90%;
+    --sidebar-accent-foreground: 270 30% 18%;
+    --sidebar-border: 272 26% 84%;
+    --sidebar-ring: 268 50% 46%;
 
-    --chart-1: 275 65% 68%;
-    --chart-2: 290 60% 65%;
-    --chart-3: 258 55% 65%;
-    --chart-4: 310 55% 65%;
-    --chart-5: 240 50% 68%;
+    --chart-1: 268 50% 46%;
+    --chart-2: 215 45% 58%;
+    --chart-3: 290 40% 58%;
+    --chart-4: 235 35% 52%;
+    --chart-5: 260 40% 68%;
 
-    --sage-50:  275 55% 16%;
-    --sage-100: 274 58% 20%;
-    --sage-200: 274 60% 26%;
-    --sage-300: 274 62% 38%;
-    --sage-400: 275 64% 52%;
-    --sage-500: 275 65% 68%;
-    --sage-600: 274 62% 76%;
-    --sage-700: 272 60% 84%;
-    --sage-800: 270 58% 91%;
-    --sage-900: 268 60% 95%;
+    /* Sage (brand) scale — used for accent bleeds like bg-sage-*.
+       Kept at medium-dark lavender core so bg-sage-500 pops on pale
+       backgrounds; low steps are deep for accent text, high steps are
+       pale tints for subtle surfaces. */
+    --sage-50:  270 45% 20%;
+    --sage-100: 269 48% 28%;
+    --sage-200: 268 50% 36%;
+    --sage-300: 268 52% 44%;
+    --sage-400: 268 55% 52%;
+    --sage-500: 268 55% 62%;
+    --sage-600: 268 52% 74%;
+    --sage-700: 270 48% 84%;
+    --sage-800: 272 42% 91%;
+    --sage-900: 275 40% 96%;
 
-    --slate-50:  268 60% 96%;
-    --slate-100: 270 58% 91%;
-    --slate-200: 272 60% 84%;
-    --slate-300: 274 62% 76%;
-    --slate-400: 275 65% 68%;
-    --slate-500: 275 14% 50%;
-    --slate-600: 275 18% 36%;
-    --slate-700: 275 24% 20%;
-    --slate-800: 275 28% 16%;
-    --slate-900: 275 32% 12%;
-    --slate-950: 275 36% 8%;
+    /* Slate scale — FLIPPED for light mode. slate-50 is dark (text),
+       slate-950 is very light (surfaces). Hue drifts from lavender at
+       the light end toward cool blue-grey at the dark end so that
+       text reads neutral and doesn't feel purple. */
+    --slate-50:  270 28% 16%;
+    --slate-100: 268 24% 22%;
+    --slate-200: 262 20% 30%;
+    --slate-300: 250 16% 42%;
+    --slate-400: 240 14% 54%;
+    --slate-500: 240 12% 62%;
+    --slate-600: 250 18% 74%;
+    --slate-700: 260 22% 84%;
+    --slate-800: 268 28% 90%;
+    --slate-900: 272 32% 95%;
+    --slate-950: 275 40% 98%;
 
-    --scrollbar-thumb: #c084fc;
-    --scrollbar-thumb-hover: #d8b4fe;
+    --scrollbar-thumb: #8b6dcc;
+    --scrollbar-thumb-hover: #6d4fb8;
   }
 
-  /* Super Hypo — sunlit yellow Super Hypo Tangerine. */
+  /* Super Hypo — high-noon sunlight. Warm coffee-brown backgrounds and
+     saturated golden-yellow primary. Lime-olive at light steps, deep
+     bronze at dark steps for an organic, sun-baked feel. */
   :root[data-theme="super-hypo"] {
-    --background: 45 30% 5%;
-    --foreground: 0 0% 98%;
-    --card: 45 25% 7%;
-    --card-foreground: 0 0% 98%;
-    --popover: 45 25% 7%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 48 92% 58%;
-    --primary-foreground: 45 40% 10%;
-    --secondary: 45 20% 15%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 45 15% 15%;
-    --muted-foreground: 48 15% 68%;
-    --accent: 48 32% 20%;
-    --accent-foreground: 0 0% 98%;
-    --destructive: 0 62% 45%;
+    --background: 40 38% 5%;
+    --foreground: 48 25% 97%;
+    --card: 40 32% 7%;
+    --card-foreground: 48 25% 97%;
+    --popover: 40 32% 7%;
+    --popover-foreground: 48 25% 97%;
+    --primary: 46 95% 58%;
+    --primary-foreground: 40 50% 10%;
+    --secondary: 40 22% 14%;
+    --secondary-foreground: 48 25% 97%;
+    --muted: 40 16% 13%;
+    --muted-foreground: 46 18% 72%;
+    --accent: 82 50% 32%;
+    --accent-foreground: 56 30% 97%;
+    --destructive: 4 72% 52%;
     --destructive-foreground: 0 0% 98%;
-    --border: 45 32% 20%;
-    --input: 45 20% 15%;
-    --ring: 48 92% 58%;
+    --border: 42 36% 19%;
+    --input: 40 22% 14%;
+    --ring: 46 95% 58%;
 
-    --sidebar-background: 45 28% 8%;
-    --sidebar-foreground: 48 14% 88%;
-    --sidebar-primary: 48 92% 58%;
-    --sidebar-primary-foreground: 45 40% 10%;
-    --sidebar-accent: 45 20% 14%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 45 26% 16%;
-    --sidebar-ring: 48 92% 58%;
+    --sidebar-background: 40 36% 7%;
+    --sidebar-foreground: 46 16% 88%;
+    --sidebar-primary: 46 95% 58%;
+    --sidebar-primary-foreground: 40 50% 10%;
+    --sidebar-accent: 40 22% 13%;
+    --sidebar-accent-foreground: 48 25% 97%;
+    --sidebar-border: 42 30% 15%;
+    --sidebar-ring: 46 95% 58%;
 
-    --chart-1: 48 92% 58%;
-    --chart-2: 38 88% 58%;
-    --chart-3: 60 80% 55%;
-    --chart-4: 28 85% 58%;
-    --chart-5: 90 70% 55%;
+    --chart-1: 46 95% 58%;
+    --chart-2: 30 88% 58%;
+    --chart-3: 82 70% 52%;
+    --chart-4: 20 85% 58%;
+    --chart-5: 60 80% 54%;
 
-    --sage-50:  45 75% 16%;
-    --sage-100: 46 78% 20%;
-    --sage-200: 47 82% 24%;
-    --sage-300: 48 85% 30%;
-    --sage-400: 48 88% 45%;
-    --sage-500: 48 92% 58%;
-    --sage-600: 50 90% 68%;
-    --sage-700: 52 85% 78%;
-    --sage-800: 54 80% 88%;
-    --sage-900: 56 82% 94%;
+    --sage-50:  40 72% 14%;
+    --sage-100: 42 76% 18%;
+    --sage-200: 44 82% 22%;
+    --sage-300: 45 88% 28%;
+    --sage-400: 46 92% 44%;
+    --sage-500: 46 95% 58%;
+    --sage-600: 48 92% 68%;
+    --sage-700: 52 88% 78%;
+    --sage-800: 56 82% 88%;
+    --sage-900: 58 86% 94%;
 
     --slate-50:  56 82% 96%;
-    --slate-100: 54 80% 88%;
-    --slate-200: 52 85% 78%;
-    --slate-300: 50 90% 68%;
-    --slate-400: 48 92% 58%;
-    --slate-500: 48 18% 48%;
-    --slate-600: 46 22% 34%;
-    --slate-700: 46 28% 18%;
-    --slate-800: 45 32% 14%;
-    --slate-900: 45 36% 11%;
-    --slate-950: 45 40% 7%;
+    --slate-100: 54 76% 88%;
+    --slate-200: 52 78% 78%;
+    --slate-300: 50 84% 66%;
+    --slate-400: 46 90% 56%;
+    --slate-500: 42 22% 48%;
+    --slate-600: 40 26% 34%;
+    --slate-700: 40 32% 18%;
+    --slate-800: 40 36% 13%;
+    --slate-900: 40 38% 10%;
+    --slate-950: 40 42% 6%;
 
-    --scrollbar-thumb: #facc15;
+    --scrollbar-thumb: #e0b308;
     --scrollbar-thumb-hover: #fde047;
   }
 

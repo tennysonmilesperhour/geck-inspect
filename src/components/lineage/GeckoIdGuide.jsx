@@ -6,7 +6,7 @@ import { Users, Link as LinkIcon, ChevronDown, ChevronUp, Info } from 'lucide-re
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 
 const CodeExample = ({ children }) => (
-    <pre className="bg-sage-200 dark:bg-gray-700 p-2 rounded-md text-sm text-sage-800 dark:text-sage-200 font-mono">
+    <pre className="bg-muted p-2 rounded-md text-sm text-foreground font-mono">
         <code>{children}</code>
     </pre>
 );
@@ -15,13 +15,13 @@ export default function GeckoIdGuide() {
     const [isOpen, setIsOpen] = useState(false);
 
     return (
-        <Card className="bg-white/80 dark:bg-gray-800/80 backdrop-blur-sm border-sage-200 dark:border-sage-700 shadow-lg">
+        <Card className="bg-card/80 backdrop-blur-sm border-border shadow-lg">
             <Collapsible open={isOpen} onOpenChange={setIsOpen}>
                 <CollapsibleTrigger asChild>
-                    <CardHeader className="cursor-pointer hover:bg-sage-50 dark:hover:bg-gray-700/50 transition-colors">
+                    <CardHeader className="cursor-pointer hover:bg-muted/60 transition-colors">
                         <div className="flex items-center justify-between">
                             <div className="flex items-center gap-3">
-                                <Info className="w-5 h-5 text-sage-600 dark:text-sage-300" />
+                                <Info className="w-5 h-5 text-primary" />
                                 <CardTitle className="text-lg">Understanding Gecko ID Codes</CardTitle>
                             </div>
                             <Button variant="ghost" size="sm" className="p-1">
@@ -32,19 +32,19 @@ export default function GeckoIdGuide() {
                                 )}
                             </Button>
                         </div>
-                        <p className="text-sm text-sage-500 dark:text-sage-400 text-left mt-1">
+                        <p className="text-sm text-muted-foreground text-left mt-1">
                             {isOpen ? 'Click to hide guide' : 'Click to learn how automatic ID codes work'}
                         </p>
                     </CardHeader>
                 </CollapsibleTrigger>
-                
+
                 <CollapsibleContent>
-                    <CardContent className="space-y-4 text-sage-700 dark:text-sage-300 pt-0">
+                    <CardContent className="space-y-4 text-muted-foreground pt-0">
                         <p>
                             Our system automatically generates unique ID codes to help you track lineage effortlessly. While you can manually override them, here's how the automatic system works:
                         </p>
 
-                        <div className="p-4 border border-sage-200 dark:border-sage-600 rounded-lg">
+                        <div className="p-4 border border-border rounded-lg">
                             <h4 className="font-semibold text-lg mb-2 flex items-center gap-2">
                                 <Users className="w-5 h-5" /> Founder Geckos (No Parents)
                             </h4>
@@ -60,7 +60,7 @@ export default function GeckoIdGuide() {
                             <CodeExample>GI-001</CodeExample>
                         </div>
 
-                        <div className="p-4 border border-sage-200 dark:border-sage-600 rounded-lg">
+                        <div className="p-4 border border-border rounded-lg">
                             <h4 className="font-semibold text-lg mb-2 flex items-center gap-2">
                                 <LinkIcon className="w-5 h-5" /> Offspring (With Parents)
                             </h4>

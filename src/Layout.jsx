@@ -750,7 +750,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 className={`group flex items-center rounded-md px-2 py-2 text-xs font-medium transition-colors duration-200 sidebar-nav-item
                   ${isActive
                     ? "active"
-                    : "text-gray-600 dark:text-gray-300 hover:bg-sage-50 dark:hover:bg-gray-700 hover:text-sage-900 dark:hover:text-white"
+                    : "text-gray-300 hover:bg-gray-700 hover:text-foreground"
                   }`}
               >
                 <IconComponent className="mr-2 h-5 w-5 flex-shrink-0" />
@@ -787,7 +787,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       >
         Skip to content
       </a>
-      <div className="flex h-screen bg-gray-100 dark:bg-gray-900 font-sans app-container-outline">
+      <div className="flex h-screen bg-background font-sans app-container-outline">
         {/* Mobile Sidebar */}
         <Sidebar className="mobile-sidebar-glass border-r border-emerald-800/40 bg-emerald-950/25 backdrop-blur-sm md:hidden z-50">
           <SidebarHeader className="border-b border-emerald-800/40 px-6 pb-6 pt-[calc(1.5rem+env(safe-area-inset-top))]">
@@ -856,7 +856,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                     className={`group flex items-center rounded-md px-2 py-2 text-xs font-medium transition-colors duration-200 sidebar-nav-item ${
                       location.pathname === createPageUrl("AdminPanel")
                         ? "active"
-                        : "text-gray-600 dark:text-gray-300 hover:bg-sage-50 dark:hover:bg-gray-700 hover:text-sage-900 dark:hover:text-white"
+                        : "text-gray-300 hover:bg-gray-700 hover:text-foreground"
                     }`}
                   >
                     <Shield className="mr-2 h-5 w-5 flex-shrink-0" />
@@ -1024,7 +1024,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                       className={`group flex items-center rounded-md px-2 py-2 text-xs font-medium transition-colors duration-200 sidebar-nav-item ${
                         location.pathname === createPageUrl("AdminPanel")
                           ? "active"
-                          : "text-gray-600 dark:text-gray-300 hover:bg-sage-50 dark:hover:bg-gray-700 hover:text-sage-900 dark:hover:text-white"
+                          : "text-gray-300 hover:bg-gray-700 hover:text-foreground"
                       }`}
                     >
                       <Shield className="mr-2 h-5 w-5 flex-shrink-0" />

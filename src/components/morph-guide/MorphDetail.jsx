@@ -83,12 +83,12 @@ export default function MorphDetail({ morph, onClose }) {
 
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
-      <Card className="bg-white dark:bg-sage-100 max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col"> {/* Changed max-w-2xl to max-w-4xl */}
-        <CardHeader className="border-b border-sage-200 dark:border-sage-300 bg-gradient-to-r from-sage-50 to-earth-50 dark:from-sage-100 dark:to-sage-200">
+      <Card className="bg-card max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+        <CardHeader className="border-b border-border bg-muted/40">
           <div className="flex items-start justify-between">
             <div>
               <div className="flex items-center gap-3 mb-2">
-                <CardTitle className="text-2xl text-sage-900">{morph.morph_name}</CardTitle>
+                <CardTitle className="text-2xl text-foreground">{morph.morph_name}</CardTitle>
                 <div className="flex items-center gap-1">
                   {Array.from({ length: rarityIcons[morph.rarity] || 0 }).map((_, i) => (
                     <Star key={i} className="w-4 h-4 fill-amber-400 text-amber-400" />
@@ -107,7 +107,7 @@ export default function MorphDetail({ morph, onClose }) {
         
         <CardContent className="p-6 overflow-y-auto flex-grow">
           {morph.example_image_url && (
-            <div className="mb-6 rounded-lg overflow-hidden shadow-lg border border-sage-200 dark:border-sage-300">
+            <div className="mb-6 rounded-lg overflow-hidden shadow-lg border border-border">
               <img
                 src={morph.example_image_url}
                 alt={morph.morph_name}
@@ -120,24 +120,24 @@ export default function MorphDetail({ morph, onClose }) {
             {/* Description */}
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <Info className="w-5 h-5 text-sage-600 dark:text-sage-400" />
-                <h3 className="text-lg font-semibold text-sage-900 dark:text-sage-800">Description</h3>
+                <Info className="w-5 h-5 text-primary" />
+                <h3 className="text-lg font-semibold text-foreground">Description</h3>
               </div>
-              <p className="text-sage-700 dark:text-sage-600 leading-relaxed">{morph.description}</p>
+              <p className="text-muted-foreground leading-relaxed">{morph.description}</p>
             </div>
             
             {/* Key Features */}
             {morph.key_features && morph.key_features.length > 0 && (
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <CheckSquare className="w-5 h-5 text-sage-600 dark:text-sage-400" />
-                  <h3 className="text-lg font-semibold text-sage-900 dark:text-sage-800">Key Identifying Features</h3>
+                  <CheckSquare className="w-5 h-5 text-primary" />
+                  <h3 className="text-lg font-semibold text-foreground">Key Identifying Features</h3>
                 </div>
                 <div className="grid gap-3">
                   {morph.key_features.map((feature, index) => (
-                    <div key={index} className="flex items-center gap-3 p-3 bg-sage-50 dark:bg-sage-200 rounded-lg border border-sage-200 dark:border-sage-300">
+                    <div key={index} className="flex items-center gap-3 p-3 bg-muted rounded-lg border border-border">
                       <div className="w-2 h-2 bg-sage-500 rounded-full flex-shrink-0"></div>
-                      <span className="text-sage-700 dark:text-sage-700 font-medium">{feature}</span>
+                      <span className="text-foreground font-medium">{feature}</span>
                     </div>
                   ))}
                 </div>
@@ -148,11 +148,11 @@ export default function MorphDetail({ morph, onClose }) {
             {morph.breeding_info && (
               <div>
                 <div className="flex items-center gap-2 mb-3">
-                  <Dna className="w-5 h-5 text-sage-600 dark:text-sage-400" />
-                  <h3 className="text-lg font-semibold text-sage-900 dark:text-sage-800">Breeding & Genetics</h3>
+                  <Dna className="w-5 h-5 text-primary" />
+                  <h3 className="text-lg font-semibold text-foreground">Breeding & Genetics</h3>
                 </div>
-                <div className="bg-gradient-to-r from-sage-50 to-earth-50 dark:from-sage-200 dark:to-earth-200 p-4 rounded-lg border border-sage-200 dark:border-sage-300">
-                  <p className="text-sage-700 dark:text-sage-700 leading-relaxed">{morph.breeding_info}</p>
+                <div className="bg-muted p-4 rounded-lg border border-border">
+                  <p className="text-foreground leading-relaxed">{morph.breeding_info}</p>
                 </div>
               </div>
             )}
@@ -160,8 +160,8 @@ export default function MorphDetail({ morph, onClose }) {
             {/* User Submitted Reference Photos */}
             <div>
               <div className="flex items-center gap-2 mb-3">
-                <Eye className="w-5 h-5 text-sage-600 dark:text-sage-400" />
-                <h3 className="text-lg font-semibold text-sage-900 dark:text-sage-800">Community Reference Photos</h3>
+                <Eye className="w-5 h-5 text-primary" />
+                <h3 className="text-lg font-semibold text-foreground">Community Reference Photos</h3>
               </div>
               
               <Alert className="mb-4 border-blue-200 bg-blue-50 dark:bg-blue-900/20 text-blue-800 dark:text-blue-300">
@@ -187,13 +187,13 @@ export default function MorphDetail({ morph, onClose }) {
                               <img 
                                   src={refImage.image_url} 
                                   alt={`Reference for ${morph.morph_name}`}
-                                  className="w-full h-32 object-cover rounded-lg border border-sage-200 dark:border-sage-300 hover:opacity-80 transition-opacity"
+                                  className="w-full h-32 object-cover rounded-lg border border-border hover:opacity-80 transition-opacity"
                               />
                           </a>
                       ))}
                   </div>
               ) : (
-                  <div className="text-center py-4 text-sage-500 bg-sage-50 dark:bg-sage-200 rounded-lg mb-4">
+                  <div className="text-center py-4 text-sage-500 bg-muted rounded-lg mb-4">
                       <EyeOff className="w-8 h-8 mx-auto mb-2 text-sage-400" />
                       <p>No community photos yet.</p>
                       <p className="text-xs">Be the first to submit one!</p>
@@ -221,18 +221,18 @@ export default function MorphDetail({ morph, onClose }) {
             </div>
             
             {/* Additional Info */}
-            <div className="bg-sage-50 dark:bg-sage-200 p-4 rounded-lg border border-sage-200 dark:border-sage-300">
-              <h4 className="font-semibold text-sage-900 dark:text-sage-800 mb-3">Quick Reference</h4>
+            <div className="bg-muted p-4 rounded-lg border border-border">
+              <h4 className="font-semibold text-foreground mb-3">Quick Reference</h4>
               <div className="grid grid-cols-2 gap-4 text-sm">
                 <div>
-                  <span className="text-sage-600 dark:text-sage-500">Rarity:</span>
-                  <span className="ml-2 font-medium text-sage-800 dark:text-sage-700 capitalize">
+                  <span className="text-muted-foreground">Rarity:</span>
+                  <span className="ml-2 font-medium text-foreground capitalize">
                     {morph.rarity.replace('_', ' ')}
                   </span>
                 </div>
                 <div>
-                  <span className="text-sage-600 dark:text-sage-500">Features:</span>
-                  <span className="ml-2 font-medium text-sage-800 dark:text-sage-700">
+                  <span className="text-muted-foreground">Features:</span>
+                  <span className="ml-2 font-medium text-foreground">
                     {morph.key_features?.length || 0} listed
                   </span>
                 </div>

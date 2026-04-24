@@ -593,7 +593,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                 <DollarSign className="w-5 h-5 text-yellow-600" />
                                 List for Sale
                             </Label>
-                            <p className="text-sm text-sage-600 dark:text-sage-300 mt-1">Makes the gecko visible on the marketplace.</p>
+                            <p className="text-sm text-muted-foreground mt-1">Makes the gecko visible on the marketplace.</p>
                         </div>
                         <Switch
                              checked={isForSale}
