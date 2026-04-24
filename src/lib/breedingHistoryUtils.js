@@ -96,7 +96,14 @@ export function summarizeBreedingHistory({
   const byLabel = new Map();
 
   for (const egg of eggs) {
-    if (!egg || egg.archived) continue;
+    if (!egg) continue;
+    // NOTE: we keep archived eggs. In this codebase an egg is flagged
+    // archived: true the moment it transitions out of "Incubating" —
+    // hatched, slug, infertile, and stillbirth all get archived
+    // automatically (see EggDetailModal.handleSave and Hatchery.hand-
+    // leMarkFailed). Skipping them here would erase almost every
+    // resolved egg from the history, which is exactly the data we
+    // want to show.
     const laid = toDate(egg.lay_date);
     if (!laid) continue;
 
