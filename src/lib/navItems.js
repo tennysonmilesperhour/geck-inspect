@@ -14,66 +14,65 @@ import {
 } from 'lucide-react';
 
 // Top-level section tabs. Rendered as a desktop header bar and a mobile
-// bottom bar. Each page belongs to exactly one section (see
-// SECTION_FOR_PAGE below); the sidebar for the active section only
-// shows pages that belong to it, which keeps the list short.
+// bottom bar. Each page belongs to exactly one section; the sidebar for
+// the active section only shows pages that belong to it, keeping the
+// list short. Default mapping lives in SECTION_FOR_PAGE below; admins
+// can override per-page via the `section` column on page_config.
 export const SECTIONS = [
-  { id: 'care',   label: 'Animal Care', icon: 'Heart',        defaultPage: 'MyGeckos' },
-  { id: 'morphs', label: 'Morph Zone',  icon: 'Dna',          defaultPage: 'Recognition' },
-  { id: 'tools',  label: 'Tools',       icon: 'Wrench',       defaultPage: 'BreederConsultant' },
-  { id: 'market', label: 'Marketplace', icon: 'ShoppingCart', defaultPage: 'Marketplace' },
+  { id: 'manage',   label: 'Manage',   icon: 'LayoutGrid', defaultPage: 'MyGeckos' },
+  { id: 'discover', label: 'Discover', icon: 'Search',     defaultPage: 'Recognition' },
 ];
 
-// Map page_name -> section id. Pages not in this map are section-agnostic
-// (Dashboard, MyProfile, Settings, etc.) and don't light up a section tab.
-// Detail pages (e.g. ForumPost) inherit their parent section so the tab
-// stays highlighted when the user drills in.
+// Fallback section assignment for every known page. Used when the DB
+// doesn't have an explicit `section` value yet. Pages not in this map
+// are section-agnostic (Dashboard, MyProfile, Settings, etc.) and don't
+// light up a section tab.
 export const SECTION_FOR_PAGE = {
-  MyGeckos: 'care',
-  Breeding: 'care',
-  BreedingPairs: 'care',
-  Lineage: 'care',
-  Pedigree: 'care',
-  CareGuide: 'care',
-  CareGuideTopic: 'care',
-  Forum: 'care',
-  ForumPost: 'care',
-  BatchHusbandry: 'care',
-  GeckoDetail: 'care',
-  AnimalPassport: 'care',
-  ClaimAnimal: 'care',
-  LikedGeckos: 'care',
+  // Manage — your animals + business
+  MyGeckos: 'manage',
+  Breeding: 'manage',
+  BreedingPairs: 'manage',
+  Lineage: 'manage',
+  Pedigree: 'manage',
+  GeckoDetail: 'manage',
+  AnimalPassport: 'manage',
+  ClaimAnimal: 'manage',
+  LikedGeckos: 'manage',
+  ProjectManager: 'manage',
+  MarketplaceSalesStats: 'manage',
+  MyListings: 'manage',
+  BreederShipping: 'manage',
+  BreederStorefront: 'manage',
+  Shipping: 'manage',
+  BatchHusbandry: 'manage',
 
-  Recognition: 'morphs',
-  MorphVisualizer: 'morphs',
-  MorphGuide: 'morphs',
-  MorphGuideSubmission: 'morphs',
-  GeneticsGuide: 'morphs',
-  GeneticCalculatorTool: 'morphs',
-  Gallery: 'morphs',
-
-  BreederConsultant: 'tools',
-  ProjectManager: 'tools',
-  GeckAnswers: 'tools',
-  PrintableWorksheets: 'tools',
-  ImageImport: 'tools',
-  Training: 'tools',
-  TrainModel: 'tools',
-
-  Marketplace: 'market',
-  MarketplaceBuy: 'market',
-  MarketplaceSell: 'market',
-  MarketplaceSalesStats: 'market',
-  MarketplaceVerification: 'market',
-  MyListings: 'market',
-  BreederShipping: 'market',
-  BreederStorefront: 'market',
-  Shipping: 'market',
-  MarketPricing: 'market',
-  BreedingROI: 'market',
-  BreedingLoans: 'market',
-  Giveaways: 'market',
-  Breeder: 'market',
+  // Discover — morphs, community, reference, browsing
+  Recognition: 'discover',
+  MorphVisualizer: 'discover',
+  MorphGuide: 'discover',
+  MorphGuideSubmission: 'discover',
+  GeneticsGuide: 'discover',
+  GeneticCalculatorTool: 'discover',
+  Gallery: 'discover',
+  CareGuide: 'discover',
+  CareGuideTopic: 'discover',
+  Forum: 'discover',
+  ForumPost: 'discover',
+  BreederConsultant: 'discover',
+  GeckAnswers: 'discover',
+  PrintableWorksheets: 'discover',
+  ImageImport: 'discover',
+  Training: 'discover',
+  TrainModel: 'discover',
+  Marketplace: 'discover',
+  MarketplaceBuy: 'discover',
+  MarketplaceSell: 'discover',
+  MarketplaceVerification: 'discover',
+  MarketPricing: 'discover',
+  BreedingROI: 'discover',
+  BreedingLoans: 'discover',
+  Giveaways: 'discover',
+  Breeder: 'discover',
 };
 
 export function getSectionForPage(pageName) {

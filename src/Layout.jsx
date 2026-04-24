@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import "@/styles/layout-theme.css";
 import { initialsAvatarUrl } from "@/components/shared/InitialsAvatar";
@@ -108,20 +108,38 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   // If the URL points to a page in a section, that section wins. On
   // section-agnostic pages (Dashboard, MyProfile, Settings) we fall back
   // to the last section the user was in, so the sidebar doesn't go
-  // empty when they hit home.
+  // empty when they hit home. DB overrides (page_config.section) are
+  // applied once page configs finish loading — see the effect below.
   const currentPageName = location.pathname.replace(/^\/+/, '').split('/')[0] || '';
-  const currentPageSection = getSectionForPage(currentPageName);
+
+  // DB-backed per-page section override. `page_config.section` wins over
+  // the hardcoded map when set — lets admins move pages between sections
+  // without a code deploy.
+  const dbSectionByPage = useMemo(() => {
+    const map = new Map();
+    for (const p of pageConfigs || []) {
+      if (p?.page_name && p?.section) map.set(p.page_name, p.section);
+    }
+    return map;
+  }, [pageConfigs]);
+  const resolveSection = (pageName) =>
+    dbSectionByPage.get(pageName) || getSectionForPage(pageName);
+
   const [activeSectionId, setActiveSectionId] = useState(() => {
-    if (currentPageSection) return currentPageSection;
+    const s = getSectionForPage(currentPageName);
+    if (s) return s;
     try { return localStorage.getItem('active_section') || SECTIONS[0].id; }
     catch { return SECTIONS[0].id; }
   });
+
+  // Update the active section whenever the URL or DB overrides change.
   useEffect(() => {
-    if (currentPageSection && currentPageSection !== activeSectionId) {
-      setActiveSectionId(currentPageSection);
-      try { localStorage.setItem('active_section', currentPageSection); } catch {}
+    const resolved = resolveSection(currentPageName);
+    if (resolved && resolved !== activeSectionId) {
+      setActiveSectionId(resolved);
+      try { localStorage.setItem('active_section', resolved); } catch {}
     }
-  }, [currentPageSection, activeSectionId]);
+  }, [currentPageName, dbSectionByPage, activeSectionId]);
 
   const { toggleSidebar } = useSidebar();
 
@@ -651,7 +669,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   // category and still show up under its section.
   const activeSection = SECTIONS.find((s) => s.id === activeSectionId) || SECTIONS[0];
   const sectionNavItems = flattenNavItems(navItems)
-    .filter((item) => getSectionForPage(item.page_name) === activeSectionId);
+    .filter((item) => resolveSection(item.page_name) === activeSectionId);
 
   const renderFavoritesGrid = () => {
     if (favoriteItems.length === 0) return null;

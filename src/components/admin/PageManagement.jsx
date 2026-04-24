@@ -25,35 +25,43 @@ import {
   Trash2,
 } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
+import { SECTIONS, SECTION_FOR_PAGE } from '@/lib/navItems';
 
 /**
  * Page Management — controls the entire sidebar.
  *
- * Three real categories (Collection / Tools / Public) plus a "Hidden"
- * bucket for pages the admin has toggled off. Hidden pages can be
- * dragged back into a category to re-enable them in one motion.
+ * Every page is assigned to one of the two top-level sections (Manage /
+ * Discover) via `page_config.section`, plus a "Hidden" bucket for pages
+ * the admin has toggled off. Hidden pages can be dragged back into a
+ * section to re-enable them in one motion.
  *
  * Reorder writes to `order_position` (the actual DB column) and toggling
  * a page off route-redirects it to / for ALL users — including admins —
  * so the sidebar can never show a page that isn't reachable.
  */
 
-const ACTIVE_CATEGORIES = ['collection', 'tools', 'public'];
-const ALL_DROP_ZONES = [...ACTIVE_CATEGORIES, 'hidden'];
+const ACTIVE_SECTIONS = SECTIONS.map((s) => s.id);
+const ALL_DROP_ZONES = [...ACTIVE_SECTIONS, 'hidden'];
 
-const CATEGORY_TITLES = {
-  collection: 'Collection',
-  tools: 'Tools',
-  public: 'Public / Discovery',
+const SECTION_LABEL_MAP = Object.fromEntries(SECTIONS.map((s) => [s.id, s.label]));
+
+const SECTION_TITLES = {
+  ...SECTION_LABEL_MAP,
   hidden: 'Hidden from sidebar',
 };
 
-const CATEGORY_DESCRIPTIONS = {
-  collection: 'Pages that manage a logged-in user’s own animals.',
-  tools: 'Utility tools — recognition, calculators, planners, AI consultant.',
-  public: 'Discovery pages visible to anonymous visitors as well as members.',
+const SECTION_DESCRIPTIONS = {
+  manage: 'Personal workspace — your animals, breeding plans, and selling.',
+  discover: 'Reference, community, morphs, and the public marketplace.',
   hidden: 'Pages disabled for everyone (including admins). Drag back into a section to re-enable.',
 };
+
+// Falls back to the hardcoded map when the DB row has no explicit
+// section value yet — e.g. rows that predate the migration, or rows for
+// pages the admin hasn't touched since the 2-section rollout.
+function sectionOf(page) {
+  return page?.section || SECTION_FOR_PAGE[page?.page_name] || ACTIVE_SECTIONS[0];
+}
 
 async function persistOrder(items) {
   await Promise.all(
@@ -141,9 +149,9 @@ export default function PageManagement() {
   );
 
   // Group + sort. Disabled pages live in the "hidden" bucket regardless
-  // of their stored category so the admin can see at a glance what's off.
+  // of their stored section so the admin can see at a glance what's off.
   const grouped = useMemo(() => {
-    const buckets = { collection: [], tools: [], public: [], hidden: [] };
+    const buckets = Object.fromEntries(ALL_DROP_ZONES.map((z) => [z, []]));
     const filterFn = (p) => {
       if (!search) return true;
       const q = search.toLowerCase();
@@ -155,11 +163,10 @@ export default function PageManagement() {
     for (const p of canonical.filter(filterFn)) {
       if (p.is_enabled === false) {
         buckets.hidden.push(p);
-      } else if (ACTIVE_CATEGORIES.includes(p.category)) {
-        buckets[p.category].push(p);
       } else {
-        // Unknown category — show in Public so the admin can move it.
-        buckets.public.push(p);
+        const sec = sectionOf(p);
+        const target = ACTIVE_SECTIONS.includes(sec) ? sec : ACTIVE_SECTIONS[0];
+        buckets[target].push(p);
       }
     }
     for (const cat of ALL_DROP_ZONES) {
@@ -179,12 +186,10 @@ export default function PageManagement() {
     return [page.id, ...dups];
   };
 
-  const counts = useMemo(() => ({
-    collection: grouped.collection.length,
-    tools: grouped.tools.length,
-    public: grouped.public.length,
-    hidden: grouped.hidden.length,
-  }), [grouped]);
+  const counts = useMemo(
+    () => Object.fromEntries(ALL_DROP_ZONES.map((z) => [z, grouped[z]?.length ?? 0])),
+    [grouped]
+  );
 
   const flashSaved = () => {
     setJustSaved(true);
@@ -209,12 +214,12 @@ export default function PageManagement() {
     }
   };
 
-  const handleCategoryChange = async (page, newCategory) => {
-    const target = grouped[newCategory] || [];
+  const handleSectionChange = async (page, newSection) => {
+    const target = grouped[newSection] || [];
     const ids = siblingIdsFor(page);
     const idSet = new Set(ids);
     const patch = {
-      category: newCategory,
+      section: newSection,
       order_position: target.length,
       is_enabled: true,
     };
@@ -225,7 +230,7 @@ export default function PageManagement() {
       await Promise.all(ids.map((id) => PageConfig.update(id, patch)));
       flashSaved();
     } catch (err) {
-      console.error('Category change failed:', err);
+      console.error('Section change failed:', err);
       toast({ title: 'Error', description: 'Could not move page.', variant: 'destructive' });
       loadPages();
     }
@@ -262,7 +267,7 @@ export default function PageManagement() {
   };
 
   const handleResetAll = async () => {
-    if (!confirm('Re-enable every page and reset categories to default? This cannot be undone.')) return;
+    if (!confirm('Re-enable every page? This does not change section assignments.')) return;
     setIsSaving(true);
     try {
       await Promise.all(
@@ -302,9 +307,9 @@ export default function PageManagement() {
       movePatch.is_enabled = false;
     } else {
       movePatch.is_enabled = true;
-      if (srcCat === 'hidden' || moved.category !== destCat) {
-        movePatch.category = destCat;
-        moved.category = destCat;
+      if (srcCat === 'hidden' || sectionOf(moved) !== destCat) {
+        movePatch.section = destCat;
+        moved.section = destCat;
       }
     }
 
@@ -403,16 +408,16 @@ export default function PageManagement() {
           </div>
           {!inHidden && (
             <Select
-              value={page.category}
-              onValueChange={(v) => handleCategoryChange(page, v)}
+              value={sectionOf(page)}
+              onValueChange={(v) => handleSectionChange(page, v)}
             >
               <SelectTrigger className="w-32 bg-slate-900 border-slate-700 text-slate-200 text-xs h-8">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent className="bg-slate-900 border-slate-700 text-slate-200">
-                <SelectItem value="collection">Collection</SelectItem>
-                <SelectItem value="tools">Tools</SelectItem>
-                <SelectItem value="public">Public</SelectItem>
+                {SECTIONS.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>
+                ))}
               </SelectContent>
             </Select>
           )}
@@ -496,7 +501,7 @@ export default function PageManagement() {
                 </p>
                 <p className="text-xs text-amber-200/70 mt-0.5">
                   Multiple <code className="text-amber-100">page_config</code> rows share the same page_name.
-                  Toggles and category changes are applied to every copy, but duplicates still clutter
+                  Toggles and section changes are applied to every copy, but duplicates still clutter
                   the DB and can cause inconsistent sidebar rendering. Clean up to keep a single canonical row per page.
                 </p>
               </div>
@@ -512,14 +517,14 @@ export default function PageManagement() {
               </Button>
             </div>
           )}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2 mb-6">
+          <div className="grid grid-cols-3 gap-2 mb-6">
             {ALL_DROP_ZONES.map((cat) => (
               <div
                 key={cat}
                 className="rounded-lg border border-slate-800 bg-slate-800/30 px-3 py-2 text-center"
               >
                 <p className="text-[10px] uppercase tracking-wider text-slate-500">
-                  {CATEGORY_TITLES[cat]}
+                  {SECTION_TITLES[cat]}
                 </p>
                 <p className="text-xl font-bold text-slate-100">{counts[cat]}</p>
               </div>
@@ -527,18 +532,18 @@ export default function PageManagement() {
           </div>
 
           <DragDropContext onDragEnd={handleDragEnd}>
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-              {ACTIVE_CATEGORIES.map((cat) => (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              {ACTIVE_SECTIONS.map((cat) => (
                 <div key={cat}>
                   <h3 className="text-sm font-semibold text-slate-200 mb-1 flex items-center gap-2">
                     <Eye className="w-4 h-4 text-emerald-400" />
-                    {CATEGORY_TITLES[cat]}
+                    {SECTION_TITLES[cat]}
                     <span className="text-xs font-normal text-slate-500">
                       ({counts[cat]})
                     </span>
                   </h3>
                   <p className="text-xs text-slate-500 mb-2">
-                    {CATEGORY_DESCRIPTIONS[cat]}
+                    {SECTION_DESCRIPTIONS[cat]}
                   </p>
                   <Droppable droppableId={cat}>
                     {(provided, snapshot) => (
@@ -568,11 +573,11 @@ export default function PageManagement() {
             <div className="mt-6">
               <h3 className="text-sm font-semibold text-slate-200 mb-1 flex items-center gap-2">
                 <EyeOff className="w-4 h-4 text-rose-400" />
-                {CATEGORY_TITLES.hidden}
+                {SECTION_TITLES.hidden}
                 <span className="text-xs font-normal text-slate-500">({counts.hidden})</span>
               </h3>
               <p className="text-xs text-slate-500 mb-2">
-                {CATEGORY_DESCRIPTIONS.hidden}
+                {SECTION_DESCRIPTIONS.hidden}
               </p>
               <Droppable droppableId="hidden">
                 {(provided, snapshot) => (
