@@ -599,14 +599,45 @@ button:focus-visible {
   /* ------------------------------------------------------------------
      Secondary "Accent color" palettes. Independent from the primary
      theme above — users pick one via the Settings → Accent picker
-     which writes data-secondary on <html>. Each block redefines the
-     --emerald-* scale (which Tailwind's `emerald` utilities now read
-     from). green-* utilities are intentionally NOT remapped so
-     "success green" stays semantic across all accent choices. */
+     which writes data-secondary on <html>.
 
-  /* Normal — Tailwind's stock emerald. Identity palette so `normal`
-     accent is byte-identical to the original UI. */
+     Each block does two jobs:
+       1. Redefine the --emerald-* scale (~1,900 hardcoded
+          `bg-emerald-500` / `text-emerald-400` etc. callsites).
+       2. Override the shadcn interactive tokens so dropdown menu
+          highlights, focus rings, primary buttons, sidebar active
+          items, and ghost-button hovers all carry the chosen accent
+          rather than the theme's brand hue. The tokens overridden
+          here come AFTER the data-theme blocks above, so they win
+          on equal specificity:
+            --primary, --primary-foreground       (brand button bg/fg)
+            --ring                                 (focus ring)
+            --accent, --accent-foreground          (dropdown / hover bg)
+            --sidebar-primary, --sidebar-primary-foreground
+            --sidebar-ring
+            --sidebar-accent, --sidebar-accent-foreground
+
+     --background, --card, --secondary, --muted, --border, --input,
+     sage scale, and slate scale are intentionally NOT overridden —
+     those are structural neutrals owned by the theme. green-*
+     utilities are also left stock so "success green" stays semantic. */
+
+  /* Normal — emerald accent. Identity palette: HSL values match
+     Tailwind stock emerald, and the interactive tokens match the
+     normal theme exactly so picking "Normal" accent on top of
+     "Normal" theme is a perfect no-op. */
   :root[data-secondary="normal"] {
+    --primary: 152 70% 48%;
+    --primary-foreground: 156 50% 8%;
+    --ring: 152 70% 48%;
+    --accent: 153 30% 18%;
+    --accent-foreground: 0 0% 98%;
+    --sidebar-primary: 152 70% 48%;
+    --sidebar-primary-foreground: 156 50% 8%;
+    --sidebar-ring: 152 70% 48%;
+    --sidebar-accent: 153 26% 16%;
+    --sidebar-accent-foreground: 0 0% 98%;
+
     --emerald-50:  152 81% 96%;
     --emerald-100: 149 80% 90%;
     --emerald-200: 152 76% 80%;
@@ -622,6 +653,17 @@ button:focus-visible {
 
   /* Tangerine — warm amber accent. */
   :root[data-secondary="tangerine"] {
+    --primary: 26 95% 56%;
+    --primary-foreground: 20 50% 10%;
+    --ring: 26 95% 56%;
+    --accent: 28 35% 22%;
+    --accent-foreground: 0 0% 98%;
+    --sidebar-primary: 26 95% 56%;
+    --sidebar-primary-foreground: 20 50% 10%;
+    --sidebar-ring: 26 95% 56%;
+    --sidebar-accent: 28 30% 18%;
+    --sidebar-accent-foreground: 0 0% 98%;
+
     --emerald-50:  34 100% 96%;
     --emerald-100: 32 96% 90%;
     --emerald-200: 32 95% 80%;
@@ -637,6 +679,17 @@ button:focus-visible {
 
   /* Halloween Mask — bold red-orange accent. */
   :root[data-secondary="halloween-mask"] {
+    --primary: 10 90% 54%;
+    --primary-foreground: 12 48% 8%;
+    --ring: 10 90% 54%;
+    --accent: 8 35% 22%;
+    --accent-foreground: 0 0% 98%;
+    --sidebar-primary: 10 90% 54%;
+    --sidebar-primary-foreground: 12 48% 8%;
+    --sidebar-ring: 10 90% 54%;
+    --sidebar-accent: 8 30% 18%;
+    --sidebar-accent-foreground: 0 0% 98%;
+
     --emerald-50:  10 100% 96%;
     --emerald-100: 10 96% 90%;
     --emerald-200: 10 92% 82%;
@@ -652,6 +705,17 @@ button:focus-visible {
 
   /* Blizzard — cool sky-blue accent. */
   :root[data-secondary="blizzard"] {
+    --primary: 202 92% 62%;
+    --primary-foreground: 218 40% 10%;
+    --ring: 202 92% 62%;
+    --accent: 210 30% 22%;
+    --accent-foreground: 0 0% 98%;
+    --sidebar-primary: 202 92% 62%;
+    --sidebar-primary-foreground: 218 40% 10%;
+    --sidebar-ring: 202 92% 62%;
+    --sidebar-accent: 210 26% 18%;
+    --sidebar-accent-foreground: 0 0% 98%;
+
     --emerald-50:  204 100% 96%;
     --emerald-100: 206 96% 90%;
     --emerald-200: 208 94% 82%;
@@ -665,8 +729,21 @@ button:focus-visible {
     --emerald-950: 220 76% 10%;
   }
 
-  /* Lavender — violet accent. */
+  /* Lavender — violet accent. Mirrors the lavender theme's signature
+     "pale lavender pop" for --accent / --sidebar-accent so dropdown
+     and sidebar highlights stay light against any dark theme. */
   :root[data-secondary="lavender"] {
+    --primary: 275 65% 68%;
+    --primary-foreground: 275 30% 10%;
+    --ring: 275 65% 68%;
+    --accent: 275 85% 92%;
+    --accent-foreground: 275 50% 16%;
+    --sidebar-primary: 275 65% 68%;
+    --sidebar-primary-foreground: 275 30% 10%;
+    --sidebar-ring: 275 65% 68%;
+    --sidebar-accent: 275 80% 90%;
+    --sidebar-accent-foreground: 275 50% 16%;
+
     --emerald-50:  275 80% 96%;
     --emerald-100: 274 78% 91%;
     --emerald-200: 273 76% 84%;
@@ -682,6 +759,17 @@ button:focus-visible {
 
   /* Super Hypo — golden yellow accent. */
   :root[data-secondary="super-hypo"] {
+    --primary: 46 95% 58%;
+    --primary-foreground: 40 50% 10%;
+    --ring: 46 95% 58%;
+    --accent: 48 32% 22%;
+    --accent-foreground: 0 0% 98%;
+    --sidebar-primary: 46 95% 58%;
+    --sidebar-primary-foreground: 40 50% 10%;
+    --sidebar-ring: 46 95% 58%;
+    --sidebar-accent: 48 28% 18%;
+    --sidebar-accent-foreground: 0 0% 98%;
+
     --emerald-50:  56 100% 96%;
     --emerald-100: 54 96% 88%;
     --emerald-200: 52 94% 78%;
