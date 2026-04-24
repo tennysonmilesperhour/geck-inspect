@@ -1,8 +1,7 @@
 import React, { createContext, useContext, useEffect, useState, useCallback } from 'react';
 
 // Each theme sets CSS custom properties via :root[data-theme="..."] in
-// src/index.css. `isLight` flips the Tailwind `dark` class so dark:*
-// variants turn off for light-mode themes.
+// src/index.css.
 export const THEMES = [
   {
     id: 'normal',
@@ -31,9 +30,8 @@ export const THEMES = [
   {
     id: 'lavender',
     label: 'Lavender',
-    description: 'Light mode — pale lavender with darker lavender, slate, and dusty-blue accents',
-    swatch: '#8b6dcc',
-    isLight: true,
+    description: 'Dusk lavender — lifted twilight surfaces with bright lilac primary and deep violet accents',
+    swatch: '#b188f0',
   },
   {
     id: 'super-hypo',
@@ -59,14 +57,6 @@ function readStoredTheme() {
 function applyThemeAttribute(themeId) {
   if (typeof document === 'undefined') return;
   document.documentElement.setAttribute('data-theme', themeId);
-  const theme = THEMES.find((t) => t.id === themeId);
-  const isLight = !!theme?.isLight;
-  // Light-mode themes drop the .dark class so Tailwind dark: variants
-  // don't fire. Must stay in sync with the bootstrap script in index.html.
-  document.documentElement.classList.toggle('dark', !isLight);
-  // Browser form controls / UA styling follow color-scheme.
-  const colorScheme = document.querySelector('meta[name="color-scheme"]');
-  if (colorScheme) colorScheme.setAttribute('content', isLight ? 'light' : 'dark');
 }
 
 const ThemeContext = createContext({

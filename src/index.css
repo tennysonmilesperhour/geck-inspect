@@ -443,83 +443,80 @@ button:focus-visible {
     --scrollbar-thumb-hover: #93c5fd;
   }
 
-  /* Lavender — the app's LIGHT MODE. Pale lavender surfaces with darker
-     lavender, slate-grey, and dusty-blue accents. Unlike the other themes,
-     slate/sage scales are flipped from the dark-mode convention so that
-     ~280 hardcoded `bg-slate-900` / `text-slate-100` usages auto-invert:
-       - slate-50 (typically light-text) → dark text token
-       - slate-950 (typically dark-surface) → near-white surface token
-     Result: components written against dark-mode tokens render correctly
-     on a light background without touching JSX. */
+  /* Lavender — dusk violet. Lighter than the original near-black base
+     (6% → 18% lightness) but still a dark-mode theme. Bright lilac
+     primary, medium-tone twilight surfaces, deep lavender accents, with
+     a hue drift toward cool blue-grey on the darkest slate steps for
+     visual variety. Keeps the dark-mode convention so hardcoded
+     `bg-slate-900` / `text-slate-100` usages read correctly. */
   :root[data-theme="lavender"] {
-    --background: 275 40% 97%;
-    --foreground: 270 30% 16%;
-    --card: 275 50% 99%;
-    --card-foreground: 270 30% 16%;
-    --popover: 275 50% 99%;
-    --popover-foreground: 270 30% 16%;
-    --primary: 268 50% 46%;
-    --primary-foreground: 275 40% 98%;
-    --secondary: 272 35% 92%;
-    --secondary-foreground: 270 30% 22%;
-    --muted: 272 30% 93%;
-    --muted-foreground: 268 18% 42%;
-    --accent: 215 45% 58%;
-    --accent-foreground: 275 40% 98%;
-    --destructive: 352 68% 48%;
+    --background: 272 22% 18%;
+    --foreground: 275 28% 96%;
+    --card: 273 24% 22%;
+    --card-foreground: 275 28% 96%;
+    --popover: 273 24% 22%;
+    --popover-foreground: 275 28% 96%;
+    --primary: 275 72% 74%;
+    --primary-foreground: 275 40% 14%;
+    --secondary: 274 22% 30%;
+    --secondary-foreground: 275 28% 96%;
+    --muted: 274 20% 30%;
+    --muted-foreground: 275 18% 78%;
+    --accent: 276 48% 42%;
+    --accent-foreground: 275 28% 96%;
+    --destructive: 0 68% 52%;
     --destructive-foreground: 0 0% 98%;
-    --border: 272 28% 86%;
-    --input: 272 30% 94%;
-    --ring: 268 50% 46%;
+    --border: 275 28% 38%;
+    --input: 274 22% 28%;
+    --ring: 275 72% 74%;
 
-    --sidebar-background: 275 45% 96%;
-    --sidebar-foreground: 270 28% 22%;
-    --sidebar-primary: 268 50% 46%;
-    --sidebar-primary-foreground: 275 40% 98%;
-    --sidebar-accent: 272 32% 90%;
-    --sidebar-accent-foreground: 270 30% 18%;
-    --sidebar-border: 272 26% 84%;
-    --sidebar-ring: 268 50% 46%;
+    --sidebar-background: 273 26% 20%;
+    --sidebar-foreground: 275 22% 90%;
+    --sidebar-primary: 275 72% 74%;
+    --sidebar-primary-foreground: 275 40% 14%;
+    --sidebar-accent: 274 24% 28%;
+    --sidebar-accent-foreground: 275 28% 96%;
+    --sidebar-border: 275 24% 30%;
+    --sidebar-ring: 275 72% 74%;
 
-    --chart-1: 268 50% 46%;
-    --chart-2: 215 45% 58%;
-    --chart-3: 290 40% 58%;
-    --chart-4: 235 35% 52%;
-    --chart-5: 260 40% 68%;
+    --chart-1: 275 72% 74%;
+    --chart-2: 292 62% 68%;
+    --chart-3: 256 58% 68%;
+    --chart-4: 312 56% 68%;
+    --chart-5: 242 52% 72%;
 
-    /* Sage (brand) scale — used for accent bleeds like bg-sage-*.
-       Kept at medium-dark lavender core so bg-sage-500 pops on pale
-       backgrounds; low steps are deep for accent text, high steps are
-       pale tints for subtle surfaces. */
-    --sage-50:  270 45% 20%;
-    --sage-100: 269 48% 28%;
-    --sage-200: 268 50% 36%;
-    --sage-300: 268 52% 44%;
-    --sage-400: 268 55% 52%;
-    --sage-500: 268 55% 62%;
-    --sage-600: 268 52% 74%;
-    --sage-700: 270 48% 84%;
-    --sage-800: 272 42% 91%;
-    --sage-900: 275 40% 96%;
+    /* Sage (brand lavender) — dark→light. sage-50 is the deep violet
+       that echoes the original lavender, sage-500 is the bright lilac
+       primary, sage-900 is a pale lavender mist. */
+    --sage-50:  273 52% 24%;
+    --sage-100: 273 56% 30%;
+    --sage-200: 274 60% 38%;
+    --sage-300: 274 64% 48%;
+    --sage-400: 275 68% 60%;
+    --sage-500: 275 72% 74%;
+    --sage-600: 274 72% 82%;
+    --sage-700: 272 70% 88%;
+    --sage-800: 270 68% 93%;
+    --sage-900: 268 72% 97%;
 
-    /* Slate scale — FLIPPED for light mode. slate-50 is dark (text),
-       slate-950 is very light (surfaces). Hue drifts from lavender at
-       the light end toward cool blue-grey at the dark end so that
-       text reads neutral and doesn't feel purple. */
-    --slate-50:  270 28% 16%;
-    --slate-100: 268 24% 22%;
-    --slate-200: 262 20% 30%;
-    --slate-300: 250 16% 42%;
-    --slate-400: 240 14% 54%;
-    --slate-500: 240 12% 62%;
-    --slate-600: 250 18% 74%;
-    --slate-700: 260 22% 84%;
-    --slate-800: 268 28% 90%;
-    --slate-900: 272 32% 95%;
-    --slate-950: 275 40% 98%;
+    /* Slate (neutrals) — dark-mode-inverted: slate-50=lightest text,
+       slate-950=darkest surface. Dark floor raised (16% not 8%) so the
+       theme reads "dusk" not "midnight"; hue cools toward blue-grey on
+       darker steps so body text doesn't feel uniformly purple. */
+    --slate-50:  275 30% 96%;
+    --slate-100: 274 30% 90%;
+    --slate-200: 273 32% 82%;
+    --slate-300: 272 30% 72%;
+    --slate-400: 268 24% 62%;
+    --slate-500: 265 18% 54%;
+    --slate-600: 262 20% 44%;
+    --slate-700: 268 22% 34%;
+    --slate-800: 272 24% 28%;
+    --slate-900: 273 24% 22%;
+    --slate-950: 275 26% 16%;
 
-    --scrollbar-thumb: #8b6dcc;
-    --scrollbar-thumb-hover: #6d4fb8;
+    --scrollbar-thumb: #b188f0;
+    --scrollbar-thumb-hover: #d8b4fe;
   }
 
   /* Super Hypo — high-noon sunlight. Warm coffee-brown backgrounds and

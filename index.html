@@ -87,10 +87,7 @@
     </script>
 
     <!-- Theme — apply persisted gecko-morph theme synchronously before
-         CSS/JS loads so users don't see a flash of the default palette.
-         Lavender is the light-mode theme, so the .dark class is OMITTED
-         for it; all other themes get .dark applied so Tailwind dark:
-         variants fire on top of the dark-palette data-theme CSS vars. -->
+         CSS/JS loads so users don't see a flash of the default palette. -->
     <script>
       (function () {
         try {
@@ -98,7 +95,7 @@
           var stored = localStorage.getItem('geckinspect.theme');
           var theme = allowed.indexOf(stored) !== -1 ? stored : 'normal';
           document.documentElement.setAttribute('data-theme', theme);
-          if (theme !== 'lavender') document.documentElement.classList.add('dark');
+          document.documentElement.classList.add('dark');
         } catch (e) {
           document.documentElement.setAttribute('data-theme', 'normal');
           document.documentElement.classList.add('dark');
