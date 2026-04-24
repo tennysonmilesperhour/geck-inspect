@@ -722,9 +722,9 @@ export default function Lineage() {
     // column doesn't dominate the layout.
     const matesCardSize = generations >= 4 ? 'tiny' : 'small';
 
-    // Offspring render as per-season sections (newest first), each a compact
-    // 4-wide grid of "nano" cards so ~24 fit in the same footprint as a
-    // 2×6 block of mates at the mates' own card size.
+    // Offspring render as per-season sections (newest first); each section
+    // is a single vertical column of "nano" cards, stacked top-to-bottom
+    // so the panel extends downward rather than sideways.
     const offspringBySeason = useMemo(() => {
         const groups = new Map();
         for (const child of offspring) {
@@ -1418,8 +1418,9 @@ export default function Lineage() {
                             </div>
 
                             {/* Offspring Column (Right) — one section per
-                                hatch season (newest first), each a 4-wide
-                                grid of nano cards that grows downward. */}
+                                hatch season (newest first); each section is
+                                a single vertical column of nano cards so the
+                                panel only grows top-to-bottom, never sideways. */}
                             <div className="flex-shrink-0 order-3">
                                 {offspring.length > 0 && (
                                     <div className="bg-emerald-950/50 rounded-lg p-2 md:p-3 border border-emerald-800">
@@ -1436,7 +1437,7 @@ export default function Lineage() {
                                                         {season}
                                                         <span className="ml-1 font-normal text-blue-400/60">({kids.length})</span>
                                                     </h3>
-                                                    <div className="grid grid-cols-4 gap-1 justify-items-center">
+                                                    <div className="grid grid-cols-1 gap-1 justify-items-center">
                                                         {kids.map(child => (
                                                             <GeckoCardNode
                                                                 key={child.id}
