@@ -21,6 +21,7 @@ import {
 import Seo from '@/components/seo/Seo';
 import { CARE_CATEGORIES } from '@/data/care-guide';
 import ContentBlock from '@/components/careguide/ContentBlock';
+import KeepersGuideTabs from '@/components/careguide/KeepersGuideTabs';
 import { authorSchema, bylineText, editorialFor } from '@/lib/editorial';
 
 const CATEGORY_ICONS = {
@@ -479,6 +480,8 @@ export default function CareGuidePage() {
               {activeCategory.quickFacts?.length > 0 && (
                 <QuickFactsGrid facts={activeCategory.quickFacts} />
               )}
+
+              <KeepersGuideTabs />
 
               {localSections.length === 0 && communitySections.length === 0 ? (
                 <Card className="bg-slate-900/40 border-slate-800">
