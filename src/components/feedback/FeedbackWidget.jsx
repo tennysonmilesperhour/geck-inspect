@@ -25,11 +25,11 @@ import {
 } from 'lucide-react';
 
 /**
- * Floating feedback widget — anchored to the bottom-right corner of every
- * authenticated page. Opens a dialog where the user picks a feedback type
- * (general, bug, feature request) plus an optional 1-5 star rating, then
- * fires straight into support_messages. Admins triage it from the support
- * inbox with the "Feedback" filter.
+ * Side-tab feedback widget — a slim vertical tab hugging the right edge of
+ * every authenticated page. Opens a dialog where the user picks a feedback
+ * type (general, bug, feature request) plus an optional 1-5 star rating,
+ * then fires straight into support_messages. Admins triage it from the
+ * support inbox with the "Feedback" filter.
  *
  * Hidden on mobile auth/onboarding routes so it doesn't cover important UI.
  */
@@ -133,15 +133,15 @@ export default function FeedbackWidget() {
 
   return (
     <>
-      {/* Floating launcher */}
+      {/* Side-tab launcher */}
       <button
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Send feedback"
-        className="fixed right-5 z-[60] flex items-center gap-2 rounded-full bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/50 px-4 py-3 text-sm font-semibold transition-all hover:scale-105 active:scale-95 print:hidden bottom-[calc(5rem+env(safe-area-inset-bottom))] md:bottom-[calc(1.25rem+env(safe-area-inset-bottom))]"
+        className="fixed right-0 top-1/2 -translate-y-1/2 z-[60] flex flex-col items-center gap-1.5 rounded-l-md bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/50 px-1.5 py-3 text-xs font-semibold tracking-wider uppercase transition-all hover:px-2 active:scale-95 print:hidden"
       >
-        <MessageSquare className="w-4 h-4" />
-        <span className="hidden sm:inline">Feedback</span>
+        <MessageSquare className="w-3.5 h-3.5" />
+        <span className="[writing-mode:vertical-rl] rotate-180">Feedback</span>
       </button>
 
       <Dialog open={open} onOpenChange={handleClose}>
