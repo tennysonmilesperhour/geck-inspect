@@ -1227,7 +1227,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
             </div>
           </header>
 
-          <div className="flex-1 overflow-auto overflow-x-hidden pb-[calc(2.25rem+env(safe-area-inset-bottom))] md:pb-0">
+          <div className="flex-1 overflow-auto overflow-x-hidden pb-[calc(2.25rem+env(safe-area-inset-bottom)/2)] md:pb-0">
             {children}
           </div>
 
@@ -1236,7 +1236,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
         {/* Section tabs (mobile) — fixed bottom bar */}
         <nav
-          className="gecko-bottom-nav fixed bottom-0 left-0 right-0 z-40 md:hidden flex pb-[env(safe-area-inset-bottom)]"
+          className="gecko-bottom-nav fixed bottom-0 left-0 right-0 z-40 md:hidden flex pb-[calc(env(safe-area-inset-bottom)/2)]"
           aria-label="App sections"
         >
           {SECTIONS.map((section) => {
