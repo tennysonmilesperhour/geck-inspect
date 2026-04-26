@@ -1227,7 +1227,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
             </div>
           </header>
 
-          <div className="flex-1 overflow-auto overflow-x-hidden pb-[calc(4.5rem+env(safe-area-inset-bottom))] md:pb-0">
+          <div className="flex-1 overflow-auto overflow-x-hidden pb-[calc(2.25rem+env(safe-area-inset-bottom))] md:pb-0">
             {children}
           </div>
 
