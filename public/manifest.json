@@ -2,7 +2,7 @@
   "name": "Geck Inspect",
   "short_name": "Geck Inspect",
   "description": "Crested gecko collection, breeding, and community platform. Track geckos, plan breedings, identify morphs, research lineages.",
-  "start_url": "/",
+  "start_url": "/MyGeckos",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",
