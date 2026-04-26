@@ -150,6 +150,27 @@ const AuthenticatedApp = () => {
     }).catch((err) => console.error('Failed to load page configs:', err));
   }, [isAuthenticated]);
 
+  // PWA launch redirect: existing home-screen icons may have been saved
+  // when start_url was "/" (or while the user was on /Messages), and iOS
+  // caches the manifest aggressively, so a manifest-only fix doesn't
+  // reach already-installed icons. Once per session, if the app was
+  // launched as a standalone PWA and lands on / or /Messages, bounce to
+  // /MyGeckos. The sessionStorage flag means subsequent in-app
+  // navigation to Messages still works normally.
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    if (sessionStorage.getItem('pwa_launch_handled')) return;
+    const isStandalone =
+      window.matchMedia?.('(display-mode: standalone)').matches ||
+      window.navigator.standalone === true;
+    if (!isStandalone) return;
+    sessionStorage.setItem('pwa_launch_handled', '1');
+    const path = window.location.pathname.replace(/\/+$/, '') || '/';
+    if (path === '/' || path === '/Messages') {
+      window.location.replace('/MyGeckos');
+    }
+  }, []);
+
   // Show loading spinner while checking auth
   if (isLoadingAuth) {
     return (
