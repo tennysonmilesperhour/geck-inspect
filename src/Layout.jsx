@@ -1258,7 +1258,11 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       </div>
       <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
       <CommandPalette />
-      <FeedingAlertSystem user={user} enabled={user?.feeding_alerts_enabled !== false} />
+      <FeedingAlertSystem
+        user={user}
+        enabled={user?.feeding_alerts_enabled !== false}
+        lateReminders={user?.feeding_late_reminders_enabled === true}
+      />
       {/* Always run the hatch producer for signed-in users; per-channel
           (push/email) opt-out lives in Settings → Notifications. The bell
           notification is non-disruptive, so no separate master toggle. */}

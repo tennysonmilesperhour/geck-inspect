@@ -6,35 +6,42 @@ import { AnimatePresence, motion } from 'framer-motion';
 
 // Dedup window: fire at most one push/email per entity per day. The
 // 5-minute polling loop would otherwise create 288 notifications a day
-// for a single overdue reptile. Key: geck_fed_notified_<alertId> →
-// ISO timestamp of last firing.
+// for a single overdue reptile. The dedup key is scoped by the
+// entity's current `last_fed_date` so that each new feeding cycle
+// gets a fresh slot — without this, a user on a 1-day interval would
+// only get notified every other day.
+// Key: geck_fed_notified_<alertId>__<lastFedDate> → ISO timestamp of last firing.
 const NOTIFY_DEDUP_HOURS = 24;
-function shouldNotify(alertId) {
+function dedupKey(alertId, lastFedDate) {
+  return `geck_fed_notified_${alertId}__${lastFedDate || 'never'}`;
+}
+function shouldNotify(alertId, lastFedDate) {
   try {
-    const key = `geck_fed_notified_${alertId}`;
-    const last = localStorage.getItem(key);
+    const last = localStorage.getItem(dedupKey(alertId, lastFedDate));
     if (!last) return true;
     const elapsedHours = (Date.now() - new Date(last).getTime()) / 36e5;
     return elapsedHours >= NOTIFY_DEDUP_HOURS;
   } catch { return true; }
 }
-function markNotified(alertId) {
+function markNotified(alertId, lastFedDate) {
   try {
-    localStorage.setItem(`geck_fed_notified_${alertId}`, new Date().toISOString());
+    localStorage.setItem(dedupKey(alertId, lastFedDate), new Date().toISOString());
   } catch {}
 }
 
-export default function FeedingAlertSystem({ user, enabled }) {
+export default function FeedingAlertSystem({ user, enabled, lateReminders }) {
   const [alerts, setAlerts] = useState([]);
   const [dismissedAlerts, setDismissedAlerts] = useState(new Set());
 
-  // Calculate days overdue
+  // Days past the feeding due date. 0 = due today (interval has just elapsed),
+  // 1 = a day late, etc. Negative values (not yet due) are filtered upstream
+  // by the `daysOverdue >= 0` check.
   const calculateDaysOverdue = (lastFedDate, intervalDays) => {
     if (!lastFedDate) return intervalDays;
     const lastFed = new Date(lastFedDate);
     const now = new Date();
     const daysElapsed = Math.floor((now - lastFed) / (1000 * 60 * 60 * 24));
-    return Math.max(0, daysElapsed - intervalDays);
+    return daysElapsed - intervalDays;
   };
 
   // Get color based on days overdue
@@ -77,7 +84,7 @@ export default function FeedingAlertSystem({ user, enabled }) {
         // Check feeding groups
         feedingGroups.forEach(group => {
           const daysOverdue = calculateDaysOverdue(group.last_fed_date, group.interval_days);
-          if (daysOverdue > 0) {
+          if (daysOverdue >= 0) {
             newAlerts.push({
               id: `group-${group.id}`,
               type: 'feedingGroup',
@@ -85,6 +92,7 @@ export default function FeedingAlertSystem({ user, enabled }) {
               name: group.name || group.label,
               daysOverdue,
               intervalDays: group.interval_days,
+              lastFedDate: group.last_fed_date,
               color: getAlertColor(daysOverdue),
               group
             });
@@ -95,7 +103,7 @@ export default function FeedingAlertSystem({ user, enabled }) {
         otherReptiles.forEach(reptile => {
           if (reptile.feeding_reminder_enabled) {
             const daysOverdue = calculateDaysOverdue(reptile.last_fed_date, reptile.feeding_interval_days || 7);
-            if (daysOverdue > 0) {
+            if (daysOverdue >= 0) {
               newAlerts.push({
                 id: `reptile-${reptile.id}`,
                 type: 'otherReptile',
@@ -103,6 +111,7 @@ export default function FeedingAlertSystem({ user, enabled }) {
                 name: reptile.name,
                 daysOverdue,
                 intervalDays: reptile.feeding_interval_days || 7,
+                lastFedDate: reptile.last_fed_date,
                 color: getAlertColor(daysOverdue),
                 reptile
               });
@@ -112,20 +121,26 @@ export default function FeedingAlertSystem({ user, enabled }) {
 
         setAlerts(newAlerts);
 
-        // For every alert we haven't already pinged the user about in
-        // the last 24 hours, create a `feeding_due` notification row.
+        // Fire one `feeding_due` notification per entity per 24h. By
+        // default we only ping on the day feeding becomes due
+        // (daysOverdue === 0); the user has to opt into late reminders
+        // in Settings to keep getting daily re-pings while overdue.
         // The DB trigger fans out to push + email subject to the
         // user's per-type preferences in Settings → Notifications.
         for (const a of newAlerts) {
-          if (!shouldNotify(a.id)) continue;
+          if (a.daysOverdue > 0 && !lateReminders) continue;
+          if (!shouldNotify(a.id, a.lastFedDate)) continue;
           const linkPath = a.type === 'feedingGroup'
             ? '/BatchHusbandry'
             : '/OtherReptiles';
+          const content = a.daysOverdue === 0
+            ? `${a.name} is due for feeding today`
+            : `${a.name} is ${a.daysOverdue} day${a.daysOverdue !== 1 ? 's' : ''} overdue for feeding`;
           try {
             await Notification.create({
               user_email: user.email,
               type: 'feeding_due',
-              content: `${a.name} is ${a.daysOverdue} day${a.daysOverdue !== 1 ? 's' : ''} overdue for feeding`,
+              content,
               link: linkPath,
               metadata: {
                 entity_type: a.type,
@@ -134,7 +149,7 @@ export default function FeedingAlertSystem({ user, enabled }) {
               },
               is_read: false,
             });
-            markNotified(a.id);
+            markNotified(a.id, a.lastFedDate);
           } catch (err) {
             // Don't break the toast UI if notification creation fails.
             console.warn('feeding_due notification failed:', err);
@@ -148,7 +163,7 @@ export default function FeedingAlertSystem({ user, enabled }) {
     loadAlerts();
     const interval = setInterval(loadAlerts, 5 * 60 * 1000); // Refresh every 5 minutes
     return () => clearInterval(interval);
-  }, [user, enabled]);
+  }, [user, enabled, lateReminders]);
 
   const handleFed = async (alert) => {
     try {
@@ -229,7 +244,9 @@ export default function FeedingAlertSystem({ user, enabled }) {
                       ? 'text-orange-300'
                       : 'text-yellow-300'
                   }`}>
-                    {alert.daysOverdue} day{alert.daysOverdue !== 1 ? 's' : ''} overdue (every {alert.intervalDays} days)
+                    {alert.daysOverdue === 0
+                      ? `Due today (every ${alert.intervalDays} days)`
+                      : `${alert.daysOverdue} day${alert.daysOverdue !== 1 ? 's' : ''} overdue (every ${alert.intervalDays} days)`}
                   </p>
                 </div>
               </div>

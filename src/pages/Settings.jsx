@@ -248,6 +248,7 @@ const initialFormData = {
     calendar_alerts_enabled: true,
     calendar_alert_types: ['egg_lay_estimate', 'hatch_estimate', 'breeding_reminders', 'weight_check_reminders'],
     feeding_alerts_enabled: true,
+    feeding_late_reminders_enabled: false,
     palm_street_sync_enabled: false,
     email_on_new_follower: true,
     email_on_new_message: true,
@@ -356,6 +357,7 @@ export default function SettingsPage() {
                         calendar_alerts_enabled: currentUser.calendar_alerts_enabled !== false,
                         calendar_alert_types: currentUser.calendar_alert_types || ['egg_lay_estimate', 'hatch_estimate', 'breeding_reminders', 'weight_check_reminders'],
                         feeding_alerts_enabled: currentUser.feeding_alerts_enabled !== false,
+                        feeding_late_reminders_enabled: currentUser.feeding_late_reminders_enabled === true,
                         palm_street_sync_enabled: currentUser.palm_street_sync_enabled || false,
                         email_on_new_follower: currentUser.email_on_new_follower !== false, // Default true
                         email_on_new_message: currentUser.email_on_new_message !== false, // Default true
@@ -838,9 +840,12 @@ export default function SettingsPage() {
                  <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
                      <CardHeader><CardTitle className="text-slate-100 flex items-center gap-2"><Clock className="w-5 h-5"/>Feeding Alerts</CardTitle></CardHeader>
                      <CardContent className="space-y-6">
-                          {renderSwitch('feeding-alerts-enabled', 'Enable Feeding Alerts', 'Show glowing in-app notifications and popups when feeding is overdue', formData.feeding_alerts_enabled, (checked) => handleChange('feeding_alerts_enabled', checked))}
+                          {renderSwitch('feeding-alerts-enabled', 'Enable Feeding Alerts', 'Send a notification on the day each feeding group or reptile is due', formData.feeding_alerts_enabled, (checked) => handleChange('feeding_alerts_enabled', checked))}
                          {formData.feeding_alerts_enabled && (
-                             <p className="text-sm text-slate-400">Alerts will appear in the bottom right corner when feeding groups or reptiles are overdue. Notifications glow yellow (1+ day overdue), orange (2+ weeks), or red (3+ weeks).</p>
+                             <>
+                                 {renderSwitch('feeding-late-reminders-enabled', 'Late Reminders', 'Keep sending daily reminders while a feeding remains overdue. Off by default — you only get one notification on the day feeding is due.', formData.feeding_late_reminders_enabled, (checked) => handleChange('feeding_late_reminders_enabled', checked))}
+                                 <p className="text-sm text-slate-400">Alerts also appear in the bottom right corner while feeding is overdue. Glow turns yellow when due, orange after 2+ weeks, red after 3+ weeks.</p>
+                             </>
                          )}
                      </CardContent>
                  </Card>
