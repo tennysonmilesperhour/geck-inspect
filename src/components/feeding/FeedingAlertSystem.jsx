@@ -74,10 +74,27 @@ export default function FeedingAlertSystem({ user, enabled, lateReminders }) {
 
     const loadAlerts = async () => {
       try {
-        const [feedingGroups, otherReptiles] = await Promise.all([
+        const [feedingGroups, otherReptiles, recentNotifs] = await Promise.all([
           FeedingGroup.filter({ created_by: user.email }),
-          OtherReptile.filter({ created_by: user.email, archived: false })
+          OtherReptile.filter({ created_by: user.email, archived: false }),
+          // Pull this user's recent feeding_due notifications so we
+          // can dedup across devices/tabs/sessions where localStorage
+          // can't see the other side's firings. 50 is far more than a
+          // single user could rack up in a day across all their
+          // groups + reptiles.
+          Notification.filter({ user_email: user.email, type: 'feeding_due' }, '-created_date', 50).catch(() => []),
         ]);
+
+        const todayStr = new Date().toISOString().split('T')[0];
+        const firedTodayEntityIds = new Set(
+          (recentNotifs || [])
+            .filter(n => {
+              const created = n.created_date || n.created_at;
+              return created && String(created).startsWith(todayStr);
+            })
+            .map(n => n.metadata?.entity_id)
+            .filter(Boolean)
+        );
 
         const newAlerts = [];
 
@@ -130,6 +147,12 @@ export default function FeedingAlertSystem({ user, enabled, lateReminders }) {
         for (const a of newAlerts) {
           if (a.daysOverdue > 0 && !lateReminders) continue;
           if (!shouldNotify(a.id, a.lastFedDate)) continue;
+          // Cross-device dedup: another browser/tab may have already
+          // inserted a feeding_due row for this entity earlier today.
+          if (firedTodayEntityIds.has(a.entityId)) {
+            markNotified(a.id, a.lastFedDate);
+            continue;
+          }
           const linkPath = a.type === 'feedingGroup'
             ? '/BatchHusbandry'
             : '/OtherReptiles';

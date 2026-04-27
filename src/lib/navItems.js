@@ -30,6 +30,7 @@ export const SECTIONS = [
 export const SECTION_FOR_PAGE = {
   // Manage — your animals + business
   MyGeckos: 'manage',
+  OtherReptiles: 'manage',
   Breeding: 'manage',
   BreedingPairs: 'manage',
   Lineage: 'manage',
@@ -82,10 +83,11 @@ export function getSectionForPage(pageName) {
 export const FALLBACK_NAV_ITEMS = {
   collection: [
     { page_name: "MyGeckos", display_name: "My Geckos", icon: "LayoutGrid", category: "collection", requires_auth: true, is_enabled: true, order: 1 },
-    { page_name: "Breeding", display_name: "Breeding", icon: "Egg", category: "collection", requires_auth: true, is_enabled: true, order: 2 },
-    { page_name: "Lineage", display_name: "Lineage", icon: "GitBranch", category: "collection", requires_auth: true, is_enabled: true, order: 3 },
-    { page_name: "CareGuide", display_name: "Care Guide", icon: "Heart", category: "collection", requires_auth: false, is_enabled: true, order: 4 },
-    { page_name: "Forum", display_name: "Forum", icon: "MessageSquare", category: "collection", requires_auth: false, is_enabled: true, order: 5 },
+    { page_name: "OtherReptiles", display_name: "Other Reptiles", icon: "UsersRound", category: "collection", requires_auth: true, is_enabled: true, order: 2 },
+    { page_name: "Breeding", display_name: "Breeding", icon: "Egg", category: "collection", requires_auth: true, is_enabled: true, order: 3 },
+    { page_name: "Lineage", display_name: "Lineage", icon: "GitBranch", category: "collection", requires_auth: true, is_enabled: true, order: 4 },
+    { page_name: "CareGuide", display_name: "Care Guide", icon: "Heart", category: "collection", requires_auth: false, is_enabled: true, order: 5 },
+    { page_name: "Forum", display_name: "Forum", icon: "MessageSquare", category: "collection", requires_auth: false, is_enabled: true, order: 6 },
   ],
   tools: [
     { page_name: "Recognition", display_name: "Morph ID", icon: "Search", category: "tools", requires_auth: false, is_enabled: true, order: 1 },

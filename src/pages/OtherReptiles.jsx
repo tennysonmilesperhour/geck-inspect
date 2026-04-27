@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
-import { OtherReptile, Notification } from '@/entities/all';
+import { OtherReptile } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import { PlusCircle, Search, Users, Archive, ArchiveRestore, Lock } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
@@ -17,7 +17,6 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
 import { AnimatePresence, motion } from 'framer-motion';
-import { differenceInDays } from 'date-fns';
 
 export default function OtherReptilesPage() {
     const [reptilePrefs, setReptilePrefs] = usePageSettings('other_reptiles_prefs', {
@@ -35,72 +34,17 @@ export default function OtherReptilesPage() {
     const [showArchived, setShowArchived] = useState(reptilePrefs.showArchivedDefault);
     const [showLimitModal, setShowLimitModal] = useState(false);
 
-    // Check and create feeding notifications for overdue/due reptiles
-    const checkFeedingNotifications = useCallback(async (reptileList, userEmail) => {
-        const today = new Date();
-        
-        for (const reptile of reptileList) {
-            if (!reptile.feeding_reminder_enabled || !reptile.last_fed_date || !reptile.feeding_interval_days) {
-                continue;
-            }
-
-            const lastFed = new Date(reptile.last_fed_date);
-            const daysSinceLastFed = differenceInDays(today, lastFed);
-            const daysUntilNextFeed = reptile.feeding_interval_days - daysSinceLastFed;
-
-            // Only create notification if overdue or due today
-            if (daysUntilNextFeed <= 0 && reptile.feeding_notification_enabled) {
-                const todayStr = today.toISOString().split('T')[0];
-                
-                // Check if we already sent a notification today for this reptile
-                try {
-                    const existingNotifs = await Notification.filter({ 
-                        user_email: userEmail
-                    });
-                    
-                    const alreadyNotified = existingNotifs.some(n => 
-                        n.metadata?.reptile_id === reptile.id && 
-                        n.metadata?.type === 'feeding_reminder' &&
-                        n.created_date?.startsWith(todayStr)
-                    );
-
-                    if (!alreadyNotified) {
-                        const daysOverdue = Math.abs(daysUntilNextFeed);
-                        const message = daysOverdue === 0 
-                            ? `${reptile.name} (${reptile.species}) is due for feeding today!`
-                            : `${reptile.name} (${reptile.species}) is ${daysOverdue} day(s) overdue for feeding!`;
-
-                        await Notification.create({
-                            user_email: userEmail,
-                            type: 'announcement',
-                            content: message,
-                            link: '/OtherReptiles',
-                            metadata: { reptile_id: reptile.id, type: 'feeding_reminder' }
-                        });
-                    }
-                } catch (e) {
-                    // Silently fail - notifications are not critical
-                    console.log("Could not check/create feeding notification:", e);
-                }
-            }
-        }
-    }, []);
-
     const loadReptiles = useCallback(async () => {
         if (!user) return;
         setIsLoading(true);
         try {
             const userReptiles = await OtherReptile.filter({ created_by: user.email }, '-created_date');
             setReptiles(userReptiles);
-            
-            // Check for feeding notifications (non-blocking)
-            checkFeedingNotifications(userReptiles, user.email)
-                .catch((err) => console.error('Feeding notification check failed:', err));
         } catch (error) {
             console.error("Failed to load reptiles:", error);
         }
         setIsLoading(false);
-    }, [user, checkFeedingNotifications]);
+    }, [user]);
 
     useEffect(() => {
         const fetchUser = async () => {
