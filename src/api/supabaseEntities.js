@@ -109,6 +109,12 @@ export const TABLE_MAP = {
   ShippingOrder: 'shipping_orders',
   // Pending Sales — reserve price system
   PendingSale: 'pending_sales',
+  // Blog system
+  BlogSettings: 'blog_settings',
+  BlogPost: 'blog_posts',
+  BlogCategory: 'blog_categories',
+  BlogTag: 'blog_tags',
+  BlogLog: 'blog_logs',
 };
 
 function parseSort(sort) {
@@ -343,3 +349,9 @@ export const BreederReview = createEntityClient('BreederReview');
 export const ShippingOrder = createEntityClient('ShippingOrder');
 // Pending Sales — reserve price system
 export const PendingSale = createEntityClient('PendingSale');
+// Blog system
+export const BlogSettings = createEntityClient('BlogSettings');
+export const BlogPost = createEntityClient('BlogPost');
+export const BlogCategory = createEntityClient('BlogCategory');
+export const BlogTag = createEntityClient('BlogTag');
+export const BlogLog = createEntityClient('BlogLog');

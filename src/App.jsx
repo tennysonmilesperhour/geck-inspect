@@ -73,6 +73,8 @@ const GeckAnswersPublic     = lazy(() => import('./pages/GeckAnswers'));
 // the same pipeline as MorphGuide / CareGuide topic pages.
 const BlogIndex             = lazy(() => import('./pages/BlogIndex'));
 const BlogPost              = lazy(() => import('./pages/BlogPost'));
+const BlogCategoryPage      = lazy(() => import('./pages/BlogCategoryPage'));
+const BlogTagPage           = lazy(() => import('./pages/BlogTagPage'));
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -218,6 +220,8 @@ const AuthenticatedApp = () => {
           <Route path="/GeckAnswers" element={<GeckAnswersPublic />} />
           {/* Editorial blog */}
           <Route path="/blog" element={<BlogIndex />} />
+          <Route path="/blog/category/:slug" element={<BlogCategoryPage />} />
+          <Route path="/blog/tag/:slug" element={<BlogTagPage />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
           <Route path="*" element={<LoginPortal />} />
         </Routes>
@@ -254,6 +258,8 @@ const AuthenticatedApp = () => {
 
       {/* Editorial blog — accessible to authenticated users too */}
       <Route path="/blog" element={<BlogIndex />} />
+      <Route path="/blog/category/:slug" element={<BlogCategoryPage />} />
+      <Route path="/blog/tag/:slug" element={<BlogTagPage />} />
       <Route path="/blog/:slug" element={<BlogPost />} />
       {/* P1 — Public passport pages (also available when authenticated) */}
       <Route path="/passport/:passportCode" element={<AnimalPassport />} />

@@ -113,3 +113,9 @@ export const BreederReview = sb.BreederReview;
 export const ShippingOrder = sb.ShippingOrder;
 // Pending Sales — reserve price system
 export const PendingSale = sb.PendingSale;
+// Blog system
+export const BlogSettings = sb.BlogSettings;
+export const BlogPost = sb.BlogPost;
+export const BlogCategory = sb.BlogCategory;
+export const BlogTag = sb.BlogTag;
+export const BlogLog = sb.BlogLog;

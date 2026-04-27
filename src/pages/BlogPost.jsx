@@ -1,56 +1,81 @@
 import { useMemo } from 'react';
 import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, ArrowRight, BookOpen, ExternalLink } from 'lucide-react';
+import { ArrowLeft, ArrowRight, BookOpen, ExternalLink, Loader2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Seo from '@/components/seo/Seo';
 import ContentBlock from '@/components/careguide/ContentBlock';
 import PublicPageShell from '@/components/public/PublicPageShell';
-import {
-  BLOG_POSTS,
-  getBlogPost,
-  getBlogCategory,
-  recentPosts,
-} from '@/data/blog-posts';
 import {
   blogPostingSchema,
   breadcrumbSchema,
 } from '@/lib/organization-schema';
 import { authorSchema, bylineText, editorialFor } from '@/lib/editorial';
 import { createPageUrl } from '@/utils';
+import {
+  useBlogContent,
+  findPostBySlug,
+  relatedPosts as computeRelated,
+} from '@/lib/blog-data-source';
 
 /**
- * Single blog post page. Renders the post body, FAQ block, internal /
- * external link list, prev/next navigation, and a closing CTA. Wires up
- * BlogPosting + FAQPage + BreadcrumbList JSON-LD via the shared schema
- * helpers in src/lib/organization-schema.js.
+ * Single blog post page. Resolves the slug against the merged data
+ * source (DB-published posts + static editorial), renders either a
+ * legacy ContentBlock body (static) or sanitized markdown→html (DB),
+ * and wires JSON-LD + breadcrumbs the same way for both.
  */
 export default function BlogPost() {
   const { slug } = useParams();
-  const post = slug ? getBlogPost(slug) : null;
-  const category = post ? getBlogCategory(post.category) : null;
+  const { posts, settings, loading } = useBlogContent();
+
+  const post = useMemo(() => findPostBySlug(posts, slug), [posts, slug]);
+
+  const blogEnabled = settings ? settings.blog_enabled !== false : true;
+  const showAuthorBox = settings ? settings.show_author_box !== false : true;
+  const showRelatedPosts = settings ? settings.show_related_posts !== false : true;
 
   const { prev, next } = useMemo(() => {
     if (!post) return { prev: null, next: null };
-    const idx = BLOG_POSTS.findIndex((p) => p.slug === post.slug);
+    const idx = posts.findIndex((p) => p.slug === post.slug);
     return {
-      prev: idx > 0 ? BLOG_POSTS[idx - 1] : null,
-      next: idx >= 0 && idx < BLOG_POSTS.length - 1 ? BLOG_POSTS[idx + 1] : null,
+      prev: idx > 0 ? posts[idx - 1] : null,
+      next: idx >= 0 && idx < posts.length - 1 ? posts[idx + 1] : null,
     };
-  }, [post]);
+  }, [post, posts]);
 
-  if (!post) {
+  const related = useMemo(
+    () => (showRelatedPosts ? computeRelated(posts, post, 3) : []),
+    [posts, post, showRelatedPosts]
+  );
+
+  // Initial render before posts have loaded — avoid the not-found flash
+  // for valid slugs.
+  if (loading && !post) {
+    return (
+      <PublicPageShell>
+        <div className="flex justify-center py-20">
+          <Loader2 className="w-6 h-6 text-slate-500 animate-spin" />
+        </div>
+      </PublicPageShell>
+    );
+  }
+
+  if (!blogEnabled || !post) {
     return (
       <PublicPageShell>
         <Seo
-          title="Blog post not found"
+          title={blogEnabled ? 'Blog post not found' : 'Blog'}
           description="That blog post could not be found."
           path={`/blog/${slug || ''}`}
           noIndex
         />
         <section className="max-w-3xl mx-auto px-6 py-20 text-center">
-          <h1 className="text-3xl font-bold text-slate-100 mb-3">Post not found</h1>
+          <h1 className="text-3xl font-bold text-slate-100 mb-3">
+            {blogEnabled ? 'Post not found' : 'Blog unavailable'}
+          </h1>
           <p className="text-slate-400 mb-6">
-            We couldn't find a blog post for "{slug}". Browse the index instead.
+            {blogEnabled
+              ? <>We couldn't find a blog post for "{slug}". Browse the index instead.</>
+              : 'The blog is currently disabled. Please check back later.'}
           </p>
           <Link to="/blog">
             <Button className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold">
@@ -65,9 +90,12 @@ export default function BlogPost() {
   const path = `/blog/${post.slug}`;
   const editorial = editorialFor(path);
   const editorialPost = {
-    ...post,
+    slug: post.slug,
+    title: post.title,
+    description: post.description || post.excerpt || '',
+    keyphrase: post.keyphrase || post.targetKeyword || null,
     datePublished: editorial.published || post.datePublished,
-    dateModified: editorial.modified || post.dateModified,
+    dateModified: editorial.modified || post.dateModified || post.datePublished,
   };
 
   const jsonLd = [
@@ -76,7 +104,7 @@ export default function BlogPost() {
       path,
       author: authorSchema(),
       faq: post.faq,
-      keyphrase: post.keyphrase,
+      keyphrase: editorialPost.keyphrase,
     }),
     breadcrumbSchema([
       { name: 'Home', path: '/' },
@@ -85,18 +113,22 @@ export default function BlogPost() {
     ]),
   ];
 
-  const related = recentPosts(4).filter((p) => p.slug !== post.slug).slice(0, 3);
+  const keywordsList = [
+    post.keyphrase,
+    post.targetKeyword,
+    ...(post.tags || []).map((t) => t.name),
+  ].filter(Boolean);
 
   return (
     <PublicPageShell>
       <Seo
-        title={post.title}
-        description={post.description}
+        title={post.metaTitle || post.title}
+        description={post.metaDescription || post.description || post.excerpt}
         path={path}
         type="article"
         publishedTime={editorialPost.datePublished}
         modifiedTime={editorialPost.dateModified}
-        keywords={[post.keyphrase, ...(post.tags || [])]}
+        keywords={keywordsList}
         jsonLd={jsonLd}
       />
 
@@ -106,24 +138,49 @@ export default function BlogPost() {
           <span>/</span>
           <Link to="/blog" className="hover:text-slate-300">Blog</Link>
           <span>/</span>
-          <span className="text-slate-400">{post.title}</span>
+          <span className="text-slate-400 truncate">{post.title}</span>
         </div>
 
-        {category && (
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300 mb-4">
+        {post.category && (
+          <Link
+            to={`/blog/category/${post.category.slug}`}
+            className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300 mb-4 hover:bg-emerald-500/20"
+          >
             <BookOpen className="w-3.5 h-3.5" />
-            {category.label}
-          </div>
+            {post.category.label}
+          </Link>
         )}
 
         <h1 className="text-3xl md:text-5xl font-bold tracking-tight leading-[1.1] mb-4 bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent">
           {post.title}
         </h1>
 
-        <p className="text-slate-300 text-base md:text-lg leading-relaxed max-w-2xl mb-3">
-          {post.description}
+        {(post.description || post.excerpt) && (
+          <p className="text-slate-300 text-base md:text-lg leading-relaxed max-w-2xl mb-3">
+            {post.description || post.excerpt}
+          </p>
+        )}
+
+        <p className="text-xs text-slate-500 mb-8">
+          {post.source === 'static'
+            ? bylineText(path)
+            : (
+              <>
+                {post.authorName ? `By ${post.authorName}` : 'By Geck Inspect Editorial'}
+                {post.datePublished && <> · {new Date(post.datePublished).toLocaleDateString()}</>}
+                {post.readingTimeMinutes ? <> · {post.readingTimeMinutes} min read</> : null}
+              </>
+            )}
         </p>
-        <p className="text-xs text-slate-500 mb-8">{bylineText(path)}</p>
+
+        {post.featuredImageUrl && (
+          <img
+            src={post.featuredImageUrl}
+            alt={post.featuredImageAlt || post.title}
+            className="rounded-2xl border border-slate-800 w-full aspect-[16/9] object-cover mb-8"
+            loading="lazy"
+          />
+        )}
 
         {Array.isArray(post.tldr) && post.tldr.length > 0 && (
           <div className="mb-8 rounded-2xl border border-emerald-500/30 bg-emerald-500/5 p-5 md:p-6">
@@ -141,11 +198,21 @@ export default function BlogPost() {
           </div>
         )}
 
-        <div className="space-y-5 text-slate-300 leading-relaxed">
-          {(post.body || []).map((block, i) => (
-            <ContentBlock key={i} block={block} />
-          ))}
-        </div>
+        {/* Body: either static ContentBlocks or DB-rendered HTML. */}
+        {Array.isArray(post.body) && post.body.length > 0 ? (
+          <div className="space-y-5 text-slate-300 leading-relaxed">
+            {post.body.map((block, i) => (
+              <ContentBlock key={i} block={block} />
+            ))}
+          </div>
+        ) : post.contentHtml ? (
+          <div
+            className="prose prose-invert prose-emerald max-w-none prose-headings:text-slate-100 prose-a:text-emerald-300 prose-strong:text-slate-100 prose-blockquote:border-emerald-500/40 prose-blockquote:text-slate-300 prose-code:text-emerald-200 prose-img:rounded-lg"
+            dangerouslySetInnerHTML={{ __html: post.contentHtml }}
+          />
+        ) : (
+          <p className="text-slate-400 italic">This post has no content yet.</p>
+        )}
 
         {Array.isArray(post.faq) && post.faq.length > 0 && (
           <section className="mt-12">
@@ -203,6 +270,41 @@ export default function BlogPost() {
           </section>
         )}
 
+        {Array.isArray(post.tags) && post.tags.length > 0 && (
+          <div className="mt-8 flex flex-wrap gap-1.5">
+            {post.tags.map((t) => (
+              <Link
+                key={t.slug}
+                to={`/blog/tag/${t.slug}`}
+                className="text-xs px-2.5 py-1 rounded-md bg-slate-800/70 border border-slate-700 text-slate-300 hover:border-emerald-500/30 hover:text-emerald-300"
+              >
+                #{t.name}
+              </Link>
+            ))}
+          </div>
+        )}
+
+        {showAuthorBox && (post.authorName || post.authorBio) && (
+          <section className="mt-10 rounded-2xl border border-slate-800 bg-slate-900/40 p-5 flex items-start gap-4">
+            {post.authorAvatarUrl && (
+              <img
+                src={post.authorAvatarUrl}
+                alt={post.authorName || 'Author'}
+                className="w-14 h-14 rounded-full object-cover border border-slate-700"
+                loading="lazy"
+              />
+            )}
+            <div className="min-w-0">
+              <p className="text-sm font-semibold text-slate-100">
+                {post.authorName || 'Geck Inspect Editorial'}
+              </p>
+              {post.authorBio && (
+                <p className="text-xs text-slate-400 mt-1 leading-relaxed">{post.authorBio}</p>
+              )}
+            </div>
+          </section>
+        )}
+
         <nav className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-3 border-t border-slate-800/60 pt-6">
           {prev ? (
             <Link
@@ -228,7 +330,7 @@ export default function BlogPost() {
           ) : <span />}
         </nav>
 
-        {related.length > 0 && (
+        {showRelatedPosts && related.length > 0 && (
           <section className="mt-12">
             <h2 className="text-sm font-semibold uppercase tracking-wider text-slate-400 mb-3">
               Related reading
@@ -240,7 +342,7 @@ export default function BlogPost() {
                   to={`/blog/${p.slug}`}
                   className="group rounded-xl border border-slate-800 hover:border-emerald-500/30 bg-slate-900/60 hover:bg-slate-900 p-4 transition-colors"
                 >
-                  <div className="text-xs text-emerald-300 mb-1">{p.heroEyebrow || 'Article'}</div>
+                  <div className="text-xs text-emerald-300 mb-1">{p.heroEyebrow || p.category?.label || 'Article'}</div>
                   <div className="text-sm font-semibold text-slate-200 group-hover:text-emerald-200 leading-snug">
                     {p.title}
                   </div>

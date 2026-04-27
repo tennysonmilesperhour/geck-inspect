@@ -19,6 +19,7 @@ import {
   Globe,
   Shield,
   AlertOctagon,
+  BookOpen,
 } from 'lucide-react';
 
 import AdminOverview from '@/components/admin/AdminOverview';
@@ -34,6 +35,7 @@ import MorphSubmissionReview from '@/components/admin/MorphSubmissionReview';
 import SystemHealth from '@/components/admin/SystemHealth';
 import SupportInbox from '@/components/admin/SupportInbox';
 import ErrorLogsViewer from '@/components/admin/ErrorLogsViewer';
+import BlogManager from '@/components/admin/blog/BlogManager';
 
 /**
  * Admin Panel — sidebar layout grouped by responsibility.
@@ -77,6 +79,7 @@ const NAV_GROUPS = [
     label: 'Content',
     items: [
       { id: 'morph_guides', label: 'Morph guides', icon: Sparkles },
+      { id: 'blog', label: 'Blog', icon: BookOpen },
       { id: 'pages', label: 'Pages', icon: Layout },
       { id: 'morph_submissions', label: 'Morph submissions', icon: CheckSquare },
     ],
@@ -107,6 +110,7 @@ const SECTION_TITLES = {
   messaging: 'Mass messaging',
   changelog: 'Changelog',
   morph_guides: 'Morph guide editor',
+  blog: 'Blog',
   pages: 'Page management',
   morph_submissions: 'Morph submissions',
   analytics: 'Analytics',
@@ -183,6 +187,8 @@ export default function AdminPanel() {
         return <ChangeLogManager />;
       case 'morph_guides':
         return <MorphGuideEditor />;
+      case 'blog':
+        return <BlogManager />;
       case 'pages':
         return <PageManagement />;
       case 'morph_submissions':
