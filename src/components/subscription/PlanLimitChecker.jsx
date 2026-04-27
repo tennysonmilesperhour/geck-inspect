@@ -78,10 +78,23 @@ const FEATURE_NAMES = {
 };
 
 // Admins get enterprise-level access. Grandfathered accounts keep Breeder.
+// Lifetime users keep whatever tier they bought — `membership_billing_cycle`
+// is just metadata for the billing/UI layer; entitlements are still driven
+// off `membership_tier`, so a lifetime Keeper has the same gates as a
+// monthly Keeper.
 function effectiveTier(user) {
     if (user?.role === 'admin') return 'enterprise';
     if (user?.subscription_status === 'grandfathered') return 'breeder';
     return user?.membership_tier || 'free';
+}
+
+// True for users who bought lifetime access on Keeper or Breeder. Use this
+// for UX signals only ("Lifetime member" badge, suppress renewal copy,
+// etc.) — feature gating already flows through effectiveTier().
+export function isLifetimeMember(user) {
+    if (!user) return false;
+    if (user.membership_billing_cycle !== 'lifetime') return false;
+    return user.membership_tier === 'keeper' || user.membership_tier === 'breeder';
 }
 
 export function checkPlanLimit(user, limitType, currentCount = 0) {

@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
-import { Check, Sparkles, Zap, Crown, Star, Loader2, Flame } from 'lucide-react';
+import { Check, Sparkles, Zap, Crown, Star, Loader2, Flame, Infinity as InfinityIcon } from 'lucide-react';
 import { User } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
 import SupportContactCard from '@/components/support/SupportContactCard';
+import { getTierPricing } from '@/lib/stripe-config';
 
 /**
  * Membership / pricing page.
@@ -19,6 +20,18 @@ import SupportContactCard from '@/components/support/SupportContactCard';
  *                 home dashboard, marketplace sync, certificates, etc
  *   ENTERPRISE  — hovering "Coming Soon" badge, waitlist CTA
  *
+ * Three billing cadences are surfaced through a top-of-page toggle:
+ *
+ *   Monthly   — recurring, the default
+ *   Annual    — recurring, ~20% cheaper than 12× monthly
+ *   Lifetime  — one-time payment, never expires (Keeper + Breeder only;
+ *               Enterprise is custom-quoted and shows "Lifetime not
+ *               available — talk to us" copy when this cadence is on)
+ *
+ * The cadence is passed through to the (still-to-be-built)
+ * `stripe-checkout` edge function as `billing_cycle` along with the
+ * specific Stripe price id from src/lib/stripe-config.js.
+ *
  * Grandfathered users land on this page already owning the Breeder tier
  * (see subscription_status === 'grandfathered') and see a "You already
  * have Breeder access" banner instead of the checkout buttons.
@@ -28,11 +41,8 @@ const tiers = [
   {
     key: 'free',
     name: 'FREE',
-    price: '$0',
-    billing: '/month',
     icon: Star,
     description: 'Perfect for getting started',
-    cta: 'Get Started Free',
     featured: false,
     comingSoon: false,
     features: [
@@ -47,11 +57,8 @@ const tiers = [
   {
     key: 'keeper',
     name: 'KEEPER',
-    price: '$4',
-    billing: '/month',
     icon: Zap,
     description: 'For dedicated collectors',
-    cta: 'Start Keeper',
     featured: true, // <-- Most Popular
     comingSoon: false,
     features: [
@@ -67,11 +74,8 @@ const tiers = [
   {
     key: 'breeder',
     name: 'BREEDER',
-    price: '$9',
-    billing: '/month',
     icon: Crown,
     description: 'For serious breeders',
-    cta: 'Start Breeder',
     featured: false,
     comingSoon: false,
     features: [
@@ -80,7 +84,7 @@ const tiers = [
       'Unlimited additional reptiles tracked',
       'Sales stats and cost tracking dashboard',
       'Option to be featured on the dashboard',
-      'Zero\u2019s Geckos shipping integration',
+      'Zero’s Geckos shipping integration',
       'Expert verification eligibility',
       'Early access to new features',
     ],
@@ -88,11 +92,8 @@ const tiers = [
   {
     key: 'enterprise',
     name: 'ENTERPRISE',
-    price: 'Custom',
-    billing: 'pricing',
     icon: Sparkles,
     description: 'For large-scale operations',
-    cta: 'Join the Waitlist',
     featured: false,
     comingSoon: true,
     features: [
@@ -107,19 +108,73 @@ const tiers = [
   },
 ];
 
+const CYCLE_OPTIONS = [
+  { key: 'monthly',  label: 'Monthly' },
+  { key: 'annual',   label: 'Annual',   hint: 'Save 20%' },
+  { key: 'lifetime', label: 'Lifetime', hint: 'Pay once' },
+];
+
 function HoveringBadge({ children, variant = 'popular' }) {
   const styles =
     variant === 'popular'
       ? 'bg-emerald-500 text-white border-emerald-400 shadow-lg shadow-emerald-500/30'
-      : 'bg-slate-700 text-slate-200 border-slate-600';
+      : variant === 'lifetime'
+        ? 'bg-amber-500 text-slate-950 border-amber-400 shadow-lg shadow-amber-500/30'
+        : 'bg-slate-700 text-slate-200 border-slate-600';
   return (
     <div className="absolute -top-3 left-1/2 -translate-x-1/2 z-20 pointer-events-none">
       <span
         className={`inline-flex items-center gap-1 text-[11px] font-bold uppercase tracking-wider px-3 py-1 rounded-full border whitespace-nowrap ${styles}`}
       >
         {variant === 'popular' && <Flame className="w-3 h-3" />}
+        {variant === 'lifetime' && <InfinityIcon className="w-3 h-3" />}
         {children}
       </span>
+    </div>
+  );
+}
+
+function CycleToggle({ value, onChange }) {
+  return (
+    <div
+      role="tablist"
+      aria-label="Billing cadence"
+      className="inline-flex items-center rounded-full border border-slate-700 bg-slate-900/80 p-1 shadow-inner"
+    >
+      {CYCLE_OPTIONS.map((opt) => {
+        const active = value === opt.key;
+        return (
+          <button
+            key={opt.key}
+            type="button"
+            role="tab"
+            aria-selected={active}
+            onClick={() => onChange(opt.key)}
+            className={`flex items-center gap-2 px-4 py-1.5 rounded-full text-sm font-semibold transition-colors ${
+              active
+                ? opt.key === 'lifetime'
+                  ? 'bg-amber-500 text-slate-950'
+                  : 'bg-emerald-600 text-white'
+                : 'text-slate-300 hover:text-white'
+            }`}
+          >
+            {opt.label}
+            {opt.hint && (
+              <span
+                className={`text-[10px] font-bold uppercase tracking-wide rounded-full px-1.5 py-0.5 ${
+                  active
+                    ? opt.key === 'lifetime'
+                      ? 'bg-slate-950/20 text-slate-900'
+                      : 'bg-emerald-900/40 text-emerald-100'
+                    : 'bg-slate-800 text-slate-300'
+                }`}
+              >
+                {opt.hint}
+              </span>
+            )}
+          </button>
+        );
+      })}
     </div>
   );
 }
@@ -127,6 +182,7 @@ function HoveringBadge({ children, variant = 'popular' }) {
 export default function MembershipPage() {
   const [user, setUser] = useState(null);
   const [loadingTier, setLoadingTier] = useState(null);
+  const [cycle, setCycle] = useState('monthly');
   const { toast } = useToast();
 
   useEffect(() => {
@@ -136,11 +192,10 @@ export default function MembershipPage() {
   const isGrandfathered =
     user?.subscription_status === 'grandfathered' && user?.membership_tier === 'breeder';
   const currentTier = user?.membership_tier || null;
+  const currentCycle = user?.membership_billing_cycle || null;
 
-  const handleCTA = async (tier) => {
+  const handleCTA = async (tier, pricing) => {
     if (tier.comingSoon) {
-      // Enterprise waitlist now routes into our in-app support inbox
-      // instead of a personal mailto. Scroll down to the support card.
       toast({
         title: 'Enterprise waitlist',
         description: 'Tell us about your operation using the support form below.',
@@ -151,11 +206,7 @@ export default function MembershipPage() {
       return;
     }
     if (tier.key === 'free') {
-      if (user) {
-        window.location.href = '/Dashboard';
-      } else {
-        window.location.href = '/AuthPortal';
-      }
+      window.location.href = user ? '/Dashboard' : '/AuthPortal';
       return;
     }
     if (!user) {
@@ -173,7 +224,13 @@ export default function MembershipPage() {
     setLoadingTier(tier.key);
     try {
       const { data, error } = await supabase.functions.invoke('stripe-checkout', {
-        body: { tier: tier.key, returnUrl: `${window.location.origin}/Membership` },
+        body: {
+          tier: tier.key,
+          billing_cycle: cycle,
+          price_id: pricing?.price_id || null,
+          mode: pricing?.mode || null,
+          returnUrl: `${window.location.origin}/Membership`,
+        },
       });
       if (error) throw error;
       if (data?.url) {
@@ -199,9 +256,14 @@ export default function MembershipPage() {
         {/* Header */}
         <div className="text-center space-y-4">
           <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-            Choose the tier that fits your collection. Cancel anytime — all paid plans
-            include a 7-day free trial.
+            Choose the tier that fits your collection. Cancel anytime — recurring plans
+            include a 7-day free trial. Lifetime is a one-time purchase.
           </p>
+
+          <div className="flex justify-center pt-2">
+            <CycleToggle value={cycle} onChange={setCycle} />
+          </div>
+
           {isGrandfathered && (
             <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300">
               <Crown className="w-4 h-4" />
@@ -217,52 +279,80 @@ export default function MembershipPage() {
             const Icon = tier.icon;
             const isFeatured = tier.featured;
             const isEnterprise = tier.comingSoon;
-            const isCurrent = currentTier === tier.key && !isEnterprise;
+            const pricing = getTierPricing(tier.key, cycle);
+            // Enterprise has no `lifetime` row in the pricing config —
+            // surface a friendly "Not available" instead of crashing or
+            // showing stale monthly numbers.
+            const enterpriseLifetimeUnavailable = isEnterprise && cycle === 'lifetime' && !pricing;
+
+            const isCurrent =
+              currentTier === tier.key &&
+              !isEnterprise &&
+              (currentCycle === cycle || (tier.key === 'free' && !currentCycle));
             const busy = loadingTier === tier.key;
+
+            // Lifetime tab gets an amber accent so it visually reads as
+            // a different commercial proposition from the recurring tabs.
+            const lifetimeAccent = cycle === 'lifetime' && !isEnterprise && tier.key !== 'free';
 
             return (
               <div key={tier.key} className="relative">
-                {isFeatured && <HoveringBadge variant="popular">Most Popular</HoveringBadge>}
+                {isFeatured && cycle !== 'lifetime' && (
+                  <HoveringBadge variant="popular">Most Popular</HoveringBadge>
+                )}
+                {isFeatured && cycle === 'lifetime' && (
+                  <HoveringBadge variant="lifetime">Best Value</HoveringBadge>
+                )}
                 {isEnterprise && (
                   <HoveringBadge variant="coming">Coming Soon</HoveringBadge>
                 )}
                 <Card
                   className={`h-full flex flex-col transition-all duration-300 ${
-                    isFeatured
-                      ? 'border-2 border-emerald-500 bg-slate-900/95 shadow-2xl shadow-emerald-500/20'
-                      : isEnterprise
-                        ? 'border-slate-700 bg-slate-900/50 opacity-80'
-                        : 'border-slate-700 bg-slate-900/80 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/10'
+                    lifetimeAccent && isFeatured
+                      ? 'border-2 border-amber-500 bg-slate-900/95 shadow-2xl shadow-amber-500/20'
+                      : lifetimeAccent
+                        ? 'border-amber-500/40 bg-slate-900/85 hover:border-amber-400/60 hover:shadow-lg hover:shadow-amber-500/10'
+                        : isFeatured
+                          ? 'border-2 border-emerald-500 bg-slate-900/95 shadow-2xl shadow-emerald-500/20'
+                          : isEnterprise
+                            ? 'border-slate-700 bg-slate-900/50 opacity-80'
+                            : 'border-slate-700 bg-slate-900/80 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/10'
                   }`}
                 >
                   <CardHeader className="space-y-4">
                     <div className="flex items-center gap-3">
                       <div
                         className={`p-3 rounded-lg ${
-                          isFeatured
-                            ? 'bg-emerald-500/20'
-                            : isEnterprise
-                              ? 'bg-slate-700/50'
-                              : 'bg-slate-800'
+                          lifetimeAccent
+                            ? 'bg-amber-500/20'
+                            : isFeatured
+                              ? 'bg-emerald-500/20'
+                              : isEnterprise
+                                ? 'bg-slate-700/50'
+                                : 'bg-slate-800'
                         }`}
                       >
                         <Icon
                           className={`w-6 h-6 ${
-                            isFeatured
-                              ? 'text-emerald-400'
-                              : isEnterprise
-                                ? 'text-slate-400'
-                                : 'text-slate-300'
+                            lifetimeAccent
+                              ? 'text-amber-300'
+                              : isFeatured
+                                ? 'text-emerald-400'
+                                : isEnterprise
+                                  ? 'text-slate-400'
+                                  : 'text-slate-300'
                           }`}
                         />
                       </div>
                       <CardTitle
                         className={`text-2xl ${
-                          isFeatured
-                            ? 'text-emerald-300'
-                            : isEnterprise
-                              ? 'text-slate-400'
-                              : 'text-white'
+                          lifetimeAccent
+                            ? 'text-amber-200'
+                            : isFeatured
+                              ? 'text-emerald-300'
+                              : isEnterprise
+                                ? 'text-slate-400'
+                                : 'text-white'
                         }`}
                       >
                         {tier.name}
@@ -273,28 +363,41 @@ export default function MembershipPage() {
                       <div className="flex items-baseline gap-1">
                         <span
                           className={`text-4xl font-bold ${
-                            isFeatured
-                              ? 'text-emerald-300'
-                              : isEnterprise
-                                ? 'text-slate-400'
-                                : 'text-white'
+                            lifetimeAccent
+                              ? 'text-amber-200'
+                              : isFeatured
+                                ? 'text-emerald-300'
+                                : isEnterprise
+                                  ? 'text-slate-400'
+                                  : 'text-white'
                           }`}
                         >
-                          {tier.price}
+                          {enterpriseLifetimeUnavailable ? '—' : (pricing?.price ?? 'Custom')}
                         </span>
-                        <span className="text-slate-400 text-sm">{tier.billing}</span>
+                        {!enterpriseLifetimeUnavailable && pricing?.billing && (
+                          <span className="text-slate-400 text-sm">{pricing.billing}</span>
+                        )}
                       </div>
                       <p
                         className={`text-sm mt-2 ${
-                          isFeatured
-                            ? 'text-emerald-200/80'
-                            : isEnterprise
-                              ? 'text-slate-500'
-                              : 'text-slate-400'
+                          lifetimeAccent
+                            ? 'text-amber-200/80'
+                            : isFeatured
+                              ? 'text-emerald-200/80'
+                              : isEnterprise
+                                ? 'text-slate-500'
+                                : 'text-slate-400'
                         }`}
                       >
                         {tier.description}
                       </p>
+                      {(pricing?.priceCaption || enterpriseLifetimeUnavailable) && (
+                        <p className="text-xs mt-1.5 text-slate-500 italic">
+                          {enterpriseLifetimeUnavailable
+                            ? 'Lifetime not available for Enterprise — message support for a custom quote.'
+                            : pricing.priceCaption}
+                        </p>
+                      )}
                     </div>
                   </CardHeader>
 
@@ -304,11 +407,13 @@ export default function MembershipPage() {
                         <li key={idx} className="flex gap-3">
                           <Check
                             className={`w-5 h-5 flex-shrink-0 ${
-                              isFeatured
-                                ? 'text-emerald-400'
-                                : isEnterprise
-                                  ? 'text-slate-500'
-                                  : 'text-slate-400'
+                              lifetimeAccent
+                                ? 'text-amber-400'
+                                : isFeatured
+                                  ? 'text-emerald-400'
+                                  : isEnterprise
+                                    ? 'text-slate-500'
+                                    : 'text-slate-400'
                             }`}
                           />
                           <span
@@ -327,14 +432,18 @@ export default function MembershipPage() {
                     </ul>
 
                     <Button
-                      onClick={() => handleCTA(tier)}
-                      disabled={isEnterprise || busy || isCurrent}
+                      onClick={() => handleCTA(tier, pricing)}
+                      disabled={isEnterprise || busy || isCurrent || enterpriseLifetimeUnavailable}
                       className={`w-full font-semibold ${
-                        isFeatured
-                          ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                          : isEnterprise
-                            ? 'bg-slate-700 hover:bg-slate-700 text-slate-500 cursor-not-allowed'
-                            : 'bg-slate-700 hover:bg-slate-600 text-slate-100'
+                        lifetimeAccent && isFeatured
+                          ? 'bg-amber-500 hover:bg-amber-400 text-slate-950'
+                          : lifetimeAccent
+                            ? 'bg-amber-600/90 hover:bg-amber-500 text-slate-950'
+                            : isFeatured
+                              ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                              : isEnterprise
+                                ? 'bg-slate-700 hover:bg-slate-700 text-slate-500 cursor-not-allowed'
+                                : 'bg-slate-700 hover:bg-slate-600 text-slate-100'
                       }`}
                     >
                       {busy ? (
@@ -344,8 +453,10 @@ export default function MembershipPage() {
                         </>
                       ) : isCurrent ? (
                         'Current plan'
+                      ) : enterpriseLifetimeUnavailable ? (
+                        'Not available'
                       ) : (
-                        tier.cta
+                        pricing?.cta || 'Choose plan'
                       )}
                     </Button>
                   </CardContent>
