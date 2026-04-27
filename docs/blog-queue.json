@@ -1,5 +1,48 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-04-24T10:52:36.002Z",
-  "topics": []
+  "lastUpdated": "2026-04-27T12:09:40.571Z",
+  "topics": [
+    {
+      "id": "tpc_1777291763850_supercappu",
+      "title": "Super Cappuccino Crested Geckos: Scam or Legitimate Morph?",
+      "slug": "super-cappuccino-viability-debate",
+      "category": "breeding",
+      "status": "new",
+      "score": {
+        "demand": 7,
+        "originality": 8,
+        "accuracyRisk": 4,
+        "voiceFit": 8,
+        "total": 19
+      },
+      "createdAt": "2026-04-27T12:09:23.850Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "youtube",
+          "url": "https://www.youtube.com/watch?v=5O_obmlNu9I",
+          "snippet": "Don't buy super cappuccino crested gecko it's a scam and waste of money"
+        },
+        {
+          "source": "youtube",
+          "url": "https://www.youtube.com/watch?v=JLXYdEo7mhk",
+          "snippet": "Should We Breed Super Cappuccino Crested Geckos? — TikisGeckos explores the ethical and genetic debate"
+        },
+        {
+          "source": "youtube",
+          "url": "https://www.youtube.com/watch?v=3xRF-wumo_E",
+          "snippet": "Why So Much Hate for Cappuccino Geckos? The Truth No One Wants to Say…"
+        }
+      ],
+      "angleIdeas": [
+        "Breeders call super cappuccino 'a scam'—but the incomplete-dominant genetics say it should be viable. Here's what the community is actually afraid of.",
+        "Two cappuccino geckos bred together don't always produce super cappuccinos. Most buyers assume they will. Here's why that matters for your breeding plan.",
+        "The cappuccino controversy isn't really about the morph. It's about whether breeders should be chasing homozygous animals at all.",
+        "Super cappuccino exists genetically, but breeding for it has become taboo. Here's the real cost—financial and ethical—of trying."
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    }
+  ]
 }

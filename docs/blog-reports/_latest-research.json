@@ -1,10 +1,10 @@
 {
-  "ranAt": "2026-04-24T10:52:22.458Z",
+  "ranAt": "2026-04-27T12:09:23.850Z",
   "signals": {
     "googleAc": 95,
     "bluesky": 0,
     "googleTrends": 0,
-    "youtube": 69,
+    "youtube": 68,
     "breederBlogs": 1,
     "errors": [
       "\"crested gecko\": 403 Forbidden",
@@ -22,7 +22,9 @@
       "AC Reptiles: 404 Not Found"
     ]
   },
-  "costUsd": 0.015992,
-  "addedSlugs": [],
-  "rationale": "The signal set is dominated by Google autocomplete suggestions (95 entries) tracking generic search interest in morphs, care, breeding basics, and marketplace searches. YouTube data shows established coverage of morph identification, breeding setup, and genetic guides (multiple \"ULTIMATE\" and \"COMPLETE\" guides already published 1–8 years ago). One recent outlier: a video titled \"Don't buy super cappuccino crested gecko it's a scam and waste of money\" (1 year ago, 2,059 views) and \"Why So Much Hate for Cappuccino Geckos? The Truth No One Wants to Say…\" (4 months ago, 421 views) suggest simmering debate, but cappuccino genetics are already published (cappuccino-crested-gecko-genetics slug). No forum threads, no social-media heat, no trending queries, and no breeder blog posts with fresh angles. The autocomplete data reflects broad search volume but no actionable debate or knowledge gap; it merely confirms that people search for \"crested gecko morphs,\" \"breeding weight,\" and \"cappuccino price\"—all serviceable by existing content. Zero evidence of a specific misconception, contested breeding outcome, or identification challenge that hasn't been covered. I'm rejecting all three slots."
+  "costUsd": 0.018302,
+  "addedSlugs": [
+    "super-cappuccino-viability-debate"
+  ],
+  "rationale": "The signal set is heavily dominated by Google autocomplete (95 suggestions) with broad, generic search intent: care, husbandry, prices, and listings. YouTube contains mostly listicle-style content (\"Top 12 Morphs,\" \"Ultimate Guide\") and some valuable breeding controversy (cappuccino debates, breeding warnings). However, there is no forum discussion, no trending topics, and no recent breeder insights beyond a sale announcement. The morph-specific autocomplete signals (cappuccino, lilly white, axanthic, soft scale) show reader interest, but Google AC alone cannot ground a claim. The cappuccino slug is already published. I found one viable angle: the YouTube evidence suggests genuine confusion and disagreement about cappuccino breeding ethics and super-cappuccino viability—a real mythbuster opportunity with forum-like heat in comments. The lilly white signals show identification confusion (multiple \"how to tell\" videos). The axanthic and soft scale signals are weaker—mostly price and availability searches. Given the bar is high and duplicate/care-guide rejections apply, I am emitting only one strong topic."
 }
