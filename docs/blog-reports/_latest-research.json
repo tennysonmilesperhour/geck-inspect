@@ -1,10 +1,10 @@
 {
-  "ranAt": "2026-04-27T12:09:23.850Z",
+  "ranAt": "2026-04-29T11:57:01.651Z",
   "signals": {
     "googleAc": 95,
     "bluesky": 0,
     "googleTrends": 0,
-    "youtube": 68,
+    "youtube": 65,
     "breederBlogs": 1,
     "errors": [
       "\"crested gecko\": 403 Forbidden",
@@ -22,9 +22,7 @@
       "AC Reptiles: 404 Not Found"
     ]
   },
-  "costUsd": 0.018302,
-  "addedSlugs": [
-    "super-cappuccino-viability-debate"
-  ],
-  "rationale": "The signal set is heavily dominated by Google autocomplete (95 suggestions) with broad, generic search intent: care, husbandry, prices, and listings. YouTube contains mostly listicle-style content (\"Top 12 Morphs,\" \"Ultimate Guide\") and some valuable breeding controversy (cappuccino debates, breeding warnings). However, there is no forum discussion, no trending topics, and no recent breeder insights beyond a sale announcement. The morph-specific autocomplete signals (cappuccino, lilly white, axanthic, soft scale) show reader interest, but Google AC alone cannot ground a claim. The cappuccino slug is already published. I found one viable angle: the YouTube evidence suggests genuine confusion and disagreement about cappuccino breeding ethics and super-cappuccino viability—a real mythbuster opportunity with forum-like heat in comments. The lilly white signals show identification confusion (multiple \"how to tell\" videos). The axanthic and soft scale signals are weaker—mostly price and availability searches. Given the bar is high and duplicate/care-guide rejections apply, I am emitting only one strong topic."
+  "costUsd": 0.015732,
+  "addedSlugs": [],
+  "rationale": "The signal set is almost entirely composed of generic search volume (Google autocomplete) and existing video content. While there's strong search demand around \"crested gecko morphs,\" \"cappuccino crested gecko,\" \"lilly white crested gecko,\" and \"axanthic crested gecko,\" the signals lack the forum heat, disagreement, or specific breeding outcomes that would justify a new post. YouTube already has comprehensive coverage on these topics (TikisGeckos alone has multiple morph guides, breeding guides, and cappuccino/lilly white deep-dives). The one queued slug (\"super-cappuccino-viability-debate\") suggests we're already working the cappuccino space. The autocomplete data shows buyer interest (price, for sale, care) but not breeder-specific confusion or misconceptions. Without evidence of forum discussion, data-backed claims to verify, or a concrete breeding outcome to explain, none of these rise above \"general care\" or \"listicle\" territory. The breeder blog signal is promotional (sale announcement), not editorial. I'm rejecting all topics."
 }
