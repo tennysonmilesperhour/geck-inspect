@@ -271,8 +271,7 @@ export default function Home() {
         <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
           <img
             src={BACKGROUND_IMAGE}
-            alt=""
-            aria-hidden="true"
+            alt="Lush tropical rainforest canopy — the natural habitat of the crested gecko (Correlophus ciliatus) in New Caledonia."
             className="w-full h-full object-cover opacity-70"
             loading="eager"
             fetchPriority="high"

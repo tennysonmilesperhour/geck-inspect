@@ -6,7 +6,9 @@ import { Check, Sparkles, Zap, Crown, Star, Loader2, Flame, Infinity as Infinity
 import { User } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
 import SupportContactCard from '@/components/support/SupportContactCard';
-import { getTierPricing } from '@/lib/stripe-config';
+import { getTierPricing, TIER_PRICING } from '@/lib/stripe-config';
+import Seo from '@/components/seo/Seo';
+import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
 
 /**
  * Membership / pricing page.
@@ -112,6 +114,116 @@ const CYCLE_OPTIONS = [
   { key: 'monthly',  label: 'Monthly' },
   { key: 'annual',   label: 'Annual',   hint: 'Save 20%' },
   { key: 'lifetime', label: 'Lifetime', hint: 'Pay once' },
+];
+
+// SoftwareApplication + Offer JSON-LD for the pricing page. AI assistants
+// (ChatGPT, Perplexity, Claude) parse this directly when answering "how
+// much does Geck Inspect cost / what plans are available". Offers cover
+// every (tier × billing cycle) combo where we have a real $ amount —
+// "Custom" enterprise rows are intentionally omitted because schema.org
+// Offer.price requires a number.
+const PRICED_TIERS = ['keeper', 'breeder'];
+const TIER_DESCRIPTIONS = {
+  keeper:
+    'For dedicated collectors. Up to 50 geckos, 5 active breeding pairs, full lineage tree, feeding groups, and AI morph ID.',
+  breeder:
+    'For serious breeders. Unlimited geckos and breeding pairs, marketplace sync, certificates, and a featured spot on the home dashboard.',
+};
+function priceToNumber(p) {
+  // "$4" → 4, "$38.40" → 38.4, "$0" → 0
+  return Number(String(p).replace(/[^0-9.]/g, ''));
+}
+const MEMBERSHIP_OFFERS = PRICED_TIERS.flatMap((tier) =>
+  Object.entries(TIER_PRICING[tier]).map(([cycle, p]) => ({
+    '@type': 'Offer',
+    name: `Geck Inspect ${tier[0].toUpperCase() + tier.slice(1)} (${cycle})`,
+    price: priceToNumber(p.price).toFixed(2),
+    priceCurrency: 'USD',
+    availability: 'https://schema.org/InStock',
+    url: `${SITE_URL}/Membership`,
+    category: cycle === 'lifetime' ? 'one-time' : 'subscription',
+    description: p.priceCaption,
+  })),
+);
+const MEMBERSHIP_JSON_LD = [
+  {
+    '@type': 'SoftwareApplication',
+    '@id': `${SITE_URL}/Membership#softwareapplication`,
+    name: 'Geck Inspect',
+    description:
+      'Crested gecko collection, breeding, and community platform. Plans for hobbyists through professional breeders, with AI morph ID, lineage trees, marketplace sync, and certificates.',
+    applicationCategory: 'BusinessApplication',
+    applicationSubCategory: 'Reptile breeding and collection management',
+    operatingSystem: 'Web, iOS Safari, Android Chrome',
+    url: `${SITE_URL}/Membership`,
+    publisher: { '@id': ORG_ID },
+    offers: {
+      '@type': 'AggregateOffer',
+      priceCurrency: 'USD',
+      lowPrice: '0',
+      highPrice: '349',
+      offerCount: MEMBERSHIP_OFFERS.length + 3, // + 3 free-tier rows
+      offers: MEMBERSHIP_OFFERS,
+    },
+    featureList: [
+      'Crested gecko collection tracker',
+      'Breeding pair manager with lineage tree',
+      'AI-powered morph identification',
+      'Weight and feeding logs',
+      'MorphMarket CSV sync (Breeder tier)',
+      'Genetics calculator and morph guide',
+      'Community forum and marketplace',
+    ],
+  },
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
+      {
+        '@type': 'ListItem',
+        position: 2,
+        name: 'Membership',
+        item: `${SITE_URL}/Membership`,
+      },
+    ],
+  },
+  {
+    '@type': 'FAQPage',
+    mainEntity: [
+      {
+        '@type': 'Question',
+        name: 'How much does Geck Inspect cost?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Geck Inspect has a Free tier (10 geckos), a Keeper tier ($4/month, $38.40/year, or $149 lifetime), a Breeder tier ($9/month, $105.60/year, or $349 lifetime), and a custom-quoted Enterprise tier. Annual plans save 20% versus monthly; lifetime plans are a one-time purchase with no renewals.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Can I try a paid plan before subscribing?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Yes — every recurring (monthly or annual) Keeper and Breeder plan includes a 7-day free trial. Lifetime purchases are one-time and do not include a trial.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'What is included in the Free plan?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'The Free plan includes up to 10 geckos, 1 active breeding pair, weight tracking, public marketplace browsing, and community forum access. It is free forever with no credit card required.',
+        },
+      },
+      {
+        '@type': 'Question',
+        name: 'Can I cancel anytime?',
+        acceptedAnswer: {
+          '@type': 'Answer',
+          text: 'Yes. Monthly and annual subscriptions can be cancelled at any time from your account settings. Lifetime purchases are one-time and do not require cancellation.',
+        },
+      },
+    ],
+  },
 ];
 
 function HoveringBadge({ children, variant = 'popular' }) {
@@ -252,6 +364,22 @@ export default function MembershipPage() {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 p-6">
+      <Seo
+        title="Pricing & Plans"
+        description="Geck Inspect plans for crested gecko keepers and breeders. Free (10 geckos), Keeper ($4/mo, $38.40/yr, $149 lifetime), Breeder ($9/mo, $105.60/yr, $349 lifetime), and custom Enterprise. 7-day free trial on recurring plans. Cancel anytime."
+        path="/Membership"
+        type="website"
+        imageAlt="Geck Inspect membership plans — Free, Keeper, Breeder, and Enterprise tiers"
+        keywords={[
+          'crested gecko app pricing',
+          'gecko breeding software cost',
+          'geckOS plans',
+          'crested gecko subscription',
+          'breeder software pricing',
+          'lifetime membership',
+        ]}
+        jsonLd={MEMBERSHIP_JSON_LD}
+      />
       <div className="max-w-7xl mx-auto space-y-12">
         {/* Header */}
         <div className="text-center space-y-4">
