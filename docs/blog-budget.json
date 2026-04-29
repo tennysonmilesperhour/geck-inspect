@@ -58,12 +58,15 @@
       "lastCallAt": "2026-04-24T10:52:36.001Z"
     },
     "2026-W18": {
-      "totalUsd": 0.034034,
+      "totalUsd": 0.389675,
       "byModel": {
-        "claude-haiku-4-5": 0.034034
+        "claude-haiku-4-5": 0.034034,
+        "claude-sonnet-4-6": 0.355641
       },
       "byStop": {
-        "research-score": 0.034034
+        "research-score": 0.034034,
+        "draft-write": 0.20701,
+        "draft-critique": 0.148631
       },
       "log": [
         {
@@ -85,10 +88,30 @@
           "out": 281,
           "cr": 0,
           "cw": 0
+        },
+        {
+          "at": "2026-04-29T12:09:39.962Z",
+          "model": "claude-sonnet-4-6",
+          "stopLabel": "draft-write",
+          "usd": 0.20701,
+          "in": 922,
+          "out": 4431,
+          "cr": 0,
+          "cw": 36741
+        },
+        {
+          "at": "2026-04-29T12:10:03.962Z",
+          "model": "claude-sonnet-4-6",
+          "stopLabel": "draft-critique",
+          "usd": 0.148631,
+          "in": 2560,
+          "out": 995,
+          "cr": 0,
+          "cw": 33607
         }
       ],
       "firstCallAt": "2026-04-27T12:09:40.570Z",
-      "lastCallAt": "2026-04-29T11:57:12.535Z"
+      "lastCallAt": "2026-04-29T12:10:03.962Z"
     }
   }
 }

@@ -1,13 +1,13 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-04-29T11:57:12.535Z",
+  "lastUpdated": "2026-04-29T12:10:03.963Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
       "title": "Super Cappuccino Crested Geckos: Scam or Legitimate Morph?",
       "slug": "super-cappuccino-viability-debate",
       "category": "breeding",
-      "status": "new",
+      "status": "drafted",
       "score": {
         "demand": 7,
         "originality": 8,
@@ -16,7 +16,7 @@
         "total": 19
       },
       "createdAt": "2026-04-27T12:09:23.850Z",
-      "draftedAt": null,
+      "draftedAt": "2026-04-29T12:10:03.963Z",
       "publishedAt": null,
       "evidence": [
         {
