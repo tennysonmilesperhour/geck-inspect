@@ -132,6 +132,20 @@
     <meta name="twitter:description" content="The professional platform for crested gecko breeders and keepers. Track collections, plan breedings, identify morphs with AI, and connect with the community." />
     <meta name="twitter:image" content="https://geckinspect.com/logo.png" />
 
+    <!-- Robauto.ai — A.I. Growth Engine Pixel. Detects LLM bot traffic
+         and AI referrals (ChatGPT, Claude, Perplexity, etc.) so we can
+         attribute organic AI-driven visits. Fires once per page load via
+         sendBeacon (XHR fallback) and is non-blocking. -->
+    <script>
+    (function(){
+      var pid="94be07bb-a48d-44fa-b1d0-c9d88d2fc975";
+      var ep="https://hkeytqaukllckucnhzey.supabase.co/functions/v1/track";
+      var d=JSON.stringify({path:location.pathname,url:location.href,referer:document.referrer});
+      if(navigator.sendBeacon){navigator.sendBeacon(ep+"?pid="+pid,d)}
+      else{var x=new XMLHttpRequest();x.open("POST",ep+"?pid="+pid);x.setRequestHeader("Content-Type","application/json");x.send(d)}
+    })();
+    </script>
+
     <!-- Site-level structured data (Organization + WebSite). Page-specific
          schema (Article, FAQPage, HowTo, Product, BreadcrumbList) is emitted
          per-route by <Seo>; keeping these two here means they exist on every
