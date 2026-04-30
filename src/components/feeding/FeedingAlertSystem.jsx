@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { FeedingGroup, OtherReptile, Notification } from '@/entities/all';
 import { Button } from '@/components/ui/button';
 import { X, CheckCircle2, Clock } from 'lucide-react';
@@ -32,6 +32,11 @@ function markNotified(alertId, lastFedDate) {
 export default function FeedingAlertSystem({ user, enabled, lateReminders }) {
   const [alerts, setAlerts] = useState([]);
   const [dismissedAlerts, setDismissedAlerts] = useState(new Set());
+  // In-flight guard. AuthContext's setUser fires on profile-enrich, every
+  // auth state change, and every tab visibility change — so without this
+  // mutex two loadAlerts() can race past the read-then-write dedup and
+  // each insert their own notification row, fanning out to 2x pushes.
+  const loadingRef = useRef(false);
 
   // Days past the feeding due date. 0 = due today (interval has just elapsed),
   // 1 = a day late, etc. Negative values (not yet due) are filtered upstream
@@ -67,12 +72,14 @@ export default function FeedingAlertSystem({ user, enabled, lateReminders }) {
 
   // Load alerts
   useEffect(() => {
-    if (!user || !enabled) {
+    if (!user?.email || !enabled) {
       setAlerts([]);
       return;
     }
 
     const loadAlerts = async () => {
+      if (loadingRef.current) return;
+      loadingRef.current = true;
       try {
         const [feedingGroups, otherReptiles, recentNotifs] = await Promise.all([
           FeedingGroup.filter({ created_by: user.email }),
@@ -159,6 +166,10 @@ export default function FeedingAlertSystem({ user, enabled, lateReminders }) {
           const content = a.daysOverdue === 0
             ? `${a.name} is due for feeding today`
             : `${a.name} is ${a.daysOverdue} day${a.daysOverdue !== 1 ? 's' : ''} overdue for feeding`;
+          // Claim the dedup slot BEFORE the network call so a concurrent
+          // poll can't race past shouldNotify() while we're awaiting the
+          // insert. We roll it back on failure so the next poll can retry.
+          markNotified(a.id, a.lastFedDate);
           try {
             await Notification.create({
               user_email: user.email,
@@ -172,21 +183,23 @@ export default function FeedingAlertSystem({ user, enabled, lateReminders }) {
               },
               is_read: false,
             });
-            markNotified(a.id, a.lastFedDate);
           } catch (err) {
             // Don't break the toast UI if notification creation fails.
             console.warn('feeding_due notification failed:', err);
+            try { localStorage.removeItem(dedupKey(a.id, a.lastFedDate)); } catch {}
           }
         }
       } catch (error) {
         console.error('Failed to load feeding alerts:', error);
+      } finally {
+        loadingRef.current = false;
       }
     };
 
     loadAlerts();
     const interval = setInterval(loadAlerts, 5 * 60 * 1000); // Refresh every 5 minutes
     return () => clearInterval(interval);
-  }, [user, enabled, lateReminders]);
+  }, [user?.email, enabled, lateReminders]);
 
   const handleFed = async (alert) => {
     try {
