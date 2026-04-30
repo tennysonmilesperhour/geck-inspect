@@ -4,6 +4,88 @@ import { useAuth } from '@/lib/AuthContext';
 import { formatDistanceToNow } from 'date-fns';
 import { Search, ThumbsUp, MessageSquare, CheckCircle, ChevronLeft, Plus, Star } from 'lucide-react';
 import ReactMarkdown from 'react-markdown';
+import Seo from '@/components/seo/Seo';
+import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
+
+// Build a QAPage JSON-LD graph for the currently-open question. Only
+// emitted on the detail view because schema.org QAPage requires a single
+// primary question + accepted/suggested answers, not a list. The list
+// view ships a CollectionPage instead.
+function buildQAPageJsonLd(question, answers) {
+  const url = `${SITE_URL}/GeckAnswers?id=${question.id}`;
+  const accepted = (answers || []).find((a) => a.is_best_answer);
+  const suggested = (answers || []).filter((a) => !a.is_best_answer);
+  return [
+    {
+      '@type': 'QAPage',
+      '@id': `${url}#qapage`,
+      url,
+      mainEntity: {
+        '@type': 'Question',
+        '@id': `${url}#question`,
+        name: question.title,
+        text: question.body || question.title,
+        upvoteCount: question.upvote_count || 0,
+        answerCount: (answers || []).length,
+        dateCreated: question.created_date || undefined,
+        author: { '@type': 'Person', name: question.created_by || 'Community member' },
+        ...(accepted && {
+          acceptedAnswer: {
+            '@type': 'Answer',
+            text: accepted.body,
+            upvoteCount: accepted.upvote_count || 0,
+            dateCreated: accepted.created_date || undefined,
+            author: { '@type': 'Person', name: accepted.created_by || 'Community member' },
+          },
+        }),
+        ...(suggested.length > 0 && {
+          suggestedAnswer: suggested.map((a) => ({
+            '@type': 'Answer',
+            text: a.body,
+            upvoteCount: a.upvote_count || 0,
+            dateCreated: a.created_date || undefined,
+            author: { '@type': 'Person', name: a.created_by || 'Community member' },
+          })),
+        }),
+      },
+      isPartOf: { '@id': `${SITE_URL}/#website` },
+      publisher: { '@id': ORG_ID },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
+        { '@type': 'ListItem', position: 2, name: 'Geck Answers', item: `${SITE_URL}/GeckAnswers` },
+        { '@type': 'ListItem', position: 3, name: question.title, item: url },
+      ],
+    },
+  ];
+}
+
+const GECK_ANSWERS_LIST_JSON_LD = [
+  {
+    '@type': 'CollectionPage',
+    '@id': `${SITE_URL}/GeckAnswers#collection`,
+    name: 'Geck Answers — Crested Gecko Q&A',
+    url: `${SITE_URL}/GeckAnswers`,
+    description:
+      'Community-driven crested gecko Q&A. Search questions on nutrition, health, housing, breeding, morphs, juveniles, adults, hatchlings, equipment, and genetics — or ask your own.',
+    isPartOf: { '@id': `${SITE_URL}/#website` },
+    publisher: { '@id': ORG_ID },
+    about: {
+      '@type': 'Thing',
+      name: 'Crested gecko',
+      alternateName: 'Correlophus ciliatus',
+    },
+  },
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
+      { '@type': 'ListItem', position: 2, name: 'Geck Answers', item: `${SITE_URL}/GeckAnswers` },
+    ],
+  },
+];
 
 const C = { forest: '#e2e8f0', sage: '#10b981', paleSage: 'rgba(16,185,129,0.1)', warmWhite: '#020617', gold: '#f59e0b', goldLight: 'rgba(245,158,11,0.15)', slate: '#cbd5e1', muted: '#64748b', cardBg: '#0f172a', border: 'rgba(51,65,85,0.5)' };
 const TAGS = ['Nutrition', 'Health', 'Housing', 'Breeding', 'Morphs', 'Juveniles', 'Adults', 'Hatchlings', 'Equipment', 'Genetics'];
@@ -88,6 +170,12 @@ export default function GeckAnswers() {
   if (view === 'ask') {
     return (
       <div className="min-h-screen p-6" style={{ backgroundColor: C.warmWhite, fontFamily: "'DM Sans', sans-serif" }}>
+        <Seo
+          title="Ask a Crested Gecko Question"
+          description="Post a new crested gecko question to the Geck Answers community."
+          path="/GeckAnswers"
+          noIndex
+        />
         <div className="max-w-2xl mx-auto">
           <button onClick={() => setView('list')} className="flex items-center gap-1 text-sm mb-4" style={{ color: C.sage }}><ChevronLeft size={16} /> Back</button>
           <h1 className="text-3xl mb-6" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>Ask a Question</h1>
@@ -128,6 +216,18 @@ export default function GeckAnswers() {
 
     return (
       <div className="min-h-screen p-6" style={{ backgroundColor: C.warmWhite, fontFamily: "'DM Sans', sans-serif" }}>
+        <Seo
+          title={`${selected.title} — Crested Gecko Q&A`}
+          description={(selected.body || selected.title).slice(0, 200)}
+          path={`/GeckAnswers?id=${selected.id}`}
+          imageAlt={`Crested gecko question — ${selected.title}`}
+          keywords={[
+            'crested gecko question',
+            'crested gecko answer',
+            ...(selected.tags || []).map((t) => `crested gecko ${t.toLowerCase()}`),
+          ]}
+          jsonLd={buildQAPageJsonLd(selected, answers)}
+        />
         <div className="max-w-3xl mx-auto">
           <button onClick={() => { setView('list'); setSelected(null); }} className="flex items-center gap-1 text-sm mb-4" style={{ color: C.sage }}><ChevronLeft size={16} /> Back to questions</button>
 
@@ -201,6 +301,20 @@ export default function GeckAnswers() {
   // ─── LIST VIEW ───
   return (
     <div className="min-h-screen p-6" style={{ backgroundColor: C.warmWhite, fontFamily: "'DM Sans', sans-serif" }}>
+      <Seo
+        title="Geck Answers — Crested Gecko Q&A"
+        description="Community-driven crested gecko Q&A. Browse questions on nutrition, health, housing, breeding, morphs, juveniles, adults, hatchlings, equipment, and genetics — or ask your own."
+        path="/GeckAnswers"
+        imageAlt="Geck Answers — crested gecko Q&A community"
+        keywords={[
+          'crested gecko questions',
+          'crested gecko answers',
+          'crested gecko Q&A',
+          'gecko help',
+          'crestie advice',
+        ]}
+        jsonLd={GECK_ANSWERS_LIST_JSON_LD}
+      />
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
           <h1 className="text-3xl" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>Geck Answers</h1>

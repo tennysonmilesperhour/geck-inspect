@@ -23,6 +23,23 @@ import {
 } from '@/data/morph-guide';
 import RotatingMorphImage from '@/components/morphguide/RotatingMorphImage';
 
+// DefinedTermSet treats the morph guide as a controlled vocabulary for
+// AI assistants — every morph becomes a DefinedTerm that can be cited
+// back ("the term 'Lilly White' as defined by Geck Inspect..."). The
+// parallel ItemList preserves the ordered presentation for crawlers
+// that prefer ItemList over DefinedTermSet, and links each entry to its
+// canonical /MorphGuide/<slug> URL.
+const MORPH_TERMS = MORPHS.map((m) => ({
+  '@type': 'DefinedTerm',
+  '@id': `https://geckinspect.com/MorphGuide/${m.slug}#term`,
+  name: m.name,
+  ...(Array.isArray(m.aliases) && m.aliases.length > 0 && { alternateName: m.aliases }),
+  termCode: m.slug,
+  url: `https://geckinspect.com/MorphGuide/${m.slug}`,
+  description: m.summary || m.description || `${m.name} — crested gecko morph.`,
+  inDefinedTermSet: { '@id': 'https://geckinspect.com/MorphGuide#termset' },
+}));
+
 const MORPH_GUIDE_JSON_LD = [
   {
     '@type': 'CollectionPage',
@@ -39,6 +56,31 @@ const MORPH_GUIDE_JSON_LD = [
     },
     isPartOf: { '@id': 'https://geckinspect.com/#website' },
     publisher: { '@id': 'https://geckinspect.com/#organization' },
+    mainEntity: { '@id': 'https://geckinspect.com/MorphGuide#termset' },
+  },
+  {
+    '@type': 'DefinedTermSet',
+    '@id': 'https://geckinspect.com/MorphGuide#termset',
+    name: 'Crested Gecko Morph Vocabulary',
+    description:
+      'Controlled vocabulary of named crested gecko morphs maintained by Geck Inspect — base colors, color modifiers, pattern types, structural traits, and named combinations, each with inheritance model and rarity.',
+    url: 'https://geckinspect.com/MorphGuide',
+    inLanguage: 'en-US',
+    publisher: { '@id': 'https://geckinspect.com/#organization' },
+    hasDefinedTerm: MORPH_TERMS,
+  },
+  {
+    '@type': 'ItemList',
+    '@id': 'https://geckinspect.com/MorphGuide#itemlist',
+    name: 'Crested Gecko Morphs',
+    numberOfItems: MORPHS.length,
+    itemListOrder: 'https://schema.org/ItemListOrderAscending',
+    itemListElement: MORPHS.map((m, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      url: `https://geckinspect.com/MorphGuide/${m.slug}`,
+      name: m.name,
+    })),
   },
   {
     '@type': 'BreadcrumbList',

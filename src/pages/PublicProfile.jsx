@@ -11,6 +11,73 @@ import { useToast } from '@/components/ui/use-toast';
 import { createPageUrl } from '@/utils';
 import { useNavigate } from 'react-router-dom';
 import GeckoCard from '../components/my-geckos/GeckoCard';
+import Seo from '@/components/seo/Seo';
+import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
+
+// Build a ProfilePage + Person JSON-LD graph for the currently-loaded
+// breeder. Surfaces the breeder as a recognized entity to AI assistants
+// answering "is X a real crested gecko breeder" or "who is X" — pulls
+// every social handle the user has filled in into Person.sameAs.
+function buildProfileJsonLd(profileUser, counts) {
+  const params = new URLSearchParams();
+  if (profileUser.id) params.set('userId', profileUser.id);
+  else if (profileUser.email) params.set('email', profileUser.email);
+  const path = `/PublicProfile?${params.toString()}`;
+  const url = `${SITE_URL}${path}`;
+  const sameAs = [
+    profileUser.website_url,
+    profileUser.facebook_url,
+    profileUser.youtube_url,
+    profileUser.instagram_handle && `https://instagram.com/${profileUser.instagram_handle}`,
+    profileUser.tiktok_handle && `https://tiktok.com/@${profileUser.tiktok_handle}`,
+  ].filter(Boolean);
+  const addressParts = [profileUser.city, profileUser.state_province, profileUser.country].filter(Boolean);
+  return [
+    {
+      '@type': 'ProfilePage',
+      '@id': `${url}#profilepage`,
+      url,
+      name: `${profileUser.full_name} on Geck Inspect`,
+      dateCreated: profileUser.created_date || undefined,
+      dateModified: profileUser.updated_date || undefined,
+      isPartOf: { '@id': `${SITE_URL}/#website` },
+      publisher: { '@id': ORG_ID },
+      mainEntity: {
+        '@type': 'Person',
+        '@id': `${url}#person`,
+        name: profileUser.full_name,
+        ...(profileUser.business_name && { affiliation: { '@type': 'Organization', name: profileUser.business_name } }),
+        ...(profileUser.bio && { description: profileUser.bio }),
+        ...(profileUser.profile_image_url && { image: profileUser.profile_image_url }),
+        ...(addressParts.length > 0 && {
+          address: {
+            '@type': 'PostalAddress',
+            ...(profileUser.city && { addressLocality: profileUser.city }),
+            ...(profileUser.state_province && { addressRegion: profileUser.state_province }),
+            ...(profileUser.country && { addressCountry: profileUser.country }),
+          },
+        }),
+        knowsAbout: ['Crested gecko', 'Correlophus ciliatus', 'Reptile husbandry', 'Gecko breeding'],
+        ...(sameAs.length > 0 && { sameAs }),
+      },
+      ...(counts && counts.forSale > 0 && {
+        about: {
+          '@type': 'OfferCatalog',
+          name: `${profileUser.full_name} — geckos for sale`,
+          numberOfItems: counts.forSale,
+        },
+      }),
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
+        { '@type': 'ListItem', position: 2, name: 'Community', item: `${SITE_URL}/CommunityConnect` },
+        { '@type': 'ListItem', position: 3, name: profileUser.full_name, item: url },
+      ],
+    },
+  ];
+}
 
 export default function PublicProfile() {
     const location = useLocation();
@@ -166,8 +233,33 @@ export default function PublicProfile() {
         return null;
     }
     
+    const profilePath = profileUser.id
+        ? `/PublicProfile?userId=${profileUser.id}`
+        : `/PublicProfile?email=${encodeURIComponent(profileUser.email)}`;
+    const profileDescription = profileUser.bio
+        ? `${profileUser.full_name} — ${profileUser.bio.slice(0, 200)}`
+        : `${profileUser.full_name}'s public crested gecko profile on Geck Inspect — collection, breeders, and listings.`;
+
     return (
         <div className="bg-slate-950 min-h-screen">
+            <Seo
+                title={`${profileUser.full_name} — Crested Gecko Breeder Profile`}
+                description={profileDescription}
+                path={profilePath}
+                image={profileUser.profile_image_url || profileUser.cover_image_url || undefined}
+                imageAlt={`${profileUser.full_name} — Geck Inspect profile`}
+                keywords={[
+                    'crested gecko breeder',
+                    `${profileUser.full_name} crested gecko`,
+                    profileUser.business_name && profileUser.business_name.toLowerCase(),
+                    'gecko collection',
+                ].filter(Boolean)}
+                jsonLd={buildProfileJsonLd(profileUser, {
+                    forSale: forSaleGeckos.length,
+                    breeding: breedingGeckos.length,
+                    collection: collectionGeckos.length,
+                })}
+            />
             <div className="relative h-48 md:h-64 bg-slate-800">
                 {profileUser.cover_image_url && (
                     <img src={profileUser.cover_image_url} alt="Cover" className="w-full h-full object-cover"/>

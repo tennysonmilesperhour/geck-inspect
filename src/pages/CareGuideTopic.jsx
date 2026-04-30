@@ -51,6 +51,32 @@ function sectionPlainText(section) {
   return chunks.join(' ').replace(/\s+/g, ' ').slice(0, 280).trim();
 }
 
+// If a care section contains an ordered-list block, treat that list as
+// a HowTo procedure. Many topics like "How to set up an enclosure" or
+// "How to handle a new arrival" are naturally step-based; emitting HowTo
+// lets AI assistants read the procedure aloud and quote individual steps.
+// Returns null when no ordered steps exist so the schema only ships
+// where it's actually applicable.
+function howToSchemaFor(section, url) {
+  const ol = (section.body || []).find(
+    (b) => b.type === 'ol' && Array.isArray(b.items) && b.items.length >= 2,
+  );
+  if (!ol) return null;
+  const introBlock = (section.body || []).find((b) => b.type === 'p' && b.text);
+  return {
+    '@type': 'HowTo',
+    '@id': `${url}#howto`,
+    name: section.title,
+    description: introBlock?.text?.slice(0, 250) || `${section.title} — crested gecko care procedure.`,
+    step: ol.items.map((text, i) => ({
+      '@type': 'HowToStep',
+      position: i + 1,
+      name: `Step ${i + 1}`,
+      text,
+    })),
+  };
+}
+
 export default function CareGuideTopic() {
   const { topic } = useParams();
   const entry = topic ? SECTION_INDEX.get(topic) : null;
@@ -96,6 +122,7 @@ export default function CareGuideTopic() {
     `${section.title} — crested gecko care guide section from Geck Inspect.`;
   const editorial = editorialFor(path);
 
+  const howTo = howToSchemaFor(section, url);
   const jsonLd = [
     {
       '@context': 'https://schema.org',
@@ -125,6 +152,7 @@ export default function CareGuideTopic() {
       },
       publisher: { '@id': ORG_ID },
     },
+    ...(howTo ? [howTo] : []),
     breadcrumbSchema([
       { name: 'Home', path: '/' },
       { name: 'Care Guide', path: '/CareGuide' },

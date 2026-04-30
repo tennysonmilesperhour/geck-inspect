@@ -18,6 +18,44 @@ import {
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { formatDistanceToNow } from 'date-fns';
+import Seo from '@/components/seo/Seo';
+import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
+
+// CollectionPage schema declares /CommunityConnect as a curated directory
+// of crested gecko breeders + a forum hub, so AI assistants can surface
+// it for "find a crested gecko breeder" or "crested gecko forum" intents.
+const COMMUNITY_JSON_LD = [
+  {
+    '@type': 'CollectionPage',
+    '@id': `${SITE_URL}/CommunityConnect#collection`,
+    name: 'Geck Inspect Community Connect',
+    url: `${SITE_URL}/CommunityConnect`,
+    description:
+      'Find crested gecko breeders and keepers, follow their collections, and join discussions on the Geck Inspect community forum.',
+    isPartOf: { '@id': `${SITE_URL}/#website` },
+    publisher: { '@id': ORG_ID },
+    about: {
+      '@type': 'Thing',
+      name: 'Crested gecko community',
+      alternateName: 'Crested gecko breeder directory',
+    },
+    mainEntity: {
+      '@type': 'ItemList',
+      name: 'Community sections',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Find Breeders', description: 'Searchable directory of crested gecko breeders and keepers.' },
+        { '@type': 'ListItem', position: 2, name: 'Forum', description: 'Community discussions on husbandry, genetics, breeding, and morphs.' },
+      ],
+    },
+  },
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
+      { '@type': 'ListItem', position: 2, name: 'Community', item: `${SITE_URL}/CommunityConnect` },
+    ],
+  },
+];
 
 // Breeder Card Component
 function BreederCard({ breeder, currentUser, isFollowing, onFollow, onUnfollow, geckoCounts, coverImage }) {
@@ -664,6 +702,20 @@ export default function CommunityConnectPage() {
 
     return (
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+            <Seo
+                title="Community — Find Crested Gecko Breeders & Forum"
+                description="Find crested gecko breeders and keepers, follow their collections, and join discussions on the Geck Inspect community forum."
+                path="/CommunityConnect"
+                imageAlt="Geck Inspect community connect — breeder directory and forum"
+                keywords={[
+                    'crested gecko breeders',
+                    'find a crested gecko breeder',
+                    'crested gecko forum',
+                    'gecko community',
+                    'reptile breeder directory',
+                ]}
+                jsonLd={COMMUNITY_JSON_LD}
+            />
             <div className="max-w-6xl mx-auto">
                 <div className="text-center mb-8">
                     <h1 className="text-4xl font-bold text-slate-100 mb-2">Community Connect</h1>

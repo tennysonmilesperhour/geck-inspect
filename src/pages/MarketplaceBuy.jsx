@@ -23,6 +23,91 @@ import { useNavigate, Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import MessageUserButton from '../components/ui/MessageUserButton';
 import { getSexIcon, getSexColor } from '@/lib/utils';
+import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
+
+// Cap the per-page Product graph at 24 listings. The full result set can
+// run hundreds of geckos deep — emitting all of them blows up the
+// JSON-LD payload and any single offer past the first ~25 has near-zero
+// AI/SEO value because crawlers paginate too. The visible top set is
+// what AI assistants will quote from when answering "what crested
+// geckos are for sale on Geck Inspect right now".
+const MAX_LISTINGS_IN_SCHEMA = 24;
+
+function buildMarketplaceListJsonLd(geckos, owners) {
+  const top = (geckos || []).slice(0, MAX_LISTINGS_IN_SCHEMA);
+  const items = top.map((g, i) => {
+    const owner = owners?.[g.created_by];
+    const detailUrl = `${SITE_URL}/GeckoDetail?id=${g.id}`;
+    const product = {
+      '@type': 'Product',
+      '@id': `${detailUrl}#product`,
+      name: g.name || `Crested gecko #${g.id}`,
+      description: [g.morphs_traits, g.notes].filter(Boolean).join(' — ').slice(0, 280) ||
+        'Crested gecko (Correlophus ciliatus) listed on the Geck Inspect marketplace.',
+      sku: g.id,
+      url: detailUrl,
+      ...(g.image_urls?.[0] && { image: g.image_urls[0] }),
+      category: 'Live animal — Crested gecko (Correlophus ciliatus)',
+      additionalProperty: [
+        g.sex && { '@type': 'PropertyValue', name: 'Sex', value: g.sex },
+        g.morphs_traits && { '@type': 'PropertyValue', name: 'Morphs / traits', value: g.morphs_traits },
+        g.hatch_date && { '@type': 'PropertyValue', name: 'Hatch date', value: g.hatch_date },
+      ].filter(Boolean),
+      ...(typeof g.price === 'number' && g.price > 0 && {
+        offers: {
+          '@type': 'Offer',
+          '@id': `${detailUrl}#offer`,
+          price: g.price.toFixed(2),
+          priceCurrency: g.price_currency || 'USD',
+          availability: 'https://schema.org/InStock',
+          url: detailUrl,
+          ...(owner && {
+            seller: {
+              '@type': 'Person',
+              name: owner.full_name,
+              ...(owner.business_name && {
+                affiliation: { '@type': 'Organization', name: owner.business_name },
+              }),
+            },
+          }),
+        },
+      }),
+    };
+    return {
+      '@type': 'ListItem',
+      position: i + 1,
+      item: product,
+    };
+  });
+
+  return [
+    {
+      '@type': 'CollectionPage',
+      '@id': `${SITE_URL}/MarketplaceBuy#collection`,
+      name: 'Crested Geckos For Sale — Geck Inspect Marketplace',
+      url: `${SITE_URL}/MarketplaceBuy`,
+      description:
+        'Live crested gecko listings from Geck Inspect breeders. Browse by morph, sex, age, and price; message sellers directly.',
+      isPartOf: { '@id': `${SITE_URL}/#website` },
+      publisher: { '@id': ORG_ID },
+      mainEntity: {
+        '@type': 'ItemList',
+        '@id': `${SITE_URL}/MarketplaceBuy#listings`,
+        name: 'Featured crested gecko listings',
+        numberOfItems: items.length,
+        itemListElement: items,
+      },
+    },
+    {
+      '@type': 'BreadcrumbList',
+      itemListElement: [
+        { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
+        { '@type': 'ListItem', position: 2, name: 'Marketplace', item: `${SITE_URL}/Marketplace` },
+        { '@type': 'ListItem', position: 3, name: 'Buy Geckos', item: `${SITE_URL}/MarketplaceBuy` },
+      ],
+    },
+  ];
+}
 
 // Marketplace-specific Gecko Card. `size` switches between the two
 // grid densities: 'regular' mirrors MyGeckos' tighter look (more cards
@@ -336,6 +421,7 @@ export default function MarketplaceBuyPage() {
                 description="Browse crested geckos for sale from trusted breeders. Filter by morph, sex, and price to find your next gecko."
                 path="/MarketplaceBuy"
                 keywords={['buy crested gecko', 'gecko for sale', 'crested gecko marketplace', 'gecko breeder listings']}
+                jsonLd={buildMarketplaceListJsonLd(filteredGeckos, owners)}
             />
             <div className="max-w-7xl mx-auto">
                 <header className="mb-6 flex flex-col md:flex-row md:items-start md:justify-between gap-4">

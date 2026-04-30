@@ -494,17 +494,19 @@ function run() {
   // HTML file pretending they have static content. Everything in the
   // sitemap is eligible; noindex pages live in vercel.json X-Robots-Tag
   // rules instead of this list.
+  //
+  // High-commercial-intent + content pages (Membership, Marketplace,
+  // MorphVisualizer, CommunityConnect) used to live here, but the AI
+  // visibility audit caught that GPTBot/CCBot were getting the bare
+  // shell on those URLs — no canonical, no OG, no schema. They now go
+  // through the prerender so non-JS crawlers see the full route-level
+  // meta block.
   const SKIP = new Set([
-    '/CommunityConnect',
     '/Forum',
     '/Gallery',
-    '/Marketplace',
-    '/MarketplaceBuy',
     '/Shipping',
     '/Giveaways',
-    '/Membership',
     '/AuthPortal',
-    '/MorphVisualizer',
   ]);
 
   const routes = [

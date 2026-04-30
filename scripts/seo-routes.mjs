@@ -225,6 +225,11 @@ export const STATIC_ROUTES = [
     priority: 0.7,
     changefreq: 'monthly',
     lastmod: TODAY,
+    meta: {
+      title: 'Crested Gecko Morph Visualizer — Interactive Trait Simulator',
+      description:
+        'Free interactive crested gecko trait simulator. Pick a base color, set morph genotype zygosity, dial pattern intensity, toggle accents, and watch the resulting phenotype render in real time with rarity and value estimates.',
+    },
   },
   {
     path: '/Gallery',
@@ -237,6 +242,11 @@ export const STATIC_ROUTES = [
     priority: 0.7,
     changefreq: 'daily',
     lastmod: TODAY,
+    meta: {
+      title: 'Community — Find Crested Gecko Breeders & Forum',
+      description:
+        'Find crested gecko breeders and keepers, follow their collections, and join discussions on the Geck Inspect community forum.',
+    },
   },
   {
     path: '/Forum',
@@ -249,12 +259,22 @@ export const STATIC_ROUTES = [
     priority: 0.8,
     changefreq: 'daily',
     lastmod: TODAY,
+    meta: {
+      title: 'Crested Gecko Marketplace — Buy and Sell Geckos',
+      description:
+        'Buy and sell crested geckos on Geck Inspect. Browse listings from breeders worldwide, filter by morph, sex, age, and price, and message sellers directly.',
+    },
   },
   {
     path: '/MarketplaceBuy',
     priority: 0.7,
     changefreq: 'daily',
     lastmod: TODAY,
+    meta: {
+      title: 'Buy Crested Geckos — Marketplace',
+      description:
+        'Browse crested geckos for sale from trusted breeders. Filter by morph, sex, age, and price to find your next gecko.',
+    },
   },
   {
     path: '/Shipping',
@@ -273,6 +293,11 @@ export const STATIC_ROUTES = [
     priority: 0.6,
     changefreq: 'monthly',
     lastmod: TODAY,
+    meta: {
+      title: 'Pricing & Plans — Geck Inspect',
+      description:
+        'Geck Inspect plans for crested gecko keepers and breeders. Free (10 geckos), Keeper ($4/mo, $38.40/yr, $149 lifetime), Breeder ($9/mo, $105.60/yr, $349 lifetime), and custom Enterprise. 7-day free trial on recurring plans. Cancel anytime.',
+    },
   },
   {
     path: '/AuthPortal',

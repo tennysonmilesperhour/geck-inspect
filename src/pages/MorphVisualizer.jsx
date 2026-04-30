@@ -2,10 +2,98 @@ import { useMemo, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Layers, Sparkles, RotateCcw, HardHat, Eye, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import Seo from '@/components/seo/Seo';
+import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
 
 import { composePhenotype } from '../components/morph-visualizer/engine/compose';
 import { DEFAULT_SELECTIONS, PRESETS_BY_ID } from '../components/morph-visualizer/data/presets';
 import { ZYGOSITY as Z } from '../components/morph-visualizer/data/traits';
+
+// WebApplication + HowTo schema. WebApplication advertises this as a
+// free no-install crested-gecko trait simulator; HowTo gives AI assistants
+// a step-by-step walkthrough they can read aloud when a user asks "how
+// do I use the morph visualizer".
+const VISUALIZER_JSON_LD = [
+  {
+    '@type': 'WebApplication',
+    '@id': `${SITE_URL}/MorphVisualizer#webapp`,
+    name: 'Crested Gecko Morph Visualizer',
+    url: `${SITE_URL}/MorphVisualizer`,
+    applicationCategory: 'EducationalApplication',
+    applicationSubCategory: 'Reptile genetics simulator',
+    operatingSystem: 'Web',
+    browserRequirements: 'Modern browser with JavaScript enabled',
+    description:
+      'Interactive crested gecko (Correlophus ciliatus) trait simulator. Pick base color, set Mendelian morph zygosity, dial pattern intensity, toggle accents, and watch the resulting phenotype render in real time with rarity and value estimates.',
+    featureList: [
+      'Base color picker (red, orange, yellow, olive, chocolate, lavender, etc.)',
+      'Mendelian morph genotype panel with zygosity (het / visible / super)',
+      'Polygenic pattern intensity sliders (Harlequin, Pinstripe, Dalmatian)',
+      'Accent toggles (cream, white wall, soft scale)',
+      'Structural and environmental modifiers',
+      'Genetics reasoning explanation for every phenotype',
+      'Rarity and price-tier estimate',
+      'Preset gallery (wild type and named morph combinations)',
+    ],
+    offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
+    publisher: { '@id': ORG_ID },
+    isPartOf: { '@id': `${SITE_URL}/#website` },
+  },
+  {
+    '@type': 'HowTo',
+    '@id': `${SITE_URL}/MorphVisualizer#howto`,
+    name: 'How to use the Crested Gecko Morph Visualizer',
+    description:
+      'Build a virtual crested gecko phenotype to predict what a real-world pairing might look like, or to study how individual morph genes stack.',
+    totalTime: 'PT5M',
+    tool: [{ '@type': 'HowToTool', name: 'Geck Inspect Morph Visualizer (web browser)' }],
+    step: [
+      {
+        '@type': 'HowToStep',
+        position: 1,
+        name: 'Pick a base color',
+        text: 'Open the Base Color panel on the left and choose the underlying body color (red, orange, yellow, olive, chocolate, or lavender). This sets the foundation everything else paints on top of.',
+      },
+      {
+        '@type': 'HowToStep',
+        position: 2,
+        name: 'Set Mendelian morph zygosity',
+        text: 'In the Morph Genotype panel, mark recessive, co-dominant, and incomplete-dominant traits as het, visible, or super. Lilly White, Axanthic, Cappuccino, and similar single-gene morphs live here.',
+      },
+      {
+        '@type': 'HowToStep',
+        position: 3,
+        name: 'Dial in polygenic pattern intensity',
+        text: 'Use the Pattern Intensity sliders for Harlequin, Pinstripe, Dalmatian, and similar polygenic traits — these stack continuously rather than as on/off genes.',
+      },
+      {
+        '@type': 'HowToStep',
+        position: 4,
+        name: 'Toggle accents and structural traits',
+        text: 'Add accents like cream edging, white wall, or soft scale, then adjust structural traits (crests, eye color, tail) and environmental modifiers (fired vs unfired) to match the look you want.',
+      },
+      {
+        '@type': 'HowToStep',
+        position: 5,
+        name: 'Read the genetics reasoning and rarity',
+        text: 'The Genetics Reasoning panel explains every active trait and its expected expression. The Rarity and Value panel on the right gives an indicative price tier so you can sanity-check a pairing before committing eggs to it.',
+      },
+      {
+        '@type': 'HowToStep',
+        position: 6,
+        name: 'Try a preset or reset',
+        text: 'Apply a preset from the gallery to study a named combination, or hit Reset to return to wild type and start over.',
+      },
+    ],
+  },
+  {
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Home', item: `${SITE_URL}/` },
+      { '@type': 'ListItem', position: 2, name: 'Morph Visualizer', item: `${SITE_URL}/MorphVisualizer` },
+    ],
+  },
+];
 
 import GeckoCanvas from '../components/morph-visualizer/render/GeckoCanvas';
 import BaseColorPicker from '../components/morph-visualizer/panels/BaseColorPicker';
@@ -87,6 +175,20 @@ export default function MorphVisualizer() {
 
   return (
     <div className="p-4 md:p-6 bg-slate-950 min-h-screen text-white">
+      <Seo
+        title="Crested Gecko Morph Visualizer"
+        description="Free interactive crested gecko trait simulator. Pick a base color, set morph genotype zygosity, dial pattern intensity, and watch the resulting phenotype render in real time with a rarity and value estimate."
+        path="/MorphVisualizer"
+        imageAlt="Crested gecko morph visualizer — interactive trait simulator"
+        keywords={[
+          'crested gecko morph visualizer',
+          'gecko trait simulator',
+          'crested gecko phenotype builder',
+          'crested gecko genetics tool',
+          'morph combination preview',
+        ]}
+        jsonLd={VISUALIZER_JSON_LD}
+      />
       <div className="max-w-[1700px] mx-auto">
         {/* Header */}
         <div className="text-center mb-6">

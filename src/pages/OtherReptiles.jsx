@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
+import Seo from '@/components/seo/Seo';
 import { OtherReptile } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import { PlusCircle, Search, Users, Archive, ArchiveRestore, Lock } from 'lucide-react';
@@ -180,6 +181,12 @@ export default function OtherReptilesPage() {
 
     return (
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+            <Seo
+                title="Other Reptiles"
+                description="Track your non-gecko reptile collection on Geck Inspect with feeding reminders, weights, and species notes."
+                path="/OtherReptiles"
+                noIndex
+            />
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                     <div>
