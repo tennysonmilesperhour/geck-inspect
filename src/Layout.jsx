@@ -1183,6 +1183,8 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                       key={section.id}
                       to={createPageUrl(section.defaultPage)}
                       aria-current={isActive ? 'page' : undefined}
+                      data-tutorial-id={`__section_${section.id}`}
+                      data-tutorial-label={section.label}
                       className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-semibold transition-colors ${
                         isActive
                           ? 'bg-emerald-700/60 text-emerald-50 shadow-sm'
@@ -1247,6 +1249,8 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 key={section.id}
                 to={createPageUrl(section.defaultPage)}
                 aria-current={isActive ? 'page' : undefined}
+                data-tutorial-id={`__section_${section.id}`}
+                data-tutorial-label={section.label}
                 className={`gecko-bottom-nav__item ${isActive ? 'is-active' : ''}`}
               >
                 <IconComponent className="h-5 w-5" />

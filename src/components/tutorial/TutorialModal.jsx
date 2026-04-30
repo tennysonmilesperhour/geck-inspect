@@ -2,6 +2,12 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Button } from '@/components/ui/button';
 import { ChevronLeft, ChevronRight, X, Sparkles, ArrowRightLeft, MessageSquare } from 'lucide-react';
+import {
+    SECTIONS,
+    FALLBACK_NAV_ITEMS,
+    flattenNavItems,
+    getSectionForPage,
+} from '@/lib/navItems';
 
 /**
  * Tutorial walkthrough — anchored tooltip tour.
@@ -24,83 +30,121 @@ import { ChevronLeft, ChevronRight, X, Sparkles, ArrowRightLeft, MessageSquare }
  */
 
 // Blurbs keyed by page_name. Any nav item not listed here gets a
-// generic fallback blurb ("Open <Display Name> to...").
+// generic fallback blurb ("Open <Display Name> to..."). Two synthetic
+// keys cover the section-overview steps the tour inserts before each
+// section's items: __section_manage and __section_discover.
 const STEP_BLURBS = {
+    __section_manage: {
+        title: 'Manage — your animals + business',
+        body: 'The Manage tab holds everything about the geckos you actually keep: your collection, breeding pairs, lineage, listings, sales stats, and shipping. We\'ll walk through each tile next.',
+    },
+    __section_discover: {
+        title: 'Discover — tools, community, reference',
+        body: 'The Discover tab is for tools, community, and reference content: morph ID, the morph guide, the AI consultant, the visualizer, the care guide, the marketplace, the forum, and Q&A. Switching to it now so we can walk those tiles.',
+    },
     Dashboard: {
         title: 'Dashboard',
-        body: 'Your home base. Personal to-do list, gecko of the day, community pulse, featured breeders, and quick stats.',
+        body: 'Your home base. Daily to-do list, gecko of the day, community pulse, featured breeders, weight-trend snapshots, and quick stats across your collection.',
     },
     MyGeckos: {
         title: 'My Geckos',
-        body: 'Your full collection. Add geckos, track weight, status, morph tags, and jump into individual profiles.',
+        body: 'Your full collection. Add geckos, log weights, set status (Holdback / For Sale / Proven / etc.), tag morphs, attach photos, and jump into individual profiles.',
     },
     Breeding: {
         title: 'Breeding',
-        body: 'Create breeding pairs, log copulation events, track eggs through incubation, and auto-hatch them into new geckos.',
+        body: 'Create breeding pairs, log copulation events, track eggs from lay through incubation, and auto-hatch confirmed eggs into new gecko records that inherit lineage.',
+    },
+    BreedingPairs: {
+        title: 'Breeding Pairs',
+        body: 'Dedicated view of every active and historical pair. See pairing dates, predicted hatch windows, and per-pair offspring outcomes at a glance.',
     },
     Lineage: {
         title: 'Lineage',
-        body: 'Visualize multi-generation family trees. Add placeholder ancestors for geckos purchased from other breeders.',
+        body: 'Visualize multi-generation family trees, drag to reposition, and add placeholder ancestors for geckos you bought from other breeders so the tree stays complete.',
     },
     MyProfile: {
         title: 'My Profile',
-        body: 'Your public-facing page. Shows your bio, geckos for sale, breeding projects, and social links.',
+        body: 'Your public-facing breeder page. Bio, location, social links, geckos for sale, breeding projects, store policy, and the cover image other keepers see first.',
     },
     MarketplaceSalesStats: {
         title: 'Sales Stats',
-        body: 'Year-over-year revenue, cost tracking, best-selling morphs, and profit trends.',
+        body: 'Year-over-year revenue, per-morph profit, cost tracking (food, equipment, shipping), and best-selling pairings — the numbers behind your breeding business.',
     },
     OtherReptiles: {
         title: 'Other Reptiles',
-        body: 'Track non-gecko reptiles you keep — leopard geckos, ball pythons, blue tongue skinks, etc.',
+        body: 'Track non-gecko reptiles you keep — leopard geckos, ball pythons, blue tongue skinks — with the same feeding reminders and weight logs as the main collection.',
     },
     Recognition: {
         title: 'Morph ID',
-        body: 'Upload a photo and our AI will identify the gecko\'s morphs and traits.',
+        body: 'Upload a photo of a gecko and our AI calls out the morphs and traits it sees, with confidence scores. Great for unboxing day or sanity-checking a hatchling.',
     },
     MorphVisualizer: {
         title: 'Morph Visualizer',
-        body: 'Preview how different morph combinations look on a stylized gecko — great for project planning.',
+        body: 'Stack base color, Mendelian morphs, polygenic patterns, and accents on a stylized gecko to preview a pairing before you commit eggs to it. Includes rarity and value estimates.',
     },
     BreederConsultant: {
         title: 'AI Consultant',
-        body: 'Ask any question about crested gecko care, breeding, genetics, or pricing. Real gecko knowledge, no guessing.',
+        body: 'Ask anything about crested gecko care, breeding, genetics, or pricing. Trained on real keeper knowledge and our morph guide — no generic chatbot answers.',
     },
     ProjectManager: {
         title: 'Season Planner',
-        body: 'Plan your breeding season, manage feeding groups, schedule tasks, and set up future breeding plans.',
+        body: 'Plan your breeding season, schedule feeding groups, set up future pairings, and track season-long tasks from cooldown through hatchling weaning.',
     },
     GeneticsGuide: {
         title: 'Genetics Guide',
-        body: 'A hands-on crested gecko genetics primer — dominant, co-dominant, recessive, and polygenic traits explained.',
+        body: 'A hands-on crested gecko genetics primer — dominant, co-dominant, recessive, and polygenic traits explained with worked examples.',
     },
     Training: {
         title: 'Train Model',
-        body: 'Help the AI improve by labeling gecko photos. Earn badges as you contribute to the training dataset.',
+        body: 'Help the AI improve by labeling community gecko photos. Earn badges as you contribute — your labels go straight into the next Morph ID training run.',
     },
     MorphGuide: {
         title: 'Morph Guide',
-        body: 'Browse every crested gecko morph with reference photos, inheritance notes, and visual examples. Use it to identify what you see in a gecko or to plan pairings.',
+        body: 'Reference for every named crested gecko morph — base colors, color modifiers, pattern types, structural traits, and named combinations. Each entry has its own deep page with reference photos and inheritance notes.',
     },
     CareGuide: {
         title: 'Care Guide',
-        body: 'Husbandry reference — enclosure setup, temperature and humidity ranges, feeding schedules, handling, and common health issues.',
+        body: 'Husbandry reference: enclosure setup, temperature and humidity ranges, CGD diet brands, handling, shedding, common health issues, and breeding readiness — all sourced from working keepers.',
     },
     Forum: {
         title: 'Forum',
-        body: 'Community discussion board. Ask questions, share breeding results, post morph ID help requests, and chat with other keepers.',
+        body: 'Community discussion board. Ask husbandry questions, share breeding results, post morph-ID requests, and chat with other keepers without leaving the app.',
+    },
+    GeckAnswers: {
+        title: 'Geck Answers',
+        body: 'Stack-Overflow-style Q&A for crested geckos. Search past questions, upvote the best answers, and the original asker can mark a Best Answer to settle a thread.',
     },
     Gallery: {
         title: 'Image Gallery',
-        body: 'Community photo feed. Post pictures of your geckos, like other keepers\' shots, and browse morph examples tagged by trait.',
+        body: 'Community photo feed. Post pictures of your geckos, like other keepers\' shots, and browse morph examples filtered by trait.',
     },
     Marketplace: {
         title: 'Marketplace',
-        body: 'Browse geckos for sale from breeders across the community. Filter by morph, price, age, and sex — or list your own animals to sell.',
+        body: 'Buy and sell geckos through Geck Inspect. The page splits into Buy (browse listings) and Sell (publish your own) — both filter by morph, sex, age, and price.',
+    },
+    MarketplaceBuy: {
+        title: 'Buy Geckos',
+        body: 'Live listings from breeders across the community. Filter by morph, sex, age, and price; like to save; message the seller without leaving the app.',
+    },
+    MarketplaceSell: {
+        title: 'Sell Geckos',
+        body: 'Publish any gecko in your collection (set status to "For Sale" first). Photos, price, and morph tags pull straight from the gecko\'s profile.',
+    },
+    MyListings: {
+        title: 'My Listings',
+        body: 'Manage every active listing in one place — edit price, swap photos, mark as sold, or unlist with one click.',
+    },
+    BreederStorefront: {
+        title: 'My Storefront',
+        body: 'A polished public storefront URL you can share — your branding, your for-sale geckos, your story, your store policy, no ads.',
     },
     BreederShipping: {
         title: 'Shipping',
-        body: 'Manage shipping labels, box inventory, heat/cold packs, and live-arrival guarantees for animals you sell through the marketplace.',
+        body: 'Manage shipping labels, box inventory, heat/cold packs, and live-arrival guarantees for animals you sell. Integrates with the marketplace once a buyer commits.',
+    },
+    BreedingROI: {
+        title: 'Breeding ROI',
+        body: 'Project the cost-versus-revenue of a planned breeding season, including food, equipment depreciation, and a per-clutch revenue estimate based on morph rarity.',
     },
 };
 
@@ -141,73 +185,136 @@ export default function TutorialModal({ isOpen, onClose }) {
         if (!isOpen) setMigrationMode(false);
     }, [isOpen]);
 
-    // Collect the list of actually-rendered nav items when the tutorial
-    // opens. Everything that has a `data-tutorial-id` attribute is a
-    // live anchor; disabled pages don't have one so they're skipped.
-    // Prefer visible nodes (offsetParent !== null) so we highlight the
-    // right copy when both mobile + desktop sidebars are in the DOM.
+    // Build the step list from the static nav data so we can walk every
+    // tile in every section, not just the ones currently mounted in the
+    // DOM (the sidebar only renders the active section's items at a
+    // time). Each per-item step carries its sectionId so we can switch
+    // sections on the fly when the user advances into the other tab.
+    //
+    // Anchors are looked up live at render-time in the layout effect
+    // below — that handles the case where switching sections re-mounts
+    // the nav and we need to grab the freshly-rendered node.
     useEffect(() => {
         if (!isOpen) return;
-        const nodes = Array.from(document.querySelectorAll('[data-tutorial-id]'));
-        const byId = new Map();
-        for (const node of nodes) {
-            const id = node.getAttribute('data-tutorial-id');
-            const existing = byId.get(id);
-            const visible = node.offsetParent !== null;
-            if (!existing || (visible && existing.offsetParent === null)) {
-                byId.set(id, node);
+
+        const flat = flattenNavItems(FALLBACK_NAV_ITEMS);
+        // Group items by section, preserving each section's source order.
+        const itemsBySection = new Map(SECTIONS.map((s) => [s.id, []]));
+        for (const item of flat) {
+            const sectionId = getSectionForPage(item.page_name);
+            if (sectionId && itemsBySection.has(sectionId)) {
+                itemsBySection.get(sectionId).push(item);
             }
         }
-        const found = Array.from(byId.entries()).map(([id, node]) => ({
-            pageName: id,
-            label: node.getAttribute('data-tutorial-label') || id,
-            node,
-        }));
+
         const welcomeStep = {
             pageName: '__welcome',
             label: 'Welcome',
-            node: null,
+            sectionId: null,
             blurb: {
                 title: 'Welcome to Geck Inspect',
-                body: 'We\'ll walk through each tab in your sidebar and explain what it does. Use the arrows or Esc to skip.',
+                body: 'The app is split into two top-level tabs — Manage (your animals + business) and Discover (tools, community, reference). We\'ll walk through both, one tile at a time. Use the arrows, or hit Esc to skip.',
             },
         };
         const doneStep = {
             pageName: '__done',
             label: 'All set',
-            node: null,
+            sectionId: null,
             blurb: {
                 title: "You're all set",
-                body: 'Relaunch this tour anytime from the command palette or the onboarding card on the dashboard. Happy breeding!',
+                body: 'Pick favorites from any tile to pin them to the top of the sidebar. Customize the theme + accent color in Settings. Need a hand or want a feature? The feedback tab on the right edge of the screen reaches us directly. Relaunch this tour anytime from the command palette (⌘K).',
             },
         };
 
-        const tabSteps = found.map((it) => ({
-            ...it,
-            blurb: STEP_BLURBS[it.pageName] || {
-                title: it.label,
-                body: `Open ${it.label} to manage this section of the app.`,
-            },
-        }));
+        // For each section, emit the section-overview step first
+        // (anchored to the section tab itself), then a per-item step
+        // for every nav tile inside it.
+        const sectionSteps = SECTIONS.flatMap((section) => {
+            const headerKey = `__section_${section.id}`;
+            const header = {
+                pageName: headerKey,
+                label: section.label,
+                sectionId: section.id,
+                blurb: STEP_BLURBS[headerKey] || {
+                    title: section.label,
+                    body: `The ${section.label} tab.`,
+                },
+            };
+            const items = (itemsBySection.get(section.id) || []).map((item) => ({
+                pageName: item.page_name,
+                label: item.display_name,
+                sectionId: section.id,
+                blurb: STEP_BLURBS[item.page_name] || {
+                    title: item.display_name,
+                    body: `Open ${item.display_name} to use this part of the app.`,
+                },
+            }));
+            return [header, ...items];
+        });
 
-        setSteps([welcomeStep, ...tabSteps, doneStep]);
+        setSteps([welcomeStep, ...sectionSteps, doneStep]);
         setStepIndex(0);
     }, [isOpen]);
 
     const currentStep = steps[stepIndex] || null;
-    const currentNode = currentStep?.node || null;
+
+    // Pick the visible anchor for a given page_name. Both desktop and
+    // mobile sidebars can be in the DOM at once (Layout renders a
+    // shared mobile Sidebar plus a desktop favorites grid), so prefer
+    // the node that's actually painting (offsetParent !== null).
+    const findAnchorNode = (pageName) => {
+        const nodes = document.querySelectorAll(`[data-tutorial-id="${pageName}"]`);
+        let firstHidden = null;
+        for (const n of nodes) {
+            if (n.offsetParent !== null) return n;
+            if (!firstHidden) firstHidden = n;
+        }
+        return firstHidden;
+    };
+
+    // Switch sections by simulated-clicking the section's tab anchor.
+    // The tab is a react-router <Link>, so a click event triggers the
+    // SPA navigation that re-mounts the sidebar with that section's
+    // items. Returns true if a switch was attempted.
+    const ensureSection = (sectionId) => {
+        if (!sectionId) return false;
+        const tab = findAnchorNode(`__section_${sectionId}`);
+        if (!tab) return false;
+        const isActive = tab.getAttribute('aria-current') === 'page';
+        if (isActive) return false;
+        tab.click();
+        return true;
+    };
 
     // Track the anchor rect so the tooltip follows the element on
-    // scroll/resize. useLayoutEffect to measure synchronously before
-    // paint.
+    // scroll/resize. Resolves the node live (rather than caching it on
+    // the step) so section switches that re-mount the sidebar still
+    // land the highlight ring on the right tile. We retry a few times
+    // because `tab.click()` triggers async navigation + render.
     useLayoutEffect(() => {
-        if (!currentNode) {
+        if (!currentStep) {
             setAnchorRect(null);
             return;
         }
 
-        const update = () => {
-            const r = currentNode.getBoundingClientRect();
+        // Synthetic intro/outro steps have no anchor — center card.
+        if (currentStep.pageName === '__welcome' || currentStep.pageName === '__done') {
+            setAnchorRect(null);
+            return;
+        }
+
+        // If this step belongs to a non-active section, switch first.
+        // The section header step itself uses the tab as its anchor,
+        // so the click would be a no-op there.
+        if (currentStep.sectionId && !currentStep.pageName.startsWith('__section_')) {
+            ensureSection(currentStep.sectionId);
+        }
+
+        let cancelled = false;
+        let resolvedNode = null;
+
+        const measure = (node) => {
+            const r = node.getBoundingClientRect();
             setAnchorRect({
                 top: r.top,
                 left: r.left,
@@ -218,20 +325,40 @@ export default function TutorialModal({ isOpen, onClose }) {
             });
         };
 
-        // Scroll the anchor into view on step change, then measure.
-        currentNode.scrollIntoView({ behavior: 'smooth', block: 'center' });
-        // Delay the first measure slightly so the scroll can settle.
-        setTimeout(update, 180);
+        // Try to resolve the anchor up to ~600ms after step change so
+        // a section switch has time to mount the new sidebar items.
+        const attempts = [0, 80, 180, 320, 600];
+        const timers = attempts.map((delay) =>
+            setTimeout(() => {
+                if (cancelled) return;
+                const node = findAnchorNode(currentStep.pageName);
+                if (!node) return;
+                resolvedNode = node;
+                node.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                measure(node);
+            }, delay),
+        );
+
+        const update = () => {
+            if (cancelled) return;
+            const node = resolvedNode || findAnchorNode(currentStep.pageName);
+            if (!node) return;
+            resolvedNode = node;
+            measure(node);
+        };
 
         window.addEventListener('scroll', update, { passive: true, capture: true });
         window.addEventListener('resize', update);
         intervalRef.current = setInterval(update, 500);
         return () => {
+            cancelled = true;
+            timers.forEach(clearTimeout);
             window.removeEventListener('scroll', update, { capture: true });
             window.removeEventListener('resize', update);
             if (intervalRef.current) clearInterval(intervalRef.current);
         };
-    }, [currentNode]);
+        // eslint-disable-next-line react-hooks/exhaustive-deps
+    }, [currentStep?.pageName, currentStep?.sectionId]);
 
     // Close on Esc
     useEffect(() => {
