@@ -2,6 +2,7 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
 import { identifyUser, resetUser } from '@/lib/posthog';
 import { isGuestMode, setGuestMode, GUEST_USER } from '@/lib/guestMode';
+import { applyPendingReferral } from '@/lib/referral';
 
 const AuthContext = createContext();
 
@@ -62,6 +63,10 @@ export const AuthProvider = ({ children }) => {
         buildUser(session.user).then((enriched) => {
           setUser(enriched);
           identifyUser(enriched);
+          // Best-effort: link this account to whoever referred them, if a
+          // ?ref=<code> was captured before signup. Fire-and-forget; any
+          // failure is logged but never blocks the auth flow.
+          applyPendingReferral(enriched);
         });
       } else {
         setIsAuthenticated(false);

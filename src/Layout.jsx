@@ -28,6 +28,7 @@ import {
 } from "@/components/ui/Sidebar";
 import { Button } from "@/components/ui/button";
 import UserBadge from "@/components/ui/UserBadge";
+import ReferralLinkCard from "@/components/shared/ReferralLinkCard";
 
 
 // Non-React concerns extracted from this file as part of the hairball
@@ -909,6 +910,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           <SidebarFooter className="px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-emerald-900/40">
             <div className="space-y-3">
               <Link to="/PrivacyPolicy" className="block text-xs text-slate-500 hover:text-slate-300 px-3 transition-colors">Privacy Policy</Link>
+              <ReferralLinkCard />
               <Link to={createPageUrl("Membership")} className="block">
                 <Button variant="outline" size="sm" className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm">
                   <Star className="w-4 h-4 mr-2 flex-shrink-0" />
@@ -1064,6 +1066,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
               <div className="p-4 border-t border-emerald-900/40 mt-auto">
                 <div className="space-y-3">
                   <Link to="/PrivacyPolicy" className="block text-xs text-slate-500 hover:text-slate-300 px-3 transition-colors sidebar-collapse-hide">Privacy Policy</Link>
+                  <ReferralLinkCard />
                   <Link to={createPageUrl("Membership")} className="block">
                     <Button variant="outline" size="sm" className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm">
                       <Star className="w-4 h-4 mr-2 flex-shrink-0" />
