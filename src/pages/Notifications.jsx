@@ -215,12 +215,12 @@ export default function NotificationsPage() {
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
             <Seo title="Notifications" description="Stay updated with your gecko community activity." path="/Notifications" noIndex />
             <div className="max-w-4xl mx-auto space-y-6">
-                <div className="flex items-center justify-between gap-4">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
+                    <div className="flex items-center gap-3 min-w-0">
+                        <div className="w-12 h-12 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shrink-0">
                             <Bell className="w-6 h-6 text-white" />
                         </div>
-                        <div>
+                        <div className="min-w-0">
                             <h1 className="text-3xl md:text-4xl font-bold text-slate-100">
                                 Notifications
                             </h1>
@@ -231,7 +231,7 @@ export default function NotificationsPage() {
                             </p>
                         </div>
                     </div>
-                    <div className="flex gap-2 shrink-0">
+                    <div className="flex gap-2 shrink-0 flex-wrap">
                         <PageSettingsPanel title="Notification Settings">
                             <div className="flex items-center justify-between">
                                 <Label className="text-slate-300 text-sm">Auto-mark as Read</Label>

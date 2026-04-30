@@ -2,7 +2,7 @@ import { useState, useRef, useEffect } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Bell, ArrowRight, Check, Award, Shield, ImagePlus, User as UserIcon, MessageSquare, Star, ShoppingCart } from 'lucide-react';
+import { Bell, ArrowRight, Check, CheckCheck, Award, Shield, ImagePlus, User as UserIcon, MessageSquare, Star, ShoppingCart } from 'lucide-react';
 import { formatDistanceToNowStrict } from 'date-fns';
 
 const ICONS = {
@@ -27,7 +27,7 @@ const ICONS = {
  * Notification bell popover — shows the 5 most recent unread
  * notifications inline, with a "See all" link to the full page.
  */
-export default function NotificationPopover({ notifications = [], unreadCount = 0, onMarkRead }) {
+export default function NotificationPopover({ notifications = [], unreadCount = 0, onMarkRead, onMarkAllRead }) {
   const [open, setOpen] = useState(false);
   const buttonRef = useRef(null);
   const [position, setPosition] = useState({ top: 0, right: 0 });
@@ -68,12 +68,27 @@ export default function NotificationPopover({ notifications = [], unreadCount = 
             style={{ top: position.top, right: position.right }}
           >
             {/* Header */}
-            <div className="flex items-center justify-between px-4 py-3 border-b border-emerald-900/30">
-              <h3 className="text-sm font-semibold text-slate-100">Notifications</h3>
-              {unreadCount > 0 && (
-                <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full">
-                  {unreadCount} new
-                </span>
+            <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-emerald-900/30">
+              <div className="flex items-center gap-2 min-w-0">
+                <h3 className="text-sm font-semibold text-slate-100">Notifications</h3>
+                {unreadCount > 0 && (
+                  <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/30 px-2 py-0.5 rounded-full shrink-0">
+                    {unreadCount} new
+                  </span>
+                )}
+              </div>
+              {unreadCount > 0 && onMarkAllRead && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    onMarkAllRead();
+                  }}
+                  className="shrink-0 inline-flex items-center gap-1 text-[11px] font-medium text-emerald-400 hover:text-emerald-300 transition-colors"
+                  title="Mark all as read"
+                >
+                  <CheckCheck className="w-3.5 h-3.5" />
+                  Mark all read
+                </button>
               )}
             </div>
 

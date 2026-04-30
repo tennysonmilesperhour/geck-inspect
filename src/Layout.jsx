@@ -494,6 +494,33 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     window.dispatchEvent(new CustomEvent('unread_counts_changed', { detail: { kind: 'notifications' } }));
   };
 
+  const handleMarkAllNotificationsRead = async () => {
+    if (!user?.email) return;
+    const unread = recentNotifications.filter((n) => !n.is_read);
+    if (unread.length === 0) return;
+    // Optimistically clear local state and remember dismissals
+    unread.forEach((n) => dismissedNotificationIds.current.add(n.id));
+    try {
+      sessionStorage.setItem('geck_dismissed_notifs', JSON.stringify([...dismissedNotificationIds.current]));
+    } catch {}
+    setRecentNotifications([]);
+    setUnreadNotificationsCount(0);
+    try {
+      // Mark every unread notification for this user, not just the recent slice
+      const all = await base44.entities.Notification.filter(
+        { user_email: user.email, is_read: false }
+      );
+      await Promise.all(
+        all.map((n) => base44.entities.Notification.update(n.id, { is_read: true }))
+      );
+      const cacheKey = `notifications_${user.email}`;
+      dataCache.clear(cacheKey);
+    } catch (e) {
+      console.warn('Failed to mark all notifications read:', e);
+    }
+    window.dispatchEvent(new CustomEvent('unread_counts_changed', { detail: { kind: 'notifications' } }));
+  };
+
   const handleLoginPrompt = (featureName) => {
     if (window.confirm(`${featureName} requires an account. Would you like to sign up or log in now?`)) {
       handleLogin();
@@ -1140,6 +1167,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                       notifications={recentNotifications}
                       unreadCount={unreadNotificationsCount}
                       onMarkRead={handleMarkNotificationRead}
+                      onMarkAllRead={handleMarkAllNotificationsRead}
                     />
                     <Link to={createPageUrl("MyProfile")} className="gecko-header-action" aria-label="Profile">
                       <Users />
@@ -1214,6 +1242,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                       notifications={recentNotifications}
                       unreadCount={unreadNotificationsCount}
                       onMarkRead={handleMarkNotificationRead}
+                      onMarkAllRead={handleMarkAllNotificationsRead}
                     />
                     <Link to={createPageUrl("MyProfile")} className="gecko-header-action" aria-label="Profile">
                       <Users />
