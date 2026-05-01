@@ -1,5 +1,5 @@
 {
-  "ranAt": "2026-04-29T11:57:01.651Z",
+  "ranAt": "2026-05-01T10:54:37.003Z",
   "signals": {
     "googleAc": 95,
     "bluesky": 0,
@@ -22,7 +22,11 @@
       "AC Reptiles: 404 Not Found"
     ]
   },
-  "costUsd": 0.015732,
-  "addedSlugs": [],
-  "rationale": "The signal set is almost entirely composed of generic search volume (Google autocomplete) and existing video content. While there's strong search demand around \"crested gecko morphs,\" \"cappuccino crested gecko,\" \"lilly white crested gecko,\" and \"axanthic crested gecko,\" the signals lack the forum heat, disagreement, or specific breeding outcomes that would justify a new post. YouTube already has comprehensive coverage on these topics (TikisGeckos alone has multiple morph guides, breeding guides, and cappuccino/lilly white deep-dives). The one queued slug (\"super-cappuccino-viability-debate\") suggests we're already working the cappuccino space. The autocomplete data shows buyer interest (price, for sale, care) but not breeder-specific confusion or misconceptions. Without evidence of forum discussion, data-backed claims to verify, or a concrete breeding outcome to explain, none of these rise above \"general care\" or \"listicle\" territory. The breeder blog signal is promotional (sale announcement), not editorial. I'm rejecting all topics."
+  "costUsd": 0.021754,
+  "addedSlugs": [
+    "super-cappuccino-breeding-risks",
+    "lilly-white-identification-breeding",
+    "axanthic-breeding-strategy"
+  ],
+  "rationale": "The signal landscape is dominated by Google autocomplete (general consumer interest) and YouTube content (existing coverage). Notably, **cappuccino genetics and breeding** generates high search intent, with a YouTube controversy thread (\"scam,\" \"waste of money,\" \"Should we breed?\") that signals real breeder confusion and disagreement. **Lilly whites** show strong demand (recent top-breeder video, 8-month-old) combined with older identification content, suggesting a gap for a breeding-focused take. **Axanthic recessive genetics** appears in autocomplete and search, with a recent warning video (\"NEVER BREED THESE TOGETHER\"), hinting at misconceptions. I avoided the cappuccino-crested-gecko-genetics slug (already published) and the super-cappuccino-viability-debate queue, but the \"risky breeding\" angle is distinct enough to earn a slot. All three topics avoid generic care advice and target concrete breeding decisions with misconceptions to correct. Accuracy risk is moderate (genetics can be complex and context-dependent), but all three are groundable in standard reptile genetics principles and the cited videos show active debate among credible breeders."
 }
