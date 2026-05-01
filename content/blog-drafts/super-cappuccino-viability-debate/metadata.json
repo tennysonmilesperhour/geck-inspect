@@ -1,0 +1,151 @@
+{
+  "slug": "super-cappuccino-viability-debate",
+  "title": "Super Cappuccino: Scam, or Just Misunderstood?",
+  "description": "Super Cappuccino (Frappuccino) crested geckos are genetically legitimate—but breeders call them a scam. Here's the real debate about viability, ethics, and breeding risk.",
+  "keyphrase": "super cappuccino crested gecko",
+  "category": "breeding",
+  "heroEyebrow": "Breeding Ethics",
+  "tldr": [
+    "Frappuccino (Super Cappuccino) is the homozygous form of the incomplete-dominant Cappuccino morph—genetically real, not a scam.",
+    "Cappuccino × Cappuccino pairings produce ~25% Frappuccinos, ~50% Cappuccinos, and ~25% normals, per standard incomplete-dominant math.",
+    "Community concern centers on reported clutch failures and health issues in Cappuccino × Cappuccino pairings—not on whether the morph exists.",
+    "The safest breeding approach remains Cappuccino × non-carrier: 50% Cappuccino offspring, zero lethal-super risk.",
+    "Calling Frappuccino 'a scam' conflates the genetics with the ethics of chasing homozygous animals when viability data is still thin."
+  ],
+  "faq": [
+    {
+      "question": "Is the Super Cappuccino (Frappuccino) crested gecko a real morph?",
+      "answer": "Yes. Frappuccino is the homozygous (super) form of the incomplete-dominant Cappuccino morph—the same relationship Lilly White has to Super Lilly White. It is genetically real and multiple breeders have produced them. The debate is about the health and viability of the super form, not whether the gene exists."
+    },
+    {
+      "question": "What are the odds of producing a Frappuccino from Cappuccino × Cappuccino?",
+      "answer": "Standard incomplete-dominant math: 25% Frappuccino, 50% Cappuccino, 25% normal offspring. These are probabilities across many clutches, not guarantees per egg. A single clutch can produce zero or all Frappuccinos by chance alone."
+    },
+    {
+      "question": "Is it safe to breed two Cappuccino crested geckos together?",
+      "answer": "It's not confirmed lethal the way Lilly White × Lilly White is, but some breeders report reduced hatch rates and health concerns from Cap × Cap pairings. The safer default is Cappuccino × non-carrier, which produces 50% Cappuccino offspring and eliminates any Frappuccino viability risk entirely."
+    },
+    {
+      "question": "What does a Frappuccino crested gecko look like?",
+      "answer": "Frappuccinos show a more amplified dorsal saddle than single-copy Cappuccinos, a paler and more neutral body color, and cleaner pattern boundaries. The expression is generally more extreme than a visual Cappuccino but varies with background genetics."
+    },
+    {
+      "question": "Why do people call Super Cappuccino geckos a scam?",
+      "answer": "The 'scam' label usually refers to sellers marketing Frappuccinos without disclosing potential viability concerns, or to buyers overpaying based on incomplete genetics claims. The morph itself is genetically legitimate. The risk is in buying from a line without documented health and clutch data."
+    },
+    {
+      "question": "How is Frappuccino different from Super Lilly White?",
+      "answer": "Super Lilly White is confirmed embryonic-lethal—two copies of the LW gene means eggs fail to hatch. Frappuccinos do survive and can be healthy animals. The concern is that some Cap × Cap pairings show reduced viability or clutch problems, but this is a debated soft effect, not a confirmed hard lethal."
+    },
+    {
+      "question": "What questions should I ask before buying a Frappuccino crested gecko?",
+      "answer": "Ask for the clutch hatch rate, how many siblings from the same Cap × Cap pairing are alive and healthy, the Frappuccino's age and weight trajectory, and the health history of both parents. A reputable breeder will have documentation. Reluctance to share this data is a red flag."
+    },
+    {
+      "question": "Can I produce Frappuccinos without a Cappuccino × Cappuccino pairing?",
+      "answer": "No. Two copies of the Cappuccino gene are required. The only path to a Frappuccino is pairing two animals that each carry at least one Cappuccino allele—i.e., two visual Cappuccinos. You cannot produce the super form from a Cappuccino × non-carrier pairing."
+    }
+  ],
+  "internalLinks": [
+    {
+      "href": "/MorphGuide/cappuccino",
+      "label": "Cappuccino morph guide"
+    },
+    {
+      "href": "/MorphGuide/frappuccino",
+      "label": "Frappuccino (Super Cappuccino) morph guide"
+    },
+    {
+      "href": "/MorphGuide/lilly-white",
+      "label": "Lilly White morph — lethal allele reference"
+    },
+    {
+      "href": "/GeneticsGuide",
+      "label": "Crested gecko genetics guide: incomplete dominant inheritance"
+    },
+    {
+      "href": "/GeneticCalculatorTool",
+      "label": "Genetic calculator — model your Cappuccino pairings"
+    },
+    {
+      "href": "/MorphGuide/inheritance/incomplete-dominant",
+      "label": "All incomplete-dominant crested gecko morphs"
+    }
+  ],
+  "externalCitations": [
+    {
+      "url": "https://www.youtube.com/watch?v=JLXYdEo7mhk",
+      "label": "TikisGeckos — Should We Breed Super Cappuccino Crested Geckos? (YouTube)"
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=5O_obmlNu9I",
+      "label": "Don't Buy Super Cappuccino Crested Gecko — It's a Scam (YouTube)"
+    }
+  ],
+  "topicId": "tpc_1777291763850_supercappu",
+  "originalQueueEntry": {
+    "id": "tpc_1777291763850_supercappu",
+    "title": "Super Cappuccino Crested Geckos: Scam or Legitimate Morph?",
+    "slug": "super-cappuccino-viability-debate",
+    "category": "breeding",
+    "status": "new",
+    "score": {
+      "demand": 7,
+      "originality": 8,
+      "accuracyRisk": 4,
+      "voiceFit": 8,
+      "total": 19
+    },
+    "createdAt": "2026-04-27T12:09:23.850Z",
+    "draftedAt": null,
+    "publishedAt": null,
+    "evidence": [
+      {
+        "source": "youtube",
+        "url": "https://www.youtube.com/watch?v=5O_obmlNu9I",
+        "snippet": "Don't buy super cappuccino crested gecko it's a scam and waste of money"
+      },
+      {
+        "source": "youtube",
+        "url": "https://www.youtube.com/watch?v=JLXYdEo7mhk",
+        "snippet": "Should We Breed Super Cappuccino Crested Geckos? — TikisGeckos explores the ethical and genetic debate"
+      },
+      {
+        "source": "youtube",
+        "url": "https://www.youtube.com/watch?v=3xRF-wumo_E",
+        "snippet": "Why So Much Hate for Cappuccino Geckos? The Truth No One Wants to Say…"
+      }
+    ],
+    "angleIdeas": [
+      "Breeders call super cappuccino 'a scam'—but the incomplete-dominant genetics say it should be viable. Here's what the community is actually afraid of.",
+      "Two cappuccino geckos bred together don't always produce super cappuccinos. Most buyers assume they will. Here's why that matters for your breeding plan.",
+      "The cappuccino controversy isn't really about the morph. It's about whether breeders should be chasing homozygous animals at all.",
+      "Super cappuccino exists genetically, but breeding for it has become taboo. Here's the real cost—financial and ethical—of trying."
+    ],
+    "rejectionReason": null,
+    "prUrl": null
+  },
+  "factSources": [
+    {
+      "label": "morph-guide.js (local canonical catalogue)",
+      "path": "src/data/morph-guide.js",
+      "bytes": 46691
+    },
+    {
+      "label": "genetics-glossary.js",
+      "path": "src/data/genetics-glossary.js",
+      "bytes": 13230
+    },
+    {
+      "label": "genetics-sections.jsx (long-form)",
+      "path": "src/data/genetics-sections.jsx",
+      "bytes": 39736
+    },
+    {
+      "label": "genetics-jsonld.js (structured FAQ)",
+      "path": "src/data/genetics-jsonld.js",
+      "bytes": 11168
+    }
+  ],
+  "generatedAt": "2026-05-01T11:00:41.392Z"
+}
