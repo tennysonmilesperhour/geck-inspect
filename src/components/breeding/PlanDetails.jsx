@@ -36,6 +36,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Edit, Trash2, Egg as EggIcon, Calendar as CalendarIcon } from 'lucide-react';
 import { format, addDays, differenceInDays } from 'date-fns';
+import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
 import { generateHatchedGeckoIdFromEgg } from '@/components/shared/geckoIdUtils';
 
 /**
@@ -63,7 +64,7 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
         try {
             await Egg.update(eggToDelete, {
                 archived: true,
-                archived_date: new Date().toISOString().split('T')[0]
+                archived_date: todayLocalISO()
             });
             onPlanUpdate();
         } catch (error) {
@@ -79,11 +80,11 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
         // Auto-archive any egg that isn't incubating
         if (status !== 'Incubating') {
             updateData.archived = true;
-            updateData.archived_date = new Date().toISOString().split('T')[0];
+            updateData.archived_date = todayLocalISO();
         }
 
         if (status === 'Hatched' && currentEgg?.status !== 'Hatched') {
-            const hatchDate = new Date().toISOString().split('T')[0];
+            const hatchDate = todayLocalISO();
             updateData.hatch_date_actual = hatchDate;
 
             // Create gecko automatically if not already linked
@@ -114,7 +115,7 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
                     });
 
                     // Calculate incubation days
-                    const incubationDays = differenceInDays(new Date(hatchDate), new Date(currentEgg.lay_date));
+                    const incubationDays = differenceInDays(parseLocalDate(hatchDate), parseLocalDate(currentEgg.lay_date));
 
                     // Create the gecko
                     const newGecko = await Gecko.create({
@@ -178,8 +179,8 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
             const dam = geckos.find(g => g.id === plan.dam_id);
 
             const title = `Gecko Egg Hatching - ${sire?.name || 'Unknown Sire'} x ${dam?.name || 'Unknown Dam'}`;
-            const description = `Expected hatch date for egg laid on ${format(new Date(egg.lay_date), 'MMM dd, yyyy')}`;
-            const startDate = new Date(egg.hatch_date_expected);
+            const description = `Expected hatch date for egg laid on ${format(parseLocalDate(egg.lay_date), 'MMM dd, yyyy')}`;
+            const startDate = parseLocalDate(egg.hatch_date_expected);
 
             const encodedTitle = encodeURIComponent(title);
             const encodedDescription = encodeURIComponent(description);
@@ -224,7 +225,7 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
             return (
                 <Input
                     type="date"
-                    defaultValue={egg.hatch_date_actual ? format(new Date(egg.hatch_date_actual), 'yyyy-MM-dd') : ''}
+                    defaultValue={egg.hatch_date_actual ? format(parseLocalDate(egg.hatch_date_actual), 'yyyy-MM-dd') : ''}
                     onBlur={(e) => handleUpdateHatchDate(egg.id, e.target.value)}
                     autoFocus
                     className="bg-slate-800 border-slate-600 h-9 w-full"
@@ -235,7 +236,7 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
         const statusConfig = {
             'Hatched': {
                 className: "bg-transparent text-green-400 border-green-400 hover:bg-green-900/20",
-                text: egg.hatch_date_actual ? `Hatched ${format(new Date(egg.hatch_date_actual), 'MM/dd/yy')}` : 'Hatched'
+                text: egg.hatch_date_actual ? `Hatched ${format(parseLocalDate(egg.hatch_date_actual), 'MM/dd/yy')}` : 'Hatched'
             },
             'Incubating': {
                 className: "bg-transparent text-blue-400 border-blue-400 hover:bg-blue-900/20",
@@ -331,8 +332,8 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
                                     ) : (
                                         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
                                             <div>
-                                                <p className="text-slate-200 text-sm font-medium">Laid: {format(new Date(egg.lay_date), 'MMM dd, yyyy')}</p>
-                                                <p className="text-xs text-slate-400">Expected Hatch: {format(new Date(egg.hatch_date_expected), 'MMM dd, yyyy')}</p>
+                                                <p className="text-slate-200 text-sm font-medium">Laid: {format(parseLocalDate(egg.lay_date), 'MMM dd, yyyy')}</p>
+                                                <p className="text-xs text-slate-400">Expected Hatch: {format(parseLocalDate(egg.hatch_date_expected), 'MMM dd, yyyy')}</p>
                                                 {egg.gecko_id && (
                                                     <p className="text-xs text-green-400 mt-1">✓ Gecko created in collection</p>
                                                 )}
@@ -425,7 +426,7 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="pairing_date">Pairing Date</Label>
-                            <Input id="pairing_date" type="date" value={editedPlan.pairing_date ? format(new Date(editedPlan.pairing_date), 'yyyy-MM-dd') : ''} onChange={e => setEditedPlan({...editedPlan, pairing_date: e.target.value})} className="bg-slate-800 border-slate-600"/>
+                            <Input id="pairing_date" type="date" value={editedPlan.pairing_date ? format(parseLocalDate(editedPlan.pairing_date), 'yyyy-MM-dd') : ''} onChange={e => setEditedPlan({...editedPlan, pairing_date: e.target.value})} className="bg-slate-800 border-slate-600"/>
                         </div>
                         <div className="space-y-2">
                             <Label htmlFor="status">Status</Label>

@@ -2,7 +2,8 @@ import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Eye, Edit, Calendar, Utensils } from 'lucide-react';
-import { format, differenceInDays } from 'date-fns';
+import { format } from 'date-fns';
+import { todayLocalISO, parseLocalDate, daysSinceLocal } from '@/lib/dateUtils';
 import EventTracker from '../my-geckos/EventTracker';
 import { ReptileEvent, OtherReptile } from '@/entities/all';
 import {
@@ -35,9 +36,7 @@ export default function ReptileCard({ reptile, onView, onEdit, onFeedingComplete
             return { status: 'none', daysUntil: null, daysSince: null, daysOverdue: 0 };
         }
 
-        const lastFed = new Date(reptile.last_fed_date);
-        const today = new Date();
-        const daysSinceLastFed = differenceInDays(today, lastFed);
+        const daysSinceLastFed = daysSinceLocal(reptile.last_fed_date);
         const daysUntilNextFeed = reptile.feeding_interval_days - daysSinceLastFed;
         const daysOverdue = Math.abs(daysUntilNextFeed);
 
@@ -82,8 +81,8 @@ export default function ReptileCard({ reptile, onView, onEdit, onFeedingComplete
     const handleQuickFed = async () => {
         setIsSaving(true);
         try {
-            const today = new Date().toISOString().split('T')[0];
-            
+            const today = todayLocalISO();
+
             // Create feeding event with prey count
             const notes = [
                 preyCount && preyCount !== '1' && `Qty: ${preyCount}`,
@@ -232,7 +231,7 @@ export default function ReptileCard({ reptile, onView, onEdit, onFeedingComplete
                 {reptile.feeding_reminder_enabled && reptile.last_fed_date && (
                     <div className="flex items-center gap-1.5 text-xs text-slate-400">
                         <Calendar className="w-3 h-3" />
-                        <span>Last fed: {format(new Date(reptile.last_fed_date), 'MMM d')}</span>
+                        <span>Last fed: {format(parseLocalDate(reptile.last_fed_date), 'MMM d')}</span>
                     </div>
                 )}
             </CardContent>

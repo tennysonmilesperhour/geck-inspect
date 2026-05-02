@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ReptileEvent } from '@/entities/all';
 import { format } from 'date-fns';
+import { parseLocalDate } from '@/lib/dateUtils';
 import { X, Plus, Trash2, LineChart, Loader2, History, Edit, Archive, ArchiveRestore } from 'lucide-react';
 import EventTracker from '../my-geckos/EventTracker';
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
@@ -105,9 +106,9 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
     };
 
     const chartData = [...weightRecords].reverse().map(r => ({
-        date: format(new Date(r.record_date), 'MMM d'),
+        date: format(parseLocalDate(r.record_date), 'MMM d'),
         weight: r.weight_grams,
-        fullDate: format(new Date(r.record_date), 'PPP')
+        fullDate: format(parseLocalDate(r.record_date), 'PPP')
     }));
 
     if (!reptile) return null;
@@ -203,7 +204,7 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
                                         <div className="text-sm text-slate-400 space-y-1">
                                             <p>Interval: Every {reptile.feeding_interval_days} days</p>
                                             {reptile.last_fed_date && (
-                                                <p>Last Fed: {format(new Date(reptile.last_fed_date), 'PPP')}</p>
+                                                <p>Last Fed: {format(parseLocalDate(reptile.last_fed_date), 'PPP')}</p>
                                             )}
                                         </div>
                                     </div>
@@ -269,7 +270,7 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
                                         <div className="max-h-32 overflow-y-auto space-y-2">
                                             {weightRecords.slice(0, 5).map(record => (
                                                 <div key={record.id} className="flex justify-between items-center bg-slate-800 p-2 rounded text-sm">
-                                                    <span className="text-slate-300">{format(new Date(record.record_date), 'MMM d, yyyy')}</span>
+                                                    <span className="text-slate-300">{format(parseLocalDate(record.record_date), 'MMM d, yyyy')}</span>
                                                     <span className="font-bold text-emerald-400">{record.weight_grams}g</span>
                                                     <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setWeightToDelete(record.id)}>
                                                        <Trash2 className="w-3 h-3 text-red-500"/>

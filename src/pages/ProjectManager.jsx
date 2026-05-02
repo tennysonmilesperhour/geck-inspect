@@ -17,7 +17,8 @@ import EmptyState from '../components/shared/EmptyState';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import usePageSettings from '@/hooks/usePageSettings';
 import { Switch } from '@/components/ui/switch';
-import { format } from 'date-fns';
+import { format, differenceInCalendarDays } from 'date-fns';
+import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
 import ProjectCalendar from '../components/project-manager/ProjectCalendar';
 import FeedingGroupManager from '../components/project-manager/FeedingGroupManager';
 import StickyNotes from '../components/project-manager/StickyNotes';
@@ -119,9 +120,8 @@ export default function ProjectManager() {
       taskList, projectList, userEmail
     ) => {
       if (!userEmail) return;
+      const todayStr = todayLocalISO();
       const today = new Date();
-      today.setHours(0, 0, 0, 0);
-      const todayStr = today.toISOString().split('T')[0];
 
       // Collect items that need a notification
       const reminders = [];
@@ -130,10 +130,10 @@ export default function ProjectManager() {
         if (task.is_completed) continue;
         const dueDate = task.is_recurring ? task.next_due_date : task.due_date;
         if (!dueDate) continue;
-        const due = new Date(dueDate);
-        due.setHours(0, 0, 0, 0);
-        if (due <= today) {
-          const daysOverdue = Math.round((today - due) / 86400000);
+        const due = parseLocalDate(dueDate);
+        if (!due) continue;
+        const daysOverdue = differenceInCalendarDays(today, due);
+        if (daysOverdue >= 0) {
           reminders.push({
             dedupKey: `task_${task.id}_${todayStr}`,
             content: daysOverdue === 0
@@ -148,10 +148,10 @@ export default function ProjectManager() {
       for (const project of projectList) {
         if (project.status === 'completed') continue;
         if (!project.due_date) continue;
-        const due = new Date(project.due_date);
-        due.setHours(0, 0, 0, 0);
-        if (due <= today) {
-          const daysOverdue = Math.round((today - due) / 86400000);
+        const due = parseLocalDate(project.due_date);
+        if (!due) continue;
+        const daysOverdue = differenceInCalendarDays(today, due);
+        if (daysOverdue >= 0) {
           reminders.push({
             dedupKey: `project_${project.id}_${todayStr}`,
             content: daysOverdue === 0

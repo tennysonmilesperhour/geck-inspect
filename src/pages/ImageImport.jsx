@@ -8,9 +8,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
-import { Camera, Upload, Loader2, Check, X, Trash2, Lock, ArrowRight, ImagePlus } from 'lucide-react';
+import { Camera, Loader2, Check, X, Lock, ArrowRight, ImagePlus } from 'lucide-react';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import { todayLocalISO } from '@/lib/dateUtils';
 
 const LoginPortal = React.lazy(() => import('@/components/auth/LoginPortal'));
 
@@ -179,7 +179,7 @@ export default function ImageImport() {
                     await BreedingPlan.create({
                         sire_id: sire?.id || '',
                         dam_id: dam?.id || '',
-                        pairing_date: record.pairing_date || new Date().toISOString().split('T')[0],
+                        pairing_date: record.pairing_date || todayLocalISO(),
                         breeding_id: record.breeding_id || '',
                         breeding_season: record.breeding_season || '',
                         status: record.status || 'Planned',
@@ -199,7 +199,7 @@ export default function ImageImport() {
                     for (let i = 0; i < eggCount; i++) {
                         await Egg.create({
                             breeding_plan_id: plan?.id || '',
-                            lay_date: record.lay_date || new Date().toISOString().split('T')[0],
+                            lay_date: record.lay_date || todayLocalISO(),
                             hatch_date_expected: record.hatch_date_expected || '',
                             hatch_date_actual: record.hatch_date_actual || '',
                             status: record.status || 'Incubating',

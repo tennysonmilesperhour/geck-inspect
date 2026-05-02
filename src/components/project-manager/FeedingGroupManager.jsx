@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Plus, Trash2, Edit, Utensils } from 'lucide-react';
 import { format, addDays, differenceInDays } from 'date-fns';
+import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
 
 const GROUP_COLORS = ['#f97316', '#3b82f6', '#8b5cf6', '#ec4899', '#10b981', '#eab308', '#ef4444', '#06b6d4'];
 const GROUP_LABELS = ['A', 'B', 'C', 'D', 'E', 'F', 'G', 'H'];
@@ -99,13 +100,13 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
     };
 
     const handleMarkFed = async (group) => {
-        await FeedingGroup.update(group.id, { last_fed_date: format(new Date(), 'yyyy-MM-dd') });
+        await FeedingGroup.update(group.id, { last_fed_date: todayLocalISO() });
         onUpdate();
     };
 
     const getNextFeedDate = (group) => {
         if (!group.last_fed_date) return null;
-        return addDays(new Date(group.last_fed_date), group.interval_days);
+        return addDays(parseLocalDate(group.last_fed_date), group.interval_days);
     };
 
     const getDaysUntil = (group) => {
@@ -118,7 +119,7 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
     // daily-interval group doesn't perpetually stay in the "within 1 day" warn state.
     const wasFedToday = (group) => {
         if (!group.last_fed_date) return false;
-        return group.last_fed_date === format(new Date(), 'yyyy-MM-dd');
+        return group.last_fed_date === todayLocalISO();
     };
 
     return (
@@ -181,7 +182,7 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
                                     </div>
                                     {group.last_fed_date && (
                                         <div className="text-xs text-slate-400">
-                                            Last fed: <span className="text-slate-300">{format(new Date(group.last_fed_date), 'MMM d')}</span>
+                                            Last fed: <span className="text-slate-300">{format(parseLocalDate(group.last_fed_date), 'MMM d')}</span>
                                         </div>
                                     )}
                                     {nextFeed && (

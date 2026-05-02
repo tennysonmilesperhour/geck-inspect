@@ -3,6 +3,7 @@ import { FeedingGroup, OtherReptile, Notification } from '@/entities/all';
 import { Button } from '@/components/ui/button';
 import { X, CheckCircle2, Clock } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
+import { todayLocalISO, daysSinceLocal } from '@/lib/dateUtils';
 
 // Dedup window: fire at most one push/email per entity per day. The
 // 5-minute polling loop would otherwise create 288 notifications a day
@@ -43,18 +44,16 @@ export default function FeedingAlertSystem({ user, enabled, lateReminders }) {
   // by the `daysOverdue >= 0` check.
   const calculateDaysOverdue = (lastFedDate, intervalDays) => {
     if (!lastFedDate) return intervalDays;
-    const lastFed = new Date(lastFedDate);
-    const now = new Date();
-    const daysElapsed = Math.floor((now - lastFed) / (1000 * 60 * 60 * 24));
+    const daysElapsed = daysSinceLocal(lastFedDate) ?? 0;
     return daysElapsed - intervalDays;
   };
 
-  // Get color based on days overdue
+  // Get color based on days overdue. Order matters — check the most-overdue
+  // bucket first so a 30-day overdue alert doesn't fall through to yellow.
   const getAlertColor = (daysOverdue) => {
-    if (daysOverdue > 7) return 'yellow'; // yellow - 1+ week overdue
-    if (daysOverdue > 14) return 'orange'; // orange - 2+ weeks overdue
-    if (daysOverdue > 21) return 'red'; // red - 3+ weeks overdue
-    return 'yellow'; // default yellow
+    if (daysOverdue > 21) return 'red';
+    if (daysOverdue > 14) return 'orange';
+    return 'yellow';
   };
 
   const getGlowClass = (color) => {
@@ -203,7 +202,7 @@ export default function FeedingAlertSystem({ user, enabled, lateReminders }) {
 
   const handleFed = async (alert) => {
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = todayLocalISO();
 
       if (alert.type === 'feedingGroup') {
         await FeedingGroup.update(alert.entityId, { last_fed_date: today });

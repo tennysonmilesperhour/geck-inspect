@@ -19,6 +19,7 @@ import {
   Clock, Weight, Thermometer, Package, CheckCircle2,
 } from 'lucide-react';
 import { format, getQuarter, getYear } from 'date-fns';
+import { todayLocalISO } from '@/lib/dateUtils';
 import GeckoSelectionModal from '../components/marketplace/GeckoSelectionModal';
 import MarketAnalytics from '@/components/market-analytics/MarketAnalytics';
 
@@ -203,7 +204,7 @@ function PendingSaleCard({ sale, onUpdate, onComplete, onCancel, onDelete }) {
     updated[idx] = {
       ...updated[idx],
       paid: !updated[idx].paid,
-      paid_date: !updated[idx].paid ? new Date().toISOString().split('T')[0] : null,
+      paid_date: !updated[idx].paid ? todayLocalISO() : null,
     };
     const newPaid = updated.filter(p => p.paid).reduce((s, p) => s + Number(p.amount || 0), 0);
     setForm(f => ({ ...f, payment_schedule: updated, amount_paid: newPaid }));
@@ -509,7 +510,7 @@ function PendingSalesTab({ user, pendingSales, setPendingSales, onCompleteSale, 
         try {
           await Gecko.update(sale.gecko_id, {
             status: 'Sold', archived: true, archive_reason: 'sold',
-            archived_date: new Date().toISOString().split('T')[0],
+            archived_date: todayLocalISO(),
             asking_price: parseFloat(sale.reserve_price) || 0,
           });
         } catch (e) { console.warn('Could not archive gecko:', e); }
@@ -518,7 +519,7 @@ function PendingSalesTab({ user, pendingSales, setPendingSales, onCompleteSale, 
         user_email: user.email,
         description: sale.gecko_name,
         amount: parseFloat(sale.reserve_price) || 0,
-        date: new Date().toISOString().split('T')[0],
+        date: todayLocalISO(),
         category: 'sale:produced_in_house',
       });
       setPendingSales(prev => prev.filter(s => s.id !== sale.id));
@@ -807,10 +808,10 @@ export default function MarketplaceSalesStats() {
   const [isSaving, setIsSaving] = useState(false);
 
   const [newCost, setNewCost] = useState({
-    description: '', amount: '', date: new Date().toISOString().split('T')[0], category: 'other'
+    description: '', amount: '', date: todayLocalISO(), category: 'other'
   });
   const [newRevenue, setNewRevenue] = useState({
-    name: '', amount: '', date: new Date().toISOString().split('T')[0], category: 'produced_in_house'
+    name: '', amount: '', date: todayLocalISO(), category: 'produced_in_house'
   });
   const [geckoCategories, setGeckoCategories] = useState({});
   const [addSaleModalOpen, setAddSaleModalOpen] = useState(false);
@@ -852,7 +853,7 @@ export default function MarketplaceSalesStats() {
                   user_email: currentUser.email,
                   description: c.description,
                   amount: c.amount,
-                  date: c.date?.split('T')[0] || new Date().toISOString().split('T')[0],
+                  date: c.date?.split('T')[0] || todayLocalISO(),
                   category: 'General',
                 }));
                 await MarketplaceCost.bulkCreate(toCreate);
@@ -918,7 +919,7 @@ export default function MarketplaceSalesStats() {
         category: newCost.category || 'General',
       });
       setCosts(prev => [created, ...prev]);
-      setNewCost({ description: '', amount: '', date: new Date().toISOString().split('T')[0], category: 'other' });
+      setNewCost({ description: '', amount: '', date: todayLocalISO(), category: 'other' });
       toast({ title: "Cost Added", description: `${newCost.description} — $${parseFloat(newCost.amount).toFixed(2)}` });
     } catch (error) {
       console.error('Failed to add cost:', error);
@@ -950,7 +951,7 @@ export default function MarketplaceSalesStats() {
         await Gecko.update(gecko.id, {
           archived: true,
           archive_reason: 'sold',
-          archived_date: new Date().toISOString().split('T')[0],
+          archived_date: todayLocalISO(),
           asking_price: price
         });
       }
@@ -980,7 +981,7 @@ export default function MarketplaceSalesStats() {
         user_email: user.email,
         description: newRevenue.name.trim(),
         amount: price,
-        date: newRevenue.date || new Date().toISOString().split('T')[0],
+        date: newRevenue.date || todayLocalISO(),
         category: 'sale:' + (newRevenue.category || 'produced_in_house'),
       });
 
@@ -989,7 +990,7 @@ export default function MarketplaceSalesStats() {
       setNewRevenue({
         name: '',
         amount: '',
-        date: new Date().toISOString().split('T')[0],
+        date: todayLocalISO(),
         category: 'produced_in_house',
       });
       setSaleMode(null);
@@ -1319,7 +1320,7 @@ export default function MarketplaceSalesStats() {
                       asking_price: sale.reserve_price,
                       archived: true,
                       archive_reason: 'sold',
-                      archived_date: new Date().toISOString().split('T')[0],
+                      archived_date: todayLocalISO(),
                     }]);
                   }
                 }}

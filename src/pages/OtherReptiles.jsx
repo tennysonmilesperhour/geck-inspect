@@ -18,6 +18,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { toast } from '@/components/ui/use-toast';
 import { AnimatePresence, motion } from 'framer-motion';
+import { todayLocalISO, daysSinceLocal } from '@/lib/dateUtils';
 
 export default function OtherReptilesPage() {
     const [reptilePrefs, setReptilePrefs] = usePageSettings('other_reptiles_prefs', {
@@ -100,7 +101,7 @@ export default function OtherReptilesPage() {
         try {
             await OtherReptile.update(reptileId, {
                 archived: shouldArchive,
-                archived_date: shouldArchive ? new Date().toISOString().split('T')[0] : null
+                archived_date: shouldArchive ? todayLocalISO() : null
             });
             await loadReptiles();
             setIsDetailModalOpen(false);
@@ -121,7 +122,7 @@ export default function OtherReptilesPage() {
     const handleFeedingComplete = async (reptileId) => {
         try {
             await OtherReptile.update(reptileId, {
-                last_fed_date: new Date().toISOString().split('T')[0]
+                last_fed_date: todayLocalISO()
             });
             await loadReptiles();
             toast({ title: "Feeding Recorded", description: "Last fed date updated!" });
@@ -136,9 +137,7 @@ export default function OtherReptilesPage() {
             return { priority: 3, daysUntil: Infinity }; // No feeding tracking - lowest priority
         }
 
-        const lastFed = new Date(reptile.last_fed_date);
-        const today = new Date();
-        const daysSinceLastFed = Math.floor((today - lastFed) / (1000 * 60 * 60 * 24));
+        const daysSinceLastFed = daysSinceLocal(reptile.last_fed_date);
         const daysUntilNextFeed = (reptile.feeding_interval_days || 7) - daysSinceLastFed;
 
         const alertThreshold = Number(reptilePrefs.feedingAlertDays) || 2;

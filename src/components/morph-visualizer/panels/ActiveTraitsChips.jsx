@@ -3,7 +3,7 @@
  * describe the phenotype at a glance.
  */
 
-import { TRAITS_BY_ID, BASE_COLORS_BY_ID } from '../data/traits';
+import { BASE_COLORS_BY_ID } from '../data/traits';
 import { zygosityLabel } from '../data/genetics';
 
 const CATEGORY_COLORS = {

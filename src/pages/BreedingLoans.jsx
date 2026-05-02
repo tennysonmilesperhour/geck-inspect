@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { User, Gecko, BreedingLoan } from '@/entities/all';
 import { format, isPast, parseISO } from 'date-fns';
+import { todayLocalISO } from '@/lib/dateUtils';
 import {
   Handshake, Plus, Calendar, AlertTriangle, CheckCircle2, ArrowLeftRight,
   User as UserIcon, DollarSign, FileText, Loader2, Send,
@@ -75,7 +76,7 @@ function LoanCard({ loan, geckoMap, isOutgoing, onRefresh }) {
     try {
       await BreedingLoan.update(loan.id, {
         status: 'returned',
-        actual_return: new Date().toISOString().split('T')[0],
+        actual_return: todayLocalISO(),
       });
       toast({ title: 'Marked as returned', description: gecko?.name || 'Loan updated' });
       onRefresh();
@@ -219,7 +220,7 @@ function NewLoanModal({ open, onClose, geckos, userEmail, onCreated }) {
     borrower_email: '',
     borrower_name: '',
     purpose: '',
-    loan_start: new Date().toISOString().split('T')[0],
+    loan_start: todayLocalISO(),
     expected_return: '',
     stud_fee: '',
     offspring_agreement: '',
@@ -260,7 +261,7 @@ function NewLoanModal({ open, onClose, geckos, userEmail, onCreated }) {
       onClose();
       setForm({
         animal_id: '', borrower_email: '', borrower_name: '', purpose: '',
-        loan_start: new Date().toISOString().split('T')[0], expected_return: '',
+        loan_start: todayLocalISO(), expected_return: '',
         stud_fee: '', offspring_agreement: '', condition_on_loan: '', notes: '',
       });
     } catch (err) {

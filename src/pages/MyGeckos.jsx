@@ -28,6 +28,7 @@ import { toast } from '@/components/ui/use-toast';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import PlanLimitModal, { getGeckoLimit } from '../components/subscription/PlanLimitChecker';
+import { todayLocalISO } from '@/lib/dateUtils';
 import { exportGeckosCSV, exportGeckosPDF } from '@/lib/exportUtils';
 import { captureEvent } from '@/lib/posthog';
 import { useGeckoFilters } from '@/hooks/useGeckoFilters';
@@ -211,7 +212,7 @@ export default function MyGeckosPage() {
 
         try {
             const updateData = shouldArchive
-                ? { archived: true, archived_date: new Date().toISOString().split('T')[0], archive_reason: reason || null }
+                ? { archived: true, archived_date: todayLocalISO(), archive_reason: reason || null }
                 : { archived: false, archived_date: null, archive_reason: null };
 
             await retryApiCall(async () => Gecko.update(geckoId, updateData));

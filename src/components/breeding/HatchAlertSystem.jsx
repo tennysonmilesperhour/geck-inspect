@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { Egg, Notification } from '@/entities/all';
 import { differenceInDays } from 'date-fns';
+import { parseLocalDate } from '@/lib/dateUtils';
 
 /**
  * HatchAlertSystem — silent producer for `hatch_alert` notifications.
@@ -58,7 +59,7 @@ export default function HatchAlertSystem({ user, enabled }) {
           if (egg.status !== 'Incubating') continue;
           if (egg.archived) continue;
           if (!egg.lay_date) continue;
-          const daysIncubating = differenceInDays(today, new Date(egg.lay_date));
+          const daysIncubating = differenceInDays(today, parseLocalDate(egg.lay_date));
           if (daysIncubating < threshold) continue;
           if (!shouldNotify(egg.id)) continue;
 
@@ -66,7 +67,7 @@ export default function HatchAlertSystem({ user, enabled }) {
           // hatch_date_expected if set; otherwise just say "now in
           // hatch window" with the day count.
           const expected = egg.hatch_date_expected
-            ? new Date(egg.hatch_date_expected)
+            ? parseLocalDate(egg.hatch_date_expected)
             : null;
           const daysToExpected = expected
             ? differenceInDays(expected, today)

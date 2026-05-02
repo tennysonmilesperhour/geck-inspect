@@ -18,6 +18,7 @@ import {
   generateLineageCertificatePDF,
 } from '@/lib/certificateUtils';
 import { toast } from '@/components/ui/use-toast';
+import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
 import { useNavigate } from 'react-router-dom';
 import { generatePassportCode } from '@/lib/passportUtils';
 import { supabase } from '@/lib/supabaseClient';
@@ -122,7 +123,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
       const newRecord = {
         gecko_id: gecko.id,
         weight_grams: weightValue,
-        record_date: new Date().toISOString().split('T')[0],
+        record_date: todayLocalISO(),
       };
 
       const createdRecord = await WeightRecord.create(newRecord);
@@ -236,9 +237,9 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
   const dam = allGeckos.find(g => g.id === gecko.dam_id);
 
   const chartData = [...weightRecords].reverse().map(r => ({
-    date: format(new Date(r.record_date), 'MMM d'),
+    date: format(parseLocalDate(r.record_date), 'MMM d'),
     weight: r.weight_grams,
-    fullDate: format(new Date(r.record_date), 'PPP')
+    fullDate: format(parseLocalDate(r.record_date), 'PPP')
   }));
 
   if (!gecko) return null;
@@ -601,7 +602,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                     <div className="max-h-32 overflow-y-auto space-y-2">
                       {weightRecords.map(record => (
                         <div key={record.id} className="flex justify-between items-center bg-slate-800 p-2 rounded text-sm">
-                          <span className="text-slate-300">{format(new Date(record.record_date), 'MMM d, yyyy')}</span>
+                          <span className="text-slate-300">{format(parseLocalDate(record.record_date), 'MMM d, yyyy')}</span>
                           <span className="font-bold text-emerald-400">{record.weight_grams}g</span>
                           <AlertDialog open={weightToDelete === record.id} onOpenChange={(open) => { if (!open) setWeightToDelete(null); }}>
                             <AlertDialogTrigger asChild>
@@ -613,7 +614,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                               <AlertDialogHeader>
                                 <AlertDialogTitle className="text-slate-100">Delete weight record?</AlertDialogTitle>
                                 <AlertDialogDescription className="text-slate-400">
-                                  This will permanently delete the weight record from {format(new Date(record.record_date), 'MMM d, yyyy')}. This cannot be undone.
+                                  This will permanently delete the weight record from {format(parseLocalDate(record.record_date), 'MMM d, yyyy')}. This cannot be undone.
                                 </AlertDialogDescription>
                               </AlertDialogHeader>
                               <AlertDialogFooter>
@@ -684,7 +685,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                           </div>
                           {breeding.pairing_date && (
                             <p className="text-slate-400 text-sm">
-                              Paired: {format(new Date(breeding.pairing_date), 'PPP')}
+                              Paired: {format(parseLocalDate(breeding.pairing_date), 'PPP')}
                             </p>
                           )}
                           <div className="flex items-center justify-between mt-2">
@@ -1028,7 +1029,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                         <div key={egg.id} className="bg-slate-800 p-3 rounded-lg">
                           <div className="flex items-center justify-between mb-1">
                             <span className="text-slate-300 text-sm">
-                              Laid: {format(new Date(egg.lay_date), 'MMM d, yyyy')}
+                              Laid: {format(parseLocalDate(egg.lay_date), 'MMM d, yyyy')}
                             </span>
                             <Badge variant={egg.status === 'Hatched' ? 'default' : 'secondary'} className="text-xs">
                               {egg.status}
@@ -1036,7 +1037,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                           </div>
                           {egg.hatch_date_actual && (
                             <p className="text-slate-400 text-xs">
-                              Hatched: {format(new Date(egg.hatch_date_actual), 'MMM d, yyyy')}
+                              Hatched: {format(parseLocalDate(egg.hatch_date_actual), 'MMM d, yyyy')}
                             </p>
                           )}
                         </div>

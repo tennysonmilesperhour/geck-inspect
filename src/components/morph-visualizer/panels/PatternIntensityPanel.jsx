@@ -6,7 +6,7 @@
  * instead of a zygosity picker.
  */
 
-import { PATTERN_TRAITS, EXPRESSION } from '../data/traits';
+import { PATTERN_TRAITS } from '../data/traits';
 import { Waves } from 'lucide-react';
 
 const STEP_LABELS = ['None', 'Trace', 'Partial', 'Strong', 'Extreme'];

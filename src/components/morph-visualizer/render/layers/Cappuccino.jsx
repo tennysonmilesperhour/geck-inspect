@@ -4,7 +4,6 @@
  * In Super (Frappuccino) the dorsum is fully patternless and expansive.
  */
 
-import { DORSUM_PATH } from '../svgShapes';
 
 export default function Cappuccino({ expressed, isSuper, palette }) {
   if (!expressed) return null;

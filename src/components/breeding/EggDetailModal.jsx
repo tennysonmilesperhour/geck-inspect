@@ -7,6 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Loader2, Egg as EggIcon } from 'lucide-react';
 import { differenceInDays } from 'date-fns';
+import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
 
 export default function EggDetailModal({ egg, breedingPlan, sire, dam, onClose, onUpdate }) {
     const [isEditing, setIsEditing] = useState(false);
@@ -20,9 +21,9 @@ export default function EggDetailModal({ egg, breedingPlan, sire, dam, onClose, 
         grade: egg.grade || '',
     });
 
-    const daysIncubating = differenceInDays(new Date(), new Date(egg.lay_date));
+    const daysIncubating = differenceInDays(new Date(), parseLocalDate(egg.lay_date));
     const incubationDays = egg.status === 'Hatched' && egg.hatch_date_actual
-        ? differenceInDays(new Date(egg.hatch_date_actual), new Date(egg.lay_date))
+        ? differenceInDays(parseLocalDate(egg.hatch_date_actual), parseLocalDate(egg.lay_date))
         : null;
 
     const handleSave = async () => {
@@ -41,7 +42,7 @@ export default function EggDetailModal({ egg, breedingPlan, sire, dam, onClose, 
 
             if (editData.status !== 'Incubating') {
                 updatePayload.archived = true;
-                updatePayload.archived_date = new Date().toISOString().split('T')[0];
+                updatePayload.archived_date = todayLocalISO();
             }
 
             await Egg.update(egg.id, updatePayload);

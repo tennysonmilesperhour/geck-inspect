@@ -4,6 +4,7 @@ import { Gecko, Egg, BreedingPlan, WeightRecord, FutureBreedingPlan } from '@/en
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Scale, EggIcon, Calendar, Target, ChevronRight, CheckCircle2, Sparkles } from 'lucide-react';
 import { differenceInDays, format } from 'date-fns';
+import { parseLocalDate } from '@/lib/dateUtils';
 import { SEASON_LABELS, seasonStatus } from '@/lib/seasons';
 
 /**
@@ -30,7 +31,7 @@ function buildActions({ geckos, eggs, plans, weights, futurePlans }) {
     // 1. Eggs in the hatch window
     const incubating = (eggs || []).filter((e) => e.status === 'Incubating' && !e.archived && e.lay_date);
     for (const egg of incubating) {
-        const laid = new Date(egg.lay_date);
+        const laid = parseLocalDate(egg.lay_date);
         const daysIn = differenceInDays(now, laid);
         // crested gecko eggs hatch ~65–90 days after lay
         if (daysIn >= 60 && daysIn <= 100) {

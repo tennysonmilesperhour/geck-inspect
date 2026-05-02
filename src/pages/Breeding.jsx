@@ -31,6 +31,7 @@ import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from '@/components/ui/use-toast';
+import { todayLocalISO } from '@/lib/dateUtils';
 
 const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
 
@@ -88,7 +89,7 @@ export default function BreedingPage() {
         sire_id: '',
         dam_id: '',
         breeding_id: '',
-        pairing_date: new Date().toISOString().split('T')[0],
+        pairing_date: todayLocalISO(),
         status: 'Planned',
         notes: '',
         breeding_season: ''
@@ -183,7 +184,7 @@ export default function BreedingPage() {
                 sire_id: '',
                 dam_id: '',
                 breeding_id: '',
-                pairing_date: new Date().toISOString().split('T')[0],
+                pairing_date: todayLocalISO(),
                 status: 'Planned',
                 notes: '',
                 breeding_season: ''
@@ -214,7 +215,7 @@ export default function BreedingPage() {
 
             await BreedingPlan.update(planId, {
                 archived: shouldArchive,
-                archived_date: shouldArchive ? new Date().toISOString().split('T')[0] : null,
+                archived_date: shouldArchive ? todayLocalISO() : null,
                 breeding_season: planToUpdate.breeding_season || getCurrentSeason() 
             });
             loadData();

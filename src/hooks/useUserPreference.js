@@ -45,7 +45,6 @@ export default function useUserPreference(user, key, defaults) {
   useEffect(() => {
     setState(readInitial());
     migratedRef.current = false; // allow one migration per sign-in
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [user?.id, JSON.stringify(user?.[key] || null)]);
 
   // One-time migration: signed-in user with empty metadata + existing
@@ -97,7 +96,6 @@ export default function useUserPreference(user, key, defaults) {
         supabase.auth.updateUser({ data: { [key]: state } }).catch(() => {});
       }
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return [state, updateState];

@@ -4,6 +4,7 @@ import { Gecko, UserActivity, WeightRecord, FeedingGroup } from '@/entities/all'
 import { UploadFile } from '@/integrations/Core';
 import { notifyFollowersNewGecko, checkAndNotifyLevelUp } from '@/components/notifications/NotificationService';
 import { useToast } from '@/components/ui/use-toast';
+import { todayLocalISO } from '@/lib/dateUtils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -392,7 +393,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                  await WeightRecord.create({
                      gecko_id: savedGecko.id,
                      weight_grams: weightValue,
-                     record_date: new Date().toISOString().split('T')[0],
+                     record_date: todayLocalISO(),
                  });
              }
 

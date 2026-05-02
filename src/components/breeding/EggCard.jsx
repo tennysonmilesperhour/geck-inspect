@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Calendar, Clock, Baby, CheckCircle } from 'lucide-react';
 import { format, differenceInDays } from 'date-fns';
+import { parseLocalDate } from '@/lib/dateUtils';
 import { createGeckoFromEgg } from '@/functions/createGeckoFromEgg';
 import { Egg as EggEntity } from '@/entities/all';
 import { toast } from '@/components/ui/use-toast';
@@ -31,7 +32,7 @@ export default function EggCard({ egg, breedingPlan: _breedingPlan, onUpdate }) 
   const calculateDaysRemaining = () => {
     if (!egg.hatch_date_expected) return null;
     const today = new Date();
-    const expectedDate = new Date(egg.hatch_date_expected);
+    const expectedDate = parseLocalDate(egg.hatch_date_expected);
     return differenceInDays(expectedDate, today);
   };
 
@@ -68,7 +69,7 @@ export default function EggCard({ egg, breedingPlan: _breedingPlan, onUpdate }) 
               Egg #{egg.id.slice(-6)}
             </p>
             <p className="text-slate-400 text-sm">
-              Laid: {format(new Date(egg.lay_date), 'MMM d, yyyy')}
+              Laid: {format(parseLocalDate(egg.lay_date), 'MMM d, yyyy')}
             </p>
           </div>
           <div className="flex items-center gap-1.5">
@@ -113,7 +114,7 @@ export default function EggCard({ egg, breedingPlan: _breedingPlan, onUpdate }) 
           <div className="mb-3">
             <p className="text-slate-400 text-sm flex items-center gap-2">
               <Calendar className="w-4 h-4" />
-              Expected: {format(new Date(egg.hatch_date_expected), 'MMM d, yyyy')}
+              Expected: {format(parseLocalDate(egg.hatch_date_expected), 'MMM d, yyyy')}
             </p>
             {daysRemaining !== null && (
               <p className="text-slate-300 text-sm flex items-center gap-2">
@@ -130,7 +131,7 @@ export default function EggCard({ egg, breedingPlan: _breedingPlan, onUpdate }) 
           <div className="mb-3">
             <p className="text-slate-300 text-sm flex items-center gap-2">
               <Baby className="w-4 h-4" />
-              Hatched: {format(new Date(egg.hatch_date_actual), 'MMM d, yyyy')}
+              Hatched: {format(parseLocalDate(egg.hatch_date_actual), 'MMM d, yyyy')}
             </p>
           </div>
         )}

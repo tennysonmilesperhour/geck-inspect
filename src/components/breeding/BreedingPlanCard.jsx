@@ -41,7 +41,8 @@ import {
   Leaf,
   Moon,
 } from 'lucide-react';
-import { format, addDays, differenceInDays } from 'date-fns';
+import { format, addDays } from 'date-fns';
+import { todayLocalISO, parseLocalDate, daysSinceLocal } from '@/lib/dateUtils';
 import { generateCalendarEvent } from '@/functions/generateCalendarEvent';
 import GeneticsModal from './GeneticsModal';
 import PlanDetails from './PlanDetails';
@@ -58,7 +59,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
     const dam = getGecko(plan.dam_id);
 
     const [isCopulationModalOpen, setIsCopulationModalOpen] = useState(false);
-    const [copulationDate, setCopulationDate] = useState(new Date().toISOString().split('T')[0]);
+    const [copulationDate, setCopulationDate] = useState(todayLocalISO());
     const [copulationNotes, setCopulationNotes] = useState('');
     const [isEggCheckModalOpen, setIsEggCheckModalOpen] = useState(false);
     const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -75,16 +76,14 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
     const eggCounts = { incubating, hatched, failed, eggsLaid };
 
     // Calculate days since last egg
-    const daysSinceLastEgg = lastEggDate
-        ? differenceInDays(new Date(), new Date(lastEggDate))
-        : null;
+    const daysSinceLastEgg = daysSinceLocal(lastEggDate);
 
     // Glow when past expected lay interval (default 31 days)
     const expectedLayInterval = plan.expected_lay_interval ?? 31;
     const shouldGlow = daysSinceLastEgg !== null && daysSinceLastEgg >= expectedLayInterval;
 
     const handleOpenCopulationModal = () => {
-        setCopulationDate(new Date().toISOString().split('T')[0]);
+        setCopulationDate(todayLocalISO());
         setCopulationNotes('');
         setIsCopulationModalOpen(true);
     };
@@ -96,19 +95,19 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
 
     const handleQuickAddEggs = async (count) => {
         const today = new Date();
-        const newLayDate = today.toISOString().split('T')[0];
+        const newLayDate = todayLocalISO();
 
         // Load user preferences for hatch alert days
         const currentUser = await User.me();
         const hatchAlertDays = currentUser?.hatch_alert_days || 60;
-        const expectedHatch = addDays(today, hatchAlertDays);
+        const expectedHatch = format(addDays(today, hatchAlertDays), 'yyyy-MM-dd');
 
         try {
             for (let i = 0; i < count; i++) {
                 await Egg.create({
                     breeding_plan_id: plan.id,
                     lay_date: newLayDate,
-                    hatch_date_expected: expectedHatch.toISOString().split('T')[0],
+                    hatch_date_expected: expectedHatch,
                     status: 'Incubating'
                 });
             }
@@ -156,7 +155,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
             if (!plan.first_egg_lay_date) {
                 const today = new Date();
                 today.setDate(eggCheckDay);
-                updateData.first_egg_lay_date = today.toISOString().split('T')[0];
+                updateData.first_egg_lay_date = format(today, 'yyyy-MM-dd');
             }
 
             await BreedingPlan.update(plan.id, updateData);
@@ -175,7 +174,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
             const damName = dam?.name || 'N/A';
 
             // Start from today or the first egg lay date
-            const baseDate = plan.first_egg_lay_date ? new Date(plan.first_egg_lay_date) : new Date();
+            const baseDate = plan.first_egg_lay_date ? parseLocalDate(plan.first_egg_lay_date) : new Date();
             baseDate.setDate(plan.egg_check_day);
 
             // If the day has passed this month, start from next month
@@ -353,9 +352,9 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                     {plan.copulation_events.map((event, index) => (
                                         <div key={index} className="flex flex-col md:flex-row justify-between items-start md:items-center bg-slate-800 p-3 rounded-lg gap-2">
                                             <div className="w-full md:w-auto">
-                                                <p className="text-slate-200 text-sm md:text-base">Date: {format(new Date(event.date), 'MMM dd, yyyy')}</p>
+                                                <p className="text-slate-200 text-sm md:text-base">Date: {format(parseLocalDate(event.date), 'MMM dd, yyyy')}</p>
                                                 {event.notes && <p className="text-xs text-slate-400">{event.notes}</p>}
-                                                <p className="text-xs text-slate-500">Estimated lay date: {format(addDays(new Date(event.date), 30), 'MMM dd, yyyy')}</p>
+                                                <p className="text-xs text-slate-500">Estimated lay date: {format(addDays(parseLocalDate(event.date), 30), 'MMM dd, yyyy')}</p>
                                             </div>
                                             <Button
                                                 size="sm"
@@ -398,7 +397,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                 const goingDormant = plan.laying_active !== false;
                                 await BreedingPlan.update(plan.id, {
                                     laying_active: !goingDormant,
-                                    dormant_since: goingDormant ? new Date().toISOString().split('T')[0] : null
+                                    dormant_since: goingDormant ? todayLocalISO() : null
                                 });
                                 onPlanUpdate();
                             }}
@@ -410,7 +409,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                 <>
                                     <Moon size={14} className="mr-1" /> Dormant
                                     {plan.dormant_since && (() => {
-                                        const days = Math.floor((new Date() - new Date(plan.dormant_since)) / 86400000);
+                                        const days = daysSinceLocal(plan.dormant_since);
                                         return days > 0 ? <span className="ml-1 text-slate-500">({days}d)</span> : null;
                                     })()}
                                 </>
@@ -626,7 +625,7 @@ function PlanEditDialog({ plan, isOpen, onOpenChange, onPlanUpdate, onPlanDelete
                         <Input
                             id="pairing_date"
                             type="date"
-                            value={editedPlan.pairing_date ? format(new Date(editedPlan.pairing_date), 'yyyy-MM-dd') : ''}
+                            value={editedPlan.pairing_date ? format(parseLocalDate(editedPlan.pairing_date), 'yyyy-MM-dd') : ''}
                             onChange={e => setEditedPlan({ ...editedPlan, pairing_date: e.target.value })}
                             className="bg-slate-800 border-slate-600"
                         />

@@ -8,6 +8,7 @@ import { Badge } from '@/components/ui/badge';
 import { Egg as EggIcon, Search, Timer, Archive, ArchiveRestore, Sparkles, XCircle } from 'lucide-react';
 import LoadingSpinner from '../shared/LoadingSpinner';
 import { format, differenceInDays } from 'date-fns';
+import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
 import EggDetailModal from './EggDetailModal';
 import { generateHatchedGeckoIdFromEgg } from '../shared/geckoIdUtils';
 import { currentSeasonLabel, inferSeasonLabel } from '@/lib/seasons';
@@ -109,8 +110,8 @@ export default function Hatchery() {
         // Sort
         result.sort((a, b) => {
             const today = new Date();
-            const daysIncubatingA = differenceInDays(today, new Date(a.lay_date));
-            const daysIncubatingB = differenceInDays(today, new Date(b.lay_date));
+            const daysIncubatingA = differenceInDays(today, parseLocalDate(a.lay_date));
+            const daysIncubatingB = differenceInDays(today, parseLocalDate(b.lay_date));
             
             switch (sortBy) {
                 case 'incubation_longest':
@@ -155,7 +156,7 @@ export default function Hatchery() {
         try {
             await Egg.update(eggId, {
                 archived: shouldArchive,
-                archived_date: shouldArchive ? new Date().toISOString().split('T')[0] : null
+                archived_date: shouldArchive ? todayLocalISO() : null
             });
             await loadData();
         } catch (error) {
@@ -174,7 +175,7 @@ export default function Hatchery() {
             return;
         }
 
-        const today = format(new Date(), 'yyyy-MM-dd');
+        const today = todayLocalISO();
         try {
             const pairEggs = eggs.filter(e => e.breeding_plan_id === plan.id);
             const newGeckoIdCode = generateHatchedGeckoIdFromEgg({
@@ -190,7 +191,7 @@ export default function Hatchery() {
                 dam_id: dam.id,
                 status: 'Pet',
                 morphs_traits: '',
-                notes: `Hatched from egg laid on ${format(new Date(egg.lay_date), 'PPP')}. From breeding pair: ${sire.name} x ${dam.name}.`,
+                notes: `Hatched from egg laid on ${format(parseLocalDate(egg.lay_date), 'PPP')}. From breeding pair: ${sire.name} x ${dam.name}.`,
                 image_urls: [],
             });
 
@@ -213,7 +214,7 @@ export default function Hatchery() {
             await Egg.update(eggId, {
                 status: newStatus,
                 archived: true,
-                archived_date: new Date().toISOString().split('T')[0],
+                archived_date: todayLocalISO(),
             });
             await loadData();
         } catch (error) {
@@ -354,12 +355,12 @@ export default function Hatchery() {
                     const hatchedGecko = egg.gecko_id ? geckos.find(g => g.id === egg.gecko_id) : null;
                     
                     const today = new Date();
-                    const daysIncubating = differenceInDays(today, new Date(egg.lay_date));
+                    const daysIncubating = differenceInDays(today, parseLocalDate(egg.lay_date));
                     const isNearHatching = daysIncubating >= hatchAlertDays && egg.status === 'Incubating';
-                    
+
                     // Calculate incubation days for hatched eggs
                     const incubationDays = egg.status === 'Hatched' && egg.hatch_date_actual
-                        ? differenceInDays(new Date(egg.hatch_date_actual), new Date(egg.lay_date))
+                        ? differenceInDays(parseLocalDate(egg.hatch_date_actual), parseLocalDate(egg.lay_date))
                         : null;
 
                     return (
@@ -413,11 +414,11 @@ export default function Hatchery() {
                                 )}
 
                                 <div className="text-sm text-slate-400 space-y-1">
-                                    <p>Laid: {format(new Date(egg.lay_date), 'MMM dd, yyyy')}</p>
-                                    <p>Expected: {format(new Date(egg.hatch_date_expected), 'MMM dd, yyyy')}</p>
+                                    <p>Laid: {format(parseLocalDate(egg.lay_date), 'MMM dd, yyyy')}</p>
+                                    <p>Expected: {format(parseLocalDate(egg.hatch_date_expected), 'MMM dd, yyyy')}</p>
                                     {egg.hatch_date_actual && (
                                         <p className="text-green-400">
-                                            Hatched: {format(new Date(egg.hatch_date_actual), 'MMM dd, yyyy')}
+                                            Hatched: {format(parseLocalDate(egg.hatch_date_actual), 'MMM dd, yyyy')}
                                         </p>
                                     )}
                                     {incubationDays !== null && (

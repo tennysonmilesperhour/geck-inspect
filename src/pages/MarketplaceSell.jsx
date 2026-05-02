@@ -20,6 +20,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
+import { todayLocalISO } from '@/lib/dateUtils';
 import {
   Plus,
   Edit,
@@ -393,7 +394,7 @@ export default function MarketplaceSellPage() {
         status: 'Sold',
         is_public: false,
         archived: true,
-        archived_date: new Date().toISOString().split('T')[0],
+        archived_date: todayLocalISO(),
       });
       setAllGeckos((prev) =>
         prev.map((g) =>

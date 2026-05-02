@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { User, Gecko, FeedingGroup, FeedingRecord, WeightRecord } from '@/entities/all';
 import { format, differenceInDays } from 'date-fns';
+import { todayLocalISO } from '@/lib/dateUtils';
 import {
   Utensils, Scale, ChevronLeft, CheckCircle2, AlertTriangle, Loader2,
   Clock, Users, X, Check,
@@ -191,7 +192,7 @@ function BatchFeedView({ group, groupGeckos, feedingRecords, onBack, onSaved }) 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = todayLocalISO();
       let fedCount = 0;
       let refusedCount = 0;
 
@@ -393,7 +394,7 @@ function BatchWeighView({ group, groupGeckos, weightRecords, onBack, onSaved }) 
   const handleSave = async () => {
     setSaving(true);
     try {
-      const today = new Date().toISOString().split('T')[0];
+      const today = todayLocalISO();
       let recorded = 0;
       let flagged = 0;
 
@@ -711,7 +712,7 @@ export default function BatchHusbandry() {
                   <p className="text-2xl font-bold" style={{ color: C.gold }}>
                     {feedingRecords.filter(r => {
                       const d = r.date || r.created_date;
-                      return d && d.startsWith(new Date().toISOString().split('T')[0]);
+                      return d && d.startsWith(todayLocalISO());
                     }).length}
                   </p>
                   <p className="text-xs" style={{ color: C.muted }}>Fed Today</p>
