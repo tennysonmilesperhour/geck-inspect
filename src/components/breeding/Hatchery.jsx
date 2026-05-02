@@ -62,7 +62,24 @@ export default function Hatchery() {
                 BreedingPlan.filter({ created_by: user.email }),
                 Gecko.filter({ created_by: user.email })
             ]);
-            
+
+            // One-time backfill: hatching from this page used to leave eggs
+            // un-archived, so old "Hatched" rows still showed in the default
+            // view. The breeding-pair flow archives on hatch (PlanDetails);
+            // mirror that here for any stragglers we find.
+            const orphans = eggsData.filter(e => e.status === 'Hatched' && !e.archived);
+            if (orphans.length > 0) {
+                const today = todayLocalISO();
+                await Promise.all(orphans.map(e =>
+                    Egg.update(e.id, { archived: true, archived_date: e.hatch_date_actual || today })
+                        .catch(err => console.warn(`Failed to backfill archive for egg ${e.id}:`, err))
+                ));
+                for (const e of orphans) {
+                    e.archived = true;
+                    e.archived_date = e.hatch_date_actual || today;
+                }
+            }
+
             setEggs(eggsData);
             setBreedingPlans(plansData);
             setGeckos(geckosData);
@@ -199,6 +216,8 @@ export default function Hatchery() {
                 status: 'Hatched',
                 hatch_date_actual: today,
                 gecko_id: newGecko.id,
+                archived: true,
+                archived_date: today,
             });
 
             await loadData();
