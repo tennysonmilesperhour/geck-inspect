@@ -91,7 +91,7 @@ export default function RecentActivity({ geckoImages, isLoading, onImageSelect, 
                 .tile {
                     position: relative;
                     aspect-ratio: 1 / 1;
-                    border-radius: 10px;
+                    border-radius: 12px;
                     overflow: hidden;
                     background: rgba(15, 23, 42, 0.6);
                     border: 1px solid rgba(52, 211, 153, 0.1);
