@@ -34,7 +34,8 @@ export const LOGO_URL =
 // comments prevents 404s in the live structured data while tracking the
 // audit follow-ups the team needs to complete.
 export const SAME_AS = [
-  // 'https://www.instagram.com/geckinspect/',
+  'https://www.instagram.com/the.gecko.garden/',
+  'https://www.instagram.com/the.reptile.garden/',
   // 'https://www.tiktok.com/@geckinspect',
   // 'https://www.youtube.com/@geckinspect',
   // 'https://www.linkedin.com/company/geck-inspect/',
