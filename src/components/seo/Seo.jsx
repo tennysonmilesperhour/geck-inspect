@@ -28,7 +28,7 @@ import { APP_LOGO_URL } from '@/lib/constants';
 const SITE_URL = 'https://geckinspect.com';
 const SITE_NAME = 'Geck Inspect';
 const SITE_HANDLE = '@geckinspect';
-const DEFAULT_IMAGE = APP_LOGO_URL;
+const DEFAULT_IMAGE = 'https://geckinspect.com/og-image.png';
 
 // Default keyword base that every page picks up — keeps the top-level
 // crested gecko identity searches consistent across the whole app.
