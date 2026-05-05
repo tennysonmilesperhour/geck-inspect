@@ -185,7 +185,11 @@ function appendPostToBlogPosts(entry) {
   }
 
   // Walk backwards from closeIdx to find the last `}` — that's the last entry's end.
+  // Handle trailing commas: skip whitespace AND a possible trailing comma.
   let j = closeIdx - 1;
+  while (j > 0 && /\s/.test(src[j])) j--;
+  // Skip trailing comma if present (valid JS, sometimes left by formatters).
+  if (src[j] === ',') j--;
   while (j > 0 && /\s/.test(src[j])) j--;
   if (src[j] !== '}') {
     throw new Error(`Unexpected char before "]" at index ${j}: ${JSON.stringify(src[j])}`);
