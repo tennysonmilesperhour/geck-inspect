@@ -1,0 +1,141 @@
+{
+  "slug": "super-cappuccino-breeding-risks",
+  "title": "Why Super Cappuccino Breeding Is Riskier Than You Think",
+  "description": "Pairing two Cappuccinos sounds like a straightforward path to Frappuccinos. The incomplete-dominant inheritance math—and real breeder outcomes—tell a different story.",
+  "keyphrase": "super cappuccino breeding risks",
+  "category": "breeding",
+  "heroEyebrow": "Genetics · Breeding",
+  "tldr": [
+    "Cappuccino is an incomplete-dominant morph — two copies produce Frappuccino (super cappuccino), but the super form's viability is actively debated in the community.",
+    "A Cap × Cap pairing statistically yields 25% Frappuccino, 50% Cappuccino, and 25% non-carriers — but some breeders report reduced clutch sizes and developmental concerns in the Frappuccino fraction.",
+    "The safest approach is Cappuccino × normal, which produces 50% visual Cappuccinos with zero risk of a potentially compromised super form.",
+    "Lineage documentation matters more than appearance — dark brown geckos with a dorsal pattern are not automatically Cappuccino.",
+    "If you're deliberately producing Frappuccinos, document every clutch outcome and share that data publicly. The community needs it."
+  ],
+  "faq": [
+    {
+      "question": "What is a Frappuccino crested gecko?",
+      "answer": "Frappuccino (also called Super Cappuccino) is the homozygous form of the Cappuccino incomplete-dominant morph. Two copies of the Cappuccino gene produce a more extreme version of the saddle marking, paler and more neutral body color, and cleaner pattern boundaries. Frappuccinos are rare and command premium prices ($1,500–$3,500), but their long-term viability is still debated in the breeding community."
+    },
+    {
+      "question": "Is it safe to breed two Cappuccino crested geckos together?",
+      "answer": "It's not confirmed unsafe, but it's not confirmed safe either. A Cap × Cap pairing produces 25% Frappuccino offspring, and some breeders report elevated egg-failure rates or developmental concerns in the super form. The conservative default is Cappuccino × normal, which produces 50% visual Cappuccinos with no risk of a potentially compromised super form. If you do pair two Cappuccinos, document every clutch outcome."
+    },
+    {
+      "question": "How is Cappuccino different from Lilly White in terms of inheritance?",
+      "answer": "Both are incomplete-dominant morphs in crested geckos — one copy produces the visual form, two copies produce a super form. The key difference: Super Lilly White is confirmed embryonic-lethal and no homozygous animals survive to hatch. The Super Cappuccino (Frappuccino) does survive, but some breeders report viability concerns. Lilly White × Lilly White pairings are considered irresponsible; Cap × Cap pairings are considered higher-risk but not categorically banned."
+    },
+    {
+      "question": "What does a visual Cappuccino crested gecko look like?",
+      "answer": "A visual Cappuccino has a characteristic 'saddle' — a distinct, rounded dorsal marking with clean edges that runs from the nape down the spine. Body color tends toward warm chocolate or coffee tones. Eye rims and crest lines are often darker than surrounding areas. Not every brown gecko with a dorsal pattern is Cappuccino — lineage documentation is required to confirm the morph."
+    },
+    {
+      "question": "What offspring does a Cappuccino × normal pairing produce?",
+      "answer": "Approximately 50% visual Cappuccinos and 50% non-carriers (normal-looking geckos with no Cappuccino gene). This is the safest pairing for a Cappuccino project. It produces no Frappuccinos, so there's no risk associated with the debated super-form viability, but you also cannot produce Frappuccinos this way."
+    },
+    {
+      "question": "Are Frappuccino crested geckos a scam?",
+      "answer": "No. Frappuccinos are real animals with documented genetics — the homozygous form of the incomplete-dominant Cappuccino morph. The concern is not that they're fictional, but that the viability of the super form is still debated and that uncertainty is rarely disclosed to buyers. A Frappuccino from a well-documented line with transparent clutch records is a legitimate purchase; one sold without that context leaves buyers missing important information."
+    },
+    {
+      "question": "How do I confirm a crested gecko is a true Cappuccino and not just a brown gecko?",
+      "answer": "Lineage documentation — not appearance. Ask the seller for pairing records showing what the parents were, their confirmed genetics, and who originally proved the Cappuccino gene in the line. A dark brown gecko with a connected dorsal pattern may look like a Cappuccino, but visual similarity alone is not proof. This is the same standard that applies to all proven incomplete-dominant morphs."
+    },
+    {
+      "question": "What is the right way to document a Cappuccino breeding project?",
+      "answer": "Record the sire and dam identity with photos and their confirmed genetics. Log every clutch: egg count, fertility rate, hatch rate, and offspring phenotypes. For Cap × Cap pairings specifically, track Frappuccino offspring health at 30, 90, and 180 days and compare to Cappuccino clutchmates. Share results publicly — the community needs breeder data to resolve the Frappuccino viability question."
+    }
+  ],
+  "internalLinks": [
+    {
+      "href": "/MorphGuide/cappuccino",
+      "label": "Cappuccino morph profile"
+    },
+    {
+      "href": "/MorphGuide/frappuccino",
+      "label": "Frappuccino (Super Cappuccino) morph profile"
+    },
+    {
+      "href": "/MorphGuide/lilly-white",
+      "label": "Lilly White — the confirmed lethal super form"
+    },
+    {
+      "href": "/GeneticsGuide",
+      "label": "Crested gecko genetics guide"
+    },
+    {
+      "href": "/GeneticCalculatorTool",
+      "label": "Run the Cap × Cap Punnett square yourself"
+    }
+  ],
+  "externalCitations": [
+    {
+      "url": "https://www.youtube.com/watch?v=JLXYdEo7mhk",
+      "label": "TikisGeckos — Should We Breed Super Cappuccino Crested Geckos? (YouTube)"
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=5O_obmlNu9I",
+      "label": "Homestead Reptiles — Don't Buy Super Cappuccino Crested Gecko (YouTube)"
+    }
+  ],
+  "topicId": "tpc_1777632877003_supercappu",
+  "originalQueueEntry": {
+    "id": "tpc_1777632877003_supercappu",
+    "title": "Why Super Cappuccino Breeding Is Risky (And What Breeders Get Wrong)",
+    "slug": "super-cappuccino-breeding-risks",
+    "category": "breeding",
+    "status": "new",
+    "score": {
+      "demand": 7,
+      "originality": 8,
+      "accuracyRisk": 4,
+      "voiceFit": 8,
+      "total": 19
+    },
+    "createdAt": "2026-05-01T10:54:37.003Z",
+    "draftedAt": null,
+    "publishedAt": null,
+    "evidence": [
+      {
+        "source": "youtube",
+        "url": "https://www.youtube.com/watch?v=5O_obmlNu9I",
+        "snippet": "\"Don't buy super cappuccino crested gecko it's a scam and waste of money\" — Homestead reptiles (2,063 views, 1 year ago)"
+      },
+      {
+        "source": "youtube",
+        "url": "https://www.youtube.com/watch?v=JLXYdEo7mhk",
+        "snippet": "\"Should We Breed Super Cappuccino Crested Geckos?\" — TikisGeckos (7,653 views, 3 years ago)"
+      }
+    ],
+    "angleIdeas": [
+      "Breeders often assume that pairing two cappuccinos will yield viable super cappuccinos at a predictable rate—the genetics tell a different story.",
+      "The 'scam' narrative around super cappuccinos isn't just hype: here's what the incomplete-dominant inheritance actually produces.",
+      "If you're planning a cappuccino breeding project, you need to understand why super cappuccino projects fail or succeed based on lineage, not just color."
+    ],
+    "rejectionReason": null,
+    "prUrl": null
+  },
+  "factSources": [
+    {
+      "label": "morph-guide.js (local canonical catalogue)",
+      "path": "src/data/morph-guide.js",
+      "bytes": 46691
+    },
+    {
+      "label": "genetics-glossary.js",
+      "path": "src/data/genetics-glossary.js",
+      "bytes": 13230
+    },
+    {
+      "label": "genetics-sections.jsx (long-form)",
+      "path": "src/data/genetics-sections.jsx",
+      "bytes": 39736
+    },
+    {
+      "label": "genetics-jsonld.js (structured FAQ)",
+      "path": "src/data/genetics-jsonld.js",
+      "bytes": 11168
+    }
+  ],
+  "generatedAt": "2026-05-06T09:28:26.236Z"
+}

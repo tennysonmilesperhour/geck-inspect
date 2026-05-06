@@ -122,6 +122,40 @@
       ],
       "firstCallAt": "2026-04-27T12:09:40.570Z",
       "lastCallAt": "2026-05-01T11:00:41.391Z"
+    },
+    "2026-W19": {
+      "totalUsd": 0.355755,
+      "byModel": {
+        "claude-sonnet-4-6": 0.355755
+      },
+      "byStop": {
+        "draft-write": 0.208738,
+        "draft-critique": 0.147017
+      },
+      "log": [
+        {
+          "at": "2026-05-06T09:28:00.980Z",
+          "model": "claude-sonnet-4-6",
+          "stopLabel": "draft-write",
+          "usd": 0.208738,
+          "in": 853,
+          "out": 4560,
+          "cr": 0,
+          "cw": 36741
+        },
+        {
+          "at": "2026-05-06T09:28:26.235Z",
+          "model": "claude-sonnet-4-6",
+          "stopLabel": "draft-critique",
+          "usd": 0.147017,
+          "in": 2307,
+          "out": 938,
+          "cr": 0,
+          "cw": 33607
+        }
+      ],
+      "firstCallAt": "2026-05-06T09:28:00.980Z",
+      "lastCallAt": "2026-05-06T09:28:26.235Z"
     }
   }
 }
