@@ -131,3 +131,6 @@ export const StoreFulfillment = sb.StoreFulfillment;
 export const StoreAffiliateClick = sb.StoreAffiliateClick;
 export const StoreSignupGrant = sb.StoreSignupGrant;
 export const StorePromoCode = sb.StorePromoCode;
+export const Testimonial = sb.Testimonial;
+export const Collection = sb.Collection;
+export const CollectionMember = sb.CollectionMember;

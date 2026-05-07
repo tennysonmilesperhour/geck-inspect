@@ -16,6 +16,7 @@ const MEMBERSHIP_TIERS = [
     price: 0,
     features: [
       'Up to 10 geckos in collection',
+      '500 MB photo storage',
       'Basic breeding tracking',
       'Public profile',
       'Community forum access',
@@ -32,6 +33,8 @@ const MEMBERSHIP_TIERS = [
     annualPrice: 38.40,
     features: [
       'Up to 50 geckos in collection',
+      '5 GB photo storage',
+      'Up to 2 collection collaborators',
       'Advanced breeding tools',
       'Calendar reminders',
       'Weight tracking & charts',
@@ -50,6 +53,8 @@ const MEMBERSHIP_TIERS = [
     annualPrice: 105.60,
     features: [
       'Unlimited geckos',
+      'Unlimited photo storage',
+      'Unlimited collection collaborators',
       'Full lineage tree access',
       'Advanced calendar system',
       'Marketplace sync (MorphMarket, Palm Street)',

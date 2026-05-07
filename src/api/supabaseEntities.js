@@ -127,6 +127,11 @@ export const TABLE_MAP = {
   StoreAffiliateClick: 'store_affiliate_clicks',
   StoreSignupGrant: 'store_signup_grants',
   StorePromoCode: 'store_promo_codes',
+  // Landing page testimonials — admin curated, public-readable when approved
+  Testimonial: 'testimonials',
+  // Multi-user collaboration: per-collection ownership and shared access
+  Collection: 'collections',
+  CollectionMember: 'collection_members',
 };
 
 function parseSort(sort) {
@@ -380,3 +385,6 @@ export const StoreFulfillment = createEntityClient('StoreFulfillment');
 export const StoreAffiliateClick = createEntityClient('StoreAffiliateClick');
 export const StoreSignupGrant = createEntityClient('StoreSignupGrant');
 export const StorePromoCode = createEntityClient('StorePromoCode');
+export const Testimonial = createEntityClient('Testimonial');
+export const Collection = createEntityClient('Collection');
+export const CollectionMember = createEntityClient('CollectionMember');

@@ -3,6 +3,8 @@ import { User } from '@/entities/User';
 import { UploadFile } from '@/integrations/Core';
 import { useToast } from "@/components/ui/use-toast";
 import usePageSettings from '@/hooks/usePageSettings';
+import StorageUsageCard from '@/components/settings/StorageUsageCard';
+import CollectionsCard from '@/components/settings/CollectionsCard';
 import IdLogicSettings, { DEFAULT_ID_SETTINGS } from '@/components/settings/IdLogicSettings';
 import PushNotificationsCard from '@/components/settings/PushNotificationsCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -574,6 +576,14 @@ export default function SettingsPage() {
                     </aside>
 
                     <div className="flex-1 min-w-0 space-y-8">
+                <section id="storage-usage">
+                    <StorageUsageCard user={user} />
+                </section>
+
+                <section id="collections">
+                    <CollectionsCard user={user} />
+                </section>
+
                 <section id="appearance">
                 <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
                     <CardHeader>

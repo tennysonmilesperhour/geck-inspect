@@ -31,6 +31,7 @@ import {
   X,
 } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
+import Testimonials from '@/components/landing/Testimonials';
 
 const LOGO_URL =
   APP_LOGO_URL;
@@ -622,6 +623,10 @@ export default function Home() {
             </table>
           </div>
         </section>
+
+        {/* Testimonials — self-hides until at least 3 approved quotes
+            exist in the testimonials table. Curated via the admin tab. */}
+        <Testimonials />
 
         {/* Crested gecko context — this is valuable SEO/AI content */}
         <section className="relative z-10 max-w-4xl mx-auto px-6 pb-24">

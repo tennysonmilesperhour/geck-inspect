@@ -18,8 +18,41 @@
  * src/integrations/Core.js as `UploadFile` for backwards compatibility.
  */
 import { supabase } from '@/lib/supabaseClient';
+import { getTierLimits, formatBytes } from '@/lib/tierLimits';
 
 const BUCKET = 'geck-inspect-media';
+
+/**
+ * Best-effort fetch of the current user's total storage bytes. Returns
+ * null on any failure (RPC missing, network, permissions) — callers
+ * must treat null as "unknown" and skip quota enforcement rather than
+ * blocking the upload. This keeps client uploads working even when the
+ * 20260507_storage_quota.sql migration hasn't been applied yet.
+ */
+export async function getUserStorageBytes() {
+  try {
+    const { data, error } = await supabase.rpc('get_user_storage_bytes');
+    if (error) return null;
+    return Number(data) || 0;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchCurrentUserProfile() {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('membership_tier, subscription_status')
+      .eq('id', user.id)
+      .maybeSingle();
+    return profile || {};
+  } catch {
+    return null;
+  }
+}
 
 // Only allow real image types — SVG is excluded because it's scriptable.
 const ALLOWED_MIME_TYPES = new Set([
@@ -86,6 +119,23 @@ export async function uploadFile({ file, folder = 'uploads' } = {}) {
   // Namespace by user ID (UUID) so public URLs don't leak emails.
   const { data: { user } } = await supabase.auth.getUser();
   const ownerSlug = user?.id || 'public';
+
+  // Tier-based storage quota. Best effort — if either query fails we
+  // fall through to the upload rather than block the user (the
+  // migration may not yet be applied, or the network may be flaky).
+  if (user) {
+    const [profile, usedBytes] = await Promise.all([
+      fetchCurrentUserProfile(),
+      getUserStorageBytes(),
+    ]);
+    const limits = getTierLimits(profile);
+    const limit = limits.maxStorageBytes;
+    if (limit != null && usedBytes != null && usedBytes + file.size > limit) {
+      throw new Error(
+        `Storage quota reached: this upload would put you at ${formatBytes(usedBytes + file.size)} of your ${formatBytes(limit)} (${limits.label}) limit. Upgrade your plan or delete some photos to continue.`,
+      );
+    }
+  }
 
   const ext = extensionFor(file);
   const baseName = safeFileName((file.name || 'upload').replace(/\.[a-zA-Z0-9]+$/, ''));

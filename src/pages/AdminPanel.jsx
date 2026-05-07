@@ -42,6 +42,7 @@ import SystemHealth from '@/components/admin/SystemHealth';
 import SupportInbox from '@/components/admin/SupportInbox';
 import ErrorLogsViewer from '@/components/admin/ErrorLogsViewer';
 import BlogManager from '@/components/admin/blog/BlogManager';
+import TestimonialsAdmin from '@/components/admin/TestimonialsAdmin';
 
 /**
  * Admin Panel — sidebar layout grouped by responsibility.
@@ -89,6 +90,7 @@ const NAV_GROUPS = [
       { id: 'blog', label: 'Blog', icon: BookOpen },
       { id: 'pages', label: 'Pages', icon: Layout },
       { id: 'morph_submissions', label: 'Morph submissions', icon: CheckSquare },
+      { id: 'testimonials', label: 'Testimonials', icon: Megaphone },
     ],
   },
   {
@@ -128,6 +130,7 @@ const SECTION_TITLES = {
   blog: 'Blog',
   pages: 'Page management',
   morph_submissions: 'Morph submissions',
+  testimonials: 'Landing-page testimonials',
   product_analytics: 'Product analytics',
   analytics: 'Marketplace analytics',
   store: 'Store',
@@ -212,6 +215,8 @@ export default function AdminPanel() {
         return <PageManagement />;
       case 'morph_submissions':
         return <MorphSubmissionReview />;
+      case 'testimonials':
+        return <TestimonialsAdmin />;
       case 'product_analytics':
         return <ProductAnalytics />;
       case 'analytics':

@@ -505,6 +505,7 @@ const DYNAMIC_ROUTE_PATTERNS = [
   '/passport/:passportCode/qr',
   '/passport/:passportCode',
   '/claim/:token',
+  '/collection-invite/:token',
   '/blog/:slug',
 ];
 
