@@ -49,26 +49,10 @@ $$;
 
 grant execute on function public.get_user_storage_bytes() to authenticated;
 
--- Optional convenience view (admin-only) for monitoring overall usage
--- and identifying users approaching their quota. Not used by the
--- client; useful in SQL editor for dashboards.
-create or replace view public.storage_usage_per_user as
-  select
-    split_part(name, '/', 2) as user_id_guess,
-    count(*) as object_count,
-    coalesce(sum((metadata->>'size')::bigint), 0) as total_bytes
-  from storage.objects
-  where bucket_id = 'geck-inspect-media'
-  group by 1;
-
--- View security: only admins can read this monitoring view.
-revoke all on public.storage_usage_per_user from anon, authenticated;
-grant select on public.storage_usage_per_user to authenticated;
-
--- We use a row-security helper in the consuming queries instead of
--- restricting the view, since views can't have RLS attached directly
--- on Postgres < 15 in the Supabase config. Document the intent here.
-comment on view public.storage_usage_per_user is
-  'Admin-only monitoring view. Authenticated role can SELECT but the
-   bucket prefix encoding does not include user identifiers in a
-   privacy-sensitive way; consumers should still gate on profile.role.';
+-- Note: an earlier draft of this migration also created a public
+-- monitoring view `storage_usage_per_user`. It was dropped because
+-- views in the public schema inherit SECURITY DEFINER semantics from
+-- their creator (which Supabase's linter flags as an error), and the
+-- view was never wired up from the client. If admins need a global
+-- usage report later, query storage.objects directly from the SQL
+-- editor or expose a SECURITY INVOKER RPC instead of a view.

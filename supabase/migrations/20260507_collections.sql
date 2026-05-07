@@ -1,49 +1,49 @@
 -- =============================================================================
--- Collections + per-collection collaborators
+-- Collections + per-collection collaborators (email-keyed identity)
 -- =============================================================================
 -- Adds two tables:
---   collections           — a named bucket of geckos owned by one user
---   collection_members    — invitation + role records linking a user to a
+--   collections           — a named bucket of geckos owned by one email
+--   collection_members    — invitation + role records linking an email to a
 --                           collection (roles: owner / editor / viewer)
 --
 -- Adds one column:
 --   geckos.collection_id  — every gecko belongs to exactly one collection
 --
--- Backfill strategy: for every existing user that owns at least one
--- gecko, create a default collection ("My collection") and reparent all
--- their geckos into it. The owner is also written into collection_members
--- with role='owner', so future code paths can treat ownership uniformly
--- by reading collection_members rather than special-casing the owner.
+-- Identity model
+-- --------------
+-- This schema is keyed by email rather than auth.users.id (uuid). That
+-- matches the canonical pattern used everywhere else in this codebase
+-- ("auth.email() = created_by" in every existing RLS policy), and it
+-- works for legacy Base44-era profiles whose `profiles.id` is a 24-char
+-- hex string with no corresponding auth.users row. A uuid-keyed design
+-- silently drops every legacy owner from the backfill.
 --
--- RLS posture:
---   collections           — owner can read/write; accepted members can read.
---                           Pending invitees can also read so the invite
---                           landing page can show them what they're joining.
---   collection_members    — owner can read/write all rows for their owned
---                           collections; users can read+modify their own
---                           membership row (to accept/decline/leave).
---   geckos                — UNCHANGED for now. A later migration will
---                           update the geckos SELECT policy to include
---                           "auth.uid() in (SELECT member_id FROM
---                           collection_members WHERE collection_id =
---                           geckos.collection_id AND status='accepted')".
---                           Holding off here so existing app queries that
---                           filter by created_by stay correct until the
---                           UI is updated to honor collaborator access.
+-- RLS posture
+-- -----------
+--   collections           — readable by owner; readable by any
+--                           accepted/pending member; writable by owner.
+--   collection_members    — readable by collection owner; readable by
+--                           the member themselves; writable by owner;
+--                           updatable (status only) by the member.
+--   geckos                — UNCHANGED here. The existing geckos_read_all
+--                           policy already returns true for any authed
+--                           user, so collaborator visibility is already
+--                           there. Phase B updates the WRITE policies
+--                           to allow editor-role members to mutate rows
+--                           in collections they belong to.
 --
--- Apply order:
---   1. CREATE TABLE collections + collection_members
---   2. ADD COLUMN geckos.collection_id (nullable)
---   3. Backfill default collections + member rows
---   4. After verifying the app still works, a follow-up migration can
---      flip geckos.collection_id NOT NULL and update the geckos RLS.
+-- Backfill: for every distinct geckos.created_by, create a default
+-- "My collection", insert an owner row in collection_members, and set
+-- collection_id on each of that owner's geckos.
+--
+-- Idempotent — safe to run twice.
 -- =============================================================================
 
 -- 1. collections -----------------------------------------------------------
 
 create table if not exists public.collections (
   id uuid primary key default gen_random_uuid(),
-  owner_id uuid not null references auth.users(id) on delete cascade,
+  owner_email text not null,
   name text not null,
   description text,
   is_default boolean not null default false,
@@ -51,12 +51,12 @@ create table if not exists public.collections (
   updated_at timestamptz not null default now()
 );
 
-create index if not exists collections_owner_idx on public.collections(owner_id);
+create index if not exists collections_owner_idx on public.collections(lower(owner_email));
 
--- One default collection per owner, enforced at the DB so the
--- "find-or-create default" backfill below is idempotent.
+-- One default collection per owner so the find-or-create backfill below
+-- is idempotent.
 create unique index if not exists collections_one_default_per_owner
-  on public.collections(owner_id) where is_default = true;
+  on public.collections(lower(owner_email)) where is_default = true;
 
 alter table public.collections enable row level security;
 
@@ -64,27 +64,14 @@ drop policy if exists "Owners read their collections" on public.collections;
 create policy "Owners read their collections"
   on public.collections
   for select
-  using (owner_id = auth.uid());
-
-drop policy if exists "Members read collections they belong to" on public.collections;
-create policy "Members read collections they belong to"
-  on public.collections
-  for select
-  using (
-    exists (
-      select 1 from public.collection_members cm
-      where cm.collection_id = collections.id
-        and cm.member_id = auth.uid()
-        and cm.status in ('pending', 'accepted')
-    )
-  );
+  using (lower(owner_email) = lower(coalesce(auth.email(), '')));
 
 drop policy if exists "Owners write their collections" on public.collections;
 create policy "Owners write their collections"
   on public.collections
   for all
-  using (owner_id = auth.uid())
-  with check (owner_id = auth.uid());
+  using (lower(owner_email) = lower(coalesce(auth.email(), '')))
+  with check (lower(owner_email) = lower(coalesce(auth.email(), '')));
 
 
 -- 2. collection_members ----------------------------------------------------
@@ -92,15 +79,11 @@ create policy "Owners write their collections"
 create table if not exists public.collection_members (
   id uuid primary key default gen_random_uuid(),
   collection_id uuid not null references public.collections(id) on delete cascade,
-  -- member_id is null until the invitation is accepted by a real user.
-  -- We track member_email at invite time so the row can be linked once
-  -- the invitee signs up.
-  member_id uuid references auth.users(id) on delete cascade,
   member_email text not null,
   role text not null check (role in ('owner', 'editor', 'viewer')),
   status text not null default 'pending' check (status in ('pending', 'accepted', 'declined', 'revoked')),
   invite_token text unique,
-  invited_by uuid references auth.users(id) on delete set null,
+  invited_by_email text,
   invited_at timestamptz not null default now(),
   accepted_at timestamptz,
   declined_at timestamptz,
@@ -109,8 +92,6 @@ create table if not exists public.collection_members (
 
 create index if not exists collection_members_collection_idx
   on public.collection_members(collection_id);
-create index if not exists collection_members_member_idx
-  on public.collection_members(member_id) where member_id is not null;
 create index if not exists collection_members_email_idx
   on public.collection_members(lower(member_email));
 create unique index if not exists collection_members_unique_invite
@@ -118,7 +99,21 @@ create unique index if not exists collection_members_unique_invite
 
 alter table public.collection_members enable row level security;
 
--- Owner of the collection can read every row tied to it.
+-- Member-readable policy on collections (defined here because the EXISTS
+-- subquery references collection_members which must exist first).
+drop policy if exists "Members read collections they belong to" on public.collections;
+create policy "Members read collections they belong to"
+  on public.collections
+  for select
+  using (
+    exists (
+      select 1 from public.collection_members cm
+      where cm.collection_id = collections.id
+        and lower(cm.member_email) = lower(coalesce(auth.email(), ''))
+        and cm.status in ('pending', 'accepted')
+    )
+  );
+
 drop policy if exists "Owners read members of their collections" on public.collection_members;
 create policy "Owners read members of their collections"
   on public.collection_members
@@ -127,21 +122,16 @@ create policy "Owners read members of their collections"
     exists (
       select 1 from public.collections c
       where c.id = collection_members.collection_id
-        and c.owner_id = auth.uid()
+        and lower(c.owner_email) = lower(coalesce(auth.email(), ''))
     )
   );
 
--- Members can read their own row (to see role/status, claim invite, etc).
 drop policy if exists "Members read their own membership" on public.collection_members;
 create policy "Members read their own membership"
   on public.collection_members
   for select
-  using (
-    member_id = auth.uid()
-    or lower(member_email) = lower(coalesce(auth.email(), ''))
-  );
+  using (lower(member_email) = lower(coalesce(auth.email(), '')));
 
--- Owners can insert/update/delete any member row for collections they own.
 drop policy if exists "Owners write members of their collections" on public.collection_members;
 create policy "Owners write members of their collections"
   on public.collection_members
@@ -150,38 +140,31 @@ create policy "Owners write members of their collections"
     exists (
       select 1 from public.collections c
       where c.id = collection_members.collection_id
-        and c.owner_id = auth.uid()
+        and lower(c.owner_email) = lower(coalesce(auth.email(), ''))
     )
   )
   with check (
     exists (
       select 1 from public.collections c
       where c.id = collection_members.collection_id
-        and c.owner_id = auth.uid()
+        and lower(c.owner_email) = lower(coalesce(auth.email(), ''))
     )
   );
 
--- Members can update their OWN row to accept / decline / leave.
--- They cannot change role, collection_id, or invited_by from the client;
--- those fields are validated on the server in the accept-invite flow.
+-- Members can update their OWN row to accept / decline / leave. The
+-- accept_collection_invite RPC is the supported path, but this policy
+-- exists so direct updates from the client also stay scoped to self.
 drop policy if exists "Members update their own membership" on public.collection_members;
 create policy "Members update their own membership"
   on public.collection_members
   for update
-  using (
-    member_id = auth.uid()
-    or lower(member_email) = lower(coalesce(auth.email(), ''))
-  )
-  with check (
-    member_id = auth.uid()
-    or lower(member_email) = lower(coalesce(auth.email(), ''))
-  );
+  using (lower(member_email) = lower(coalesce(auth.email(), '')))
+  with check (lower(member_email) = lower(coalesce(auth.email(), '')));
 
--- Auto-touch updated_at on the parent collection when membership rows
--- change, so admin dashboards can sort by activity.
 create or replace function public.bump_collection_updated_at()
 returns trigger
 language plpgsql
+set search_path = public
 as $$
 begin
   update public.collections
@@ -205,43 +188,36 @@ alter table public.geckos
 create index if not exists geckos_collection_idx on public.geckos(collection_id);
 
 
--- 4. Backfill: default collection per existing owner ----------------------
+-- 4. Backfill: default collection per existing geckos.created_by ----------
 
--- For every distinct created_by (email) that owns at least one gecko,
--- look up the matching auth.user, create a default collection, link
--- the owner as a member, and reparent the user's geckos into it.
 do $$
 declare
   rec record;
   cid uuid;
 begin
   for rec in
-    select distinct g.created_by as email,
-                    u.id as uid
-      from public.geckos g
-      join auth.users u on lower(u.email) = lower(g.created_by)
-     where g.collection_id is null
+    select distinct created_by as email
+      from public.geckos
+     where collection_id is null
+       and created_by is not null
   loop
-    -- Look up an existing default collection for this user, or insert one.
     select id into cid
       from public.collections
-     where owner_id = rec.uid and is_default = true
+     where lower(owner_email) = lower(rec.email) and is_default = true
      limit 1;
 
     if cid is null then
-      insert into public.collections (owner_id, name, description, is_default)
-        values (rec.uid, 'My collection', 'Default collection — created during the multi-collection migration.', true)
+      insert into public.collections (owner_email, name, description, is_default)
+        values (rec.email, 'My collection', 'Default collection.', true)
         returning id into cid;
     end if;
 
-    -- Owner row in collection_members so we can read membership uniformly.
     insert into public.collection_members
-        (collection_id, member_id, member_email, role, status, accepted_at)
+        (collection_id, member_email, role, status, accepted_at)
       values
-        (cid, rec.uid, rec.email, 'owner', 'accepted', now())
+        (cid, rec.email, 'owner', 'accepted', now())
       on conflict (collection_id, lower(member_email)) do nothing;
 
-    -- Reparent all of this user's unparented geckos.
     update public.geckos
        set collection_id = cid
      where created_by = rec.email
@@ -250,12 +226,8 @@ begin
 end $$;
 
 
--- 5. Convenience: trigger that auto-fills collection_id on insert ---------
+-- 5. Trigger that auto-fills collection_id on insert ----------------------
 
--- New geckos created by users that already have a default collection
--- inherit it automatically. New users without a default collection
--- still need application code to call ensure_default_collection() at
--- profile creation time.
 create or replace function public.geckos_set_default_collection()
 returns trigger
 language plpgsql
@@ -264,28 +236,30 @@ set search_path = public
 as $$
 declare
   cid uuid;
-  uid uuid := auth.uid();
+  effective_email text;
 begin
   if new.collection_id is not null then
     return new;
   end if;
-  if uid is null then
+  effective_email := coalesce(new.created_by, auth.email());
+  if effective_email is null or effective_email = '' then
     return new;
   end if;
+
   select id into cid
     from public.collections
-   where owner_id = uid and is_default = true
+   where lower(owner_email) = lower(effective_email) and is_default = true
    limit 1;
 
   if cid is null then
-    insert into public.collections (owner_id, name, description, is_default)
-      values (uid, 'My collection', 'Default collection.', true)
+    insert into public.collections (owner_email, name, description, is_default)
+      values (effective_email, 'My collection', 'Default collection.', true)
       returning id into cid;
 
     insert into public.collection_members
-        (collection_id, member_id, member_email, role, status, accepted_at)
+        (collection_id, member_email, role, status, accepted_at)
       values
-        (cid, uid, coalesce(auth.email(), ''), 'owner', 'accepted', now())
+        (cid, effective_email, 'owner', 'accepted', now())
       on conflict (collection_id, lower(member_email)) do nothing;
   end if;
 
@@ -299,14 +273,14 @@ create trigger geckos_set_default_collection_trg
   before insert on public.geckos
   for each row execute function public.geckos_set_default_collection();
 
+-- This is a trigger function, not an RPC. Revoke EXECUTE so it can't
+-- be invoked via /rest/v1/rpc — Postgres still fires it on inserts
+-- because triggers don't check EXECUTE on the underlying function.
+revoke execute on function public.geckos_set_default_collection() from anon, authenticated, public;
+
 
 -- 6. RPC: accept an invitation ---------------------------------------------
 
--- Server-side accept so the client doesn't need permission to mutate
--- arbitrary collection_members rows. Caller passes the invite token.
--- The RPC matches the token against the auth.uid() / auth.email() of
--- the caller; mismatches return a clear error rather than silently
--- accepting under a different identity.
 create or replace function public.accept_collection_invite(token text)
 returns public.collection_members
 language plpgsql
@@ -315,10 +289,9 @@ set search_path = public
 as $$
 declare
   row public.collection_members;
-  uid uuid := auth.uid();
   email text := lower(coalesce(auth.email(), ''));
 begin
-  if uid is null then
+  if email = '' then
     raise exception 'not authenticated';
   end if;
 
@@ -345,8 +318,7 @@ begin
   end if;
 
   update public.collection_members
-     set member_id = uid,
-         status = 'accepted',
+     set status = 'accepted',
          accepted_at = now()
    where id = row.id
    returning * into row;
@@ -356,3 +328,4 @@ end;
 $$;
 
 grant execute on function public.accept_collection_invite(text) to authenticated;
+revoke execute on function public.accept_collection_invite(text) from anon, public;

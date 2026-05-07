@@ -43,6 +43,9 @@ create policy "Approved testimonials are public"
   using (approved = true);
 
 -- Admin read: admins see everything (pending + rejected + approved).
+-- Note: profiles.id is text in this schema, so admin checks use the
+-- canonical `p.email = auth.email()` pattern that every other admin
+-- policy in the database uses.
 drop policy if exists "Admins read all testimonials" on public.testimonials;
 create policy "Admins read all testimonials"
   on public.testimonials
@@ -50,7 +53,7 @@ create policy "Admins read all testimonials"
   using (
     exists (
       select 1 from public.profiles p
-      where p.id = auth.uid() and p.role = 'admin'
+      where p.email = auth.email() and p.role = 'admin'
     )
   );
 
@@ -62,13 +65,13 @@ create policy "Admins write testimonials"
   using (
     exists (
       select 1 from public.profiles p
-      where p.id = auth.uid() and p.role = 'admin'
+      where p.email = auth.email() and p.role = 'admin'
     )
   )
   with check (
     exists (
       select 1 from public.profiles p
-      where p.id = auth.uid() and p.role = 'admin'
+      where p.email = auth.email() and p.role = 'admin'
     )
   );
 
@@ -77,6 +80,7 @@ create policy "Admins write testimonials"
 create or replace function public.set_testimonials_updated_at()
 returns trigger
 language plpgsql
+set search_path = public
 as $$
 begin
   new.updated_at = now();

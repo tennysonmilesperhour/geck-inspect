@@ -25,7 +25,6 @@ import {
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Collection, CollectionMember } from '@/entities/all';
-import { supabase } from '@/lib/supabaseClient';
 import { getTierLimits } from '@/lib/tierLimits';
 
 /**
@@ -73,14 +72,16 @@ export default function CollectionsCard({ user }) {
   const load = async () => {
     setLoading(true);
     try {
-      const userId = user?.id;
-      if (!userId) {
+      const email = user?.email;
+      if (!email) {
         setCollections([]);
         setMemberships([]);
         return;
       }
+      // Collections RLS limits these to ones the caller owns or is a
+      // member of, so we don't need an explicit owner_email filter.
       const [cols, mems] = await Promise.all([
-        Collection.filter({ owner_id: userId }, 'created_at'),
+        Collection.filter({}, 'created_at'),
         CollectionMember.filter({}, 'invited_at'),
       ]);
       setCollections(Array.isArray(cols) ? cols : []);
@@ -93,7 +94,7 @@ export default function CollectionsCard({ user }) {
 
   useEffect(() => {
     load();
-  }, [user?.id]);
+  }, [user?.email]);
 
   const createCollection = async () => {
     const name = newName.trim();
@@ -101,7 +102,7 @@ export default function CollectionsCard({ user }) {
     setCreating(true);
     try {
       const created = await Collection.create({
-        owner_id: user.id,
+        owner_email: user.email,
         name,
         description: null,
         is_default: false,
@@ -110,7 +111,6 @@ export default function CollectionsCard({ user }) {
       // uniformly via collection_members.
       await CollectionMember.create({
         collection_id: created.id,
-        member_id: user.id,
         member_email: user.email,
         role: 'owner',
         status: 'accepted',
@@ -313,7 +313,7 @@ function CollectionRow({
         role: inviteRole,
         status: 'pending',
         invite_token: token,
-        invited_by: user.id,
+        invited_by_email: user.email,
         invited_at: new Date().toISOString(),
         expires_at: new Date(Date.now() + 30 * 86400 * 1000).toISOString(),
       });
