@@ -115,6 +115,18 @@ export const TABLE_MAP = {
   BlogCategory: 'blog_categories',
   BlogTag: 'blog_tags',
   BlogLog: 'blog_logs',
+  // Store — supplies, gifts, merch, affiliate
+  StoreVendor: 'store_vendors',
+  StoreCategory: 'store_categories',
+  StoreProduct: 'store_products',
+  StoreCart: 'store_carts',
+  StoreCartItem: 'store_cart_items',
+  StoreOrder: 'store_orders',
+  StoreOrderItem: 'store_order_items',
+  StoreFulfillment: 'store_fulfillments',
+  StoreAffiliateClick: 'store_affiliate_clicks',
+  StoreSignupGrant: 'store_signup_grants',
+  StorePromoCode: 'store_promo_codes',
 };
 
 function parseSort(sort) {
@@ -355,3 +367,16 @@ export const BlogPost = createEntityClient('BlogPost');
 export const BlogCategory = createEntityClient('BlogCategory');
 export const BlogTag = createEntityClient('BlogTag');
 export const BlogLog = createEntityClient('BlogLog');
+
+// Store — supplies, gifts, merch, affiliate
+export const StoreVendor = createEntityClient('StoreVendor');
+export const StoreCategory = createEntityClient('StoreCategory');
+export const StoreProduct = createEntityClient('StoreProduct');
+export const StoreCart = createEntityClient('StoreCart');
+export const StoreCartItem = createEntityClient('StoreCartItem');
+export const StoreOrder = createEntityClient('StoreOrder');
+export const StoreOrderItem = createEntityClient('StoreOrderItem');
+export const StoreFulfillment = createEntityClient('StoreFulfillment');
+export const StoreAffiliateClick = createEntityClient('StoreAffiliateClick');
+export const StoreSignupGrant = createEntityClient('StoreSignupGrant');
+export const StorePromoCode = createEntityClient('StorePromoCode');

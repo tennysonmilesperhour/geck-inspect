@@ -82,6 +82,10 @@ const BlogIndex             = lazy(() => import('./pages/BlogIndex'));
 const BlogPost              = lazy(() => import('./pages/BlogPost'));
 const BlogCategoryPage      = lazy(() => import('./pages/BlogCategoryPage'));
 const BlogTagPage           = lazy(() => import('./pages/BlogTagPage'));
+// Store — Supplies tab. Public for guests (gift SEO), works for auth too.
+// Self-contained chrome; mounted at /Store/* so internal sub-routes
+// (cart, gifts, PDPs) resolve without colliding with the auto-router.
+const Store                 = lazy(() => import('./pages/Store'));
 
 const { Pages, Layout, mainPage } = pagesConfig;
 const mainPageKey = mainPage ?? Object.keys(Pages)[0];
@@ -234,6 +238,8 @@ const AuthenticatedApp = () => {
           <Route path="/blog/category/:slug" element={<BlogCategoryPage />} />
           <Route path="/blog/tag/:slug" element={<BlogTagPage />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
+          {/* Store — public so guests can shop and check out. */}
+          <Route path="/Store/*" element={<Store />} />
           <Route path="*" element={<LoginPortal />} />
         </Routes>
       </Suspense>
@@ -275,6 +281,8 @@ const AuthenticatedApp = () => {
       <Route path="/blog/category/:slug" element={<BlogCategoryPage />} />
       <Route path="/blog/tag/:slug" element={<BlogTagPage />} />
       <Route path="/blog/:slug" element={<BlogPost />} />
+      {/* Store — same chrome for auth and guest. */}
+      <Route path="/Store/*" element={<Store />} />
       {/* P1 — Public passport pages (also available when authenticated) */}
       <Route path="/passport/:passportCode" element={<AnimalPassport />} />
       <Route path="/claim/:token" element={<ClaimAnimal />} />

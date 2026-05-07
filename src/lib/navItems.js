@@ -10,7 +10,7 @@ import {
   Search, Settings as SettingsIcon, Shield, MessageSquare, Heart,
   ShoppingCart, GitBranch, FlaskConical, Star, FolderKanban,
   GraduationCap, Dna, Egg, LayoutGrid, CircleUser, UsersRound, Images,
-  Tag, CalendarDays, Sparkles, Truck, Wrench,
+  Tag, CalendarDays, Sparkles, Truck, Wrench, Store as StoreIcon,
 } from 'lucide-react';
 
 // Top-level section tabs. Rendered as a desktop header bar and a mobile
@@ -46,6 +46,7 @@ export const SECTION_FOR_PAGE = {
   BreederStorefront: 'manage',
   Shipping: 'manage',
   BatchHusbandry: 'manage',
+  Store: 'manage',
 
   // Discover — morphs, community, reference, browsing
   Recognition: 'discover',
@@ -86,8 +87,9 @@ export const FALLBACK_NAV_ITEMS = {
     { page_name: "OtherReptiles", display_name: "Other Reptiles", icon: "UsersRound", category: "collection", requires_auth: true, is_enabled: true, order: 2 },
     { page_name: "Breeding", display_name: "Breeding", icon: "Egg", category: "collection", requires_auth: true, is_enabled: true, order: 3 },
     { page_name: "Lineage", display_name: "Lineage", icon: "GitBranch", category: "collection", requires_auth: true, is_enabled: true, order: 4 },
-    { page_name: "CareGuide", display_name: "Care Guide", icon: "Heart", category: "collection", requires_auth: false, is_enabled: true, order: 5 },
-    { page_name: "Forum", display_name: "Forum", icon: "MessageSquare", category: "collection", requires_auth: false, is_enabled: true, order: 6 },
+    { page_name: "Store", display_name: "Supplies", icon: "Store", category: "collection", requires_auth: false, is_enabled: true, order: 5 },
+    { page_name: "CareGuide", display_name: "Care Guide", icon: "Heart", category: "collection", requires_auth: false, is_enabled: true, order: 6 },
+    { page_name: "Forum", display_name: "Forum", icon: "MessageSquare", category: "collection", requires_auth: false, is_enabled: true, order: 7 },
   ],
   tools: [
     { page_name: "Recognition", display_name: "Morph ID", icon: "Search", category: "tools", requires_auth: false, is_enabled: true, order: 1 },
@@ -111,7 +113,7 @@ export const NAV_ICON_MAP = {
   Database, ShoppingCart, Users, GitBranch, Upload, Shield, HeartHandshake,
   FolderKanban, Dna, GraduationCap, Star, Settings: SettingsIcon,
   Egg, LayoutGrid, CircleUser, UsersRound, Images, Tag, CalendarDays,
-  Sparkles, Truck, Wrench,
+  Sparkles, Truck, Wrench, Store: StoreIcon,
 };
 
 export const FAVORITES_MAX = 4;

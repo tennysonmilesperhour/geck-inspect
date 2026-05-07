@@ -119,3 +119,15 @@ export const BlogPost = sb.BlogPost;
 export const BlogCategory = sb.BlogCategory;
 export const BlogTag = sb.BlogTag;
 export const BlogLog = sb.BlogLog;
+// Store — supplies, gifts, merch, affiliate
+export const StoreVendor = sb.StoreVendor;
+export const StoreCategory = sb.StoreCategory;
+export const StoreProduct = sb.StoreProduct;
+export const StoreCart = sb.StoreCart;
+export const StoreCartItem = sb.StoreCartItem;
+export const StoreOrder = sb.StoreOrder;
+export const StoreOrderItem = sb.StoreOrderItem;
+export const StoreFulfillment = sb.StoreFulfillment;
+export const StoreAffiliateClick = sb.StoreAffiliateClick;
+export const StoreSignupGrant = sb.StoreSignupGrant;
+export const StorePromoCode = sb.StorePromoCode;
