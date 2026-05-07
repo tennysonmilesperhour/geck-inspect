@@ -21,11 +21,13 @@ import {
   AlertOctagon,
   BookOpen,
   LineChart,
+  Package,
 } from 'lucide-react';
 
 import AdminOverview from '@/components/admin/AdminOverview';
 import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
 import ProductAnalytics from '@/components/admin/ProductAnalytics';
+import StoreAdmin from '@/components/admin/StoreAdmin';
 import UserManagement from '@/components/admin/UserManagement';
 import MorphGuideEditor from '@/components/admin/MorphGuideEditor';
 import ContentModeration from '@/components/admin/ContentModeration';
@@ -96,6 +98,7 @@ const NAV_GROUPS = [
   {
     label: 'Marketplace',
     items: [
+      { id: 'store', label: 'Store', icon: Package },
       { id: 'shipping', label: 'Shipping config', icon: Truck },
       { id: 'market_data', label: 'Market data', icon: Globe },
     ],
@@ -123,6 +126,7 @@ const SECTION_TITLES = {
   morph_submissions: 'Morph submissions',
   product_analytics: 'Product analytics',
   analytics: 'Marketplace analytics',
+  store: 'Store',
   shipping: 'Shipping configuration',
   market_data: 'Market data management',
   scraped_data: 'Scraped data review',
@@ -206,6 +210,8 @@ export default function AdminPanel() {
         return <ProductAnalytics />;
       case 'analytics':
         return <AnalyticsDashboard />;
+      case 'store':
+        return <StoreAdmin />;
       case 'shipping':
         return <AdminPlaceholder title="Shipping Configuration" description="Manage the Zero's Geckos shipping integration. Configure API credentials, default carrier settings, and monitor shipment status. This section will be fully functional once the partnership is finalized." icon={Truck} />;
       case 'market_data':
