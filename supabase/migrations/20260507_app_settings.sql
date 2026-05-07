@@ -16,7 +16,12 @@
 -- which bypasses RLS.
 -- =============================================================================
 
-create table if not exists public.app_settings (
+-- The base44 import left behind an app_settings table with a different shape
+-- (id text PK, setting_key, setting_value text). Drop any pre-existing table
+-- so the canonical key/value/jsonb schema below applies cleanly.
+drop table if exists public.app_settings cascade;
+
+create table public.app_settings (
   key text primary key,
   value jsonb not null,
   is_public boolean not null default false,
@@ -43,7 +48,7 @@ create policy "Admins read all settings"
   using (
     exists (
       select 1 from public.profiles p
-      where p.id = auth.uid() and p.role = 'admin'
+      where p.id = auth.uid()::text and p.role = 'admin'
     )
   );
 
@@ -54,13 +59,13 @@ create policy "Admins write settings"
   using (
     exists (
       select 1 from public.profiles p
-      where p.id = auth.uid() and p.role = 'admin'
+      where p.id = auth.uid()::text and p.role = 'admin'
     )
   )
   with check (
     exists (
       select 1 from public.profiles p
-      where p.id = auth.uid() and p.role = 'admin'
+      where p.id = auth.uid()::text and p.role = 'admin'
     )
   );
 
