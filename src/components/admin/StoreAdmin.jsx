@@ -287,9 +287,13 @@ export default function StoreAdmin() {
     setError(null);
     try {
       const rows = Object.entries(settings).map(([key, value]) => ({
-        key, value, is_public: false,
+        key,
+        value,
+        is_public: ['store_enabled', 'store_free_shipping_threshold_cents', 'store_loyalty_cgd_min_cart_cents'].includes(key),
       }));
-      const { error: e } = await supabase.from('app_settings').upsert(rows, { onConflict: 'key' });
+      const { error: e } = await supabase
+        .from('app_settings')
+        .upsert(rows, { onConflict: 'key' });
       if (e) throw e;
     } catch (e) {
       setError(e.message || String(e));

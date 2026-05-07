@@ -434,23 +434,23 @@ create policy "Active promo codes readable by anyone"
 -- -- Admin write on the catalog -----------------------------------------------
 drop policy if exists "Admins write vendors" on public.store_vendors;
 create policy "Admins write vendors" on public.store_vendors for all
-  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
-  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+  using (exists (select 1 from public.profiles p where p.id = auth.uid()::text and p.role = 'admin'))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid()::text and p.role = 'admin'));
 
 drop policy if exists "Admins write categories" on public.store_categories;
 create policy "Admins write categories" on public.store_categories for all
-  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
-  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+  using (exists (select 1 from public.profiles p where p.id = auth.uid()::text and p.role = 'admin'))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid()::text and p.role = 'admin'));
 
 drop policy if exists "Admins write products" on public.store_products;
 create policy "Admins write products" on public.store_products for all
-  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
-  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+  using (exists (select 1 from public.profiles p where p.id = auth.uid()::text and p.role = 'admin'))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid()::text and p.role = 'admin'));
 
 drop policy if exists "Admins write promo codes" on public.store_promo_codes;
 create policy "Admins write promo codes" on public.store_promo_codes for all
-  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
-  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+  using (exists (select 1 from public.profiles p where p.id = auth.uid()::text and p.role = 'admin'))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid()::text and p.role = 'admin'));
 
 -- -- User cart RLS -----------------------------------------------------------
 -- Authenticated users read/write their own cart only. Guest carts go through
@@ -480,12 +480,12 @@ create policy "Users read own orders" on public.store_orders for select
 
 drop policy if exists "Admins read all orders" on public.store_orders;
 create policy "Admins read all orders" on public.store_orders for select
-  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+  using (exists (select 1 from public.profiles p where p.id = auth.uid()::text and p.role = 'admin'));
 
 drop policy if exists "Admins write orders" on public.store_orders;
 create policy "Admins write orders" on public.store_orders for all
-  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
-  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+  using (exists (select 1 from public.profiles p where p.id = auth.uid()::text and p.role = 'admin'))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid()::text and p.role = 'admin'));
 
 drop policy if exists "Users read own order items" on public.store_order_items;
 create policy "Users read own order items" on public.store_order_items for select
@@ -498,7 +498,7 @@ create policy "Users read own order items" on public.store_order_items for selec
 
 drop policy if exists "Admins read all order items" on public.store_order_items;
 create policy "Admins read all order items" on public.store_order_items for select
-  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+  using (exists (select 1 from public.profiles p where p.id = auth.uid()::text and p.role = 'admin'));
 
 drop policy if exists "Users read own fulfillments" on public.store_fulfillments;
 create policy "Users read own fulfillments" on public.store_fulfillments for select
@@ -511,8 +511,8 @@ create policy "Users read own fulfillments" on public.store_fulfillments for sel
 
 drop policy if exists "Admins manage fulfillments" on public.store_fulfillments;
 create policy "Admins manage fulfillments" on public.store_fulfillments for all
-  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
-  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+  using (exists (select 1 from public.profiles p where p.id = auth.uid()::text and p.role = 'admin'))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid()::text and p.role = 'admin'));
 
 -- -- Affiliate clicks: anon insert, admin read ------------------------------
 drop policy if exists "Anyone logs affiliate clicks" on public.store_affiliate_clicks;
@@ -521,14 +521,14 @@ create policy "Anyone logs affiliate clicks" on public.store_affiliate_clicks fo
 
 drop policy if exists "Admins read affiliate clicks" on public.store_affiliate_clicks;
 create policy "Admins read affiliate clicks" on public.store_affiliate_clicks for select
-  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+  using (exists (select 1 from public.profiles p where p.id = auth.uid()::text and p.role = 'admin'));
 
 -- -- Signup grants: server-managed; user can read by token only (via fn) ----
 -- We do NOT expose direct row reads to anon — token redemption goes through
 -- a SECURITY DEFINER function so the token is never returned to the client.
 drop policy if exists "Admins read signup grants" on public.store_signup_grants;
 create policy "Admins read signup grants" on public.store_signup_grants for select
-  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+  using (exists (select 1 from public.profiles p where p.id = auth.uid()::text and p.role = 'admin'));
 
 -- =============================================================================
 -- Seed reference data

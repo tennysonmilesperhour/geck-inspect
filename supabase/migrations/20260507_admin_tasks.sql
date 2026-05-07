@@ -45,12 +45,12 @@ alter table public.admin_tasks enable row level security;
 
 drop policy if exists "Admins read tasks" on public.admin_tasks;
 create policy "Admins read tasks" on public.admin_tasks for select
-  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+  using (exists (select 1 from public.profiles p where p.id = auth.uid()::text and p.role = 'admin'));
 
 drop policy if exists "Admins write tasks" on public.admin_tasks;
 create policy "Admins write tasks" on public.admin_tasks for all
-  using (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'))
-  with check (exists (select 1 from public.profiles p where p.id = auth.uid() and p.role = 'admin'));
+  using (exists (select 1 from public.profiles p where p.id = auth.uid()::text and p.role = 'admin'))
+  with check (exists (select 1 from public.profiles p where p.id = auth.uid()::text and p.role = 'admin'));
 
 create or replace function public.admin_tasks_touch_updated_at()
 returns trigger language plpgsql as $$

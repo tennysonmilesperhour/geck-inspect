@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useAuth } from '@/lib/AuthContext';
 import { Navigate } from 'react-router-dom';
 import {
@@ -162,6 +162,11 @@ export default function AdminPanel() {
   // Prefill payload passed into MassMessaging when the Changelog manager
   // clicks "Broadcast". Consumed on mount by the target component.
   const [messagingPrefill, setMessagingPrefill] = useState(null);
+  // Refs for the scrollable panes — the panel keeps the document fixed
+  // and scrolls each pane internally so the page never jumps when the
+  // section content height changes.
+  const mainRef = useRef(null);
+  const sidebarRef = useRef(null);
 
   useEffect(() => {
     const onPrefill = (e) => {
@@ -238,12 +243,19 @@ export default function AdminPanel() {
     }
   };
 
+  // Fixed-viewport layout. The document itself doesn't scroll; both the
+  // sidebar and the main pane scroll internally. Switching sections no
+  // longer changes the page scroll position because the page itself is
+  // locked at viewport height — only the inner pane's scrollbar moves.
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-100">
-      <div className="max-w-[1600px] mx-auto flex flex-col lg:flex-row gap-6 p-4 md:p-6">
-        {/* Sidebar */}
-        <aside className="lg:w-64 shrink-0">
-          <div className="lg:sticky lg:top-6 space-y-6">
+    <div className="h-full bg-slate-950 text-slate-100 flex flex-col overflow-hidden">
+      <div className="max-w-[1600px] w-full mx-auto flex flex-1 flex-col lg:flex-row gap-6 p-4 md:p-6 overflow-hidden">
+        {/* Sidebar — internal scroll for projects with long admin nav. */}
+        <aside
+          ref={sidebarRef}
+          className="lg:w-64 shrink-0 lg:overflow-y-auto custom-scrollbar pr-1"
+        >
+          <div className="space-y-6">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
                 <Shield className="w-5 h-5 text-emerald-400" />
@@ -289,15 +301,24 @@ export default function AdminPanel() {
           </div>
         </aside>
 
-        {/* Main pane */}
-        <main className="flex-1 min-w-0">
+        {/* Main pane — scrolls internally so the document never moves
+            when section content height changes. */}
+        <main
+          ref={mainRef}
+          className="flex-1 min-w-0 overflow-y-auto custom-scrollbar pr-1"
+        >
           <header className="mb-6">
             <h2 className="text-3xl font-bold text-white">
               {SECTION_TITLES[section] || 'Admin'}
             </h2>
             <div className="h-px bg-slate-800 mt-4" />
           </header>
-          {renderSection()}
+          {/* min-h-full keeps the inner content at least as tall as the
+              pane so switching from a long section to a short one
+              doesn't bounce the inner scrollbar back to top. */}
+          <div className="min-h-full pb-12">
+            {renderSection()}
+          </div>
         </main>
       </div>
     </div>

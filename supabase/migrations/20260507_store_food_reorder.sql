@@ -110,7 +110,7 @@ begin
   -- planning; if the schema changes shape we'll revisit.
   select count(*) into v_gecko_count
     from public.geckos g
-   where g.created_by = v_email and (g.is_archived is not true);
+   where g.created_by = v_email;
 
   if coalesce(v_gecko_count, 0) = 0 then
     return jsonb_build_object('has_food_history', false, 'reason', 'no_geckos');
@@ -196,10 +196,17 @@ comment on function public.estimate_food_runout(text) is
 -- alerted for a given runout estimate, we don't alert again until the
 -- next reorder shifts the estimate.
 --
--- pg_cron: the schedule call is wrapped in a do-block so re-running this
--- migration doesn't error if the job already exists.
+-- The schedule itself is set up manually from Supabase Studio because
+-- pg_cron lives in a different schema across project tiers. After this
+-- migration runs, schedule with:
+--
+--   select cron.schedule('cgd_reorder_reminder_daily', '0 9 * * *',
+--     'select public.cgd_reorder_reminder_run();');
+--
+-- Idempotent on cgd_reorder_last_estimated_runout_at — once we've
+-- alerted for a given runout estimate, we don't alert again until the
+-- next reorder shifts the estimate.
 -- =============================================================================
-create extension if not exists pg_cron with schema extensions;
 
 create or replace function public.cgd_reorder_reminder_run()
 returns void
@@ -214,7 +221,7 @@ declare
   v_days_left int;
 begin
   for r in
-    select p.id, p.email
+    select p.email
       from public.profiles p
      where coalesce(p.cgd_reorder_reminders_enabled, true)
        and p.email is not null
@@ -227,10 +234,9 @@ begin
     v_days_left := coalesce((v_estimate->>'days_until_runout')::int, 999);
 
     if v_days_left between 13 and 15 then
-      -- Skip if we already alerted for this estimated runout date
       perform 1
         from public.profiles p2
-       where p2.id = r.id
+       where p2.email = r.email
          and p2.cgd_reorder_last_estimated_runout_at is not null
          and abs(extract(day from p2.cgd_reorder_last_estimated_runout_at - v_runs_out_at)::int) < 3;
       if found then
@@ -254,7 +260,7 @@ begin
       update public.profiles
          set cgd_reorder_last_reminder_at = now(),
              cgd_reorder_last_estimated_runout_at = v_runs_out_at
-       where id = r.id;
+       where email = r.email;
     end if;
   end loop;
 end;
@@ -262,18 +268,3 @@ $$;
 
 comment on function public.cgd_reorder_reminder_run() is
   'Daily cron entry point: scans every user with reorder reminders enabled and inserts a notification when their estimated CGD runout is ~14 days out. Idempotent per estimated runout date.';
-
--- Schedule the daily run at 09:00 UTC. Wrapped in a do-block so
--- re-running this migration is safe.
-do $cron$
-begin
-  perform extensions.cron.unschedule('cgd_reorder_reminder_daily');
-exception when others then null;
-end;
-$cron$;
-
-select extensions.cron.schedule(
-  'cgd_reorder_reminder_daily',
-  '0 9 * * *',
-  $$ select public.cgd_reorder_reminder_run(); $$
-);
