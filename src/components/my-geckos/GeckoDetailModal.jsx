@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WeightRecord, BreedingPlan, Egg, Gecko, GeckoEvent, GeckoImage } from '@/entities/all';
 import { format, differenceInMonths } from 'date-fns';
 import { X, Plus, Trash2, LineChart, Loader2, Award, GitBranch, Calendar, Baby, Users, Edit, Eye, EyeOff, History, Archive, ArchiveRestore, ChevronLeft, ChevronRight, Camera, QrCode, ArrowRightLeft, ExternalLink } from 'lucide-react';
@@ -23,6 +24,47 @@ import { useNavigate } from 'react-router-dom';
 import { generatePassportCode } from '@/lib/passportUtils';
 import { supabase } from '@/lib/supabaseClient';
 import { createPageUrl } from '@/utils';
+
+const PARENT_FALLBACK_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
+
+function ParentCard({ parent, fallbackName, role }) {
+  if (parent) {
+    return (
+      <div className="bg-slate-800 rounded-lg overflow-hidden border border-slate-700">
+        <div className="aspect-square bg-slate-900 overflow-hidden">
+          <img
+            src={parent.image_urls?.[0] || PARENT_FALLBACK_IMAGE}
+            alt={parent.name}
+            className="w-full h-full object-cover"
+            onError={(e) => { e.target.src = PARENT_FALLBACK_IMAGE; }}
+          />
+        </div>
+        <div className="p-4 space-y-2">
+          <p className="text-emerald-400 text-xs uppercase tracking-wider font-semibold">{role}</p>
+          <h4 className="text-slate-100 font-semibold text-lg leading-tight">{parent.name}</h4>
+          {parent.gecko_id_code && (
+            <p className="text-xs text-slate-500 font-mono">ID: {parent.gecko_id_code}</p>
+          )}
+          {parent.morphs_traits && (
+            <p className="text-sm text-slate-300">{parent.morphs_traits}</p>
+          )}
+          {parent.hatch_date && (
+            <p className="text-xs text-slate-400">
+              Hatched {format(new Date(parent.hatch_date), 'MMM d, yyyy')}
+            </p>
+          )}
+        </div>
+      </div>
+    );
+  }
+  return (
+    <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-700 border-dashed flex flex-col items-center justify-center text-center min-h-[220px]">
+      <p className="text-emerald-400 text-xs uppercase tracking-wider font-semibold mb-2">{role}</p>
+      <p className="text-slate-200 font-medium text-lg">{fallbackName || 'Unknown'}</p>
+      <p className="text-xs text-slate-500 mt-2">Not linked to a gecko in your collection</p>
+    </div>
+  );
+}
 
 export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onArchive, onDelete, allGeckos = [], currentUser = null }) {
   const navigate = useNavigate();
@@ -279,11 +321,27 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
         </CardHeader>
         
         <CardContent className="p-6 overflow-y-auto flex-1">
-          <div className="grid lg:grid-cols-3 gap-8">
-            {/* Left Column: Basic Info & Image */}
-            <div className="space-y-6">
-              {/* Image area with optional slideshow */}
-              <div className="space-y-2">
+          <Tabs defaultValue="overview" className="w-full">
+            <TabsList className="flex w-full bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1 mb-6">
+              <TabsTrigger value="overview" className="flex-1 data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-2 rounded-sm transition-colors">
+                <Eye className="w-4 h-4 mr-1.5" /> Overview
+              </TabsTrigger>
+              <TabsTrigger value="parents" className="flex-1 data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-2 rounded-sm transition-colors">
+                <GitBranch className="w-4 h-4 mr-1.5" /> Parents
+              </TabsTrigger>
+              <TabsTrigger value="history" className="flex-1 data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-2 rounded-sm transition-colors">
+                <History className="w-4 h-4 mr-1.5" /> History
+              </TabsTrigger>
+              <TabsTrigger value="manage" className="flex-1 data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-2 rounded-sm transition-colors">
+                <Award className="w-4 h-4 mr-1.5" /> Manage
+              </TabsTrigger>
+            </TabsList>
+
+            {/* OVERVIEW TAB */}
+            <TabsContent value="overview" className="mt-0 focus-visible:ring-0">
+              <div className="grid lg:grid-cols-2 gap-8">
+                {/* Left: Image area with optional slideshow */}
+                <div className="space-y-2">
                 {gecko.image_urls?.length > 1 && (
                   <div className="flex items-center justify-between">
                     <button
@@ -399,6 +457,8 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                 )}
               </div>
               
+              {/* Right: Basic info, morphs, notes, toggles */}
+              <div className="space-y-6">
               <div className="space-y-4">
                 <h3 className="text-lg font-semibold text-slate-100">Basic Information</h3>
                 <div className="grid grid-cols-2 gap-4 text-slate-300 text-sm">
@@ -564,11 +624,38 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                   </p>
                 </div>
               </div>
+              </div>
+              </div>
+            </TabsContent>
 
-            </div>
+            {/* PARENTS TAB */}
+            <TabsContent value="parents" className="mt-0 focus-visible:ring-0">
+              <div className="max-w-3xl mx-auto space-y-6">
+                <div className="text-center">
+                  <h3 className="text-xl font-semibold text-slate-100">Parents of {gecko.name}</h3>
+                  <p className="text-sm text-slate-400 mt-1">Direct parental lineage</p>
+                </div>
+                <div className="grid sm:grid-cols-2 gap-4">
+                  <ParentCard parent={sire} fallbackName={gecko.sire_name} role="Sire (Father)" />
+                  <ParentCard parent={dam} fallbackName={gecko.dam_name} role="Dam (Mother)" />
+                </div>
+                <div className="flex justify-center pt-2">
+                  <Button
+                    variant="outline"
+                    onClick={handleLineageClick}
+                    className="border-slate-600 hover:bg-slate-800"
+                  >
+                    <GitBranch className="w-4 h-4 mr-2" />
+                    View Full Lineage Tree
+                  </Button>
+                </div>
+              </div>
+            </TabsContent>
 
-            {/* Middle Column: Weight & Breeding History */}
-            <div className="space-y-6">
+            {/* HISTORY TAB */}
+            <TabsContent value="history" className="mt-0 focus-visible:ring-0">
+              <div className="grid lg:grid-cols-2 gap-8">
+                <div className="space-y-6">
               {/* Weight Tracking */}
               <div>
                 <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
@@ -768,10 +855,83 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
               </div>
             </div>
 
-            {/* Right Column: Actions, Parentage, Offspring, Eggs */}
-            <div className="space-y-6">
-              {/* Action Buttons */}
-              <div className="space-y-3">
+                <div className="space-y-6">
+
+              {/* Offspring */}
+              {offspring.length > 0 && (
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
+                    <Baby className="w-5 h-5" />
+                    Offspring ({offspring.length})
+                  </h3>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {offspring.map(child => (
+                      <div key={child.id} className="bg-slate-800 p-2 rounded flex items-center justify-between">
+                        <div>
+                          <p className="text-slate-200 font-medium text-sm">{child.name}</p>
+                          <p className="text-slate-400 text-xs">{child.sex}</p>
+                        </div>
+                        {child.hatch_date && (
+                          <p className="text-slate-400 text-xs">
+                            {format(new Date(child.hatch_date), 'MMM yyyy')}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Breeding History summary (per-season, females only) */}
+              {gecko.sex === 'Female' && (
+                <BreedingHistory
+                  eggs={eggHistory}
+                  breedingPlans={breedingHistory}
+                  weightRecords={weightRecords}
+                  hatchDate={gecko.hatch_date}
+                />
+              )}
+
+              {/* Egg History (for females) */}
+              {gecko.sex === 'Female' && (
+                <div>
+                  <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
+                    <Calendar className="w-5 h-5" />
+                    Egg History
+                  </h3>
+                  
+                  {eggHistory.length > 0 ? (
+                    <div className="space-y-2 max-h-40 overflow-y-auto">
+                      {eggHistory.map(egg => (
+                        <div key={egg.id} className="bg-slate-800 p-3 rounded-lg">
+                          <div className="flex items-center justify-between mb-1">
+                            <span className="text-slate-300 text-sm">
+                              Laid: {format(parseLocalDate(egg.lay_date), 'MMM d, yyyy')}
+                            </span>
+                            <Badge variant={egg.status === 'Hatched' ? 'default' : 'secondary'} className="text-xs">
+                              {egg.status}
+                            </Badge>
+                          </div>
+                          {egg.hatch_date_actual && (
+                            <p className="text-slate-400 text-xs">
+                              Hatched: {format(parseLocalDate(egg.hatch_date_actual), 'MMM d, yyyy')}
+                            </p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-slate-400 text-center py-4">No eggs recorded.</p>
+                  )}
+                </div>
+              )}
+              </div>
+              </div>
+            </TabsContent>
+
+            {/* MANAGE TAB */}
+            <TabsContent value="manage" className="mt-0 focus-visible:ring-0">
+              <div className="max-w-2xl mx-auto space-y-3">
                 <div className="space-y-2">
                   <Button
                     onClick={() => handleGenerateCertificate('ownership')}
@@ -870,15 +1030,6 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                   </Button>
                 </div>
 
-                <Button
-                  variant="outline"
-                  onClick={handleLineageClick}
-                  className="w-full border-slate-600 hover:bg-slate-800"
-                >
-                  <GitBranch className="w-4 h-4 mr-2" />
-                  View Lineage Tree
-                </Button>
-
                 {onArchive && (
                   <div className="space-y-2">
                     {gecko.archived && gecko.archive_reason && (
@@ -960,96 +1111,8 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                   </div>
                 )}
               </div>
-
-              {/* Parentage */}
-              <div>
-                <h3 className="text-lg font-semibold text-slate-100 mb-4">Parentage</h3>
-                <div className="space-y-3">
-                  <div className="bg-slate-800 p-3 rounded-lg">
-                    <p className="text-slate-400 text-sm">Sire (Father)</p>
-                    <p className="text-slate-200 font-medium">
-                      {sire ? sire.name : (gecko.sire_name || 'Unknown')}
-                    </p>
-                  </div>
-                  <div className="bg-slate-800 p-3 rounded-lg">
-                    <p className="text-slate-400 text-sm">Dam (Mother)</p>
-                    <p className="text-slate-200 font-medium">
-                      {dam ? dam.name : (gecko.dam_name || 'Unknown')}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Offspring */}
-              {offspring.length > 0 && (
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
-                    <Baby className="w-5 h-5" />
-                    Offspring ({offspring.length})
-                  </h3>
-                  <div className="space-y-2 max-h-40 overflow-y-auto">
-                    {offspring.map(child => (
-                      <div key={child.id} className="bg-slate-800 p-2 rounded flex items-center justify-between">
-                        <div>
-                          <p className="text-slate-200 font-medium text-sm">{child.name}</p>
-                          <p className="text-slate-400 text-xs">{child.sex}</p>
-                        </div>
-                        {child.hatch_date && (
-                          <p className="text-slate-400 text-xs">
-                            {format(new Date(child.hatch_date), 'MMM yyyy')}
-                          </p>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              {/* Breeding History summary (per-season, females only) */}
-              {gecko.sex === 'Female' && (
-                <BreedingHistory
-                  eggs={eggHistory}
-                  breedingPlans={breedingHistory}
-                  weightRecords={weightRecords}
-                  hatchDate={gecko.hatch_date}
-                />
-              )}
-
-              {/* Egg History (for females) */}
-              {gecko.sex === 'Female' && (
-                <div>
-                  <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
-                    <Calendar className="w-5 h-5" />
-                    Egg History
-                  </h3>
-                  
-                  {eggHistory.length > 0 ? (
-                    <div className="space-y-2 max-h-40 overflow-y-auto">
-                      {eggHistory.map(egg => (
-                        <div key={egg.id} className="bg-slate-800 p-3 rounded-lg">
-                          <div className="flex items-center justify-between mb-1">
-                            <span className="text-slate-300 text-sm">
-                              Laid: {format(parseLocalDate(egg.lay_date), 'MMM d, yyyy')}
-                            </span>
-                            <Badge variant={egg.status === 'Hatched' ? 'default' : 'secondary'} className="text-xs">
-                              {egg.status}
-                            </Badge>
-                          </div>
-                          {egg.hatch_date_actual && (
-                            <p className="text-slate-400 text-xs">
-                              Hatched: {format(parseLocalDate(egg.hatch_date_actual), 'MMM d, yyyy')}
-                            </p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-slate-400 text-center py-4">No eggs recorded.</p>
-                  )}
-                </div>
-              )}
-            </div>
-          </div>
+            </TabsContent>
+          </Tabs>
         </CardContent>
       </Card>
     </div>
