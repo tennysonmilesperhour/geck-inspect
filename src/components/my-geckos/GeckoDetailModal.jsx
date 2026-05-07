@@ -66,7 +66,14 @@ function ParentCard({ parent, fallbackName, role }) {
   );
 }
 
-export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onArchive, onDelete, allGeckos = [], currentUser = null }) {
+// `canEdit` mirrors the geckos UPDATE/DELETE RLS policy on the client
+// — it's true for the gecko's original creator and for any accepted
+// owner/editor member of the gecko's collection. Defaults to true for
+// backwards compatibility with call sites that haven't been migrated
+// to compute it; those sites worked under the old "you only see your
+// own geckos" model. New call sites that surface shared geckos
+// (MyGeckos as of Phase B) should pass an explicit value.
+export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onArchive, onDelete, allGeckos = [], currentUser = null, canEdit = true }) {
   const navigate = useNavigate();
 
   const handleLineageClick = () => {
@@ -305,15 +312,24 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
               EventEntity={GeckoEvent}
               onEventAdded={loadEventHistory}
             />
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => onEdit(gecko)}
-              className="border-slate-600 hover:bg-slate-800"
-            >
-              <Edit className="w-4 h-4 mr-2" />
-              Edit
-            </Button>
+            {canEdit ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => onEdit(gecko)}
+                className="border-slate-600 hover:bg-slate-800"
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                Edit
+              </Button>
+            ) : (
+              <span
+                className="text-xs px-2.5 py-1 rounded border border-slate-700 bg-slate-800/40 text-slate-400 hidden sm:inline-flex items-center gap-1.5"
+                title="You have read-only access to this collection. Ask the owner to grant you editor permissions."
+              >
+                Read-only
+              </span>
+            )}
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="w-5 h-5 text-slate-400" />
             </Button>
@@ -1030,7 +1046,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                   </Button>
                 </div>
 
-                {onArchive && (
+                {onArchive && canEdit && (
                   <div className="space-y-2">
                     {gecko.archived && gecko.archive_reason && (
                       <div className="bg-slate-800 p-3 rounded-lg">

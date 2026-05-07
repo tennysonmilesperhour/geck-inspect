@@ -20,7 +20,13 @@ const ARCHIVE_LABELS = {
   other: 'Other',
 };
 
-export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [], onView, onEdit, isOwner = true }) {
+// `isOwner` controls the visual "Shared" badge (i.e. is this row in the
+// caller's own collection or one shared with them). `canEdit` controls
+// whether write affordances are rendered. Pre-Phase-B those were the
+// same thing — post-Phase-B a collection owner can edit a gecko whose
+// `created_by` is a different user, so the two diverge.
+export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [], onView, onEdit, isOwner = true, canEdit }) {
+  const writable = canEdit !== undefined ? canEdit : isOwner;
   const feedingGroup = feedingGroups.find(g => g.id === gecko.feeding_group_id);
 
   const latestWeight = React.useMemo(() => {
@@ -98,7 +104,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
             <Eye className="w-3.5 h-3.5" />
             <span className="hidden sm:inline ml-1.5 text-xs">View</span>
           </Button>
-          {isOwner && (
+          {writable && (
             <Button
               size="sm"
               onClick={handleEditClick}

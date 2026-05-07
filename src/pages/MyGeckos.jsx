@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Seo from '@/components/seo/Seo';
-import { Gecko, WeightRecord, FeedingGroup } from '@/entities/all';
-import { getVisibleGeckos } from '@/lib/geckoAccess';
+import { Gecko, WeightRecord, FeedingGroup, CollectionMember } from '@/entities/all';
+import { getVisibleGeckos, canWriteGecko } from '@/lib/geckoAccess';
 import { base44 } from '@/api/base44Client';
 import { PlusCircle, Search, Users, Grid3x3, List, ArrowUpDown, Archive, ArchiveRestore, Download, FileText, FileSpreadsheet } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
@@ -39,6 +39,11 @@ const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
 
 export default function MyGeckosPage() {
     const [geckos, setGeckos] = useState([]);
+    // Accepted collection memberships for the current user. Used to decide
+    // whether they can edit each row (vs read-only viewer access). Stored
+    // as a flat array of { collection_id, role } so the per-card lookup
+    // is O(rows × memberships) which stays small.
+    const [memberships, setMemberships] = useState([]);
     const [weightRecords, setWeightRecords] = useState([]);
     const scrollPositionRef = React.useRef(0);
     const [isLoading, setIsLoading] = useState(true);
@@ -90,16 +95,21 @@ export default function MyGeckosPage() {
         if (!user) return;
         setIsLoading(true);
         try {
-            const [userGeckos, userWeights] = await retryApiCall(async () =>
+            const [userGeckos, userWeights, userMemberships] = await retryApiCall(async () =>
                 Promise.all([
                     // Pull every gecko visible to the user — own collection plus
                     // any collections shared with them via collection_members.
                     getVisibleGeckos(user, {}, '-created_date', GECKO_FETCH_LIMIT),
                     WeightRecord.filter({ created_by: user.email }, '-record_date'),
+                    // Accepted memberships drive per-card edit gating. RLS
+                    // already scopes this to the current user, so the empty
+                    // filter is intentional.
+                    CollectionMember.filter({ status: 'accepted' }).catch(() => []),
                 ])
             );
             setGeckos(userGeckos);
             setWeightRecords(userWeights);
+            setMemberships(Array.isArray(userMemberships) ? userMemberships : []);
         } catch (error) {
             console.error('Failed to load geckos:', error);
             toast({
@@ -604,6 +614,7 @@ export default function MyGeckosPage() {
                                                                     onView={handleOpenDetailModal}
                                                                     onEdit={handleEdit}
                                                                     isOwner={!user?.email || gecko.created_by?.toLowerCase() === user.email.toLowerCase()}
+                                                                    canEdit={canWriteGecko(gecko, user, memberships)}
                                                                 />
                                                             ))}
                                                         </div>
@@ -805,6 +816,7 @@ export default function MyGeckosPage() {
                         gecko={selectedGecko}
                         allGeckos={geckos}
                         currentUser={user}
+                        canEdit={canWriteGecko(selectedGecko, user, memberships)}
                         onClose={handleCloseDetailModal}
                         onUpdate={() => loadGeckos()}
                         onEdit={handleEdit}
