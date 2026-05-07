@@ -22,12 +22,14 @@ import {
   BookOpen,
   LineChart,
   Package,
+  ListChecks,
 } from 'lucide-react';
 
 import AdminOverview from '@/components/admin/AdminOverview';
 import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
 import ProductAnalytics from '@/components/admin/ProductAnalytics';
 import StoreAdmin from '@/components/admin/StoreAdmin';
+import AdminTasks from '@/components/admin/AdminTasks';
 import UserManagement from '@/components/admin/UserManagement';
 import MorphGuideEditor from '@/components/admin/MorphGuideEditor';
 import ContentModeration from '@/components/admin/ContentModeration';
@@ -67,6 +69,7 @@ const NAV_GROUPS = [
     label: null,
     items: [
       { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+      { id: 'tasks', label: 'Tasks', icon: ListChecks },
     ],
   },
   {
@@ -115,6 +118,7 @@ const NAV_GROUPS = [
 
 const SECTION_TITLES = {
   overview: 'Overview',
+  tasks: 'Admin tasks',
   users: 'User management',
   support: 'Support inbox',
   moderation: 'Content moderation',
@@ -183,6 +187,8 @@ export default function AdminPanel() {
     switch (section) {
       case 'overview':
         return <AdminOverview onNavigate={setSection} />;
+      case 'tasks':
+        return <AdminTasks />;
       case 'users':
         return <UserManagement />;
       case 'support':
