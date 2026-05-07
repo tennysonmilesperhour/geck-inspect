@@ -210,6 +210,10 @@ const AuthenticatedApp = () => {
           <Route path="/CareGuide/:topic" element={<CareGuideTopic />} />
           <Route path="/GeneticsGuide" element={<GeneticsGuide />} />
           <Route path="/GeneticCalculatorTool" element={<GeneticCalculatorTool />} />
+          {/* Cleaner, marketable URL alias for the genetics calculator —
+              the legacy path is kept above so existing links and the
+              authenticated PAGES table keep working. */}
+          <Route path="/calculator" element={<GeneticCalculatorTool />} />
           <Route path="/About" element={<About />} />
           <Route path="/Contact" element={<Contact />} />
           <Route path="/Terms" element={<Terms />} />
@@ -261,6 +265,9 @@ const AuthenticatedApp = () => {
         ))}
         <Route path="/MorphGuide/:slug" element={<MorphDetail />} />
         <Route path="/passport/:passportCode/qr" element={<PassportQR />} />
+        {/* /calculator alias inside the authenticated layout so signed-in
+            users hitting the cleaner URL keep their app chrome. */}
+        <Route path="/calculator" element={<GeneticCalculatorTool />} />
       </Route>
 
       {/* Editorial blog — accessible to authenticated users too */}

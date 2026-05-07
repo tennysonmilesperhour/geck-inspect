@@ -11,7 +11,8 @@ import { createPageUrl } from '@/utils';
 const MEMBERSHIP_TIERS = [
   {
     id: 'free',
-    name: 'Free Member',
+    name: 'Free',
+    tagline: 'Hobbyist',
     price: 0,
     features: [
       'Up to 10 geckos in collection',
@@ -26,6 +27,7 @@ const MEMBERSHIP_TIERS = [
   {
     id: 'keeper',
     name: 'Keeper',
+    tagline: 'Pro',
     monthlyPrice: 4,
     annualPrice: 38.40,
     features: [
@@ -43,6 +45,7 @@ const MEMBERSHIP_TIERS = [
   {
     id: 'breeder',
     name: 'Breeder',
+    tagline: 'Premium',
     monthlyPrice: 11,
     annualPrice: 105.60,
     features: [
@@ -248,7 +251,14 @@ export default function SubscriptionPage() {
                   <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${tier.color} flex items-center justify-center mb-4`}>
                     <Icon className="w-6 h-6 text-white" />
                   </div>
-                  <CardTitle className="text-2xl text-white">{tier.name}</CardTitle>
+                  <CardTitle className="text-2xl text-white flex items-baseline gap-2">
+                    {tier.name}
+                    {tier.tagline && (
+                      <span className="text-sm font-medium text-emerald-300/80">
+                        / {tier.tagline}
+                      </span>
+                    )}
+                  </CardTitle>
                   <CardDescription>
                     <span className="text-3xl font-bold text-white">{price}</span>
                   </CardDescription>

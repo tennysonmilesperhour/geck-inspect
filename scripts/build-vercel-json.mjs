@@ -57,7 +57,10 @@ const CASE_REDIRECTS = [
   { from: '/careguide', to: '/CareGuide' },
   { from: '/careguide/:topic', to: '/CareGuide/:topic' },
   { from: '/geneticsguide', to: '/GeneticsGuide' },
-  { from: '/geneticcalculatortool', to: '/GeneticCalculatorTool' },
+  // Calculator URL canonicalization: both legacy paths 301 to /calculator,
+  // which is the marketed and sitemap-canonical URL.
+  { from: '/geneticcalculatortool', to: '/calculator' },
+  { from: '/GeneticCalculatorTool', to: '/calculator' },
   { from: '/morphvisualizer', to: '/MorphVisualizer' },
   { from: '/marketplace', to: '/Marketplace' },
   { from: '/marketplacebuy', to: '/MarketplaceBuy' },

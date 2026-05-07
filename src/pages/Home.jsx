@@ -19,8 +19,16 @@ import {
   CalendarDays,
   Truck,
   Shield,
+  ShieldCheck,
   Scale,
   FileSpreadsheet,
+  BadgeCheck,
+  QrCode,
+  Lock,
+  Smartphone,
+  Download,
+  Check,
+  X,
 } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
 
@@ -120,21 +128,29 @@ const INNOVATIVE_FEATURES = [
 // requires the two to match for rich-result eligibility, so keep them
 // in sync by editing this list only.
 const LANDING_FAQS = [
+  // Buyer-objection FAQs first — cost, lock-in, "vs spreadsheet" — so the
+  // top of the visible FAQ closes objections before scrolling into
+  // capability questions. Order matters here for conversion; the JSON-LD
+  // FAQPage schema is derived from this same array.
+  {
+    q: 'Is Geck Inspect free?',
+    a: 'Yes. Creating an account and using Geck Inspect is free, including the genetics calculator, morph guide, care guide, community forum, and core collection tracking. Paid tiers (Keeper and Breeder) unlock larger collections, advanced breeding tools, marketplace sync, and white-label pedigree certificates — but you never need to pay to use the app.',
+  },
+  {
+    q: 'Is my collection data private, and can I export it?',
+    a: 'Yes. Your collection is private by default — only geckos you explicitly publish to the gallery, forum, or marketplace are visible to other users. Data is stored on Supabase with row-level security so other users cannot read your records. You own your data and can export your full roster, weight history, breeding log, and photos as CSV or PDF at any time.',
+  },
+  {
+    q: 'How is Geck Inspect better than a spreadsheet?',
+    a: 'A spreadsheet stores text. Geck Inspect stores structured records that connect to each other — every weight, photo, pairing, clutch, and lineage edge is queryable. You can ask "how many harlequin pinstripe females over 35 grams have I bred this season?" and get an answer. When you sell a gecko, the entire history (parents, weights, photos, medical notes) transfers as a verified digital passport with one click — something a spreadsheet cannot do for any buyer.',
+  },
   {
     q: 'What is Geck Inspect?',
     a: 'Geck Inspect is a free web platform built specifically for crested gecko keepers and breeders. It combines collection management, breeding planning, AI-powered morph identification, lineage tracking, a community gallery, a forum, and a verified marketplace into one tool. It is used by hobbyists with a single gecko through commercial breeders managing hundreds of animals.',
   },
   {
-    q: 'Is Geck Inspect free?',
-    a: 'Yes. Creating an account and using Geck Inspect is free. Premium membership tiers may unlock advanced features in the future, but the core collection tracking, breeding planning, and community features are free for all users.',
-  },
-  {
-    q: 'Can Geck Inspect identify the morph of my crested gecko?',
-    a: 'Yes. Geck Inspect has an AI-powered morph identification feature. Upload a photo of your gecko and the model will return a classification of primary morph, secondary traits, and base color. The classifier is trained on thousands of verified crested gecko photos from the community.',
-  },
-  {
-    q: 'How accurate is the AI crested gecko morph identifier?',
-    a: 'The morph identifier performs well on common primary morphs — Harlequin, Pinstripe, Dalmatian, Flame, and base colors — and reports a confidence score with every prediction. For ambiguous animals, expressing traits (partial pin, dal spotting, tiger, brindle) are returned as secondary tags. You can always request a human second-opinion from the verified expert network inside the app.',
+    q: 'How do I track my crested gecko collection?',
+    a: "Create a free account, then add each gecko with name, ID code, sex, hatch date, weight, morph tags, photos, and optionally the sire/dam lineage. Geck Inspect tracks weight history, photos over time, feeding group, and breeding history automatically. You can export your roster as CSV or PDF at any time.",
   },
   {
     q: 'Does Geck Inspect help with crested gecko breeding planning?',
@@ -145,8 +161,16 @@ const LANDING_FAQS = [
     a: 'Yes. Every pairing has its own clutch log. Geck Inspect records lay date, incubation temperature, days-to-hatch, and outcome for each egg. Eggs promote to hatchling records the day they emerge, with lineage and clutch automatically attached, and season-level hatch-rate stats roll up on the breeding dashboard.',
   },
   {
-    q: 'How do I track my crested gecko collection?',
-    a: "Create a free account, then add each gecko with name, ID code, sex, hatch date, weight, morph tags, photos, and optionally the sire/dam lineage. Geck Inspect tracks weight history, photos over time, feeding group, and breeding history automatically. You can export your roster as CSV or PDF at any time.",
+    q: 'How does the crested gecko genetics calculator work?',
+    a: 'The genetics calculator models co-dominant, recessive, and polygenic inheritance across the major crested gecko traits — Lilly White, Axanthic, Cappuccino, Super Dalmatian, Pinstripe, Harlequin, and more. Pick a sire and dam from your collection (or enter genotypes manually) and the calculator returns the full offspring distribution with expected percentages.',
+  },
+  {
+    q: 'Can Geck Inspect identify the morph of my crested gecko?',
+    a: 'Yes. Geck Inspect has an AI-powered morph identification feature. Upload a photo of your gecko and the model will return a classification of primary morph, secondary traits, and base color. The classifier is trained on thousands of verified crested gecko photos from the community.',
+  },
+  {
+    q: 'How accurate is the AI crested gecko morph identifier?',
+    a: 'The morph identifier performs well on common primary morphs — Harlequin, Pinstripe, Dalmatian, Flame, and base colors — and reports a confidence score with every prediction. For ambiguous animals, expressing traits (partial pin, dal spotting, tiger, brindle) are returned as secondary tags. You can always request a human second-opinion from the verified expert network inside the app.',
   },
   {
     q: 'Does Geck Inspect sync with MorphMarket or Palm Street?',
@@ -154,15 +178,7 @@ const LANDING_FAQS = [
   },
   {
     q: 'Can I use Geck Inspect on my phone?',
-    a: 'Yes. Geck Inspect is a responsive web app designed to work on any modern phone or tablet browser — no app store install required. Photo uploads use the device camera directly, so you can weigh, photograph, and log a gecko entirely from your phone during feeding or maintenance.',
-  },
-  {
-    q: 'Is my collection data private, and can I export it?',
-    a: 'Yes. Your collection is private by default — only geckos you explicitly publish to the gallery, forum, or marketplace are visible to other users. You own your data and can export your full roster, weight history, breeding log, and photos as CSV or PDF at any time.',
-  },
-  {
-    q: 'How does the crested gecko genetics calculator work?',
-    a: 'The genetics calculator models co-dominant, recessive, and polygenic inheritance across the major crested gecko traits — Lilly White, Axanthic, Cappuccino, Super Dalmatian, Pinstripe, Harlequin, and more. Pick a sire and dam from your collection (or enter genotypes manually) and the calculator returns the full offspring distribution with expected percentages.',
+    a: 'Yes. Geck Inspect is a responsive web app designed to work on any modern phone or tablet browser — no app store install required. You can also "Add to Home Screen" on iOS or Android to get a full-screen icon that behaves like a native app, and photo uploads use the device camera directly.',
   },
   {
     q: 'How long do crested geckos live?',
@@ -320,17 +336,17 @@ export default function Home() {
             Welcome to <span className="font-bold">geckOS</span>
           </div>
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-[1.05] mb-6 bg-gradient-to-b from-white via-white to-emerald-200 bg-clip-text text-transparent">
-            The ultimate gecko
+            Track, breed, and verify
             <br />
-            operating system.
+            your crested geckos.
           </h1>
           <p className="text-xl md:text-2xl text-emerald-200/90 max-w-2xl mx-auto mb-4 font-medium">
-            Every gecko in your collection, finally in one place.
+            No spreadsheets. No guesswork.
           </p>
           <p className="text-base md:text-lg text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed">
-            Track, breed, and identify crested geckos with a platform built specifically for the
-            hobby. AI morph identification, breeding planning, lineage trees, community — your
-            new <span className="font-semibold text-emerald-200">geckOS</span>.
+            The all-in-one platform for crested gecko keepers and breeders — AI morph ID, multi-trait
+            breeding projections, lineage trees, and digital pedigrees that buyers can verify. Built
+            specifically for the hobby. Your new <span className="font-semibold text-emerald-200">geckOS</span>.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
             <Link to={createPageUrl('AuthPortal')}>
@@ -377,6 +393,34 @@ export default function Home() {
           <p className="text-xs text-slate-500 mt-6">
             Free to use. No credit card required. Your collection stays yours.
           </p>
+
+          {/* Trust strip — short, scannable proof points addressing the
+              three buyer objections (privacy, lock-in, install). Appears
+              just under the hero so cold visitors see them before
+              scrolling into features. */}
+          <div className="mt-12 grid grid-cols-1 sm:grid-cols-3 gap-3 text-left max-w-3xl mx-auto">
+            <div className="flex items-start gap-3 rounded-lg border border-emerald-500/20 bg-emerald-950/30 backdrop-blur px-4 py-3">
+              <Lock className="w-5 h-5 text-emerald-300 flex-shrink-0 mt-0.5" />
+              <div>
+                <div className="text-sm font-semibold text-white">Private by default</div>
+                <div className="text-xs text-slate-400 leading-snug">Row-level security on every record. Only what you publish is public.</div>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 rounded-lg border border-emerald-500/20 bg-emerald-950/30 backdrop-blur px-4 py-3">
+              <Download className="w-5 h-5 text-emerald-300 flex-shrink-0 mt-0.5" />
+              <div>
+                <div className="text-sm font-semibold text-white">Yours to export</div>
+                <div className="text-xs text-slate-400 leading-snug">Roster, weights, photos, lineage — CSV or PDF, anytime. No lock-in.</div>
+              </div>
+            </div>
+            <div className="flex items-start gap-3 rounded-lg border border-emerald-500/20 bg-emerald-950/30 backdrop-blur px-4 py-3">
+              <Smartphone className="w-5 h-5 text-emerald-300 flex-shrink-0 mt-0.5" />
+              <div>
+                <div className="text-sm font-semibold text-white">Works on every phone</div>
+                <div className="text-xs text-slate-400 leading-snug">Add to home screen on iOS or Android — no app store required.</div>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* Feature grid */}
@@ -456,6 +500,129 @@ export default function Home() {
           </div>
         </section>
 
+        {/* Verifiable pedigrees — the buyer-trust angle. Surfaces the
+            AnimalPassport / lineage-transfer machinery that already
+            exists in the app but never got marketed on the landing page.
+            This is the section a prospective buyer browsing a seller's
+            listing should read. */}
+        <section className="relative z-10 max-w-6xl mx-auto px-6 pb-24">
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300 mb-4">
+              <BadgeCheck className="w-3.5 h-3.5" />
+              For breeders &amp; buyers
+            </div>
+            <h2 className="text-3xl md:text-4xl font-bold mb-3">
+              Pedigrees buyers can verify
+            </h2>
+            <p className="text-slate-400 max-w-2xl mx-auto">
+              Every gecko gets a digital passport. When you sell, the new owner inherits the full
+              history — parents, weights, photos, medical notes — with a scannable QR. No more
+              screenshots. No more &ldquo;trust me.&rdquo;
+            </p>
+          </div>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="gecko-card backdrop-blur p-6">
+              <div className="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-400/25 flex items-center justify-center mb-4">
+                <QrCode className="w-6 h-6 text-emerald-300" />
+              </div>
+              <h3 className="text-lg font-semibold text-white mb-2">Animal Passport</h3>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                A scannable, public-by-permission record of every gecko: parents, hatch date, weight
+                history, every photo it&rsquo;s ever had, and notes. Ship it as a QR card with the
+                animal.
+              </p>
+            </div>
+            <div className="gecko-card backdrop-blur p-6">
+              <div className="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-400/25 flex items-center justify-center mb-4">
+                <ShieldCheck className="w-6 h-6 text-emerald-300" />
+              </div>
+              <h3 className="text-lg font-semibold text-white mb-2">One-click ownership transfer</h3>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                Sold an animal? Issue a claim link, the buyer creates an account, and the entire
+                provenance — lineage, weights, photos — moves with it. The history persists across
+                owners for life.
+              </p>
+            </div>
+            <div className="gecko-card backdrop-blur p-6">
+              <div className="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-400/25 flex items-center justify-center mb-4">
+                <BadgeCheck className="w-6 h-6 text-emerald-300" />
+              </div>
+              <h3 className="text-lg font-semibold text-white mb-2">Build a verifiable reputation</h3>
+              <p className="text-sm text-slate-400 leading-relaxed">
+                Your public breeder profile shows real animals you&rsquo;ve produced and transferred —
+                not just listings. Buyers see lineage they can trace back. Reputation, in data, not
+                screenshots.
+              </p>
+            </div>
+          </div>
+          <div className="mt-8 text-center">
+            <Link to={createPageUrl('MarketplaceVerification')}>
+              <Button
+                variant="outline"
+                className="bg-emerald-950/40 text-emerald-100 hover:bg-emerald-900/60 hover:text-white border-emerald-500/40 font-semibold backdrop-blur"
+              >
+                How marketplace verification works
+                <ArrowRight className="w-4 h-4 ml-2" />
+              </Button>
+            </Link>
+          </div>
+        </section>
+
+        {/* Comparison block — directly contrasts the three options a
+            keeper actually considers (spreadsheet, generic reptile app,
+            Geck Inspect). Drives conversion by naming the pain in a
+            spreadsheet and the gap in a generic app. */}
+        <section className="relative z-10 max-w-6xl mx-auto px-6 pb-24">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-3">
+              Built for the crested gecko hobby
+            </h2>
+            <p className="text-slate-400 max-w-2xl mx-auto">
+              A spreadsheet stores text. A generic reptile app stores generic records. Geck Inspect
+              speaks crestie.
+            </p>
+          </div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm border-separate border-spacing-0">
+              <thead>
+                <tr className="text-left">
+                  <th className="p-4 font-semibold text-slate-400">&nbsp;</th>
+                  <th className="p-4 font-semibold text-slate-400 border-b border-slate-800">Spreadsheet</th>
+                  <th className="p-4 font-semibold text-slate-400 border-b border-slate-800">Generic reptile app</th>
+                  <th className="p-4 font-semibold text-emerald-300 border-b border-emerald-500/30 bg-emerald-500/5 rounded-t-lg">Geck Inspect</th>
+                </tr>
+              </thead>
+              <tbody className="text-slate-300">
+                {[
+                  ['Crested-specific morphs', 'Free text', 'Generic morph list', '33 crested morphs, structured'],
+                  ['Multi-trait genetics calculator', 'Manual Punnett squares', 'Single trait at a time', 'Multi-trait + Lilly White lethal flagging + Monte Carlo'],
+                  ['Lineage on every animal', 'One sheet per generation', 'Limited tree depth', 'Full multi-generation tree, drag to explore'],
+                  ['Pedigree transfers to buyers', 'PDF if you remember', 'Not supported', 'One-click verifiable digital passport'],
+                  ['Marketplace sync', 'Re-type each listing', 'Internal only', 'Push to MorphMarket &amp; Palm Street'],
+                  ['Photo timeline per animal', 'A folder somewhere', 'Single photo', 'Auto-advancing slideshow from hatchling to adult'],
+                  ['Built for the species', 'Built for nothing', 'Built for everything', 'Built for crested geckos and only crested geckos'],
+                ].map(([row, sheet, generic, gi], i) => (
+                  <tr key={i} className="border-b border-slate-800/60">
+                    <td className="p-4 font-semibold text-white">{row}</td>
+                    <td className="p-4 text-slate-400">
+                      <X className="w-4 h-4 text-slate-600 inline mr-2" />
+                      <span className="text-xs">{sheet}</span>
+                    </td>
+                    <td className="p-4 text-slate-400">
+                      <X className="w-4 h-4 text-slate-600 inline mr-2" />
+                      <span className="text-xs">{generic}</span>
+                    </td>
+                    <td className="p-4 text-slate-200 bg-emerald-500/5 border-l border-r border-emerald-500/20">
+                      <Check className="w-4 h-4 text-emerald-400 inline mr-2" />
+                      <span className="text-xs" dangerouslySetInnerHTML={{ __html: gi }} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </section>
+
         {/* Crested gecko context — this is valuable SEO/AI content */}
         <section className="relative z-10 max-w-4xl mx-auto px-6 pb-24">
           <div className="gecko-card backdrop-blur p-8 md:p-12">
@@ -519,6 +686,30 @@ export default function Home() {
               </Link>
             </div>
           </div>
+
+          {/* Multi-species roadmap callout — sets expectations for visitors
+              who arrive looking for gargoyle / leachianus support, and
+              keeps them in the funnel by making clear the upgrade path
+              is included with their existing account. */}
+          <div className="mt-6 rounded-xl border border-slate-700/60 bg-slate-900/40 backdrop-blur p-6 md:p-8">
+            <div className="flex items-start gap-4">
+              <div className="w-10 h-10 rounded-lg bg-emerald-500/15 border border-emerald-400/25 flex items-center justify-center flex-shrink-0">
+                <Sparkles className="w-5 h-5 text-emerald-300" />
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-white mb-1">
+                  Crested-only today. Gargoyle &amp; Leachianus next.
+                </h3>
+                <p className="text-sm text-slate-400 leading-relaxed">
+                  Geck Inspect is purpose-built for crested geckos right now — the AI morph ID,
+                  genetics calculator, and morph guide are all tuned for <em>Correlophus ciliatus</em>.
+                  Support for gargoyle geckos (<em>Rhacodactylus auriculatus</em>) and Leachianus
+                  (<em>Rhacodactylus leachianus</em>) is on the roadmap. Sign up now and you&rsquo;ll
+                  get the species upgrade for free when it ships.
+                </p>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* Visible FAQ — mirrors the FAQPage JSON-LD in LANDING_JSON_LD.
@@ -560,8 +751,12 @@ export default function Home() {
           <h2 className="text-3xl md:text-4xl font-bold mb-4">
             Boot up your geckOS.
           </h2>
-          <p className="text-slate-400 mb-8 text-lg">
+          <p className="text-slate-400 mb-3 text-lg">
             Create a free account and start cataloging your collection in minutes.
+          </p>
+          <p className="text-emerald-200/70 mb-8 text-sm flex items-center justify-center gap-2">
+            <Smartphone className="w-4 h-4" />
+            Add to your iOS or Android home screen — full-screen, like a native app, no app store needed.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
             <Link to={createPageUrl('AuthPortal')}>
@@ -614,7 +809,7 @@ export default function Home() {
                 <li><Link to="/MorphGuide" className="hover:text-white">Morph Guide</Link></li>
                 <li><Link to="/CareGuide" className="hover:text-white">Care Guide</Link></li>
                 <li><Link to="/GeneticsGuide" className="hover:text-white">Genetics Guide</Link></li>
-                <li><Link to="/GeneticCalculatorTool" className="hover:text-white">Genetics Calculator</Link></li>
+                <li><Link to="/calculator" className="hover:text-white">Genetics Calculator</Link></li>
                 <li><Link to="/Blog" className="hover:text-white">Blog</Link></li>
               </ul>
             </div>

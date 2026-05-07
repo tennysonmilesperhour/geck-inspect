@@ -2,19 +2,19 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
     <loc>https://geckinspect.com/</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>1.0</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/About</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.5</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/Contact</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.4</priority>
   </url>
@@ -38,565 +38,571 @@
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/GeneticsGuide</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
-    <loc>https://geckinspect.com/GeneticCalculatorTool</loc>
-    <lastmod>2026-04-30</lastmod>
+    <loc>https://geckinspect.com/calculator</loc>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphVisualizer</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/Gallery</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CommunityConnect</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/Forum</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/Marketplace</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MarketplaceBuy</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/Shipping</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/Giveaways</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>daily</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/Membership</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/AuthPortal</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/harlequin</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/extreme-harlequin</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/pinstripe</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/phantom-pinstripe</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/dalmatian</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/super-dalmatian</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/flame</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/tiger</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/brindle</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/extreme-brindle</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/tiger-brindle</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/soft-scale</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/super-soft-scale</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/white-wall</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/white-wall-white-spot</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/cappuccino</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/frappuccino</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/lilly-white</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/axanthic</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/hypo</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/patternless</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/moonglow</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/translucent</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/red-base</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/orange-base</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/yellow-base</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/olive</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/chocolate</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/lavender</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/buckskin</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/cream</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/tricolor</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/bicolor</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/category/pattern</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/category/base</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/category/color</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/category/structure</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/category/combo</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/inheritance/recessive</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/inheritance/co-dominant</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/inheritance/incomplete-dominant</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/inheritance/dominant</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/inheritance/polygenic</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/MorphGuide/inheritance/line-bred</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/species-background</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/before-you-buy</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/sexing</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/enclosure-size</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/substrate</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/temperature</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/humidity</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/lighting</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/decor</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/cgd-basics</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/cgd-brands</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/feeding-schedules</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/insects</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/fruit-and-treats</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/picky-eaters</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/acclimation</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/handling-technique</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/firing-up</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/weight-tracking</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/shedding</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/tail-loss</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/common-issues</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/quarantine</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/hatchling-care</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/juvenile-care</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/subadult-care</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/adult-care</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/senior-care</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/breeding-readiness</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/cooling-period</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/pairing</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/egg-laying</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/incubation</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/CareGuide/hatching-and-record-keeping</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/blog</loc>
-    <lastmod>2026-04-30</lastmod>
+    <lastmod>2026-05-07</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
     <loc>https://geckinspect.com/blog/cappuccino-crested-gecko-genetics</loc>
     <lastmod>2026-04-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://geckinspect.com/blog/super-cappuccino-viability-debate</loc>
+    <lastmod>2026-05-05</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>

@@ -18,7 +18,7 @@ const CALCULATOR_JSON_LD = [
     '@type': 'WebApplication',
     '@id': 'https://geckinspect.com/GeneticCalculatorTool#app',
     name: 'Crested Gecko Genetics Calculator',
-    url: 'https://geckinspect.com/GeneticCalculatorTool',
+    url: 'https://geckinspect.com/calculator',
     description: 'Punnett-square-based genetics calculator for crested gecko (Correlophus ciliatus) breeders. Predicts offspring outcomes for incomplete-dominant, recessive, and dominant traits including Lilly White, Cappuccino, Axanthic, Soft Scale, and Hypo.',
     applicationCategory: 'UtilitiesApplication',
     applicationSubCategory: 'Reptile Breeding Calculator',
@@ -36,7 +36,7 @@ const CALCULATOR_JSON_LD = [
   },
   breadcrumbSchema([
     { name: 'Home', path: '/' },
-    { name: 'Genetic Calculator', path: '/GeneticCalculatorTool' },
+    { name: 'Genetic Calculator', path: '/calculator' },
   ]),
 ];
 
@@ -89,7 +89,7 @@ export default function GeneticCalculatorTool() {
             <Seo
               title="Crested Gecko Genetics Calculator"
               description="Free Punnett-square genetics calculator for crested gecko breeders. Predict offspring outcomes for Lilly White (incomplete-dominant, lethal super), Cappuccino (incomplete-dominant), Axanthic (recessive), Soft Scale (incomplete-dominant), and Hypo (dominant). Built for the crested gecko hobby."
-              path="/GeneticCalculatorTool"
+              path="/calculator"
               imageAlt="Crested gecko genetics Punnett-square calculator"
               keywords={[
                 'crested gecko genetics calculator',

@@ -440,7 +440,7 @@ function injectNoscriptBody(html, route) {
             <a href="/MorphGuide">Morph Guide</a>
             <a href="/CareGuide">Care Guide</a>
             <a href="/GeneticsGuide">Genetics</a>
-            <a href="/GeneticCalculatorTool">Calculator</a>
+            <a href="/calculator">Calculator</a>
             <a href="/blog">Blog</a>
             <a href="/About">About</a>
           </nav>

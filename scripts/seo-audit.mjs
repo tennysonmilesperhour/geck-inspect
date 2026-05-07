@@ -154,7 +154,7 @@ function findings(file, html) {
   // Noscript body should contain an h1 for content routes. Pages have
   // multiple <noscript> blocks (font-loading + main body shell) — check
   // whether any of them carry a heading.
-  const isContentRoute = /^\/(blog|CareGuide|MorphGuide|GeneticsGuide|GeneticCalculatorTool|About)(\/|$)/.test(route);
+  const isContentRoute = /^\/(blog|CareGuide|MorphGuide|GeneticsGuide|GeneticCalculatorTool|calculator|About)(\/|$)/.test(route);
   if (isContentRoute) {
     const anyH1 = [...html.matchAll(/<noscript>([\s\S]*?)<\/noscript>/g)]
       .some((m) => /<h1[^>]*>/.test(m[1]));

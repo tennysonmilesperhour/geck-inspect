@@ -210,7 +210,10 @@ export const STATIC_ROUTES = [
     },
   },
   {
-    path: '/GeneticCalculatorTool',
+    // Canonical clean URL for the genetics calculator. The legacy
+    // /GeneticCalculatorTool path still routes (App.jsx) but is 301'd
+    // to /calculator in vercel.json so search engines consolidate.
+    path: '/calculator',
     priority: 0.85,
     changefreq: 'monthly',
     lastmod: TODAY,

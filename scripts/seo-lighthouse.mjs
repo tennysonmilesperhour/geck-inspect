@@ -36,7 +36,7 @@ const TARGETS = [
   { path: '/MorphGuide', label: 'Morph Guide hub' },
   { path: '/CareGuide', label: 'Care Guide hub' },
   { path: '/GeneticsGuide', label: 'Genetics Guide' },
-  { path: '/GeneticCalculatorTool', label: 'Genetics Calculator' },
+  { path: '/calculator', label: 'Genetics Calculator' },
   { path: '/blog', label: 'Blog index' },
 ];
 

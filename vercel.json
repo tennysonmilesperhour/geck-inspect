@@ -223,7 +223,12 @@
     },
     {
       "source": "/geneticcalculatortool",
-      "destination": "/GeneticCalculatorTool",
+      "destination": "/calculator",
+      "permanent": true
+    },
+    {
+      "source": "/GeneticCalculatorTool",
+      "destination": "/calculator",
       "permanent": true
     },
     {

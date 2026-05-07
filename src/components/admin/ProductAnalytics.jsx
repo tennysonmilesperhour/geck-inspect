@@ -10,7 +10,7 @@ import {
   Trash2,
   Save,
   Activity,
-  Funnel,
+  Filter as Funnel,
   Users,
   Repeat,
   Eye,
