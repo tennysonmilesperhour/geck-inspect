@@ -431,6 +431,36 @@ export function getBlogRoutes() {
   return [...index, ...posts_];
 }
 
+// Per-morph genetics calculator landing pages at /calculator/<slug>.
+// Source of truth for the slug list is PICKER_TRAITS in
+// src/components/breeding/ManualGenotypePicker.jsx — keep this list in
+// sync when adding/removing pickable traits. Each entry yields one
+// indexable HTML route prerendered with the trait pre-filled into
+// Parent A.
+const CALCULATOR_MORPH_SLUGS = [
+  { slug: 'lilly-white',  label: 'Lilly White' },
+  { slug: 'cappuccino',   label: 'Cappuccino' },
+  { slug: 'whiteout',     label: 'Whiteout' },
+  { slug: 'empty-back',   label: 'Empty Back' },
+  { slug: 'soft-scale',   label: 'Soft Scale' },
+  { slug: 'axanthic',     label: 'Axanthic' },
+  { slug: 'phantom',      label: 'Phantom' },
+  { slug: 'hypo',         label: 'Hypo' },
+];
+
+export function getCalculatorMorphRoutes() {
+  return CALCULATOR_MORPH_SLUGS.map(({ slug, label }) => ({
+    path: `/calculator/${slug}`,
+    priority: 0.75,
+    changefreq: 'monthly',
+    lastmod: TODAY,
+    meta: {
+      title: `${label} Genetics Calculator — Crested Gecko`,
+      description: `Free Punnett-square calculator for crested gecko ${label} pairings. Predict offspring outcomes when one parent carries ${label}. No signup required.`,
+    },
+  }));
+}
+
 export function getAllRoutes() {
   return [
     ...STATIC_ROUTES,
@@ -438,6 +468,7 @@ export function getAllRoutes() {
     ...getMorphTaxonomyRoutes(),
     ...getCareTopicRoutes(),
     ...getBlogRoutes(),
+    ...getCalculatorMorphRoutes(),
   ];
 }
 
@@ -468,6 +499,7 @@ const DYNAMIC_ROUTE_PATTERNS = [
   '/MorphGuide/category/:categoryId',
   '/MorphGuide/inheritance/:inheritanceId',
   '/MorphGuide/:slug',
+  '/calculator/:morph',
   '/CareGuide/:topic',
   '/Breeder/:slug',
   '/passport/:passportCode/qr',
@@ -519,6 +551,7 @@ export function getAllSpaPathPatterns() {
   for (const r of getMorphTaxonomyRoutes()) push(r.path);
   for (const r of getCareTopicRoutes()) push(r.path);
   for (const r of getMorphRoutes()) push(r.path);
+  for (const r of getCalculatorMorphRoutes()) push(r.path);
   for (const r of getBlogRoutes()) push(r.path);
   for (const p of DYNAMIC_ROUTE_PATTERNS) push(p);
 
