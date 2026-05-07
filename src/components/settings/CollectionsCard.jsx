@@ -21,11 +21,41 @@ import {
   Check,
   Crown,
   ArrowRight,
+  Send,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Collection, CollectionMember } from '@/entities/all';
+import { supabase } from '@/lib/supabaseClient';
 import { getTierLimits } from '@/lib/tierLimits';
+
+/**
+ * Best-effort transactional email via the send-collection-invite edge
+ * function. Never throws: if the function isn't deployed yet (404),
+ * isn't configured (200 with `skipped`), or the network blip's, we
+ * fall through to the copy-link UI which is already there. The
+ * pending row is the source of truth for the invite either way.
+ */
+async function sendInviteEmail({ toEmail, inviter, collectionName, role, token }) {
+  const inviteUrl = `${window.location.origin}/collection-invite/${token}`;
+  try {
+    const { data, error } = await supabase.functions.invoke('send-collection-invite', {
+      body: {
+        to_email: toEmail,
+        inviter_email: inviter?.email || '',
+        inviter_name: inviter?.full_name || '',
+        collection_name: collectionName,
+        role,
+        invite_url: inviteUrl,
+      },
+    });
+    if (error) return { delivered: false, reason: error.message };
+    if (data?.delivered === 1) return { delivered: true };
+    return { delivered: false, reason: data?.skipped || 'unknown' };
+  } catch (e) {
+    return { delivered: false, reason: e?.message || 'network' };
+  }
+}
 
 /**
  * Settings card: list and manage collections you own + collaborator
@@ -274,6 +304,7 @@ function CollectionRow({
   const [inviteRole, setInviteRole] = useState('editor');
   const [inviting, setInviting] = useState(false);
   const [copiedToken, setCopiedToken] = useState(null);
+  const [resendingId, setResendingId] = useState(null);
 
   const owner = memberships.find((m) => m.role === 'owner');
   const others = memberships.filter((m) => m.role !== 'owner');
@@ -317,11 +348,22 @@ function CollectionRow({
         invited_at: new Date().toISOString(),
         expires_at: new Date(Date.now() + 30 * 86400 * 1000).toISOString(),
       });
+      // Fire-and-await the transactional email. Failures fall back to
+      // the existing copy-link UX, so this never blocks the invite.
+      const emailResult = await sendInviteEmail({
+        toEmail: email,
+        inviter: user,
+        collectionName: collection.name,
+        role: inviteRole,
+        token,
+      });
       setInviteEmail('');
       onChange?.();
       toast({
-        title: 'Invite created',
-        description: `Share the link below with ${email}.`,
+        title: emailResult.delivered ? 'Invite sent' : 'Invite created',
+        description: emailResult.delivered
+          ? `Email sent to ${email}.`
+          : `Email delivery isn't set up yet — copy the invite link below to share manually.`,
       });
     } catch (e) {
       toast({
@@ -345,6 +387,25 @@ function CollectionRow({
         variant: 'destructive',
       });
     }
+  };
+
+  const resendInvite = async (m) => {
+    setResendingId(m.id);
+    const result = await sendInviteEmail({
+      toEmail: m.member_email,
+      inviter: user,
+      collectionName: collection.name,
+      role: m.role,
+      token: m.invite_token,
+    });
+    setResendingId(null);
+    toast({
+      title: result.delivered ? 'Invite re-sent' : 'Could not re-send email',
+      description: result.delivered
+        ? `Email sent to ${m.member_email}.`
+        : 'Use the Copy invite link below to share manually.',
+      variant: result.delivered ? 'default' : 'destructive',
+    });
   };
 
   const copyInvite = async (m) => {
@@ -421,24 +482,43 @@ function CollectionRow({
               </div>
               <div className="flex items-center gap-1">
                 {m.status === 'pending' && m.invite_token && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => copyInvite(m)}
-                    className="text-slate-400 hover:text-emerald-300 text-xs"
-                  >
-                    {copiedToken === m.id ? (
-                      <>
-                        <Check className="w-3.5 h-3.5 mr-1" />
-                        Copied
-                      </>
-                    ) : (
-                      <>
-                        <Copy className="w-3.5 h-3.5 mr-1" />
-                        Copy invite
-                      </>
-                    )}
-                  </Button>
+                  <>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => resendInvite(m)}
+                      disabled={resendingId === m.id}
+                      className="text-slate-400 hover:text-emerald-300 text-xs"
+                      title="Re-send the invitation email"
+                    >
+                      {resendingId === m.id ? (
+                        <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                      ) : (
+                        <>
+                          <Send className="w-3.5 h-3.5 mr-1" />
+                          Resend
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => copyInvite(m)}
+                      className="text-slate-400 hover:text-emerald-300 text-xs"
+                    >
+                      {copiedToken === m.id ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 mr-1" />
+                          Copied
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5 mr-1" />
+                          Copy link
+                        </>
+                      )}
+                    </Button>
+                  </>
                 )}
                 <Button
                   variant="ghost"
