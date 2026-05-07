@@ -41,6 +41,7 @@ import {
     LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import MessageUserButton from '../components/ui/MessageUserButton';
+import RecommendedKitForGecko from '../components/store/RecommendedKitForGecko';
 
 export default function GeckoDetail() {
     const [gecko, setGecko] = useState(null);
@@ -366,6 +367,13 @@ export default function GeckoDetail() {
                             </Card>
                         )}
                     </div>
+                </div>
+
+                {/* Personalized supplies recommendation. Quietly hides itself
+                    when the store is disabled or has no matching products,
+                    so this never adds empty-card noise to the page. */}
+                <div className="mt-8">
+                    <RecommendedKitForGecko gecko={gecko} />
                 </div>
             </div>
         </div>
