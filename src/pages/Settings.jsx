@@ -249,6 +249,7 @@ const initialFormData = {
     calendar_alert_types: ['egg_lay_estimate', 'hatch_estimate', 'breeding_reminders', 'weight_check_reminders'],
     feeding_alerts_enabled: true,
     feeding_late_reminders_enabled: false,
+    cgd_reorder_reminders_enabled: true,
     palm_street_sync_enabled: false,
     email_on_new_follower: true,
     email_on_new_message: true,
@@ -358,6 +359,7 @@ export default function SettingsPage() {
                         calendar_alert_types: currentUser.calendar_alert_types || ['egg_lay_estimate', 'hatch_estimate', 'breeding_reminders', 'weight_check_reminders'],
                         feeding_alerts_enabled: currentUser.feeding_alerts_enabled !== false,
                         feeding_late_reminders_enabled: currentUser.feeding_late_reminders_enabled === true,
+                        cgd_reorder_reminders_enabled: currentUser.cgd_reorder_reminders_enabled !== false,
                         palm_street_sync_enabled: currentUser.palm_street_sync_enabled || false,
                         email_on_new_follower: currentUser.email_on_new_follower !== false, // Default true
                         email_on_new_message: currentUser.email_on_new_message !== false, // Default true
@@ -847,6 +849,7 @@ export default function SettingsPage() {
                                  <p className="text-sm text-slate-400">Alerts also appear in the bottom right corner while feeding is overdue. Glow turns yellow when due, orange after 2+ weeks, red after 3+ weeks.</p>
                              </>
                          )}
+                         {renderSwitch('cgd-reorder-reminder', 'CGD Reorder Reminder', 'Notify me roughly 14 days before my CGD is estimated to run out, based on my collection size and order history. Disable to stop these reminders.', formData.cgd_reorder_reminders_enabled, (checked) => handleChange('cgd_reorder_reminders_enabled', checked))}
                      </CardContent>
                  </Card>
                 </section>

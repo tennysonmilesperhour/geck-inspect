@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Trash2, Minus, Plus, ShoppingBag, Sparkles } from 'lucide-react';
 import StoreLayout from '@/components/store/StoreLayout';
 import Seo from '@/components/seo/Seo';
+import FoodRunoutWidget from '@/components/store/FoodRunoutWidget';
 import { Button } from '@/components/ui/button';
 import {
   fetchCart,
@@ -227,7 +228,8 @@ export default function StoreCart() {
             })}
           </div>
 
-          <aside className="rounded-lg border border-slate-800 bg-slate-900/40 p-4 h-max sticky top-20">
+          <aside className="rounded-lg border border-slate-800 bg-slate-900/40 p-4 h-max sticky top-20 space-y-3">
+            <FoodRunoutWidget compact />
             <h2 className="text-sm font-bold text-slate-200">Summary</h2>
             <div className="mt-3 space-y-1.5 text-sm">
               <div className="flex justify-between text-slate-400">

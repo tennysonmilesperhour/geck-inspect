@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { Gift, Shirt, Sparkles, Wrench } from 'lucide-react';
 import StoreLayout from '@/components/store/StoreLayout';
 import ProductCard from '@/components/store/ProductCard';
+import FoodRunoutWidget from '@/components/store/FoodRunoutWidget';
 import Seo from '@/components/seo/Seo';
 import { SITE_URL } from '@/lib/organization-schema';
 import { supabase } from '@/lib/supabaseClient';
@@ -103,6 +104,10 @@ export default function StoreLanding() {
           </Link>
         </div>
       </section>
+
+      <div className="mb-6">
+        <FoodRunoutWidget />
+      </div>
 
       <section className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
         {HERO_TILES.map(({ slug, label, blurb, Icon }) => (
