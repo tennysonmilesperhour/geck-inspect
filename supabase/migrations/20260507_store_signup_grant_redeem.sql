@@ -58,10 +58,11 @@ begin
     return jsonb_build_object('ok', false, 'reason', 'email_mismatch');
   end if;
 
-  -- Apply the grant: extend membership_tier_expires_at by the granted duration,
-  -- never reducing an existing later expiry.
+  -- Apply the grant: extend membership_expires_at by the granted duration,
+  -- never reducing an existing later expiry. profiles.id is `text` (legacy
+  -- base44 shape) so we look up by email instead of joining on auth.uid().
   select membership_expires_at into v_current_expiry from public.profiles
-   where id = v_user_id;
+   where email = v_user_email;
 
   v_new_expiry := greatest(
     coalesce(v_current_expiry, now()),
@@ -75,7 +76,7 @@ begin
          end,
          membership_expires_at = v_new_expiry,
          updated_date = now()
-   where id = v_user_id;
+   where email = v_user_email;
 
   update public.store_signup_grants
      set redeemed_at = now(),
