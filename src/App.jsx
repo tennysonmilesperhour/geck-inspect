@@ -282,6 +282,11 @@ const AuthenticatedApp = () => {
             users hitting the cleaner URL keep their app chrome. */}
         <Route path="/calculator" element={<GeneticCalculatorTool />} />
         <Route path="/calculator/:morph" element={<CalculatorMorph />} />
+        {/* Store — nested inside Layout so the sidebar persists. The
+            StoreLayout component skips its standalone header when an
+            authenticated user is detected (i.e. when the parent Layout
+            is mounted) so the brand chrome doesn't double up. */}
+        <Route path="/Store/*" element={<Store />} />
       </Route>
 
       {/* Editorial blog — accessible to authenticated users too */}
@@ -289,8 +294,6 @@ const AuthenticatedApp = () => {
       <Route path="/blog/category/:slug" element={<BlogCategoryPage />} />
       <Route path="/blog/tag/:slug" element={<BlogTagPage />} />
       <Route path="/blog/:slug" element={<BlogPost />} />
-      {/* Store — same chrome for auth and guest. */}
-      <Route path="/Store/*" element={<Store />} />
       {/* P1 — Public passport pages (also available when authenticated) */}
       <Route path="/passport/:passportCode" element={<AnimalPassport />} />
       <Route path="/claim/:token" element={<ClaimAnimal />} />
