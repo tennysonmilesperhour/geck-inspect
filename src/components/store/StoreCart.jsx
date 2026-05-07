@@ -9,6 +9,7 @@ import {
   updateCartItemQuantity,
   removeFromCart,
   cartSubtotalCents,
+  getSessionToken,
 } from '@/lib/store/cart';
 import { formatCents } from '@/lib/store/format';
 import { useAuth } from '@/lib/AuthContext';
@@ -101,11 +102,35 @@ export default function StoreCart() {
         item_count: items.length,
         subtotal_cents: cartSubtotalCents(items),
       });
-      // Phase 1 stub: edge function not yet deployed. Tell the user
-      // checkout is coming and bail rather than 500'ing.
-      alert(
-        'Checkout is wired up next. We will redirect to Stripe Checkout once the store-checkout edge function is deployed.'
-      );
+      const cart = await fetchCart();
+      const origin = typeof window !== 'undefined' ? window.location.origin : '';
+      const body = {
+        success_url: `${origin}/Store/checkout/success`,
+        cancel_url: `${origin}/Store/cart`,
+      };
+      if (cart.mode === 'user' && cart.cart?.id) {
+        body.cart_id = cart.cart.id;
+        if (user?.email) body.customer_email = user.email;
+      } else {
+        body.session_token = getSessionToken();
+      }
+      const { data, error } = await supabase.functions.invoke('store-checkout', { body });
+      if (error || !data?.url) {
+        const msg = error?.message || data?.error || 'checkout_unavailable';
+        if (msg === 'stripe_not_configured') {
+          alert(
+            'Checkout requires Stripe credentials to be configured on the server. ' +
+            'Once STRIPE_SECRET_KEY is set on the store-checkout edge function, this button will work.'
+          );
+        } else {
+          alert(`Checkout error: ${msg}`);
+        }
+        return;
+      }
+      window.location.href = data.url;
+    } catch (e) {
+      console.error('checkout failed', e);
+      alert(`Checkout error: ${e.message || e}`);
     } finally {
       setBusy(false);
     }

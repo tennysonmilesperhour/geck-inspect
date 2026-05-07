@@ -3,6 +3,7 @@ import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
 import { identifyUser, resetUser } from '@/lib/posthog';
 import { isGuestMode, setGuestMode, GUEST_USER } from '@/lib/guestMode';
 import { applyPendingReferral } from '@/lib/referral';
+import { applyPendingSignupGrant } from '@/lib/store/signupGrant';
 
 const AuthContext = createContext();
 
@@ -67,6 +68,10 @@ export const AuthProvider = ({ children }) => {
           // ?ref=<code> was captured before signup. Fire-and-forget; any
           // failure is logged but never blocks the auth flow.
           applyPendingReferral(enriched);
+          // Redeem any pending store signup-grant token (3-month Keeper
+          // trial from a guest checkout). Same fire-and-forget posture —
+          // soft failures clear the token, hard failures retry next sign-in.
+          applyPendingSignupGrant();
         });
       } else {
         setIsAuthenticated(false);

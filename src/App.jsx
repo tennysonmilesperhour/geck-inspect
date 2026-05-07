@@ -18,12 +18,17 @@ import LoginPortal from '@/components/auth/LoginPortal';
 import ScrollToTop from '@/components/shared/ScrollToTop';
 import { base44 } from '@/api/base44Client';
 import { captureReferralFromUrl } from '@/lib/referral';
+import { captureSignupGrantFromUrl } from '@/lib/store/signupGrant';
 
 // Pull ?ref=<code> off the URL into localStorage as early as possible,
 // before any router renders, so the param is captured even on the very
 // first navigation away from the landing page. applyPendingReferral
 // (called from AuthContext on sign-in) consumes it later.
 captureReferralFromUrl();
+// Same idea for ?grant=<token> from the email receipt link — capture
+// before any redirect / OAuth round-trip clobbers the URL, then
+// applyPendingSignupGrant redeems it on first authenticated session.
+captureSignupGrantFromUrl();
 
 // Public landing page — stays eager because it's what unauthenticated
 // visitors (and crawlers) hit first.
