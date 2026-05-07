@@ -16,12 +16,10 @@
 --   2. Replaces notify_push_on_insert with notify_dispatch_on_insert,
 --      which POSTs the same payload to BOTH send-push and send-email
 --      via pg_net. Each function checks per-user prefs independently.
---   3. Reads three GUCs:
---        app.send_push_url
---        app.send_email_url
---        app.service_role_key
---      Missing or empty GUCs are tolerated — the trigger skips that
---      channel cleanly so the notifications INSERT itself never fails.
+--   3. Reads the service-role key from Vault (notification_service_role_key
+--      secret). Edge function URLs are hardcoded — they aren't secrets,
+--      and ALTER DATABASE for GUCs is not available to any user role on
+--      hosted Supabase.
 -- =============================================================================
 
 -- 1. profiles columns ------------------------------------------------------
@@ -64,25 +62,51 @@ comment on column public.profiles.email_notification_types is
   'Which email-grouping keys to deliver. Empty array = all email muted (master toggle still rules).';
 
 -- 2. Replace the trigger with one that fans out to BOTH channels ----------
+--
+-- Hosted Supabase does not allow ALTER DATABASE postgres SET ... from
+-- any role available to users (including the dashboard SQL editor),
+-- so a GUC-based config strategy is unreachable. We use Vault for the
+-- only actually-secret value (the service-role key) and hardcode the
+-- two URLs, which aren't secret — the function names and project ref
+-- are visible from the Edge Functions list and every Supabase URL.
+--
+-- Setup left to the user (one statement in the dashboard SQL editor):
+--
+--   select vault.create_secret(
+--     '<service-role-key>',
+--     'notification_service_role_key'
+--   );
+--
+-- Re-issue the same call to rotate the key; vault.create_secret
+-- upserts by name.
 
 create or replace function public.notify_dispatch_on_insert()
 returns trigger
 language plpgsql
 security definer
-set search_path = public, extensions
+set search_path = public, extensions, vault
 as $$
 declare
-  v_push_url  text := current_setting('app.send_push_url',     true);
-  v_email_url text := current_setting('app.send_email_url',    true);
-  v_key       text := current_setting('app.service_role_key',  true);
+  v_push_url  constant text :=
+    'https://mmuglfphhwlaluyfyxsp.supabase.co/functions/v1/send-push';
+  v_email_url constant text :=
+    'https://mmuglfphhwlaluyfyxsp.supabase.co/functions/v1/send-email';
+  v_key       text;
   v_title     text;
   v_body      text;
   v_link      text;
   v_payload   jsonb;
   v_headers   jsonb;
 begin
-  -- Without a service-role key we can't authenticate to the edge
-  -- functions at all, so skip both channels.
+  -- Pull the service-role key from Vault. If it's not configured,
+  -- skip both channels cleanly so the notifications INSERT itself
+  -- still succeeds.
+  select decrypted_secret
+    into v_key
+    from vault.decrypted_secrets
+   where name = 'notification_service_role_key'
+   limit 1;
+
   if v_key is null or v_key = '' then
     return NEW;
   end if;
@@ -123,23 +147,17 @@ begin
     'tag',        NEW.type
   );
 
-  -- Push channel.
-  if v_push_url is not null and v_push_url <> '' then
-    begin
-      perform net.http_post(url := v_push_url, headers := v_headers, body := v_payload);
-    exception when others then
-      raise warning 'notify_dispatch_on_insert: send-push pg_net call failed: %', sqlerrm;
-    end;
-  end if;
+  begin
+    perform net.http_post(url := v_push_url, headers := v_headers, body := v_payload);
+  exception when others then
+    raise warning 'notify_dispatch_on_insert: send-push pg_net call failed: %', sqlerrm;
+  end;
 
-  -- Email channel.
-  if v_email_url is not null and v_email_url <> '' then
-    begin
-      perform net.http_post(url := v_email_url, headers := v_headers, body := v_payload);
-    exception when others then
-      raise warning 'notify_dispatch_on_insert: send-email pg_net call failed: %', sqlerrm;
-    end;
-  end if;
+  begin
+    perform net.http_post(url := v_email_url, headers := v_headers, body := v_payload);
+  exception when others then
+    raise warning 'notify_dispatch_on_insert: send-email pg_net call failed: %', sqlerrm;
+  end;
 
   return NEW;
 end;
