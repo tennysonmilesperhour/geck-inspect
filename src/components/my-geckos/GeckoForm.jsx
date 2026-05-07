@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Gecko, UserActivity, WeightRecord, FeedingGroup } from '@/entities/all';
+import { Gecko, UserActivity, WeightRecord, FeedingGroup, Collection, CollectionMember } from '@/entities/all';
 import { UploadFile } from '@/integrations/Core';
 import { notifyFollowersNewGecko, checkAndNotifyLevelUp } from '@/components/notifications/NotificationService';
 import { useToast } from '@/components/ui/use-toast';
@@ -64,6 +64,10 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
     // New states for certificate generation
     // isGeneratingCert / certType state removed — certificates live on the view modal now.
     const [feedingGroups, setFeedingGroups] = useState([]);
+    // Collections the user can write to (own + editor memberships).
+    // Drives the Collection picker. Empty / single-entry → picker
+    // hides because there's nothing meaningful to choose between.
+    const [writableCollections, setWritableCollections] = useState([]);
     // sire/dam suggestion visibility + refs now live inside ParentAutocomplete
 
     useEffect(() => {
@@ -75,6 +79,36 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                 .catch((err) => console.error('Failed to load feeding groups:', err));
         }
     }, [feedingGroupsProp]);
+
+    // Load every collection the user can write to. Owners get every
+    // collection they own; editors get the collections they were
+    // invited into. Viewers get nothing here — they can't create or
+    // move geckos. The intersection of CollectionMember rows and
+    // Collection rows gives us the writable set.
+    useEffect(() => {
+        let cancelled = false;
+        if (!currentUser?.email) return;
+        Promise.all([
+            Collection.filter({}).catch(() => []),
+            CollectionMember.filter({ status: 'accepted' }).catch(() => []),
+        ]).then(([cols, mems]) => {
+            if (cancelled) return;
+            const writableIds = new Set(
+                (mems || [])
+                    .filter((m) => m.role === 'owner' || m.role === 'editor')
+                    .map((m) => m.collection_id),
+            );
+            const list = (cols || []).filter((c) => writableIds.has(c.id));
+            // Default collection sorts first; everything else by name.
+            list.sort((a, b) => {
+                if (a.is_default && !b.is_default) return -1;
+                if (!a.is_default && b.is_default) return 1;
+                return (a.name || '').localeCompare(b.name || '');
+            });
+            setWritableCollections(list);
+        });
+        return () => { cancelled = true; };
+    }, [currentUser?.email]);
 
     const handleChange = useCallback((field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
@@ -355,6 +389,13 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                              parseFloat(formData.asking_price) : null,
                 image_crop_data: cropData,
                 species: formData.species || 'Crested Gecko',
+                // Pass the chosen collection through so the new row lands
+                // in the right bucket. If null, the
+                // geckos_set_default_collection trigger fills in the
+                // user's default collection on insert (existing rows
+                // keep their previous collection_id when null is passed
+                // because Supabase only updates non-undefined columns).
+                collection_id: formData.collection_id || null,
                 is_gravid: formData.sex === 'Female' ? (formData.is_gravid || false) : false,
                 gravid_since: formData.sex === 'Female' && formData.is_gravid ? (formData.gravid_since || null) : null,
                 egg_drop_date: formData.sex === 'Female' && formData.is_gravid ? (formData.egg_drop_date || null) : null,
@@ -753,6 +794,39 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                             <p className="text-xs text-slate-500 mt-1">Create feeding groups in the Project Manager.</p>
                         )}
                     </div>
+
+                    {/* Collection picker — only renders when the user has more
+                        than one writable collection. Solo-collection users
+                        don't need a chooser; their default lands every gecko
+                        in the right place via the trigger. */}
+                    {writableCollections.length > 1 && (
+                        <div>
+                            <Label htmlFor="collection_id">Collection</Label>
+                            <Select
+                                value={formData.collection_id || ''}
+                                onValueChange={(v) => handleChange('collection_id', v)}
+                                disabled={isArchived}
+                            >
+                                <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100">
+                                    <SelectValue placeholder="Default collection" />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
+                                    {writableCollections.map((c) => (
+                                        <SelectItem
+                                            key={c.id}
+                                            value={c.id}
+                                            className="text-slate-100 focus:bg-slate-700 focus:text-white"
+                                        >
+                                            {c.name}{c.is_default ? ' (default)' : ''}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <p className="text-xs text-slate-500 mt-1">
+                                Move this gecko to a different collection. Manage collections in Settings.
+                            </p>
+                        </div>
+                    )}
 
                     <div>
                         <Label htmlFor="notes">Notes</Label>

@@ -50,6 +50,10 @@ export const INITIAL_FORM_DATA = {
   weight_grams: '',
   asking_price: '',
   image_crop_data: {},
+  // Collection ownership. Null tells the trigger / save flow to use
+  // the user's default collection. Set explicitly when the user
+  // picks a non-default collection in the form's "Collection" select.
+  collection_id: null,
 };
 
 export { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
