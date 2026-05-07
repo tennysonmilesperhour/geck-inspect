@@ -91,7 +91,8 @@ export default function GeneticCalculatorTool({
                 const user = await base44.auth.me();
                 if (user) {
                     setIsAuthed(true);
-                    const data = await Gecko.filter({ created_by: user.email });
+                    const { getVisibleGeckos } = await import('@/lib/geckoAccess');
+                    const data = await getVisibleGeckos(user);
                     setGeckos(data.filter(g => !g.archived));
                     // Authed users haven't filled in a manual genotype yet —
                     // start them on collection mode if they have geckos.

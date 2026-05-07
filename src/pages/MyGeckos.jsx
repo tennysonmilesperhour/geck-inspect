@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import Seo from '@/components/seo/Seo';
 import { Gecko, WeightRecord, FeedingGroup } from '@/entities/all';
+import { getVisibleGeckos } from '@/lib/geckoAccess';
 import { base44 } from '@/api/base44Client';
 import { PlusCircle, Search, Users, Grid3x3, List, ArrowUpDown, Archive, ArchiveRestore, Download, FileText, FileSpreadsheet } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
@@ -91,7 +92,9 @@ export default function MyGeckosPage() {
         try {
             const [userGeckos, userWeights] = await retryApiCall(async () =>
                 Promise.all([
-                    Gecko.filter({ created_by: user.email }, '-created_date', GECKO_FETCH_LIMIT),
+                    // Pull every gecko visible to the user — own collection plus
+                    // any collections shared with them via collection_members.
+                    getVisibleGeckos(user, {}, '-created_date', GECKO_FETCH_LIMIT),
                     WeightRecord.filter({ created_by: user.email }, '-record_date'),
                 ])
             );
@@ -593,7 +596,15 @@ export default function MyGeckosPage() {
                                                     {viewMode === 'card' ? (
                                                         <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                                                             {speciesGeckos.map(gecko => (
-                                                                <GeckoCard key={gecko.id} gecko={gecko} weightRecords={weightRecords} feedingGroups={feedingGroups} onView={handleOpenDetailModal} onEdit={handleEdit} />
+                                                                <GeckoCard
+                                                                    key={gecko.id}
+                                                                    gecko={gecko}
+                                                                    weightRecords={weightRecords}
+                                                                    feedingGroups={feedingGroups}
+                                                                    onView={handleOpenDetailModal}
+                                                                    onEdit={handleEdit}
+                                                                    isOwner={!user?.email || gecko.created_by?.toLowerCase() === user.email.toLowerCase()}
+                                                                />
                                                             ))}
                                                         </div>
                                                     ) : (

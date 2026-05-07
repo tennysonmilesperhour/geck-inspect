@@ -57,10 +57,13 @@ export default function Hatchery() {
         setIsLoading(true);
         try {
             const user = await User.me();
+            const { getVisibleGeckos } = await import('@/lib/geckoAccess');
             const [eggsData, plansData, geckosData] = await Promise.all([
                 Egg.filter({ created_by: user.email }, '-lay_date'),
                 BreedingPlan.filter({ created_by: user.email }),
-                Gecko.filter({ created_by: user.email })
+                // Hatchery shows pairs and offspring from any collection
+                // the user is a member of, not just ones they created.
+                getVisibleGeckos(user)
             ]);
 
             // One-time backfill: hatching from this page used to leave eggs

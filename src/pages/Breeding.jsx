@@ -126,8 +126,9 @@ export default function BreedingPage() {
                 return;
             }
             
+            const { getVisibleGeckos } = await import('@/lib/geckoAccess');
             const [geckosData, plansData, eggsData] = await Promise.all([
-                Gecko.filter({ created_by: currentUser.email }),
+                getVisibleGeckos(currentUser),
                 BreedingPlan.filter({ created_by: currentUser.email }, '-created_date'),
                 Egg.filter({ created_by: currentUser.email })
             ]);

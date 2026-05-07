@@ -130,8 +130,9 @@ export default function NextActions({ currentUserEmail }) {
         (async () => {
             setIsLoading(true);
             try {
+                const { getVisibleGeckos } = await import('@/lib/geckoAccess');
                 const [geckos, eggs, plans, weights, futurePlans] = await Promise.all([
-                    Gecko.filter({ created_by: currentUserEmail }).catch(() => []),
+                    getVisibleGeckos({ email: currentUserEmail }).catch(() => []),
                     Egg.filter({ created_by: currentUserEmail }).catch(() => []),
                     BreedingPlan.filter({ created_by: currentUserEmail }).catch(() => []),
                     WeightRecord.filter({ created_by: currentUserEmail }).catch(() => []),

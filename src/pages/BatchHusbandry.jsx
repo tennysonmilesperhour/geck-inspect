@@ -611,10 +611,11 @@ export default function BatchHusbandry() {
       }
 
       const email = currentUser.email;
+      const { getVisibleGeckos } = await import('@/lib/geckoAccess');
 
       const [userGroups, userGeckos, userFeedings, userWeights] = await Promise.all([
         FeedingGroup.filter({ created_by: email }),
-        Gecko.filter({ created_by: email }),
+        getVisibleGeckos(currentUser),
         FeedingRecord.filter({ created_by: email }, '-date'),
         WeightRecord.filter({ created_by: email }, '-date'),
       ]);

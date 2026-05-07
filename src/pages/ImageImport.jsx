@@ -44,8 +44,9 @@ export default function ImageImport() {
                 setAuthChecked(true);
                 if (currentUser) {
                     setHasAccess(canUseFeature(currentUser, 'image_import'));
+                    const { getVisibleGeckos } = await import('@/lib/geckoAccess');
                     const [g, bp] = await Promise.all([
-                        Gecko.filter({ created_by: currentUser.email }),
+                        getVisibleGeckos(currentUser),
                         BreedingPlan.filter({ created_by: currentUser.email }),
                     ]);
                     setGeckos(g);

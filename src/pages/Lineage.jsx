@@ -537,8 +537,9 @@ export default function Lineage() {
         setIsLoading(true);
         try {
             const currentUser = await base44Client.auth.me().catch(() => null);
+            const { getVisibleGeckos } = await import('@/lib/geckoAccess');
             const [userGeckos, allVisibleGeckos, userPlaceholders] = await Promise.all([
-                currentUser ? Gecko.filter({ created_by: currentUser.email }) : [],
+                currentUser ? getVisibleGeckos(currentUser) : [],
                 Gecko.list(),
                 currentUser ? LineagePlaceholder.filter({ created_by: currentUser.email }).catch(() => []) : []
             ]);

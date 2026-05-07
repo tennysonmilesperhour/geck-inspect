@@ -88,8 +88,9 @@ export default function ProjectManager() {
             // breeders' geckos as parents — a real bug.
             const currentUser = await User.me().catch(() => null);
             const userEmail = currentUser?.email || null;
-            const geckoQuery = userEmail
-                ? Gecko.filter({ created_by: userEmail })
+            const { getVisibleGeckos } = await import('@/lib/geckoAccess');
+            const geckoQuery = currentUser
+                ? getVisibleGeckos(currentUser)
                 : Promise.resolve([]);
             const [projectsData, tasksData, geckosData, plansData, feedingData, reptilesData] = await Promise.all([
                 Project.filter({ status: { $in: ['active', 'completed'] } }),

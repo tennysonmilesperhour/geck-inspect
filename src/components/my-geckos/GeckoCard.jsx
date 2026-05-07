@@ -2,7 +2,7 @@ import React from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Eye, Edit, Calendar, Weight, Heart } from 'lucide-react';
+import { Eye, Edit, Calendar, Weight, Heart, Users2 } from 'lucide-react';
 import { format } from 'date-fns';
 import WeightHealthBadge from '@/components/innovations/WeightHealthBadge';
 import { getSexIcon, getSexColor } from '@/lib/utils';
@@ -121,6 +121,15 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
             <p className="mt-0.5 text-[11px] text-slate-500 font-mono uppercase tracking-wider truncate">
               {gecko.gecko_id_code}
             </p>
+          )}
+          {!isOwner && (
+            <Badge
+              className="mt-1 bg-blue-900/40 text-blue-200 border border-blue-700/50 text-[10px] inline-flex items-center gap-1 max-w-full"
+              title={`Shared by ${gecko.created_by || 'another keeper'}`}
+            >
+              <Users2 className="w-2.5 h-2.5 flex-shrink-0" />
+              <span className="truncate">Shared</span>
+            </Badge>
           )}
         </div>
 

@@ -518,7 +518,8 @@ export default function PrintableWorksheets() {
         setIsLoading(false);
         return;
       }
-      const userGeckos = await Gecko.filter({ created_by: currentUser.email });
+      const { getVisibleGeckos } = await import('@/lib/geckoAccess');
+      const userGeckos = await getVisibleGeckos(currentUser);
       setGeckos(userGeckos.filter(g => !g.archived));
     } catch (err) {
       console.error('Failed to load geckos:', err);

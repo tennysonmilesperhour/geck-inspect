@@ -54,8 +54,9 @@ export default function BreedingPairsPage() {
         try {
             const currentUser = await User.me();
             if (currentUser) {
+                const { getVisibleGeckos } = await import('@/lib/geckoAccess');
                 const [userGeckos, plans, userEggs] = await Promise.all([
-                    Gecko.filter({ created_by: currentUser.email }),
+                    getVisibleGeckos(currentUser),
                     BreedingPlan.filter({ created_by: currentUser.email }, pairsPrefs.sortBy),
                     Egg.filter({ created_by: currentUser.email })
                 ]);
