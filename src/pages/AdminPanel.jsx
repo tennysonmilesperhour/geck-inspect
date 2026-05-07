@@ -20,10 +20,12 @@ import {
   Shield,
   AlertOctagon,
   BookOpen,
+  LineChart,
 } from 'lucide-react';
 
 import AdminOverview from '@/components/admin/AdminOverview';
 import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
+import ProductAnalytics from '@/components/admin/ProductAnalytics';
 import UserManagement from '@/components/admin/UserManagement';
 import MorphGuideEditor from '@/components/admin/MorphGuideEditor';
 import ContentModeration from '@/components/admin/ContentModeration';
@@ -85,9 +87,15 @@ const NAV_GROUPS = [
     ],
   },
   {
+    label: 'Insights',
+    items: [
+      { id: 'product_analytics', label: 'Product analytics', icon: LineChart },
+      { id: 'analytics', label: 'Marketplace analytics', icon: BarChart2 },
+    ],
+  },
+  {
     label: 'Marketplace',
     items: [
-      { id: 'analytics', label: 'Analytics', icon: BarChart2 },
       { id: 'shipping', label: 'Shipping config', icon: Truck },
       { id: 'market_data', label: 'Market data', icon: Globe },
     ],
@@ -113,7 +121,8 @@ const SECTION_TITLES = {
   blog: 'Blog',
   pages: 'Page management',
   morph_submissions: 'Morph submissions',
-  analytics: 'Analytics',
+  product_analytics: 'Product analytics',
+  analytics: 'Marketplace analytics',
   shipping: 'Shipping configuration',
   market_data: 'Market data management',
   scraped_data: 'Scraped data review',
@@ -193,6 +202,8 @@ export default function AdminPanel() {
         return <PageManagement />;
       case 'morph_submissions':
         return <MorphSubmissionReview />;
+      case 'product_analytics':
+        return <ProductAnalytics />;
       case 'analytics':
         return <AnalyticsDashboard />;
       case 'shipping':
