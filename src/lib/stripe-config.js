@@ -37,13 +37,13 @@ export const TIER_PRICING = {
     lifetime: { price: '$0',     billing: '',         priceCaption: 'Free forever',                         mode: null,            price_id: null, cta: 'Get Started Free' },
   },
   keeper: {
-    monthly:  { price: '$4',     billing: '/month',   priceCaption: 'Billed monthly. Cancel anytime.',      mode: 'subscription',  price_id: null, cta: 'Start Keeper' },
-    annual:   { price: '$38.40', billing: '/year',    priceCaption: 'Save 20% vs monthly. Cancel anytime.', mode: 'subscription',  price_id: null, cta: 'Start Keeper' },
+    monthly:  { price: '$2.99',  billing: '/month',   priceCaption: 'Billed monthly. Cancel anytime.',      mode: 'subscription',  price_id: null, cta: 'Start Keeper' },
+    annual:   { price: '$30',    billing: '/year',    priceCaption: 'Annual launches June 2026. Save vs monthly. Cancel anytime.', mode: 'subscription',  price_id: null, cta: 'Start Keeper' },
     lifetime: { price: '$149',   billing: 'one-time', priceCaption: 'Pay once. Lifetime access. No renewals.', mode: 'payment',   price_id: null, cta: 'Get Lifetime Keeper' },
   },
   breeder: {
-    monthly:  { price: '$9',     billing: '/month',   priceCaption: 'Billed monthly. Cancel anytime.',      mode: 'subscription',  price_id: null, cta: 'Start Breeder' },
-    annual:   { price: '$105.60',billing: '/year',    priceCaption: 'Save 20% vs monthly. Cancel anytime.', mode: 'subscription',  price_id: null, cta: 'Start Breeder' },
+    monthly:  { price: '$6.99',  billing: '/month',   priceCaption: 'Billed monthly. Cancel anytime.',      mode: 'subscription',  price_id: null, cta: 'Start Breeder' },
+    annual:   { price: '$70',    billing: '/year',    priceCaption: 'Annual launches June 2026. Save vs monthly. Cancel anytime.', mode: 'subscription',  price_id: null, cta: 'Start Breeder' },
     lifetime: { price: '$349',   billing: 'one-time', priceCaption: 'Pay once. Lifetime access. No renewals.', mode: 'payment',   price_id: null, cta: 'Get Lifetime Breeder' },
   },
   // Enterprise intentionally does NOT have a lifetime entry — that
