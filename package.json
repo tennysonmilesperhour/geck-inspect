@@ -11,6 +11,7 @@
     "build:llms-full": "node scripts/build-llms-full.mjs",
     "build:morphs-csv": "node scripts/build-morphs-csv.mjs",
     "build:vercel-json": "node scripts/build-vercel-json.mjs",
+    "build:pdfs": "node scripts/generate-pdfs.mjs",
     "build:prerender": "node scripts/prerender.mjs",
     "audit": "node scripts/seo-audit.mjs",
     "audit:strict": "node scripts/seo-audit.mjs --strict",
