@@ -305,7 +305,7 @@ export default function Home() {
         {/* Top nav */}
         <header className="relative z-10 max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <img src={LOGO_URL} alt="Geck Inspect" className="h-10 w-10 rounded-xl" />
+            <img src={LOGO_URL} alt="Geck Inspect" className="h-10 w-10 rounded-md" />
             <span className="text-xl font-bold tracking-tight">Geck Inspect</span>
           </div>
           <nav className="hidden md:flex items-center gap-6 text-sm text-slate-300">
@@ -344,23 +344,33 @@ export default function Home() {
             your crested geckos.
           </h1>
           <p className="text-xl md:text-2xl text-emerald-200/90 max-w-2xl mx-auto mb-4 font-medium">
-            No spreadsheets. No guesswork.
+            Every gecko, every clutch, every gene. In one place.
           </p>
           <p className="text-base md:text-lg text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed">
-            The all-in-one platform for crested gecko keepers and breeders, AI morph ID, multi-trait
-            breeding projections, lineage trees, and digital pedigrees that buyers can verify. Built
-            specifically for the hobby. Your new <span className="font-semibold text-emerald-200">geckOS</span>.
+            The crested gecko platform built for the way breeders actually work: AI morph ID, multi-trait
+            breeding projections, lineage trees, and digital pedigrees that buyers can verify. Your new <span className="font-semibold text-emerald-200">geckOS</span>.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-            <Link to={createPageUrl('AuthPortal')}>
+            {showGuestCta ? (
               <Button
                 size="lg"
+                onClick={handleContinueAsGuest}
                 className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-base px-8 py-6 gecko-glow"
               >
-                Create your account
+                Try Now for Free
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
-            </Link>
+            ) : (
+              <Link to={createPageUrl('Dashboard')}>
+                <Button
+                  size="lg"
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-base px-8 py-6 gecko-glow"
+                >
+                  Open your dashboard
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
+            )}
             <Link to={createPageUrl('AuthPortal')}>
               <Button
                 size="lg"
@@ -371,27 +381,8 @@ export default function Home() {
               </Button>
             </Link>
           </div>
-          {/* Secondary entry, no-signup tour. Guests get the public
-              tabs fully interactive and the private ones in view-only
-              mode, so they can evaluate the app before committing. */}
-          {showGuestCta && (
-            <div className="mt-5 flex flex-col items-center">
-              <button
-                type="button"
-                onClick={handleContinueAsGuest}
-                className="group inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-500/5 px-5 py-2 text-sm font-semibold text-emerald-200 hover:bg-emerald-500/10 hover:border-emerald-300/40 hover:text-emerald-100 transition-colors"
-              >
-                <Eye className="w-4 h-4" />
-                Try Now for Free
-                <ArrowRight className="w-3.5 h-3.5 opacity-70 group-hover:translate-x-0.5 transition-transform" />
-              </button>
-              <p className="text-[11px] text-emerald-200/60 mt-2">
-                Explore the full app without signing up. Saving requires a free account.
-              </p>
-            </div>
-          )}
           <p className="text-xs text-slate-500 mt-6">
-            Free to use. No credit card required. Your collection stays yours.
+            No credit card required. Saving requires a free account, and your collection stays yours.
           </p>
         </section>
 
@@ -409,21 +400,21 @@ export default function Home() {
               just under the hero so cold visitors see them before
               scrolling into features. */}
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 text-left max-w-3xl mx-auto">
-            <div className="flex items-start gap-3 rounded-lg border border-sky-500/25 bg-sky-950/30 backdrop-blur px-4 py-3">
+            <div className="flex items-start gap-3 rounded border border-sky-500/25 bg-sky-950/30 backdrop-blur px-4 py-3">
               <Lock className="w-5 h-5 text-sky-300 flex-shrink-0 mt-0.5" />
               <div>
                 <div className="text-sm font-semibold text-white">Private by default</div>
                 <div className="text-xs text-slate-400 leading-snug">Row-level security on every record. Only what you publish is public.</div>
               </div>
             </div>
-            <div className="flex items-start gap-3 rounded-lg border border-sky-500/25 bg-sky-950/30 backdrop-blur px-4 py-3">
+            <div className="flex items-start gap-3 rounded border border-sky-500/25 bg-sky-950/30 backdrop-blur px-4 py-3">
               <Download className="w-5 h-5 text-sky-300 flex-shrink-0 mt-0.5" />
               <div>
                 <div className="text-sm font-semibold text-white">Yours to export</div>
                 <div className="text-xs text-slate-400 leading-snug">Roster, weights, photos, lineage. CSV or PDF, anytime. No lock-in.</div>
               </div>
             </div>
-            <div className="flex items-start gap-3 rounded-lg border border-sky-500/25 bg-sky-950/30 backdrop-blur px-4 py-3">
+            <div className="flex items-start gap-3 rounded border border-sky-500/25 bg-sky-950/30 backdrop-blur px-4 py-3">
               <Smartphone className="w-5 h-5 text-sky-300 flex-shrink-0 mt-0.5" />
               <div>
                 <div className="text-sm font-semibold text-white">Works on every phone</div>
@@ -455,7 +446,7 @@ export default function Home() {
                   key={f.title}
                   className="group gecko-card backdrop-blur p-6 transition-all duration-200"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-emerald-500/15 border border-emerald-400/25 flex items-center justify-center mb-4 group-hover:bg-emerald-500/25 group-hover:border-emerald-300/40 transition-colors">
+                  <div className="w-12 h-12 rounded-md bg-emerald-500/15 border border-emerald-400/25 flex items-center justify-center mb-4 group-hover:bg-emerald-500/25 group-hover:border-emerald-300/40 transition-colors">
                     <Icon className="w-6 h-6 text-emerald-300" />
                   </div>
                   <h3
@@ -497,7 +488,7 @@ export default function Home() {
                   key={f.title}
                   className="group gecko-card backdrop-blur p-6 transition-all duration-200"
                 >
-                  <div className="w-12 h-12 rounded-xl bg-amber-500/15 border border-amber-400/25 flex items-center justify-center mb-4 group-hover:bg-amber-500/25 group-hover:border-amber-300/40 transition-colors">
+                  <div className="w-12 h-12 rounded-md bg-amber-500/15 border border-amber-400/25 flex items-center justify-center mb-4 group-hover:bg-amber-500/25 group-hover:border-amber-300/40 transition-colors">
                     <Icon className="w-6 h-6 text-amber-300" />
                   </div>
                   <h3
@@ -536,7 +527,7 @@ export default function Home() {
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
             <div className="gecko-card backdrop-blur p-6">
-              <div className="w-12 h-12 rounded-xl bg-sky-500/15 border border-sky-400/25 flex items-center justify-center mb-4">
+              <div className="w-12 h-12 rounded-md bg-sky-500/15 border border-sky-400/25 flex items-center justify-center mb-4">
                 <QrCode className="w-6 h-6 text-sky-300" />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Animal Passport</h3>
@@ -547,7 +538,7 @@ export default function Home() {
               </p>
             </div>
             <div className="gecko-card backdrop-blur p-6">
-              <div className="w-12 h-12 rounded-xl bg-sky-500/15 border border-sky-400/25 flex items-center justify-center mb-4">
+              <div className="w-12 h-12 rounded-md bg-sky-500/15 border border-sky-400/25 flex items-center justify-center mb-4">
                 <ShieldCheck className="w-6 h-6 text-sky-300" />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">One-click ownership transfer</h3>
@@ -558,7 +549,7 @@ export default function Home() {
               </p>
             </div>
             <div className="gecko-card backdrop-blur p-6">
-              <div className="w-12 h-12 rounded-xl bg-sky-500/15 border border-sky-400/25 flex items-center justify-center mb-4">
+              <div className="w-12 h-12 rounded-md bg-sky-500/15 border border-sky-400/25 flex items-center justify-center mb-4">
                 <BadgeCheck className="w-6 h-6 text-sky-300" />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Build a verifiable reputation</h3>
@@ -715,9 +706,9 @@ export default function Home() {
               who arrive looking for gargoyle / leachianus support, and
               keeps them in the funnel by making clear the upgrade path
               is included with their existing account. */}
-          <div className="mt-6 rounded-xl border border-amber-500/25 bg-amber-950/20 backdrop-blur p-6 md:p-8">
+          <div className="mt-6 rounded-md border border-amber-500/25 bg-amber-950/20 backdrop-blur p-6 md:p-8">
             <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded-lg bg-amber-500/15 border border-amber-400/25 flex items-center justify-center flex-shrink-0">
+              <div className="w-10 h-10 rounded bg-amber-500/15 border border-amber-400/25 flex items-center justify-center flex-shrink-0">
                 <Sparkles className="w-5 h-5 text-amber-300" />
               </div>
               <div>
@@ -782,25 +773,26 @@ export default function Home() {
             <Smartphone className="w-4 h-4" />
             Add to your iOS or Android home screen, full-screen, like a native app, no app store needed.
           </p>
-          <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
-            <Link to={createPageUrl('AuthPortal')}>
+          <div className="flex justify-center items-center">
+            {showGuestCta ? (
               <Button
                 size="lg"
+                onClick={handleContinueAsGuest}
                 className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-base px-8 py-6 gecko-glow"
               >
-                Get started. It&rsquo;s free
+                Try Now for Free
                 <ArrowRight className="w-4 h-4 ml-2" />
               </Button>
-            </Link>
-            {showGuestCta && (
-              <button
-                type="button"
-                onClick={handleContinueAsGuest}
-                className="group inline-flex items-center gap-2 rounded-full border border-emerald-400/25 bg-emerald-500/5 px-5 py-3 text-sm font-semibold text-emerald-200 hover:bg-emerald-500/10 hover:border-emerald-300/40 hover:text-emerald-100 transition-colors"
-              >
-                <Eye className="w-4 h-4" />
-                Try Now for Free
-              </button>
+            ) : (
+              <Link to={createPageUrl('Dashboard')}>
+                <Button
+                  size="lg"
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-base px-8 py-6 gecko-glow"
+                >
+                  Open your dashboard
+                  <ArrowRight className="w-4 h-4 ml-2" />
+                </Button>
+              </Link>
             )}
           </div>
         </section>
@@ -812,7 +804,7 @@ export default function Home() {
           <div className="max-w-6xl mx-auto px-6 py-12 grid grid-cols-2 md:grid-cols-5 gap-8 text-sm">
             <div className="col-span-2">
               <div className="flex items-center gap-3">
-                <img src={LOGO_URL} alt="Geck Inspect" className="h-8 w-8 rounded-lg" />
+                <img src={LOGO_URL} alt="Geck Inspect" className="h-8 w-8 rounded" />
                 <span className="font-bold text-slate-100">Geck Inspect</span>
               </div>
               <p className="text-slate-500 mt-3 leading-relaxed max-w-md">

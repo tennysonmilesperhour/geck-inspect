@@ -4,25 +4,23 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <meta name="robots" content="noindex" />
-  <title>Geck Inspect — Font Preview</title>
+  <title>Geck Inspect — Font Preview (v2)</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
 
-  <!-- Geist Sans (Vercel's font) -->
-  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
-  <!-- Manrope -->
-  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <!-- Outfit -->
-  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <!-- Plus Jakarta Sans -->
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
-  <!-- Inter (current, for reference) -->
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Roboto (MorphMarket-style workhorse) -->
+  <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700;900&display=swap" rel="stylesheet" />
+  <!-- Montserrat (geometric, distinctive height — popular SaaS) -->
+  <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet" />
+  <!-- Bricolage Grotesque (variable, humanist-modern) -->
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,300..800&display=swap" rel="stylesheet" />
+  <!-- IBM Plex Sans (technical, slight engineering personality) -->
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Fraunces (serif — totally different vibe) -->
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300..900&family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
   <style>
-    :root {
-      color-scheme: dark;
-    }
+    :root { color-scheme: dark; }
     * { box-sizing: border-box; }
     body {
       margin: 0;
@@ -33,12 +31,7 @@
       padding: 32px 16px 80px;
     }
     .wrap { max-width: 1100px; margin: 0 auto; }
-    h1.page-title {
-      font-size: 28px;
-      font-weight: 700;
-      color: #fff;
-      margin: 0 0 8px;
-    }
+    h1.page-title { font-size: 28px; font-weight: 700; color: #fff; margin: 0 0 8px; }
     p.page-sub {
       color: #94a3b8;
       margin: 0 0 28px;
@@ -47,17 +40,14 @@
       font-size: 14px;
     }
     .controls {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 24px;
-      flex-wrap: wrap;
+      display: flex; gap: 8px; margin-bottom: 24px; flex-wrap: wrap;
     }
     .controls button {
       background: rgba(16,185,129,0.10);
       color: #d1fae5;
       border: 1px solid rgba(16,185,129,0.30);
       padding: 8px 14px;
-      border-radius: 999px;
+      border-radius: 8px;
       font-size: 13px;
       font-weight: 600;
       cursor: pointer;
@@ -72,11 +62,12 @@
 
     .card {
       border: 1px solid rgba(16,185,129,0.20);
-      border-radius: 16px;
+      border-radius: 10px;
       background: rgba(13,31,23,0.6);
       backdrop-filter: blur(8px);
       padding: 28px 32px;
       margin-bottom: 18px;
+      position: relative;
     }
     .card .label {
       display: inline-flex;
@@ -135,7 +126,7 @@
       border: 1px solid rgba(16,185,129,0.20);
       background: rgba(6,46,27,0.4);
       padding: 10px 14px;
-      border-radius: 10px;
+      border-radius: 6px;
       font-size: 13px;
       color: #cbd5e1;
       max-width: 220px;
@@ -151,13 +142,14 @@
       font-family: 'Inter', system-ui, sans-serif;
       font-weight: 500;
     }
-    .card { position: relative; }
 
-    .font-geist  { font-family: 'Geist', system-ui, sans-serif; }
-    .font-manrope { font-family: 'Manrope', system-ui, sans-serif; }
-    .font-outfit  { font-family: 'Outfit', system-ui, sans-serif; }
-    .font-jakarta { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
-    .font-inter   { font-family: 'Inter', system-ui, sans-serif; }
+    /* Font assignments */
+    .font-roboto    { font-family: 'Roboto', system-ui, sans-serif; }
+    .font-mont      { font-family: 'Montserrat', system-ui, sans-serif; letter-spacing: -0.01em; }
+    .font-bricolage { font-family: 'Bricolage Grotesque', system-ui, sans-serif; }
+    .font-plex      { font-family: 'IBM Plex Sans', system-ui, sans-serif; }
+    .font-fraunces  { font-family: 'Fraunces', Georgia, serif; }
+    .font-inter     { font-family: 'Inter', system-ui, sans-serif; }
 
     .footer-note {
       color: #64748b;
@@ -170,32 +162,33 @@
 </head>
 <body>
   <div class="wrap">
-    <h1 class="page-title">Font preview</h1>
+    <h1 class="page-title">Font preview (v2 — diversified)</h1>
     <p class="page-sub">
-      Each card below renders the actual landing-page hero copy in a different sans-serif candidate. Inter (current) is included at the bottom for comparison. Pick one and reply with the name; I'll wire it up across the landing page.
+      Five candidates, picked to span more visual ground than v1. Each card renders the actual landing-page hero copy with the new subhead. Inter (current) sits at the bottom for comparison. Reply with one of: <strong>Roboto</strong>, <strong>Montserrat</strong>, <strong>Bricolage</strong>, <strong>Plex</strong>, <strong>Fraunces</strong> — I'll wire it up.
     </p>
 
     <div class="controls" id="controls">
       <button data-filter="all" class="active">All</button>
-      <button data-filter="geist">Geist Sans</button>
-      <button data-filter="manrope">Manrope</button>
-      <button data-filter="outfit">Outfit</button>
-      <button data-filter="jakarta">Plus Jakarta Sans</button>
+      <button data-filter="roboto">Roboto</button>
+      <button data-filter="mont">Montserrat</button>
+      <button data-filter="bricolage">Bricolage</button>
+      <button data-filter="plex">IBM Plex Sans</button>
+      <button data-filter="fraunces">Fraunces</button>
       <button data-filter="inter">Inter (current)</button>
     </div>
 
-    <!-- Geist Sans -->
-    <article class="card font-geist" data-font="geist">
-      <span class="name-tag">Geist Sans · Vercel · Modern · Sleek</span>
-      <span class="label"><span class="swatch"></span>Option A</span>
+    <!-- Roboto -->
+    <article class="card font-roboto" data-font="roboto">
+      <span class="name-tag">Roboto · Material · Workhorse · MorphMarket-adjacent</span>
+      <span class="label"><span class="swatch"></span>Option A · Marketplace-familiar</span>
       <span class="pill">✦ Welcome to <strong style="margin-left:4px">geckOS</strong></span>
       <p style="font-size:12px; font-style:italic; color:#86efac; margin:0 0 18px">
         Built by a crested gecko breeder, for crested gecko breeders.
       </p>
       <h2 class="hero">Track, breed, and verify<br/>your crested geckos.</h2>
-      <p class="sub">No spreadsheets. No guesswork.</p>
+      <p class="sub">Every gecko, every clutch, every gene. In one place.</p>
       <p class="body">
-        The all-in-one platform for crested gecko keepers and breeders — AI morph ID, multi-trait breeding projections, lineage trees, and digital pedigrees that buyers can verify. Built specifically for the hobby. Your new <strong style="color:#a7f3d0">geckOS</strong>.
+        The crested gecko platform built for the way breeders actually work: AI morph ID, multi-trait breeding projections, lineage trees, and digital pedigrees buyers can verify.
       </p>
       <div class="badges">
         <div class="badge"><strong>Encrypted &amp; private</strong>Your data is encrypted. Only what you choose to publish is public.</div>
@@ -204,18 +197,18 @@
       </div>
     </article>
 
-    <!-- Manrope -->
-    <article class="card font-manrope" data-font="manrope">
-      <span class="name-tag">Manrope · Geometric · Friendly · Modern</span>
-      <span class="label"><span class="swatch"></span>Option B</span>
+    <!-- Montserrat -->
+    <article class="card font-mont" data-font="mont">
+      <span class="name-tag">Montserrat · Geometric · Tall · Strong landing-page presence</span>
+      <span class="label"><span class="swatch"></span>Option B · Bold &amp; tall</span>
       <span class="pill">✦ Welcome to <strong style="margin-left:4px">geckOS</strong></span>
       <p style="font-size:12px; font-style:italic; color:#86efac; margin:0 0 18px">
         Built by a crested gecko breeder, for crested gecko breeders.
       </p>
       <h2 class="hero">Track, breed, and verify<br/>your crested geckos.</h2>
-      <p class="sub">No spreadsheets. No guesswork.</p>
+      <p class="sub">Every gecko, every clutch, every gene. In one place.</p>
       <p class="body">
-        The all-in-one platform for crested gecko keepers and breeders — AI morph ID, multi-trait breeding projections, lineage trees, and digital pedigrees that buyers can verify. Built specifically for the hobby. Your new <strong style="color:#a7f3d0">geckOS</strong>.
+        The crested gecko platform built for the way breeders actually work: AI morph ID, multi-trait breeding projections, lineage trees, and digital pedigrees buyers can verify.
       </p>
       <div class="badges">
         <div class="badge"><strong>Encrypted &amp; private</strong>Your data is encrypted. Only what you choose to publish is public.</div>
@@ -224,18 +217,18 @@
       </div>
     </article>
 
-    <!-- Outfit -->
-    <article class="card font-outfit" data-font="outfit">
-      <span class="name-tag">Outfit · Geometric · Tight · SaaS-modern</span>
-      <span class="label"><span class="swatch"></span>Option C</span>
+    <!-- Bricolage Grotesque -->
+    <article class="card font-bricolage" data-font="bricolage">
+      <span class="name-tag">Bricolage Grotesque · Variable · Distinctive humanist</span>
+      <span class="label"><span class="swatch"></span>Option C · Distinctive &amp; modern</span>
       <span class="pill">✦ Welcome to <strong style="margin-left:4px">geckOS</strong></span>
       <p style="font-size:12px; font-style:italic; color:#86efac; margin:0 0 18px">
         Built by a crested gecko breeder, for crested gecko breeders.
       </p>
       <h2 class="hero">Track, breed, and verify<br/>your crested geckos.</h2>
-      <p class="sub">No spreadsheets. No guesswork.</p>
+      <p class="sub">Every gecko, every clutch, every gene. In one place.</p>
       <p class="body">
-        The all-in-one platform for crested gecko keepers and breeders — AI morph ID, multi-trait breeding projections, lineage trees, and digital pedigrees that buyers can verify. Built specifically for the hobby. Your new <strong style="color:#a7f3d0">geckOS</strong>.
+        The crested gecko platform built for the way breeders actually work: AI morph ID, multi-trait breeding projections, lineage trees, and digital pedigrees buyers can verify.
       </p>
       <div class="badges">
         <div class="badge"><strong>Encrypted &amp; private</strong>Your data is encrypted. Only what you choose to publish is public.</div>
@@ -244,18 +237,38 @@
       </div>
     </article>
 
-    <!-- Plus Jakarta Sans -->
-    <article class="card font-jakarta" data-font="jakarta">
-      <span class="name-tag">Plus Jakarta Sans · Modern · Editorial-leaning</span>
-      <span class="label"><span class="swatch"></span>Option D</span>
+    <!-- IBM Plex Sans -->
+    <article class="card font-plex" data-font="plex">
+      <span class="name-tag">IBM Plex Sans · Engineering · Slightly distinctive</span>
+      <span class="label"><span class="swatch"></span>Option D · Technical &amp; precise</span>
       <span class="pill">✦ Welcome to <strong style="margin-left:4px">geckOS</strong></span>
       <p style="font-size:12px; font-style:italic; color:#86efac; margin:0 0 18px">
         Built by a crested gecko breeder, for crested gecko breeders.
       </p>
       <h2 class="hero">Track, breed, and verify<br/>your crested geckos.</h2>
-      <p class="sub">No spreadsheets. No guesswork.</p>
+      <p class="sub">Every gecko, every clutch, every gene. In one place.</p>
       <p class="body">
-        The all-in-one platform for crested gecko keepers and breeders — AI morph ID, multi-trait breeding projections, lineage trees, and digital pedigrees that buyers can verify. Built specifically for the hobby. Your new <strong style="color:#a7f3d0">geckOS</strong>.
+        The crested gecko platform built for the way breeders actually work: AI morph ID, multi-trait breeding projections, lineage trees, and digital pedigrees buyers can verify.
+      </p>
+      <div class="badges">
+        <div class="badge"><strong>Encrypted &amp; private</strong>Your data is encrypted. Only what you choose to publish is public.</div>
+        <div class="badge"><strong>Yours to export</strong>Roster, weights, photos, lineage — CSV or PDF, anytime.</div>
+        <div class="badge"><strong>Works on every phone</strong>Add to home screen on iOS or Android.</div>
+      </div>
+    </article>
+
+    <!-- Fraunces (serif) -->
+    <article class="card font-fraunces" data-font="fraunces">
+      <span class="name-tag">Fraunces · Serif · Editorial · Boldest departure</span>
+      <span class="label"><span class="swatch"></span>Option E · Serif (different vibe)</span>
+      <span class="pill">✦ Welcome to <strong style="margin-left:4px">geckOS</strong></span>
+      <p style="font-size:12px; font-style:italic; color:#86efac; margin:0 0 18px">
+        Built by a crested gecko breeder, for crested gecko breeders.
+      </p>
+      <h2 class="hero">Track, breed, and verify<br/>your crested geckos.</h2>
+      <p class="sub">Every gecko, every clutch, every gene. In one place.</p>
+      <p class="body">
+        The crested gecko platform built for the way breeders actually work: AI morph ID, multi-trait breeding projections, lineage trees, and digital pedigrees buyers can verify.
       </p>
       <div class="badges">
         <div class="badge"><strong>Encrypted &amp; private</strong>Your data is encrypted. Only what you choose to publish is public.</div>
@@ -273,9 +286,9 @@
         Built by a crested gecko breeder, for crested gecko breeders.
       </p>
       <h2 class="hero">Track, breed, and verify<br/>your crested geckos.</h2>
-      <p class="sub">No spreadsheets. No guesswork.</p>
+      <p class="sub">Every gecko, every clutch, every gene. In one place.</p>
       <p class="body">
-        The all-in-one platform for crested gecko keepers and breeders — AI morph ID, multi-trait breeding projections, lineage trees, and digital pedigrees that buyers can verify. Built specifically for the hobby. Your new <strong style="color:#a7f3d0">geckOS</strong>.
+        The crested gecko platform built for the way breeders actually work: AI morph ID, multi-trait breeding projections, lineage trees, and digital pedigrees buyers can verify.
       </p>
       <div class="badges">
         <div class="badge"><strong>Encrypted &amp; private</strong>Your data is encrypted. Only what you choose to publish is public.</div>
@@ -285,7 +298,7 @@
     </article>
 
     <p class="footer-note">
-      How to choose: scroll the hero block on each card and read it as if you'd never seen the brand. Geist reads most "tech / SaaS / Vercel-y." Manrope feels human and warm without going bubbly. Outfit is the tightest and most minimal. Plus Jakarta Sans has slightly more personality (a touch editorial) without being decorative. Reply with one of: Geist, Manrope, Outfit, Jakarta — I'll wire it up across the landing page in the next commit.
+      <strong>How they read different from each other:</strong> Roboto is the most generic — what reptile marketplaces and Material-design products use, including roughly what you'd see on MorphMarket. Montserrat is taller and more distinctive, common on agency landing pages. Bricolage Grotesque has a humanist warmth with engineering precision (Linear-adjacent). IBM Plex Sans reads as technical and slightly distinctive (good for "platform" branding). Fraunces is a serif — the boldest departure if you want a crafted, editorial feel.
     </p>
   </div>
 

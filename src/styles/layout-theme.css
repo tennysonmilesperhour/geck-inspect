@@ -414,7 +414,7 @@ html, body, #root {
           .gecko-card {
             background: #163026;
             border: 1px solid rgba(134, 239, 172, 0.15);
-            border-radius: 18px;
+            border-radius: 9px;
             overflow: hidden;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
           }
