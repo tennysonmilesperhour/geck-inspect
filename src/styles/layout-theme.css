@@ -24,6 +24,24 @@ html, body, #root {
 
           /* Font loaded via <link> in index.html — duplicate @import removed. */
 
+          /* Landing-page font override. The rest of the app uses Inter
+             (declared on .app-container-outline above). The public
+             marketing landing page uses Montserrat — taller, more
+             distinctive, and better suited to a landing-page hero
+             without being bubbly. Scoped to .landing-font so it
+             cascades to every child component (ProductTour,
+             EmailCaptureCard, LiveStats, Testimonials) without
+             leaking into the authenticated app shell. */
+          .landing-font {
+            font-family: 'Montserrat', system-ui, sans-serif;
+            letter-spacing: -0.01em;
+          }
+          .landing-font h1,
+          .landing-font h2,
+          .landing-font h3 {
+            letter-spacing: -0.02em;
+          }
+
           /* Safe-area handling for notched iOS devices.
              index.html sets viewport-fit=cover, so env(safe-area-inset-*)
              returns non-zero values whenever the OS chrome (status bar,
