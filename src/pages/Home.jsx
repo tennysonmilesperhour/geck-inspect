@@ -277,7 +277,7 @@ export default function Home() {
       />
 
       <div
-        className="min-h-screen text-slate-100 relative"
+        className="landing-font min-h-screen text-slate-100 relative"
         style={{ background: 'linear-gradient(135deg, #0a0f0a 0%, #1a2920 100%)' }}
       >
         {/* Jungle background, fixed so it parallax-feels as you scroll.
