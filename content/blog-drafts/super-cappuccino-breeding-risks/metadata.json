@@ -1,0 +1,145 @@
+{
+  "slug": "super-cappuccino-breeding-risks",
+  "title": "Why Super Cappuccino Breeding Is Riskier Than You Think",
+  "description": "Pairing two Cappuccinos to produce Frappuccinos sounds like good math. Here's why experienced breeders are cautious—and what the incomplete-dominant inheritance actually tells you.",
+  "keyphrase": "super cappuccino breeding risks",
+  "category": "breeding",
+  "heroEyebrow": "Genetics × Breeding Ethics",
+  "tldr": [
+    "Cappuccino is incomplete-dominant — two copies produce the super form (Frappuccino), not a lethal outcome, but viability concerns exist.",
+    "Cap × Cap pairings produce 25% Frappuccino, 50% visual Cappuccino, 25% normal — the math is sound but the biology may not be.",
+    "Some breeders report reduced clutch sizes and developmental issues from Cap × Cap pairings; the community data is incomplete.",
+    "The safest strategy is Cappuccino × normal: 50% visual Cappuccino offspring with zero super-form risk.",
+    "Buy Frappuccinos only from breeders who document clutch outcomes — lineage transparency is the only quality signal that matters here."
+  ],
+  "faq": [
+    {
+      "question": "Is Super Cappuccino (Frappuccino) lethal like Super Lilly White?",
+      "answer": "No. Frappuccino is not confirmed embryonic-lethal the way Super Lilly White is. Frappuccinos hatch and reach adulthood. However, some breeders report reduced clutch sizes and possible developmental concerns from Cappuccino × Cappuccino pairings. The distinction matters: it's not a confirmed lethal allele, but it carries documented uncertainty."
+    },
+    {
+      "question": "What are the odds of getting a Frappuccino from a Cappuccino × Cappuccino pairing?",
+      "answer": "25%, according to standard incomplete-dominant inheritance. A Cap × Cap pairing produces 25% Frappuccino, 50% visual Cappuccino, and 25% normal offspring. In practice, reduced hatch rates reported by some breeders may lower the effective yield. Don't expect one Frappuccino per four eggs reliably."
+    },
+    {
+      "question": "What is the safest way to breed Cappuccino crested geckos?",
+      "answer": "Cappuccino × normal is the safest pairing. It produces 50% visual Cappuccino and 50% normal offspring with no super-form risk. This is the recommended approach unless you are specifically researching Frappuccino production and prepared to document every clutch outcome."
+    },
+    {
+      "question": "What does a Frappuccino (Super Cappuccino) look like compared to a visual Cappuccino?",
+      "answer": "Frappuccinos show an amplified version of the Cappuccino saddle pattern with cleaner boundaries, and typically a paler, more neutral body color than single-copy Cappuccino animals. The pattern is more pronounced and the warm coffee tones of a standard Cappuccino are often muted."
+    },
+    {
+      "question": "How is Cappuccino inheritance different from Lilly White?",
+      "answer": "Both are incomplete-dominant. The key difference is the super form: Super Lilly White is confirmed embryonic-lethal — homozygous eggs don't hatch. Frappuccino (Super Cappuccino) does hatch but carries reported viability concerns. Lilly White × Lilly White pairings should always be avoided; Cap × Cap requires caution and documentation."
+    },
+    {
+      "question": "Are Frappuccino crested geckos worth buying?",
+      "answer": "They can be, if the seller can provide clutch documentation. Ask how many eggs were in the clutch, how many hatched, and what health observations they have at 6+ months. A Frappuccino without that paper trail carries unknown breeding risk — which matters if you plan to use it as a project animal."
+    },
+    {
+      "question": "Can you tell a Cappuccino het by looking at it?",
+      "answer": "No. Cappuccino is incomplete-dominant — the normal-looking offspring from a Cap × normal pairing are non-carriers. There are no hets to identify visually. Either an animal shows the Cappuccino phenotype (one or two copies) or it doesn't carry the gene at all."
+    },
+    {
+      "question": "What does 'sublethal' mean in the context of Frappuccino breeding?",
+      "answer": "Sublethal means the animals survive but may have reduced fitness — slower growth, smaller clutches, fertility issues, or subtle developmental differences. Unlike a confirmed lethal allele where embryos die, sublethal effects only become visible over time, which is why long-term documentation from breeders matters."
+    }
+  ],
+  "internalLinks": [
+    {
+      "href": "/MorphGuide/cappuccino",
+      "label": "Cappuccino morph profile"
+    },
+    {
+      "href": "/MorphGuide/frappuccino",
+      "label": "Frappuccino (Super Cappuccino) morph profile"
+    },
+    {
+      "href": "/MorphGuide/lilly-white",
+      "label": "Lilly White — the confirmed lethal super form"
+    },
+    {
+      "href": "/GeneticsGuide",
+      "label": "Crested gecko genetics guide"
+    },
+    {
+      "href": "/GeneticCalculatorTool",
+      "label": "Punnett square calculator for Cappuccino pairings"
+    },
+    {
+      "href": "/MorphGuide/soft-scale",
+      "label": "Soft Scale — another incomplete-dominant with super-form concerns"
+    }
+  ],
+  "externalCitations": [
+    {
+      "url": "https://www.youtube.com/watch?v=JLXYdEo7mhk",
+      "label": "TikisGeckos — Should We Breed Super Cappuccino Crested Geckos?"
+    },
+    {
+      "url": "https://www.youtube.com/watch?v=5O_obmlNu9I",
+      "label": "Homestead Reptiles — Don't Buy Super Cappuccino Crested Gecko"
+    }
+  ],
+  "topicId": "tpc_1777632877003_supercappu",
+  "originalQueueEntry": {
+    "id": "tpc_1777632877003_supercappu",
+    "title": "Why Super Cappuccino Breeding Is Risky (And What Breeders Get Wrong)",
+    "slug": "super-cappuccino-breeding-risks",
+    "category": "breeding",
+    "status": "new",
+    "score": {
+      "demand": 7,
+      "originality": 8,
+      "accuracyRisk": 4,
+      "voiceFit": 8,
+      "total": 19
+    },
+    "createdAt": "2026-05-01T10:54:37.003Z",
+    "draftedAt": null,
+    "publishedAt": null,
+    "evidence": [
+      {
+        "source": "youtube",
+        "url": "https://www.youtube.com/watch?v=5O_obmlNu9I",
+        "snippet": "\"Don't buy super cappuccino crested gecko it's a scam and waste of money\" — Homestead reptiles (2,063 views, 1 year ago)"
+      },
+      {
+        "source": "youtube",
+        "url": "https://www.youtube.com/watch?v=JLXYdEo7mhk",
+        "snippet": "\"Should We Breed Super Cappuccino Crested Geckos?\" — TikisGeckos (7,653 views, 3 years ago)"
+      }
+    ],
+    "angleIdeas": [
+      "Breeders often assume that pairing two cappuccinos will yield viable super cappuccinos at a predictable rate—the genetics tell a different story.",
+      "The 'scam' narrative around super cappuccinos isn't just hype: here's what the incomplete-dominant inheritance actually produces.",
+      "If you're planning a cappuccino breeding project, you need to understand why super cappuccino projects fail or succeed based on lineage, not just color."
+    ],
+    "rejectionReason": null,
+    "prUrl": null
+  },
+  "factSources": [
+    {
+      "label": "morph-guide.js (local canonical catalogue)",
+      "path": "src/data/morph-guide.js",
+      "bytes": 46691
+    },
+    {
+      "label": "genetics-glossary.js",
+      "path": "src/data/genetics-glossary.js",
+      "bytes": 13230
+    },
+    {
+      "label": "genetics-sections.jsx (long-form)",
+      "path": "src/data/genetics-sections.jsx",
+      "bytes": 39736
+    },
+    {
+      "label": "genetics-jsonld.js (structured FAQ)",
+      "path": "src/data/genetics-jsonld.js",
+      "bytes": 11168
+    }
+  ],
+  "generatedAt": "2026-05-08T08:24:39.636Z"
+}
