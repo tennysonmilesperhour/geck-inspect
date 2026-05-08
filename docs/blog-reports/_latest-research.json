@@ -1,5 +1,5 @@
 {
-  "ranAt": "2026-05-01T10:54:37.003Z",
+  "ranAt": "2026-05-08T07:47:00.580Z",
   "signals": {
     "googleAc": 95,
     "bluesky": 0,
@@ -22,11 +22,7 @@
       "AC Reptiles: 404 Not Found"
     ]
   },
-  "costUsd": 0.021754,
-  "addedSlugs": [
-    "super-cappuccino-breeding-risks",
-    "lilly-white-identification-breeding",
-    "axanthic-breeding-strategy"
-  ],
-  "rationale": "The signal landscape is dominated by Google autocomplete (general consumer interest) and YouTube content (existing coverage). Notably, **cappuccino genetics and breeding** generates high search intent, with a YouTube controversy thread (\"scam,\" \"waste of money,\" \"Should we breed?\") that signals real breeder confusion and disagreement. **Lilly whites** show strong demand (recent top-breeder video, 8-month-old) combined with older identification content, suggesting a gap for a breeding-focused take. **Axanthic recessive genetics** appears in autocomplete and search, with a recent warning video (\"NEVER BREED THESE TOGETHER\"), hinting at misconceptions. I avoided the cappuccino-crested-gecko-genetics slug (already published) and the super-cappuccino-viability-debate queue, but the \"risky breeding\" angle is distinct enough to earn a slot. All three topics avoid generic care advice and target concrete breeding decisions with misconceptions to correct. Accuracy risk is moderate (genetics can be complex and context-dependent), but all three are groundable in standard reptile genetics principles and the cited videos show active debate among credible breeders."
+  "costUsd": 0.016463,
+  "addedSlugs": [],
+  "rationale": "The signal set is dominated by Google autocomplete suggestions (95 entries) around general care topics (food, enclosure, lifespan, diet, breeding basics), morph identification, and pricing. YouTube content shows heavy existing coverage of morph guides (multiple \"complete guides,\" \"comprehensive guides\"), cappuccino genetics debates (already queued as super-cappuccino-breeding-risks and lilly-white-identification-breeding), and basic breeding advice. The breeder blog signal is purely promotional (sales announcement). No forum threads, Bluesky posts, or Google Trends spikes to signal emerging confusion or controversy. The autocomplete data itself is too generic and diffuse—it shows demand for beginner-level content (care, diet, enclosure) which we've already published, and morph-specific searches which duplicate either our existing slug (cappuccino-crested-gecko-genetics, how-to-identify-crested-gecko-morphs) or already-queued topics (super-cappuccino-breeding-risks, lilly-white-identification-breeding, axanthic-breeding-strategy). YouTube titles like \"WARNING, NEVER BREED THESE CRESTED GECKOS TOGETHER\" and \"Why So Much Hate for Cappuccino Geckos? The Truth No One Wants to Say…\" suggest strong community opinion, but without access to the actual video content or forum discussion threads showing specific misconceptions, we cannot ground a fact-checked post. The signal lacks the specificity needed to identify a concrete breeding outcome, genetics correction, or breeder-to-breeder angle that we can verify against our morph guide and genetics resources."
 }

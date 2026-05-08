@@ -122,6 +122,29 @@
       ],
       "firstCallAt": "2026-04-27T12:09:40.570Z",
       "lastCallAt": "2026-05-01T11:00:41.391Z"
+    },
+    "2026-W19": {
+      "totalUsd": 0.016463,
+      "byModel": {
+        "claude-haiku-4-5": 0.016463
+      },
+      "byStop": {
+        "research-score": 0.016463
+      },
+      "log": [
+        {
+          "at": "2026-05-08T07:47:13.855Z",
+          "model": "claude-haiku-4-5",
+          "stopLabel": "research-score",
+          "usd": 0.016463,
+          "in": 14438,
+          "out": 405,
+          "cr": 0,
+          "cw": 0
+        }
+      ],
+      "firstCallAt": "2026-05-08T07:47:13.855Z",
+      "lastCallAt": "2026-05-08T07:47:13.855Z"
     }
   }
 }
