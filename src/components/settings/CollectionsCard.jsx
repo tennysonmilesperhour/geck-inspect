@@ -63,8 +63,8 @@ async function sendInviteEmail({ toEmail, inviter, collectionName, role, token }
  * your tier's collaborator cap.
  *
  * Tier policy:
- *   - Free:    no invites
- *   - Keeper:  up to maxCollaborators (default 2) accepted+pending invites
+ *   - Free:    up to maxCollaborators (default 1) accepted+pending invites
+ *   - Keeper:  up to maxCollaborators (default 5) accepted+pending invites
  *              across all owned collections combined
  *   - Breeder: unlimited
  */

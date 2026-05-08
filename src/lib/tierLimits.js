@@ -4,10 +4,10 @@
  * the Subscription page, and any feature gate that needs to know
  * whether a user has hit a quota.
  *
- * The numbers below were chosen on 2026-05-07 to align with a more
- * generous free tier than the Reptidex baseline (Reptidex Free is
- * 10 animals / 1 GB; we go 10 / 500 MB but compensate by giving
- * Pro 5 GB instead of their 10 GB and unlimited animals on Premium).
+ * Storage and collaborator caps mirror Reptidex (Free 1GB, Pro 10GB,
+ * Premium unlimited) with collaborator gating set to Free 1 / Keeper 5
+ * / Breeder unlimited. Gecko count caps are kept tighter than storage
+ * to keep Free a real funnel into Keeper.
  *
  * `null` means unlimited. Always check `if (limit == null)` before
  * comparing usage — never treat null as 0.
@@ -21,15 +21,15 @@ export const TIER_LIMITS = {
     label: 'Free',
     tagline: 'Hobbyist',
     maxGeckos: 10,
-    maxStorageBytes: 500 * MB,
-    maxCollaborators: 0,
+    maxStorageBytes: 1 * GB,
+    maxCollaborators: 1,
   },
   keeper: {
     label: 'Keeper',
     tagline: 'Pro',
     maxGeckos: 50,
-    maxStorageBytes: 5 * GB,
-    maxCollaborators: 2,
+    maxStorageBytes: 10 * GB,
+    maxCollaborators: 5,
   },
   breeder: {
     label: 'Breeder',

@@ -16,7 +16,8 @@ const MEMBERSHIP_TIERS = [
     price: 0,
     features: [
       'Up to 10 geckos in collection',
-      '500 MB photo storage',
+      '1 GB photo storage',
+      '1 collection collaborator',
       'Basic breeding tracking',
       'Public profile',
       'Community forum access',
@@ -33,8 +34,8 @@ const MEMBERSHIP_TIERS = [
     annualPrice: 38.40,
     features: [
       'Up to 50 geckos in collection',
-      '5 GB photo storage',
-      'Up to 2 collection collaborators',
+      '10 GB photo storage',
+      'Up to 5 collection collaborators',
       'Advanced breeding tools',
       'Calendar reminders',
       'Weight tracking & charts',
