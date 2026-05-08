@@ -50,7 +50,7 @@ const MEMBERSHIP_TIERS = [
     id: 'breeder',
     name: 'Breeder',
     tagline: 'Premium',
-    monthlyPrice: 6.99,
+    monthlyPrice: 5.99,
     annualPrice: 70,
     features: [
       'Unlimited geckos',
