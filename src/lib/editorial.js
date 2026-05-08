@@ -89,7 +89,7 @@ const PER_PATH = {
   '/CareGuide': { published: '2025-06-15', modified: '2026-04-17' },
   '/MorphGuide': { published: '2025-07-01', modified: '2026-04-17' },
   '/GeneticsGuide': { published: '2025-07-15', modified: '2026-04-17' },
-  '/GeneticCalculatorTool': { published: '2025-08-01', modified: '2026-04-17' },
+  '/calculator': { published: '2025-08-01', modified: '2026-04-17' },
   // Blog index — bumped whenever a new post ships. Per-post pages
   // resolve their dates from src/data/blog-posts.js (datePublished /
   // dateModified) via the /blog/<slug> branch in editorialFor().

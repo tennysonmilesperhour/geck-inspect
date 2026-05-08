@@ -26,7 +26,7 @@ export default function PublicPageShell({ children }) {
           <Link to="/MorphGuide" className="hover:text-white">Morph Guide</Link>
           <Link to="/CareGuide" className="hover:text-white">Care Guide</Link>
           <Link to="/GeneticsGuide" className="hover:text-white">Genetics</Link>
-          <Link to="/GeneticCalculatorTool" className="hover:text-white">Calculator</Link>
+          <Link to="/calculator" className="hover:text-white">Calculator</Link>
         </nav>
         <Link to={createPageUrl('AuthPortal')}>
           <Button className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold">
@@ -61,7 +61,7 @@ export function PublicFooter() {
             <li><Link to="/MorphGuide" className="hover:text-white">Morph Guide</Link></li>
             <li><Link to="/CareGuide" className="hover:text-white">Care Guide</Link></li>
             <li><Link to="/GeneticsGuide" className="hover:text-white">Genetics Guide</Link></li>
-            <li><Link to="/GeneticCalculatorTool" className="hover:text-white">Genetics Calculator</Link></li>
+            <li><Link to="/calculator" className="hover:text-white">Genetics Calculator</Link></li>
           </ul>
         </div>
         <div>

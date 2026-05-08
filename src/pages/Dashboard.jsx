@@ -419,7 +419,7 @@ export default function Dashboard() {
                                         </div>
                                         <div className="grid grid-cols-1 gap-2">
                                             {[
-                                                { label: 'Genetics Calculator', href: '/GeneticCalculatorTool' },
+                                                { label: 'Genetics Calculator', href: '/calculator' },
                                                 { label: 'Season Planner', href: '/ProjectManager' },
                                                 { label: 'Lineage Tree', href: '/Lineage' },
                                             ].map((l) => (

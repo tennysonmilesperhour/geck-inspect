@@ -168,7 +168,7 @@ function NodeCard({ node, x, y, onClick }) {
       <foreignObject x={x} y={y} width={NODE_W} height={NODE_H}>
         {slug ? (
           <Link
-            to={`/Breeder?slug=${slug}`}
+            to={`/Breeder/${slug}`}
             className="block w-full h-full hover:border-emerald-500/50 transition-colors"
           >
             {inner}

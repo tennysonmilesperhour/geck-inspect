@@ -26,7 +26,7 @@ function ParentName({ linkedGecko, fallbackName }) {
     if (!slug) return <span>{text}</span>;
     return (
         <Link
-            to={`/Breeder?slug=${slug}`}
+            to={`/Breeder/${slug}`}
             className="text-emerald-300 hover:text-emerald-200 underline decoration-emerald-500/40 decoration-dotted underline-offset-2"
             title={`View ${text} on Geck Inspect`}
         >

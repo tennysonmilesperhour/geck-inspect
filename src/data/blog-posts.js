@@ -193,7 +193,7 @@ export const BLOG_POSTS = [
       { label: 'Cappuccino in the Morph Guide', path: '/MorphGuide/cappuccino' },
       { label: 'Lilly White morph reference', path: '/MorphGuide/lilly-white' },
       { label: 'Crested Gecko Genetics Guide', path: '/GeneticsGuide' },
-      { label: 'Genetic Calculator Tool', path: '/GeneticCalculatorTool' },
+      { label: 'Genetic Calculator Tool', path: '/calculator' },
       { label: 'Incomplete-dominant morph hub', path: '/MorphGuide/inheritance/incomplete-dominant' },
     ],
     externalCitations: [
@@ -447,7 +447,7 @@ export const BLOG_POSTS = [
           label: 'Crested gecko genetics guide: incomplete dominant inheritance',
         },
         {
-          href: '/GeneticCalculatorTool',
+          href: '/calculator',
           label: 'Genetic calculator — model your Cappuccino pairings',
         },
         {
@@ -1237,8 +1237,8 @@ export const BLOG_POSTS = [
       { label: 'Full Crested Gecko Morph Guide (30+ morphs)', path: '/MorphGuide' },
       { label: 'AI Morph Identification Tool', path: '/Recognition' },
       { label: 'Crested Gecko Genetics Guide', path: '/GeneticsGuide' },
-      { label: 'Genetic Calculator Tool', path: '/GeneticCalculatorTool' },
-      { label: 'Cappuccino morph deep-dive', path: '/Blog/cappuccino-crested-gecko-genetics' },
+      { label: 'Genetic Calculator Tool', path: '/calculator' },
+      { label: 'Cappuccino morph deep-dive', path: '/blog/cappuccino-crested-gecko-genetics' },
       { label: 'Harlequin morph reference', path: '/MorphGuide/harlequin' },
     ],
     externalCitations: [

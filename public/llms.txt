@@ -31,7 +31,7 @@ Geck Inspect is designed as a definitive reference and working tool for anyone k
 - **Morph reference guide** — curated entries covering 30+ crested gecko morphs with descriptions, rarity, key features, and breeding info
 - **Genetics calculator** — predict offspring outcomes from parent trait combinations
 - **Care guides** — comprehensive husbandry guides covering housing, feeding, handling, health, and breeding
-- **Breeder attribution pages** — public `/Breeder?slug=...` pages auto-generated from free-text breeder references in users' gecko lineage data
+- **Breeder attribution pages** — public `/Breeder/:slug` pages auto-generated from free-text breeder references in users' gecko lineage data
 
 ## About the crested gecko (*Correlophus ciliatus*)
 
@@ -200,7 +200,7 @@ Every documented crested gecko morph is also available as a raw, machine-readabl
 - **Morph guide index**: https://geckinspect.com/MorphGuide
 - **Care guide**: https://geckinspect.com/CareGuide
 - **Genetics guide**: https://geckinspect.com/GeneticsGuide
-- **Genetics calculator**: https://geckinspect.com/GeneticCalculatorTool
+- **Genetics calculator**: https://geckinspect.com/calculator
 - **Community gallery**: https://geckinspect.com/Gallery
 - **Marketplace**: https://geckinspect.com/Marketplace
 - **Shipping (Zero's Geckos partnership)**: https://geckinspect.com/Shipping

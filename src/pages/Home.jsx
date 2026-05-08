@@ -815,7 +815,7 @@ export default function Home() {
                 <li><Link to="/CareGuide" className="hover:text-white">Care Guide</Link></li>
                 <li><Link to="/GeneticsGuide" className="hover:text-white">Genetics Guide</Link></li>
                 <li><Link to="/calculator" className="hover:text-white">Genetics Calculator</Link></li>
-                <li><Link to="/Blog" className="hover:text-white">Blog</Link></li>
+                <li><Link to="/blog" className="hover:text-white">Blog</Link></li>
               </ul>
             </div>
             <div>
