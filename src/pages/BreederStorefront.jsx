@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { format } from 'date-fns';
-import { MapPin, ShieldCheck, Star, Edit, Save, FileText } from 'lucide-react';
+import { MapPin, ShieldCheck, Star, Edit, Save, FileText, ExternalLink } from 'lucide-react';
 
 const C = { forest: '#e2e8f0', sage: '#10b981', paleSage: 'rgba(16,185,129,0.1)', warmWhite: '#020617', gold: '#f59e0b', goldLight: 'rgba(245,158,11,0.15)', slate: '#cbd5e1', muted: '#64748b', cardBg: '#0f172a', border: 'rgba(51,65,85,0.5)' };
 
@@ -85,7 +85,7 @@ export default function BreederStorefront() {
           <p className="text-sm mb-6" style={{ color: C.muted }}>Create your public breeder page to share with buyers.</p>
           <div className="space-y-4">
             <div><label className="text-xs uppercase block mb-1" style={{ color: C.muted }}>Display Name *</label><input value={setupForm.display_name} onChange={e => setSetupForm(p => ({ ...p, display_name: e.target.value }))} className="w-full rounded-xl border px-4 py-3 text-sm" style={{ borderColor: 'rgba(51,65,85,0.5)', color: C.slate }} placeholder="Tennys Crested Geckos" /></div>
-            <div><label className="text-xs uppercase block mb-1" style={{ color: C.muted }}>URL Slug * (geckinspect.com/BreederStorefront?slug=your-slug)</label><input value={setupForm.custom_slug} onChange={e => setSetupForm(p => ({ ...p, custom_slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') }))} className="w-full rounded-xl border px-4 py-3 text-sm font-mono" style={{ borderColor: 'rgba(51,65,85,0.5)', color: C.slate }} placeholder="tennys-crested-geckos" /></div>
+            <div><label className="text-xs uppercase block mb-1" style={{ color: C.muted }}>URL Slug * (geckinspect.com/Breeder/your-slug)</label><input value={setupForm.custom_slug} onChange={e => setSetupForm(p => ({ ...p, custom_slug: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '') }))} className="w-full rounded-xl border px-4 py-3 text-sm font-mono" style={{ borderColor: 'rgba(51,65,85,0.5)', color: C.slate }} placeholder="tennys-crested-geckos" /></div>
             <div><label className="text-xs uppercase block mb-1" style={{ color: C.muted }}>Bio</label><textarea value={setupForm.bio} onChange={e => setSetupForm(p => ({ ...p, bio: e.target.value }))} rows={3} className="w-full rounded-xl border px-4 py-3 text-sm" style={{ borderColor: 'rgba(51,65,85,0.5)', color: C.slate }} /></div>
             <div className="grid grid-cols-2 gap-3">
               <div><label className="text-xs uppercase block mb-1" style={{ color: C.muted }}>Location</label><input value={setupForm.location} onChange={e => setSetupForm(p => ({ ...p, location: e.target.value }))} className="w-full rounded-lg border px-3 py-2 text-sm" style={{ borderColor: 'rgba(51,65,85,0.5)', color: C.slate }} placeholder="Utah, USA" /></div>
@@ -131,8 +131,22 @@ export default function BreederStorefront() {
             </div>
           </div>
           {isOwner && (
-            editing ? <button onClick={saveProfile} className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm text-white" style={{ backgroundColor: C.sage }}><Save size={14} /> Save</button>
-              : <button onClick={() => setEditing(true)} className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm border" style={{ borderColor: C.sage, color: C.sage }}><Edit size={14} /> Edit</button>
+            <div className="flex items-center gap-2">
+              {profile.custom_slug && !editing && (
+                <a
+                  href={`/Breeder/${profile.custom_slug}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm border"
+                  style={{ borderColor: C.sage, color: C.sage }}
+                  title="Open the public-facing storefront in a new tab"
+                >
+                  <ExternalLink size={14} /> View public
+                </a>
+              )}
+              {editing ? <button onClick={saveProfile} className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm text-white" style={{ backgroundColor: C.sage }}><Save size={14} /> Save</button>
+                : <button onClick={() => setEditing(true)} className="flex items-center gap-1 px-3 py-1.5 rounded-lg text-sm border" style={{ borderColor: C.sage, color: C.sage }}><Edit size={14} /> Edit</button>}
+            </div>
           )}
         </div>
 
