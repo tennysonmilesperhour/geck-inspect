@@ -481,15 +481,39 @@ export default function Home() {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {INNOVATIVE_FEATURES.map((f) => {
+            {INNOVATIVE_FEATURES.map((f, idx) => {
               const Icon = f.icon;
+              // Three complementary tones across the three rows of three.
+              // Row 1 (idx 0–2): amber/gold (warm).
+              // Row 2 (idx 3–5): rose (warm-pink).
+              // Row 3 (idx 6–8): violet (cool purple).
+              // Tailwind classes are written out as full literals so the
+              // JIT compiler picks them up.
+              const ROW_TONES = [
+                {
+                  tint: 'card-tint-amber',
+                  iconBox: 'bg-amber-500/15 border-amber-400/25 group-hover:bg-amber-500/25 group-hover:border-amber-300/40',
+                  iconText: 'text-amber-300',
+                },
+                {
+                  tint: 'card-tint-rose',
+                  iconBox: 'bg-rose-500/15 border-rose-400/25 group-hover:bg-rose-500/25 group-hover:border-rose-300/40',
+                  iconText: 'text-rose-300',
+                },
+                {
+                  tint: 'card-tint-violet',
+                  iconBox: 'bg-violet-500/15 border-violet-400/25 group-hover:bg-violet-500/25 group-hover:border-violet-300/40',
+                  iconText: 'text-violet-300',
+                },
+              ];
+              const tone = ROW_TONES[Math.floor(idx / 3)] || ROW_TONES[0];
               return (
                 <div
                   key={f.title}
-                  className="group gecko-card backdrop-blur p-6 transition-all duration-200"
+                  className={`group gecko-card ${tone.tint} backdrop-blur p-6 transition-all duration-200`}
                 >
-                  <div className="w-12 h-12 rounded-md bg-amber-500/15 border border-amber-400/25 flex items-center justify-center mb-4 group-hover:bg-amber-500/25 group-hover:border-amber-300/40 transition-colors">
-                    <Icon className="w-6 h-6 text-amber-300" />
+                  <div className={`w-12 h-12 rounded-md border flex items-center justify-center mb-4 transition-colors ${tone.iconBox}`}>
+                    <Icon className={`w-6 h-6 ${tone.iconText}`} />
                   </div>
                   <h3
                     className="text-lg font-semibold text-white mb-2"

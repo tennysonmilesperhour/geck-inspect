@@ -429,12 +429,32 @@ html, body, #root {
                              was "closed" — including Select triggers — which
                              made dropdowns invisible until clicked. Removed. */
 
+          /* Background bumped from #163026 (light forest) to a darker,
+             more saturated gradient so cards stand out from the page
+             gradient with roughly +10% perceptual opacity. */
           .gecko-card {
-            background: #163026;
+            background: linear-gradient(160deg, rgba(20, 50, 36, 0.98) 0%, rgba(13, 32, 24, 0.98) 100%);
             border: 1px solid rgba(134, 239, 172, 0.15);
             border-radius: 9px;
             overflow: hidden;
             transition: border-color 0.2s ease, box-shadow 0.2s ease;
+          }
+
+          /* Per-row tint variants for the INNOVATIVE_FEATURES grid on
+             the landing page. Each shifts the gecko-card base toward a
+             different hue at the top-left corner so each row reads as
+             its own band, while the bottom-right keeps the unified
+             dark-forest look so all 9 cards still feel like one set.
+             Tints stay ~18% opacity — the icon color is the louder
+             per-row signal. */
+          .gecko-card.card-tint-amber {
+            background: linear-gradient(160deg, rgba(180, 120, 28, 0.18) 0%, rgba(13, 32, 24, 0.98) 65%);
+          }
+          .gecko-card.card-tint-rose {
+            background: linear-gradient(160deg, rgba(225, 60, 100, 0.18) 0%, rgba(13, 32, 24, 0.98) 65%);
+          }
+          .gecko-card.card-tint-violet {
+            background: linear-gradient(160deg, rgba(124, 80, 220, 0.20) 0%, rgba(13, 32, 24, 0.98) 65%);
           }
 
           .gecko-card:hover {
