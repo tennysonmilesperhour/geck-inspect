@@ -30,8 +30,8 @@ const MEMBERSHIP_TIERS = [
     id: 'keeper',
     name: 'Keeper',
     tagline: 'Pro',
-    monthlyPrice: 4,
-    annualPrice: 38.40,
+    monthlyPrice: 2.99,
+    annualPrice: 30,
     features: [
       'Up to 50 geckos in collection',
       '10 GB photo storage',
@@ -50,8 +50,8 @@ const MEMBERSHIP_TIERS = [
     id: 'breeder',
     name: 'Breeder',
     tagline: 'Premium',
-    monthlyPrice: 11,
-    annualPrice: 105.60,
+    monthlyPrice: 6.99,
+    annualPrice: 70,
     features: [
       'Unlimited geckos',
       'Unlimited photo storage',

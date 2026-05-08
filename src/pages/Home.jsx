@@ -132,66 +132,49 @@ const LANDING_FAQS = [
   // Buyer-objection FAQs first — cost, lock-in, "vs spreadsheet" — so the
   // top of the visible FAQ closes objections before scrolling into
   // capability questions. Order matters here for conversion; the JSON-LD
-  // FAQPage schema is derived from this same array.
+  // FAQPage schema is derived from this same array. Trimmed to 10
+  // entries; combined answers carry the implication of the questions
+  // they replaced (e.g. "What is Geck Inspect?" folded into the pricing
+  // answer; egg/incubation folded into breeding planning).
   {
-    q: 'Is Geck Inspect free?',
-    a: 'Yes. Creating an account and using Geck Inspect is free, including the genetics calculator, morph guide, care guide, community forum, and core collection tracking. Paid tiers (Keeper and Breeder) unlock larger collections, advanced breeding tools, marketplace sync, and white-label pedigree certificates — but you never need to pay to use the app.',
+    q: 'What is Geck Inspect, and is it free?',
+    a: 'Geck Inspect is a web platform built specifically for crested gecko (Correlophus ciliatus) keepers and breeders — collection management, breeding planning, AI morph identification, lineage tracking, community gallery, forum, and a verified marketplace, all in one tool. Creating an account and using the core app is free, including the genetics calculator, morph guide, care guide, and forum. Paid tiers (Keeper $2.99/mo, Breeder $6.99/mo) unlock larger collections, more storage, more collaborators, and advanced breeder tools — but you never need to pay to use the app.',
   },
   {
-    q: 'Is my collection data private, and can I export it?',
-    a: 'Yes. Your collection is private by default — only geckos you explicitly publish to the gallery, forum, or marketplace are visible to other users. Data is stored on Supabase with row-level security so other users cannot read your records. You own your data and can export your full roster, weight history, breeding log, and photos as CSV or PDF at any time.',
+    q: 'Is my collection data private, encrypted, and exportable?',
+    a: 'Yes. Your collection is private by default — only geckos you explicitly publish to the gallery, forum, or marketplace are visible to other users. Data is encrypted at rest on Supabase, with row-level security so other users cannot read your records. You own your data and can export your full roster, weight history, breeding log, and photos as CSV or PDF at any time. There is no lock-in.',
   },
   {
     q: 'How is Geck Inspect better than a spreadsheet?',
     a: 'A spreadsheet stores text. Geck Inspect stores structured records that connect to each other — every weight, photo, pairing, clutch, and lineage edge is queryable. You can ask "how many harlequin pinstripe females over 35 grams have I bred this season?" and get an answer. When you sell a gecko, the entire history (parents, weights, photos, medical notes) transfers as a verified digital passport with one click — something a spreadsheet cannot do for any buyer.',
   },
   {
-    q: 'What is Geck Inspect?',
-    a: 'Geck Inspect is a free web platform built specifically for crested gecko keepers and breeders. It combines collection management, breeding planning, AI-powered morph identification, lineage tracking, a community gallery, a forum, and a verified marketplace into one tool. It is used by hobbyists with a single gecko through commercial breeders managing hundreds of animals.',
-  },
-  {
     q: 'How do I track my crested gecko collection?',
-    a: "Create a free account, then add each gecko with name, ID code, sex, hatch date, weight, morph tags, photos, and optionally the sire/dam lineage. Geck Inspect tracks weight history, photos over time, feeding group, and breeding history automatically. You can export your roster as CSV or PDF at any time.",
+    a: 'Create a free account, then add each gecko with name, ID code, sex, hatch date, weight, morph tags, photos, and optionally the sire/dam lineage. Geck Inspect tracks weight history, photos over time, feeding group, and breeding history automatically. Lineage links across generations so you can see ancestry and descendants for any animal. Export your roster as CSV or PDF at any time.',
   },
   {
-    q: 'Does Geck Inspect help with crested gecko breeding planning?',
-    a: 'Yes. You can plan pairings, track copulation events, schedule monthly egg checks, log eggs and incubation dates, auto-generate hatchling records when eggs hatch, and visualize multi-generation lineage trees and pedigree charts for any gecko in your collection.',
-  },
-  {
-    q: 'Can I track eggs, incubation, and hatch rates per clutch?',
-    a: 'Yes. Every pairing has its own clutch log. Geck Inspect records lay date, incubation temperature, days-to-hatch, and outcome for each egg. Eggs promote to hatchling records the day they emerge, with lineage and clutch automatically attached, and season-level hatch-rate stats roll up on the breeding dashboard.',
+    q: 'Does Geck Inspect help with breeding planning, eggs, and incubation?',
+    a: 'Yes. You can plan pairings, track copulation events, schedule monthly egg checks, and visualize multi-generation lineage trees. Every pairing has its own clutch log — lay date, incubation temperature, days-to-hatch, and outcome for each egg. Eggs promote to hatchling records the day they emerge, with lineage and clutch automatically attached, and season-level hatch-rate stats roll up on the breeding dashboard.',
   },
   {
     q: 'How does the crested gecko genetics calculator work?',
-    a: 'The genetics calculator models co-dominant, recessive, and polygenic inheritance across the major crested gecko traits — Lilly White, Axanthic, Cappuccino, Super Dalmatian, Pinstripe, Harlequin, and more. Pick a sire and dam from your collection (or enter genotypes manually) and the calculator returns the full offspring distribution with expected percentages.',
+    a: 'The genetics calculator models co-dominant, recessive, and polygenic inheritance across every major crested gecko trait — Harlequin, Pinstripe, Dalmatian, Cappuccino, Axanthic, Lilly White, Super Dalmatian, Soft Scale, and more. Pick a sire and dam from your collection (or enter genotypes manually) and the calculator returns the full offspring distribution with expected percentages, plus a Monte Carlo clutch simulator for projecting realistic clutch outcomes.',
   },
   {
-    q: 'Can Geck Inspect identify the morph of my crested gecko?',
-    a: 'Yes. Geck Inspect has an AI-powered morph identification feature. Upload a photo of your gecko and the model will return a classification of primary morph, secondary traits, and base color. The classifier is trained on thousands of verified crested gecko photos from the community.',
-  },
-  {
-    q: 'How accurate is the AI crested gecko morph identifier?',
-    a: 'The morph identifier performs well on common primary morphs — Harlequin, Pinstripe, Dalmatian, Flame, and base colors — and reports a confidence score with every prediction. For ambiguous animals, expressing traits (partial pin, dal spotting, tiger, brindle) are returned as secondary tags. You can always request a human second-opinion from the verified expert network inside the app.',
+    q: 'Can Geck Inspect identify the morph of my gecko, and how accurate is it?',
+    a: 'Yes. Upload a photo and the AI returns a classification of primary morph, secondary traits, and base color, with a confidence score on every prediction. The model is trained on thousands of verified crested gecko photos from the community and performs well on common primary morphs (Harlequin, Pinstripe, Dalmatian, Flame) and base colors. For ambiguous animals, expressing traits (partial pin, dal spotting, tiger, brindle) are returned as secondary tags, and you can request a human second-opinion from the verified expert network inside the app.',
   },
   {
     q: 'Does Geck Inspect sync with MorphMarket or Palm Street?',
-    a: 'Yes. You can import an existing roster from a CSV export, and Geck Inspect can push listings with photos, weight history, and lineage to MorphMarket and Palm Street without retyping. Sold animals can be transferred with full provenance to the buyer in one click.',
+    a: 'Yes. You can import an existing roster from a CSV export, and Geck Inspect can push listings with photos, weight history, and lineage to MorphMarket and Palm Street without retyping. Sold animals can be transferred with full provenance to the buyer in one click — no separate tool, no manual copy-paste.',
   },
   {
     q: 'Can I use Geck Inspect on my phone?',
-    a: 'Yes. Geck Inspect is a responsive web app designed to work on any modern phone or tablet browser — no app store install required. You can also "Add to Home Screen" on iOS or Android to get a full-screen icon that behaves like a native app, and photo uploads use the device camera directly.',
-  },
-  {
-    q: 'How long do crested geckos live?',
-    a: 'In captivity, crested geckos (Correlophus ciliatus) routinely live 15 to 20 years with proper husbandry, and some well-kept animals have reached their mid-20s. Geck Inspect is built with that long lifespan in mind — weight history, photo timelines, and breeding records persist for the entire life of each gecko.',
-  },
-  {
-    q: 'What are the most popular crested gecko morphs?',
-    a: 'The most common primary morphs are Harlequin, Pinstripe, Dalmatian, Flame, and Patternless, often combined with base colors like red, olive, chocolate, buckskin, and yellow. High-demand recessive and co-dominant traits include Lilly White, Axanthic, Cappuccino, and Super Dalmatian. The in-app Morph Guide has photo-led references for every major morph.',
+    a: 'Yes. Geck Inspect is a responsive web app designed to work on any modern phone or tablet browser — no app store install required. You can also "Add to Home Screen" on iOS or Android to get a full-screen icon that behaves like a native app, and photo uploads use the device camera directly. A native iOS app is on the roadmap.',
   },
   {
     q: 'Does Geck Inspect support other reptiles besides crested geckos?',
-    a: 'Geck Inspect is purpose-built for crested geckos (Correlophus ciliatus) right now — the AI morph ID, genetics calculator, and morph guide are all tuned for the species. Support for gargoyle geckos (Rhacodactylus auriculatus) and Leachianus is on the roadmap; other reptiles are not currently planned.',
+    a: 'Geck Inspect is purpose-built for crested geckos (Correlophus ciliatus) right now — the AI morph ID, genetics calculator, and morph guide are all tuned for the species. Support for gargoyle geckos (Rhacodactylus auriculatus) and Leachianus (Rhacodactylus leachianus) is on the roadmap; sign up now and you will get the species upgrade for free when it ships. Other reptiles are not currently planned.',
   },
 ];
 
@@ -332,10 +315,13 @@ export default function Home() {
 
         {/* Hero */}
         <section className="relative z-10 max-w-5xl mx-auto px-6 pt-16 pb-24 text-center">
-          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-sm font-semibold text-emerald-300 mb-8">
+          <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-sm font-semibold text-emerald-300 mb-3">
             <Sparkles className="w-3.5 h-3.5" />
             Welcome to <span className="font-bold">geckOS</span>
           </div>
+          <p className="text-xs md:text-sm text-emerald-200/75 italic mb-8">
+            Built by a crested gecko breeder, for crested gecko breeders.
+          </p>
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-[1.05] mb-6 bg-gradient-to-b from-white via-white to-emerald-200 bg-clip-text text-transparent">
             Track, breed, and verify
             <br />
@@ -403,8 +389,8 @@ export default function Home() {
             <div className="flex items-start gap-3 rounded-lg border border-emerald-500/20 bg-emerald-950/30 backdrop-blur px-4 py-3">
               <Lock className="w-5 h-5 text-emerald-300 flex-shrink-0 mt-0.5" />
               <div>
-                <div className="text-sm font-semibold text-white">Private by default</div>
-                <div className="text-xs text-slate-400 leading-snug">Row-level security on every record. Only what you publish is public.</div>
+                <div className="text-sm font-semibold text-white">Encrypted &amp; private</div>
+                <div className="text-xs text-slate-400 leading-snug">Your data is encrypted. Only what you choose to publish is public.</div>
               </div>
             </div>
             <div className="flex items-start gap-3 rounded-lg border border-emerald-500/20 bg-emerald-950/30 backdrop-blur px-4 py-3">
@@ -596,7 +582,7 @@ export default function Home() {
               <tbody className="text-slate-300">
                 {[
                   ['Crested-specific morphs', 'Free text', 'Generic morph list', '33 crested morphs, structured'],
-                  ['Multi-trait genetics calculator', 'Manual Punnett squares', 'Single trait at a time', 'Multi-trait + Lilly White lethal flagging + Monte Carlo'],
+                  ['Multi-trait genetics calculator', 'Manual Punnett squares', 'Single trait at a time', 'Multi-trait Punnetts + Monte Carlo clutch projections'],
                   ['Lineage on every animal', 'One sheet per generation', 'Limited tree depth', 'Full multi-generation tree, drag to explore'],
                   ['Pedigree transfers to buyers', 'PDF if you remember', 'Not supported', 'One-click verifiable digital passport'],
                   ['Marketplace sync', 'Re-type each listing', 'Internal only', 'Push to MorphMarket &amp; Palm Street'],
