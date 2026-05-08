@@ -33,7 +33,7 @@ import {
 import Seo from '@/components/seo/Seo';
 import Testimonials from '@/components/landing/Testimonials';
 import LiveStats from '@/components/landing/LiveStats';
-import HeroSlideshow from '@/components/landing/HeroSlideshow';
+import ProductTour from '@/components/landing/ProductTour';
 import EmailCaptureCard from '@/components/landing/EmailCaptureCard';
 
 const LOGO_URL =
@@ -398,7 +398,7 @@ export default function Home() {
         {/* Hero product preview, sits between the CTA copy and the
             trust strip so a visitor scrolling sees a tangible "this is
             what you'd be using" before the trust signals. */}
-        <HeroSlideshow />
+        <ProductTour />
 
         {/* Trust strip in its own section now that the slideshow has
             been hoisted out of the hero. Visual order on the page is

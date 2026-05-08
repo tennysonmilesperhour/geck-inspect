@@ -1,0 +1,307 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="robots" content="noindex" />
+  <title>Geck Inspect — Font Preview</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+
+  <!-- Geist Sans (Vercel's font) -->
+  <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+  <!-- Manrope -->
+  <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Outfit -->
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Plus Jakarta Sans -->
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+  <!-- Inter (current, for reference) -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet" />
+
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      background: linear-gradient(135deg, #0a0f0a 0%, #1a2920 100%);
+      color: #e2e8f0;
+      font-family: 'Inter', system-ui, sans-serif;
+      min-height: 100vh;
+      padding: 32px 16px 80px;
+    }
+    .wrap { max-width: 1100px; margin: 0 auto; }
+    h1.page-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: #fff;
+      margin: 0 0 8px;
+    }
+    p.page-sub {
+      color: #94a3b8;
+      margin: 0 0 28px;
+      max-width: 720px;
+      line-height: 1.55;
+      font-size: 14px;
+    }
+    .controls {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+    }
+    .controls button {
+      background: rgba(16,185,129,0.10);
+      color: #d1fae5;
+      border: 1px solid rgba(16,185,129,0.30);
+      padding: 8px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      font-family: inherit;
+    }
+    .controls button:hover { background: rgba(16,185,129,0.20); }
+    .controls button.active {
+      background: #10b981;
+      color: #022c22;
+      border-color: #10b981;
+    }
+
+    .card {
+      border: 1px solid rgba(16,185,129,0.20);
+      border-radius: 16px;
+      background: rgba(13,31,23,0.6);
+      backdrop-filter: blur(8px);
+      padding: 28px 32px;
+      margin-bottom: 18px;
+    }
+    .card .label {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #6ee7b7;
+      font-size: 11px;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      margin-bottom: 14px;
+    }
+    .card .label .swatch {
+      display: inline-block; width: 10px; height: 10px; border-radius: 999px;
+      background: linear-gradient(135deg, #10b981, #14b8a6);
+    }
+    .card h2.hero {
+      font-size: clamp(36px, 5vw, 64px);
+      line-height: 1.05;
+      letter-spacing: -0.02em;
+      font-weight: 700;
+      margin: 0 0 12px;
+      background: linear-gradient(180deg, #ffffff, #a7f3d0);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .card .sub {
+      font-size: 18px;
+      color: #d1fae5;
+      font-weight: 500;
+      margin: 0 0 8px;
+    }
+    .card .body {
+      color: #cbd5e1;
+      font-size: 15px;
+      line-height: 1.6;
+      max-width: 620px;
+      margin: 0 0 18px;
+    }
+    .card .pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      border: 1px solid rgba(16,185,129,0.30);
+      background: rgba(16,185,129,0.10);
+      color: #6ee7b7;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+    .card .badges { display: flex; gap: 12px; flex-wrap: wrap; margin-top: 14px; }
+    .card .badge {
+      border: 1px solid rgba(16,185,129,0.20);
+      background: rgba(6,46,27,0.4);
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 13px;
+      color: #cbd5e1;
+      max-width: 220px;
+    }
+    .card .badge strong { color: #fff; display: block; margin-bottom: 2px; font-size: 13px; }
+
+    .name-tag {
+      position: absolute;
+      top: 14px;
+      right: 18px;
+      font-size: 12px;
+      color: #94a3b8;
+      font-family: 'Inter', system-ui, sans-serif;
+      font-weight: 500;
+    }
+    .card { position: relative; }
+
+    .font-geist  { font-family: 'Geist', system-ui, sans-serif; }
+    .font-manrope { font-family: 'Manrope', system-ui, sans-serif; }
+    .font-outfit  { font-family: 'Outfit', system-ui, sans-serif; }
+    .font-jakarta { font-family: 'Plus Jakarta Sans', system-ui, sans-serif; }
+    .font-inter   { font-family: 'Inter', system-ui, sans-serif; }
+
+    .footer-note {
+      color: #64748b;
+      font-size: 12px;
+      margin-top: 20px;
+      max-width: 720px;
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1 class="page-title">Font preview</h1>
+    <p class="page-sub">
+      Each card below renders the actual landing-page hero copy in a different sans-serif candidate. Inter (current) is included at the bottom for comparison. Pick one and reply with the name; I'll wire it up across the landing page.
+    </p>
+
+    <div class="controls" id="controls">
+      <button data-filter="all" class="active">All</button>
+      <button data-filter="geist">Geist Sans</button>
+      <button data-filter="manrope">Manrope</button>
+      <button data-filter="outfit">Outfit</button>
+      <button data-filter="jakarta">Plus Jakarta Sans</button>
+      <button data-filter="inter">Inter (current)</button>
+    </div>
+
+    <!-- Geist Sans -->
+    <article class="card font-geist" data-font="geist">
+      <span class="name-tag">Geist Sans · Vercel · Modern · Sleek</span>
+      <span class="label"><span class="swatch"></span>Option A</span>
+      <span class="pill">✦ Welcome to <strong style="margin-left:4px">geckOS</strong></span>
+      <p style="font-size:12px; font-style:italic; color:#86efac; margin:0 0 18px">
+        Built by a crested gecko breeder, for crested gecko breeders.
+      </p>
+      <h2 class="hero">Track, breed, and verify<br/>your crested geckos.</h2>
+      <p class="sub">No spreadsheets. No guesswork.</p>
+      <p class="body">
+        The all-in-one platform for crested gecko keepers and breeders — AI morph ID, multi-trait breeding projections, lineage trees, and digital pedigrees that buyers can verify. Built specifically for the hobby. Your new <strong style="color:#a7f3d0">geckOS</strong>.
+      </p>
+      <div class="badges">
+        <div class="badge"><strong>Encrypted &amp; private</strong>Your data is encrypted. Only what you choose to publish is public.</div>
+        <div class="badge"><strong>Yours to export</strong>Roster, weights, photos, lineage — CSV or PDF, anytime.</div>
+        <div class="badge"><strong>Works on every phone</strong>Add to home screen on iOS or Android.</div>
+      </div>
+    </article>
+
+    <!-- Manrope -->
+    <article class="card font-manrope" data-font="manrope">
+      <span class="name-tag">Manrope · Geometric · Friendly · Modern</span>
+      <span class="label"><span class="swatch"></span>Option B</span>
+      <span class="pill">✦ Welcome to <strong style="margin-left:4px">geckOS</strong></span>
+      <p style="font-size:12px; font-style:italic; color:#86efac; margin:0 0 18px">
+        Built by a crested gecko breeder, for crested gecko breeders.
+      </p>
+      <h2 class="hero">Track, breed, and verify<br/>your crested geckos.</h2>
+      <p class="sub">No spreadsheets. No guesswork.</p>
+      <p class="body">
+        The all-in-one platform for crested gecko keepers and breeders — AI morph ID, multi-trait breeding projections, lineage trees, and digital pedigrees that buyers can verify. Built specifically for the hobby. Your new <strong style="color:#a7f3d0">geckOS</strong>.
+      </p>
+      <div class="badges">
+        <div class="badge"><strong>Encrypted &amp; private</strong>Your data is encrypted. Only what you choose to publish is public.</div>
+        <div class="badge"><strong>Yours to export</strong>Roster, weights, photos, lineage — CSV or PDF, anytime.</div>
+        <div class="badge"><strong>Works on every phone</strong>Add to home screen on iOS or Android.</div>
+      </div>
+    </article>
+
+    <!-- Outfit -->
+    <article class="card font-outfit" data-font="outfit">
+      <span class="name-tag">Outfit · Geometric · Tight · SaaS-modern</span>
+      <span class="label"><span class="swatch"></span>Option C</span>
+      <span class="pill">✦ Welcome to <strong style="margin-left:4px">geckOS</strong></span>
+      <p style="font-size:12px; font-style:italic; color:#86efac; margin:0 0 18px">
+        Built by a crested gecko breeder, for crested gecko breeders.
+      </p>
+      <h2 class="hero">Track, breed, and verify<br/>your crested geckos.</h2>
+      <p class="sub">No spreadsheets. No guesswork.</p>
+      <p class="body">
+        The all-in-one platform for crested gecko keepers and breeders — AI morph ID, multi-trait breeding projections, lineage trees, and digital pedigrees that buyers can verify. Built specifically for the hobby. Your new <strong style="color:#a7f3d0">geckOS</strong>.
+      </p>
+      <div class="badges">
+        <div class="badge"><strong>Encrypted &amp; private</strong>Your data is encrypted. Only what you choose to publish is public.</div>
+        <div class="badge"><strong>Yours to export</strong>Roster, weights, photos, lineage — CSV or PDF, anytime.</div>
+        <div class="badge"><strong>Works on every phone</strong>Add to home screen on iOS or Android.</div>
+      </div>
+    </article>
+
+    <!-- Plus Jakarta Sans -->
+    <article class="card font-jakarta" data-font="jakarta">
+      <span class="name-tag">Plus Jakarta Sans · Modern · Editorial-leaning</span>
+      <span class="label"><span class="swatch"></span>Option D</span>
+      <span class="pill">✦ Welcome to <strong style="margin-left:4px">geckOS</strong></span>
+      <p style="font-size:12px; font-style:italic; color:#86efac; margin:0 0 18px">
+        Built by a crested gecko breeder, for crested gecko breeders.
+      </p>
+      <h2 class="hero">Track, breed, and verify<br/>your crested geckos.</h2>
+      <p class="sub">No spreadsheets. No guesswork.</p>
+      <p class="body">
+        The all-in-one platform for crested gecko keepers and breeders — AI morph ID, multi-trait breeding projections, lineage trees, and digital pedigrees that buyers can verify. Built specifically for the hobby. Your new <strong style="color:#a7f3d0">geckOS</strong>.
+      </p>
+      <div class="badges">
+        <div class="badge"><strong>Encrypted &amp; private</strong>Your data is encrypted. Only what you choose to publish is public.</div>
+        <div class="badge"><strong>Yours to export</strong>Roster, weights, photos, lineage — CSV or PDF, anytime.</div>
+        <div class="badge"><strong>Works on every phone</strong>Add to home screen on iOS or Android.</div>
+      </div>
+    </article>
+
+    <!-- Inter (current) -->
+    <article class="card font-inter" data-font="inter">
+      <span class="name-tag">Inter · CURRENT</span>
+      <span class="label" style="color:#94a3b8"><span class="swatch" style="background:#475569"></span>Reference (currently shipped)</span>
+      <span class="pill">✦ Welcome to <strong style="margin-left:4px">geckOS</strong></span>
+      <p style="font-size:12px; font-style:italic; color:#86efac; margin:0 0 18px">
+        Built by a crested gecko breeder, for crested gecko breeders.
+      </p>
+      <h2 class="hero">Track, breed, and verify<br/>your crested geckos.</h2>
+      <p class="sub">No spreadsheets. No guesswork.</p>
+      <p class="body">
+        The all-in-one platform for crested gecko keepers and breeders — AI morph ID, multi-trait breeding projections, lineage trees, and digital pedigrees that buyers can verify. Built specifically for the hobby. Your new <strong style="color:#a7f3d0">geckOS</strong>.
+      </p>
+      <div class="badges">
+        <div class="badge"><strong>Encrypted &amp; private</strong>Your data is encrypted. Only what you choose to publish is public.</div>
+        <div class="badge"><strong>Yours to export</strong>Roster, weights, photos, lineage — CSV or PDF, anytime.</div>
+        <div class="badge"><strong>Works on every phone</strong>Add to home screen on iOS or Android.</div>
+      </div>
+    </article>
+
+    <p class="footer-note">
+      How to choose: scroll the hero block on each card and read it as if you'd never seen the brand. Geist reads most "tech / SaaS / Vercel-y." Manrope feels human and warm without going bubbly. Outfit is the tightest and most minimal. Plus Jakarta Sans has slightly more personality (a touch editorial) without being decorative. Reply with one of: Geist, Manrope, Outfit, Jakarta — I'll wire it up across the landing page in the next commit.
+    </p>
+  </div>
+
+  <script>
+    const buttons = document.querySelectorAll('#controls button');
+    const cards = document.querySelectorAll('.card[data-font]');
+    buttons.forEach((b) => {
+      b.addEventListener('click', () => {
+        buttons.forEach((x) => x.classList.remove('active'));
+        b.classList.add('active');
+        const filter = b.dataset.filter;
+        cards.forEach((c) => {
+          c.style.display = filter === 'all' || c.dataset.font === filter ? '' : 'none';
+        });
+      });
+    });
+  </script>
+</body>
+</html>
