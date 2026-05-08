@@ -34,6 +34,7 @@ import Seo from '@/components/seo/Seo';
 import Testimonials from '@/components/landing/Testimonials';
 import LiveStats from '@/components/landing/LiveStats';
 import HeroSlideshow from '@/components/landing/HeroSlideshow';
+import EmailCaptureCard from '@/components/landing/EmailCaptureCard';
 
 const LOGO_URL =
   APP_LOGO_URL;
@@ -635,6 +636,12 @@ export default function Home() {
             </table>
           </div>
         </section>
+
+        {/* Email capture lead-magnet, sends Care Guide and Genetics
+            Guide PDFs via Resend. Recorded in newsletter_subscribers.
+            Sits after the comparison block so visitors who've already
+            seen the differentiation can opt in for a deeper read. */}
+        <EmailCaptureCard source="homepage" />
 
         {/* Testimonials, self-hides until at least 3 approved quotes
             exist in the testimonials table. Curated via the admin tab. */}

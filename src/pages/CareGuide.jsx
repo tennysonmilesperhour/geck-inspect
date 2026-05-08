@@ -17,6 +17,7 @@ import {
   ExternalLink,
   ChevronRight,
   Sparkles,
+  Download,
 } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
 import { CARE_CATEGORIES } from '@/data/care-guide';
@@ -432,6 +433,16 @@ export default function CareGuidePage() {
               <span>7 categories</span>
             </div>
             <p className="mt-2 text-xs text-slate-500">{bylineText('/CareGuide')}</p>
+            <div className="mt-5">
+              <a
+                href="/downloads/geck-inspect-care-guide.pdf"
+                download
+                className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 px-4 py-2 text-sm font-semibold text-emerald-200 transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                Download Care Guide as PDF
+              </a>
+            </div>
           </div>
         </section>
 

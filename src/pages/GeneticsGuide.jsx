@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Dna, ArrowUp, Search } from 'lucide-react';
+import { Dna, ArrowUp, Search, Download } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
 import { Subsection } from '@/components/genetics/GeneticsHelpers';
 import { GENETICS_GUIDE_JSON_LD, GENETICS_GUIDE_PUBLISHED, GENETICS_GUIDE_MODIFIED } from "@/data/genetics-jsonld";
@@ -183,6 +183,16 @@ export default function GeneticsGuide() {
             </div>
             <div className="mt-6">
               <DnaHelix />
+            </div>
+            <div className="mt-4">
+              <a
+                href="/downloads/geck-inspect-genetics-guide.pdf"
+                download
+                className="inline-flex items-center gap-2 rounded-lg border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 px-4 py-2 text-sm font-semibold text-emerald-200 transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                Download Genetics Guide as PDF
+              </a>
             </div>
           </div>
         </div>
