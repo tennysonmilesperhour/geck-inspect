@@ -91,7 +91,7 @@ export default function ProductTour() {
   return (
     <section className="relative z-10 max-w-4xl mx-auto px-6 pb-16">
       <div
-        className="relative rounded-2xl overflow-hidden border border-emerald-500/25 bg-slate-950/60 shadow-2xl"
+        className="relative rounded-lg overflow-hidden border border-emerald-500/25 bg-slate-950/60 shadow-2xl"
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
