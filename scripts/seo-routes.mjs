@@ -50,14 +50,14 @@ function loadMorphSlugs() {
 // Resolve blog post entries (slug + title + description + dateModified)
 // from src/data/blog-posts.js so every post automatically gets a sitemap
 // entry, prerendered HTML, and a vercel.json rewrite. Mirrors the morph
-// parser — regex-based to keep the script dependency-free.
+// parser, regex-based to keep the script dependency-free.
 function loadBlogPosts() {
   const src = readFileSync(resolve(REPO_ROOT, 'src/data/blog-posts.js'), 'utf8');
   const m = src.match(/export const BLOG_POSTS\s*=\s*\[([\s\S]*?)\n\];/);
   if (!m) return [];
   const body = m[1];
   // Each post block opens with `  {` (two-space indent) and closes
-  // with `  },`. Tolerant split — it's a data file we control.
+  // with `  },`. Tolerant split, since it's a data file we control.
   const entries = body.split(/\n\s{2}\},\s*\n\s{2}\{/).map((c, i, arr) => {
     let x = c;
     if (i === 0) x = x.replace(/^\s*\{\s*/, '');
@@ -199,6 +199,18 @@ export const STATIC_ROUTES = [
     },
   },
   {
+    // P11 Quality Scale rubric, public + indexable.
+    path: '/QualityScale',
+    priority: 0.9,
+    changefreq: 'monthly',
+    lastmod: TODAY,
+    meta: {
+      title: 'Crested Gecko Quality Scale (Geck Inspect Standard)',
+      description:
+        'Free 10-point rubric for evaluating a crested gecko on structure, head, pattern, and color. Score your gecko, see which grade tier it falls into, and understand what it is worth.',
+    },
+  },
+  {
     path: '/GeneticsGuide',
     priority: 0.9,
     changefreq: 'monthly',
@@ -335,7 +347,7 @@ export function getMorphRoutes() {
   }));
 }
 
-// Morph taxonomy hub pages — one per category and per inheritance
+// Morph taxonomy hub pages: one per category and per inheritance
 // mode. Small, high-quality hubs that keep the internal link graph
 // dense and capture "all recessive crested gecko morphs" style
 // queries.
@@ -363,8 +375,8 @@ export function getMorphTaxonomyRoutes() {
     changefreq: 'weekly',
     lastmod: TODAY,
     meta: {
-      title: `${label} — Crested Gecko Morph Guide`,
-      description: `Every crested gecko ${label.toLowerCase()} in one place — inheritance, rarity, and deep links to per-morph detail pages.`,
+      title: `${label}: Crested Gecko Morph Guide`,
+      description: `Every crested gecko ${label.toLowerCase()} in one place, with inheritance, rarity, and deep links to per-morph detail pages.`,
     },
   }));
   const inhs = MORPH_INHERITANCES_META.map(({ id, label }) => ({
@@ -381,7 +393,7 @@ export function getMorphTaxonomyRoutes() {
 }
 
 // CareGuide topic pages are programmatically generated from the
-// care-guide.js sections. Priority is uniform 0.7 — high enough to keep
+// care-guide.js sections. Priority is uniform 0.7, high enough to keep
 // them crawled regularly, not so high that the long tail dominates the
 // primary navigation pages (/CareGuide, /MorphGuide, /GeneticsGuide).
 export function getCareTopicRoutes() {
@@ -392,8 +404,8 @@ export function getCareTopicRoutes() {
     changefreq: 'monthly',
     lastmod: TODAY,
     meta: {
-      title: `${title} — Crested Gecko Care`,
-      description: `${title} — part of the Geck Inspect crested gecko (Correlophus ciliatus) care guide.`,
+      title: `${title}: Crested Gecko Care`,
+      description: `${title}, part of the Geck Inspect crested gecko (Correlophus ciliatus) care guide.`,
     },
   }));
 }
@@ -415,7 +427,7 @@ export function getBlogRoutes() {
     meta: {
       title: 'Crested Gecko Blog',
       description:
-        'Long-form crested gecko genetics, breeding, and care articles from the Geck Inspect editorial team — built on the Foundation Genetics consensus.',
+        'Long-form crested gecko genetics, breeding, and care articles from the Geck Inspect editorial team, built on the Foundation Genetics consensus.',
     },
   }];
   const posts_ = posts.map((p) => ({
@@ -433,7 +445,7 @@ export function getBlogRoutes() {
 
 // Per-morph genetics calculator landing pages at /calculator/<slug>.
 // Source of truth for the slug list is PICKER_TRAITS in
-// src/components/breeding/ManualGenotypePicker.jsx — keep this list in
+// src/components/breeding/ManualGenotypePicker.jsx. Keep this list in
 // sync when adding/removing pickable traits. Each entry yields one
 // indexable HTML route prerendered with the trait pre-filled into
 // Parent A.
@@ -455,7 +467,7 @@ export function getCalculatorMorphRoutes() {
     changefreq: 'monthly',
     lastmod: TODAY,
     meta: {
-      title: `${label} Genetics Calculator — Crested Gecko`,
+      title: `${label} Genetics Calculator: Crested Gecko`,
       description: `Free Punnett-square calculator for crested gecko ${label} pairings. Predict offspring outcomes when one parent carries ${label}. No signup required.`,
     },
   }));
@@ -482,7 +494,7 @@ export function getAllRoutes() {
 // catch-all `(.*)` rewrite returned 200 for every unknown path, which
 // Bing and some AI crawlers penalize as soft-404.
 //
-// Source of truth for authenticated pages is src/pages.config.js — we
+// Source of truth for authenticated pages is src/pages.config.js, and we
 // parse its PAGES object so adding a route there auto-propagates here.
 
 // Pages that are always rendered inside <AuthenticatedApp> but live at
@@ -515,7 +527,7 @@ function loadAuthenticatedPagePaths() {
   // The leading `\n` anchors the match to a line-starting `export` so the
   // JSDoc example at the top of pages.config.js (where `export const PAGES`
   // is prefixed with ` * `) doesn't win the non-greedy match and starve
-  // vercel.json of every auth-gated route — that regression 404'd reloads
+  // vercel.json of every auth-gated route. That regression 404'd reloads
   // on /MyGeckos, /Breeding, /ForumPost, etc.
   const m = src.match(/\nexport const PAGES\s*=\s*\{([\s\S]*?)\n\}/);
   if (!m) {
