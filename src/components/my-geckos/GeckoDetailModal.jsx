@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { WeightRecord, BreedingPlan, Egg, Gecko, GeckoEvent, GeckoImage } from '@/entities/all';
 import { format, differenceInMonths } from 'date-fns';
 import { X, Plus, Trash2, LineChart, Loader2, Award, GitBranch, Calendar, Baby, Users, Edit, Eye, EyeOff, History, Archive, ArchiveRestore, ChevronLeft, ChevronRight, Camera, QrCode, ArrowRightLeft, ExternalLink } from 'lucide-react';
@@ -24,47 +23,6 @@ import { useNavigate } from 'react-router-dom';
 import { generatePassportCode } from '@/lib/passportUtils';
 import { supabase } from '@/lib/supabaseClient';
 import { createPageUrl } from '@/utils';
-
-const PARENT_FALLBACK_IMAGE = 'https://i.imgur.com/sw9gnDp.png';
-
-function ParentCard({ parent, fallbackName, role }) {
-  if (parent) {
-    return (
-      <div className="bg-slate-800 rounded-lg overflow-hidden border border-slate-700">
-        <div className="aspect-square bg-slate-900 overflow-hidden">
-          <img
-            src={parent.image_urls?.[0] || PARENT_FALLBACK_IMAGE}
-            alt={parent.name}
-            className="w-full h-full object-cover"
-            onError={(e) => { e.target.src = PARENT_FALLBACK_IMAGE; }}
-          />
-        </div>
-        <div className="p-4 space-y-2">
-          <p className="text-emerald-400 text-xs uppercase tracking-wider font-semibold">{role}</p>
-          <h4 className="text-slate-100 font-semibold text-lg leading-tight">{parent.name}</h4>
-          {parent.gecko_id_code && (
-            <p className="text-xs text-slate-500 font-mono">ID: {parent.gecko_id_code}</p>
-          )}
-          {parent.morphs_traits && (
-            <p className="text-sm text-slate-300">{parent.morphs_traits}</p>
-          )}
-          {parent.hatch_date && (
-            <p className="text-xs text-slate-400">
-              Hatched {format(new Date(parent.hatch_date), 'MMM d, yyyy')}
-            </p>
-          )}
-        </div>
-      </div>
-    );
-  }
-  return (
-    <div className="bg-slate-800/50 rounded-lg p-6 border border-slate-700 border-dashed flex flex-col items-center justify-center text-center min-h-[220px]">
-      <p className="text-emerald-400 text-xs uppercase tracking-wider font-semibold mb-2">{role}</p>
-      <p className="text-slate-200 font-medium text-lg">{fallbackName || 'Unknown'}</p>
-      <p className="text-xs text-slate-500 mt-2">Not linked to a gecko in your collection</p>
-    </div>
-  );
-}
 
 // `canEdit` mirrors the geckos UPDATE/DELETE RLS policy on the client
 // — it's true for the gecko's original creator and for any accepted
@@ -337,27 +295,10 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
         </CardHeader>
         
         <CardContent className="p-6 overflow-y-auto flex-1">
-          <Tabs defaultValue="overview" className="w-full">
-            <TabsList className="flex w-full bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1 mb-6">
-              <TabsTrigger value="overview" className="flex-1 data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-2 rounded-sm transition-colors">
-                <Eye className="w-4 h-4 mr-1.5" /> Overview
-              </TabsTrigger>
-              <TabsTrigger value="parents" className="flex-1 data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-2 rounded-sm transition-colors">
-                <GitBranch className="w-4 h-4 mr-1.5" /> Parents
-              </TabsTrigger>
-              <TabsTrigger value="history" className="flex-1 data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-2 rounded-sm transition-colors">
-                <History className="w-4 h-4 mr-1.5" /> History
-              </TabsTrigger>
-              <TabsTrigger value="manage" className="flex-1 data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-2 rounded-sm transition-colors">
-                <Award className="w-4 h-4 mr-1.5" /> Manage
-              </TabsTrigger>
-            </TabsList>
-
-            {/* OVERVIEW TAB */}
-            <TabsContent value="overview" className="mt-0 focus-visible:ring-0">
-              <div className="grid lg:grid-cols-2 gap-8">
-                {/* Left: Image area with optional slideshow */}
-                <div className="space-y-2">
+          <div className="grid lg:grid-cols-3 gap-8">
+            {/* Left column: Image + Basic Information */}
+            <div className="space-y-6">
+              <div className="space-y-2">
                 {gecko.image_urls?.length > 1 && (
                   <div className="flex items-center justify-between">
                     <button
@@ -641,37 +582,10 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                 </div>
               </div>
               </div>
-              </div>
-            </TabsContent>
+            </div>
 
-            {/* PARENTS TAB */}
-            <TabsContent value="parents" className="mt-0 focus-visible:ring-0">
-              <div className="max-w-3xl mx-auto space-y-6">
-                <div className="text-center">
-                  <h3 className="text-xl font-semibold text-slate-100">Parents of {gecko.name}</h3>
-                  <p className="text-sm text-slate-400 mt-1">Direct parental lineage</p>
-                </div>
-                <div className="grid sm:grid-cols-2 gap-4">
-                  <ParentCard parent={sire} fallbackName={gecko.sire_name} role="Sire (Father)" />
-                  <ParentCard parent={dam} fallbackName={gecko.dam_name} role="Dam (Mother)" />
-                </div>
-                <div className="flex justify-center pt-2">
-                  <Button
-                    variant="outline"
-                    onClick={handleLineageClick}
-                    className="border-slate-600 hover:bg-slate-800"
-                  >
-                    <GitBranch className="w-4 h-4 mr-2" />
-                    View Full Lineage Tree
-                  </Button>
-                </div>
-              </div>
-            </TabsContent>
-
-            {/* HISTORY TAB */}
-            <TabsContent value="history" className="mt-0 focus-visible:ring-0">
-              <div className="grid lg:grid-cols-2 gap-8">
-                <div className="space-y-6">
+            {/* Middle column: Weight / Breeding / Event history */}
+            <div className="space-y-6">
               {/* Weight Tracking */}
               <div>
                 <h3 className="text-lg font-semibold text-slate-100 mb-4 flex items-center gap-2">
@@ -869,9 +783,6 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                   <p className="text-slate-400 text-center py-4 text-sm">No events recorded yet.</p>
                 )}
               </div>
-            </div>
-
-                <div className="space-y-6">
 
               {/* Offspring */}
               {offspring.length > 0 && (
@@ -941,194 +852,209 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                   )}
                 </div>
               )}
-              </div>
-              </div>
-            </TabsContent>
+            </div>
 
-            {/* MANAGE TAB */}
-            <TabsContent value="manage" className="mt-0 focus-visible:ring-0">
-              <div className="max-w-2xl mx-auto space-y-3">
-                <div className="space-y-2">
-                  <Button
-                    onClick={() => handleGenerateCertificate('ownership')}
-                    disabled={isGeneratingCert}
-                    variant="outline"
-                    className="w-full border-emerald-700 text-emerald-300 hover:bg-emerald-900/20"
-                  >
-                    {isGeneratingCert ? (
-                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
-                    ) : (
-                      <><Award className="w-4 h-4 mr-2" /> Ownership Certificate</>
-                    )}
-                  </Button>
-                  <Button
-                    onClick={() => handleGenerateCertificate('lineage')}
-                    disabled={isGeneratingCert}
-                    variant="outline"
-                    className="w-full border-emerald-700 text-emerald-300 hover:bg-emerald-900/20"
-                  >
-                    {isGeneratingCert ? (
-                      <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
-                    ) : (
-                      <><GitBranch className="w-4 h-4 mr-2" /> Lineage Certificate</>
-                    )}
-                  </Button>
-                </div>
+            {/* Right column: Certificates / Passport / Lineage / Archive / Parentage */}
+            <div className="space-y-3">
+              <Button
+                onClick={() => handleGenerateCertificate('ownership')}
+                disabled={isGeneratingCert}
+                variant="outline"
+                className="w-full border-emerald-700 text-emerald-300 hover:bg-emerald-900/20"
+              >
+                {isGeneratingCert ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
+                ) : (
+                  <><Award className="w-4 h-4 mr-2" /> Ownership Certificate</>
+                )}
+              </Button>
+              <Button
+                onClick={() => handleGenerateCertificate('lineage')}
+                disabled={isGeneratingCert}
+                variant="outline"
+                className="w-full border-emerald-700 text-emerald-300 hover:bg-emerald-900/20"
+              >
+                {isGeneratingCert ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
+                ) : (
+                  <><GitBranch className="w-4 h-4 mr-2" /> Lineage Certificate</>
+                )}
+              </Button>
 
-                {/* Passport & Transfer Section */}
-                <div className="border border-slate-700 rounded-lg p-3 space-y-2">
-                  <p className="text-xs text-slate-400 uppercase tracking-wider font-medium mb-2">Passport & Transfer</p>
-                  {gecko.passport_code ? (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                      <Button
-                        variant="outline"
-                        onClick={() => window.open(`/passport/${gecko.passport_code}`, '_blank')}
-                        className="border-emerald-700 text-emerald-300 hover:bg-emerald-900/20"
-                      >
-                        <ExternalLink className="w-4 h-4 mr-2" />
-                        View Passport
-                      </Button>
-                      <Button
-                        variant="outline"
-                        onClick={() => window.open(`/passport/${gecko.passport_code}/qr`, '_blank')}
-                        className="border-slate-600 hover:bg-slate-800"
-                      >
-                        <QrCode className="w-4 h-4 mr-2" />
-                        QR Code
-                      </Button>
-                    </div>
-                  ) : (
+              {/* Passport & Transfer Section */}
+              <div className="border border-slate-700 rounded-lg p-3 space-y-2">
+                <p className="text-xs text-slate-400 uppercase tracking-wider font-medium mb-2">Passport & Transfer</p>
+                {gecko.passport_code ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     <Button
                       variant="outline"
-                      onClick={async () => {
-                        const code = generatePassportCode();
-                        await Gecko.update(gecko.id, { passport_code: code, is_public: true });
-                        toast({ title: 'Passport created', description: `Code: ${code}` });
-                        if (onUpdate) onUpdate();
-                      }}
-                      className="w-full border-emerald-700 text-emerald-300 hover:bg-emerald-900/20"
+                      onClick={() => window.open(`/passport/${gecko.passport_code}`, '_blank')}
+                      className="border-emerald-700 text-emerald-300 hover:bg-emerald-900/20"
+                    >
+                      <ExternalLink className="w-4 h-4 mr-2" />
+                      View Passport
+                    </Button>
+                    <Button
+                      variant="outline"
+                      onClick={() => window.open(`/passport/${gecko.passport_code}/qr`, '_blank')}
+                      className="border-slate-600 hover:bg-slate-800"
                     >
                       <QrCode className="w-4 h-4 mr-2" />
-                      Generate Passport
+                      QR Code
                     </Button>
+                  </div>
+                ) : (
+                  <Button
+                    variant="outline"
+                    onClick={async () => {
+                      const code = generatePassportCode();
+                      await Gecko.update(gecko.id, { passport_code: code, is_public: true });
+                      toast({ title: 'Passport created', description: `Code: ${code}` });
+                      if (onUpdate) onUpdate();
+                    }}
+                    className="w-full border-emerald-700 text-emerald-300 hover:bg-emerald-900/20"
+                  >
+                    <QrCode className="w-4 h-4 mr-2" />
+                    Generate Passport
+                  </Button>
+                )}
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const email = prompt('Enter the recipient\'s email address:');
+                    if (!email) return;
+                    const price = prompt('Sale price (optional, leave blank to skip):');
+                    const msg = prompt('Message for the buyer (optional):');
+                    const token = crypto.randomUUID();
+                    supabase.from('transfer_requests').insert({
+                      animal_id: gecko.id,
+                      from_user_id: null,
+                      to_email: email,
+                      token,
+                      sale_price: price ? Number(price) : null,
+                      message: msg || null,
+                      created_by: gecko.created_by,
+                      expires_at: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(),
+                    }).then(({ error }) => {
+                      if (error) {
+                        toast({ title: 'Transfer failed', description: error.message, variant: 'destructive' });
+                      } else {
+                        const claimUrl = `${window.location.origin}/claim/${token}`;
+                        navigator.clipboard.writeText(claimUrl);
+                        toast({ title: 'Transfer initiated!', description: `Claim link copied to clipboard. Share it with ${email}. Expires in 72 hours.` });
+                      }
+                    });
+                  }}
+                  className="w-full border-amber-600 text-amber-400 hover:bg-amber-900/20"
+                >
+                  <ArrowRightLeft className="w-4 h-4 mr-2" />
+                  Transfer Ownership
+                </Button>
+              </div>
+
+              <Button
+                variant="outline"
+                onClick={handleLineageClick}
+                className="w-full border-slate-600 hover:bg-slate-800"
+              >
+                <GitBranch className="w-4 h-4 mr-2" />
+                View Lineage Tree
+              </Button>
+
+              {onArchive && canEdit && (
+                <div className="space-y-2">
+                  {gecko.archived && gecko.archive_reason && (
+                    <div className="bg-slate-800 p-3 rounded-lg">
+                      <p className="text-xs text-slate-400 mb-2">Archive reason:</p>
+                      <div className="flex gap-2">
+                        {[
+                          { value: 'death', label: 'Passed Away' },
+                          { value: 'sold', label: 'Sold' },
+                          { value: 'other', label: 'Other' },
+                        ].map(opt => (
+                          <button
+                            key={opt.value}
+                            onClick={async () => {
+                              await Gecko.update(gecko.id, { archive_reason: opt.value });
+                              if (onUpdate) onUpdate();
+                            }}
+                            className={`text-xs px-2 py-1 rounded border transition-colors ${
+                              gecko.archive_reason === opt.value
+                                ? 'border-yellow-500 bg-yellow-900/40 text-yellow-300'
+                                : 'border-slate-600 text-slate-400 hover:bg-slate-700'
+                            }`}
+                          >
+                            {opt.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
                   )}
                   <Button
                     variant="outline"
-                    onClick={() => {
-                      const email = prompt('Enter the recipient\'s email address:');
-                      if (!email) return;
-                      const price = prompt('Sale price (optional, leave blank to skip):');
-                      const msg = prompt('Message for the buyer (optional):');
-                      const token = crypto.randomUUID();
-                      supabase.from('transfer_requests').insert({
-                        animal_id: gecko.id,
-                        from_user_id: null,
-                        to_email: email,
-                        token,
-                        sale_price: price ? Number(price) : null,
-                        message: msg || null,
-                        created_by: gecko.created_by,
-                        expires_at: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(),
-                      }).then(({ error }) => {
-                        if (error) {
-                          toast({ title: 'Transfer failed', description: error.message, variant: 'destructive' });
-                        } else {
-                          const claimUrl = `${window.location.origin}/claim/${token}`;
-                          navigator.clipboard.writeText(claimUrl);
-                          toast({ title: 'Transfer initiated!', description: `Claim link copied to clipboard. Share it with ${email}. Expires in 72 hours.` });
-                        }
-                      });
-                    }}
-                    className="w-full border-amber-600 text-amber-400 hover:bg-amber-900/20"
+                    onClick={() => onArchive(gecko.id, !gecko.archived)}
+                    className={gecko.archived ? "w-full border-emerald-600 text-emerald-500 hover:bg-emerald-900/20" : "w-full border-red-600 text-red-500 hover:bg-red-900/20"}
                   >
-                    <ArrowRightLeft className="w-4 h-4 mr-2" />
-                    Transfer Ownership
+                    {gecko.archived ? (
+                      <><ArchiveRestore className="w-4 h-4 mr-2" /> Unarchive</>
+                    ) : (
+                      <><Archive className="w-4 h-4 mr-2" /> Archive</>
+                    )}
                   </Button>
-                </div>
 
-                {onArchive && canEdit && (
-                  <div className="space-y-2">
-                    {gecko.archived && gecko.archive_reason && (
-                      <div className="bg-slate-800 p-3 rounded-lg">
-                        <p className="text-xs text-slate-400 mb-2">Archive reason:</p>
-                        <div className="flex gap-2">
-                          {[
-                            { value: 'death', label: 'Passed Away' },
-                            { value: 'sold', label: 'Sold' },
-                            { value: 'other', label: 'Other' },
-                          ].map(opt => (
-                            <button
-                              key={opt.value}
-                              onClick={async () => {
-                                await Gecko.update(gecko.id, { archive_reason: opt.value });
-                                if (onUpdate) onUpdate();
-                              }}
-                              className={`text-xs px-2 py-1 rounded border transition-colors ${
-                                gecko.archive_reason === opt.value
-                                  ? 'border-yellow-500 bg-yellow-900/40 text-yellow-300'
-                                  : 'border-slate-600 text-slate-400 hover:bg-slate-700'
-                              }`}
-                            >
-                              {opt.label}
-                            </button>
-                          ))}
-                        </div>
-                      </div>
-                    )}
-                    <Button
-                      variant="outline"
-                      onClick={() => onArchive(gecko.id, !gecko.archived)}
-                      className={gecko.archived ? "w-full border-emerald-600 text-emerald-500 hover:bg-emerald-900/20" : "w-full border-red-600 text-red-500 hover:bg-red-900/20"}
-                    >
-                      {gecko.archived ? (
-                        <><ArchiveRestore className="w-4 h-4 mr-2" /> Unarchive</>
-                      ) : (
-                        <><Archive className="w-4 h-4 mr-2" /> Archive</>
-                      )}
-                    </Button>
-
-                    {/* Permanent delete — only for archived geckos */}
-                    {gecko.archived && onDelete && (
-                      <AlertDialog>
-                        <AlertDialogTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className="w-full border-red-800 text-red-400 hover:bg-red-950/40 hover:text-red-300"
+                  {gecko.archived && onDelete && (
+                    <AlertDialog>
+                      <AlertDialogTrigger asChild>
+                        <Button
+                          variant="outline"
+                          className="w-full border-red-800 text-red-400 hover:bg-red-950/40 hover:text-red-300"
+                        >
+                          <Trash2 className="w-4 h-4 mr-2" />
+                          Permanently Delete
+                        </Button>
+                      </AlertDialogTrigger>
+                      <AlertDialogContent className="bg-slate-900 border-slate-700">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle className="text-slate-100">
+                            Permanently delete {gecko.name}?
+                          </AlertDialogTitle>
+                          <AlertDialogDescription className="text-slate-400">
+                            This will <strong className="text-red-400">permanently remove</strong>{' '}
+                            <strong>{gecko.name}</strong> and all associated data from your
+                            collection. This action cannot be undone.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
+                        <AlertDialogFooter>
+                          <AlertDialogCancel className="bg-slate-800 text-slate-200 border-slate-600">
+                            Cancel
+                          </AlertDialogCancel>
+                          <AlertDialogAction
+                            onClick={() => onDelete(gecko.id)}
+                            className="bg-red-700 hover:bg-red-800"
                           >
-                            <Trash2 className="w-4 h-4 mr-2" />
-                            Permanently Delete
-                          </Button>
-                        </AlertDialogTrigger>
-                        <AlertDialogContent className="bg-slate-900 border-slate-700">
-                          <AlertDialogHeader>
-                            <AlertDialogTitle className="text-slate-100">
-                              Permanently delete {gecko.name}?
-                            </AlertDialogTitle>
-                            <AlertDialogDescription className="text-slate-400">
-                              This will <strong className="text-red-400">permanently remove</strong>{' '}
-                              <strong>{gecko.name}</strong> and all associated data from your
-                              collection. This action cannot be undone.
-                            </AlertDialogDescription>
-                          </AlertDialogHeader>
-                          <AlertDialogFooter>
-                            <AlertDialogCancel className="bg-slate-800 text-slate-200 border-slate-600">
-                              Cancel
-                            </AlertDialogCancel>
-                            <AlertDialogAction
-                              onClick={() => onDelete(gecko.id)}
-                              className="bg-red-700 hover:bg-red-800"
-                            >
-                              Delete Forever
-                            </AlertDialogAction>
-                          </AlertDialogFooter>
-                        </AlertDialogContent>
-                      </AlertDialog>
-                    )}
-                  </div>
-                )}
+                            Delete Forever
+                          </AlertDialogAction>
+                        </AlertDialogFooter>
+                      </AlertDialogContent>
+                    </AlertDialog>
+                  )}
+                </div>
+              )}
+
+              {/* Parentage */}
+              <div className="pt-2 space-y-3">
+                <h3 className="text-lg font-semibold text-slate-100">Parentage</h3>
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-slate-400 mb-1">Sire (Father)</p>
+                  <p className="text-slate-100 font-semibold">{sire?.name || gecko.sire_name || 'Unknown'}</p>
+                </div>
+                <div>
+                  <p className="text-xs uppercase tracking-wider text-slate-400 mb-1">Dam (Mother)</p>
+                  <p className="text-slate-100 font-semibold">{dam?.name || gecko.dam_name || 'Unknown'}</p>
+                </div>
               </div>
-            </TabsContent>
-          </Tabs>
+            </div>
+          </div>
         </CardContent>
       </Card>
     </div>
