@@ -15,6 +15,7 @@ import {
 } from 'recharts';
 import { Helmet } from 'react-helmet-async';
 import ShareMenu from '@/components/shared/ShareMenu';
+import QualityBadge from '@/components/shared/QualityBadge';
 
 /* ─── Design tokens ─────────────────────────────────────────────── */
 const C = {
@@ -678,7 +679,7 @@ export default function AnimalPassport() {
           </div>
 
           {/* ─── Morph card ────────────────────────── */}
-          {(baseMorph || morphTraits.length > 0 || gecko.pattern_grade) && (
+          {(baseMorph || morphTraits.length > 0 || gecko.pattern_grade || gecko.quality_score != null) && (
             <div
               className="rounded-xl border p-6"
               style={{ borderColor: C.border, backgroundColor: C.cardBg }}
@@ -686,7 +687,9 @@ export default function AnimalPassport() {
               <SectionHeading>Morph &amp; Genetics</SectionHeading>
               <div className="flex flex-wrap items-center gap-2">
                 {baseMorph && <MorphPill text={baseMorph} />}
-                <PatternGradeBadge grade={gecko.pattern_grade} />
+                {gecko.quality_score != null
+                  ? <QualityBadge score={gecko.quality_score} linkToScale />
+                  : <PatternGradeBadge grade={gecko.pattern_grade} />}
               </div>
               {morphTraits.length > 0 && (
                 <div className="flex flex-wrap gap-1.5 mt-3">
