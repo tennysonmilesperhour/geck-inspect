@@ -26,6 +26,8 @@ import { format } from "date-fns";
 import { Upload, X, Trash2, DollarSign, Loader2 } from "lucide-react";
 import { Switch } from '@/components/ui/switch';
 import MorphIDSelector from './MorphIDSelector';
+import QualityInput from './QualityInput';
+import { patternGradeForScore } from '@/lib/quality';
 // Extracted helpers / constants / sub-components — keeps this file focused
 // on the orchestration logic instead of static data and pure UI pieces.
 import { MONTHS, GECKO_SPECIES, INITIAL_FORM_DATA } from './form/constants';
@@ -399,6 +401,13 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                 is_gravid: formData.sex === 'Female' ? (formData.is_gravid || false) : false,
                 gravid_since: formData.sex === 'Female' && formData.is_gravid ? (formData.gravid_since || null) : null,
                 egg_drop_date: formData.sex === 'Female' && formData.is_gravid ? (formData.egg_drop_date || null) : null,
+                // P11 Quality Scale. quality_score is the source of truth;
+                // pattern_grade is mirrored from the derived tier so Market
+                // Pricing aggregations keep working without a backfill.
+                quality_score: formData.quality_score == null || formData.quality_score === ''
+                    ? null
+                    : Number(formData.quality_score),
+                pattern_grade: patternGradeForScore(formData.quality_score) ?? formData.pattern_grade ?? null,
             };
 
             let savedGecko;
@@ -773,6 +782,15 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                          onMorphsChange={(tags) => handleChange('morph_tags', tags)}
                          disabled={isArchived}
                      />
+
+                    {/* Quality grade (Geck Inspect Standard 0-10). Tier
+                        is derived; pattern_grade is mirrored on save. */}
+                    <div className="rounded-lg border border-slate-700 bg-slate-900/40 p-4">
+                        <QualityInput
+                            value={formData.quality_score}
+                            onChange={(score) => handleChange('quality_score', score)}
+                        />
+                    </div>
 
                     {/* Feeding Group */}
                     <div>
