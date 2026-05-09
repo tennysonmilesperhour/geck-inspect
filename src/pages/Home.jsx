@@ -336,7 +336,7 @@ export default function Home() {
         <section className="relative z-10 max-w-5xl mx-auto px-6 pt-16 pb-24 text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-sm font-semibold text-emerald-300 mb-8">
             <Sparkles className="w-3.5 h-3.5" />
-            Welcome to <span className="font-bold">geckOS</span>
+            Welcome To The <span className="font-bold">Geck OS</span>
           </div>
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-[1.05] mb-6 bg-gradient-to-b from-white via-white to-emerald-200 bg-clip-text text-transparent">
             Track, breed, and verify
@@ -346,9 +346,11 @@ export default function Home() {
           <p className="text-xl md:text-2xl text-emerald-200/90 max-w-2xl mx-auto mb-4 font-medium">
             Every gecko, every clutch, every gene. In one place.
           </p>
-          <p className="text-base md:text-lg text-slate-300 max-w-2xl mx-auto mb-10 leading-relaxed">
+          <p className="text-base md:text-lg max-w-2xl mx-auto mb-10 leading-relaxed bg-gradient-to-b from-sky-200 via-sky-300 to-blue-500 bg-clip-text text-transparent">
             The crested gecko platform built for the way breeders actually work: AI morph ID, multi-trait
-            breeding projections, lineage trees, and digital pedigrees that buyers can verify. Your new <span className="font-semibold text-emerald-200">geckOS</span>.
+            breeding projections, lineage trees, digital pedigrees buyers can verify, marketplace analytics
+            and trends, social-media posting assistance and automation, and a gecko quality scoring rubric.
+            Your new <span className="font-semibold text-emerald-200">geckOS</span>.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
             {showGuestCta ? (
