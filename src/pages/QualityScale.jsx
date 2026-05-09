@@ -489,6 +489,21 @@ export default function QualityScale() {
                     <PlaceholderTile key={tier} tier={tier} />
                   ))}
                 </div>
+                {/* Outbound link to GSGC's competition coverage so visitors
+                    can see real category winners. Linked, not embedded,
+                    so we don't host or hotlink GSGC's photographs. */}
+                <p className="text-xs text-slate-500 mt-3">
+                  See real {c.name.replace(/\s*\(.*\)$/, '')} category winners and judging examples on the{' '}
+                  <a
+                    href="https://www.youtube.com/playlist?list=PLBYqDmT358pxaK8t9Taz6OyauOBpxRCtw"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="text-emerald-400 hover:text-emerald-300 underline"
+                  >
+                    Gold Standard Gecko Club
+                  </a>
+                  .
+                </p>
               </div>
             ))}
           </div>
