@@ -1059,7 +1059,7 @@ export default function Lineage() {
 
     return (
         <TooltipProvider>
-        <div className="flex flex-col h-[100dvh] bg-slate-950 text-slate-200 overflow-hidden">
+        <div className="flex flex-col h-full min-h-0 bg-slate-950 text-slate-200 overflow-hidden lineage-scroll-host">
             <Seo
                 title="Lineage Tree"
                 description="Visualize your crested gecko family trees with an interactive lineage explorer. Trace ancestry across generations."
@@ -1375,7 +1375,7 @@ export default function Lineage() {
 
             <main
                 ref={mainContentRef}
-                className="flex-1 overflow-auto relative overscroll-contain [touch-action:pan-x_pan-y]"
+                className="flex-1 min-h-0 overflow-auto relative overscroll-contain [touch-action:pan-x_pan-y] lineage-main-scroll"
                 onTouchStart={handleTouchStart}
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
