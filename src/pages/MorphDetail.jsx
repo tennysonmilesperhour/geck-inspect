@@ -28,6 +28,7 @@ import {
 } from '@/data/morph-guide';
 import { authorSchema, bylineText, editorialFor } from '@/lib/editorial';
 import { morphFaq, morphFaqSchema } from '@/lib/morphFaq';
+import { getMorphReferenceImages } from '@/lib/geckDataClient';
 
 const LOGO_URL = APP_LOGO_URL;
 
@@ -45,7 +46,7 @@ const RARITY_COLORS = {
   very_rare: 'bg-purple-500/15 text-purple-300 border-purple-500/30',
 };
 
-// Safe-enough image — strips the broken external URLs we found during
+// Safe-enough image: strips the broken external URLs we found during
 // the migration so Wikipedia rate-limited / YouTube-404 images don't
 // render as broken thumbnails on the hero.
 function sanitizeImage(url) {
@@ -64,6 +65,7 @@ export default function MorphDetail() {
   const { slug } = useParams();
   const [record, setRecord] = useState(null);
   const [communityImages, setCommunityImages] = useState([]);
+  const [referenceImages, setReferenceImages] = useState([]);
   const [relatedMorphs, setRelatedMorphs] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
@@ -94,7 +96,7 @@ export default function MorphDetail() {
         const best = pickBestMorphRecord(matches);
         const localMorph = getMorph(slug);
 
-        // Fall back to local dataset if no DB record exists — our
+        // Fall back to local dataset if no DB record exists; our
         // local morph-guide.js is the authoritative reference and
         // covers every KNOWN_MORPH_SLUGS entry.
         if (!best && !localMorph) {
@@ -128,7 +130,7 @@ export default function MorphDetail() {
             .map(([s, r]) => ({ slug: s, name: r.morph_name, rarity: r.rarity }))
         );
 
-        // Community photos of this morph from the gallery — nice touch if we have them
+        // Community photos of this morph from the gallery; nice touch if we have them.
         try {
           const normalized = best.morph_name.toLowerCase();
           const firstWord = normalized.split(/\s+/)[0];
@@ -140,6 +142,19 @@ export default function MorphDetail() {
           if (!cancelled) setCommunityImages(imgs || []);
         } catch {
           /* gallery is a bonus; ignore failures */
+        }
+
+        // External + extension-sourced reference photos from geck-data.
+        // External refs (Leopard Gecko Wiki, iNaturalist) carry license and
+        // attribution metadata; listing-derived images are unattributed
+        // marketplace photos. Both are best-effort: failures render no
+        // section instead of taking down the page.
+        try {
+          const morphName = best?.morph_name || displayName;
+          const { data: refs } = await getMorphReferenceImages(morphName, { limit: 12 });
+          if (!cancelled) setReferenceImages(refs || []);
+        } catch {
+          /* reference panel is optional */
         }
       } catch {
         if (!cancelled) setNotFound(true);
@@ -231,7 +246,7 @@ export default function MorphDetail() {
         return {
           '@type': 'Article',
           '@id': `https://geckinspect.com/MorphGuide/${slug}#article`,
-          headline: `${morphName} — Crested Gecko Morph Guide`,
+          headline: `${morphName}: Crested Gecko Morph Guide`,
           description: record.description?.slice(0, 280),
           url: `https://geckinspect.com/MorphGuide/${slug}`,
           image: heroImage,
@@ -263,7 +278,7 @@ export default function MorphDetail() {
   return (
     <>
       <Seo
-        title={`${morphName} Morph — Crested Gecko Guide`}
+        title={`${morphName} Morph: Crested Gecko Guide`}
         description={metaDescription}
         path={`/MorphGuide/${slug}`}
         image={heroImage}
@@ -520,6 +535,56 @@ export default function MorphDetail() {
             </section>
           )}
 
+          {/* Reference photos pulled from geck-data: external sources
+              (iNaturalist, Leopard Gecko Wiki, breeder partnerships) and
+              extension-captured marketplace listings tagged with this
+              morph. Each card carries an attribution line so license terms
+              stay visible. */}
+          {referenceImages.length > 0 && (
+            <section className="mb-10">
+              <h2 className="text-2xl font-bold text-white mb-3 flex items-center gap-2">
+                <BookOpen className="w-5 h-5 text-emerald-400" />
+                Reference photos
+              </h2>
+              <p className="text-sm text-slate-400 mb-4">
+                Curated reference set drawn from external CC-licensed sources
+                and extension-captured marketplace listings.
+              </p>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                {referenceImages.map((img, i) => (
+                  <div
+                    key={`ref-${i}`}
+                    className="aspect-square rounded-xl overflow-hidden border border-slate-800 bg-slate-900 relative group"
+                  >
+                    {img.source_url ? (
+                      <a href={img.source_url} target="_blank" rel="noopener noreferrer">
+                        <img
+                          src={img.url}
+                          alt={`${displayName} reference photo`}
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      </a>
+                    ) : (
+                      <img
+                        src={img.url}
+                        alt={`${displayName} reference photo`}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    )}
+                    {(img.attribution || img.license) && (
+                      <div className="absolute bottom-0 left-0 right-0 bg-black/60 px-2 py-1 text-[10px] text-slate-200 opacity-0 group-hover:opacity-100 transition-opacity">
+                        {img.attribution ? <div className="truncate">{img.attribution}</div> : null}
+                        {img.license ? <div className="text-slate-400">{img.license}</div> : null}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </section>
+          )}
+
           {/* Community examples */}
           {communityImages.length > 0 && (
             <section className="mb-10">
@@ -567,7 +632,7 @@ export default function MorphDetail() {
             </section>
           )}
 
-          {/* FAQ — generated from the structured morph data. Surfaces
+          {/* FAQ generated from the structured morph data. Surfaces
               in Google's "People also ask" and in AI Overviews / Perplexity
               answer extraction via the FAQPage JSON-LD emitted alongside
               the Article schema. */}
@@ -607,7 +672,7 @@ export default function MorphDetail() {
             </h2>
             <p className="text-slate-300 mb-5 leading-relaxed">
               Free to use. Log weights, plan breedings, visualize lineages, and identify morphs
-              with AI — built specifically for the crested gecko hobby.
+              with AI, built specifically for the crested gecko hobby.
             </p>
             <Link to={createPageUrl('AuthPortal')}>
               <Button
