@@ -80,6 +80,7 @@ const Marketplace           = lazy(() => import('./pages/Marketplace'));
 const MarketplaceBuy        = lazy(() => import('./pages/MarketplaceBuy'));
 const MarketplaceSalesStats = lazy(() => import('./pages/MarketplaceSalesStats'));
 const MarketplaceSell       = lazy(() => import('./pages/MarketplaceSell'));
+const MorphMarketExport     = lazy(() => import('./pages/MorphMarketExport'));
 const Membership            = lazy(() => import('./pages/Membership'));
 const Messages              = lazy(() => import('./pages/Messages'));
 const MorphGuide            = lazy(() => import('./pages/MorphGuide'));
@@ -139,6 +140,7 @@ export const PAGES = {
     "MarketplaceBuy": MarketplaceBuy,
     "MarketplaceSalesStats": MarketplaceSalesStats,
     "MarketplaceSell": MarketplaceSell,
+    "MorphMarketExport": MorphMarketExport,
     "Membership": Membership,
     "Messages": Messages,
     "MorphGuide": MorphGuide,
