@@ -111,6 +111,9 @@ const BreederStorefront     = lazy(() => import('./pages/BreederStorefront'));
 const BreederShipping       = lazy(() => import('./pages/BreederShipping'));
 const ImageImport           = lazy(() => import('./pages/ImageImport'));
 
+// P11 Quality Scale: public rubric, also resolvable inside the auth shell.
+const QualityScale          = lazy(() => import('./pages/QualityScale'));
+
 
 export const PAGES = {
     "AdminPanel": AdminPanel,
@@ -166,6 +169,7 @@ export const PAGES = {
     "BreederStorefront": BreederStorefront,
     "BreederShipping": BreederShipping,
     "ImageImport": ImageImport,
+    "QualityScale": QualityScale,
 }
 
 export const pagesConfig = {

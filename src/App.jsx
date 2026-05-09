@@ -74,6 +74,9 @@ const About                 = lazy(() => import('./pages/About'));
 const Contact               = lazy(() => import('./pages/Contact'));
 const Terms                 = lazy(() => import('./pages/Terms'));
 const MarketplaceVerification = lazy(() => import('./pages/MarketplaceVerification'));
+// P11 Quality Scale: public rubric for grading a crested gecko on
+// structure, head, pattern, and color. Spec: docs/specs/P11-quality-rubric.md.
+const QualityScale          = lazy(() => import('./pages/QualityScale'));
 
 // P1 — Animal Passport (public pages, no auth required)
 const AnimalPassport        = lazy(() => import('./pages/AnimalPassport'));
@@ -230,6 +233,7 @@ const AuthenticatedApp = () => {
           <Route path="/Contact" element={<Contact />} />
           <Route path="/Terms" element={<Terms />} />
           <Route path="/MarketplaceVerification" element={<MarketplaceVerification />} />
+          <Route path="/QualityScale" element={<QualityScale />} />
           <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
           {/* Breeder is indexable under both /Breeder?slug= (legacy) and
               /Breeder/<slug> (clean, preferred); the page itself reads
