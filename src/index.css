@@ -121,7 +121,7 @@ button:focus-visible {
     --sidebar-border: 220 13% 91%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Emerald scale — overridden by tailwind.config.js to read these
+    /* Emerald scale, overridden by tailwind.config.js to read these
        CSS variables so the ~1,900 hardcoded `bg-emerald-500` etc.
        usages re-tint when the user picks a different "Accent color"
        (data-secondary attribute on <html>). Defaults below match
@@ -174,7 +174,7 @@ button:focus-visible {
     --sidebar-border: 240 3.7% 15.9%;
     --sidebar-ring: 217.2 91.2% 59.8%;
 
-    /* Scrollbar tokens — per-theme overrides below re-tint these. */
+    /* Scrollbar tokens, per-theme overrides below re-tint these. */
     --scrollbar-thumb: #4ade80;
     --scrollbar-thumb-hover: #86efac;
   }
@@ -195,13 +195,13 @@ button:focus-visible {
      Values are HSL triplets (no hsl() wrapper) so Tailwind's opacity
      modifier (bg-sage-500/50) works via hsl(var(--sage-500) / <alpha>).
 
-     sage: dark→light (50 = darkest, 900 = lightest) — matches the
+     sage: dark→light (50 = darkest, 900 = lightest), matches the
        always-dark inverted scale the app was built against.
-     slate/gray: light→dark (50 = lightest, 950 = darkest) — standard
+     slate/gray: light→dark (50 = lightest, 950 = darkest), standard
        Tailwind direction; used for page backgrounds and neutrals.
      ------------------------------------------------------------------ */
 
-  /* Normal — wild-type leopard gecko. Deep forest floor with moss-green
+  /* Normal, wild-type leopard gecko. Deep forest floor with moss-green
      primary and a touch of warm umber at the edges. */
   :root[data-theme="normal"] {
     --background: 156 38% 4%;
@@ -266,7 +266,7 @@ button:focus-visible {
     --scrollbar-thumb-hover: #4ade80;
   }
 
-  /* Tangerine — dusk-to-ember warmth. Deep umber backgrounds, bright
+  /* Tangerine, dusk-to-ember warmth. Deep umber backgrounds, bright
      amber primary, rose-red chart accents that evoke sunset horizon. */
   :root[data-theme="tangerine"] {
     --background: 20 42% 5%;
@@ -331,7 +331,7 @@ button:focus-visible {
     --scrollbar-thumb-hover: #fbbf24;
   }
 
-  /* Halloween Mask — dramatic October night. Near-black backgrounds let
+  /* Halloween Mask, dramatic October night. Near-black backgrounds let
      the glowing red-orange primary burn, with bronze/ember accents. */
   :root[data-theme="halloween-mask"] {
     --background: 12 48% 4%;
@@ -396,7 +396,7 @@ button:focus-visible {
     --scrollbar-thumb-hover: #f87171;
   }
 
-  /* Blizzard — icy night. Cold near-black with frost-cyan primary and
+  /* Blizzard, icy night. Cold near-black with frost-cyan primary and
      glacial blue-white highlights. Hue drifts from cyan at bright steps
      toward indigo at dark steps for a subtle aurora. */
   :root[data-theme="blizzard"] {
@@ -462,7 +462,7 @@ button:focus-visible {
     --scrollbar-thumb-hover: #93c5fd;
   }
 
-  /* Lavender — original deep violet base with pale-lavender accents.
+  /* Lavender, original deep violet base with pale-lavender accents.
      Near-black purple surfaces, bright lilac primary (#c084fc), and the
      --accent / --sidebar-accent / --chart-5 tokens get a very light
      lavender so hover states, selected sidebar items, and one chart
@@ -530,7 +530,7 @@ button:focus-visible {
     --scrollbar-thumb-hover: #e9d5ff;
   }
 
-  /* Super Hypo — high-noon sunlight. Warm coffee-brown backgrounds and
+  /* Super Hypo, high-noon sunlight. Warm coffee-brown backgrounds and
      saturated golden-yellow primary. Lime-olive at light steps, deep
      bronze at dark steps for an organic, sun-baked feel. */
   :root[data-theme="super-hypo"] {
@@ -598,7 +598,7 @@ button:focus-visible {
 
   /* ------------------------------------------------------------------
      Secondary "Accent color" palettes. Independent from the primary
-     theme above — users pick one via the Settings → Accent picker
+     theme above, users pick one via the Settings → Accent picker
      which writes data-secondary on <html>.
 
      Each block does two jobs:
@@ -618,11 +618,11 @@ button:focus-visible {
             --sidebar-accent, --sidebar-accent-foreground
 
      --background, --card, --secondary, --muted, --border, --input,
-     sage scale, and slate scale are intentionally NOT overridden —
+     sage scale, and slate scale are intentionally NOT overridden,
      those are structural neutrals owned by the theme. green-*
      utilities are also left stock so "success green" stays semantic. */
 
-  /* Normal — emerald accent. Identity palette: HSL values match
+  /* Normal, emerald accent. Identity palette: HSL values match
      Tailwind stock emerald, and the interactive tokens match the
      normal theme exactly so picking "Normal" accent on top of
      "Normal" theme is a perfect no-op. */
@@ -651,7 +651,7 @@ button:focus-visible {
     --emerald-950: 166 91% 9%;
   }
 
-  /* Tangerine — warm amber accent. */
+  /* Tangerine, warm amber accent. */
   :root[data-secondary="tangerine"] {
     --primary: 26 95% 56%;
     --primary-foreground: 20 50% 10%;
@@ -677,7 +677,7 @@ button:focus-visible {
     --emerald-950: 22 80% 11%;
   }
 
-  /* Halloween Mask — bold red-orange accent. */
+  /* Halloween Mask, bold red-orange accent. */
   :root[data-secondary="halloween-mask"] {
     --primary: 10 90% 54%;
     --primary-foreground: 12 48% 8%;
@@ -703,7 +703,7 @@ button:focus-visible {
     --emerald-950: 10 82% 10%;
   }
 
-  /* Blizzard — cool sky-blue accent. */
+  /* Blizzard, cool sky-blue accent. */
   :root[data-secondary="blizzard"] {
     --primary: 202 92% 62%;
     --primary-foreground: 218 40% 10%;
@@ -729,7 +729,7 @@ button:focus-visible {
     --emerald-950: 220 76% 10%;
   }
 
-  /* Lavender — violet accent. Mirrors the lavender theme's signature
+  /* Lavender, violet accent. Mirrors the lavender theme's signature
      "pale lavender pop" for --accent / --sidebar-accent so dropdown
      and sidebar highlights stay light against any dark theme. */
   :root[data-secondary="lavender"] {
@@ -757,7 +757,7 @@ button:focus-visible {
     --emerald-950: 275 50% 12%;
   }
 
-  /* Super Hypo — golden yellow accent. */
+  /* Super Hypo, golden yellow accent. */
   :root[data-secondary="super-hypo"] {
     --primary: 46 95% 58%;
     --primary-foreground: 40 50% 10%;
@@ -783,7 +783,7 @@ button:focus-visible {
     --emerald-950: 40 80% 10%;
   }
 
-  /* P1 Design System — Passport & new feature pages */
+  /* P1 Design System, Passport & new feature pages */
   :root {
     --gi-forest-deep: #1A2E1A;
     --gi-moss-mid: #2D4A2D;
@@ -864,4 +864,31 @@ button:focus-visible {
   border: 2px solid #0f172a;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
   cursor: grab;
+}
+
+/* Lineage page scrollbar: bump from the global 6px to 12px so the
+   user can actually click and drag it. The global thin scrollbar is
+   fine for sidebars and small panels, but the Lineage tree main is a
+   primary scroll surface that needs a real grab target. Scoped via
+   .lineage-main-scroll so it doesn't leak into the rest of the app. */
+.lineage-main-scroll {
+  scrollbar-width: auto;
+  scrollbar-color: var(--scrollbar-thumb) rgba(15, 23, 42, 0.5);
+}
+.lineage-main-scroll::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+.lineage-main-scroll::-webkit-scrollbar-track {
+  background: rgba(15, 23, 42, 0.5);
+  border-radius: 999px;
+}
+.lineage-main-scroll::-webkit-scrollbar-thumb {
+  background: var(--scrollbar-thumb);
+  border: 2px solid rgba(15, 23, 42, 0.5);
+  border-radius: 999px;
+  min-height: 40px;
+}
+.lineage-main-scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--scrollbar-thumb-hover);
 }
