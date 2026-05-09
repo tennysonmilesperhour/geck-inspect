@@ -158,6 +158,71 @@ const CATEGORIES = [
   },
 ];
 
+const FAQ_ITEMS = [
+  {
+    q: 'What is the Geck Inspect Quality Scale?',
+    a: 'The Geck Inspect Quality Scale (also called the Geck Inspect Standard) is a free, public 10-point rubric for evaluating a crested gecko on body structure, head shape, eye quality, crests, dorsal pattern, lateral pattern, color saturation, contrast, pattern quality, and overall presence. The total score maps to one of four grade tiers: Pet (0.0 to 4.9), Breeder (5.0 to 6.9), High-end (7.0 to 8.4), and Investment (8.5 to 10.0).',
+  },
+  {
+    q: 'How do I score my crested gecko?',
+    a: 'Photograph the gecko in good light against a neutral backdrop, confirm it meets the eligibility floor (18 months old, 45 g with tail or 40 g without for the full structure point), then award 0 to 1 point in 0.5 steps for each of the 10 criteria on the rubric. Total the ten scores out of 10 and read the matching grade tier from the score-to-grade table.',
+  },
+  {
+    q: 'What is the difference between Pet, Breeder, High-end, and Investment grade?',
+    a: 'Pet grade (0 to 4.9) covers companion animals with no breeding ambitions. Breeder grade (5 to 6.9) is the typical hobby breeder line: clean structure, decent pattern, solid color. High-end (7 to 8.4) shows above-average structure, strong contrast, and refined pattern, the kind of animal that holds its value in the hobby. Investment grade (8.5 to 10) is show-quality, with elite structure, exceptional pattern coverage, and saturated color that breeders compete for.',
+  },
+  {
+    q: 'How much is my crested gecko worth?',
+    a: 'Value is driven by morph, sex, age, and quality grade. Pet-grade hatchlings typically sell for $50 to $150, breeder juveniles $150 to $400, high-end Harlequin adult females $400 to $1,200, and investment-grade Extreme Harlequins or proven Lilly Whites can reach $800 to $3,000. Match your scored grade against recent sales data on the Geck Inspect Market Pricing page for live price bands by morph and tier.',
+  },
+  {
+    q: 'Is the Geck Inspect Standard related to the Gold Standard Gecko Club?',
+    a: 'No, the Geck Inspect Standard is its own rubric. It is informed by the public work the Gold Standard Gecko Club (GSGC, founded by Danny Utrera and Manny Durand of Tiki’s Geckos) has done in setting judging criteria for crested geckos, and it credits GSGC openly with linked sources. Their published thresholds (18 months, 45 g full tail, 40 g no tail for full structure point) directly inform the eligibility floor on this page. Geck Inspect is not affiliated with GSGC.',
+  },
+  {
+    q: 'Can I grade a hatchling crested gecko?',
+    a: 'You can score color, pattern, and head traits on any age, but the structure point should be reduced or withheld until the gecko is at least 18 months old and meets the weight threshold (45 g with tail or 40 g without). A hatchling is not structurally mature, so structure cannot be fairly judged.',
+  },
+  {
+    q: 'Does a higher score guarantee my gecko will sell for more?',
+    a: 'No. Score correlates with price, but price is also affected by morph rarity, lineage, breeder reputation, sex (proven females typically command a premium), and current market demand. The rubric tells you which tier your gecko fits into. Market Pricing data on Geck Inspect tells you what that tier is selling for right now.',
+  },
+  {
+    q: 'How is a crested gecko’s quality grade different from its morph?',
+    a: 'Morph (Harlequin, Lilly White, Pinstripe, Dalmatian, etc.) describes the trait pattern the gecko expresses. Quality grade describes how well the gecko expresses that morph: structure, head, color saturation, contrast, pattern coverage. Two harlequins with the same morph label can sit in completely different grade tiers based on quality.',
+  },
+];
+
+const HOWTO_STEPS = [
+  {
+    name: 'Photograph the gecko',
+    text: 'Take a clear top-down shot and a clear side shot in good light against a neutral backdrop.',
+  },
+  {
+    name: 'Confirm eligibility',
+    text: 'Check that the gecko is at least 18 months old and meets the weight threshold (45 g with full tail, or 40 g without). If not, expect a reduced structure score, not a failed evaluation.',
+  },
+  {
+    name: 'Walk the 10 criteria',
+    text: 'Score each criterion (body structure, head shape, eye quality, crown crests, dorsal crests and stripe, pattern coverage, pattern quality, color saturation, contrast, overall presence) from 0 to 1 in 0.5 increments. Be honest. Optimistic scoring is the most common source of mispriced listings.',
+  },
+  {
+    name: 'Total the score',
+    text: 'Add the ten scores. The total falls into Pet (0 to 4.9), Breeder (5 to 6.9), High-end (7 to 8.4), or Investment (8.5 to 10).',
+  },
+  {
+    name: 'Cross-check against market data',
+    text: 'Compare the resulting tier against recent sales for your morph on the Geck Inspect Market Pricing page to land on a fair asking price.',
+  },
+];
+
+const DEFINED_TIERS = [
+  { id: 'pet', name: 'Pet grade crested gecko', range: '0.0 to 4.9', desc: 'Companion-animal tier. Healthy gecko with no breeding ambitions, possibly displaying minor structural or pattern shortfalls.' },
+  { id: 'breeder', name: 'Breeder grade crested gecko', range: '5.0 to 6.9', desc: 'Typical hobby-breeder line. Clean structure, decent pattern, solid color. Suitable for breeding projects.' },
+  { id: 'high-end', name: 'High-end grade crested gecko', range: '7.0 to 8.4', desc: 'Above-average structure, strong contrast, refined pattern. Animals that hold their value in the hobby.' },
+  { id: 'investment', name: 'Investment grade crested gecko', range: '8.5 to 10.0', desc: 'Show-quality. Elite structure, exceptional pattern coverage, saturated color. The animals top breeders compete for.' },
+];
+
 const QUALITY_SCALE_JSON_LD = [
   {
     '@context': 'https://schema.org',
@@ -168,7 +233,79 @@ const QUALITY_SCALE_JSON_LD = [
     description:
       'The Geck Inspect Standard is a free 10-point rubric for evaluating crested gecko structure, head, pattern, and color. Score your gecko, see which grade tier it falls into, and understand what it is worth.',
     dateModified: LAST_UPDATED,
+    inLanguage: 'en-US',
     isPartOf: { '@id': `${SITE_URL}/#website` },
+    about: { '@id': `${SITE_URL}/QualityScale#defined-term-set` },
+    mainEntity: { '@id': `${SITE_URL}/QualityScale#faq` },
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'Article',
+    '@id': `${SITE_URL}/QualityScale#article`,
+    headline: 'Crested Gecko Quality Scale: the Geck Inspect Standard',
+    description:
+      'A free 10-point rubric for grading a crested gecko on body structure, head, pattern, and color. Maps to four tiers (Pet, Breeder, High-end, Investment) and to live market price bands.',
+    url: `${SITE_URL}/QualityScale`,
+    datePublished: '2026-05-09',
+    dateModified: LAST_UPDATED,
+    author: {
+      '@type': 'Organization',
+      name: 'Geck Inspect',
+      url: SITE_URL,
+    },
+    publisher: {
+      '@type': 'Organization',
+      name: 'Geck Inspect',
+      url: SITE_URL,
+    },
+    isPartOf: { '@id': `${SITE_URL}/QualityScale#webpage` },
+    mainEntityOfPage: { '@id': `${SITE_URL}/QualityScale#webpage` },
+    keywords:
+      'crested gecko quality, crested gecko grading, breeder grade crested gecko, investment grade crested gecko, crested gecko valuation, gold standard gecko club',
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'DefinedTermSet',
+    '@id': `${SITE_URL}/QualityScale#defined-term-set`,
+    name: 'Geck Inspect Standard quality grade tiers',
+    url: `${SITE_URL}/QualityScale`,
+    hasDefinedTerm: DEFINED_TIERS.map((t) => ({
+      '@type': 'DefinedTerm',
+      '@id': `${SITE_URL}/QualityScale#tier-${t.id}`,
+      name: t.name,
+      description: `${t.desc} Score range: ${t.range} on the Geck Inspect Standard 0 to 10 scale.`,
+      inDefinedTermSet: `${SITE_URL}/QualityScale#defined-term-set`,
+      url: `${SITE_URL}/QualityScale#${t.id === 'high-end' ? 'high-end' : t.id}`,
+    })),
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'HowTo',
+    '@id': `${SITE_URL}/QualityScale#howto`,
+    name: 'How to score a crested gecko on the Geck Inspect Quality Scale',
+    description:
+      'Five-step process for grading a crested gecko on the Geck Inspect Standard 10-point rubric and translating the score into a market value tier.',
+    totalTime: 'PT10M',
+    step: HOWTO_STEPS.map((s, i) => ({
+      '@type': 'HowToStep',
+      position: i + 1,
+      name: s.name,
+      text: s.text,
+      url: `${SITE_URL}/QualityScale#step-${i + 1}`,
+    })),
+  },
+  {
+    '@context': 'https://schema.org',
+    '@type': 'FAQPage',
+    '@id': `${SITE_URL}/QualityScale#faq`,
+    mainEntity: FAQ_ITEMS.map((item) => ({
+      '@type': 'Question',
+      name: item.q,
+      acceptedAnswer: {
+        '@type': 'Answer',
+        text: item.a,
+      },
+    })),
   },
   breadcrumbSchema([
     { name: 'Home', path: '/' },
@@ -190,17 +327,21 @@ export default function QualityScale() {
   return (
     <PublicPageShell>
       <Seo
-        title="Crested Gecko Quality Scale (Geck Inspect Standard)"
-        description="Free 10-point rubric for evaluating crested gecko quality across structure, head, pattern, and color. Score your gecko, see which grade tier it lands in, and understand what it is worth."
+        title="Crested Gecko Quality Scale: Pet, Breeder, High-End, Investment"
+        description="Free 10-point rubric for grading a crested gecko on structure, head, pattern, and color. Map your score to Pet, Breeder, High-end, or Investment grade and see what your gecko is actually worth."
         path="/QualityScale"
         type="article"
         modifiedTime={LAST_UPDATED}
         keywords={[
           'crested gecko quality',
           'crested gecko grading',
+          'crested gecko quality grade',
           'crested gecko valuation',
-          'gold standard gecko',
+          'how much is my crested gecko worth',
+          'gold standard gecko club',
+          'pet grade crested gecko',
           'breeder grade crested gecko',
+          'high end crested gecko',
           'investment grade crested gecko',
         ]}
         jsonLd={QUALITY_SCALE_JSON_LD}
@@ -240,7 +381,7 @@ export default function QualityScale() {
         <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 mb-8">
           <div className="flex items-center gap-2 mb-3">
             <Scale className="w-5 h-5 text-emerald-400" />
-            <h2 className="text-lg font-semibold text-slate-100">Eligibility floor</h2>
+            <h2 className="text-lg font-semibold text-slate-100">Which crested geckos are eligible to be scored?</h2>
           </div>
           <p className="text-slate-400 text-sm mb-4">
             A gecko has to be structurally mature before structure can be fairly judged. These thresholds match the public Gold Standard Gecko Club (GSGC) entry requirements, the broadest community-accepted floor in the hobby.
@@ -272,7 +413,7 @@ export default function QualityScale() {
         <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 mb-8">
           <div className="flex items-center gap-2 mb-2">
             <ScrollText className="w-5 h-5 text-sky-400" />
-            <h2 className="text-lg font-semibold text-slate-100">The 10-point rubric</h2>
+            <h2 className="text-lg font-semibold text-slate-100">How does the 10-point rubric work?</h2>
           </div>
           <p className="text-slate-400 text-sm mb-5">
             Award each criterion 0 to 1 point. Half-points are fine. Add the ten scores together to get a total out of 10.
@@ -296,7 +437,7 @@ export default function QualityScale() {
         <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 mb-8">
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="w-5 h-5 text-amber-400" />
-            <h2 className="text-lg font-semibold text-slate-100">Score-to-grade mapping</h2>
+            <h2 className="text-lg font-semibold text-slate-100">What grade tier does my score correspond to?</h2>
           </div>
           <p className="text-slate-400 text-sm mb-4">
             Once you have a total score, this is the tier your gecko sits in. The tier feeds directly into the Market Pricing data on Geck Inspect, so you get a price band based on actual sales of geckos in the same tier.
@@ -322,7 +463,7 @@ export default function QualityScale() {
         <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 mb-8">
           <div className="flex items-center gap-2 mb-3">
             <Eye className="w-5 h-5 text-emerald-400" />
-            <h2 className="text-lg font-semibold text-slate-100">Per-category standards</h2>
+            <h2 className="text-lg font-semibold text-slate-100">What changes per morph category?</h2>
           </div>
           <p className="text-slate-400 text-sm mb-5">
             The rubric weights are universal but the interpretation of pattern, contrast, and color shifts by morph category. Each category has its own reference plate showing what a Pet, Breeder, High-end, and Investment exemplar looks like.
@@ -357,7 +498,7 @@ export default function QualityScale() {
         <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 mb-8">
           <div className="flex items-center gap-2 mb-3">
             <CheckCircle2 className="w-5 h-5 text-sky-400" />
-            <h2 className="text-lg font-semibold text-slate-100">How to use this rubric</h2>
+            <h2 className="text-lg font-semibold text-slate-100">How do I score my crested gecko, step by step?</h2>
           </div>
           <ol className="text-slate-300 text-sm leading-relaxed space-y-2 list-decimal list-inside">
             <li>Photograph your gecko in good light against a neutral backdrop. Take a clear top-down shot and a clear side shot.</li>
@@ -374,9 +515,22 @@ export default function QualityScale() {
           </p>
         </div>
 
+        {/* Frequently asked questions (visible block matched to FAQPage JSON-LD) */}
+        <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 mb-8">
+          <h2 className="text-lg font-semibold text-slate-100 mb-4">Frequently asked questions</h2>
+          <div className="space-y-5">
+            {FAQ_ITEMS.map((item) => (
+              <div key={item.q}>
+                <h3 className="text-sm font-semibold text-slate-100">{item.q}</h3>
+                <p className="text-slate-400 text-sm leading-relaxed mt-1">{item.a}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+
         {/* Credit and sources */}
         <div className="bg-slate-900 border border-slate-700 rounded-xl p-6">
-          <h2 className="text-lg font-semibold text-slate-100 mb-2">What this standard is built on</h2>
+          <h2 className="text-lg font-semibold text-slate-100 mb-2">What is this standard built on?</h2>
           <p className="text-slate-400 text-sm leading-relaxed">
             The Geck Inspect Standard is our own rubric. It is informed by, and gives credit to, the public work the <strong className="text-slate-200">Gold Standard Gecko Club</strong> has done in setting judging criteria for crested geckos. GSGC was founded by Danny Utrera and Manny Durand of Tiki's Geckos and is the closest thing the hobby has to a recognized standards body. Their rules, eligibility thresholds, and category list directly informed this page. We are not reusing their score sheets or assets without permission.
           </p>
