@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/select';
 import { Search, DollarSign, MapPin, Heart, ShoppingBag, GitBranch, ArrowUpDown, LayoutGrid, Grid3x3, Filter } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
+import QualityBadge from '@/components/shared/QualityBadge';
 import EmptyState from '../components/shared/EmptyState';
 import { useNavigate, Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -145,6 +146,11 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                     >
                         <Heart className={`${isRegular ? 'w-4 h-4' : 'w-5 h-5'} ${isLiked ? 'fill-pink-500' : ''}`} />
                     </Button>
+                )}
+                {gecko.quality_score != null && (
+                    <div className={`absolute ${currentUser ? 'top-11' : 'top-2'} right-2 drop-shadow-lg`}>
+                        <QualityBadge score={gecko.quality_score} size="sm" />
+                    </div>
                 )}
             </div>
             <CardContent className={`${isRegular ? 'p-3' : 'p-4'} flex-grow flex flex-col`}>
