@@ -11,6 +11,8 @@ import {
     DollarSign, LineChart as LineChartIcon, MapPin, Tag, User as UserIcon,
     ChevronLeft, ChevronRight, X
 } from 'lucide-react';
+import ShareMenu from '@/components/shared/ShareMenu';
+import { passportUrl } from '@/lib/passportUtils';
 
 // Renders a sire/dam parent name. If we have a linked Gecko record, that
 // wins. Otherwise, if the free-text name looks like a breeder reference
@@ -152,6 +154,15 @@ export default function GeckoDetail() {
                                     <Badge variant="secondary">{gecko.sex}</Badge>
                                     {latestWeight != null && <Badge variant="outline" className="border-slate-600">{latestWeight}g</Badge>}
                                 </div>
+                                {gecko.passport_code && (
+                                  <div className="mt-3 flex justify-center">
+                                    <ShareMenu
+                                      url={passportUrl(gecko.passport_code)}
+                                      title={`${gecko.name} on Geck Inspect`}
+                                      subtitle={[gecko.morphs_traits, gecko.sex].filter(Boolean).join(' · ')}
+                                    />
+                                  </div>
+                                )}
                                 {gecko.hatch_date && (
                                     <p className="text-slate-400 text-xs mt-2">
                                         <Calendar className="w-3 h-3 inline mr-1" />

@@ -14,6 +14,7 @@ import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
 } from 'recharts';
 import { Helmet } from 'react-helmet-async';
+import ShareMenu from '@/components/shared/ShareMenu';
 
 /* ─── Design tokens ─────────────────────────────────────────────── */
 const C = {
@@ -656,18 +657,16 @@ export default function AnimalPassport() {
                 >
                   {passportCode}
                 </code>
-                <button
-                  onClick={copyLink}
-                  className="text-xs flex items-center gap-1 px-2 py-0.5 rounded-full transition hover:opacity-70"
-                  style={{ backgroundColor: C.paleSage, color: C.sage }}
-                  title="Copy passport link"
-                >
-                  {copied ? <Check size={12} /> : <Copy size={12} />}
-                  {copied ? 'Copied!' : 'Copy link'}
-                </button>
               </div>
             </div>
-            <StatusBadge status={status} />
+            <div className="flex items-center gap-2">
+              <ShareMenu
+                url={url}
+                title={`${gecko.name} on Geck Inspect`}
+                subtitle={[gecko.morphs_traits, gecko.sex].filter(Boolean).join(' · ')}
+              />
+              <StatusBadge status={status} />
+            </div>
           </div>
 
           {/* ─── Identity row ──────────────────────── */}
