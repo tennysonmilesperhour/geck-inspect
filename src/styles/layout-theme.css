@@ -22,11 +22,11 @@ html, body, #root {
             font-family: 'Inter', system-ui, sans-serif;
           }
 
-          /* Font loaded via <link> in index.html — duplicate @import removed. */
+          /* Font loaded via <link> in index.html, duplicate @import removed. */
 
           /* Landing-page font override. The rest of the app uses Inter
              (declared on .app-container-outline above). The public
-             marketing landing page uses Montserrat — taller, more
+             marketing landing page uses Montserrat, taller, more
              distinctive, and better suited to a landing-page hero
              without being bubbly. Scoped to .landing-font so it
              cascades to every child component (ProductTour,
@@ -45,7 +45,7 @@ html, body, #root {
           /* Safe-area handling for notched iOS devices.
              index.html sets viewport-fit=cover, so env(safe-area-inset-*)
              returns non-zero values whenever the OS chrome (status bar,
-             home indicator, Dynamic Island) overlaps the viewport — both
+             home indicator, Dynamic Island) overlaps the viewport, both
              in a regular Safari tab AND when installed as a PWA. The
              previous @supports (display-mode: standalone) gate meant
              browser users were missing the padding and the top nav was
@@ -163,7 +163,7 @@ html, body, #root {
             font-weight: 400;
           }
 
-          /* Sidebar-only white overrides — scoped to avoid
+          /* Sidebar-only white overrides, scoped to avoid
              cascading into card content throughout the app. */
           .dark [data-sidebar] .bg-white,
           .dark [data-sidebar] .bg-white\/80,
@@ -178,7 +178,7 @@ html, body, #root {
 
           /* Slate palette is overridden in tailwind.config.js to use
              emerald-tinted dark tones instead of Tailwind's default
-             blue-grey. No !important hacks needed — every bg-slate-*,
+             blue-grey. No !important hacks needed, every bg-slate-*,
              text-slate-*, border-slate-* class generates the right
              color at build time. */
 
@@ -280,7 +280,7 @@ html, body, #root {
           }
 
           /* Radix Select triggers need explicit alignment to avoid
-             baseline shifts in flex rows. Scoped to Radix only —
+             baseline shifts in flex rows. Scoped to Radix only , 
              the previous version targeted ALL button/input/select
              globally with !important, breaking flex layouts, hidden
              inputs, and loading states across the app. */
@@ -339,7 +339,7 @@ html, body, #root {
              Previous overrides forced gradients + transforms on every
              emerald button, causing inconsistent appearance. */
 
-          /* Input, text, and border color overrides removed — now handled
+          /* Input, text, and border color overrides removed, now handled
              by the slate/gray palette override in tailwind.config.js. */
 
           .dark .border-slate-700,
@@ -426,7 +426,7 @@ html, body, #root {
                              classes (data-[state=closed]:animate-out etc.).
                              A previous global [data-state="closed"] rule
                              here faded out EVERY Radix element whose state
-                             was "closed" — including Select triggers — which
+                             was "closed", including Select triggers, which
                              made dropdowns invisible until clicked. Removed. */
 
           /* Background bumped from #163026 (light forest) to a darker,
@@ -445,7 +445,7 @@ html, body, #root {
              different hue at the top-left corner so each row reads as
              its own band, while the bottom-right keeps the unified
              dark-forest look so all 9 cards still feel like one set.
-             Tints stay ~18% opacity — the icon color is the louder
+             Tints stay ~18% opacity, the icon color is the louder
              per-row signal. */
           .gecko-card.card-tint-amber {
             background: linear-gradient(160deg, rgba(180, 120, 28, 0.18) 0%, rgba(13, 32, 24, 0.98) 65%);
@@ -455,6 +455,21 @@ html, body, #root {
           }
           .gecko-card.card-tint-violet {
             background: linear-gradient(160deg, rgba(124, 80, 220, 0.20) 0%, rgba(13, 32, 24, 0.98) 65%);
+          }
+          .gecko-card.card-tint-sky {
+            background: linear-gradient(160deg, rgba(56, 167, 242, 0.18) 0%, rgba(13, 32, 24, 0.98) 65%);
+          }
+          .gecko-card.card-tint-teal {
+            background: linear-gradient(160deg, rgba(20, 184, 166, 0.18) 0%, rgba(13, 32, 24, 0.98) 65%);
+          }
+          .gecko-card.card-tint-emerald {
+            background: linear-gradient(160deg, rgba(16, 185, 129, 0.18) 0%, rgba(13, 32, 24, 0.98) 65%);
+          }
+          .gecko-card.card-tint-lime {
+            background: linear-gradient(160deg, rgba(132, 204, 22, 0.18) 0%, rgba(13, 32, 24, 0.98) 65%);
+          }
+          .gecko-card.card-tint-fuchsia {
+            background: linear-gradient(160deg, rgba(217, 70, 239, 0.18) 0%, rgba(13, 32, 24, 0.98) 65%);
           }
 
           .gecko-card:hover {
@@ -483,7 +498,7 @@ html, body, #root {
           /* Keep the inner content laid out at full 16rem so icons
              stay in their original positions even when the rail is
              collapsed. Use min-width (NOT flex-shrink:0) because this
-             is a flex-col child — flex-shrink:0 on the main axis would
+             is a flex-col child, flex-shrink:0 on the main axis would
              prevent the scroll container from shrinking to parent
              height, which silently kills overflow-y: auto. */
           .desktop-sidebar-wrapper .desktop-sidebar-inner > div {
@@ -503,7 +518,7 @@ html, body, #root {
           }
           /* Hide section titles, wordmark, user name/email, footer
              button labels, Privacy link, level badge, and "logged in
-             as" caption while collapsed — AND collapse their box so
+             as" caption while collapsed, AND collapse their box so
              they don't leave behind empty vertical gaps in the rail. */
           .desktop-sidebar-wrapper.is-collapsed .sidebar-collapse-hide {
             opacity: 0;
@@ -552,7 +567,7 @@ html, body, #root {
           }
           /* Sidebar-nav-item hover: disable translate-x shift, the
              outer glow box-shadow, and the full-width background fill
-             while collapsed — otherwise the nav item's 16rem-wide
+             while collapsed, otherwise the nav item's 16rem-wide
              hover highlight clips into a hard rectangle and the glow
              extends past the rail's right edge. Instead, show a
              compact icon-sized pill on hover. */
@@ -577,7 +592,7 @@ html, body, #root {
              when the rail is expanded, and reduces to just the icon
              when collapsed. Icon is horizontally aligned with the
              user profile picture below it (both centered at 2rem from
-             the rail's left edge — avatar is at px-4 + w-4 center,
+             the rail's left edge, avatar is at px-4 + w-4 center,
              logo wrapper gets the same 0.75rem outer padding and its
              inner link shrinks to the icon's intrinsic 2.5rem so the
              still-present wordmark span can't push things left). */
@@ -730,7 +745,7 @@ html, body, #root {
             height: 38px;
             border-radius: 9px;
           }
-          /* Beat the generic coarse-pointer 44x44 bump above — scoped to
+          /* Beat the generic coarse-pointer 44x44 bump above, scoped to
              the compact header only so desktop/tablet still get the
              comfier tap target. */
           @media (hover: none) and (pointer: coarse) {
@@ -744,7 +759,7 @@ html, body, #root {
             height: 18px;
           }
 
-          /* Bottom nav (mobile): mirror the sidebar's glass treatment —
+          /* Bottom nav (mobile): mirror the sidebar's glass treatment , 
              semi-transparent emerald backdrop, soft inner top highlight,
              and an accent bar above the active tab. */
           .gecko-bottom-nav {
