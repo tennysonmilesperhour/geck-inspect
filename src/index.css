@@ -825,3 +825,43 @@ button:focus-visible {
 ::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-thumb-hover);
 }
+
+/* P11 Quality Scale slider. The tier-zone gradient track is applied
+   inline via `style={{ background: tierGradient() }}` so the boundaries
+   always match src/lib/quality.js. Thumb styles are shared. */
+.quality-slider {
+  appearance: none;
+  -webkit-appearance: none;
+  height: 12px;
+  border-radius: 999px;
+  outline: none;
+  cursor: pointer;
+  border: 1px solid rgba(15, 23, 42, 0.4);
+}
+.quality-slider:focus-visible {
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.35);
+}
+.quality-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #f8fafc;
+  border: 2px solid #0f172a;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+  cursor: grab;
+}
+.quality-slider::-webkit-slider-thumb:active {
+  cursor: grabbing;
+  transform: scale(1.05);
+}
+.quality-slider::-moz-range-thumb {
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  background: #f8fafc;
+  border: 2px solid #0f172a;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.45);
+  cursor: grab;
+}
