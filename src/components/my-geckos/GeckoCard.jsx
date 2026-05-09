@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Eye, Edit, Calendar, Weight, Heart, Users2 } from 'lucide-react';
 import { format } from 'date-fns';
 import WeightHealthBadge from '@/components/innovations/WeightHealthBadge';
+import QualityBadge from '@/components/shared/QualityBadge';
 import { getSexIcon, getSexColor } from '@/lib/utils';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 
@@ -84,15 +85,19 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
           )}
         </div>
 
-        {/* Top-right: archive reason */}
-        {archiveIcon && (
+        {/* Top-right: archive reason or quality badge */}
+        {archiveIcon ? (
           <div
             className="absolute top-2 right-2 text-2xl leading-none drop-shadow-lg"
             title={`Archive reason: ${ARCHIVE_LABELS[gecko.archive_reason]}`}
           >
             {archiveIcon}
           </div>
-        )}
+        ) : gecko.quality_score != null ? (
+          <div className="absolute top-2 right-2 drop-shadow-lg">
+            <QualityBadge score={gecko.quality_score} size="sm" />
+          </div>
+        ) : null}
 
         {/* Bottom-right: actions (always visible on touch, hover-only on desktop) */}
         <div className="absolute bottom-2 right-2 flex gap-1.5 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity duration-200">

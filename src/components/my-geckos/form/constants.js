@@ -49,6 +49,10 @@ export const INITIAL_FORM_DATA = {
   image_urls: [],
   weight_grams: '',
   asking_price: '',
+  // P11 Quality Scale: 0-10 numeric, NULL when not graded yet.
+  // Tier (pet/breeder/high_end/investment) is derived in src/lib/quality.js
+  // and mirrored to pattern_grade on save for Market Pricing aggregations.
+  quality_score: null,
   image_crop_data: {},
   // Collection ownership. Null tells the trigger / save flow to use
   // the user's default collection. Set explicitly when the user
