@@ -9,7 +9,7 @@
  *   https://www.morphmarket.com/blog/2022/04/18/bulk-import-export-20/
  *
  * We generate a CSV file the breeder can upload directly to MorphMarket's
- * Bulk Import page — no API needed.
+ * Bulk Import page. No API needed.
  */
 
 // ─── CSV helpers ────────────────────────────────────────────────────────────
@@ -154,20 +154,48 @@ const MM_COLUMNS = [
  * Export an array of gecko objects as a MorphMarket-compatible CSV and
  * trigger a browser download.
  *
- * @param {Array} geckos — gecko records from Supabase
+ * @param {Array} geckos gecko records from Supabase
  * @param {{ filename?: string }} options
  * @returns {string} the filename used
  */
 export function exportMorphMarketCSV(geckos, { filename } = {}) {
-  const header = MM_COLUMNS.map((c) => csvEscape(c.header)).join(',');
-  const rows = geckos.map((g) =>
-    MM_COLUMNS.map((c) => csvEscape(c.exportFn(g))).join(',')
-  );
-  const csv = '\uFEFF' + [header, ...rows].join('\r\n');
+  const csv = buildMorphMarketCSV(geckos);
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const name = filename || `morphmarket-export-${timestampSlug()}.csv`;
   downloadBlob(blob, name);
   return name;
+}
+
+/**
+ * Build the MorphMarket CSV text for the given geckos. Exposed so the
+ * batch builder can preview the file in the UI and copy it to the
+ * clipboard without forcing a download. Includes a UTF-8 BOM so Excel
+ * opens it cleanly.
+ */
+export function buildMorphMarketCSV(geckos) {
+  const header = MM_COLUMNS.map((c) => csvEscape(c.header)).join(',');
+  const rows = geckos.map((g) =>
+    MM_COLUMNS.map((c) => csvEscape(c.exportFn(g))).join(',')
+  );
+  return '\uFEFF' + [header, ...rows].join('\r\n');
+}
+
+/**
+ * The MorphMarket column headers, in the order they're written to the
+ * CSV. Used by the batch builder's preview table so the on-screen
+ * layout matches the file the breeder downloads.
+ */
+export const MM_HEADERS = MM_COLUMNS.map((c) => c.header);
+
+/**
+ * Build a single MorphMarket row as a plain object keyed by column
+ * header. Lets the UI render the same values that end up in the CSV
+ * without re-implementing the export logic.
+ */
+export function buildMorphMarketRow(gecko) {
+  const row = {};
+  for (const c of MM_COLUMNS) row[c.header] = c.exportFn(gecko);
+  return row;
 }
 
 // ─── Import (parse) ─────────────────────────────────────────────────────────
@@ -176,7 +204,7 @@ export function exportMorphMarketCSV(geckos, { filename } = {}) {
  * Parse a MorphMarket CSV export into Geck Inspect gecko records.
  * Returns an array of partial gecko objects ready to create/update.
  *
- * @param {string} csvText — raw CSV file content
+ * @param {string} csvText raw CSV file content
  * @returns {{ records: Array, warnings: string[] }}
  */
 export function parseMorphMarketCSV(csvText) {

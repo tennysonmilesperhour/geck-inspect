@@ -19,6 +19,7 @@ import {
   Loader2,
   ExternalLink,
   Crown,
+  Layers,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -26,7 +27,7 @@ import { exportMorphMarketCSV, parseMorphMarketCSV } from '@/lib/morphmarketSync
 import { Gecko } from '@/entities/all';
 
 /**
- * MorphMarket CSV sync panel — shown on the Seller Console for
+ * MorphMarket CSV sync panel, shown on the Seller Console for
  * Breeder and Enterprise tier users.
  *
  * Export: generates a MorphMarket-compatible CSV from the user's
@@ -142,7 +143,7 @@ export default function MorphMarketSync({ geckos, user, onImportComplete }) {
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-xs text-slate-400 leading-relaxed">
-            Export your listings as a CSV file you can upload directly to{' '}
+            Build a curated CSV you can upload directly to{' '}
             <a
               href="https://www.morphmarket.com/me/ads/import/"
               target="_blank"
@@ -152,17 +153,28 @@ export default function MorphMarketSync({ geckos, user, onImportComplete }) {
               MorphMarket Bulk Import
               <ExternalLink className="w-3 h-3 inline ml-0.5" />
             </a>
-            , or import a MorphMarket CSV export into Geck Inspect.
+            . Open the batch builder to filter by weight, hatch date, sex, and status, then add picks to the export. Or quick-export every "For Sale" gecko at once, or import a MorphMarket CSV back into Geck Inspect.
           </p>
+
+          <Link to={createPageUrl('MorphMarketExport')} className="block">
+            <Button
+              size="sm"
+              className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs h-9 w-full"
+            >
+              <Layers className="w-3.5 h-3.5 mr-1.5" />
+              Open batch builder
+            </Button>
+          </Link>
 
           <div className="grid grid-cols-2 gap-2">
             <Button
               size="sm"
+              variant="outline"
               onClick={handleExport}
-              className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs h-9"
+              className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-9"
             >
               <Download className="w-3.5 h-3.5 mr-1.5" />
-              Export ({forSaleGeckos.length})
+              Quick export ({forSaleGeckos.length})
             </Button>
             <Button
               size="sm"

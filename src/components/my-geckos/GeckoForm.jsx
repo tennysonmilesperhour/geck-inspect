@@ -127,6 +127,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                 // Ensure number fields are string for input type="number"
                 weight_grams: gecko.weight_grams !== undefined && gecko.weight_grams !== null ? gecko.weight_grams.toString() : '',
                 asking_price: gecko.asking_price !== undefined && gecko.asking_price !== null ? gecko.asking_price.toString() : '',
+                marketplace_description: gecko.marketplace_description || '',
                 // Set defaults for other fields if null/undefined
                 name: gecko.name || '',
                 gecko_id_code: gecko.gecko_id_code || '',
@@ -387,8 +388,9 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                 notes: formData.notes,
                 status: formData.status,
                 image_urls: formData.image_urls,
-                asking_price: formData.asking_price !== '' && formData.asking_price !== null ? 
+                asking_price: formData.asking_price !== '' && formData.asking_price !== null ?
                              parseFloat(formData.asking_price) : null,
+                marketplace_description: formData.marketplace_description || null,
                 image_crop_data: cropData,
                 species: formData.species || 'Crested Gecko',
                 // Pass the chosen collection through so the new row lands
@@ -758,6 +760,19 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     </div>
 
                     <div>
+                        <Label htmlFor="marketplace_description">Marketplace Description</Label>
+                        <Textarea
+                            id="marketplace_description"
+                            value={formData.marketplace_description}
+                            onChange={(e) => handleChange('marketplace_description', e.target.value)}
+                            disabled={isArchived}
+                            placeholder="Public-facing listing copy used on Geck Inspect, MorphMarket exports, and other marketplaces. Falls back to Notes if blank."
+                            rows={3}
+                            className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
+                        />
+                    </div>
+
+                    <div>
                         <Label htmlFor="weight_grams">Current Weight (grams)</Label>
                         <Input 
                              id="weight_grams" 
@@ -803,7 +818,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                 <SelectItem value="none" className="text-slate-100 focus:bg-slate-700 focus:text-white">No group</SelectItem>
                                 {feedingGroups.map(g => (
                                     <SelectItem key={g.id} value={g.id} className="text-slate-100 focus:bg-slate-700 focus:text-white">
-                                        Group {g.label}{g.name ? ` — ${g.name}` : ''} ({g.diet_type})
+                                        Group {g.label}{g.name ? `: ${g.name}` : ''} ({g.diet_type})
                                     </SelectItem>
                                 ))}
                             </SelectContent>
