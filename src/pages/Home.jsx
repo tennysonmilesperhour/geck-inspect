@@ -441,15 +441,34 @@ export default function Home() {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {FEATURES.map((f) => {
+            {FEATURES.map((f, idx) => {
               const Icon = f.icon;
+              // Two complementary cool tones across the two rows of three.
+              // Row 1 (idx 0-2): sky (clean tech-blue, echoes the trust strip).
+              // Row 2 (idx 3-5): teal (cool green-blue bridge).
+              // Distinct from the amber/rose/violet trio used by the
+              // INNOVATIVE_FEATURES grid below so the two sections read
+              // as distinct sets, not one long undifferentiated wall.
+              const FEATURE_ROW_TONES = [
+                {
+                  tint: 'card-tint-sky',
+                  iconBox: 'bg-sky-500/15 border-sky-400/25 group-hover:bg-sky-500/25 group-hover:border-sky-300/40',
+                  iconText: 'text-sky-300',
+                },
+                {
+                  tint: 'card-tint-teal',
+                  iconBox: 'bg-teal-500/15 border-teal-400/25 group-hover:bg-teal-500/25 group-hover:border-teal-300/40',
+                  iconText: 'text-teal-300',
+                },
+              ];
+              const tone = FEATURE_ROW_TONES[Math.floor(idx / 3)] || FEATURE_ROW_TONES[0];
               return (
                 <div
                   key={f.title}
-                  className="group gecko-card backdrop-blur p-6 transition-all duration-200"
+                  className={`group gecko-card ${tone.tint} backdrop-blur p-6 transition-all duration-200`}
                 >
-                  <div className="w-12 h-12 rounded-md bg-emerald-500/15 border border-emerald-400/25 flex items-center justify-center mb-4 group-hover:bg-emerald-500/25 group-hover:border-emerald-300/40 transition-colors">
-                    <Icon className="w-6 h-6 text-emerald-300" />
+                  <div className={`w-12 h-12 rounded-md border flex items-center justify-center mb-4 transition-colors ${tone.iconBox}`}>
+                    <Icon className={`w-6 h-6 ${tone.iconText}`} />
                   </div>
                   <h3
                     className="text-lg font-semibold text-white mb-2"
@@ -552,9 +571,15 @@ export default function Home() {
             </p>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-            <div className="gecko-card backdrop-blur p-6">
-              <div className="w-12 h-12 rounded-md bg-sky-500/15 border border-sky-400/25 flex items-center justify-center mb-4">
-                <QrCode className="w-6 h-6 text-sky-300" />
+            {/* Pedigrees row tints: one distinct hue per card so the
+                three trust facets read as three pillars, not one block.
+                Hues are pulled from the not-yet-used end of the
+                landing palette (emerald, lime, fuchsia) so they don't
+                collide with the FEATURES (sky/teal) or INNOVATIVE
+                (amber/rose/violet) grids above. */}
+            <div className="group gecko-card card-tint-emerald backdrop-blur p-6 transition-all duration-200">
+              <div className="w-12 h-12 rounded-md bg-emerald-500/15 border border-emerald-400/25 flex items-center justify-center mb-4 transition-colors group-hover:bg-emerald-500/25 group-hover:border-emerald-300/40">
+                <QrCode className="w-6 h-6 text-emerald-300" />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Animal Passport</h3>
               <p className="text-sm text-slate-400 leading-relaxed">
@@ -563,9 +588,9 @@ export default function Home() {
                 animal.
               </p>
             </div>
-            <div className="gecko-card backdrop-blur p-6">
-              <div className="w-12 h-12 rounded-md bg-sky-500/15 border border-sky-400/25 flex items-center justify-center mb-4">
-                <ShieldCheck className="w-6 h-6 text-sky-300" />
+            <div className="group gecko-card card-tint-lime backdrop-blur p-6 transition-all duration-200">
+              <div className="w-12 h-12 rounded-md bg-lime-500/15 border border-lime-400/25 flex items-center justify-center mb-4 transition-colors group-hover:bg-lime-500/25 group-hover:border-lime-300/40">
+                <ShieldCheck className="w-6 h-6 text-lime-300" />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">One-click ownership transfer</h3>
               <p className="text-sm text-slate-400 leading-relaxed">
@@ -574,9 +599,9 @@ export default function Home() {
                 owners for life.
               </p>
             </div>
-            <div className="gecko-card backdrop-blur p-6">
-              <div className="w-12 h-12 rounded-md bg-sky-500/15 border border-sky-400/25 flex items-center justify-center mb-4">
-                <BadgeCheck className="w-6 h-6 text-sky-300" />
+            <div className="group gecko-card card-tint-fuchsia backdrop-blur p-6 transition-all duration-200">
+              <div className="w-12 h-12 rounded-md bg-fuchsia-500/15 border border-fuchsia-400/25 flex items-center justify-center mb-4 transition-colors group-hover:bg-fuchsia-500/25 group-hover:border-fuchsia-300/40">
+                <BadgeCheck className="w-6 h-6 text-fuchsia-300" />
               </div>
               <h3 className="text-lg font-semibold text-white mb-2">Build a verifiable reputation</h3>
               <p className="text-sm text-slate-400 leading-relaxed">
