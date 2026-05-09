@@ -3,6 +3,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { format } from 'date-fns';
 import { MapPin, ShieldCheck, Star, Edit, Save, FileText, ExternalLink } from 'lucide-react';
+import QualityBadge from '@/components/shared/QualityBadge';
 
 const C = { forest: '#e2e8f0', sage: '#10b981', paleSage: 'rgba(16,185,129,0.1)', warmWhite: '#020617', gold: '#f59e0b', goldLight: 'rgba(245,158,11,0.15)', slate: '#cbd5e1', muted: '#64748b', cardBg: '#0f172a', border: 'rgba(51,65,85,0.5)' };
 
@@ -41,7 +42,7 @@ export default function BreederStorefront() {
         setReviews(revs || []);
         const ownerEmail = p.created_by;
         if (ownerEmail) {
-          const { data: geckos } = await supabase.from('geckos').select('id, name, morphs_traits, image_urls, asking_price, passport_code, sex, status')
+          const { data: geckos } = await supabase.from('geckos').select('id, name, morphs_traits, image_urls, asking_price, passport_code, sex, status, quality_score')
             .eq('created_by', ownerEmail).or('status.ilike.%sale%,status.eq.For Sale');
           setForSale(geckos || []);
           const { data: ownerProfile } = await supabase.from('profiles').select('store_policy').eq('email', ownerEmail).maybeSingle();
@@ -176,7 +177,14 @@ export default function BreederStorefront() {
             {forSale.map(g => (
               <a key={g.id} href={g.passport_code ? `/passport/${g.passport_code}` : `/GeckoDetail?id=${g.id}`}
                 className="rounded-xl border overflow-hidden transition hover:shadow-md" style={{ borderColor: 'rgba(51,65,85,0.5)', backgroundColor: C.cardBg }}>
-                {g.image_urls?.[0] ? <img src={g.image_urls[0]} alt={g.name} className="w-full h-32 object-cover" /> : <div className="w-full h-32 flex items-center justify-center text-3xl" style={{ backgroundColor: C.paleSage }}>🦎</div>}
+                <div className="relative">
+                  {g.image_urls?.[0] ? <img src={g.image_urls[0]} alt={g.name} className="w-full h-32 object-cover" /> : <div className="w-full h-32 flex items-center justify-center text-3xl" style={{ backgroundColor: C.paleSage }}>🦎</div>}
+                  {g.quality_score != null && (
+                    <div className="absolute top-2 right-2 drop-shadow-lg">
+                      <QualityBadge score={g.quality_score} size="sm" />
+                    </div>
+                  )}
+                </div>
                 <div className="p-3">
                   <h3 className="text-sm font-semibold truncate" style={{ color: C.forest }}>{g.name}</h3>
                   <p className="text-xs" style={{ color: C.muted }}>{g.morphs_traits || 'Crested Gecko'}</p>
