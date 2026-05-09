@@ -16,7 +16,7 @@ const VERIFICATION_JSON_LD = [
     '@context': 'https://schema.org',
     '@type': 'Article',
     '@id': `${URL}#article`,
-    headline: 'Geck Inspect Marketplace — Breeder Verification & Trust Policy',
+    headline: 'Geck Inspect Marketplace, Breeder Verification & Trust Policy',
     description:
       'How Geck Inspect verifies breeders and marketplace sellers, the Zero\'s Geckos shipping partnership, buyer protections, and what to expect when buying or selling a crested gecko through the platform.',
     url: URL,
@@ -52,7 +52,7 @@ const VERIFICATION_JSON_LD = [
         name: 'How does Geck Inspect verify breeders on the marketplace?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Sellers on the Geck Inspect marketplace operate from accounts tied to an email-verified identity and a visible profile history. Listings carry the gecko\'s tracked weight history, lineage, and photo timeline as stored on Geck Inspect — so the animal\'s ownership history is transparent rather than asserted in free text. We don\'t issue a single binary "verified" badge; instead we surface the on-platform data (account age, number of geckos tracked, listing history, lineage provenance) so buyers can evaluate sellers with real signal.',
+          text: 'Sellers on the Geck Inspect marketplace operate from accounts tied to an email-verified identity and a visible profile history. Listings carry the gecko\'s tracked weight history, lineage, and photo timeline as stored on Geck Inspect, so the animal\'s ownership history is transparent rather than asserted in free text. We don\'t issue a single binary "verified" badge; instead we surface the on-platform data (account age, number of geckos tracked, listing history, lineage provenance) so buyers can evaluate sellers with real signal.',
         },
       },
       {
@@ -76,7 +76,7 @@ const VERIFICATION_JSON_LD = [
         name: 'What should I check before buying a crested gecko through the marketplace?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Ask for the animal\'s hatch date, current weight, last feeding, last shed, and sire/dam information — the seller already has these in their Geck Inspect tracking. Check the lineage view for multi-generation provenance. Request additional photos with a recent date stamp. Confirm the seller\'s shipping option (Zero\'s Geckos vs independent) and their live-arrival policy in writing before paying.',
+          text: 'Ask for the animal\'s hatch date, current weight, last feeding, last shed, and sire/dam information, the seller already has these in their Geck Inspect tracking. Check the lineage view for multi-generation provenance. Request additional photos with a recent date stamp. Confirm the seller\'s shipping option (Zero\'s Geckos vs independent) and their live-arrival policy in writing before paying.',
         },
       },
       {
@@ -148,10 +148,10 @@ export default function MarketplaceVerification() {
         <div className="space-y-6">
           <Section icon={User} title="How we verify sellers">
             <p>
-              Every marketplace listing is posted by an account tied to a verified email and a visible profile history. We don't issue a binary "verified breeder" badge — instead, buyers see the on-platform data the seller has actually accumulated: account age, number of geckos tracked, lineage depth, previous listing history, and photo timeline for the specific animal being sold.
+              Every marketplace listing is posted by an account tied to a verified email and a visible profile history. We don't issue a binary "verified breeder" badge, instead, buyers see the on-platform data the seller has actually accumulated: account age, number of geckos tracked, lineage depth, previous listing history, and photo timeline for the specific animal being sold.
             </p>
             <p>
-              Geck Inspect stores every gecko's weight log, photo history, and parent attribution as part of normal collection management. When a seller lists that animal, that full history is inherited by the listing. Buyers get real provenance — not a claim in a free-text field.
+              Geck Inspect stores every gecko's weight log, photo history, and parent attribution as part of normal collection management. When a seller lists that animal, that full history is inherited by the listing. Buyers get real provenance, not a claim in a free-text field.
             </p>
           </Section>
 
@@ -178,11 +178,11 @@ export default function MarketplaceVerification() {
 
           <Section icon={MessageSquare} title="What to check before you buy">
             <ul className="list-disc pl-5 space-y-1.5">
-              <li>Ask for the hatch date, current weight, last feeding, and last shed — the seller has these on hand in their Geck Inspect tracking.</li>
+              <li>Ask for the hatch date, current weight, last feeding, and last shed, the seller has these on hand in their Geck Inspect tracking.</li>
               <li>Check the lineage view for sire/dam + multi-generation provenance.</li>
               <li>Request recent, date-stamped photos of the specific animal.</li>
               <li>Confirm the shipping option (Zero's Geckos or independent) and the live-arrival policy in writing before paying.</li>
-              <li>Verify that the seller is shipping to your jurisdiction — some states and countries have restrictions on reptile imports.</li>
+              <li>Verify that the seller is shipping to your jurisdiction, some states and countries have restrictions on reptile imports.</li>
               <li>Prefer sellers with visible account history and lineage depth over new accounts.</li>
             </ul>
           </Section>
