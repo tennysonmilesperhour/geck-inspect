@@ -1,5 +1,5 @@
 /**
- * White Wall — a clean white band along the lateral body wall.
+ * White Wall ,  a clean white band along the lateral body wall.
  */
 
 export default function WhiteWall({ expressed, isSuper }) {

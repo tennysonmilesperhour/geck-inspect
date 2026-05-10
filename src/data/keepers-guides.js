@@ -1,5 +1,5 @@
 /**
- * Keeper's Guide Series — master index.
+ * Keeper's Guide Series ,  master index.
  *
  * Five slide-based educational guides rendered inside the Care Guide
  * page. See src/components/careguide/KeepersGuideTabs.jsx.
