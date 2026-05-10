@@ -12,7 +12,7 @@ import { Search } from 'lucide-react';
 import GeneticCalculator from './GeneticCalculator';
 
 /**
- * Genetic calculator tab — picks any two geckos from the user's collection
+ * Genetic calculator tab ,  picks any two geckos from the user's collection
  * and renders the punnett-square predictions via the underlying
  * GeneticCalculator component. Extracted from src/pages/Breeding.jsx as
  * part of the hairball cleanup.
@@ -46,7 +46,7 @@ export default function GeneticCalculatorTab({ geckos }) {
                   .filter((g) => g.id !== damId)
                   .map((g) => (
                     <SelectItem key={g.id} value={g.id}>
-                      {g.name} — {g.sex}
+                      {g.name} ,  {g.sex}
                     </SelectItem>
                   ))}
               </SelectContent>
@@ -88,7 +88,7 @@ export default function GeneticCalculatorTab({ geckos }) {
                   .filter((g) => g.id !== sireId)
                   .map((g) => (
                     <SelectItem key={g.id} value={g.id}>
-                      {g.name} — {g.sex}
+                      {g.name} ,  {g.sex}
                     </SelectItem>
                   ))}
               </SelectContent>

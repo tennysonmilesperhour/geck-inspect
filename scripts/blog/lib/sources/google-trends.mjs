@@ -1,13 +1,13 @@
 /**
- * Google Trends source — fetches rising-related-queries for a seed list
+ * Google Trends source ,  fetches rising-related-queries for a seed list
  * of gecko terms via Google's public Trends API.
  *
  * We don't use the `google-trends-api` npm package to avoid adding a
  * dependency (the pipeline otherwise only needs @anthropic-ai/sdk).
  * Instead we call the two Trends RPC endpoints directly:
  *
- *   1. /trends/api/explore — returns a bag of widget tokens for a query
- *   2. /trends/api/widgetdata/relatedsearches — returns the related
+ *   1. /trends/api/explore ,  returns a bag of widget tokens for a query
+ *   2. /trends/api/widgetdata/relatedsearches ,  returns the related
  *      queries table (top + rising) for one of those widgets
  *
  * Google prefixes both responses with `)]}',\n` as XSSI protection; we

@@ -17,7 +17,7 @@ import { getUserStorageBytes } from '@/lib/uploadFile';
  * in the geck-inspect-media bucket and renders a progress bar against
  * their tier's max. Renders `Unlimited` for breeder-tier accounts and
  * silently shows the bar at 0% if the RPC is unavailable (migration
- * not yet applied) — never blocks the page.
+ * not yet applied) ,  never blocks the page.
  */
 export default function StorageUsageCard({ user }) {
   const [bytes, setBytes] = useState(null);

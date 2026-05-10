@@ -4,7 +4,7 @@
  *
  * Pulls Search Analytics data (queries + pages, 28-day window) via
  * the Search Console API using a service-account JWT. No SDK
- * dependency — signs the JWT with Node's built-in crypto.
+ * dependency ,  signs the JWT with Node's built-in crypto.
  *
  * Usage (from scripts/growth-report.mjs):
  *
@@ -14,8 +14,8 @@
  *   const queries = await fetchGscQueries(token, siteUrl);
  *
  * Requires env vars:
- *   GOOGLE_SERVICE_ACCOUNT_JSON — full JSON key string
- *   GSC_SITE_URL                — "sc-domain:geckinspect.com" or
+ *   GOOGLE_SERVICE_ACCOUNT_JSON ,  full JSON key string
+ *   GSC_SITE_URL                ,  "sc-domain:geckinspect.com" or
  *                                 "https://geckinspect.com/"
  *
  * Returns null from every fetcher when auth isn't configured, so
@@ -39,7 +39,7 @@ function base64url(buf) {
 
 /**
  * Parse the service-account JSON from env. Returns null if missing
- * or malformed — callers treat null as "skip gracefully".
+ * or malformed ,  callers treat null as "skip gracefully".
  */
 export function loadServiceAccount() {
   const raw = process.env.GOOGLE_SERVICE_ACCOUNT_JSON;
@@ -155,7 +155,7 @@ export async function fetchGscPages(token, siteUrl, { rowLimit = 500 } = {}) {
 }
 
 /**
- * Query × page joint report — needed to find which page ranks for
+ * Query × page joint report ,  needed to find which page ranks for
  * which query. Expensive (rowLimit capped lower), used for the
  * per-page snippet-rewrite recommendations.
  */

@@ -10,14 +10,14 @@ import { GUEST_WRITE_BLOCKED_EVENT } from '@/lib/guestMode';
  * Bottom-right floating disclaimer shown throughout guest mode.
  *
  * Requirements (from the product ask):
- *   - Semi-transparent yellow — demo-y and distinct from the green app
+ *   - Semi-transparent yellow ,  demo-y and distinct from the green app
  *   - Explains that everything on screen is mock data
  *   - Notes the images are fair-use demos and may not actually match
  *     the traits they're being paired with
  *   - Login / Create-account buttons adjacent, but not obtrusive
  *   - Dismissible, so the user can hide it mid-demo if it's in the way
  *
- * Dismissal is per-tab (sessionStorage) — when guest mode ends the
+ * Dismissal is per-tab (sessionStorage) ,  when guest mode ends the
  * flag can go stale but that's fine since we stop rendering anyway.
  * We also pipe guest write-block events into a toast here, keeping
  * all guest-mode UX in one component.
@@ -79,7 +79,7 @@ export default function GuestMockDisclaimer() {
             <p className="text-xs leading-snug text-yellow-50/95">
               Everything shown here is mock data. Photos are fair-use demo
               images and don&rsquo;t necessarily reflect the traits they&rsquo;re
-              paired with — they&rsquo;re here only to show what the UI looks
+              paired with ,  they&rsquo;re here only to show what the UI looks
               like populated.
             </p>
             <div className="mt-2.5 flex items-center gap-2">

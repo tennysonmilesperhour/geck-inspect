@@ -34,7 +34,7 @@ export default function BlogTagPage() {
   }
 
   // For tag pages we accept any tag that has at least one visible post,
-  // even if the tag entity itself isn't in the active tags list — that
+  // even if the tag entity itself isn't in the active tags list ,  that
   // keeps slug-only static-post tags from 404ing.
   const tagName = tag?.name || (visible[0]?.tags || []).find((t) => t.slug === slug)?.name || slug;
 

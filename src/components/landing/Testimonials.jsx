@@ -11,7 +11,7 @@ import { Quote } from 'lucide-react';
  * worse than no section at all, and we want the landing page to
  * grow into the section organically as real quotes come in.
  *
- * Data source is the public RLS policy on `testimonials` — the anon
+ * Data source is the public RLS policy on `testimonials` ,  the anon
  * client can read rows where `approved = true`. No admin curation
  * happens in this component; that's in TestimonialsAdmin.
  */
@@ -43,7 +43,7 @@ export default function Testimonials() {
       })
       .catch(() => {
         if (cancelled) return;
-        // Fail silent — testimonials are optional. We never want a
+        // Fail silent ,  testimonials are optional. We never want a
         // landing-page render to depend on this query succeeding.
         setItems([]);
       });
@@ -52,7 +52,7 @@ export default function Testimonials() {
     };
   }, []);
 
-  // While loading, render nothing (no skeleton — keeps the page tall
+  // While loading, render nothing (no skeleton ,  keeps the page tall
   // even when items eventually = 0). When loaded but below threshold,
   // also render nothing.
   if (!items || items.length < MIN_TESTIMONIALS) return null;

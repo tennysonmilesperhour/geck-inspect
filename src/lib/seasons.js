@@ -10,7 +10,7 @@
  *   summer -> Jun 1  – Aug 31
  *   fall   -> Sep 1  – Nov 30
  *   winter -> Dec 1  – Feb 28/29 (of the NEXT calendar year for dec,
- *             same calendar year for jan/feb — but we anchor winter to
+ *             same calendar year for jan/feb ,  but we anchor winter to
  *             the Dec–Feb span that BEGINS in the target year)
  */
 
@@ -74,8 +74,8 @@ export function seasonStatus(season, year, now = new Date()) {
 // ---------------------------------------------------------------------------
 // Stored-season helpers
 //
-// BreedingPlan.breeding_season is stored as "<year> <Season>" — e.g.
-// "2024 Spring", "2024 Summer", "2024 Fall", "2024 Winter" — by
+// BreedingPlan.breeding_season is stored as "<year> <Season>" ,  e.g.
+// "2024 Spring", "2024 Summer", "2024 Fall", "2024 Winter" ,  by
 // Breeding.jsx's getCurrentSeason(). When we need to group eggs or
 // plans whose breeding_season field is blank, we fall back to inferring
 // from a date with the exact same rule:
@@ -115,7 +115,7 @@ export function currentSeasonLabel(now = new Date()) {
 }
 
 /**
- * Parse a stored label into { year, season } — where `season` is the
+ * Parse a stored label into { year, season } ,  where `season` is the
  * capitalized name ('Spring' | 'Summer' | 'Fall' | 'Winter') and `year`
  * is a number. Returns null if the input doesn't parse.
  */

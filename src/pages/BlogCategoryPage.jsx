@@ -11,7 +11,7 @@ import {
 } from '@/lib/blog-data-source';
 
 /**
- * /blog/category/[slug] — lists every published post in a single
+ * /blog/category/[slug] ,  lists every published post in a single
  * category. Mirrors the BlogIndex layout so a crawler treats the page
  * as a meaningful subset of the blog hub.
  */

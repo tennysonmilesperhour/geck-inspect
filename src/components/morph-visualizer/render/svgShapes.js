@@ -3,7 +3,7 @@
  *
  * All layers render against a shared 800×480 viewBox so the coordinate system
  * is stable across components. The paths describe a side-profile gecko perched
- * on a branch, head facing right, tail trailing left — the most recognizable
+ * on a branch, head facing right, tail trailing left ,  the most recognizable
  * angle for morph ID.
  *
  * The silhouette is intentionally built from smooth, geometric curves rather
@@ -13,7 +13,7 @@
 
 export const VIEWBOX = '0 0 800 480';
 
-// Key anatomical reference points — used by both paths and helpers.
+// Key anatomical reference points ,  used by both paths and helpers.
 export const BODY_ELLIPSE  = { cx: 395, cy: 252, rx: 235, ry: 58 };
 export const HEAD_ELLIPSE  = { cx: 666, cy: 208, rx: 72,  ry: 48 };
 export const NECK_JOIN_X   = 600;
@@ -59,7 +59,7 @@ export const DORSUM_PATH = `
   C 110,252 70,250 60,240 Z
 `;
 
-// ---- Flanks band (middle — clipped to body) ----
+// ---- Flanks band (middle ,  clipped to body) ----
 export const FLANKS_PATH = `
   M 55,248
   L 735,248
@@ -68,7 +68,7 @@ export const FLANKS_PATH = `
   Z
 `;
 
-// ---- Belly band (bottom — clipped to body) ----
+// ---- Belly band (bottom ,  clipped to body) ----
 export const BELLY_PATH = `
   M 55,282
   L 735,282
@@ -77,7 +77,7 @@ export const BELLY_PATH = `
   Z
 `;
 
-// ---- Crest spikes — dorsal ridge from hip to crown ----
+// ---- Crest spikes ,  dorsal ridge from hip to crown ----
 export function crestSpikes() {
   const spikes = [];
   const startX = 165, endX = 670;
@@ -93,7 +93,7 @@ export function crestSpikes() {
   return spikes;
 }
 
-// Supraorbital crest — the signature "eyelash" ridge above the eye.
+// Supraorbital crest ,  the signature "eyelash" ridge above the eye.
 export const SUPRAORBITAL_PATH = `
   M 648,164
   C 666,156 688,154 706,160
@@ -144,7 +144,7 @@ export const LEG_BACK_FAR_PATH = `
   Z
 `;
 
-// Toe pads (lamellae) — signature wide gecko feet.
+// Toe pads (lamellae) ,  signature wide gecko feet.
 export function toePads(cx, cy, count = 5, spread = 11, size = 3.2) {
   const pads = [];
   for (let i = 0; i < count; i += 1) {
@@ -184,7 +184,7 @@ export const BRANCH_PATH = `
   Z
 `;
 
-// Utility — seeded PRNG so dalmatian/LW splotches stay stable across renders.
+// Utility ,  seeded PRNG so dalmatian/LW splotches stay stable across renders.
 export function mulberry32(seed) {
   let a = seed >>> 0;
   return function () {
@@ -195,5 +195,5 @@ export function mulberry32(seed) {
   };
 }
 
-// Shared clip-path id — use it anywhere patterns need to stay on the body.
+// Shared clip-path id ,  use it anywhere patterns need to stay on the body.
 export const BODY_CLIP_ID = 'gecko-body-clip';

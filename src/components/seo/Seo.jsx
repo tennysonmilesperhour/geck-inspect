@@ -19,7 +19,7 @@ import { APP_LOGO_URL } from '@/lib/constants';
  *
  * The component supports:
  *   - title / description / image / path / canonical
- *   - keywords (array or string) — rendered as <meta name="keywords">
+ *   - keywords (array or string) ,  rendered as <meta name="keywords">
  *   - Open Graph (og:*) + Article meta (og:type="article")
  *   - Twitter card with @geckinspect handles
  *   - Optional JSON-LD (object or array; gets wrapped in @graph if array)
@@ -30,7 +30,7 @@ const SITE_NAME = 'Geck Inspect';
 const SITE_HANDLE = '@geckinspect';
 const DEFAULT_IMAGE = 'https://geckinspect.com/og-image.png';
 
-// Default keyword base that every page picks up — keeps the top-level
+// Default keyword base that every page picks up ,  keeps the top-level
 // crested gecko identity searches consistent across the whole app.
 const BASE_KEYWORDS = [
   'crested gecko',
@@ -57,8 +57,8 @@ export default function Seo({
   jsonLd,
 }) {
   const fullTitle = title
-    ? `${title} — ${SITE_NAME}`
-    : `${SITE_NAME} — Crested Gecko Collection, Breeding & Community Platform`;
+    ? `${title} ,  ${SITE_NAME}`
+    : `${SITE_NAME} ,  Crested Gecko Collection, Breeding & Community Platform`;
   const canonical = `${SITE_URL}${path.startsWith('/') ? path : `/${path}`}`;
 
   const mergedKeywords = Array.isArray(keywords)

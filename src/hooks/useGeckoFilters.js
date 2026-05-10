@@ -1,7 +1,7 @@
 /**
- * useGeckoFilters — client-side filtering + sorting for gecko collections.
+ * useGeckoFilters ,  client-side filtering + sorting for gecko collections.
  *
- * Extracted from MyGeckos.jsx. Pure computation — no API calls.
+ * Extracted from MyGeckos.jsx. Pure computation ,  no API calls.
  */
 import { useMemo } from 'react';
 

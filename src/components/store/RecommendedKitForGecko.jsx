@@ -5,7 +5,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { formatCents } from '@/lib/store/format';
 
 /**
- * RecommendedKitForGecko — small aside that turns the gecko-app context
+ * RecommendedKitForGecko ,  small aside that turns the gecko-app context
  * into a personalized supplies recommendation. Mounted on MyGeckos and
  * GeckoDetail.
  *
@@ -16,7 +16,7 @@ import { formatCents } from '@/lib/store/format';
  *  - Render up to 4 picks. Sort active first, gift_friendly second.
  *
  * Stays quiet if the supplies tab is disabled (store_enabled = false) or
- * if there are no matching products yet — no empty card noise.
+ * if there are no matching products yet ,  no empty card noise.
  */
 export default function RecommendedKitForGecko({ gecko, compact = false }) {
   const [enabled, setEnabled] = useState(true);
