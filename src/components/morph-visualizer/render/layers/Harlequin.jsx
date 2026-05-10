@@ -1,5 +1,5 @@
 /**
- * Harlequin pattern — lateral cream markings rising up the flanks.
+ * Harlequin pattern ,  lateral cream markings rising up the flanks.
  * Intensity ladder (0 → 4):
  *   0 = off
  *   1 = trace (a few small blotches low on the flanks)
@@ -27,7 +27,6 @@ function harlequinBlobs(count, seed, heightCap, spreadY) {
 export default function Harlequin({ intensity, palette, suppressed }) {
   if (!intensity || suppressed?.lateral) return null;
 
-  // Amount of coverage scales with intensity.
   const count = [0, 6, 12, 20, 32][intensity] || 0;
   const heightCap = [0, 18, 28, 38, 50][intensity] || 0;
   const spreadY = 255 - (intensity >= 3 ? 30 : 0);
@@ -46,7 +45,6 @@ export default function Harlequin({ intensity, palette, suppressed }) {
         </clipPath>
       </defs>
 
-      {/* Lateral flanks coverage */}
       <g clipPath="url(#harlequin-clip-lateral)">
         {blobs.map((b, i) => (
           <ellipse
@@ -61,7 +59,6 @@ export default function Harlequin({ intensity, palette, suppressed }) {
         ))}
       </g>
 
-      {/* Extreme — pattern climbs onto dorsum */}
       {intensity >= 4 && (
         <g clipPath="url(#harlequin-clip-dorsal)" opacity="0.85">
           {harlequinBlobs(14, 4211, 18, 198).map((b, i) => (
