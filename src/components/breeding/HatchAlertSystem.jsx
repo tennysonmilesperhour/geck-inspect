@@ -1,4 +1,4 @@
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Egg, Notification } from '@/entities/all';
 import { differenceInDays } from 'date-fns';
 import { parseLocalDate } from '@/lib/dateUtils';
@@ -43,6 +43,12 @@ function markNotified(eggId) {
 }
 
 export default function HatchAlertSystem({ user, enabled }) {
+  // Guard against the 15-min interval and the focus listener firing
+  // checkEggs() in parallel — without this, two scans could each pass
+  // the localStorage shouldNotify() check before either has written
+  // its dedup stamp, doubling the notification row insert.
+  const loadingRef = useRef(false);
+
   useEffect(() => {
     if (!user?.email || enabled === false) return undefined;
 
@@ -51,6 +57,8 @@ export default function HatchAlertSystem({ user, enabled }) {
       : DEFAULT_HATCH_ALERT_DAYS;
 
     const checkEggs = async () => {
+      if (loadingRef.current) return;
+      loadingRef.current = true;
       try {
         const eggs = await Egg.filter({ created_by: user.email });
         const today = new Date();
@@ -102,6 +110,8 @@ export default function HatchAlertSystem({ user, enabled }) {
         }
       } catch (err) {
         console.warn('HatchAlertSystem: egg poll failed:', err);
+      } finally {
+        loadingRef.current = false;
       }
     };
 
