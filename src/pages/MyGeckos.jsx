@@ -230,12 +230,14 @@ export default function MyGeckosPage() {
 
             await retryApiCall(async () => Gecko.update(geckoId, updateData));
 
-            if (user) ;
-
-            await loadGeckos();
+            // Close the reason dialog and detail modal first so the user
+            // sees the action complete even if the follow-up reload is slow
+            // or fails.
+            setArchiveDialogGeckoId(null);
             setIsDetailModalOpen(false);
             setSelectedGecko(null);
-            setArchiveDialogGeckoId(null);
+
+            await loadGeckos();
 
             toast({
                 title: shouldArchive ? "Gecko Archived" : "Gecko Unarchived",
@@ -243,7 +245,12 @@ export default function MyGeckosPage() {
             });
         } catch (error) {
             console.error("Failed to archive gecko:", error);
-            toast({ title: "Error", description: "Failed to archive gecko. Please try again.", variant: "destructive" });
+            setArchiveDialogGeckoId(null);
+            toast({
+                title: "Error",
+                description: error?.message || "Failed to archive gecko. Please try again.",
+                variant: "destructive",
+            });
         }
     };
 
