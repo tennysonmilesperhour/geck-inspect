@@ -6,12 +6,12 @@ import { MARKET_INTELLIGENCE_URL } from '@/lib/constants';
 // Topbar launcher for the standalone Market Intelligence (geck-data) app.
 // Only renders for users whose effective tier unlocks `market_intelligence`
 // (Enterprise + admins; grandfathered accounts stay on Breeder and don't
-// get it — that's intentional per the pricing sheet).
+// get it ,  that's intentional per the pricing sheet).
 //
 // When the geck-data deployment exposes an /api/unread-count endpoint
 // (returning `{ count: number }` with CORS allowing this origin) a badge
 // will show. If the endpoint is missing, errors, or the browser is
-// offline, the badge simply doesn't render — no console noise, no
+// offline, the badge simply doesn't render ,  no console noise, no
 // broken UI. The endpoint contract is:
 //   GET <MARKET_INTELLIGENCE_URL>/api/unread-count?email=<user_email>
 //   -> 200 { "count": <integer> }  | any other response = no badge
@@ -37,13 +37,13 @@ export default function MarketIntelligenceButton({ user }) {
           signal: controller.signal,
           credentials: 'omit',
         });
-        if (!res.ok) return; // silently ignore — endpoint may not exist yet
+        if (!res.ok) return; // silently ignore ,  endpoint may not exist yet
         const data = await res.json();
         if (cancelled) return;
         const n = Number(data?.count);
         if (Number.isFinite(n) && n >= 0) setUnreadCount(n);
       } catch {
-        // Network error, CORS error, malformed JSON — all map to "no badge"
+        // Network error, CORS error, malformed JSON ,  all map to "no badge"
       }
     };
 

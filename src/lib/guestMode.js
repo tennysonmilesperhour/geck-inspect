@@ -1,5 +1,5 @@
 /**
- * Guest mode — a browser-local "continue without an account" state.
+ * Guest mode ,  a browser-local "continue without an account" state.
  *
  * A guest has no Supabase session, so RLS will block all writes anyway.
  * This module layers a friendlier UX on top of that: a sessionStorage
@@ -10,7 +10,7 @@
  *
  * The flag lives in sessionStorage so closing the tab ends guest mode
  * (matching the ephemeral session behavior for signed-in users). No
- * cross-tab sync is attempted — each tab is its own guest or its own
+ * cross-tab sync is attempted ,  each tab is its own guest or its own
  * signed-in user.
  */
 const FLAG_KEY = 'geck_inspect_guest_mode';
@@ -38,7 +38,7 @@ export function setGuestMode(on) {
 
 /**
  * Synthetic user object shown while in guest mode. Empty `id` so any
- * page that filters "my X" by user id naturally returns nothing — a
+ * page that filters "my X" by user id naturally returns nothing ,  a
  * guest sees the UI shell, not another user's data.
  */
 export const GUEST_USER = Object.freeze({

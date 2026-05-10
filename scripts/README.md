@@ -36,7 +36,7 @@ scripts/deploy-morph-id.sh --dry-run
 
 ### Hands-on-keyboard steps the script intentionally skips
 
-- `supabase/migrations/README_training_rls_prod.md` — RLS + role
+- `supabase/migrations/README_training_rls_prod.md` ,  RLS + role
   migration. Not auto-applied because its policies depend on
   `profiles.role`, which only exists in prod.
 - Granting the role:
@@ -62,12 +62,12 @@ probe is skipped (RLS hides the schema from anon/authenticated).
 
 What it checks:
 
-- **Schema** — `gecko_images` has every training / embedding column.
-- **RPCs** — `gecko_image_stats`, `is_expert_reviewer`,
+- **Schema** ,  `gecko_images` has every training / embedding column.
+- **RPCs** ,  `gecko_image_stats`, `is_expert_reviewer`,
   `nearest_training_samples`, `review_gecko_image` are callable.
-- **Edge functions** — all three POST/GET with sensible 4xx on bad input
+- **Edge functions** ,  all three POST/GET with sensible 4xx on bad input
   (confirms deployed + reachable, without needing real API calls).
-- **Dataset sanity** — prints current total and verified counts.
+- **Dataset sanity** ,  prints current total and verified counts.
 
 ## Typical cadence
 

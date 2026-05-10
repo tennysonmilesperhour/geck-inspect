@@ -1,5 +1,5 @@
 /**
- * Structural / physical trait controls — crests, crowned, furred, tail,
+ * Structural / physical trait controls ,  crests, crowned, furred, tail,
  * eye color. These are static structural traits (not genetic) that change
  * the silhouette or hue without affecting pattern genetics.
  */

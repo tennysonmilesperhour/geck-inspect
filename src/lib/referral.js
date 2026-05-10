@@ -13,7 +13,7 @@ export function buildReferralLink(referralCode, baseUrl) {
 }
 
 // Pulls ?ref=<code> off the URL on initial load and stashes it in
-// localStorage so we can apply it once the user signs up — even if they
+// localStorage so we can apply it once the user signs up ,  even if they
 // bounce around the site or come back later in the same browser. Strips
 // the param from the URL bar so the dirty link doesn't get bookmarked.
 export function captureReferralFromUrl() {
@@ -28,7 +28,7 @@ export function captureReferralFromUrl() {
     const newUrl = url.pathname + (search ? `?${search}` : '') + url.hash;
     window.history.replaceState({}, '', newUrl);
   } catch {
-    // Non-browser env — ignore
+    // Non-browser env ,  ignore
   }
 }
 
@@ -50,13 +50,13 @@ export function clearPendingReferralCode() {
 
 // If a referral code is pending and the signed-in user has not already
 // been attributed to a referrer, link them. No-ops on self-referral or
-// any failure — the referral link is best-effort and never blocks auth.
+// any failure ,  the referral link is best-effort and never blocks auth.
 export async function applyPendingReferral(user) {
   if (!user?.email) return;
   const code = getPendingReferralCode();
   if (!code) return;
 
-  // Already attributed, or trying to self-refer — drop the pending code.
+  // Already attributed, or trying to self-refer ,  drop the pending code.
   if (user.referred_by || user.referral_code === code) {
     clearPendingReferralCode();
     return;

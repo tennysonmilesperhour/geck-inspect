@@ -1,5 +1,5 @@
 /**
- * Google autocomplete source — hits the public suggest API for seed queries
+ * Google autocomplete source ,  hits the public suggest API for seed queries
  * and returns the full long-tail tree.
  *
  * Endpoint: http://suggestqueries.google.com/complete/search?client=firefox&q=<query>
@@ -8,7 +8,7 @@
  * Why this matters: Google autocomplete is the cleanest signal of what
  * real people type into search boxes. "cappuccino crested gecko" returning
  * "cappuccino crested gecko lethal" tells us the audience is worried about
- * the super form — that's a topic with clear reader stakes.
+ * the super form ,  that's a topic with clear reader stakes.
  *
  * We seed with short heads ("crested gecko", "cappuccino crested gecko",
  * etc.) and walk one level of children per seed. That's ~20 queries total

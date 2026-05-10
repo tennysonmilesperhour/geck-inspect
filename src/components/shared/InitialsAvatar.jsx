@@ -1,5 +1,5 @@
 /**
- * InitialsAvatar — local SVG avatar that renders a user's initials.
+ * InitialsAvatar ,  local SVG avatar that renders a user's initials.
  *
  * Replaces the external ui-avatars.com dependency so the app doesn't
  * depend on a third-party service for every user avatar. Works offline,

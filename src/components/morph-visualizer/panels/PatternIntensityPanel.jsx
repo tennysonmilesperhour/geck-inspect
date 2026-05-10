@@ -1,5 +1,5 @@
 /**
- * Intensity slider for polygenic pattern traits — harlequin, flame,
+ * Intensity slider for polygenic pattern traits ,  harlequin, flame,
  * pinstripe, dalmatian, tiger, brindle, patternless, phantom.
  *
  * Polygenic traits can't be Punnett-squared so we use a 0-4 ladder
@@ -17,7 +17,7 @@ export default function PatternIntensityPanel({ patterns, onChange }) {
       <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
         <Waves className="w-4 h-4 text-emerald-400" />
         Pattern Traits
-        <span className="text-xs font-normal text-slate-500 ml-1">(polygenic — dial 0→extreme)</span>
+        <span className="text-xs font-normal text-slate-500 ml-1">(polygenic ,  dial 0→extreme)</span>
       </h3>
 
       <div className="space-y-2.5">
