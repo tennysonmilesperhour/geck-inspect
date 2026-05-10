@@ -1,5 +1,5 @@
 /**
- * Product tour manifest — drives the screenshot slideshow on the
+ * Product tour manifest ,  drives the screenshot slideshow on the
  * public landing page (rendered by ProductTour.jsx, replacing the
  * gecko-photo HeroSlideshow).
  *
@@ -13,7 +13,7 @@
  *   - Capture the page on a wide laptop viewport (≥1440 wide), zoom 100%.
  *   - Use a populated demo collection so the screenshot looks real,
  *     not like an empty state.
- *   - Crop to remove any browser chrome — the tour frames the image
+ *   - Crop to remove any browser chrome ,  the tour frames the image
  *     in a card, so include the in-app header/sidebar but no Chrome
  *     tabs or OS window decorations.
  */
@@ -23,7 +23,7 @@ export const PRODUCT_TOUR_SLIDES = [
     id: 'dashboard',
     file: 'dashboard.png',
     title: 'Dashboard',
-    caption: 'Your collection at a glance — geckos, breeding pairs, recent activity, weights due.',
+    caption: 'Your collection at a glance ,  geckos, breeding pairs, recent activity, weights due.',
     captureUrl: 'https://geckinspect.com/Dashboard',
   },
   {

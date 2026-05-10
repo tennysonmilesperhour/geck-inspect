@@ -5,8 +5,8 @@ import posthog from 'posthog-js';
  *
  * Reads config from Vite env vars so nothing sensitive lives in the repo:
  *
- *   VITE_POSTHOG_KEY   — your PostHog project API key (phc_...)
- *   VITE_POSTHOG_HOST  — PostHog endpoint (defaults to US cloud)
+ *   VITE_POSTHOG_KEY   ,  your PostHog project API key (phc_...)
+ *   VITE_POSTHOG_HOST  ,  PostHog endpoint (defaults to US cloud)
  *
  * When VITE_POSTHOG_KEY is unset, every function in this module becomes a
  * no-op so local dev and preview deployments don't ping PostHog with noise.
@@ -20,14 +20,14 @@ import posthog from 'posthog-js';
 const API_KEY = import.meta.env.VITE_POSTHOG_KEY;
 const API_HOST = import.meta.env.VITE_POSTHOG_HOST || 'https://us.i.posthog.com';
 
-// Whether PostHog is actually initialized — other modules check this before
+// Whether PostHog is actually initialized ,  other modules check this before
 // calling into the client to avoid a hard dependency in tests / local dev.
 let initialized = false;
 
 export function initPostHog() {
   if (initialized) return;
   if (!API_KEY) {
-    // Intentionally quiet — noisy warnings in local dev are annoying.
+    // Intentionally quiet ,  noisy warnings in local dev are annoying.
     return;
   }
   try {
@@ -36,7 +36,7 @@ export function initPostHog() {
       // SPAs need manual pageview capture (we do it in PostHogPageTracker).
       capture_pageview: false,
       capture_pageleave: true,
-      // Autocapture clicks, form submits, etc. — the whole point of PostHog.
+      // Autocapture clicks, form submits, etc. ,  the whole point of PostHog.
       autocapture: true,
       // Mask all text and attributes by default to protect PII (bios,
       // messages, shipping addresses). PostHog still tracks interactions
@@ -88,7 +88,7 @@ export function capturePageview(path) {
 }
 
 /**
- * Capture a custom product event. Use sparingly and consistently — each
+ * Capture a custom product event. Use sparingly and consistently ,  each
  * unique event name becomes a column in PostHog.
  *
  *   captureEvent('gecko_added', { status: 'Ready to Breed' });

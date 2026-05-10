@@ -22,7 +22,7 @@ export default function MorphGenotypePanel({ mendelian, onChange }) {
       <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
         <Dna className="w-4 h-4 text-emerald-400" />
         Proven Morphs
-        <span className="text-xs font-normal text-slate-500 ml-1">(Mendelian — set zygosity)</span>
+        <span className="text-xs font-normal text-slate-500 ml-1">(Mendelian ,  set zygosity)</span>
       </h3>
 
       <div className="space-y-2">

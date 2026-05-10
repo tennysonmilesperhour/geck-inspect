@@ -1,5 +1,5 @@
 /**
- * Rarity + value panel — shows a tier label, an estimated USD range,
+ * Rarity + value panel ,  shows a tier label, an estimated USD range,
  * and the breakdown of which traits are contributing.
  */
 

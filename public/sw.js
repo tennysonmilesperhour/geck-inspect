@@ -1,9 +1,9 @@
 /**
- * Geck Inspect service worker — push notifications only.
+ * Geck Inspect service worker ,  push notifications only.
  *
  * We intentionally do NOT cache assets or add offline support here.
  * Vite already emits hashed filenames with long-cache headers, and the
- * HTML shell is prerendered — layering our own cache on top is a
+ * HTML shell is prerendered ,  layering our own cache on top is a
  * well-known source of "why is the site stuck on an old version" bugs.
  * Keep this file narrowly scoped to what push requires.
  */
@@ -20,7 +20,7 @@ self.addEventListener('activate', (event) => {
 
 // Push notification arrival. Server payload is JSON:
 //   { title, body, url, icon, tag, data }
-// We always show a user-visible notification on iOS — Apple revokes
+// We always show a user-visible notification on iOS ,  Apple revokes
 // push permission if a push handler ever resolves without one.
 self.addEventListener('push', (event) => {
   let payload = {};

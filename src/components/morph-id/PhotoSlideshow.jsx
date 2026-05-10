@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 
 // Auto-advancing image carousel. `urls` is an array of image URLs; the
 // primary (first) one is considered the cover. Hovering pauses. Single-
-// image callers get a plain <img> — no carousel chrome.
+// image callers get a plain <img> ,  no carousel chrome.
 export default function PhotoSlideshow({
   urls = [],
   alt = 'Gecko',

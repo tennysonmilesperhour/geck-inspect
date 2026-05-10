@@ -1,5 +1,5 @@
 /**
- * useWeightHealthScore — analyzes a gecko's weight records to produce
+ * useWeightHealthScore ,  analyzes a gecko's weight records to produce
  * a health score (green/yellow/red) and trend data.
  *
  * Algorithm:
@@ -65,15 +65,15 @@ export function useWeightHealthScore(weightRecords) {
     if (percentChange <= -10) {
       score = 'critical';
       color = 'red';
-      label = `Dropped ${Math.abs(percentChange)}% — check in immediately`;
+      label = `Dropped ${Math.abs(percentChange)}% ,  check in immediately`;
     } else if (percentChange <= -5) {
       score = 'warning';
       color = 'amber';
-      label = `Down ${Math.abs(percentChange)}% — monitor closely`;
+      label = `Down ${Math.abs(percentChange)}% ,  monitor closely`;
     } else if (percentChange >= 5) {
       score = 'growing';
       color = 'emerald';
-      label = `Up ${percentChange}% — healthy growth`;
+      label = `Up ${percentChange}% ,  healthy growth`;
     } else {
       score = 'stable';
       color = 'emerald';

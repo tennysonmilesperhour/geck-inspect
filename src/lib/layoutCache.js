@@ -7,7 +7,7 @@
  * so they belong in a plain .js module.
  */
 
-// Aggressive cache with long durations — we're caching things like the
+// Aggressive cache with long durations ,  we're caching things like the
 // current user and their contribution counts, which don't change often.
 class DataCache {
   constructor() {

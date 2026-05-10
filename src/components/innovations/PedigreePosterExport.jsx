@@ -1,5 +1,5 @@
 /**
- * PedigreePosterExport — one-click export of a pedigree tree as a
+ * PedigreePosterExport ,  one-click export of a pedigree tree as a
  * high-res PNG with a "Made with Geck Inspect" watermark.
  *
  * Uses html2canvas (already a dep) to render a hidden pedigree
@@ -41,7 +41,7 @@ async function captureAndDownload(element, geckoName, setStatus) {
     ctx.fillStyle = 'rgba(134, 239, 172, 0.4)';
     ctx.textAlign = 'right';
     ctx.fillText(
-      'Made with Geck Inspect \u2022 geckinspect.com',
+      'Made with Geck Inspect • geckinspect.com',
       canvas.width - padding,
       canvas.height - padding
     );

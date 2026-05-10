@@ -37,13 +37,13 @@ export default function StoreOrders() {
 
   return (
     <StoreLayout breadcrumbs={[{ label: 'Supplies', to: '/Store' }, { label: 'Orders' }]}>
-      <Seo title="Your orders — Geck Inspect" path="/Store/orders" description="" noIndex />
+      <Seo title="Your orders ,  Geck Inspect" path="/Store/orders" description="" noIndex />
       <h1 className="text-2xl font-bold text-slate-100 mb-4">Your orders</h1>
 
       {!isAuthenticated ? (
         <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-6 text-sm text-slate-300">
           <p>Sign in to see your order history. If you checked out as a guest, look for the order
-          link in your email receipt — it has a magic link to view your order without an account.</p>
+          link in your email receipt ,  it has a magic link to view your order without an account.</p>
           <Link to="/AuthPortal" className="inline-block mt-3 text-emerald-300 hover:text-emerald-200">Sign in →</Link>
         </div>
       ) : loading ? (

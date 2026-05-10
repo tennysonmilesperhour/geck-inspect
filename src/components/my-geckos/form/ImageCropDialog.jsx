@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
  *
  * Used by GeckoForm to let the user pick the focus point for a gecko's
  * thumbnail (stored as { x, y } in percent of the image container).
- * Supports both mouse and touch. Self-contained — no external state.
+ * Supports both mouse and touch. Self-contained ,  no external state.
  */
 export default function ImageCropDialog({ imageUrl, initialCrop, onSave, onClose }) {
   const [cropPosition, setCropPosition] = useState(initialCrop || { x: 50, y: 50 });

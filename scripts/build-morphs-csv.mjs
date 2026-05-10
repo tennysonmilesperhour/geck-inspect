@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Generate /morphs.csv — the open, machine-readable crested gecko
+ * Generate /morphs.csv ,  the open, machine-readable crested gecko
  * morph dataset sourced from src/data/morph-guide.js.
  *
  * The GEO audit's 30-day plan flagged an open dataset as a
@@ -10,7 +10,7 @@
  *
  *   1. Becomes a citable primary source for "crested gecko morphs by
  *      inheritance" style queries.
- *   2. Works as a machine-readable complement to llms-full.txt — some
+ *   2. Works as a machine-readable complement to llms-full.txt ,  some
  *      ingestion pipelines prefer CSV to markdown for tabular data.
  *
  * The CSV is regenerated on every build from the canonical morph

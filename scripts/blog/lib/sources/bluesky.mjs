@@ -1,5 +1,5 @@
 /**
- * Bluesky source — queries the public `searchPosts` XRPC endpoint for
+ * Bluesky source ,  queries the public `searchPosts` XRPC endpoint for
  * gecko-relevant terms.
  *
  * Endpoint:  https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts
@@ -8,7 +8,7 @@
  *
  * Why this is useful: Bluesky's reptile community has grown since 2024
  * as hobbyists migrated off Twitter. Posts skew toward breeder
- * announcements and real-time debate — the closest substitute for the
+ * announcements and real-time debate ,  the closest substitute for the
  * forum/subreddit signal we used to pull from Reddit (bot-blocked) and
  * the Pangea forum (offline).
  *

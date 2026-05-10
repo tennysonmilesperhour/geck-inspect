@@ -1,5 +1,5 @@
 /**
- * Visible summary of what is "on" in the current selection — tag chips that
+ * Visible summary of what is "on" in the current selection ,  tag chips that
  * describe the phenotype at a glance.
  */
 

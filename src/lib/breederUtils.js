@@ -9,7 +9,7 @@
  *   2. Find every gecko in the DB attributed to a given breeder
  *   3. Render a pretty display name from a slug in the URL
  *
- * There is no `breeders` table yet — attribution is derived at query
+ * There is no `breeders` table yet ,  attribution is derived at query
  * time. When we eventually add a normalized table, this module is the
  * only place we'll need to update the mapping logic.
  */
@@ -41,7 +41,7 @@ export function breederSlug(name) {
 }
 
 /**
- * Fully alphanumeric canonical form — used to match two variants of the
+ * Fully alphanumeric canonical form ,  used to match two variants of the
  * same breeder name that differ only in punctuation/spacing.
  *   breederCanonical('Altitude Exotics')    → 'altitudeexotics'
  *   breederCanonical('Altitudeexotics.com') → 'altitudeexotics'
