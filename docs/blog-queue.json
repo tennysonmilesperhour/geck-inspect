@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-05-08T08:24:39.636Z",
+  "lastUpdated": "2026-05-10T00:20:56.503Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -49,7 +49,7 @@
       "title": "Why Super Cappuccino Breeding Is Risky (And What Breeders Get Wrong)",
       "slug": "super-cappuccino-breeding-risks",
       "category": "breeding",
-      "status": "drafted",
+      "status": "published",
       "score": {
         "demand": 7,
         "originality": 8,
@@ -59,7 +59,7 @@
       },
       "createdAt": "2026-05-01T10:54:37.003Z",
       "draftedAt": "2026-05-08T08:24:39.636Z",
-      "publishedAt": null,
+      "publishedAt": "2026-05-10T00:20:56.503Z",
       "evidence": [
         {
           "source": "youtube",
