@@ -1,5 +1,5 @@
 /**
- * Secondary / accent traits — portholes, kneecaps, drippy dorsal, crest tips.
+ * Secondary / accent traits ,  portholes, kneecaps, drippy dorsal, crest tips.
  * Small cosmetic overlays on top of the main pattern stack.
  */
 
@@ -18,7 +18,7 @@ export default function Accents({ accents, palette }) {
         </clipPath>
       </defs>
 
-      {/* Portholes — round white circles along the lateral body */}
+      {/* Portholes ,  round white circles along the lateral body */}
       {accents.portholes && (
         <g clipPath="url(#flank-clip-accents)">
           {Array.from({ length: 6 }).map((_, i) => {
@@ -34,7 +34,7 @@ export default function Accents({ accents, palette }) {
         </g>
       )}
 
-      {/* Kneecaps — white patches on the knees */}
+      {/* Kneecaps ,  white patches on the knees */}
       {accents.kneecaps && (
         <g>
           <ellipse cx={600} cy={335} rx="9" ry="7" fill="#f3ede0" />
@@ -43,7 +43,7 @@ export default function Accents({ accents, palette }) {
         </g>
       )}
 
-      {/* Drippy dorsal — dripping pattern from the dorsal line down the flanks */}
+      {/* Drippy dorsal ,  dripping pattern from the dorsal line down the flanks */}
       {accents.drippy_dorsal && (
         <g opacity="0.85">
           {Array.from({ length: 9 }).map((_, i) => {
@@ -55,7 +55,7 @@ export default function Accents({ accents, palette }) {
         </g>
       )}
 
-      {/* White-tipped crests — tiny light dots at each crest-spike tip */}
+      {/* White-tipped crests ,  tiny light dots at each crest-spike tip */}
       {accents.white_tipped_crests && (
         <g>
           {crestSpikes().map((s, i) => (

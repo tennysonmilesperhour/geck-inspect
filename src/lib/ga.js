@@ -11,7 +11,7 @@
  *   trackEvent('signup_completed', { method: 'email' });
  *   trackEvent('gecko_added', { morph: 'lilly-white' });
  *
- * Page views are handled by src/lib/GA4PageTracker.jsx — do not fire
+ * Page views are handled by src/lib/GA4PageTracker.jsx ,  do not fire
  * `page_view` events manually from feature code.
  */
 
@@ -37,7 +37,7 @@ export function trackEvent(name, params = {}) {
   try {
     window.gtag('event', name, params);
   } catch {
-    // Swallow — analytics failures must never break the UX.
+    // Swallow ,  analytics failures must never break the UX.
   }
 }
 

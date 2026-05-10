@@ -1,5 +1,5 @@
 /**
- * Preset gallery — one-click iconic morphs so users can seed the visualizer
+ * Preset gallery ,  one-click iconic morphs so users can seed the visualizer
  * with well-known crested gecko looks and see exactly what the genotype does.
  */
 

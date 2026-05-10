@@ -1,5 +1,5 @@
 /**
- * WeightHealthBadge — compact health indicator for a gecko's weight trend.
+ * WeightHealthBadge ,  compact health indicator for a gecko's weight trend.
  *
  * Shows a color-coded badge (green/amber/red) with a trend arrow.
  * Drop it onto gecko cards, detail modals, or the dashboard.

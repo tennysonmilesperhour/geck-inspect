@@ -1,5 +1,5 @@
 /**
- * Base color picker — grid of swatches with rarity indicators.
+ * Base color picker ,  grid of swatches with rarity indicators.
  */
 
 import { BASE_COLORS } from '../data/traits';

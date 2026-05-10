@@ -28,7 +28,7 @@ export function captureSignupGrantFromUrl() {
       window.history.replaceState({}, '', url.toString());
     }
   } catch {
-    // ignore — best-effort
+    // ignore ,  best-effort
   }
 }
 
@@ -59,9 +59,6 @@ export async function applyPendingSignupGrant() {
       });
       return data;
     }
-    // Specific failure reasons we should surface to the user are handled
-    // by the AuthPortal UI; for soft failures (already_redeemed, expired)
-    // we just drop the token to stop retrying.
     if (data?.reason && ['already_redeemed', 'expired', 'voided', 'token_not_found'].includes(data.reason)) {
       clearPendingSignupGrant();
     }

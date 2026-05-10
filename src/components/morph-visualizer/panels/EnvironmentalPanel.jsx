@@ -1,5 +1,5 @@
 /**
- * Environmental state controls — fire state, age, shed state.
+ * Environmental state controls ,  fire state, age, shed state.
  * Not inherited, but dramatically change how a gecko looks.
  */
 

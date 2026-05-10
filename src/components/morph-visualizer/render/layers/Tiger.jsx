@@ -1,5 +1,5 @@
 /**
- * Tiger — vertical dark bands across the ribs.
+ * Tiger ,  vertical dark bands across the ribs.
  * Brindle is the same layer with broken/feathered bands.
  */
 

@@ -8,7 +8,7 @@ Eight slides are configured. Capture each at **1600 × 1000 px (16:10)**, PNG or
 
 | File | Page to capture | What to show |
 |---|---|---|
-| `dashboard.png` | `/Dashboard` | Populated dashboard — recent activity, weights due, breeding pairs |
+| `dashboard.png` | `/Dashboard` | Populated dashboard ,  recent activity, weights due, breeding pairs |
 | `lineage-tree.png` | `/MyGeckos` → open a gecko → Lineage tab | Multi-generation tree with at least 3 generations visible |
 | `genetics-calculator.png` | `/calculator` | A populated calculation with multi-trait outcomes |
 | `morph-guide.png` | `/MorphGuide` | The morph index grid with photo tiles |

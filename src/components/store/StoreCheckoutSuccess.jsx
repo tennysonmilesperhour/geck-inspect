@@ -22,10 +22,10 @@ export default function StoreCheckoutSuccess() {
 
   return (
     <StoreLayout breadcrumbs={[{ label: 'Supplies', to: '/Store' }, { label: 'Order confirmed' }]}>
-      <Seo title="Order confirmed — Geck Inspect" path="/Store/checkout/success" description="" noIndex />
+      <Seo title="Order confirmed ,  Geck Inspect" path="/Store/checkout/success" description="" noIndex />
       <div className="text-center py-16 max-w-lg mx-auto">
         <CheckCircle2 className="w-14 h-14 text-emerald-400 mx-auto mb-4" />
-        <h1 className="text-2xl font-bold text-slate-100">Thanks — your order is in.</h1>
+        <h1 className="text-2xl font-bold text-slate-100">Thanks ,  your order is in.</h1>
         <p className="text-sm text-slate-400 mt-2 leading-relaxed">
           A confirmation email is on its way with your order details and tracking
           info as soon as it ships. If you checked out as a guest, the email

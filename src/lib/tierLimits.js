@@ -1,5 +1,5 @@
 /**
- * Tier limits — single source of truth for what each membership tier
+ * Tier limits ,  single source of truth for what each membership tier
  * unlocks. Imported by upload validation, the Settings storage card,
  * the Subscription page, and any feature gate that needs to know
  * whether a user has hit a quota.
@@ -10,7 +10,7 @@
  * to keep Free a real funnel into Keeper.
  *
  * `null` means unlimited. Always check `if (limit == null)` before
- * comparing usage — never treat null as 0.
+ * comparing usage ,  never treat null as 0.
  */
 
 const MB = 1024 * 1024;

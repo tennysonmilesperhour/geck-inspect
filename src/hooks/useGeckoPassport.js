@@ -1,5 +1,5 @@
 /**
- * useGeckoPassport — generates a verifiable digital passport for a gecko.
+ * useGeckoPassport ,  generates a verifiable digital passport for a gecko.
  *
  * Creates a tamper-evident token (base64-encoded JSON + checksum) that
  * encodes the gecko's lineage, weight history, morph classification,
@@ -7,7 +7,7 @@
  *
  *   geckinspect.com/passport?data=<token>
  *
- * No server-side signing is needed — the checksum ensures the data
+ * No server-side signing is needed ,  the checksum ensures the data
  * hasn't been tampered with, and the link points back to the app for
  * visual verification.
  *
@@ -16,7 +16,7 @@
  * cryptographic non-repudiation.
  */
 
-// Simple checksum for tamper-evidence (not cryptographic — see note above)
+// Simple checksum for tamper-evidence (not cryptographic ,  see note above)
 function simpleChecksum(str) {
   let hash = 0;
   for (let i = 0; i < str.length; i++) {

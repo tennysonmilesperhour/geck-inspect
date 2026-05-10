@@ -1,5 +1,5 @@
 /**
- * Eye — large round iris with a vertical slit pupil. Color driven by structural.
+ * Eye ,  large round iris with a vertical slit pupil. Color driven by structural.
  * Eyes can't be blinked (no eyelids in crested geckos), so a strong eye-ring
  * gives the face its definition.
  */

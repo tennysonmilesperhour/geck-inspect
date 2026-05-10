@@ -27,7 +27,7 @@ export default class ErrorBoundary extends React.Component {
                         <div className="text-5xl">🦎</div>
                         <h2 className="text-xl font-bold text-slate-100">Something went wrong</h2>
                         <p className="text-slate-400 text-sm">
-                            An unexpected error occurred. Your data is safe — please refresh the page to continue.
+                            An unexpected error occurred. Your data is safe ,  please refresh the page to continue.
                         </p>
                         {this.state.error?.message && (
                             <p className="text-xs text-slate-600 font-mono bg-slate-800 rounded p-2 text-left break-all">

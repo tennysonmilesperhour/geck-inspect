@@ -1,5 +1,5 @@
 /**
- * Base body layer — the flat fill of the gecko silhouette.
+ * Base body layer ,  the flat fill of the gecko silhouette.
  * Uses a vertical gradient to suggest a slightly darker dorsum shadow
  * against a lit belly, which reads as dimensional without being cartoony.
  */
@@ -45,17 +45,14 @@ export default function BaseBody({ palette, structural }) {
       <path d={LEG_BACK_NEAR_PATH}  fill="url(#legGrad)" />
       <path d={LEG_FRONT_NEAR_PATH} fill="url(#legGrad)" />
 
-      {/* toe pads / lamellae — signature gecko feature */}
+      {/* toe pads / lamellae ,  signature gecko feature */}
       <g fill={shadow} opacity="0.9">
-        {/* front-right foot */}
         {toePads(597, 395, 5, 10, 3.4).map((p, i) => (
           <ellipse key={`tf-${i}`} cx={p.cx} cy={p.cy} rx={p.r} ry={p.r * 1.2} />
         ))}
-        {/* back-right foot */}
         {toePads(205, 395, 5, 10, 3.4).map((p, i) => (
           <ellipse key={`tb-${i}`} cx={p.cx} cy={p.cy} rx={p.r} ry={p.r * 1.2} />
         ))}
-        {/* far legs — small hints */}
         {toePads(620, 398, 3, 6, 2.4).map((p, i) => (
           <ellipse key={`tff-${i}`} cx={p.cx} cy={p.cy} rx={p.r} ry={p.r * 1.2} opacity="0.7" />
         ))}

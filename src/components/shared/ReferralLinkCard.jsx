@@ -5,7 +5,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { buildReferralLink } from '@/lib/referral';
 
 // Sidebar card surfacing the user's referral link. Sits above the
-// Membership CTA so it's seen alongside the upgrade prompt — every
+// Membership CTA so it's seen alongside the upgrade prompt ,  every
 // signed-in user has a link, and they earn 10% of any referred user's
 // subscription revenue for life. Hidden for guests / signed-out users
 // (no link to share) and collapses with the rest of the sidebar chrome
@@ -41,7 +41,7 @@ export default function ReferralLinkCard() {
         <p className="mt-2 text-[11px] leading-snug text-emerald-100/80">
           Share your link. Earn{' '}
           <span className="font-semibold text-emerald-200">10%</span> of every
-          subscription paid by anyone who signs up through it — for life.
+          subscription paid by anyone who signs up through it ,  for life.
         </p>
         <Button
           type="button"
