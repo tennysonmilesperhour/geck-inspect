@@ -18,7 +18,7 @@
  *      `membership_billing_cycle` to `billing_cycle` on the user's
  *      profile (lifetime users keep `billing_cycle = 'lifetime'`
  *      forever, which the entitlement layer treats as a permanent
- *      grant ,  see PlanLimitChecker.isLifetimeMember).
+ *      grant. See PlanLimitChecker.isLifetimeMember.
  */
 
 export const BILLING_CYCLES = ['monthly', 'annual', 'lifetime'];
