@@ -1,5 +1,5 @@
 /**
- * Market Analytics — Query Facade
+ * Market Analytics: Query Facade
  *
  * The ONLY interface visualization components use to fetch analytics
  * data. Every exported query is async; data is loaded lazily from the
@@ -7,7 +7,7 @@
  * in memory, and transparently falls back to deterministic mock
  * fixtures if the fetch fails (network error, CORS, 404, bad JSON,
  * timeout). Views never need to know whether they're in live or
- * preview mode — the shape is identical.
+ * preview mode; the shape is identical.
  *
  * Every returned aggregate includes:
  *   - the underlying `sample_size` (how many observations)
@@ -57,8 +57,19 @@ const SNAPSHOT_TTL_MS     = 15 * 60_000; // 15 min
 let _data = null;
 let _loadedAt = 0;
 let _loadPromise = null;
-let _dataSource = null; // null | 'live' | 'preview'
+let _dataSource = null; // null | 'live' | 'preview' | 'error'
 let _generatedAt = null; // ISO-8601 timestamp if live snapshot provides it
+let _loadError = null;   // Error message string when _dataSource === 'error'
+
+// Mock fixtures used to mask snapshot fetch failures by default. In dev that
+// is desirable (lets the UI render with no backend running); in production
+// it hid every real outage and was a major reason the user could not tell
+// what was actually flowing. Gate the silent fallback behind DEV so prod
+// shows an empty-state + error the user can act on.
+const ALLOW_MOCK_FALLBACK =
+  typeof import.meta !== 'undefined' &&
+  import.meta.env &&
+  (import.meta.env.DEV === true || import.meta.env.VITE_ALLOW_MOCK_FALLBACK === 'true');
 
 function buildFallbackData() {
   return {
@@ -104,12 +115,34 @@ export async function ensureLoaded() {
       _data = coerced;
       _dataSource = 'live';
       _generatedAt = typeof json.generated_at === 'string' ? json.generated_at : null;
-    } catch {
-      // Silent fallback — any failure keeps the module working with
-      // preview data. No console noise (the banner tells the user).
-      _data = buildFallbackData();
-      _dataSource = 'preview';
-      _generatedAt = null;
+      _loadError = null;
+    } catch (err) {
+      const message = err && err.message ? err.message : String(err);
+      if (ALLOW_MOCK_FALLBACK) {
+        _data = buildFallbackData();
+        _dataSource = 'preview';
+        _generatedAt = null;
+        _loadError = null;
+      } else {
+        // Production: surface the failure instead of masking it. Components
+        // calling getDataSource() === 'error' can render an empty state with
+        // a retry, and getLoadError() carries the underlying message for the
+        // banner. Returning an empty-but-shape-correct dataset keeps the
+        // facade callers from blowing up.
+        _data = {
+          transactions: [],
+          breeders: [],
+          supply_pipeline: [],
+          demand_signals: {},
+          market_events: [],
+        };
+        _dataSource = 'error';
+        _generatedAt = null;
+        _loadError = message;
+        if (typeof console !== 'undefined') {
+          console.warn('[marketAnalytics] snapshot load failed:', message);
+        }
+      }
     }
     _loadedAt = Date.now();
     return _data;
@@ -128,10 +161,12 @@ export function invalidateSnapshot() {
   _loadedAt = 0;
   _dataSource = null;
   _generatedAt = null;
+  _loadError = null;
 }
 
 export function getDataSource() { return _dataSource; }
 export function getSnapshotGeneratedAt() { return _generatedAt; }
+export function getLoadError() { return _loadError; }
 
 // ---------- Internal helpers ------------------------------------------
 const tx       = () => _data?.transactions || [];
@@ -183,7 +218,7 @@ function filterTx({ combo_id, region, regions, source_id, sources, timeframe, st
   return out;
 }
 
-// Identity — each exported query is already async, so plain return works.
+// Identity helper: each exported query is already async, so plain return works.
 // Kept as a no-op wrapper for minimal churn in existing call sites.
 const ok = (v) => v;
 
@@ -289,7 +324,7 @@ export async function queryPeakIndicators({ regions = [] } = {}) {
     const olderAvg  = mean(older.map((r) => r.sold_price)) || recentAvg;
     const priceMomentum = clamp(pct(recentAvg, olderAvg) / 30);          // +30% → +1
     const volumeMomentum = clamp(pct(recent.length, Math.max(1, older.length / 3)) / 50);
-    // Supply pressure: use pipeline signal — normalized against a 50 baseline.
+    // Supply pressure: use pipeline signal, normalized against a 50 baseline.
     const pipe = supply().find((p) => p.combo_id === c.id);
     const upcoming = pipe ? pipe.series.slice(0, 3).reduce((s, m) => s + m.projected_hatchlings, 0) : 0;
     const supplyPressure = clamp((upcoming - 25) / 50);
@@ -475,8 +510,8 @@ export async function querySupplyPipeline({ combos } = {}) {
   await ensureLoaded();
   let data = supply();
   if (combos?.length) data = data.filter((d) => combos.includes(d.combo_id));
-  // Attach a confidence based on active_pairs — more pairs logged = more
-  // reliable forecast.
+  // Attach a confidence based on active_pairs (more pairs logged = more
+  // reliable forecast).
   return ok(data.map((d) => ({
     ...d,
     confidence: scoreConfidence({ sourceId: 'internal.breeding', sampleSize: d.active_pairs * 2 }),
@@ -500,7 +535,7 @@ export async function queryBreederShare({ regions = [], timeframe = '12m' } = {}
     breeder_id: id,
     name: breederMap[id]?.name ?? id,
     tier: breederMap[id]?.tier ?? 'unknown',
-    region: breederMap[id]?.region ?? '—',
+    region: breederMap[id]?.region ?? '-',
     revenue: Math.round(v.revenue),
     volume: v.count,
     share_pct: +((v.revenue / totalRevenue) * 100).toFixed(2),

@@ -6,18 +6,20 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { 
-    Brain, 
-    Database, 
-    TrendingUp, 
-    Eye, 
+import {
+    Brain,
+    Database,
+    TrendingUp,
+    Eye,
     CheckCircle,
     Loader2,
     BarChart3,
     Zap,
-    Target
+    Target,
+    Globe
 } from 'lucide-react';
 import { recognizeGeckoMorph } from '../functions/recognizeGeckoMorph';
+import { getGeckDataTrainingStats } from '@/lib/geckDataClient';
 
 export default function TrainModelPage() {
     const [user, setUser] = useState(null);
@@ -30,6 +32,13 @@ export default function TrainModelPage() {
         morphCategories: 0,
         recentSubmissions: 0
     });
+
+    // Inventory in geck-data (the standalone Market Intelligence project,
+    // populated by the Eye in the Sky extension and the external reference
+    // importers). Surfaced here so admins can see how much labeled training
+    // material is available beyond the local base44 store.
+    const [geckDataStats, setGeckDataStats] = useState(null);
+    const [geckDataError, setGeckDataError] = useState(null);
     
     // Model testing
     const [testImage, setTestImage] = useState(null);
@@ -75,6 +84,15 @@ export default function TrainModelPage() {
                         labeledImages: labeledImages.length,
                         morphCategories: morphs.size,
                         recentSubmissions: recentSubmissions.length
+                    });
+
+                    // Fire and forget; failure here renders an empty card,
+                    // not a blocked page. The hook returns its own error
+                    // string when the geck-data anon key is missing or the
+                    // project is unreachable.
+                    getGeckDataTrainingStats().then(({ data, error }) => {
+                        if (data) setGeckDataStats(data);
+                        if (error) setGeckDataError(error);
                     });
                 }
             } catch (_err) {
@@ -222,6 +240,52 @@ Please be specific about crested gecko morphs and use standard morph terminology
                         </CardContent>
                     </Card>
                 </div>
+
+                {/* External inventory (geck-data) */}
+                <Card className="bg-white/80 backdrop-blur-sm border-sage-200">
+                    <CardHeader>
+                        <CardTitle className="flex items-center gap-2">
+                            <Globe className="w-5 h-5" />
+                            geck-data inventory (extension + external sources)
+                        </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        {geckDataError && !geckDataStats ? (
+                            <p className="text-sm text-red-600">
+                                Unable to read geck-data: {geckDataError}
+                            </p>
+                        ) : !geckDataStats ? (
+                            <p className="text-sm text-sage-600">Loading inventory...</p>
+                        ) : (
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                                <div>
+                                    <p className="text-xs text-sage-600">Listing images</p>
+                                    <p className="text-xl font-bold text-sage-900">
+                                        {geckDataStats.listing_images.toLocaleString()}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-sage-600">External refs (iNat / wiki)</p>
+                                    <p className="text-xl font-bold text-sage-900">
+                                        {geckDataStats.external_reference_images.toLocaleString()}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-sage-600">Morph taxonomy</p>
+                                    <p className="text-xl font-bold text-sage-900">
+                                        {geckDataStats.morph_taxonomy.toLocaleString()}
+                                    </p>
+                                </div>
+                                <div>
+                                    <p className="text-xs text-sage-600">Market listings</p>
+                                    <p className="text-xl font-bold text-sage-900">
+                                        {geckDataStats.market_listings.toLocaleString()}
+                                    </p>
+                                </div>
+                            </div>
+                        )}
+                    </CardContent>
+                </Card>
 
                 {/* Training Progress */}
                 <Card className="bg-white/80 backdrop-blur-sm border-sage-200">
