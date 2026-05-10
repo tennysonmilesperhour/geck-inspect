@@ -1,13 +1,20 @@
 /**
  * Tier limits — single source of truth for what each membership tier
  * unlocks. Imported by upload validation, the Settings storage card,
- * the Subscription page, and any feature gate that needs to know
- * whether a user has hit a quota.
+ * the Subscription page, the Promote (social media) page, and any
+ * feature gate that needs to know whether a user has hit a quota.
  *
  * Storage and collaborator caps mirror Reptidex (Free 1GB, Pro 10GB,
  * Premium unlimited) with collaborator gating set to Free 1 / Keeper 5
  * / Breeder unlimited. Gecko count caps are kept tighter than storage
  * to keep Free a real funnel into Keeper.
+ *
+ * Social-media post quotas (`monthlySocialPosts`) are MONTHLY INCLUDED
+ * counts, not hard caps. Every paid tier can overage at $0.50/post.
+ * Free can overage too, but only after they've added a payment method
+ * (or accepted a Keeper trial). Enterprise's "unlimited" label is
+ * marketing copy; the actual included count is 30, with overage at the
+ * same flat rate.
  *
  * `null` means unlimited. Always check `if (limit == null)` before
  * comparing usage — never treat null as 0.
@@ -23,6 +30,7 @@ export const TIER_LIMITS = {
     maxGeckos: 10,
     maxStorageBytes: 1 * GB,
     maxCollaborators: 1,
+    monthlySocialPosts: 1,
   },
   keeper: {
     label: 'Keeper',
@@ -30,6 +38,7 @@ export const TIER_LIMITS = {
     maxGeckos: 50,
     maxStorageBytes: 10 * GB,
     maxCollaborators: 5,
+    monthlySocialPosts: 4,
   },
   breeder: {
     label: 'Breeder',
@@ -37,8 +46,22 @@ export const TIER_LIMITS = {
     maxGeckos: null,
     maxStorageBytes: null,
     maxCollaborators: null,
+    monthlySocialPosts: 12,
+  },
+  enterprise: {
+    label: 'Enterprise',
+    tagline: 'Unlimited',
+    maxGeckos: null,
+    maxStorageBytes: null,
+    maxCollaborators: null,
+    monthlySocialPosts: 30,
   },
 };
+
+// Flat overage rate per post once a user exceeds their monthly included
+// allotment. Same rate across every tier so billing stays predictable
+// and Enterprise never pays more per overage post than a Free user.
+export const SOCIAL_POST_OVERAGE_CENTS = 50;
 
 /**
  * Resolve the tier ID for a user record. Treats grandfathered users

@@ -357,7 +357,7 @@ export default function TutorialModal({ isOpen, onClose }) {
             window.removeEventListener('resize', update);
             if (intervalRef.current) clearInterval(intervalRef.current);
         };
-        // eslint-disable-next-line react-hooks/exhaustive-deps
+         
     }, [currentStep?.pageName, currentStep?.sectionId]);
 
     // Close on Esc
