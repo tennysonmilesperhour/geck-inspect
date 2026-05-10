@@ -1,13 +1,13 @@
 import { supabase } from '@/lib/supabaseClient';
 
 /**
- * Telemetry — lightweight event + error logging into Supabase.
+ * Telemetry ,  lightweight event + error logging into Supabase.
  *
  * PostHog already captures click/pageview noise. This module is for the
  * events we want to slice in the in-app admin analytics dashboard
  * without leaving the database (so charts live where the data lives).
  *
- * Both functions are best-effort — they swallow all errors. A telemetry
+ * Both functions are best-effort ,  they swallow all errors. A telemetry
  * failure must never break a user flow.
  */
 

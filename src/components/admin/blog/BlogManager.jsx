@@ -25,7 +25,7 @@ const VIEWS = [
 /**
  * Top-level admin Blog screen. Renders an internal tab strip and
  * delegates each tab to its own component. The "editor" is a virtual
- * tab — it activates when the user clicks Edit/Create on a post and
+ * tab ,  it activates when the user clicks Edit/Create on a post and
  * captures the active post id so the editor knows what to load.
  */
 export default function BlogManager() {

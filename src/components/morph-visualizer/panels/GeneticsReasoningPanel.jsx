@@ -1,5 +1,5 @@
 /**
- * Genetics reasoning panel — explains, in plain English, WHY the preview
+ * Genetics reasoning panel ,  explains, in plain English, WHY the preview
  * looks the way it does. Pulls directly from the phenotype.reasoning
  * trace plus the trait catalog.
  *
@@ -20,11 +20,11 @@ export default function GeneticsReasoningPanel({ phenotype, selections }) {
         Why this gecko looks this way
       </h3>
 
-      {/* Active morphs list — for each, show the trait explanation */}
+      {/* Active morphs list ,  for each, show the trait explanation */}
       <div className="space-y-2">
         {phenotype.activeMorphs.length === 0 && (
           <div className="text-xs text-slate-500 italic">
-            No morphs selected — this is a wild-type gecko showing its polygenic base color.
+            No morphs selected ,  this is a wild-type gecko showing its polygenic base color.
           </div>
         )}
 
@@ -63,7 +63,7 @@ export default function GeneticsReasoningPanel({ phenotype, selections }) {
         </div>
       )}
 
-      {/* Warnings — lethals, incompatibilities */}
+      {/* Warnings ,  lethals, incompatibilities */}
       {warnings.length > 0 && (
         <div className="mt-3 space-y-1.5">
           {warnings.map((w, i) => (

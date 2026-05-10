@@ -18,7 +18,7 @@
  *      `membership_billing_cycle` to `billing_cycle` on the user's
  *      profile (lifetime users keep `billing_cycle = 'lifetime'`
  *      forever, which the entitlement layer treats as a permanent
- *      grant — see PlanLimitChecker.isLifetimeMember).
+ *      grant ,  see PlanLimitChecker.isLifetimeMember).
  */
 
 export const BILLING_CYCLES = ['monthly', 'annual', 'lifetime'];
@@ -46,14 +46,14 @@ export const TIER_PRICING = {
     annual:   { price: '$70',    billing: '/year',    priceCaption: 'Annual launches June 2026. Save vs monthly. Cancel anytime.', mode: 'subscription',  price_id: null, cta: 'Start Breeder' },
     lifetime: { price: '$349',   billing: 'one-time', priceCaption: 'Pay once. Lifetime access. No renewals.', mode: 'payment',   price_id: null, cta: 'Get Lifetime Breeder' },
   },
-  // Enterprise intentionally does NOT have a lifetime entry — that
+  // Enterprise intentionally does NOT have a lifetime entry ,  that
   // tier is custom-quoted and stays on the waitlist for now. The
   // Membership page reads `TIER_PRICING.enterprise[cycle] ?? fallback`
   // so a missing key just renders the existing Coming Soon state.
   enterprise: {
     monthly:  { price: 'Custom', billing: 'pricing',  priceCaption: 'Talk to us about volume + custom needs.', mode: null,        price_id: null, cta: 'Join the Waitlist' },
     annual:   { price: 'Custom', billing: 'pricing',  priceCaption: 'Talk to us about volume + custom needs.', mode: null,        price_id: null, cta: 'Join the Waitlist' },
-    // No lifetime row — surfaces a "Lifetime not available" message in the UI.
+    // No lifetime row ,  surfaces a "Lifetime not available" message in the UI.
   },
 };
 

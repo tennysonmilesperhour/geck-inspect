@@ -1,5 +1,5 @@
 /**
- * Breeder-blog RSS source — pulls recent posts from established breeder
+ * Breeder-blog RSS source ,  pulls recent posts from established breeder
  * blogs. These carry heavier weight than forum chatter because they
  * represent what working breeders are actively producing and writing
  * about.
@@ -49,7 +49,7 @@ function parseFeed(name, url, xml) {
         source: 'breeder-blog',
         url: link || url,
         title,
-        snippet: `${name}: "${title}"${summary ? ' — ' + summary.slice(0, 400) : ''}`,
+        snippet: `${name}: "${title}"${summary ? ' ,  ' + summary.slice(0, 400) : ''}`,
         publisher: name,
         observedAt: new Date().toISOString(),
       };
@@ -67,7 +67,7 @@ function parseFeed(name, url, xml) {
         source: 'breeder-blog',
         url: link || url,
         title,
-        snippet: `${name}: "${title}"${desc ? ' — ' + desc.slice(0, 400) : ''}`,
+        snippet: `${name}: "${title}"${desc ? ' ,  ' + desc.slice(0, 400) : ''}`,
         publisher: name,
         observedAt: new Date().toISOString(),
       };

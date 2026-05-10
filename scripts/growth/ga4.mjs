@@ -4,10 +4,10 @@
  *
  * Pulls page-level engagement over a 7-day window via the GA4 Data
  * API v1beta. Reuses the service-account token minted by
- * ./gsc.mjs — pass an access token in, get rows out.
+ * ./gsc.mjs ,  pass an access token in, get rows out.
  *
  * Env vars:
- *   GA4_PROPERTY_ID — numeric property id (e.g. "346789123"), NOT
+ *   GA4_PROPERTY_ID ,  numeric property id (e.g. "346789123"), NOT
  *                     the G-WLGHJ7KC2N measurement id
  *
  * Returns null from every fetcher when GA4_PROPERTY_ID is missing

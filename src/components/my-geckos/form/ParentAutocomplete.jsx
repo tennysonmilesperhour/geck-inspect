@@ -9,15 +9,15 @@ import { DEFAULT_GECKO_IMAGE as DEFAULT_THUMB } from '@/lib/constants';
  * current user's collection.
  *
  * Props:
- *   id            — DOM id for the input (for label htmlFor)
- *   label         — visible label ("Sire (Father)" / "Dam (Mother)")
- *   placeholder   — placeholder text
- *   value         — current typed text (controlled)
- *   onChange      — (value) => void, called on every keystroke. Parent is
+ *   id            ,  DOM id for the input (for label htmlFor)
+ *   label         ,  visible label ("Sire (Father)" / "Dam (Mother)")
+ *   placeholder   ,  placeholder text
+ *   value         ,  current typed text (controlled)
+ *   onChange      ,  (value) => void, called on every keystroke. Parent is
  *                   responsible for also updating the linked FK id.
- *   onSelect      — (gecko) => void, called when a suggestion is clicked
- *   geckos        — full list of candidate geckos (filtered by sex + self)
- *   disabled      — locks the input when the gecko is archived
+ *   onSelect      ,  (gecko) => void, called when a suggestion is clicked
+ *   geckos        ,  full list of candidate geckos (filtered by sex + self)
+ *   disabled      ,  locks the input when the gecko is archived
  */
 export default function ParentAutocomplete({
   id,

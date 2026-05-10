@@ -1,9 +1,9 @@
 /**
- * geckoAccess — helpers for "geckos this user can see / edit."
+ * geckoAccess ,  helpers for "geckos this user can see / edit."
  *
  * Background: every gecko belongs to exactly one collection (see
  * supabase/migrations/20260507_collections.sql). Ownership and
- * collaboration both run through the `collection_members` table — a
+ * collaboration both run through the `collection_members` table ,  a
  * user owns a collection iff they have a role='owner' member row for
  * it, and they collaborate iff they have a role='editor' or 'viewer'
  * row with status='accepted'.
@@ -23,7 +23,7 @@ import { Gecko, CollectionMember } from '@/entities/all';
  *
  * RLS limits CollectionMember.filter() to rows where the caller is
  * either the collection owner or the member themselves, so we don't
- * need to pass an explicit email filter — but we do drop unaccepted
+ * need to pass an explicit email filter ,  but we do drop unaccepted
  * invitations so a pending viewer can't see geckos before clicking
  * the accept link.
  */
@@ -49,7 +49,7 @@ export async function getVisibleGeckos(user, extraFilter = {}, sort = '-created_
   if (!user?.email) return [];
   const ids = await getAccessibleCollectionIds();
   if (ids.length === 0) {
-    // User has no memberships at all — fall back to the email-key
+    // User has no memberships at all ,  fall back to the email-key
     // path so very-new users (whose default collection is created on
     // first gecko insert) still see the geckos they just created
     // before the trigger fires.

@@ -4,7 +4,7 @@ import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
 import MarketplaceBuyPage from './MarketplaceBuy';
 import MarketplaceSellPage from './MarketplaceSell';
 
-// CollectionPage schema for the marketplace landing — declares this URL
+// CollectionPage schema for the marketplace landing ,  declares this URL
 // as a curated collection of crested gecko listings so AI assistants can
 // answer "where can I buy a crested gecko on Geck Inspect" with the
 // canonical entry point rather than an inner sub-tab URL.

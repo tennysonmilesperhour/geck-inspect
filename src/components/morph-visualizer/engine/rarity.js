@@ -9,7 +9,7 @@
  *     how strong the expression is.
  *   - Rarity tier is the max of the inputs contributing to the phenotype.
  *
- * Prices are illustrative — reference retail floors at the time of writing.
+ * Prices are illustrative ,  reference retail floors at the time of writing.
  */
 
 import {
@@ -46,7 +46,7 @@ export function estimateRarityAndValue(phenotype, selections = {}) {
     });
   }
 
-  // Mendelian morphs — each expressed morph pays full value.
+  // Mendelian morphs ,  each expressed morph pays full value.
   const expressedCount = MENDELIAN_MORPHS.filter((m) => phenotype.expressed[m.id]).length;
   MENDELIAN_MORPHS.forEach((m) => {
     if (!phenotype.expressed[m.id]) return;
@@ -67,7 +67,7 @@ export function estimateRarityAndValue(phenotype, selections = {}) {
     rarityTier = Math.min(5, rarityTier + 1);
   }
 
-  // Polygenic patterns — scaled by intensity.
+  // Polygenic patterns ,  scaled by intensity.
   PATTERN_TRAITS.forEach((p) => {
     const intensity = phenotype.patternIntensity[p.id] || 0;
     if (intensity <= 0) return;
@@ -86,7 +86,7 @@ export function estimateRarityAndValue(phenotype, selections = {}) {
     contributions.push({ source: a.name, value: Math.round(a.valueHint * 0.6) });
   });
 
-  // Structural — crowned/furred bump value.
+  // Structural ,  crowned/furred bump value.
   if (phenotype.structural?.crowned) {
     value += TRAITS_BY_ID.crowned.valueHint;
     rarityTier = Math.max(rarityTier, TRAITS_BY_ID.crowned.rarity);

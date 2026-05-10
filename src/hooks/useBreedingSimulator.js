@@ -1,5 +1,5 @@
 /**
- * useBreedingSimulator — Monte Carlo breeding outcome simulation.
+ * useBreedingSimulator ,  Monte Carlo breeding outcome simulation.
  *
  * Computes exact per-offspring phenotype probabilities via the
  * Foundation Genetics-backed `predict()` from `crested-gecko-app`,

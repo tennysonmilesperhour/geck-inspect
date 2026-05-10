@@ -47,7 +47,7 @@ export default function AddToCartButton({ product, compact = false, quantity = 1
     if (!product.vendor_product_url) return;
     setBusy(true);
     try {
-      // Best-effort log — never block the click.
+      // Best-effort log ,  never block the click.
       try {
         await supabase.from('store_affiliate_clicks').insert({
           product_id: product.id,

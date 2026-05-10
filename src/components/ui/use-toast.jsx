@@ -3,13 +3,13 @@ import * as React from 'react';
 /**
  * Lightweight in-memory toast store. Subscribes are kept in a
  * module-level array so any component can fire a toast without needing
- * a surrounding provider — the <Toaster /> mounted once in App.jsx is
+ * a surrounding provider ,  the <Toaster /> mounted once in App.jsx is
  * the single UI consumer.
  *
  * Differences from the stock shadcn generator:
  *   - TOAST_LIMIT is 3 so fast-firing toasts stack instead of replacing.
  *   - The manual `setTimeout(dismiss, duration)` inside `toast()` is
- *     gone — Radix Toast handles its own auto-dismiss via the
+ *     gone ,  Radix Toast handles its own auto-dismiss via the
  *     `duration` prop we forward through. Having both racing each
  *     other was the root cause of toasts flickering in/out.
  *   - Default duration is 3.5s, slightly more generous than the old 2s

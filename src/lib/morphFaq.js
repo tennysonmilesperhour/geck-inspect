@@ -20,7 +20,7 @@ function inheritanceAnswer(morph) {
   if (!inh) return null;
   const base = inh.description;
   const special = morph.slug === 'lilly-white'
-    ? ' Lilly White specifically has a lethal super form — pairing two Lilly Whites together produces 25% non-viable homozygous embryos, so the morph cannot be bred "true".'
+    ? ' Lilly White specifically has a lethal super form ,  pairing two Lilly Whites together produces 25% non-viable homozygous embryos, so the morph cannot be bred "true".'
     : '';
   return `${morph.name} is classified as ${inh.label.toLowerCase()}. ${base}${special}`;
 }
@@ -60,7 +60,7 @@ function summaryAnswer(morph) {
 
 /**
  * Return an ordered list of { question, answer } pairs for a morph.
- * Short questions, concrete answers — optimized for both People Also
+ * Short questions, concrete answers ,  optimized for both People Also
  * Ask extraction and readability on the page itself.
  */
 export function morphFaq(morph) {

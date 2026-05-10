@@ -20,7 +20,7 @@ const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
 
 const SOURCES = [
   // TODO: once the Foundation Genetics module is integrated, prepend its
-  // exported fact sheet here — it supersedes every other source.
+  // exported fact sheet here ,  it supersedes every other source.
   { label: 'morph-guide.js (local canonical catalogue)', path: 'src/data/morph-guide.js' },
   { label: 'genetics-glossary.js',                       path: 'src/data/genetics-glossary.js' },
   { label: 'genetics-sections.jsx (long-form)',          path: 'src/data/genetics-sections.jsx' },

@@ -11,7 +11,7 @@ import { supabase } from '@/lib/supabaseClient';
  * existing localStorage data triggers a one-time migration
  * (localStorage → metadata) so existing guest-era prefs aren't lost.
  *
- * Guest users: behaves exactly like usePageSettings — pure localStorage.
+ * Guest users: behaves exactly like usePageSettings ,  pure localStorage.
  *
  * Updates are debounced (600ms) before hitting Supabase so rapid state
  * changes (e.g. dragging pins) don't spam the auth API. Local state +
@@ -63,7 +63,7 @@ export default function useUserPreference(user, key, defaults) {
     if (!local || typeof local !== 'object') return;
     migratedRef.current = true;
     supabase.auth.updateUser({ data: { [key]: local } }).catch(() => {
-      // Silently fall back — localStorage still has the data, next
+      // Silently fall back ,  localStorage still has the data, next
       // write attempt will retry the sync.
     });
   }, [user?.id, user?.[key], key]);
@@ -71,7 +71,7 @@ export default function useUserPreference(user, key, defaults) {
   const updateState = useCallback((patch) => {
     setState((prev) => {
       const next = { ...prev, ...patch };
-      // localStorage cache — always write, makes guest sessions work and
+      // localStorage cache ,  always write, makes guest sessions work and
       // gives signed-in users an offline fallback.
       try { localStorage.setItem(key, JSON.stringify(next)); } catch {}
       // Debounced write to Supabase for signed-in users.
@@ -80,7 +80,7 @@ export default function useUserPreference(user, key, defaults) {
         pendingWriteRef.current = setTimeout(() => {
           pendingWriteRef.current = null;
           supabase.auth.updateUser({ data: { [key]: next } }).catch(() => {
-            // No retry — next update will try again. localStorage has latest.
+            // No retry ,  next update will try again. localStorage has latest.
           });
         }, 600);
       }

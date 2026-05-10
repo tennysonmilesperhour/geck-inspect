@@ -27,7 +27,7 @@ export default function PageNotFound({}) {
                 way to tell JS-executing crawlers this URL is a dead end is
                 via <meta name="robots" content="noindex, nofollow">. Real
                 404 status requires enumerating every known SPA path in
-                vercel.json — tracked as a follow-up. */}
+                vercel.json ,  tracked as a follow-up. */}
             <Seo
               title="Page not found"
               description="The page you requested could not be found on Geck Inspect."

@@ -1,5 +1,5 @@
 /**
- * YouTube source — extracts recent + top video titles for gecko queries.
+ * YouTube source ,  extracts recent + top video titles for gecko queries.
  *
  * Strategy: YouTube's official Data API requires an API key. To avoid
  * adding another secret, we scrape the public search results page with
@@ -12,7 +12,7 @@
  * returns an empty set. Not worth a full headless-browser investment
  * for one signal.
  *
- * Value: YouTube title velocity is a leading indicator — a flurry of
+ * Value: YouTube title velocity is a leading indicator ,  a flurry of
  * "My First Cappuccino Hatched!" videos precedes a surge in
  * marketplace activity by 4-8 weeks.
  */
@@ -70,7 +70,7 @@ async function searchYouTube(q) {
         source: 'youtube',
         url: videoId ? `https://www.youtube.com/watch?v=${videoId}` : null,
         title,
-        snippet: `YouTube: "${title}" by ${channel} — ${viewCountText} (${publishedText})`,
+        snippet: `YouTube: "${title}" by ${channel} ,  ${viewCountText} (${publishedText})`,
         channel,
         viewCountText,
         publishedText,
