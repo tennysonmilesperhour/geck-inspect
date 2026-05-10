@@ -1,5 +1,5 @@
 /**
- * Binary accent traits — portholes, kneecaps, drippy dorsal, etc.
+ * Binary accent traits ,  portholes, kneecaps, drippy dorsal, etc.
  */
 
 import { ACCENT_TRAITS } from '../data/traits';

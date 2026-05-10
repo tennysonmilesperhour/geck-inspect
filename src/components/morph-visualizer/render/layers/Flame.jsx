@@ -1,5 +1,5 @@
 /**
- * Flame — lighter lateral markings that shoot up the flanks like tongues of fire.
+ * Flame ,  lighter lateral markings that shoot up the flanks like tongues of fire.
  * A subtler cousin of harlequin: lower coverage, more organic shapes.
  */
 

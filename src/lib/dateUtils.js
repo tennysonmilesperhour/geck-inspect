@@ -2,7 +2,7 @@ import { format, parseISO, differenceInCalendarDays } from 'date-fns';
 
 // `last_fed_date`, `archived_date`, etc. are stored as `YYYY-MM-DD` (Postgres
 // `date` type, no timezone). Use the user's local timezone when reading and
-// writing — saving via `toISOString()` produces a UTC date, which renders as
+// writing ,  saving via `toISOString()` produces a UTC date, which renders as
 // "yesterday" for users east of UTC during the early-morning hours and as
 // "tomorrow" for users west of UTC during the late-evening hours.
 

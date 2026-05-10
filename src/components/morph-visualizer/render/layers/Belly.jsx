@@ -1,5 +1,5 @@
 /**
- * Belly layer — the lighter underside of the gecko. Receives the White Wall
+ * Belly layer ,  the lighter underside of the gecko. Receives the White Wall
  * band and, optionally, a white-fringe edging.
  */
 

@@ -1,5 +1,5 @@
 /**
- * Fire state overlay — simulates the difference between a fired-up
+ * Fire state overlay ,  simulates the difference between a fired-up
  * (dark, saturated) and fired-down (pale, milky) gecko.
  *
  * Most of the adjustment already happened in the palette, so this layer

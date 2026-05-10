@@ -7,10 +7,10 @@ import { trackPageView } from './ga';
  * including the initial mount. Mirrors the existing
  * PostHogPageTracker pattern but writes to Google Analytics.
  *
- * Must render inside <Router>. Returns null — no UI.
+ * Must render inside <Router>. Returns null ,  no UI.
  *
  * The gtag loader in index.html uses `send_page_view: false` so this
- * component is the single source of page_view events — no double-count
+ * component is the single source of page_view events ,  no double-count
  * on the first render.
  */
 export default function GA4PageTracker() {

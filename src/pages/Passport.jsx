@@ -1,8 +1,8 @@
 /**
- * Passport verification page — publicly accessible.
+ * Passport verification page ,  publicly accessible.
  *
  * Renders a gecko's digital passport from the ?data= URL parameter.
- * No authentication required — anyone with the link can verify.
+ * No authentication required ,  anyone with the link can verify.
  */
 import { useSearchParams, Link } from 'react-router-dom';
 import { GeckoPassportViewer } from '@/components/innovations/GeckoPassport';

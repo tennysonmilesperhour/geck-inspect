@@ -4,7 +4,7 @@ import { TAXONOMY_VERSION } from './morphTaxonomy';
 // `training_meta` and `image_urls` are columns the dataset is migrating
 // toward. Until every deployed copy of the schema has them, we fall back
 // to folding `training_meta` into the notes field and dropping
-// `image_urls` onto `training_meta` — nothing is ever dropped.
+// `image_urls` onto `training_meta` ,  nothing is ever dropped.
 export async function saveGeckoImageWithMeta(record) {
   const attempts = [
     (r) => r,

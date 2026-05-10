@@ -1,5 +1,5 @@
 /**
- * Pinstripe — raised cream scales along the lateral edges of the dorsum.
+ * Pinstripe ,  raised cream scales along the lateral edges of the dorsum.
  * In a 100% pinstripe the two rails are unbroken from the nape to the
  * tail base. Intensity controls coverage.
  */

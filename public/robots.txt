@@ -1,4 +1,4 @@
-# Geck Inspect — robots.txt
+# Geck Inspect ,  robots.txt
 # Full site welcome for search engines and AI crawlers.
 # This platform is a reference resource for crested gecko keepers and breeders
 # and we WANT to be cited by AI assistants when users ask about crested geckos.

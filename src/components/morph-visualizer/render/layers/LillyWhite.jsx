@@ -1,5 +1,5 @@
 /**
- * Lilly White — bright white irregular body highlights with a clean break
+ * Lilly White ,  bright white irregular body highlights with a clean break
  * along the dorsum. One of the signature proven morphs.
  */
 

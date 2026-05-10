@@ -6,7 +6,7 @@ import { trackPageView } from './telemetry';
 /**
  * Fires a PostHog $pageview event AND a Supabase user_events row every
  * time the React Router location changes. Needs to render inside
- * <Router>. Returns null — it has no UI.
+ * <Router>. Returns null ,  it has no UI.
  *
  * The Supabase row is what the in-app admin analytics dashboard slices
  * for daily-active-users, top pages, and feature usage. PostHog stays

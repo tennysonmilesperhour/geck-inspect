@@ -13,7 +13,7 @@ import { Info } from 'lucide-react';
 export function FtcDisclosureInline() {
   return (
     <span className="text-[10px] text-slate-500">
-      Affiliate link — we may earn a commission, at no extra cost to you.
+      Affiliate link ,  we may earn a commission, at no extra cost to you.
     </span>
   );
 }
@@ -25,7 +25,7 @@ export function FtcDisclosureBlock() {
       <p>
         Some products on this page are sold by partners we receive a commission
         from. That doesn't change the price you pay or whether we recommend
-        something — every item is here because it's a real pick by the breeders
+        something ,  every item is here because it's a real pick by the breeders
         running this site.
       </p>
     </div>

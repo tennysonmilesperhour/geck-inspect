@@ -1,5 +1,5 @@
 /**
- * A subtle stippled scale texture over the body — gives the flat fills a
+ * A subtle stippled scale texture over the body ,  gives the flat fills a
  * reptilian micro-detail without committing to a photorealistic render.
  * Soft Scale reduces the effect to a near-smooth surface.
  */

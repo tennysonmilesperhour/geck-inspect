@@ -1,7 +1,7 @@
 /**
  * Service-worker registration for web push.
  *
- * Registration is idempotent — multiple calls just return the existing
+ * Registration is idempotent ,  multiple calls just return the existing
  * registration. We register eagerly on page load (not lazily inside the
  * Settings toggle) because iOS requires the worker to already be
  * controlling the page before Notification.requestPermission() is

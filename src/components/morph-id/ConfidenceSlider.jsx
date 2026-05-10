@@ -23,7 +23,7 @@ export default function ConfidenceSlider({
   return (
     <div className="space-y-2">
       <Label className="text-slate-300 font-medium">
-        {label} — <span className="text-emerald-300">{value}%</span>
+        {label} ,  <span className="text-emerald-300">{value}%</span>
       </Label>
       <Slider
         value={[value]}

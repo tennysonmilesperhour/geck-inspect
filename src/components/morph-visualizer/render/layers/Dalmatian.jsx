@@ -1,5 +1,5 @@
 /**
- * Dalmatian spots — scatter of dark ink spots across the body.
+ * Dalmatian spots ,  scatter of dark ink spots across the body.
  * Spot density scales with intensity; "super dalmatian" fully blankets the animal.
  */
 
