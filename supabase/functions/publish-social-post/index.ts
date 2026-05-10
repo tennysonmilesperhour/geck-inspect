@@ -2,37 +2,20 @@
 //
 // Publishes a social_post_variant to its target platform and bills the user.
 // In v1 we directly post to Bluesky (app-password auth, no OAuth required).
-// All other platforms ("threads", "instagram", "x", "tiktok", "reddit",
-// "facebook_page", "clipboard", "youtube_community") are recorded as
-// `status = 'copied'` and quotas are still deducted — copy-to-clipboard
-// counts as a publish for billing purposes since the user committed to the
-// post.
+// All other platforms are recorded as `status = 'copied'` and quotas are
+// still deducted; copy-to-clipboard counts as a publish for billing
+// purposes since the user committed to the post.
 //
-// Billing rules (delegated to charge_social_publish RPC):
-//   1. If user has post credits available, burn one credit, no quota cost.
-//   2. Else if user has remaining included posts this month, deduct one.
-//   3. Else, accrue a $0.50 overage charge.
-//
-// Free-tier guard: if a Free user has 0 credits AND has used their 1
-// included post AND has no Stripe customer / payment method on file,
-// we return 402 with `requires_payment_method: true` so the frontend can
-// trigger the trial-offer modal. Keeper/Breeder/Enterprise always have a
-// card on file by definition; they never hit this guard.
-//
-// Secrets:
-//   SUPABASE_URL
-//   SUPABASE_SERVICE_ROLE_KEY
-//   (BLUESKY uses per-user app password stored encrypted on
-//    social_platform_connections; no global secret needed)
-//
-// Deploy:
-//   supabase functions deploy publish-social-post
+// Token decryption: access_token_ciphertext (+ access_token_iv) hold the
+// AES-GCM encrypted app password from set-platform-connection. We fall
+// back to plaintext access_token for legacy rows.
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
 const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+const PLATFORM_KEY_B64 = Deno.env.get("PLATFORM_CONNECTIONS_KEY") || "";
 
 const OVERAGE_CENTS_PER_POST = 50;
 
@@ -65,12 +48,25 @@ function tierOf(profile: { membership_tier?: string | null; subscription_status?
   return ["free", "keeper", "breeder", "enterprise"].includes(t) ? t : "free";
 }
 
-// ---------------------------------------------------------------------------
-// Bluesky direct posting via the AT Protocol. We accept the user's identifier
-// (handle.bsky.social) and an app password (NOT their main login password —
-// generated at https://bsky.app/settings/app-passwords). Tokens are exchanged
-// per-publish; no long-lived refresh management needed for v1.
-// ---------------------------------------------------------------------------
+function b64decode(s: string): Uint8Array {
+  const bin = atob(s);
+  const out = new Uint8Array(bin.length);
+  for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
+  return out;
+}
+
+async function decryptToken(ciphertextB64: string, ivB64: string): Promise<string> {
+  if (!PLATFORM_KEY_B64) throw new Error("PLATFORM_CONNECTIONS_KEY not configured");
+  const rawKey = b64decode(PLATFORM_KEY_B64);
+  if (rawKey.byteLength !== 32) throw new Error("PLATFORM_CONNECTIONS_KEY must decode to 32 bytes");
+  const key = await crypto.subtle.importKey("raw", rawKey, { name: "AES-GCM" }, false, ["decrypt"]);
+  const pt = await crypto.subtle.decrypt(
+    { name: "AES-GCM", iv: b64decode(ivB64) },
+    key,
+    b64decode(ciphertextB64),
+  );
+  return new TextDecoder().decode(pt);
+}
 
 async function postToBluesky(
   identifier: string,
@@ -219,43 +215,44 @@ serve(async (req) => {
   };
 
   if (DIRECT_POST_PLATFORMS.has(variant.platform)) {
-    // Find user's connection for this platform.
     const { data: conn } = await supabase
       .from("social_platform_connections")
-      .select("id, platform, account_handle, access_token, is_active")
+      .select("id, platform, account_handle, access_token, access_token_ciphertext, access_token_iv, is_active")
       .eq("user_id", user.id)
       .eq("platform", variant.platform)
       .eq("is_active", true)
       .maybeSingle();
-    if (!conn?.access_token || !conn.account_handle) {
-      return json({
-        error: "platform_not_connected",
-        platform: variant.platform,
-      }, 400);
+    if (!conn?.account_handle) {
+      return json({ error: "platform_not_connected", platform: variant.platform }, 400);
+    }
+
+    let token: string | null = null;
+    if (conn.access_token_ciphertext && conn.access_token_iv) {
+      try {
+        token = await decryptToken(conn.access_token_ciphertext, conn.access_token_iv);
+      } catch (e) {
+        return json({ error: "token_decrypt_failed", detail: (e as Error).message }, 500);
+      }
+    } else if (conn.access_token) {
+      token = conn.access_token;
+    }
+    if (!token) {
+      return json({ error: "platform_not_connected", platform: variant.platform }, 400);
     }
 
     if (variant.platform === "bluesky") {
       try {
-        const r = await postToBluesky(conn.account_handle, conn.access_token, text);
+        const r = await postToBluesky(conn.account_handle, token, text);
         publishResult = { url: r.postUrl, platform_post_id: r.uri, statusOnSuccess: "published" };
       } catch (e) {
         const msg = e instanceof Error ? e.message : String(e);
         await supabase
           .from("social_post_variants")
-          .update({
-            status: "failed",
-            publish_error: msg.slice(0, 500),
-            updated_date: new Date().toISOString(),
-          })
+          .update({ status: "failed", publish_error: msg.slice(0, 500), updated_date: new Date().toISOString() })
           .eq("id", variant.id);
         return json({ error: "publish_failed", platform: variant.platform, detail: msg.slice(0, 300) }, 502);
       }
     }
-  } else {
-    // Copy-to-clipboard pathway. The frontend has already copied the text;
-    // we record the publish so quotas deduct. status='copied' so the UI can
-    // distinguish "we sent it" from "the user copied it themselves."
-    publishResult = { statusOnSuccess: "copied" };
   }
 
   // Charge the publish (credit > included > overage).

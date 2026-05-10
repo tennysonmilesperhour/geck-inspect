@@ -5,6 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Check, Trash2, ExternalLink, Loader2, Cloud } from 'lucide-react';
 import { SocialPlatformConnection } from '@/entities/all';
+import { supabase } from '@/lib/supabaseClient';
 import { toast } from '@/components/ui/use-toast';
 
 // Connections modal — manages per-user platform credentials. v1 ships
@@ -49,21 +50,18 @@ export default function ConnectionsModal({ open, onOpenChange, user }) {
     }
     setSaving(true);
     try {
-      if (bluesky) {
-        await SocialPlatformConnection.update(bluesky.id, {
-          account_handle: handle.trim(),
-          access_token: appPassword.trim(),
-          is_active: true,
-        });
-      } else {
-        await SocialPlatformConnection.create({
-          user_id: user.id,
+      // Encrypted write via the set-platform-connection edge function.
+      // RLS now blocks direct INSERT/UPDATE from authenticated, so this
+      // is the only way for the app password to land on the row.
+      const { data, error } = await supabase.functions.invoke('set-platform-connection', {
+        body: {
           platform: 'bluesky',
           account_handle: handle.trim(),
           access_token: appPassword.trim(),
-          is_active: true,
-        });
-      }
+        },
+      });
+      if (error) throw new Error(error.message || 'set-platform-connection failed');
+      if (data?.error) throw new Error(`${data.error}${data.detail ? `: ${data.detail}` : ''}`);
       setAppPassword('');
       await load();
       toast({ title: 'Bluesky connected', description: 'Direct posting is now active.' });
@@ -78,7 +76,9 @@ export default function ConnectionsModal({ open, onOpenChange, user }) {
     if (!bluesky) return;
     if (!confirm('Disconnect Bluesky? You can reconnect anytime.')) return;
     try {
-      await SocialPlatformConnection.update(bluesky.id, { is_active: false });
+      // Delete outright (RLS allows owner DELETE). Update is blocked by RLS
+      // since encrypted writes go through set-platform-connection only.
+      await SocialPlatformConnection.delete(bluesky.id);
       setBluesky(null);
       setHandle('');
       setAppPassword('');
