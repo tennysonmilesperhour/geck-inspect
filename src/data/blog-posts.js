@@ -1251,7 +1251,7 @@ export const BLOG_POSTS = [
         url: 'https://lmreptiles.com/fg-overview/',
       },
     ],
-  }
+  },
   {
     slug: "super-cappuccino-breeding-risks",
     title: "Why Super Cappuccino Breeding Is Riskier Than You Think",

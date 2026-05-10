@@ -185,21 +185,21 @@ function appendPostToBlogPosts(entry) {
   }
 
   // Walk backwards from closeIdx to find the last `}` — that's the last entry's end.
-  // Handle trailing commas: skip whitespace AND a possible trailing comma.
+  // Track whether we skipped a trailing comma during the walk; we can't infer
+  // it later from a regex on the surrounding text because inner arrays inside
+  // the entry also contain `,]` sequences (externalCitations etc.) that would
+  // give a false positive.
   let j = closeIdx - 1;
   while (j > 0 && /\s/.test(src[j])) j--;
-  // Skip trailing comma if present (valid JS, sometimes left by formatters).
-  if (src[j] === ',') j--;
+  let hasTrailingComma = false;
+  if (src[j] === ',') { hasTrailingComma = true; j--; }
   while (j > 0 && /\s/.test(src[j])) j--;
   if (src[j] !== '}') {
     throw new Error(`Unexpected char before "]" at index ${j}: ${JSON.stringify(src[j])}`);
   }
-  // Ensure there's a trailing comma on the previous entry.
   let before = src.slice(0, j + 1);
-  let after = src.slice(j + 1);
-  if (!/,\s*\]/m.test(before.slice(-50) + after.slice(0, 10))) {
-    before += ',';
-  }
+  const after = src.slice(j + 1);
+  if (!hasTrailingComma) before += ',';
 
   const emitted = emitObjectLiteral(entry, 2);
   const patched = before + '\n  ' + emitted + after;
