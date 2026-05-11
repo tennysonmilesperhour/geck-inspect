@@ -1,0 +1,17 @@
+# repo-sync.conf — list of local repos to keep in sync with their `origin/main`.
+#
+# Copy this to ~/.config/repo-sync.conf and edit. One absolute path per line.
+# Lines starting with # are comments. Blank lines are ignored. Leading ~ is
+# expanded to $HOME.
+#
+# Safety: every pull is --ff-only. Repos with uncommitted edits or unpushed
+# local commits get logged and skipped — never overwritten.
+#
+# Repos on a branch other than main/master are fetched but not merged.
+
+~/dev/geck-inspect
+~/mnemo-cortex
+
+# Add others as you go, e.g.
+# ~/dev/mythic-labs
+# ~/dev/some-other-repo

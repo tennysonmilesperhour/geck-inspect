@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Multi-repo weekly auto-sync.
+
+  Install:
+    cp scripts/local/com.localops.repo-sync.plist ~/Library/LaunchAgents/
+    chmod +x scripts/local/repo-sync.sh
+    cp scripts/local/repo-sync.conf.example ~/.config/repo-sync.conf
+    # edit ~/.config/repo-sync.conf to list your repos
+    launchctl unload  ~/Library/LaunchAgents/com.localops.repo-sync.plist 2>/dev/null
+    launchctl load    ~/Library/LaunchAgents/com.localops.repo-sync.plist
+
+  Replaces the single-repo com.geckinspect.weekly-pull job. After install:
+    launchctl unload ~/Library/LaunchAgents/com.geckinspect.weekly-pull.plist
+    rm               ~/Library/LaunchAgents/com.geckinspect.weekly-pull.plist
+  (geck-inspect will be picked up via the config file instead.)
+
+  Runs Mondays at 07:00 local time. Logs at ~/Library/Logs/repo-sync.log.
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.localops.repo-sync</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/tennyson/dev/geck-inspect/scripts/local/repo-sync.sh</string>
+    </array>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>1</integer>
+        <key>Hour</key>
+        <integer>7</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/tennyson/Library/Logs/repo-sync.launchd.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/tennyson/Library/Logs/repo-sync.launchd.log</string>
+</dict>
+</plist>
