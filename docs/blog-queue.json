@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-05-10T00:20:56.503Z",
+  "lastUpdated": "2026-05-11T09:48:00.019Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -147,6 +147,95 @@
         "Axanthics are recessive, which means breeding two visuals can explode your clutch with unexpected color morphs—here's how to predict the outcomes.",
         "New breeders often don't realize that breeding two axanthics requires understanding what other genes they're carrying.",
         "If you want to keep your line pure axanthic or cross strategically, you need to know the hidden genes your breeding stock is hiding."
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "tpc_1778492856369_cappuccino",
+      "title": "Why Your 'Perfect' Cappuccino Pairing Creates Runts (and What to Do Instead)",
+      "slug": "cappuccino-pairing-risks-runts",
+      "category": "breeding",
+      "status": "new",
+      "score": {
+        "demand": 8,
+        "originality": 7,
+        "voiceFit": 8,
+        "accuracyRisk": 3,
+        "total": 20
+      },
+      "createdAt": "2026-05-11T09:47:36.369Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "youtube",
+          "snippet": "\"Don't buy super cappuccino crested gecko it's a scam and waste of money\" by Homestead reptiles, 2,065 views (1 year ago)",
+          "url": "https://www.youtube.com/watch?v=5O_obmlNu9I"
+        },
+        {
+          "source": "youtube",
+          "snippet": "\"WARNING, NEVER BREED THESE CRESTED GECKOS TOGETHER\" by TikisGeckos, 3,411 views (2 months ago)",
+          "url": "https://www.youtube.com/watch?v=K1vjq-btadk"
+        },
+        {
+          "source": "youtube",
+          "snippet": "\"Why So Much Hate for Cappuccino Geckos? The Truth No One Wants to Say…\" by Flawless Crested Geckos, 428 views (5 months ago)",
+          "url": "https://www.youtube.com/watch?v=3xRF-wumo_E"
+        },
+        {
+          "source": "google-ac",
+          "snippet": "Google autocomplete for \"cappuccino crested gecko\" suggests high search volume for \"cappuccino crested gecko traits\", \"cappuccino crested gecko hatchling\", \"cappuccino crested gecko markers\"",
+          "url": null
+        }
+      ],
+      "angleIdeas": [
+        "Most breeders who pair two Cappuccinos assume they'll get consistent results—but incomplete dominance means one in four hatchlings will be a health-compromise Super Cappuccino with severe stunting.",
+        "Cappuccino × non-morph pairings consistently outperform Cappuccino × Cappuccino on hatchling vigor—here's the genetics and why.",
+        "The YouTube comment sections are full of breeders reporting \"runts\" from Cappuccino projects; we explain what's actually happening genetically and how to screen before you pair.",
+        "Super Cappuccino 'scam' videos are attracting 2k+ views because buyers don't know genetics—teach breeders how to avoid creating unmarketable offspring."
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "tpc_1778492856369_softscales",
+      "title": "Soft Scale Genetics: Why Double-Scaled Hatchlings Are Rarer Than You Think",
+      "slug": "soft-scale-super-soft-scale-genetics",
+      "category": "genetics",
+      "status": "new",
+      "score": {
+        "demand": 6,
+        "originality": 8,
+        "voiceFit": 7,
+        "accuracyRisk": 2,
+        "total": 19
+      },
+      "createdAt": "2026-05-11T09:47:36.369Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "google-ac",
+          "snippet": "Google autocomplete for \"soft scale crested gecko\" suggests significant search interest, appearing in final autocomplete batch",
+          "url": null
+        },
+        {
+          "source": "youtube",
+          "snippet": "\"The COMPLETE Guide to Crested Gecko Morphs! Part 1\" by TikisGeckos, 179,984 views (8 years ago)—multiple references to scale morphs",
+          "url": "https://www.youtube.com/watch?v=kpa6SCe3XEY"
+        },
+        {
+          "source": "youtube",
+          "snippet": "\"CRESTED GECKO MORPHS - A Comprehensive Guide to Crested Gecko Base Morphs\" by JTB Reptiles, 40,591 views (7 years ago)—scale morphs included but often misunderstood",
+          "url": "https://www.youtube.com/watch?v=crf7baHQF88"
+        }
+      ],
+      "angleIdeas": [
+        "Soft Scale is incomplete dominant—breed two hets and you might expect 25% double-scaled, but most breeders don't understand what a Super Soft Scale should actually look like, so they're keeping and selling normals as 'het'.",
+        "The rarest outcome from Soft Scale × Soft Scale isn't failure—it's misidentification; here's how to spot true Super Soft Scales in your clutches.",
+        "Soft Scale breeding projects stall because breeders confuse incomplete dominance with co-dominance; the genetics are simple once you see it.",
+        "Google is asking about 'soft scale crested gecko' but breeder forums show confusion about progeny—a clear gap you can fill."
       ],
       "rejectionReason": null,
       "prUrl": null

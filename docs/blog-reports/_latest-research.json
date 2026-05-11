@@ -1,10 +1,10 @@
 {
-  "ranAt": "2026-05-08T07:47:00.580Z",
+  "ranAt": "2026-05-11T09:47:36.369Z",
   "signals": {
     "googleAc": 95,
     "bluesky": 0,
     "googleTrends": 0,
-    "youtube": 65,
+    "youtube": 66,
     "breederBlogs": 1,
     "errors": [
       "\"crested gecko\": 403 Forbidden",
@@ -22,7 +22,10 @@
       "AC Reptiles: 404 Not Found"
     ]
   },
-  "costUsd": 0.016463,
-  "addedSlugs": [],
-  "rationale": "The signal set is dominated by Google autocomplete suggestions (95 entries) around general care topics (food, enclosure, lifespan, diet, breeding basics), morph identification, and pricing. YouTube content shows heavy existing coverage of morph guides (multiple \"complete guides,\" \"comprehensive guides\"), cappuccino genetics debates (already queued as super-cappuccino-breeding-risks and lilly-white-identification-breeding), and basic breeding advice. The breeder blog signal is purely promotional (sales announcement). No forum threads, Bluesky posts, or Google Trends spikes to signal emerging confusion or controversy. The autocomplete data itself is too generic and diffuse—it shows demand for beginner-level content (care, diet, enclosure) which we've already published, and morph-specific searches which duplicate either our existing slug (cappuccino-crested-gecko-genetics, how-to-identify-crested-gecko-morphs) or already-queued topics (super-cappuccino-breeding-risks, lilly-white-identification-breeding, axanthic-breeding-strategy). YouTube titles like \"WARNING, NEVER BREED THESE CRESTED GECKOS TOGETHER\" and \"Why So Much Hate for Cappuccino Geckos? The Truth No One Wants to Say…\" suggest strong community opinion, but without access to the actual video content or forum discussion threads showing specific misconceptions, we cannot ground a fact-checked post. The signal lacks the specificity needed to identify a concrete breeding outcome, genetics correction, or breeder-to-breeder angle that we can verify against our morph guide and genetics resources."
+  "costUsd": 0.022162,
+  "addedSlugs": [
+    "cappuccino-pairing-risks-runts",
+    "soft-scale-super-soft-scale-genetics"
+  ],
+  "rationale": "The signal set is heavily weighted toward Google autocomplete searches (95 items) showing consistent high-volume interest in morphs, breeding, and specific morphs like Cappuccino, Lilly White, and Axanthic. YouTube videos reinforce strong demand for breeding advice, morph identification, and \"warning\" content about risky pairings (e.g., Super Cappuccino breeding risks, pairings to avoid). However, most Google Trends, Bluesky, and forum data are absent or low-engagement. The autocomplete data confirms demand but is generic. Two topics already queued (lilly-white-identification-breeding, axanthic-breeding-strategy) eliminate those morphs. YouTube's \"WARNING, NEVER BREED THESE CRESTED GECKOS TOGETHER\" (3.4k views, 2 months) and \"Don't buy super cappuccino... it's a scam\" (2k views, 1 year) suggest real breeding confusion and misconceptions worth correcting. The Cappuccino topic is published but the data hints at audience frustration (\"Why So Much Hate\") and breeding risk narratives. I'll focus on one high-signal topic that avoids published slugs and already-queued topics: a breeding pairing misconception angle with actionable genetics."
 }
