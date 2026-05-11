@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Weekly auto-pull for /Users/tennyson/dev/geck-inspect.
+
+  Install:
+    cp scripts/local/com.geckinspect.weekly-pull.plist ~/Library/LaunchAgents/
+    chmod +x scripts/local/weekly-pull.sh
+    launchctl unload  ~/Library/LaunchAgents/com.geckinspect.weekly-pull.plist 2>/dev/null
+    launchctl load    ~/Library/LaunchAgents/com.geckinspect.weekly-pull.plist
+
+  Runs Mondays at 07:00 local time. Logs at ~/Library/Logs/geck-inspect-pull.log.
+
+  Uninstall:
+    launchctl unload  ~/Library/LaunchAgents/com.geckinspect.weekly-pull.plist
+    rm                ~/Library/LaunchAgents/com.geckinspect.weekly-pull.plist
+-->
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.geckinspect.weekly-pull</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/tennyson/dev/geck-inspect/scripts/local/weekly-pull.sh</string>
+    </array>
+
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Weekday</key>
+        <integer>1</integer>
+        <key>Hour</key>
+        <integer>7</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <!-- If the Mac is asleep at 7am Monday, run as soon as it wakes. -->
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>StandardOutPath</key>
+    <string>/Users/tennyson/Library/Logs/geck-inspect-pull.launchd.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/tennyson/Library/Logs/geck-inspect-pull.launchd.log</string>
+</dict>
+</plist>
