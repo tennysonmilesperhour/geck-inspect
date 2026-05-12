@@ -115,6 +115,9 @@ const ImageImport           = lazy(() => import('./pages/ImageImport'));
 // P11 Quality Scale: public rubric, also resolvable inside the auth shell.
 const QualityScale          = lazy(() => import('./pages/QualityScale'));
 
+// Social media manager
+const Promote               = lazy(() => import('./pages/Promote'));
+
 
 export const PAGES = {
     "AdminPanel": AdminPanel,
@@ -172,6 +175,8 @@ export const PAGES = {
     "BreederShipping": BreederShipping,
     "ImageImport": ImageImport,
     "QualityScale": QualityScale,
+    // Social media manager
+    "Promote": Promote,
 }
 
 export const pagesConfig = {

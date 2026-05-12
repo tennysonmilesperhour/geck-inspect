@@ -134,3 +134,12 @@ export const StorePromoCode = sb.StorePromoCode;
 export const Testimonial = sb.Testimonial;
 export const Collection = sb.Collection;
 export const CollectionMember = sb.CollectionMember;
+// Social Media Manager (Promote)
+export const SocialPost = sb.SocialPost;
+export const SocialPostVariant = sb.SocialPostVariant;
+export const SocialPlatformConnection = sb.SocialPlatformConnection;
+export const SocialPostUsage = sb.SocialPostUsage;
+export const SocialGenerationLog = sb.SocialGenerationLog;
+export const UserBrandVoice = sb.UserBrandVoice;
+export const SocialPostPhotoUsage = sb.SocialPostPhotoUsage;
+export const SocialReferralBonus = sb.SocialReferralBonus;

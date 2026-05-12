@@ -132,6 +132,15 @@ export const TABLE_MAP = {
   // Multi-user collaboration: per-collection ownership and shared access
   Collection: 'collections',
   CollectionMember: 'collection_members',
+  // Social Media Manager (Promote)
+  SocialPost: 'social_posts',
+  SocialPostVariant: 'social_post_variants',
+  SocialPlatformConnection: 'social_platform_connections',
+  SocialPostUsage: 'social_post_usage',
+  SocialGenerationLog: 'social_generation_log',
+  UserBrandVoice: 'user_brand_voice',
+  SocialPostPhotoUsage: 'social_post_photo_usage',
+  SocialReferralBonus: 'social_referral_bonuses',
 };
 
 function parseSort(sort) {
@@ -388,3 +397,13 @@ export const StorePromoCode = createEntityClient('StorePromoCode');
 export const Testimonial = createEntityClient('Testimonial');
 export const Collection = createEntityClient('Collection');
 export const CollectionMember = createEntityClient('CollectionMember');
+
+// Social Media Manager (Promote)
+export const SocialPost = createEntityClient('SocialPost');
+export const SocialPostVariant = createEntityClient('SocialPostVariant');
+export const SocialPlatformConnection = createEntityClient('SocialPlatformConnection');
+export const SocialPostUsage = createEntityClient('SocialPostUsage');
+export const SocialGenerationLog = createEntityClient('SocialGenerationLog');
+export const UserBrandVoice = createEntityClient('UserBrandVoice');
+export const SocialPostPhotoUsage = createEntityClient('SocialPostPhotoUsage');
+export const SocialReferralBonus = createEntityClient('SocialReferralBonus');

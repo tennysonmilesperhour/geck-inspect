@@ -75,6 +75,9 @@ export const SECTION_FOR_PAGE = {
   BreedingLoans: 'discover',
   Giveaways: 'discover',
   Breeder: 'discover',
+  // Promote — social media manager (lives in Manage so it's adjacent to
+  // MyGeckos and BreedingPairs where the source data lives).
+  Promote: 'manage',
 };
 
 export function getSectionForPage(pageName) {
@@ -87,9 +90,10 @@ export const FALLBACK_NAV_ITEMS = {
     { page_name: "OtherReptiles", display_name: "Other Reptiles", icon: "UsersRound", category: "collection", requires_auth: true, is_enabled: true, order: 2 },
     { page_name: "Breeding", display_name: "Breeding", icon: "Egg", category: "collection", requires_auth: true, is_enabled: true, order: 3 },
     { page_name: "Lineage", display_name: "Lineage", icon: "GitBranch", category: "collection", requires_auth: true, is_enabled: true, order: 4 },
-    { page_name: "Store", display_name: "Supplies", icon: "Store", category: "collection", requires_auth: false, is_enabled: true, order: 5 },
-    { page_name: "CareGuide", display_name: "Care Guide", icon: "Heart", category: "collection", requires_auth: false, is_enabled: true, order: 6 },
-    { page_name: "Forum", display_name: "Forum", icon: "MessageSquare", category: "collection", requires_auth: false, is_enabled: true, order: 7 },
+    { page_name: "Promote", display_name: "Promote", icon: "Sparkles", category: "collection", requires_auth: true, is_enabled: true, order: 5 },
+    { page_name: "Store", display_name: "Supplies", icon: "Store", category: "collection", requires_auth: false, is_enabled: true, order: 6 },
+    { page_name: "CareGuide", display_name: "Care Guide", icon: "Heart", category: "collection", requires_auth: false, is_enabled: true, order: 7 },
+    { page_name: "Forum", display_name: "Forum", icon: "MessageSquare", category: "collection", requires_auth: false, is_enabled: true, order: 8 },
   ],
   tools: [
     { page_name: "Recognition", display_name: "Morph ID", icon: "Search", category: "tools", requires_auth: false, is_enabled: true, order: 1 },
