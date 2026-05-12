@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-05-11T10:42:09.524Z",
+  "lastUpdated": "2026-05-12T06:44:36.703Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -156,7 +156,7 @@
       "title": "Why Your 'Perfect' Cappuccino Pairing Creates Runts (and What to Do Instead)",
       "slug": "cappuccino-pairing-risks-runts",
       "category": "breeding",
-      "status": "drafted",
+      "status": "published",
       "score": {
         "demand": 8,
         "originality": 7,
@@ -166,7 +166,7 @@
       },
       "createdAt": "2026-05-11T09:47:36.369Z",
       "draftedAt": "2026-05-11T10:42:09.524Z",
-      "publishedAt": null,
+      "publishedAt": "2026-05-12T06:44:36.703Z",
       "evidence": [
         {
           "source": "youtube",
