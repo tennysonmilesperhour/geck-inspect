@@ -9,6 +9,7 @@
 //   STRIPE_SECRET_KEY           sk_live_... or sk_test_...
 //   STRIPE_KEEPER_PRICE_ID      price_... (monthly Keeper)
 //   STRIPE_BREEDER_PRICE_ID     price_... (monthly Breeder)
+//   STRIPE_ENTERPRISE_PRICE_ID  price_... (monthly Enterprise $99.99)
 // Optional:
 //   STRIPE_OVERAGE_PRICE_ID     price_... (metered $0.50/post overage line).
 //                               When set, attached as a second line item on
@@ -44,6 +45,7 @@ function jsonResponse(body: unknown, status = 200) {
 const PRICE_IDS: Record<string, string | undefined> = {
   keeper: Deno.env.get("STRIPE_KEEPER_PRICE_ID"),
   breeder: Deno.env.get("STRIPE_BREEDER_PRICE_ID"),
+  enterprise: Deno.env.get("STRIPE_ENTERPRISE_PRICE_ID"),
 };
 
 async function stripeRequest(

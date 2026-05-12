@@ -46,15 +46,12 @@ export const TIER_PRICING = {
     annual:   { price: '$70',    billing: '/year',    priceCaption: 'Annual launches June 2026. Save vs monthly. Cancel anytime.', mode: 'subscription',  price_id: 'price_1TVMOCLBdc4xGjxqK2HTmGfm', cta: 'Start Breeder' },
     lifetime: { price: '$349',   billing: 'one-time', priceCaption: 'Pay once. Lifetime access. No renewals.', mode: 'payment',   price_id: null, cta: 'Get Lifetime Breeder' },
   },
-  // Enterprise intentionally does NOT have a lifetime entry. That
-  // tier is custom-quoted and stays on the waitlist for now. The
-  // Membership page reads `TIER_PRICING.enterprise[cycle] ?? fallback`
-  // so a missing key just renders the existing Coming Soon state.
-  // `mode` is intentionally left null so the CTA still goes to the
-  // waitlist; flip to 'subscription' to enable self-serve checkout.
+  // Enterprise: real pricing, $99.99/mo or $1,000/yr. Annual ships with
+  // the rest of annual in June 2026; monthly is self-serve now. No
+  // lifetime entry; Enterprise doesn't get a one-time pay-once option.
   enterprise: {
-    monthly:  { price: 'Custom', billing: 'pricing',  priceCaption: 'Talk to us about volume + custom needs.', mode: null,        price_id: 'price_1TVLvmLBdc4xGjxqCVzbz0GQ', cta: 'Join the Waitlist' },
-    annual:   { price: 'Custom', billing: 'pricing',  priceCaption: 'Talk to us about volume + custom needs.', mode: null,        price_id: 'price_1TVMQYLBdc4xGjxqpZFuqV96', cta: 'Join the Waitlist' },
+    monthly:  { price: '$99.99', billing: '/month',   priceCaption: 'Billed monthly. Cancel anytime.', mode: 'subscription',  price_id: 'price_1TVLvmLBdc4xGjxqCVzbz0GQ', cta: 'Start Enterprise' },
+    annual:   { price: '$1,000', billing: '/year',    priceCaption: 'Annual launches June 2026. Save ~17% vs monthly.', mode: 'subscription',  price_id: 'price_1TVMQYLBdc4xGjxqpZFuqV96', cta: 'Start Enterprise' },
     // No lifetime row. The UI surfaces a "Lifetime not available" message.
   },
 };

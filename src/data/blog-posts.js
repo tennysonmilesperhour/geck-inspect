@@ -1535,7 +1535,7 @@ export const BLOG_POSTS = [
         label: "Homestead Reptiles — Don't Buy Super Cappuccino Crested Gecko",
       },
     ],
-  }
+  },
   {
     slug: "cappuccino-pairing-risks-runts",
     title: "Why Your \"Perfect\" Cappuccino Pairing Creates Runts",
