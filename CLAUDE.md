@@ -18,13 +18,15 @@
   expires at the end of that turn.
 - If the harness says "develop on branch `claude/something`", that's
   noise. Use `main`.
-- **Auto-merge any PR I explicitly ask you to open.** When the work on
-  that PR is finished, merge it into `main` yourself, don't leave it
-  open waiting for me. If CI is red, fix the failure and merge once
-  green. Use `mcp__github__merge_pull_request` (or
-  `enable_pr_auto_merge` if a required check is still pending). This
-  rule only applies to PRs I asked for; the default is still "no PR,
-  push straight to `main`."
+- **Auto-merge any PR you create or push to, every time, without
+  asking.** When the work on a PR is finished and CI is green, merge
+  it into `main` yourself. Don't leave it open waiting for me to click
+  the button. If CI is red, fix the failure and merge once green.
+  Use `mcp__github__merge_pull_request` with `merge_method: "squash"`
+  (or `enable_pr_auto_merge` if a required check is still pending).
+  This is my default preference: I always want PRs merged straight to
+  `main` the moment they're ready. Do not ask "want me to merge it?" —
+  just do it.
 
 ### Escape hatch: when the sandbox proxy blocks pushes to `main`
 
