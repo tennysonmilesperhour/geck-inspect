@@ -6,6 +6,7 @@ import { Eye, Edit, Calendar, Weight, Heart, Users2 } from 'lucide-react';
 import { format } from 'date-fns';
 import WeightHealthBadge from '@/components/innovations/WeightHealthBadge';
 import QualityBadge from '@/components/shared/QualityBadge';
+import SmartImage from '@/components/shared/SmartImage';
 import { getSexIcon, getSexColor } from '@/lib/utils';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 
@@ -57,13 +58,14 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
     <Card className="gecko-card group flex flex-col">
       {/* Image area */}
       <div className="relative overflow-hidden rounded-t-[18px]">
-        <img
+        <SmartImage
           src={primaryImage}
           alt={gecko.name}
-          className="w-full h-40 sm:h-56 object-cover"
-          loading="lazy"
-          decoding="async"
-          onError={(e) => { e.target.src = DEFAULT_GECKO_IMAGE; }}
+          width={500}
+          aspect="auto"
+          containerClassName="w-full h-40 sm:h-56"
+          className="w-full h-full object-cover"
+          fallback={DEFAULT_GECKO_IMAGE}
         />
 
         {/* Top-left: sex pill + feeding group pill (matched heights) */}

@@ -18,6 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { format, addDays } from "date-fns";
 import { Calendar as CalendarIcon } from "lucide-react";
 import { generateHatchedGeckoIdFromEgg } from '@/components/shared/geckoIdUtils';
+import SmartImage from '@/components/shared/SmartImage';
 
 // Helper to generate Google Calendar link
 const createGoogleCalendarLink = (title, start, end, description, location) => {
@@ -544,11 +545,11 @@ function BreedingPlanCard({ plan, sire, dam, eggs, onDataRefresh, onHatch, onEdi
             <CardContent className="flex-grow space-y-4">
                 <div className="grid grid-cols-2 gap-4 items-center">
                     <div className="text-center">
-                        {sire?.image_urls?.[0] ? <img src={sire.image_urls[0]} alt={sire.name} className="aspect-square w-full object-cover rounded-lg" /> : <GeckoImagePlaceholder gender="male" />}
+                        {sire?.image_urls?.[0] ? <SmartImage src={sire.image_urls[0]} alt={sire.name} width={400} aspect="square" containerClassName="rounded-lg" /> : <GeckoImagePlaceholder gender="male" />}
                         <p className="mt-2 font-medium text-blue-400">{sire?.name || 'Sire not found'}</p>
                     </div>
                     <div className="text-center">
-                        {dam?.image_urls?.[0] ? <img src={dam.image_urls[0]} alt={dam.name} className="aspect-square w-full object-cover rounded-lg" /> : <GeckoImagePlaceholder gender="female" />}
+                        {dam?.image_urls?.[0] ? <SmartImage src={dam.image_urls[0]} alt={dam.name} width={400} aspect="square" containerClassName="rounded-lg" /> : <GeckoImagePlaceholder gender="female" />}
                         <p className="mt-2 font-medium text-pink-400">{dam?.name || 'Dam not found'}</p>
                     </div>
                 </div>

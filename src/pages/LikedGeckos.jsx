@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Heart, Loader2, DollarSign, MapPin, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import SmartImage from '@/components/shared/SmartImage';
 
 export default function LikedGeckosPage() {
     const [likedGeckos, setLikedGeckos] = useState([]);
@@ -117,10 +118,13 @@ export default function LikedGeckosPage() {
                                 <Card key={gecko.id} className="overflow-hidden bg-slate-900 border-slate-700 hover:border-pink-500/50 transition-all">
                                     <div className="aspect-square w-full overflow-hidden relative group">
                                         <Link to={createPageUrl(`GeckoDetail?id=${gecko.id}`)}>
-                                            <img
-                                                src={gecko.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'}
+                                            <SmartImage
+                                                src={gecko.image_urls?.[0]}
                                                 alt={gecko.name}
-                                                className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                                width={500}
+                                                aspect="square"
+                                                fallback="https://i.imgur.com/sw9gnDp.png"
+                                                className="group-hover:scale-105 transition-transform"
                                             />
                                         </Link>
                                         <Button

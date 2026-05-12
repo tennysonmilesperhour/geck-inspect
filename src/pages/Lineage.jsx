@@ -4,6 +4,7 @@ import { useLocation } from 'react-router-dom';
 import { Gecko, BreedingPlan, LineagePlaceholder } from '@/entities/all';
 import { base44 as base44Client } from '@/api/base44Client';
 import { uploadFile } from '@/lib/uploadFile';
+import SmartImage from '@/components/shared/SmartImage';
 import { Loader2, Search, ZoomIn, ZoomOut, GitBranch, Heart, Users2, Edit2, Upload, Download, AlertTriangle, ExternalLink, Dna, Calendar, Scale, Tag, X, Link as LinkIcon, Check, ChevronUp, ChevronDown } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
@@ -177,12 +178,14 @@ const PlaceholderCardNode = ({ parentName, placeholderData, onEdit, size = 'norm
                 onClick={isEditable ? onEdit : undefined}
             >
                 <div className="w-full h-full bg-slate-700 flex items-center justify-center relative">
-                    <img
-                        src={placeholderData?.image_url || DEFAULT_GECKO_IMAGE}
+                    <SmartImage
+                        src={placeholderData?.image_url}
                         alt={parentName || 'Unknown'}
-                        className="w-full h-full object-cover opacity-60"
-                        loading="lazy"
-                        decoding="async"
+                        width={400}
+                        aspect="auto"
+                        containerClassName="w-full h-full"
+                        className="opacity-60"
+                        fallback={DEFAULT_GECKO_IMAGE}
                     />
                     {isEditable && (
                         <div className="absolute top-1 right-1">
@@ -291,12 +294,13 @@ const GeckoCardNode = ({
                 onClick={(e) => { e.stopPropagation(); onNodeClick(gecko.id); }}
             >
                 <div className="w-full h-full bg-slate-700 flex items-center justify-center">
-                    <img
-                        src={hasImage ? gecko.image_urls[0] : DEFAULT_GECKO_IMAGE}
+                    <SmartImage
+                        src={hasImage ? gecko.image_urls[0] : null}
                         alt={gecko.name}
-                        className="w-full h-full object-cover"
-                        loading="lazy"
-                        decoding="async"
+                        width={400}
+                        aspect="auto"
+                        containerClassName="w-full h-full"
+                        fallback={DEFAULT_GECKO_IMAGE}
                     />
                 </div>
 
@@ -1110,12 +1114,13 @@ export default function Lineage() {
                                             className={`w-full text-left px-3 py-2.5 text-sm text-slate-200 hover:bg-slate-700 flex items-center gap-3 transition-colors ${idx !== 0 ? 'border-t border-slate-700/60' : ''}`}
                                             onMouseDown={() => handleSearchSelect(gecko)}
                                         >
-                                            <img
-                                                src={gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
+                                            <SmartImage
+                                                src={gecko.image_urls?.[0]}
                                                 alt={gecko.name}
-                                                className="w-9 h-9 rounded object-cover flex-shrink-0"
-                                                loading="lazy"
-                                                decoding="async"
+                                                width={120}
+                                                aspect="square"
+                                                containerClassName="w-9 h-9 rounded flex-shrink-0"
+                                                fallback={DEFAULT_GECKO_IMAGE}
                                             />
                                             <span className="font-medium">{gecko.name}</span>
                                             {gecko.gecko_id_code && (
@@ -1232,12 +1237,13 @@ export default function Lineage() {
                         className="flex-shrink-0 border-b border-slate-800 bg-slate-900/60 backdrop-blur-sm overflow-hidden"
                     >
                         <div className="max-w-7xl mx-auto px-3 md:px-6 py-3 flex flex-col md:flex-row gap-4 items-start md:items-center">
-                            <img
-                                src={selectedGecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
+                            <SmartImage
+                                src={selectedGecko.image_urls?.[0]}
                                 alt={selectedGecko.name}
-                                className="w-16 h-16 md:w-20 md:h-20 rounded-lg object-cover border border-slate-700 flex-shrink-0"
-                                loading="lazy"
-                                decoding="async"
+                                width={240}
+                                aspect="square"
+                                containerClassName="w-16 h-16 md:w-20 md:h-20 rounded-lg border border-slate-700 flex-shrink-0"
+                                fallback={DEFAULT_GECKO_IMAGE}
                             />
                             <div className="flex-1 min-w-0">
                                 <div className="flex flex-wrap items-center gap-2">
@@ -1326,11 +1332,13 @@ export default function Lineage() {
                                         }`}
                                         title={g.gecko_id_code || g.name}
                                     >
-                                        <img
-                                            src={g.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
+                                        <SmartImage
+                                            src={g.image_urls?.[0]}
                                             alt=""
-                                            className="w-4 h-4 rounded-sm object-cover"
-                                            loading="lazy"
+                                            width={64}
+                                            aspect="square"
+                                            containerClassName="w-4 h-4 rounded-sm"
+                                            fallback={DEFAULT_GECKO_IMAGE}
                                         />
                                         <span className="truncate max-w-[110px]">{g.name}</span>
                                         {i < recentGeckos.length - 1 && (
