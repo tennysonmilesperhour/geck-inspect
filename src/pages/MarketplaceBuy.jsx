@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import Seo from '@/components/seo/Seo';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
+import SmartImage from '@/components/shared/SmartImage';
 import { Gecko, User, MarketplaceLike } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import { Input } from '@/components/ui/input';
@@ -120,13 +121,12 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
     return (
         <Card className="overflow-hidden group-hover:border-emerald-500/50 group-hover:shadow-lg group-hover:shadow-emerald-500/10 transition-colors duration-200 h-full flex flex-col bg-slate-900 border-slate-800">
             <div className="aspect-square w-full overflow-hidden relative">
-                <img
-                    src={gecko.image_urls?.[0] || initialsAvatarUrl(gecko.name)}
+                <SmartImage
+                    src={gecko.image_urls?.[0]}
                     alt={gecko.name}
-                    className="w-full h-full object-cover"
-                    loading="lazy"
-                    decoding="async"
-                    onError={(e) => { e.target.src = 'https://i.imgur.com/sw9gnDp.png'; }}
+                    width={500}
+                    aspect="square"
+                    fallback={gecko.image_urls?.[0] ? 'https://i.imgur.com/sw9gnDp.png' : initialsAvatarUrl(gecko.name)}
                 />
                 {/* Sex icon in top left */}
                 <div className="absolute top-2 left-2">

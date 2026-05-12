@@ -6,6 +6,7 @@ import { WeightRecord, BreedingPlan, Egg, Gecko, GeckoEvent, GeckoImage } from '
 import { format, differenceInMonths } from 'date-fns';
 import { X, Plus, Trash2, LineChart, Loader2, Award, GitBranch, Calendar, Baby, Users, Edit, Eye, EyeOff, History, Archive, ArchiveRestore, ChevronLeft, ChevronRight, Camera, QrCode, ArrowRightLeft, ExternalLink } from 'lucide-react';
 import LoadingSpinner from '../shared/LoadingSpinner';
+import SmartImage from '../shared/SmartImage';
 import EventTracker from './EventTracker';
 import BreedingHistory from './BreedingHistory';
 import { Switch } from '@/components/ui/switch';
@@ -354,11 +355,15 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                         <ChevronLeft className="w-5 h-5" />
                       </button>
                       <div className="relative flex-1 rounded-lg overflow-hidden bg-slate-800 min-h-[160px]">
-                        <img
+                        <SmartImage
                           key={`slide-img-${slideshowImageIndex}`}
-                          src={gecko.image_urls[slideshowImageIndex] || 'https://i.imgur.com/sw9gnDp.png'}
+                          src={gecko.image_urls[slideshowImageIndex]}
                           alt={`${gecko.name} photo ${slideshowImageIndex + 1}`}
-                          className="w-full h-auto object-contain max-h-64"
+                          width={800}
+                          aspect="auto"
+                          containerClassName="w-full max-h-64"
+                          className="object-contain"
+                          fallback="https://i.imgur.com/sw9gnDp.png"
                         />
                         <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
                           {growthSlots[slideshowIndex]?.label} · {slideshowImageIndex + 1}/{gecko.image_urls.length}
@@ -396,7 +401,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                                 : 'border-slate-600 hover:border-slate-400'
                             }`}
                           >
-                            <img src={url} alt={`img ${imgIdx + 1}`} className="w-full h-full object-cover" />
+                            <SmartImage src={url} alt={`img ${imgIdx + 1}`} width={120} aspect="auto" containerClassName="w-full h-full" />
                           </button>
                         ))}
                       </div>
@@ -405,10 +410,14 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                   </div>
                 ) : (
                   <div className="w-full rounded-lg overflow-hidden">
-                    <img
-                      src={gecko.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'}
+                    <SmartImage
+                      src={gecko.image_urls?.[0]}
                       alt={gecko.name}
-                      className="w-full h-auto object-contain max-h-80"
+                      width={800}
+                      aspect="auto"
+                      containerClassName="w-full max-h-80"
+                      className="object-contain"
+                      fallback="https://i.imgur.com/sw9gnDp.png"
                     />
                   </div>
                 )}
