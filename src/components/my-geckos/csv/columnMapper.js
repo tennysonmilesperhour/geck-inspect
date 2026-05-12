@@ -41,7 +41,7 @@ export const TEMPLATE_FIELDS = [
  * Alias map: normalised alias → template field key.
  *
  * Each alias is lowercased and stripped of special chars for matching.
- * Order matters — first match wins, so put more specific aliases first.
+ * Order matters ,  first match wins, so put more specific aliases first.
  */
 const ALIAS_MAP = [
   // Name

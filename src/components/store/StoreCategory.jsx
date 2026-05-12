@@ -8,7 +8,7 @@ import { SITE_URL } from '@/lib/organization-schema';
 import { supabase } from '@/lib/supabaseClient';
 
 /**
- * Category page — fetches the category by slug (supports nested slugs
+ * Category page ,  fetches the category by slug (supports nested slugs
  * like `gifts/under-25`), pulls active products in that category, and
  * renders a grid with optional SEO intro/outro markdown above and below.
  *
@@ -133,7 +133,7 @@ export default function StoreCategory() {
   if (notFound) {
     return (
       <StoreLayout breadcrumbs={[{ label: 'Supplies', to: '/Store' }, { label: 'Not found' }]}>
-        <Seo title="Category not found — Geck Inspect" path={`/Store/c/${slug}`} description="" />
+        <Seo title="Category not found ,  Geck Inspect" path={`/Store/c/${slug}`} description="" />
         <div className="text-center py-20">
           <h1 className="text-2xl font-bold text-slate-100">Category not found</h1>
           <p className="text-sm text-slate-400 mt-2">
@@ -149,7 +149,7 @@ export default function StoreCategory() {
   return (
     <StoreLayout breadcrumbs={breadcrumbs}>
       <Seo
-        title={category?.seo_title || (category ? `${category.name} — Geck Inspect Supplies` : 'Supplies — Geck Inspect')}
+        title={category?.seo_title || (category ? `${category.name} ,  Geck Inspect Supplies` : 'Supplies ,  Geck Inspect')}
         description={category?.seo_description || category?.description || ''}
         path={`/Store/c/${slug}`}
         jsonLd={jsonLd || undefined}
@@ -197,7 +197,7 @@ export default function StoreCategory() {
         <div className="h-40 flex items-center justify-center text-slate-500 text-sm">Loading…</div>
       ) : products.length === 0 ? (
         <div className="rounded-lg border border-dashed border-slate-700 bg-slate-900/20 p-8 text-center text-sm text-slate-400">
-          Nothing in this category yet — check back soon.
+          Nothing in this category yet ,  check back soon.
         </div>
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">

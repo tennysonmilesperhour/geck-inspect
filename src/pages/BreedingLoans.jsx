@@ -136,7 +136,7 @@ function LoanCard({ loan, geckoMap, isOutgoing, onRefresh }) {
         <Calendar size={14} style={{ color: C.muted }} />
         <span className="text-sm" style={{ color: C.slate }}>
           {loan.loan_start ? format(parseISO(loan.loan_start), 'MMM d, yyyy') : 'Not started'}
-          {' — '}
+          {' ,  '}
           {loan.actual_return
             ? format(parseISO(loan.actual_return), 'MMM d, yyyy')
             : loan.expected_return

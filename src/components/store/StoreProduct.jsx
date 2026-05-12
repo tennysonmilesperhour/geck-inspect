@@ -114,7 +114,7 @@ export default function StoreProduct() {
   if (!product) {
     return (
       <StoreLayout breadcrumbs={[{ label: 'Supplies', to: '/Store' }, { label: 'Not found' }]}>
-        <Seo title="Product not found — Geck Inspect" path={`/Store/p/${slug}`} description="" />
+        <Seo title="Product not found ,  Geck Inspect" path={`/Store/p/${slug}`} description="" />
         <div className="text-center py-20">
           <h1 className="text-2xl font-bold text-slate-100">Product not found</h1>
           <p className="text-sm text-slate-400 mt-2">
@@ -128,7 +128,7 @@ export default function StoreProduct() {
   return (
     <StoreLayout breadcrumbs={breadcrumbs}>
       <Seo
-        title={`${product.name} — Geck Inspect Supplies`}
+        title={`${product.name} ,  Geck Inspect Supplies`}
         description={product.short_description || ''}
         path={`/Store/p/${product.slug}`}
         jsonLd={jsonLd || undefined}

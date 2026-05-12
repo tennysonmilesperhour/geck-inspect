@@ -1,5 +1,5 @@
 /**
- * uploadFile — client wrapper for Supabase Storage.
+ * uploadFile ,  client wrapper for Supabase Storage.
  *
  * Replaces the dead Base44 `UploadFile` shim. Every image upload in
  * the app (profile photos, cover photos, gecko photos, reptile photos)
@@ -24,7 +24,7 @@ const BUCKET = 'geck-inspect-media';
 
 /**
  * Best-effort fetch of the current user's total storage bytes. Returns
- * null on any failure (RPC missing, network, permissions) — callers
+ * null on any failure (RPC missing, network, permissions) ,  callers
  * must treat null as "unknown" and skip quota enforcement rather than
  * blocking the upload. This keeps client uploads working even when the
  * 20260507_storage_quota.sql migration hasn't been applied yet.
@@ -54,7 +54,7 @@ async function fetchCurrentUserProfile() {
   }
 }
 
-// Only allow real image types — SVG is excluded because it's scriptable.
+// Only allow real image types ,  SVG is excluded because it's scriptable.
 const ALLOWED_MIME_TYPES = new Set([
   'image/jpeg',
   'image/png',
@@ -97,21 +97,21 @@ export async function uploadFile({ file, folder = 'uploads' } = {}) {
     throw new Error('uploadFile: no file provided');
   }
 
-  // Validate MIME type — reject anything that isn't an allowed image format.
+  // Validate MIME type ,  reject anything that isn't an allowed image format.
   if (!ALLOWED_MIME_TYPES.has(file.type)) {
     throw new Error(
       `Unsupported file type "${file.type || 'unknown'}". Allowed: JPEG, PNG, WebP, GIF, AVIF.`
     );
   }
 
-  // Validate file size — reject uploads larger than 10 MB.
+  // Validate file size ,  reject uploads larger than 10 MB.
   if (file.size > MAX_FILE_SIZE) {
     throw new Error(
       `File is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximum allowed: 10 MB.`
     );
   }
 
-  // Validate folder — must be a simple alphanumeric slug, no path traversal.
+  // Validate folder ,  must be a simple alphanumeric slug, no path traversal.
   if (!/^[a-zA-Z0-9_-]+$/.test(folder)) {
     throw new Error('Invalid upload folder name.');
   }
@@ -120,7 +120,7 @@ export async function uploadFile({ file, folder = 'uploads' } = {}) {
   const { data: { user } } = await supabase.auth.getUser();
   const ownerSlug = user?.id || 'public';
 
-  // Tier-based storage quota. Best effort — if either query fails we
+  // Tier-based storage quota. Best effort ,  if either query fails we
   // fall through to the upload rather than block the user (the
   // migration may not yet be applied, or the network may be flaky).
   if (user) {

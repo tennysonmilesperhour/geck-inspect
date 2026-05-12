@@ -8,10 +8,10 @@
  *   - Top movers (fastest appreciating and depreciating combos)
  *   - Upcoming market events (expos, breeder releases) that move prices
  *
- * Every number is drilled into by clicking — via the `onDrillDown`
+ * Every number is drilled into by clicking ,  via the `onDrillDown`
  * callback that opens the TransactionDrilldown modal in the container.
  *
- * Cards here are pinnable — pass `pinnedCardIds` (array) + `onTogglePin`
+ * Cards here are pinnable ,  pass `pinnedCardIds` (array) + `onTogglePin`
  * (function(id)) to enable the pin UI. When `filterCardIds` is provided,
  * only cards whose id is in the set render (used by the "Pinned" tab).
  */
@@ -162,7 +162,7 @@ export default function OverviewDashboard({
     );
   }
 
-  // Canonical Overview layout — grid with TopMovers + Events side-by-side.
+  // Canonical Overview layout ,  grid with TopMovers + Events side-by-side.
   return (
     <div className="space-y-5">
       {renderCard('market-index')}
@@ -186,7 +186,7 @@ function MarketIndexCard({ index, pinProps }) {
       <SectionHeader
         icon={Activity}
         title="Geck Inspect Market Index"
-        subtitle="Weighted basket of high-value trait combinations — 1,000 at period start"
+        subtitle="Weighted basket of high-value trait combinations ,  1,000 at period start"
         right={
           <div className="flex items-center gap-2">
             <ConfidenceChip
@@ -197,7 +197,7 @@ function MarketIndexCard({ index, pinProps }) {
             />
             <MethodologyPopover title="How this index is built">
               <p>The Market Index is a Laspeyres-style basket: we sum the median monthly sold price of each high-value combo, weight it by the combo's 12-month volume share, and normalize the earliest month in view to 1,000. It's designed so a reading of 1,200 means the basket is up 20% from period start.</p>
-              <p>We publish confidence alongside the headline — anything below 65 should be read as directional, not a precise signal.</p>
+              <p>We publish confidence alongside the headline ,  anything below 65 should be read as directional, not a precise signal.</p>
             </MethodologyPopover>
             <PinToggle id="market-index" {...pinProps} />
           </div>
@@ -335,19 +335,19 @@ function PeakIndicatorGrid({ peaks, onDrillDown, pinProps }) {
     <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
       <SectionHeader
         icon={Gauge}
-        title="Peak Indicator — Hold, Sell, or Accumulate"
+        title="Peak Indicator ,  Hold, Sell, or Accumulate"
         subtitle="Composite 0–100 score. Higher = market heat, lower = early / undervalued."
         right={
           <div className="flex items-center gap-2">
             <MethodologyPopover title="How the peak score is calculated">
               <p>Four components, each normalized to [-1, +1], then weighted:</p>
               <ul className="list-disc pl-5 space-y-0.5 text-slate-300">
-                <li>Price momentum (90d vs 91-365d) — weight 45%</li>
-                <li>Volume momentum (sales acceleration) — weight 25%</li>
-                <li>Supply pressure (3-month projected hatchlings) — weight 20%</li>
-                <li>Breeder adoption breadth (distinct producers) — weight 10%</li>
+                <li>Price momentum (90d vs 91-365d) ,  weight 45%</li>
+                <li>Volume momentum (sales acceleration) ,  weight 25%</li>
+                <li>Supply pressure (3-month projected hatchlings) ,  weight 20%</li>
+                <li>Breeder adoption breadth (distinct producers) ,  weight 10%</li>
               </ul>
-              <p>Mapped from [-1, +1] to [0, 100]. This mirrors the "overheat" indicators on sneaker and watch indices — high scores are a sell signal, low scores accumulate.</p>
+              <p>Mapped from [-1, +1] to [0, 100]. This mirrors the "overheat" indicators on sneaker and watch indices ,  high scores are a sell signal, low scores accumulate.</p>
             </MethodologyPopover>
             <PinToggle id="peak-indicators" {...pinProps} />
           </div>

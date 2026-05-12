@@ -80,7 +80,7 @@ function parseDate(raw) {
     return `${yyyy}-${mm}-${dd}`;
   }
 
-  // MM/DD/YYYY or DD/MM/YYYY — try US format first
+  // MM/DD/YYYY or DD/MM/YYYY ,  try US format first
   const slashMatch = trimmed.match(/^(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})$/);
   if (slashMatch) {
     let [, a, b, y] = slashMatch;
@@ -120,11 +120,11 @@ function parseMorphTags(raw) {
 /**
  * Main import function.
  *
- * @param {Object[]} rows — array of row objects keyed by template field names
+ * @param {Object[]} rows ,  array of row objects keyed by template field names
  * @param {Object} options
- * @param {string}  options.importMode — 'create_and_update' or 'create_only'
- * @param {boolean} options.createBreedingPairs — upsert BreedingPlan for each (sire, dam) pair resolved from rows
- * @param {boolean} options.importEggs — create Egg records from rows that have egg_lay_date + a resolved pair
+ * @param {string}  options.importMode ,  'create_and_update' or 'create_only'
+ * @param {boolean} options.createBreedingPairs ,  upsert BreedingPlan for each (sire, dam) pair resolved from rows
+ * @param {boolean} options.importEggs ,  create Egg records from rows that have egg_lay_date + a resolved pair
  * @returns {{ success: boolean, results: { processed, created, updated, pairsCreated, eggsCreated, errors, warnings } }}
  */
 export async function importGeckosFromCSV({
@@ -177,7 +177,7 @@ export async function importGeckosFromCSV({
     try {
       const name = (row.name || '').trim();
       if (!name) {
-        results.warnings.push(`${rowLabel}: Skipped — no name provided.`);
+        results.warnings.push(`${rowLabel}: Skipped ,  no name provided.`);
         continue;
       }
 
@@ -191,7 +191,7 @@ export async function importGeckosFromCSV({
       }
 
       if (existing && importMode === 'create_only') {
-        results.warnings.push(`${rowLabel}: "${name}" (${geckoIdCode}) already exists — skipped.`);
+        results.warnings.push(`${rowLabel}: "${name}" (${geckoIdCode}) already exists ,  skipped.`);
         continue;
       }
 
@@ -205,7 +205,7 @@ export async function importGeckosFromCSV({
           sireId = sire.id;
           if (!sireName) sireName = sire.name;
         } else {
-          results.warnings.push(`${rowLabel}: Sire ID code "${sireIdCode}" not found — stored as sire name.`);
+          results.warnings.push(`${rowLabel}: Sire ID code "${sireIdCode}" not found ,  stored as sire name.`);
           if (!sireName) sireName = sireIdCode;
         }
       }
@@ -220,7 +220,7 @@ export async function importGeckosFromCSV({
           damId = dam.id;
           if (!damName) damName = dam.name;
         } else {
-          results.warnings.push(`${rowLabel}: Dam ID code "${damIdCode}" not found — stored as dam name.`);
+          results.warnings.push(`${rowLabel}: Dam ID code "${damIdCode}" not found ,  stored as dam name.`);
           if (!damName) damName = damIdCode;
         }
       }
@@ -287,7 +287,7 @@ export async function importGeckosFromCSV({
         });
       } else if ((importEggs || createBreedingPairs) && (row.egg_lay_date || row.pairing_date)) {
         results.warnings.push(
-          `${rowLabel}: breeding/egg columns were provided but sire and dam could not both be resolved — skipping pair/egg creation for this row.`
+          `${rowLabel}: breeding/egg columns were provided but sire and dam could not both be resolved ,  skipping pair/egg creation for this row.`
         );
       }
     } catch (err) {
@@ -329,7 +329,7 @@ export async function importGeckosFromCSV({
           planByPairKey.set(key, plan);
           results.pairsCreated++;
         } catch (err) {
-          results.warnings.push(`${info.rowLabel}: could not create breeding pair — ${err.message}`);
+          results.warnings.push(`${info.rowLabel}: could not create breeding pair ,  ${err.message}`);
         }
       }
     }
@@ -357,7 +357,7 @@ export async function importGeckosFromCSV({
       const plan = planByPairKey.get(key);
       if (!plan) {
         results.warnings.push(
-          `${info.rowLabel}: egg has a lay date but no breeding pair — enable "Auto-create breeding pairs" or pre-create the pair.`
+          `${info.rowLabel}: egg has a lay date but no breeding pair ,  enable "Auto-create breeding pairs" or pre-create the pair.`
         );
         continue;
       }
@@ -375,7 +375,7 @@ export async function importGeckosFromCSV({
         eggByGeckoId.set(info.geckoId, egg);
         results.eggsCreated++;
       } catch (err) {
-        results.warnings.push(`${info.rowLabel}: could not create egg — ${err.message}`);
+        results.warnings.push(`${info.rowLabel}: could not create egg ,  ${err.message}`);
       }
     }
   }

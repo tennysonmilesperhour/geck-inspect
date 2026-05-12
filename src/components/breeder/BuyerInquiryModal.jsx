@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabaseClient';
 
 /**
  * Buyer-side inquiry modal rendered on the public breeder storefront
- * (/Breeder/:slug). Anyone (logged-in or not) can submit an inquiry —
+ * (/Breeder/:slug). Anyone (logged-in or not) can submit an inquiry , 
  * the form posts to the `send-breeder-inquiry` edge function which
  * records it in `breeder_inquiries` and emails the breeder via Resend.
  *
@@ -14,7 +14,7 @@ import { supabase } from '@/lib/supabaseClient';
  *   - breederEmail: string (required, recipient)
  *   - breederSlug?: string (used in the email link back)
  *   - breederName?: string (display only)
- *   - gecko?: { id, name, passport_code } (optional — populated when
+ *   - gecko?: { id, name, passport_code } (optional ,  populated when
  *             inquiring about a specific listing)
  *
  * The form has a hidden honeypot field `website` that real users won't
@@ -74,7 +74,7 @@ export default function BuyerInquiryModal({
           gecko_name: gecko?.name || '',
           gecko_passport_code: gecko?.passport_code || '',
           message: message.trim(),
-          website, // honeypot — should be empty
+          website, // honeypot ,  should be empty
         },
       });
       if (fnErr) throw fnErr;
@@ -206,7 +206,7 @@ export default function BuyerInquiryModal({
               />
             </div>
 
-            {/* Honeypot — invisible to humans; bots fill every field. */}
+            {/* Honeypot ,  invisible to humans; bots fill every field. */}
             <div aria-hidden="true" style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', overflow: 'hidden' }}>
               <label>
                 Website (leave blank)

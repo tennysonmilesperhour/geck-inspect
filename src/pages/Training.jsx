@@ -48,7 +48,7 @@ function adaptStats(raw) {
   const rawUndersampled = new Map(
     (raw.undersampled_morphs || []).map((m) => [m.id, Number(m.count) || 0]),
   );
-  // Include canonical morphs with ZERO samples too — the RPC only returns
+  // Include canonical morphs with ZERO samples too ,  the RPC only returns
   // ids that appear in the table at all.
   const undersampled = PRIMARY_MORPHS
     .map((m) => ({ ...m, count: rawUndersampled.get(m.id) ?? 0 }))
@@ -167,7 +167,7 @@ export default function TrainingPage() {
             <div className="flex items-start gap-3 text-slate-400 text-sm">
               <Sparkles className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
               <p>
-                Label every axis that matters for ML — primary morph, genetic
+                Label every axis that matters for ML ,  primary morph, genetic
                 traits, descriptive modifiers, base color, pattern intensity,
                 fired state, photo quality, and (optionally) lineage. The more
                 axes you provide, the more weight the sample carries in training.
@@ -180,7 +180,7 @@ export default function TrainingPage() {
             <div className="flex items-start gap-3 text-slate-400 text-sm">
               <ShieldCheck className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
               <p>
-                Approving promotes a sample to <span className="text-emerald-300">verified</span> —
+                Approving promotes a sample to <span className="text-emerald-300">verified</span> , 
                 the flag ML uses to select training-grade rows. Rejecting keeps
                 it in the corpus but marks it unreliable, so the model can
                 learn from the disagreement too.
@@ -268,7 +268,7 @@ export default function TrainingPage() {
                   Canonical primary morphs with fewer than 5 labeled samples:
                 </p>
                 {stats.undersampled.length === 0 ? (
-                  <p className="text-sm text-emerald-300">Nothing under-represented — great coverage.</p>
+                  <p className="text-sm text-emerald-300">Nothing under-represented ,  great coverage.</p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {stats.undersampled.map((m) => (

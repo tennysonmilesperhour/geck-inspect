@@ -27,7 +27,7 @@ import {
 } from '@/components/ui/select';
 
 /**
- * Mass messaging — broadcast an announcement to a target audience.
+ * Mass messaging ,  broadcast an announcement to a target audience.
  *
  * Each user in the target group receives:
  *   1. A DirectMessage from the admin's email
@@ -125,7 +125,7 @@ export default function MassMessaging({ prefill, onPrefillConsumed }) {
       const bullets = (latest.bullet_points || []).map((b) => `- ${b}`).join('\n');
       const prompt = `You are writing a platform update announcement for users of "Geck Inspect", a crested-gecko management web app.
 
-Use ONLY the bullets below — do NOT invent features that aren't listed.
+Use ONLY the bullets below ,  do NOT invent features that aren't listed.
 
 Title: ${latest.title}
 Bullets:
@@ -182,7 +182,7 @@ Return JSON: { "subject": "short email-style subject, under 70 chars", "content"
       } = await supabase.auth.getUser();
       const adminEmail = sbUser?.email;
       if (!adminEmail) {
-        throw new Error('Not signed in — cannot send.');
+        throw new Error('Not signed in ,  cannot send.');
       }
 
       const allUsers = await User.list();

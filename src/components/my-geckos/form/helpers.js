@@ -1,5 +1,5 @@
 /**
- * GeckoForm helpers — pure functions, no React state.
+ * GeckoForm helpers ,  pure functions, no React state.
  */
 
 import { generateHatchedGeckoId, generateFounderGeckoId } from '@/components/shared/geckoIdUtils';
@@ -8,18 +8,18 @@ import { generateHatchedGeckoId, generateFounderGeckoId } from '@/components/sha
  * Apply a user-defined format string by replacing known tokens.
  *
  * Tokens:
- *   {PREFIX}  — breeder prefix (first 3 chars of breeder_name or email)
- *   {NNN}     — zero-padded 3-digit sequential number
- *   {SIRE}    — first two letters of sire name (title-cased)
- *   {DAM}     — first two letters of dam name (title-cased)
- *   {NUM}     — offspring number this season
- *   {LETTER}  — clutch egg letter (a, b, c …)
- *   {YY}      — 2-digit year
- *   {YYYY}    — 4-digit year
- *   {LINE}    — prefix of the oldest founder ancestor (sire-side by default)
- *   {PARENT}  — full gecko_id_code of the direct parent (sire preferred)
- *   {SEX}     — m / f / u
- *   {CLUTCH}  — clutch number (same as NUM when clutch entity not present)
+ *   {PREFIX}  ,  breeder prefix (first 3 chars of breeder_name or email)
+ *   {NNN}     ,  zero-padded 3-digit sequential number
+ *   {SIRE}    ,  first two letters of sire name (title-cased)
+ *   {DAM}     ,  first two letters of dam name (title-cased)
+ *   {NUM}     ,  offspring number this season
+ *   {LETTER}  ,  clutch egg letter (a, b, c …)
+ *   {YY}      ,  2-digit year
+ *   {YYYY}    ,  4-digit year
+ *   {LINE}    ,  prefix of the oldest founder ancestor (sire-side by default)
+ *   {PARENT}  ,  full gecko_id_code of the direct parent (sire preferred)
+ *   {SEX}     ,  m / f / u
+ *   {CLUTCH}  ,  clutch number (same as NUM when clutch entity not present)
  *
  * Any text outside tokens is kept as-is, so "{PREFIX}-{NNN}" → "JOH-001".
  */
@@ -40,7 +40,7 @@ export function applyFormat(format, vars) {
 }
 
 /**
- * Extract a short prefix from a gecko_id_code — the contiguous leading
+ * Extract a short prefix from a gecko_id_code ,  the contiguous leading
  * alphabetic characters, max 4. Falls back to the first 3 alphanumeric
  * chars if no leading alpha run exists. Used by resolveLinePrefix.
  */
@@ -81,10 +81,10 @@ export function resolveLinePrefix(startGecko, allGeckos, side = 'sire', depthCap
  * Supported inheritance modes. Determines what {LINE} resolves to for
  * a hatchling given its sire + dam.
  *
- *   breeder_prefix  — always the breeder's own prefix (default)
- *   sire_line       — paternal lineage (walk up sire_id)
- *   dam_line        — maternal lineage (walk up dam_id)
- *   founder_origin  — sire-side if available, else dam-side, else breeder
+ *   breeder_prefix  ,  always the breeder's own prefix (default)
+ *   sire_line       ,  paternal lineage (walk up sire_id)
+ *   dam_line        ,  maternal lineage (walk up dam_id)
+ *   founder_origin  ,  sire-side if available, else dam-side, else breeder
  */
 export const INHERITANCE_MODES = ['breeder_prefix', 'sire_line', 'dam_line', 'founder_origin'];
 
@@ -126,9 +126,9 @@ function getPrefix(user, customPrefix) {
  * panel.  When present, the user's custom format string is applied
  * instead of the built-in pattern.
  *
- *   idSettings.founderFormat   — e.g. "{PREFIX}-{NNN}"
- *   idSettings.hatchlingFormat — e.g. "{SIRE}{DAM}{NUM}{LETTER}{YY}"
- *   idSettings.prefix          — custom prefix override (blank = auto)
+ *   idSettings.founderFormat   ,  e.g. "{PREFIX}-{NNN}"
+ *   idSettings.hatchlingFormat ,  e.g. "{SIRE}{DAM}{NUM}{LETTER}{YY}"
+ *   idSettings.prefix          ,  custom prefix override (blank = auto)
  */
 export async function generateNextGeckoId(user, allGeckos, sire = null, dam = null, sireName = '', damName = '', idSettings = null) {
   const hasCustomFormat = idSettings &&

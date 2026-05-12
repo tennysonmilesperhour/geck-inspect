@@ -10,7 +10,7 @@ import { format, formatDistanceToNow } from 'date-fns';
 import { BlogPost } from '@/entities/all';
 
 /**
- * Blog dashboard — at-a-glance counts plus the most-recent posts and
+ * Blog dashboard ,  at-a-glance counts plus the most-recent posts and
  * quick-action buttons. Fetches posts once on mount and bins them by
  * status; everything else (filtering, editing) lives in BlogPostsList.
  */
@@ -74,7 +74,7 @@ export default function BlogDashboard({ onNavigate, onCreatePost, onGenerate }) 
             </div>
           ) : recent.length === 0 ? (
             <p className="text-slate-500 text-sm py-6 text-center">
-              No posts yet — create your first one above.
+              No posts yet ,  create your first one above.
             </p>
           ) : (
             <ul className="divide-y divide-slate-800">

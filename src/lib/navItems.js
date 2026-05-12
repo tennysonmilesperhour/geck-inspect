@@ -28,7 +28,7 @@ export const SECTIONS = [
 // are section-agnostic (Dashboard, MyProfile, Settings, etc.) and don't
 // light up a section tab.
 export const SECTION_FOR_PAGE = {
-  // Manage — your animals + business
+  // Manage ,  your animals + business
   MyGeckos: 'manage',
   OtherReptiles: 'manage',
   Breeding: 'manage',
@@ -48,7 +48,7 @@ export const SECTION_FOR_PAGE = {
   BatchHusbandry: 'manage',
   Store: 'manage',
 
-  // Discover — morphs, community, reference, browsing
+  // Discover ,  morphs, community, reference, browsing
   Recognition: 'discover',
   MorphVisualizer: 'discover',
   MorphGuide: 'discover',
@@ -75,7 +75,7 @@ export const SECTION_FOR_PAGE = {
   BreedingLoans: 'discover',
   Giveaways: 'discover',
   Breeder: 'discover',
-  // Promote — social media manager (lives in Manage so it's adjacent to
+  // Promote ,  social media manager (lives in Manage so it's adjacent to
   // MyGeckos and BreedingPairs where the source data lives).
   Promote: 'manage',
 };

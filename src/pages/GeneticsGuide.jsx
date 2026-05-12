@@ -13,13 +13,13 @@ import { GLOSSARY_GROUPS, GLOSSARY } from "@/data/genetics-glossary";
 
 // ── Content data ──────────────────────────────────────────────────────────────
 //
-// Content organized by experience level — only TWO levels now:
+// Content organized by experience level ,  only TWO levels now:
 //
 //   Beginner: Foundations + Punnett squares + Morphs-vs-Polygenic basics
 //   Advanced: Proven Mendelian morphs, lethal alleles, proving genetics
 //
 // Each level is shown as a tab on the page. Within a level, sections are
-// laid out as a vertical "DNA strand" — numbered nodes on the left rail
+// laid out as a vertical "DNA strand" ,  numbered nodes on the left rail
 // linked by a gradient backbone, with content cards on the right. There's
 // no level filter, no prev/next slideshow buttons, and nothing is hidden
 // behind collapsibles that chop off the flow.
@@ -27,7 +27,7 @@ import { GLOSSARY_GROUPS, GLOSSARY } from "@/data/genetics-glossary";
 const LEVEL_META = {
   Beginner: {
     label: 'Beginner',
-    subtitle: 'Start here — what genes, alleles, and inheritance actually are.',
+    subtitle: 'Start here ,  what genes, alleles, and inheritance actually are.',
     accent: 'from-emerald-500 to-teal-400',
     badgeClass: 'bg-emerald-500/15 text-emerald-300 border-emerald-500/40',
     nodeClass: 'bg-emerald-500 text-white ring-emerald-400/30',
@@ -271,7 +271,7 @@ export default function GeneticsGuide() {
 
               {/* DNA-strand section layout */}
               <div className="relative">
-                {/* Vertical DNA backbone — decorative gradient line on the left
+                {/* Vertical DNA backbone ,  decorative gradient line on the left
                     rail, connecting every section's numbered node. */}
                 <div className="absolute left-[19px] md:left-[23px] top-6 bottom-6 w-0.5 bg-gradient-to-b from-emerald-500/60 via-teal-400/40 to-purple-500/60 pointer-events-none" />
 

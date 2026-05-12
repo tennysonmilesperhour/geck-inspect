@@ -85,7 +85,7 @@ export default function ProjectManager() {
             // Resolve current user first so we can scope every subsequent
             // query to their own data. Previously Gecko.list() was
             // unscoped, so the Future Breeding planner could pick other
-            // breeders' geckos as parents — a real bug.
+            // breeders' geckos as parents ,  a real bug.
             const currentUser = await User.me().catch(() => null);
             const userEmail = currentUser?.email || null;
             const { getVisibleGeckos } = await import('@/lib/geckoAccess');
@@ -115,7 +115,7 @@ export default function ProjectManager() {
     // ── Task / project due-date notifications ────────────────────────
     // Runs once on mount. For each task or project with a due date that
     // is today or past (and not completed/archived), creates an in-app
-    // notification — deduped by a daily key so the same reminder isn't
+    // notification ,  deduped by a daily key so the same reminder isn't
     // created twice in one session.
     const checkDueDateNotifications = useCallback(async (
       taskList, projectList, userEmail

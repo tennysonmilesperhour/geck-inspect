@@ -31,7 +31,7 @@ import { createPageUrl } from '@/utils';
 import { format } from 'date-fns';
 
 /**
- * Dashboard — April 2026 creative rework.
+ * Dashboard ,  April 2026 creative rework.
  *
  * Key changes vs the previous version:
  *
@@ -39,9 +39,9 @@ import { format } from 'date-fns';
  *    shows their own collection count inline. Gradient is animated so
  *    the dashboard feels alive the moment it loads.
  * 2. Three-column layout for the main content grid:
- *       left  — Next Actions + Community Pulse (the fun stuff)
- *       mid   — Gecko of the Day (the eye candy)
- *       right — Stats + Featured Breeders + hatchery widget
+ *       left  ,  Next Actions + Community Pulse (the fun stuff)
+ *       mid   ,  Gecko of the Day (the eye candy)
+ *       right ,  Stats + Featured Breeders + hatchery widget
  *    This replaces the old "big content + tiny sidebar" split that
  *    felt lopsided.
  * 3. Pruned the query fan-out: the old dashboard loaded 500 geckos,
@@ -50,7 +50,7 @@ import { format } from 'date-fns';
  *    strip, 10 posts, plus the gecko of the day. Per-user queries
  *    run inside NextActions / FeaturedBreeders scoped to the current
  *    user only.
- * 4. Recent Activity tiles no longer use `scale-105` on hover — that
+ * 4. Recent Activity tiles no longer use `scale-105` on hover ,  that
  *    was the root cause of the sluggish gallery hover. See the
  *    RecentActivity component for details.
  */
@@ -96,7 +96,7 @@ export default function Dashboard() {
         return () => window.removeEventListener('changelog_read', handler);
     }, []);
 
-    // Hatchery widget — cheap egg/plan counts (used for the hero strip)
+    // Hatchery widget ,  cheap egg/plan counts (used for the hero strip)
     useEffect(() => {
         (async () => {
             try {
@@ -121,7 +121,7 @@ export default function Dashboard() {
             setIsLoading(true);
             try {
                 const today = format(new Date(), 'yyyy-MM-dd');
-                // Batched fetch — dramatically slimmer than before.
+                // Batched fetch ,  dramatically slimmer than before.
                 const [currentUser, usersData, geckosPreview, posts, gotd, recentImagesData] = await Promise.all([
                     User.me().catch(() => null),
                     User.list('-created_date', 30),
@@ -187,7 +187,7 @@ export default function Dashboard() {
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-emerald-950/30 to-slate-900 relative overflow-hidden">
             <Seo
                 title="Dashboard"
-                description="Your crested gecko breeding dashboard — track your collection, hatchery stats, community activity, and gecko of the day."
+                description="Your crested gecko breeding dashboard ,  track your collection, hatchery stats, community activity, and gecko of the day."
                 path="/Dashboard"
                 noIndex
                 keywords={['gecko dashboard', 'breeding tracker', 'hatchery stats']}
@@ -199,7 +199,7 @@ export default function Dashboard() {
 
             <div className="relative z-10 p-4 md:p-8">
                 <div className="max-w-7xl mx-auto space-y-6">
-                    {/* HERO STRIP — personal greeting + live mini stats */}
+                    {/* HERO STRIP ,  personal greeting + live mini stats */}
                     <div className="relative overflow-hidden rounded-3xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950/60 via-slate-900/80 to-slate-950/80 backdrop-blur-sm">
                         <div className="absolute -top-20 -right-20 w-80 h-80 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
                         <div className="absolute -bottom-16 -left-16 w-72 h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -334,15 +334,15 @@ export default function Dashboard() {
                         </div>
                     )}
 
-                    {/* MAIN CONTENT GRID — 3 columns on large screens */}
+                    {/* MAIN CONTENT GRID ,  3 columns on large screens */}
                     <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
-                        {/* Left column — Next Actions + Community Pulse */}
+                        {/* Left column ,  Next Actions + Community Pulse */}
                         <div className="xl:col-span-4 space-y-6">
                             <NextActions currentUserEmail={user?.email} />
                             {dashPrefs.showCommunityPulse && <CommunityPulse />}
                         </div>
 
-                        {/* Middle column — Gecko of the Day hero */}
+                        {/* Middle column ,  Gecko of the Day hero */}
                         <div className="xl:col-span-5 space-y-6">
                             {dashPrefs.showGeckoOfTheDay && (
                                 <GeckoOfTheDayComponent
@@ -359,7 +359,7 @@ export default function Dashboard() {
                             />
                         </div>
 
-                        {/* Right column — Featured breeders + hatchery */}
+                        {/* Right column ,  Featured breeders + hatchery */}
                         <div className="xl:col-span-3 space-y-6">
                             {dashPrefs.showFeaturedBreeders && <FeaturedBreeders />}
 

@@ -32,7 +32,7 @@ import ReferralLinkCard from "@/components/shared/ReferralLinkCard";
 
 
 // Non-React concerns extracted from this file as part of the hairball
-// cleanup — pure JS cache + rate-limit helpers, and the static
+// cleanup ,  pure JS cache + rate-limit helpers, and the static
 // navigation / level-progression constants.
 import { dataCache, retryApiCall } from '@/lib/layoutCache';
 import {
@@ -110,11 +110,11 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   // section-agnostic pages (Dashboard, MyProfile, Settings) we fall back
   // to the last section the user was in, so the sidebar doesn't go
   // empty when they hit home. DB overrides (page_config.section) are
-  // applied once page configs finish loading — see the effect below.
+  // applied once page configs finish loading ,  see the effect below.
   const currentPageName = location.pathname.replace(/^\/+/, '').split('/')[0] || '';
 
   // DB-backed per-page section override. `page_config.section` wins over
-  // the hardcoded map when set — lets admins move pages between sections
+  // the hardcoded map when set ,  lets admins move pages between sections
   // without a code deploy.
   const dbSectionByPage = useMemo(() => {
     const map = new Map();
@@ -283,7 +283,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   }, [user]);
   
   // Unread message polling + event-driven refresh. Previously polled
-  // every 30 minutes with a cache that never invalidated — which is why
+  // every 30 minutes with a cache that never invalidated ,  which is why
   // the badge didn't clear after reading a conversation. Now:
   //   * Polls every 60s
   //   * Invalidates the cache on force-refresh
@@ -344,7 +344,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   }, [user]);
 
   // Sidebar data: contributions, levels, images, page configs.
-  // User comes from useAuth() — no separate fetch needed.
+  // User comes from useAuth() ,  no separate fetch needed.
   useEffect(() => {
     const fetchData = async () => {
       try {
@@ -460,7 +460,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     }
   };
 
-  // IDs of notifications the user dismissed this session — prevents
+  // IDs of notifications the user dismissed this session ,  prevents
   // them from reappearing in the popover even if the server re-fetch
   // race condition returns them before the DB write propagates.
   // Persist dismissed notification IDs in sessionStorage so they
@@ -580,7 +580,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   // The DB is the source of truth for ordering and visibility. Fallback
   // items are ONLY used to populate the sidebar when a brand-new page
   // hasn't been seeded into page_config yet. If page_config explicitly
-  // marks a page as disabled (is_enabled=false), it stays hidden — even
+  // marks a page as disabled (is_enabled=false), it stays hidden ,  even
   // for admins. The previous version re-merged fallback items back in,
   // which is why disabled pages still appeared in the admin sidebar.
   const getNavItems = () => {
@@ -652,7 +652,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     // Seed: if a fallback item has NEVER been written to page_config
     // (brand-new page that an admin hasn't touched yet), surface it so
     // the sidebar isn't missing entries on a first deploy. Fallbacks
-    // are NOT used to override an existing DB row — meaning a disabled
+    // are NOT used to override an existing DB row ,  meaning a disabled
     // page stays disabled.
     for (const category of ['collection', 'tools', 'public']) {
       for (const fallback of (FALLBACK_NAV_ITEMS[category] || [])) {
@@ -667,7 +667,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
   const rawNavItems = getNavItems();
 
-  // Favorite pages — user picks up to FAVORITES_MAX pages in Settings.
+  // Favorite pages ,  user picks up to FAVORITES_MAX pages in Settings.
   // Those get a prominent 2x2 grid at the top of the sidebar and are
   // hidden from their original category section so they don't appear
   // twice. Stored on auth.user_metadata + profiles.favorite_page_names.
@@ -693,7 +693,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
   // Sidebar filtered to the active section. We flatten across the old
   // category buckets (collection/tools/public) because sections are now
-  // the primary grouping — a single page can live anywhere in the DB
+  // the primary grouping ,  a single page can live anywhere in the DB
   // category and still show up under its section.
   const activeSection = SECTIONS.find((s) => s.id === activeSectionId) || SECTIONS[0];
   const sectionNavItems = flattenNavItems(navItems)
@@ -895,7 +895,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
             )}
           </SidebarBody>
 
-          {/* Scroll hint — a fade + bouncing chevron that overlaps the
+          {/* Scroll hint ,  a fade + bouncing chevron that overlaps the
               end of the scrollable nav so users see, at a glance,
               that there's more content above the footer. Pulled up
               with negative margin so the gradient visually blends
@@ -970,7 +970,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         </Sidebar>
 
 
-        {/* Edge hover detector — expands the collapsed rail before the
+        {/* Edge hover detector ,  expands the collapsed rail before the
             cursor physically reaches it, giving a smoother feel. Only
             mounted while collapsed so it can't intercept clicks on the
             expanded sidebar's left edge. */}
@@ -981,7 +981,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
             onMouseEnter={expandSidebar}
           />
         )}
-        {/* Desktop sidebar — fixed, so the expanded panel overlays the
+        {/* Desktop sidebar ,  fixed, so the expanded panel overlays the
             page instead of reflowing it. Main content gets enough
             left-padding at md breakpoint to clear the collapsed rail. */}
         <div
@@ -1128,7 +1128,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                     variant="ghost"
                     size="sm"
                     onClick={toggleSidebarLock}
-                    title={isSidebarLocked ? "Unlock — sidebar will auto-collapse on mouse leave" : "Lock sidebar open"}
+                    title={isSidebarLocked ? "Unlock ,  sidebar will auto-collapse on mouse leave" : "Lock sidebar open"}
                     aria-label={isSidebarLocked ? "Unlock sidebar" : "Lock sidebar open"}
                     className="w-full justify-start text-emerald-100/70 hover:text-white hover:bg-emerald-800/30 text-xs sidebar-lock-toggle"
                   >
@@ -1268,7 +1268,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
           </main>
 
-        {/* Section tabs (mobile) — fixed bottom bar */}
+        {/* Section tabs (mobile) ,  fixed bottom bar */}
         <nav
           className="gecko-bottom-nav fixed bottom-0 left-0 right-0 z-40 md:hidden flex"
           aria-label="App sections"

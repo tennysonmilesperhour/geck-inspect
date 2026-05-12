@@ -41,7 +41,7 @@ export const PRIMARY_MORPHS = [
   { id: 'full_pinstripe',     label: 'Full Pinstripe (100%)',  inheritance: 'polygenic',   notes: 'Continuous pinstripe from shoulders to tail base, unbroken.' },
   { id: 'partial_pinstripe',  label: 'Partial Pinstripe',      inheritance: 'polygenic',   notes: 'Broken / interrupted pinstripe less than ~80% coverage.' },
   { id: 'phantom_pinstripe',  label: 'Phantom Pinstripe',      inheritance: 'polygenic',   notes: 'Raised scales along ridge without contrasting color.' },
-  { id: 'reverse_pinstripe',  label: 'Reverse Pinstripe',      inheritance: 'polygenic',   notes: 'Dark pinstripe on lighter dorsum — inverse of typical.' },
+  { id: 'reverse_pinstripe',  label: 'Reverse Pinstripe',      inheritance: 'polygenic',   notes: 'Dark pinstripe on lighter dorsum ,  inverse of typical.' },
   { id: 'quad_stripe',        label: 'Quad Stripe',            inheritance: 'polygenic',   notes: 'Pinstripe + lateral stripe on both flanks.' },
   { id: 'super_stripe',       label: 'Super Stripe',           inheritance: 'polygenic',   notes: 'Full pinstripe + quad stripe, often with tail stripe.' },
   { id: 'tiger',              label: 'Tiger',                  inheritance: 'polygenic',   notes: 'Vertical bands / stripes across flanks.' },
@@ -57,16 +57,16 @@ export const PRIMARY_MORPHS = [
 ];
 
 /**
- * Named genetic traits — heritable, proven or unconfirmed, travel orthogonal to
+ * Named genetic traits ,  heritable, proven or unconfirmed, travel orthogonal to
  * the primary-morph pattern. Keep ids stable; they become training labels.
  *
  * `canonical_trait_id` points at the matching trait in `crested-gecko-app`
  * (Foundation Genetics canonical form). Use that when you need inheritance,
- * source citations, or Punnett math — this file is for UI labels only.
+ * source citations, or Punnett math ,  this file is for UI labels only.
  */
 export const GENETIC_TRAITS = [
   { id: 'lily_white',       label: 'Lily White',        inheritance: 'incomplete_dominant',  canonical_trait_id: 'lilly_white',
-    notes: 'Foundation Genetics: incomplete dominant. Originated by Lilly Exotics (UK). Super Lilly White is LETHAL — never pair Lilly × Lilly. Canonical spelling is "Lilly White" (two Ls).' },
+    notes: 'Foundation Genetics: incomplete dominant. Originated by Lilly Exotics (UK). Super Lilly White is LETHAL ,  never pair Lilly × Lilly. Canonical spelling is "Lilly White" (two Ls).' },
   { id: 'axanthic_vca',     label: 'Axanthic (VCA)',    inheritance: 'recessive',            canonical_trait_id: 'axanthic',
     notes: 'Simple recessive. Removes yellow/red pigment, retains melanin (not albinism). Proven by Altitude Exotics.' },
   { id: 'axanthic_tsm',     label: 'Axanthic (TSM)',    inheritance: 'recessive',            canonical_trait_id: 'axanthic',
@@ -80,7 +80,7 @@ export const GENETIC_TRAITS = [
   { id: 'soft_scale',       label: 'Soft Scale',        inheritance: 'incomplete_dominant',  canonical_trait_id: 'softscale',
     notes: 'Foundation Genetics: incomplete dominant producing a matte finish and smoother scale texture. Super form is healthy with enhanced matte effect.' },
   { id: 'whiteout',         label: 'Whiteout',          inheritance: 'incomplete_dominant',  canonical_trait_id: 'whiteout',
-    notes: 'Incomplete dominant, originated by AC Reptiles (Anthony Caponetto). Distinct locus from Lilly White. Super Whiteout is HEALTHY and freely breedable — strategic advantage over Lilly White for stacking white.' },
+    notes: 'Incomplete dominant, originated by AC Reptiles (Anthony Caponetto). Distinct locus from Lilly White. Super Whiteout is HEALTHY and freely breedable ,  strategic advantage over Lilly White for stacking white.' },
   { id: 'empty_back',       label: 'Empty Back',        inheritance: 'incomplete_dominant',  canonical_trait_id: 'empty_back',
     notes: 'Foundation Genetics: incomplete dominant. Clears dorsal pattern. Super form is healthy and further suppresses dorsal pattern.' },
   { id: 'white_wall',       label: 'White Wall',        inheritance: 'phenotype',
@@ -88,11 +88,11 @@ export const GENETIC_TRAITS = [
   { id: 'hypo',             label: 'Hypo',              inheritance: 'dominant',             canonical_trait_id: 'hypo',
     notes: 'Dominant trait that reduces melanin. Combines with Black Base → Lavender, Red Base → Pink, Yellow Base → Cream/C2.' },
   { id: 'melanistic',       label: 'Melanistic',        inheritance: 'combo phenotype',      canonical_trait_id: 'cappuccino',
-    notes: 'Synonymous with Super Cappuccino — the homozygous form of Cappuccino. Has documented health concerns; breeding specifically for supers is not recommended.' },
+    notes: 'Synonymous with Super Cappuccino ,  the homozygous form of Cappuccino. Has documented health concerns; breeding specifically for supers is not recommended.' },
 ];
 
 /**
- * Descriptive traits — modifiers that can co-occur with any primary morph.
+ * Descriptive traits ,  modifiers that can co-occur with any primary morph.
  * Grouped by subcategory to make UI picking less overwhelming.
  */
 export const SECONDARY_TRAITS = [
@@ -200,8 +200,8 @@ export const WHITE_AMOUNTS = [
 ];
 
 export const FIRED_STATES = [
-  { id: 'fired_up',      label: 'Fired up',       notes: 'High contrast / saturated — animal warm or stressed.' },
-  { id: 'fired_down',    label: 'Fired down',     notes: 'Washed out / low contrast — animal cool and relaxed.' },
+  { id: 'fired_up',      label: 'Fired up',       notes: 'High contrast / saturated ,  animal warm or stressed.' },
+  { id: 'fired_down',    label: 'Fired down',     notes: 'Washed out / low contrast ,  animal cool and relaxed.' },
   { id: 'transitioning', label: 'Transitioning',  notes: 'Mid-change between states.' },
   { id: 'unknown',       label: 'Unknown' },
 ];
@@ -257,21 +257,21 @@ export const IMAGE_QUALITY_FLAGS = [
 
 /** Confidence preset labels to keep annotator grading consistent. */
 export const CONFIDENCE_PRESETS = [
-  { value: 100, label: 'Certain — I bred / own this animal' },
+  { value: 100, label: 'Certain ,  I bred / own this animal' },
   { value: 90,  label: 'Very confident (clear traits, good photo)' },
   { value: 75,  label: 'Confident' },
   { value: 55,  label: 'Leaning' },
   { value: 35,  label: 'Guess' },
-  { value: 15,  label: 'Unsure — reviewer input wanted' },
+  { value: 15,  label: 'Unsure ,  reviewer input wanted' },
 ];
 
-/** Provenance categories — drives how ML weights the label. */
+/** Provenance categories ,  drives how ML weights the label. */
 export const PROVENANCE = [
   { id: 'expert_owner',      label: 'Expert: I bred or own this gecko',                weight: 1.0 },
   { id: 'expert_reviewed',   label: 'Expert: reviewed photo, confident identification', weight: 0.85 },
   { id: 'community',         label: 'Community: best-effort identification',            weight: 0.55 },
   { id: 'ai_then_expert',    label: 'AI guess, corrected by expert',                    weight: 0.80 },
-  { id: 'web_crawl',         label: 'Web crawl — labels from listing',                  weight: 0.40 },
+  { id: 'web_crawl',         label: 'Web crawl ,  labels from listing',                  weight: 0.40 },
 ];
 
 export const COMMONLY_CONFUSED = {
@@ -287,7 +287,7 @@ export const COMMONLY_CONFUSED = {
 };
 
 // ---------------------------------------------------------------------------
-// Lookup helpers — used by both /recognition and /training flows.
+// Lookup helpers ,  used by both /recognition and /training flows.
 
 export const MORPH_BY_ID = Object.fromEntries(
   [...PRIMARY_MORPHS, ...GENETIC_TRAITS].map((m) => [m.id, m]),

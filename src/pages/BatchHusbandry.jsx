@@ -240,7 +240,7 @@ function BatchFeedView({ group, groupGeckos, feedingRecords, onBack, onSaved }) 
             Batch Feeding Complete
           </h3>
           <p className="text-sm mb-6" style={{ color: C.muted }}>
-            {group.name || group.label} — {format(new Date(), 'MMMM d, yyyy')}
+            {group.name || group.label} ,  {format(new Date(), 'MMMM d, yyyy')}
           </p>
           <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto mb-6">
             <div className="rounded-xl p-4" style={{ backgroundColor: C.paleSage }}>
@@ -284,7 +284,7 @@ function BatchFeedView({ group, groupGeckos, feedingRecords, onBack, onSaved }) 
             Feed: {group.name || group.label}
           </SectionHeading>
           <p className="text-sm -mt-2" style={{ color: C.muted }}>
-            {rows.length} animals — sorted by most overdue
+            {rows.length} animals ,  sorted by most overdue
           </p>
         </div>
         <Button
@@ -414,7 +414,7 @@ function BatchWeighView({ group, groupGeckos, weightRecords, onBack, onSaved }) 
           animal_id: row.gecko.id,
           date: today,
           weight: newWeight,
-          notes: `Batch weigh — ${group.name || group.label}`,
+          notes: `Batch weigh ,  ${group.name || group.label}`,
         });
       }
 
@@ -449,7 +449,7 @@ function BatchWeighView({ group, groupGeckos, weightRecords, onBack, onSaved }) 
             Batch Weigh Complete
           </h3>
           <p className="text-sm mb-6" style={{ color: C.muted }}>
-            {group.name || group.label} — {format(new Date(), 'MMMM d, yyyy')}
+            {group.name || group.label} ,  {format(new Date(), 'MMMM d, yyyy')}
           </p>
           <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto mb-6">
             <div className="rounded-xl p-4" style={{ backgroundColor: C.paleSage }}>
@@ -491,7 +491,7 @@ function BatchWeighView({ group, groupGeckos, weightRecords, onBack, onSaved }) 
         Weigh: {group.name || group.label}
       </SectionHeading>
       <p className="text-sm -mt-2 mb-4" style={{ color: C.muted }}>
-        {rows.length} animals — enter new weights in grams
+        {rows.length} animals ,  enter new weights in grams
       </p>
 
       <div

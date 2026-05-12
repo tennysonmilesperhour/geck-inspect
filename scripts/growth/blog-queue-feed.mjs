@@ -6,7 +6,7 @@
  * impressions but no matching page on geckinspect.com, this module
  * maps the finding to a conforming topic entry in
  * docs/blog-queue.json. The existing research → draft → publish
- * pipeline then treats it as any other queue entry — the growth
+ * pipeline then treats it as any other queue entry ,  the growth
  * report is essentially an additional signal source.
  *
  * The growth report only APPENDS; it never edits an existing topic
@@ -22,7 +22,7 @@ const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..', '..');
 const QUEUE_FILE = resolve(REPO_ROOT, 'docs/blog-queue.json');
 
-// Category guesser — match query tokens against BLOG_CATEGORIES
+// Category guesser ,  match query tokens against BLOG_CATEGORIES
 // (src/data/blog-posts.js). Falls back to 'genetics' because that's
 // the most active category and any false-positive sort into it is
 // fixable by the draft agent via the rejectionReason flow.
@@ -63,7 +63,7 @@ function angleIdeasFor(query, category) {
     out.push(`Foundation Genetics framing: what allele(s) underlie "${query}", inheritance pattern, and breeding implications`);
   }
   if (category === 'breeding') {
-    out.push(`Pairing math for "${query}" — Punnett square outcomes + safe/risky pair recommendations`);
+    out.push(`Pairing math for "${query}" ,  Punnett square outcomes + safe/risky pair recommendations`);
   }
   if (category === 'identification') {
     out.push(`Visual ID primer for "${query}" with hatchling → adult progression photos and lookalike comparison`);

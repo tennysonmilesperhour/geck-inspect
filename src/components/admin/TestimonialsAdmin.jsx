@@ -20,7 +20,7 @@ import {
 /**
  * Admin tab for landing-page testimonials.
  *
- * Curated CRUD only — no "users submit, admins approve" flow yet, to
+ * Curated CRUD only ,  no "users submit, admins approve" flow yet, to
  * avoid a spam vector. To add a quote: paste it here, fill in author
  * details, save, then flip Approved on. The public landing page only
  * renders rows where approved = true and shows nothing at all until
@@ -264,7 +264,7 @@ export default function TestimonialsAdmin() {
               value={form.source_note}
               onChange={(e) => setForm({ ...form, source_note: e.target.value })}
               className="bg-slate-800 border-slate-600 text-slate-100"
-              placeholder="DM 2026-04-12, Discord, email — for our reference only"
+              placeholder="DM 2026-04-12, Discord, email ,  for our reference only"
             />
           </div>
           <div className="flex items-center gap-2 pt-1">

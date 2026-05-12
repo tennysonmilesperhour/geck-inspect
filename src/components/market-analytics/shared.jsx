@@ -1,5 +1,5 @@
 /**
- * Market Analytics — Shared UI Primitives
+ * Market Analytics ,  Shared UI Primitives
  *
  * Small, self-contained visual components that every analytics view
  * reuses: source badges, confidence chips, freshness indicators,
@@ -46,7 +46,7 @@ export function SourceBadge({ sourceId, size = 'sm' }) {
   );
 }
 
-// ------------ SourceBadgeStack — show up to 3 contributing sources ----
+// ------------ SourceBadgeStack ,  show up to 3 contributing sources ----
 export function SourceBadgeStack({ sourceIds = [] }) {
   if (!sourceIds?.length) return null;
   const internal = sourceIds.filter(isInternal);
@@ -102,7 +102,7 @@ export function ConfidenceChip({ confidence, sampleSize, sources = [], methodolo
 }
 
 // ------------ FreshnessIndicator -------------------------------------
-// Little clock chip next to a headline that indicates "freshness" — how
+// Little clock chip next to a headline that indicates "freshness" ,  how
 // recently the underlying sources were scraped/synced.
 export function FreshnessIndicator({ sourceIds = [] }) {
   if (!sourceIds.length) return null;
@@ -136,7 +136,7 @@ export function MethodologyPopover({ title, children }) {
 // Tiny inline SVG sparkline. Null values are skipped (break the line).
 export function Sparkline({ data = [], width = 100, height = 28, stroke = '#34d399', fill = 'rgba(52,211,153,0.12)' }) {
   const valid = data.filter((v) => v != null && Number.isFinite(v));
-  if (valid.length < 2) return <div className="text-[10px] text-slate-600">—</div>;
+  if (valid.length < 2) return <div className="text-[10px] text-slate-600">, </div>;
   const min = Math.min(...valid);
   const max = Math.max(...valid);
   const range = max - min || 1;
@@ -180,7 +180,7 @@ export function Sparkline({ data = [], width = 100, height = 28, stroke = '#34d3
 // ------------ TrendDelta ---------------------------------------------
 // Signed percentage with arrow and color.
 export function TrendDelta({ value, digits = 1 }) {
-  if (value == null || !Number.isFinite(value)) return <span className="text-slate-500">—</span>;
+  if (value == null || !Number.isFinite(value)) return <span className="text-slate-500">, </span>;
   const up = value >= 0;
   return (
     <span className={`tabular-nums font-semibold ${up ? 'text-emerald-400' : 'text-red-400'}`}>

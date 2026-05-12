@@ -27,7 +27,7 @@ import { format } from 'date-fns';
 import { useToast } from '@/components/ui/use-toast';
 
 /**
- * Notifications page — dark slate theme, matches the rest of the app.
+ * Notifications page ,  dark slate theme, matches the rest of the app.
  *
  * Each notification row has:
  *   - its icon/type badge + content + timestamp
@@ -226,7 +226,7 @@ export default function NotificationsPage() {
                             </h1>
                             <p className="text-sm text-slate-400">
                                 {unreadCount > 0
-                                    ? `${unreadCount} unread — click "Mark read" to dismiss without opening.`
+                                    ? `${unreadCount} unread ,  click "Mark read" to dismiss without opening.`
                                     : "You're all caught up."}
                             </p>
                         </div>

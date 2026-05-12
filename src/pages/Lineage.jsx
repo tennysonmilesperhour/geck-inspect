@@ -101,7 +101,7 @@ const findInbreedingOverlap = (lineage) => {
 };
 
 // Collect every path from `node` to each known ancestor id, measured in generations away.
-// Returns { ancestorId: [distance1, distance2, ...] } — a single ancestor can appear on
+// Returns { ancestorId: [distance1, distance2, ...] } ,  a single ancestor can appear on
 // multiple paths if they recur in the tree.
 const collectAncestorDistances = (node, distance = 0, map = {}) => {
     if (!node || node.isPlaceholder || !node.id) return map;
@@ -804,7 +804,7 @@ export default function Lineage() {
     };
 
     useEffect(() => {
-        // Accept both `geckoId` and `geckoid` — some older call sites
+        // Accept both `geckoId` and `geckoid` ,  some older call sites
         // passed the whole thing through createPageUrl() which lowercases
         // the query string and turned `geckoId` into `geckoid`.
         const params = new URLSearchParams(location.search);
@@ -934,7 +934,7 @@ export default function Lineage() {
             const damUniqueKey = `${uniqueKey}_dam`;
             return (
                 <div className="flex flex-col items-center">
-                    {/* Unknown grandparents — marked as ancestor padding so they don't share data */}
+                    {/* Unknown grandparents ,  marked as ancestor padding so they don't share data */}
                     <div className="flex gap-2 md:gap-4">
                         <div className="flex flex-col items-center">
                             {renderPlaceholderWithParents(
@@ -1370,7 +1370,7 @@ export default function Lineage() {
                                     <div className="col-span-2 md:col-span-4 flex items-center gap-2 px-3 py-2 rounded-lg border border-amber-500/40 bg-amber-500/10 text-amber-200 text-xs">
                                         <AlertTriangle className="w-4 h-4 flex-shrink-0" />
                                         <span>
-                                            Possible inbreeding: shared ancestor{stats.inbreedingAncestors.length > 1 ? 's' : ''} on both sides —{' '}
+                                            Possible inbreeding: shared ancestor{stats.inbreedingAncestors.length > 1 ? 's' : ''} on both sides , {' '}
                                             {stats.inbreedingAncestors.map((a) => a.name).join(', ')}
                                         </span>
                                     </div>
@@ -1388,7 +1388,7 @@ export default function Lineage() {
                 onTouchMove={handleTouchMove}
                 onTouchEnd={handleTouchEnd}
             >
-                {/* Zoom controls — desktop only. Mobile users pinch-zoom with
+                {/* Zoom controls ,  desktop only. Mobile users pinch-zoom with
                     two fingers (native touch-action handles it). */}
                 <div className="hidden md:flex absolute bottom-4 left-4 z-10 items-center gap-2">
                     <Button size="icon" variant="outline" onClick={() => setScale(s => Math.max(0.3, s - 0.1))} className="bg-slate-800 border-slate-600">
@@ -1411,7 +1411,7 @@ export default function Lineage() {
                         </div>
                     ) : selectedGeckoId && lineage?.id ? (
                         <div className={`flex flex-col md:flex-row gap-2 md:gap-3 md:items-start md:justify-center`}>
-                            {/* Mates Column (Left) — single vertical column. */}
+                            {/* Mates Column (Left) ,  single vertical column. */}
                             <div className="flex-shrink-0 order-2 md:order-1">
                                 {mates.length > 0 && (
                                     <div className="bg-emerald-950/50 rounded-lg p-2 md:p-3 border border-emerald-800">
@@ -1438,7 +1438,7 @@ export default function Lineage() {
                                 {renderTree(lineage, 1)}
                             </div>
 
-                            {/* Offspring Column (Right) — one section per
+                            {/* Offspring Column (Right) ,  one section per
                                 hatch season (newest first), laid out side-by-
                                 side so seasons sit adjacent rather than
                                 stacked. Wraps to the next row on narrow

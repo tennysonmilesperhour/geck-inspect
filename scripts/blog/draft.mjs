@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Draft pass — runs Mon/Wed/Fri at 07:00 UTC, one hour after research.
+ * Draft pass ,  runs Mon/Wed/Fri at 07:00 UTC, one hour after research.
  *
  * Flow:
  *   1. Read docs/blog-queue.json. Pick the highest-scored "new" topic.
@@ -40,7 +40,7 @@ function writeQueue(queue) {
 
 /**
  * Matches the src/data/blog-posts.js object shape. We intentionally keep
- * this schema narrower than the real file — publish.mjs fills in
+ * this schema narrower than the real file ,  publish.mjs fills in
  * datePublished, tags, hero metadata, and JSON-LD wiring from the draft
  * output plus sensible defaults.
  */
@@ -65,7 +65,7 @@ const DRAFT_SCHEMA = {
     markdown: {
       type: 'string',
       minLength: 3000,
-      description: 'The full post body as GitHub-flavored markdown (no frontmatter). Follows the style guide — hook paragraph, subsections, opinionated section, practical takeaways, callback. Publish pass converts this into the block structure used by src/data/blog-posts.js.',
+      description: 'The full post body as GitHub-flavored markdown (no frontmatter). Follows the style guide ,  hook paragraph, subsections, opinionated section, practical takeaways, callback. Publish pass converts this into the block structure used by src/data/blog-posts.js.',
     },
     faq: {
       type: 'array',
@@ -149,18 +149,18 @@ function buildWriterSystem({ styleGuide, voiceExamples, factCheck, knownMorphs }
       text: [
         '# ALLOWED MORPH SLUGS',
         'When linking internally to /MorphGuide/<slug>, use one of these:',
-        knownMorphs.map((m) => `  - ${m.slug} — ${m.name} (${m.inheritance})`).join('\n'),
+        knownMorphs.map((m) => `  - ${m.slug} ,  ${m.name} (${m.inheritance})`).join('\n'),
         '',
         'Acceptable internal link paths:',
-        '  /MorphGuide                        — morph catalogue index',
-        '  /MorphGuide/<slug>                 — specific morph detail',
-        '  /MorphGuide/category/<id>          — category hub (base|color|pattern|structure|combo)',
-        '  /MorphGuide/inheritance/<id>       — inheritance hub (recessive|incomplete-dominant|...)',
-        '  /GeneticsGuide                     — long-form genetics encyclopedia',
-        '  /GeneticCalculatorTool             — Punnett calculator',
-        '  /CareGuide, /CareGuide/<topic>     — care guide',
-        '  /MorphVisualizer                   — visual morph simulator',
-        '  /blog/<slug>                       — other blog posts',
+        '  /MorphGuide                        ,  morph catalogue index',
+        '  /MorphGuide/<slug>                 ,  specific morph detail',
+        '  /MorphGuide/category/<id>          ,  category hub (base|color|pattern|structure|combo)',
+        '  /MorphGuide/inheritance/<id>       ,  inheritance hub (recessive|incomplete-dominant|...)',
+        '  /GeneticsGuide                     ,  long-form genetics encyclopedia',
+        '  /GeneticCalculatorTool             ,  Punnett calculator',
+        '  /CareGuide, /CareGuide/<topic>     ,  care guide',
+        '  /MorphVisualizer                   ,  visual morph simulator',
+        '  /blog/<slug>                       ,  other blog posts',
       ].join('\n'),
     },
   ];
@@ -251,7 +251,7 @@ async function main() {
     critiqueText = extractText(critiqueResp.content);
   } catch (err) {
     if (err instanceof BudgetExceededError) {
-      critiqueText = '(skipped — weekly budget exhausted before critique pass)';
+      critiqueText = '(skipped ,  weekly budget exhausted before critique pass)';
     } else {
       critiqueText = `(critique pass failed: ${err.message})`;
     }

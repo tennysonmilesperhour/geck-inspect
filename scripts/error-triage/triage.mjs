@@ -46,14 +46,14 @@ import {
 } from './lib.mjs';
 
 // --------------------------------------------------------------------------
-// Tool definitions — what the triage agent can call.
+// Tool definitions ,  what the triage agent can call.
 // --------------------------------------------------------------------------
 
 const TOOLS = [
   {
     name: 'search_code',
     description:
-      'Search the repo for a pattern. Uses grep under the hood. Returns up to 60 matching lines with file:line prefixes. Scope to src/, supabase/, or scripts/ where possible — node_modules and build output are excluded.',
+      'Search the repo for a pattern. Uses grep under the hood. Returns up to 60 matching lines with file:line prefixes. Scope to src/, supabase/, or scripts/ where possible ,  node_modules and build output are excluded.',
     input_schema: {
       type: 'object',
       properties: {
@@ -89,7 +89,7 @@ const TOOLS = [
   {
     name: 'propose_fix',
     description:
-      'Terminal. Emit a proposed fix. Provide full new contents for every file you want to change — NOT a diff. The workflow will apply them, run lint + typecheck, and open a draft PR if those pass.',
+      'Terminal. Emit a proposed fix. Provide full new contents for every file you want to change ,  NOT a diff. The workflow will apply them, run lint + typecheck, and open a draft PR if those pass.',
     input_schema: {
       type: 'object',
       properties: {
@@ -116,7 +116,7 @@ const TOOLS = [
   {
     name: 'skip',
     description:
-      'Terminal. Skip this error — transient, third-party, cannot reproduce, too risky, or not actionable from this stack trace. Be specific about why.',
+      'Terminal. Skip this error ,  transient, third-party, cannot reproduce, too risky, or not actionable from this stack trace. Be specific about why.',
     input_schema: {
       type: 'object',
       properties: {
@@ -162,7 +162,7 @@ function handleSearchCode({ query, path_glob }) {
       cwd: REPO_ROOT,
     });
   } catch (err) {
-    // grep exits 1 when no matches — that's success for us.
+    // grep exits 1 when no matches ,  that's success for us.
     if (err.status === 1) return 'No matches.';
     throw err;
   }
@@ -212,8 +212,8 @@ const SYSTEM_PROMPT = `You are a senior frontend/full-stack engineer triaging pr
 You receive one production error at a time. Your job:
 
 1. Investigate the codebase to find the root cause. Use \`search_code\`, \`read_file\`, and \`list_directory\` freely.
-2. Propose a minimal, surgical fix — the smallest change that eliminates the error class without side effects.
-3. If the error is transient (network blip, third-party outage, extension noise), not reproducible from the stack, or too risky to auto-fix, call \`skip\` with a clear reason. It's fine — and often correct — to skip.
+2. Propose a minimal, surgical fix ,  the smallest change that eliminates the error class without side effects.
+3. If the error is transient (network blip, third-party outage, extension noise), not reproducible from the stack, or too risky to auto-fix, call \`skip\` with a clear reason. It's fine ,  and often correct ,  to skip.
 
 HARD RULES:
 - Never modify configuration, CI, package.json, lockfiles, or vercel.json.
@@ -224,7 +224,7 @@ HARD RULES:
 - Match the surrounding code style. The codebase uses ES modules, JSX, functional React, Tailwind.
 - Confidence matters: call \`skip\` unless you are at least "medium" confident the fix is correct. "low" confidence = skip.
 
-When you call \`propose_fix\`, provide the FULL new contents of each file — the orchestrator does not patch-merge.`;
+When you call \`propose_fix\`, provide the FULL new contents of each file ,  the orchestrator does not patch-merge.`;
 
 function buildUserMessage(group) {
   const first = group.samples[0] || {};
@@ -269,7 +269,7 @@ function buildUserMessage(group) {
     '',
     '## Instructions',
     '',
-    'Investigate using the tools. When you understand the root cause, call either `propose_fix` (full new file contents) or `skip` (with a reason). You have a hard limit of 20 tool calls. Don\'t narrate — just call tools.',
+    'Investigate using the tools. When you understand the root cause, call either `propose_fix` (full new file contents) or `skip` (with a reason). You have a hard limit of 20 tool calls. Don\'t narrate ,  just call tools.',
   ].join('\n');
 }
 
@@ -285,7 +285,7 @@ function applyFixFiles(files) {
   for (const f of files) {
     const abs = safePathUnder(REPO_ROOT, f.path);
     // Refuse to CREATE new files. The agent should only modify existing
-    // source — new files demand more judgement than we want to delegate.
+    // source ,  new files demand more judgement than we want to delegate.
     if (!fs.existsSync(abs)) {
       throw new Error(`propose_fix referenced a non-existent file: ${f.path}. The agent may only edit existing files.`);
     }
@@ -300,7 +300,7 @@ function resetWorkingTree() {
 
 /**
  * Run a shell command and return exit status + combined output without
- * throwing. We do not want `execSync`'s throw-on-nonzero behaviour here —
+ * throwing. We do not want `execSync`'s throw-on-nonzero behaviour here , 
  * a nonzero lint baseline is expected in this repo.
  */
 function runCapture(cmd) {
@@ -431,7 +431,7 @@ function buildPrBody({ signature, group, fix }) {
     '',
     '---',
     '',
-    '_Opened automatically by nightly error-triage. Lint + typecheck pass. Review before merging. If the fix is wrong, close this PR — the state file will note the outcome and hold off on re-triage for 2 days._',
+    '_Opened automatically by nightly error-triage. Lint + typecheck pass. Review before merging. If the fix is wrong, close this PR ,  the state file will note the outcome and hold off on re-triage for 2 days._',
   ];
   return lines.join('\n');
 }
@@ -441,7 +441,7 @@ function buildPrBody({ signature, group, fix }) {
 // --------------------------------------------------------------------------
 
 async function triageGroup({ client, group, baseBranch, placeholder, baseline }) {
-  console.log(`\n— triaging ${group.signature} (${group.count}× in last 24h)`);
+  console.log(`\n,  triaging ${group.signature} (${group.count}× in last 24h)`);
   const result = await runToolLoop({
     client,
     system: SYSTEM_PROMPT,
@@ -472,7 +472,7 @@ async function triageGroup({ client, group, baseBranch, placeholder, baseline })
   }
 
   if (placeholder) {
-    console.log('  (placeholder mode — not opening PR, not applying files)');
+    console.log('  (placeholder mode ,  not opening PR, not applying files)');
     return { status: 'skipped', reason: 'placeholder mode: agent proposed fix but PR creation disabled', prUrl: null };
   }
 
@@ -517,7 +517,7 @@ async function main() {
     !process.env.ANTHROPIC_API_KEY;
 
   if (placeholder) {
-    console.log('[placeholder mode] secrets missing — logging only, no PR.');
+    console.log('[placeholder mode] secrets missing ,  logging only, no PR.');
     // We still exit 0 so the workflow's commit-state step runs. That keeps
     // the ledger's lastRun fresh even on placeholder days.
     const state = loadState();

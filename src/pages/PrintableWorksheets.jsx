@@ -65,7 +65,7 @@ function FeedingLogTemplate({ gecko }) {
           Feeding Log
         </h1>
         <p style={{ fontSize: 14, margin: '4px 0 0', color: '#555' }}>
-          {gecko.name || 'Unnamed Gecko'} {gecko.morph ? `— ${gecko.morph}` : ''}
+          {gecko.name || 'Unnamed Gecko'} {gecko.morph ? `,  ${gecko.morph}` : ''}
         </p>
         <p style={{ fontSize: 12, color: '#888', margin: '2px 0 0' }}>
           Generated {format(new Date(), 'MMMM d, yyyy')}
@@ -161,7 +161,7 @@ function VetHealthCardTemplate({ gecko, weights, sheds, feedingRecords }) {
             Veterinary Health Card
           </h1>
           <p style={{ fontSize: 11, color: '#888', margin: '4px 0 0' }}>
-            Geck Inspect — Generated {format(new Date(), 'MMMM d, yyyy')}
+            Geck Inspect ,  Generated {format(new Date(), 'MMMM d, yyyy')}
           </p>
         </div>
         <div style={{ textAlign: 'right', fontSize: 12 }}>
@@ -251,7 +251,7 @@ function VetHealthCardTemplate({ gecko, weights, sheds, feedingRecords }) {
               {recentSheds.map((s, idx) => (
                 <li key={s.id || idx} style={{ marginBottom: 2 }}>
                   {s.date ? format(parseISO(s.date), 'MMM d, yyyy') : '—'}
-                  {s.completeness && ` — ${s.completeness}`}
+                  {s.completeness && ` ,  ${s.completeness}`}
                 </li>
               ))}
             </ul>
@@ -595,7 +595,7 @@ export default function PrintableWorksheets() {
             Printable Worksheets
           </h1>
           <p className="text-sm" style={{ color: C.muted }}>
-            Generate print-ready documents for your geckos — feeding logs, vet cards, expo tags, and lineage certificates.
+            Generate print-ready documents for your geckos ,  feeding logs, vet cards, expo tags, and lineage certificates.
           </p>
         </div>
 
@@ -611,7 +611,7 @@ export default function PrintableWorksheets() {
             <SelectContent>
               {geckos.map(g => (
                 <SelectItem key={g.id} value={g.id}>
-                  {g.name || g.id} {g.morph ? `(${g.morph})` : ''} {g.sex ? `— ${g.sex}` : ''}
+                  {g.name || g.id} {g.morph ? `(${g.morph})` : ''} {g.sex ? `,  ${g.sex}` : ''}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -687,7 +687,7 @@ export default function PrintableWorksheets() {
             style={{ borderBottom: '1px solid rgba(78,124,78,0.15)' }}
           >
             <p className="text-xs font-medium" style={{ color: C.sage }}>
-              PREVIEW — This is how your document will look when printed
+              PREVIEW ,  This is how your document will look when printed
             </p>
           </div>
 

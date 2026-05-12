@@ -16,7 +16,7 @@
  *
  * When adding social profiles, add them to SAME_AS. Every external profile
  * in this array strengthens entity recognition across ChatGPT, Gemini,
- * Perplexity, and Google Knowledge Graph — the audit flagged this as the
+ * Perplexity, and Google Knowledge Graph ,  the audit flagged this as the
  * single most impactful fix after SSR.
  */
 
@@ -30,7 +30,7 @@ export const LOGO_URL =
 
 // External profiles for Organization.sameAs. Every URL here is a signed
 // Geck Inspect presence that AI entity-recognition systems weigh heavily.
-// Commented entries are planned but not yet created — leaving them as
+// Commented entries are planned but not yet created ,  leaving them as
 // comments prevents 404s in the live structured data while tracking the
 // audit follow-ups the team needs to complete.
 export const SAME_AS = [
@@ -53,7 +53,7 @@ export const ORGANIZATION_SCHEMA = {
   '@type': 'Organization',
   '@id': ORG_ID,
   name: SITE_NAME,
-  alternateName: ['Geck Inspect — Crested Gecko Platform', 'geckOS'],
+  alternateName: ['Geck Inspect ,  Crested Gecko Platform', 'geckOS'],
   url: `${SITE_URL}/`,
   logo: {
     '@type': 'ImageObject',
@@ -145,10 +145,10 @@ export function faqPageSchema(pairs) {
  *   path: '/blog/<slug>'
  *
  * Optional:
- *   author     — object with @type/@id/name (defaults to publisher org)
- *   faq        — array of { question, answer } pairs; emits FAQPage entry
- *   image      — image URL for the post hero (defaults to org logo)
- *   keyphrase  — about/keywords primary term
+ *   author     ,  object with @type/@id/name (defaults to publisher org)
+ *   faq        ,  array of { question, answer } pairs; emits FAQPage entry
+ *   image      ,  image URL for the post hero (defaults to org logo)
+ *   keyphrase  ,  about/keywords primary term
  */
 export function blogPostingSchema({ post, path, author, faq, image, keyphrase }) {
   const url = `${SITE_URL}${path}`;

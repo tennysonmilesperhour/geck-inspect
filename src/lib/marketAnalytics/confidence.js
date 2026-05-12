@@ -1,5 +1,5 @@
 /**
- * Market Analytics — Confidence Scoring
+ * Market Analytics ,  Confidence Scoring
  *
  * Serious buyers won't trust a number without knowing how solid it is.
  * This module produces 0..1 confidence scores and price bands from
@@ -8,7 +8,7 @@
  * value and a confidence triple (low, mid, high) derived here.
  *
  * The math is intentionally simple and well-behaved rather than
- * strictly Bayesian — the priority is a signal a subscriber can trust
+ * strictly Bayesian ,  the priority is a signal a subscriber can trust
  * and a methodology they can audit via the "i" popover in the UI.
  */
 
@@ -33,7 +33,7 @@ export function scoreConfidence({ sourceId, sampleSize = 0, regionMatch = true }
   const src = getSource(sourceId);
   const base = src.base_confidence ?? 0.5;
   // Saturating function on sample size: n=1 → 0.2, n=10 → 0.65, n=30 → 0.86,
-  // n=100 → 0.95. Chosen to feel right in the collectibles domain —
+  // n=100 → 0.95. Chosen to feel right in the collectibles domain , 
   // collectors recognize that n=30 is meaningful, n=100 is solid.
   const n = Math.max(0, sampleSize);
   const sampleFactor = 1 - Math.exp(-n / 20);
@@ -90,7 +90,7 @@ export function blendObservations(observations) {
 }
 
 /**
- * "Peak indicator" — a 0..100 score combining (a) 12m price trend,
+ * "Peak indicator" ,  a 0..100 score combining (a) 12m price trend,
  * (b) recent volume trend, (c) supply pipeline pressure, (d) breeder-
  * adoption breadth. A score near 100 suggests the trait is at peak
  * (sell), a score near 0 suggests early/undervalued (accumulate).
@@ -102,7 +102,7 @@ export function blendObservations(observations) {
  *   adoptionBreadth: +1 = many breeders working with it, -1 = very few
  */
 export function peakScore({ priceMomentum = 0, volumeMomentum = 0, supplyPressure = 0, adoptionBreadth = 0 }) {
-  // Weighted mix — price and volume dominate, supply is a contrarian
+  // Weighted mix ,  price and volume dominate, supply is a contrarian
   // indicator (more coming supply → closer to peak), adoption breadth
   // moderates (widely worked traits rarely have explosive upside).
   const raw =

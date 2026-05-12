@@ -86,7 +86,7 @@ export default function StoreLayout({ children, breadcrumbs }) {
   );
 
   // ---------------------------------------------------------------------
-  // Embedded mode — slim sub-nav only. The parent Layout owns the brand,
+  // Embedded mode ,  slim sub-nav only. The parent Layout owns the brand,
   // sidebar, and account menu.
   // ---------------------------------------------------------------------
   if (embedded) {
@@ -120,9 +120,9 @@ export default function StoreLayout({ children, breadcrumbs }) {
 
         <div className="border-t border-slate-800/60 mt-12">
           <div className="max-w-6xl mx-auto px-4 py-4 text-[11px] text-slate-500 flex flex-col md:flex-row items-start md:items-center gap-2 md:gap-4">
-            <span>Supplies — sold by Geck Inspect, with select partner items.</span>
+            <span>Supplies ,  sold by Geck Inspect, with select partner items.</span>
             <span className="md:ml-auto">
-              Some links are affiliate links — see disclosure on product pages.
+              Some links are affiliate links ,  see disclosure on product pages.
             </span>
           </div>
         </div>
@@ -131,7 +131,7 @@ export default function StoreLayout({ children, breadcrumbs }) {
   }
 
   // ---------------------------------------------------------------------
-  // Standalone mode — anonymous visitors. Full chrome with logo, brand,
+  // Standalone mode ,  anonymous visitors. Full chrome with logo, brand,
   // and Sign in CTA.
   // ---------------------------------------------------------------------
   return (
@@ -202,12 +202,12 @@ export default function StoreLayout({ children, breadcrumbs }) {
 
       <footer className="border-t border-slate-800 mt-12">
         <div className="max-w-6xl mx-auto px-4 py-6 text-xs text-slate-500 flex flex-col md:flex-row items-start md:items-center gap-3 md:gap-6">
-          <span>© Geck Inspect — Supplies for crested gecko keepers and breeders.</span>
+          <span>© Geck Inspect ,  Supplies for crested gecko keepers and breeders.</span>
           <Link to="/PrivacyPolicy" className="hover:text-slate-300">Privacy</Link>
           <Link to="/Terms" className="hover:text-slate-300">Terms</Link>
           <Link to="/Contact" className="hover:text-slate-300">Contact</Link>
           <span className="ml-auto">
-            Some links are affiliate links — see disclosure on product pages.
+            Some links are affiliate links ,  see disclosure on product pages.
           </span>
         </div>
       </footer>

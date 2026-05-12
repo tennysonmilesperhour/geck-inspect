@@ -23,7 +23,7 @@ const DEFAULT_PLATFORM = 'bluesky';
 const DEFAULT_LENGTH = 'medium';
 const ITERATION_CAP = 10;
 
-// The composer — generation, edit, voice cycling, copy, publish.
+// The composer ,  generation, edit, voice cycling, copy, publish.
 //
 // Lifecycle:
 //   Open with a gecko -> create draft social_posts row -> user picks
@@ -237,7 +237,7 @@ export default function PromoteComposer({
         return;
       }
       if (data?.error) {
-        setError(`Error: ${data.error}${data.detail ? ` — ${data.detail}` : ''}`);
+        setError(`Error: ${data.error}${data.detail ? ` ,  ${data.detail}` : ''}`);
         return;
       }
 

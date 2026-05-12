@@ -24,7 +24,7 @@ const FEATURES = [
   {
     icon: Thermometer,
     title: 'Temperature-controlled transit',
-    desc: "Reptile-specific carriers with heat packs, cold packs, and insulated foam. Every box is built for the conditions your geckos actually need — not a one-size-fits-all courier bag.",
+    desc: "Reptile-specific carriers with heat packs, cold packs, and insulated foam. Every box is built for the conditions your geckos actually need ,  not a one-size-fits-all courier bag.",
   },
   {
     icon: PackageCheck,
@@ -62,7 +62,7 @@ export default function Shipping() {
   return (
     <>
       <Seo
-        title="Shipping — Live Arrival Guaranteed"
+        title="Shipping ,  Live Arrival Guaranteed"
         description="Geck Inspect is partnering with Zero's Geckos to offer temperature-controlled, live-arrival-guaranteed shipping for crested geckos sold on the platform. Built for breeders, trusted by buyers."
         path="/Shipping"
         jsonLd={SHIPPING_JSON_LD}
@@ -112,7 +112,7 @@ export default function Shipping() {
               Zero&rsquo;s Geckos Shipping Project
             </a>{' '}
             so every gecko sold through the marketplace can be booked, paid for, and tracked in
-            one place — the same way MorphMarket users experience shipping, but built for the
+            one place ,  the same way MorphMarket users experience shipping, but built for the
             crested gecko hobby specifically.
           </p>
 
@@ -225,7 +225,7 @@ export default function Shipping() {
               Already a Breeder member?
             </h2>
             <p className="text-slate-400 max-w-xl mx-auto mb-6">
-              Access the full shipping dashboard — get quotes, book shipments, print labels, and
+              Access the full shipping dashboard ,  get quotes, book shipments, print labels, and
               track packages all from inside Geck Inspect.
             </p>
             <Link to={createPageUrl('BreederShipping')}>

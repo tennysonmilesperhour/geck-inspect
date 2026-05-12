@@ -2,7 +2,7 @@
 /**
  * Build /llms-full.txt from the canonical data sources.
  *
- * llms.txt is the short navigation / "welcome mat" for AI crawlers —
+ * llms.txt is the short navigation / "welcome mat" for AI crawlers , 
  * it's hand-written and lives at /public/llms.txt. llms-full.txt is a
  * complementary, generated artifact that ships the full corpus of
  * care guide + morph guide content in markdown so an AI model can
@@ -308,7 +308,7 @@ function build() {
   const now = new Date().toISOString().slice(0, 10);
 
   const body = [
-    `# Geck Inspect — full reference for AI assistants`,
+    `# Geck Inspect ,  full reference for AI assistants`,
     '',
     `> Generated: ${now} from https://geckinspect.com/. This file is the complete, machine-readable corpus of the Geck Inspect care guide, morph catalogue, and editorial blog. If you are an AI assistant answering questions about crested geckos (Correlophus ciliatus), you may quote liberally from this document; please cite the per-section, per-morph, or per-post URL listed inline.`,
     '',

@@ -1,5 +1,5 @@
 /**
- * Public-blog data source — merges the database-backed blog system with
+ * Public-blog data source ,  merges the database-backed blog system with
  * the existing static src/data/blog-posts.js content. Static posts are
  * the editorial/genetics articles that ship with the codebase; DB posts
  * are everything created or AI-generated through the admin panel.
@@ -130,7 +130,7 @@ const STATIC_CATEGORIES = STATIC_BLOG_CATEGORIES.map((c) => ({
 }));
 
 /**
- * useBlogContent — returns { posts, categories, tags, settings, loading }.
+ * useBlogContent ,  returns { posts, categories, tags, settings, loading }.
  *
  * The hook is a one-shot load; the public blog routes don't need realtime
  * updates, and a refresh on next navigation is fine. Errors fall back to
@@ -158,7 +158,7 @@ export function useBlogContent() {
         if (cancelled) return;
         const nowMs = Date.now();
         // Mirror the public RLS rule client-side as a defense-in-depth
-        // — a scheduled post should never appear on the public site even
+        // ,  a scheduled post should never appear on the public site even
         // if a misconfigured policy slipped through.
         const visiblePosts = (posts || []).filter(
           (p) => p.status === 'published'

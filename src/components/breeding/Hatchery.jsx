@@ -191,7 +191,7 @@ export default function Hatchery() {
         const dam = plan ? geckos.find(g => g.id === plan.dam_id) : null;
 
         if (!plan || !sire || !dam) {
-            alert("Can't auto-hatch — this egg's breeding plan, sire, or dam is missing. Open the egg to mark it manually.");
+            alert("Can't auto-hatch ,  this egg's breeding plan, sire, or dam is missing. Open the egg to mark it manually.");
             return;
         }
 

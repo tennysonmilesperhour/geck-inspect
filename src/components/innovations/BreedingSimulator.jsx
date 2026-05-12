@@ -1,5 +1,5 @@
 /**
- * BreedingSimulator — Monte Carlo breeding outcome visualization.
+ * BreedingSimulator ,  Monte Carlo breeding outcome visualization.
  *
  * Drop into any page that has sire + dam gecko objects.
  * Runs 1,000 virtual clutches and shows:
@@ -56,11 +56,11 @@ export default function BreedingSimulator({ sire, dam }) {
           </Badge>
         </CardTitle>
         <p className="text-xs text-slate-500 mt-1">
-          Monte Carlo simulation — randomized allele draws across {result.trials.toLocaleString()} clutches of {clutchSize} eggs each.
+          Monte Carlo simulation ,  randomized allele draws across {result.trials.toLocaleString()} clutches of {clutchSize} eggs each.
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
-        {/* Safety warnings — always rendered first when present */}
+        {/* Safety warnings ,  always rendered first when present */}
         {warnings.length > 0 && (
           <div className="space-y-2">
             {warnings.map((w) => (

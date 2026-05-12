@@ -50,7 +50,7 @@ const REPO_ROOT = resolve(__dirname, '..');
 const DIST = resolve(REPO_ROOT, 'dist');
 
 if (!existsSync(DIST)) {
-  console.error('[prerender] dist/ does not exist — run `vite build` first.');
+  console.error('[prerender] dist/ does not exist ,  run `vite build` first.');
   process.exit(1);
 }
 
@@ -92,7 +92,7 @@ function loadMorphs() {
   const body = m[1];
 
   // Split into per-morph objects. Each opens `  {` (two-space indent)
-  // and closes with a matching `  },`. Tolerant split — it's a data
+  // and closes with a matching `  },`. Tolerant split ,  it's a data
   // file we control.
   const entries = body.split(/\n\s{2}\},\s*\n\s{2}\{/).map((chunk, i, arr) => {
     let c = chunk;
@@ -184,7 +184,7 @@ function loadBlogPosts() {
     const slug = gs('slug');
     if (!slug) continue;
 
-    // First tldr bullet — pull the first quoted string out of the
+    // First tldr bullet ,  pull the first quoted string out of the
     // tldr: [ ... ] array literal.
     const tldrMatch = chunk.match(/tldr:\s*\[([\s\S]*?)\n\s*\],/);
     let tldrFirst = null;
@@ -239,7 +239,7 @@ function morphMeta(slug) {
     (m.description ? m.description.slice(0, 220).trim() + (m.description.length > 220 ? '…' : '') : null) ||
     `${name} is a ${rarity} crested gecko morph. Every documented crested gecko (Correlophus ciliatus) morph has its own entry in the Geck Inspect morph guide with inheritance, visual identifiers, and breeding notes.`;
   return {
-    title: `${name} Morph — Crested Gecko Guide`,
+    title: `${name} Morph ,  Crested Gecko Guide`,
     description: `${name} is a ${rarity} crested gecko morph. ${desc}`.slice(0, 320),
     bodyHeading: `${name} crested gecko morph`,
     bodyLead: desc,
@@ -258,14 +258,14 @@ function careTopicMeta(id) {
   const title = section?.title || id;
   const summary =
     section?.summary ||
-    `${title} — part of the Geck Inspect crested gecko care guide.`;
+    `${title} ,  part of the Geck Inspect crested gecko care guide.`;
   // Clamp to the soft description limit Google actually renders.
   const description =
-    `${title} — crested gecko care guide. ${summary}`.slice(0, 320);
+    `${title} ,  crested gecko care guide. ${summary}`.slice(0, 320);
   return {
-    title: `${title} — Crested Gecko Care`,
+    title: `${title} ,  Crested Gecko Care`,
     description,
-    bodyHeading: `${title} — crested gecko care`,
+    bodyHeading: `${title} ,  crested gecko care`,
     bodyLead: summary,
     bodyExtra:
       'Full care reference: housing, diet, humidity, handling, health, breeding, and life-stage guidance for Correlophus ciliatus. Every topic in the Geck Inspect care guide has its own URL so you can share or bookmark it.',
@@ -275,7 +275,7 @@ function careTopicMeta(id) {
 function blogPostMeta(slug, route) {
   const post = BLOG_POSTS[slug];
   const fallbackTitle = route?.meta?.title || humanize(slug);
-  const fallbackDesc = route?.meta?.description || `${fallbackTitle} — long-form crested gecko article on Geck Inspect.`;
+  const fallbackDesc = route?.meta?.description || `${fallbackTitle} ,  long-form crested gecko article on Geck Inspect.`;
   if (!post) {
     return {
       title: fallbackTitle,
@@ -326,7 +326,7 @@ function routeMeta(route) {
 
 // Hero image preloads. Mirrors the static URLs the pages render so the
 // browser can start fetching the LCP candidate before the JS bundle
-// evaluates. Keep this list tight — every preload is a mandatory high
+// evaluates. Keep this list tight ,  every preload is a mandatory high
 // priority fetch, and preloading something the page doesn't use hurts
 // LCP instead of helping it.
 //
@@ -342,7 +342,7 @@ const HERO_PRELOADS = {
 function injectMeta(html, route) {
   const meta = routeMeta(route);
   const canonical = `${SITE_URL}${route.path}`;
-  const titleFull = meta.title.includes('Geck Inspect') ? meta.title : `${meta.title} — Geck Inspect`;
+  const titleFull = meta.title.includes('Geck Inspect') ? meta.title : `${meta.title} ,  Geck Inspect`;
   const desc = meta.description.replace(/"/g, '&quot;');
 
   // Rewrite the <title> (exact match on the shell's default title).
@@ -412,7 +412,7 @@ function escapeHtml(s) {
 /**
  * Inject a <noscript> body block so non-JS crawlers see visible text on
  * the page. Placed adjacent to the React root so SPA hydration doesn't
- * clobber the noscript content — browsers ignore <noscript> when JS is
+ * clobber the noscript content ,  browsers ignore <noscript> when JS is
  * enabled, and bots without JS see it as real content.
  */
 function injectNoscriptBody(html, route) {
@@ -451,7 +451,7 @@ function injectNoscriptBody(html, route) {
           <p>Canonical URL: <a href="${canonical}">${canonical}</a></p>
           <p>
             Geck Inspect is the professional platform for crested gecko
-            (<em>Correlophus ciliatus</em>) breeders and keepers — collection
+            (<em>Correlophus ciliatus</em>) breeders and keepers ,  collection
             management, breeding planning, AI-powered morph identification,
             multi-generation lineage tracking, and a verified community.
             Enable JavaScript to use the full interactive app, or
@@ -490,7 +490,7 @@ function writeRoute(route) {
 }
 
 function run() {
-  // Skip routes that are either not indexable or clearly auth-gated —
+  // Skip routes that are either not indexable or clearly auth-gated , 
   // we still want the SPA to handle them, but we don't need a prerendered
   // HTML file pretending they have static content. Everything in the
   // sitemap is eligible; noindex pages live in vercel.json X-Robots-Tag
@@ -499,7 +499,7 @@ function run() {
   // High-commercial-intent + content pages (Membership, Marketplace,
   // MorphVisualizer, CommunityConnect) used to live here, but the AI
   // visibility audit caught that GPTBot/CCBot were getting the bare
-  // shell on those URLs — no canonical, no OG, no schema. They now go
+  // shell on those URLs ,  no canonical, no OG, no schema. They now go
   // through the prerender so non-JS crawlers see the full route-level
   // meta block.
   const SKIP = new Set([

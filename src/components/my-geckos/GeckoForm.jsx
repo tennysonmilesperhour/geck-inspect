@@ -28,7 +28,7 @@ import { Switch } from '@/components/ui/switch';
 import MorphIDSelector from './MorphIDSelector';
 import QualityInput from './QualityInput';
 import { patternGradeForScore } from '@/lib/quality';
-// Extracted helpers / constants / sub-components — keeps this file focused
+// Extracted helpers / constants / sub-components ,  keeps this file focused
 // on the orchestration logic instead of static data and pure UI pieces.
 import { MONTHS, GECKO_SPECIES, INITIAL_FORM_DATA } from './form/constants';
 import { generateNextGeckoId } from './form/helpers';
@@ -64,7 +64,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
     const [isForSale, setIsForSale] = useState(false);
     
     // New states for certificate generation
-    // isGeneratingCert / certType state removed — certificates live on the view modal now.
+    // isGeneratingCert / certType state removed ,  certificates live on the view modal now.
     const [feedingGroups, setFeedingGroups] = useState([]);
     // Collections the user can write to (own + editor memberships).
     // Drives the Collection picker. Empty / single-entry → picker
@@ -84,7 +84,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
 
     // Load every collection the user can write to. Owners get every
     // collection they own; editors get the collections they were
-    // invited into. Viewers get nothing here — they can't create or
+    // invited into. Viewers get nothing here ,  they can't create or
     // move geckos. The intersection of CollectionMember rows and
     // Collection rows gives us the writable set.
     useEffect(() => {
@@ -686,7 +686,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                          />
                     </div>
 
-                    {/* Gravid — Female only */}
+                    {/* Gravid ,  Female only */}
                     {formData.sex === 'Female' && (
                         <div className="space-y-3 p-4 bg-pink-950/30 border border-pink-800/40 rounded-lg">
                             <div className="flex items-center justify-between">
@@ -828,7 +828,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         )}
                     </div>
 
-                    {/* Collection picker — only renders when the user has more
+                    {/* Collection picker ,  only renders when the user has more
                         than one writable collection. Solo-collection users
                         don't need a chooser; their default lands every gecko
                         in the right place via the trigger. */}
@@ -924,7 +924,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     </div>
 
                     {/* Certificates now live on the gecko detail view rather
-                        than the edit form — see GeckoDetailModal. */}
+                        than the edit form ,  see GeckoDetailModal. */}
                 </form>
 
                 <CardFooter className="flex-shrink-0 mt-auto bg-slate-900 border-t border-slate-700 p-4 flex justify-end items-center gap-4">

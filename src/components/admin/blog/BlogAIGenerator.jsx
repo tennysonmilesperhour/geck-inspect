@@ -263,7 +263,7 @@ export default function BlogAIGenerator({ onDraftCreated }) {
             <Textarea
               value={input.custom_instructions}
               onChange={(e) => setField('custom_instructions', e.target.value)}
-              placeholder="Anything else the writer should know — links to include, sections to emphasize, things to avoid…"
+              placeholder="Anything else the writer should know ,  links to include, sections to emphasize, things to avoid…"
               className="bg-slate-800 border-slate-700 text-slate-100 h-20"
             />
           </div>
@@ -298,7 +298,7 @@ export default function BlogAIGenerator({ onDraftCreated }) {
             <div className="flex flex-wrap items-center justify-between gap-2">
               <h3 className="text-base font-semibold text-emerald-300">
                 <Sparkles className="inline w-4 h-4 mr-1" />
-                Draft created — "{result.post.title}"
+                Draft created ,  "{result.post.title}"
               </h3>
               <Button
                 onClick={() => onDraftCreated?.(result.post)}

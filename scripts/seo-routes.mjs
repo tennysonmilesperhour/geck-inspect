@@ -12,16 +12,16 @@
  *   1. Append an object here with { path, priority, changefreq, lastmod, meta? }
  *   2. Optionally supply meta { title, description, ogImage } so the
  *      prerenderer can inject it without the route having to render React.
- *   3. Re-run `pnpm build` — sitemap, prerendered HTML, and vercel.json
+ *   3. Re-run `pnpm build` ,  sitemap, prerendered HTML, and vercel.json
  *      update together.
  *
- * Morph pages are NOT listed here individually — they're expanded from
+ * Morph pages are NOT listed here individually ,  they're expanded from
  * the canonical MORPHS dataset in src/data/morph-guide.js so adding a
  * new morph automatically lights up a crawlable URL.
  *
  * Authenticated-only pages (Dashboard, Settings, AdminPanel, etc.) are
  * parsed out of src/pages.config.js so that adding a page there stays
- * a one-line change — the SPA rewrite list in vercel.json picks it up
+ * a one-line change ,  the SPA rewrite list in vercel.json picks it up
  * automatically on the next build.
  */
 
@@ -116,7 +116,7 @@ export const STATIC_ROUTES = [
     changefreq: 'weekly',
     lastmod: TODAY,
     meta: {
-      title: 'Geck Inspect — Crested Gecko Collection, Breeding & Community Platform',
+      title: 'Geck Inspect ,  Crested Gecko Collection, Breeding & Community Platform',
       description:
         'The professional platform for crested gecko breeders and keepers. Track collections, plan breedings, identify morphs with AI, and connect with the community.',
     },
@@ -129,7 +129,7 @@ export const STATIC_ROUTES = [
     meta: {
       title: 'About Geck Inspect',
       description:
-        'Geck Inspect is the professional platform for crested gecko (Correlophus ciliatus) breeders and keepers — collection management, breeding planning, AI morph identification, lineage tracking, and community.',
+        'Geck Inspect is the professional platform for crested gecko (Correlophus ciliatus) breeders and keepers ,  collection management, breeding planning, AI morph identification, lineage tracking, and community.',
     },
   },
   {
@@ -160,7 +160,7 @@ export const STATIC_ROUTES = [
     changefreq: 'yearly',
     lastmod: '2026-04-17',
     meta: {
-      title: 'Marketplace Verification & Trust — Geck Inspect',
+      title: 'Marketplace Verification & Trust ,  Geck Inspect',
       description:
         "How Geck Inspect verifies sellers on the crested gecko marketplace, the Zero's Geckos shipping partnership, buyer protections, and what to check before buying.",
     },
@@ -184,7 +184,7 @@ export const STATIC_ROUTES = [
     meta: {
       title: 'Crested Gecko Care Guide',
       description:
-        'Comprehensive crested gecko (Correlophus ciliatus) care guide — housing, temperature and humidity, diet with CGD brand comparison, handling, common health issues, shedding, tail loss, breeding readiness, egg incubation, and hatchling care.',
+        'Comprehensive crested gecko (Correlophus ciliatus) care guide ,  housing, temperature and humidity, diet with CGD brand comparison, handling, common health issues, shedding, tail loss, breeding readiness, egg incubation, and hatchling care.',
     },
   },
   {
@@ -193,9 +193,9 @@ export const STATIC_ROUTES = [
     changefreq: 'weekly',
     lastmod: TODAY,
     meta: {
-      title: 'Crested Gecko Morph Guide — Every Known Morph',
+      title: 'Crested Gecko Morph Guide ,  Every Known Morph',
       description:
-        'Definitive visual and written reference for every known crested gecko (Correlophus ciliatus) morph. Harlequin, Pinstripe, Dalmatian, Lilly White, Cappuccino, Axanthic, and dozens more — with inheritance, rarity, and pricing.',
+        'Definitive visual and written reference for every known crested gecko (Correlophus ciliatus) morph. Harlequin, Pinstripe, Dalmatian, Lilly White, Cappuccino, Axanthic, and dozens more ,  with inheritance, rarity, and pricing.',
     },
   },
   {
@@ -218,7 +218,7 @@ export const STATIC_ROUTES = [
     meta: {
       title: 'Crested Gecko Genetics Guide',
       description:
-        'From Punnett squares to proving recessives — the crested gecko genetics guide. Understand Lilly White co-dominance, Cappuccino and Axanthic recessives, Soft Scale dominance, and why most morphs are polygenic.',
+        'From Punnett squares to proving recessives ,  the crested gecko genetics guide. Understand Lilly White co-dominance, Cappuccino and Axanthic recessives, Soft Scale dominance, and why most morphs are polygenic.',
     },
   },
   {
@@ -241,7 +241,7 @@ export const STATIC_ROUTES = [
     changefreq: 'monthly',
     lastmod: TODAY,
     meta: {
-      title: 'Crested Gecko Morph Visualizer — Interactive Trait Simulator',
+      title: 'Crested Gecko Morph Visualizer ,  Interactive Trait Simulator',
       description:
         'Free interactive crested gecko trait simulator. Pick a base color, set morph genotype zygosity, dial pattern intensity, toggle accents, and watch the resulting phenotype render in real time with rarity and value estimates.',
     },
@@ -258,7 +258,7 @@ export const STATIC_ROUTES = [
     changefreq: 'daily',
     lastmod: TODAY,
     meta: {
-      title: 'Community — Find Crested Gecko Breeders & Forum',
+      title: 'Community ,  Find Crested Gecko Breeders & Forum',
       description:
         'Find crested gecko breeders and keepers, follow their collections, and join discussions on the Geck Inspect community forum.',
     },
@@ -275,7 +275,7 @@ export const STATIC_ROUTES = [
     changefreq: 'daily',
     lastmod: TODAY,
     meta: {
-      title: 'Crested Gecko Marketplace — Buy and Sell Geckos',
+      title: 'Crested Gecko Marketplace ,  Buy and Sell Geckos',
       description:
         'Buy and sell crested geckos on Geck Inspect. Browse listings from breeders worldwide, filter by morph, sex, age, and price, and message sellers directly.',
     },
@@ -286,7 +286,7 @@ export const STATIC_ROUTES = [
     changefreq: 'daily',
     lastmod: TODAY,
     meta: {
-      title: 'Buy Crested Geckos — Marketplace',
+      title: 'Buy Crested Geckos ,  Marketplace',
       description:
         'Browse crested geckos for sale from trusted breeders. Filter by morph, sex, age, and price to find your next gecko.',
     },
@@ -309,7 +309,7 @@ export const STATIC_ROUTES = [
     changefreq: 'monthly',
     lastmod: TODAY,
     meta: {
-      title: 'Pricing & Plans — Geck Inspect',
+      title: 'Pricing & Plans ,  Geck Inspect',
       description:
         'Geck Inspect plans for crested gecko keepers and breeders. Free (10 geckos), Keeper ($4/mo, $38.40/yr, $149 lifetime), Breeder ($9/mo, $105.60/yr, $349 lifetime), and custom Enterprise. 7-day free trial on recurring plans. Cancel anytime.',
     },

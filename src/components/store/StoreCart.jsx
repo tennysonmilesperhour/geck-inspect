@@ -140,20 +140,20 @@ export default function StoreCart() {
   const subtotal = cartSubtotalCents(items);
   const remainingForFreeShipping = Math.max(0, settings.free_shipping_threshold_cents - subtotal);
 
-  // Loyalty perk eligibility — paid subscriber, tenure check is server-side
+  // Loyalty perk eligibility ,  paid subscriber, tenure check is server-side
   // at order time; here we surface the cart-side dollar threshold only.
   const loyaltyTier = user?.membership_tier;
   const isPaidTier = loyaltyTier && loyaltyTier !== 'free';
   const remainingForLoyalty = Math.max(0, settings.loyalty_min_cart_cents - subtotal);
 
-  // Signup-grant preview for guests — see CLAUDE.md / proposal: the receipt
+  // Signup-grant preview for guests ,  see CLAUDE.md / proposal: the receipt
   // includes a 3-month Keeper trial for guest checkouts above the min order.
   const remainingForGrant = Math.max(0, settings.signup_grant_min_order_cents - subtotal);
 
   return (
     <StoreLayout breadcrumbs={[{ label: 'Supplies', to: '/Store' }, { label: 'Cart' }]}>
       <Seo
-        title="Cart — Geck Inspect Supplies"
+        title="Cart ,  Geck Inspect Supplies"
         description="Review your Geck Inspect cart and check out."
         path="/Store/cart"
         noIndex

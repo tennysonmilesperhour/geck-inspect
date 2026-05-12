@@ -1,7 +1,7 @@
 /**
  * Genetics engine for the Morph Visualizer.
  *
- * Pure functions — no React, no rendering. Kept small and well-typed so it can
+ * Pure functions ,  no React, no rendering. Kept small and well-typed so it can
  * later back a breeding predictor, a probability calculator, or an LLM tool.
  */
 
@@ -69,7 +69,7 @@ export function zygosityLabel(traitId, zygosity) {
 }
 
 /* -----------------------------------------------------------
- * Punnett math — per-trait probabilities for ONE offspring
+ * Punnett math ,  per-trait probabilities for ONE offspring
  * --------------------------------------------------------- */
 
 function allelesFor(zygosity) {
@@ -143,7 +143,7 @@ export function detectWarnings(selections) {
       severity: 'info',
       traitId: 'cappuccino',
       title: 'Frappuccino (Super Cappuccino)',
-      body: 'Homozygous Cappuccino — some breeders report fertility concerns but the genotype is viable.',
+      body: 'Homozygous Cappuccino ,  some breeders report fertility concerns but the genotype is viable.',
     });
   }
 

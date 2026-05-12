@@ -6,7 +6,7 @@
  * (`shipzeros-proxy`) that holds the API key and forwards requests.
  *
  * Until the partnership is finalized and API credentials are issued,
- * every public method operates in **demo mode** — returning realistic
+ * every public method operates in **demo mode** ,  returning realistic
  * mock data so the full UI can be exercised end-to-end. Once live
  * credentials exist, flip `DEMO_MODE` to false (or set the
  * VITE_SHIPZEROS_LIVE env var) and the real proxy calls take over.
@@ -119,7 +119,7 @@ export async function trackShipment(trackingNumber) {
     return {
       trackingNumber,
       status: 'in_transit',
-      statusDetail: 'Package in transit — on schedule',
+      statusDetail: 'Package in transit ,  on schedule',
       carrier: 'FedEx',
       estimatedDelivery: new Date(now.getTime() + 86400000).toISOString().split('T')[0],
       events: [
@@ -159,7 +159,7 @@ export async function cancelShipment(shipmentId) {
 }
 
 /**
- * Confirm live arrival — buyer calls this after delivery.
+ * Confirm live arrival ,  buyer calls this after delivery.
  *
  * @param {string} shipmentId
  * @param {{ arrived: boolean, condition: 'healthy'|'stressed'|'doa', notes: string }} confirmation

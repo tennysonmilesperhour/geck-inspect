@@ -32,7 +32,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-// Appearance — two independent pickers. Theme drives backgrounds /
+// Appearance ,  two independent pickers. Theme drives backgrounds /
 // surfaces / sage / slate scales; Accent drives the emerald brand color
 // used on buttons, the sidebar, the feedback widget, etc. Mix and match
 // freely (e.g. Lavender theme + Tangerine accent). The ThemeProvider
@@ -80,7 +80,7 @@ function AppearanceSection() {
                 <div>
                     <h3 className="font-semibold text-slate-100">Theme</h3>
                     <p className="text-sm text-slate-400 mt-1">
-                        Sets the overall mood — backgrounds, surfaces, and neutrals
+                        Sets the overall mood ,  backgrounds, surfaces, and neutrals
                         across the app.
                     </p>
                 </div>
@@ -91,7 +91,7 @@ function AppearanceSection() {
                 <div>
                     <h3 className="font-semibold text-slate-100">Accent color</h3>
                     <p className="text-sm text-slate-400 mt-1">
-                        Sets the brand accent — sidebar highlights, primary buttons,
+                        Sets the brand accent ,  sidebar highlights, primary buttons,
                         the feedback widget, and other emerald-tinted chrome. Mix
                         with any theme.
                     </p>
@@ -148,7 +148,7 @@ function LookingForSection({ formData, handleChange }) {
     );
 }
 
-// Favorite Pages Section — lets the user pin up to FAVORITES_MAX pages
+// Favorite Pages Section ,  lets the user pin up to FAVORITES_MAX pages
 // to a 2x2 grid at the top of the sidebar. Selected order is preserved
 // (click order = grid order).
 function FavoritePagesSection({ selected, onChange }) {
@@ -266,7 +266,7 @@ const initialFormData = {
     favorite_page_names: [],
 };
 
-// Email preference keys — legacy grouping-keys that predate the push
+// Email preference keys ,  legacy grouping-keys that predate the push
 // work. Keeping them stable so existing users don't get their
 // preferences silently reset.
 const notificationTypes = [
@@ -281,7 +281,7 @@ const notificationTypes = [
     { key: 'announcements', label: 'Platform Announcements', description: 'Important news and feature updates' }
 ];
 
-// Push preference keys — these match the actual `Notification.type`
+// Push preference keys ,  these match the actual `Notification.type`
 // enum values stored in the notifications table (see
 // src/components/notifications/NotificationService.jsx call sites),
 // because the send-push edge function filters by that exact string.
@@ -295,8 +295,8 @@ const pushNotificationTypes = [
     { key: 'new_comment', label: 'Comments on Your Posts', description: 'Comments on your forum posts' },
     { key: 'new_reply', label: 'Replies to You', description: 'Replies to your comments' },
     { key: 'new_follower', label: 'New Followers', description: 'When someone starts following you' },
-    { key: 'new_gecko_listing', label: 'Following Activity — New Listings', description: 'When breeders you follow list new geckos' },
-    { key: 'new_breeding_plan', label: 'Following Activity — New Plans', description: 'When breeders you follow publish new breeding plans' },
+    { key: 'new_gecko_listing', label: 'Following Activity ,  New Listings', description: 'When breeders you follow list new geckos' },
+    { key: 'new_breeding_plan', label: 'Following Activity ,  New Plans', description: 'When breeders you follow publish new breeding plans' },
     { key: 'future_breeding_ready', label: 'Breeding Window Ready', description: 'When one of your future breeding plans enters its pairing window' },
     { key: 'gecko_of_the_day', label: 'Gecko of the Day', description: 'When your gecko is featured' },
     { key: 'level_up', label: 'Level Up & Achievements', description: 'New badges or milestones' },
@@ -557,7 +557,7 @@ export default function SettingsPage() {
                 )}
 
                 <div className="flex flex-col lg:flex-row gap-8">
-                    {/* Sticky section navigator — industry-standard pattern */}
+                    {/* Sticky section navigator ,  industry-standard pattern */}
                     <aside className="lg:w-56 shrink-0">
                         <nav className="lg:sticky lg:top-20 space-y-1">
                             <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold px-2 mb-2">
@@ -744,7 +744,7 @@ export default function SettingsPage() {
                     <CardHeader>
                         <CardTitle className="text-slate-100 flex items-center gap-2"><FileText className="w-5 h-5"/>Store Policy</CardTitle>
                         <CardDescription className="text-slate-400">
-                            Set your store policies for buyers — shipping terms, payment plans, health guarantees, return policy, etc. This will be visible on your public profile and storefront.
+                            Set your store policies for buyers ,  shipping terms, payment plans, health guarantees, return policy, etc. This will be visible on your public profile and storefront.
                         </CardDescription>
                     </CardHeader>
                     <CardContent className="space-y-4">
@@ -855,7 +855,7 @@ export default function SettingsPage() {
                           {renderSwitch('feeding-alerts-enabled', 'Enable Feeding Alerts', 'Send a notification on the day each feeding group or reptile is due', formData.feeding_alerts_enabled, (checked) => handleChange('feeding_alerts_enabled', checked))}
                          {formData.feeding_alerts_enabled && (
                              <>
-                                 {renderSwitch('feeding-late-reminders-enabled', 'Late Reminders', 'Keep sending daily reminders while a feeding remains overdue. Off by default — you only get one notification on the day feeding is due.', formData.feeding_late_reminders_enabled, (checked) => handleChange('feeding_late_reminders_enabled', checked))}
+                                 {renderSwitch('feeding-late-reminders-enabled', 'Late Reminders', 'Keep sending daily reminders while a feeding remains overdue. Off by default ,  you only get one notification on the day feeding is due.', formData.feeding_late_reminders_enabled, (checked) => handleChange('feeding_late_reminders_enabled', checked))}
                                  <p className="text-sm text-slate-400">Alerts also appear in the bottom right corner while feeding is overdue. Glow turns yellow when due, orange after 2+ weeks, red after 3+ weeks.</p>
                              </>
                          )}

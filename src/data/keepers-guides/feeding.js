@@ -1,5 +1,5 @@
 /**
- * Guide 01 — Feeding Troubleshooting
+ * Guide 01 ,  Feeding Troubleshooting
  *
  * The complete diagnostic framework for any crested gecko that has
  * stopped eating. Source-of-truth slide content, rendered by

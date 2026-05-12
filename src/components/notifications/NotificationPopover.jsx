@@ -24,7 +24,7 @@ const ICONS = {
 };
 
 /**
- * Notification bell popover — shows the 5 most recent unread
+ * Notification bell popover ,  shows the 5 most recent unread
  * notifications inline, with a "See all" link to the full page.
  */
 export default function NotificationPopover({ notifications = [], unreadCount = 0, onMarkRead, onMarkAllRead }) {

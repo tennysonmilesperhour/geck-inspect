@@ -1,5 +1,5 @@
 /**
- * Social Media Manager — shared client-side constants and helpers.
+ * Social Media Manager ,  shared client-side constants and helpers.
  *
  * Voice presets, post templates, and platform metadata are mirrored on the
  * server (generate-social-post edge function) so prompt construction stays

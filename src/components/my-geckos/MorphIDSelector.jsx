@@ -7,7 +7,7 @@ import { Dna, ChevronDown, ChevronUp, Search } from 'lucide-react';
  * Comprehensive crested gecko morph/trait tag selector.
  *
  * Inheritance classifications follow the Foundation Genetics consensus
- * (mirrored in `src/components/morph-id/morphTaxonomy.js` — the canonical
+ * (mirrored in `src/components/morph-id/morphTaxonomy.js` ,  the canonical
  * in-repo reference). Trait list sourced from MorphMarket Morphpedia,
  * Lil Monsters Foundation Genetics, Fringemorphs, and community glossaries.
  *
@@ -19,7 +19,7 @@ import { Dna, ChevronDown, ChevronUp, Search } from 'lucide-react';
  *
  * Traits are mutually exclusive where biologically appropriate (e.g. a
  * gecko can't be both Fired Up and Fired Down simultaneously) but the
- * selector doesn't enforce that — breeders know their animals.
+ * selector doesn't enforce that ,  breeders know their animals.
  */
 
 const MORPH_CATEGORIES = {

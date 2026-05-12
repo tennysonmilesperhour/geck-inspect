@@ -110,7 +110,7 @@ export default function ExpertContributionForm({ prefill, onSaved }) {
 
       const saved = await saveGeckoImageWithMeta(record);
 
-      toast({ title: 'Submitted', description: 'Thanks — queued for peer review.' });
+      toast({ title: 'Submitted', description: 'Thanks ,  queued for peer review.' });
       onSaved?.(saved);
       setState({ ...EMPTY_STATE });
       setImageUrls([]);
@@ -250,7 +250,7 @@ export default function ExpertContributionForm({ prefill, onSaved }) {
               <Textarea
                 value={state.notes}
                 onChange={(e) => set('notes', e.target.value)}
-                placeholder="Anything a reviewer should know — lineage, unique marks, lighting quirks…"
+                placeholder="Anything a reviewer should know ,  lineage, unique marks, lighting quirks…"
                 className="bg-slate-800 border-slate-600 text-slate-100"
                 rows={3}
               />

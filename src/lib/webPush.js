@@ -28,7 +28,7 @@ function urlBase64ToUint8Array(base64String) {
   return arr;
 }
 
-// ArrayBuffer → base64 (what we store — matches what `web-push` server
+// ArrayBuffer → base64 (what we store ,  matches what `web-push` server
 // libraries expect on the way back out).
 function arrayBufferToBase64(buffer) {
   const bytes = new Uint8Array(buffer);
@@ -57,7 +57,7 @@ export function isPushSupported() {
 
 /**
  * Returns { supported, permission, subscribed } for the current browser.
- * Note: "subscribed" is checked against the browser's PushManager only —
+ * Note: "subscribed" is checked against the browser's PushManager only , 
  * a row could exist in push_subscriptions for a stale/re-installed
  * browser; the 410-cleanup loop in send-push handles that.
  */
@@ -78,7 +78,7 @@ export async function getPushStatus() {
 
 /**
  * Request permission (if not already granted), subscribe with the push
- * service, and persist to Supabase. Safe to call multiple times — an
+ * service, and persist to Supabase. Safe to call multiple times ,  an
  * existing subscription with the same endpoint is upserted.
  *
  * Returns { ok: true } on success, { ok: false, reason } on failure.
@@ -88,7 +88,7 @@ export async function getPushStatus() {
 export async function subscribeToPush(userEmail) {
   if (!isPushSupported()) return { ok: false, reason: 'not-supported' };
   if (!VAPID_PUBLIC_KEY) {
-    console.warn('[push] VITE_VAPID_PUBLIC_KEY is not set — skipping subscribe');
+    console.warn('[push] VITE_VAPID_PUBLIC_KEY is not set ,  skipping subscribe');
     return { ok: false, reason: 'no-vapid-key' };
   }
   if (!userEmail) return { ok: false, reason: 'no-user' };
@@ -103,7 +103,7 @@ export async function subscribeToPush(userEmail) {
 
   let sub;
   try {
-    // If an existing subscription is present, reuse it — re-subscribing
+    // If an existing subscription is present, reuse it ,  re-subscribing
     // with different VAPID keys would invalidate the old endpoint.
     sub = await reg.pushManager.getSubscription();
     if (!sub) {
@@ -153,7 +153,7 @@ export async function subscribeToPush(userEmail) {
       .update({ push_notifications_enabled: true })
       .eq('email', userEmail);
   } catch {
-    // Non-fatal — the subscription row already exists.
+    // Non-fatal ,  the subscription row already exists.
   }
 
   return { ok: true, subscription: sub };
@@ -162,7 +162,7 @@ export async function subscribeToPush(userEmail) {
 /**
  * Unsubscribe this browser: unregister from the push service AND delete
  * the corresponding row from push_subscriptions. Does NOT flip the
- * profiles.push_notifications_enabled flag — the user may have other
+ * profiles.push_notifications_enabled flag ,  the user may have other
  * devices still subscribed.
  */
 export async function unsubscribeFromPush() {

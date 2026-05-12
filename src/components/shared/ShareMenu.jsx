@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Share2, Twitter, Facebook, Instagram, Link as LinkIcon, Check, ExternalLink } from 'lucide-react';
 
 /**
- * Share menu for gecko profile pages — public passport (AnimalPassport)
+ * Share menu for gecko profile pages ,  public passport (AnimalPassport)
  * and the in-app gecko detail (GeckoDetail).
  *
  * Pops a small panel with direct share targets for X (Twitter Web Intent),
@@ -11,15 +11,15 @@ import { Share2, Twitter, Facebook, Instagram, Link as LinkIcon, Check, External
  * paste the link manually), plus a "Copy link" fallback.
  *
  * If the browser supports navigator.share() we ALSO surface a "More..."
- * option that opens the native OS share sheet — which is the only way
+ * option that opens the native OS share sheet ,  which is the only way
  * to "share to Instagram" cleanly on mobile, since the share sheet
  * includes Instagram alongside every other installed app.
  *
  * Props:
- *   url      — absolute URL to share (required)
- *   title    — short text used as the post copy / window title (required)
- *   subtitle — optional second line (e.g. morph, sex, breeder name)
- *   className — passed through to the trigger button
+ *   url      ,  absolute URL to share (required)
+ *   title    ,  short text used as the post copy / window title (required)
+ *   subtitle ,  optional second line (e.g. morph, sex, breeder name)
+ *   className ,  passed through to the trigger button
  */
 export default function ShareMenu({ url, title, subtitle, className = '' }) {
   const [open, setOpen] = useState(false);
@@ -42,7 +42,7 @@ export default function ShareMenu({ url, title, subtitle, className = '' }) {
     };
   }, [open]);
 
-  const fullText = subtitle ? `${title} — ${subtitle}` : title;
+  const fullText = subtitle ? `${title} ,  ${subtitle}` : title;
   const encodedUrl = encodeURIComponent(url);
   const encodedText = encodeURIComponent(fullText);
 
@@ -84,7 +84,7 @@ export default function ShareMenu({ url, title, subtitle, className = '' }) {
       await navigator.share({ title, text: fullText, url });
       setOpen(false);
     } catch {
-      // User cancelled or share failed — leave the menu open so they
+      // User cancelled or share failed ,  leave the menu open so they
       // can pick a specific target instead.
     }
   };
@@ -158,7 +158,7 @@ export default function ShareMenu({ url, title, subtitle, className = '' }) {
             <Instagram className="w-4 h-4 text-pink-400" />
             <span className="flex-1 text-left">
               Instagram
-              <span className="block text-[10px] text-slate-500 leading-tight">Link copied — paste into a story or post</span>
+              <span className="block text-[10px] text-slate-500 leading-tight">Link copied ,  paste into a story or post</span>
             </span>
           </button>
 

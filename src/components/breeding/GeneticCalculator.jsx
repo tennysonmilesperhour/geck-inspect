@@ -109,7 +109,7 @@ export default function GeneticCalculator({ sire, dam }) {
       {/* Parent summary */}
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-slate-800 rounded-lg p-3">
-          <p className="text-xs text-blue-400 font-semibold mb-1">♂ Sire — {sire.name}</p>
+          <p className="text-xs text-blue-400 font-semibold mb-1">♂ Sire ,  {sire.name}</p>
           <div className="flex flex-wrap gap-1">
             {sireTraits.length ? sireTraits.map((t) => (
               <span key={t} className="text-xs bg-blue-900/60 border border-blue-700 text-blue-200 px-1.5 py-0.5 rounded">{t}</span>
@@ -117,7 +117,7 @@ export default function GeneticCalculator({ sire, dam }) {
           </div>
         </div>
         <div className="bg-slate-800 rounded-lg p-3">
-          <p className="text-xs text-pink-400 font-semibold mb-1">♀ Dam — {dam.name}</p>
+          <p className="text-xs text-pink-400 font-semibold mb-1">♀ Dam ,  {dam.name}</p>
           <div className="flex flex-wrap gap-1">
             {damTraits.length ? damTraits.map((t) => (
               <span key={t} className="text-xs bg-pink-900/60 border border-pink-700 text-pink-200 px-1.5 py-0.5 rounded">{t}</span>
@@ -126,7 +126,7 @@ export default function GeneticCalculator({ sire, dam }) {
         </div>
       </div>
 
-      {/* Warnings — critical safety info, always rendered, not filterable */}
+      {/* Warnings ,  critical safety info, always rendered, not filterable */}
       {warnings.length > 0 && (
         <div className="space-y-2">
           {warnings.map((w) => (
@@ -208,7 +208,7 @@ export default function GeneticCalculator({ sire, dam }) {
       <p className="text-xs text-slate-500 text-center pt-2">
         Probabilities are per-offspring from Punnett-square math across independent loci, powered by the
         Foundation Genetics consensus (<a className="underline" href="https://lmreptiles.com/fg-overview" target="_blank" rel="noopener noreferrer">lmreptiles.com/fg-overview</a>).
-        Morph tags are auto-converted to genotypes — add explicit zygosity context for exact results.
+        Morph tags are auto-converted to genotypes ,  add explicit zygosity context for exact results.
       </p>
     </div>
   );

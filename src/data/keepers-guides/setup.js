@@ -1,5 +1,5 @@
 /**
- * Guide 02 — Setup & First 30 Days
+ * Guide 02 ,  Setup & First 30 Days
  *
  * The complete playbook for bringing home a new crested gecko. From
  * pre-arrival setup through the 30-day checkpoint.

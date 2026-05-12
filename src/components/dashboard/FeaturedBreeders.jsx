@@ -9,12 +9,12 @@ import { DEFAULT_GECKO_IMAGE as DEFAULT_AVATAR } from '@/lib/constants';
  * Featured Breeders dashboard widget.
  *
  * Shows 2 Breeder-tier users who have opted in via Settings ("Feature
- * me on the Dashboard"). The pair rotates every 24h — the selection is
+ * me on the Dashboard"). The pair rotates every 24h ,  the selection is
  * deterministic per UTC day so every visitor sees the same breeders on
  * the same day, and the rotation advances once a day rather than on
  * every refresh. Clicking a card takes you to their public profile.
  *
- * Uses Gecko.list() to bucket sale counts client-side — the table is
+ * Uses Gecko.list() to bucket sale counts client-side ,  the table is
  * small enough that a single fetch is fine. When it grows we can move
  * this to a materialized view.
  */
@@ -23,7 +23,7 @@ const FEATURED_COUNT = 2;
 
 // Small deterministic PRNG. Given the same seed it always produces the
 // same sequence of floats in [0, 1). We use it to drive a Fisher-Yates
-// shuffle that's stable for 24h — seeding from `days since epoch` means
+// shuffle that's stable for 24h ,  seeding from `days since epoch` means
 // the pick only changes at UTC midnight.
 function mulberry32(seed) {
   return function () {

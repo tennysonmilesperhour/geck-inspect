@@ -101,11 +101,11 @@ export default function EggCard({ egg, breedingPlan: _breedingPlan, onUpdate }) 
               <SelectValue placeholder="Rate egg" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="A+">A+ — Excellent</SelectItem>
-              <SelectItem value="A">A — Great</SelectItem>
-              <SelectItem value="B">B — Good</SelectItem>
-              <SelectItem value="C">C — Fair</SelectItem>
-              <SelectItem value="D">D — Poor</SelectItem>
+              <SelectItem value="A+">A+ ,  Excellent</SelectItem>
+              <SelectItem value="A">A ,  Great</SelectItem>
+              <SelectItem value="B">B ,  Good</SelectItem>
+              <SelectItem value="C">C ,  Fair</SelectItem>
+              <SelectItem value="D">D ,  Poor</SelectItem>
             </SelectContent>
           </Select>
         </div>

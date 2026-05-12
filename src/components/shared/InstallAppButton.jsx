@@ -50,7 +50,7 @@ const notificationsSupported = () =>
  *        permission when tapped. Post-tap, we register with the
  *        push manager (subscription storage arrives in a later phase).
  *   4. Installed + permission granted:
- *        component renders nothing — there's nothing to nag about.
+ *        component renders nothing ,  there's nothing to nag about.
  *
  * Dismissal only suppresses the pre-install state. Once the user
  * installs, the post-install notifications prompt surfaces once and
@@ -75,7 +75,7 @@ export default function InstallAppButton() {
     try {
       setDismissed(localStorage.getItem(DISMISSED_KEY) === "1");
     } catch {
-      // localStorage unavailable — just show the button.
+      // localStorage unavailable ,  just show the button.
     }
 
     const onBeforeInstall = (e) => {
@@ -150,7 +150,7 @@ export default function InstallAppButton() {
         if (result === "denied") setShowNotifHelp(true);
         return;
       }
-      // Permission granted — subscribe the device with the push service
+      // Permission granted ,  subscribe the device with the push service
       // and persist the resulting keys to Supabase. subscribeToPush is
       // idempotent, so re-runs on the same device just upsert.
       if (user?.email) {
@@ -318,7 +318,7 @@ export default function InstallAppButton() {
             <DialogTitle>Add Geck Inspect to your Home Screen</DialogTitle>
             <DialogDescription>
               iOS doesn&apos;t let apps install themselves, but it&apos;s two
-              taps in Safari — and it unlocks push notifications too.
+              taps in Safari ,  and it unlocks push notifications too.
             </DialogDescription>
           </DialogHeader>
           <ol className="space-y-3 text-sm mt-2">
@@ -354,7 +354,7 @@ export default function InstallAppButton() {
           </ol>
           <p className="text-xs text-muted-foreground mt-3">
             Hatch alerts, feeding reminders, messages, and breeding milestones
-            show up right on your lock screen — no browser tab required.
+            show up right on your lock screen ,  no browser tab required.
             Requires iOS 16.4 or newer.
           </p>
         </DialogContent>

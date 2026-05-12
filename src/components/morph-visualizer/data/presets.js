@@ -1,5 +1,5 @@
 /**
- * Notable morph presets — one-click examples of iconic crested gecko looks.
+ * Notable morph presets ,  one-click examples of iconic crested gecko looks.
  * Values intentionally map directly to the selection state shape used by the
  * visualizer so they can be loaded with a simple state replace.
  */
@@ -10,7 +10,7 @@ export const PRESETS = [
   {
     id: 'wild_type',
     name: 'Wild Type (Buckskin)',
-    description: 'The non-morph baseline. Polygenic brown base with a hint of flame — what crested geckos look like before humans got involved.',
+    description: 'The non-morph baseline. Polygenic brown base with a hint of flame ,  what crested geckos look like before humans got involved.',
     rarityTier: 1,
     valueHint: 40,
     selections: {
@@ -40,7 +40,7 @@ export const PRESETS = [
   {
     id: 'extreme_harlequin',
     name: 'Extreme Harlequin',
-    description: 'Harlequin pattern extending over the back — lateral cream climbs onto the dorsum.',
+    description: 'Harlequin pattern extending over the back ,  lateral cream climbs onto the dorsum.',
     rarityTier: 3,
     valueHint: 500,
     selections: {
@@ -55,7 +55,7 @@ export const PRESETS = [
   {
     id: 'pinstripe_harlequin',
     name: 'Pinstripe Harlequin',
-    description: '100% pinstripe stacked with strong harlequin lateral markings — a show-line staple.',
+    description: '100% pinstripe stacked with strong harlequin lateral markings ,  a show-line staple.',
     rarityTier: 3,
     valueHint: 450,
     selections: {
@@ -70,7 +70,7 @@ export const PRESETS = [
   {
     id: 'lilly_white',
     name: 'Lilly White',
-    description: 'Incomplete-dominant morph — single-copy white body highlights with clean lateral contrast.',
+    description: 'Incomplete-dominant morph ,  single-copy white body highlights with clean lateral contrast.',
     rarityTier: 3,
     valueHint: 500,
     selections: {
@@ -85,7 +85,7 @@ export const PRESETS = [
   {
     id: 'cappuccino_lw',
     name: 'Cappuccino Lilly White',
-    description: 'Two proven morphs stacked — coffee-brown body with connected dorsum and white body highlights.',
+    description: 'Two proven morphs stacked ,  coffee-brown body with connected dorsum and white body highlights.',
     rarityTier: 4,
     valueHint: 1200,
     selections: {
@@ -100,7 +100,7 @@ export const PRESETS = [
   {
     id: 'frappuccino',
     name: 'Frappuccino',
-    description: 'Super (homozygous) Cappuccino — fully patternless cream dorsum over a dark coffee body.',
+    description: 'Super (homozygous) Cappuccino ,  fully patternless cream dorsum over a dark coffee body.',
     rarityTier: 5,
     valueHint: 2500,
     selections: {
@@ -130,7 +130,7 @@ export const PRESETS = [
   {
     id: 'moonglow_style',
     name: 'Moonglow-style',
-    description: 'Hypothetical moonglow aesthetic — near-white body on a pale phantom base with LW highlights.',
+    description: 'Hypothetical moonglow aesthetic ,  near-white body on a pale phantom base with LW highlights.',
     rarityTier: 5,
     valueHint: 2000,
     selections: {
@@ -160,7 +160,7 @@ export const PRESETS = [
   {
     id: 'tiger',
     name: 'Tiger',
-    description: 'Dark vertical banding across the ribs — polygenic and strikingly linear.',
+    description: 'Dark vertical banding across the ribs ,  polygenic and strikingly linear.',
     rarityTier: 2,
     valueHint: 200,
     selections: {
@@ -175,7 +175,7 @@ export const PRESETS = [
   {
     id: 'phantom_pinstripe',
     name: 'Phantom Pinstripe',
-    description: 'Desaturated, ghostly base color with full pinstripe rails — muted contrast.',
+    description: 'Desaturated, ghostly base color with full pinstripe rails ,  muted contrast.',
     rarityTier: 3,
     valueHint: 300,
     selections: {
@@ -191,5 +191,5 @@ export const PRESETS = [
 
 export const PRESETS_BY_ID = Object.fromEntries(PRESETS.map((p) => [p.id, p]));
 
-/** Default selection state — a wild-type starting point. */
+/** Default selection state ,  a wild-type starting point. */
 export const DEFAULT_SELECTIONS = PRESETS[0].selections;

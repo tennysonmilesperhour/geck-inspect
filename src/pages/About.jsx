@@ -14,7 +14,7 @@ const ABOUT_JSON_LD = [
     name: 'About Geck Inspect',
     url: `${SITE_URL}/About`,
     description:
-      'Geck Inspect is the professional platform for crested gecko (Correlophus ciliatus) breeders and keepers — combining collection management, breeding planning, AI morph identification, lineage tracking, and community tools.',
+      'Geck Inspect is the professional platform for crested gecko (Correlophus ciliatus) breeders and keepers ,  combining collection management, breeding planning, AI morph identification, lineage tracking, and community tools.',
     about: { '@id': ORG_ID },
     isPartOf: { '@id': `${SITE_URL}/#website` },
     mainEntity: { '@id': ORG_ID },
@@ -39,7 +39,7 @@ export default function About() {
     <PublicPageShell>
       <Seo
         title="About Geck Inspect"
-        description="Geck Inspect is the professional platform for crested gecko breeders and keepers — collection management, breeding planning, AI morph identification, lineage tracking, and community. Built by people who breed crested geckos, for people who breed crested geckos."
+        description="Geck Inspect is the professional platform for crested gecko breeders and keepers ,  collection management, breeding planning, AI morph identification, lineage tracking, and community. Built by people who breed crested geckos, for people who breed crested geckos."
         path="/About"
         type="article"
         keywords={[
@@ -68,7 +68,7 @@ export default function About() {
           We built the platform we wanted as breeders
         </h1>
         <p className="text-lg text-slate-300 leading-relaxed max-w-3xl">
-          Geck Inspect is a free, professional web platform for crested gecko (<em>Correlophus ciliatus</em>) breeders and keepers. It combines collection management, breeding planning, AI-powered morph identification, multi-generation lineage tracking, and a verified community — in one place, built specifically for this species.
+          Geck Inspect is a free, professional web platform for crested gecko (<em>Correlophus ciliatus</em>) breeders and keepers. It combines collection management, breeding planning, AI-powered morph identification, multi-generation lineage tracking, and a verified community ,  in one place, built specifically for this species.
         </p>
 
         <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-6 border-y border-slate-800/50 py-6">
@@ -84,7 +84,7 @@ export default function About() {
               <BookOpen className="w-5 h-5 text-emerald-400" /> What Geck Inspect is
             </h2>
             <p className="text-slate-300 leading-relaxed">
-              Crested geckos were rediscovered in 1994 and the hobby has exploded in the years since. Spreadsheets, breeder Facebook groups, and generic reptile apps have not kept up. Geck Inspect treats this species as the specialist domain it is: morphs and their polygenic/Mendelian distinctions are modeled as first-class data, lineage is tracked across breeders not just owners, and the AI morph identifier is trained on community-uploaded crested geckos — not a generic reptile dataset.
+              Crested geckos were rediscovered in 1994 and the hobby has exploded in the years since. Spreadsheets, breeder Facebook groups, and generic reptile apps have not kept up. Geck Inspect treats this species as the specialist domain it is: morphs and their polygenic/Mendelian distinctions are modeled as first-class data, lineage is tracked across breeders not just owners, and the AI morph identifier is trained on community-uploaded crested geckos ,  not a generic reptile dataset.
             </p>
           </section>
 
@@ -96,8 +96,8 @@ export default function About() {
               <li className="flex gap-3"><span className="text-emerald-400 mt-1.5">•</span><span>Track every gecko in your collection with weights, photos, notes, and full pedigree back to the breeder.</span></li>
               <li className="flex gap-3"><span className="text-emerald-400 mt-1.5">•</span><span>Plan breedings with a genetics calculator that understands Lilly White (co-dominant, lethal super), Cappuccino, Axanthic, and Soft Scale.</span></li>
               <li className="flex gap-3"><span className="text-emerald-400 mt-1.5">•</span><span>Log egg lays, incubation temps, and hatch dates and watch hatchlings graduate into juveniles and adults.</span></li>
-              <li className="flex gap-3"><span className="text-emerald-400 mt-1.5">•</span><span>Identify morphs with AI from a photo — primary morph, secondary traits, and base color.</span></li>
-              <li className="flex gap-3"><span className="text-emerald-400 mt-1.5">•</span><span>Read the <Link to="/CareGuide" className="text-emerald-300 underline-offset-2 hover:underline">Care Guide</Link>, <Link to="/MorphGuide" className="text-emerald-300 underline-offset-2 hover:underline">Morph Guide</Link>, and <Link to="/GeneticsGuide" className="text-emerald-300 underline-offset-2 hover:underline">Genetics Guide</Link> — written for beginners, deep enough for long-time breeders.</span></li>
+              <li className="flex gap-3"><span className="text-emerald-400 mt-1.5">•</span><span>Identify morphs with AI from a photo ,  primary morph, secondary traits, and base color.</span></li>
+              <li className="flex gap-3"><span className="text-emerald-400 mt-1.5">•</span><span>Read the <Link to="/CareGuide" className="text-emerald-300 underline-offset-2 hover:underline">Care Guide</Link>, <Link to="/MorphGuide" className="text-emerald-300 underline-offset-2 hover:underline">Morph Guide</Link>, and <Link to="/GeneticsGuide" className="text-emerald-300 underline-offset-2 hover:underline">Genetics Guide</Link> ,  written for beginners, deep enough for long-time breeders.</span></li>
             </ul>
           </section>
 
@@ -106,14 +106,14 @@ export default function About() {
               <ShieldCheck className="w-5 h-5 text-emerald-400" /> Our editorial approach
             </h2>
             <p className="text-slate-300 leading-relaxed">
-              Care and genetics content on Geck Inspect is written and reviewed by breeders with lived experience of the species, and every guide carries a <em>last updated</em> date. When we cite a figure (temperature ranges, breeding weights, incubation timing), it is drawn from established references — de Vosjoli's <em>Crested Gecko Manual</em>, Repashy and Pangea diet formulation notes, and collective community data from keepers tracking real animals on the platform. Corrections are welcomed at <Link to="/Contact" className="text-emerald-300 underline-offset-2 hover:underline">/Contact</Link>.
+              Care and genetics content on Geck Inspect is written and reviewed by breeders with lived experience of the species, and every guide carries a <em>last updated</em> date. When we cite a figure (temperature ranges, breeding weights, incubation timing), it is drawn from established references ,  de Vosjoli's <em>Crested Gecko Manual</em>, Repashy and Pangea diet formulation notes, and collective community data from keepers tracking real animals on the platform. Corrections are welcomed at <Link to="/Contact" className="text-emerald-300 underline-offset-2 hover:underline">/Contact</Link>.
             </p>
           </section>
 
           <section>
             <h2 className="text-2xl font-bold text-white mb-3">Also branded as geckOS</h2>
             <p className="text-slate-300 leading-relaxed">
-              You'll sometimes see Geck Inspect referred to as <strong className="text-white">geckOS</strong> — "the gecko operating system." Same platform; the dual branding reflects the platform's role as the underlying operating system for serious crested gecko projects.
+              You'll sometimes see Geck Inspect referred to as <strong className="text-white">geckOS</strong> ,  "the gecko operating system." Same platform; the dual branding reflects the platform's role as the underlying operating system for serious crested gecko projects.
             </p>
           </section>
         </div>

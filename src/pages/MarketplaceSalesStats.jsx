@@ -140,7 +140,7 @@ function QuarterSection({ quarterKey, items, onDelete: _onDelete, onUpdate: _onU
         className="w-full flex items-center justify-between gap-3 px-4 py-3 hover:bg-slate-700/40 transition-colors">
         <div className="flex items-center gap-2 flex-wrap min-w-0 flex-1">
           <Calendar className="w-4 h-4 text-emerald-500 flex-shrink-0" />
-          <span className="font-semibold text-slate-100 whitespace-nowrap">{year} — {QUARTER_LABELS[quarter]}</span>
+          <span className="font-semibold text-slate-100 whitespace-nowrap">{year} ,  {QUARTER_LABELS[quarter]}</span>
           <Badge className="bg-emerald-900/50 text-emerald-300 border-emerald-800/40 text-xs flex-shrink-0">{items.length} entries</Badge>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
@@ -156,7 +156,7 @@ function QuarterSection({ quarterKey, items, onDelete: _onDelete, onUpdate: _onU
               <div className="flex items-center gap-2 mb-2">
                 <Tag className="w-3 h-3 text-emerald-600" />
                 <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">{getCategoryLabel(cat)}</span>
-                <span className="text-xs text-slate-500">— ${catItems.reduce((s, i) => s + Number(i.amount || 0), 0).toFixed(2)}</span>
+                <span className="text-xs text-slate-500">,  ${catItems.reduce((s, i) => s + Number(i.amount || 0), 0).toFixed(2)}</span>
               </div>
               <div className="space-y-2">
                 {catItems.map(item => renderItem(item))}
@@ -171,7 +171,7 @@ function QuarterSection({ quarterKey, items, onDelete: _onDelete, onUpdate: _onU
 
 
 // ---------------------------------------------------------------------------
-// Pending Sales — reserve price system
+// Pending Sales ,  reserve price system
 // ---------------------------------------------------------------------------
 
 function PendingSaleCard({ sale, onUpdate, onComplete, onCancel, onDelete }) {
@@ -232,7 +232,7 @@ function PendingSaleCard({ sale, onUpdate, onComplete, onCancel, onDelete }) {
     return (
       <div className="bg-slate-800/80 border border-amber-700/40 rounded-xl p-5 space-y-4">
         <div className="flex justify-between items-center">
-          <h3 className="text-sm font-bold text-slate-100">Edit Reserve — {form.gecko_name}</h3>
+          <h3 className="text-sm font-bold text-slate-100">Edit Reserve ,  {form.gecko_name}</h3>
           <button onClick={() => { setForm(sale); setEditing(false); }} className="text-slate-400 hover:text-slate-200"><X className="w-4 h-4" /></button>
         </div>
 
@@ -482,7 +482,7 @@ function PendingSalesTab({ user, pendingSales, setPendingSales, onCompleteSale, 
       };
       const created = await PendingSale.create(record);
       setPendingSales(prev => [created, ...prev]);
-      toast({ title: 'Reserve created', description: `${record.gecko_name} — $${record.reserve_price.toFixed(2)}` });
+      toast({ title: 'Reserve created', description: `${record.gecko_name} ,  $${record.reserve_price.toFixed(2)}` });
       resetForm();
     } catch (err) {
       console.error('Failed to create pending sale:', err);
@@ -625,7 +625,7 @@ function PendingSalesTab({ user, pendingSales, setPendingSales, onCompleteSale, 
                     <div className="absolute z-20 left-0 right-0 mt-1 bg-slate-700 border border-slate-600 rounded-lg max-h-48 overflow-y-auto shadow-lg">
                       {filtered.length === 0 ? (
                         <p className="text-xs text-slate-400 p-2">
-                          {q ? `No matches — "${newSale.gecko_name}" will be used as a manual entry` : 'No geckos in collection'}
+                          {q ? `No matches ,  "${newSale.gecko_name}" will be used as a manual entry` : 'No geckos in collection'}
                         </p>
                       ) : filtered.map(g => (
                         <button key={g.id} type="button"
@@ -832,7 +832,7 @@ export default function MarketplaceSalesStats() {
 
         const allGeckos = await Gecko.filter({ created_by: currentUser.email });
         setUserGeckos(allGeckos);
-        // Only real sold geckos — exclude fake records created by old manual-sale flow
+        // Only real sold geckos ,  exclude fake records created by old manual-sale flow
         setSoldGeckos(allGeckos.filter(g =>
           ((g.archived && g.archive_reason === 'sold') || g.status === 'Sold') &&
           !g.notes?.startsWith('[Manual sale]')
@@ -920,7 +920,7 @@ export default function MarketplaceSalesStats() {
       });
       setCosts(prev => [created, ...prev]);
       setNewCost({ description: '', amount: '', date: todayLocalISO(), category: 'other' });
-      toast({ title: "Cost Added", description: `${newCost.description} — $${parseFloat(newCost.amount).toFixed(2)}` });
+      toast({ title: "Cost Added", description: `${newCost.description} ,  $${parseFloat(newCost.amount).toFixed(2)}` });
     } catch (error) {
       console.error('Failed to add cost:', error);
       toast({ title: "Error", description: "Could not add cost. Please try again.", variant: "destructive" });
@@ -965,7 +965,7 @@ export default function MarketplaceSalesStats() {
     }
   };
 
-  // Manual "Add Sale" — for sales of animals that were never added to
+  // Manual "Add Sale" ,  for sales of animals that were never added to
   // the collection (e.g. rehoming a gecko you helped a friend list, or
   // an "Other" category item). Stored as a MarketplaceCost record with
   // type='sale' so it doesn't pollute the gecko collection / archive.
@@ -986,7 +986,7 @@ export default function MarketplaceSalesStats() {
       });
 
       setManualSales((prev) => [created, ...prev]);
-      toast({ title: "Sale Added", description: `${newRevenue.name.trim()} — $${price.toFixed(2)}` });
+      toast({ title: "Sale Added", description: `${newRevenue.name.trim()} ,  $${price.toFixed(2)}` });
       setNewRevenue({
         name: '',
         amount: '',
@@ -1050,7 +1050,7 @@ export default function MarketplaceSalesStats() {
 
   return (
     <div className="min-h-screen bg-slate-950">
-      {/* Hero — matches GeneticsGuide visual pattern */}
+      {/* Hero ,  matches GeneticsGuide visual pattern */}
       <div className="relative overflow-hidden border-b border-slate-800 bg-gradient-to-br from-slate-950 via-emerald-950/30 to-teal-950/20">
         <div className="absolute inset-0 gecko-scale-pattern opacity-[0.04] pointer-events-none" />
         <div className="relative max-w-5xl mx-auto px-4 md:px-8 py-8 md:py-10">
@@ -1399,7 +1399,7 @@ export default function MarketplaceSalesStats() {
               )}
             </TabsContent>
 
-            {/* Market Analytics — Enterprise tier only */}
+            {/* Market Analytics ,  Enterprise tier only */}
             <TabsContent value="analytics" className="space-y-6">
               <MarketAnalytics user={user} />
             </TabsContent>

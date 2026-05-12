@@ -52,7 +52,7 @@ export default function LoginPortal({ requiredFeature = null }) {
       toast({ title: 'Google sign-in failed', description: error.message, variant: 'destructive' });
       setIsGoogleLoading(false);
     }
-    // On success, Supabase redirects the browser — no need to reset state.
+    // On success, Supabase redirects the browser ,  no need to reset state.
   };
 
   const handleSubmit = async (e) => {
@@ -71,7 +71,7 @@ export default function LoginPortal({ requiredFeature = null }) {
         if (error) {
           toast({ title: 'Sign in failed', description: error.message, variant: 'destructive' });
         } else if (!rememberMe) {
-          // Mark session as ephemeral — AuthContext will clear it on tab close
+          // Mark session as ephemeral ,  AuthContext will clear it on tab close
           sessionStorage.setItem('geck_inspect_ephemeral_session', '1');
         } else {
           sessionStorage.removeItem('geck_inspect_ephemeral_session');

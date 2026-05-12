@@ -8,7 +8,7 @@ import { SocialPlatformConnection } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from '@/components/ui/use-toast';
 
-// Connections modal — manages per-user platform credentials. v1 ships
+// Connections modal ,  manages per-user platform credentials. v1 ships
 // Bluesky (app-password auth) only; other direct integrations land in
 // later phases.
 //
@@ -175,7 +175,7 @@ export default function ConnectionsModal({ open, onOpenChange, user }) {
             )}
           </div>
 
-          {/* Other platforms — coming soon */}
+          {/* Other platforms ,  coming soon */}
           {['Threads', 'Reddit', 'Facebook Page'].map((name) => (
             <div
               key={name}

@@ -16,7 +16,7 @@ import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
 
 // Build a ProfilePage + Person JSON-LD graph for the currently-loaded
 // breeder. Surfaces the breeder as a recognized entity to AI assistants
-// answering "is X a real crested gecko breeder" or "who is X" — pulls
+// answering "is X a real crested gecko breeder" or "who is X" ,  pulls
 // every social handle the user has filled in into Person.sameAs.
 function buildProfileJsonLd(profileUser, counts) {
   const params = new URLSearchParams();
@@ -63,7 +63,7 @@ function buildProfileJsonLd(profileUser, counts) {
       ...(counts && counts.forSale > 0 && {
         about: {
           '@type': 'OfferCatalog',
-          name: `${profileUser.full_name} — geckos for sale`,
+          name: `${profileUser.full_name} ,  geckos for sale`,
           numberOfItems: counts.forSale,
         },
       }),
@@ -237,17 +237,17 @@ export default function PublicProfile() {
         ? `/PublicProfile?userId=${profileUser.id}`
         : `/PublicProfile?email=${encodeURIComponent(profileUser.email)}`;
     const profileDescription = profileUser.bio
-        ? `${profileUser.full_name} — ${profileUser.bio.slice(0, 200)}`
-        : `${profileUser.full_name}'s public crested gecko profile on Geck Inspect — collection, breeders, and listings.`;
+        ? `${profileUser.full_name} ,  ${profileUser.bio.slice(0, 200)}`
+        : `${profileUser.full_name}'s public crested gecko profile on Geck Inspect ,  collection, breeders, and listings.`;
 
     return (
         <div className="bg-slate-950 min-h-screen">
             <Seo
-                title={`${profileUser.full_name} — Crested Gecko Breeder Profile`}
+                title={`${profileUser.full_name} ,  Crested Gecko Breeder Profile`}
                 description={profileDescription}
                 path={profilePath}
                 image={profileUser.profile_image_url || profileUser.cover_image_url || undefined}
-                imageAlt={`${profileUser.full_name} — Geck Inspect profile`}
+                imageAlt={`${profileUser.full_name} ,  Geck Inspect profile`}
                 keywords={[
                     'crested gecko breeder',
                     `${profileUser.full_name} crested gecko`,

@@ -9,7 +9,7 @@ import { todayLocalISO, daysSinceLocal } from '@/lib/dateUtils';
 // 5-minute polling loop would otherwise create 288 notifications a day
 // for a single overdue reptile. The dedup key is scoped by the
 // entity's current `last_fed_date` so that each new feeding cycle
-// gets a fresh slot — without this, a user on a 1-day interval would
+// gets a fresh slot ,  without this, a user on a 1-day interval would
 // only get notified every other day.
 // Key: geck_fed_notified_<alertId>__<lastFedDate> → ISO timestamp of last firing.
 const NOTIFY_DEDUP_HOURS = 24;
@@ -34,7 +34,7 @@ export default function FeedingAlertSystem({ user, enabled, lateReminders }) {
   const [alerts, setAlerts] = useState([]);
   const [dismissedAlerts, setDismissedAlerts] = useState(new Set());
   // In-flight guard. AuthContext's setUser fires on profile-enrich, every
-  // auth state change, and every tab visibility change — so without this
+  // auth state change, and every tab visibility change ,  so without this
   // mutex two loadAlerts() can race past the read-then-write dedup and
   // each insert their own notification row, fanning out to 2x pushes.
   const loadingRef = useRef(false);
@@ -48,7 +48,7 @@ export default function FeedingAlertSystem({ user, enabled, lateReminders }) {
     return daysElapsed - intervalDays;
   };
 
-  // Get color based on days overdue. Order matters — check the most-overdue
+  // Get color based on days overdue. Order matters ,  check the most-overdue
   // bucket first so a 30-day overdue alert doesn't fall through to yellow.
   const getAlertColor = (daysOverdue) => {
     if (daysOverdue > 21) return 'red';

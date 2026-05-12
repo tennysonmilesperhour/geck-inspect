@@ -16,8 +16,8 @@ import { createPageUrl } from '@/utils';
  * Programmatic taxonomy hub page for the morph catalog.
  *
  * Two variants, driven by the URL:
- *   /MorphGuide/category/<categoryId>     — pattern / base / color / structure / combo
- *   /MorphGuide/inheritance/<inheritance> — recessive / co-dominant / dominant / polygenic / line-bred
+ *   /MorphGuide/category/<categoryId>     ,  pattern / base / color / structure / combo
+ *   /MorphGuide/inheritance/<inheritance> ,  recessive / co-dominant / dominant / polygenic / line-bred
  *
  * Each hub lists the morphs that match and emits:
  *   - Article + BreadcrumbList JSON-LD so the page is an indexable entity
@@ -160,7 +160,7 @@ function TaxonomyHub({
       '@context': 'https://schema.org',
       '@type': 'CollectionPage',
       '@id': `${url}#webpage`,
-      name: `${label} — Crested Gecko Morph Guide`,
+      name: `${label} ,  Crested Gecko Morph Guide`,
       url,
       description: seoDescription,
       about: {
@@ -194,7 +194,7 @@ function TaxonomyHub({
   return (
     <PublicPageShell>
       <Seo
-        title={`${label} — Crested Gecko Morphs`}
+        title={`${label} ,  Crested Gecko Morphs`}
         description={seoDescription}
         path={path}
         keywords={seoKeywords}

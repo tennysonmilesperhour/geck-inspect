@@ -310,7 +310,7 @@ export default function BreedingPage() {
             );
         });
         
-        // Get egg counts and last egg dates for sorting — use hoisted allEggs, no extra fetches
+        // Get egg counts and last egg dates for sorting ,  use hoisted allEggs, no extra fetches
         const plansWithData = filtered.map((plan) => {
             const eggs = allEggs.filter(e => e.breeding_plan_id === plan.id);
             const sorted = [...eggs].sort((a, b) => new Date(b.lay_date) - new Date(a.lay_date));
@@ -435,7 +435,7 @@ export default function BreedingPage() {
         <div className="p-4 md:p-8 bg-slate-950 min-h-screen">
             <Seo
                 title="Breeding Management"
-                description="Plan and track your crested gecko breeding projects — manage pairings, monitor eggs, and use the genetics calculator."
+                description="Plan and track your crested gecko breeding projects ,  manage pairings, monitor eggs, and use the genetics calculator."
                 path="/Breeding"
                 noIndex
                 keywords={['gecko breeding', 'breeding planner', 'genetics calculator', 'hatchery']}

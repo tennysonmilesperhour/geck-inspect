@@ -75,7 +75,7 @@ export default function MyGeckosPage() {
         inheritanceMode: 'breeder_prefix',
     });
 
-    // No incremental paging — the dual server-side offset + client-side
+    // No incremental paging ,  the dual server-side offset + client-side
     // visibleCount that used to live here was producing random counts and
     // losing its "Load more" button on re-renders. Simple batch fetch is
     // correct and snappy. 500 is generous enough to include archived geckos
@@ -97,7 +97,7 @@ export default function MyGeckosPage() {
         try {
             const [userGeckos, userWeights, userMemberships] = await retryApiCall(async () =>
                 Promise.all([
-                    // Pull every gecko visible to the user — own collection plus
+                    // Pull every gecko visible to the user ,  own collection plus
                     // any collections shared with them via collection_members.
                     getVisibleGeckos(user, {}, '-created_date', GECKO_FETCH_LIMIT),
                     WeightRecord.filter({ created_by: user.email }, '-record_date'),
@@ -341,7 +341,7 @@ export default function MyGeckosPage() {
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
             <Seo
                 title="My Geckos"
-                description="Manage your crested gecko collection — track morphs, weights, breeding history, and care records."
+                description="Manage your crested gecko collection ,  track morphs, weights, breeding history, and care records."
                 path="/MyGeckos"
                 noIndex
                 keywords={['gecko collection', 'crested gecko tracker', 'morph tracker']}
@@ -390,7 +390,7 @@ export default function MyGeckosPage() {
                                         <div className="border-t border-slate-700 pt-3 mt-1">
                                             <Label className="text-slate-300 text-sm font-medium block mb-1">Gecko ID Format</Label>
                                             <p className="text-[11px] text-slate-500 leading-snug mb-2">
-                                                The full customizer — inheritance modes, presets, and live preview — lives in Settings.
+                                                The full customizer ,  inheritance modes, presets, and live preview ,  lives in Settings.
                                             </p>
                                             <a
                                                 href="/Settings#id-logic"
@@ -405,7 +405,7 @@ export default function MyGeckosPage() {
                              whether or not Layout.jsx's global
                              `button:not([data-state])` emerald override applies.
                              The Export button is wrapped in DropdownMenuTrigger,
-                             which gives it data-state — so without explicit
+                             which gives it data-state ,  so without explicit
                              classes it escaped the global rule and rendered
                              with a grey border, misaligned against its siblings. */}
                         <Button
@@ -521,7 +521,7 @@ export default function MyGeckosPage() {
                 </div>
 
                 <div className="mb-6">
-                    {/* Toolbar — single row: search (grows) + sort + view + filters */}
+                    {/* Toolbar ,  single row: search (grows) + sort + view + filters */}
                     <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 p-2 rounded-xl border border-slate-800 bg-slate-900/60">
                         <div className="relative flex-1 min-w-0">
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
@@ -575,7 +575,7 @@ export default function MyGeckosPage() {
                         </div>
                     </div>
 
-                    {/* Filters panel — slimmer than before. Opens inline below the toolbar. */}
+                    {/* Filters panel ,  slimmer than before. Opens inline below the toolbar. */}
                     <div className="mt-3">
                         <GeckoFilters
                             filters={filters}

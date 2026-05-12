@@ -57,12 +57,12 @@ export default function ProductTour() {
   const noneValid =
     anyResolved && statuses.every((s) => s.ok === false);
 
-  // Hidden when no screenshots exist yet — this is the natural state
+  // Hidden when no screenshots exist yet ,  this is the natural state
   // before any images get committed to /public/screenshots/.
   if (noneValid) {
     return (
       <>
-        {/* Preload probes — these never become visible but trigger
+        {/* Preload probes ,  these never become visible but trigger
             the onError handlers above so the empty state stays correct
             after any later screenshot lands. */}
         {statuses.map((s) => (
@@ -95,7 +95,7 @@ export default function ProductTour() {
         onMouseEnter={() => setPaused(true)}
         onMouseLeave={() => setPaused(false)}
       >
-        {/* 16:10 frame — matches a typical laptop screen capture */}
+        {/* 16:10 frame ,  matches a typical laptop screen capture */}
         <div className="relative aspect-[16/10] bg-slate-900">
           {statuses.map((s, i) => {
             const visibleIndex = visible.findIndex((v) => v.id === s.id);
@@ -104,7 +104,7 @@ export default function ProductTour() {
               <img
                 key={s.id}
                 src={SCREENSHOTS_BASE + s.file}
-                alt={`Geck Inspect — ${s.title}`}
+                alt={`Geck Inspect ,  ${s.title}`}
                 loading={i === 0 ? 'eager' : 'lazy'}
                 onLoad={() =>
                   setStatuses((cur) =>

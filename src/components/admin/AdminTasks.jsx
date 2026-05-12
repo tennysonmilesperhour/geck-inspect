@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 
 /**
- * Admin Tasks — single source of truth for "things I have to do."
+ * Admin Tasks ,  single source of truth for "things I have to do."
  *
  * Three sources mix in one list:
  *   - launch:  one-time launch checklist seeded by migration
@@ -29,7 +29,7 @@ import {
  *   - manual:  ad-hoc tasks the admin types in
  *
  * Auto-generation is triggered by a button. It upserts on
- * source_key so re-runs converge — current issues stay pending,
+ * source_key so re-runs converge ,  current issues stay pending,
  * resolved issues get auto-completed when the underlying data is
  * fixed.
  */
@@ -102,7 +102,7 @@ async function generateAutoTasks() {
     }
   }
 
-  // 3. Draft products that have a real image and a tag/variant — ready to activate
+  // 3. Draft products that have a real image and a tag/variant ,  ready to activate
   const { data: draftRows } = await supabase
     .from('store_products')
     .select('id, slug, name, status, fulfillment_mode, images, vendor_extra')
@@ -171,7 +171,7 @@ async function generateAutoTasks() {
     resolvedKeys.add(dashKey);
   }
 
-  // Upsert findings — one row per source_key. on conflict update title +
+  // Upsert findings ,  one row per source_key. on conflict update title +
   // description in case the wording / priority changed, but keep status
   // and notes that the admin may have edited.
   if (findings.length > 0) {
@@ -387,7 +387,7 @@ export default function AdminTasks() {
     setError(null);
     try {
       const out = await generateAutoTasks();
-      setAutoStatus(`Sync complete — ${out.created} pending issue${out.created === 1 ? '' : 's'}, ${out.resolved} resolved.`);
+      setAutoStatus(`Sync complete ,  ${out.created} pending issue${out.created === 1 ? '' : 's'}, ${out.resolved} resolved.`);
       await load();
     } catch (e) {
       setError(e.message || String(e));

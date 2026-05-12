@@ -39,7 +39,7 @@ function dailySeries(list, days = 30) {
 }
 
 /**
- * Admin landing screen — at-a-glance KPIs and recent activity feed.
+ * Admin landing screen ,  at-a-glance KPIs and recent activity feed.
  *
  * Designed to be the first thing an admin sees: it answers "is everything
  * healthy and what's new" in one screen so they can drill into a specific

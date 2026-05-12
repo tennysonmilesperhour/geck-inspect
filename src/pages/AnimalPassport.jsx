@@ -210,7 +210,7 @@ function OwnershipTimeline({ records }) {
     return (
       <div className="text-center py-6">
         <ShieldCheck size={24} style={{ color: C.muted }} className="mx-auto mb-2" />
-        <p className="text-sm" style={{ color: C.muted }}>Original owner — no transfers recorded</p>
+        <p className="text-sm" style={{ color: C.muted }}>Original owner ,  no transfers recorded</p>
       </div>
     );
   }
@@ -565,7 +565,7 @@ export default function AnimalPassport() {
     setTimeout(() => setCopied(false), 2000);
   };
 
-  // — Loading state
+  // ,  Loading state
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: C.warmWhite }}>
@@ -578,7 +578,7 @@ export default function AnimalPassport() {
     );
   }
 
-  // — Error states
+  // ,  Error states
   if (error === 'not_found') {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: C.warmWhite }}>
@@ -616,7 +616,7 @@ export default function AnimalPassport() {
     );
   }
 
-  // — Parse morph data
+  // ,  Parse morph data
   const images = gecko.image_urls || [];
   const morphTraits = gecko.morph_traits
     ? (Array.isArray(gecko.morph_traits) ? gecko.morph_traits : gecko.morph_traits.split(',').map(t => t.trim()))
@@ -629,10 +629,10 @@ export default function AnimalPassport() {
   return (
     <>
       <Helmet>
-        <title>{gecko.name} — Geck Inspect Passport</title>
-        <meta name="description" content={`${gecko.name} — ${baseMorph || 'Crested Gecko'}. View full history, lineage, and care records on Geck Inspect.`} />
-        <meta property="og:title" content={`${gecko.name} — Geck Inspect Passport`} />
-        <meta property="og:description" content={`${baseMorph || 'Crested Gecko'} — View full history and care records.`} />
+        <title>{gecko.name} ,  Geck Inspect Passport</title>
+        <meta name="description" content={`${gecko.name} ,  ${baseMorph || 'Crested Gecko'}. View full history, lineage, and care records on Geck Inspect.`} />
+        <meta property="og:title" content={`${gecko.name} ,  Geck Inspect Passport`} />
+        <meta property="og:description" content={`${baseMorph || 'Crested Gecko'} ,  View full history and care records.`} />
         {images[0] && <meta property="og:image" content={images[0]} />}
       </Helmet>
 
@@ -779,13 +779,13 @@ export default function AnimalPassport() {
                     return;
                   }
                   // In full implementation, this would open the claim flow
-                  alert('Claim flow coming soon — contact the seller to initiate a transfer.');
+                  alert('Claim flow coming soon ,  contact the seller to initiate a transfer.');
                 }}
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition hover:opacity-90 border"
                 style={{ borderColor: C.sage, color: C.sage, backgroundColor: 'transparent' }}
               >
                 <ArrowRightLeft size={16} />
-                I purchased this gecko — claim ownership
+                I purchased this gecko ,  claim ownership
               </button>
             </div>
           )}
@@ -814,7 +814,7 @@ export default function AnimalPassport() {
           {/* ─── Footer branding ───────────────────── */}
           <div className="text-center py-6">
             <p className="text-xs" style={{ color: C.muted }}>
-              Powered by <span style={{ fontWeight: 600, color: C.forest }}>Geck Inspect</span> — Professional Gecko Management
+              Powered by <span style={{ fontWeight: 600, color: C.forest }}>Geck Inspect</span> ,  Professional Gecko Management
             </p>
           </div>
         </div>

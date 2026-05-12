@@ -4,7 +4,7 @@ import { differenceInDays } from 'date-fns';
 import { parseLocalDate } from '@/lib/dateUtils';
 
 /**
- * HatchAlertSystem — silent producer for `hatch_alert` notifications.
+ * HatchAlertSystem ,  silent producer for `hatch_alert` notifications.
  *
  * Polls the signed-in user's incubating eggs every 15 minutes. When an
  * egg has been incubating long enough that the user's
@@ -13,7 +13,7 @@ import { parseLocalDate } from '@/lib/dateUtils';
  * notifications.INSERT then fans out to web push + email subject to
  * the user's preferences in Settings → Notifications.
  *
- * Mirrors src/components/feeding/FeedingAlertSystem.jsx — same
+ * Mirrors src/components/feeding/FeedingAlertSystem.jsx ,  same
  * polling-with-localStorage-dedup pattern, but renders no UI. The
  * Hatchery page already highlights "near hatching" eggs visually;
  * this component just owns the *off-page* notification path.
@@ -44,7 +44,7 @@ function markNotified(eggId) {
 
 export default function HatchAlertSystem({ user, enabled }) {
   // Guard against the 15-min interval and the focus listener firing
-  // checkEggs() in parallel — without this, two scans could each pass
+  // checkEggs() in parallel ,  without this, two scans could each pass
   // the localStorage shouldNotify() check before either has written
   // its dedup stamp, doubling the notification row insert.
   const loadingRef = useRef(false);
@@ -86,7 +86,7 @@ export default function HatchAlertSystem({ user, enabled }) {
           } else if (daysToExpected != null && daysToExpected < 0) {
             body = `An egg in your incubator is ${Math.abs(daysToExpected)} day${Math.abs(daysToExpected) === 1 ? '' : 's'} past its expected hatch date. Check on it ASAP.`;
           } else {
-            body = `An egg has been incubating for ${daysIncubating} days — within the hatch window.`;
+            body = `An egg has been incubating for ${daysIncubating} days ,  within the hatch window.`;
           }
 
           try {

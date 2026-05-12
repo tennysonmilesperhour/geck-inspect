@@ -15,7 +15,7 @@
  * Seasons are keyed on the BreedingPlan.breeding_season string
  * ("2024 Spring", etc.). If a plan has no stored season, or an egg has
  * no linked plan, we fall back to inferring the season from the lay date
- * with the exact same month rule Breeding.jsx uses — so everything in
+ * with the exact same month rule Breeding.jsx uses ,  so everything in
  * the app groups under the same labels.
  *
  * Status values in the eggs table: Incubating | Hatched | Infertile | Slug | Stillbirth
@@ -57,10 +57,10 @@ function yearsBetween(from, to) {
  * Aggregate a female's eggs + weights into one row per breeding season.
  *
  * @param {object} params
- * @param {Array}  params.eggs — Egg rows for this dam (status, lay_date, breeding_plan_id)
- * @param {Array}  [params.breedingPlans] — BreedingPlan rows (for breeding_season lookup)
- * @param {Array}  params.weightRecords — WeightRecord rows for this gecko
- * @param {string|Date|null} params.hatchDate — the gecko's hatch_date
+ * @param {Array}  params.eggs ,  Egg rows for this dam (status, lay_date, breeding_plan_id)
+ * @param {Array}  [params.breedingPlans] ,  BreedingPlan rows (for breeding_season lookup)
+ * @param {Array}  params.weightRecords ,  WeightRecord rows for this gecko
+ * @param {string|Date|null} params.hatchDate ,  the gecko's hatch_date
  * @returns {Array<{
  *   seasonLabel: string,       // e.g. "2024 Spring"
  *   year: number|null,
@@ -98,7 +98,7 @@ export function summarizeBreedingHistory({
   for (const egg of eggs) {
     if (!egg) continue;
     // NOTE: we keep archived eggs. In this codebase an egg is flagged
-    // archived: true the moment it transitions out of "Incubating" —
+    // archived: true the moment it transitions out of "Incubating" , 
     // hatched, slug, infertile, and stillbirth all get archived
     // automatically (see EggDetailModal.handleSave and Hatchery.hand-
     // leMarkFailed). Skipping them here would erase almost every
@@ -191,7 +191,7 @@ export function summarizeBreedingHistory({
 }
 
 /**
- * Lifetime totals across all seasons — handy for the top-line summary
+ * Lifetime totals across all seasons ,  handy for the top-line summary
  * on the profile card and on certificates.
  */
 export function breedingHistoryTotals(rows = []) {

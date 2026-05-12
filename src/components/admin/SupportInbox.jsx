@@ -40,7 +40,7 @@ import {
 import { formatDistanceToNowStrict, format } from 'date-fns';
 
 /**
- * Admin Support Inbox — triage view for user-submitted support_messages.
+ * Admin Support Inbox ,  triage view for user-submitted support_messages.
  *
  * - Status tabs: New / In Progress / Resolved / Archived
  * - Search filter across subject, body, and user_email

@@ -69,7 +69,7 @@ function isExpired(g) {
 const PAGE_JSON_LD = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
-  name: 'Crested Gecko Giveaways — Geck Inspect',
+  name: 'Crested Gecko Giveaways ,  Geck Inspect',
   url: 'https://geckinspect.com/Giveaways',
   description:
     'Active and upcoming crested gecko giveaways hosted by breeders on Geck Inspect. Browse, enter, and track winners for gecko giveaways from verified keepers.',
@@ -196,7 +196,7 @@ function CreateGiveawayModal({ open, onOpenChange, user, onCreated }) {
                 {myGeckos.map((g) => (
                   <SelectItem key={g.id} value={g.id} className="focus:bg-slate-800">
                     {g.name || 'Unnamed gecko'}
-                    {g.gecko_id_code ? ` — ${g.gecko_id_code}` : ''}
+                    {g.gecko_id_code ? ` ,  ${g.gecko_id_code}` : ''}
                   </SelectItem>
                 ))}
               </SelectContent>
@@ -695,7 +695,7 @@ export default function Giveaways() {
           )}
         </section>
 
-        {/* Footer — only when unauth (auth layout provides its own) */}
+        {/* Footer ,  only when unauth (auth layout provides its own) */}
         {!isAuthenticated && (
           <footer className="border-t border-slate-800/50 mt-8">
             <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">

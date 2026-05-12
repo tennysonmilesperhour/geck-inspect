@@ -95,7 +95,7 @@ export default function Terms() {
           </Section>
 
           <Section n="6" title="Educational content disclaimer">
-            <p>Care guides, morph references, genetics explanations, and breeding recommendations on the Service are general reference material — not veterinary advice. Always consult a qualified reptile veterinarian for medical decisions concerning an individual animal.</p>
+            <p>Care guides, morph references, genetics explanations, and breeding recommendations on the Service are general reference material ,  not veterinary advice. Always consult a qualified reptile veterinarian for medical decisions concerning an individual animal.</p>
           </Section>
 
           <Section n="7" title="Changes to the Service">

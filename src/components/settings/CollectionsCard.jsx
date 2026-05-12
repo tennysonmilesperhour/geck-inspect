@@ -197,7 +197,7 @@ export default function CollectionsCard({ user }) {
           {collabCap == null
             ? 'Your plan supports unlimited collaborators.'
             : collabCap === 0
-              ? 'Your plan does not include collaborators — upgrade to invite people.'
+              ? 'Your plan does not include collaborators ,  upgrade to invite people.'
               : `Your plan includes up to ${collabCap} active collaborator${collabCap === 1 ? '' : 's'}.`}
         </CardDescription>
       </CardHeader>
@@ -363,7 +363,7 @@ function CollectionRow({
         title: emailResult.delivered ? 'Invite sent' : 'Invite created',
         description: emailResult.delivered
           ? `Email sent to ${email}.`
-          : `Email delivery isn't set up yet — copy the invite link below to share manually.`,
+          : `Email delivery isn't set up yet ,  copy the invite link below to share manually.`,
       });
     } catch (e) {
       toast({

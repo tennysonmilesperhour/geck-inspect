@@ -1,5 +1,5 @@
 /**
- * Crested Gecko Care Guide — authoritative local content.
+ * Crested Gecko Care Guide ,  authoritative local content.
  *
  * Source-of-truth husbandry data, structured for both UI rendering
  * and LLM consumption. Each `body` block is a plain object with a
@@ -9,7 +9,7 @@
  * Keep this file dependency-free (no JSX, no imports). The UI layer
  * is in src/pages/CareGuide.jsx and src/components/careguide/*.
  *
- * Content contributions welcome — see CONTRIBUTING notes in the repo
+ * Content contributions welcome ,  see CONTRIBUTING notes in the repo
  * README. Facts should be sourced from reputable keepers, published
  * husbandry references, and peer-reviewed herpetology literature.
  * Note uncertain claims as "hobby consensus" rather than stating
@@ -60,7 +60,7 @@ export const CARE_CATEGORIES = [
             title: 'Why the crest?',
             items: [
               'The eyelash-like crest running from eye to tail-base is the species signature trait and the reason for both the common name and the species epithet "ciliatus" (Latin: "eyelashed").',
-              'The structure of the crest is heritable and has been amplified through selective breeding — soft-scale, white-wall, and super-crest lines all modify it.',
+              'The structure of the crest is heritable and has been amplified through selective breeding ,  soft-scale, white-wall, and super-crest lines all modify it.',
             ],
           },
         ],
@@ -79,7 +79,7 @@ export const CARE_CATEGORIES = [
             items: [
               'Buy from a breeder who weighs and dates every animal. Hatchlings under 3 grams should generally stay with the breeder until they gain mass.',
               'Ask for the hatch date, current weight, last-fed date, last shed, and sire/dam morph details. Keep a copy with your records.',
-              'Avoid "rescue" impulse buys unless you have an experienced reptile vet lined up — husbandry-damaged geckos are a hard first project.',
+              'Avoid "rescue" impulse buys unless you have an experienced reptile vet lined up ,  husbandry-damaged geckos are a hard first project.',
               'Expect 1 week of no handling after arrival. Acclimation is the single most common step new keepers skip.',
             ],
           },
@@ -88,10 +88,10 @@ export const CARE_CATEGORIES = [
             tone: 'warn',
             title: 'Red flags when buying',
             items: [
-              'Sunken fat pads on the pelvis, visible hip bones, or a thin tail base — signs of underweight or illness.',
+              'Sunken fat pads on the pelvis, visible hip bones, or a thin tail base ,  signs of underweight or illness.',
               'Kinked spine or tail, swollen jaw (possible MBD), stuck shed on toes or tail tip.',
               'A seller who cannot tell you the hatch date or current weight.',
-              'Wild-caught imports — crested geckos are captive-bred only; any "wild-caught" claim is either false or illegal.',
+              'Wild-caught imports ,  crested geckos are captive-bred only; any "wild-caught" claim is either false or illegal.',
             ],
           },
         ],
@@ -145,7 +145,7 @@ export const CARE_CATEGORIES = [
         body: [
           {
             type: 'p',
-            text: 'Crested geckos are arboreal — they use vertical height far more than floor space. Size the enclosure to the animal, not to a fixed minimum. Hatchlings in an oversized setup get lost, stop eating, and lose weight.',
+            text: 'Crested geckos are arboreal ,  they use vertical height far more than floor space. Size the enclosure to the animal, not to a fixed minimum. Hatchlings in an oversized setup get lost, stop eating, and lose weight.',
           },
           {
             type: 'table',
@@ -153,7 +153,7 @@ export const CARE_CATEGORIES = [
             rows: [
               ['Hatchling', '0–8 g', '6-qt tub or small Kritter Keeper', 'Deli cup of CGD + moss + small branches. Easy to monitor feeding.'],
               ['Juvenile', '8–20 g', '12×12×18 in glass terrarium', 'Introduce height. Fake or live plants for cover.'],
-              ['Sub-adult', '20–35 g', '18×18×18 in', 'Optional intermediate step — or skip straight to adult sizing.'],
+              ['Sub-adult', '20–35 g', '18×18×18 in', 'Optional intermediate step ,  or skip straight to adult sizing.'],
               ['Adult', '35 g+', '18×18×24 in minimum', 'Larger (24×18×36 in) is always better. Do not house adults together.'],
             ],
           },
@@ -162,7 +162,7 @@ export const CARE_CATEGORIES = [
             tone: 'warn',
             title: 'One gecko per enclosure',
             items: [
-              'Do not cohabitate males — they will fight, sometimes to the death, once sexually mature.',
+              'Do not cohabitate males ,  they will fight, sometimes to the death, once sexually mature.',
               'Do not house males and females together outside of a controlled breeding project. Females can be bred to exhaustion.',
               'Female-only pairs are possible but often still result in stress, tail drops, and uneven feeding. Most experienced keepers house solo.',
             ],
@@ -183,7 +183,7 @@ export const CARE_CATEGORIES = [
             items: [
               { term: 'Paper towel', def: 'Cheapest, cleanest, easiest to quarantine. Best choice for hatchlings and any sick or new animal.' },
               { term: 'Coco fiber / coco coir', def: 'Holds humidity well. Safe if the animal does not eat large chunks. Avoid dust-fine peat.' },
-              { term: 'ABG mix (bioactive)', def: 'Atlanta Botanical Garden mix — bark, charcoal, peat, sphagnum. Long-term solution with live plants and a cleanup crew.' },
+              { term: 'ABG mix (bioactive)', def: 'Atlanta Botanical Garden mix ,  bark, charcoal, peat, sphagnum. Long-term solution with live plants and a cleanup crew.' },
               { term: 'Tile or PVC sheet', def: 'Used by high-volume breeders. Zero humidity buffer, requires daily misting.' },
             ],
           },
@@ -192,9 +192,9 @@ export const CARE_CATEGORIES = [
             tone: 'danger',
             title: 'Substrates to avoid',
             items: [
-              'Sand, calcium sand, walnut shell — impaction risk, no humidity benefit, marketed dishonestly.',
-              'Cedar or pine shavings — aromatic oils are toxic to reptiles.',
-              'Reptile carpet — traps claws, harbors bacteria, frays into threads that wrap toes.',
+              'Sand, calcium sand, walnut shell ,  impaction risk, no humidity benefit, marketed dishonestly.',
+              'Cedar or pine shavings ,  aromatic oils are toxic to reptiles.',
+              'Reptile carpet ,  traps claws, harbors bacteria, frays into threads that wrap toes.',
             ],
           },
         ],
@@ -243,7 +243,7 @@ export const CARE_CATEGORIES = [
               'Heavy mist 30 minutes before lights-out. The cage should be visibly wet and fogged.',
               'Allow humidity to drop back to 50–70% within a few hours. Cross-ventilation matters here.',
               'Light mist or none in the morning if the cage is still damp. Over-misting is a common mistake.',
-              'Provide a shallow water dish — not because they drink from it often, but because it buffers humidity and some animals do use it.',
+              'Provide a shallow water dish ,  not because they drink from it often, but because it buffers humidity and some animals do use it.',
             ],
           },
           {
@@ -251,7 +251,7 @@ export const CARE_CATEGORIES = [
             items: [
               { term: 'Hand sprayer', def: 'Works fine for 1–2 animals. Cheap, reliable, and forces daily eyes-on inspection.' },
               { term: 'Automatic mister (MistKing, Exo-Terra Monsoon)', def: 'Best for collections of 3+ or for keepers who travel. Must be combined with a hygrometer and a dry-down period.' },
-              { term: 'Cool-mist fogger', def: 'Used supplementally in very dry climates. Do not replace misting — fog wets surfaces differently than droplets.' },
+              { term: 'Cool-mist fogger', def: 'Used supplementally in very dry climates. Do not replace misting ,  fog wets surfaces differently than droplets.' },
             ],
           },
         ],
@@ -263,14 +263,14 @@ export const CARE_CATEGORIES = [
         body: [
           {
             type: 'p',
-            text: 'Crested geckos do not strictly require UVB because commercial CGD contains vitamin D3. That said, current hobby consensus favors low-level UVB as enrichment and a backup — it costs little, supports natural behavior, and hedges against diet gaps.',
+            text: 'Crested geckos do not strictly require UVB because commercial CGD contains vitamin D3. That said, current hobby consensus favors low-level UVB as enrichment and a backup ,  it costs little, supports natural behavior, and hedges against diet gaps.',
           },
           {
             type: 'ul',
             items: [
               'Photoperiod: 12 hours on, 12 hours off. A timer removes the daily chore.',
               'UVB: Arcadia ShadeDweller 7% or Zoo Med 5.0 T5, mounted above the mesh top, 10–14 inches from the highest basking spot the animal can reach.',
-              'Replace UVB bulbs every 12 months — output drops long before the bulb visibly fails.',
+              'Replace UVB bulbs every 12 months ,  output drops long before the bulb visibly fails.',
               'Plant lights (LED full-spectrum) are great for live-plant vivariums but produce no useful UVB. Keep them separate from husbandry lighting.',
             ],
           },
@@ -297,9 +297,9 @@ export const CARE_CATEGORIES = [
           {
             type: 'ul',
             items: [
-              'Cork bark flats and tubes — grippable, humidity-tolerant, reusable for years.',
+              'Cork bark flats and tubes ,  grippable, humidity-tolerant, reusable for years.',
               'Live plants: pothos, bromeliads, ficus, schefflera. Avoid anything with sticky latex or toxic sap.',
-              'Fake plants are fine — the gecko does not care. Use them if you are not ready for a bioactive setup.',
+              'Fake plants are fine ,  the gecko does not care. Use them if you are not ready for a bioactive setup.',
               'Branches cut to wedge corner-to-corner create secure perches. Avoid sharp cut ends near the animal.',
               'One or two hides at ground level for daytime retreat. Coco huts, cork tubes, or a half-buried flowerpot work.',
             ],
@@ -336,7 +336,7 @@ export const CARE_CATEGORIES = [
             items: [
               'Always use dechlorinated or bottled water. Tap water is fine in most municipalities but avoid heavily chlorinated supplies.',
               'Mix fresh each feeding. Pre-mixed CGD kept in the fridge degrades within 48 hours and separates.',
-              'Use a flat, shallow dish — magnetic ledge cups are popular because geckos forage upside-down.',
+              'Use a flat, shallow dish ,  magnetic ledge cups are popular because geckos forage upside-down.',
               'Replace the dish after 24–36 hours even if untouched. Old CGD breeds yeast and fruit flies.',
               'Rotate at least two brands over the animal\'s life. Each brand balances ingredients differently and rotation hedges against formulation changes.',
             ],
@@ -350,7 +350,7 @@ export const CARE_CATEGORIES = [
         body: [
           {
             type: 'p',
-            text: 'There is no single "best" CGD. The major brands below are all nutritionally complete and widely used by top breeders. Variety is the point — rotate flavors and brands so the animal does not become food-fixated.',
+            text: 'There is no single "best" CGD. The major brands below are all nutritionally complete and widely used by top breeders. Variety is the point ,  rotate flavors and brands so the animal does not become food-fixated.',
           },
           {
             type: 'table',
@@ -360,7 +360,7 @@ export const CARE_CATEGORIES = [
               ['Repashy', 'Crested Gecko MRP (Classic, Grubs ‘N’ Fruit, Meal Replacement)', 'Oldest proven brand. "Grubs N Fruit" adds black soldier fly larvae for higher protein.'],
               ['Black Panther Zoological (BPZ)', 'Complete Gecko Diet', 'Smaller producer, fresh batches, fewer artificial ingredients. Rotates seasonal fruit.'],
               ['Leapin\' Leachie', 'LLG Crested Gecko Diet', 'Higher protein, popular with breeders producing clutches.'],
-              ['Zoo Med', 'Crested Gecko Food', 'Widely available at pet chains. Considered a secondary option — use it alongside a premium brand, not exclusively.'],
+              ['Zoo Med', 'Crested Gecko Food', 'Widely available at pet chains. Considered a secondary option ,  use it alongside a premium brand, not exclusively.'],
             ],
           },
           {
@@ -369,7 +369,7 @@ export const CARE_CATEGORIES = [
             title: 'Buying tip',
             items: [
               'Check the manufacture date on the pouch. CGD loses vitamin potency after roughly 12 months. Buy small pouches often rather than one giant bag.',
-              'Freeze unopened pouches if you buy in bulk — sealed and frozen, shelf life extends to 18–24 months.',
+              'Freeze unopened pouches if you buy in bulk ,  sealed and frozen, shelf life extends to 18–24 months.',
             ],
           },
         ],
@@ -384,7 +384,7 @@ export const CARE_CATEGORIES = [
             headers: ['Life stage', 'CGD frequency', 'Insect frequency', 'Notes'],
             rows: [
               ['Hatchling (0–8 g)', 'Fresh daily', 'Optional, 1–2 pinheads 1×/week', 'Target 0.2–0.5 g gain per week.'],
-              ['Juvenile (8–20 g)', 'Fresh daily or every other day', '3–5 feeders 1–2×/week', 'Growth phase — never ration CGD.'],
+              ['Juvenile (8–20 g)', 'Fresh daily or every other day', '3–5 feeders 1–2×/week', 'Growth phase ,  never ration CGD.'],
               ['Sub-adult (20–35 g)', '3–4×/week', '4–6 feeders 1×/week', 'Start tracking monthly weight trend.'],
               ['Adult (35 g+)', '3×/week', '4–6 feeders 1×/2 weeks (optional)', 'Overfeeding adults causes obesity and fatty liver.'],
               ['Breeding female', '3–4×/week + extra calcium', '6–8 feeders 1–2×/week', 'Protein and calcium demand spikes during laying season.'],
@@ -395,7 +395,7 @@ export const CARE_CATEGORIES = [
             tone: 'warn',
             items: [
               'Adults that gorge on CGD every night get fat, develop fatty liver disease, and fail to breed. Three to four feedings per week is enough for a non-breeder.',
-              'Never fast a hatchling "to build appetite." Missed meals at this stage compound — a hatchling that skips 3 meals has lost a meaningful fraction of its body weight.',
+              'Never fast a hatchling "to build appetite." Missed meals at this stage compound ,  a hatchling that skips 3 meals has lost a meaningful fraction of its body weight.',
             ],
           },
         ],
@@ -437,7 +437,7 @@ export const CARE_CATEGORIES = [
         body: [
           {
             type: 'p',
-            text: 'Crested geckos love sugary fruit, but it is not a complete food. Treat fresh fruit the way you would treat candy — an occasional reward, not a staple. Overuse causes CGD refusal and diarrhea.',
+            text: 'Crested geckos love sugary fruit, but it is not a complete food. Treat fresh fruit the way you would treat candy ,  an occasional reward, not a staple. Overuse causes CGD refusal and diarrhea.',
           },
           {
             type: 'ul',
@@ -445,7 +445,7 @@ export const CARE_CATEGORIES = [
               'Safe treats (rare): mashed ripe banana, mango, papaya, fig, passion fruit, peach.',
               'Avoid citrus, grapes, rhubarb, avocado, and anything acidic. Many of these contain oxalates that bind calcium.',
               'Baby food pouches (Gerber Stage 2, plain fruit only) work in a pinch but are not a substitute for CGD.',
-              'Never feed insects caught from your yard — pesticide and parasite risk.',
+              'Never feed insects caught from your yard ,  pesticide and parasite risk.',
             ],
           },
         ],
@@ -483,7 +483,7 @@ export const CARE_CATEGORIES = [
       { label: 'First handling', value: 'After 2–3 weeks acclimation' },
       { label: 'Session length', value: '5–15 min max' },
       { label: 'Frequency', value: '2–4×/week at most' },
-      { label: 'Hatchlings', value: 'Observe only — no handling' },
+      { label: 'Hatchlings', value: 'Observe only ,  no handling' },
     ],
     sections: [
       {
@@ -499,7 +499,7 @@ export const CARE_CATEGORIES = [
             type: 'ol',
             items: [
               'Days 1–7: no handling. Do misting and food changes quickly and quietly. Observe only.',
-              'Days 8–14: short in-cage interactions — change the water, adjust decor, let the gecko see your hand without grabbing.',
+              'Days 8–14: short in-cage interactions ,  change the water, adjust decor, let the gecko see your hand without grabbing.',
               'After day 14 and after the first confirmed meal: begin brief handling sessions as described below.',
               'For breeder stock, extend the window to 3–4 weeks and skip casual handling altogether.',
             ],
@@ -515,7 +515,7 @@ export const CARE_CATEGORIES = [
             type: 'ul',
             items: [
               '"Hand-walking": let the gecko walk from one palm to the other. Never grab, squeeze, or restrain.',
-              'Keep sessions short — 5 to 15 minutes is plenty. Stop earlier if the gecko freezes, gapes, or sits and pants.',
+              'Keep sessions short ,  5 to 15 minutes is plenty. Stop earlier if the gecko freezes, gapes, or sits and pants.',
               'Handle low over a soft surface (bed, couch) so a jump does not result in a fall from height.',
               'Never pick up by the tail. Crested gecko tails are autotomous and will drop at the lightest pull.',
               'Wash hands before and after. After insects or raw meat, always wash before reaching into the enclosure.',
@@ -524,11 +524,11 @@ export const CARE_CATEGORIES = [
           {
             type: 'callout',
             tone: 'warn',
-            title: 'Stress signals — put the gecko back',
+            title: 'Stress signals ,  put the gecko back',
             items: [
               'Mouth held open, slow deliberate panting, darkened colors that do not fade.',
               'Violent wriggling, leaping repeatedly, tail whipping side-to-side like a whip.',
-              'Tail base lifted and waved slowly — a pre-drop warning, stop immediately.',
+              'Tail base lifted and waved slowly ,  a pre-drop warning, stop immediately.',
             ],
           },
         ],
@@ -563,7 +563,7 @@ export const CARE_CATEGORIES = [
       { label: 'Weigh', value: 'Weekly (juveniles) · monthly (adults)' },
       { label: 'Annual vet', value: 'Fecal float + wellness exam' },
       { label: 'Red flags', value: 'Appetite loss, kink tail, lethargy' },
-      { label: 'Tail regrowth', value: 'Never — dropped tails do not regrow' },
+      { label: 'Tail regrowth', value: 'Never ,  dropped tails do not regrow' },
     ],
     sections: [
       {
@@ -573,7 +573,7 @@ export const CARE_CATEGORIES = [
         body: [
           {
             type: 'p',
-            text: 'Weight is the single most useful data point for monitoring crested gecko health. A downward trend is almost always the first sign of a problem — earlier than appetite changes, earlier than visible wasting, and sometimes weeks before a vet exam would catch it.',
+            text: 'Weight is the single most useful data point for monitoring crested gecko health. A downward trend is almost always the first sign of a problem ,  earlier than appetite changes, earlier than visible wasting, and sometimes weeks before a vet exam would catch it.',
           },
           {
             type: 'ul',
@@ -593,7 +593,7 @@ export const CARE_CATEGORIES = [
         body: [
           {
             type: 'p',
-            text: 'Crested geckos shed every 1–4 weeks depending on age and growth rate. The shed itself takes about 10–20 minutes and usually happens overnight. You often will not see it — the animal eats its own shed immediately. The tell is a duller, chalkier-looking gecko one night, then a clean bright one the next morning.',
+            text: 'Crested geckos shed every 1–4 weeks depending on age and growth rate. The shed itself takes about 10–20 minutes and usually happens overnight. You often will not see it ,  the animal eats its own shed immediately. The tell is a duller, chalkier-looking gecko one night, then a clean bright one the next morning.',
           },
           {
             type: 'ul',
@@ -601,7 +601,7 @@ export const CARE_CATEGORIES = [
               'Stuck shed on toes, tail tip, and around eyes is the most common husbandry problem. Root cause is almost always low humidity.',
               'Fix: increase misting, raise ambient humidity to 80–100% for 2–3 nights, and provide a humid hide (plastic tub with damp moss).',
               'Stuck shed on a toe cuts off circulation. Remove within 48 hours or the toe can be lost. Soak the gecko on damp paper towel for 15 minutes and peel gently with a damp cotton swab.',
-              'Never pull — if it does not come off easily, soak longer.',
+              'Never pull ,  if it does not come off easily, soak longer.',
             ],
           },
         ],
@@ -613,7 +613,7 @@ export const CARE_CATEGORIES = [
         body: [
           {
             type: 'p',
-            text: 'Crested geckos drop their tails as a predator-escape response. Unlike leopard geckos and many other species, a lost tail does not regrow. The animal is otherwise fine — in the wild, most adult crested geckos are tailless.',
+            text: 'Crested geckos drop their tails as a predator-escape response. Unlike leopard geckos and many other species, a lost tail does not regrow. The animal is otherwise fine ,  in the wild, most adult crested geckos are tailless.',
           },
           {
             type: 'ul',
@@ -621,7 +621,7 @@ export const CARE_CATEGORIES = [
               'A dropped tail will bleed briefly, then clot on its own. No veterinary intervention is usually needed.',
               'Keep the enclosure clean for 3–5 days post-drop to avoid infection of the stump.',
               'Tail drops are triggered by stress: being grabbed, fighting another gecko, being startled, or sudden temperature change. Solo-house, handle gently, and minimize surprises.',
-              'A tailless ("frogbutt") gecko is not worth less to a keeper — many hobbyists find them charming. Show breeders do pay a premium for intact tails.',
+              'A tailless ("frogbutt") gecko is not worth less to a keeper ,  many hobbyists find them charming. Show breeders do pay a premium for intact tails.',
             ],
           },
           {
@@ -643,10 +643,10 @@ export const CARE_CATEGORIES = [
             headers: ['Issue', 'Signs', 'Typical cause', 'Action'],
             rows: [
               ['Metabolic Bone Disease (MBD)', 'Kinked spine, wavy tail, soft jaw, hemipenile prolapse, leg tremors', 'Chronic low calcium / D3, underfeeding', 'Vet ASAP. Early MBD is reversible with calcium and UVB; advanced cases are not.'],
-              ['Floppy Tail Syndrome (FTS)', 'Tail arches over the back when hanging upside-down, pelvic deformity in adults', 'Prolonged upside-down perching on glass tops, lack of horizontal resting spots', 'Provide broad leaf perches and cork bark at the top. Prevention only — established FTS is permanent.'],
+              ['Floppy Tail Syndrome (FTS)', 'Tail arches over the back when hanging upside-down, pelvic deformity in adults', 'Prolonged upside-down perching on glass tops, lack of horizontal resting spots', 'Provide broad leaf perches and cork bark at the top. Prevention only ,  established FTS is permanent.'],
               ['Respiratory infection', 'Open-mouth breathing, mucus bubbles, wheezing, lethargy', 'Chronic humidity too high + poor ventilation, or cold draft', 'Dry out the cage, fix ventilation, vet for antibiotics if it persists >48 h.'],
               ['Impaction', 'Not defecating for 7+ days, visible bulge, loss of appetite', 'Substrate ingestion, dehydration, cold', 'Warm soak (84°F water, 10–15 min). Persistent: vet.'],
-              ['Parasites (pinworms, coccidia, crypto)', 'Watery or bloody stool, weight loss despite eating, lethargy', 'Often present at import, spread via shared tools', 'Fecal float at vet. Crypto is the serious one — ask the vet to test specifically if weight loss is persistent.'],
+              ['Parasites (pinworms, coccidia, crypto)', 'Watery or bloody stool, weight loss despite eating, lethargy', 'Often present at import, spread via shared tools', 'Fecal float at vet. Crypto is the serious one ,  ask the vet to test specifically if weight loss is persistent.'],
               ['Mouth rot (stomatitis)', 'Cheesy white or yellow material at the gum line, swollen jaw, food refusal', 'Trauma + bacteria, low humidity, immune stress', 'Vet. Topical antiseptics and sometimes antibiotics.'],
               ['Dystocia (egg-binding)', 'Swollen abdomen, straining without laying, lethargy in a gravid female', 'Underweight female, calcium deficiency, no lay box, too-hot or too-cold cage', 'Emergency vet. Provide a warm humid lay box with damp substrate at least a week before expected lay date.'],
             ],
@@ -656,7 +656,7 @@ export const CARE_CATEGORIES = [
             tone: 'warn',
             title: 'Find a reptile-experienced vet before you need one',
             items: [
-              'Most "exotic" vets see rabbits and birds — not reptiles. Call ahead and ask specifically about crested gecko cases per year.',
+              'Most "exotic" vets see rabbits and birds ,  not reptiles. Call ahead and ask specifically about crested gecko cases per year.',
               'Keep an emergency kit: digital scale, small plastic tub, damp paper towel, a list of vet phone numbers, a transport carrier.',
             ],
           },
@@ -669,13 +669,13 @@ export const CARE_CATEGORIES = [
         body: [
           {
             type: 'p',
-            text: 'If you have an existing collection, quarantine every new arrival for a minimum of 30 days — 90 days is better. Quarantine means a separate room if possible, different tools, and last-in-the-day husbandry order so you never carry pathogens back.',
+            text: 'If you have an existing collection, quarantine every new arrival for a minimum of 30 days ,  90 days is better. Quarantine means a separate room if possible, different tools, and last-in-the-day husbandry order so you never carry pathogens back.',
           },
           {
             type: 'ul',
             items: [
               'Keep the quarantine enclosure on paper towel. Easier to spot parasite eggs and monitor stool.',
-              'Run a fecal float at the beginning and the end of the quarantine period. Crypto shedding is intermittent — one clear test is not proof.',
+              'Run a fecal float at the beginning and the end of the quarantine period. Crypto shedding is intermittent ,  one clear test is not proof.',
               'Weigh weekly. A new arrival that drops more than 10% during quarantine should not be introduced to your collection even after the period ends.',
               'Wash hands, change shirts, and spray tools with a reptile-safe disinfectant (F10SC) between enclosures.',
             ],
@@ -710,7 +710,7 @@ export const CARE_CATEGORIES = [
             type: 'ul',
             items: [
               'Enclosure: 6-quart tub or small critter keeper with paper towel, a small branch, and a handful of fake leaves or sphagnum.',
-              'First meal: offer CGD 24–48 hours after hatching. Some hatchlings do not eat for the first 3–5 days — that is normal if they are holding weight.',
+              'First meal: offer CGD 24–48 hours after hatching. Some hatchlings do not eat for the first 3–5 days ,  that is normal if they are holding weight.',
               'Humidity: mist 1–2 times daily. Let the sides of the tub dry between mists.',
               'Do not handle. Observe only for the first month.',
               'Weigh every 4–7 days. A hatchling that drops below hatching weight for more than a week needs attention.',
@@ -733,7 +733,7 @@ export const CARE_CATEGORIES = [
               'Feed fresh CGD daily or every other day. Never ration at this age.',
               'Insects (optional) 1–2 times per week, always dusted.',
               'Expect 0.5–1.5 g weight gain per week under good husbandry.',
-              'Sexing becomes possible around 15–25 g. Do not stress-handle to check sex — a confirmed-male juvenile can still be housed safely solo.',
+              'Sexing becomes possible around 15–25 g. Do not stress-handle to check sex ,  a confirmed-male juvenile can still be housed safely solo.',
             ],
           },
         ],
@@ -752,7 +752,7 @@ export const CARE_CATEGORIES = [
             items: [
               'Feed CGD 3–4 times per week. Expect 1–3 g weight gain per month.',
               'Adult enclosure (18×18×24 in) is appropriate by ~25 g.',
-              'This is a good time to socialize handling if you intend to — calm 10-minute sessions 1–2 times per week.',
+              'This is a good time to socialize handling if you intend to ,  calm 10-minute sessions 1–2 times per week.',
               'Morph evaluation at 25–30 g is more accurate than at hatch. Pattern "fade" and base color clarify as the animal approaches adulthood.',
             ],
           },
@@ -765,7 +765,7 @@ export const CARE_CATEGORIES = [
         body: [
           {
             type: 'p',
-            text: 'Adult crested geckos are low-maintenance. Most care time becomes routine — feed three times a week, mist nightly, weigh monthly, and watch for behavior changes.',
+            text: 'Adult crested geckos are low-maintenance. Most care time becomes routine ,  feed three times a week, mist nightly, weigh monthly, and watch for behavior changes.',
           },
           {
             type: 'ul',
@@ -793,7 +793,7 @@ export const CARE_CATEGORIES = [
               'Retire breeding females after 8 years of age, or sooner if clutch counts decline or body condition softens.',
               'Reduce climbing height if arthritis-like stiffness appears. Lower perches + easier access to food and water.',
               'Warm up the cool side of the cage slightly (76–78°F days) if the animal is clearly slower in cold weather.',
-              'A senior gecko that sleeps more, eats less, and moves less is usually fine. One that loses more than 10% of its peak adult weight within a year is not — vet visit warranted.',
+              'A senior gecko that sleeps more, eats less, and moves less is usually fine. One that loses more than 10% of its peak adult weight within a year is not ,  vet visit warranted.',
             ],
           },
         ],
@@ -821,7 +821,7 @@ export const CARE_CATEGORIES = [
         body: [
           {
             type: 'p',
-            text: 'Breeding too soon is the most common mistake new breeders make. The cost is the life or long-term health of the female. Wait for the numbers — weight and age — not for the temptation.',
+            text: 'Breeding too soon is the most common mistake new breeders make. The cost is the life or long-term health of the female. Wait for the numbers ,  weight and age ,  not for the temptation.',
           },
           {
             type: 'table',
@@ -871,7 +871,7 @@ export const CARE_CATEGORIES = [
         body: [
           {
             type: 'p',
-            text: 'Introduce the male into the female\'s enclosure, not the reverse — females are more territorial and less likely to tolerate a new male in their own space. Supervise the first introduction.',
+            text: 'Introduce the male into the female\'s enclosure, not the reverse ,  females are more territorial and less likely to tolerate a new male in their own space. Supervise the first introduction.',
           },
           {
             type: 'ul',
@@ -891,14 +891,14 @@ export const CARE_CATEGORIES = [
         body: [
           {
             type: 'p',
-            text: 'A female produces a clutch of 2 eggs every 4–6 weeks during the breeding season. She needs a dedicated lay box — without one, she will lay in the substrate or hold the eggs, risking dystocia.',
+            text: 'A female produces a clutch of 2 eggs every 4–6 weeks during the breeding season. She needs a dedicated lay box ,  without one, she will lay in the substrate or hold the eggs, risking dystocia.',
           },
           {
             type: 'ul',
             items: [
               'Lay box: deli cup or Tupperware with a hole cut in the lid, filled with 3–4 inches of moist (not wet) coco fiber or sphagnum.',
               'Place in the enclosure at all times for breeding females, not just during lay periods.',
-              'Collect eggs within 24 hours. Mark the top with a dot so orientation stays consistent — rotating a developing egg can kill the embryo.',
+              'Collect eggs within 24 hours. Mark the top with a dot so orientation stays consistent ,  rotating a developing egg can kill the embryo.',
               'Expect a gravid female to lose 5–15 grams in a single lay. This is normal and why extra calcium/protein matters during the season.',
             ],
           },
@@ -926,7 +926,7 @@ export const CARE_CATEGORIES = [
             type: 'ul',
             items: [
               'Substrate: 1:1 (by weight) vermiculite and water, or perlite at the same ratio. Some breeders use SuperHatch (baked clay).',
-              'Container: deli cup with a small cross-slit in the lid. No standing water — too wet is the most common killer.',
+              'Container: deli cup with a small cross-slit in the lid. No standing water ,  too wet is the most common killer.',
               'Open and check weekly. Spot-mist the container walls if the substrate dries. Do not mist the eggs directly.',
               'Turn nothing. Mark the top of each egg when collected and keep that orientation.',
             ],
@@ -940,12 +940,12 @@ export const CARE_CATEGORIES = [
         body: [
           {
             type: 'p',
-            text: 'Pipping (breaking the eggshell) takes hours to a full day. Leave the hatchling in the egg until it fully emerges — pulling it out early interferes with yolk absorption.',
+            text: 'Pipping (breaking the eggshell) takes hours to a full day. Leave the hatchling in the egg until it fully emerges ,  pulling it out early interferes with yolk absorption.',
           },
           {
             type: 'ul',
             items: [
-              'Move the hatchling to its own 6-qt tub within 24 hours of emerging. Do not feed for 48 hours — it is still absorbing yolk.',
+              'Move the hatchling to its own 6-qt tub within 24 hours of emerging. Do not feed for 48 hours ,  it is still absorbing yolk.',
               'Log everything: hatch date, hatch weight, clutch number, parents, incubation temperature. Good records are the currency of serious breeding.',
               'Do not evaluate morph at hatch. Many traits (extreme harlequin, true pinstripe, etc.) do not express until the first major shed and some not until 3–6 months.',
               'Sell or trade only after the hatchling is 3+ grams, eating reliably, and has had a successful shed. Hobby ethics put this floor around 8–10 grams for most breeders.',

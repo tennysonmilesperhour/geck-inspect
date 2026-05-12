@@ -3,7 +3,7 @@
  *
  * The signal no external scraper can see: our own users' breeding
  * records tell us how many juveniles of each combo will come to market
- * over the next 9 months. This is forward-looking supply — before any
+ * over the next 9 months. This is forward-looking supply ,  before any
  * listing is posted anywhere on the internet.
  *
  * Shows a stacked monthly forecast with combo breakdown and a per-combo
@@ -54,8 +54,8 @@ export default function SupplyPipeline({ filters: _filters }) {
       <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
         <SectionHeader
           icon={Sprout}
-          title="Supply pipeline — projected hatchlings (9-month)"
-          subtitle="Forward-looking supply from Geck Inspect users' own breeding records — available nowhere else"
+          title="Supply pipeline ,  projected hatchlings (9-month)"
+          subtitle="Forward-looking supply from Geck Inspect users' own breeding records ,  available nowhere else"
           right={
             <MethodologyPopover title="How the forecast is built">
               <p>Active breeding pairs logged in-app × seasonal fertility curve × historical clutches-per-pair, aggregated by combo and projected forward 9 months.</p>

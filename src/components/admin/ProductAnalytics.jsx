@@ -20,7 +20,7 @@ import {
 } from 'lucide-react';
 
 /**
- * Product Analytics — admin tab that surfaces PostHog data inside the app.
+ * Product Analytics ,  admin tab that surfaces PostHog data inside the app.
  *
  * Scrappy v1: admins paste PostHog "shared dashboard" embed URLs into the
  * settings panel; we render each as an iframe with an explanatory caption.
@@ -242,7 +242,7 @@ export default function ProductAnalytics() {
               PostHog dashboards embedded right here so we can see what's actually
               happening in the app. Pick dashboards in PostHog → Share → Embed,
               paste the URL below, and they'll render inline. The captions are
-              for context — what the metric means and what to do if it moves.
+              for context ,  what the metric means and what to do if it moves.
             </p>
           </div>
           <div className="flex items-center gap-2 shrink-0">
@@ -371,7 +371,7 @@ export default function ProductAnalytics() {
                   {d.url && !isLikelyShareUrl(d.url) && (
                     <p className="text-xs text-amber-300/80 flex items-center gap-1.5">
                       <Info className="w-3.5 h-3.5" />
-                      That doesn't look like a PostHog share URL — embeds may not render.
+                      That doesn't look like a PostHog share URL ,  embeds may not render.
                     </p>
                   )}
                 </div>
@@ -416,7 +416,7 @@ export default function ProductAnalytics() {
             <p className="text-sm text-slate-400 max-w-lg mx-auto leading-relaxed">
               PostHog is collecting data, but we haven't pinned any dashboards
               here yet. Click <span className="text-emerald-300">Configure</span> to add
-              your first one. Suggested starter dashboards are listed below — build
+              your first one. Suggested starter dashboards are listed below ,  build
               them in PostHog, share the embed link, and paste it back.
             </p>
           </CardContent>
@@ -547,7 +547,7 @@ export default function ProductAnalytics() {
           Properties: <code className="text-slate-300 font-mono text-xs">membership_tier</code>,{' '}
           <code className="text-slate-300 font-mono text-xs">role</code>,{' '}
           <code className="text-slate-300 font-mono text-xs">name</code>. PII (bios,
-          messages, addresses) is masked at the SDK level — you'll see structural
+          messages, addresses) is masked at the SDK level ,  you'll see structural
           data but never actual content. Session replay is off by default.
         </CardContent>
       </Card>

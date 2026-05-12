@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Research pass — runs Monday/Wednesday/Friday at 06:00 UTC.
+ * Research pass ,  runs Monday/Wednesday/Friday at 06:00 UTC.
  *
  * Flow:
  *   1. Collect raw signals from Google autocomplete, Bluesky, Google Trends,
@@ -55,7 +55,7 @@ const TOPIC_SCHEMA = {
         additionalProperties: false,
         required: ['title', 'slug', 'category', 'score', 'evidence', 'angleIdeas'],
         properties: {
-          title: { type: 'string', description: 'Working title — the writer agent may rewrite.' },
+          title: { type: 'string', description: 'Working title ,  the writer agent may rewrite.' },
           slug:  { type: 'string', description: 'URL slug, lowercase, hyphens only.' },
           category: { type: 'string', enum: ['genetics', 'breeding', 'mythbusters', 'identification'] },
           score: {
@@ -117,7 +117,7 @@ function buildScorerSystem({ publishedSlugs, queuedSlugs, knownMorphs }) {
       text: [
         'You are the research agent for the Geck Inspect blog pipeline.',
         '',
-        'Your job: from the raw forum + listing + search signals below, pick AT MOST 3 topics that deserve a full blog post this week. Be selective — empty output is fine if nothing clears the bar.',
+        'Your job: from the raw forum + listing + search signals below, pick AT MOST 3 topics that deserve a full blog post this week. Be selective ,  empty output is fine if nothing clears the bar.',
         '',
         'Scoring rubric (all on 0-10):',
         '  demand:       how much reader interest is there (forum heat, search volume, recency)?',
@@ -139,7 +139,7 @@ function buildScorerSystem({ publishedSlugs, queuedSlugs, knownMorphs }) {
         '',
         'Category must be one of: genetics | breeding | mythbusters | identification.',
         '',
-        'For each topic, provide at least 2 evidence entries that reference the actual signals below — include the source and a verbatim-or-nearly-verbatim snippet so a human can verify.',
+        'For each topic, provide at least 2 evidence entries that reference the actual signals below ,  include the source and a verbatim-or-nearly-verbatim snippet so a human can verify.',
         '',
         'Provide 2-4 angleIdeas that are actual first-sentence hooks, not titles. Bad: "Cappuccino genetics explained." Good: "Most breeders who buy two Cappuccinos and pair them assume they\'ll get more Cappuccinos. Here\'s why that\'s expensive."',
       ].join('\n'),
@@ -154,7 +154,7 @@ function buildScorerSystem({ publishedSlugs, queuedSlugs, knownMorphs }) {
         queuedSlugs.length ? queuedSlugs.map((s) => `  - ${s}`).join('\n') : '  (none)',
         '',
         'Canonical morph list (you must use one of these slugs if the topic targets a specific morph):',
-        knownMorphs.map((m) => `  - ${m.slug} — ${m.name} (${m.inheritance})`).join('\n'),
+        knownMorphs.map((m) => `  - ${m.slug} ,  ${m.name} (${m.inheritance})`).join('\n'),
       ].join('\n'),
     },
   ];
@@ -200,7 +200,7 @@ async function main() {
     `YouTube (${youtube.items.length} recent videos):`,
     JSON.stringify(youtube.items.slice(0, 30), null, 2),
     '',
-    `Breeder blogs (${breederBlogs.items.length} recent posts — AC Reptiles, LM Reptiles, Pangea):`,
+    `Breeder blogs (${breederBlogs.items.length} recent posts ,  AC Reptiles, LM Reptiles, Pangea):`,
     JSON.stringify(breederBlogs.items.slice(0, 20), null, 2),
   ].join('\n');
 

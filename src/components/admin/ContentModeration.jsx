@@ -26,7 +26,7 @@ import {
 import { formatDistanceToNow } from 'date-fns';
 
 /**
- * Content moderation surface — browse and delete user-generated content
+ * Content moderation surface ,  browse and delete user-generated content
  * across forum posts, forum comments, marketplace listings, and morph guide
  * comments. Each tab is a simple list with search + delete confirmation.
  */

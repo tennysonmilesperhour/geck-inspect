@@ -18,7 +18,7 @@ import {
 import { formatCents } from '@/lib/store/format';
 
 /**
- * Store admin — minimum-viable controls for the supplies tab.
+ * Store admin ,  minimum-viable controls for the supplies tab.
  *
  * Controls:
  *   1. Master kill-switch (store_enabled) and a few key tunables
@@ -28,7 +28,7 @@ import { formatCents } from '@/lib/store/format';
  *      editing for the rows that need quick tweaks.
  *
  * Categories, vendors, and full product field edits are intentionally
- * deferred — admins can use the Supabase dashboard for those today and
+ * deferred ,  admins can use the Supabase dashboard for those today and
  * we can add proper editors when the volume justifies them.
  */
 
@@ -361,7 +361,7 @@ export default function StoreAdmin() {
                 <p className="text-sm text-slate-400 mt-1">
                   Quick activate / archive / inline price + cost editing. For
                   full edits (images, descriptions, lifecycle tags, vendor
-                  extras), use the Supabase dashboard — proper editor coming
+                  extras), use the Supabase dashboard ,  proper editor coming
                   next.
                 </p>
               </div>

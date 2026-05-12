@@ -36,7 +36,7 @@ import { format, isSameDay, isToday, isYesterday, differenceInMinutes } from 'da
 const SYSTEM_EMAIL = 'system@geckinspect.com';
 
 // Users can delete their own messages for both sides within this window.
-// Outside the window, the message is locked — no UI affordance to delete
+// Outside the window, the message is locked ,  no UI affordance to delete
 // it. The client gate matches the intended server-side RLS policy.
 const UNSEND_WINDOW_MS = 5 * 60 * 1000;
 
@@ -110,14 +110,14 @@ function annotateMessages(messages) {
 }
 
 /**
- * Messages page — dark slate shell to match the rest of the app, but
+ * Messages page ,  dark slate shell to match the rest of the app, but
  * the individual message bubbles themselves use a cream background
  * with black ink so long message bodies are easy to read. Only the
  * bubbles get recolored; the page background, conversation list, and
  * composer stay on the app's standard dark theme.
  */
 
-// Bubble color tokens — kept inline so we don't have to extend Tailwind.
+// Bubble color tokens ,  kept inline so we don't have to extend Tailwind.
 const BUBBLE_INCOMING_BG = '#fdf6e3';
 const BUBBLE_INCOMING_BORDER = '#e7dcc0';
 const BUBBLE_SYSTEM_BG = '#fff7d6';
@@ -191,7 +191,7 @@ export default function MessagesPage() {
     };
 
     // Remove a set of messages from local state without waiting for the
-    // realtime channel to round-trip — feels instant and avoids the brief
+    // realtime channel to round-trip ,  feels instant and avoids the brief
     // period where deleted bubbles reappear before the channel fires.
     const pruneMessagesLocally = (idsToRemove) => {
         const idSet = idsToRemove instanceof Set ? idsToRemove : new Set(idsToRemove);
@@ -614,7 +614,7 @@ export default function MessagesPage() {
                 </div>
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
-                    {/* Conversation list — hidden on mobile when a conversation is open */}
+                    {/* Conversation list ,  hidden on mobile when a conversation is open */}
                     <Card
                         className={`bg-slate-900 border-slate-800 ${
                             selectedConversation ? 'hidden lg:block' : 'block'
@@ -717,7 +717,7 @@ export default function MessagesPage() {
                         </CardContent>
                     </Card>
 
-                    {/* Message view — hidden on mobile when no conversation selected */}
+                    {/* Message view ,  hidden on mobile when no conversation selected */}
                     <div
                         className={`lg:col-span-2 ${
                             selectedConversation ? 'block' : 'hidden lg:block'
@@ -793,7 +793,7 @@ export default function MessagesPage() {
                                             ({ message, showDateDivider, isFirstInGroup, isLastInGroup, date }) => {
                                             const isMine = message.sender_email === currentUser.email;
                                             const isSystem = message.message_type === 'system';
-                                            // Bubble: cream, black text — the only element that
+                                            // Bubble: cream, black text ,  the only element that
                                             // intentionally breaks the dark theme because the
                                             // user asked for it to be easier to read.
                                             const bubbleStyle = isMine

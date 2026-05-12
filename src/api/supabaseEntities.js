@@ -82,32 +82,32 @@ export const TABLE_MAP = {
   WeightRecord: 'weight_records',
   User: 'profiles',
 
-  // P1 — Animal Passport + Ownership Transfer
+  // P1 ,  Animal Passport + Ownership Transfer
   OwnershipRecord: 'ownership_records',
   ShedRecord: 'shed_records',
   VetRecord: 'vet_records',
   TransferRequest: 'transfer_requests',
   FeedingRecord: 'feeding_records',
-  // P2 — Market Pricing Intelligence
+  // P2 ,  Market Pricing Intelligence
   MorphPriceEntry: 'morph_price_entries',
   PriceAlert: 'price_alerts',
   CollectionValuation: 'collection_valuations',
-  // P3 — Breeding ROI Dashboard
+  // P3 ,  Breeding ROI Dashboard
   BreedingProject: 'breeding_projects',
   GeneticOutcomePrediction: 'genetic_outcome_predictions',
   Clutch: 'clutches',
-  // P4 — Breeding Loan Management
+  // P4 ,  Breeding Loan Management
   BreedingLoan: 'breeding_loans',
-  // P5 — Geck Answers
+  // P5 ,  Geck Answers
   Question: 'questions',
   Answer: 'answers',
   QuestionVote: 'question_votes',
-  // P8 — Breeder Storefront
+  // P8 ,  Breeder Storefront
   BreederProfile: 'breeder_profiles',
   BreederReview: 'breeder_reviews',
-  // Shipping — Zero's Geckos integration
+  // Shipping ,  Zero's Geckos integration
   ShippingOrder: 'shipping_orders',
-  // Pending Sales — reserve price system
+  // Pending Sales ,  reserve price system
   PendingSale: 'pending_sales',
   // Blog system
   BlogSettings: 'blog_settings',
@@ -115,7 +115,7 @@ export const TABLE_MAP = {
   BlogCategory: 'blog_categories',
   BlogTag: 'blog_tags',
   BlogLog: 'blog_logs',
-  // Store — supplies, gifts, merch, affiliate
+  // Store ,  supplies, gifts, merch, affiliate
   StoreVendor: 'store_vendors',
   StoreCategory: 'store_categories',
   StoreProduct: 'store_products',
@@ -127,7 +127,7 @@ export const TABLE_MAP = {
   StoreAffiliateClick: 'store_affiliate_clicks',
   StoreSignupGrant: 'store_signup_grants',
   StorePromoCode: 'store_promo_codes',
-  // Landing page testimonials — admin curated, public-readable when approved
+  // Landing page testimonials ,  admin curated, public-readable when approved
   Testimonial: 'testimonials',
   // Multi-user collaboration: per-collection ownership and shared access
   Collection: 'collections',
@@ -348,32 +348,32 @@ export const UserFollow = createEntityClient('UserFollow');
 export const WeightRecord = createEntityClient('WeightRecord');
 export const UserEntity = createEntityClient('User');
 
-// P1 — Animal Passport + Ownership Transfer
+// P1 ,  Animal Passport + Ownership Transfer
 export const OwnershipRecord = createEntityClient('OwnershipRecord');
 export const ShedRecord = createEntityClient('ShedRecord');
 export const VetRecord = createEntityClient('VetRecord');
 export const TransferRequest = createEntityClient('TransferRequest');
 export const FeedingRecord = createEntityClient('FeedingRecord');
-// P2 — Market Pricing Intelligence
+// P2 ,  Market Pricing Intelligence
 export const MorphPriceEntry = createEntityClient('MorphPriceEntry');
 export const PriceAlert = createEntityClient('PriceAlert');
 export const CollectionValuation = createEntityClient('CollectionValuation');
-// P3 — Breeding ROI Dashboard
+// P3 ,  Breeding ROI Dashboard
 export const BreedingProject = createEntityClient('BreedingProject');
 export const GeneticOutcomePrediction = createEntityClient('GeneticOutcomePrediction');
 export const Clutch = createEntityClient('Clutch');
-// P4 — Breeding Loan Management
+// P4 ,  Breeding Loan Management
 export const BreedingLoan = createEntityClient('BreedingLoan');
-// P5 — Geck Answers
+// P5 ,  Geck Answers
 export const Question = createEntityClient('Question');
 export const Answer = createEntityClient('Answer');
 export const QuestionVote = createEntityClient('QuestionVote');
-// P8 — Breeder Storefront
+// P8 ,  Breeder Storefront
 export const BreederProfile = createEntityClient('BreederProfile');
 export const BreederReview = createEntityClient('BreederReview');
-// Shipping — Zero's Geckos integration
+// Shipping ,  Zero's Geckos integration
 export const ShippingOrder = createEntityClient('ShippingOrder');
-// Pending Sales — reserve price system
+// Pending Sales ,  reserve price system
 export const PendingSale = createEntityClient('PendingSale');
 // Blog system
 export const BlogSettings = createEntityClient('BlogSettings');
@@ -382,7 +382,7 @@ export const BlogCategory = createEntityClient('BlogCategory');
 export const BlogTag = createEntityClient('BlogTag');
 export const BlogLog = createEntityClient('BlogLog');
 
-// Store — supplies, gifts, merch, affiliate
+// Store ,  supplies, gifts, merch, affiliate
 export const StoreVendor = createEntityClient('StoreVendor');
 export const StoreCategory = createEntityClient('StoreCategory');
 export const StoreProduct = createEntityClient('StoreProduct');

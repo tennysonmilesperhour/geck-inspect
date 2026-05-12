@@ -64,7 +64,7 @@ function BreederCard({ breeder, currentUser, isFollowing, onFollow, onUnfollow, 
 
     return (
         <Card className="bg-slate-900 border-slate-700 hover:border-emerald-500/50 transition-all overflow-hidden flex flex-col">
-            {/* Cover Image — always rendered for consistent card height */}
+            {/* Cover Image ,  always rendered for consistent card height */}
             <div className="h-24 w-full overflow-hidden flex-shrink-0">
                 {cardCover ? (
                     <img
@@ -703,10 +703,10 @@ export default function CommunityConnectPage() {
     return (
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
             <Seo
-                title="Community — Find Crested Gecko Breeders & Forum"
+                title="Community ,  Find Crested Gecko Breeders & Forum"
                 description="Find crested gecko breeders and keepers, follow their collections, and join discussions on the Geck Inspect community forum."
                 path="/CommunityConnect"
-                imageAlt="Geck Inspect community connect — breeder directory and forum"
+                imageAlt="Geck Inspect community connect ,  breeder directory and forum"
                 keywords={[
                     'crested gecko breeders',
                     'find a crested gecko breeder',

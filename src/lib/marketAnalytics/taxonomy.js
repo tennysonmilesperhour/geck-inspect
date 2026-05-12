@@ -2,7 +2,7 @@
  * Market Analytics Taxonomy
  *
  * Canonical reference data for the Market Analytics module. Nothing in
- * here should depend on the visualization layer — this is pure data the
+ * here should depend on the visualization layer ,  this is pure data the
  * UI consumes. If a new morph, region, or lineage tier is introduced,
  * update this file and the rest of the analytics layer picks it up.
  *
@@ -29,17 +29,17 @@ export const TRAIT_KINDS = {
 
 // ---------- Canonical morph list --------------------------------------
 // Curated to match the morphs that actually move volume or command
-// premiums in 2025. Not exhaustive — the analytics module can be pointed
+// premiums in 2025. Not exhaustive ,  the analytics module can be pointed
 // at any morph but this is the "watched list" surfaced in default views.
 export const CANONICAL_MORPHS = [
-  // Recessive (homozygous-expressing) — drive the largest premiums
+  // Recessive (homozygous-expressing) ,  drive the largest premiums
   { name: 'Lilly White',        kind: TRAIT_KINDS.CODOMINANT,  premium_tier: 'flagship' },
   { name: 'Axanthic',           kind: TRAIT_KINDS.RECESSIVE,   premium_tier: 'flagship' },
   { name: 'Cappuccino',         kind: TRAIT_KINDS.RECESSIVE,   premium_tier: 'flagship' },
   { name: 'Sable',              kind: TRAIT_KINDS.RECESSIVE,   premium_tier: 'premium' },
   { name: 'Frappuccino',        kind: TRAIT_KINDS.RECESSIVE,   premium_tier: 'premium' },
   { name: 'Moonglow',           kind: TRAIT_KINDS.POLYGENIC,   premium_tier: 'premium' },
-  // Structural — stack with color/pattern
+  // Structural ,  stack with color/pattern
   { name: 'Full Pinstripe',     kind: TRAIT_KINDS.STRUCTURAL,  premium_tier: 'premium' },
   { name: 'Pinstripe',          kind: TRAIT_KINDS.STRUCTURAL,  premium_tier: 'mid' },
   { name: 'Phantom Pinstripe',  kind: TRAIT_KINDS.STRUCTURAL,  premium_tier: 'premium' },

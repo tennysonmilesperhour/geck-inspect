@@ -47,7 +47,7 @@ export default function BlogPost() {
     [posts, post, showRelatedPosts]
   );
 
-  // Initial render before posts have loaded — avoid the not-found flash
+  // Initial render before posts have loaded ,  avoid the not-found flash
   // for valid slugs.
   if (loading && !post) {
     return (

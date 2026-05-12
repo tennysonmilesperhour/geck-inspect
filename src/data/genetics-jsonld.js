@@ -1,12 +1,12 @@
 /**
- * Genetics Guide — structured data (JSON-LD).
+ * Genetics Guide ,  structured data (JSON-LD).
  * Extracted from GeneticsGuide.jsx for maintainability.
  */
 
 const GENETICS_GUIDE_PUBLISHED = '2025-09-15T00:00:00Z';
 const GENETICS_GUIDE_MODIFIED = '2026-04-17T00:00:00Z';
 
-// Editorial author identity. Mirrors the shape in src/lib/editorial.js —
+// Editorial author identity. Mirrors the shape in src/lib/editorial.js , 
 // kept inline here because this file is consumed both by JSX (for JSON-LD
 // rendering) and by build-time tooling that must not import React.
 const EDITORIAL = {
@@ -21,7 +21,7 @@ const GENETICS_GUIDE_JSON_LD = [
   {
     '@type': 'Article',
     '@id': 'https://geckinspect.com/GeneticsGuide#article',
-    headline: 'Crested Gecko Genetics Guide — Morphs, Inheritance, and Selective Breeding',
+    headline: 'Crested Gecko Genetics Guide ,  Morphs, Inheritance, and Selective Breeding',
     description:
       'Complete educational reference for crested gecko (Correlophus ciliatus) genetics: dominant, recessive, incomplete-dominant traits; polygenic morphs; inheritance patterns with Punnett squares; selective breeding strategies; lethal alleles; and proven morphs including Lilly White, Axanthic, Cappuccino, Soft Scale, and White Wall.',
     url: 'https://geckinspect.com/GeneticsGuide',
@@ -130,7 +130,7 @@ const GENETICS_GUIDE_JSON_LD = [
         name: 'Is Lilly White recessive or dominant in crested geckos?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Lilly White is incomplete dominant — a single copy produces the visible Lilly White morph, and two copies produce Super Lilly White, which is embryonic-lethal. Breeders pair Lilly White to non-LW animals to safely produce more Lilly Whites.',
+          text: 'Lilly White is incomplete dominant ,  a single copy produces the visible Lilly White morph, and two copies produce Super Lilly White, which is embryonic-lethal. Breeders pair Lilly White to non-LW animals to safely produce more Lilly Whites.',
         },
       },
       {
@@ -138,7 +138,7 @@ const GENETICS_GUIDE_JSON_LD = [
         name: 'What is an axanthic crested gecko?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Axanthic is a recessive crested gecko morph that lacks xanthophores — the pigment cells that produce yellow and red tones. Visual axanthics appear in shades of black, white, and gray regardless of their underlying color genetics, and two copies of the gene are required for visual expression.',
+          text: 'Axanthic is a recessive crested gecko morph that lacks xanthophores ,  the pigment cells that produce yellow and red tones. Visual axanthics appear in shades of black, white, and gray regardless of their underlying color genetics, and two copies of the gene are required for visual expression.',
         },
       },
       {
@@ -146,7 +146,7 @@ const GENETICS_GUIDE_JSON_LD = [
         name: 'What is the difference between a morph and a trait in crested gecko breeding?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'A morph has a proven, predictable single-gene inheritance pattern — Lilly White, Axanthic, Cappuccino, Soft Scale, and White Wall qualify. A trait is a phenotypic characteristic like harlequin, pinstripe, flame, or dalmatian that is usually polygenic and does not follow a simple Mendelian inheritance pattern.',
+          text: 'A morph has a proven, predictable single-gene inheritance pattern ,  Lilly White, Axanthic, Cappuccino, Soft Scale, and White Wall qualify. A trait is a phenotypic characteristic like harlequin, pinstripe, flame, or dalmatian that is usually polygenic and does not follow a simple Mendelian inheritance pattern.',
         },
       },
       {
@@ -154,7 +154,7 @@ const GENETICS_GUIDE_JSON_LD = [
         name: 'Why can\'t I predict base color in crested geckos with a Punnett square?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Base color is polygenic — it is controlled by many genes each contributing a small additive effect. Punnett squares only work for single-gene Mendelian traits. You can influence polygenic outcomes through consistent selective breeding over many generations, but you can\'t calculate exact ratios.',
+          text: 'Base color is polygenic ,  it is controlled by many genes each contributing a small additive effect. Punnett squares only work for single-gene Mendelian traits. You can influence polygenic outcomes through consistent selective breeding over many generations, but you can\'t calculate exact ratios.',
         },
       },
       {

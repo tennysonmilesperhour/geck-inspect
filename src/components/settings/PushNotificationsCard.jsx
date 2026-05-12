@@ -27,7 +27,7 @@ const isIOS = () => {
  * Settings card for push notifications.
  *
  * Shows the current browser's subscription state, provides subscribe /
- * unsubscribe buttons, and — when subscribed — exposes the per-type
+ * unsubscribe buttons, and ,  when subscribed ,  exposes the per-type
  * allowlist via checkboxes. The allowlist is controlled by the parent
  * `formData`/`onToggleType` pair so saves happen together with the
  * rest of Settings on the main "Save Changes" button.
@@ -111,7 +111,7 @@ export default function PushNotificationsCard({
     }
   };
 
-  // Block the UI behind the "install to home screen" gate on iOS — push
+  // Block the UI behind the "install to home screen" gate on iOS ,  push
   // only works from the installed PWA on iPhone, so there's no point
   // pretending otherwise.
   const iosNeedsInstall = isIOS() && !isStandalone();
@@ -131,7 +131,7 @@ export default function PushNotificationsCard({
               <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
               <p>
                 Your browser doesn&apos;t support web push. Try the latest
-                version of Chrome, Edge, Firefox, or Safari — and make sure
+                version of Chrome, Edge, Firefox, or Safari ,  and make sure
                 you&apos;re on HTTPS.
               </p>
             </div>
@@ -208,7 +208,7 @@ export default function PushNotificationsCard({
                 )}
               </div>
 
-              {/* Master toggle — lets the user pause pushes without
+              {/* Master toggle ,  lets the user pause pushes without
                   tearing down the subscription on every device. */}
               {renderSwitch(
                 'push-enabled',

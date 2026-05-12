@@ -50,7 +50,7 @@ export default function WebImportPanel({ onApply }) {
           listing. We'll map the free text into canonical taxonomy ids and
           prefill the contribution form below. Anything we can't map shows
           up as <span className="text-amber-300">unmapped</span> so you can
-          extend the alias table — nothing is silently dropped.
+          extend the alias table ,  nothing is silently dropped.
         </p>
 
         <div>
@@ -78,13 +78,13 @@ export default function WebImportPanel({ onApply }) {
           <Readout title="Primary morph">
             {parsed.primary_morph
               ? <Badge className="bg-emerald-600">{labelFor(parsed.primary_morph)}</Badge>
-              : <span className="text-slate-500 text-sm">—</span>}
+              : <span className="text-slate-500 text-sm">, </span>}
           </Readout>
 
           <Readout title="Base color">
             {parsed.base_color
               ? <Badge variant="secondary" className="bg-slate-700 text-slate-200">{labelFor(parsed.base_color)}</Badge>
-              : <span className="text-slate-500 text-sm">—</span>}
+              : <span className="text-slate-500 text-sm">, </span>}
           </Readout>
 
           <Readout title="Genetic traits">
@@ -143,7 +143,7 @@ function Readout({ title, children }) {
 }
 
 function Tokens({ ids = [], prefix = '' }) {
-  if (!ids.length) return <span className="text-slate-500 text-sm">—</span>;
+  if (!ids.length) return <span className="text-slate-500 text-sm">, </span>;
   return ids.map((id) => (
     <Badge key={id} variant="secondary" className="bg-slate-700 text-slate-200">
       {prefix}{labelFor(id)}

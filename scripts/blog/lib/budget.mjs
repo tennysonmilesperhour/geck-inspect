@@ -1,14 +1,14 @@
 /**
  * Weekly budget tracker for the blog pipeline.
  *
- * Persists spend to docs/blog-budget.json committed to the repo (yes — we
+ * Persists spend to docs/blog-budget.json committed to the repo (yes ,  we
  * want the ledger visible in PRs and the weekly report can link to it).
  * The file rolls into weekly buckets keyed by ISO week "YYYY-Www". Each
  * bucket tracks totalUsd, per-model totals, and a call log (capped at
  * 1000 entries / week) so the weekly report can show what drove spend.
  *
  * Hard weekly cap: $10 USD. Any call that would push the current week
- * over the cap throws BudgetExceededError immediately — callers should
+ * over the cap throws BudgetExceededError immediately ,  callers should
  * treat that as a hard stop for the current run. The cron schedule will
  * try again next slot.
  *
@@ -25,7 +25,7 @@ const WEEKLY_CAP_USD = 10.00;
 const MAX_LOG_ENTRIES_PER_WEEK = 1000;
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-// anthropic.mjs and budget.mjs live in scripts/blog/lib/ — budget ledger
+// anthropic.mjs and budget.mjs live in scripts/blog/lib/ ,  budget ledger
 // is repo-relative so it gets committed.
 const REPO_ROOT = path.resolve(__dirname, '..', '..', '..');
 const BUDGET_FILE = path.join(REPO_ROOT, 'docs', 'blog-budget.json');
@@ -84,7 +84,7 @@ export function currentWeekSpend() {
 /**
  * Throw BudgetExceededError if the current week is already at or over the cap.
  * Call this BEFORE an API call that you're not willing to run if we're out of
- * budget. Intentionally conservative — we check before the call rather than
+ * budget. Intentionally conservative ,  we check before the call rather than
  * trying to predict its cost.
  */
 export function assertBudgetAvailable(context = '') {

@@ -175,7 +175,7 @@ export default function ShippingBookingForm({ quote, onBooked }) {
         )}
         {IS_DEMO && (
           <p className="text-xs text-amber-400/70 mt-2">
-            Demo mode — label printing will be available once the integration is live.
+            Demo mode ,  label printing will be available once the integration is live.
           </p>
         )}
       </div>
@@ -226,7 +226,7 @@ export default function ShippingBookingForm({ quote, onBooked }) {
           </>
         ) : (
           <>
-            <Package className="w-4 h-4 mr-2" /> Book shipment — ${quote?.price?.toFixed(2)}
+            <Package className="w-4 h-4 mr-2" /> Book shipment ,  ${quote?.price?.toFixed(2)}
           </>
         )}
       </Button>

@@ -5,7 +5,7 @@ import {
 } from './breedingHistoryUtils';
 
 /**
- * Certificate PDF generators — ownership and lineage.
+ * Certificate PDF generators ,  ownership and lineage.
  *
  * Two flavors, both portrait Letter, both downloaded as a blob via a
  * manual <a> click (the same pattern exportUtils.js uses for the gecko
@@ -60,7 +60,7 @@ function safeFilename(value) {
   );
 }
 
-// Manual blob download — same pattern exportUtils.js uses successfully.
+// Manual blob download ,  same pattern exportUtils.js uses successfully.
 // Doesn't depend on jsPDF's doc.save() implementation.
 function downloadPdfBlob(doc, filename) {
   const blob = doc.output('blob');
@@ -75,7 +75,7 @@ function downloadPdfBlob(doc, filename) {
 }
 
 // ---------------------------------------------------------------------------
-// Drawing primitives — kept simple on purpose
+// Drawing primitives ,  kept simple on purpose
 // ---------------------------------------------------------------------------
 
 function drawHeader(doc, title, owner) {
@@ -151,7 +151,7 @@ function drawRow(doc, label, value, x, y, maxWidth) {
   doc.setFontSize(11);
   doc.setTextColor(30, 30, 30);
   const text = safeText(value) || '-';
-  // Force a single-line clip — multi-line wraps would mess up our row math
+  // Force a single-line clip ,  multi-line wraps would mess up our row math
   const lines = doc.splitTextToSize(text, maxWidth);
   doc.text(lines[0] || '-', x, y + 5);
 }
@@ -181,7 +181,7 @@ function drawBreedingHistorySection(doc, history, x, y, width) {
   );
   y += 6;
 
-  // Column layout — season | age | # | laid | hatched | inf/fail | weight
+  // Column layout ,  season | age | # | laid | hatched | inf/fail | weight
   const cols = [
     { key: 'season', label: 'Season', w: 0.20 },
     { key: 'age', label: 'Age', w: 0.09 },
@@ -211,7 +211,7 @@ function drawBreedingHistorySection(doc, history, x, y, width) {
   doc.setFontSize(9);
   doc.setTextColor(30, 30, 30);
 
-  // Newest season first — most relevant on a certificate.
+  // Newest season first ,  most relevant on a certificate.
   for (const row of [...rows].reverse()) {
     const weight =
       row.weightMin != null && row.weightMax != null

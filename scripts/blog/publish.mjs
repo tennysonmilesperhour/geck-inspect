@@ -1,13 +1,13 @@
 #!/usr/bin/env node
 /**
- * Publish pass — runs after a blog-draft PR is merged.
+ * Publish pass ,  runs after a blog-draft PR is merged.
  *
  * Flow:
  *   1. Read content/blog-drafts/<slug>/{post.md, metadata.json}.
  *   2. Convert the markdown body into the block structure used by
  *      src/data/blog-posts.js (paragraphs, lists, tables, callouts).
  *   3. Append a new object literal to the BLOG_POSTS array by locating the
- *      closing bracket with a tolerant regex (not a full JS parser — the
+ *      closing bracket with a tolerant regex (not a full JS parser ,  the
  *      file is append-only and well-formatted). Writes a trailing comma
  *      on the previous entry if it's missing.
  *   4. Delete the content/blog-drafts/<slug>/ directory.
@@ -54,7 +54,7 @@ function parseMarkdownIntoBlocks(md) {
     const trimmed = line.trim();
 
     // Heading: H2 becomes the conventional "section header" blocks.
-    // blog-posts.js doesn't have an explicit h2 block type — the existing
+    // blog-posts.js doesn't have an explicit h2 block type ,  the existing
     // renderer expects a paragraph with a bolded heading, so we use a
     // callout:tone=info with just a title, which renders cleanly.
     if (/^##\s+/.test(trimmed)) {
@@ -184,7 +184,7 @@ function appendPostToBlogPosts(entry) {
     throw new Error(`Cannot find closing "];" in ${BLOG_POSTS_PATH}; refusing to append.`);
   }
 
-  // Walk backwards from closeIdx to find the last `}` — that's the last entry's end.
+  // Walk backwards from closeIdx to find the last `}` ,  that's the last entry's end.
   // Track whether we skipped a trailing comma during the walk; we can't infer
   // it later from a regex on the surrounding text because inner arrays inside
   // the entry also contain `,]` sequences (externalCitations etc.) that would

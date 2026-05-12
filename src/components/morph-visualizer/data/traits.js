@@ -1,18 +1,18 @@
 /**
- * Crested Gecko trait catalog — canonical data.
+ * Crested Gecko trait catalog ,  canonical data.
  *
  * The single source of truth for the Morph Visualizer. Every trait has:
- *   id         — stable machine key (used by engine + render layers)
- *   name       — human label
- *   category   — where it goes in the UI
- *   genetics   — how it is inherited and what zygosities are allowed
- *   epistasis  — what this trait hides/masks when expressed
- *   visual     — hints the renderer can use (palette swaps, layer flags)
- *   rarity     — 1 (common) → 5 (ultra rare) baseline tier
- *   valueHint  — USD-ish floor suggestion for an adult at that trait alone
- *   description— short plain-English summary
+ *   id         ,  stable machine key (used by engine + render layers)
+ *   name       ,  human label
+ *   category   ,  where it goes in the UI
+ *   genetics   ,  how it is inherited and what zygosities are allowed
+ *   epistasis  ,  what this trait hides/masks when expressed
+ *   visual     ,  hints the renderer can use (palette swaps, layer flags)
+ *   rarity     ,  1 (common) → 5 (ultra rare) baseline tier
+ *   valueHint  ,  USD-ish floor suggestion for an adult at that trait alone
+ *   description,  short plain-English summary
  *
- * The shape is deliberately portable — data here can power:
+ * The shape is deliberately portable ,  data here can power:
  *   - this visualizer (render hints)
  *   - breeding predictors (genetics block)
  *   - recognition / identification features (visual + description)
@@ -31,12 +31,12 @@ export const GENETICS_TYPE = {
 
 export const ZYGOSITY = {
   ABSENT: 'absent',      // no copies (N/N)
-  HET: 'het',            // one copy (N/a) — invisible for recessive, visual for incomp-dom
+  HET: 'het',            // one copy (N/a) ,  invisible for recessive, visual for incomp-dom
   VISUAL: 'visual',      // visual expression (covers het-visual for incomp-dom, hom for recessive)
   SUPER: 'super',        // homozygous super form for incomp-dom
 };
 
-// Polygenic expression ladder — used by both UI sliders and renderer.
+// Polygenic expression ladder ,  used by both UI sliders and renderer.
 export const EXPRESSION = ['none', 'trace', 'partial', 'strong', 'extreme'];
 
 // ---------- Base colors (polygenic, display only) ----------
@@ -120,10 +120,10 @@ export const MENDELIAN_MORPHS = [
     genetics: {
       type: GENETICS_TYPE.RECESSIVE,
       summary:
-        'Simple recessive. Both parents must carry at least one copy. Visual animals express only in homozygous form — they lack red/yellow pigment.',
+        'Simple recessive. Both parents must carry at least one copy. Visual animals express only in homozygous form ,  they lack red/yellow pigment.',
     },
     epistasis: {
-      removeWarmPigment: true, // drops xanthophores — masks base color
+      removeWarmPigment: true, // drops xanthophores ,  masks base color
     },
     visual: {
       layer: 'axanthic',
@@ -151,7 +151,7 @@ export const MENDELIAN_MORPHS = [
     rarity: 4,
     valueHint: 600,
     description:
-      'Smaller, smoother scales that give the animal a velvety appearance. Structural — visible more than colored.',
+      'Smaller, smoother scales that give the animal a velvety appearance. Structural ,  visible more than colored.',
   },
   {
     id: 'white_wall',
@@ -278,7 +278,7 @@ export const PATTERN_TRAITS = [
     category: 'pattern',
     genetics: {
       type: GENETICS_TYPE.POLYGENIC,
-      summary: 'Polygenic. Broken, feathered tiger-style banding — looks etched rather than painted.',
+      summary: 'Polygenic. Broken, feathered tiger-style banding ,  looks etched rather than painted.',
     },
     epistasis: {},
     visual: { layer: 'brindle', intensityDriven: true },
@@ -300,7 +300,7 @@ export const PATTERN_TRAITS = [
     rarity: 2,
     valueHint: 100,
     description:
-      'No lateral or dorsal markings. Shows the base color cleanly — common for solid-color projects.',
+      'No lateral or dorsal markings. Shows the base color cleanly ,  common for solid-color projects.',
   },
   {
     id: 'phantom',
@@ -309,7 +309,7 @@ export const PATTERN_TRAITS = [
     genetics: {
       type: GENETICS_TYPE.LINEBRED,
       summary:
-        'Linebred. Reduced warm pigment saturation — looks muted, ghostly, desaturated. Believed polygenic, not Mendelian.',
+        'Linebred. Reduced warm pigment saturation ,  looks muted, ghostly, desaturated. Believed polygenic, not Mendelian.',
     },
     epistasis: { desaturate: 0.35 },
     visual: { layer: 'phantom' },
@@ -330,7 +330,7 @@ export const ACCENT_TRAITS = [
     visual: { layer: 'portholes' },
     rarity: 2,
     valueHint: 75,
-    description: 'Round, cream-to-white rings along the lateral body — like small windows on the flanks.',
+    description: 'Round, cream-to-white rings along the lateral body ,  like small windows on the flanks.',
   },
   {
     id: 'kneecaps',
@@ -370,7 +370,7 @@ export const ACCENT_TRAITS = [
     visual: { layer: 'crestTips' },
     rarity: 2,
     valueHint: 100,
-    description: 'Cream tips on each crest scale — subtle but striking in adults.',
+    description: 'Cream tips on each crest scale ,  subtle but striking in adults.',
   },
 ];
 
@@ -381,7 +381,7 @@ export const STRUCTURAL_TRAITS = [
     name: 'Crest Prominence',
     category: 'structural',
     type: 'choice',
-    genetics: { type: GENETICS_TYPE.STRUCTURAL, summary: 'Body structure — influenced by genetics and age.' },
+    genetics: { type: GENETICS_TYPE.STRUCTURAL, summary: 'Body structure ,  influenced by genetics and age.' },
     options: ['reduced', 'normal', 'heavy'],
     default: 'normal',
     visual: { layer: 'crestSize' },
@@ -425,7 +425,7 @@ export const STRUCTURAL_TRAITS = [
     name: 'Eye Color',
     category: 'structural',
     type: 'choice',
-    genetics: { type: GENETICS_TYPE.STRUCTURAL, summary: 'Iris pigment variation — largely polygenic.' },
+    genetics: { type: GENETICS_TYPE.STRUCTURAL, summary: 'Iris pigment variation ,  largely polygenic.' },
     options: ['gold', 'copper', 'silver', 'grey', 'red'],
     default: 'gold',
     visual: { layer: 'eye' },
@@ -440,7 +440,7 @@ export const ENVIRONMENTAL_TRAITS = [
     name: 'Fire State',
     category: 'environmental',
     type: 'choice',
-    genetics: { type: GENETICS_TYPE.ENVIRONMENTAL, summary: 'Chromatophore state. Not inherited — changes minute-to-minute.' },
+    genetics: { type: GENETICS_TYPE.ENVIRONMENTAL, summary: 'Chromatophore state. Not inherited ,  changes minute-to-minute.' },
     options: ['fired_down', 'neutral', 'fired_up'],
     default: 'neutral',
     visual: { layer: 'fireState' },

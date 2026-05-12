@@ -1,7 +1,7 @@
 /**
  * Top-down (aerial) view of the gecko.
  *
- * Intentionally kept as a single file with inline pattern layers — the view
+ * Intentionally kept as a single file with inline pattern layers ,  the view
  * is younger than the side view and we'd rather iterate fast than over-split.
  * When this view matures, split it into per-layer components like the side view.
  */
@@ -191,7 +191,7 @@ export default function GeckoCanvasTop({ phenotype, selections }) {
 // ----- Inline pattern sub-components -----
 
 function PinstripeTop({ intensity, palette }) {
-  // Rails run along the dorso-lateral edges (ish) — two strong lines.
+  // Rails run along the dorso-lateral edges (ish) ,  two strong lines.
   const coverage = [0, 0.25, 0.5, 0.8, 1.0][intensity];
   const rand = mulberry32(9901 + intensity);
   const seg = 16;

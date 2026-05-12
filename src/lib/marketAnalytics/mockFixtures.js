@@ -1,9 +1,9 @@
 /**
- * Market Analytics — Mock Fixtures
+ * Market Analytics ,  Mock Fixtures
  *
  * Deterministic mock data generators for the Market Analytics module.
  * Everything here is seeded from a single constant so the UI renders
- * the same numbers across reloads — serious users get twitchy when
+ * the same numbers across reloads ,  serious users get twitchy when
  * values jump randomly between page loads.
  *
  * Every record is tagged with `__mock: true` and a `source_id` so the
@@ -25,7 +25,7 @@ import {
 } from './taxonomy.js';
 
 // ---------- Seeded RNG ------------------------------------------------
-// mulberry32 — tiny, fast, repeatable. We expose helpers for deterministic
+// mulberry32 ,  tiny, fast, repeatable. We expose helpers for deterministic
 // "random" choices so the same morph/region pair always gets the same
 // mock distribution.
 function mulberry32(seed) {
@@ -121,7 +121,7 @@ function regionMultiplier(region, morphName) {
     EU:  m.includes('Lilly') ? 1.25 : m.includes('Axanthic') ? 1.15 : 1.0,
     UK:  m.includes('Lilly') ? 1.2  : 0.95,
     CA:  0.9,
-    AU:  1.6,                      // scarcity — imports banned
+    AU:  1.6,                      // scarcity ,  imports banned
     JP:  m === 'Moonglow' || m === 'Sable' || m.includes('Soft Scale') ? 1.5 : 1.1,
     SE:  m === 'Axanthic' ? 1.3 : 1.0,
     SEA: 0.7,
@@ -157,12 +157,12 @@ export function getTransactions() {
       * regionMultiplier(region, primaryMorph)
       * ageMultiplier(age)
       * lineageMultiplier(lineage);
-    // Combo premium — buyers pay a synergy premium for true combos.
+    // Combo premium ,  buyers pay a synergy premium for true combos.
     const comboPremium = 1 + (combo.traits.length - 1) * (0.15 + rng() * 0.2);
     const askPrice = basePrice * comboPremium * (0.9 + rng() * 0.25);
     const soldSpread = 0.82 + rng() * 0.14;              // 82-96% of ask
     const soldPrice = askPrice * soldSpread;
-    // Which source this came from (internal dominates — we see our own
+    // Which source this came from (internal dominates ,  we see our own
     // users' data cleanly; external is noisier).
     const sourceRoll = rng();
     const source_id =

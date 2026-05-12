@@ -8,7 +8,7 @@
  *   - "Which combos are moving the fastest (lowest days-listed)?"
  *
  * Left pane: filter & sort controls + ranked combo table.
- * Right pane: detail panel for the selected combo — 12-month price
+ * Right pane: detail panel for the selected combo ,  12-month price
  * history (sold vs ask, internal vs external), price-band confidence
  * ribbon, and a drill-through to underlying transactions.
  */
@@ -90,13 +90,13 @@ export default function TraitComboExplorer({ filters, onDrillDown }) {
         <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
           <SectionHeader
             icon={Layers}
-            title="Trait Combinations — ranked"
+            title="Trait Combinations ,  ranked"
             subtitle="The market prices combinations, not single traits. Click a row to drill in."
             right={
               <div className="flex items-center gap-1.5">
                 <SortControl sortKey={sortKey} setSortKey={setSortKey} sortDir={sortDir} setSortDir={setSortDir} />
                 <MethodologyPopover title="How rankings are built">
-                  <p>We compute each combo's median sold price (not mean — sold prices are long-tailed), median ask, the spread between them (a proxy for bargaining power), time-on-market in days (velocity), and raw volume.</p>
+                  <p>We compute each combo's median sold price (not mean ,  sold prices are long-tailed), median ask, the spread between them (a proxy for bargaining power), time-on-market in days (velocity), and raw volume.</p>
                   <p>The spread % = (median_ask − median_sold) / median_ask. Low-spread combos close near ask; high-spread combos are overpriced or illiquid.</p>
                 </MethodologyPopover>
               </div>
@@ -277,7 +277,7 @@ function BlendedSourceCard({ blend }) {
     <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
       <SectionHeader
         icon={Layers}
-        title="Blended price — contribution by source"
+        title="Blended price ,  contribution by source"
         subtitle="How the headline is assembled from multiple feeds"
       />
       <div className="space-y-2">

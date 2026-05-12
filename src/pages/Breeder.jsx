@@ -14,7 +14,7 @@ import BuyerInquiryModal from '@/components/breeder/BuyerInquiryModal';
 
 const LOGO_URL = APP_LOGO_URL;
 
-// Curated tile — used when we have a breeder_profiles row and pull
+// Curated tile ,  used when we have a breeder_profiles row and pull
 // real for-sale geckos by created_by. Click opens a passport page if
 // the gecko has one, otherwise the GeckoDetail page.
 function ForSaleTile({ gecko, onInquire }) {
@@ -57,7 +57,7 @@ function ForSaleTile({ gecko, onInquire }) {
   );
 }
 
-// Inferred tile — same look as the original Breeder page when no
+// Inferred tile ,  same look as the original Breeder page when no
 // breeder_profiles row exists; used by the fallback "people referenced
 // this name in their lineage" mode.
 function InferredTile({ gecko }) {
@@ -128,7 +128,7 @@ export default function Breeder() {
   const [uniqueOwners, setUniqueOwners] = useState(0);
   const [errorMsg, setErrorMsg] = useState(null);
 
-  // Inquiry modal state — `inquiryGecko` is null for the generic
+  // Inquiry modal state ,  `inquiryGecko` is null for the generic
   // "Contact breeder" button, set to a gecko object when the buyer
   // clicked "Inquire" on a specific listing.
   const [inquiryOpen, setInquiryOpen] = useState(false);
@@ -147,7 +147,7 @@ export default function Breeder() {
       setMode('loading');
       setErrorMsg(null);
       try {
-        // 1. Curated lookup first — does a breeder_profiles row claim
+        // 1. Curated lookup first ,  does a breeder_profiles row claim
         //    this slug? If so we render the rich storefront.
         const { data: bp } = await supabase
           .from('breeder_profiles')
@@ -194,7 +194,7 @@ export default function Breeder() {
           return;
         }
 
-        // 2. No curated profile — fall back to the inferred SEO page.
+        // 2. No curated profile ,  fall back to the inferred SEO page.
         //    Search the three likely columns using the first word of
         //    the display name as a broad ILIKE filter, then tighten
         //    client-side using canonicalized form.
@@ -234,14 +234,14 @@ export default function Breeder() {
     };
   }, [slug, inferredDisplayName, canonical]);
 
-  // Invalid slug guard — rarely hit, but render a clean 404-ish page
+  // Invalid slug guard ,  rarely hit, but render a clean 404-ish page
   if (!slug) {
     return (
       <div className="min-h-screen bg-slate-950 flex items-center justify-center p-8">
         <div className="text-center space-y-4 max-w-md">
           <h1 className="text-2xl font-bold text-slate-100">No breeder specified</h1>
           <p className="text-slate-400">
-            This page needs a slug — e.g. <code>/Breeder/altitude-exotics</code>.
+            This page needs a slug ,  e.g. <code>/Breeder/altitude-exotics</code>.
           </p>
           <Link to="/">
             <Button variant="outline" className="bg-white text-slate-900 hover:bg-slate-100 hover:text-slate-900 border-white/40 font-semibold">
@@ -271,7 +271,7 @@ export default function Breeder() {
           name: displayName,
           alternateName: slug,
           url: breederUrl,
-          description: profile.bio || `${displayName} — verified crested gecko breeder on Geck Inspect.`,
+          description: profile.bio || `${displayName} ,  verified crested gecko breeder on Geck Inspect.`,
           logo: profile.profile_photo || LOGO_URL,
           image: profile.banner_photo || profile.profile_photo || LOGO_URL,
           ...(profile.location ? { address: { '@type': 'PostalAddress', addressLocality: profile.location } } : {}),
@@ -327,8 +327,8 @@ export default function Breeder() {
       ];
 
   const seoTitle = isCurated
-    ? `${displayName} — Crested Gecko Breeder on Geck Inspect`
-    : `${displayName} — Crested Gecko Breeder`;
+    ? `${displayName} ,  Crested Gecko Breeder on Geck Inspect`
+    : `${displayName} ,  Crested Gecko Breeder`;
   const seoDescription = isCurated
     ? (profile.bio
         ? profile.bio.slice(0, 200)
@@ -354,7 +354,7 @@ export default function Breeder() {
       />
 
       <div className="min-h-screen bg-slate-950 text-slate-100">
-        {/* Top nav — mirrors the landing page for a coherent public feel */}
+        {/* Top nav ,  mirrors the landing page for a coherent public feel */}
         <header className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
           <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
             <img src={LOGO_URL} alt="Geck Inspect" className="h-10 w-10 rounded-xl" />
@@ -542,7 +542,7 @@ export default function Breeder() {
                     <h2 className="text-lg font-bold text-white">Pedigrees you can verify</h2>
                   </div>
                   <p className="text-slate-300 text-sm leading-relaxed">
-                    Every gecko sold by {displayName} can ship with a digital passport — full lineage, weight history, photos, transferred to you in one click. Powered by Geck Inspect.
+                    Every gecko sold by {displayName} can ship with a digital passport ,  full lineage, weight history, photos, transferred to you in one click. Powered by Geck Inspect.
                   </p>
                 </div>
                 <Link to={createPageUrl('AuthPortal')}>
@@ -558,7 +558,7 @@ export default function Breeder() {
 
         {mode === 'inferred' && (
           <>
-            {/* Hero — inferred / SEO mode */}
+            {/* Hero ,  inferred / SEO mode */}
             <section className="max-w-5xl mx-auto px-6 pt-10 pb-12">
               <Link
                 to="/"
@@ -609,7 +609,7 @@ export default function Breeder() {
                   </div>
                   <p className="text-slate-300 text-sm leading-relaxed">
                     Create a free Geck Inspect account and claim{' '}
-                    <span className="text-white font-semibold">{displayName}</span> as your verified storefront. Show your for-sale animals, lineages, and reviews — all on this page.
+                    <span className="text-white font-semibold">{displayName}</span> as your verified storefront. Show your for-sale animals, lineages, and reviews ,  all on this page.
                   </p>
                 </div>
                 <Link to={createPageUrl('AuthPortal')}>

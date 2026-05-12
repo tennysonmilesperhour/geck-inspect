@@ -294,7 +294,7 @@ export function PolygenicGradient({ caption, low = 'Muted', high = 'Extreme' }) 
     <DiagramFrame
       caption={
         caption ||
-        'Polygenic traits form a continuous spectrum — not a clean on/off switch.'
+        'Polygenic traits form a continuous spectrum ,  not a clean on/off switch.'
       }
       ariaLabel="Polygenic trait expression spectrum"
     >
@@ -504,14 +504,14 @@ export function LethalAlleleDiagram({ caption }) {
 }
 
 // ---- Epistasis masking ------------------------------------------------------
-// Shows how one gene can "mask" another — specifically axanthic masking
+// Shows how one gene can "mask" another ,  specifically axanthic masking
 // underlying red/yellow color genes.
 export function EpistasisDiagram({ caption }) {
   return (
     <DiagramFrame
       caption={
         caption ||
-        'Axanthic geckos carry color genes but can\'t express them — the axanthic gene sits "upstream" and masks xanthophore development entirely.'
+        'Axanthic geckos carry color genes but can\'t express them ,  the axanthic gene sits "upstream" and masks xanthophore development entirely.'
       }
       ariaLabel="Epistasis masking diagram"
     >
@@ -568,7 +568,7 @@ export function DoseResponse({ caption, traitName = 'Lilly White', superLabel = 
     <DiagramFrame
       caption={
         caption ||
-        `${traitName} is incomplete dominant — one copy shows the trait, two copies produce a distinct "super" form.`
+        `${traitName} is incomplete dominant ,  one copy shows the trait, two copies produce a distinct "super" form.`
       }
       ariaLabel="Incomplete dominant dose response"
     >

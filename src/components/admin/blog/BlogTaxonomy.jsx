@@ -216,7 +216,7 @@ function TaxonomyList({ title, icon: Icon, Entity, kind }) {
           </div>
         ) : items.length === 0 ? (
           <p className="text-center text-sm text-slate-500 py-6">
-            No {kind}s yet — add one above.
+            No {kind}s yet ,  add one above.
           </p>
         ) : (
           <ul className="divide-y divide-slate-800">

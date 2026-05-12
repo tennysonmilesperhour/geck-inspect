@@ -366,7 +366,7 @@ function PlanPairingForm({ males, females, onPlanCreated }) {
 
 function EditBreedingPlanModal({ plan, males, females, onSave, onClose }) {
     // Defensive initial state. `plan.pairing_date` can come back as null,
-    // an empty string, or an invalid ISO from the DB — `new Date()` of any
+    // an empty string, or an invalid ISO from the DB ,  `new Date()` of any
     // of those yields either epoch 1970 or Invalid Date, which then
     // explodes in `format()` downstream. Fall back to today when the
     // stored value is unusable so the modal never crashes on mount.
@@ -641,11 +641,11 @@ function AddEggForm({ planId, onEggAdded, sire: _sire, dam: _dam }) {
                         <Select value={grade} onValueChange={setGrade}>
                             <SelectTrigger><SelectValue placeholder="Select grade" /></SelectTrigger>
                             <SelectContent>
-                                <SelectItem value="A+">A+ — Excellent</SelectItem>
-                                <SelectItem value="A">A — Great</SelectItem>
-                                <SelectItem value="B">B — Good</SelectItem>
-                                <SelectItem value="C">C — Fair</SelectItem>
-                                <SelectItem value="D">D — Poor</SelectItem>
+                                <SelectItem value="A+">A+ ,  Excellent</SelectItem>
+                                <SelectItem value="A">A ,  Great</SelectItem>
+                                <SelectItem value="B">B ,  Good</SelectItem>
+                                <SelectItem value="C">C ,  Fair</SelectItem>
+                                <SelectItem value="D">D ,  Poor</SelectItem>
                             </SelectContent>
                         </Select>
                     </div>

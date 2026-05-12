@@ -20,7 +20,7 @@ export default function StoreOrderDetail() {
       try {
         // Authenticated owners can fetch via RLS by order_number directly.
         // Guests pass ?token=<signed_token>; for Phase 1 we do a best-effort
-        // direct fetch and surface a friendly message if it 401s — the
+        // direct fetch and surface a friendly message if it 401s ,  the
         // edge function for token-validated guest reads ships next.
         let q = supabase.from('store_orders').select('*').eq('order_number', orderNumber);
         if (token) q = q.eq('id', token);  // Phase 1 placeholder; real flow validates a signed token server-side
@@ -54,7 +54,7 @@ export default function StoreOrderDetail() {
       { label: 'Orders', to: '/Store/orders' },
       { label: orderNumber || 'Order' },
     ]}>
-      <Seo title={`Order ${orderNumber} — Geck Inspect`} path={`/Store/orders/${orderNumber}`} description="" noIndex />
+      <Seo title={`Order ${orderNumber} ,  Geck Inspect`} path={`/Store/orders/${orderNumber}`} description="" noIndex />
       {loading ? (
         <div className="h-40 flex items-center justify-center text-slate-500 text-sm">Loading…</div>
       ) : error ? (

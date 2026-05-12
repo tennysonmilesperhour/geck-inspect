@@ -34,7 +34,7 @@ import {
 import { format, formatDistanceToNowStrict, subDays } from 'date-fns';
 
 /**
- * Admin Error Logs — captures everything reported by ErrorBoundary, the
+ * Admin Error Logs ,  captures everything reported by ErrorBoundary, the
  * global window.error handler, and the unhandledrejection listener.
  *
  * Shows volume over the past N days, lets the admin mark items resolved,

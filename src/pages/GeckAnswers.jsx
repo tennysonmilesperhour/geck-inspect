@@ -66,10 +66,10 @@ const GECK_ANSWERS_LIST_JSON_LD = [
   {
     '@type': 'CollectionPage',
     '@id': `${SITE_URL}/GeckAnswers#collection`,
-    name: 'Geck Answers — Crested Gecko Q&A',
+    name: 'Geck Answers ,  Crested Gecko Q&A',
     url: `${SITE_URL}/GeckAnswers`,
     description:
-      'Community-driven crested gecko Q&A. Search questions on nutrition, health, housing, breeding, morphs, juveniles, adults, hatchlings, equipment, and genetics — or ask your own.',
+      'Community-driven crested gecko Q&A. Search questions on nutrition, health, housing, breeding, morphs, juveniles, adults, hatchlings, equipment, and genetics ,  or ask your own.',
     isPartOf: { '@id': `${SITE_URL}/#website` },
     publisher: { '@id': ORG_ID },
     about: {
@@ -217,10 +217,10 @@ export default function GeckAnswers() {
     return (
       <div className="min-h-screen p-6" style={{ backgroundColor: C.warmWhite, fontFamily: "'DM Sans', sans-serif" }}>
         <Seo
-          title={`${selected.title} — Crested Gecko Q&A`}
+          title={`${selected.title} ,  Crested Gecko Q&A`}
           description={(selected.body || selected.title).slice(0, 200)}
           path={`/GeckAnswers?id=${selected.id}`}
-          imageAlt={`Crested gecko question — ${selected.title}`}
+          imageAlt={`Crested gecko question ,  ${selected.title}`}
           keywords={[
             'crested gecko question',
             'crested gecko answer',
@@ -302,10 +302,10 @@ export default function GeckAnswers() {
   return (
     <div className="min-h-screen p-6" style={{ backgroundColor: C.warmWhite, fontFamily: "'DM Sans', sans-serif" }}>
       <Seo
-        title="Geck Answers — Crested Gecko Q&A"
-        description="Community-driven crested gecko Q&A. Browse questions on nutrition, health, housing, breeding, morphs, juveniles, adults, hatchlings, equipment, and genetics — or ask your own."
+        title="Geck Answers ,  Crested Gecko Q&A"
+        description="Community-driven crested gecko Q&A. Browse questions on nutrition, health, housing, breeding, morphs, juveniles, adults, hatchlings, equipment, and genetics ,  or ask your own."
         path="/GeckAnswers"
-        imageAlt="Geck Answers — crested gecko Q&A community"
+        imageAlt="Geck Answers ,  crested gecko Q&A community"
         keywords={[
           'crested gecko questions',
           'crested gecko answers',

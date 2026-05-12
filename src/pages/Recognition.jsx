@@ -60,7 +60,7 @@ export default function Recognition() {
             </div>
             <CardTitle className="text-3xl font-bold text-slate-100">AI Morph ID</CardTitle>
             <p className="text-slate-400 max-w-2xl mx-auto mt-2">
-              Drop up to {MAX_PHOTOS} photos of the same crested gecko — different
+              Drop up to {MAX_PHOTOS} photos of the same crested gecko ,  different
               angles, fired up vs fired down, close-ups. The model synthesizes
               across all of them, and you save one feedback record covering the
               whole set.
@@ -150,7 +150,7 @@ export default function Recognition() {
           <Card className="bg-emerald-950/30 border-emerald-800">
             <CardContent className="p-4 text-emerald-200 flex items-center justify-between">
               <span>
-                Thanks — your feedback is in the queue. Want to review others?
+                Thanks ,  your feedback is in the queue. Want to review others?
               </span>
               <Button
                 variant="outline"

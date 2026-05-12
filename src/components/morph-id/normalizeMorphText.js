@@ -7,7 +7,7 @@ import {
 } from './morphTaxonomy';
 
 // Maps free-text morph labels (MorphMarket listings, Instagram captions, etc.)
-// into our canonical taxonomy ids. Conservative by design — if a token can't
+// into our canonical taxonomy ids. Conservative by design ,  if a token can't
 // be confidently mapped, it's returned under `unmapped` so a human can review
 // rather than silently dropped or guessed. Callers typically:
 //   1. Run the raw listing text through `normalizeMorphText(text)`.
@@ -15,7 +15,7 @@ import {
 //   3. Show `unmapped` terms to an operator to extend the aliases below.
 
 const ALIASES = {
-  // Primary morphs — synonyms, abbreviations, and marketing terms.
+  // Primary morphs ,  synonyms, abbreviations, and marketing terms.
   extreme_harlequin: ['extreme harlequin', 'ext harle', 'ext harley', 'ehr', 'ehq', 'e-harle'],
   super_harlequin:   ['super harlequin', 'super harle', 'sh', 's-harle'],
   harlequin:         ['harlequin', 'harle', 'harley', 'harl', 'hq'],
@@ -195,7 +195,7 @@ export function normalizeMorphText(input) {
     else if (!firedState && FIRED_STATE_IDS.has(id)) firedState = id;
   }
 
-  // Residual alphanumeric tokens that didn't match anything — the operator
+  // Residual alphanumeric tokens that didn't match anything ,  the operator
   // can extend aliases based on what shows up here.
   const unmapped = remaining
     .split(/[^a-z0-9%-]+/)

@@ -8,7 +8,7 @@ import { parseLocalDate } from '@/lib/dateUtils';
 import { SEASON_LABELS, seasonStatus } from '@/lib/seasons';
 
 /**
- * "Your Next Actions" widget — a personal todo-shaped list of things
+ * "Your Next Actions" widget ,  a personal todo-shaped list of things
  * the user should do soon, pulled from their actual data:
  *
  *   - Eggs due to hatch in the next 14 days (Incubating status + lay_date
@@ -17,7 +17,7 @@ import { SEASON_LABELS, seasonStatus } from '@/lib/seasons';
  *   - Future breeding plans whose target season is "Ready now"
  *   - Active breeding plans with no recorded activity in 30+ days (stale)
  *
- * The whole thing is skippable — if there's nothing to do it renders
+ * The whole thing is skippable ,  if there's nothing to do it renders
  * a celebration state instead of empty space. That's the spot where
  * the dashboard feels "alive" instead of static.
  */

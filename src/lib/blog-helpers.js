@@ -68,7 +68,7 @@ export function canPublish(post) {
 
 // Naive-but-safe markdown→HTML for the public blog renderer. Handles the
 // blocks the AI generator emits (headings, paragraphs, lists, blockquotes,
-// inline emphasis, links, code spans). Not a full CommonMark parser — but
+// inline emphasis, links, code spans). Not a full CommonMark parser ,  but
 // the AI generator is constrained to this subset, and admins editing
 // markdown by hand get a live HTML preview either way.
 export function markdownToHtml(md) {

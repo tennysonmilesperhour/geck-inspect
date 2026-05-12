@@ -1,8 +1,8 @@
 /**
- * Phenotype resolver — turns raw user selections into a "phenotype" object
+ * Phenotype resolver ,  turns raw user selections into a "phenotype" object
  * that the SVG renderer and explanation panels consume.
  *
- * Everything downstream (canvas + reasoning + rarity) reads THIS object —
+ * Everything downstream (canvas + reasoning + rarity) reads THIS object , 
  * never the raw selections. That means epistasis (one trait masking another)
  * is applied exactly once, in one place, which keeps the visualizer accurate.
  */
@@ -96,13 +96,13 @@ export function composePhenotype(selections) {
     highlight: lightenHex(baseColor.hex, 0.25),
     shadow:    darkenHex(baseColor.hex, 0.35),
     dorsum:    lightenHex(baseColor.hex, 0.15),
-    pattern:   '#f1e7c8',  // cream — lateral / pinstripe / harlequin
+    pattern:   '#f1e7c8',  // cream ,  lateral / pinstripe / harlequin
     accent:    '#ffffff',
     eye:       '#d4a93b',
     belly:     lightenHex(baseColor.hex, 0.35),
   };
 
-  // ---- 2. Environmental — fire state, age, shed.
+  // ---- 2. Environmental ,  fire state, age, shed.
   const env = selections.environmental || {};
   let fireFactor = 0.5;
   if (env.fire_state === 'fired_up')   fireFactor = 0.95;
@@ -125,13 +125,13 @@ export function composePhenotype(selections) {
     palette.highlight = desaturateHex(palette.highlight, 0.5);
     palette.shadow    = desaturateHex(palette.shadow, 0.5);
     palette.dorsum    = lightenHex(palette.dorsum, 0.2);
-    reasoning.push({ trait: 'shed_state', message: 'Pre-shed animal — base colors look dusty and desaturated.' });
+    reasoning.push({ trait: 'shed_state', message: 'Pre-shed animal ,  base colors look dusty and desaturated.' });
   }
 
   if (env.age === 'juvenile') {
     // Juveniles are less saturated + pattern more obvious.
     palette.base      = desaturateHex(palette.base, 0.25);
-    reasoning.push({ trait: 'age', message: 'Juvenile — saturation and pattern contrast develop with age.' });
+    reasoning.push({ trait: 'age', message: 'Juvenile ,  saturation and pattern contrast develop with age.' });
   }
 
   // ---- 3. Resolve which Mendelian morphs are visually expressed.
@@ -147,7 +147,7 @@ export function composePhenotype(selections) {
     }
   });
 
-  // ---- 4. Epistasis pass — apply in fixed order so the result is deterministic.
+  // ---- 4. Epistasis pass ,  apply in fixed order so the result is deterministic.
   const suppressed = { pattern: false, dorsal: false, lateral: false, warmPigment: false };
 
   // Axanthic masks warm pigment entirely.
@@ -161,11 +161,11 @@ export function composePhenotype(selections) {
     suppressed.warmPigment = true;
     reasoning.push({
       trait: 'axanthic',
-      message: 'Axanthic removes xanthophores — base color is replaced by a grayscale palette.',
+      message: 'Axanthic removes xanthophores ,  base color is replaced by a grayscale palette.',
     });
   }
 
-  // Cappuccino visual — dark body, cream dorsum.
+  // Cappuccino visual ,  dark body, cream dorsum.
   if (expressed.cappuccino) {
     const capp = TRAITS_BY_ID.cappuccino.visual;
     palette.base    = mend.cappuccino === Z.SUPER ? darkenHex(capp.bodyDarkHex, 0.05) : capp.bodyDarkHex;
@@ -176,37 +176,37 @@ export function composePhenotype(selections) {
     reasoning.push({
       trait: 'cappuccino',
       message: mend.cappuccino === Z.SUPER
-        ? 'Super Cappuccino (Frappuccino) — dorsum fully patternless, body saturated dark coffee.'
-        : 'Cappuccino — connected cream dorsum, coffee-brown body.',
+        ? 'Super Cappuccino (Frappuccino) ,  dorsum fully patternless, body saturated dark coffee.'
+        : 'Cappuccino ,  connected cream dorsum, coffee-brown body.',
     });
   }
 
-  // Lilly White — bright body highlights.
+  // Lilly White ,  bright body highlights.
   if (expressed.lilly_white) {
     palette.accent    = TRAITS_BY_ID.lilly_white.visual.floodColor;
     reasoning.push({
       trait: 'lilly_white',
       message: mend.lilly_white === Z.SUPER
-        ? 'Super Lilly White is embryonic-lethal — the rendered preview is illustrative only.'
-        : 'Lilly White — irregular bright white body highlights and a clean break along the dorsum.',
+        ? 'Super Lilly White is embryonic-lethal ,  the rendered preview is illustrative only.'
+        : 'Lilly White ,  irregular bright white body highlights and a clean break along the dorsum.',
     });
   }
 
-  // White Wall — clean white belly band.
+  // White Wall ,  clean white belly band.
   if (expressed.white_wall) {
     palette.belly = TRAITS_BY_ID.white_wall.visual.bandHex;
     reasoning.push({
       trait: 'white_wall',
-      message: 'White Wall — clean white band along the lower lateral body.',
+      message: 'White Wall ,  clean white band along the lower lateral body.',
     });
   }
 
-  // Empty Back — suppresses dorsal pattern.
+  // Empty Back ,  suppresses dorsal pattern.
   if (expressed.empty_back) {
     suppressed.dorsal = true;
     reasoning.push({
       trait: 'empty_back',
-      message: 'Empty Back — clears the dorsal pattern entirely, leaving a clean back.',
+      message: 'Empty Back ,  clears the dorsal pattern entirely, leaving a clean back.',
     });
   }
 
@@ -233,7 +233,7 @@ export function composePhenotype(selections) {
     patternIntensity[p.id] = val;
   });
 
-  // ---- 6. Accents — pass-through.
+  // ---- 6. Accents ,  pass-through.
   const accentsIn = selections.accents || {};
   const accents = {};
   ACCENT_TRAITS.forEach((a) => {

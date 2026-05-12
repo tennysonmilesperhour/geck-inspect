@@ -1,5 +1,5 @@
 /**
- * SmartImage — drop-in replacement for <img> that enforces best practices.
+ * SmartImage ,  drop-in replacement for <img> that enforces best practices.
  *
  * Features:
  *   - loading="lazy" + decoding="async" by default

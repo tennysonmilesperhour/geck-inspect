@@ -60,7 +60,7 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
     };
 
     const applyWeightRangeToGeckos = async (groupData, existingGroupId) => {
-        // Get the actual saved group id — need to re-fetch if new
+        // Get the actual saved group id ,  need to re-fetch if new
         let targetGroupId = existingGroupId;
         if (!targetGroupId) {
             const groups = await FeedingGroup.list();

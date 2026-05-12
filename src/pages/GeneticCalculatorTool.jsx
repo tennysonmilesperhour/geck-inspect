@@ -48,11 +48,11 @@ const CALCULATOR_JSON_LD = [
  * Free, public Punnett-square genetics calculator.
  *
  * Two parent-entry modes share the same prediction engine:
- *   - 'manual'     — pick zygosity per trait. Available to everyone,
+ *   - 'manual'     ,  pick zygosity per trait. Available to everyone,
  *                    default for unauthenticated visitors. Per-morph
  *                    SEO routes (/calculator/:morph) pre-fill one
  *                    parent via the `initialSireZygosity` prop.
- *   - 'collection' — pick two of the user's saved geckos. Authed only.
+ *   - 'collection' ,  pick two of the user's saved geckos. Authed only.
  *
  * The downstream `GeneticCalculator` component reads `morph_tags` off
  * each parent, so manual-mode "animals" are constructed by
@@ -94,7 +94,7 @@ export default function GeneticCalculatorTool({
                     const { getVisibleGeckos } = await import('@/lib/geckoAccess');
                     const data = await getVisibleGeckos(user);
                     setGeckos(data.filter(g => !g.archived));
-                    // Authed users haven't filled in a manual genotype yet —
+                    // Authed users haven't filled in a manual genotype yet , 
                     // start them on collection mode if they have geckos.
                     if (!initialSireZygosity && data.length > 0) {
                         setMode('collection');
@@ -187,7 +187,7 @@ export default function GeneticCalculatorTool({
                     <p className="text-slate-400 mt-2 text-sm md:text-base">
                         {pageDescription
                           ? pageDescription
-                          : 'Free Punnett-square projections for Lilly White, Cappuccino, Axanthic, Soft Scale, Whiteout, Empty Back, Phantom, and Hypo. Pick zygosity per trait below — no account required — or sign in to pull parents straight from your collection.'}
+                          : 'Free Punnett-square projections for Lilly White, Cappuccino, Axanthic, Soft Scale, Whiteout, Empty Back, Phantom, and Hypo. Pick zygosity per trait below ,  no account required ,  or sign in to pull parents straight from your collection.'}
                     </p>
                 </div>
 
@@ -199,7 +199,7 @@ export default function GeneticCalculatorTool({
                     </div>
                 ) : (
                     <>
-                        {/* Mode toggle (only visible to signed-in users — guests have
+                        {/* Mode toggle (only visible to signed-in users ,  guests have
                             only the manual mode anyway, so the toggle would be
                             misleading). */}
                         {isAuthed && (
@@ -233,7 +233,7 @@ export default function GeneticCalculatorTool({
                         )}
 
                         {mode === 'manual' ? (
-                          /* Manual entry — works for everyone */
+                          /* Manual entry ,  works for everyone */
                           <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 mb-6">
                             <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-start">
                               <div className="space-y-3">
@@ -279,7 +279,7 @@ export default function GeneticCalculatorTool({
                             )}
                           </div>
                         ) : (
-                          /* Collection mode — authed users picking saved geckos */
+                          /* Collection mode ,  authed users picking saved geckos */
                           <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 mb-6">
                             <div className="grid grid-cols-1 md:grid-cols-[1fr_auto_1fr] gap-4 items-end">
                               <div className="space-y-2">
@@ -291,7 +291,7 @@ export default function GeneticCalculatorTool({
                                   <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
                                     {allForSire.map(g => (
                                       <SelectItem key={g.id} value={g.id}>
-                                        {g.name}{g.gecko_id_code ? ` (${g.gecko_id_code})` : ''} — {g.sex}
+                                        {g.name}{g.gecko_id_code ? ` (${g.gecko_id_code})` : ''} ,  {g.sex}
                                       </SelectItem>
                                     ))}
                                   </SelectContent>
@@ -328,7 +328,7 @@ export default function GeneticCalculatorTool({
                                   <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
                                     {allForDam.map(g => (
                                       <SelectItem key={g.id} value={g.id}>
-                                        {g.name}{g.gecko_id_code ? ` (${g.gecko_id_code})` : ''} — {g.sex}
+                                        {g.name}{g.gecko_id_code ? ` (${g.gecko_id_code})` : ''} ,  {g.sex}
                                       </SelectItem>
                                     ))}
                                   </SelectContent>
@@ -349,7 +349,7 @@ export default function GeneticCalculatorTool({
                           </div>
                         )}
 
-                        {/* Calculator results — same engine for both modes */}
+                        {/* Calculator results ,  same engine for both modes */}
                         <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
                           <GeneticCalculator sire={hasParents ? sire : null} dam={hasParents ? dam : null} />
                         </div>

@@ -51,7 +51,7 @@ import {
 import { format, subDays, startOfDay, differenceInDays, startOfWeek, addWeeks, subWeeks } from 'date-fns';
 
 /**
- * Analytics dashboard — focused on growth + usage, not vanity counts.
+ * Analytics dashboard ,  focused on growth + usage, not vanity counts.
  *
  * Old version showed a lot of unhelpful slices (role breakdown pie charts,
  * top morphs, etc). This rebuild answers the three questions the user
@@ -375,7 +375,7 @@ export default function AnalyticsDashboard() {
     const totalSessions = sessionSet.size;
     const totalSessionsDelta = pctChange(totalSessions, priorSessionSet.size);
 
-    // DAU per day — distinct user_email per day
+    // DAU per day ,  distinct user_email per day
     const dauBuckets = {};
     for (const e of eventsInWindow) {
       const d = safeDate(e.created_date);
@@ -390,7 +390,7 @@ export default function AnalyticsDashboard() {
     }));
 
     // Top pages in the window, by event count. Sessions column is the
-    // unique-session count on that page — more useful than raw hits
+    // unique-session count on that page ,  more useful than raw hits
     // because hot pages ping many events per visit.
     const pageAgg = {};
     for (const e of eventsInWindow) {
@@ -407,7 +407,7 @@ export default function AnalyticsDashboard() {
     // ------------------------------------------------------------------
     // Features tab: event_name frequency. page_view is the most common
     // event by design, so the chart/table are more useful when we split
-    // it out — "real" feature usage lives in the non-page_view rows.
+    // it out ,  "real" feature usage lives in the non-page_view rows.
     // ------------------------------------------------------------------
     const eventNameAgg = {};
     for (const e of eventsInWindow) {
@@ -789,7 +789,7 @@ export default function AnalyticsDashboard() {
             Power users
           </CardTitle>
           <p className="text-xs text-slate-500">
-            Top breeders by gecko count — who's leaning on the app hardest
+            Top breeders by gecko count ,  who's leaning on the app hardest
           </p>
         </CardHeader>
         <CardContent>
@@ -1074,7 +1074,7 @@ export default function AnalyticsDashboard() {
                           if (f.pct === null) {
                             return (
                               <td key={f.week} className="py-2 px-3 text-center text-slate-600">
-                                —
+                                , 
                               </td>
                             );
                           }

@@ -1,9 +1,9 @@
 #!/usr/bin/env node
 /**
- * Weekly report — runs every Monday morning.
+ * Weekly report ,  runs every Monday morning.
  *
  * Produces three artefacts:
- *   1. docs/blog-reports/YYYY-Www.md — committed markdown archive.
+ *   1. docs/blog-reports/YYYY-Www.md ,  committed markdown archive.
  *   2. A GitHub Issue opened by the workflow using this script's output.
  *   3. An email sent via Resend using this script's output.
  *
@@ -119,7 +119,7 @@ function main() {
       avgScore: round(avgScore, 2),
       budgetUsd: round(budget.totalUsd || 0, 4),
     },
-    issueTitle: `Blog pipeline weekly report — ${weekKey}`,
+    issueTitle: `Blog pipeline weekly report ,  ${weekKey}`,
     issueBody: md,
     suggestions,
   };
@@ -144,13 +144,13 @@ function round(n, places) {
 function autoSuggest({ publishedLastWeek, draftedLastWeek, rejectedLastWeek, inQueue, budget, currentBudget }) {
   const out = [];
   if (publishedLastWeek.length === 0) {
-    out.push('No posts published last week. Either the drafts weren\'t merged, or the draft agent skipped every slot. Check the blog-draft PRs — any still open?');
+    out.push('No posts published last week. Either the drafts weren\'t merged, or the draft agent skipped every slot. Check the blog-draft PRs ,  any still open?');
   }
   if (publishedLastWeek.length >= 3) {
     out.push('Target cadence met (3/week). Consider raising the queue score threshold to push quality up at the same cadence.');
   }
   if (rejectedLastWeek.length > publishedLastWeek.length) {
-    out.push('More drafts rejected than published. Look at rejection reasons in the queue — pattern suggests the style guide or fact-check corpus needs a tweak.');
+    out.push('More drafts rejected than published. Look at rejection reasons in the queue ,  pattern suggests the style guide or fact-check corpus needs a tweak.');
   }
   if (inQueue.length < 2) {
     out.push('Queue is running low. The next research pass will refill, but if this persists for two weeks, widen the source list (Discord, FB public pages) or lower the score threshold.');
@@ -177,7 +177,7 @@ function renderMarkdown(ctx) {
   } = ctx;
 
   const lines = [];
-  lines.push(`# Blog pipeline — weekly report ${weekKey}`);
+  lines.push(`# Blog pipeline ,  weekly report ${weekKey}`);
   lines.push('');
   lines.push(`Generated ${new Date().toISOString()}.`);
   lines.push('');
@@ -268,7 +268,7 @@ function renderMarkdown(ctx) {
   lines.push('## Suggestions');
   lines.push('');
   if (suggestions.length === 0) {
-    lines.push('_No automated suggestions this week — pipeline looks healthy._');
+    lines.push('_No automated suggestions this week ,  pipeline looks healthy._');
   } else {
     for (const s of suggestions) lines.push(`- ${s}`);
   }
@@ -279,7 +279,7 @@ function renderMarkdown(ctx) {
   lines.push('- **Kill a bad topic:** edit `docs/blog-queue.json`, set the topic\'s status to `rejected` and add a `rejectionReason`.');
   lines.push('- **Force a specific topic next:** reorder `docs/blog-queue.json`; the draft agent picks highest-scored `new`/`scheduled` entry.');
   lines.push('- **Pause the pipeline:** disable the workflow in GitHub Actions UI (Settings → Actions → blog-pipeline).');
-  lines.push('- **Adjust voice:** edit `docs/blog-voice-examples.md` — the writer agent picks it up on the next run.');
+  lines.push('- **Adjust voice:** edit `docs/blog-voice-examples.md` ,  the writer agent picks it up on the next run.');
   lines.push('- **Adjust style rules:** edit `docs/blog-style-guide.md`.');
   lines.push('- **Adjust budget cap:** edit `WEEKLY_CAP_USD` in `scripts/blog/lib/budget.mjs`.');
   lines.push('');

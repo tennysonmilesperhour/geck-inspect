@@ -14,7 +14,7 @@ import { LifeBuoy, Send, CheckCircle2, Loader2 } from 'lucide-react';
  * the Admin Panel's Support Inbox. Replaces the old mailto link that
  * pointed at a personal Gmail address.
  *
- * Works for both authenticated and anonymous users — the RLS insert
+ * Works for both authenticated and anonymous users ,  the RLS insert
  * policy allows anyone to file a ticket. If the caller is signed in,
  * we pre-fill user_email from their profile.
  */
@@ -64,7 +64,7 @@ export default function SupportContactCard({ title = 'Need help?' }) {
             console.error('Support submit failed:', err);
             toast({
                 title: 'Could not send',
-                description: err.message || 'Something went wrong — try again.',
+                description: err.message || 'Something went wrong ,  try again.',
                 variant: 'destructive',
             });
         }

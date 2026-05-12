@@ -287,7 +287,7 @@ export default function ClaimAnimal() {
                 Contribute this sale price to market data
               </p>
               <p className="text-xs mt-0.5" style={{ color: C.muted }}>
-                Anonymized — helps breeders understand morph pricing trends.
+                Anonymized ,  helps breeders understand morph pricing trends.
               </p>
             </div>
           </label>

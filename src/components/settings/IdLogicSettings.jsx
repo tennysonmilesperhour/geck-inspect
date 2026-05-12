@@ -78,7 +78,7 @@ const PRESETS = [
 ];
 
 const MODE_EXPLAINER = {
-  breeder_prefix: 'Every gecko — founder or offspring — carries your own breeder prefix. Simplest option; lineage is tracked via the sire/dam links, not in the ID.',
+  breeder_prefix: 'Every gecko ,  founder or offspring ,  carries your own breeder prefix. Simplest option; lineage is tracked via the sire/dam links, not in the ID.',
   sire_line: 'A hatchling’s {LINE} token resolves to the prefix of the oldest paternal founder. Useful when you mainly track males as line anchors.',
   dam_line: 'A hatchling’s {LINE} token resolves to the prefix of the oldest maternal founder. Useful when females anchor your lines.',
   founder_origin: 'Tries the sire side first; if no paternal founder is recorded, falls back to the dam side, then your breeder prefix. Good for mixed collections.',
@@ -117,7 +117,7 @@ const MODES = [
   {
     id: 'founder_origin',
     label: 'Founder of origin',
-    blurb: 'Prefer sire side, fall back to dam side — earliest ancestor wins.',
+    blurb: 'Prefer sire side, fall back to dam side ,  earliest ancestor wins.',
     icon: Layers,
   },
 ];
@@ -179,7 +179,7 @@ export default function IdLogicSettings({ value, onChange }) {
         </CardTitle>
         <CardDescription className="text-slate-400">
           Pick how gecko IDs are built, and how offspring inherit lineage prefixes.
-          Your existing IDs are never rewritten — this only affects new geckos.
+          Your existing IDs are never rewritten ,  this only affects new geckos.
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-6">

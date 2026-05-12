@@ -25,7 +25,7 @@ function urlsFor(row) {
 
 function describeOutcome(action, result) {
   if (action === 'reject') return 'Rejection recorded. Sample stays unverified.';
-  if (result?.verified) return 'Consensus reached — sample promoted to training-grade.';
+  if (result?.verified) return 'Consensus reached ,  sample promoted to training-grade.';
   const count = result?.approve_count ?? 1;
   return `Approval recorded (${count}/2). Needs one more reviewer to verify.`;
 }
@@ -151,7 +151,7 @@ export default function AIFeedbackQueue() {
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-slate-400">
-            No unverified samples right now. Contribute more — or come back later
+            No unverified samples right now. Contribute more ,  or come back later
             as new ones flow in from Recognition and community uploads.
           </p>
           <Button variant="outline" onClick={load}>
@@ -229,7 +229,7 @@ export default function AIFeedbackQueue() {
 
             <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700 space-y-3">
               <p className="text-xs uppercase tracking-wide text-slate-400">
-                Your call — edit before approving if needed
+                Your call ,  edit before approving if needed
               </p>
               {edits && (
                 <>
@@ -265,7 +265,7 @@ export default function AIFeedbackQueue() {
             disabled={isSaving || !edits?.primary_morph || !isExpertReviewer}
             title={isExpertReviewer
               ? 'Promote this sample to verified training data'
-              : 'Only expert reviewers can approve — your edits will still be saved if you submit feedback from /recognition.'}
+              : 'Only expert reviewers can approve ,  your edits will still be saved if you submit feedback from /recognition.'}
             className="bg-emerald-600 hover:bg-emerald-700"
           >
             {isSaving

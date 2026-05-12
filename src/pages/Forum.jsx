@@ -30,7 +30,7 @@ import { createPageUrl } from '@/utils';
 import { formatDistanceToNow } from 'date-fns';
 
 /**
- * Forum index — dark theme to match the rest of the app.
+ * Forum index ,  dark theme to match the rest of the app.
  *
  * Previous version used sage/earth light colors and cached the post
  * list for 5 minutes. The cache meant that when a user deleted a post
@@ -76,7 +76,7 @@ export default function ForumPage() {
         setIsLoading(false);
     };
 
-    // Always fetch fresh on mount. No time-based cache — deleted posts
+    // Always fetch fresh on mount. No time-based cache ,  deleted posts
     // need to disappear immediately when the user navigates back here.
     useEffect(() => {
         loadData();

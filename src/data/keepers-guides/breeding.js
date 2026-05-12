@@ -1,5 +1,5 @@
 /**
- * Guide 05 — Complete Breeding Guide
+ * Guide 05 ,  Complete Breeding Guide
  *
  * The full arc from deciding if you should breed through hatchling
  * placement.

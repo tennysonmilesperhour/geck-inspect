@@ -39,7 +39,7 @@ import { Loader2, Plus, Pencil, Trash2, Search, Sparkles } from 'lucide-react';
  * After the morph terminology audit (we deleted Moonglow / Hypo / Lavender /
  * Translucent because they aren't real crested gecko morphs), the user needs
  * an in-app way to keep this table accurate. This component is the long-term
- * fix for "bad data ends up in the morph guide" — admins can edit, delete,
+ * fix for "bad data ends up in the morph guide" ,  admins can edit, delete,
  * and add new morph_guides records without touching the database directly.
  *
  * Schema: id, morph_name, description, key_features (text[]), rarity,
@@ -345,7 +345,7 @@ export default function MorphGuideEditor() {
                 id="description"
                 value={form.description}
                 onChange={(e) => setForm({ ...form, description: e.target.value })}
-                placeholder="Several paragraphs are fine — split with blank lines."
+                placeholder="Several paragraphs are fine ,  split with blank lines."
                 className="bg-slate-950 border-slate-700 text-slate-100 mt-1 min-h-32"
               />
             </div>

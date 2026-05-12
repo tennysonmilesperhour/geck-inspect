@@ -12,7 +12,7 @@ const HERO_TILES = [
   { slug: 'apparel',      label: 'Apparel',           Icon: Shirt,    blurb: 'Original Geck Inspect tees, hoodies, hats.' },
   { slug: 'gifts',        label: 'Gift ideas',        Icon: Gift,     blurb: 'For keepers, breeders, and the people who love them.' },
   { slug: 'diet',         label: 'Diet (CGD)',        Icon: Sparkles, blurb: 'The brands we feed our own animals.' },
-  { slug: 'enclosures',   label: 'Enclosures',        Icon: Wrench,   blurb: 'Tubs, glass, PVC — every life stage.' },
+  { slug: 'enclosures',   label: 'Enclosures',        Icon: Wrench,   blurb: 'Tubs, glass, PVC ,  every life stage.' },
 ];
 
 const LANDING_JSON_LD = [
@@ -67,7 +67,7 @@ export default function StoreLanding() {
   return (
     <StoreLayout>
       <Seo
-        title="Crested gecko supplies, gifts, and apparel — Geck Inspect"
+        title="Crested gecko supplies, gifts, and apparel ,  Geck Inspect"
         description="Crested gecko supplies hand-picked by breeders. Original Geck Inspect apparel, the diet brands we use ourselves, and gift ideas for the gecko person in your life."
         path="/Store"
         keywords={[
@@ -136,7 +136,7 @@ export default function StoreLanding() {
           </div>
         ) : featured.length === 0 ? (
           <div className="rounded-lg border border-dashed border-slate-700 bg-slate-900/20 p-8 text-center text-sm text-slate-400">
-            We're seeding the catalog right now — check back in a day or two.
+            We're seeding the catalog right now ,  check back in a day or two.
           </div>
         ) : (
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -152,7 +152,7 @@ export default function StoreLanding() {
           Why "Geck Inspect Supplies"?
         </h2>
         <p className="text-sm text-slate-400 leading-relaxed max-w-3xl">
-          We're the breeders behind Geck Inspect — pedigree tracking, husbandry
+          We're the breeders behind Geck Inspect ,  pedigree tracking, husbandry
           tools, and a working roster of crested geckos. Everything in this
           store is here because we use it ourselves, our friends use it, or
           we'd give it to someone we know just got their first crestie. If we

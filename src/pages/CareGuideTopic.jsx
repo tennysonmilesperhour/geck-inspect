@@ -17,7 +17,7 @@ import { createPageUrl } from '@/utils';
  * at /CareGuide/<sectionId>. This captures long-tail intent queries
  * like "crested gecko humidity", "crested gecko incubation temperature",
  * and "crested gecko picky eater" without the work of hand-writing a
- * separate article for each one — the content already lives in the
+ * separate article for each one ,  the content already lives in the
  * structured care-guide dataset.
  */
 
@@ -67,7 +67,7 @@ function howToSchemaFor(section, url) {
     '@type': 'HowTo',
     '@id': `${url}#howto`,
     name: section.title,
-    description: introBlock?.text?.slice(0, 250) || `${section.title} — crested gecko care procedure.`,
+    description: introBlock?.text?.slice(0, 250) || `${section.title} ,  crested gecko care procedure.`,
     step: ol.items.map((text, i) => ({
       '@type': 'HowToStep',
       position: i + 1,
@@ -119,7 +119,7 @@ export default function CareGuideTopic() {
   const path = `/CareGuide/${section.id}`;
   const url = `${SITE_URL}${path}`;
   const description = sectionPlainText(section) ||
-    `${section.title} — crested gecko care guide section from Geck Inspect.`;
+    `${section.title} ,  crested gecko care guide section from Geck Inspect.`;
   const editorial = editorialFor(path);
 
   const howTo = howToSchemaFor(section, url);
@@ -128,7 +128,7 @@ export default function CareGuideTopic() {
       '@context': 'https://schema.org',
       '@type': 'Article',
       '@id': `${url}#article`,
-      headline: `${section.title} — Crested Gecko Care Guide`,
+      headline: `${section.title} ,  Crested Gecko Care Guide`,
       description,
       url,
       articleSection: category?.label || 'Crested Gecko Care',
@@ -164,7 +164,7 @@ export default function CareGuideTopic() {
   return (
     <PublicPageShell>
       <Seo
-        title={`${section.title} — Crested Gecko Care`}
+        title={`${section.title} ,  Crested Gecko Care`}
         description={description}
         path={path}
         type="article"
@@ -198,7 +198,7 @@ export default function CareGuideTopic() {
 
         <p className="text-slate-400 text-sm mb-2 max-w-2xl">
           Part of the Geck Inspect <Link to="/CareGuide" className="text-emerald-300 hover:underline">crested gecko care guide</Link>
-          {category ? <> — <Link to={`/CareGuide#${category.id}`} className="text-emerald-300 hover:underline">{category.label} section</Link></> : null}.
+          {category ? <> ,  <Link to={`/CareGuide#${category.id}`} className="text-emerald-300 hover:underline">{category.label} section</Link></> : null}.
         </p>
         <p className="text-xs text-slate-500 mb-8">{bylineText(path)}</p>
 
@@ -208,7 +208,7 @@ export default function CareGuideTopic() {
           ))}
         </div>
 
-        {/* Prev / next — keeps Googlebot traversing the topic chain and
+        {/* Prev / next ,  keeps Googlebot traversing the topic chain and
             distributes internal link equity across all 30+ topic pages. */}
         <nav className="mt-12 grid grid-cols-1 md:grid-cols-2 gap-3 border-t border-slate-800/60 pt-6">
           {prev ? (

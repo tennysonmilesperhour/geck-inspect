@@ -44,7 +44,7 @@ async function runOne(url) {
   const endpoint = new URL('https://www.googleapis.com/pagespeedonline/v5/runPagespeed');
   endpoint.searchParams.set('url', url);
   endpoint.searchParams.set('strategy', 'mobile');
-  // Request all five categories — lightweight additions and the summary
+  // Request all five categories ,  lightweight additions and the summary
   // only reports the ones we emit.
   for (const cat of ['performance', 'accessibility', 'seo', 'best-practices']) {
     endpoint.searchParams.append('category', cat);
@@ -122,7 +122,7 @@ async function main() {
 
   // Locate most recent audit report to append into.
   if (!existsSync(REPORTS_DIR)) {
-    console.error('[seo-lighthouse] docs/seo-audits/ missing — run seo-audit.mjs first.');
+    console.error('[seo-lighthouse] docs/seo-audits/ missing ,  run seo-audit.mjs first.');
     process.exit(1);
   }
   const files = readdirSync(REPORTS_DIR)

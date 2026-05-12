@@ -17,7 +17,7 @@ import TrialOfferModal from '@/components/promote/TrialOfferModal';
 import ConnectionsModal from '@/components/promote/ConnectionsModal';
 import { formatDistanceToNow } from 'date-fns';
 
-// Promote — the social media manager page.
+// Promote ,  the social media manager page.
 //
 // Lists the user's geckos sorted by `last_meaningful_change_at` (the
 // "Recently changed" sort) so the breeder can post about what's actually
@@ -145,7 +145,7 @@ export default function PromotePage() {
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto">
       <Seo
-        title="Promote your geckos — Geck Inspect"
+        title="Promote your geckos ,  Geck Inspect"
         description="Generate platform-tailored social media posts about your crested geckos using AI trained on crestie-specific best practices."
       />
 

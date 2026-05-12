@@ -7,7 +7,7 @@
  * docs/growth-reports/YYYY-MM-DD.md with:
  *
  *   1. At-a-glance: sessions, users, pageviews, top source mix
- *   2. Opportunities — each finding ships a "Claude prompt" the
+ *   2. Opportunities ,  each finding ships a "Claude prompt" the
  *      user can copy-paste to initiate the fix
  *   3. Top queries (last 28d)
  *   4. Top pages by engagement (last 7d)
@@ -118,7 +118,7 @@ function detectEngagementLaggards(engagementRows) {
     }));
 }
 
-// Slug matcher — cheap token overlap against known content paths.
+// Slug matcher ,  cheap token overlap against known content paths.
 // If ≥ 2 non-trivial query tokens appear in any known slug, we treat
 // the query as already served by that page.
 function slugMatchesQuery(query, knownSlugs) {
@@ -191,7 +191,7 @@ function today() { return new Date().toISOString().slice(0, 10); }
 
 function renderPlaceholder(missing) {
   const lines = [];
-  lines.push(`# Geck Inspect growth report — ${today()}`);
+  lines.push(`# Geck Inspect growth report ,  ${today()}`);
   lines.push('');
   lines.push('> **Setup incomplete.** Secrets needed before this report populates with real data:');
   lines.push('');
@@ -206,7 +206,7 @@ function renderPlaceholder(missing) {
 
 function renderReport({ summary, trafficSources, topQueries, topPages, findings }) {
   const lines = [];
-  lines.push(`# Geck Inspect growth report — ${today()}`);
+  lines.push(`# Geck Inspect growth report ,  ${today()}`);
   lines.push('');
   lines.push('_Generated from the Google Search Console + Google Analytics 4 data streams. Each recommendation ships a Claude prompt you can copy straight into a session to initiate the fix._');
   lines.push('');

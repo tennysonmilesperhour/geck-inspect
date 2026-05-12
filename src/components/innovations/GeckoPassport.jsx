@@ -1,5 +1,5 @@
 /**
- * GeckoPassport — generate and display a verifiable digital passport.
+ * GeckoPassport ,  generate and display a verifiable digital passport.
  *
  * Two modes:
  *   1. Generator: renders a "Generate Passport" button that produces

@@ -41,7 +41,7 @@ import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
 import { BLOG_POSTS } from '@/data/blog-posts';
 
 // Editorial byline. In the audit the reviewer is described as a panel
-// of experienced keepers — represent that as an editorial collective
+// of experienced keepers ,  represent that as an editorial collective
 // rather than a single person, with the organization as the parent
 // publisher. When individual subject-matter experts review content,
 // replace this with a real Person entry (name, jobTitle, affiliation).
@@ -51,7 +51,7 @@ export const EDITORIAL_AUTHOR = {
   name: 'Geck Inspect Editorial',
   url: `${SITE_URL}/About`,
   description:
-    'The Geck Inspect editorial team — breeders and long-time keepers of Correlophus ciliatus who review every care and morph guide before publication and on a rolling schedule thereafter.',
+    'The Geck Inspect editorial team ,  breeders and long-time keepers of Correlophus ciliatus who review every care and morph guide before publication and on a rolling schedule thereafter.',
   parentOrganization: { '@id': ORG_ID },
   knowsAbout: [
     'Crested gecko husbandry',
@@ -76,7 +76,7 @@ const DEFAULT_PUBLISHED = '2025-06-01';
 const DEFAULT_MODIFIED = new Date().toISOString().slice(0, 10);
 
 // Per-path publication and last-update metadata. Fill this out over
-// time — every path we don't list falls back to the defaults above.
+// time ,  every path we don't list falls back to the defaults above.
 // Paths are stored without a trailing slash to match the canonical
 // form used throughout the app.
 const PER_PATH = {
@@ -90,7 +90,7 @@ const PER_PATH = {
   '/MorphGuide': { published: '2025-07-01', modified: '2026-04-17' },
   '/GeneticsGuide': { published: '2025-07-15', modified: '2026-04-17' },
   '/calculator': { published: '2025-08-01', modified: '2026-04-17' },
-  // Blog index — bumped whenever a new post ships. Per-post pages
+  // Blog index ,  bumped whenever a new post ships. Per-post pages
   // resolve their dates from src/data/blog-posts.js (datePublished /
   // dateModified) via the /blog/<slug> branch in editorialFor().
   '/blog': { published: '2026-04-18', modified: '2026-04-18' },
@@ -100,7 +100,7 @@ const PER_PATH = {
  * Look up editorial metadata for a path.
  *
  * Per-morph (/MorphGuide/<slug>) and per-care-topic (/CareGuide/<id>)
- * pages inherit the parent guide's dates by default — override a
+ * pages inherit the parent guide's dates by default ,  override a
  * specific slug by adding it to PER_PATH above.
  */
 export function editorialFor(path) {

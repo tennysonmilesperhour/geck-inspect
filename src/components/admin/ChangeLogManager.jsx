@@ -20,7 +20,7 @@ import {
 import { format } from 'date-fns';
 
 /**
- * Changelog manager — admins log deploy notes, optionally run them through
+ * Changelog manager ,  admins log deploy notes, optionally run them through
  * an LLM for plain-English bullets, save as draft, publish, and (optionally)
  * broadcast the published entry to users via the Mass Messaging surface.
  *
@@ -212,7 +212,7 @@ Return a JSON object with { "title": "short catchy headline, 3-6 words", "bullet
     );
     toast({
       title: 'Ready to broadcast',
-      description: 'Opened in Mass Messaging — review and send.',
+      description: 'Opened in Mass Messaging ,  review and send.',
     });
   };
 

@@ -1,5 +1,5 @@
 /**
- * Market Analytics — Root Container
+ * Market Analytics ,  Root Container
  *
  * Mounts the filter bar, sub-nav (Overview / Combos / Regional / Arbitrage
  * / Supply / Breeders), and the drill-down modal. Every sub-view is a
@@ -192,7 +192,7 @@ function EnterpriseBanner() {
         <Lock className="w-5 h-5 text-emerald-400" />
       </div>
       <div className="flex-1">
-        <h3 className="text-sm font-bold text-white">Market Analytics — Enterprise preview</h3>
+        <h3 className="text-sm font-bold text-white">Market Analytics ,  Enterprise preview</h3>
         <p className="text-xs text-slate-400 mt-0.5">
           Viewing with preview data. Live internal sales, scraped external feeds, and forward-looking breeding signals activate with an Enterprise subscription.
         </p>
@@ -234,13 +234,13 @@ function PreviewDataBanner() {
     );
   }
 
-  // Default banner — shown while loading AND when we fall back to mocks.
+  // Default banner ,  shown while loading AND when we fall back to mocks.
   return (
     <div className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-2.5 flex items-start gap-2">
       <AlertCircle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
       <p className="text-[11px] text-slate-400 leading-relaxed">
         <span className="text-amber-300 font-semibold">Preview data.</span>{' '}
-        Every number is tagged with its source; click any badge to see where it came from. Fixtures are deterministic, so the same filter always returns the same numbers — when the Market Intelligence snapshot is available, values will update automatically and this banner turns green.
+        Every number is tagged with its source; click any badge to see where it came from. Fixtures are deterministic, so the same filter always returns the same numbers ,  when the Market Intelligence snapshot is available, values will update automatically and this banner turns green.
       </p>
     </div>
   );
@@ -297,7 +297,7 @@ function FilterBar({ filters, setFilters, presets, activePreset, onLoadPreset, o
 
       <FilterDivider />
 
-      {/* Timeframe — always visible */}
+      {/* Timeframe ,  always visible */}
       <TimeframeSelector value={filters.timeframe} onChange={(v) => setFilters((f) => ({ ...f, timeframe: v }))} />
 
       <FilterDivider />
@@ -347,7 +347,7 @@ function FilterBar({ filters, setFilters, presets, activePreset, onLoadPreset, o
         onChange={(next) => setFilters((f) => ({ ...f, lineage_tier: next }))}
       />
 
-      {/* Sources — internal vs external toggle popover */}
+      {/* Sources ,  internal vs external toggle popover */}
       <Popover>
         <PopoverTrigger asChild>
           <button className="inline-flex items-center gap-1.5 text-xs text-slate-200 hover:bg-slate-800 rounded px-2 py-1 border border-slate-700">

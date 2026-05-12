@@ -11,7 +11,7 @@ import { formatDistanceToNowStrict } from 'date-fns';
  * plus a full-surface gradient overlay whose opacity animated on hover.
  * Both of those force image repaints on every mouseover which made the
  * dashboard feel like molasses when there were ~20 tiles laid out. This
- * version drops the scale transform and the overlay — hovering just
+ * version drops the scale transform and the overlay ,  hovering just
  * reveals a compact metadata strip via `content-visibility` + `will-change`
  * tricks, so there's no layout thrash.
  */

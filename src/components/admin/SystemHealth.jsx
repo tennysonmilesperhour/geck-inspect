@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { CheckCircle2, XCircle, Loader2, RefreshCw, ExternalLink } from 'lucide-react';
 
 /**
- * System health checks — quick overview of integrations the app depends on.
+ * System health checks ,  quick overview of integrations the app depends on.
  *
  * Each check returns { ok, label, detail } and is rendered as a row.
  * Reuses the same supabase client the rest of the app uses, so a green
@@ -14,7 +14,7 @@ import { CheckCircle2, XCircle, Loader2, RefreshCw, ExternalLink } from 'lucide-
  */
 
 const REQUIRED_ENV_KEYS = ['VITE_SUPABASE_URL', 'VITE_SUPABASE_ANON_KEY'];
-// PostHog is opt-in — the client no-ops when these are unset (see src/lib/posthog.js).
+// PostHog is opt-in ,  the client no-ops when these are unset (see src/lib/posthog.js).
 const OPTIONAL_ENV_KEYS = ['VITE_POSTHOG_KEY', 'VITE_POSTHOG_HOST'];
 
 function getEnv(key) {
@@ -28,7 +28,7 @@ function getEnv(key) {
 async function pingSupabase() {
   const start = performance.now();
   try {
-    // Lightweight HEAD-style query — count only, single row at most.
+    // Lightweight HEAD-style query ,  count only, single row at most.
     const { error } = await supabase.from('profiles').select('id', { count: 'exact', head: true });
     if (error) throw error;
     const ms = Math.round(performance.now() - start);

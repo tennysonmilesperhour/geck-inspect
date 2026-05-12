@@ -28,7 +28,7 @@ import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { SECTIONS, SECTION_FOR_PAGE } from '@/lib/navItems';
 
 /**
- * Page Management — controls the entire sidebar.
+ * Page Management ,  controls the entire sidebar.
  *
  * Every page is assigned to one of the two top-level sections (Manage /
  * Discover) via `page_config.section`, plus a "Hidden" bucket for pages
@@ -36,7 +36,7 @@ import { SECTIONS, SECTION_FOR_PAGE } from '@/lib/navItems';
  * section to re-enable them in one motion.
  *
  * Reorder writes to `order_position` (the actual DB column) and toggling
- * a page off route-redirects it to / for ALL users — including admins —
+ * a page off route-redirects it to / for ALL users ,  including admins , 
  * so the sidebar can never show a page that isn't reachable.
  */
 
@@ -51,13 +51,13 @@ const SECTION_TITLES = {
 };
 
 const SECTION_DESCRIPTIONS = {
-  manage: 'Personal workspace — your animals, breeding plans, and selling.',
+  manage: 'Personal workspace ,  your animals, breeding plans, and selling.',
   discover: 'Reference, community, morphs, and the public marketplace.',
   hidden: 'Pages disabled for everyone (including admins). Drag back into a section to re-enable.',
 };
 
 // Falls back to the hardcoded map when the DB row has no explicit
-// section value yet — e.g. rows that predate the migration, or rows for
+// section value yet ,  e.g. rows that predate the migration, or rows for
 // pages the admin hasn't touched since the 2-section rollout.
 function sectionOf(page) {
   return page?.section || SECTION_FOR_PAGE[page?.page_name] || ACTIVE_SECTIONS[0];
@@ -453,7 +453,7 @@ export default function PageManagement() {
               <p className="text-sm text-slate-400 mt-1 max-w-xl">
                 Drag rows to reorder, between sections to recategorize, or into{' '}
                 <span className="text-slate-300">Hidden</span> to disable. Toggling a page off
-                takes effect for every user — including admins — and the route redirects to home.
+                takes effect for every user ,  including admins ,  and the route redirects to home.
               </p>
             </div>
             <div className="flex items-center gap-2">
@@ -592,7 +592,7 @@ export default function PageManagement() {
                   >
                     {grouped.hidden.length === 0 && (
                       <p className="text-xs text-slate-500 text-center py-4">
-                        No hidden pages — every page is currently visible to its target audience.
+                        No hidden pages ,  every page is currently visible to its target audience.
                       </p>
                     )}
                     {grouped.hidden.map((page, index) => renderItem(page, index, true))}

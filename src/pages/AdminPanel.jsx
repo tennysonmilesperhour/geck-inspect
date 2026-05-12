@@ -45,22 +45,22 @@ import BlogManager from '@/components/admin/blog/BlogManager';
 import TestimonialsAdmin from '@/components/admin/TestimonialsAdmin';
 
 /**
- * Admin Panel — sidebar layout grouped by responsibility.
+ * Admin Panel ,  sidebar layout grouped by responsibility.
  *
  * Sections:
- *   Overview            — KPIs + recent activity + quick links
- *   Users               — search, role/expert grants, message
- *   Moderation          — delete forum posts, comments, listings
- *   Morph Guides        — full CRUD on the morph_guides table
- *   Pages               — toggle visibility / page settings
- *   Morph Submissions   — review user-submitted reference photos
- *   Scraped Data        — review training-data candidates
- *   Analytics           — charts + cohort breakdowns
- *   Messaging           — broadcast messages to users
- *   Changelog           — publish app changelog entries
- *   System              — env / supabase / build health checks
+ *   Overview            ,  KPIs + recent activity + quick links
+ *   Users               ,  search, role/expert grants, message
+ *   Moderation          ,  delete forum posts, comments, listings
+ *   Morph Guides        ,  full CRUD on the morph_guides table
+ *   Pages               ,  toggle visibility / page settings
+ *   Morph Submissions   ,  review user-submitted reference photos
+ *   Scraped Data        ,  review training-data candidates
+ *   Analytics           ,  charts + cohort breakdowns
+ *   Messaging           ,  broadcast messages to users
+ *   Changelog           ,  publish app changelog entries
+ *   System              ,  env / supabase / build health checks
  *
- * Each section is self-contained — picking one renders just that component
+ * Each section is self-contained ,  picking one renders just that component
  * in the main pane, so loading the panel never fans out queries across
  * every tab.
  */
@@ -162,7 +162,7 @@ export default function AdminPanel() {
   // Prefill payload passed into MassMessaging when the Changelog manager
   // clicks "Broadcast". Consumed on mount by the target component.
   const [messagingPrefill, setMessagingPrefill] = useState(null);
-  // Refs for the scrollable panes — the panel keeps the document fixed
+  // Refs for the scrollable panes ,  the panel keeps the document fixed
   // and scrolls each pane internally so the page never jumps when the
   // section content height changes.
   const mainRef = useRef(null);
@@ -246,11 +246,11 @@ export default function AdminPanel() {
   // Fixed-viewport layout. The document itself doesn't scroll; both the
   // sidebar and the main pane scroll internally. Switching sections no
   // longer changes the page scroll position because the page itself is
-  // locked at viewport height — only the inner pane's scrollbar moves.
+  // locked at viewport height ,  only the inner pane's scrollbar moves.
   return (
     <div className="h-full bg-slate-950 text-slate-100 flex flex-col overflow-hidden">
       <div className="max-w-[1600px] w-full mx-auto flex flex-1 flex-col lg:flex-row gap-6 p-4 md:p-6 overflow-hidden">
-        {/* Sidebar — internal scroll for projects with long admin nav. */}
+        {/* Sidebar ,  internal scroll for projects with long admin nav. */}
         <aside
           ref={sidebarRef}
           className="lg:w-64 shrink-0 lg:overflow-y-auto custom-scrollbar pr-1"
@@ -301,7 +301,7 @@ export default function AdminPanel() {
           </div>
         </aside>
 
-        {/* Main pane — scrolls internally so the document never moves
+        {/* Main pane ,  scrolls internally so the document never moves
             when section content height changes. */}
         <main
           ref={mainRef}

@@ -8,7 +8,7 @@
  *
  * Each row shows everything a serious buyer needs to audit the number:
  * price, combo, region, age class, lineage tier, breeder, time on
- * market, date, and source. Source badges are clickable — the user
+ * market, date, and source. Source badges are clickable ,  the user
  * can follow exactly where the data came from.
  */
 
@@ -42,7 +42,7 @@ export default function TransactionDrilldown({ open, onClose, criteria }) {
     if (criteria.combo_id) parts.push(COMBO_LABEL[criteria.combo_id] ?? criteria.combo_id);
     if (criteria.region)   parts.push(REGION_LABEL[criteria.region]  ?? criteria.region);
     if (criteria.timeframe) parts.push(criteria.timeframe);
-    return parts.length ? parts.join(' — ') : 'Transactions';
+    return parts.length ? parts.join(' ,  ') : 'Transactions';
   }, [criteria]);
 
   const handleExport = () => {
@@ -71,7 +71,7 @@ export default function TransactionDrilldown({ open, onClose, criteria }) {
         <div className="flex items-center justify-between px-5 py-3 border-b border-slate-800">
           <div>
             <h2 className="text-base font-semibold text-slate-100">{title}</h2>
-            <p className="text-[11px] text-slate-500">{rows.length} transaction{rows.length !== 1 ? 's' : ''} — latest first</p>
+            <p className="text-[11px] text-slate-500">{rows.length} transaction{rows.length !== 1 ? 's' : ''} ,  latest first</p>
           </div>
           <div className="flex items-center gap-2">
             <button

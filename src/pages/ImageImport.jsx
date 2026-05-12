@@ -237,7 +237,7 @@ export default function ImageImport() {
                         </div>
                         <h1 className="text-3xl md:text-4xl font-bold text-slate-100">AI Image Import</h1>
                     </div>
-                    <p className="text-slate-400">Upload photos of notecards, screenshots, or records — AI extracts the data for you.</p>
+                    <p className="text-slate-400">Upload photos of notecards, screenshots, or records ,  AI extracts the data for you.</p>
                 </div>
 
                 {/* Step indicator */}
@@ -282,7 +282,7 @@ export default function ImageImport() {
                                     <label className="flex flex-col items-center justify-center border-2 border-dashed border-slate-600 rounded-lg p-8 cursor-pointer hover:border-emerald-500 transition-colors">
                                         <ImagePlus className="w-12 h-12 text-slate-500 mb-3" />
                                         <span className="text-slate-400 text-sm">Click to select images or drag and drop</span>
-                                        <span className="text-slate-500 text-xs mt-1">JPEG, PNG, WebP — max 10MB each</span>
+                                        <span className="text-slate-500 text-xs mt-1">JPEG, PNG, WebP ,  max 10MB each</span>
                                         <input
                                             type="file"
                                             accept="image/jpeg,image/png,image/webp"

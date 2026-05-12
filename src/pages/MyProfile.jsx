@@ -38,7 +38,7 @@ const COMMUNITY_LEVELS = [
   { level: 5, title: "Gecko Guru", points: 50, badge: "🎓" },
 ];
 
-// Sales progression — counts every gecko the user has marked Sold. The
+// Sales progression ,  counts every gecko the user has marked Sold. The
 // thresholds ramp quickly at the low end (first sale is a big deal)
 // then spread out at the top so veteran breeders still have a goal.
 const SALES_LEVELS = [
@@ -53,7 +53,7 @@ const SALES_LEVELS = [
   { sales: 500, title: "Legendary Seller", badge: "💎" },
 ];
 
-// Hatchery progression — counts every Egg with status 'Hatched' from
+// Hatchery progression ,  counts every Egg with status 'Hatched' from
 // the user's breeding plans.
 const HATCHERY_LEVELS = [
   { hatched: 1, title: "First Hatch", badge: "🥚" },
@@ -67,7 +67,7 @@ const HATCHERY_LEVELS = [
   { hatched: 500, title: "Hatchery Legend", badge: "🌌" },
 ];
 
-// Gallery contributor progression — counts GeckoImage rows the user
+// Gallery contributor progression ,  counts GeckoImage rows the user
 // has uploaded to the public community gallery.
 const GALLERY_LEVELS = [
   { uploads: 1, title: "First Upload", badge: "📸" },
@@ -79,7 +79,7 @@ const GALLERY_LEVELS = [
   { uploads: 250, title: "Gallery Legend", badge: "📽️" },
 ];
 
-// Morph diversity progression — counts distinct morph tags across
+// Morph diversity progression ,  counts distinct morph tags across
 // every gecko the user has in their active collection.
 const MORPH_DIVERSITY_LEVELS = [
   { morphs: 1, title: "Morph Dabbler", badge: "🎨" },
@@ -92,7 +92,7 @@ const MORPH_DIVERSITY_LEVELS = [
   { morphs: 50, title: "Morph Master", badge: "🏆" },
 ];
 
-// Human-readable label for each level key — used when the user hits max level
+// Human-readable label for each level key ,  used when the user hits max level
 // and we need to render the totals (e.g. "42 Sales", "17 Morphs").
 const LEVEL_KEY_LABELS = {
     geckos: 'Geckos',
@@ -269,7 +269,7 @@ export default function MyProfile() {
                         // Safely extract results
                         if (results[0].status === 'fulfilled') {
                             const allGeckos = results[0].value;
-                            // Active geckos count (excludes archived) — keeps the collection level consistent with what's visible
+                            // Active geckos count (excludes archived) ,  keeps the collection level consistent with what's visible
                             stats.geckos = allGeckos.filter(g => !g.archived).length;
                             // Sales counts any gecko flagged as sold (status or archive reason)
                             stats.sales = allGeckos.filter(g => g.status === 'Sold' || (g.archived && g.archive_reason === 'sold')).length;
@@ -304,7 +304,7 @@ export default function MyProfile() {
 
             } catch (error) {
                 console.error("Failed to load user data:", error);
-                // Don't clear user — auth may still be valid even if data fetch fails
+                // Don't clear user ,  auth may still be valid even if data fetch fails
             }
             setIsLoading(false);
         };

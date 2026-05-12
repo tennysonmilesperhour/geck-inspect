@@ -49,7 +49,7 @@ export default function MultiPhotoUploader({
     if (room <= 0) {
       toast({
         title: 'Photo limit reached',
-        description: `Up to ${max} photos per submission — remove one to add another.`,
+        description: `Up to ${max} photos per submission ,  remove one to add another.`,
         variant: 'destructive',
       });
       return;
@@ -219,7 +219,7 @@ export default function MultiPhotoUploader({
 
       <p className="text-xs text-slate-500">
         First photo is the cover / primary used for the AI analysis. Others
-        add context — different angles, fired states, close-ups of the dorsum or face.
+        add context ,  different angles, fired states, close-ups of the dorsum or face.
       </p>
     </div>
   );

@@ -30,7 +30,7 @@ export default function EggDetailModal({ egg, breedingPlan, sire, dam, onClose, 
         setIsSaving(true);
         setSaveError(null);
         try {
-            // Supabase rejects empty strings for date columns and enum fields —
+            // Supabase rejects empty strings for date columns and enum fields , 
             // convert them to null so the update goes through.
             const updatePayload = {
                 lay_date: editData.lay_date || null,
@@ -153,11 +153,11 @@ export default function EggDetailModal({ egg, breedingPlan, sire, dam, onClose, 
                                     <SelectValue placeholder="No grade" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-slate-800 border-slate-600">
-                                    <SelectItem value="A+">A+ — Excellent</SelectItem>
-                                    <SelectItem value="A">A — Great</SelectItem>
-                                    <SelectItem value="B">B — Good</SelectItem>
-                                    <SelectItem value="C">C — Fair</SelectItem>
-                                    <SelectItem value="D">D — Poor</SelectItem>
+                                    <SelectItem value="A+">A+ ,  Excellent</SelectItem>
+                                    <SelectItem value="A">A ,  Great</SelectItem>
+                                    <SelectItem value="B">B ,  Good</SelectItem>
+                                    <SelectItem value="C">C ,  Fair</SelectItem>
+                                    <SelectItem value="D">D ,  Poor</SelectItem>
                                 </SelectContent>
                             </Select>
                         </div>

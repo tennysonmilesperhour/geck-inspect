@@ -163,7 +163,7 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
                         Bulk Import Geckos from CSV
                     </DialogTitle>
                     <DialogDescription className="text-slate-400 text-sm">
-                        Upload any spreadsheet — we'll help you map the columns to match.
+                        Upload any spreadsheet ,  we'll help you map the columns to match.
                     </DialogDescription>
                 </DialogHeader>
 
@@ -182,7 +182,7 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
                         <div className="text-sm text-slate-400 leading-relaxed">
                             <p className="mb-4">
                                 Download a CSV template to get started with bulk importing your
-                                gecko collection. You don't <em>have</em> to use this template — any
+                                gecko collection. You don't <em>have</em> to use this template ,  any
                                 spreadsheet will work. On the Import tab you can map your columns
                                 to ours.
                             </p>
@@ -252,7 +252,7 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
                         {/* =================== STEP: UPLOAD =================== */}
                         {step === 'upload' && (
                             <div className="space-y-4">
-                                {/* File picker — prominent drop zone */}
+                                {/* File picker ,  prominent drop zone */}
                                 <div>
                                     <Label htmlFor="csv-file" className="text-slate-300">Select CSV File</Label>
                                     <label
@@ -276,7 +276,7 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
                                                 {useDirectFormat && (
                                                     <p className="text-xs text-emerald-500/60 flex items-center gap-1.5">
                                                         <Sparkles className="w-3.5 h-3.5" />
-                                                        Columns match our template — you can skip mapping!
+                                                        Columns match our template ,  you can skip mapping!
                                                     </p>
                                                 )}
                                             </>
@@ -287,7 +287,7 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
                                                     Click to choose a CSV file
                                                 </p>
                                                 <p className="text-xs text-slate-500">
-                                                    Any spreadsheet format works — we'll help you map the columns
+                                                    Any spreadsheet format works ,  we'll help you map the columns
                                                 </p>
                                             </>
                                         )}
@@ -338,7 +338,7 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
                                 <div>
                                     <Label className="text-slate-300">Breeding &amp; Lineage</Label>
                                     <p className="text-xs text-slate-500 mt-0.5 mb-2">
-                                        Optional — build out breeding pairs and egg history from the same CSV.
+                                        Optional ,  build out breeding pairs and egg history from the same CSV.
                                     </p>
                                     <div className="grid grid-cols-1 gap-2">
                                         <label className="flex items-start gap-2.5 cursor-pointer group">

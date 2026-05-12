@@ -47,7 +47,7 @@ export default function BreedingHistory({
           Breeding History
         </h3>
         <p className="text-slate-400 text-center py-4 text-sm">
-          No breeding history yet — once she lays her first clutch, each season will show up here.
+          No breeding history yet ,  once she lays her first clutch, each season will show up here.
         </p>
       </div>
     );

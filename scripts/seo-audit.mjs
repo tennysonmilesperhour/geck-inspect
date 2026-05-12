@@ -27,13 +27,13 @@
  *     `@id` (confuses search engines).
  *
  * Emits:
- *   dist/seo-audit.json            — machine-readable, used by the
+ *   dist/seo-audit.json            ,  machine-readable, used by the
  *                                    GitHub Actions workflow
- *   docs/seo-audits/<YYYY-MM-DD>.md — human-readable report with two
+ *   docs/seo-audits/<YYYY-MM-DD>.md ,  human-readable report with two
  *                                    sections: "Audit findings" +
  *                                    "Content changes since last audit"
  *
- * Exit code is 0 even when findings exist — the report is the
+ * Exit code is 0 even when findings exist ,  the report is the
  * deliverable, not a CI gate. Use --strict to exit non-zero on any
  * error-level finding.
  */
@@ -52,7 +52,7 @@ const STALE_THRESHOLD_DAYS = 60;
 const STRICT = process.argv.includes('--strict');
 
 if (!existsSync(DIST)) {
-  console.error('[seo-audit] dist/ does not exist — run `pnpm build` first.');
+  console.error('[seo-audit] dist/ does not exist ,  run `pnpm build` first.');
   process.exit(1);
 }
 
@@ -96,9 +96,9 @@ function findings(file, html) {
     add('error', 'missing-title', `No <title> on ${route}`);
   } else {
     // Google truncates at ~60 chars on mobile, ~70 on desktop. The
-    // " — Geck Inspect" suffix is appended by Seo.jsx for brand
+    // " ,  Geck Inspect" suffix is appended by Seo.jsx for brand
     // consistency; don't penalize the raw headline for carrying it.
-    const raw = title.replace(/ [—-] Geck Inspect$/, '').trim();
+    const raw = title.replace(/ [, -] Geck Inspect$/, '').trim();
     if (raw.length > 65) {
       add('warn', 'long-title', `Title is ${raw.length} chars without suffix (target ≤65)`, raw);
     }
@@ -130,7 +130,7 @@ function findings(file, html) {
   if (jsonLdBlocks.length === 0) {
     add('error', 'missing-jsonld', `No JSON-LD on ${route}`);
   } else {
-    // Validate each block parses. Detect duplicate entity definitions —
+    // Validate each block parses. Detect duplicate entity definitions , 
     // nodes that supply BOTH @id and @type with the same @id across
     // blocks (two independent definitions of the same entity). A bare
     // `{ "@id": "...#organization" }` reference is a legal Schema.org
@@ -152,7 +152,7 @@ function findings(file, html) {
   }
 
   // Noscript body should contain an h1 for content routes. Pages have
-  // multiple <noscript> blocks (font-loading + main body shell) — check
+  // multiple <noscript> blocks (font-loading + main body shell) ,  check
   // whether any of them carry a heading.
   const isContentRoute = /^\/(blog|CareGuide|MorphGuide|GeneticsGuide|GeneticCalculatorTool|calculator|About)(\/|$)/.test(route);
   if (isContentRoute) {
@@ -173,7 +173,7 @@ function collectEntityIds(node, counts) {
     return;
   }
   // Only count as an entity definition when BOTH @id and @type are
-  // present — otherwise it's a reference, which is a legal duplicate.
+  // present ,  otherwise it's a reference, which is a legal duplicate.
   if (typeof node['@id'] === 'string' && node['@type']) {
     counts.set(node['@id'], (counts.get(node['@id']) || 0) + 1);
   }
@@ -247,7 +247,7 @@ function lastAuditDate() {
 }
 
 function contentChangesSince(sinceDate) {
-  // Fall back to 14 days if no prior audit exists — matches the
+  // Fall back to 14 days if no prior audit exists ,  matches the
   // biweekly cadence the GH Actions workflow runs on.
   const since = sinceDate || new Date(Date.now() - 14 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
   try {
@@ -304,7 +304,7 @@ for (const file of htmlFiles) {
   }
 }
 
-// Broken internal links — link target does not exist as a prerendered file
+// Broken internal links ,  link target does not exist as a prerendered file
 const knownRoutes = new Set(htmlFiles.map(pathFromFile).map((r) => (r === '/' ? '/' : r.replace(/\/$/, ''))));
 for (const [source, targets] of outboundLinks) {
   for (const target of targets) {
@@ -324,7 +324,7 @@ for (const [source, targets] of outboundLinks) {
 function isKnownSpaOnlyRoute(p) {
   // Routes that render through the SPA but are intentionally not
   // prerendered (auth-gated, dynamic params, etc.). These are fine to
-  // link to — Googlebot will hydrate them.
+  // link to ,  Googlebot will hydrate them.
   const allowlist = [
     '/Dashboard', '/MyGeckos', '/Gallery', '/Marketplace', '/MarketplaceBuy',
     '/MarketplaceSell', '/Forum', '/CommunityConnect', '/AuthPortal',
@@ -337,7 +337,7 @@ function isKnownSpaOnlyRoute(p) {
   return false;
 }
 
-// Orphan detection — prerendered routes no other prerendered page links to
+// Orphan detection ,  prerendered routes no other prerendered page links to
 const orphans = [];
 for (const route of knownRoutes) {
   if (route === '/' || route === '/AuthPortal') continue;
@@ -413,7 +413,7 @@ if (STRICT && summary.findings.errors > 0) {
 
 function renderMarkdown(report) {
   const lines = [];
-  lines.push(`# Geck Inspect SEO audit — ${today}`);
+  lines.push(`# Geck Inspect SEO audit ,  ${today}`);
   lines.push('');
   lines.push(`Generated ${report.generatedAt} against \`${report.siteUrl}\`.`);
   lines.push('');
@@ -433,7 +433,7 @@ function renderMarkdown(report) {
     for (const [code, items] of byCode) {
       lines.push(`### ${code} (${items.length})`);
       for (const it of items.slice(0, 20)) {
-        lines.push(`- [${it.level}] \`${it.route}\` — ${it.message}`);
+        lines.push(`- [${it.level}] \`${it.route}\` ,  ${it.message}`);
       }
       if (items.length > 20) {
         lines.push(`- … and ${items.length - 20} more`);
@@ -449,7 +449,7 @@ function renderMarkdown(report) {
     lines.push('None. All tracked content was updated within the threshold.');
   } else {
     for (const s of stales) {
-      lines.push(`- \`${s.path}\` — last modified ${s.modified} (${s.ageDays} days ago)`);
+      lines.push(`- \`${s.path}\` ,  last modified ${s.modified} (${s.ageDays} days ago)`);
     }
   }
   lines.push('');
@@ -472,7 +472,7 @@ function renderMarkdown(report) {
     lines.push('No content commits in this window.');
   } else {
     for (const c of report.contentDiff.commits) {
-      lines.push(`- **${c.hash}** (${c.date}) — ${c.subject}`);
+      lines.push(`- **${c.hash}** (${c.date}) ,  ${c.subject}`);
       for (const f of c.files) lines.push(`  - ${f}`);
     }
   }

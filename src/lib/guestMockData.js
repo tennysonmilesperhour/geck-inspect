@@ -10,7 +10,7 @@
  *   filter "mine" by email match cleanly.
  * - Images come from Picsum (https://picsum.photos/seed/<seed>/...).
  *   Picsum is a free service that returns stable Unsplash photos keyed
- *   by a seed string. They are used here for UI demonstration only —
+ *   by a seed string. They are used here for UI demonstration only , 
  *   the photos don't necessarily depict crested geckos, let alone the
  *   specific traits each mock record claims to have. The guest-mode
  *   disclaimer toast makes this explicit to the visitor.
@@ -23,8 +23,8 @@ export const GUEST_EMAIL = 'guest@local';
 // Fair-use crested gecko photos from Wikimedia Commons, served via the
 // stable Special:FilePath redirect. Every file below is licensed under
 // CC-BY-SA or equivalent and hotlinkable for demonstration. Because the
-// demo assigns these images to mock records by index — not by actual
-// morph — the guest disclaimer toast explicitly notes the photo may
+// demo assigns these images to mock records by index ,  not by actual
+// morph ,  the guest disclaimer toast explicitly notes the photo may
 // not depict the traits the record claims.
 const GECKO_PHOTOS = [
   'https://commons.wikimedia.org/wiki/Special:FilePath/Crested_gecko_2.JPG?width=640',
@@ -92,7 +92,7 @@ const monthsAgo = (n) => daysAgo(n * 30);
 // Gen 3 hatchlings carry sire_id/dam_id pointing at Harley and Spud.
 // ---------------------------------------------------------------------------
 const GECKOS = [
-  // ---- Gen 1 — founders (archived, retained for pedigree display) ----
+  // ---- Gen 1 ,  founders (archived, retained for pedigree display) ----
   {
     id: 'mock-gecko-gp1-diamond',
     name: 'Diamond',
@@ -178,7 +178,7 @@ const GECKOS = [
     created_date: daysAgo(2300),
   },
 
-  // ---- Gen 2 — active parents ----
+  // ---- Gen 2 ,  active parents ----
   {
     id: 'mock-gecko-1',
     name: 'Harley',
@@ -271,7 +271,7 @@ const GECKOS = [
     created_by: GUEST_EMAIL,
     created_date: daysAgo(90),
   },
-  // Siblings of Nimbus — same clutch, Harley × Spud 2025
+  // Siblings of Nimbus ,  same clutch, Harley × Spud 2025
   {
     id: 'mock-gecko-off-pebble',
     name: 'Pebble',
@@ -502,7 +502,7 @@ const GECKO_IMAGES = GECKOS.flatMap((g, i) =>
     gecko_id: g.id,
     primary_morph: g.primary_morph,
     secondary_traits: g.morph_tags,
-    caption: `${g.name} — ${g.primary_morph}`,
+    caption: `${g.name} ,  ${g.primary_morph}`,
     verified: j === 0,
     likes_count: 5 + ((i * 3 + j) % 40),
     created_by: GUEST_EMAIL,
@@ -511,7 +511,7 @@ const GECKO_IMAGES = GECKOS.flatMap((g, i) =>
 );
 
 // ---------------------------------------------------------------------------
-// Weight records — simple growth curve per gecko
+// Weight records ,  simple growth curve per gecko
 // ---------------------------------------------------------------------------
 const WEIGHT_RECORDS = GECKOS.flatMap((g, gi) => {
   const target = g.weight_grams;
@@ -593,7 +593,7 @@ const BREEDING_PLANS = [
   },
 ];
 
-// Hatchery — eggs laid, pipping soon, hatched, failed, and historical.
+// Hatchery ,  eggs laid, pipping soon, hatched, failed, and historical.
 // Incubation days are shown as (lay_date → hatch_date_expected) with
 // status advancing as the expected date approaches. Hatched eggs link
 // to their resulting gecko via `gecko_id` so the UI can pivot from
@@ -751,14 +751,14 @@ const EGGS = [
   },
 ];
 
-// Hatchery events — what shows up on the hatchery dashboard widget.
+// Hatchery events ,  what shows up on the hatchery dashboard widget.
 const HATCHERY_EVENTS = [
   {
     id: 'mock-hatch-evt-1',
     type: 'pip',
     egg_id: 'mock-egg-hs-2',
     breeding_plan_id: 'mock-bp-1',
-    message: 'Harley × Spud clutch A, egg #2 has pipped — hatch expected in 24-48h.',
+    message: 'Harley × Spud clutch A, egg #2 has pipped ,  hatch expected in 24-48h.',
     created_by: 'system@geckinspect',
     created_date: daysAgo(0),
   },
@@ -768,7 +768,7 @@ const HATCHERY_EVENTS = [
     egg_id: 'mock-egg-ao-2025-1',
     gecko_id: 'mock-gecko-off-fern',
     breeding_plan_id: 'mock-bp-2',
-    message: 'Fern hatched from Aria × Onyx 2025 — strong harlequin, yellow base.',
+    message: 'Fern hatched from Aria × Onyx 2025 ,  strong harlequin, yellow base.',
     created_by: 'system@geckinspect',
     created_date: daysAgo(8),
   },
@@ -776,7 +776,7 @@ const HATCHERY_EVENTS = [
     id: 'mock-hatch-evt-3',
     type: 'lay',
     breeding_plan_id: 'mock-bp-1',
-    message: 'Harley laid clutch B (2 eggs) — incubation started.',
+    message: 'Harley laid clutch B (2 eggs) ,  incubation started.',
     created_by: 'system@geckinspect',
     created_date: daysAgo(18),
   },
@@ -785,13 +785,13 @@ const HATCHERY_EVENTS = [
     type: 'failure',
     egg_id: 'mock-egg-hs-2025b-2',
     breeding_plan_id: 'mock-bp-4',
-    message: 'Egg from Harley × Spud 2025B stopped developing — discarded at ~day 45.',
+    message: 'Egg from Harley × Spud 2025B stopped developing ,  discarded at ~day 45.',
     created_by: GUEST_EMAIL,
     created_date: daysAgo(50),
   },
 ];
 
-// Clutch summaries — grouping eggs by clutch for the pedigree / lineage
+// Clutch summaries ,  grouping eggs by clutch for the pedigree / lineage
 // views. Populated from EGGS above so numbers stay in sync.
 const CLUTCHES = [
   {
@@ -898,7 +898,7 @@ const FORUM_POSTS = [
   },
   {
     id: 'mock-post-3',
-    title: 'Breeding loan checklist — what to include in the contract',
+    title: 'Breeding loan checklist ,  what to include in the contract',
     content:
       'Putting together a loan checklist. What clauses are non-negotiable for you?',
     category_id: 'mock-cat-breeding',
@@ -910,7 +910,7 @@ const FORUM_POSTS = [
   },
   {
     id: 'mock-post-4',
-    title: 'Cappuccino × Lilly White — anyone run this project?',
+    title: 'Cappuccino × Lilly White ,  anyone run this project?',
     content:
       'Curious if the combo has been proven out. Looking at phenotype variation across clutches.',
     category_id: 'mock-cat-breeding',
@@ -949,7 +949,7 @@ const NOTIFICATIONS = [
     id: 'mock-notif-1',
     recipient_email: GUEST_EMAIL,
     title: 'Egg due to hatch soon',
-    body: 'Harley × Spud clutch #1 — expected hatch in 10 days.',
+    body: 'Harley × Spud clutch #1 ,  expected hatch in 10 days.',
     link: '/BreedingPairs',
     type: 'breeding',
     is_read: false,
@@ -988,7 +988,7 @@ const DIRECT_MESSAGES = [
     id: 'mock-dm-1',
     sender_email: 'lumen@example.com',
     recipient_email: GUEST_EMAIL,
-    content: 'Hey — are any of your Harley pins still available for pickup at the expo?',
+    content: 'Hey ,  are any of your Harley pins still available for pickup at the expo?',
     is_read: false,
     message_type: 'user',
     created_date: daysAgo(1),
@@ -998,7 +998,7 @@ const DIRECT_MESSAGES = [
     id: 'mock-dm-2',
     sender_email: GUEST_EMAIL,
     recipient_email: 'lumen@example.com',
-    content: 'Yes — Ember and one sibling. Sending photos tonight.',
+    content: 'Yes ,  Ember and one sibling. Sending photos tonight.',
     is_read: true,
     message_type: 'user',
     created_date: daysAgo(1),
@@ -1026,7 +1026,7 @@ const FEEDING_GROUPS = [
 ];
 
 // ---------------------------------------------------------------------------
-// Gecko of the day — points at a mock image
+// Gecko of the day ,  points at a mock image
 // ---------------------------------------------------------------------------
 const GECKO_OF_THE_DAY = [
   {
@@ -1042,7 +1042,7 @@ const GECKO_OF_THE_DAY = [
 ];
 
 // ---------------------------------------------------------------------------
-// Store map — keyed by the Supabase entity name used in supabaseEntities.js
+// Store map ,  keyed by the Supabase entity name used in supabaseEntities.js
 // ---------------------------------------------------------------------------
 const STORE = {
   Gecko: GECKOS,
@@ -1064,7 +1064,7 @@ const STORE = {
 export const MOCK_HATCHERY_EVENTS = HATCHERY_EVENTS;
 
 // ---------------------------------------------------------------------------
-// Query helpers — minimal re-implementation of the subset of the Supabase
+// Query helpers ,  minimal re-implementation of the subset of the Supabase
 // entity API that pages actually exercise. Anything unsupported falls
 // back to returning the full collection (pages apply their own filters
 // client-side for the non-indexed fields they care about).

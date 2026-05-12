@@ -1,12 +1,12 @@
 /**
- * GeckoCanvas — the single SVG that composes every visual layer in order.
+ * GeckoCanvas ,  the single SVG that composes every visual layer in order.
  *
  * Draw order (back → front):
- *   1. Branch (perch) — context, rendered first
+ *   1. Branch (perch) ,  context, rendered first
  *   2. Silhouette fill (base body with gradient)
  *   3. Dorsum band (paler dorsal tone)
  *   4. Belly band (lighter underside, white wall)
- *   5. Pattern layers — pinstripe, flame, tiger/brindle, harlequin
+ *   5. Pattern layers ,  pinstripe, flame, tiger/brindle, harlequin
  *   6. Dalmatian spots
  *   7. Lilly White splashes (goes OVER other pattern)
  *   8. Cappuccino dorsum replacement (overrides dorsal pattern)
@@ -59,7 +59,7 @@ export default function GeckoCanvas({ phenotype, selections }) {
       role="img"
       aria-label="Crested gecko morph preview"
     >
-      {/* Backdrop — soft forest-floor gradient */}
+      {/* Backdrop ,  soft forest-floor gradient */}
       <defs>
         <radialGradient id="bg-grad" cx="50%" cy="60%" r="70%">
           <stop offset="0%"   stopColor="#1e2e1e" />
@@ -69,7 +69,7 @@ export default function GeckoCanvas({ phenotype, selections }) {
           <stop offset="0%" stopColor="#4a3a24" />
           <stop offset="100%" stopColor="#281c10" />
         </linearGradient>
-        {/* Master silhouette clip — every pattern overlay can use this */}
+        {/* Master silhouette clip ,  every pattern overlay can use this */}
         <clipPath id={BODY_CLIP_ID}>
           <path d={BODY_PATH} />
           <path d={HEAD_PATH} />
@@ -103,7 +103,7 @@ export default function GeckoCanvas({ phenotype, selections }) {
         <Belly  palette={palette} expressed={expressed} accents={accents} />
       </g>
 
-      {/* Patterns (polygenic) — suppressed by cappuccino or empty back */}
+      {/* Patterns (polygenic) ,  suppressed by cappuccino or empty back */}
       {!suppressed.dorsal && (
         <Pinstripe intensity={patternIntensity.pinstripe} palette={palette} suppressed={suppressed} />
       )}
@@ -115,16 +115,16 @@ export default function GeckoCanvas({ phenotype, selections }) {
       {/* White Wall above belly but below pattern-lock morphs */}
       <WhiteWall expressed={expressed.white_wall} isSuper={false} />
 
-      {/* Cappuccino repaints the dorsum — draw after pattern to override. */}
+      {/* Cappuccino repaints the dorsum ,  draw after pattern to override. */}
       <Cappuccino expressed={expressed.cappuccino} isSuper={cappSuper} palette={palette} />
 
       {/* Lilly White splashes sit on top of everything except details. */}
       <LillyWhite expressed={expressed.lilly_white} isSuper={lwSuper} />
 
-      {/* Scale stippling — soft scale makes this near-invisible */}
+      {/* Scale stippling ,  soft scale makes this near-invisible */}
       <ScaleTexture softScale={softScale} palette={palette} />
 
-      {/* Accents — portholes, kneecaps, drippy dorsal */}
+      {/* Accents ,  portholes, kneecaps, drippy dorsal */}
       <Accents accents={accents} palette={palette} />
 
       {/* Crests, eye, mouth */}

@@ -12,13 +12,13 @@ import {
 import { formatDistanceToNowStrict } from 'date-fns';
 
 /**
- * Community Pulse — a live-feeling activity ticker showing the most
+ * Community Pulse ,  a live-feeling activity ticker showing the most
  * recent public actions across the whole app: new geckos added, new
  * images uploaded, forum posts, and breeding plans kicked off.
  *
  * Pulls the last 20 of each in parallel, merges, sorts by timestamp,
  * and renders the top 8. Cheap enough to run every time the dashboard
- * loads — no polling; a manual refresh on the dashboard hits it again.
+ * loads ,  no polling; a manual refresh on the dashboard hits it again.
  */
 
 const TYPE_META = {
@@ -111,7 +111,7 @@ export default function CommunityPulse() {
                     Community Pulse
                 </CardTitle>
                 <p className="text-xs text-slate-400">
-                    The latest from around Geck Inspect — refreshed every time you land here.
+                    The latest from around Geck Inspect ,  refreshed every time you land here.
                 </p>
             </CardHeader>
             <CardContent>

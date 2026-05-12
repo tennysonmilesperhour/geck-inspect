@@ -339,7 +339,7 @@ export default function BlogEditor({ postId, initialPost, onBack, onSaved }) {
               </div>
               <div>
                 <Label className="text-xs text-slate-400 mb-1.5 block">
-                  Content (markdown — supports # headings, **bold**, *italic*, [links](url), - bullets)
+                  Content (markdown ,  supports # headings, **bold**, *italic*, [links](url), - bullets)
                 </Label>
                 <Textarea
                   value={form.content_markdown}
@@ -488,7 +488,7 @@ export default function BlogEditor({ postId, initialPost, onBack, onSaved }) {
                 <Label className="text-xs text-slate-400 mb-1.5 block">Tags</Label>
                 <div className="flex flex-wrap gap-1.5">
                   {tags.filter((t) => t.is_active).length === 0 && (
-                    <p className="text-xs text-slate-500">No active tags yet — create some in Categories &amp; Tags.</p>
+                    <p className="text-xs text-slate-500">No active tags yet ,  create some in Categories &amp; Tags.</p>
                   )}
                   {tags.filter((t) => t.is_active).map((t) => {
                     const active = (form.tag_ids || []).includes(t.id);

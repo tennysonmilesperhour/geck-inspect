@@ -30,7 +30,7 @@ import {
 } from '@/components/ui/alert-dialog';
 
 /**
- * Forum post detail page — fixes applied April 2026:
+ * Forum post detail page ,  fixes applied April 2026:
  *
  * 1. "Post comment" button: the async submit is now wired through
  *    explicit state (isPosting) with a visible loading indicator and
@@ -42,7 +42,7 @@ import {
  *    AND scrolls the comment box into view with a focus, so it's
  *    obvious that the reply target changed. The composer card also
  *    shows a colored "Replying to X" badge.
- * 4. Delete is no longer admin-only — the post/comment OWNER also
+ * 4. Delete is no longer admin-only ,  the post/comment OWNER also
  *    sees a delete button. Admin still has override for both.
  * 5. Better "not found" state with a back button and an auto-refresh
  *    suggestion so users who bookmarked a deleted post don't just

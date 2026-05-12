@@ -12,7 +12,7 @@
  *   public/downloads/geck-inspect-genetics-guide.pdf
  *
  * The PDFs are programmatic (jsPDF text + simple layout) rather than
- * rendered from HTML — that keeps them small, searchable, and fully
+ * rendered from HTML ,  that keeps them small, searchable, and fully
  * deterministic across runs. Re-run this script whenever the source
  * data in src/data/care-guide.js or src/data/genetics-glossary.js
  * changes; the resulting PDFs are committed as static assets.
@@ -136,7 +136,7 @@ class Layout {
     this.spacer(8);
   }
 
-  // Section heading — categories / chapters.
+  // Section heading ,  categories / chapters.
   h2(text) {
     this.spacer(14);
     this.ensureRoom(32);
@@ -383,7 +383,7 @@ function renderBody(layout, body) {
         });
         break;
       default:
-        // Unknown block — skip silently to keep PDFs clean.
+        // Unknown block ,  skip silently to keep PDFs clean.
         break;
     }
   }
@@ -409,7 +409,7 @@ async function renderCareGuide() {
 
   layout.title("Crested Gecko Care Guide");
   layout.subtitle(
-    "A complete husbandry reference for Correlophus ciliatus — beginner-friendly, detailed enough for working breeders. Compiled by Geck Inspect."
+    "A complete husbandry reference for Correlophus ciliatus ,  beginner-friendly, detailed enough for working breeders. Compiled by Geck Inspect."
   );
   layout.paragraph(
     "Generated " + date + " · geckinspect.com/CareGuide · Free to download and share. Always check the live online edition for the latest corrections."
@@ -419,7 +419,7 @@ async function renderCareGuide() {
   // Table of contents
   layout.h2("Contents");
   for (const cat of CARE_CATEGORIES) {
-    layout.bullet(`${cat.label} — ${cat.tagline || ""}`);
+    layout.bullet(`${cat.label} ,  ${cat.tagline || ""}`);
   }
   layout.spacer(8);
 
@@ -438,7 +438,7 @@ async function renderCareGuide() {
   layout.spacer(20);
   layout.rule();
   layout.paragraph(
-    "© Geck Inspect. Built by a crested gecko breeder, for crested gecko breeders. Get the always-current version, AI morph identification, lineage trees, and the genetics calculator at geckinspect.com — every core feature is free."
+    "© Geck Inspect. Built by a crested gecko breeder, for crested gecko breeders. Get the always-current version, AI morph identification, lineage trees, and the genetics calculator at geckinspect.com ,  every core feature is free."
   );
 
   layout.finalize();
@@ -455,7 +455,7 @@ async function renderGeneticsGuide() {
   // can't be evaluated outside the React renderer, so we stick to
   // the glossary + a curated PDF-only "core concepts" prose section
   // hard-coded here. The in-app Genetics Guide remains the rich
-  // interactive version — this PDF is the portable reference.
+  // interactive version ,  this PDF is the portable reference.
   const glossaryModule = await import(
     "../src/data/genetics-glossary.js"
   );
@@ -483,7 +483,7 @@ async function renderGeneticsGuide() {
   layout.h2("Foundations");
   layout.h3("What a gene is");
   layout.paragraph(
-    "A gene is a segment of DNA that carries instructions for a trait — melanin production, scale shape, pattern layout, eye color. Each gecko inherits two copies of every gene, one from the sire and one from the dam. These two copies are called alleles."
+    "A gene is a segment of DNA that carries instructions for a trait ,  melanin production, scale shape, pattern layout, eye color. Each gecko inherits two copies of every gene, one from the sire and one from the dam. These two copies are called alleles."
   );
   layout.h3("Alleles, homozygous, heterozygous");
   layout.bullet(
@@ -504,14 +504,14 @@ async function renderGeneticsGuide() {
     "Recessive: the trait only shows when both copies are the recessive allele. Axanthic is the cleanest crested gecko example."
   );
   layout.bullet(
-    "Incomplete dominant: one copy produces the visual form; two produce a more extreme \"super.\" Most proven crested gecko morphs work this way — Lilly White, Cappuccino, Soft Scale, White Wall."
+    "Incomplete dominant: one copy produces the visual form; two produce a more extreme \"super.\" Most proven crested gecko morphs work this way ,  Lilly White, Cappuccino, Soft Scale, White Wall."
   );
   layout.callout({
     tone: "warn",
     title: "Visual het identification is never reliable",
     items: [
       "You cannot tell from photos whether a gecko carries a recessive trait. Lineage and progeny testing are the only proofs.",
-      "\"66% possible het\" means the offspring of het × het that LOOK normal — statistically 2 of 3 carry the gene, but no individual animal can be confirmed without a test pair.",
+      "\"66% possible het\" means the offspring of het × het that LOOK normal ,  statistically 2 of 3 carry the gene, but no individual animal can be confirmed without a test pair.",
     ],
   });
 
@@ -531,13 +531,13 @@ async function renderGeneticsGuide() {
   });
   layout.h3("Multi-gene crosses");
   layout.paragraph(
-    "Each gene is independent (no linkage observed in any proven crested gecko morph). Multiply the per-gene odds — Lilly × Lilly Het Axanthic gives 25% supers × 50% het = 12.5% super Lilly het Axanthic, and so on."
+    "Each gene is independent (no linkage observed in any proven crested gecko morph). Multiply the per-gene odds ,  Lilly × Lilly Het Axanthic gives 25% supers × 50% het = 12.5% super Lilly het Axanthic, and so on."
   );
   layout.callout({
     tone: "info",
     title: "Use the live calculator",
     items: [
-      "geckinspect.com/calculator — multi-trait projection across every proven crested gecko morph.",
+      "geckinspect.com/calculator ,  multi-trait projection across every proven crested gecko morph.",
       "Per-morph deep-dives at geckinspect.com/calculator/<morph>: lilly-white, cappuccino, axanthic, phantom, hypo, whiteout, empty-back, soft-scale.",
     ],
   });
@@ -545,13 +545,13 @@ async function renderGeneticsGuide() {
   // ── Polygenic
   layout.h2("Polygenic Traits");
   layout.paragraph(
-    "Many of the visible features that breeders care about most — base color, harlequin pattern coverage, flame markings, dalmatian spot density — are controlled by many genes acting additively. They cannot be Punnett-squared, only selected for over generations."
+    "Many of the visible features that breeders care about most ,  base color, harlequin pattern coverage, flame markings, dalmatian spot density ,  are controlled by many genes acting additively. They cannot be Punnett-squared, only selected for over generations."
   );
   layout.bullet(
     "Outcomes are continuous and skew toward the parents' average rather than producing discrete categories."
   );
   layout.bullet(
-    "A single \"high-end\" pairing can still produce mediocre offspring — and breeders selecting from many clutches over years are why the hobby's average gecko is so much better-looking than 20 years ago."
+    "A single \"high-end\" pairing can still produce mediocre offspring ,  and breeders selecting from many clutches over years are why the hobby's average gecko is so much better-looking than 20 years ago."
   );
   layout.bullet(
     "Selective pressure works. Tracking exact weights, photos, and pairings gives you data to keep the right animals across generations."
@@ -560,7 +560,7 @@ async function renderGeneticsGuide() {
   // ── Lethal Allele
   layout.h2("Lethal Alleles");
   layout.paragraph(
-    "An incomplete dominant allele can be lethal in homozygous form — animals inheriting two copies fail to develop or die early. Lilly White is the textbook example in crested geckos: super-Lillys (homozygous LW) are lethal. The practical implication: never pair Lilly × Lilly. The expected ratio is 25% super (lethal), 50% Lilly, 25% normal — you lose a quarter of the clutch and the visual gain over Lilly × non-Lilly is zero."
+    "An incomplete dominant allele can be lethal in homozygous form ,  animals inheriting two copies fail to develop or die early. Lilly White is the textbook example in crested geckos: super-Lillys (homozygous LW) are lethal. The practical implication: never pair Lilly × Lilly. The expected ratio is 25% super (lethal), 50% Lilly, 25% normal ,  you lose a quarter of the clutch and the visual gain over Lilly × non-Lilly is zero."
   );
 
   // ── Glossary

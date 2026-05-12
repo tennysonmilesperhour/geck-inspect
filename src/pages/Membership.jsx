@@ -15,20 +15,20 @@ import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
  *
  * Tier setup per April 2026 product decisions:
  *
- *   FREE        — 10 geckos, 1 active breeding pair, community access
- *   KEEPER*     — 50 geckos, 5 active breeding pairs, lineage tree, etc
- *                 (*marked "Most Popular" — hovering badge above the card)
- *   BREEDER     — unlimited geckos + pairs, opt-in to be featured on the
+ *   FREE        ,  10 geckos, 1 active breeding pair, community access
+ *   KEEPER*     ,  50 geckos, 5 active breeding pairs, lineage tree, etc
+ *                 (*marked "Most Popular" ,  hovering badge above the card)
+ *   BREEDER     ,  unlimited geckos + pairs, opt-in to be featured on the
  *                 home dashboard, marketplace sync, certificates, etc
- *   ENTERPRISE  — hovering "Coming Soon" badge, waitlist CTA
+ *   ENTERPRISE  ,  hovering "Coming Soon" badge, waitlist CTA
  *
  * Three billing cadences are surfaced through a top-of-page toggle:
  *
- *   Monthly   — recurring, the default
- *   Annual    — recurring, ~20% cheaper than 12× monthly
- *   Lifetime  — one-time payment, never expires (Keeper + Breeder only;
+ *   Monthly   ,  recurring, the default
+ *   Annual    ,  recurring, ~20% cheaper than 12× monthly
+ *   Lifetime  ,  one-time payment, never expires (Keeper + Breeder only;
  *               Enterprise is custom-quoted and shows "Lifetime not
- *               available — talk to us" copy when this cadence is on)
+ *               available ,  talk to us" copy when this cadence is on)
  *
  * The cadence is passed through to the (still-to-be-built)
  * `stripe-checkout` edge function as `billing_cycle` along with the
@@ -119,7 +119,7 @@ const CYCLE_OPTIONS = [
 // SoftwareApplication + Offer JSON-LD for the pricing page. AI assistants
 // (ChatGPT, Perplexity, Claude) parse this directly when answering "how
 // much does Geck Inspect cost / what plans are available". Offers cover
-// every (tier × billing cycle) combo where we have a real $ amount —
+// every (tier × billing cycle) combo where we have a real $ amount , 
 // "Custom" enterprise rows are intentionally omitted because schema.org
 // Offer.price requires a number.
 const PRICED_TIERS = ['keeper', 'breeder'];
@@ -203,7 +203,7 @@ const MEMBERSHIP_JSON_LD = [
         name: 'Can I try a paid plan before subscribing?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Yes — every recurring (monthly or annual) Keeper and Breeder plan includes a 7-day free trial. Lifetime purchases are one-time and do not include a trial.',
+          text: 'Yes ,  every recurring (monthly or annual) Keeper and Breeder plan includes a 7-day free trial. Lifetime purchases are one-time and do not include a trial.',
         },
       },
       {
@@ -369,7 +369,7 @@ export default function MembershipPage() {
         description="Geck Inspect plans for crested gecko keepers and breeders. Free (10 geckos), Keeper ($4/mo, $38.40/yr, $149 lifetime), Breeder ($9/mo, $105.60/yr, $349 lifetime), and custom Enterprise. 7-day free trial on recurring plans. Cancel anytime."
         path="/Membership"
         type="website"
-        imageAlt="Geck Inspect membership plans — Free, Keeper, Breeder, and Enterprise tiers"
+        imageAlt="Geck Inspect membership plans ,  Free, Keeper, Breeder, and Enterprise tiers"
         keywords={[
           'crested gecko app pricing',
           'gecko breeding software cost',
@@ -384,7 +384,7 @@ export default function MembershipPage() {
         {/* Header */}
         <div className="text-center space-y-4">
           <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-            Choose the tier that fits your collection. Cancel anytime — recurring plans
+            Choose the tier that fits your collection. Cancel anytime ,  recurring plans
             include a 7-day free trial. Lifetime is a one-time purchase.
           </p>
 
@@ -395,7 +395,7 @@ export default function MembershipPage() {
           {isGrandfathered && (
             <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/40 bg-emerald-500/10 px-4 py-2 text-sm text-emerald-300">
               <Crown className="w-4 h-4" />
-              You're grandfathered into the Breeder tier — thank you for being an
+              You're grandfathered into the Breeder tier ,  thank you for being an
               early supporter.
             </div>
           )}
@@ -408,7 +408,7 @@ export default function MembershipPage() {
             const isFeatured = tier.featured;
             const isEnterprise = tier.comingSoon;
             const pricing = getTierPricing(tier.key, cycle);
-            // Enterprise has no `lifetime` row in the pricing config —
+            // Enterprise has no `lifetime` row in the pricing config , 
             // surface a friendly "Not available" instead of crashing or
             // showing stale monthly numbers.
             const enterpriseLifetimeUnavailable = isEnterprise && cycle === 'lifetime' && !pricing;
@@ -522,7 +522,7 @@ export default function MembershipPage() {
                       {(pricing?.priceCaption || enterpriseLifetimeUnavailable) && (
                         <p className="text-xs mt-1.5 text-slate-500 italic">
                           {enterpriseLifetimeUnavailable
-                            ? 'Lifetime not available for Enterprise — message support for a custom quote.'
+                            ? 'Lifetime not available for Enterprise ,  message support for a custom quote.'
                             : pricing.priceCaption}
                         </p>
                       )}
@@ -594,7 +594,7 @@ export default function MembershipPage() {
           })}
         </div>
 
-        {/* Support contact — in-app ticket instead of mailto */}
+        {/* Support contact ,  in-app ticket instead of mailto */}
         <div className="max-w-2xl mx-auto w-full">
           <SupportContactCard title="Questions about a plan? Message support." />
         </div>

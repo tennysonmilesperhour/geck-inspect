@@ -10,7 +10,7 @@ import {
 } from '@/lib/navItems';
 
 /**
- * Tutorial walkthrough — anchored tooltip tour.
+ * Tutorial walkthrough ,  anchored tooltip tour.
  *
  * Instead of a slideshow popup, this version walks the user through
  * each visible tab in the sidebar one at a time. At each step it:
@@ -21,7 +21,7 @@ import {
  *      and pops a compact tooltip bubble next to it explaining what
  *      that section is for.
  *   3. Tabs that aren't rendered (page config disabled, auth required
- *      but user is signed out, etc.) are silently skipped — no
+ *      but user is signed out, etc.) are silently skipped ,  no
  *      references to features the user can't access.
  *
  * The step content is keyed by the nav item's `page_name` so the
@@ -35,11 +35,11 @@ import {
 // section's items: __section_manage and __section_discover.
 const STEP_BLURBS = {
     __section_manage: {
-        title: 'Manage — your animals + business',
+        title: 'Manage ,  your animals + business',
         body: 'The Manage tab holds everything about the geckos you actually keep: your collection, breeding pairs, lineage, listings, sales stats, and shipping. We\'ll walk through each tile next.',
     },
     __section_discover: {
-        title: 'Discover — tools, community, reference',
+        title: 'Discover ,  tools, community, reference',
         body: 'The Discover tab is for tools, community, and reference content: morph ID, the morph guide, the AI consultant, the visualizer, the care guide, the marketplace, the forum, and Q&A. Switching to it now so we can walk those tiles.',
     },
     Dashboard: {
@@ -68,11 +68,11 @@ const STEP_BLURBS = {
     },
     MarketplaceSalesStats: {
         title: 'Sales Stats',
-        body: 'Year-over-year revenue, per-morph profit, cost tracking (food, equipment, shipping), and best-selling pairings — the numbers behind your breeding business.',
+        body: 'Year-over-year revenue, per-morph profit, cost tracking (food, equipment, shipping), and best-selling pairings ,  the numbers behind your breeding business.',
     },
     OtherReptiles: {
         title: 'Other Reptiles',
-        body: 'Track non-gecko reptiles you keep — leopard geckos, ball pythons, blue tongue skinks — with the same feeding reminders and weight logs as the main collection.',
+        body: 'Track non-gecko reptiles you keep ,  leopard geckos, ball pythons, blue tongue skinks ,  with the same feeding reminders and weight logs as the main collection.',
     },
     Recognition: {
         title: 'Morph ID',
@@ -84,7 +84,7 @@ const STEP_BLURBS = {
     },
     BreederConsultant: {
         title: 'AI Consultant',
-        body: 'Ask anything about crested gecko care, breeding, genetics, or pricing. Trained on real keeper knowledge and our morph guide — no generic chatbot answers.',
+        body: 'Ask anything about crested gecko care, breeding, genetics, or pricing. Trained on real keeper knowledge and our morph guide ,  no generic chatbot answers.',
     },
     ProjectManager: {
         title: 'Season Planner',
@@ -92,19 +92,19 @@ const STEP_BLURBS = {
     },
     GeneticsGuide: {
         title: 'Genetics Guide',
-        body: 'A hands-on crested gecko genetics primer — dominant, co-dominant, recessive, and polygenic traits explained with worked examples.',
+        body: 'A hands-on crested gecko genetics primer ,  dominant, co-dominant, recessive, and polygenic traits explained with worked examples.',
     },
     Training: {
         title: 'Train Model',
-        body: 'Help the AI improve by labeling community gecko photos. Earn badges as you contribute — your labels go straight into the next Morph ID training run.',
+        body: 'Help the AI improve by labeling community gecko photos. Earn badges as you contribute ,  your labels go straight into the next Morph ID training run.',
     },
     MorphGuide: {
         title: 'Morph Guide',
-        body: 'Reference for every named crested gecko morph — base colors, color modifiers, pattern types, structural traits, and named combinations. Each entry has its own deep page with reference photos and inheritance notes.',
+        body: 'Reference for every named crested gecko morph ,  base colors, color modifiers, pattern types, structural traits, and named combinations. Each entry has its own deep page with reference photos and inheritance notes.',
     },
     CareGuide: {
         title: 'Care Guide',
-        body: 'Husbandry reference: enclosure setup, temperature and humidity ranges, CGD diet brands, handling, shedding, common health issues, and breeding readiness — all sourced from working keepers.',
+        body: 'Husbandry reference: enclosure setup, temperature and humidity ranges, CGD diet brands, handling, shedding, common health issues, and breeding readiness ,  all sourced from working keepers.',
     },
     Forum: {
         title: 'Forum',
@@ -120,7 +120,7 @@ const STEP_BLURBS = {
     },
     Marketplace: {
         title: 'Marketplace',
-        body: 'Buy and sell geckos through Geck Inspect. The page splits into Buy (browse listings) and Sell (publish your own) — both filter by morph, sex, age, and price.',
+        body: 'Buy and sell geckos through Geck Inspect. The page splits into Buy (browse listings) and Sell (publish your own) ,  both filter by morph, sex, age, and price.',
     },
     MarketplaceBuy: {
         title: 'Buy Geckos',
@@ -132,11 +132,11 @@ const STEP_BLURBS = {
     },
     MyListings: {
         title: 'My Listings',
-        body: 'Manage every active listing in one place — edit price, swap photos, mark as sold, or unlist with one click.',
+        body: 'Manage every active listing in one place ,  edit price, swap photos, mark as sold, or unlist with one click.',
     },
     BreederStorefront: {
         title: 'My Storefront',
-        body: 'A polished public storefront URL you can share — your branding, your for-sale geckos, your story, your store policy, no ads.',
+        body: 'A polished public storefront URL you can share ,  your branding, your for-sale geckos, your story, your store policy, no ads.',
     },
     BreederShipping: {
         title: 'Shipping',
@@ -192,7 +192,7 @@ export default function TutorialModal({ isOpen, onClose }) {
     // sections on the fly when the user advances into the other tab.
     //
     // Anchors are looked up live at render-time in the layout effect
-    // below — that handles the case where switching sections re-mounts
+    // below ,  that handles the case where switching sections re-mounts
     // the nav and we need to grab the freshly-rendered node.
     useEffect(() => {
         if (!isOpen) return;
@@ -213,7 +213,7 @@ export default function TutorialModal({ isOpen, onClose }) {
             sectionId: null,
             blurb: {
                 title: 'Welcome to Geck Inspect',
-                body: 'The app is split into two top-level tabs — Manage (your animals + business) and Discover (tools, community, reference). We\'ll walk through both, one tile at a time. Use the arrows, or hit Esc to skip.',
+                body: 'The app is split into two top-level tabs ,  Manage (your animals + business) and Discover (tools, community, reference). We\'ll walk through both, one tile at a time. Use the arrows, or hit Esc to skip.',
             },
         };
         const doneStep = {
@@ -297,7 +297,7 @@ export default function TutorialModal({ isOpen, onClose }) {
             return;
         }
 
-        // Synthetic intro/outro steps have no anchor — center card.
+        // Synthetic intro/outro steps have no anchor ,  center card.
         if (currentStep.pageName === '__welcome' || currentStep.pageName === '__done') {
             setAnchorRect(null);
             return;
@@ -477,13 +477,13 @@ export default function TutorialModal({ isOpen, onClose }) {
                         <p className="text-sm text-slate-300 mt-1 leading-relaxed">
                             Bringing records over from another tracker (spreadsheet, iHerp, Morphmarket notes,
                             a different app) is a first-class workflow. The tour below will call out the
-                            pages where migrated data lands — My Geckos, Breeding, Lineage, and My Profile —
+                            pages where migrated data lands ,  My Geckos, Breeding, Lineage, and My Profile , 
                             and the import points in each.
                         </p>
                         <p className="text-sm text-slate-300 mt-2 leading-relaxed">
                             If you want a hand getting everything across cleanly, reach out and I&apos;ll
                             help directly. I can also build new import/export features to fit the format
-                            your old data is in — just ask.
+                            your old data is in ,  just ask.
                         </p>
                         <div className="mt-3 flex flex-col gap-2">
                             <a

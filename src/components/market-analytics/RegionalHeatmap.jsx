@@ -2,7 +2,7 @@
  * Regional Heatmap
  *
  * Matrix of combo × region. The single most important screen for
- * answering "where should I list this animal?" — a glance reveals which
+ * answering "where should I list this animal?" ,  a glance reveals which
  * combos command premiums in which markets, and where supply is thin.
  *
  * Cell color encodes value; cell opacity encodes confidence. A faded
@@ -58,7 +58,7 @@ export default function RegionalHeatmap({ filters, onDrillDown }) {
     <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
       <SectionHeader
         icon={MapIcon}
-        title="Regional heatmap — combo × market"
+        title="Regional heatmap ,  combo × market"
         subtitle="Where each combination commands premiums and where supply is thin"
         right={
           <div className="flex items-center gap-2">
@@ -71,7 +71,7 @@ export default function RegionalHeatmap({ filters, onDrillDown }) {
             </select>
             <MethodologyPopover title="How this heatmap is colored">
               <p>Each cell is the combo's median metric in the region for the selected timeframe. Color ramps from green (low) to red (high) across the <em>visible</em> min/max, so you can compare within the grid directly.</p>
-              <p>Cell opacity = confidence. Faded cells have small sample sizes — don't act on them without drilling in.</p>
+              <p>Cell opacity = confidence. Faded cells have small sample sizes ,  don't act on them without drilling in.</p>
             </MethodologyPopover>
           </div>
         }
@@ -104,7 +104,7 @@ export default function RegionalHeatmap({ filters, onDrillDown }) {
                         min={min} max={max}
                         confidence={cell?.confidence ?? 0}
                         onClick={() => onDrillDown?.({ combo_id: c.id, region: r.code })}
-                        label={cell ? `${c.name} — ${r.name}: ${fmt(cell.value)} (n=${cell.sample_size})` : '—'}
+                        label={cell ? `${c.name} ,  ${r.name}: ${fmt(cell.value)} (n=${cell.sample_size})` : '—'}
                       />
                     </td>
                   );

@@ -18,7 +18,7 @@ import { authorSchema, editorialFor } from '@/lib/editorial';
 import { useBlogContent } from '@/lib/blog-data-source';
 
 /**
- * Blog index — renders the merged dataset (static-prerendered editorial
+ * Blog index ,  renders the merged dataset (static-prerendered editorial
  * content + admin-published DB posts) with search, category/tag filters,
  * and pagination governed by the BlogSettings.posts_per_page value.
  *
@@ -38,7 +38,7 @@ export default function BlogIndex() {
   const perPage = settings?.posts_per_page || 12;
   const blogName = settings?.blog_name || 'Crested Gecko Blog';
   const blogDescription = settings?.blog_description
-    || 'Long-form crested gecko genetics, breeding, and care articles from the Geck Inspect editorial team — built on the Foundation Genetics consensus.';
+    || 'Long-form crested gecko genetics, breeding, and care articles from the Geck Inspect editorial team ,  built on the Foundation Genetics consensus.';
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();

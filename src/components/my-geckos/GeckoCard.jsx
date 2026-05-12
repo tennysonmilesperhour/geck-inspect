@@ -25,7 +25,7 @@ const ARCHIVE_LABELS = {
 // `isOwner` controls the visual "Shared" badge (i.e. is this row in the
 // caller's own collection or one shared with them). `canEdit` controls
 // whether write affordances are rendered. Pre-Phase-B those were the
-// same thing — post-Phase-B a collection owner can edit a gecko whose
+// same thing ,  post-Phase-B a collection owner can edit a gecko whose
 // `created_by` is a different user, so the two diverge.
 export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [], onView, onEdit, isOwner = true, canEdit }) {
   const writable = canEdit !== undefined ? canEdit : isOwner;
@@ -80,7 +80,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
             <span
               className="inline-flex items-center justify-center h-6 w-6 rounded-full text-white text-[11px] font-bold shadow border border-white/30 leading-none"
               style={{ backgroundColor: feedingGroup.color || '#f97316' }}
-              title={`Feeding Group ${feedingGroup.label}${feedingGroup.name ? ': ' + feedingGroup.name : ''} — ${feedingGroup.diet_type}`}
+              title={`Feeding Group ${feedingGroup.label}${feedingGroup.name ? ': ' + feedingGroup.name : ''} ,  ${feedingGroup.diet_type}`}
             >
               {feedingGroup.label}
             </span>
@@ -124,7 +124,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
         </div>
       </div>
 
-      {/* Body — flex column so cards in a grid share the same baseline */}
+      {/* Body ,  flex column so cards in a grid share the same baseline */}
       <CardContent className="p-3 flex-1 flex flex-col gap-1.5">
         <div className="min-w-0">
           <h3 className="font-bold text-base sm:text-lg text-emerald-100 truncate leading-tight">
@@ -146,7 +146,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
           )}
         </div>
 
-        {/* Stats row — left-aligned, wraps when narrow, never jumps */}
+        {/* Stats row ,  left-aligned, wraps when narrow, never jumps */}
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs sm:text-sm mt-auto">
           {latestWeight != null && (
             <div className="inline-flex items-center gap-1 text-emerald-400">
@@ -163,7 +163,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
           )}
         </div>
 
-        {/* Status badges — inline so they don't stack as detached chunks */}
+        {/* Status badges ,  inline so they don't stack as detached chunks */}
         {(showGravidBadge || showSpeciesBadge) && (
           <div className="flex flex-wrap gap-1.5">
             {showGravidBadge && (

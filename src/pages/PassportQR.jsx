@@ -67,7 +67,7 @@ export default function PassportQR() {
       ctx.fillText(passportCode, 400, 740);
 
       ctx.font = '12px "DM Sans", sans-serif';
-      ctx.fillText('Scan to view full history — Geck Inspect', 400, 775);
+      ctx.fillText('Scan to view full history ,  Geck Inspect', 400, 775);
 
       // Download
       const link = document.createElement('a');

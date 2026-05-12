@@ -1,5 +1,5 @@
 /**
- * Entity exports — all backed by Supabase.
+ * Entity exports ,  all backed by Supabase.
  */
 import * as sb from '@/api/supabaseEntities';
 import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
@@ -48,7 +48,7 @@ export const User = new Proxy({}, {
   }
 });
 
-// All data entities — Supabase
+// All data entities ,  Supabase
 export const AppSettings = sb.AppSettings;
 export const BreedingPlan = sb.BreedingPlan;
 export const CareGuideSection = sb.CareGuideSection;
@@ -86,32 +86,32 @@ export const UserBadge = sb.UserBadge;
 export const UserFollow = sb.UserFollow;
 export const WeightRecord = sb.WeightRecord;
 
-// P1 — Animal Passport + Ownership Transfer
+// P1 ,  Animal Passport + Ownership Transfer
 export const OwnershipRecord = sb.OwnershipRecord;
 export const ShedRecord = sb.ShedRecord;
 export const VetRecord = sb.VetRecord;
 export const TransferRequest = sb.TransferRequest;
 export const FeedingRecord = sb.FeedingRecord;
-// P2 — Market Pricing Intelligence
+// P2 ,  Market Pricing Intelligence
 export const MorphPriceEntry = sb.MorphPriceEntry;
 export const PriceAlert = sb.PriceAlert;
 export const CollectionValuation = sb.CollectionValuation;
-// P3 — Breeding ROI Dashboard
+// P3 ,  Breeding ROI Dashboard
 export const BreedingProject = sb.BreedingProject;
 export const GeneticOutcomePrediction = sb.GeneticOutcomePrediction;
 export const Clutch = sb.Clutch;
-// P4 — Breeding Loan Management
+// P4 ,  Breeding Loan Management
 export const BreedingLoan = sb.BreedingLoan;
-// P5 — Geck Answers
+// P5 ,  Geck Answers
 export const Question = sb.Question;
 export const Answer = sb.Answer;
 export const QuestionVote = sb.QuestionVote;
-// P8 — Breeder Storefront
+// P8 ,  Breeder Storefront
 export const BreederProfile = sb.BreederProfile;
 export const BreederReview = sb.BreederReview;
-// Shipping — Zero's Geckos integration
+// Shipping ,  Zero's Geckos integration
 export const ShippingOrder = sb.ShippingOrder;
-// Pending Sales — reserve price system
+// Pending Sales ,  reserve price system
 export const PendingSale = sb.PendingSale;
 // Blog system
 export const BlogSettings = sb.BlogSettings;
@@ -119,7 +119,7 @@ export const BlogPost = sb.BlogPost;
 export const BlogCategory = sb.BlogCategory;
 export const BlogTag = sb.BlogTag;
 export const BlogLog = sb.BlogLog;
-// Store — supplies, gifts, merch, affiliate
+// Store ,  supplies, gifts, merch, affiliate
 export const StoreVendor = sb.StoreVendor;
 export const StoreCategory = sb.StoreCategory;
 export const StoreProduct = sb.StoreProduct;

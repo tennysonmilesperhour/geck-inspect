@@ -3,13 +3,13 @@
  *
  * Who's moving volume in each market. Shows:
  *   - Top breeders ranked by revenue share
- *   - Concentration score (HHI — Herfindahl-Hirschman Index)
+ *   - Concentration score (HHI ,  Herfindahl-Hirschman Index)
  *   - Tier distribution (OG / named / regional / hobby)
  *   - Release cadence implied by transaction dates
  *
  * Research note: we borrow the HHI concentration index from antitrust
  * economics because it maps beautifully onto the "can any one breeder
- * move prices?" question — <1500 = competitive, >2500 = concentrated.
+ * move prices?" question ,  <1500 = competitive, >2500 = concentrated.
  */
 
 import { useEffect, useState } from 'react';
@@ -71,7 +71,7 @@ export default function BreederMarketShare({ filters }) {
           right={
             <MethodologyPopover title="Herfindahl-Hirschman Index">
               <p>HHI = sum of (market-share %)², range 0–10,000. Below 1,500 is a competitive market; 1,500–2,500 is moderately concentrated; above 2,500 is highly concentrated.</p>
-              <p>We compute HHI on revenue share inside the current region and timeframe filters. In a concentrated segment a single breeder's release calendar meaningfully moves prices — watch those events closely.</p>
+              <p>We compute HHI on revenue share inside the current region and timeframe filters. In a concentrated segment a single breeder's release calendar meaningfully moves prices ,  watch those events closely.</p>
             </MethodologyPopover>
           }
         />

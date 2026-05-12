@@ -1,7 +1,7 @@
 /**
  * Blog backend operations. Thin wrappers around the entity client that
  * keep status transitions, slug uniqueness, log writes, AI generation,
- * and reading-time/word-count derivation all in one place — so every
+ * and reading-time/word-count derivation all in one place ,  so every
  * surface (admin editor, AI generator, mass actions) goes through the
  * same path and produces consistent audit trail entries in blog_logs.
  *
@@ -153,7 +153,7 @@ export async function cancelScheduledBlogPost(id) {
   });
   await logBlogEvent('post_updated', {
     related_post_id: id,
-    message: 'Schedule cancelled — back to draft',
+    message: 'Schedule cancelled ,  back to draft',
   });
   return updated;
 }
@@ -279,7 +279,7 @@ function buildAiPrompt(input, categories, tags) {
   const target = LENGTH_TARGETS[input.length] || LENGTH_TARGETS.medium;
   const safeList = (arr) => Array.isArray(arr) ? arr.filter(Boolean).join(', ') : '';
 
-  return `You are an expert SEO blog writer for a niche audience. Write a complete blog post that follows the brief below and call back ONLY with the JSON object the response schema requires — no extra prose, no markdown wrapper.
+  return `You are an expert SEO blog writer for a niche audience. Write a complete blog post that follows the brief below and call back ONLY with the JSON object the response schema requires ,  no extra prose, no markdown wrapper.
 
 # Brief
 
@@ -298,8 +298,8 @@ ${input.custom_instructions ? `- Extra instructions: ${input.custom_instructions
 # Writing rules (strict)
 
 1. NEVER invent statistics, percentages, study citations, or fake testimonials. Only state numbers if you are sure they are widely known and verifiable; otherwise speak qualitatively ("many breeders find…", "in our experience…").
-2. Avoid keyword stuffing. The target keyword should appear naturally — once in the title, once in the first 100 words, and 2–4 more times across the body.
-3. Match the search intent above — do not write a sales page if the intent is informational.
+2. Avoid keyword stuffing. The target keyword should appear naturally ,  once in the title, once in the first 100 words, and 2–4 more times across the body.
+3. Match the search intent above ,  do not write a sales page if the intent is informational.
 4. Use clear H2/H3 headings (markdown ## / ###), short paragraphs (max 4 sentences), and bullet lists where they help.
 5. Open with a 2–3 sentence intro that names the problem and previews the answer.
 6. Close with a useful conclusion paragraph and exactly ONE clear call to action linking back to the brand or to a relevant page.
@@ -313,7 +313,7 @@ ${input.custom_instructions ? `- Extra instructions: ${input.custom_instructions
 - slug: kebab-case, ≤ 60 chars, contains the target keyword if natural.
 - excerpt: 140–160 char meta-description-style summary.
 - outline: 5–10 H2-level headings as bullets.
-- full_article_markdown: the full body in markdown using ## / ### headings, ${target.words} words give-or-take. Begin with the intro paragraph (no H1 — the renderer adds that).
+- full_article_markdown: the full body in markdown using ## / ### headings, ${target.words} words give-or-take. Begin with the intro paragraph (no H1 ,  the renderer adds that).
 - meta_title: ≤ 60 chars, contains the target keyword.
 - meta_description: 150–160 chars, contains the target keyword.
 - suggested_category: a single category name (string).

@@ -48,7 +48,7 @@ import GeneticsModal from './GeneticsModal';
 import PlanDetails from './PlanDetails';
 
 /**
- * A single breeding plan card — collapsed view shows sire/dam thumbnails,
+ * A single breeding plan card ,  collapsed view shows sire/dam thumbnails,
  * pairing name, egg-check countdown, and quick-add buttons. Expanded view
  * renders <PlanDetails/> inline. Extracted from src/pages/Breeding.jsx as
  * part of the hairball cleanup. Body unchanged; only the imports are new.
@@ -66,7 +66,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
     const [isGeneticsOpen, setIsGeneticsOpen] = useState(false);
     const [eggCheckDay, setEggCheckDay] = useState(plan.egg_check_day || 15);
 
-    // Derive egg data from hoisted prop — no individual fetches
+    // Derive egg data from hoisted prop ,  no individual fetches
     const sortedEggs = [...planEggs].sort((a, b) => new Date(b.lay_date) - new Date(a.lay_date));
     const lastEggDate = sortedEggs.length > 0 ? sortedEggs[0].lay_date : null;
     const eggsLaid = planEggs.filter(e => !e.archived).length;
@@ -401,7 +401,7 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                 });
                                 onPlanUpdate();
                             }}
-                            title={plan.laying_active !== false ? 'Active laying season — click to mark dormant' : 'Dormant — click to mark active'}
+                            title={plan.laying_active !== false ? 'Active laying season ,  click to mark dormant' : 'Dormant ,  click to mark active'}
                         >
                             {plan.laying_active !== false ? (
                                 <><Leaf size={14} className="mr-1" /> Active</>

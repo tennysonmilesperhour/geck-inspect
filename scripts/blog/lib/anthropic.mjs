@@ -4,8 +4,8 @@
  * Centralises:
  *   - Model selection (Sonnet 4.6 for drafting/review, Haiku 4.5 for research scoring)
  *   - Prompt caching via top-level cache_control (the research + draft passes reuse
- *     a ~15-30K token static preamble — style guide, voice examples, fact-check
- *     corpus — so cache hits pay for themselves within the first week)
+ *     a ~15-30K token static preamble ,  style guide, voice examples, fact-check
+ *     corpus ,  so cache hits pay for themselves within the first week)
  *   - Structured JSON outputs via forced tool use with strict schemas
  *   - Token accounting that feeds into the $10/week budget tracker
  *
@@ -17,7 +17,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import { recordSpend, assertBudgetAvailable } from './budget.mjs';
 
-/** Model IDs — see the claude-api skill output for the canonical table. */
+/** Model IDs ,  see the claude-api skill output for the canonical table. */
 export const MODELS = {
   DRAFT: 'claude-sonnet-4-6',    // drafting + self-review
   REVIEW: 'claude-sonnet-4-6',   // fact-check + reading-level pass
@@ -80,7 +80,7 @@ export function computeCost(model, usage) {
  *
  * Params:
  *   model:    model id from MODELS
- *   system:   array of {text} blocks — the FIRST blocks should be the static
+ *   system:   array of {text} blocks ,  the FIRST blocks should be the static
  *             style guide / voice / fact-check corpus (they get cached); the
  *             LAST block should be run-specific context.
  *   messages: standard Anthropic message array
@@ -111,7 +111,7 @@ export async function callClaude({
 
   // Mark the last static system block as a cache breakpoint. The caller
   // controls WHICH block is the last static one by the order they pass
-  // blocks in — put volatile context LAST (and uncached) by appending it
+  // blocks in ,  put volatile context LAST (and uncached) by appending it
   // to `messages` instead of `system`.
   if (cacheStaticSystem && sysBlocks.length > 0) {
     const last = sysBlocks[sysBlocks.length - 1];
@@ -183,7 +183,7 @@ export async function callClaudeJson({
   schema,
 }) {
   // NOTE: we do NOT set `strict: true`. Strict-mode tool schemas reject
-  // `minItems`, `maxItems`, `minLength`, `maxLength`, `pattern`, etc. —
+  // `minItems`, `maxItems`, `minLength`, `maxLength`, `pattern`, etc. , 
   // constraints that are genuinely useful as model hints. Since we force
   // tool use via tool_choice below, Claude reliably calls the tool without
   // strict enforcement, and the constraints still bias generation.

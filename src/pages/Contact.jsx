@@ -28,7 +28,7 @@ const CHANNELS = [
   {
     icon: MessageSquare,
     title: 'Support',
-    body: 'The fastest way to reach us is from inside the app — any account can send a direct message from the inbox. Every support conversation is tied to your account so we can look at the exact gecko record, breeding pair, or import file you\'re asking about.',
+    body: 'The fastest way to reach us is from inside the app ,  any account can send a direct message from the inbox. Every support conversation is tied to your account so we can look at the exact gecko record, breeding pair, or import file you\'re asking about.',
     cta: { label: 'Sign in to send a message', path: '/AuthPortal' },
   },
   {
@@ -78,7 +78,7 @@ export default function Contact() {
           Get in touch
         </h1>
         <p className="text-lg text-slate-300 leading-relaxed max-w-3xl">
-          Geck Inspect is operated from the United States. The quickest way to reach us is through the in-app messaging system after creating a free account — we can then see the data you're asking about and reply with specifics.
+          Geck Inspect is operated from the United States. The quickest way to reach us is through the in-app messaging system after creating a free account ,  we can then see the data you're asking about and reply with specifics.
         </p>
 
         <div className="mt-10 space-y-5">
@@ -108,7 +108,7 @@ export default function Contact() {
           <div className="space-y-4 text-slate-300 leading-relaxed">
             <div>
               <h3 className="font-semibold text-slate-100 mb-1">Is Geck Inspect really free?</h3>
-              <p className="text-sm text-slate-400">Yes. Every feature — collection management, breeding planning, AI morph identification, lineage tracking, the marketplace — is free to use.</p>
+              <p className="text-sm text-slate-400">Yes. Every feature ,  collection management, breeding planning, AI morph identification, lineage tracking, the marketplace ,  is free to use.</p>
             </div>
             <div>
               <h3 className="font-semibold text-slate-100 mb-1">Do you support species other than crested geckos?</h3>

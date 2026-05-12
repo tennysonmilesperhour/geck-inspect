@@ -25,9 +25,9 @@ import ShippingOrderList from '@/components/shipping/ShippingOrderList';
 import { IS_DEMO, SHIPZEROS_URL, getNearbyHubs } from '@/integrations/ShipZeros';
 
 /**
- * BreederShipping — the authenticated shipping dashboard for Breeder
+ * BreederShipping ,  the authenticated shipping dashboard for Breeder
  * tier users. Lets them get quotes, book shipments, print labels, and
- * track packages — all powered by the Zero's Geckos integration.
+ * track packages ,  all powered by the Zero's Geckos integration.
  *
  * Free / Keeper tier users see a gated upgrade prompt instead.
  */
@@ -172,7 +172,7 @@ export default function BreederShipping() {
           setOrders(data || []);
         }
       } catch {
-        // Table might not exist yet — that's fine
+        // Table might not exist yet ,  that's fine
         setOrders([]);
       }
       setIsLoading(false);
@@ -206,7 +206,7 @@ export default function BreederShipping() {
         setOrders((prev) => [data, ...prev]);
       }
     } catch {
-      // Table might not exist — still show success in UI
+      // Table might not exist ,  still show success in UI
     }
     setActiveQuote(null);
   };
@@ -261,11 +261,11 @@ export default function BreederShipping() {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300 mb-3">
               <Truck className="w-3.5 h-3.5" />
-              {IS_DEMO ? 'Demo mode — partnership pending' : 'Powered by Zero\u2019s Geckos'}
+              {IS_DEMO ? 'Demo mode ,  partnership pending' : 'Powered by Zero\u2019s Geckos'}
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-slate-100">Shipping</h1>
             <p className="text-sm text-slate-400 mt-1">
-              Book shipments, print labels, and track packages — all from one place.
+              Book shipments, print labels, and track packages ,  all from one place.
             </p>
           </div>
           <a href={SHIPZEROS_URL} target="_blank" rel="noopener noreferrer">

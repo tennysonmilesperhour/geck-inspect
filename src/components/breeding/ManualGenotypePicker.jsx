@@ -12,7 +12,7 @@ import { AlertTriangle } from 'lucide-react';
 /**
  * Curated set of Mendelian crested gecko traits available in the
  * unauthenticated / manual-entry calculator. The list is intentionally
- * shorter than the full TRAITS export from `crested-gecko-app` —
+ * shorter than the full TRAITS export from `crested-gecko-app` , 
  * polygenic morphs (Harlequin, Pinstripe intensity, base color
  * gradients) don't follow Punnett squares, and the allelic complex at
  * SABLE_COMPLEX is presented as a single picker since selecting two
@@ -20,7 +20,7 @@ import { AlertTriangle } from 'lucide-react';
  * here.
  *
  * Each entry encodes the canonical tag strings the upstream
- * `tagToGenotype` library recognizes — so changing labels here is safe
+ * `tagToGenotype` library recognizes ,  so changing labels here is safe
  * but changing `tags.*` strings will silently break genotype mapping.
  */
 export const PICKER_TRAITS = [
@@ -139,7 +139,7 @@ function zygosityOptions(trait) {
     opts.push({
       value: 'super',
       label: trait.super_lethal
-        ? 'Super (homozygous) — lethal in the egg'
+        ? 'Super (homozygous) ,  lethal in the egg'
         : 'Super (homozygous)',
     });
   } else {
@@ -150,7 +150,7 @@ function zygosityOptions(trait) {
 }
 
 /**
- * Stateless picker — the parent owns the zygosity record and renders
+ * Stateless picker ,  the parent owns the zygosity record and renders
  * the resulting summary tags. We only emit `onChange(newZygosity)`.
  */
 export default function ManualGenotypePicker({ value, onChange, accentClass = 'border-emerald-700' }) {
@@ -203,7 +203,7 @@ export default function ManualGenotypePicker({ value, onChange, accentClass = 'b
         <div className="flex items-start gap-2 rounded-lg border border-red-700 bg-red-950/40 px-3 py-2">
           <AlertTriangle className="w-4 h-4 text-red-300 flex-shrink-0 mt-0.5" />
           <p className="text-xs text-red-200 leading-snug">
-            Super Lilly White is lethal in the egg — this combination cannot
+            Super Lilly White is lethal in the egg ,  this combination cannot
             exist in a living animal. The calculator still runs the math so
             you can see the predicted distribution, but expect lethal-egg
             warnings in the results.

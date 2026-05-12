@@ -8,7 +8,7 @@
  *   - Read/write docs/error-triage-state.json, the git-tracked dedupe ledger.
  *   - Wrap @anthropic-ai/sdk with tool-use support for the triage loop.
  *
- * Everything here is plain Node + ESM — no Vite aliases, no Supabase client
+ * Everything here is plain Node + ESM ,  no Vite aliases, no Supabase client
  * imports from src/. This file runs in CI.
  */
 import fs from 'node:fs';
@@ -26,7 +26,7 @@ export const STATE_PATH = path.join(REPO_ROOT, 'docs', 'error-triage-state.json'
 export const MODEL = 'claude-sonnet-4-6';
 
 /**
- * Dedupe windows — once a signature is in one of these states, skip it until
+ * Dedupe windows ,  once a signature is in one of these states, skip it until
  * the window elapses. `open_pr` is indefinite because the PR itself blocks
  * re-triage (we check PR state on the next run and clear if merged/closed).
  */
@@ -58,7 +58,7 @@ export function getSupabase() {
 
 /**
  * Fetch unresolved error_logs rows in the given window. We only look at
- * `level='error'` — warnings/info are useful for the admin dashboard but
+ * `level='error'` ,  warnings/info are useful for the admin dashboard but
  * not worth burning an agent run on.
  */
 export async function fetchRecentErrors(supabase, { sinceHours = 24 } = {}) {
@@ -108,7 +108,7 @@ function firstMeaningfulFrame(stack) {
   if (!stack) return '';
   const lines = stack.split('\n');
   for (const line of lines) {
-    // "at handleClick (...)" or "at Object.foo (...)" — grab the symbol.
+    // "at handleClick (...)" or "at Object.foo (...)" ,  grab the symbol.
     const m = line.match(/\bat\s+([A-Za-z_$][\w$.<>]*)\b/);
     if (!m) continue;
     const name = m[1];
@@ -262,7 +262,7 @@ export async function runToolLoop({
     accumulate(totalUsage, response.usage);
     onTurn({ turn, stopReason: response.stop_reason, usage: response.usage });
 
-    // Text blocks are discarded — we only act on tool_use.
+    // Text blocks are discarded ,  we only act on tool_use.
     const toolUses = response.content.filter((b) => b.type === 'tool_use');
     if (toolUses.length === 0) {
       // Claude answered in prose instead of calling a tool. Nudge once; if

@@ -11,7 +11,7 @@ import { createPageUrl } from '@/utils';
 //   - how many active breeding pairs the user can track (breeding_pairs)
 //   - which feature keys unlock for the tier (features)
 //
-// Grandfathered accounts keep `breeder` tier indefinitely — they never
+// Grandfathered accounts keep `breeder` tier indefinitely ,  they never
 // get paywalled as long as subscription_status === 'grandfathered'.
 //
 // marketplace_sync is Enterprise-only; Breeder does not include it.
@@ -78,7 +78,7 @@ const FEATURE_NAMES = {
 };
 
 // Admins get enterprise-level access. Grandfathered accounts keep Breeder.
-// Lifetime users keep whatever tier they bought — `membership_billing_cycle`
+// Lifetime users keep whatever tier they bought ,  `membership_billing_cycle`
 // is just metadata for the billing/UI layer; entitlements are still driven
 // off `membership_tier`, so a lifetime Keeper has the same gates as a
 // monthly Keeper.
@@ -90,7 +90,7 @@ function effectiveTier(user) {
 
 // True for users who bought lifetime access on Keeper or Breeder. Use this
 // for UX signals only ("Lifetime member" badge, suppress renewal copy,
-// etc.) — feature gating already flows through effectiveTier().
+// etc.) ,  feature gating already flows through effectiveTier().
 export function isLifetimeMember(user) {
     if (!user) return false;
     if (user.membership_billing_cycle !== 'lifetime') return false;

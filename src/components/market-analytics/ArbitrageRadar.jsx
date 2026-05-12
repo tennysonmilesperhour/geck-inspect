@@ -10,7 +10,7 @@
  * friction), sample size, and confidence. Clickable to drill into the
  * underlying transactions on both sides.
  *
- * Research note: we follow Liv-ex / sneaker-arbitrage patterns — always
+ * Research note: we follow Liv-ex / sneaker-arbitrage patterns ,  always
  * show gross vs risk-adjusted, always show sample size, and always let
  * the user see the trades that built the number.
  */
@@ -41,7 +41,7 @@ export default function ArbitrageRadar({ filters, onDrillDown }) {
     <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
       <SectionHeader
         icon={Radar}
-        title="Arbitrage radar — cross-region opportunities"
+        title="Arbitrage radar ,  cross-region opportunities"
         subtitle="Combos priced meaningfully below their highest-paying market, after shipping & import friction"
         right={
           <div className="flex items-center gap-2">

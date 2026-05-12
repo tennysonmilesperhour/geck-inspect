@@ -25,7 +25,7 @@ import {
 } from 'lucide-react';
 
 /**
- * Side-tab feedback widget — a slim vertical tab hugging the right edge of
+ * Side-tab feedback widget ,  a slim vertical tab hugging the right edge of
  * every authenticated page. Opens a dialog where the user picks a feedback
  * type (general, bug, feature request) plus an optional 1-5 star rating,
  * then fires straight into support_messages. Admins triage it from the
@@ -114,7 +114,7 @@ export default function FeedbackWidget() {
       });
       setSent(true);
       toast({
-        title: 'Sent — thank you!',
+        title: 'Sent ,  thank you!',
         description: 'An admin will see this in the inbox.',
       });
     } catch (err) {

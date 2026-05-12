@@ -25,12 +25,12 @@ import { captureSignupGrantFromUrl } from '@/lib/store/signupGrant';
 // first navigation away from the landing page. applyPendingReferral
 // (called from AuthContext on sign-in) consumes it later.
 captureReferralFromUrl();
-// Same idea for ?grant=<token> from the email receipt link — capture
+// Same idea for ?grant=<token> from the email receipt link ,  capture
 // before any redirect / OAuth round-trip clobbers the URL, then
 // applyPendingSignupGrant redeems it on first authenticated session.
 captureSignupGrantFromUrl();
 
-// Public landing page — stays eager because it's what unauthenticated
+// Public landing page ,  stays eager because it's what unauthenticated
 // visitors (and crawlers) hit first.
 import Home from './pages/Home';
 
@@ -47,7 +47,7 @@ const Giveaways            = lazy(() => import('./pages/Giveaways'));
 const MorphDetail          = lazy(() => import('./pages/MorphDetail'));
 const MorphGuideList       = lazy(() => import('./pages/MorphGuide'));
 // Programmatic taxonomy hubs: /MorphGuide/category/<id> and
-// /MorphGuide/inheritance/<id>. Two routes, one module — the module
+// /MorphGuide/inheritance/<id>. Two routes, one module ,  the module
 // exports named components per variant so each route resolves its
 // expected param shape via useParams() directly.
 const MorphCategoryHub     = lazy(() =>
@@ -58,7 +58,7 @@ const MorphInheritanceHub  = lazy(() =>
 );
 const PrivacyPolicy        = lazy(() => import('./pages/PrivacyPolicy'));
 // Content pages that were previously auth-gated despite being in the
-// sitemap — moved public so crawlers (and humans without an account) can
+// sitemap ,  moved public so crawlers (and humans without an account) can
 // actually read them. The pages render their own public header/footer
 // and link through to sign-up CTAs where relevant.
 const CareGuide             = lazy(() => import('./pages/CareGuide'));
@@ -78,21 +78,21 @@ const MarketplaceVerification = lazy(() => import('./pages/MarketplaceVerificati
 // structure, head, pattern, and color. Spec: docs/specs/P11-quality-rubric.md.
 const QualityScale          = lazy(() => import('./pages/QualityScale'));
 
-// P1 — Animal Passport (public pages, no auth required)
+// P1 ,  Animal Passport (public pages, no auth required)
 const AnimalPassport        = lazy(() => import('./pages/AnimalPassport'));
 const PassportQR            = lazy(() => import('./pages/PassportQR'));
 const ClaimAnimal           = lazy(() => import('./pages/ClaimAnimal'));
 const CollectionInvite      = lazy(() => import('./pages/CollectionInvite'));
-// P5 — Geck Answers (public read, auth to post)
+// P5 ,  Geck Answers (public read, auth to post)
 const GeckAnswersPublic     = lazy(() => import('./pages/GeckAnswers'));
-// Editorial blog — long-form genetics, breeding, and care articles. Lives
+// Editorial blog ,  long-form genetics, breeding, and care articles. Lives
 // under /blog/<slug>, indexable, prerendered, and JSON-LD wired through
 // the same pipeline as MorphGuide / CareGuide topic pages.
 const BlogIndex             = lazy(() => import('./pages/BlogIndex'));
 const BlogPost              = lazy(() => import('./pages/BlogPost'));
 const BlogCategoryPage      = lazy(() => import('./pages/BlogCategoryPage'));
 const BlogTagPage           = lazy(() => import('./pages/BlogTagPage'));
-// Store — Supplies tab. Public for guests (gift SEO), works for auth too.
+// Store ,  Supplies tab. Public for guests (gift SEO), works for auth too.
 // Self-contained chrome; mounted at /Store/* so internal sub-routes
 // (cart, gifts, PDPs) resolve without colliding with the auto-router.
 const Store                 = lazy(() => import('./pages/Store'));
@@ -105,7 +105,7 @@ const LayoutWrapper = ({ children, currentPageName }) => Layout ?
   <Layout currentPageName={currentPageName}>{children}</Layout>
   : <>{children}</>;
 
-// Spinner used for the in-Layout Suspense boundary — fills whatever
+// Spinner used for the in-Layout Suspense boundary ,  fills whatever
 // space the page slot has rather than the whole viewport, so the
 // sidebar + header stay visible while a lazy page chunk loads.
 const PageSuspenseFallback = (
@@ -117,7 +117,7 @@ const PageSuspenseFallback = (
 // Parent-route element that wraps authenticated pages in a single
 // Layout instance and renders the matched child via <Outlet/>. This
 // keeps the Layout (sidebar, header, hover state) mounted across
-// navigation — previously each Route.element created its own
+// navigation ,  previously each Route.element created its own
 // LayoutWrapper, so React unmounted + remounted the entire Layout
 // (and reset the sidebar collapse state) on every link click.
 //
@@ -125,7 +125,7 @@ const PageSuspenseFallback = (
 // while loading, and the nearest Suspense boundary renders its
 // fallback in place of everything below it. Without this boundary,
 // the outer Suspense at Routes level would catch it and replace the
-// Layout with the global spinner — which is why first-time
+// Layout with the global spinner ,  which is why first-time
 // navigations (uncached chunks) appeared to reload the menu while
 // repeat navigations (cached chunks) preserved state.
 const LayoutOutlet = () => Layout ? (
@@ -224,7 +224,7 @@ const AuthenticatedApp = () => {
           <Route path="/CareGuide/:topic" element={<CareGuideTopic />} />
           <Route path="/GeneticsGuide" element={<GeneticsGuide />} />
           <Route path="/GeneticCalculatorTool" element={<GeneticCalculatorTool />} />
-          {/* Cleaner, marketable URL alias for the genetics calculator —
+          {/* Cleaner, marketable URL alias for the genetics calculator , 
               the legacy path is kept above so existing links and the
               authenticated PAGES table keep working. */}
           <Route path="/calculator" element={<GeneticCalculatorTool />} />
@@ -239,19 +239,19 @@ const AuthenticatedApp = () => {
               /Breeder/<slug> (clean, preferred); the page itself reads
               whichever the router hands it. */}
           <Route path="/Breeder/:slug" element={<Breeder />} />
-          {/* P1 — Public passport pages (no auth needed) */}
+          {/* P1 ,  Public passport pages (no auth needed) */}
           <Route path="/passport/:passportCode" element={<AnimalPassport />} />
           <Route path="/passport/:passportCode/qr" element={<PassportQR />} />
           <Route path="/claim/:token" element={<ClaimAnimal />} />
           <Route path="/collection-invite/:token" element={<CollectionInvite />} />
-          {/* P5 — Geck Answers (public read) */}
+          {/* P5 ,  Geck Answers (public read) */}
           <Route path="/GeckAnswers" element={<GeckAnswersPublic />} />
           {/* Editorial blog */}
           <Route path="/blog" element={<BlogIndex />} />
           <Route path="/blog/category/:slug" element={<BlogCategoryPage />} />
           <Route path="/blog/tag/:slug" element={<BlogTagPage />} />
           <Route path="/blog/:slug" element={<BlogPost />} />
-          {/* Store — public so guests can shop and check out. */}
+          {/* Store ,  public so guests can shop and check out. */}
           <Route path="/Store/*" element={<Store />} />
           <Route path="*" element={<LoginPortal />} />
         </Routes>
@@ -288,19 +288,19 @@ const AuthenticatedApp = () => {
             users hitting the cleaner URL keep their app chrome. */}
         <Route path="/calculator" element={<GeneticCalculatorTool />} />
         <Route path="/calculator/:morph" element={<CalculatorMorph />} />
-        {/* Store — nested inside Layout so the sidebar persists. The
+        {/* Store ,  nested inside Layout so the sidebar persists. The
             StoreLayout component skips its standalone header when an
             authenticated user is detected (i.e. when the parent Layout
             is mounted) so the brand chrome doesn't double up. */}
         <Route path="/Store/*" element={<Store />} />
       </Route>
 
-      {/* Editorial blog — accessible to authenticated users too */}
+      {/* Editorial blog ,  accessible to authenticated users too */}
       <Route path="/blog" element={<BlogIndex />} />
       <Route path="/blog/category/:slug" element={<BlogCategoryPage />} />
       <Route path="/blog/tag/:slug" element={<BlogTagPage />} />
       <Route path="/blog/:slug" element={<BlogPost />} />
-      {/* P1 — Public passport pages (also available when authenticated) */}
+      {/* P1 ,  Public passport pages (also available when authenticated) */}
       <Route path="/passport/:passportCode" element={<AnimalPassport />} />
       <Route path="/claim/:token" element={<ClaimAnimal />} />
       <Route path="/collection-invite/:token" element={<CollectionInvite />} />

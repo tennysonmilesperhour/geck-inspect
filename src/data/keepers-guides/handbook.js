@@ -1,5 +1,5 @@
 /**
- * Guide 03 — The Handbook: Everything They Don't Tell You
+ * Guide 03 ,  The Handbook: Everything They Don't Tell You
  *
  * Evergreen reference settling the debates: UVB, cohabitation,
  * handling, bioactive vs paper towel, sexing, behavior decoding, and

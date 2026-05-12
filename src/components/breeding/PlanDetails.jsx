@@ -40,7 +40,7 @@ import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
 import { generateHatchedGeckoIdFromEgg } from '@/components/shared/geckoIdUtils';
 
 /**
- * Expanded-state view of a single breeding plan — shows all eggs with
+ * Expanded-state view of a single breeding plan ,  shows all eggs with
  * editable lay/hatch dates, status dropdowns, and the Edit Plan modal.
  */
 export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulationModal, onOpenEggCheckModal, planEggs, isEditModalOpen, setIsEditModalOpen }) {
@@ -99,7 +99,7 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
                     const allEggs = await Egg.filter({ breeding_plan_id: plan.id });
 
                     // Simple 1-based offspring number for the human-readable name
-                    // — the ID code carries the authoritative sequence.
+                    // ,  the ID code carries the authoritative sequence.
                     const hatchedEggsWithGeckos = allEggs.filter(e => e.status === 'Hatched' && e.gecko_id);
                     const offspringNumber = hatchedEggsWithGeckos.length + 1;
 
@@ -346,7 +346,7 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
                                 </div>
                             </div>
 
-                            {/* Status and Actions — single flex row so everything
+                            {/* Status and Actions ,  single flex row so everything
                                 stays aligned side by side. StatusDisplay and
                                 Hatched! stretch to fill; icon buttons stay fixed. */}
                             <div className="flex items-center gap-2">

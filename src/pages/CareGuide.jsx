@@ -57,7 +57,7 @@ const CARE_GUIDE_JSON_LD = {
     {
       '@type': 'Article',
       '@id': 'https://geckinspect.com/CareGuide#article',
-      headline: 'Crested Gecko Care Guide — Complete Beginner to Advanced Reference',
+      headline: 'Crested Gecko Care Guide ,  Complete Beginner to Advanced Reference',
       description:
         'Comprehensive care guide for crested geckos (Correlophus ciliatus): housing, temperature and humidity, diet, handling, common health issues, shedding, tail loss, breeding, and hatchling care.',
       url: 'https://geckinspect.com/CareGuide',
@@ -109,7 +109,7 @@ const CARE_GUIDE_JSON_LD = {
           name: 'What do crested geckos eat?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'The primary diet is commercial Crested Gecko Diet (CGD) — a complete powdered food mixed with water. Popular brands include Pangea, Repashy, and Black Panther Zoological. Insects like dubia roaches or black soldier fly larvae can be offered 1–2 times per week as enrichment.',
+            text: 'The primary diet is commercial Crested Gecko Diet (CGD) ,  a complete powdered food mixed with water. Popular brands include Pangea, Repashy, and Black Panther Zoological. Insects like dubia roaches or black soldier fly larvae can be offered 1–2 times per week as enrichment.',
           },
         },
         {
@@ -384,7 +384,7 @@ export default function CareGuidePage() {
     <>
       <Seo
         title="Crested Gecko Care Guide"
-        description="Comprehensive crested gecko (Correlophus ciliatus) care guide — housing setups, temperature and humidity ranges, diet with CGD brand comparison, handling, common health issues, shedding, tail loss, breeding readiness, egg incubation, and hatchling care."
+        description="Comprehensive crested gecko (Correlophus ciliatus) care guide ,  housing setups, temperature and humidity ranges, diet with CGD brand comparison, handling, common health issues, shedding, tail loss, breeding readiness, egg incubation, and hatchling care."
         path="/CareGuide"
         imageAlt="Crested gecko care and husbandry reference"
         keywords={[
@@ -424,7 +424,7 @@ export default function CareGuidePage() {
             <p className="text-lg md:text-xl text-slate-300 max-w-3xl leading-relaxed">
               Every dimension of crested gecko husbandry, from your first
               hatchling to long-term breeding projects. Housing, diet, handling,
-              health, life stages, breeding — written for beginners, deep enough
+              health, life stages, breeding ,  written for beginners, deep enough
               for keepers with dozens of animals.
             </p>
             <div className="mt-5 flex flex-wrap items-center gap-2 text-xs text-slate-400">

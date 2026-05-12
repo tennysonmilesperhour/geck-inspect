@@ -6,8 +6,8 @@ import jsPDF from 'jspdf';
  * One place to define what a "gecko row" looks like in an export, so
  * CSV and PDF stay in sync. Format:
  *
- *   exportGeckosCSV(geckos)  — triggers a .csv download
- *   exportGeckosPDF(geckos, { title })  — triggers a .pdf download
+ *   exportGeckosCSV(geckos)  ,  triggers a .csv download
+ *   exportGeckosPDF(geckos, { title })  ,  triggers a .pdf download
  *
  * Both walk the same column spec, so adding a new field only requires
  * updating the COLUMNS array below.
@@ -85,7 +85,7 @@ export function exportGeckosCSV(geckos, { filename } = {}) {
 /**
  * Generate a landscape PDF of the gecko roster and trigger a download.
  * Rolls our own lightweight table renderer against jsPDF's primitive
- * text/line APIs — avoids needing jspdf-autotable.
+ * text/line APIs ,  avoids needing jspdf-autotable.
  */
 export function exportGeckosPDF(geckos, { title, filename, userName } = {}) {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'letter' });
@@ -162,7 +162,7 @@ export function exportGeckosPDF(geckos, { title, filename, userName } = {}) {
     let x = margin + 2;
     COLUMNS.forEach((col, i) => {
       let text = renderCell(gecko, col);
-      // Clip to column width (no wrap — landscape table)
+      // Clip to column width (no wrap ,  landscape table)
       const maxW = widths[i] - 3;
       // Truncate to something the column can actually hold. jsPDF's
       // maxWidth would wrap, which breaks our fixed row height.

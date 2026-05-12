@@ -1,5 +1,5 @@
 /**
- * MorphPriceIndex — community price intelligence widget.
+ * MorphPriceIndex ,  community price intelligence widget.
  *
  * Shows comparable sale prices for a given morph, and inline feedback
  * when a seller sets their price ("12% above average").

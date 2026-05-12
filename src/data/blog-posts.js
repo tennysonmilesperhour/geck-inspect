@@ -1,5 +1,5 @@
 /**
- * Geck Inspect blog — authoritative long-form content.
+ * Geck Inspect blog ,  authoritative long-form content.
  *
  * Each entry is a self-contained blog post that compounds with the
  * existing /MorphGuide and /CareGuide pages: posts are "spokes" that
@@ -8,7 +8,7 @@
  *
  * Why this lives in a JS data file
  * --------------------------------
- * The same convention as care-guide.js and morph-guide.js — keep
+ * The same convention as care-guide.js and morph-guide.js ,  keep
  * content in plain JavaScript objects, no JSX, no imports. The build
  * pipeline (sitemap, prerender, llms-full, vercel.json) parses this
  * file with regex so adding a post needs no schema change anywhere.
@@ -47,7 +47,7 @@ export const BLOG_CATEGORIES = [
     id: 'genetics',
     label: 'Genetics & Inheritance',
     description:
-      'Trait deep-dives explaining the Foundation Genetics consensus on individual crested gecko alleles — what each trait does, how it passes to offspring, and what the breeding pairs produce.',
+      'Trait deep-dives explaining the Foundation Genetics consensus on individual crested gecko alleles ,  what each trait does, how it passes to offspring, and what the breeding pairs produce.',
   },
   {
     id: 'breeding',
@@ -65,7 +65,7 @@ export const BLOG_CATEGORIES = [
     id: 'identification',
     label: 'Identification & Visual ID',
     description:
-      'How to tell one trait from another at a glance — including hatchling vs. adult expression and traits that look similar but behave differently in breeding.',
+      'How to tell one trait from another at a glance ,  including hatchling vs. adult expression and traits that look similar but behave differently in breeding.',
   },
   {
     id: 'care',
@@ -80,7 +80,7 @@ export const BLOG_POSTS = [
     slug: 'cappuccino-crested-gecko-genetics',
     title: 'Cappuccino Crested Gecko: Why Super Cappuccinos Are Risky',
     description:
-      'Cappuccino is incomplete dominant, not codominant. Super Cappuccinos (CAPP/CAPP) have documented breathing issues — here is what every breeder needs to know before pairing.',
+      'Cappuccino is incomplete dominant, not codominant. Super Cappuccinos (CAPP/CAPP) have documented breathing issues ,  here is what every breeder needs to know before pairing.',
     keyphrase: 'cappuccino crested gecko',
     category: 'genetics',
     tags: ['cappuccino', 'incomplete-dominant', 'super-cappuccino', 'melanistic', 'sable', 'foundation-genetics'],
@@ -88,15 +88,15 @@ export const BLOG_POSTS = [
     dateModified: '2026-04-18',
     heroEyebrow: 'Genetics deep-dive',
     tldr: [
-      'Cappuccino is incomplete dominant — one copy gives the visible trait, two copies produce the Super Cappuccino (Melanistic).',
+      'Cappuccino is incomplete dominant ,  one copy gives the visible trait, two copies produce the Super Cappuccino (Melanistic).',
       'Super Cappuccinos have documented health issues including reduced nostril size and breathing difficulty. Breeding for supers is not recommended.',
-      'Cappuccino is allelic with Sable and Highway — they share the same gene location but produce distinct compound heterozygotes (Luwak, etc.) instead of supers.',
-      'Hobby sources commonly call Cappuccino "codominant." This is incorrect — true codominance is extremely rare in any animal species.',
+      'Cappuccino is allelic with Sable and Highway ,  they share the same gene location but produce distinct compound heterozygotes (Luwak, etc.) instead of supers.',
+      'Hobby sources commonly call Cappuccino "codominant." This is incorrect ,  true codominance is extremely rare in any animal species.',
     ],
     body: [
       {
         type: 'p',
-        text: 'The Cappuccino crested gecko is one of the most popular incomplete dominant traits introduced to the hobby in the last decade. It was discovered and proven by Reptile City Korea in 2020–2021 and has since become a staple of high-end Correlophus ciliatus breeding projects worldwide. But the trait carries health risks in homozygous form that newer breeders often miss because the hobby still calls it "codominant" — a term that is almost always wrong when applied to crested geckos.',
+        text: 'The Cappuccino crested gecko is one of the most popular incomplete dominant traits introduced to the hobby in the last decade. It was discovered and proven by Reptile City Korea in 2020–2021 and has since become a staple of high-end Correlophus ciliatus breeding projects worldwide. But the trait carries health risks in homozygous form that newer breeders often miss because the hobby still calls it "codominant" ,  a term that is almost always wrong when applied to crested geckos.',
       },
       {
         type: 'p',
@@ -108,7 +108,7 @@ export const BLOG_POSTS = [
         title: 'Critical breeding warning',
         items: [
           'Super Cappuccinos (homozygous CAPP/CAPP, also called Melanistic) have documented health concerns including reduced nostril size, breathing difficulty, and poor thriving.',
-          'Breeding specifically to produce Super Cappuccinos is not recommended. Pair Cappuccino × non-Cappuccino instead — you still produce ~50% Cappuccino offspring without risking the lethal homozygous expression.',
+          'Breeding specifically to produce Super Cappuccinos is not recommended. Pair Cappuccino × non-Cappuccino instead ,  you still produce ~50% Cappuccino offspring without risking the lethal homozygous expression.',
         ],
       },
       {
@@ -124,7 +124,7 @@ export const BLOG_POSTS = [
         items: [
           'A distinctive Y-shape at the base of the tail where the dorsal pattern splits.',
           'White flecks or splotching along the lower spine and tail base.',
-          'Reduced or absent lateral pattern — the sides of the body are typically clean.',
+          'Reduced or absent lateral pattern ,  the sides of the body are typically clean.',
           'Bright sharp white on the tail base in hatchlings, with a darker tail tip that contrasts strongly.',
         ],
       },
@@ -144,7 +144,7 @@ export const BLOG_POSTS = [
       },
       {
         type: 'p',
-        text: 'The fact that Cappuccino × Sable produces a Luwak (and NOT a Super Cappuccino) is the key evidence that proves Cappuccino, Sable, and Highway are three distinct alleles at the same gene locus rather than three separate genes. If they were on different loci, the Cappuccino × Sable cross would produce some offspring carrying one copy each of Cappuccino and Sable on independent chromosomes, expressing both traits weakly — instead, what you actually see is a single distinct intermediate phenotype, which is the textbook signature of two alleles competing for the same gene slot.',
+        text: 'The fact that Cappuccino × Sable produces a Luwak (and NOT a Super Cappuccino) is the key evidence that proves Cappuccino, Sable, and Highway are three distinct alleles at the same gene locus rather than three separate genes. If they were on different loci, the Cappuccino × Sable cross would produce some offspring carrying one copy each of Cappuccino and Sable on independent chromosomes, expressing both traits weakly ,  instead, what you actually see is a single distinct intermediate phenotype, which is the textbook signature of two alleles competing for the same gene slot.',
       },
       {
         type: 'table',
@@ -161,7 +161,7 @@ export const BLOG_POSTS = [
       {
         question: 'Is Cappuccino codominant or incomplete dominant?',
         answer:
-          'Cappuccino is incomplete dominant, not codominant — a common hobby error corrected by the Foundation Genetics project. Two copies produce the Super Cappuccino (Melanistic) form, which is the diagnostic signature of incomplete dominance.',
+          'Cappuccino is incomplete dominant, not codominant ,  a common hobby error corrected by the Foundation Genetics project. Two copies produce the Super Cappuccino (Melanistic) form, which is the diagnostic signature of incomplete dominance.',
       },
       {
         question: 'Can I safely breed Super Cappuccinos?',
@@ -171,7 +171,7 @@ export const BLOG_POSTS = [
       {
         question: 'What is the difference between Cappuccino and Sable?',
         answer:
-          'Cappuccino and Sable are both incomplete dominant traits that sit at the same gene locus (allelic), but they are distinct alleles. Cappuccino × Sable produces a compound heterozygote called Luwak, NOT a Super Cappuccino — which is the key evidence proving they share a locus.',
+          'Cappuccino and Sable are both incomplete dominant traits that sit at the same gene locus (allelic), but they are distinct alleles. Cappuccino × Sable produces a compound heterozygote called Luwak, NOT a Super Cappuccino ,  which is the key evidence proving they share a locus.',
       },
       {
         question: 'How do I identify a heterozygous Cappuccino?',
@@ -198,15 +198,15 @@ export const BLOG_POSTS = [
     ],
     externalCitations: [
       {
-        label: 'Lil Monsters Reptiles — Cappuccino White Paper',
+        label: 'Lil Monsters Reptiles ,  Cappuccino White Paper',
         url: 'https://lmreptiles.com/fg-pt2-capps/',
       },
       {
-        label: 'LM Reptiles — Foundation Genetics Overview',
+        label: 'LM Reptiles ,  Foundation Genetics Overview',
         url: 'https://lmreptiles.com/fg-overview/',
       },
       {
-        label: 'ReptiDex Genetics Library — Crested Gecko',
+        label: 'ReptiDex Genetics Library ,  Crested Gecko',
         url: 'https://reptidex.com/genetics/crested-gecko',
       },
     ],
@@ -214,7 +214,7 @@ export const BLOG_POSTS = [
   {
       slug: 'super-cappuccino-viability-debate',
       title: 'Super Cappuccino: Scam, or Just Misunderstood?',
-      description: 'Super Cappuccino (Frappuccino) crested geckos are genetically legitimate—but breeders call them a scam. Here\'s the real debate about viability, ethics, and breeding risk.',
+      description: 'Super Cappuccino (Frappuccino) crested geckos are genetically legitimate, but breeders call them a scam. Here\'s the real debate about viability, ethics, and breeding risk.',
       keyphrase: 'super cappuccino crested gecko',
       category: 'breeding',
       tags: [
@@ -224,16 +224,16 @@ export const BLOG_POSTS = [
       dateModified: '2026-05-05',
       heroEyebrow: 'Breeding Ethics',
       tldr: [
-        'Frappuccino (Super Cappuccino) is the homozygous form of the incomplete-dominant Cappuccino morph—genetically real, not a scam.',
+        'Frappuccino (Super Cappuccino) is the homozygous form of the incomplete-dominant Cappuccino morph, genetically real, not a scam.',
         'Cappuccino × Cappuccino pairings produce ~25% Frappuccinos, ~50% Cappuccinos, and ~25% normals, per standard incomplete-dominant math.',
-        'Community concern centers on reported clutch failures and health issues in Cappuccino × Cappuccino pairings—not on whether the morph exists.',
+        'Community concern centers on reported clutch failures and health issues in Cappuccino × Cappuccino pairings, not on whether the morph exists.',
         'The safest breeding approach remains Cappuccino × non-carrier: 50% Cappuccino offspring, zero lethal-super risk.',
         'Calling Frappuccino \'a scam\' conflates the genetics with the ethics of chasing homozygous animals when viability data is still thin.',
       ],
       body: [
         {
           type: 'p',
-          text: 'A visual Cappuccino crested gecko will run you $400–$1,200 depending on the line. Pair it to another Cappuccino and the math says one in four babies is a Frappuccino—a Super Cappuccino, the homozygous form—worth multiples of that. On paper, it sounds like the easiest money in the hobby. In practice, a corner of the breeding community has decided the whole thing is a scam. Both sides are wrong in useful ways, and sorting out which parts are wrong matters for your breeding decisions and your animals\' welfare.',
+          text: 'A visual Cappuccino crested gecko will run you $400–$1,200 depending on the line. Pair it to another Cappuccino and the math says one in four babies is a Frappuccino, a Super Cappuccino, the homozygous form, worth multiples of that. On paper, it sounds like the easiest money in the hobby. In practice, a corner of the breeding community has decided the whole thing is a scam. Both sides are wrong in useful ways, and sorting out which parts are wrong matters for your breeding decisions and your animals\' welfare.',
         },
         {
           type: 'p',
@@ -241,7 +241,7 @@ export const BLOG_POSTS = [
         },
         {
           type: 'p',
-          text: 'The answer is neither clean nor comfortable: the Frappuccino is genetically real, predicted by the same incomplete-dominant math that governs Lilly White and Soft Scale. The controversy isn\'t about whether the gene exists. It\'s about what happens when you breed for the homozygous form before you have enough data to know whether two copies of this gene are safe. That\'s a different question—and a harder one.',
+          text: 'The answer is neither clean nor comfortable: the Frappuccino is genetically real, predicted by the same incomplete-dominant math that governs Lilly White and Soft Scale. The controversy isn\'t about whether the gene exists. It\'s about what happens when you breed for the homozygous form before you have enough data to know whether two copies of this gene are safe. That\'s a different question, and a harder one.',
         },
         {
           type: 'callout',
@@ -250,7 +250,7 @@ export const BLOG_POSTS = [
         },
         {
           type: 'p',
-          text: 'Cappuccino is a proven incomplete-dominant morph. Single copy produces the visual form: a characteristic warm brown animal with a connected dorsal pattern and distinctive eye-rim markings. Two copies produce the super form, which the hobby calls Frappuccino. This is standard incomplete-dominant behavior—the same pattern as Lilly White (one copy = visual morph, two copies = super form) and Soft Scale (same structure).',
+          text: 'Cappuccino is a proven incomplete-dominant morph. Single copy produces the visual form: a characteristic warm brown animal with a connected dorsal pattern and distinctive eye-rim markings. Two copies produce the super form, which the hobby calls Frappuccino. This is standard incomplete-dominant behavior, the same pattern as Lilly White (one copy = visual morph, two copies = super form) and Soft Scale (same structure).',
         },
         {
           type: 'p',
@@ -270,7 +270,7 @@ export const BLOG_POSTS = [
         },
         {
           type: 'p',
-          text: 'What the Punnett square cannot tell you is whether two copies of the Cappuccino gene produces a healthy, fertile, long-lived animal. That\'s where the community\'s concern is actually grounded—and where the word "scam" goes off the rails.',
+          text: 'What the Punnett square cannot tell you is whether two copies of the Cappuccino gene produces a healthy, fertile, long-lived animal. That\'s where the community\'s concern is actually grounded, and where the word "scam" goes off the rails.',
         },
         {
           type: 'callout',
@@ -283,11 +283,11 @@ export const BLOG_POSTS = [
         },
         {
           type: 'p',
-          text: 'The problem is what some breeders report happens along the way. Several community voices—including the YouTube discussions that sparked this post—describe reduced clutch viability when pairing Cappuccino to Cappuccino. Not dramatically failed eggs (that\'s what a confirmed lethal allele looks like, as with Super Lilly White), but quieter problems: lower hatch rates, smaller clutch sizes, animals that seem less robust out of the egg.',
+          text: 'The problem is what some breeders report happens along the way. Several community voices, including the YouTube discussions that sparked this post, describe reduced clutch viability when pairing Cappuccino to Cappuccino. Not dramatically failed eggs (that\'s what a confirmed lethal allele looks like, as with Super Lilly White), but quieter problems: lower hatch rates, smaller clutch sizes, animals that seem less robust out of the egg.',
         },
         {
           type: 'p',
-          text: 'This is meaningfully different from the Lilly White situation. When you pair two Lilly Whites, the ~25% of embryos that inherit two LW alleles simply don\'t hatch. The Frappuccino situation appears to be murkier—some Cap × Cap clutches produce Frappuccinos that seem perfectly healthy; others underperform. The honest description from the morph-guide corpus is: "some breeders report reduced clutch sizes or health issues from Cappuccino × Cappuccino pairings. Proceed with caution and document outcomes."',
+          text: 'This is meaningfully different from the Lilly White situation. When you pair two Lilly Whites, the ~25% of embryos that inherit two LW alleles simply don\'t hatch. The Frappuccino situation appears to be murkier, some Cap × Cap clutches produce Frappuccinos that seem perfectly healthy; others underperform. The honest description from the morph-guide corpus is: "some breeders report reduced clutch sizes or health issues from Cappuccino × Cappuccino pairings. Proceed with caution and document outcomes."',
         },
         {
           type: 'p',
@@ -304,11 +304,11 @@ export const BLOG_POSTS = [
         },
         {
           type: 'p',
-          text: 'The first argument—that the Frappuccino *morph* is a genetic fiction—is false. The incomplete-dominant math is solid. Frappuccinos are real phenotypic animals with a predictable genetic basis. Calling the morph itself a scam conflates bad breeding documentation with flawed genetics.',
+          text: 'The first argument, that the Frappuccino *morph* is a genetic fiction, is false. The incomplete-dominant math is solid. Frappuccinos are real phenotypic animals with a predictable genetic basis. Calling the morph itself a scam conflates bad breeding documentation with flawed genetics.',
         },
         {
           type: 'p',
-          text: 'The second argument—that *buying* a Frappuccino from an undocumented or high-risk line and expecting a healthy breeding animal is a bad investment—has more merit. If a breeder produced Frappuccinos from a Cap × Cap pairing but cannot tell you clutch viability data, how many siblings made it to adulthood, and whether the Frappuccino parents they used have a demonstrated health track record, you\'re buying into an unknown. The morph is real; the specific animal\'s long-term viability is uncertain.',
+          text: 'The second argument, that *buying* a Frappuccino from an undocumented or high-risk line and expecting a healthy breeding animal is a bad investment, has more merit. If a breeder produced Frappuccinos from a Cap × Cap pairing but cannot tell you clutch viability data, how many siblings made it to adulthood, and whether the Frappuccino parents they used have a demonstrated health track record, you\'re buying into an unknown. The morph is real; the specific animal\'s long-term viability is uncertain.',
         },
         {
           type: 'p',
@@ -321,15 +321,15 @@ export const BLOG_POSTS = [
         },
         {
           type: 'p',
-          text: 'Lilly White is the cleanest case study for incomplete-dominant ethics in this hobby, and it\'s worth leaning on. Two copies of the LW gene is embryonic-lethal—eggs develop partially and fail to hatch. The community converged on an ethic: never pair two visual Lilly Whites. You get 50% visual LW offspring, 50% normals, and zero lethal supers by breeding LW × non-carrier. That pairing is universal best practice and widely enforced.',
+          text: 'Lilly White is the cleanest case study for incomplete-dominant ethics in this hobby, and it\'s worth leaning on. Two copies of the LW gene is embryonic-lethal, eggs develop partially and fail to hatch. The community converged on an ethic: never pair two visual Lilly Whites. You get 50% visual LW offspring, 50% normals, and zero lethal supers by breeding LW × non-carrier. That pairing is universal best practice and widely enforced.',
         },
         {
           type: 'p',
-          text: 'The Cappuccino situation is not that clean. Super Lilly White never survives to hatch. Frappuccinos do survive—the question is whether they thrive consistently. That ambiguity is both the reason the debate persists and the reason the "just avoid it like you avoid Super LW" argument doesn\'t quite land. You can\'t compare a confirmed hard lethal to a possible soft effect and draw the same policy conclusion.',
+          text: 'The Cappuccino situation is not that clean. Super Lilly White never survives to hatch. Frappuccinos do survive, the question is whether they thrive consistently. That ambiguity is both the reason the debate persists and the reason the "just avoid it like you avoid Super LW" argument doesn\'t quite land. You can\'t compare a confirmed hard lethal to a possible soft effect and draw the same policy conclusion.',
         },
         {
           type: 'p',
-          text: 'What the LW comparison *does* teach us: when the super form of an incomplete dominant has any credible health concerns, the burden of proof is on the breeder pursuing it to document outcomes rigorously. The community converged on LW ethics once the data was unambiguous. The Frappuccino community is still in the data-gathering phase—which means irresponsible production now shapes what the data will look like.',
+          text: 'What the LW comparison *does* teach us: when the super form of an incomplete dominant has any credible health concerns, the burden of proof is on the breeder pursuing it to document outcomes rigorously. The community converged on LW ethics once the data was unambiguous. The Frappuccino community is still in the data-gathering phase, which means irresponsible production now shapes what the data will look like.',
         },
         {
           type: 'callout',
@@ -342,7 +342,7 @@ export const BLOG_POSTS = [
         },
         {
           type: 'p',
-          text: 'I don\'t think we do. Not because the morph is fake, but because the community data is thin and unevenly reported. Most of what circulates is anecdote—breeders who report clutch problems often aren\'t logging complete data, and breeders who report healthy Frappuccinos have an obvious incentive to emphasize the positive. Neither camp is running controlled experiments.',
+          text: 'I don\'t think we do. Not because the morph is fake, but because the community data is thin and unevenly reported. Most of what circulates is anecdote, breeders who report clutch problems often aren\'t logging complete data, and breeders who report healthy Frappuccinos have an obvious incentive to emphasize the positive. Neither camp is running controlled experiments.',
         },
         {
           type: 'p',
@@ -367,11 +367,11 @@ export const BLOG_POSTS = [
         },
         {
           type: 'p',
-          text: '**If you\'re considering buying a Frappuccino**, ask hard questions. How many clutches has this breeder produced from Cap × Cap pairings? What are the hatch rates? Are the Frappuccino\'s siblings still alive and thriving? What\'s the health history of the specific Frappuccino you\'re looking at? A legitimate breeder who has done this right will have these answers. A breeder who sells you "the genetics work, so it\'s fine" without documentation is the real scam—not the morph.',
+          text: '**If you\'re considering buying a Frappuccino**, ask hard questions. How many clutches has this breeder produced from Cap × Cap pairings? What are the hatch rates? Are the Frappuccino\'s siblings still alive and thriving? What\'s the health history of the specific Frappuccino you\'re looking at? A legitimate breeder who has done this right will have these answers. A breeder who sells you "the genetics work, so it\'s fine" without documentation is the real scam, not the morph.',
         },
         {
           type: 'p',
-          text: '**If you\'re evaluating animals marketed as possible Frappuccinos**, remember that deeper body color, amplified dorsal saddle, and paler neutral tone are the visual indicators—but those features alone don\'t prove two-copy status. Lineage documentation is the only confirmation that works. A "looks like a Frappuccino" animal from unknown parents is just a dark Cappuccino.',
+          text: '**If you\'re evaluating animals marketed as possible Frappuccinos**, remember that deeper body color, amplified dorsal saddle, and paler neutral tone are the visual indicators, but those features alone don\'t prove two-copy status. Lineage documentation is the only confirmation that works. A "looks like a Frappuccino" animal from unknown parents is just a dark Cappuccino.',
         },
         {
           type: 'p',
@@ -388,17 +388,17 @@ export const BLOG_POSTS = [
         },
         {
           type: 'p',
-          text: 'The scam isn\'t the morph. The scam is pretending the ethics are simple in either direction—either "the math works so breed away" or "it\'s all fake, don\'t touch it." The real situation is that an incomplete-dominant gene with an incompletely characterized super form is sitting in the hands of a hobby that hasn\'t yet generated the rigorous data to set clear norms.',
+          text: 'The scam isn\'t the morph. The scam is pretending the ethics are simple in either direction, either "the math works so breed away" or "it\'s all fake, don\'t touch it." The real situation is that an incomplete-dominant gene with an incompletely characterized super form is sitting in the hands of a hobby that hasn\'t yet generated the rigorous data to set clear norms.',
         },
         {
           type: 'p',
-          text: 'Breed Cappuccino × non-carrier. Keep meticulous records if you do otherwise. Buy from breeders who can show you their work. And stop calling the whole morph a scam—it\'s muddying the conversation that actually needs to happen.',
+          text: 'Breed Cappuccino × non-carrier. Keep meticulous records if you do otherwise. Buy from breeders who can show you their work. And stop calling the whole morph a scam, it\'s muddying the conversation that actually needs to happen.',
         },
       ],
       faq: [
         {
           question: 'Is the Super Cappuccino (Frappuccino) crested gecko a real morph?',
-          answer: 'Yes. Frappuccino is the homozygous (super) form of the incomplete-dominant Cappuccino morph—the same relationship Lilly White has to Super Lilly White. It is genetically real and multiple breeders have produced them. The debate is about the health and viability of the super form, not whether the gene exists.',
+          answer: 'Yes. Frappuccino is the homozygous (super) form of the incomplete-dominant Cappuccino morph, the same relationship Lilly White has to Super Lilly White. It is genetically real and multiple breeders have produced them. The debate is about the health and viability of the super form, not whether the gene exists.',
         },
         {
           question: 'What are the odds of producing a Frappuccino from Cappuccino × Cappuccino?',
@@ -418,7 +418,7 @@ export const BLOG_POSTS = [
         },
         {
           question: 'How is Frappuccino different from Super Lilly White?',
-          answer: 'Super Lilly White is confirmed embryonic-lethal—two copies of the LW gene means eggs fail to hatch. Frappuccinos do survive and can be healthy animals. The concern is that some Cap × Cap pairings show reduced viability or clutch problems, but this is a debated soft effect, not a confirmed hard lethal.',
+          answer: 'Super Lilly White is confirmed embryonic-lethal, two copies of the LW gene means eggs fail to hatch. Frappuccinos do survive and can be healthy animals. The concern is that some Cap × Cap pairings show reduced viability or clutch problems, but this is a debated soft effect, not a confirmed hard lethal.',
         },
         {
           question: 'What questions should I ask before buying a Frappuccino crested gecko?',
@@ -426,7 +426,7 @@ export const BLOG_POSTS = [
         },
         {
           question: 'Can I produce Frappuccinos without a Cappuccino × Cappuccino pairing?',
-          answer: 'No. Two copies of the Cappuccino gene are required. The only path to a Frappuccino is pairing two animals that each carry at least one Cappuccino allele—i.e., two visual Cappuccinos. You cannot produce the super form from a Cappuccino × non-carrier pairing.',
+          answer: 'No. Two copies of the Cappuccino gene are required. The only path to a Frappuccino is pairing two animals that each carry at least one Cappuccino allele, i.e., two visual Cappuccinos. You cannot produce the super form from a Cappuccino × non-carrier pairing.',
         },
       ],
       internalLinks: [
@@ -440,7 +440,7 @@ export const BLOG_POSTS = [
         },
         {
           href: '/MorphGuide/lilly-white',
-          label: 'Lilly White morph — lethal allele reference',
+          label: 'Lilly White morph ,  lethal allele reference',
         },
         {
           href: '/GeneticsGuide',
@@ -448,7 +448,7 @@ export const BLOG_POSTS = [
         },
         {
           href: '/calculator',
-          label: 'Genetic calculator — model your Cappuccino pairings',
+          label: 'Genetic calculator ,  model your Cappuccino pairings',
         },
         {
           href: '/MorphGuide/inheritance/incomplete-dominant',
@@ -458,11 +458,11 @@ export const BLOG_POSTS = [
       externalCitations: [
         {
           url: 'https://www.youtube.com/watch?v=JLXYdEo7mhk',
-          label: 'TikisGeckos — Should We Breed Super Cappuccino Crested Geckos? (YouTube)',
+          label: 'TikisGeckos ,  Should We Breed Super Cappuccino Crested Geckos? (YouTube)',
         },
         {
           url: 'https://www.youtube.com/watch?v=5O_obmlNu9I',
-          label: 'Don\'t Buy Super Cappuccino Crested Gecko — It\'s a Scam (YouTube)',
+          label: 'Don\'t Buy Super Cappuccino Crested Gecko ,  It\'s a Scam (YouTube)',
         },
       ],
     },
@@ -1255,7 +1255,7 @@ export const BLOG_POSTS = [
   {
     slug: "super-cappuccino-breeding-risks",
     title: "Why Super Cappuccino Breeding Is Riskier Than You Think",
-    description: "Pairing two Cappuccinos to produce Frappuccinos sounds like good math. Here's why experienced breeders are cautious—and what the incomplete-dominant inheritance actually tells you.",
+    description: "Pairing two Cappuccinos to produce Frappuccinos sounds like good math. Here's why experienced breeders are cautious, and what the incomplete-dominant inheritance actually tells you.",
     keyphrase: "super cappuccino breeding risks",
     category: "breeding",
     tags: [
@@ -1271,16 +1271,16 @@ export const BLOG_POSTS = [
     dateModified: "2026-05-10",
     heroEyebrow: "Genetics × Breeding Ethics",
     tldr: [
-      "Cappuccino is incomplete-dominant — two copies produce the super form (Frappuccino), not a lethal outcome, but viability concerns exist.",
-      "Cap × Cap pairings produce 25% Frappuccino, 50% visual Cappuccino, 25% normal — the math is sound but the biology may not be.",
+      "Cappuccino is incomplete-dominant ,  two copies produce the super form (Frappuccino), not a lethal outcome, but viability concerns exist.",
+      "Cap × Cap pairings produce 25% Frappuccino, 50% visual Cappuccino, 25% normal ,  the math is sound but the biology may not be.",
       "Some breeders report reduced clutch sizes and developmental issues from Cap × Cap pairings; the community data is incomplete.",
       "The safest strategy is Cappuccino × normal: 50% visual Cappuccino offspring with zero super-form risk.",
-      "Buy Frappuccinos only from breeders who document clutch outcomes — lineage transparency is the only quality signal that matters here.",
+      "Buy Frappuccinos only from breeders who document clutch outcomes ,  lineage transparency is the only quality signal that matters here.",
     ],
     body: [
       {
         type: "p",
-        text: "A Frappuccino crested gecko listed at a 2024 expo had a sign beside it: *\"Super Cappuccino — rarest morph at the show, $2,200.\"* Two tables over, a breeder was quietly telling anyone who'd listen that she'd lost three clutches trying to produce one. The math on Cap × Cap looks straightforward. The biology, apparently, is less cooperative.",
+        text: "A Frappuccino crested gecko listed at a 2024 expo had a sign beside it: *\"Super Cappuccino ,  rarest morph at the show, $2,200.\"* Two tables over, a breeder was quietly telling anyone who'd listen that she'd lost three clutches trying to produce one. The math on Cap × Cap looks straightforward. The biology, apparently, is less cooperative.",
       },
       {
         type: "p",
@@ -1297,7 +1297,7 @@ export const BLOG_POSTS = [
       },
       {
         type: "p",
-        text: "Cappuccino is a proven incomplete-dominant morph. That's not a community guess — it's been demonstrated through controlled breeding, and the morph-guide.js canonical data lists it explicitly as `incomplete-dominant`.",
+        text: "Cappuccino is a proven incomplete-dominant morph. That's not a community guess ,  it's been demonstrated through controlled breeding, and the morph-guide.js canonical data lists it explicitly as `incomplete-dominant`.",
       },
       {
         type: "p",
@@ -1307,13 +1307,13 @@ export const BLOG_POSTS = [
         type: "ul",
         items: [
           "**0 copies:** normal-looking gecko, no carrier status visible",
-          "**1 copy:** visual Cappuccino — the classic coffee-brown saddle pattern with warm body tones",
-          "**2 copies:** Frappuccino (Super Cappuccino) — amplified saddle, paler and more neutral body color, cleaner pattern boundaries",
+          "**1 copy:** visual Cappuccino ,  the classic coffee-brown saddle pattern with warm body tones",
+          "**2 copies:** Frappuccino (Super Cappuccino) ,  amplified saddle, paler and more neutral body color, cleaner pattern boundaries",
         ],
       },
       {
         type: "p",
-        text: "Pair two visual Cappuccinos and the Punnett square gives you 25% Frappuccino, 50% visual Cappuccino, 25% normal. On paper, that's a productive pairing — one in four animals hits the high-value outcome.",
+        text: "Pair two visual Cappuccinos and the Punnett square gives you 25% Frappuccino, 50% visual Cappuccino, 25% normal. On paper, that's a productive pairing ,  one in four animals hits the high-value outcome.",
       },
       {
         type: "p",
@@ -1322,7 +1322,7 @@ export const BLOG_POSTS = [
       {
         type: "callout",
         tone: "info",
-        title: "The incomplete-dominant super-form pattern — and why Frappuccino is different from Lilly White",
+        title: "The incomplete-dominant super-form pattern ,  and why Frappuccino is different from Lilly White",
       },
       {
         type: "p",
@@ -1334,15 +1334,15 @@ export const BLOG_POSTS = [
       },
       {
         type: "p",
-        text: "Frappuccino is not that clean. The super form *does* hatch. It *does* exist. Breeders produce them. That's enough to separate it from Super Lilly White categorically — there's no confirmed embryonic lethality.",
+        text: "Frappuccino is not that clean. The super form *does* hatch. It *does* exist. Breeders produce them. That's enough to separate it from Super Lilly White categorically ,  there's no confirmed embryonic lethality.",
       },
       {
         type: "p",
-        text: "But the genetics-sections data includes a specific caveat that many guides omit: *\"there is ongoing debate about sublethal effects — some breeders report reduced clutch sizes or health issues from Cappuccino × Cappuccino pairings.\"* That word, sublethal, is doing a lot of work. It means the animals survive, but perhaps not robustly. It means clutch outcomes may be worse than the 75% hatch rate a clean incomplete-dominant pairing should theoretically produce.",
+        text: "But the genetics-sections data includes a specific caveat that many guides omit: *\"there is ongoing debate about sublethal effects ,  some breeders report reduced clutch sizes or health issues from Cappuccino × Cappuccino pairings.\"* That word, sublethal, is doing a lot of work. It means the animals survive, but perhaps not robustly. It means clutch outcomes may be worse than the 75% hatch rate a clean incomplete-dominant pairing should theoretically produce.",
       },
       {
         type: "p",
-        text: "Soft Scale has a similar profile. The genetics-sections data notes that *\"several breeders report reduced fertility when producing [Super Soft Scales]\"* from Soft Scale × Soft Scale pairings. The pattern is worth noticing: in both Cappuccino and Soft Scale, the incomplete-dominant super form has a cloud of reported — but not systematically documented — health and fertility concerns hovering over it.",
+        text: "Soft Scale has a similar profile. The genetics-sections data notes that *\"several breeders report reduced fertility when producing [Super Soft Scales]\"* from Soft Scale × Soft Scale pairings. The pattern is worth noticing: in both Cappuccino and Soft Scale, the incomplete-dominant super form has a cloud of reported ,  but not systematically documented ,  health and fertility concerns hovering over it.",
       },
       {
         type: "p",
@@ -1351,11 +1351,11 @@ export const BLOG_POSTS = [
       {
         type: "callout",
         tone: "info",
-        title: "What breeders have reported — and why it matters",
+        title: "What breeders have reported ,  and why it matters",
       },
       {
         type: "p",
-        text: "The TikisGeckos YouTube video asking \"Should We Breed Super Cappuccino Crested Geckos?\" (7,653 views, three years ago) captures the moment the community was actively working through this question. The Homestead Reptiles video titled \"Don't buy super cappuccino crested gecko it's a scam and waste of money\" is blunter — and while the framing is sensational, the underlying concern is real: buyers who don't know what they're getting into may be purchasing animals with undisclosed health question marks.",
+        text: "The TikisGeckos YouTube video asking \"Should We Breed Super Cappuccino Crested Geckos?\" (7,653 views, three years ago) captures the moment the community was actively working through this question. The Homestead Reptiles video titled \"Don't buy super cappuccino crested gecko it's a scam and waste of money\" is blunter ,  and while the framing is sensational, the underlying concern is real: buyers who don't know what they're getting into may be purchasing animals with undisclosed health question marks.",
       },
       {
         type: "p",
@@ -1366,7 +1366,7 @@ export const BLOG_POSTS = [
         items: [
           "**Frappuccinos hatch.** This isn't Super LW. Animals reach adulthood.",
           "**Some Cap × Cap clutches show higher-than-expected failure rates.** Breeders have reported this, but sample sizes at any individual operation are small. Without systematic data collection across multiple breeders and seasons, it's impossible to put a reliable number on the risk.",
-          "**Some Frappuccinos show subtle development differences** — scale texture, growth rate, reproductive output — that are consistent with sublethal genetic effects. Again: reported, not systematically confirmed.",
+          "**Some Frappuccinos show subtle development differences** ,  scale texture, growth rate, reproductive output ,  that are consistent with sublethal genetic effects. Again: reported, not systematically confirmed.",
           "**The premium pricing for Frappuccinos doesn't come with a health warranty.** A $2,000+ animal that came from a Cap × Cap pairing where the breeder didn't track clutch outcomes is a financial and ethical liability.",
         ],
       },
@@ -1381,7 +1381,7 @@ export const BLOG_POSTS = [
       {
         type: "callout",
         tone: "info",
-        title: "The safer pairing — and what you actually get",
+        title: "The safer pairing ,  and what you actually get",
       },
       {
         type: "p",
@@ -1446,7 +1446,7 @@ export const BLOG_POSTS = [
       },
       {
         type: "p",
-        text: "**Only run Cap × Cap if you're specifically targeting Frappuccino and prepared to document every outcome.** That means recording every egg laid, every egg that fails, every hatchling phenotype, and growth/health observations at 6 and 12 months. You're not just breeding — you're adding to the community's data on whether the sublethal risk is real.",
+        text: "**Only run Cap × Cap if you're specifically targeting Frappuccino and prepared to document every outcome.** That means recording every egg laid, every egg that fails, every hatchling phenotype, and growth/health observations at 6 and 12 months. You're not just breeding ,  you're adding to the community's data on whether the sublethal risk is real.",
       },
       {
         type: "p",
@@ -1454,7 +1454,7 @@ export const BLOG_POSTS = [
       },
       {
         type: "p",
-        text: "**Don't assume \"Frappuccino looks healthy at 6 months\" means \"Frappuccino has no issues.\"** Sublethal effects in incomplete-dominant supers can show up in reduced reproductive output or fertility — things you won't know until the animal is adult and breeding age.",
+        text: "**Don't assume \"Frappuccino looks healthy at 6 months\" means \"Frappuccino has no issues.\"** Sublethal effects in incomplete-dominant supers can show up in reduced reproductive output or fertility ,  things you won't know until the animal is adult and breeding age.",
       },
       {
         type: "p",
@@ -1462,7 +1462,7 @@ export const BLOG_POSTS = [
       },
       {
         type: "p",
-        text: "Back to that expo Frappuccino with the $2,200 sign: the price wasn't outrageous for a legitimately rare animal from a careful breeder. But the sign said nothing about where it came from, how many eggs preceded it, or whether the line had any health documentation. That's the gap this post is trying to close. The genetics of Cappuccino are sound. The breeding decision to produce Frappuccinos is yours to make. Just make it with the full picture in front of you — not just the Punnett square.",
+        text: "Back to that expo Frappuccino with the $2,200 sign: the price wasn't outrageous for a legitimately rare animal from a careful breeder. But the sign said nothing about where it came from, how many eggs preceded it, or whether the line had any health documentation. That's the gap this post is trying to close. The genetics of Cappuccino are sound. The breeding decision to produce Frappuccinos is yours to make. Just make it with the full picture in front of you ,  not just the Punnett square.",
       },
     ],
     faq: [
@@ -1484,19 +1484,19 @@ export const BLOG_POSTS = [
       },
       {
         question: "How is Cappuccino inheritance different from Lilly White?",
-        answer: "Both are incomplete-dominant. The key difference is the super form: Super Lilly White is confirmed embryonic-lethal — homozygous eggs don't hatch. Frappuccino (Super Cappuccino) does hatch but carries reported viability concerns. Lilly White × Lilly White pairings should always be avoided; Cap × Cap requires caution and documentation.",
+        answer: "Both are incomplete-dominant. The key difference is the super form: Super Lilly White is confirmed embryonic-lethal ,  homozygous eggs don't hatch. Frappuccino (Super Cappuccino) does hatch but carries reported viability concerns. Lilly White × Lilly White pairings should always be avoided; Cap × Cap requires caution and documentation.",
       },
       {
         question: "Are Frappuccino crested geckos worth buying?",
-        answer: "They can be, if the seller can provide clutch documentation. Ask how many eggs were in the clutch, how many hatched, and what health observations they have at 6+ months. A Frappuccino without that paper trail carries unknown breeding risk — which matters if you plan to use it as a project animal.",
+        answer: "They can be, if the seller can provide clutch documentation. Ask how many eggs were in the clutch, how many hatched, and what health observations they have at 6+ months. A Frappuccino without that paper trail carries unknown breeding risk ,  which matters if you plan to use it as a project animal.",
       },
       {
         question: "Can you tell a Cappuccino het by looking at it?",
-        answer: "No. Cappuccino is incomplete-dominant — the normal-looking offspring from a Cap × normal pairing are non-carriers. There are no hets to identify visually. Either an animal shows the Cappuccino phenotype (one or two copies) or it doesn't carry the gene at all.",
+        answer: "No. Cappuccino is incomplete-dominant ,  the normal-looking offspring from a Cap × normal pairing are non-carriers. There are no hets to identify visually. Either an animal shows the Cappuccino phenotype (one or two copies) or it doesn't carry the gene at all.",
       },
       {
         question: "What does 'sublethal' mean in the context of Frappuccino breeding?",
-        answer: "Sublethal means the animals survive but may have reduced fitness — slower growth, smaller clutches, fertility issues, or subtle developmental differences. Unlike a confirmed lethal allele where embryos die, sublethal effects only become visible over time, which is why long-term documentation from breeders matters.",
+        answer: "Sublethal means the animals survive but may have reduced fitness ,  slower growth, smaller clutches, fertility issues, or subtle developmental differences. Unlike a confirmed lethal allele where embryos die, sublethal effects only become visible over time, which is why long-term documentation from breeders matters.",
       },
     ],
     internalLinks: [
@@ -1510,7 +1510,7 @@ export const BLOG_POSTS = [
       },
       {
         href: "/MorphGuide/lilly-white",
-        label: "Lilly White — the confirmed lethal super form",
+        label: "Lilly White ,  the confirmed lethal super form",
       },
       {
         href: "/GeneticsGuide",
@@ -1522,24 +1522,24 @@ export const BLOG_POSTS = [
       },
       {
         href: "/MorphGuide/soft-scale",
-        label: "Soft Scale — another incomplete-dominant with super-form concerns",
+        label: "Soft Scale ,  another incomplete-dominant with super-form concerns",
       },
     ],
     externalCitations: [
       {
         url: "https://www.youtube.com/watch?v=JLXYdEo7mhk",
-        label: "TikisGeckos — Should We Breed Super Cappuccino Crested Geckos?",
+        label: "TikisGeckos ,  Should We Breed Super Cappuccino Crested Geckos?",
       },
       {
         url: "https://www.youtube.com/watch?v=5O_obmlNu9I",
-        label: "Homestead Reptiles — Don't Buy Super Cappuccino Crested Gecko",
+        label: "Homestead Reptiles ,  Don't Buy Super Cappuccino Crested Gecko",
       },
     ],
   },
   {
     slug: "cappuccino-pairing-risks-runts",
     title: "Why Your \"Perfect\" Cappuccino Pairing Creates Runts",
-    description: "Pairing two Cappuccino crested geckos looks like a guaranteed win on paper. One in four hatchlings will be a Frappuccino — and that may be costing you more than you think.",
+    description: "Pairing two Cappuccino crested geckos looks like a guaranteed win on paper. One in four hatchlings will be a Frappuccino ,  and that may be costing you more than you think.",
     keyphrase: "cappuccino crested gecko pairing",
     category: "breeding",
     tags: [
@@ -1553,11 +1553,11 @@ export const BLOG_POSTS = [
     dateModified: "2026-05-12",
     heroEyebrow: "Breeding Strategy",
     tldr: [
-      "Cappuccino is incomplete dominant — pairing two visuals produces 25% Frappuccino (super form), 50% Cappuccino, 25% non-carrier.",
+      "Cappuccino is incomplete dominant ,  pairing two visuals produces 25% Frappuccino (super form), 50% Cappuccino, 25% non-carrier.",
       "Some breeders report reduced vigor or developmental issues in Frappuccino hatchlings; viability concerns are real but not yet fully documented.",
-      "The safest and most productive pairing is Cappuccino × non-carrier — 50% Cappuccino offspring, zero Frappuccino risk.",
+      "The safest and most productive pairing is Cappuccino × non-carrier ,  50% Cappuccino offspring, zero Frappuccino risk.",
       "Cappuccino × Cappuccino is not inherently irresponsible, but you must document outcomes and disclose risks to buyers.",
-      "A dark brown gecko with a dorsal pattern is not automatically Cappuccino — lineage is the only valid confirmation.",
+      "A dark brown gecko with a dorsal pattern is not automatically Cappuccino ,  lineage is the only valid confirmation.",
     ],
     body: [
       {
@@ -1566,7 +1566,7 @@ export const BLOG_POSTS = [
       },
       {
         type: "p",
-        text: "So why does this keep happening — and why do so many guides still present the Cap × Cap pairing as the obvious move?",
+        text: "So why does this keep happening ,  and why do so many guides still present the Cap × Cap pairing as the obvious move?",
       },
       {
         type: "p",
@@ -1579,7 +1579,7 @@ export const BLOG_POSTS = [
       },
       {
         type: "p",
-        text: "Cappuccino is a proven incomplete-dominant morph. That sentence carries a lot of weight. According to the morph-guide.js canonical data, it produces a characteristic \"saddle\" — a distinct, rounded dorsal marking with clean boundaries — along with a warm brown body tone. Single-copy animals (visual Cappuccinos) show the saddle pattern and that signature coffee-colored base. Two copies produce the super form, called Frappuccino.",
+        text: "Cappuccino is a proven incomplete-dominant morph. That sentence carries a lot of weight. According to the morph-guide.js canonical data, it produces a characteristic \"saddle\" ,  a distinct, rounded dorsal marking with clean boundaries ,  along with a warm brown body tone. Single-copy animals (visual Cappuccinos) show the saddle pattern and that signature coffee-colored base. Two copies produce the super form, called Frappuccino.",
       },
       {
         type: "p",
@@ -1599,7 +1599,7 @@ export const BLOG_POSTS = [
       },
       {
         type: "p",
-        text: "A quick note on what Cappuccino is *not*: a dark brown crested gecko with a dorsal stripe is not automatically a Cappuccino. The genetics-sections.jsx makes this explicit — \"not every brown crested gecko with a dorsal pattern is Cappuccino.\" Lineage is the only valid confirmation. This is worth saying because a flood of mislabeled animals in the hobby has distorted what people expect from a \"Cappuccino pairing.\"",
+        text: "A quick note on what Cappuccino is *not*: a dark brown crested gecko with a dorsal stripe is not automatically a Cappuccino. The genetics-sections.jsx makes this explicit ,  \"not every brown crested gecko with a dorsal pattern is Cappuccino.\" Lineage is the only valid confirmation. This is worth saying because a flood of mislabeled animals in the hobby has distorted what people expect from a \"Cappuccino pairing.\"",
       },
       {
         type: "callout",
@@ -1658,7 +1658,7 @@ export const BLOG_POSTS = [
       },
       {
         type: "p",
-        text: "The likely mechanism: Frappuccinos (the homozygous super form) may carry a developmental load that their single-copy siblings don't. This is not confirmed as a lethal allele — Frappuccinos do survive and are bred — but the sub-lethality hypothesis is consistent with what breeders are observing. Reduced hatch rates, lower birth weights, and slow early growth all point in the same direction.",
+        text: "The likely mechanism: Frappuccinos (the homozygous super form) may carry a developmental load that their single-copy siblings don't. This is not confirmed as a lethal allele ,  Frappuccinos do survive and are bred ,  but the sub-lethality hypothesis is consistent with what breeders are observing. Reduced hatch rates, lower birth weights, and slow early growth all point in the same direction.",
       },
       {
         type: "p",
@@ -1687,7 +1687,7 @@ export const BLOG_POSTS = [
       },
       {
         type: "p",
-        text: "Part of this is simple math appeal. Two Cappuccinos = more Cappuccinos + a shot at the premium super form. Part of it is the absence of a confirmed lethal (unlike Lilly White, where the LW × LW prohibition is airtight and well-known). And part of it is that the Frappuccino is genuinely striking — paler, more neutral body color and amplified saddle, per the morph guide — and commands a premium when it's healthy.",
+        text: "Part of this is simple math appeal. Two Cappuccinos = more Cappuccinos + a shot at the premium super form. Part of it is the absence of a confirmed lethal (unlike Lilly White, where the LW × LW prohibition is airtight and well-known). And part of it is that the Frappuccino is genuinely striking ,  paler, more neutral body color and amplified saddle, per the morph guide ,  and commands a premium when it's healthy.",
       },
       {
         type: "p",
@@ -1695,7 +1695,7 @@ export const BLOG_POSTS = [
       },
       {
         type: "p",
-        text: "The problem is that \"see what happens\" is not a breeding strategy. It's an experiment. And when you're running an experiment on animals, you have an obligation to document the outcomes — hatch rates, hatchling weights at 30 days, growth curves through 90 days — and share them. The Frappuccino's viability profile will only get resolved when breeders actually track and publish this data rather than quietly selling the small ones as \"Cappuccinos\" and moving on.",
+        text: "The problem is that \"see what happens\" is not a breeding strategy. It's an experiment. And when you're running an experiment on animals, you have an obligation to document the outcomes ,  hatch rates, hatchling weights at 30 days, growth curves through 90 days ,  and share them. The Frappuccino's viability profile will only get resolved when breeders actually track and publish this data rather than quietly selling the small ones as \"Cappuccinos\" and moving on.",
       },
       {
         type: "callout",
@@ -1710,18 +1710,18 @@ export const BLOG_POSTS = [
         type: "ul",
         items: [
           "50% visual Cappuccinos from every clutch, every time",
-          "Zero Frappuccinos — and zero associated viability risk",
+          "Zero Frappuccinos ,  and zero associated viability risk",
           "50% non-carriers (valuable for future outcrosses, or sold as pets)",
           "Hatchlings with normal expected vigor",
         ],
       },
       {
         type: "p",
-        text: "For a breeding program with a two- to three-year horizon, running Cappuccino × quality non-carrier is how you build a stable line. The 25% Frappuccino gamble from Cap × Cap might produce one premium animal per clutch — but if that animal comes in undersized and takes six months to catch up, the price premium evaporates. And if it doesn't catch up at all, you've got an animal that's difficult to sell honestly and potentially unhealthy.",
+        text: "For a breeding program with a two- to three-year horizon, running Cappuccino × quality non-carrier is how you build a stable line. The 25% Frappuccino gamble from Cap × Cap might produce one premium animal per clutch ,  but if that animal comes in undersized and takes six months to catch up, the price premium evaporates. And if it doesn't catch up at all, you've got an animal that's difficult to sell honestly and potentially unhealthy.",
       },
       {
         type: "p",
-        text: "There's also a lineage value argument for the outcross route. Pairing your Cappuccino male to a high-quality harlequin or extreme harlequin non-carrier gives you 50% Cappuccinos *with the harlequin background baked in*. Those animals are worth more than a baseline Cappuccino from an uninspiring pairing. The non-carrier offspring in that clutch carry 50% of that same harlequin line — they're quality animals in their own right.",
+        text: "There's also a lineage value argument for the outcross route. Pairing your Cappuccino male to a high-quality harlequin or extreme harlequin non-carrier gives you 50% Cappuccinos *with the harlequin background baked in*. Those animals are worth more than a baseline Cappuccino from an uninspiring pairing. The non-carrier offspring in that clutch carry 50% of that same harlequin line ,  they're quality animals in their own right.",
       },
       {
         type: "callout",
@@ -1734,11 +1734,11 @@ export const BLOG_POSTS = [
       },
       {
         type: "p",
-        text: "If you're a serious breeder and you want to characterize Frappuccino viability, run the pairing, track every egg from lay date through 90-day weight, and publish the data. That's genuinely valuable for the community. The genetics-sections.jsx says it directly: \"if you do breed for Frappuccino, be transparent about clutch outcomes — the community needs data to establish whether homozygous viability is a real concern.\"",
+        text: "If you're a serious breeder and you want to characterize Frappuccino viability, run the pairing, track every egg from lay date through 90-day weight, and publish the data. That's genuinely valuable for the community. The genetics-sections.jsx says it directly: \"if you do breed for Frappuccino, be transparent about clutch outcomes ,  the community needs data to establish whether homozygous viability is a real concern.\"",
       },
       {
         type: "p",
-        text: "But if you're producing animals for sale and you're not tracking outcomes, Cap × Cap is a way to quietly generate a cohort of potentially compromised animals that get sold as \"Cappuccinos\" to buyers who don't know what a Frappuccino is. That's a reputation problem waiting to happen — and it's contributing to the YouTube skepticism around the morph.",
+        text: "But if you're producing animals for sale and you're not tracking outcomes, Cap × Cap is a way to quietly generate a cohort of potentially compromised animals that get sold as \"Cappuccinos\" to buyers who don't know what a Frappuccino is. That's a reputation problem waiting to happen ,  and it's contributing to the YouTube skepticism around the morph.",
       },
       {
         type: "p",
@@ -1761,7 +1761,7 @@ export const BLOG_POSTS = [
         type: "ol",
         items: [
           "Photograph all hatchlings within 48 hours of hatching, before first shed.",
-          "Note which animals have the most washed-out, pale body tone — those are your Frappuccino candidates.",
+          "Note which animals have the most washed-out, pale body tone ,  those are your Frappuccino candidates.",
           "Weigh all hatchlings at hatch and at 30 days. A Frappuccino that's growing normally is almost certainly fine. A Frappuccino that's 20% lighter than siblings at 30 days is a concern.",
           "Hold all hatchlings until 60 days before selling. This is when growth-rate problems become undeniable and when you can honestly describe what you're selling.",
         ],
@@ -1785,7 +1785,7 @@ export const BLOG_POSTS = [
       },
       {
         type: "p",
-        text: "**If you're buying a \"Cappuccino\" hatchling:** Ask for lineage. Ask what the pairing was. A hatchling from Cap × Cap is not the same risk profile as one from Cap × non-carrier, and the price should reflect that. A visual Cappuccino with no lineage documentation might be a Frappuccino — you won't know for months.",
+        text: "**If you're buying a \"Cappuccino\" hatchling:** Ask for lineage. Ask what the pairing was. A hatchling from Cap × Cap is not the same risk profile as one from Cap × non-carrier, and the price should reflect that. A visual Cappuccino with no lineage documentation might be a Frappuccino ,  you won't know for months.",
       },
       {
         type: "p",
@@ -1793,7 +1793,7 @@ export const BLOG_POSTS = [
       },
       {
         type: "p",
-        text: "The breeder at the expo who spent $1,400 on that female did nothing wrong — he just made a pairing decision without a plan for what to do with 25% of the outcome. His three dead eggs and two small hatchlings aren't a genetics failure. They're a documentation gap. He doesn't know if those slow animals were Frappuccinos, whether the viability issue is consistent in his line, or whether his male Cappuccino is producing the same problem with other females. He's flying blind on the most important question his project raises.",
+        text: "The breeder at the expo who spent $1,400 on that female did nothing wrong ,  he just made a pairing decision without a plan for what to do with 25% of the outcome. His three dead eggs and two small hatchlings aren't a genetics failure. They're a documentation gap. He doesn't know if those slow animals were Frappuccinos, whether the viability issue is consistent in his line, or whether his male Cappuccino is producing the same problem with other females. He's flying blind on the most important question his project raises.",
       },
       {
         type: "p",
@@ -1803,7 +1803,7 @@ export const BLOG_POSTS = [
     faq: [
       {
         question: "Is it safe to breed two Cappuccino crested geckos together?",
-        answer: "It's not confirmed-unsafe the way Lilly White × Lilly White is — Frappuccinos survive. But multiple breeders report higher egg-failure rates and slow-growing hatchlings from Cap × Cap pairings. The conservative default is Cappuccino × non-carrier: you get 50% Cappuccino offspring with no Frappuccino viability risk at all.",
+        answer: "It's not confirmed-unsafe the way Lilly White × Lilly White is ,  Frappuccinos survive. But multiple breeders report higher egg-failure rates and slow-growing hatchlings from Cap × Cap pairings. The conservative default is Cappuccino × non-carrier: you get 50% Cappuccino offspring with no Frappuccino viability risk at all.",
       },
       {
         question: "What is a Frappuccino crested gecko?",
@@ -1811,27 +1811,27 @@ export const BLOG_POSTS = [
       },
       {
         question: "How do I know if my hatchling is a Frappuccino or a regular Cappuccino?",
-        answer: "Frappuccinos tend to look noticeably paler and more washed-out than single-copy Cappuccino siblings at hatch. Amplified saddle with very clean edges is the key visual signal. Lineage is the only reliable confirmation — if both parents are visual Cappuccinos, 25% of the clutch is expected to be Frappuccino.",
+        answer: "Frappuccinos tend to look noticeably paler and more washed-out than single-copy Cappuccino siblings at hatch. Amplified saddle with very clean edges is the key visual signal. Lineage is the only reliable confirmation ,  if both parents are visual Cappuccinos, 25% of the clutch is expected to be Frappuccino.",
       },
       {
         question: "Why are some Cappuccino hatchlings staying small?",
-        answer: "Slow growth in hatchlings from Cap × Cap pairings is consistent with sublethal effects in the homozygous Frappuccino form. Not all Frappuccinos show this, but the pattern appears often enough in community reports to be a real concern. Track weights at 30 and 60 days — an animal that isn't gaining normally by 60 days needs assessment before sale.",
+        answer: "Slow growth in hatchlings from Cap × Cap pairings is consistent with sublethal effects in the homozygous Frappuccino form. Not all Frappuccinos show this, but the pattern appears often enough in community reports to be a real concern. Track weights at 30 and 60 days ,  an animal that isn't gaining normally by 60 days needs assessment before sale.",
       },
       {
         question: "What is the best pairing for a Cappuccino crested gecko project?",
-        answer: "Cappuccino × high-quality non-carrier. This produces 50% visual Cappuccinos in every clutch with no Frappuccino viability risk. Use the non-carrier to bring in strong background genetics — harlequin, red base, or extreme pattern will push your Cappuccino line's visual quality forward while keeping hatchling health predictable.",
+        answer: "Cappuccino × high-quality non-carrier. This produces 50% visual Cappuccinos in every clutch with no Frappuccino viability risk. Use the non-carrier to bring in strong background genetics ,  harlequin, red base, or extreme pattern will push your Cappuccino line's visual quality forward while keeping hatchling health predictable.",
       },
       {
         question: "Do Cappuccino crested geckos have health problems?",
-        answer: "Single-copy visual Cappuccinos have no documented health concerns. The Frappuccino (homozygous super form) is where some breeders report issues — reduced hatch rates and slower early growth. These effects aren't universal and haven't been formally studied, but they're consistent enough in community reports to justify caution with Cap × Cap pairings.",
+        answer: "Single-copy visual Cappuccinos have no documented health concerns. The Frappuccino (homozygous super form) is where some breeders report issues ,  reduced hatch rates and slower early growth. These effects aren't universal and haven't been formally studied, but they're consistent enough in community reports to justify caution with Cap × Cap pairings.",
       },
       {
         question: "Is the Cappuccino morph recessive or dominant?",
-        answer: "Neither. Cappuccino is incomplete dominant — one copy produces the visible Cappuccino form, and two copies produce the Frappuccino (super form). This is the most common inheritance pattern among proven crested gecko morphs, shared with Lilly White, Soft Scale, and White Wall.",
+        answer: "Neither. Cappuccino is incomplete dominant ,  one copy produces the visible Cappuccino form, and two copies produce the Frappuccino (super form). This is the most common inheritance pattern among proven crested gecko morphs, shared with Lilly White, Soft Scale, and White Wall.",
       },
       {
         question: "What percentage of offspring from Cap × Cap are Frappuccinos?",
-        answer: "About 25% across many clutches. The expected ratio from pairing two visual Cappuccinos is: 25% non-carrier, 50% visual Cappuccino, 25% Frappuccino. Individual clutches will vary — you can get three Frappuccinos in one clutch and none in the next. The average holds across a large enough sample size.",
+        answer: "About 25% across many clutches. The expected ratio from pairing two visual Cappuccinos is: 25% non-carrier, 50% visual Cappuccino, 25% Frappuccino. Individual clutches will vary ,  you can get three Frappuccinos in one clutch and none in the next. The average holds across a large enough sample size.",
       },
     ],
     internalLinks: [
@@ -1849,21 +1849,21 @@ export const BLOG_POSTS = [
       },
       {
         href: "/GeneticCalculatorTool",
-        label: "Genetic Calculator — model your Cappuccino pairing",
+        label: "Genetic Calculator ,  model your Cappuccino pairing",
       },
       {
         href: "/MorphGuide/lilly-white",
-        label: "Lilly White — the confirmed lethal allele comparison",
+        label: "Lilly White ,  the confirmed lethal allele comparison",
       },
     ],
     externalCitations: [
       {
         url: "https://www.youtube.com/watch?v=5O_obmlNu9I",
-        label: "Homestead Reptiles — Don't buy super cappuccino crested gecko (YouTube)",
+        label: "Homestead Reptiles ,  Don't buy super cappuccino crested gecko (YouTube)",
       },
       {
         url: "https://www.youtube.com/watch?v=K1vjq-btadk",
-        label: "TikisGeckos — WARNING, NEVER BREED THESE CRESTED GECKOS TOGETHER (YouTube)",
+        label: "TikisGeckos ,  WARNING, NEVER BREED THESE CRESTED GECKOS TOGETHER (YouTube)",
       },
     ],
   },

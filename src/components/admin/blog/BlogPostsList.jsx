@@ -31,7 +31,7 @@ const STATUS_FILTERS = [
 ];
 
 /**
- * Posts list — search by title/keyword, filter by status, then click to
+ * Posts list ,  search by title/keyword, filter by status, then click to
  * edit. Bulk actions live inline per row (publish, archive, duplicate).
  */
 export default function BlogPostsList({ onCreatePost, onEditPost }) {
@@ -141,7 +141,7 @@ export default function BlogPostsList({ onCreatePost, onEditPost }) {
       ) : filtered.length === 0 ? (
         <div className="text-center py-12 border border-dashed border-slate-800 rounded-xl text-slate-500">
           {posts.length === 0
-            ? 'No posts yet — start by creating one or generating with AI.'
+            ? 'No posts yet ,  start by creating one or generating with AI.'
             : 'No posts match the current filter.'}
         </div>
       ) : (
