@@ -170,13 +170,13 @@
       "lastCallAt": "2026-05-08T08:24:39.635Z"
     },
     "2026-W20": {
-      "totalUsd": 0.389218,
+      "totalUsd": 0.405545,
       "byModel": {
-        "claude-haiku-4-5": 0.022162,
+        "claude-haiku-4-5": 0.038489,
         "claude-sonnet-4-6": 0.367056
       },
       "byStop": {
-        "research-score": 0.022162,
+        "research-score": 0.038489,
         "draft-write": 0.217429,
         "draft-critique": 0.149627
       },
@@ -210,10 +210,20 @@
           "out": 967,
           "cr": 0,
           "cw": 33607
+        },
+        {
+          "at": "2026-05-13T08:49:54.936Z",
+          "model": "claude-haiku-4-5",
+          "stopLabel": "research-score",
+          "usd": 0.016327,
+          "in": 14432,
+          "out": 379,
+          "cr": 0,
+          "cw": 0
         }
       ],
       "firstCallAt": "2026-05-11T09:48:00.018Z",
-      "lastCallAt": "2026-05-11T10:42:09.523Z"
+      "lastCallAt": "2026-05-13T08:49:54.936Z"
     }
   }
 }
