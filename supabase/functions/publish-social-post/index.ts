@@ -350,17 +350,29 @@ serve(async (req) => {
       } else if (variant.platform === "instagram") {
         const igUserId = conn.account_id || (conn.metadata as { ig_business_account_id?: string } | null)?.ig_business_account_id;
         if (!igUserId) throw new Error("missing_ig_business_account_id");
-        const { data: geckoRow } = await supabase
-          .from("geckos")
-          .select("image_urls")
-          .eq("id", post.gecko_id)
-          .maybeSingle();
-        const imageUrls = (geckoRow as { image_urls?: string[] } | null)?.image_urls || [];
-        const imageUrl = Array.isArray(imageUrls) && imageUrls.length > 0 ? imageUrls[0] : null;
-        if (!imageUrl) throw new Error("instagram_requires_photo_on_gecko");
-        // IG convention: caption stays clean, hashtags ride in the first
-        // comment. Build a tags-only string and pass it through so the
-        // post helper can drop it as comment #1 after the media is live.
+        // Prefer images the user picked from the Promote library; fall
+        // back to the gecko's primary photo if none picked. Either way
+        // we need a publicly-fetchable URL (Meta won't accept signed).
+        let imageUrl: string | null = null;
+        const pickedIds = Array.isArray(variant.image_ids) ? variant.image_ids : [];
+        if (pickedIds.length > 0) {
+          const { data: imgRow } = await supabase
+            .from("promote_images")
+            .select("public_url")
+            .eq("id", pickedIds[0])
+            .maybeSingle();
+          imageUrl = (imgRow as { public_url?: string } | null)?.public_url || null;
+        }
+        if (!imageUrl && post.gecko_id) {
+          const { data: geckoRow } = await supabase
+            .from("geckos")
+            .select("image_urls")
+            .eq("id", post.gecko_id)
+            .maybeSingle();
+          const imageUrls = (geckoRow as { image_urls?: string[] } | null)?.image_urls || [];
+          imageUrl = Array.isArray(imageUrls) && imageUrls.length > 0 ? imageUrls[0] : null;
+        }
+        if (!imageUrl) throw new Error("instagram_requires_photo");
         const igHashtags = (variant.hashtags || [])
           .map((h: string) => (h.startsWith("#") ? h : `#${h}`))
           .join(" ");

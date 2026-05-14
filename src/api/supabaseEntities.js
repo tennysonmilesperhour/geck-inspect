@@ -50,6 +50,7 @@ export const ENTITIES_WITHOUT_CREATED_BY = new Set([
   'SocialReferralBonus',
   'GeckoWaitlist',
   'GeckoWaitlistSignup',
+  'PromoteImage',
 ]);
 
 export const TABLE_MAP = {
@@ -163,6 +164,8 @@ export const TABLE_MAP = {
   // Per-gecko waitlists, public-link signups
   GeckoWaitlist: 'gecko_waitlists',
   GeckoWaitlistSignup: 'gecko_waitlist_signups',
+  // Promote-only image library (separate from gecko_images)
+  PromoteImage: 'promote_images',
 };
 
 function parseSort(sort) {
@@ -435,3 +438,4 @@ export const SocialPostPhotoUsage = createEntityClient('SocialPostPhotoUsage');
 export const SocialReferralBonus = createEntityClient('SocialReferralBonus');
 export const GeckoWaitlist = createEntityClient('GeckoWaitlist');
 export const GeckoWaitlistSignup = createEntityClient('GeckoWaitlistSignup');
+export const PromoteImage = createEntityClient('PromoteImage');

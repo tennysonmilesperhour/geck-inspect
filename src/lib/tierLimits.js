@@ -31,6 +31,12 @@ export const TIER_LIMITS = {
     maxStorageBytes: 1 * GB,
     maxCollaborators: 1,
     monthlySocialPosts: 1,
+    // Promote-only image library. Separate budget from collection
+    // storage so a free user can't bury the social tooling under
+    // their gecko photo backlog.
+    promoteImageStorageBytes: 25 * MB,
+    promoteImageMaxCount: 10,
+    scheduledPostsMax: 1,
   },
   keeper: {
     label: 'Keeper',
@@ -39,6 +45,9 @@ export const TIER_LIMITS = {
     maxStorageBytes: 10 * GB,
     maxCollaborators: 5,
     monthlySocialPosts: 4,
+    promoteImageStorageBytes: 200 * MB,
+    promoteImageMaxCount: 100,
+    scheduledPostsMax: 5,
   },
   breeder: {
     label: 'Breeder',
@@ -47,6 +56,9 @@ export const TIER_LIMITS = {
     maxStorageBytes: null,
     maxCollaborators: null,
     monthlySocialPosts: 12,
+    promoteImageStorageBytes: 1 * GB,
+    promoteImageMaxCount: 500,
+    scheduledPostsMax: 10,
   },
   enterprise: {
     label: 'Enterprise',
@@ -55,6 +67,9 @@ export const TIER_LIMITS = {
     maxStorageBytes: null,
     maxCollaborators: null,
     monthlySocialPosts: 30,
+    promoteImageStorageBytes: 5 * GB,
+    promoteImageMaxCount: 2000,
+    scheduledPostsMax: 10,
   },
 };
 

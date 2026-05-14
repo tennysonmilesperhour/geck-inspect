@@ -8,8 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Checkbox } from '@/components/ui/checkbox';
 import {
   Sparkles, RefreshCw, ChevronLeft, ChevronRight, Copy, Send, Check,
-  AlertCircle, Loader2,
+  AlertCircle, Loader2, Image as ImageIcon, Calendar,
 } from 'lucide-react';
+import PromoteImageGallery from './PromoteImageGallery';
+import { getTierLimits } from '@/lib/tierLimits';
 import {
   VOICE_PRESETS, POST_TEMPLATES, PLATFORMS, PLATFORM_CHAR_LIMITS,
   HASHTAG_LIBRARY, normalizeHashtag, buildMorphMarketCsvRow,
@@ -76,6 +78,16 @@ export default function PromoteComposer({
   // platform's char limit we offer a client-side split into segments,
   // each ≤ the limit, with "1/N" markers. Server-free for now.
   const [threadSegments, setThreadSegments] = useState([]);
+  // Promote image library + per-post picks. The gallery opens as a
+  // sibling modal; selected rows become image_ids on the variant
+  // when we publish or schedule.
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [pickedImages, setPickedImages] = useState([]); // [{id, public_url, ...}]
+  // Scheduling: datetime-local string ("YYYY-MM-DDTHH:mm"). When set,
+  // the Publish button becomes Schedule; the post lands in 'scheduled'
+  // status and the pg_cron worker picks it up.
+  const [scheduleAt, setScheduleAt] = useState('');
+  const tierLimitsFn = useMemo(() => getTierLimits(user), [user]);
 
   // Reset on open / gecko change.
   useEffect(() => {
@@ -90,6 +102,8 @@ export default function PromoteComposer({
     setStartingPoint('');
     setPlatforms(DEFAULT_PLATFORMS);
     setHookSuggestions([]);
+    setPickedImages([]);
+    setScheduleAt('');
   }, [open, gecko?.id]);
 
   // Load the user's saved custom voices when the composer opens.
@@ -577,14 +591,71 @@ export default function PromoteComposer({
     }
   };
 
+  // If the user picked a future date, save the post as 'scheduled'
+  // instead of publishing now. The cron worker picks up due rows and
+  // calls publish-social-post for each platform.
+  const handleSchedule = async () => {
+    if (!draft || !scheduleAt) return;
+    const when = new Date(scheduleAt);
+    if (Number.isNaN(when.getTime()) || when <= new Date()) {
+      setError('Pick a future date and time.');
+      return;
+    }
+    setPublishing(true);
+    setError(null);
+    try {
+      const tags = editedHashtags.split(/\s+/).map((t) => t.trim()).filter(Boolean);
+      const cta = variants[activeIdx]?.cta || null;
+      const imageIds = pickedImages.map((p) => p.id);
+
+      // Create one variant per selected platform up-front. The cron
+      // worker will call publish-social-post against the first one;
+      // we set primary_variant_id so it knows which to use.
+      let primaryId = null;
+      for (const p of platforms) {
+        const v = await SocialPostVariant.create({
+          post_id: draft.id,
+          platform: p,
+          content: editedContent,
+          hashtags: tags,
+          cta,
+          image_ids: imageIds,
+          status: 'draft',
+        });
+        if (!primaryId) primaryId = v.id;
+      }
+
+      await SocialPost.update(draft.id, {
+        status: 'scheduled',
+        scheduled_at: when.toISOString(),
+        primary_variant_id: primaryId,
+      });
+
+      toast({
+        title: 'Scheduled',
+        description: `Will publish to ${platforms.length} platform${platforms.length === 1 ? '' : 's'} at ${when.toLocaleString()}.`,
+      });
+      onPublished?.();
+      onOpenChange(false);
+    } catch (e) {
+      setError(`Schedule failed: ${e?.message || e}`);
+    } finally {
+      setPublishing(false);
+    }
+  };
+
   const handlePublish = async () => {
     if (!draft) return;
+    if (scheduleAt) {
+      return handleSchedule();
+    }
     setPublishing(true);
     setError(null);
 
     try {
       const tags = editedHashtags.split(/\s+/).map((t) => t.trim()).filter(Boolean);
       const cta = variants[activeIdx]?.cta || null;
+      const imageIds = pickedImages.map((p) => p.id);
 
       // Create one variant per selected platform, then publish each.
       // Failures are collected per-platform so the user can see which
@@ -599,7 +670,7 @@ export default function PromoteComposer({
             content: editedContent,
             hashtags: tags,
             cta,
-            image_ids: [],
+            image_ids: imageIds,
             status: 'draft',
           });
           variantId = variant.id;
@@ -1154,6 +1225,70 @@ export default function PromoteComposer({
                 </div>
               )}
 
+              {/* Image picker row + schedule input. The picker opens
+                  the PromoteImageGallery in 'picker' mode; the schedule
+                  input flips Publish into Schedule when set. */}
+              <div className="rounded-lg border border-emerald-800/40 bg-emerald-950/30 p-3 space-y-2">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setGalleryOpen(true)}
+                    type="button"
+                  >
+                    <ImageIcon className="w-3.5 h-3.5 mr-1.5" />
+                    {pickedImages.length === 0
+                      ? 'Pick images'
+                      : `${pickedImages.length} image${pickedImages.length === 1 ? '' : 's'} selected`}
+                  </Button>
+                  {pickedImages.length > 0 && (
+                    <button
+                      type="button"
+                      onClick={() => setPickedImages([])}
+                      className="text-[11px] text-emerald-300/60 hover:text-emerald-100"
+                    >
+                      Clear
+                    </button>
+                  )}
+                  <div className="flex items-center gap-1.5 ml-auto">
+                    <Calendar className="w-3.5 h-3.5 text-emerald-300/70" />
+                    <Input
+                      type="datetime-local"
+                      value={scheduleAt}
+                      onChange={(e) => setScheduleAt(e.target.value)}
+                      className="text-xs h-8 w-auto"
+                      title={`Schedule (up to ${tierLimitsFn.scheduledPostsMax} active)`}
+                    />
+                    {scheduleAt && (
+                      <button
+                        type="button"
+                        onClick={() => setScheduleAt('')}
+                        className="text-[11px] text-emerald-300/60 hover:text-emerald-100"
+                      >
+                        clear
+                      </button>
+                    )}
+                  </div>
+                </div>
+                {pickedImages.length > 0 && (
+                  <div className="flex gap-1.5 overflow-x-auto pb-1">
+                    {pickedImages.map((img) => (
+                      <div
+                        key={img.id}
+                        className="flex-shrink-0 w-12 h-12 rounded border border-emerald-800/40 overflow-hidden"
+                      >
+                        <img
+                          src={img.public_url}
+                          alt=""
+                          className="w-full h-full object-cover"
+                          loading="lazy"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
               {/* Action buttons. On mobile, pin to the bottom of the
                   viewport so Publish is always reachable without
                   scrolling through hashtag chips + previews. */}
@@ -1188,7 +1323,12 @@ export default function PromoteComposer({
                   disabled={publishing || !editedContent.trim()}
                 >
                   {publishing ? (
-                    <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> Publishing…</>
+                    <><Loader2 className="w-4 h-4 mr-1.5 animate-spin" /> {scheduleAt ? 'Scheduling…' : 'Publishing…'}</>
+                  ) : scheduleAt ? (
+                    <>
+                      <Calendar className="w-4 h-4 mr-1.5" />
+                      Schedule ×{platforms.length}
+                    </>
                   ) : (
                     <>
                       <Send className="w-4 h-4 mr-1.5" />
@@ -1211,6 +1351,15 @@ export default function PromoteComposer({
             </div>
           )}
         </div>
+
+        <PromoteImageGallery
+          open={galleryOpen}
+          onOpenChange={setGalleryOpen}
+          user={user}
+          mode="picker"
+          initialSelectedIds={pickedImages.map((p) => p.id)}
+          onPicked={(rows) => setPickedImages(rows)}
+        />
       </DialogContent>
     </Dialog>
   );

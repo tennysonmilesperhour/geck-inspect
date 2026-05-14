@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sparkles, Search, Settings as SettingsIcon, Clock, Send, Archive } from 'lucide-react';
+import { Sparkles, Search, Settings as SettingsIcon, Clock, Send, Archive, Image as ImageIcon, Calendar, X as XIcon } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { tierOf, getTierLimits } from '@/lib/tierLimits';
@@ -13,6 +13,7 @@ import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import EmptyState from '@/components/shared/EmptyState';
 import PostUsageMeter from '@/components/promote/PostUsageMeter';
 import PromoteComposer from '@/components/promote/PromoteComposer';
+import PromoteImageGallery from '@/components/promote/PromoteImageGallery';
 import TrialOfferModal from '@/components/promote/TrialOfferModal';
 import ConnectionsModal from '@/components/promote/ConnectionsModal';
 import { formatDistanceToNow } from 'date-fns';
@@ -42,6 +43,8 @@ export default function PromotePage() {
   const [composerOpen, setComposerOpen] = useState(false);
   const [trialOpen, setTrialOpen] = useState(false);
   const [connectionsOpen, setConnectionsOpen] = useState(false);
+  const [galleryOpen, setGalleryOpen] = useState(false);
+  const [scheduledPosts, setScheduledPosts] = useState([]);
 
   const tier = useMemo(() => tierOf(user), [user]);
   const tierLimits = useMemo(() => getTierLimits(user), [user]);
@@ -92,6 +95,18 @@ export default function PromotePage() {
         .order('updated_date', { ascending: false })
         .limit(8);
       setRecentPosts(postRows || []);
+
+      // 4. Scheduled queue (pg_cron worker drains these).
+      const { data: schedRows } = await supabase
+        .from('social_posts')
+        .select(`
+          id, template, gecko_id, scheduled_at, primary_variant_id, voice_preset
+        `)
+        .eq('created_by_user_id', user.auth_user_id)
+        .eq('status', 'scheduled')
+        .order('scheduled_at', { ascending: true })
+        .limit(20);
+      setScheduledPosts(schedRows || []);
     } catch (e) {
       console.error('Promote load failed:', e);
     } finally {
@@ -171,20 +186,87 @@ export default function PromotePage() {
             Pick a gecko and we'll draft a post about it. Tailored to platform best practices.
           </p>
         </div>
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => setConnectionsOpen(true)}
-        >
-          <SettingsIcon className="w-4 h-4 mr-1.5" />
-          Connections
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setGalleryOpen(true)}
+          >
+            <ImageIcon className="w-4 h-4 mr-1.5" />
+            Library
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => setConnectionsOpen(true)}
+          >
+            <SettingsIcon className="w-4 h-4 mr-1.5" />
+            Connections
+          </Button>
+        </div>
       </div>
 
       {/* Usage meter */}
       <div className="mb-5">
         <PostUsageMeter usage={usage} tier={tier} credits={credits} />
       </div>
+
+      {/* Scheduled queue ,  posts the pg_cron worker will publish at
+          their `scheduled_at` time. Up to `scheduledPostsMax` per tier
+          enforced in the composer. The cancel button just flips the
+          row back to draft so the worker skips it. */}
+      {scheduledPosts.length > 0 && (
+        <div className="mb-5 rounded-lg border border-emerald-700/40 bg-emerald-900/20 p-3">
+          <div className="flex items-center justify-between mb-2">
+            <div className="text-xs uppercase tracking-wider text-emerald-300 flex items-center gap-1.5">
+              <Calendar className="w-3.5 h-3.5" />
+              Scheduled ({scheduledPosts.length})
+            </div>
+            <span className="text-[10px] text-emerald-300/60">
+              Auto-publishes within ~1 min of the scheduled time
+            </span>
+          </div>
+          <div className="space-y-1.5">
+            {scheduledPosts.map((p) => {
+              const when = p.scheduled_at ? new Date(p.scheduled_at) : null;
+              const gname = geckos.find((g) => g.id === p.gecko_id)?.name || p.gecko_id;
+              return (
+                <div
+                  key={p.id}
+                  className="flex items-center justify-between text-xs rounded bg-emerald-950/40 px-2 py-1.5"
+                >
+                  <div className="flex-1 min-w-0 truncate">
+                    <span className="text-emerald-100 font-medium">{p.template}</span>
+                    <span className="text-emerald-300/70 mx-2">·</span>
+                    <span className="text-emerald-200/80">{gname}</span>
+                    <span className="text-emerald-300/70 mx-2">·</span>
+                    <span className="text-emerald-300/80">{when ? when.toLocaleString() : 'no time set'}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={async () => {
+                      if (!confirm('Cancel this scheduled post? It returns to drafts.')) return;
+                      try {
+                        await supabase
+                          .from('social_posts')
+                          .update({ status: 'draft', scheduled_at: null })
+                          .eq('id', p.id);
+                        setScheduledPosts((prev) => prev.filter((r) => r.id !== p.id));
+                      } catch (e) {
+                        console.warn('cancel scheduled failed', e);
+                      }
+                    }}
+                    className="text-emerald-300/70 hover:text-red-300 ml-2"
+                    title="Cancel"
+                  >
+                    <XIcon className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      )}
 
       {/* Recent posts strip */}
       {recentPosts.length > 0 && (
@@ -356,6 +438,13 @@ export default function PromotePage() {
         open={connectionsOpen}
         onOpenChange={setConnectionsOpen}
         user={user}
+      />
+
+      <PromoteImageGallery
+        open={galleryOpen}
+        onOpenChange={setGalleryOpen}
+        user={user}
+        mode="manage"
       />
     </div>
   );

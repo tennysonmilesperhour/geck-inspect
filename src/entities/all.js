@@ -145,3 +145,4 @@ export const SocialPostPhotoUsage = sb.SocialPostPhotoUsage;
 export const SocialReferralBonus = sb.SocialReferralBonus;
 export const GeckoWaitlist = sb.GeckoWaitlist;
 export const GeckoWaitlistSignup = sb.GeckoWaitlistSignup;
+export const PromoteImage = sb.PromoteImage;
