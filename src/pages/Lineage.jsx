@@ -9,7 +9,6 @@ import { Loader2, Search, ZoomIn, ZoomOut, GitBranch, Heart, Users2, Edit2, Uplo
 import { Button } from '@/components/ui/button';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import usePageSettings from '@/hooks/usePageSettings';
-import { Switch } from '@/components/ui/switch';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
@@ -439,7 +438,6 @@ export default function Lineage() {
     const [lineagePrefs, setLineagePrefs] = usePageSettings('lineage_prefs', {
         defaultGenerations: '3',
         defaultZoom: '100',
-        showUnknownParents: true,
     });
     const location = useLocation();
     const [myGeckos, setMyGeckos] = useState([]);
@@ -886,7 +884,6 @@ export default function Lineage() {
         const cardSize = getCardSize(generation);
 
         if (gecko.isPlaceholder) {
-            if (!lineagePrefs.showUnknownParents) return null;
             const key = `${gecko.geckoId}_${gecko.parentType}`;
             const placeholderData = placeholders[key];
             return (
@@ -922,7 +919,6 @@ export default function Lineage() {
     // Render placeholder with its own unknown parents
     // uniqueKey tracks the full ancestry path so each node has its own identity
     const renderPlaceholderWithParents = (placeholder, generation, maxGen, uniqueKey) => {
-        if (!lineagePrefs.showUnknownParents) return null;
         const cardSize = getCardSize(generation);
         // Only look up real placeholder data using the actual base geckoId
         const key = `${placeholder.geckoId}_${placeholder.parentType}`;
@@ -994,9 +990,8 @@ export default function Lineage() {
             return renderPlaceholderWithParents(gecko, generation, generations, uniqueKey);
         }
 
-        const showUnknown = lineagePrefs.showUnknownParents;
-        const sireVisible = gecko.sire && (showUnknown || !gecko.sire.isPlaceholder);
-        const damVisible = gecko.dam && (showUnknown || !gecko.dam.isPlaceholder);
+        const sireVisible = !!gecko.sire;
+        const damVisible = !!gecko.dam;
         const hasParents = sireVisible || damVisible;
 
         // Connector brightness follows the hover path so the chain visibly glows.
@@ -1200,10 +1195,6 @@ export default function Lineage() {
                                         </button>
                                     ))}
                                 </div>
-                            </div>
-                            <div className="flex items-center justify-between">
-                                <Label className="text-slate-300 text-sm">Show Unknown Parents</Label>
-                                <Switch checked={lineagePrefs.showUnknownParents} onCheckedChange={v => setLineagePrefs({ showUnknownParents: v })} />
                             </div>
                         </PageSettingsPanel>
                     </div>
