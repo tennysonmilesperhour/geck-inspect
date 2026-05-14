@@ -43,7 +43,7 @@ export default function PromotePage() {
   const tierLimits = useMemo(() => getTierLimits(user), [user]);
 
   const loadEverything = useCallback(async () => {
-    if (!user?.email) return;
+    if (!user?.email || !user?.auth_user_id) return;
     setLoading(true);
     try {
       // 1. User's geckos (filtered by created_by email; matches existing pattern).
@@ -57,11 +57,13 @@ export default function PromotePage() {
       setGeckos(geckoRows || []);
 
       // 2. This month's usage (or seeded with tier defaults if missing).
+      // social_post_usage.user_id is the auth UUID, not the legacy
+      // profile id — see AuthContext.buildUser for the distinction.
       const monthKey = new Date().toISOString().slice(0, 7);
       const { data: usageRow } = await supabase
         .from('social_post_usage')
         .select('*')
-        .eq('user_id', user.id)
+        .eq('user_id', user.auth_user_id)
         .eq('month_key', monthKey)
         .maybeSingle();
 
@@ -81,7 +83,7 @@ export default function PromotePage() {
           id, status, template, gecko_id, published_at, created_date,
           primary_variant_id, voice_preset
         `)
-        .eq('created_by_user_id', user.id)
+        .eq('created_by_user_id', user.auth_user_id)
         .in('status', ['published', 'draft'])
         .order('updated_date', { ascending: false })
         .limit(8);
@@ -91,7 +93,7 @@ export default function PromotePage() {
     } finally {
       setLoading(false);
     }
-  }, [user?.email, user?.id, tierLimits.monthlySocialPosts]);
+  }, [user?.email, user?.auth_user_id, tierLimits.monthlySocialPosts]);
 
   useEffect(() => {
     loadEverything();

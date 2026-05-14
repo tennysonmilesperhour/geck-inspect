@@ -164,7 +164,7 @@ serve(async (req) => {
   // payment-method gate should fire.
   const { data: profile } = await supabase
     .from("profiles")
-    .select("id, email, membership_tier, subscription_status, social_post_credits, stripe_customer_id")
+    .select("id, email, role, membership_tier, subscription_status, social_post_credits, stripe_customer_id")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -174,7 +174,7 @@ serve(async (req) => {
   if (!resolvedProfile) {
     const { data: byEmail } = await supabase
       .from("profiles")
-      .select("id, email, membership_tier, subscription_status, social_post_credits, stripe_customer_id")
+      .select("id, email, role, membership_tier, subscription_status, social_post_credits, stripe_customer_id")
       .eq("email", user.email || "")
       .maybeSingle();
     resolvedProfile = byEmail || null;
@@ -183,6 +183,10 @@ serve(async (req) => {
   const tier = tierOf(resolvedProfile as Record<string, unknown> | null);
   const includedPosts = TIER_INCLUDED[tier] ?? 1;
   const credits = Number(resolvedProfile?.social_post_credits || 0);
+  // Admins bypass all billing gates (payment-method requirement, monthly
+  // included caps, overage charging). Keeps the team able to test the
+  // full publish path without hitting trial-offer modals or being charged.
+  const isAdmin = (resolvedProfile as { role?: string } | null)?.role === "admin";
 
   // Compose the text we'll actually post (body + hashtags).
   const text = [variant.content, ...(variant.hashtags || []).map((h) => (h.startsWith("#") ? h : `#${h}`))]
@@ -190,7 +194,7 @@ serve(async (req) => {
 
   // Free-tier payment-method gate: if free, no credits, and would tip into
   // overage, block with a 402 so the frontend can show the trial offer.
-  if (tier === "free") {
+  if (tier === "free" && !isAdmin) {
     const monthKey = new Date().toISOString().slice(0, 7);
     const { data: usage } = await supabase
       .from("social_post_usage")
@@ -255,14 +259,18 @@ serve(async (req) => {
     }
   }
 
-  // Charge the publish (credit > included > overage).
-  const { data: chargeRows } = await supabase.rpc("charge_social_publish", {
-    p_user_id: user.id,
-    p_tier: tier,
-    p_posts_included: includedPosts,
-    p_overage_cents_per_post: OVERAGE_CENTS_PER_POST,
-  });
-  const charge = Array.isArray(chargeRows) ? chargeRows[0] : chargeRows;
+  // Charge the publish (credit > included > overage). Skipped entirely
+  // for admins so test publishes don't burn quota or trigger overage.
+  let charge: unknown = null;
+  if (!isAdmin) {
+    const { data: chargeRows } = await supabase.rpc("charge_social_publish", {
+      p_user_id: user.id,
+      p_tier: tier,
+      p_posts_included: includedPosts,
+      p_overage_cents_per_post: OVERAGE_CENTS_PER_POST,
+    });
+    charge = Array.isArray(chargeRows) ? chargeRows[0] : chargeRows;
+  }
 
   // Update the variant + post.
   await supabase

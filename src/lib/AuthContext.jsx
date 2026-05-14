@@ -15,11 +15,17 @@ async function buildUser(supabaseUser) {
       .select('*')
       .eq('email', supabaseUser.email)
       .maybeSingle();
-    if (profile) return { ...base, ...profile };
+    // profiles.id is a legacy text id that does NOT match auth.users.id
+    // for any existing profile. Legacy tables (gecko_images.user_id, etc)
+    // expect that legacy id, so `user.id` stays as the profile id after
+    // the spread. But anything that needs the actual auth uid for RLS or
+    // for uuid-typed columns (the social_* tables, anything new that
+    // joins to auth.users) must use `user.auth_user_id` instead.
+    if (profile) return { ...base, ...profile, auth_user_id: base.id };
   } catch (e) {
     console.warn('Profile enrichment failed:', e);
   }
-  return base;
+  return { ...base, auth_user_id: base.id };
 }
 
 export const AuthProvider = ({ children }) => {
