@@ -251,15 +251,15 @@ export default function PromotePage() {
             >
               <CardContent className="p-3">
                 <div className="aspect-square w-full bg-emerald-950/40 rounded-md mb-2 overflow-hidden flex items-center justify-center">
-                  {g.primary_image_url ? (
+                  {g.image_urls?.[0] ? (
                     <img
-                      src={g.primary_image_url}
+                      src={g.image_urls[0]}
                       alt={g.name || g.id}
                       className="w-full h-full object-cover"
                       loading="lazy"
                     />
                   ) : (
-                    <span className="text-emerald-700">no photo</span>
+                    <span className="text-emerald-700 text-xs">no photo</span>
                   )}
                 </div>
                 <div className="font-semibold text-emerald-100 text-sm truncate">
