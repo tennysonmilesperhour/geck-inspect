@@ -5,7 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Sparkles, Search, Settings as SettingsIcon, Clock, Send } from 'lucide-react';
+import { Sparkles, Search, Settings as SettingsIcon, Clock, Send, Archive } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { tierOf, getTierLimits } from '@/lib/tierLimits';
@@ -34,6 +34,10 @@ export default function PromotePage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [sortBy, setSortBy] = useState('recent_changes'); // recent_changes | name | morph
+  // Active vs archive view. Archive holds sold + explicitly-archived
+  // animals so the main grid only surfaces geckos that are still
+  // post-worthy candidates today.
+  const [view, setView] = useState('active'); // 'active' | 'archive'
   const [selectedGecko, setSelectedGecko] = useState(null);
   const [composerOpen, setComposerOpen] = useState(false);
   const [trialOpen, setTrialOpen] = useState(false);
@@ -99,8 +103,14 @@ export default function PromotePage() {
     loadEverything();
   }, [loadEverything]);
 
+  // Archive split. A gecko is archived from the Promote grid if it's
+  // been explicitly archived OR its status is "Sold" (no longer in the
+  // collection). Everything else surfaces in the default Active view.
+  const isArchived = (g) => g?.archived === true || g?.status === 'Sold';
+  const archivedCount = useMemo(() => geckos.filter(isArchived).length, [geckos]);
+
   const filteredGeckos = useMemo(() => {
-    let list = geckos;
+    let list = geckos.filter((g) => (view === 'archive' ? isArchived(g) : !isArchived(g)));
     if (search.trim()) {
       const q = search.toLowerCase();
       list = list.filter((g) =>
@@ -115,7 +125,7 @@ export default function PromotePage() {
       list = [...list].sort((a, b) => (a.morph_description || a.morph || '').localeCompare(b.morph_description || b.morph || ''));
     }
     return list;
-  }, [geckos, search, sortBy]);
+  }, [geckos, search, sortBy, view]);
 
   const credits = Number(user?.social_post_credits || 0);
 
@@ -201,12 +211,48 @@ export default function PromotePage() {
         </div>
       )}
 
+      {/* Active / Archive segmented control. The Archive tab is hidden
+          when there's nothing in it to keep the UI quiet for users
+          who don't sell or archive anything. */}
+      <div className="flex items-center gap-1 mb-3 rounded-lg border border-emerald-800/40 bg-emerald-950/30 p-1 w-fit">
+        <button
+          type="button"
+          onClick={() => setView('active')}
+          className={`text-xs font-semibold px-3 py-1.5 rounded transition-colors ${
+            view === 'active'
+              ? 'bg-emerald-700/60 text-emerald-50'
+              : 'text-emerald-200/80 hover:text-emerald-100'
+          }`}
+        >
+          Active{' '}
+          <span className="text-emerald-300/60 font-normal">
+            {geckos.length - archivedCount}
+          </span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setView('archive')}
+          disabled={archivedCount === 0}
+          className={`text-xs font-semibold px-3 py-1.5 rounded transition-colors flex items-center gap-1 ${
+            view === 'archive'
+              ? 'bg-emerald-700/60 text-emerald-50'
+              : archivedCount === 0
+                ? 'text-emerald-200/30 cursor-not-allowed'
+                : 'text-emerald-200/80 hover:text-emerald-100'
+          }`}
+        >
+          <Archive className="w-3 h-3" />
+          Archive{' '}
+          <span className="text-emerald-300/60 font-normal">{archivedCount}</span>
+        </button>
+      </div>
+
       {/* Filter row */}
       <div className="flex items-center gap-2 mb-4 flex-wrap">
         <div className="relative flex-1 min-w-[200px]">
           <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400/60" />
           <Input
-            placeholder="Search geckos..."
+            placeholder={view === 'archive' ? 'Search archived...' : 'Search geckos...'}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="pl-9"
@@ -237,12 +283,21 @@ export default function PromotePage() {
       {loading ? (
         <LoadingSpinner />
       ) : filteredGeckos.length === 0 ? (
-        <EmptyState
-          title="No geckos to promote yet"
-          description="Add geckos to your collection first, then come back here to share them."
-          actionLabel="Go to My Geckos"
-          onAction={() => navigate('/MyGeckos')}
-        />
+        view === 'archive' ? (
+          <EmptyState
+            title="No archived geckos"
+            description="Geckos move here once they're sold or you've archived them."
+            actionLabel="Back to active"
+            onAction={() => setView('active')}
+          />
+        ) : (
+          <EmptyState
+            title="No geckos to promote yet"
+            description="Add geckos to your collection first, then come back here to share them."
+            actionLabel="Go to My Geckos"
+            onAction={() => navigate('/MyGeckos')}
+          />
+        )
       ) : (
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
           {filteredGeckos.map((g) => (

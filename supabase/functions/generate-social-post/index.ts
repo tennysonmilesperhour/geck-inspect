@@ -453,6 +453,23 @@ function buildUserPrompt(body: GenerateRequest, variantCount: number): string {
     .map((v, i) => `${i + 1}. ${v.content}`)
     .join("\n");
 
+  // Hook-rewrite mode: keep the body the same, vary the openings.
+  // Used by the "Try different hooks" button in the composer.
+  if ((body.kind || "") === "hook_rewrite") {
+    return [
+      `# Brief`,
+      `Task: produce ${variantCount} alternative HOOK options for the existing post body below.`,
+      `Voice: ${body.voice_preset}${body.voice_custom ? " + custom voice override" : ""}`,
+      `Platform: ${body.platforms[0]}`,
+      "",
+      `# Existing body (do NOT rewrite this; only change the hook)`,
+      previous || "(no body provided)",
+      "",
+      `# Task`,
+      `Call submit_post_variant with ${variantCount} variants. For each variant: put a new opening line (1-2 sentences) in \`hook\`, repeat the existing body verbatim in \`body\`, copy the existing hashtags in \`hashtags\`, and leave \`cta\` empty unless the post obviously needs one. Each hook should take a DIFFERENT angle: question, statistic, trait flex, lineage tease, sensory detail, etc. No repeats. Respect the anti-AI-tell rules.`,
+    ].filter(Boolean).join("\n");
+  }
+
   const lengthDirective = body.length_pref === "short"
     ? "Keep each variant tight: 1-2 short paragraphs."
     : body.length_pref === "long"

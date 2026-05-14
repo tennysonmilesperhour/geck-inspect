@@ -95,11 +95,18 @@ async function postToFacebookPage(
 // Two-step IG publish: create a media container, then publish it.
 // Requires a publicly-fetchable image URL — Meta will not accept binary
 // uploads on this API. Caller must provide one or the post fails.
+//
+// IG convention: hashtags are dumped into the first comment rather than
+// the caption itself, so the caption reads cleanly above the fold and
+// the tags still register for discovery. If `firstCommentHashtags` is
+// non-empty, we post it as a comment on the new media; failures there
+// don't roll back the publish (the post itself already succeeded).
 async function postToInstagram(
   igUserId: string,
   pageToken: string,
   caption: string,
   imageUrl: string,
+  firstCommentHashtags: string,
 ): Promise<{ id: string; postUrl: string }> {
   // 1) create container
   const containerParams = new URLSearchParams({
@@ -133,6 +140,25 @@ async function postToInstagram(
     throw new Error(`instagram_publish_failed: ${err.slice(0, 300)}`);
   }
   const published = await publishRes.json() as { id: string };
+
+  // Drop the hashtag block as comment #1 if we have one. Best-effort —
+  // a failure here doesn't roll back the publish above.
+  if (firstCommentHashtags.trim()) {
+    try {
+      const commentParams = new URLSearchParams({
+        message: firstCommentHashtags.trim(),
+        access_token: pageToken,
+      });
+      await fetch(`https://graph.facebook.com/v18.0/${published.id}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: commentParams.toString(),
+      });
+    } catch (e) {
+      console.warn("ig_first_comment_failed", (e as Error).message);
+    }
+  }
+
   return { id: published.id, postUrl: `https://www.instagram.com/p/${published.id}` };
 }
 
@@ -324,9 +350,6 @@ serve(async (req) => {
       } else if (variant.platform === "instagram") {
         const igUserId = conn.account_id || (conn.metadata as { ig_business_account_id?: string } | null)?.ig_business_account_id;
         if (!igUserId) throw new Error("missing_ig_business_account_id");
-        // IG REQUIRES a public image URL — pull the gecko's primary photo.
-        // If there's no photo we can't publish; surface a clear error so
-        // the user knows to add one to that gecko first.
         const { data: geckoRow } = await supabase
           .from("geckos")
           .select("image_urls")
@@ -335,7 +358,13 @@ serve(async (req) => {
         const imageUrls = (geckoRow as { image_urls?: string[] } | null)?.image_urls || [];
         const imageUrl = Array.isArray(imageUrls) && imageUrls.length > 0 ? imageUrls[0] : null;
         if (!imageUrl) throw new Error("instagram_requires_photo_on_gecko");
-        const r = await postToInstagram(igUserId, token, text, imageUrl);
+        // IG convention: caption stays clean, hashtags ride in the first
+        // comment. Build a tags-only string and pass it through so the
+        // post helper can drop it as comment #1 after the media is live.
+        const igHashtags = (variant.hashtags || [])
+          .map((h: string) => (h.startsWith("#") ? h : `#${h}`))
+          .join(" ");
+        const r = await postToInstagram(igUserId, token, variant.content, imageUrl, igHashtags);
         publishResult = { url: r.postUrl, platform_post_id: r.id, statusOnSuccess: "published" };
       }
     } catch (e) {
