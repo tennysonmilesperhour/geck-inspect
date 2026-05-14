@@ -26,7 +26,7 @@ const TIER_INCLUDED: Record<string, number> = {
   enterprise: 30,
 };
 
-const DIRECT_POST_PLATFORMS = new Set(["bluesky", "facebook_page", "instagram"]);
+const DIRECT_POST_PLATFORMS = new Set(["bluesky", "facebook_page", "instagram", "reddit"]);
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -160,6 +160,77 @@ async function postToInstagram(
   }
 
   return { id: published.id, postUrl: `https://www.instagram.com/p/${published.id}` };
+}
+
+// Reddit posting. Uses the user's OAuth access_token to submit a
+// self-post (text-only) to a target subreddit. If the access token is
+// expired and we have a refresh_token, we trade for a fresh one first.
+// Reddit requires a User-Agent header on every call.
+const REDDIT_USER_AGENT = Deno.env.get("REDDIT_USER_AGENT") || "web:com.geckinspect:v1";
+const REDDIT_CLIENT_ID = Deno.env.get("REDDIT_CLIENT_ID") || "";
+const REDDIT_CLIENT_SECRET = Deno.env.get("REDDIT_CLIENT_SECRET") || "";
+
+async function refreshRedditToken(refreshToken: string): Promise<string | null> {
+  if (!REDDIT_CLIENT_ID || !REDDIT_CLIENT_SECRET) return null;
+  const basic = btoa(`${REDDIT_CLIENT_ID}:${REDDIT_CLIENT_SECRET}`);
+  const res = await fetch("https://www.reddit.com/api/v1/access_token", {
+    method: "POST",
+    headers: {
+      "Authorization": `Basic ${basic}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+      "User-Agent": REDDIT_USER_AGENT,
+    },
+    body: new URLSearchParams({
+      grant_type: "refresh_token",
+      refresh_token: refreshToken,
+    }).toString(),
+  });
+  if (!res.ok) return null;
+  const body = await res.json() as { access_token?: string };
+  return body.access_token || null;
+}
+
+async function postToReddit(
+  accessToken: string,
+  subreddit: string,
+  title: string,
+  body: string,
+): Promise<{ id: string; postUrl: string }> {
+  // Reddit's submit endpoint expects sr WITHOUT the r/ or u/ prefix
+  // for subreddits, but with the u_ prefix for user profile posts.
+  // The connection stores `default_subreddit` already in the right
+  // form (e.g. "u_geckinspect" or "CrestedGecko").
+  const sr = subreddit.replace(/^r\//, "").replace(/^u\//, "u_").trim();
+  const params = new URLSearchParams({
+    sr,
+    kind: "self",
+    title: title.slice(0, 300),
+    text: body || "",
+    api_type: "json",
+    resubmit: "true",
+  });
+  const res = await fetch("https://oauth.reddit.com/api/submit", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${accessToken}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+      "User-Agent": REDDIT_USER_AGENT,
+    },
+    body: params.toString(),
+  });
+  if (!res.ok) {
+    throw new Error(`reddit_post_failed: ${(await res.text()).slice(0, 300)}`);
+  }
+  const data = await res.json() as {
+    json?: { errors?: string[][]; data?: { url?: string; id?: string; name?: string } };
+  };
+  const errors = data?.json?.errors || [];
+  if (errors.length > 0) {
+    throw new Error(`reddit_post_rejected: ${JSON.stringify(errors).slice(0, 300)}`);
+  }
+  const url = data?.json?.data?.url || "";
+  const id = data?.json?.data?.name || data?.json?.data?.id || "";
+  return { id, postUrl: url };
 }
 
 async function postToBluesky(
@@ -347,6 +418,69 @@ serve(async (req) => {
         if (!pageId) throw new Error("missing_page_id");
         const r = await postToFacebookPage(pageId, token, text);
         publishResult = { url: r.postUrl, platform_post_id: r.id, statusOnSuccess: "published" };
+      } else if (variant.platform === "reddit") {
+        // Reddit caption convention is different: there's no hashtag
+        // block, the title is what people see in feeds, and the body
+        // can be longer-form. We treat the first paragraph (up to the
+        // first blank line, max 300 chars) as the title and everything
+        // after as the body. The connection's default_subreddit is the
+        // target unless we add a per-post override later.
+        const subreddit = (conn.metadata as { default_subreddit?: string } | null)?.default_subreddit
+          || `u_${conn.account_handle}`;
+        const splitAt = variant.content.indexOf("\n\n");
+        const title = (splitAt === -1 ? variant.content : variant.content.slice(0, splitAt)).trim();
+        const body = (splitAt === -1 ? "" : variant.content.slice(splitAt).trim());
+
+        // Refresh the access token if it's stale and we have a refresh
+        // token. Reddit access tokens expire in 1 hour; refresh tokens
+        // (with duration=permanent) don't expire.
+        let workingToken = token;
+        let refreshed: string | null = null;
+        if (conn.refresh_token_ciphertext && conn.refresh_token_iv) {
+          try {
+            const rt = await decryptToken(conn.refresh_token_ciphertext, conn.refresh_token_iv);
+            refreshed = await refreshRedditToken(rt);
+            if (refreshed) workingToken = refreshed;
+          } catch (e) {
+            console.warn("reddit_refresh_failed", (e as Error).message);
+          }
+        }
+
+        const r = await postToReddit(workingToken, subreddit, title || "(post)", body);
+        publishResult = { url: r.postUrl, platform_post_id: r.id, statusOnSuccess: "published" };
+
+        // Persist the refreshed token so the next publish doesn't have
+        // to refresh again. Best-effort.
+        if (refreshed) {
+          try {
+            const { ciphertext, iv } = await (async () => {
+              // We need to encrypt with the same key publish-social-post
+              // can decrypt. Reuse the existing decryptToken infra by
+              // calling out to the same AES setup.
+              const raw = b64decode(Deno.env.get("PLATFORM_CONNECTIONS_KEY") || "");
+              if (raw.byteLength !== 32) throw new Error("bad_key");
+              const k = await crypto.subtle.importKey("raw", raw, { name: "AES-GCM" }, false, ["encrypt"]);
+              const ivb = crypto.getRandomValues(new Uint8Array(12));
+              const ct = await crypto.subtle.encrypt({ name: "AES-GCM", iv: ivb }, k, new TextEncoder().encode(refreshed));
+              let bin = "";
+              new Uint8Array(ct).forEach((b) => (bin += String.fromCharCode(b)));
+              let ivBin = "";
+              ivb.forEach((b) => (ivBin += String.fromCharCode(b)));
+              return { ciphertext: btoa(bin), iv: btoa(ivBin) };
+            })();
+            await supabase
+              .from("social_platform_connections")
+              .update({
+                access_token_ciphertext: ciphertext,
+                access_token_iv: iv,
+                expires_at: new Date(Date.now() + 60 * 60 * 1000).toISOString(),
+                updated_date: new Date().toISOString(),
+              })
+              .eq("id", conn.id);
+          } catch (e) {
+            console.warn("reddit_token_persist_failed", (e as Error).message);
+          }
+        }
       } else if (variant.platform === "instagram") {
         const igUserId = conn.account_id || (conn.metadata as { ig_business_account_id?: string } | null)?.ig_business_account_id;
         if (!igUserId) throw new Error("missing_ig_business_account_id");

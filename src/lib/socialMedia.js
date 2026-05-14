@@ -50,7 +50,7 @@ export const PLATFORMS = [
   { key: 'bluesky',          label: 'Bluesky',          mode: 'direct',     hint: 'Posts directly via app password.' },
   { key: 'facebook_page',    label: 'Facebook Page',    mode: 'direct',     hint: 'Posts directly to your Facebook Page via Meta Graph API.' },
   { key: 'instagram',        label: 'Instagram',        mode: 'direct',     hint: 'Posts directly to your IG Business account. Requires a photo on the gecko.' },
-  { key: 'reddit',           label: 'Reddit',           mode: 'clipboard',  hint: 'Copies; we will deep-link to the submit page.' },
+  { key: 'reddit',           label: 'Reddit',           mode: 'direct',     hint: 'Posts directly via OAuth. Defaults to your u/profile; you can change to a subreddit in Connections.' },
   { key: 'threads',          label: 'Threads',          mode: 'clipboard',  hint: 'Copy to clipboard. Direct posting in v2.' },
   { key: 'x',                label: 'X (Twitter)',      mode: 'clipboard',  hint: 'Copy to clipboard, deep-link to compose.' },
   { key: 'tiktok',           label: 'TikTok',           mode: 'clipboard',  hint: 'Returns a video script you can use as a shot list.' },
