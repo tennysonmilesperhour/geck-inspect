@@ -48,10 +48,10 @@ export const POST_TEMPLATES = [
 
 export const PLATFORMS = [
   { key: 'bluesky',          label: 'Bluesky',          mode: 'direct',     hint: 'Posts directly via app password.' },
+  { key: 'facebook_page',    label: 'Facebook Page',    mode: 'direct',     hint: 'Posts directly to your Facebook Page via Meta Graph API.' },
+  { key: 'instagram',        label: 'Instagram',        mode: 'direct',     hint: 'Posts directly to your IG Business account. Requires a photo on the gecko.' },
   { key: 'reddit',           label: 'Reddit',           mode: 'clipboard',  hint: 'Copies; we will deep-link to the submit page.' },
   { key: 'threads',          label: 'Threads',          mode: 'clipboard',  hint: 'Copy to clipboard. Direct posting in v2.' },
-  { key: 'facebook_page',    label: 'Facebook Page',    mode: 'clipboard',  hint: 'Copy to clipboard. Direct posting in v2.' },
-  { key: 'instagram',        label: 'Instagram',        mode: 'clipboard',  hint: 'Copy to clipboard. Direct posting after Meta app review.' },
   { key: 'x',                label: 'X (Twitter)',      mode: 'clipboard',  hint: 'Copy to clipboard, deep-link to compose.' },
   { key: 'tiktok',           label: 'TikTok',           mode: 'clipboard',  hint: 'Returns a video script you can use as a shot list.' },
   { key: 'youtube_community',label: 'YouTube Community',mode: 'clipboard',  hint: 'Copy to clipboard.' },
@@ -114,6 +114,70 @@ export function platformDeepLink(platform, text) {
     case 'youtube_community': return `https://studio.youtube.com/`;
     default:             return null;
   }
+}
+
+// Curated crested-gecko hashtag library, grouped so the composer can
+// render category chips. Tags here mirror what the server prompt knows
+// about; click in the UI just adds/removes the tag from the post's
+// hashtag list, server-side generation will still propose its own.
+export const HASHTAG_LIBRARY = [
+  {
+    key: 'core',
+    label: 'Core',
+    blurb: 'High-volume crestie tags. Use 1-2 always.',
+    tags: [
+      'crestedgecko', 'crestedgeckos', 'correlophusciliatus',
+      'reptilesofinstagram', 'geckosofinstagram', 'cresties',
+    ],
+  },
+  {
+    key: 'morph',
+    label: 'Morphs',
+    blurb: 'Pick the ones that match this animal.',
+    tags: [
+      'lillywhite', 'lillywhitecrested', 'lillywhitegecko',
+      'harlequincrestedgecko', 'extremeharlequin',
+      'phantomcrestedgecko', 'phantomgecko',
+      'cappuccinocrestedgecko', 'mochacrestedgecko',
+      'axanthiccrestedgecko', 'axanthicgecko',
+      'sablecrestedgecko',
+      'highwaycrestedgecko', 'pinstripegecko',
+      'dalmatiancrestedgecko', 'pinstripecrestedgecko', 'fullpinstripe',
+      'patternlesscrestedgecko', 'tigercrestedgecko',
+    ],
+  },
+  {
+    key: 'breeding',
+    label: 'Breeding / lifecycle',
+    blurb: 'Eggs, hatchlings, projects.',
+    tags: [
+      'geckoeggs', 'crestedgeckohatchling', 'babygecko', 'geckohatching',
+      'crestedgeckobreeding', 'breedingproject',
+    ],
+  },
+  {
+    key: 'sales',
+    label: 'Sales / community',
+    blurb: 'Use when this gecko is available or you want commerce eyes.',
+    tags: [
+      'crestedgeckosforsale', 'reptilebreeder', 'crestedgeckobreeder',
+      'morphmarket', 'geckobreeding', 'cresteddaddy', 'reptilelife',
+    ],
+  },
+  {
+    key: 'evergreen',
+    label: 'Niche / evergreen',
+    blurb: 'Genus tags + fired states.',
+    tags: [
+      'correlophus', 'rhacodactylus',
+      'firedupgecko', 'firedup',
+    ],
+  },
+];
+
+// Flat lookup for "is this tag already in the hashtag string?"
+export function normalizeHashtag(tag) {
+  return (tag || '').replace(/^#/, '').toLowerCase().trim();
 }
 
 // Pretty cents -> dollar string ($1.50, $0.50, etc).

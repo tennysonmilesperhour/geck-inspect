@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import {
   VOICE_PRESETS, POST_TEMPLATES, PLATFORMS, PLATFORM_CHAR_LIMITS,
+  HASHTAG_LIBRARY, normalizeHashtag,
   composePlatformText, platformDeepLink, platformLabel, voiceLabel,
   pickPrimaryPlatform,
 } from '@/lib/socialMedia';
@@ -87,6 +88,32 @@ export default function PromoteComposer({
     setEditedContent(`${v.hook ? v.hook + '\n\n' : ''}${v.body}${v.cta ? '\n\n' + v.cta : ''}`.trim());
     setEditedHashtags((v.hashtags || []).join(' '));
   }, [activeIdx, variants]);
+
+  // Set of currently-included hashtags (normalized, no # prefix) so the
+  // chip buttons can render an active state and the toggle helper can
+  // be idempotent.
+  const activeHashtagSet = useMemo(() => {
+    return new Set(
+      editedHashtags
+        .split(/\s+/)
+        .map(normalizeHashtag)
+        .filter(Boolean),
+    );
+  }, [editedHashtags]);
+
+  const toggleHashtag = (tag) => {
+    const norm = normalizeHashtag(tag);
+    if (!norm) return;
+    const tokens = editedHashtags.split(/\s+/).filter(Boolean);
+    const has = tokens.some((t) => normalizeHashtag(t) === norm);
+    let next;
+    if (has) {
+      next = tokens.filter((t) => normalizeHashtag(t) !== norm);
+    } else {
+      next = [...tokens, `#${norm}`];
+    }
+    setEditedHashtags(next.join(' '));
+  };
 
   const handleGenerate = async (kind = 'generate') => {
     if (!gecko) return;
@@ -423,9 +450,6 @@ export default function PromoteComposer({
                     <div className="flex-1 min-w-0">
                       <div className="text-sm text-emerald-100 truncate">
                         {p.label}
-                        {p.mode === 'direct' && (
-                          <span className="ml-1 text-[10px] text-emerald-400/80 uppercase">auto</span>
-                        )}
                       </div>
                     </div>
                   </label>
@@ -552,6 +576,43 @@ export default function PromoteComposer({
                   placeholder="#crestedgecko #lillywhite ..."
                   className="text-sm font-mono"
                 />
+
+                {/* Hashtag chip picker, grouped by category. Click a chip
+                    to add or remove that tag from the post. Selected
+                    chips render in the active style; the chip set stays
+                    in sync with whatever the user typed into the input
+                    above via the normalized hashtag set. */}
+                <div className="mt-2 space-y-2">
+                  {HASHTAG_LIBRARY.map((group) => (
+                    <div key={group.key}>
+                      <div className="text-[10px] uppercase tracking-wider text-emerald-300/70 mb-1">
+                        {group.label}
+                        <span className="text-emerald-400/40 normal-case tracking-normal ml-2">
+                          {group.blurb}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap gap-1">
+                        {group.tags.map((tag) => {
+                          const isActive = activeHashtagSet.has(normalizeHashtag(tag));
+                          return (
+                            <button
+                              key={tag}
+                              type="button"
+                              onClick={() => toggleHashtag(tag)}
+                              className={`text-[11px] px-2 py-0.5 rounded-full border transition-colors ${
+                                isActive
+                                  ? 'bg-emerald-600/40 border-emerald-500/60 text-emerald-50'
+                                  : 'bg-emerald-950/30 border-emerald-800/50 text-emerald-200/80 hover:bg-emerald-900/40 hover:text-emerald-100'
+                              }`}
+                            >
+                              #{tag}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
 
               {/* Per-platform previews, one card each. Same caption,
