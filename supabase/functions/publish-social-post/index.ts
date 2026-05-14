@@ -26,7 +26,7 @@ const TIER_INCLUDED: Record<string, number> = {
   enterprise: 30,
 };
 
-const DIRECT_POST_PLATFORMS = new Set(["bluesky"]);
+const DIRECT_POST_PLATFORMS = new Set(["bluesky", "facebook_page", "instagram"]);
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -66,6 +66,74 @@ async function decryptToken(ciphertextB64: string, ivB64: string): Promise<strin
     b64decode(ciphertextB64),
   );
   return new TextDecoder().decode(pt);
+}
+
+// Post text to a Facebook Page using the page-specific access token
+// returned from /me/accounts during OAuth. Photo posts would hit
+// {page_id}/photos with a `url` field; v1 ships text-only since the
+// composer doesn't pass an image URL through yet.
+async function postToFacebookPage(
+  pageId: string,
+  pageToken: string,
+  message: string,
+): Promise<{ id: string; postUrl: string }> {
+  const params = new URLSearchParams({ message, access_token: pageToken });
+  const res = await fetch(`https://graph.facebook.com/v18.0/${pageId}/feed`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: params.toString(),
+  });
+  if (!res.ok) {
+    const err = await res.text();
+    throw new Error(`facebook_post_failed: ${err.slice(0, 300)}`);
+  }
+  const body = await res.json() as { id: string };
+  // id is `{page_id}_{post_id}`. Derive the public URL.
+  return { id: body.id, postUrl: `https://www.facebook.com/${body.id.replace("_", "/posts/")}` };
+}
+
+// Two-step IG publish: create a media container, then publish it.
+// Requires a publicly-fetchable image URL — Meta will not accept binary
+// uploads on this API. Caller must provide one or the post fails.
+async function postToInstagram(
+  igUserId: string,
+  pageToken: string,
+  caption: string,
+  imageUrl: string,
+): Promise<{ id: string; postUrl: string }> {
+  // 1) create container
+  const containerParams = new URLSearchParams({
+    image_url: imageUrl,
+    caption,
+    access_token: pageToken,
+  });
+  const containerRes = await fetch(`https://graph.facebook.com/v18.0/${igUserId}/media`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: containerParams.toString(),
+  });
+  if (!containerRes.ok) {
+    const err = await containerRes.text();
+    throw new Error(`instagram_container_failed: ${err.slice(0, 300)}`);
+  }
+  const container = await containerRes.json() as { id: string };
+
+  // 2) publish container
+  const publishParams = new URLSearchParams({
+    creation_id: container.id,
+    access_token: pageToken,
+  });
+  const publishRes = await fetch(`https://graph.facebook.com/v18.0/${igUserId}/media_publish`, {
+    method: "POST",
+    headers: { "Content-Type": "application/x-www-form-urlencoded" },
+    body: publishParams.toString(),
+  });
+  if (!publishRes.ok) {
+    const err = await publishRes.text();
+    throw new Error(`instagram_publish_failed: ${err.slice(0, 300)}`);
+  }
+  const published = await publishRes.json() as { id: string };
+  return { id: published.id, postUrl: `https://www.instagram.com/p/${published.id}` };
 }
 
 async function postToBluesky(
@@ -221,7 +289,7 @@ serve(async (req) => {
   if (DIRECT_POST_PLATFORMS.has(variant.platform)) {
     const { data: conn } = await supabase
       .from("social_platform_connections")
-      .select("id, platform, account_handle, access_token, access_token_ciphertext, access_token_iv, is_active")
+      .select("id, platform, account_handle, account_id, access_token, access_token_ciphertext, access_token_iv, metadata, is_active")
       .eq("user_id", user.id)
       .eq("platform", variant.platform)
       .eq("is_active", true)
@@ -244,18 +312,39 @@ serve(async (req) => {
       return json({ error: "platform_not_connected", platform: variant.platform }, 400);
     }
 
-    if (variant.platform === "bluesky") {
-      try {
+    try {
+      if (variant.platform === "bluesky") {
         const r = await postToBluesky(conn.account_handle, token, text);
         publishResult = { url: r.postUrl, platform_post_id: r.uri, statusOnSuccess: "published" };
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        await supabase
-          .from("social_post_variants")
-          .update({ status: "failed", publish_error: msg.slice(0, 500), updated_date: new Date().toISOString() })
-          .eq("id", variant.id);
-        return json({ error: "publish_failed", platform: variant.platform, detail: msg.slice(0, 300) }, 502);
+      } else if (variant.platform === "facebook_page") {
+        const pageId = conn.account_id || (conn.metadata as { page_id?: string } | null)?.page_id;
+        if (!pageId) throw new Error("missing_page_id");
+        const r = await postToFacebookPage(pageId, token, text);
+        publishResult = { url: r.postUrl, platform_post_id: r.id, statusOnSuccess: "published" };
+      } else if (variant.platform === "instagram") {
+        const igUserId = conn.account_id || (conn.metadata as { ig_business_account_id?: string } | null)?.ig_business_account_id;
+        if (!igUserId) throw new Error("missing_ig_business_account_id");
+        // IG REQUIRES a public image URL — pull the gecko's primary photo.
+        // If there's no photo we can't publish; surface a clear error so
+        // the user knows to add one to that gecko first.
+        const { data: geckoRow } = await supabase
+          .from("geckos")
+          .select("image_urls")
+          .eq("id", post.gecko_id)
+          .maybeSingle();
+        const imageUrls = (geckoRow as { image_urls?: string[] } | null)?.image_urls || [];
+        const imageUrl = Array.isArray(imageUrls) && imageUrls.length > 0 ? imageUrls[0] : null;
+        if (!imageUrl) throw new Error("instagram_requires_photo_on_gecko");
+        const r = await postToInstagram(igUserId, token, text, imageUrl);
+        publishResult = { url: r.postUrl, platform_post_id: r.id, statusOnSuccess: "published" };
       }
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      await supabase
+        .from("social_post_variants")
+        .update({ status: "failed", publish_error: msg.slice(0, 500), updated_date: new Date().toISOString() })
+        .eq("id", variant.id);
+      return json({ error: "publish_failed", platform: variant.platform, detail: msg.slice(0, 300) }, 502);
     }
   }
 
