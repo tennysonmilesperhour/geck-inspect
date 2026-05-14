@@ -57,6 +57,33 @@ export const PLATFORMS = [
   { key: 'youtube_community',label: 'YouTube Community',mode: 'clipboard',  hint: 'Copy to clipboard.' },
 ];
 
+// Hard character limits enforced by each platform's API. `null` means the
+// platform has a soft/effectively-unlimited limit (we don't show a counter
+// warning for those). Used for per-platform preview counters and to pick a
+// "primary" platform that drives generation when the user fans a single
+// post out to several platforms at once.
+export const PLATFORM_CHAR_LIMITS = {
+  bluesky: 300,
+  x: 280,
+  threads: 500,
+  reddit: null,
+  facebook_page: null,
+  instagram: null,
+  tiktok: null,
+  youtube_community: null,
+};
+
+// When a user selects multiple platforms, generation has to target a single
+// set of platform rules. We pick the most restrictive selected platform so
+// the generated text fits everywhere it'll be posted.
+export function pickPrimaryPlatform(selected) {
+  const order = ['bluesky', 'x', 'threads', 'tiktok', 'reddit', 'facebook_page', 'instagram', 'youtube_community', 'clipboard'];
+  for (const key of order) {
+    if (selected.includes(key)) return key;
+  }
+  return selected[0] || 'bluesky';
+}
+
 export function platformLabel(key) {
   return PLATFORMS.find((p) => p.key === key)?.label || key;
 }

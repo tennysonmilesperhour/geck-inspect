@@ -33,6 +33,23 @@ async function withAuthRetry(queryFn) {
   return result;
 }
 
+// Entities whose tables don't carry a `created_by` text column. The newer
+// social_* tables track ownership via `created_by_user_id` / `user_id`
+// instead; injecting `created_by` here would make PostgREST reject the
+// insert with "Could not find the 'created_by' column ... in the schema
+// cache". Add new entities here when you ship a table that doesn't follow
+// the legacy base44 convention.
+export const ENTITIES_WITHOUT_CREATED_BY = new Set([
+  'SocialPost',
+  'SocialPostVariant',
+  'SocialPlatformConnection',
+  'SocialPostUsage',
+  'SocialGenerationLog',
+  'UserBrandVoice',
+  'SocialPostPhotoUsage',
+  'SocialReferralBonus',
+]);
+
 export const TABLE_MAP = {
   AppSettings: 'app_settings',
   BreedingPlan: 'breeding_plans',
@@ -245,15 +262,19 @@ function createEntityClient(entityName) {
       const email = user?.email || null;
       const now = new Date().toISOString();
 
+      const insertRecord = {
+        ...record,
+        created_date: record.created_date || now,
+        updated_date: now,
+      };
+      if (!ENTITIES_WITHOUT_CREATED_BY.has(entityName)) {
+        insertRecord.created_by = email;
+      }
+
       const { data, error } = await withAuthRetry(() =>
         supabase
           .from(tableName)
-          .insert({
-            ...record,
-            created_by: email,
-            created_date: record.created_date || now,
-            updated_date: now,
-          })
+          .insert(insertRecord)
           .select()
           .single()
       );

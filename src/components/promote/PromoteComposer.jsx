@@ -5,13 +5,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Checkbox } from '@/components/ui/checkbox';
 import {
   Sparkles, RefreshCw, ChevronLeft, ChevronRight, Copy, Send, Check,
   AlertCircle, Loader2,
 } from 'lucide-react';
 import {
-  VOICE_PRESETS, POST_TEMPLATES, PLATFORMS,
+  VOICE_PRESETS, POST_TEMPLATES, PLATFORMS, PLATFORM_CHAR_LIMITS,
   composePlatformText, platformDeepLink, platformLabel, voiceLabel,
+  pickPrimaryPlatform,
 } from '@/lib/socialMedia';
 import { supabase } from '@/lib/supabaseClient';
 import { SocialPost, SocialPostVariant } from '@/entities/all';
@@ -19,7 +21,7 @@ import { toast } from '@/components/ui/use-toast';
 
 const DEFAULT_VOICE = 'pro_breeder';
 const DEFAULT_TEMPLATE = 'meet';
-const DEFAULT_PLATFORM = 'bluesky';
+const DEFAULT_PLATFORMS = ['bluesky'];
 const DEFAULT_LENGTH = 'medium';
 const ITERATION_CAP = 10;
 
@@ -38,7 +40,7 @@ export default function PromoteComposer({
   const [draft, setDraft] = useState(null);
   const [template, setTemplate] = useState(DEFAULT_TEMPLATE);
   const [voicePreset, setVoicePreset] = useState(DEFAULT_VOICE);
-  const [platform, setPlatform] = useState(DEFAULT_PLATFORM);
+  const [platforms, setPlatforms] = useState(DEFAULT_PLATFORMS);
   const [lengthPref, setLengthPref] = useState(DEFAULT_LENGTH);
   const [startingPoint, setStartingPoint] = useState('');
   const [variants, setVariants] = useState([]);
@@ -62,9 +64,21 @@ export default function PromoteComposer({
     setEditedHashtags('');
     setError(null);
     setStartingPoint('');
+    setPlatforms(DEFAULT_PLATFORMS);
   }, [open, gecko?.id]);
 
   const remainingIterations = ITERATION_CAP - iterations;
+  const primaryPlatform = useMemo(() => pickPrimaryPlatform(platforms), [platforms]);
+
+  const togglePlatform = (key) => {
+    setPlatforms((prev) => {
+      if (prev.includes(key)) {
+        const next = prev.filter((p) => p !== key);
+        return next.length === 0 ? prev : next; // never let it go empty
+      }
+      return [...prev, key];
+    });
+  };
 
   // Update edit fields when active variant changes.
   useEffect(() => {
@@ -121,7 +135,7 @@ export default function PromoteComposer({
             dam: gecko.dam ? { name: gecko.dam.name, morph: gecko.dam.morph } : null,
             recent_changes: [],
           },
-          platforms: [platform],
+          platforms: [primaryPlatform, ...platforms.filter((p) => p !== primaryPlatform)],
           template,
           voice_preset: voicePreset,
           length_pref: lengthPref,
@@ -166,28 +180,51 @@ export default function PromoteComposer({
     }
   };
 
-  // Compute what would actually post, factoring in user edits.
-  const composedText = useMemo(() => {
+  // One composed string per selected platform, factoring user edits.
+  // composePlatformText handles per-platform hashtag placement (Reddit
+  // strips them; Instagram puts them in a trailing block; everywhere
+  // else they land inline). The character counter uses the result of
+  // that composition so the user sees the same string the API will get.
+  const previewByPlatform = useMemo(() => {
     const tags = editedHashtags
       .split(/\s+/)
       .map((t) => t.trim())
       .filter(Boolean);
-    return composePlatformText({
-      content: editedContent,
-      hashtags: tags,
-      platform,
+    return platforms.map((p) => {
+      const text = composePlatformText({
+        content: editedContent,
+        hashtags: tags,
+        platform: p,
+      });
+      const limit = PLATFORM_CHAR_LIMITS[p] ?? null;
+      return {
+        platform: p,
+        text,
+        charCount: text.length,
+        limit,
+        exceeds: limit != null && text.length > limit,
+      };
     });
-  }, [editedContent, editedHashtags, platform]);
+  }, [editedContent, editedHashtags, platforms]);
 
   const handleCopy = async () => {
+    // For multi-platform copy, join previews with a divider so the user
+    // can paste each into the right composer. Most users copy from a
+    // single platform's preview block instead, but this keeps the toolbar
+    // button useful when only one is selected.
+    const blob = previewByPlatform.length === 1
+      ? previewByPlatform[0].text
+      : previewByPlatform.map((p) => `--- ${platformLabel(p.platform)} ---\n${p.text}`).join('\n\n');
     try {
-      await navigator.clipboard.writeText(composedText);
+      await navigator.clipboard.writeText(blob);
       setCopied(true);
       setTimeout(() => setCopied(false), 1500);
-      // Also open the platform deep link so the user lands in the
-      // composer with their text already on the clipboard.
-      const url = platformDeepLink(platform, composedText);
-      if (url) window.open(url, '_blank', 'noopener,noreferrer');
+      // Deep-link only makes sense for a single platform.
+      if (previewByPlatform.length === 1) {
+        const { platform: p, text } = previewByPlatform[0];
+        const url = platformDeepLink(p, text);
+        if (url) window.open(url, '_blank', 'noopener,noreferrer');
+      }
     } catch {
       toast({ title: 'Copy failed', description: 'Select the text manually and copy.' });
     }
@@ -199,68 +236,113 @@ export default function PromoteComposer({
     setError(null);
 
     try {
-      // Persist the variant first so publish-social-post has a row to flip.
       const tags = editedHashtags.split(/\s+/).map((t) => t.trim()).filter(Boolean);
-      const variant = await SocialPostVariant.create({
-        post_id: draft.id,
-        platform,
-        content: editedContent,
-        hashtags: tags,
-        cta: variants[activeIdx]?.cta || null,
-        image_ids: [],
-        status: 'draft',
-      });
+      const cta = variants[activeIdx]?.cta || null;
 
-      const { data, error: fnErr } = await supabase.functions.invoke('publish-social-post', {
-        body: { variant_id: variant.id },
-      });
-
-      if (fnErr) {
-        // Supabase wraps non-2xx as an error. Try to read the body.
-        const ctx = fnErr.context;
-        let parsed = null;
+      // Create one variant per selected platform, then publish each.
+      // Failures are collected per-platform so the user can see which
+      // posts went out and which need attention.
+      const results = [];
+      for (const p of platforms) {
+        let variantId = null;
         try {
-          if (ctx && typeof ctx.text === 'function') {
-            const txt = await ctx.text();
-            parsed = JSON.parse(txt);
+          const variant = await SocialPostVariant.create({
+            post_id: draft.id,
+            platform: p,
+            content: editedContent,
+            hashtags: tags,
+            cta,
+            image_ids: [],
+            status: 'draft',
+          });
+          variantId = variant.id;
+
+          const { data, error: fnErr } = await supabase.functions.invoke('publish-social-post', {
+            body: { variant_id: variantId },
+          });
+
+          if (fnErr) {
+            const ctx = fnErr.context;
+            let parsed = null;
+            try {
+              if (ctx && typeof ctx.text === 'function') {
+                const txt = await ctx.text();
+                parsed = JSON.parse(txt);
+              }
+            } catch { /* ignore */ }
+            if (parsed?.error === 'payment_method_required') {
+              onPaymentRequired?.();
+              setPublishing(false);
+              return;
+            }
+            results.push({ platform: p, ok: false, error: parsed?.error || fnErr.message || 'Publish failed.' });
+            continue;
           }
-        } catch { /* ignore */ }
-        if (parsed?.error === 'payment_method_required') {
-          onPaymentRequired?.();
-          return;
+          if (data?.error === 'payment_method_required') {
+            onPaymentRequired?.();
+            setPublishing(false);
+            return;
+          }
+          if (data?.error) {
+            results.push({ platform: p, ok: false, error: data.error });
+            continue;
+          }
+
+          results.push({
+            platform: p,
+            ok: true,
+            status: data?.status,
+            url: data?.platform_post_url || null,
+            charged: data?.charged || null,
+          });
+
+          // For clipboard-mode platforms, deep-link the user into the
+          // platform's compose page with their text on the clipboard.
+          // Only viable for one platform per click; we open the LAST
+          // clipboard-mode result so the user lands somewhere useful.
+          if (data?.status === 'copied') {
+            const preview = previewByPlatform.find((pv) => pv.platform === p);
+            if (preview) {
+              try { await navigator.clipboard.writeText(preview.text); } catch { /* ignore */ }
+              const dl = platformDeepLink(p, preview.text);
+              if (dl) window.open(dl, '_blank', 'noopener,noreferrer');
+            }
+          }
+        } catch (e) {
+          results.push({ platform: p, ok: false, error: String(e?.message || e) });
         }
-        setError(parsed?.error || fnErr.message || 'Publish failed.');
-        return;
-      }
-      if (data?.error === 'payment_method_required') {
-        onPaymentRequired?.();
-        return;
-      }
-      if (data?.error) {
-        setError(`Error: ${data.error}${data.detail ? ` ,  ${data.detail}` : ''}`);
-        return;
       }
 
-      const url = data?.platform_post_url;
-      const summary = data?.charged?.charged_credit
-        ? 'Used 1 free credit.'
-        : data?.charged?.charged_overage
-          ? 'Charged $0.50 overage.'
-          : 'Counted toward your monthly included posts.';
-      toast({
-        title: data?.status === 'published' ? 'Published!' : 'Copied to clipboard',
-        description: url ? `${summary} ${url}` : summary,
-      });
+      const successes = results.filter((r) => r.ok);
+      const failures = results.filter((r) => !r.ok);
 
-      // Auto-copy if the platform mode is clipboard (deep-link too).
-      if (data?.status === 'copied') {
-        try { await navigator.clipboard.writeText(composedText); } catch { /* ignore */ }
-        const dl = platformDeepLink(platform, composedText);
-        if (dl) window.open(dl, '_blank', 'noopener,noreferrer');
+      if (successes.length > 0) {
+        toast({
+          title: failures.length === 0
+            ? `Published to ${successes.length} platform${successes.length === 1 ? '' : 's'}`
+            : `Published ${successes.length}/${results.length}`,
+          description: successes
+            .map((r) => `${platformLabel(r.platform)}${r.url ? `: ${r.url}` : ''}`)
+            .join(' · '),
+        });
       }
 
-      onPublished?.();
-      onOpenChange(false);
+      if (failures.length > 0) {
+        setError(
+          failures
+            .map((r) => `${platformLabel(r.platform)}: ${r.error}`)
+            .join('\n')
+        );
+      }
+
+      if (failures.length === 0) {
+        onPublished?.();
+        onOpenChange(false);
+      } else if (successes.length > 0) {
+        // Partial success: refresh parent counters but keep modal open
+        // so the user can retry the failed platforms.
+        onPublished?.();
+      }
     } catch (e) {
       setError(String(e?.message || e));
     } finally {
@@ -279,8 +361,8 @@ export default function PromoteComposer({
         </DialogHeader>
 
         <div className="space-y-4 mt-2">
-          {/* Template + Platform + Length pickers */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {/* Template + Length pickers */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
               <Label className="text-xs uppercase tracking-wider text-emerald-300 mb-1 block">
                 Template
@@ -291,21 +373,6 @@ export default function PromoteComposer({
                   {POST_TEMPLATES.map((t) => (
                     <SelectItem key={t.key} value={t.key}>
                       {t.label}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div>
-              <Label className="text-xs uppercase tracking-wider text-emerald-300 mb-1 block">
-                Platform
-              </Label>
-              <Select value={platform} onValueChange={setPlatform}>
-                <SelectTrigger><SelectValue /></SelectTrigger>
-                <SelectContent>
-                  {PLATFORMS.map((p) => (
-                    <SelectItem key={p.key} value={p.key}>
-                      {p.label} {p.mode === 'direct' && '✓'}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -324,6 +391,48 @@ export default function PromoteComposer({
                 </SelectContent>
               </Select>
             </div>
+          </div>
+
+          {/* Platforms ,  multi-select. Generation targets the most
+              restrictive selected platform so the post fits everywhere
+              it's sent; per-platform formatting (hashtag placement,
+              truncation) happens at publish time. */}
+          <div>
+            <Label className="text-xs uppercase tracking-wider text-emerald-300 mb-1 block">
+              Platforms (post to all selected)
+            </Label>
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 rounded-lg border border-emerald-800/40 bg-emerald-950/30 p-3">
+              {PLATFORMS.map((p) => {
+                const checked = platforms.includes(p.key);
+                return (
+                  <label
+                    key={p.key}
+                    className={`flex items-start gap-2 rounded-md px-2 py-1.5 cursor-pointer transition-colors ${
+                      checked
+                        ? 'bg-emerald-800/40 border border-emerald-600/50'
+                        : 'border border-transparent hover:bg-emerald-900/30'
+                    }`}
+                  >
+                    <Checkbox
+                      checked={checked}
+                      onCheckedChange={() => togglePlatform(p.key)}
+                      className="mt-0.5"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <div className="text-sm text-emerald-100 truncate">
+                        {p.label}
+                        {p.mode === 'direct' && (
+                          <span className="ml-1 text-[10px] text-emerald-400/80 uppercase">auto</span>
+                        )}
+                      </div>
+                    </div>
+                  </label>
+                );
+              })}
+            </div>
+            <p className="text-[11px] text-emerald-200/60 mt-1">
+              Generation tailors the post for {platformLabel(primaryPlatform)} (the strictest selected). Other platforms reuse the same draft with their own hashtag formatting.
+            </p>
           </div>
 
           {/* Voice cycling */}
@@ -443,27 +552,32 @@ export default function PromoteComposer({
                 />
               </div>
 
-              {/* Preview of the actually-posted text */}
-              <div className="rounded-lg border border-emerald-800/30 bg-emerald-950/40 p-3">
-                <div className="text-[10px] uppercase tracking-wider text-emerald-300/70 mb-1">
-                  Preview as it'll post on {platformLabel(platform)}
-                </div>
-                <div className="text-sm text-emerald-100 whitespace-pre-wrap">
-                  {composedText}
-                </div>
-                <div className="text-xs text-emerald-200/50 mt-2">
-                  {composedText.length} characters
-                  {platform === 'bluesky' && composedText.length > 300 && (
-                    <span className="text-amber-300 ml-2">
-                      Bluesky limit is 300; will be truncated on publish.
-                    </span>
-                  )}
-                  {platform === 'x' && composedText.length > 280 && (
-                    <span className="text-amber-300 ml-2">
-                      X limit is 280; trim before posting.
-                    </span>
-                  )}
-                </div>
+              {/* Per-platform previews, one card each. Same caption,
+                  per-platform hashtag handling + char counter. */}
+              <div className="space-y-2">
+                {previewByPlatform.map((p) => (
+                  <div
+                    key={p.platform}
+                    className="rounded-lg border border-emerald-800/30 bg-emerald-950/40 p-3"
+                  >
+                    <div className="text-[10px] uppercase tracking-wider text-emerald-300/70 mb-1">
+                      Preview ,  {platformLabel(p.platform)}
+                    </div>
+                    <div className="text-sm text-emerald-100 whitespace-pre-wrap">
+                      {p.text}
+                    </div>
+                    <div className="text-xs text-emerald-200/50 mt-2">
+                      {p.charCount} characters
+                      {p.limit != null && (
+                        <span className={p.exceeds ? 'text-amber-300 ml-2' : 'ml-2'}>
+                          {p.exceeds
+                            ? `${platformLabel(p.platform)} limit is ${p.limit}; will be truncated on publish.`
+                            : `(${platformLabel(p.platform)} limit ${p.limit})`}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
               </div>
 
               {/* Action buttons */}
@@ -485,9 +599,11 @@ export default function PromoteComposer({
                   ) : (
                     <>
                       <Send className="w-4 h-4 mr-1.5" />
-                      {PLATFORMS.find((p) => p.key === platform)?.mode === 'direct'
-                        ? `Publish to ${platformLabel(platform)}`
-                        : 'Copy + open compose'}
+                      {platforms.length === 1
+                        ? (PLATFORMS.find((p) => p.key === platforms[0])?.mode === 'direct'
+                            ? `Publish to ${platformLabel(platforms[0])}`
+                            : 'Copy + open compose')
+                        : `Publish to ${platforms.length} platforms`}
                     </>
                   )}
                 </Button>
@@ -498,7 +614,7 @@ export default function PromoteComposer({
           {error && (
             <div className="flex items-start gap-2 rounded-md bg-red-900/30 border border-red-700/40 p-3 text-sm text-red-200">
               <AlertCircle className="w-4 h-4 flex-shrink-0 mt-0.5" />
-              <span>{error}</span>
+              <span className="whitespace-pre-line">{error}</span>
             </div>
           )}
         </div>
