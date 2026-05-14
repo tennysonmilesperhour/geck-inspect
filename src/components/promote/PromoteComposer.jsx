@@ -17,7 +17,7 @@ import {
   pickPrimaryPlatform,
 } from '@/lib/socialMedia';
 import { supabase } from '@/lib/supabaseClient';
-import { SocialPost, SocialPostVariant } from '@/entities/all';
+import { SocialPost, SocialPostVariant, UserBrandVoice } from '@/entities/all';
 import { toast } from '@/components/ui/use-toast';
 
 const DEFAULT_VOICE = 'pro_breeder';
@@ -53,6 +53,20 @@ export default function PromoteComposer({
   const [editedHashtags, setEditedHashtags] = useState('');
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState(null);
+  // Custom voices (user_brand_voice). Loaded on open. A selected custom
+  // voice overrides the preset for the next generation by sending its
+  // voice_text as the `voice_custom` system-prompt addition.
+  const [customVoices, setCustomVoices] = useState([]);
+  const [selectedCustomVoiceId, setSelectedCustomVoiceId] = useState(null);
+  const [showNewVoiceForm, setShowNewVoiceForm] = useState(false);
+  const [newVoiceName, setNewVoiceName] = useState('');
+  const [newVoiceText, setNewVoiceText] = useState('');
+  const [savingVoice, setSavingVoice] = useState(false);
+  // Hook rewriter state: 5 alternative opening lines for the active
+  // variant. Picking one rewrites just the first paragraph of the
+  // edited content.
+  const [hookSuggestions, setHookSuggestions] = useState([]);
+  const [rewritingHooks, setRewritingHooks] = useState(false);
 
   // Reset on open / gecko change.
   useEffect(() => {
@@ -66,7 +80,28 @@ export default function PromoteComposer({
     setError(null);
     setStartingPoint('');
     setPlatforms(DEFAULT_PLATFORMS);
+    setHookSuggestions([]);
   }, [open, gecko?.id]);
+
+  // Load the user's saved custom voices when the composer opens.
+  useEffect(() => {
+    if (!open || !user?.auth_user_id) return;
+    (async () => {
+      try {
+        const rows = await UserBrandVoice.filter({ user_id: user.auth_user_id });
+        setCustomVoices(rows || []);
+        const def = (rows || []).find((r) => r.is_default);
+        if (def) setSelectedCustomVoiceId(def.id);
+      } catch (e) {
+        console.warn('custom voices load failed', e);
+      }
+    })();
+  }, [open, user?.auth_user_id]);
+
+  const selectedCustomVoice = useMemo(
+    () => customVoices.find((v) => v.id === selectedCustomVoiceId) || null,
+    [customVoices, selectedCustomVoiceId],
+  );
 
   const remainingIterations = ITERATION_CAP - iterations;
   const primaryPlatform = useMemo(() => pickPrimaryPlatform(platforms), [platforms]);
@@ -151,6 +186,10 @@ export default function PromoteComposer({
       const { data, error: fnErr } = await supabase.functions.invoke('generate-social-post', {
         body: {
           post_id: postId,
+          // When the user has a custom voice selected we forward its
+          // voice_text as voice_custom; the server appends it to the
+          // system prompt so it stacks on top of the preset.
+          voice_custom: selectedCustomVoice?.voice_text || null,
           gecko: {
             id: gecko.id,
             name: gecko.name || null,
@@ -206,6 +245,101 @@ export default function PromoteComposer({
     if (variants.length > 0) {
       // Regenerate with the new voice
       await handleGenerate('voice_cycle');
+    }
+  };
+
+  // Hook rewriter: ask the model for 5 alternative opening lines for
+  // the current draft. Body and hashtags stay; the user picks one to
+  // swap in. Burns an iteration just like a regenerate.
+  const handleRewriteHooks = async () => {
+    if (!editedContent.trim() || !draft) return;
+    if (remainingIterations <= 0) {
+      setError('You have reached the 10 generation cap for this post.');
+      return;
+    }
+    setRewritingHooks(true);
+    setError(null);
+    try {
+      const { data, error: fnErr } = await supabase.functions.invoke('generate-social-post', {
+        body: {
+          post_id: draft.id,
+          kind: 'hook_rewrite',
+          variant_count: 5,
+          voice_preset: voicePreset,
+          voice_custom: selectedCustomVoice?.voice_text || null,
+          platforms,
+          template,
+          length_pref: lengthPref,
+          gecko: {
+            id: gecko.id,
+            name: gecko.name || null,
+            morph: gecko.morph || gecko.morph_description || null,
+            sex: gecko.sex || null,
+          },
+          previous_variants: [{ content: editedContent }],
+        },
+      });
+      if (fnErr) {
+        setError(fnErr.message || 'Hook rewrite failed.');
+        return;
+      }
+      if (data?.error) {
+        setError(`Error: ${data.error}`);
+        return;
+      }
+      setHookSuggestions((data.variants || []).map((v) => v.hook).filter(Boolean));
+      setIterations(data.iteration_count || iterations + 1);
+    } catch (e) {
+      setError(String(e?.message || e));
+    } finally {
+      setRewritingHooks(false);
+    }
+  };
+
+  // Replace the opening paragraph of the edited content with the
+  // chosen hook. We treat "everything up to the first blank line" as
+  // the existing hook so users can paste-in new openings without
+  // losing the body.
+  const applyHook = (hook) => {
+    if (!hook) return;
+    const trimmed = editedContent.trim();
+    const splitAt = trimmed.indexOf('\n\n');
+    const body = splitAt === -1 ? '' : trimmed.slice(splitAt).trimStart();
+    setEditedContent(body ? `${hook}\n\n${body}` : hook);
+    setHookSuggestions([]);
+  };
+
+  // Save a new custom voice to user_brand_voice.
+  const handleSaveVoice = async () => {
+    if (!newVoiceName.trim() || !newVoiceText.trim()) return;
+    setSavingVoice(true);
+    try {
+      const created = await UserBrandVoice.create({
+        user_id: user.auth_user_id,
+        name: newVoiceName.trim(),
+        voice_text: newVoiceText.trim(),
+        is_default: customVoices.length === 0, // first one becomes default
+      });
+      setCustomVoices((prev) => [...prev, created]);
+      setSelectedCustomVoiceId(created.id);
+      setNewVoiceName('');
+      setNewVoiceText('');
+      setShowNewVoiceForm(false);
+    } catch (e) {
+      setError(`Save voice failed: ${e?.message || e}`);
+    } finally {
+      setSavingVoice(false);
+    }
+  };
+
+  const handleDeleteVoice = async (id) => {
+    if (!confirm('Delete this saved voice?')) return;
+    try {
+      await UserBrandVoice.delete(id);
+      setCustomVoices((prev) => prev.filter((v) => v.id !== id));
+      if (selectedCustomVoiceId === id) setSelectedCustomVoiceId(null);
+    } catch (e) {
+      setError(`Delete failed: ${e?.message || e}`);
     }
   };
 
@@ -461,11 +595,16 @@ export default function PromoteComposer({
             </p>
           </div>
 
-          {/* Voice cycling */}
-          <div className="rounded-lg border border-emerald-800/40 bg-emerald-950/30 p-3">
-            <div className="flex items-center justify-between mb-1">
+          {/* Voice cycling + custom voice picker */}
+          <div className="rounded-lg border border-emerald-800/40 bg-emerald-950/30 p-3 space-y-2">
+            <div className="flex items-center justify-between">
               <Label className="text-xs uppercase tracking-wider text-emerald-300">
                 Voice: {voiceLabel(voicePreset)}
+                {selectedCustomVoice && (
+                  <span className="ml-2 normal-case tracking-normal text-emerald-200/70">
+                    + {selectedCustomVoice.name}
+                  </span>
+                )}
               </Label>
               <Button
                 type="button"
@@ -482,6 +621,76 @@ export default function PromoteComposer({
             <p className="text-xs text-emerald-200/70">
               {VOICE_PRESETS.find((v) => v.key === voicePreset)?.blurb}
             </p>
+
+            {/* Saved custom voices ,  click a chip to stack a custom voice
+                on top of the preset. Saving captures the user's own
+                writing for the model to mimic. */}
+            <div className="pt-2 border-t border-emerald-900/40">
+              <div className="text-[10px] uppercase tracking-wider text-emerald-300/70 mb-1.5">
+                Your saved voices
+              </div>
+              <div className="flex flex-wrap gap-1.5 items-center">
+                {customVoices.map((v) => {
+                  const active = v.id === selectedCustomVoiceId;
+                  return (
+                    <span key={v.id} className="inline-flex items-center gap-0.5">
+                      <button
+                        type="button"
+                        onClick={() => setSelectedCustomVoiceId(active ? null : v.id)}
+                        className={`text-[11px] px-2 py-0.5 rounded-l border transition-colors ${
+                          active
+                            ? 'bg-emerald-600/40 border-emerald-500/60 text-emerald-50'
+                            : 'bg-emerald-950/40 border-emerald-800/50 text-emerald-200/80 hover:bg-emerald-900/40'
+                        }`}
+                      >
+                        {v.name}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteVoice(v.id)}
+                        title="Delete voice"
+                        className="text-[11px] px-1 py-0.5 rounded-r border border-l-0 border-emerald-800/50 bg-emerald-950/40 text-emerald-300/60 hover:text-red-300 hover:bg-red-900/30"
+                      >
+                        ×
+                      </button>
+                    </span>
+                  );
+                })}
+                <button
+                  type="button"
+                  onClick={() => setShowNewVoiceForm((s) => !s)}
+                  className="text-[11px] px-2 py-0.5 rounded-full border border-dashed border-emerald-700/60 text-emerald-300/80 hover:text-emerald-100 hover:bg-emerald-900/40"
+                >
+                  {showNewVoiceForm ? 'Cancel' : '+ Train a voice'}
+                </button>
+              </div>
+
+              {showNewVoiceForm && (
+                <div className="mt-2 space-y-2 rounded-md bg-emerald-950/50 border border-emerald-800/40 p-2">
+                  <Input
+                    value={newVoiceName}
+                    onChange={(e) => setNewVoiceName(e.target.value)}
+                    placeholder="Voice name (e.g. My breeder voice)"
+                    className="text-xs"
+                  />
+                  <Textarea
+                    value={newVoiceText}
+                    onChange={(e) => setNewVoiceText(e.target.value)}
+                    placeholder="Paste 5-10 of your past captions, or describe the voice in your own words. The model will mimic phrasing, rhythm, and tics."
+                    rows={5}
+                    className="text-xs font-mono"
+                  />
+                  <Button
+                    size="sm"
+                    onClick={handleSaveVoice}
+                    disabled={savingVoice || !newVoiceName.trim() || !newVoiceText.trim()}
+                    className="bg-emerald-600 hover:bg-emerald-500"
+                  >
+                    {savingVoice ? <><Loader2 className="w-3 h-3 mr-1 animate-spin" /> Saving…</> : 'Save voice'}
+                  </Button>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Optional starting-point text */}
@@ -554,7 +763,43 @@ export default function PromoteComposer({
                   <RefreshCw className="w-3.5 h-3.5 mr-1.5" />
                   Regenerate
                 </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleRewriteHooks}
+                  disabled={rewritingHooks || remainingIterations <= 0 || !editedContent.trim()}
+                  title="Generate 5 alternative opening lines"
+                >
+                  {rewritingHooks
+                    ? <><Loader2 className="w-3.5 h-3.5 mr-1.5 animate-spin" /> Hooks…</>
+                    : <>5 hooks</>}
+                </Button>
               </div>
+
+              {hookSuggestions.length > 0 && (
+                <div className="rounded-lg border border-emerald-700/50 bg-emerald-900/30 p-2 space-y-1.5">
+                  <div className="text-[10px] uppercase tracking-wider text-emerald-300 flex items-center justify-between">
+                    Pick a new opening
+                    <button
+                      type="button"
+                      onClick={() => setHookSuggestions([])}
+                      className="text-emerald-400/70 hover:text-emerald-200 text-[10px]"
+                    >
+                      dismiss
+                    </button>
+                  </div>
+                  {hookSuggestions.map((h, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      onClick={() => applyHook(h)}
+                      className="block w-full text-left text-xs text-emerald-100 rounded bg-emerald-950/50 hover:bg-emerald-800/40 border border-emerald-800/40 hover:border-emerald-600/60 px-2 py-1.5 transition-colors"
+                    >
+                      {h}
+                    </button>
+                  ))}
+                </div>
+              )}
 
               {/* Edit area */}
               <div>
