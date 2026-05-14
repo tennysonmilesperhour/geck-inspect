@@ -14,6 +14,7 @@ import CommandPalette from "@/components/command-palette/CommandPalette";
 import FeedingAlertSystem from "@/components/feeding/FeedingAlertSystem";
 import HatchAlertSystem from "@/components/breeding/HatchAlertSystem";
 import NotificationPopover from "@/components/notifications/NotificationPopover";
+import PushEnableBanner from "@/components/notifications/PushEnableBanner";
 import GuestMockDisclaimer from "@/components/auth/GuestMockDisclaimer";
 import FeedbackWidget from "@/components/feedback/FeedbackWidget";
 import MarketIntelligenceButton from "@/components/shared/MarketIntelligenceButton";
@@ -1262,6 +1263,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           </header>
 
           <div className="flex-1 overflow-auto overflow-x-hidden pb-9 md:pb-0">
+            <PushEnableBanner user={user} />
             {children}
           </div>
 
