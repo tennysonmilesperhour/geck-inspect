@@ -230,11 +230,12 @@ export default function MyGeckosPage() {
 
             await retryApiCall(async () => Gecko.update(geckoId, updateData));
 
-            // Close the reason dialog and detail modal first so the user
-            // sees the action complete even if the follow-up reload is slow
-            // or fails.
+            // Close the reason dialog plus any open detail/edit surface so
+            // the user sees the action complete even if the follow-up reload
+            // is slow or fails.
             setArchiveDialogGeckoId(null);
             setIsDetailModalOpen(false);
+            setIsFormOpen(false);
             setSelectedGecko(null);
 
             await loadGeckos();
@@ -801,7 +802,7 @@ export default function MyGeckosPage() {
                                         currentUser={user}
                                         onSubmit={handleFormSubmit}
                                         onCancel={handleFormCancel}
-                                        onDelete={handleDelete}
+                                        onArchive={handleArchiveGecko}
                                         feedingGroups={feedingGroups}
                                         idSettings={idSettings}
                                     />
