@@ -78,17 +78,37 @@ export default function ConnectionsModal({ open, onOpenChange, user }) {
     setMetaStarting(true);
     try {
       const { data, error } = await supabase.functions.invoke('meta-oauth-start', { body: {} });
-      if (error) throw new Error(error.message || 'meta-oauth-start failed');
+      // FunctionsHttpError doesn't auto-parse the body for non-2xx
+      // responses, so reach into error.context to surface the actual
+      // server error (e.g. `meta_not_configured` with the list of
+      // missing secrets).
+      if (error) {
+        let parsed = null;
+        try {
+          if (error.context && typeof error.context.json === 'function') {
+            parsed = await error.context.json();
+          } else if (error.context && typeof error.context.text === 'function') {
+            parsed = JSON.parse(await error.context.text());
+          }
+        } catch { /* ignore */ }
+        if (parsed?.error === 'meta_not_configured') {
+          toast({
+            title: 'Meta secrets not set',
+            description: `Add these in Supabase → Settings → Edge Functions → Secrets: ${(parsed.missing || []).join(', ')}. See the Meta App setup checklist in the docs.`,
+          });
+          return;
+        }
+        throw new Error(parsed?.error || error.message || 'meta-oauth-start failed');
+      }
       if (data?.error === 'meta_not_configured') {
         toast({
-          title: 'Meta not configured',
-          description: `Set these Supabase secrets: ${(data.missing || []).join(', ')}`,
+          title: 'Meta secrets not set',
+          description: `Add these in Supabase → Settings → Edge Functions → Secrets: ${(data.missing || []).join(', ')}.`,
         });
         return;
       }
       if (data?.error) throw new Error(`${data.error}${data.detail ? `: ${data.detail}` : ''}`);
       if (!data?.url) throw new Error('No OAuth URL returned');
-      // Top-level navigation so Meta's CSP doesn't reject us in an iframe.
       window.location.href = data.url;
     } catch (e) {
       toast({ title: 'Connect failed', description: String(e?.message || e) });
