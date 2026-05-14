@@ -25,10 +25,10 @@ export default function ConnectionsModal({ open, onOpenChange, user }) {
   const [loading, setLoading] = useState(false);
 
   const load = async () => {
-    if (!user?.id) return;
+    if (!user?.auth_user_id) return;
     setLoading(true);
     try {
-      const rows = await SocialPlatformConnection.filter({ user_id: user.id });
+      const rows = await SocialPlatformConnection.filter({ user_id: user.auth_user_id });
       const b = rows.find((r) => r.platform === 'bluesky' && r.is_active);
       setBluesky(b || null);
       if (b) setHandle(b.account_handle || '');
@@ -41,7 +41,7 @@ export default function ConnectionsModal({ open, onOpenChange, user }) {
 
   useEffect(() => {
     if (open) load();
-  }, [open, user?.id]);
+  }, [open, user?.auth_user_id]);
 
   const handleSave = async () => {
     if (!handle.trim() || !appPassword.trim()) {

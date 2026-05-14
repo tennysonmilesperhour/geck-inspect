@@ -102,7 +102,9 @@ export default function PromoteComposer({
       let postId = draft?.id;
       if (!postId) {
         const created = await SocialPost.create({
-          created_by_user_id: user.id,
+          // auth_user_id is the real auth.users uuid; user.id is the
+          // legacy profile id, which RLS will reject. See AuthContext.
+          created_by_user_id: user.auth_user_id,
           created_by_email: user.email,
           gecko_id: gecko.id,
           template,

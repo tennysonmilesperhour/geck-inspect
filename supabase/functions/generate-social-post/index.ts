@@ -303,6 +303,15 @@ serve(async (req) => {
     return json({ error: "unknown_voice_preset" }, 400);
   }
 
+  // Admins bypass the iteration cap entirely so the team can test
+  // generation without bumping into the 10-per-post limit.
+  const { data: callerProfile } = await supabase
+    .from("profiles")
+    .select("role")
+    .eq("email", user.email || "")
+    .maybeSingle();
+  const isAdmin = callerProfile?.role === "admin";
+
   // Iteration cap — atomically increment
   const { data: postRow, error: postErr } = await supabase
     .from("social_posts")
@@ -311,7 +320,7 @@ serve(async (req) => {
     .maybeSingle();
   if (postErr || !postRow) return json({ error: "post_not_found" }, 404);
   if (postRow.created_by_user_id !== user.id) return json({ error: "forbidden" }, 403);
-  if ((postRow.iteration_count || 0) >= ITERATION_CAP_PER_POST) {
+  if (!isAdmin && (postRow.iteration_count || 0) >= ITERATION_CAP_PER_POST) {
     return json({ error: "iteration_cap_reached", cap: ITERATION_CAP_PER_POST }, 429);
   }
 
