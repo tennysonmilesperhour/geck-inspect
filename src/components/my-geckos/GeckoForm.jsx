@@ -10,20 +10,9 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 import { Card, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { format } from "date-fns";
-import { Upload, X, Trash2, DollarSign, Loader2 } from "lucide-react";
+import { Upload, X, DollarSign, Loader2, Archive } from "lucide-react";
 import { Switch } from '@/components/ui/switch';
 import MorphIDSelector from './MorphIDSelector';
 import QualityInput from './QualityInput';
@@ -38,7 +27,7 @@ import ParentAutocomplete from './form/ParentAutocomplete';
 // Back-compat alias so the rest of this file doesn't need to change
 const initialFormData = INITIAL_FORM_DATA;
 
-export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, onCancel, isHatching = false, onDelete, breedingPlan = null, feedingGroups: feedingGroupsProp = null, idSettings = null }) {
+export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, onCancel, isHatching = false, onArchive, breedingPlan = null, feedingGroups: feedingGroupsProp = null, idSettings = null }) {
     const { toast } = useToast();
     const isArchived = gecko?.archived;
     const [formData, setFormData] = useState(initialFormData);
@@ -472,12 +461,6 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
         setIsSaving(false);
     };
 
-    const handleDeleteConfirm = () => {
-        if (gecko && onDelete) {
-            onDelete(gecko.id);
-        }
-    };
-    
     // Certificate generation moved to GeckoDetailModal (view flow).
 
     const getSaveButtonText = () => {
@@ -928,30 +911,17 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                 </form>
 
                 <CardFooter className="flex-shrink-0 mt-auto bg-slate-900 border-t border-slate-700 p-4 flex justify-end items-center gap-4">
-                    {gecko && onDelete && !isArchived && (
-                         <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button variant="destructive" className="h-10">
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    Archive
-                                </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent className="bg-slate-900 border-slate-700">
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle className="text-slate-100">Archive {gecko.name}?</AlertDialogTitle>
-                                    <AlertDialogDescription className="text-slate-400">
-                                        This will archive <strong>{gecko.name}</strong> and hide it from your active collection. You can restore it later from the archive.
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel className="bg-slate-800 text-slate-200 border-slate-600">Cancel</AlertDialogCancel>
-                                    <AlertDialogAction onClick={handleDeleteConfirm} className="bg-red-700 hover:bg-red-800">
-                                        Archive Gecko
-                                    </AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                            </AlertDialog>
-                            )}
+                    {gecko && onArchive && !isArchived && (
+                        <Button
+                            type="button"
+                            variant="outline"
+                            onClick={() => onArchive(gecko.id, true)}
+                            className="h-10 border-red-600 text-red-400 hover:bg-red-950/40 hover:text-red-300"
+                        >
+                            <Archive className="w-4 h-4 mr-2" />
+                            Archive
+                        </Button>
+                    )}
                             {isArchived && (
                             <div className="h-10 px-4 rounded border border-slate-600 bg-slate-800 flex items-center text-slate-400 text-sm font-medium cursor-not-allowed">
                             Archived
