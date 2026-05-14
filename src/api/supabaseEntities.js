@@ -48,6 +48,8 @@ export const ENTITIES_WITHOUT_CREATED_BY = new Set([
   'UserBrandVoice',
   'SocialPostPhotoUsage',
   'SocialReferralBonus',
+  'GeckoWaitlist',
+  'GeckoWaitlistSignup',
 ]);
 
 export const TABLE_MAP = {
@@ -158,6 +160,9 @@ export const TABLE_MAP = {
   UserBrandVoice: 'user_brand_voice',
   SocialPostPhotoUsage: 'social_post_photo_usage',
   SocialReferralBonus: 'social_referral_bonuses',
+  // Per-gecko waitlists, public-link signups
+  GeckoWaitlist: 'gecko_waitlists',
+  GeckoWaitlistSignup: 'gecko_waitlist_signups',
 };
 
 function parseSort(sort) {
@@ -428,3 +433,5 @@ export const SocialGenerationLog = createEntityClient('SocialGenerationLog');
 export const UserBrandVoice = createEntityClient('UserBrandVoice');
 export const SocialPostPhotoUsage = createEntityClient('SocialPostPhotoUsage');
 export const SocialReferralBonus = createEntityClient('SocialReferralBonus');
+export const GeckoWaitlist = createEntityClient('GeckoWaitlist');
+export const GeckoWaitlistSignup = createEntityClient('GeckoWaitlistSignup');

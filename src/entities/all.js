@@ -143,3 +143,5 @@ export const SocialGenerationLog = sb.SocialGenerationLog;
 export const UserBrandVoice = sb.UserBrandVoice;
 export const SocialPostPhotoUsage = sb.SocialPostPhotoUsage;
 export const SocialReferralBonus = sb.SocialReferralBonus;
+export const GeckoWaitlist = sb.GeckoWaitlist;
+export const GeckoWaitlistSignup = sb.GeckoWaitlistSignup;

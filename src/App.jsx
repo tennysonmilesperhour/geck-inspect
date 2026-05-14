@@ -83,6 +83,7 @@ const AnimalPassport        = lazy(() => import('./pages/AnimalPassport'));
 const PassportQR            = lazy(() => import('./pages/PassportQR'));
 const ClaimAnimal           = lazy(() => import('./pages/ClaimAnimal'));
 const CollectionInvite      = lazy(() => import('./pages/CollectionInvite'));
+const Waitlist              = lazy(() => import('./pages/Waitlist'));
 // P5 ,  Geck Answers (public read, auth to post)
 const GeckAnswersPublic     = lazy(() => import('./pages/GeckAnswers'));
 // Editorial blog ,  long-form genetics, breeding, and care articles. Lives
@@ -244,6 +245,7 @@ const AuthenticatedApp = () => {
           <Route path="/passport/:passportCode/qr" element={<PassportQR />} />
           <Route path="/claim/:token" element={<ClaimAnimal />} />
           <Route path="/collection-invite/:token" element={<CollectionInvite />} />
+          <Route path="/waitlist/:slug" element={<Waitlist />} />
           {/* P5 ,  Geck Answers (public read) */}
           <Route path="/GeckAnswers" element={<GeckAnswersPublic />} />
           {/* Editorial blog */}
@@ -304,6 +306,7 @@ const AuthenticatedApp = () => {
       <Route path="/passport/:passportCode" element={<AnimalPassport />} />
       <Route path="/claim/:token" element={<ClaimAnimal />} />
       <Route path="/collection-invite/:token" element={<CollectionInvite />} />
+      <Route path="/waitlist/:slug" element={<Waitlist />} />
       <Route path="*" element={<PageNotFound />} />
     </Routes>
     </Suspense>

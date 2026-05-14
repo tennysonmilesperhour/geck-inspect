@@ -180,6 +180,40 @@ export function normalizeHashtag(tag) {
   return (tag || '').replace(/^#/, '').toLowerCase().trim();
 }
 
+// Build a single-row CSV in MorphMarket's Bulk Import 2.0 format from
+// a gecko + user-edited caption. MorphMarket has no write API
+// (researched May 2026) so this is the most-automated path: generate
+// the CSV here, hand the user the file + a deep-link to their import
+// page. Re-uploading the same Animal ID updates the same listing
+// instead of creating a duplicate.
+export function buildMorphMarketCsvRow({ gecko, captionBody, hashtags }) {
+  const animalId = `geckinspect:${gecko.id}`;
+  const title = (gecko.name || gecko.morph_description || gecko.morph || 'Crested Gecko').slice(0, 60);
+  const tagBlock = (hashtags || []).map((h) => (h.startsWith('#') ? h : `#${h}`)).join(' ');
+  const description = [captionBody?.trim(), tagBlock].filter(Boolean).join('\n\n');
+  const sex = gecko.sex || '';
+  const birthDate = gecko.hatch_date || '';
+  const traits = gecko.morph_description || gecko.morph || '';
+  const status = (() => {
+    const s = (gecko.status || '').toLowerCase();
+    if (s === 'for sale' || s === 'available') return 'For Sale';
+    if (s === 'holdback') return 'Hold';
+    if (s === 'sold') return 'Sold';
+    return '';
+  })();
+  const photoUrls = Array.isArray(gecko.image_urls) ? gecko.image_urls.slice(0, 10).join(' ') : '';
+  const headers = ['Animal ID', 'Title', 'Description', 'Sex', 'Birth Date', 'Traits', 'Status', 'Photo URLs'];
+  const row = [animalId, title, description, sex, birthDate, traits, status, photoUrls];
+  // CSV escape: wrap any field that contains a comma, quote, or newline
+  // in double quotes and double-escape embedded quotes.
+  const escape = (s) => {
+    const str = String(s ?? '');
+    if (/[",\n]/.test(str)) return `"${str.replace(/"/g, '""')}"`;
+    return str;
+  };
+  return `${headers.join(',')}\n${row.map(escape).join(',')}\n`;
+}
+
 // Pretty cents -> dollar string ($1.50, $0.50, etc).
 export function formatCents(cents) {
   if (cents == null) return '$0.00';

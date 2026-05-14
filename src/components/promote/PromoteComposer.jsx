@@ -12,12 +12,12 @@ import {
 } from 'lucide-react';
 import {
   VOICE_PRESETS, POST_TEMPLATES, PLATFORMS, PLATFORM_CHAR_LIMITS,
-  HASHTAG_LIBRARY, normalizeHashtag,
+  HASHTAG_LIBRARY, normalizeHashtag, buildMorphMarketCsvRow,
   composePlatformText, platformDeepLink, platformLabel, voiceLabel,
   pickPrimaryPlatform,
 } from '@/lib/socialMedia';
 import { supabase } from '@/lib/supabaseClient';
-import { SocialPost, SocialPostVariant, UserBrandVoice } from '@/entities/all';
+import { SocialPost, SocialPostVariant, UserBrandVoice, GeckoWaitlist } from '@/entities/all';
 import { toast } from '@/components/ui/use-toast';
 
 const DEFAULT_VOICE = 'pro_breeder';
@@ -67,6 +67,15 @@ export default function PromoteComposer({
   // edited content.
   const [hookSuggestions, setHookSuggestions] = useState([]);
   const [rewritingHooks, setRewritingHooks] = useState(false);
+  // Inspiration library state. We pull the user's recent published
+  // social_post_variants so they can click a past post as a style
+  // anchor for the next generation. The selected anchor seeds the
+  // `starting_point` prompt slot.
+  const [inspirationPosts, setInspirationPosts] = useState([]);
+  // Thread/carousel split state. When the body exceeds the active
+  // platform's char limit we offer a client-side split into segments,
+  // each ≤ the limit, with "1/N" markers. Server-free for now.
+  const [threadSegments, setThreadSegments] = useState([]);
 
   // Reset on open / gecko change.
   useEffect(() => {
@@ -94,6 +103,51 @@ export default function PromoteComposer({
         if (def) setSelectedCustomVoiceId(def.id);
       } catch (e) {
         console.warn('custom voices load failed', e);
+      }
+    })();
+  }, [open, user?.auth_user_id]);
+
+  // Load the user's most recent published variants as inspiration. We
+  // pull from social_post_variants (status = 'published') and
+  // dedupe-by-post so the picker shows distinct posts, not every
+  // platform fan-out of the same draft.
+  useEffect(() => {
+    if (!open || !user?.auth_user_id) return;
+    (async () => {
+      try {
+        const { data: postRows } = await supabase
+          .from('social_posts')
+          .select('id, template, primary_variant_id, published_at, gecko_id')
+          .eq('created_by_user_id', user.auth_user_id)
+          .eq('status', 'published')
+          .order('published_at', { ascending: false })
+          .limit(5);
+        if (!postRows || postRows.length === 0) {
+          setInspirationPosts([]);
+          return;
+        }
+        const variantIds = postRows.map((p) => p.primary_variant_id).filter(Boolean);
+        if (variantIds.length === 0) {
+          setInspirationPosts([]);
+          return;
+        }
+        const { data: variantRows } = await supabase
+          .from('social_post_variants')
+          .select('id, post_id, platform, content')
+          .in('id', variantIds);
+        const variantById = new Map((variantRows || []).map((v) => [v.id, v]));
+        setInspirationPosts(
+          postRows
+            .map((p) => ({
+              post_id: p.id,
+              template: p.template,
+              published_at: p.published_at,
+              variant: variantById.get(p.primary_variant_id),
+            }))
+            .filter((r) => r.variant),
+        );
+      } catch (e) {
+        console.warn('inspiration load failed', e);
       }
     })();
   }, [open, user?.auth_user_id]);
@@ -343,6 +397,136 @@ export default function PromoteComposer({
     }
   };
 
+  // Seed an inspiration post into the starting-point field so the next
+  // generation can use it as a style anchor. We don't paste the full
+  // text into editedContent because that would clobber the working
+  // draft; using starting_point lets the model riff on the angle.
+  const useInspiration = (post) => {
+    if (!post?.variant) return;
+    const excerpt = post.variant.content.slice(0, 300);
+    setStartingPoint(`Match the angle and rhythm of this past post: ${excerpt}`);
+  };
+
+  // Client-side splitter. Walks the caption, packs sentences into
+  // segments that fit `limit`, and adds "1/N" markers. Good enough for
+  // Bluesky / X threading; the user can refine each segment before
+  // publishing. Auto-walking the thread on publish is a follow-up.
+  const splitIntoThread = (text, limit) => {
+    if (!text || !limit) return [];
+    const sentences = text.split(/(?<=[.!?])\s+/);
+    const segments = [];
+    let current = '';
+    const markerWidth = 6; // " 9/9" worst-case
+    const usableLimit = Math.max(60, limit - markerWidth);
+    for (const s of sentences) {
+      const candidate = current ? `${current} ${s}` : s;
+      if (candidate.length <= usableLimit) {
+        current = candidate;
+      } else {
+        if (current) segments.push(current);
+        // Sentence itself is too long; hard-split.
+        if (s.length > usableLimit) {
+          let rest = s;
+          while (rest.length > usableLimit) {
+            segments.push(rest.slice(0, usableLimit));
+            rest = rest.slice(usableLimit);
+          }
+          current = rest;
+        } else {
+          current = s;
+        }
+      }
+    }
+    if (current) segments.push(current);
+    const total = segments.length;
+    return segments.map((seg, i) => `${seg} ${i + 1}/${total}`);
+  };
+
+  // Find the most restrictive selected platform's char limit so the
+  // split is conservative; users posting to multiple thread-friendly
+  // platforms get one set of segments that fits everywhere.
+  const splitTarget = useMemo(() => {
+    const limited = platforms
+      .map((p) => ({ key: p, limit: PLATFORM_CHAR_LIMITS[p] }))
+      .filter((x) => x.limit != null)
+      .sort((a, b) => a.limit - b.limit);
+    return limited[0] || null;
+  }, [platforms]);
+
+  const handleSplitThread = () => {
+    if (!splitTarget) return;
+    const segs = splitIntoThread(editedContent, splitTarget.limit);
+    setThreadSegments(segs);
+  };
+
+  // Create a public waitlist for this gecko and inject its URL into
+  // the caption. Slug is 8 url-safe chars; we retry a couple of times
+  // on collision before giving up (uniqueness is enforced by the DB).
+  const handleCreateWaitlist = async () => {
+    if (!gecko) return;
+    const makeSlug = () => Math.random().toString(36).slice(2, 10);
+    const title = gecko.name
+      ? `Waitlist: ${gecko.name}`
+      : `Waitlist: ${gecko.morph_description || gecko.morph || 'crested gecko'}`;
+    let row = null;
+    let lastErr = null;
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        row = await GeckoWaitlist.create({
+          breeder_user_id: user.auth_user_id,
+          gecko_id: gecko.id,
+          slug: makeSlug(),
+          title,
+          description: editedContent || '',
+          is_open: true,
+        });
+        break;
+      } catch (e) {
+        lastErr = e;
+        if (!String(e?.message || '').toLowerCase().includes('duplicate')) break;
+      }
+    }
+    if (!row) {
+      setError(`Waitlist create failed: ${lastErr?.message || 'unknown'}`);
+      return;
+    }
+    const url = `${window.location.origin}/waitlist/${row.slug}`;
+    setEditedContent((prev) => `${prev.trim()}\n\nJoin the waitlist: ${url}`.trim());
+    toast({
+      title: 'Waitlist link created',
+      description: 'Added to the caption. Share the post; signups appear in your inbox.',
+    });
+  };
+
+  // Generate a MorphMarket-formatted CSV row for this gecko + caption,
+  // trigger a browser download, and open MorphMarket's bulk-import
+  // page in a new tab so the user can drop the file in. MorphMarket
+  // has no write API; this CSV/import flow is the closest thing they
+  // expose (see the research notes from May 2026).
+  const handleExportMorphMarketCsv = () => {
+    if (!gecko) return;
+    const tags = editedHashtags.split(/\s+/).map((t) => t.trim()).filter(Boolean);
+    const csv = buildMorphMarketCsvRow({
+      gecko,
+      captionBody: editedContent,
+      hashtags: tags,
+    });
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `morphmarket-${gecko.name || gecko.id}.csv`.replace(/\s+/g, '-').toLowerCase();
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    window.open('https://www.morphmarket.com/us/c/all/animals?manage=1', '_blank', 'noopener,noreferrer');
+    toast({
+      title: 'MorphMarket CSV downloaded',
+      description: 'Drop the file on the Bulk Import page (we just opened it). Re-importing the same Animal ID updates the listing.',
+    });
+  };
+
   // One composed string per selected platform, factoring user edits.
   // composePlatformText handles per-platform hashtag placement (Reddit
   // strips them; Instagram puts them in a trailing block; everywhere
@@ -515,7 +699,7 @@ export default function PromoteComposer({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-3xl w-[100vw] sm:w-auto max-h-[100vh] sm:max-h-[90vh] h-[100vh] sm:h-auto sm:rounded-lg rounded-none overflow-y-auto p-3 sm:p-6 pb-24 sm:pb-6">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-emerald-400" />
@@ -524,6 +708,35 @@ export default function PromoteComposer({
         </DialogHeader>
 
         <div className="space-y-4 mt-2">
+          {/* Inspiration: the user's last 5 published posts. Click one
+              to seed it as a style anchor (writes into the
+              starting-point field — keeps the working draft intact). */}
+          {inspirationPosts.length > 0 && (
+            <div className="rounded-lg border border-emerald-800/40 bg-emerald-950/30 p-3">
+              <div className="text-[10px] uppercase tracking-wider text-emerald-300/80 mb-2">
+                Inspired by your past posts
+              </div>
+              <div className="flex gap-2 overflow-x-auto pb-1 -mx-1 px-1">
+                {inspirationPosts.map((p) => (
+                  <button
+                    key={p.post_id}
+                    type="button"
+                    onClick={() => useInspiration(p)}
+                    className="flex-shrink-0 w-40 text-left rounded-md border border-emerald-800/40 bg-emerald-950/50 hover:border-emerald-500/60 hover:bg-emerald-900/40 transition-colors p-2"
+                    title="Use this as a style anchor for the next generation"
+                  >
+                    <div className="text-[10px] uppercase tracking-wider text-emerald-300/70">
+                      {p.template} · {platformLabel(p.variant.platform)}
+                    </div>
+                    <div className="text-[11px] text-emerald-100 line-clamp-3 mt-1">
+                      {p.variant.content}
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {/* Template + Length pickers */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             <div>
@@ -888,17 +1101,89 @@ export default function PromoteComposer({
                 ))}
               </div>
 
-              {/* Action buttons */}
-              <div className="flex flex-wrap gap-2 pt-2 border-t border-emerald-900/40">
+              {/* Split-into-thread tool. Available when any of the
+                  selected platforms has a hard char limit (Bluesky 300,
+                  X 280, Threads 500) and the current caption blows
+                  past it. Output is a numbered list of segments the
+                  user can copy/edit one at a time. Auto-walking the
+                  thread on publish is a follow-up. */}
+              {splitTarget && previewByPlatform.some((p) => p.exceeds) && (
+                <div className="rounded-lg border border-amber-700/40 bg-amber-950/20 p-3">
+                  <div className="flex items-center justify-between mb-1">
+                    <div className="text-xs text-amber-200">
+                      Caption is over the {platformLabel(splitTarget.key)} {splitTarget.limit}-char limit. Want to split into a thread?
+                    </div>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={handleSplitThread}
+                      className="text-xs"
+                    >
+                      Split into thread
+                    </Button>
+                  </div>
+                  {threadSegments.length > 0 && (
+                    <div className="mt-2 space-y-1.5">
+                      {threadSegments.map((seg, i) => (
+                        <div
+                          key={i}
+                          className="text-xs text-emerald-100 rounded bg-emerald-950/50 border border-emerald-800/40 p-2 whitespace-pre-wrap"
+                        >
+                          {seg}
+                          <div className="text-[10px] text-emerald-300/60 mt-1">
+                            {seg.length} chars
+                          </div>
+                        </div>
+                      ))}
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={async () => {
+                          try {
+                            await navigator.clipboard.writeText(threadSegments.join('\n\n---\n\n'));
+                            toast({ title: `Copied ${threadSegments.length}-segment thread to clipboard.` });
+                          } catch {
+                            toast({ title: 'Copy failed' });
+                          }
+                        }}
+                      >
+                        <Copy className="w-3 h-3 mr-1" /> Copy all segments
+                      </Button>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Action buttons. On mobile, pin to the bottom of the
+                  viewport so Publish is always reachable without
+                  scrolling through hashtag chips + previews. */}
+              <div className="flex flex-wrap gap-2 pt-2 border-t border-emerald-900/40 sm:static fixed bottom-0 inset-x-0 sm:bg-transparent bg-emerald-950/95 sm:backdrop-blur-none backdrop-blur-md sm:p-0 p-3 sm:border-t-emerald-900/40 border-t-emerald-700/60 z-10">
                 <Button
                   variant="outline"
                   onClick={handleCopy}
+                  className="flex-1 sm:flex-initial"
                 >
                   {copied ? <Check className="w-4 h-4 mr-1.5" /> : <Copy className="w-4 h-4 mr-1.5" />}
                   Copy
                 </Button>
                 <Button
-                  className="bg-emerald-600 hover:bg-emerald-500 ml-auto"
+                  variant="outline"
+                  onClick={handleCreateWaitlist}
+                  className="hidden sm:inline-flex"
+                  title="Create a public waitlist link for this gecko and append it to the caption"
+                >
+                  + Waitlist
+                </Button>
+                <Button
+                  variant="outline"
+                  onClick={handleExportMorphMarketCsv}
+                  className="hidden sm:inline-flex"
+                  title="Generate MorphMarket Bulk Import CSV and open their import page"
+                >
+                  MorphMarket CSV
+                </Button>
+                <Button
+                  className="bg-emerald-600 hover:bg-emerald-500 ml-auto flex-1 sm:flex-initial"
                   onClick={handlePublish}
                   disabled={publishing || !editedContent.trim()}
                 >
@@ -911,7 +1196,7 @@ export default function PromoteComposer({
                         ? (PLATFORMS.find((p) => p.key === platforms[0])?.mode === 'direct'
                             ? `Publish to ${platformLabel(platforms[0])}`
                             : 'Copy + open compose')
-                        : `Publish to ${platforms.length} platforms`}
+                        : `Publish ×${platforms.length}`}
                     </>
                   )}
                 </Button>
