@@ -1,4 +1,4 @@
-// Supabase Edge Function — recognize-gecko-morph
+// Supabase Edge Function: recognize-gecko-morph
 //
 // Calls Anthropic Claude vision to identify crested gecko morphs from an
 // image URL. Uses tool-use to force structured JSON that conforms to the
@@ -10,7 +10,7 @@
 // verified examples prepended to the prompt. That version was reverted
 // because Anthropic's image-prefetch threw 500s on ~84% of calls when the
 // bank stacked multiple base44-prefixed PNG screenshots with the user's
-// photo — production accuracy dropped from 27% → 0% on the few that did
+// photo. Production accuracy dropped from 27% to 0% on the few that did
 // succeed, and the cost was an 84% incident rate. Re-introduce only after
 // the gecko_images verified rows are pruned to small (~256 KB) well-formed
 // JPEGs and tested at a small N before redeploy.
@@ -32,6 +32,7 @@ import {
   PATTERN_INTENSITY_IDS,
   WHITE_AMOUNT_IDS,
   FIRED_STATE_IDS,
+  AGE_STAGE_IDS,
   TAXONOMY_VERSION,
 } from "./taxonomy.ts";
 
@@ -51,10 +52,24 @@ function json(body: unknown, status = 200) {
   });
 }
 
-function buildInstructions() {
+const AGE_STAGE_HINTS: Record<string, string> = {
+  hatchling:
+    "The keeper says this is a HATCHLING (under 3 months). Hatchling whites can look extremely bright and \"painted on\" with hard edges that soften with age; high pattern intensity at this stage is normal and is not by itself evidence of an extreme adult morph. Treat dramatic white sides / fringe / kneecaps as expected and weigh them at hatchling baseline, not adult baseline.",
+  juvenile:
+    "The keeper says this is a JUVENILE (3-12 months). Pattern and trait expression are usually at their most legible at this stage; baseline coloration is mostly settled but white edges may still soften.",
+  subadult:
+    "The keeper says this is a SUBADULT (12-18 months). Trait expression is mostly mature but can continue to develop; expect near-adult coloration with minor pattern shifts still possible.",
+  adult:
+    "The keeper says this is an ADULT (18 months or older). Trait expression is fully developed; coloration and pattern intensity reflect the animal's true morph rather than developmental changes.",
+};
+
+function buildInstructions(ageStage: string | null) {
+  const ageHint = ageStage && AGE_STAGE_HINTS[ageStage]
+    ? `\n\nLife-stage context: ${AGE_STAGE_HINTS[ageStage]}`
+    : "";
   return `You are a world-expert crested gecko (Correlophus ciliatus) morph identifier. Analyze
 the attached photograph and call the \`submit_morph_analysis\` tool with your best
-assessment. Use ONLY the ids provided in the tool's schema for each field — do not
+assessment. Use ONLY the ids provided in the tool's schema for each field, do not
 invent ids; if unsure, pick the closest and lower your confidence score.
 
 Rules:
@@ -66,7 +81,7 @@ Rules:
 - If the photo is blurry, oddly lit, or shows multiple animals, lower
   confidence_score substantially and explain why in the explanation field.
 
-Taxonomy version: ${TAXONOMY_VERSION}.`;
+Taxonomy version: ${TAXONOMY_VERSION}.${ageHint}`;
 }
 
 const TOOL = {
@@ -110,13 +125,13 @@ function clampToTaxonomy(raw: Record<string, unknown>) {
   };
 }
 
-async function callClaude(imageUrls: string[]) {
+async function callClaude(imageUrls: string[], ageStage: string | null) {
   const imageBlocks = imageUrls.map((url) => ({
     type: "image",
     source: { type: "url", url },
   }));
   const multiNote = imageUrls.length > 1
-    ? `\n\nNOTE: ${imageUrls.length} photos of the SAME animal are attached (different angles / fired states / lighting). Synthesize across them — e.g. compare fired-up vs fired-down color, check pattern continuity from multiple sides. Don't treat them as different geckos.`
+    ? `\n\nNOTE: ${imageUrls.length} photos of the SAME animal are attached (different angles / fired states / lighting). Synthesize across them, e.g. compare fired-up vs fired-down color, check pattern continuity from multiple sides. Don't treat them as different geckos.`
     : "";
 
   const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -135,7 +150,7 @@ async function callClaude(imageUrls: string[]) {
         role: "user",
         content: [
           ...imageBlocks,
-          { type: "text", text: buildInstructions() + multiNote },
+          { type: "text", text: buildInstructions(ageStage) + multiNote },
         ],
       }],
     }),
@@ -171,9 +186,17 @@ serve(async (req) => {
     }
     imageUrls = imageUrls.slice(0, 5);
 
-    const raw = await callClaude(imageUrls);
+    const rawAgeStage = typeof body?.age_stage === "string" ? body.age_stage : null;
+    const ageStage = rawAgeStage && AGE_STAGE_IDS.includes(rawAgeStage) ? rawAgeStage : null;
+
+    const raw = await callClaude(imageUrls, ageStage);
     const analysis = clampToTaxonomy(raw);
-    return json({ success: true, analysis, model: CLAUDE_MODEL, photo_count: imageUrls.length });
+    return json({
+      success: true,
+      analysis: { ...analysis, age_stage: ageStage || "unknown" },
+      model: CLAUDE_MODEL,
+      photo_count: imageUrls.length,
+    });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
     return json({ error: message }, 500);

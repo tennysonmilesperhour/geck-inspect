@@ -1,6 +1,10 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Label } from '@/components/ui/label';
+import {
+  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+} from '@/components/ui/select';
 import { Loader2, Sparkles, ArrowRight, Camera } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { recognizeGeckoMorph } from '../functions/recognizeGeckoMorph';
@@ -10,10 +14,12 @@ import PhotoTipsCard from '../components/morph-id/PhotoTipsCard';
 import SimilarGeckosStrip from '../components/morph-id/SimilarGeckosStrip';
 import MultiPhotoUploader, { MAX_PHOTOS } from '../components/morph-id/MultiPhotoUploader';
 import PhotoSlideshow from '../components/morph-id/PhotoSlideshow';
+import { AGE_STAGES } from '../components/morph-id/morphTaxonomy';
 
 export default function Recognition() {
   const { toast } = useToast();
   const [imageUrls, setImageUrls] = useState([]);
+  const [ageStage, setAgeStage] = useState('unknown');
   const [analysis, setAnalysis] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState(null);
@@ -23,6 +29,7 @@ export default function Recognition() {
 
   const reset = () => {
     setImageUrls([]);
+    setAgeStage('unknown');
     setAnalysis(null);
     setError(null);
     setSavedOnce(false);
@@ -37,7 +44,7 @@ export default function Recognition() {
     setError(null);
     setAnalysis(null);
     try {
-      const { data, error: funcError } = await recognizeGeckoMorph({ imageUrls });
+      const { data, error: funcError } = await recognizeGeckoMorph({ imageUrls, ageStage });
       if (funcError) throw new Error(funcError.message || String(funcError));
       setAnalysis(data);
     } catch (err) {
@@ -97,6 +104,24 @@ export default function Recognition() {
                       {imageUrls.length} photo{imageUrls.length !== 1 ? 's' : ''} · primary is the one used as cover.
                     </p>
                   </div>
+                  <div className="max-w-xs">
+                    <Label htmlFor="age-stage" className="text-slate-300 text-xs uppercase tracking-wide mb-1 block">
+                      Life stage
+                    </Label>
+                    <Select value={ageStage} onValueChange={setAgeStage}>
+                      <SelectTrigger id="age-stage" className="bg-slate-800 border-slate-600 text-slate-100">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-800 border-slate-600">
+                        {AGE_STAGES.map((s) => (
+                          <SelectItem key={s.id} value={s.id}>{s.label}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-slate-500 mt-1">
+                      Helps the model weigh traits at the right developmental baseline (hatchling whites read very differently from adult).
+                    </p>
+                  </div>
                   <div className="flex flex-wrap gap-3">
                     <Button
                       size="lg"
@@ -134,6 +159,7 @@ export default function Recognition() {
             result={analysis}
             imageUrl={primaryUrl}
             imageUrls={imageUrls}
+            ageStage={ageStage}
             onSaved={() => {
               setSavedOnce(true);
               toast({

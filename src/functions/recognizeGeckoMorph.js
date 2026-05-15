@@ -4,8 +4,10 @@ import { supabase } from '@/lib/supabaseClient';
 // to Claude vision and clamps the output to our canonical taxonomy.
 //
 // Accepts either { imageUrl: string } or { imageUrls: string[] } (up to 5).
+// Optional ageStage (hatchling | juvenile | subadult | adult | unknown) feeds
+// the prompt so the model weighs traits at the right developmental baseline.
 // Claude synthesizes across multiple photos of the same gecko.
-export async function recognizeGeckoMorph({ imageUrl, imageUrls } = {}) {
+export async function recognizeGeckoMorph({ imageUrl, imageUrls, ageStage } = {}) {
   const urls = Array.isArray(imageUrls) && imageUrls.length
     ? imageUrls
     : imageUrl ? [imageUrl] : [];
@@ -13,8 +15,11 @@ export async function recognizeGeckoMorph({ imageUrl, imageUrls } = {}) {
     return { data: null, error: new Error('imageUrl(s) required') };
   }
 
+  const body = { imageUrls: urls };
+  if (typeof ageStage === 'string' && ageStage) body.age_stage = ageStage;
+
   const { data, error } = await supabase.functions.invoke('recognize-gecko-morph', {
-    body: { imageUrls: urls },
+    body,
   });
   if (error) {
     let detail = error.message;

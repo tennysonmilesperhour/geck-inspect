@@ -41,3 +41,4 @@ export const BASE_COLOR_IDS = [
 export const PATTERN_INTENSITY_IDS = ["none", "low", "medium", "high", "extreme"];
 export const WHITE_AMOUNT_IDS = ["none", "trace", "low", "medium", "high", "extreme"];
 export const FIRED_STATE_IDS = ["fired_up", "fired_down", "transitioning", "unknown"];
+export const AGE_STAGE_IDS = ["hatchling", "juvenile", "subadult", "adult", "unknown"];
