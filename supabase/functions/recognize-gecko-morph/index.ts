@@ -1,25 +1,29 @@
-// Supabase Edge Function — recognize-gecko-morph (v5: bank disabled)
+// Supabase Edge Function — recognize-gecko-morph (v6: self-hosted bank)
 //
-// The two-pass few-shot bank (hero_anchor + manual_touch fillers) is
-// implemented but DISABLED by default — see env var notes below.
+// Two-pass few-shot bank, all images on geck-inspect Supabase storage
+// so Anthropic's image-prefetch is fast and reliable:
 //
-// Why disabled: every bank version that pulled URL-fetched images from
-// external hosts (Wix CDN, marketplace CDNs) exhausted Anthropic's
-// image-prefetch budget and produced 500s on ~50-80% of production
-// requests. The bank versions that did finish ran AT OR BELOW the
-// no-bank baseline (~27%). Net effect: bank hurt both accuracy and
-// throughput.
+//   1. hero_anchor rows WHERE anchor_category = 'primary_morph'
+//      — competition / show-winner photos for the primary_morph axis.
+//      Non-primary_morph hero anchors (genetic_trait, base_color)
+//      exist in gecko_images for the Morph Guide UI but are excluded
+//      from the bank so they don't bias primary_morph predictions.
+//
+//   2. manual_touch rows — community-verified examples that fill
+//      remaining slots for morphs the hero pool doesn't cover.
+//      Filtered to URLs hosted on this Supabase project so prefetch
+//      stays fast. auto_bulk_approved rows are excluded.
 //
 // History of eval runs (eval_set_size / top1_accuracy):
-//   #1 baseline (no bank)        100  27.0%  ← current default
-//   #5 v2 manual-touch 12-image  100  34.0%  (best ever, but throttled at scale)
-//   #6 v2.1 6-image lean         100  14.0%
-//   #7 v3 hero-anchor 5-image    100  23.1%  (-13 failures)
-//   #8 v4 hybrid 8-image          18  5.6%   (-82 failures — image-prefetch budget)
+//   #1 baseline (no bank)        100/100  27.0%
+//   #5 v2 manual-touch 12-image  100/100  34.0%  (best, mixed-CDN)
+//   #6 v2.1 6-image lean         100/100  14.0%
+//   #7 v3 hero-anchor 5-image     87/100  23.1%
+//   #8 v4 hybrid 8-image (slow)   18/100   5.6%  (CDN prefetch fails)
+//   #9 v5 disabled               100/100  30.0%  (production safety net)
 //
-// Re-enable once anchor images are mirrored to geck-inspect Supabase
-// storage so prefetch is fast and reliable. The bank code stays in place
-// and is gated on FEW_SHOT_PER_MORPH > 0 AND FEW_SHOT_MAX_TOTAL > 0.
+// v6 re-enables the bank now that anchor URLs live on geck-inspect
+// storage. Goal: recreate the v2 34% win on a stable substrate.
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -33,16 +37,19 @@ const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
 const CLAUDE_MODEL = Deno.env.get("CLAUDE_MODEL") || "claude-sonnet-4-6";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-// Bank is DISABLED by default. The two URL-fetched bank images per call
-// can exhaust Anthropic's image-prefetch budget when external hosts (Wix,
-// MorphMarket CDN) are slow — causing 500s and dropping eval accuracy
-// well below the no-bank baseline (~27%). Re-enable via env vars once
-// anchor images are mirrored to geck-inspect Supabase storage so the
-// prefetch is fast and reliable. See task: self-host anchor images.
+// Bank is ENABLED by default now that anchor images are mirrored to
+// geck-inspect Supabase storage and the manual_touch filler is filtered
+// to URLs on the same project. Set the env vars to 0 to disable for an
+// emergency revert without a code change.
 const FEW_SHOT_PER_MORPH = Math.min(2, Math.max(0,
-  Number(Deno.env.get("FEW_SHOT_PER_MORPH") ?? "0") || 0));
+  Number(Deno.env.get("FEW_SHOT_PER_MORPH") ?? "1") || 0));
 const MAX_BANK_TOTAL = Math.min(12, Math.max(0,
-  Number(Deno.env.get("FEW_SHOT_MAX_TOTAL") ?? "0") || 0));
+  Number(Deno.env.get("FEW_SHOT_MAX_TOTAL") ?? "10") || 0));
+// Manual-touch fillers are restricted to URLs hosted on this Supabase
+// project so Anthropic's prefetch is fast. Override via env if a faster
+// CDN is observed and we want to broaden.
+const FILLER_URL_PREFIX = Deno.env.get("FEW_SHOT_FILLER_URL_PREFIX")
+  ?? `${SUPABASE_URL.replace(/\/$/, "")}/`;
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -112,6 +119,7 @@ async function loadFewShotBank(): Promise<FewShotExample[]> {
 
       const heroRes = await baseQuery()
         .filter("training_meta->>verification_tier", "eq", "hero_anchor")
+        .filter("training_meta->>anchor_category", "eq", "primary_morph")
         .order("created_date", { ascending: false })
         .limit(200);
       if (heroRes.error) {
@@ -125,6 +133,7 @@ async function loadFewShotBank(): Promise<FewShotExample[]> {
       if (remaining > 0) {
         const fillerRes = await baseQuery()
           .is("training_meta->>verification_tier", null)
+          .like("image_url", `${FILLER_URL_PREFIX}%`)
           .order("created_date", { ascending: false })
           .limit(500);
         if (fillerRes.error) {
@@ -138,7 +147,7 @@ async function loadFewShotBank(): Promise<FewShotExample[]> {
       const heroCount = combined.filter((e) => e.source === "hero_anchor").length;
       const fillerCount = combined.length - heroCount;
       const distinctMorphs = new Set(combined.map((e) => e.primary_morph)).size;
-      console.log(`few-shot bank v4: ${combined.length} examples (${heroCount} hero + ${fillerCount} manual) across ${distinctMorphs} morphs`);
+      console.log(`few-shot bank v6: ${combined.length} examples (${heroCount} hero + ${fillerCount} manual) across ${distinctMorphs} morphs`);
       return combined;
     })();
   }
