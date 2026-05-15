@@ -1866,6 +1866,319 @@ export const BLOG_POSTS = [
         label: "TikisGeckos ,  WARNING, NEVER BREED THESE CRESTED GECKOS TOGETHER (YouTube)",
       },
     ],
+  }
+  {
+    slug: "soft-scale-super-soft-scale-genetics",
+    title: "Soft Scale Genetics: Why Super Soft Scales Are So Rare",
+    description: "Soft Scale is incomplete dominant in crested geckos — one copy is visual, two copies make Super Soft Scale. Here's why breeders rarely produce them correctly.",
+    keyphrase: "soft scale crested gecko genetics",
+    category: "genetics",
+    tags: [
+      "genetics",
+      "cappuccino",
+      "lilly-white",
+      "axanthic",
+      "soft-scale",
+      "white-wall",
+      "harlequin",
+    ],
+    datePublished: "2026-05-15",
+    dateModified: "2026-05-15",
+    heroEyebrow: "Genetics deep dive",
+    tldr: [
+      "Soft Scale is an incomplete-dominant morph: one copy = visual Soft Scale, two copies = Super Soft Scale.",
+      "Pairing two visual Soft Scales should produce roughly 25% Super Soft Scale, 50% visual, 25% normal — but fertility concerns make the actual yield lower.",
+      "Super Soft Scale hatchlings are misidentified more often than any other incomplete-dominant super form in the hobby.",
+      "The safest breeding strategy is Soft Scale × normal: 50% visual offspring, zero lethal-super risk.",
+      "Super Soft Scale commands $1,200–$3,500, but most breeders never successfully produce one because they stop at the first generation.",
+    ],
+    body: [
+      {
+        type: "p",
+        text: "# Soft Scale genetics: why Super Soft Scales are rarer than you think",
+      },
+      {
+        type: "p",
+        text: "A pair of visual Soft Scales sat in a breeder's collection for two full seasons. He bred them together twice, pulled six eggs each time, and ended up with what he described as \"a mix of soft and not-so-soft animals.\" No Super Soft Scales. No leather-skinned hatchlings. Just twelve geckos that looked, to him, basically the same. He sold the project.",
+      },
+      {
+        type: "p",
+        text: "He had the genetics right. He had the pairing right. What he was missing was the eye — and the math that explains why twelve eggs from an incomplete-dominant pairing are nowhere near enough to guarantee a super.",
+      },
+      {
+        type: "p",
+        text: "So why does every Soft Scale project seem to stall before it gets to the Super? And when a Super does hatch, why do so many breeders miss it?",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "What Soft Scale actually is",
+      },
+      {
+        type: "p",
+        text: "Soft Scale is a **proven incomplete-dominant morph** in crested geckos, first formally identified and proven by North of the Border Reptiles (Frank Payne) in the early 2020s. The inheritance is the same model as Lilly White, Cappuccino, and White Wall: one copy produces the visual form, two copies produce a distinct \"super\" form.",
+      },
+      {
+        type: "p",
+        text: "The visual presentation of a single-copy Soft Scale is a noticeably smoother, finer-grained skin texture compared to a wild-type animal. The scales are reduced in prominence — hold a Soft Scale next to a standard gecko and the difference in dorsal texture is real, even in photos. The skin reads as matte or velvety. It is a structural change to the scales, not a pigment effect.",
+      },
+      {
+        type: "p",
+        text: "The Super Soft Scale goes further. Two copies reduce scale texture far more dramatically, producing a near-leather appearance that experienced breeders describe as almost smooth. It is genuinely striking in person. It is also genuinely rare — not because the gene is unusual, but because producing it requires a specific pairing strategy most breeders are not running correctly, and recognizing the super at hatch requires knowing what to look for.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "The incomplete-dominant math",
+      },
+      {
+        type: "p",
+        text: "Here is the mechanic that trips breeders up. Soft Scale is *not* co-dominant. The hobby still uses \"codominant\" and \"incomplete dominant\" loosely and interchangeably, but the distinction matters for what you can promise buyers and how you plan your project. (Our [Genetics Guide](/GeneticsGuide) covers this in detail if you need to reset on the terminology.)",
+      },
+      {
+        type: "p",
+        text: "For an incomplete-dominant morph:",
+      },
+      {
+        type: "ul",
+        items: [
+          "**0 copies** → normal animal, no visible change",
+          "**1 copy** → visual Soft Scale (the form you buy and sell)",
+          "**2 copies** → Super Soft Scale, a distinct and more extreme phenotype",
+        ],
+      },
+      {
+        type: "p",
+        text: "When you pair two visual Soft Scales together, the Punnett square predicts:",
+      },
+      {
+        type: "table",
+        headers: [
+          "",
+          "Soft Scale allele",
+          "Normal allele",
+        ],
+        rows: [
+          [
+            "**Soft Scale allele**",
+            "Super Soft Scale (25%)",
+            "Visual Soft Scale (50%)",
+          ],
+          [
+            "**Normal allele**",
+            "Visual Soft Scale",
+            "Normal (25%)",
+          ],
+        ],
+      },
+      {
+        type: "p",
+        text: "So the expected outcome from a Soft Scale × Soft Scale pairing is 25% Super Soft Scale, 50% visual Soft Scale, and 25% normal. On paper, one in four hatchlings should be a Super.",
+      },
+      {
+        type: "p",
+        text: "In practice, that number is lower. The corpus notes that breeders have reported reduced fertility when producing Super Soft Scales, and several breeders recommend against the Soft Scale × Soft Scale pairing for this reason. Whether that's a true sub-lethal effect of the homozygous genotype, or a sampling problem from small clutch sizes, is still being worked out. The honest answer is: the community needs more documented data. What we know is that your mileage may vary, and your expected 25% yield often doesn't materialize cleanly.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "The misidentification problem",
+      },
+      {
+        type: "p",
+        text: "Assume you do run the pairing and you do get a super. Now what?",
+      },
+      {
+        type: "p",
+        text: "Crested geckos hatch small. Scale texture on a 2-gram hatchling is hard to read under any conditions. Super Soft Scales are misidentified at hatch more often than any other incomplete-dominant super form in the hobby — and the consequences are real. A Super Soft Scale sold as a visual Soft Scale represents a significant pricing error: visual Soft Scales sell for roughly $400–$1,000, while Super Soft Scales command $1,200–$3,500 when properly identified and the lineage is clean.",
+      },
+      {
+        type: "p",
+        text: "The misidentification goes both ways. Breeders sell supers as visuals (leaving money on the table). They also mark visuals as supers (which erodes trust and contaminates buyer projects). Neither is acceptable if you're running a serious line.",
+      },
+      {
+        type: "p",
+        text: "The practical protocol: **don't make a final Super call at hatch.** Wait until the animal has had at least two full sheds and is eating consistently. Scale texture becomes much more legible at 8–12 weeks. Request multiple angles in photos — a dorsal close-up and a lateral shot — and look for the reduced scale prominence compared to a confirmed visual Soft Scale from the same clutch. Side-by-side comparison within a clutch is the single most useful tool here. If you hatched all three forms (super, visual, normal) from the same pairing, comparing them together is how you learn to calibrate your eye.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Why Soft Scale projects stall in the first generation",
+      },
+      {
+        type: "p",
+        text: "There's a pattern I see in breeder groups. Someone acquires a visual Soft Scale. They breed it to a normal animal. They get a clutch of 50% Soft Scale, 50% normal. Great — except they look at those hatchlings at 10 days old, can't reliably tell the Soft Scales from the normals, and end up selling the whole clutch as \"possible hets.\"",
+      },
+      {
+        type: "p",
+        text: "That is not the right call.",
+      },
+      {
+        type: "p",
+        text: "Possible het is the language for **recessives** — for axanthic, where a single-copy carrier is genuinely invisible. Soft Scale is incomplete dominant. A single-copy Soft Scale *is visible*. It should look different from its normal siblings. If you can't tell which hatchlings have the gene, the most likely explanation is that you're looking too early or in fired-down state. Wait. Fire them up. Photograph them next to a confirmed normal sibling. The difference is there.",
+      },
+      {
+        type: "p",
+        text: "Breeders who sell Soft Scale offspring as \"possible hets\" are either misapplying recessive terminology to an incomplete-dominant trait, or they're genuinely unable to identify single-copy animals — which is a calibration problem worth solving before you sell them. Buyers who receive \"possible het Soft Scale\" animals and then can't figure out why their pairing didn't produce the expected outcome have a legitimate complaint.",
+      },
+      {
+        type: "p",
+        text: "The project stalls because breeders don't hold back confident Soft Scale visuals to breed into the second generation. They sell everything, buy a new visual, start over, and never get to the Soft Scale × Soft Scale pairing that produces supers.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "My opinion: the safest route is Soft Scale × normal, indefinitely",
+      },
+      {
+        type: "p",
+        text: "This might be a minority position among breeders who want supers as fast as possible. But here's my reasoning.",
+      },
+      {
+        type: "p",
+        text: "The Soft Scale × Soft Scale pairing has documented fertility concerns. The super form is rare enough that a small breeding program is likely to see multiple clutches with zero supers before getting one — and if clutch sizes are reduced by the homozygous effect, you've also shrunk the sample. The risk-adjusted expected output from Soft Scale × Soft Scale is worse than the raw 25% figure suggests.",
+      },
+      {
+        type: "p",
+        text: "Compare that to Soft Scale × normal: 50% of offspring are confirmed visual Soft Scales, zero risk of homozygous viability issues, and every visual offspring can become a breeder animal itself. Over three generations of consistently pairing the best visual Soft Scales back to high-quality normals, you can build a deep bench of proven Soft Scale breeders across your best pattern and color backgrounds — axanthic Soft Scale, Lilly White Soft Scale, extreme harlequin Soft Scale — without ever touching the risky pairing.",
+      },
+      {
+        type: "p",
+        text: "When and if you decide to go for supers, you'll have enough quality animals and enough documentation to do it with eyes open. Run the Soft Scale × Soft Scale pairing on a sub-pair, document every clutch outcome, and publish the data. The community genuinely needs it.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Stacking Soft Scale with other morphs",
+      },
+      {
+        type: "p",
+        text: "The real value of Soft Scale in a serious project isn't the super form — it's the texture change stacked with other proven morphs. Soft Scale + axanthic produces an animal where the scale reduction makes the already-dramatic gray-black-white coloration look almost sculptural. Soft Scale + Lilly White is a combination that multiple high-end breeders are working toward; the structural white of the Lilly combined with the velvety texture of the Soft Scale is visually unlike anything else in the hobby.",
+      },
+      {
+        type: "p",
+        text: "Planning those stacked projects requires the [Genetic Calculator Tool](/GeneticCalculatorTool) — specifically when you're tracking a recessive (axanthic) and an incomplete-dominant (Soft Scale) simultaneously. The calculator will tell you that an axanthic Soft Scale × normal pairing produces 50% visual Soft Scale that are 100% het axanthic, which is exactly the kind of clean, marketable offspring that funds a multi-year project. Use it.",
+      },
+      {
+        type: "p",
+        text: "For reference on what Soft Scale and Super Soft Scale actually look like compared to wild-type and other structural morphs, the [Soft Scale morph guide page](/MorphGuide/soft-scale) and the [Super Soft Scale page](/MorphGuide/super-soft-scale) both have the visual identifiers worth memorizing.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Practical takeaways",
+      },
+      {
+        type: "p",
+        text: "**This week:**",
+      },
+      {
+        type: "ul",
+        items: [
+          "If you have a Soft Scale breeding project, confirm you're using incomplete-dominant terminology — not \"possible het\" language — when describing single-copy offspring.",
+          "Set up a side-by-side photo comparison within each clutch at 8–12 weeks. Don't make super calls at hatch.",
+        ],
+      },
+      {
+        type: "p",
+        text: "**Before your next pairing:**",
+      },
+      {
+        type: "ul",
+        items: [
+          "Decide whether you're running Soft Scale × normal (lower risk, high yield of visuals, better for project depth) or Soft Scale × Soft Scale (higher risk, required for supers, demands documentation).",
+          "If you run the super pairing, commit to recording every clutch outcome: number of eggs, hatch rate, phenotype of each hatchling. Share it publicly. The community is still building the dataset on super viability.",
+        ],
+      },
+      {
+        type: "p",
+        text: "**Long-term:**",
+      },
+      {
+        type: "ul",
+        items: [
+          "Build your Soft Scale line on quality backgrounds. The scale modification interacts with your pattern and color genetics in ways that make strong harlequin or axanthic backgrounds far more valuable than a weak-background soft scale super.",
+        ],
+      },
+      {
+        type: "p",
+        text: "Those twelve eggs from a pair of visual Soft Scales should have statistically produced three supers. They didn't — and the breeder sold the project before understanding why. The math wasn't wrong. The clutch sizes were too small, the identification window too early, and the pairing strategy too impatient.",
+      },
+      {
+        type: "p",
+        text: "Super Soft Scales are achievable. They just require the same thing every serious incomplete-dominant project requires: enough generations, enough documentation, and enough patience to look at a hatchling for eight weeks before you decide what it is.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is Soft Scale crested gecko recessive or dominant?",
+        answer: "Soft Scale is incomplete dominant. A single copy produces the visible Soft Scale form (smoother, finer-grained scales). Two copies produce Super Soft Scale, a more extreme leather-textured animal. It is not recessive — single-copy animals are visually identifiable and should not be sold as 'possible hets.'",
+      },
+      {
+        question: "What does Super Soft Scale look like?",
+        answer: "Super Soft Scale has dramatically reduced scale texture across the entire body, producing a near-smooth, leather-like appearance. It is distinctly more extreme than the single-copy visual Soft Scale. The difference is most legible after 2+ sheds — making a final call at hatch is unreliable.",
+      },
+      {
+        question: "What percentage of offspring are Super Soft Scale from a Soft Scale × Soft Scale pairing?",
+        answer: "Punnett square math predicts 25% Super Soft Scale, 50% visual Soft Scale, and 25% normal from a Soft Scale × Soft Scale pairing. In practice, breeders have reported reduced fertility with this pairing, so real-world yield is often lower than the theoretical 25%.",
+      },
+      {
+        question: "Is it safe to breed two Soft Scale crested geckos together?",
+        answer: "It is not confirmed lethal the way Lilly White × Lilly White is, but several breeders have reported fertility and viability concerns from Soft Scale × Soft Scale pairings. The conservative recommendation is Soft Scale × normal, which produces 50% visual Soft Scale offspring with no super-form risk.",
+      },
+      {
+        question: "How much does a Super Soft Scale crested gecko cost?",
+        answer: "Super Soft Scale typically sells for $1,200–$3,500 depending on the animal's background genetics, breeder reputation, and combination with other proven morphs. Visual (single-copy) Soft Scales sell for $400–$1,000.",
+      },
+      {
+        question: "Can you tell Soft Scale from normal at hatch?",
+        answer: "Yes, in principle — single-copy Soft Scales are visually distinct from normals, unlike a recessive het. However, the difference is subtle on very young hatchlings. Best practice is to wait until 8–12 weeks and compare siblings side by side after at least two full sheds.",
+      },
+      {
+        question: "Who proved Soft Scale in crested geckos?",
+        answer: "Soft Scale was formally identified and proven by North of the Border Reptiles (Frank Payne) in the early 2020s through controlled test breedings that confirmed the incomplete-dominant inheritance pattern.",
+      },
+      {
+        question: "Does Soft Scale stack with other morphs like Lilly White or Axanthic?",
+        answer: "Yes. Soft Scale stacks with any other proven morph. Popular combinations in development include Axanthic Soft Scale and Lilly White Soft Scale. These multi-morph projects require tracking both a recessive (Axanthic) and an incomplete dominant (Soft Scale) simultaneously — use a genetic calculator to plan pairings.",
+      },
+    ],
+    internalLinks: [
+      {
+        href: "/MorphGuide/soft-scale",
+        label: "Soft Scale morph guide",
+      },
+      {
+        href: "/MorphGuide/super-soft-scale",
+        label: "Super Soft Scale morph guide",
+      },
+      {
+        href: "/GeneticsGuide",
+        label: "Crested Gecko Genetics Guide",
+      },
+      {
+        href: "/GeneticCalculatorTool",
+        label: "Genetic Calculator Tool",
+      },
+      {
+        href: "/MorphGuide/axanthic",
+        label: "Axanthic morph guide",
+      },
+      {
+        href: "/MorphGuide/lilly-white",
+        label: "Lilly White morph guide",
+      },
+    ],
+    externalCitations: [
+      {
+        url: "https://www.pangeareptile.com/blogs/articles",
+        label: "Pangea Reptile — breeder articles on crested gecko genetics",
+      },
+      {
+        url: "https://morphmarket.com/articles/morphpedia/crested-gecko/",
+        label: "MorphMarket Morphpedia — Crested Gecko",
+      },
+    ],
   },
 ];
 
