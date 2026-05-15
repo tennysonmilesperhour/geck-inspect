@@ -31,64 +31,71 @@ export const BELLY_BOT_Y   = 338;
 // Body silhouette. Closed clockwise path. Trace from back-of-head where it
 // joins the dorsum, down behind the jowl into the flank, across the belly,
 // up over the hip, around the tail-base, then back along the dorsum to the
-// start. The dorsum has a clear shoulder peak (~x=555) and hip peak
-// (~x=240) with a gentle valley between, so the silhouette doesn't read as
-// a uniform sausage. The earlier draft had a sharp notch on the underside
-// near the front-leg attach point; this version sweeps cleanly through.
+// start. The dorsum has a pronounced shoulder peak (~x=560, y=178) and hip
+// peak (~x=220, y=182) with a clear saddle (~x=400, y=200) between them so
+// the silhouette reads as a well-arched gecko at a glance, not a uniform
+// sausage.
 export const BODY_PATH = `
   M 608,214
-  C 626,232 628,260 618,286
-  C 605,308 578,322 548,330
-  C 488,340 412,344 335,340
-  C 275,336 222,328 188,316
-  C 166,306 150,290 150,272
-  C 150,250 160,226 184,210
-  C 222,194 282,186 348,188
-  C 410,190 462,194 510,196
-  C 548,198 580,202 598,206
-  C 606,208 610,212 608,214 Z
+  C 624,234 626,262 614,288
+  C 600,310 574,324 544,332
+  C 484,342 408,346 330,342
+  C 268,338 218,330 184,318
+  C 162,308 146,290 146,268
+  C 148,242 164,220 184,210
+  C 196,196 214,182 240,180
+  C 268,180 296,194 326,200
+  C 358,202 388,200 416,196
+  C 452,190 488,184 520,180
+  C 548,178 572,180 588,188
+  C 600,196 610,206 608,214 Z
 `;
 
-// Head silhouette. Wedge that tapers from a broad crown to a defined snout.
-// The crown rises clearly above the eye to read as a "shelf" for the
-// supraorbital crests; the lower jaw bows down behind the mouth and tucks
-// back to the throat, giving the face a pronounced jowl rather than a flat
-// bottom edge.
+// Head silhouette. Triangular wedge that tapers from a tall crown down to a
+// defined snout. The crown rises clearly above the supraorbital ridge so it
+// reads as a real "shelf" for the eyelash spikes; the lower jaw bows down
+// behind the mouth and tucks back to the throat, giving the face a
+// pronounced jowl rather than a flat bottom edge. Snout tip pushes out to
+// ~x=792 so the head reads as a clear triangle from a glance.
 export const HEAD_PATH = `
-  M 600,200
-  C 612,176 642,156 682,150
-  C 722,146 760,160 780,184
-  C 790,200 786,218 770,228
-  C 758,234 744,236 730,236
-  C 728,248 716,254 698,254
-  C 668,254 642,248 622,238
-  C 608,228 598,214 600,200 Z
+  M 600,210
+  C 610,180 644,150 686,144
+  C 728,140 768,156 790,184
+  C 798,200 792,218 774,228
+  C 762,232 750,234 738,234
+  C 734,250 722,256 702,256
+  C 672,256 642,250 622,238
+  C 606,228 594,216 600,210 Z
 `;
 
-// Tail. Tapers from a wide hip attachment out to a soft point on the
-// lower-left, drooping down as it goes so the tip rests near the branch
-// rather than floating mid-air. The path closes back to the hip with an
-// explicit vertical line so the tail attaches across the full back-of-body
-// height, not just a single point. Upper and lower edges converge to a
-// real point at the tip rather than a blunt flipper end.
+// Tail. Tapers from a wide hip attachment out to a defined point that ends
+// slightly upturned, suggesting the curled-tip carriage that crested geckos
+// use when perched. Upper edge sweeps down-left from the hip, hooks around
+// the bottom of the droop, then the lower edge rises back along the body
+// with a tighter curve so the tip reads as a real point rather than a flat
+// flipper end. Path closes against the hip with a short vertical so the
+// tail attaches across the full back-of-body height.
 export const TAIL_PATH = `
-  M 174,236
-  C 132,244 88,258 50,282
-  C 24,300 10,322 12,338
-  C 16,348 30,344 50,330
-  C 88,308 132,290 168,278
-  C 174,276 178,278 174,290
-  L 174,294 Z
+  M 178,228
+  C 132,236 84,252 46,278
+  C 20,298 6,322 14,340
+  C 22,352 42,348 64,332
+  C 100,306 140,284 172,272
+  C 178,272 182,276 178,288
+  L 178,294 Z
 `;
 
-// Dorsum band, clipped to BODY_PATH. Spans the upper third of the body,
-// with control points pulled in slightly so the band hugs the dorsal arch
-// rather than running straight across.
+// Dorsum band, clipped to BODY_PATH. Top edge tracks the new dual-hump
+// dorsal arch (hip hump ~y=182, saddle ~y=200, shoulder hump ~y=180) so
+// the band reaches all the way up to the back edge instead of clipping
+// out below it. Bottom edge sits around y=256.
 export const DORSUM_PATH = `
-  M 152,228
-  C 220,206 360,194 500,196
-  C 555,198 595,206 622,222
-  L 622,256
+  M 150,228
+  C 175,210 200,190 230,184
+  C 280,184 340,196 400,200
+  C 460,200 520,188 560,182
+  C 590,184 610,200 620,222
+  L 620,256
   C 555,246 380,244 230,256
   C 178,260 145,256 138,246 Z
 `;
@@ -109,20 +116,23 @@ export const BELLY_PATH = `
   L 120,340 Z
 `;
 
-// Dorsal crest spikes from above the eye to the hip. Spike base x/y traces
-// the new dorsal arch so spikes grow off the back, not above it.
+// Dorsal crest spikes from above the eye to the hip. Spike bases trace the
+// dual-hump dorsum (shoulder peak around t=0.15, hip peak around t=0.85)
+// using two gaussian bumps subtracted off a base slope, so the spikes climb
+// over each hump and dip into the saddle between them rather than tracing a
+// single uniform arc.
 export function crestSpikes() {
   const spikes = [];
-  const startX = 600, endX = 180;
-  const startY = 196, endY = 220;
-  const count = 42;
+  const startX = 608, endX = 178;
+  const count = 44;
   for (let i = 0; i < count; i += 1) {
     const t = i / (count - 1);
     const x = startX + t * (endX - startX);
-    // Arch up over the dorsum so spike bases follow the curved back rather
-    // than a straight line (deepest arch over the mid-back / shoulder).
-    const y = startY + t * (endY - startY) - Math.sin(t * Math.PI) * 10;
-    const h = 5 + Math.sin(t * Math.PI) * 4;
+    const shoulderBump = Math.exp(-Math.pow((t - 0.15) / 0.18, 2)) * 22;
+    const hipBump = Math.exp(-Math.pow((t - 0.85) / 0.18, 2)) * 26;
+    const baseY = 208 + t * 12;
+    const y = baseY - shoulderBump - hipBump;
+    const h = 4 + Math.sin(t * Math.PI) * 4;
     spikes.push({ x, y, h });
   }
   return spikes;
