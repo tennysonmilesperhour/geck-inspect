@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter,
 } from '@/components/ui/dialog';
@@ -9,7 +9,7 @@ import { Textarea } from '@/components/ui/textarea';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Upload, CheckCircle2, X } from 'lucide-react';
+import { Loader2, Upload, CheckCircle2, X, Sparkles } from 'lucide-react';
 import { Gecko } from '@/entities/all';
 import { uploadFile } from '@/lib/uploadFile';
 import { useToast } from '@/components/ui/use-toast';
@@ -22,7 +22,7 @@ const SEX_OPTIONS = ['Male', 'Female', 'Unsexed'];
  * losing their batch state. Persists straight to Gecko.update and returns
  * the patched gecko via onSaved so the export page can refresh in place.
  */
-export default function QuickFixModal({ gecko, open, onClose, onSaved, missing = [] }) {
+export default function QuickFixModal({ gecko, open, onClose, onSaved, missing = [], allGeckos = [] }) {
   const { toast } = useToast();
   const [sex, setSex] = useState(gecko?.sex || '');
   const [traits, setTraits] = useState(gecko?.morphs_traits || '');
@@ -38,6 +38,41 @@ export default function QuickFixModal({ gecko, open, onClose, onSaved, missing =
     setPrice(gecko.asking_price ?? '');
     setImageUrls(Array.isArray(gecko.image_urls) ? gecko.image_urls : []);
   }, [gecko]);
+
+  // Sibling-derived trait suggestions: any other gecko in the breeder's
+  // collection with the same sire AND dam. Same-clutch siblings tend to
+  // share trait labels, so this saves a lot of typing on hatch groups.
+  const siblingTraits = useMemo(() => {
+    if (!gecko || !Array.isArray(allGeckos)) return [];
+    const sireId = gecko.sire_id;
+    const damId = gecko.dam_id;
+    if (!sireId && !damId) return [];
+    const siblings = allGeckos.filter((g) => {
+      if (g.id === gecko.id) return false;
+      if (sireId && damId) return g.sire_id === sireId && g.dam_id === damId;
+      if (sireId) return g.sire_id === sireId;
+      return g.dam_id === damId;
+    });
+    const counts = new Map();
+    for (const sib of siblings) {
+      const raw = sib.morphs_traits ||
+        (Array.isArray(sib.morph_tags) ? sib.morph_tags.join(',') : '');
+      raw.split(/[,;]/).map((t) => t.trim()).filter(Boolean).forEach((t) => {
+        counts.set(t, (counts.get(t) || 0) + 1);
+      });
+    }
+    return Array.from(counts.entries())
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, 8)
+      .map(([trait, count]) => ({ trait, count, total: siblings.length }));
+  }, [gecko, allGeckos]);
+
+  const applySuggestion = (trait) => {
+    const current = (traits || '').trim();
+    const tokens = current.split(/[,;]/).map((t) => t.trim()).filter(Boolean);
+    if (tokens.includes(trait)) return;
+    setTraits(current ? `${current}, ${trait}` : trait);
+  };
 
   const needSex = missing.includes('Sex');
   const needTraits = missing.includes('Traits');
@@ -131,6 +166,27 @@ export default function QuickFixModal({ gecko, open, onClose, onSaved, missing =
               placeholder="e.g. Lilly White, Harlequin, Phantom"
               className="bg-slate-800 border-slate-700 text-slate-100 mt-1"
             />
+            {siblingTraits.length > 0 && (
+              <div className="mt-2 p-2 rounded border border-slate-700 bg-slate-950/40 space-y-1.5">
+                <p className="text-[10px] text-slate-400 flex items-center gap-1">
+                  <Sparkles className="w-3 h-3 text-emerald-400" />
+                  Tap to add a trait from this gecko's clutchmates
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {siblingTraits.map(({ trait, count, total }) => (
+                    <button
+                      key={trait}
+                      type="button"
+                      onClick={() => applySuggestion(trait)}
+                      className="text-[11px] px-2 py-0.5 rounded-full border border-emerald-700/60 bg-emerald-950/30 text-emerald-200 hover:bg-emerald-900/40"
+                      title={`Used by ${count} of ${total} sibling${total === 1 ? '' : 's'}`}
+                    >
+                      {trait} <span className="text-emerald-400/70">{count}/{total}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
             <p className="text-[10px] text-slate-500 mt-1">
               MorphMarket reads its trait tags from this text. Use the same labels you'd put in a listing.
             </p>

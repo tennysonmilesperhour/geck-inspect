@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Gecko, User } from '@/entities/all';
+import BulkEditModal from '@/components/morph-market/BulkEditModal';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -31,6 +32,8 @@ import {
   List,
   Pencil,
   Wrench,
+  Layers,
+  CheckCircle2,
 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import {
@@ -269,7 +272,7 @@ function FilterPanel({ filters, setFilters, onReset }) {
   );
 }
 
-function GeckoTile({ gecko, selected, onToggle, onQuickFix }) {
+function GeckoTile({ gecko, selected, onToggle, onQuickFix, onAddOne }) {
   const thumb = Array.isArray(gecko.image_urls) && gecko.image_urls[0];
   const missing = missingFields(gecko);
   return (
@@ -332,20 +335,30 @@ function GeckoTile({ gecko, selected, onToggle, onQuickFix }) {
           )}
         </div>
       </button>
-      <button
-        type="button"
-        onClick={(e) => { e.stopPropagation(); onQuickFix(gecko); }}
-        className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded bg-slate-900/80 hover:bg-slate-800 text-slate-200 text-[10px] px-1.5 py-0.5 border border-slate-700"
-        title={missing.length > 0 ? 'Fix missing MorphMarket fields' : 'Edit MorphMarket fields'}
-      >
-        {missing.length > 0 ? <Wrench className="w-3 h-3" /> : <Pencil className="w-3 h-3" />}
-        {missing.length > 0 ? 'Fix' : 'Edit'}
-      </button>
+      <div className="absolute bottom-2 right-2 flex items-center gap-1">
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onAddOne(gecko.id); }}
+          className="inline-flex items-center gap-1 rounded bg-emerald-600/90 hover:bg-emerald-500 text-white text-[10px] px-1.5 py-0.5"
+          title="Add this gecko straight to the batch"
+        >
+          <Plus className="w-3 h-3" />
+        </button>
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onQuickFix(gecko); }}
+          className="inline-flex items-center gap-1 rounded bg-slate-900/80 hover:bg-slate-800 text-slate-200 text-[10px] px-1.5 py-0.5 border border-slate-700"
+          title={missing.length > 0 ? 'Fix missing MorphMarket fields' : 'Edit MorphMarket fields'}
+        >
+          {missing.length > 0 ? <Wrench className="w-3 h-3" /> : <Pencil className="w-3 h-3" />}
+          {missing.length > 0 ? 'Fix' : 'Edit'}
+        </button>
+      </div>
     </div>
   );
 }
 
-function GeckoRow({ gecko, selected, onToggle, onQuickFix }) {
+function GeckoRow({ gecko, selected, onToggle, onQuickFix, onAddOne }) {
   const thumb = Array.isArray(gecko.image_urls) && gecko.image_urls[0];
   const missing = missingFields(gecko);
   return (
@@ -404,20 +417,121 @@ function GeckoRow({ gecko, selected, onToggle, onQuickFix }) {
           )}
         </div>
       </button>
-      <button
-        type="button"
-        onClick={(e) => { e.stopPropagation(); onQuickFix(gecko); }}
-        className="inline-flex items-center gap-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] px-2 py-1 border border-slate-700 shrink-0"
-        title={missing.length > 0 ? 'Fix missing MorphMarket fields' : 'Edit MorphMarket fields'}
-      >
-        {missing.length > 0 ? <Wrench className="w-3 h-3" /> : <Pencil className="w-3 h-3" />}
-        {missing.length > 0 ? 'Fix' : 'Edit'}
-      </button>
+      <div className="flex items-center gap-1 shrink-0">
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onAddOne(gecko.id); }}
+          className="inline-flex items-center gap-1 rounded bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] px-2 py-1"
+          title="Add this gecko straight to the batch"
+        >
+          <Plus className="w-3 h-3" />
+        </button>
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onQuickFix(gecko); }}
+          className="inline-flex items-center gap-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] px-2 py-1 border border-slate-700"
+          title={missing.length > 0 ? 'Fix missing MorphMarket fields' : 'Edit MorphMarket fields'}
+        >
+          {missing.length > 0 ? <Wrench className="w-3 h-3" /> : <Pencil className="w-3 h-3" />}
+          {missing.length > 0 ? 'Fix' : 'Edit'}
+        </button>
+      </div>
     </div>
   );
 }
 
-function BatchTable({ geckos, onRemove, onQuickFix }) {
+// Editable-cell metadata: which MorphMarket header maps to which Gecko
+// field, and what input to render. Only fields that are safe to edit
+// inline (single value, no upload, no validation interplay) are listed
+// here. Title / Maturity / etc. are derived; Images is multi-step. Use
+// the QuickFix modal for those.
+const EDITABLE_HEADERS = {
+  Sex:    { field: 'sex',           type: 'select', options: ['Male', 'Female', 'Unsexed'] },
+  Status: { field: 'status',        type: 'select', options: STATUS_OPTIONS },
+  Traits: { field: 'morphs_traits', type: 'text' },
+  Price:  { field: 'asking_price',  type: 'number' },
+  Weight: { field: 'weight_grams',  type: 'number' },
+};
+
+function EditableCell({ value, displayValue, config, onCommit }) {
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(value == null ? '' : String(value));
+  const [isSaving, setIsSaving] = useState(false);
+
+  useEffect(() => { setDraft(value == null ? '' : String(value)); }, [value]);
+
+  const commit = async (next) => {
+    if (next === draft && !editing) return;
+    let parsed = next;
+    if (config.type === 'number') {
+      if (next === '' || next == null) parsed = null;
+      else {
+        const n = Number(next);
+        if (Number.isNaN(n)) { setEditing(false); return; }
+        parsed = n;
+      }
+    }
+    const currentNorm = value == null ? null : (config.type === 'number' ? Number(value) : String(value));
+    const nextNorm = parsed == null ? null : (config.type === 'number' ? Number(parsed) : String(parsed));
+    if (currentNorm === nextNorm) { setEditing(false); return; }
+    setIsSaving(true);
+    try {
+      await onCommit(parsed);
+    } finally {
+      setIsSaving(false);
+      setEditing(false);
+    }
+  };
+
+  if (!editing) {
+    return (
+      <button
+        type="button"
+        onClick={() => setEditing(true)}
+        className="text-left w-full truncate hover:bg-slate-800/60 rounded px-1 -mx-1 py-0.5 -my-0.5"
+        title="Click to edit"
+      >
+        {displayValue || <span className="text-slate-600 italic">empty</span>}
+      </button>
+    );
+  }
+
+  if (config.type === 'select') {
+    return (
+      <select
+        autoFocus
+        value={draft}
+        onChange={(e) => { setDraft(e.target.value); commit(e.target.value); }}
+        onBlur={() => setEditing(false)}
+        disabled={isSaving}
+        className="bg-slate-800 border border-slate-600 text-slate-100 text-xs rounded px-1 py-0.5 w-full"
+      >
+        <option value="">—</option>
+        {config.options.map((o) => (
+          <option key={o} value={o}>{o}</option>
+        ))}
+      </select>
+    );
+  }
+
+  return (
+    <input
+      autoFocus
+      type={config.type === 'number' ? 'number' : 'text'}
+      value={draft}
+      onChange={(e) => setDraft(e.target.value)}
+      onBlur={() => commit(draft)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') { e.preventDefault(); commit(draft); }
+        if (e.key === 'Escape') { e.preventDefault(); setEditing(false); }
+      }}
+      disabled={isSaving}
+      className="bg-slate-800 border border-slate-600 text-slate-100 text-xs rounded px-1 py-0.5 w-full"
+    />
+  );
+}
+
+function BatchTable({ geckos, onRemove, onQuickFix, onCellSave }) {
   if (geckos.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/40 p-6 text-center">
@@ -431,7 +545,7 @@ function BatchTable({ geckos, onRemove, onQuickFix }) {
   return (
     <div className="space-y-1">
       <p className="text-[11px] text-slate-500 flex items-center gap-1">
-        <ArrowRight className="w-3 h-3" /> Scroll horizontally to see all {MM_HEADERS.length} MorphMarket columns.
+        <ArrowRight className="w-3 h-3" /> Scroll horizontally for all {MM_HEADERS.length} columns. Click any Sex / Status / Traits / Price / Weight cell to edit it inline.
       </p>
       <div className="relative rounded-xl border border-slate-800 bg-slate-950/40">
         <div className="overflow-x-scroll rounded-xl">
@@ -441,7 +555,10 @@ function BatchTable({ geckos, onRemove, onQuickFix }) {
                 <th className="text-left px-2 py-2 font-medium">#</th>
                 <th className="text-left px-2 py-2 font-medium">Fix</th>
                 {MM_HEADERS.map((h) => (
-                  <th key={h} className="text-left px-2 py-2 font-medium whitespace-nowrap">{h}</th>
+                  <th key={h} className="text-left px-2 py-2 font-medium whitespace-nowrap">
+                    {h}
+                    {EDITABLE_HEADERS[h] && <span className="ml-1 text-emerald-500/70" title="Editable">✎</span>}
+                  </th>
                 ))}
                 <th className="text-right px-2 py-2 font-medium">Remove</th>
               </tr>
@@ -469,11 +586,27 @@ function BatchTable({ geckos, onRemove, onQuickFix }) {
                         {missing.length > 0 ? 'Fix' : 'Edit'}
                       </button>
                     </td>
-                    {MM_HEADERS.map((h) => (
-                      <td key={h} className="px-2 py-2 text-slate-200 align-top max-w-[12rem]">
-                        <div className="truncate" title={String(row[h] ?? '')}>{String(row[h] ?? '')}</div>
-                      </td>
-                    ))}
+                    {MM_HEADERS.map((h) => {
+                      const config = EDITABLE_HEADERS[h];
+                      if (!config) {
+                        return (
+                          <td key={h} className="px-2 py-2 text-slate-200 align-top max-w-[12rem]">
+                            <div className="truncate" title={String(row[h] ?? '')}>{String(row[h] ?? '')}</div>
+                          </td>
+                        );
+                      }
+                      const raw = g[config.field];
+                      return (
+                        <td key={h} className="px-2 py-2 text-slate-200 align-top max-w-[12rem]">
+                          <EditableCell
+                            value={raw}
+                            displayValue={String(row[h] ?? '')}
+                            config={config}
+                            onCommit={(next) => onCellSave(g.id, config.field, next)}
+                          />
+                        </td>
+                      );
+                    })}
                     <td className="px-2 py-2 text-right">
                       <button
                         type="button"
@@ -547,6 +680,7 @@ export default function MorphMarketExport() {
   const [copied, setCopied] = useState(false);
   const [viewMode, setViewMode] = useState(() => loadStoredString(VIEW_MODE_STORAGE_KEY, 'grid'));
   const [quickFixGecko, setQuickFixGecko] = useState(null);
+  const [isBulkEditOpen, setIsBulkEditOpen] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -692,6 +826,59 @@ export default function MorphMarketExport() {
     setAllGeckos((prev) => prev.map((g) => (g.id === updated.id ? { ...g, ...updated } : g)));
     setQuickFixGecko(null);
   };
+
+  const handleBulkSaved = (updatedList) => {
+    if (!Array.isArray(updatedList) || updatedList.length === 0) {
+      setIsBulkEditOpen(false);
+      return;
+    }
+    const byId = new Map(updatedList.map((u) => [u.id, u]));
+    setAllGeckos((prev) => prev.map((g) => (byId.has(g.id) ? { ...g, ...byId.get(g.id) } : g)));
+    setIsBulkEditOpen(false);
+    setSelected(new Set());
+  };
+
+  const handleCellSave = async (id, field, value) => {
+    try {
+      const patch = { [field]: value };
+      const saved = await Gecko.update(id, patch);
+      setAllGeckos((prev) => prev.map((g) => (g.id === id ? { ...g, ...patch, ...saved } : g)));
+    } catch (err) {
+      toast({ title: 'Save failed', description: err.message, variant: 'destructive' });
+    }
+  };
+
+  const addOneToBatch = (id) => {
+    if (batchSet.has(id)) return;
+    setBatchIds((prev) => [...prev, id]);
+  };
+
+  const addAllReadyToBatch = () => {
+    const ready = filtered.filter((g) => missingFields(g).length === 0);
+    const ids = ready.map((g) => g.id).filter((id) => !batchSet.has(id));
+    if (ids.length === 0) {
+      toast({
+        title: 'Nothing ready in this filter',
+        description: 'No geckos in the current filter pass MorphMarket\'s required-field check.',
+      });
+      return;
+    }
+    setBatchIds((prev) => [...prev, ...ids]);
+    setSelected((prev) => {
+      const next = new Set(prev);
+      ids.forEach((id) => next.delete(id));
+      return next;
+    });
+    toast({
+      title: `Added ${ids.length} ready listing${ids.length === 1 ? '' : 's'}`,
+      description: 'All export-ready geckos in the current filter were staged.',
+    });
+  };
+
+  const selectedGeckos = useMemo(
+    () => Array.from(selected).map((id) => allGeckos.find((g) => g.id === id)).filter(Boolean),
+    [selected, allGeckos],
+  );
 
   const clearBatch = () => {
     setBatchIds([]);
@@ -849,6 +1036,28 @@ export default function MorphMarketExport() {
                   {allVisibleSelected ? 'Deselect all visible' : 'Select all visible'}
                 </Button>
                 <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setIsBulkEditOpen(true)}
+                  disabled={selected.size === 0}
+                  className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-9"
+                  title="Apply a single edit (price, status, sex, traits) to every selected gecko"
+                >
+                  <Layers className="w-3.5 h-3.5 mr-1" />
+                  Bulk edit{selected.size > 0 ? ` ${selected.size}` : ''}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={addAllReadyToBatch}
+                  disabled={filtered.length === 0}
+                  className="border-emerald-700/60 bg-emerald-950/30 hover:bg-emerald-900/40 text-emerald-200 text-xs h-9"
+                  title="Add every gecko in the current filter that already has all required MorphMarket fields"
+                >
+                  <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                  Add all ready in filter
+                </Button>
+                <Button
                   size="sm"
                   onClick={addSelectedToBatch}
                   disabled={selected.size === 0}
@@ -879,6 +1088,7 @@ export default function MorphMarketExport() {
                     selected={selected.has(g.id)}
                     onToggle={toggleSelected}
                     onQuickFix={openQuickFix}
+                    onAddOne={addOneToBatch}
                   />
                 ))}
               </div>
@@ -891,6 +1101,7 @@ export default function MorphMarketExport() {
                     selected={selected.has(g.id)}
                     onToggle={toggleSelected}
                     onQuickFix={openQuickFix}
+                    onAddOne={addOneToBatch}
                   />
                 ))}
               </div>
@@ -943,7 +1154,12 @@ export default function MorphMarketExport() {
               </div>
             </div>
 
-            <BatchTable geckos={batchGeckos} onRemove={removeFromBatch} onQuickFix={openQuickFix} />
+            <BatchTable
+              geckos={batchGeckos}
+              onRemove={removeFromBatch}
+              onQuickFix={openQuickFix}
+              onCellSave={handleCellSave}
+            />
 
             {batchGeckos.length > 0 && (
               <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
@@ -995,6 +1211,14 @@ export default function MorphMarketExport() {
         onClose={() => setQuickFixGecko(null)}
         onSaved={handleQuickFixSaved}
         missing={quickFixGecko ? missingFields(quickFixGecko) : []}
+        allGeckos={allGeckos}
+      />
+
+      <BulkEditModal
+        geckos={selectedGeckos}
+        open={isBulkEditOpen}
+        onClose={() => setIsBulkEditOpen(false)}
+        onSaved={handleBulkSaved}
       />
 
       {batchGeckos.length > 0 && (
