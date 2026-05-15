@@ -1,90 +1,35 @@
 import { useMemo, useState, useCallback } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Layers, Sparkles, RotateCcw, HardHat, Eye, Compass } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Layers, Sparkles } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
 import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
 
 import { composePhenotype } from '../components/morph-visualizer/engine/compose';
-import { DEFAULT_SELECTIONS, PRESETS_BY_ID } from '../components/morph-visualizer/data/presets';
-import { ZYGOSITY as Z } from '../components/morph-visualizer/data/traits';
+import { PRESETS, PRESETS_BY_ID } from '../components/morph-visualizer/data/presets';
 
-// WebApplication + HowTo schema. WebApplication advertises this as a
-// free no-install crested-gecko trait simulator; HowTo gives AI assistants
-// a step-by-step walkthrough they can read aloud when a user asks "how
-// do I use the morph visualizer".
+// WebApplication + HowTo schema for SEO. The page is now a photo gallery
+// of canonical crested gecko morphs rather than an interactive composer.
 const VISUALIZER_JSON_LD = [
   {
     '@type': 'WebApplication',
     '@id': `${SITE_URL}/MorphVisualizer#webapp`,
-    name: 'Crested Gecko Morph Visualizer',
+    name: 'Crested Gecko Morph Gallery',
     url: `${SITE_URL}/MorphVisualizer`,
     applicationCategory: 'EducationalApplication',
-    applicationSubCategory: 'Reptile genetics simulator',
+    applicationSubCategory: 'Reptile morph reference',
     operatingSystem: 'Web',
     browserRequirements: 'Modern browser with JavaScript enabled',
     description:
-      'Interactive crested gecko (Correlophus ciliatus) trait simulator. Pick base color, set Mendelian morph zygosity, dial pattern intensity, toggle accents, and watch the resulting phenotype render in real time with rarity and value estimates.',
+      'Reference gallery of canonical crested gecko (Correlophus ciliatus) morphs. See photo-quality examples of Wild Type, Red Harlequin, Lilly White, Cappuccino, Frappuccino, Axanthic, Tiger, Pinstripe and more, each annotated with its genetics, rarity tier and value estimate.',
     featureList: [
-      'Base color picker (red, orange, yellow, olive, chocolate, lavender, etc.)',
-      'Mendelian morph genotype panel with zygosity (het / visible / super)',
-      'Polygenic pattern intensity sliders (Harlequin, Pinstripe, Dalmatian)',
-      'Accent toggles (cream, white wall, soft scale)',
-      'Structural and environmental modifiers',
-      'Genetics reasoning explanation for every phenotype',
-      'Rarity and price-tier estimate',
-      'Preset gallery (wild type and named morph combinations)',
+      'Photo-quality images of every canonical crested gecko morph',
+      'Genetics reasoning for each preset (which genes are doing what)',
+      'Rarity tier and indicative price for each look',
+      'Side-by-side comparison of morph aesthetics',
     ],
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
     publisher: { '@id': ORG_ID },
     isPartOf: { '@id': `${SITE_URL}/#website` },
-  },
-  {
-    '@type': 'HowTo',
-    '@id': `${SITE_URL}/MorphVisualizer#howto`,
-    name: 'How to use the Crested Gecko Morph Visualizer',
-    description:
-      'Build a virtual crested gecko phenotype to predict what a real-world pairing might look like, or to study how individual morph genes stack.',
-    totalTime: 'PT5M',
-    tool: [{ '@type': 'HowToTool', name: 'Geck Inspect Morph Visualizer (web browser)' }],
-    step: [
-      {
-        '@type': 'HowToStep',
-        position: 1,
-        name: 'Pick a base color',
-        text: 'Open the Base Color panel on the left and choose the underlying body color (red, orange, yellow, olive, chocolate, or lavender). This sets the foundation everything else paints on top of.',
-      },
-      {
-        '@type': 'HowToStep',
-        position: 2,
-        name: 'Set Mendelian morph zygosity',
-        text: 'In the Morph Genotype panel, mark recessive, co-dominant, and incomplete-dominant traits as het, visible, or super. Lilly White, Axanthic, Cappuccino, and similar single-gene morphs live here.',
-      },
-      {
-        '@type': 'HowToStep',
-        position: 3,
-        name: 'Dial in polygenic pattern intensity',
-        text: 'Use the Pattern Intensity sliders for Harlequin, Pinstripe, Dalmatian, and similar polygenic traits ,  these stack continuously rather than as on/off genes.',
-      },
-      {
-        '@type': 'HowToStep',
-        position: 4,
-        name: 'Toggle accents and structural traits',
-        text: 'Add accents like cream edging, white wall, or soft scale, then adjust structural traits (crests, eye color, tail) and environmental modifiers (fired vs unfired) to match the look you want.',
-      },
-      {
-        '@type': 'HowToStep',
-        position: 5,
-        name: 'Read the genetics reasoning and rarity',
-        text: 'The Genetics Reasoning panel explains every active trait and its expected expression. The Rarity and Value panel on the right gives an indicative price tier so you can sanity-check a pairing before committing eggs to it.',
-      },
-      {
-        '@type': 'HowToStep',
-        position: 6,
-        name: 'Try a preset or reset',
-        text: 'Apply a preset from the gallery to study a named combination, or hit Reset to return to wild type and start over.',
-      },
-    ],
   },
   {
     '@type': 'BreadcrumbList',
@@ -95,16 +40,9 @@ const VISUALIZER_JSON_LD = [
   },
 ];
 
-import GeckoCanvas from '../components/morph-visualizer/render/GeckoCanvas';
-import BaseColorPicker from '../components/morph-visualizer/panels/BaseColorPicker';
-import MorphGenotypePanel from '../components/morph-visualizer/panels/MorphGenotypePanel';
-import PatternIntensityPanel from '../components/morph-visualizer/panels/PatternIntensityPanel';
-import AccentTogglePanel from '../components/morph-visualizer/panels/AccentTogglePanel';
-import StructuralPanel from '../components/morph-visualizer/panels/StructuralPanel';
-import EnvironmentalPanel from '../components/morph-visualizer/panels/EnvironmentalPanel';
+import PresetImage from '../components/morph-visualizer/panels/PresetImage';
 import GeneticsReasoningPanel from '../components/morph-visualizer/panels/GeneticsReasoningPanel';
 import RarityValuePanel from '../components/morph-visualizer/panels/RarityValuePanel';
-import PresetGallery from '../components/morph-visualizer/panels/PresetGallery';
 import ActiveTraitsChips from '../components/morph-visualizer/panels/ActiveTraitsChips';
 
 function cloneSelections(s) {
@@ -119,201 +57,162 @@ function cloneSelections(s) {
 }
 
 export default function MorphVisualizer() {
-  const [selections, setSelections] = useState(() => cloneSelections(DEFAULT_SELECTIONS));
-  const [activePresetId, setActivePresetId] = useState('wild_type');
-  const [view, setView] = useState('side');
+  const [activePresetId, setActivePresetId] = useState(PRESETS[0].id);
 
+  const activePreset = PRESETS_BY_ID[activePresetId] || PRESETS[0];
+  const selections = useMemo(
+    () => cloneSelections(activePreset.selections),
+    [activePreset],
+  );
   const phenotype = useMemo(() => composePhenotype(selections), [selections]);
 
-  // --- Handlers (dispatcher style keeps each panel's concerns isolated) ---
-  const setBaseColor = useCallback((id) => {
-    setSelections((s) => ({ ...s, baseColor: id }));
-    setActivePresetId(null);
-  }, []);
-
-  const setMendelian = useCallback((traitId, zygosity) => {
-    setSelections((s) => {
-      const next = { ...s.mendelian };
-      if (zygosity === Z.ABSENT) delete next[traitId];
-      else next[traitId] = zygosity;
-      return { ...s, mendelian: next };
-    });
-    setActivePresetId(null);
-  }, []);
-
-  const setPatternIntensity = useCallback((traitId, value) => {
-    setSelections((s) => ({ ...s, patterns: { ...s.patterns, [traitId]: value } }));
-    setActivePresetId(null);
-  }, []);
-
-  const toggleAccent = useCallback((traitId) => {
-    setSelections((s) => ({ ...s, accents: { ...s.accents, [traitId]: !s.accents[traitId] } }));
-    setActivePresetId(null);
-  }, []);
-
-  const setStructural = useCallback((traitId, value) => {
-    setSelections((s) => ({ ...s, structural: { ...s.structural, [traitId]: value } }));
-    setActivePresetId(null);
-  }, []);
-
-  const setEnvironmental = useCallback((traitId, value) => {
-    setSelections((s) => ({ ...s, environmental: { ...s.environmental, [traitId]: value } }));
-    setActivePresetId(null);
-  }, []);
-
   const applyPreset = useCallback((presetId) => {
-    const p = PRESETS_BY_ID[presetId];
-    if (!p) return;
-    setSelections(cloneSelections(p.selections));
     setActivePresetId(presetId);
-  }, []);
-
-  const reset = useCallback(() => {
-    setSelections(cloneSelections(DEFAULT_SELECTIONS));
-    setActivePresetId('wild_type');
+    // Scroll to the featured area so the user sees the new image without
+    // having to manually scroll back up after picking from the bottom grid.
+    if (typeof window !== 'undefined') {
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
   }, []);
 
   return (
     <div className="p-4 md:p-6 bg-slate-950 min-h-screen text-white">
       <Seo
-        title="Crested Gecko Morph Visualizer"
-        description="Free interactive crested gecko trait simulator. Pick a base color, set morph genotype zygosity, dial pattern intensity, and watch the resulting phenotype render in real time with a rarity and value estimate."
+        title="Crested Gecko Morph Gallery"
+        description="Photo-quality reference gallery of every canonical crested gecko morph. See Wild Type, Harlequin, Lilly White, Cappuccino, Frappuccino, Axanthic, Tiger and Pinstripe with genetics, rarity and value for each."
         path="/MorphVisualizer"
-        imageAlt="Crested gecko morph visualizer ,  interactive trait simulator"
+        imageAlt="Crested gecko morph gallery"
         keywords={[
-          'crested gecko morph visualizer',
-          'gecko trait simulator',
-          'crested gecko phenotype builder',
-          'crested gecko genetics tool',
-          'morph combination preview',
+          'crested gecko morph gallery',
+          'crested gecko morph examples',
+          'lilly white crested gecko',
+          'harlequin crested gecko',
+          'cappuccino crested gecko',
+          'axanthic crested gecko',
         ]}
         jsonLd={VISUALIZER_JSON_LD}
       />
-      <div className="max-w-[1700px] mx-auto">
+      <div className="max-w-[1400px] mx-auto">
         {/* Header */}
         <div className="text-center mb-6">
           <h1 className="text-3xl md:text-5xl font-bold text-slate-100 mb-2 flex items-center justify-center gap-3">
             <Layers className="w-9 h-9 text-emerald-400" />
-            Crested Gecko Morph Visualizer
+            Crested Gecko Morph Gallery
           </h1>
-          <p className="text-sm md:text-base text-slate-400">
-            Explore traits, combinations, and genetics ,  see what every morph actually looks like and why.
+          <p className="text-sm md:text-base text-slate-400 max-w-2xl mx-auto">
+            Photo-quality examples of every canonical morph, with the genetics, rarity, and rough price behind each look.
           </p>
         </div>
 
-        {/* Main grid: left controls, center canvas + explanations, right presets+rarity */}
-        <div className="grid grid-cols-1 xl:grid-cols-[360px_1fr_340px] gap-4 md:gap-6">
+        {/* Featured ,  big image on the left, info panels on the right.
+            Balanced two-column layout keeps both sides full at xl, stacks on
+            smaller screens. */}
+        <div className="grid grid-cols-1 lg:grid-cols-[1.4fr_1fr] gap-4 md:gap-6 mb-8">
+          {/* Featured image */}
+          <Card className="bg-slate-900 border-slate-700 shadow-2xl overflow-hidden">
+            <div className="aspect-[4/3] bg-slate-800 border-b border-slate-700">
+              <PresetImage
+                preset={activePreset}
+                phenotype={phenotype}
+                selections={selections}
+              />
+            </div>
+            <CardContent className="p-5">
+              <div className="flex items-start justify-between gap-3 mb-2">
+                <h2 className="text-2xl font-bold text-slate-100 flex items-center gap-2">
+                  <Sparkles className="w-5 h-5 text-emerald-400 flex-shrink-0" />
+                  {activePreset.name}
+                </h2>
+                <span className="text-sm text-amber-400 whitespace-nowrap mt-1">
+                  {'★'.repeat(activePreset.rarityTier)}
+                </span>
+              </div>
+              <p className="text-slate-300 text-sm leading-relaxed mb-3">
+                {activePreset.description}
+              </p>
+              <div>
+                <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
+                  Active Traits
+                </h4>
+                <ActiveTraitsChips phenotype={phenotype} selections={selections} />
+              </div>
+            </CardContent>
+          </Card>
 
-          {/* LEFT ,  control stack */}
-          <div className="space-y-4 order-2 xl:order-1">
+          {/* Info side: genetics reasoning + rarity. Two stacked cards so the
+              right column fills out roughly the same height as the image card. */}
+          <div className="space-y-4">
             <Card className="bg-slate-900 border-slate-700">
-              <CardContent className="p-4 space-y-5">
-                <BaseColorPicker        selected={selections.baseColor} onSelect={setBaseColor} />
-                <MorphGenotypePanel     mendelian={selections.mendelian} onChange={setMendelian} />
-                <PatternIntensityPanel  patterns={selections.patterns}   onChange={setPatternIntensity} />
-              </CardContent>
-            </Card>
-
-            <Card className="bg-slate-900 border-slate-700">
-              <CardContent className="p-4 space-y-5">
-                <AccentTogglePanel      accents={selections.accents}       onToggle={toggleAccent} />
-                <StructuralPanel        structural={selections.structural} onChange={setStructural} />
-                <EnvironmentalPanel     environmental={selections.environmental} onChange={setEnvironmental} />
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* CENTER ,  canvas + reasoning */}
-          <div className="space-y-4 order-1 xl:order-2">
-            <Card className="bg-slate-900 border-slate-700 shadow-2xl">
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between flex-wrap gap-2">
-                  <CardTitle className="flex items-center gap-2 text-slate-200 text-base">
-                    <Sparkles className="w-5 h-5 text-emerald-400" />
-                    Gecko Preview
-                  </CardTitle>
-                  <div className="flex items-center gap-2">
-                    {/* View toggle */}
-                    <div className="flex rounded-md border border-slate-700 bg-slate-800 overflow-hidden">
-                      <button
-                        onClick={() => setView('side')}
-                        className={`px-2.5 py-1 text-xs flex items-center gap-1 transition ${
-                          view === 'side'
-                            ? 'bg-emerald-700 text-white'
-                            : 'text-slate-300 hover:bg-slate-700'
-                        }`}
-                      >
-                        <Eye className="w-3 h-3" /> Side
-                      </button>
-                      <button
-                        onClick={() => setView('top')}
-                        className={`px-2.5 py-1 text-xs flex items-center gap-1 transition ${
-                          view === 'top'
-                            ? 'bg-emerald-700 text-white'
-                            : 'text-slate-300 hover:bg-slate-700'
-                        }`}
-                      >
-                        <Compass className="w-3 h-3" /> Top
-                      </button>
-                    </div>
-                    <Button
-                      onClick={reset}
-                      variant="outline"
-                      size="sm"
-                      className="text-xs bg-slate-800 border-slate-600 hover:bg-slate-700"
-                    >
-                      <RotateCcw className="w-3 h-3 mr-1" /> Reset
-                    </Button>
-                  </div>
-                </div>
+              <CardHeader className="pb-2">
+                <CardTitle className="text-slate-200 text-base">Genetics</CardTitle>
               </CardHeader>
-              <CardContent>
-                {/* Under construction banner */}
-                <div className="mb-3 flex items-center gap-2 rounded-md border border-amber-700/60 bg-amber-950/40 px-3 py-2 text-amber-200">
-                  <HardHat className="w-4 h-4 flex-shrink-0" />
-                  <div className="text-[12px] leading-snug">
-                    <span className="font-semibold">Under construction.</span>{' '}
-                    The gecko illustration is a playful work-in-progress ,  click around,
-                    stack morphs, load presets, break it in interesting ways. Your
-                    experiments help us tune what the final render should emphasize.
-                  </div>
-                </div>
-
-                <div className="aspect-[800/480] rounded-lg overflow-hidden bg-slate-800 border border-slate-700">
-                  <GeckoCanvas view={view} phenotype={phenotype} selections={selections} />
-                </div>
-
-                <div className="mt-4">
-                  <h4 className="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-2">
-                    Active Traits
-                  </h4>
-                  <ActiveTraitsChips phenotype={phenotype} selections={selections} />
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="bg-slate-900 border-slate-700">
-              <CardContent className="p-4">
+              <CardContent className="p-4 pt-0">
                 <GeneticsReasoningPanel phenotype={phenotype} selections={selections} />
               </CardContent>
             </Card>
-          </div>
-
-          {/* RIGHT ,  presets + rarity/value */}
-          <div className="space-y-4 order-3">
-            <Card className="bg-slate-900 border-slate-700">
-              <CardContent className="p-4">
-                <PresetGallery onApply={applyPreset} currentPresetId={activePresetId} />
-              </CardContent>
-            </Card>
 
             <Card className="bg-slate-900 border-slate-700">
-              <CardContent className="p-4">
+              <CardHeader className="pb-2">
+                <CardTitle className="text-slate-200 text-base">Rarity &amp; Value</CardTitle>
+              </CardHeader>
+              <CardContent className="p-4 pt-0">
                 <RarityValuePanel phenotype={phenotype} selections={selections} />
               </CardContent>
             </Card>
           </div>
         </div>
+
+        {/* Preset grid ,  full width. Tap a card to feature it above. */}
+        <Card className="bg-slate-900 border-slate-700">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-slate-200 text-base flex items-center gap-2">
+              <Sparkles className="w-4 h-4 text-emerald-400" />
+              All Morphs
+            </CardTitle>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 md:gap-4">
+              {PRESETS.map((p) => {
+                const active = p.id === activePresetId;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => applyPreset(p.id)}
+                    className={`text-left rounded-lg overflow-hidden border-2 transition group ${
+                      active
+                        ? 'border-emerald-500 ring-2 ring-emerald-500/30'
+                        : 'border-slate-700 hover:border-slate-500'
+                    }`}
+                  >
+                    <div className="aspect-[4/3] bg-slate-800 overflow-hidden">
+                      <PresetImage
+                        preset={p}
+                        phenotype={composePhenotype(p.selections)}
+                        selections={p.selections}
+                      />
+                    </div>
+                    <div className="p-3 bg-slate-900">
+                      <div className="flex items-center justify-between mb-1">
+                        <span className="text-sm font-semibold text-slate-100 truncate">
+                          {p.name}
+                        </span>
+                        <span className="text-[10px] text-amber-400 flex-shrink-0 ml-2">
+                          {'★'.repeat(p.rarityTier)}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-slate-400 leading-snug line-clamp-2">
+                        {p.description}
+                      </p>
+                      <div className="text-[11px] text-emerald-400 mt-1.5 font-mono">
+                        ≈ ${p.valueHint}
+                      </div>
+                    </div>
+                  </button>
+                );
+              })}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     </div>
   );
