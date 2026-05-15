@@ -20,7 +20,24 @@ enums, so the model can't return an id that isn't in our ontology.
 supabase secrets set ANTHROPIC_API_KEY=sk-ant-xxx
 # optional — override the model (default is claude-sonnet-4-6):
 supabase secrets set CLAUDE_MODEL=claude-opus-4-7
+# optional — how many verified examples per primary_morph to inject as
+# few-shot anchors (default 2, max 4, 0 disables few-shot entirely):
+supabase secrets set FEW_SHOT_PER_MORPH=2
 ```
+
+## Few-shot bank
+
+On cold start, the function reads up to `FEW_SHOT_PER_MORPH` verified
+rows per `primary_morph` from `gecko_images` (most recent first) and
+prepends them to the Claude prompt as labeled image blocks. This gives
+the model explicit visual anchors for each label instead of relying on
+prior knowledge alone — particularly important for the harlequin vs
+extreme_harlequin and dalmatian vs red_dalmatian distinctions.
+
+The bank is cached in module memory for the life of the warm instance.
+A redeploy or cold start refreshes it, so the more rows experts verify,
+the better-anchored the tool gets — measured by
+`scripts/eval_morph_id.py` against geck-data's test split.
 
 ## Deploy
 
