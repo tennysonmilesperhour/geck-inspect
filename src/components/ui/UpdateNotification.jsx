@@ -44,22 +44,21 @@ export default function UpdateNotification() {
   if (!showBanner) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 z-[99999] flex items-center gap-3 bg-slate-800 border border-emerald-500/50 text-slate-100 px-4 py-3 rounded-xl shadow-2xl shadow-black/50 animate-in slide-in-from-bottom-4 duration-300">
-      <RefreshCw className="w-4 h-4 text-emerald-400 flex-shrink-0" />
-      <div>
-        <p className="text-sm font-semibold text-white">New version available</p>
-        <p className="text-xs text-slate-400">Refresh to get the latest updates.</p>
-      </div>
+    <div className="fixed bottom-4 left-4 z-[99999] flex items-center gap-3 max-w-md bg-slate-800 border border-emerald-500/50 text-slate-100 px-4 py-3 rounded-xl shadow-2xl shadow-black/50 animate-in slide-in-from-bottom-4 duration-300">
+      <p className="text-sm text-slate-100 leading-snug">
+        The app is shedding its old skin. Click Chomp to refresh and update to the new version.
+      </p>
       <Button
         size="sm"
-        className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs h-7 px-3 ml-1"
+        className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs h-8 px-3 flex-shrink-0 gap-1.5"
         onClick={() => window.location.reload()}
       >
-        Update
+        <RefreshCw className="w-3.5 h-3.5" />
+        Chomp
       </Button>
       <button
         onClick={() => setShowBanner(false)}
-        className="text-slate-400 hover:text-slate-200 transition-colors ml-1"
+        className="text-slate-400 hover:text-slate-200 transition-colors flex-shrink-0"
         aria-label="Dismiss"
       >
         <X className="w-4 h-4" />
