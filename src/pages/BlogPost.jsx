@@ -237,7 +237,7 @@ export default function BlogPost() {
               {post.internalLinks.map((link, i) => (
                 <li key={i}>
                   <Link
-                    to={link.path}
+                    to={link.path || link.href}
                     className="inline-flex items-center gap-1.5 text-emerald-300 hover:underline"
                   >
                     {link.label} <ArrowRight className="w-3.5 h-3.5" />

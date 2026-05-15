@@ -30,22 +30,25 @@ const CALLOUT_STYLES = {
 function Callout({ tone = 'info', title, items }) {
   const style = CALLOUT_STYLES[tone] || CALLOUT_STYLES.info;
   const Icon = style.Icon;
+  const list = Array.isArray(items) ? items : [];
   return (
     <div className={`rounded-xl border p-4 md:p-5 ${style.wrap}`}>
       {title && (
-        <div className={`flex items-center gap-2 text-sm font-semibold mb-2 ${style.title}`}>
+        <div className={`flex items-center gap-2 text-sm font-semibold ${style.title} ${list.length > 0 ? 'mb-2' : ''}`}>
           <Icon className={`w-4 h-4 ${style.iconColor}`} />
           {title}
         </div>
       )}
-      <ul className="space-y-1.5">
-        {items.map((item, i) => (
-          <li key={i} className="flex items-start gap-2 text-slate-200 leading-relaxed">
-            {!title && <Icon className={`w-4 h-4 mt-1 flex-shrink-0 ${style.iconColor}`} />}
-            <span>{item}</span>
-          </li>
-        ))}
-      </ul>
+      {list.length > 0 && (
+        <ul className="space-y-1.5">
+          {list.map((item, i) => (
+            <li key={i} className="flex items-start gap-2 text-slate-200 leading-relaxed">
+              {!title && <Icon className={`w-4 h-4 mt-1 flex-shrink-0 ${style.iconColor}`} />}
+              <span>{item}</span>
+            </li>
+          ))}
+        </ul>
+      )}
     </div>
   );
 }
