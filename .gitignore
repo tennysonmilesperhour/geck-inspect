@@ -19,6 +19,7 @@ node_modules
 dist
 dist-ssr
 *.local
+package-lock.json
 
 # Generated reports (run `node scripts/build-geo-followup-pdf.mjs` to rebuild).
 GEO-follow-up.pdf
