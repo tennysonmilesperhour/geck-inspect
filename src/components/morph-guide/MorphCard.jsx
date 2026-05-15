@@ -39,12 +39,31 @@ export default function MorphCard({ morph, onClick }) {
       
       <CardContent className="pt-0 flex-grow flex flex-col">
         {morph.example_image_url && (
-          <div className="mb-4 aspect-video rounded-lg overflow-hidden border border-border">
+          <div className="mb-4 aspect-video rounded-lg overflow-hidden border border-border relative">
             <img
               src={morph.example_image_url}
               alt={morph.morph_name}
               className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
             />
+            {morph.isHeroAnchor && (
+              <div className="absolute top-2 right-2 inline-flex items-center gap-1 rounded-full bg-emerald-900/80 backdrop-blur-sm border border-emerald-500/40 px-2 py-0.5 text-[10px] font-medium text-emerald-100">
+                <Star className="w-3 h-3 fill-emerald-200 text-emerald-200" />
+                Show-winner
+              </div>
+            )}
+            {(morph.heroPhotoCredit || morph.heroGeckoName) && (
+              <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-2 py-1.5 text-[10px] text-white/90 leading-tight">
+                {morph.heroGeckoName && (
+                  <span className="font-medium">&ldquo;{morph.heroGeckoName}&rdquo;</span>
+                )}
+                {morph.heroGeckoName && morph.heroPhotoCredit && (
+                  <span className="text-white/60"> · </span>
+                )}
+                {morph.heroPhotoCredit && (
+                  <span className="text-white/80">{morph.heroPhotoCredit}</span>
+                )}
+              </div>
+            )}
           </div>
         )}
         

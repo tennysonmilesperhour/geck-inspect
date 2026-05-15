@@ -129,12 +129,38 @@ function MorphCard({ morph }) {
           >
             {rarity.label}
           </span>
-          {morph.priceTier && (
-            <span className="inline-flex items-center rounded-full border border-slate-700 bg-slate-950/70 px-2 py-1 text-[11px] font-semibold text-slate-300">
-              {morph.priceTier}
-            </span>
-          )}
+          <div className="flex items-center gap-1.5">
+            {morph.isHeroAnchor && (
+              <span
+                className="inline-flex items-center gap-1 rounded-full border border-emerald-500/60 bg-emerald-950/80 backdrop-blur-sm px-2 py-1 text-[10px] font-semibold text-emerald-200"
+                title={morph.heroAward || 'Competition-winning reference photo'}
+              >
+                <span aria-hidden>★</span>
+                {morph.heroAward || 'Show-winner'}
+              </span>
+            )}
+            {morph.priceTier && (
+              <span className="inline-flex items-center rounded-full border border-slate-700 bg-slate-950/70 px-2 py-1 text-[11px] font-semibold text-slate-300">
+                {morph.priceTier}
+              </span>
+            )}
+          </div>
         </div>
+        {(morph.heroPhotoCredit || morph.heroGeckoName) && (
+          <div className="absolute inset-x-0 bottom-0 px-3 py-1.5 text-[10px] leading-tight text-white/90">
+            <div className="rounded-md bg-black/60 backdrop-blur-sm border border-white/10 px-2 py-1">
+              {morph.heroGeckoName && (
+                <span className="font-medium">&ldquo;{morph.heroGeckoName}&rdquo;</span>
+              )}
+              {morph.heroGeckoName && morph.heroPhotoCredit && (
+                <span className="text-white/50"> · </span>
+              )}
+              {morph.heroPhotoCredit && (
+                <span className="text-white/80">{morph.heroPhotoCredit}</span>
+              )}
+            </div>
+          </div>
+        )}
       </div>
       <div className="flex-1 p-5 flex flex-col">
         <h3 className="text-lg font-bold text-white mb-2 group-hover:text-emerald-300 transition-colors">
@@ -194,9 +220,18 @@ function InheritanceLegend() {
   );
 }
 
+// Lower-case + collapse separators so 'Extreme Harlequin' and
+// 'extreme_harlequin' both map to 'extreme harlequin'. Used to match
+// hero-anchor rows from gecko_images (snake_case canonical ids) against
+// the MORPHS list (Title Case display names).
+function normMorph(s) {
+  return (s || '').toLowerCase().replace(/[\s_-]+/g, ' ').trim();
+}
+
 export default function MorphGuidePage() {
   const [dbRecords, setDbRecords] = useState([]);
   const [communityImages, setCommunityImages] = useState([]);
+  const [heroAnchors, setHeroAnchors] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [category, setCategory] = useState('all');
   const [inheritanceFilter, setInheritanceFilter] = useState('all');
@@ -244,6 +279,35 @@ export default function MorphGuidePage() {
     };
   }, []);
 
+  // Pull HERO ANCHOR photos ,  competition / show-winner images flagged
+  // with training_meta.verification_tier='hero_anchor'. These take
+  // priority over morph_guides.example_image_url because they're the
+  // gold-standard exemplar per morph, sourced from judged competitions.
+  // Each carries photo_credit + gecko_name for attribution.
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data } = await supabase
+          .from('gecko_images')
+          .select('image_url, primary_morph, training_meta, created_date')
+          .eq('verified', true)
+          .not('primary_morph', 'is', null)
+          .not('image_url', 'is', null)
+          .filter('training_meta->>verification_tier', 'eq', 'hero_anchor')
+          .order('created_date', { ascending: false })
+          .limit(200);
+        if (!cancelled) setHeroAnchors(data || []);
+      } catch (err) {
+        console.error('Hero anchor fetch failed:', err);
+        if (!cancelled) setHeroAnchors([]);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
   // Index DB records by slug for quick lookup.
   const dbBySlug = useMemo(() => {
     const bySlug = {};
@@ -284,7 +348,22 @@ export default function MorphGuidePage() {
     return (communityByKeyword[firstWord] || []).slice(0, 6);
   }
 
+  // Index hero anchors by normalized morph name so each MORPHS entry can
+  // look up its show-winner photo. First-by-recency wins (the query is
+  // already ordered).
+  const heroByNorm = useMemo(() => {
+    const map = new Map();
+    for (const h of heroAnchors) {
+      const key = normMorph(h.primary_morph);
+      if (!key) continue;
+      if (!map.has(key)) map.set(key, h);
+    }
+    return map;
+  }, [heroAnchors]);
+
   // Merge local + DB. Local morph-guide entries are the source of truth.
+  // Image priority per card: hero_anchor (competition winner) >
+  // morph_guides.example_image_url (curated DB) > community pool.
   // Any DB record not covered by the local dataset is appended as-is so
   // community additions still show up.
   const allMorphs = useMemo(() => {
@@ -292,14 +371,23 @@ export default function MorphGuidePage() {
     const merged = MORPHS.map((m) => {
       const dbMatch = dbBySlug[m.slug];
       const dbImg = sanitizeImage(dbMatch?.example_image_url);
+      const hero = heroByNorm.get(normMorph(m.name));
+      const heroImg = hero?.image_url ? sanitizeImage(hero.image_url) : null;
       const communityImgs = findCommunityImages(m.name);
-      // Stack the curated DB image first (if any), then the community
-      // pool. Dedup happens inside RotatingMorphImage.
-      const heroImages = dbImg ? [dbImg, ...communityImgs] : communityImgs;
+      // Stack hero anchor first (highest authority), then curated DB,
+      // then community pool. Dedup happens inside RotatingMorphImage.
+      const heroImages = [heroImg, dbImg, ...communityImgs].filter(Boolean);
+      const photoCredit = hero?.training_meta?.photo_credit || null;
+      const geckoName = hero?.training_meta?.gecko_name || null;
+      const heroAward = hero?.training_meta?.award || null;
       return {
         ...m,
         heroImage: heroImages[0] || null,
         heroImages,
+        heroPhotoCredit: photoCredit,
+        heroGeckoName: geckoName,
+        heroAward,
+        isHeroAnchor: Boolean(heroImg),
         dbDescription: dbMatch?.description,
         keyFeaturesDb: dbMatch?.key_features,
       };
