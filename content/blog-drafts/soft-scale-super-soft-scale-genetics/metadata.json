@@ -1,0 +1,151 @@
+{
+  "slug": "soft-scale-super-soft-scale-genetics",
+  "title": "Soft Scale Genetics: Why Super Soft Scales Are So Rare",
+  "description": "Soft Scale is incomplete dominant in crested geckos — one copy is visual, two copies make Super Soft Scale. Here's why breeders rarely produce them correctly.",
+  "keyphrase": "soft scale crested gecko genetics",
+  "category": "genetics",
+  "heroEyebrow": "Genetics deep dive",
+  "tldr": [
+    "Soft Scale is an incomplete-dominant morph: one copy = visual Soft Scale, two copies = Super Soft Scale.",
+    "Pairing two visual Soft Scales should produce roughly 25% Super Soft Scale, 50% visual, 25% normal — but fertility concerns make the actual yield lower.",
+    "Super Soft Scale hatchlings are misidentified more often than any other incomplete-dominant super form in the hobby.",
+    "The safest breeding strategy is Soft Scale × normal: 50% visual offspring, zero lethal-super risk.",
+    "Super Soft Scale commands $1,200–$3,500, but most breeders never successfully produce one because they stop at the first generation."
+  ],
+  "faq": [
+    {
+      "question": "Is Soft Scale crested gecko recessive or dominant?",
+      "answer": "Soft Scale is incomplete dominant. A single copy produces the visible Soft Scale form (smoother, finer-grained scales). Two copies produce Super Soft Scale, a more extreme leather-textured animal. It is not recessive — single-copy animals are visually identifiable and should not be sold as 'possible hets.'"
+    },
+    {
+      "question": "What does Super Soft Scale look like?",
+      "answer": "Super Soft Scale has dramatically reduced scale texture across the entire body, producing a near-smooth, leather-like appearance. It is distinctly more extreme than the single-copy visual Soft Scale. The difference is most legible after 2+ sheds — making a final call at hatch is unreliable."
+    },
+    {
+      "question": "What percentage of offspring are Super Soft Scale from a Soft Scale × Soft Scale pairing?",
+      "answer": "Punnett square math predicts 25% Super Soft Scale, 50% visual Soft Scale, and 25% normal from a Soft Scale × Soft Scale pairing. In practice, breeders have reported reduced fertility with this pairing, so real-world yield is often lower than the theoretical 25%."
+    },
+    {
+      "question": "Is it safe to breed two Soft Scale crested geckos together?",
+      "answer": "It is not confirmed lethal the way Lilly White × Lilly White is, but several breeders have reported fertility and viability concerns from Soft Scale × Soft Scale pairings. The conservative recommendation is Soft Scale × normal, which produces 50% visual Soft Scale offspring with no super-form risk."
+    },
+    {
+      "question": "How much does a Super Soft Scale crested gecko cost?",
+      "answer": "Super Soft Scale typically sells for $1,200–$3,500 depending on the animal's background genetics, breeder reputation, and combination with other proven morphs. Visual (single-copy) Soft Scales sell for $400–$1,000."
+    },
+    {
+      "question": "Can you tell Soft Scale from normal at hatch?",
+      "answer": "Yes, in principle — single-copy Soft Scales are visually distinct from normals, unlike a recessive het. However, the difference is subtle on very young hatchlings. Best practice is to wait until 8–12 weeks and compare siblings side by side after at least two full sheds."
+    },
+    {
+      "question": "Who proved Soft Scale in crested geckos?",
+      "answer": "Soft Scale was formally identified and proven by North of the Border Reptiles (Frank Payne) in the early 2020s through controlled test breedings that confirmed the incomplete-dominant inheritance pattern."
+    },
+    {
+      "question": "Does Soft Scale stack with other morphs like Lilly White or Axanthic?",
+      "answer": "Yes. Soft Scale stacks with any other proven morph. Popular combinations in development include Axanthic Soft Scale and Lilly White Soft Scale. These multi-morph projects require tracking both a recessive (Axanthic) and an incomplete dominant (Soft Scale) simultaneously — use a genetic calculator to plan pairings."
+    }
+  ],
+  "internalLinks": [
+    {
+      "href": "/MorphGuide/soft-scale",
+      "label": "Soft Scale morph guide"
+    },
+    {
+      "href": "/MorphGuide/super-soft-scale",
+      "label": "Super Soft Scale morph guide"
+    },
+    {
+      "href": "/GeneticsGuide",
+      "label": "Crested Gecko Genetics Guide"
+    },
+    {
+      "href": "/GeneticCalculatorTool",
+      "label": "Genetic Calculator Tool"
+    },
+    {
+      "href": "/MorphGuide/axanthic",
+      "label": "Axanthic morph guide"
+    },
+    {
+      "href": "/MorphGuide/lilly-white",
+      "label": "Lilly White morph guide"
+    }
+  ],
+  "externalCitations": [
+    {
+      "url": "https://www.pangeareptile.com/blogs/articles",
+      "label": "Pangea Reptile — breeder articles on crested gecko genetics"
+    },
+    {
+      "url": "https://morphmarket.com/articles/morphpedia/crested-gecko/",
+      "label": "MorphMarket Morphpedia — Crested Gecko"
+    }
+  ],
+  "topicId": "tpc_1778492856369_softscales",
+  "originalQueueEntry": {
+    "id": "tpc_1778492856369_softscales",
+    "title": "Soft Scale Genetics: Why Double-Scaled Hatchlings Are Rarer Than You Think",
+    "slug": "soft-scale-super-soft-scale-genetics",
+    "category": "genetics",
+    "status": "new",
+    "score": {
+      "demand": 6,
+      "originality": 8,
+      "voiceFit": 7,
+      "accuracyRisk": 2,
+      "total": 19
+    },
+    "createdAt": "2026-05-11T09:47:36.369Z",
+    "draftedAt": null,
+    "publishedAt": null,
+    "evidence": [
+      {
+        "source": "google-ac",
+        "snippet": "Google autocomplete for \"soft scale crested gecko\" suggests significant search interest, appearing in final autocomplete batch",
+        "url": null
+      },
+      {
+        "source": "youtube",
+        "snippet": "\"The COMPLETE Guide to Crested Gecko Morphs! Part 1\" by TikisGeckos, 179,984 views (8 years ago)—multiple references to scale morphs",
+        "url": "https://www.youtube.com/watch?v=kpa6SCe3XEY"
+      },
+      {
+        "source": "youtube",
+        "snippet": "\"CRESTED GECKO MORPHS - A Comprehensive Guide to Crested Gecko Base Morphs\" by JTB Reptiles, 40,591 views (7 years ago)—scale morphs included but often misunderstood",
+        "url": "https://www.youtube.com/watch?v=crf7baHQF88"
+      }
+    ],
+    "angleIdeas": [
+      "Soft Scale is incomplete dominant—breed two hets and you might expect 25% double-scaled, but most breeders don't understand what a Super Soft Scale should actually look like, so they're keeping and selling normals as 'het'.",
+      "The rarest outcome from Soft Scale × Soft Scale isn't failure—it's misidentification; here's how to spot true Super Soft Scales in your clutches.",
+      "Soft Scale breeding projects stall because breeders confuse incomplete dominance with co-dominance; the genetics are simple once you see it.",
+      "Google is asking about 'soft scale crested gecko' but breeder forums show confusion about progeny—a clear gap you can fill."
+    ],
+    "rejectionReason": null,
+    "prUrl": null
+  },
+  "factSources": [
+    {
+      "label": "morph-guide.js (local canonical catalogue)",
+      "path": "src/data/morph-guide.js",
+      "bytes": 46766
+    },
+    {
+      "label": "genetics-glossary.js",
+      "path": "src/data/genetics-glossary.js",
+      "bytes": 13250
+    },
+    {
+      "label": "genetics-sections.jsx (long-form)",
+      "path": "src/data/genetics-sections.jsx",
+      "bytes": 39846
+    },
+    {
+      "label": "genetics-jsonld.js (structured FAQ)",
+      "path": "src/data/genetics-jsonld.js",
+      "bytes": 11175
+    }
+  ],
+  "generatedAt": "2026-05-15T09:52:06.540Z"
+}

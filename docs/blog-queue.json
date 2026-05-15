@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-05-15T08:53:27.832Z",
+  "lastUpdated": "2026-05-15T09:52:06.540Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -203,7 +203,7 @@
       "title": "Soft Scale Genetics: Why Double-Scaled Hatchlings Are Rarer Than You Think",
       "slug": "soft-scale-super-soft-scale-genetics",
       "category": "genetics",
-      "status": "new",
+      "status": "drafted",
       "score": {
         "demand": 6,
         "originality": 8,
@@ -212,7 +212,7 @@
         "total": 19
       },
       "createdAt": "2026-05-11T09:47:36.369Z",
-      "draftedAt": null,
+      "draftedAt": "2026-05-15T09:52:06.540Z",
       "publishedAt": null,
       "evidence": [
         {
