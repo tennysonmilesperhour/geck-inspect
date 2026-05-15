@@ -614,8 +614,8 @@ export default function MorphMarketExport() {
         </Link>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[20rem_1fr] gap-6">
-        <div className="space-y-4">
+      <div className="grid grid-cols-1 lg:grid-cols-[20rem_minmax(0,1fr)] gap-6">
+        <div className="space-y-4 min-w-0">
           <FilterPanel
             filters={filters}
             setFilters={setFilters}
@@ -632,9 +632,9 @@ export default function MorphMarketExport() {
           </Card>
         </div>
 
-        <div className="space-y-6">
+        <div className="space-y-6 min-w-0">
           {/* Pool */}
-          <section className="space-y-3">
+          <section className="space-y-3 min-w-0">
             <div className="flex items-end justify-between gap-3 flex-wrap">
               <div>
                 <h2 className="text-lg font-bold text-slate-100">
@@ -691,7 +691,7 @@ export default function MorphMarketExport() {
           </section>
 
           {/* Batch */}
-          <section className="space-y-3">
+          <section className="space-y-3 min-w-0">
             <div className="flex items-end justify-between gap-3 flex-wrap">
               <div>
                 <h2 className="text-lg font-bold text-slate-100">
