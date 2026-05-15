@@ -45,7 +45,15 @@ function describeOutcome(action, result) {
   return `Approval recorded (${count}/2). Needs one more reviewer to verify.`;
 }
 
-const PAGE_SIZE = 25;
+const PAGE_SIZE = 50;
+// Default to NEWEST first. The previous oldest-first default buried freshly
+// seeded scraper candidates behind a backlog of legacy user submissions, so
+// the queue looked empty even with ~3,700 pending rows. Users still
+// processing the backlog can toggle to oldest-first via the sort control.
+const SORT_OPTIONS = [
+  { id: 'newest', label: 'Newest first', expr: '-created_date' },
+  { id: 'oldest', label: 'Oldest first', expr: 'created_date' },
+];
 
 // Pull initial genetic_traits off whichever well the seeder used. Older rows
 // store the array in training_meta.genetic_traits; the seeder PR also writes
@@ -74,33 +82,44 @@ export default function AIFeedbackQueue() {
   const [isExpertReviewer, setIsExpertReviewer] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [edits, setEdits] = useState(null);
+  const [sortMode, setSortMode] = useState('newest');
+  const [totalCount, setTotalCount] = useState(null);
 
   const load = useCallback(async () => {
     setIsLoading(true);
     try {
-      const [rows, expertRpc, adminRpc] = await Promise.all([
-        GeckoImage.filter({ verified: false }, 'created_date', PAGE_SIZE).catch(() => []),
+      const sortExpr = SORT_OPTIONS.find((s) => s.id === sortMode)?.expr ?? '-created_date';
+      const [rows, expertRpc, adminRpc, countRes] = await Promise.all([
+        GeckoImage.filter({ verified: false }, sortExpr, PAGE_SIZE).catch(() => []),
         supabase.rpc('is_expert_reviewer').then((r) => r.data).catch(() => false),
         supabase.rpc('is_admin').then((r) => r.data).catch(() => false),
+        supabase
+          .from('gecko_images')
+          .select('id', { count: 'exact', head: true })
+          .eq('verified', false)
+          .then((r) => r)
+          .catch(() => ({ count: null })),
       ]);
       setIsExpertReviewer(Boolean(expertRpc));
       setIsAdmin(Boolean(adminRpc));
       setQueue(rows || []);
       setHasMore((rows || []).length === PAGE_SIZE);
+      setTotalCount(typeof countRes?.count === 'number' ? countRes.count : null);
       setIdx(0);
     } catch (err) {
       toast({ title: 'Failed to load queue', description: err.message, variant: 'destructive' });
     } finally {
       setIsLoading(false);
     }
-  }, [toast]);
+  }, [toast, sortMode]);
 
   const loadMore = useCallback(async () => {
     setIsLoadingMore(true);
     try {
+      const sortExpr = SORT_OPTIONS.find((s) => s.id === sortMode)?.expr ?? '-created_date';
       const next = await GeckoImage.filter(
         { verified: false },
-        'created_date',
+        sortExpr,
         PAGE_SIZE,
         queue.length,
       ).catch(() => []);
@@ -112,7 +131,7 @@ export default function AIFeedbackQueue() {
     } finally {
       setIsLoadingMore(false);
     }
-  }, [queue, toast]);
+  }, [queue, toast, sortMode]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -244,14 +263,36 @@ export default function AIFeedbackQueue() {
   return (
     <Card className="bg-slate-900 border-slate-700">
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="text-slate-100 flex items-center gap-2">
-            <Scale className="w-5 h-5 text-emerald-400" />
-            Peer review · {idx + 1} of {queue.length}
-          </CardTitle>
-          <Button variant="ghost" size="sm" onClick={load}>
-            <RefreshCw className="w-4 h-4" />
-          </Button>
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <CardTitle className="text-slate-100 flex items-center gap-2">
+              <Scale className="w-5 h-5 text-emerald-400" />
+              Peer review · {idx + 1} of {queue.length} loaded
+            </CardTitle>
+            {totalCount != null && (
+              <p className="mt-1 text-xs text-slate-400">
+                {totalCount.toLocaleString()} unverified in the queue · sorted{' '}
+                {SORT_OPTIONS.find((s) => s.id === sortMode)?.label.toLowerCase()}
+              </p>
+            )}
+          </div>
+          <div className="flex items-center gap-2">
+            <Select value={sortMode} onValueChange={(v) => setSortMode(v)}>
+              <SelectTrigger className="h-8 w-36 bg-slate-800 border-slate-600 text-slate-100 text-xs">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="bg-slate-800 border-slate-600 text-slate-100">
+                {SORT_OPTIONS.map((s) => (
+                  <SelectItem key={s.id} value={s.id}>
+                    {s.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button variant="ghost" size="sm" onClick={load}>
+              <RefreshCw className="w-4 h-4" />
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-5">
