@@ -21,7 +21,24 @@ export default function SimilarGeckosStrip({ imageUrl }) {
         const embedRes = await supabase.functions.invoke('embed-gecko-image', {
           body: { imageUrl },
         });
-        if (embedRes.error) throw embedRes.error;
+        if (embedRes.error) {
+          let detail = embedRes.error.message;
+          const ctx = embedRes.error.context;
+          if (ctx && typeof ctx.text === 'function') {
+            try {
+              const body = await ctx.text();
+              if (body) {
+                try {
+                  const parsed = JSON.parse(body);
+                  detail = parsed?.error || body;
+                } catch {
+                  detail = body;
+                }
+              }
+            } catch { /* ignore */ }
+          }
+          throw new Error(detail);
+        }
         const embedding = embedRes.data?.embedding;
         if (!Array.isArray(embedding)) throw new Error('no embedding returned');
 
