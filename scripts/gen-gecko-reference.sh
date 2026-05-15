@@ -1,6 +1,11 @@
 #!/usr/bin/env bash
 # Generates a side-profile crested gecko BASE OUTLINE image via Replicate
-# (Flux Schnell, ~$0.003, ~3s) and saves it to ./gecko-base.png.
+# (Flux Dev, ~$0.025, ~10s) and saves it to ./gecko-base.png.
+#
+# Uses Flux Dev (one tier above Schnell) because Schnell over-simplifies
+# anatomy when asked for line art and the head/feet come out misshapen.
+# Dev preserves the realistic proportions while still rendering a clean
+# B&W outline at this prompt.
 #
 # This image is the BASE LAYER for the Morph Visualizer. Trait colors and
 # pattern overlays render BEHIND it (clipped to the gecko's shape), and
@@ -29,11 +34,11 @@ if [ -z "${REPLICATE_API_TOKEN:-}" ]; then
   exit 1
 fi
 
-PROMPT='Side profile line drawing of a crested gecko (Correlophus ciliatus), head facing right, full body visible from nose to curled tail tip, in a relaxed perched posture with all four legs visible and bent at the knee and elbow joints, each foot showing splayed toe pads with visible lamellae, tail extending to the left with a slight upward curl at the tip, large round eye with vertical slit pupil, prominent supraorbital eyelash crest ridge above the eye, two rows of dorsal crest spike scales running from above the eye down the neck and along the spine to the base of the tail, anatomically accurate crested gecko proportions, pure white body interior fill (no color, no shading, no texture, no gradient), bold solid black outline of uniform medium line weight for the silhouette and every internal feature (crests, eye, nostril, mouth, toes, leg edges), pure white background, flat 2D vector coloring book illustration style, technical illustration aesthetic, no shadows, no scenery, no branch, no text, no labels, no watermark, centered composition with generous margin around the gecko, gecko fills about 80 percent of the frame width'
+PROMPT='Anatomically accurate vintage scientific illustration of a crested gecko (Correlophus ciliatus) shown in side profile, head facing right, body in a relaxed perched posture with the dorsal arch clearly visible (distinct shoulder hump and hip hump with a saddle between them), all four legs bent at the knee and elbow joints with the limbs reading as three-dimensional rather than flat, each foot showing five wide splayed lamellae toe pads in side view, tapered tail extending to the left from the hip with a clear upward curl at the very tip, head shaped as a triangular wedge that is broadest behind the supraorbital crests and tapers to a defined snout, prominent supraorbital eyelash crest ridge sitting above the large round eye, eye drawn with a clearly visible vertical slit pupil, two rows of dorsal crest spike scales running from above the eye down the neck and along the spine to the base of the tail, pronounced jowl on the lower jaw, anatomically correct crested gecko proportions throughout (this is critical), rendered as a clean black ink line drawing on pure white paper in the style of a Linnean natural history plate, every visible feature outlined in solid medium-weight black ink, body interior left pure white with no shading and no fills, white background, no colors, no gradients, no crosshatching, no patterns inside the body, no shadows, no scenery, no branch, no text, no labels, no watermark, centered composition with margin around the gecko'
 
-echo "Calling Replicate (Flux Schnell)..."
+echo "Calling Replicate (Flux Dev)..."
 RESPONSE=$(curl -sS -X POST \
-  https://api.replicate.com/v1/models/black-forest-labs/flux-schnell/predictions \
+  https://api.replicate.com/v1/models/black-forest-labs/flux-dev/predictions \
   -H "Authorization: Token $REPLICATE_API_TOKEN" \
   -H "Content-Type: application/json" \
   -H "Prefer: wait" \
@@ -44,7 +49,7 @@ RESPONSE=$(curl -sS -X POST \
     "aspect_ratio": "16:9",
     "output_format": "png",
     "num_outputs": 1,
-    "go_fast": true
+    "go_fast": false
   }
 }
 EOF
