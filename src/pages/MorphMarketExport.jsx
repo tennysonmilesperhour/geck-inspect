@@ -27,6 +27,10 @@ import {
   Crown,
   Loader2,
   ArrowRight,
+  LayoutGrid,
+  List,
+  Pencil,
+  Wrench,
 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import {
@@ -35,6 +39,7 @@ import {
   exportMorphMarketCSV,
   MM_HEADERS,
 } from '@/lib/morphmarketSync';
+import QuickFixModal from '@/components/morph-market/QuickFixModal';
 
 /**
  * MorphMarket Bulk Export Builder.
@@ -220,6 +225,20 @@ function FilterPanel({ filters, setFilters, onReset }) {
           </div>
         </div>
 
+        <div>
+          <Label className="text-xs text-slate-400">MorphMarket readiness</Label>
+          <Select value={filters.completeness} onValueChange={(v) => update({ completeness: v })}>
+            <SelectTrigger className="h-9 bg-slate-800 border-slate-700 text-slate-100">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent className="bg-slate-800 border-slate-700 text-slate-100 z-[99999]">
+              <SelectItem value="any" className="focus:bg-slate-700">Any</SelectItem>
+              <SelectItem value="ready" className="focus:bg-slate-700">Ready to export</SelectItem>
+              <SelectItem value="missing" className="focus:bg-slate-700">Missing required fields</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 pt-1">
           <label className="flex items-center gap-2 text-xs text-slate-300 cursor-pointer">
             <Checkbox
@@ -250,62 +269,155 @@ function FilterPanel({ filters, setFilters, onReset }) {
   );
 }
 
-function GeckoTile({ gecko, selected, onToggle }) {
+function GeckoTile({ gecko, selected, onToggle, onQuickFix }) {
   const thumb = Array.isArray(gecko.image_urls) && gecko.image_urls[0];
   const missing = missingFields(gecko);
   return (
-    <button
-      type="button"
-      onClick={() => onToggle(gecko.id)}
-      className={`text-left rounded-xl border bg-slate-900/60 transition overflow-hidden focus:outline-none focus:ring-2 focus:ring-emerald-400 ${
+    <div
+      className={`relative rounded-xl border bg-slate-900/60 transition overflow-hidden ${
         selected
           ? 'border-emerald-500 ring-1 ring-emerald-500/40'
           : 'border-slate-800 hover:border-slate-700'
       }`}
     >
-      <div className="relative aspect-square bg-slate-950">
-        {thumb ? (
-          <img src={thumb} alt={gecko.name || ''} className="w-full h-full object-cover" loading="lazy" />
-        ) : (
-          <div className="w-full h-full flex items-center justify-center text-slate-700 text-xs">No photo</div>
-        )}
-        <div className="absolute top-2 left-2">
-          <Checkbox
-            checked={selected}
-            onCheckedChange={() => onToggle(gecko.id)}
-            onClick={(e) => e.stopPropagation()}
-            className="bg-slate-900/80 border-slate-600 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
-          />
-        </div>
-        {missing.length > 0 && (
-          <div className="absolute top-2 right-2 bg-amber-500/90 text-amber-950 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1">
-            <AlertTriangle className="w-3 h-3" />
-            {missing.length}
+      <button
+        type="button"
+        onClick={() => onToggle(gecko.id)}
+        className="text-left w-full focus:outline-none focus:ring-2 focus:ring-emerald-400 rounded-xl"
+      >
+        <div className="relative aspect-square bg-slate-950">
+          {thumb ? (
+            <img src={thumb} alt={gecko.name || ''} className="w-full h-full object-cover" loading="lazy" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-slate-700 text-xs">No photo</div>
+          )}
+          <div className="absolute top-2 left-2">
+            <Checkbox
+              checked={selected}
+              onCheckedChange={() => onToggle(gecko.id)}
+              onClick={(e) => e.stopPropagation()}
+              className="bg-slate-900/80 border-slate-600 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
+            />
           </div>
-        )}
-      </div>
-      <div className="p-2.5 space-y-1">
-        <p className="text-sm font-semibold text-slate-100 truncate">{gecko.name || 'Unnamed'}</p>
-        <p className="text-[11px] text-slate-500 truncate">
-          {gecko.gecko_id_code || 'No ID'} · {gecko.sex || 'Unsexed'}
-        </p>
-        <div className="flex items-center justify-between gap-2 text-[11px]">
-          <span className="text-slate-400">
-            {gecko.weight_grams != null ? `${gecko.weight_grams}g` : 'No weight'}
-          </span>
-          <span className="text-emerald-300 font-semibold">
-            {gecko.asking_price != null ? `$${gecko.asking_price}` : 'No price'}
-          </span>
+          {missing.length > 0 && (
+            <div
+              className="absolute top-2 right-2 bg-amber-500/90 text-amber-950 text-[10px] font-bold px-1.5 py-0.5 rounded flex items-center gap-1"
+              title={`Missing: ${missing.join(', ')}`}
+            >
+              <AlertTriangle className="w-3 h-3" />
+              {missing.length}
+            </div>
+          )}
         </div>
-        <p className="text-[10px] text-slate-500 truncate">
-          {gecko.morphs_traits || (Array.isArray(gecko.morph_tags) ? gecko.morph_tags.join(', ') : '')}
-        </p>
-      </div>
-    </button>
+        <div className="p-2.5 space-y-1">
+          <p className="text-sm font-semibold text-slate-100 truncate">{gecko.name || 'Unnamed'}</p>
+          <p className="text-[11px] text-slate-500 truncate">
+            {gecko.gecko_id_code || 'No ID'} · {gecko.sex || 'Unsexed'}
+          </p>
+          <div className="flex items-center justify-between gap-2 text-[11px]">
+            <span className="text-slate-400">
+              {gecko.weight_grams != null ? `${gecko.weight_grams}g` : 'No weight'}
+            </span>
+            <span className="text-emerald-300 font-semibold">
+              {gecko.asking_price != null ? `$${gecko.asking_price}` : 'No price'}
+            </span>
+          </div>
+          <p className="text-[10px] text-slate-500 truncate">
+            {gecko.morphs_traits || (Array.isArray(gecko.morph_tags) ? gecko.morph_tags.join(', ') : '')}
+          </p>
+          {missing.length > 0 && (
+            <p className="text-[10px] text-amber-300/80 truncate" title={missing.join(', ')}>
+              Missing: {missing.join(', ')}
+            </p>
+          )}
+        </div>
+      </button>
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); onQuickFix(gecko); }}
+        className="absolute bottom-2 right-2 inline-flex items-center gap-1 rounded bg-slate-900/80 hover:bg-slate-800 text-slate-200 text-[10px] px-1.5 py-0.5 border border-slate-700"
+        title={missing.length > 0 ? 'Fix missing MorphMarket fields' : 'Edit MorphMarket fields'}
+      >
+        {missing.length > 0 ? <Wrench className="w-3 h-3" /> : <Pencil className="w-3 h-3" />}
+        {missing.length > 0 ? 'Fix' : 'Edit'}
+      </button>
+    </div>
   );
 }
 
-function BatchTable({ geckos, onRemove }) {
+function GeckoRow({ gecko, selected, onToggle, onQuickFix }) {
+  const thumb = Array.isArray(gecko.image_urls) && gecko.image_urls[0];
+  const missing = missingFields(gecko);
+  return (
+    <div
+      className={`flex items-center gap-3 px-2 py-1.5 rounded-lg border transition ${
+        selected
+          ? 'border-emerald-500 bg-emerald-950/20'
+          : 'border-slate-800 bg-slate-900/40 hover:border-slate-700'
+      }`}
+    >
+      <Checkbox
+        checked={selected}
+        onCheckedChange={() => onToggle(gecko.id)}
+        className="border-slate-600 data-[state=checked]:bg-emerald-500 data-[state=checked]:border-emerald-500"
+      />
+      <button
+        type="button"
+        onClick={() => onToggle(gecko.id)}
+        className="flex items-center gap-3 flex-1 min-w-0 text-left focus:outline-none focus:ring-2 focus:ring-emerald-400 rounded-md"
+      >
+        <div className="w-10 h-10 rounded bg-slate-950 shrink-0 overflow-hidden">
+          {thumb ? (
+            <img src={thumb} alt="" className="w-full h-full object-cover" loading="lazy" />
+          ) : (
+            <div className="w-full h-full flex items-center justify-center text-slate-700 text-[9px]">No photo</div>
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-2">
+            <p className="text-sm font-semibold text-slate-100 truncate">{gecko.name || 'Unnamed'}</p>
+            <p className="text-[11px] text-slate-500 truncate">
+              {gecko.gecko_id_code || 'No ID'}
+            </p>
+          </div>
+          <p className="text-[11px] text-slate-400 truncate">
+            {[gecko.sex || 'Unsexed',
+              gecko.weight_grams != null ? `${gecko.weight_grams}g` : null,
+              gecko.morphs_traits || (Array.isArray(gecko.morph_tags) ? gecko.morph_tags.join(', ') : null),
+            ].filter(Boolean).join(' · ')}
+          </p>
+          {missing.length > 0 && (
+            <p className="text-[10px] text-amber-300/80 truncate" title={missing.join(', ')}>
+              Missing: {missing.join(', ')}
+            </p>
+          )}
+        </div>
+        <div className="text-right shrink-0">
+          <p className="text-sm text-emerald-300 font-semibold">
+            {gecko.asking_price != null ? `$${gecko.asking_price}` : '—'}
+          </p>
+          {missing.length > 0 && (
+            <div className="text-[10px] text-amber-300 inline-flex items-center gap-1">
+              <AlertTriangle className="w-3 h-3" />
+              {missing.length}
+            </div>
+          )}
+        </div>
+      </button>
+      <button
+        type="button"
+        onClick={(e) => { e.stopPropagation(); onQuickFix(gecko); }}
+        className="inline-flex items-center gap-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] px-2 py-1 border border-slate-700 shrink-0"
+        title={missing.length > 0 ? 'Fix missing MorphMarket fields' : 'Edit MorphMarket fields'}
+      >
+        {missing.length > 0 ? <Wrench className="w-3 h-3" /> : <Pencil className="w-3 h-3" />}
+        {missing.length > 0 ? 'Fix' : 'Edit'}
+      </button>
+    </div>
+  );
+}
+
+function BatchTable({ geckos, onRemove, onQuickFix }) {
   if (geckos.length === 0) {
     return (
       <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/40 p-6 text-center">
@@ -327,6 +439,7 @@ function BatchTable({ geckos, onRemove }) {
             <thead className="bg-slate-900 text-slate-400 sticky top-0">
               <tr>
                 <th className="text-left px-2 py-2 font-medium">#</th>
+                <th className="text-left px-2 py-2 font-medium">Fix</th>
                 {MM_HEADERS.map((h) => (
                   <th key={h} className="text-left px-2 py-2 font-medium whitespace-nowrap">{h}</th>
                 ))}
@@ -345,6 +458,17 @@ function BatchTable({ geckos, onRemove }) {
                     }`}
                   >
                     <td className="px-2 py-2 text-slate-500">{i + 1}</td>
+                    <td className="px-2 py-2">
+                      <button
+                        type="button"
+                        onClick={() => onQuickFix(g)}
+                        className="inline-flex items-center gap-1 rounded bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] px-2 py-0.5 border border-slate-700"
+                        title={missing.length > 0 ? `Fix: ${missing.join(', ')}` : 'Edit MorphMarket fields'}
+                      >
+                        {missing.length > 0 ? <Wrench className="w-3 h-3" /> : <Pencil className="w-3 h-3" />}
+                        {missing.length > 0 ? 'Fix' : 'Edit'}
+                      </button>
+                    </td>
                     {MM_HEADERS.map((h) => (
                       <td key={h} className="px-2 py-2 text-slate-200 align-top max-w-[12rem]">
                         <div className="truncate" title={String(row[h] ?? '')}>{String(row[h] ?? '')}</div>
@@ -387,7 +511,31 @@ const DEFAULT_FILTERS = {
   bornYear: '',
   requirePrice: false,
   requireImage: false,
+  completeness: 'any', // any | ready | missing
 };
+
+const BATCH_STORAGE_KEY = 'mm-export-batch-ids-v1';
+const VIEW_MODE_STORAGE_KEY = 'mm-export-view-mode-v1';
+
+function loadStoredArray(key) {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(key);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+}
+
+function loadStoredString(key, fallback) {
+  if (typeof window === 'undefined') return fallback;
+  try {
+    return window.localStorage.getItem(key) || fallback;
+  } catch {
+    return fallback;
+  }
+}
 
 export default function MorphMarketExport() {
   const [user, setUser] = useState(null);
@@ -395,9 +543,23 @@ export default function MorphMarketExport() {
   const [isLoading, setIsLoading] = useState(true);
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [selected, setSelected] = useState(() => new Set());
-  const [batchIds, setBatchIds] = useState(() => []);
+  const [batchIds, setBatchIds] = useState(() => loadStoredArray(BATCH_STORAGE_KEY));
   const [copied, setCopied] = useState(false);
+  const [viewMode, setViewMode] = useState(() => loadStoredString(VIEW_MODE_STORAGE_KEY, 'grid'));
+  const [quickFixGecko, setQuickFixGecko] = useState(null);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try { window.localStorage.setItem(BATCH_STORAGE_KEY, JSON.stringify(batchIds)); }
+    catch { /* ignore quota errors */ }
+  }, [batchIds]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+    try { window.localStorage.setItem(VIEW_MODE_STORAGE_KEY, viewMode); }
+    catch { /* ignore */ }
+  }, [viewMode]);
 
   useEffect(() => {
     let cancelled = false;
@@ -474,6 +636,8 @@ export default function MorphMarketExport() {
       }
       if (filters.requirePrice && (g.asking_price == null || g.asking_price === '')) return false;
       if (filters.requireImage && !(Array.isArray(g.image_urls) && g.image_urls.length > 0)) return false;
+      if (filters.completeness === 'ready' && missingFields(g).length > 0) return false;
+      if (filters.completeness === 'missing' && missingFields(g).length === 0) return false;
       return true;
     });
   }, [pool, filters]);
@@ -521,6 +685,12 @@ export default function MorphMarketExport() {
 
   const removeFromBatch = (id) => {
     setBatchIds((prev) => prev.filter((x) => x !== id));
+  };
+
+  const openQuickFix = (gecko) => setQuickFixGecko(gecko);
+  const handleQuickFixSaved = (updated) => {
+    setAllGeckos((prev) => prev.map((g) => (g.id === updated.id ? { ...g, ...updated } : g)));
+    setQuickFixGecko(null);
   };
 
   const clearBatch = () => {
@@ -645,6 +815,30 @@ export default function MorphMarketExport() {
                 </p>
               </div>
               <div className="flex items-center gap-2 flex-wrap">
+                <div className="inline-flex rounded-md border border-slate-700 bg-slate-800 overflow-hidden">
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('grid')}
+                    className={`px-2 h-9 text-xs inline-flex items-center gap-1 ${
+                      viewMode === 'grid' ? 'bg-slate-700 text-slate-100' : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                    title="Tile view"
+                  >
+                    <LayoutGrid className="w-3.5 h-3.5" />
+                    Tiles
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setViewMode('list')}
+                    className={`px-2 h-9 text-xs inline-flex items-center gap-1 border-l border-slate-700 ${
+                      viewMode === 'list' ? 'bg-slate-700 text-slate-100' : 'text-slate-400 hover:text-slate-200'
+                    }`}
+                    title="List view"
+                  >
+                    <List className="w-3.5 h-3.5" />
+                    List
+                  </button>
+                </div>
                 <Button
                   variant="outline"
                   size="sm"
@@ -676,6 +870,18 @@ export default function MorphMarketExport() {
                     : 'Try widening the weight range, hatch dates, or status.'}
                 </p>
               </div>
+            ) : viewMode === 'list' ? (
+              <div className="space-y-1.5">
+                {filtered.map((g) => (
+                  <GeckoRow
+                    key={g.id}
+                    gecko={g}
+                    selected={selected.has(g.id)}
+                    onToggle={toggleSelected}
+                    onQuickFix={openQuickFix}
+                  />
+                ))}
+              </div>
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
                 {filtered.map((g) => (
@@ -684,6 +890,7 @@ export default function MorphMarketExport() {
                     gecko={g}
                     selected={selected.has(g.id)}
                     onToggle={toggleSelected}
+                    onQuickFix={openQuickFix}
                   />
                 ))}
               </div>
@@ -736,7 +943,7 @@ export default function MorphMarketExport() {
               </div>
             </div>
 
-            <BatchTable geckos={batchGeckos} onRemove={removeFromBatch} />
+            <BatchTable geckos={batchGeckos} onRemove={removeFromBatch} onQuickFix={openQuickFix} />
 
             {batchGeckos.length > 0 && (
               <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
@@ -781,6 +988,14 @@ export default function MorphMarketExport() {
           </section>
         </div>
       </div>
+
+      <QuickFixModal
+        gecko={quickFixGecko}
+        open={!!quickFixGecko}
+        onClose={() => setQuickFixGecko(null)}
+        onSaved={handleQuickFixSaved}
+        missing={quickFixGecko ? missingFields(quickFixGecko) : []}
+      />
 
       {batchGeckos.length > 0 && (
         <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-800 bg-slate-950/95 backdrop-blur-sm">
