@@ -25,6 +25,8 @@
 # and the canvas wires it up in the same commit.
 #
 # The Replicate token is read from the environment and never written to disk.
+# Uses only curl + grep so it works on a fresh macOS without Xcode CLT
+# (no python3 / no jq dependency).
 
 set -euo pipefail
 
@@ -34,6 +36,8 @@ if [ -z "${REPLICATE_API_TOKEN:-}" ]; then
   exit 1
 fi
 
+# Prompt is written as a single line with no embedded double-quotes,
+# backslashes, or newlines so it can be inlined into JSON without escaping.
 PROMPT='Anatomically accurate vintage scientific illustration of a crested gecko (Correlophus ciliatus) shown in side profile, head facing right, body in a relaxed perched posture with the dorsal arch clearly visible (distinct shoulder hump and hip hump with a saddle between them), all four legs bent at the knee and elbow joints with the limbs reading as three-dimensional rather than flat, each foot showing five wide splayed lamellae toe pads in side view, tapered tail extending to the left from the hip with a clear upward curl at the very tip, head shaped as a triangular wedge that is broadest behind the supraorbital crests and tapers to a defined snout, prominent supraorbital eyelash crest ridge sitting above the large round eye, eye drawn with a clearly visible vertical slit pupil, two rows of dorsal crest spike scales running from above the eye down the neck and along the spine to the base of the tail, pronounced jowl on the lower jaw, anatomically correct crested gecko proportions throughout (this is critical), rendered as a clean black ink line drawing on pure white paper in the style of a Linnean natural history plate, every visible feature outlined in solid medium-weight black ink, body interior left pure white with no shading and no fills, white background, no colors, no gradients, no crosshatching, no patterns inside the body, no shadows, no scenery, no branch, no text, no labels, no watermark, centered composition with margin around the gecko'
 
 echo "Calling Replicate (Flux Dev)..."
@@ -42,34 +46,18 @@ RESPONSE=$(curl -sS -X POST \
   -H "Authorization: Token $REPLICATE_API_TOKEN" \
   -H "Content-Type: application/json" \
   -H "Prefer: wait" \
-  -d "$(cat <<EOF
-{
-  "input": {
-    "prompt": $(printf '%s' "$PROMPT" | python3 -c "import sys,json; print(json.dumps(sys.stdin.read()))"),
-    "aspect_ratio": "16:9",
-    "output_format": "png",
-    "num_outputs": 1,
-    "go_fast": false
-  }
-}
-EOF
-)")
+  -d "{\"input\":{\"prompt\":\"${PROMPT}\",\"aspect_ratio\":\"16:9\",\"output_format\":\"png\",\"num_outputs\":1,\"go_fast\":false}}")
 
-# Pull the first output URL out of the JSON. Replicate returns either
-# {"output": ["url"]} or sometimes {"output": "url"} depending on the model.
-URL=$(printf '%s' "$RESPONSE" | python3 -c "
-import sys, json
-data = json.loads(sys.stdin.read())
-out = data.get('output')
-if isinstance(out, list):
-    print(out[0])
-elif isinstance(out, str):
-    print(out)
-else:
-    print('ERROR: no output', file=sys.stderr)
-    print(json.dumps(data, indent=2), file=sys.stderr)
-    sys.exit(1)
-")
+# Pull the first PNG URL out of the JSON response with grep. Replicate
+# returns either {"output":["url"]} or {"output":"url"} depending on the
+# model, but in both cases the URL is the first https://...png string.
+URL=$(printf '%s' "$RESPONSE" | grep -oE 'https://[^"]*\.png' | head -1 || true)
+
+if [ -z "$URL" ]; then
+  echo "ERROR: no output URL in response. Full response:" >&2
+  echo "$RESPONSE" >&2
+  exit 1
+fi
 
 echo "Downloading $URL ..."
 curl -sS "$URL" -o gecko-base.png
