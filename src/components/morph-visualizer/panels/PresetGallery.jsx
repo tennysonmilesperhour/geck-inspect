@@ -6,7 +6,15 @@
 import { PRESETS } from '../data/presets';
 import { Wand2 } from 'lucide-react';
 
-export default function PresetGallery({ onApply, currentPresetId }) {
+export default function PresetGallery({ onApply, currentPresetId, layout = 'column' }) {
+  // 'column' is the old narrow-sidebar layout (2 cols, scrolls vertically).
+  // 'row' is the wide-bottom layout used when the gallery spans the full
+  // grid width ,  more cards visible at once, no fixed scroll height.
+  const gridClass =
+    layout === 'row'
+      ? 'grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-2'
+      : 'grid grid-cols-2 gap-2 max-h-80 overflow-y-auto pr-1';
+
   return (
     <div>
       <h3 className="text-sm font-semibold text-slate-300 mb-3 flex items-center gap-2">
@@ -14,7 +22,7 @@ export default function PresetGallery({ onApply, currentPresetId }) {
         Iconic Presets
       </h3>
 
-      <div className="grid grid-cols-2 gap-2 max-h-80 overflow-y-auto pr-1">
+      <div className={gridClass}>
         {PRESETS.map((p) => {
           const active = currentPresetId === p.id;
           return (

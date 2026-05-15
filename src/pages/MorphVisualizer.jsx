@@ -201,24 +201,30 @@ export default function MorphVisualizer() {
           </p>
         </div>
 
-        {/* Main grid: left controls, center canvas + explanations, right presets+rarity */}
-        <div className="grid grid-cols-1 xl:grid-cols-[360px_1fr_340px] gap-4 md:gap-6">
+        {/* Main grid: left primary trait builders, center canvas + reasoning,
+            right modifiers + rarity. The preset gallery moves to a full-width
+            row below the grid so neither side column has to stretch to hold
+            it. This balances the six trait panels across both side columns
+            instead of stacking them all on the left next to empty space. */}
+        <div className="grid grid-cols-1 xl:grid-cols-[340px_1fr_320px] gap-4 md:gap-6">
 
-          {/* LEFT ,  control stack */}
+          {/* LEFT ,  primary trait builders (the ones that change the look most) */}
           <div className="space-y-4 order-2 xl:order-1">
             <Card className="bg-slate-900 border-slate-700">
-              <CardContent className="p-4 space-y-5">
-                <BaseColorPicker        selected={selections.baseColor} onSelect={setBaseColor} />
-                <MorphGenotypePanel     mendelian={selections.mendelian} onChange={setMendelian} />
-                <PatternIntensityPanel  patterns={selections.patterns}   onChange={setPatternIntensity} />
+              <CardContent className="p-4">
+                <BaseColorPicker selected={selections.baseColor} onSelect={setBaseColor} />
               </CardContent>
             </Card>
 
             <Card className="bg-slate-900 border-slate-700">
-              <CardContent className="p-4 space-y-5">
-                <AccentTogglePanel      accents={selections.accents}       onToggle={toggleAccent} />
-                <StructuralPanel        structural={selections.structural} onChange={setStructural} />
-                <EnvironmentalPanel     environmental={selections.environmental} onChange={setEnvironmental} />
+              <CardContent className="p-4">
+                <MorphGenotypePanel mendelian={selections.mendelian} onChange={setMendelian} />
+              </CardContent>
+            </Card>
+
+            <Card className="bg-slate-900 border-slate-700">
+              <CardContent className="p-4">
+                <PatternIntensityPanel patterns={selections.patterns} onChange={setPatternIntensity} />
               </CardContent>
             </Card>
           </div>
@@ -299,11 +305,23 @@ export default function MorphVisualizer() {
             </Card>
           </div>
 
-          {/* RIGHT ,  presets + rarity/value */}
+          {/* RIGHT ,  secondary modifiers + rarity/value */}
           <div className="space-y-4 order-3">
             <Card className="bg-slate-900 border-slate-700">
               <CardContent className="p-4">
-                <PresetGallery onApply={applyPreset} currentPresetId={activePresetId} />
+                <AccentTogglePanel accents={selections.accents} onToggle={toggleAccent} />
+              </CardContent>
+            </Card>
+
+            <Card className="bg-slate-900 border-slate-700">
+              <CardContent className="p-4">
+                <StructuralPanel structural={selections.structural} onChange={setStructural} />
+              </CardContent>
+            </Card>
+
+            <Card className="bg-slate-900 border-slate-700">
+              <CardContent className="p-4">
+                <EnvironmentalPanel environmental={selections.environmental} onChange={setEnvironmental} />
               </CardContent>
             </Card>
 
@@ -313,6 +331,17 @@ export default function MorphVisualizer() {
               </CardContent>
             </Card>
           </div>
+        </div>
+
+        {/* Preset gallery ,  full-width row below the main grid so it can show
+            more presets at once and doesn't force either side column to grow
+            tall. */}
+        <div className="mt-4 md:mt-6">
+          <Card className="bg-slate-900 border-slate-700">
+            <CardContent className="p-4">
+              <PresetGallery onApply={applyPreset} currentPresetId={activePresetId} layout="row" />
+            </CardContent>
+          </Card>
         </div>
       </div>
     </div>
