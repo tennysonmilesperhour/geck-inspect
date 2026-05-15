@@ -34,12 +34,15 @@ export default function Accents({ accents, palette }) {
         </g>
       )}
 
-      {/* Kneecaps ,  white patches on the knees */}
+      {/* Kneecaps ,  white patches on the knees. Positions track the elbow /
+          knee bend on each near-side leg, with smaller fainter spots on the
+          far-side legs so the marking reads on both sides without crowding. */}
       {accents.kneecaps && (
         <g>
-          <ellipse cx={600} cy={335} rx="9" ry="7" fill="#f3ede0" />
-          <ellipse cx={205} cy={345} rx="9" ry="7" fill="#f3ede0" />
-          <ellipse cx={625} cy={355} rx="7" ry="5" fill="#f3ede0" opacity="0.7" />
+          <ellipse cx={504} cy={354} rx="9" ry="7" fill="#f3ede0" />
+          <ellipse cx={184} cy={354} rx="9" ry="7" fill="#f3ede0" />
+          <ellipse cx={572} cy={350} rx="6" ry="4.5" fill="#f3ede0" opacity="0.75" />
+          <ellipse cx={252} cy={350} rx="6" ry="4.5" fill="#f3ede0" opacity="0.75" />
         </g>
       )}
 

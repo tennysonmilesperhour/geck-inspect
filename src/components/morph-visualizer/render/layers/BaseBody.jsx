@@ -34,12 +34,15 @@ export default function BaseBody({ palette, structural }) {
   return (
     <g id="base-body">
       <defs>
-        <linearGradient id="bodyGrad" x1="0" y1="0" x2="0" y2="1">
+        {/* userSpaceOnUse so head, body and tail share a single top-to-bottom
+            shading ramp instead of each path stretching its own gradient
+            across its bounding box (which made the head look "stuck on"). */}
+        <linearGradient id="bodyGrad" x1="0" y1="170" x2="0" y2="345" gradientUnits="userSpaceOnUse">
           <stop offset="0%"   stopColor={shadow} />
           <stop offset="55%"  stopColor={base} />
           <stop offset="100%" stopColor={highlight} />
         </linearGradient>
-        <linearGradient id="legGrad" x1="0" y1="0" x2="0" y2="1">
+        <linearGradient id="legGrad" x1="0" y1="270" x2="0" y2="415" gradientUnits="userSpaceOnUse">
           <stop offset="0%"  stopColor={base} />
           <stop offset="100%" stopColor={shadow} />
         </linearGradient>
@@ -60,6 +63,15 @@ export default function BaseBody({ palette, structural }) {
 
       <path d={BODY_PATH} fill="url(#bodyGrad)" />
       <path d={HEAD_PATH} fill="url(#bodyGrad)" />
+
+      {/* Body + head silhouette outline. Drawn BEFORE the near-side legs so
+          the leg fills cover the body outline at the leg-attach overlap,
+          instead of the body outline cutting a horizontal stripe across the
+          near-side legs. */}
+      <g fill="none" stroke={outline} strokeLinejoin="round" strokeLinecap="round">
+        <path d={BODY_PATH} strokeWidth="2.2" opacity="0.85" />
+        <path d={HEAD_PATH} strokeWidth="2.2" opacity="0.9" />
+      </g>
 
       {/* near-side legs in front of body */}
       <path d={LEG_BACK_NEAR_PATH}  fill="url(#legGrad)" />
@@ -88,14 +100,12 @@ export default function BaseBody({ palette, structural }) {
         ))}
       </g>
 
-      {/* Silhouette outline. Painted last so it tracks over the body fill and
-          gives the illustrated "clean outline drawing" look the visualizer is
-          aiming for. */}
+      {/* Near-side leg outlines on top of the leg fills (and on top of the
+          body outline so the leg silhouette reads as one continuous shape
+          against the body). */}
       <g fill="none" stroke={outline} strokeLinejoin="round" strokeLinecap="round">
-        <path d={LEG_BACK_NEAR_PATH}  strokeWidth="1.8" opacity="0.7" />
-        <path d={LEG_FRONT_NEAR_PATH} strokeWidth="1.8" opacity="0.7" />
-        <path d={BODY_PATH}           strokeWidth="2.2" opacity="0.8" />
-        <path d={HEAD_PATH}           strokeWidth="2.2" opacity="0.85" />
+        <path d={LEG_BACK_NEAR_PATH}  strokeWidth="1.8" opacity="0.75" />
+        <path d={LEG_FRONT_NEAR_PATH} strokeWidth="1.8" opacity="0.75" />
       </g>
     </g>
   );

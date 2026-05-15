@@ -9,104 +9,119 @@
  * past the silhouette regardless of intensity. DORSUM_PATH, FLANKS_PATH and
  * BELLY_PATH define horizontal bands used by region-specific layers (tiger,
  * harlequin, white wall, belly tone, etc).
+ *
+ * Anatomical landmarks targeted from photo reference:
+ *   - Distinct shoulder hump (~x=560) and hip hump (~x=215) along the dorsum
+ *   - Full rounded belly that sags below the leg attach line
+ *   - Triangular head broadest behind the supraorbital crests, tapering to a
+ *     short rounded snout
+ *   - Pronounced lower jaw that bows down and tucks back to the throat,
+ *     giving a defined jowl
+ *   - Bent limbs with a clear elbow / knee joint kicking back from the body
  */
 
 export const VIEWBOX = '0 0 800 480';
 
-export const BODY_ELLIPSE  = { cx: 380, cy: 262, rx: 218, ry: 70 };
-export const HEAD_ELLIPSE  = { cx: 680, cy: 198, rx: 80, ry: 54 };
-export const NECK_JOIN_X   = 600;
-export const DORSUM_TOP_Y  = 194;
-export const BELLY_BOT_Y   = 326;
+export const BODY_ELLIPSE  = { cx: 380, cy: 268, rx: 230, ry: 72 };
+export const HEAD_ELLIPSE  = { cx: 692, cy: 198, rx: 92, ry: 56 };
+export const NECK_JOIN_X   = 605;
+export const DORSUM_TOP_Y  = 196;
+export const BELLY_BOT_Y   = 338;
 
-// Body silhouette. Closed clockwise path from the front-top where the body
-// meets the back of the head. Distinct shoulder hump, gentle mid-back dip,
-// hip hump, then a clearly tapered tail-base on the left, full belly across
-// the bottom, up the throat. Drawn so the head path overlaps and hides the
-// short neck-stub at the front.
+// Body silhouette. Closed clockwise path. Trace from back-of-head where it
+// joins the dorsum, down behind the jowl into the flank, across the belly,
+// up over the hip, around the tail-base, then back along the dorsum to the
+// start. The dorsum has a clear shoulder peak (~x=555) and hip peak
+// (~x=240) with a gentle valley between, so the silhouette doesn't read as
+// a uniform sausage. The earlier draft had a sharp notch on the underside
+// near the front-leg attach point; this version sweeps cleanly through.
 export const BODY_PATH = `
-  M 602,200
-  C 588,188 568,182 545,184
-  C 510,188 470,196 430,202
-  C 380,208 330,210 285,206
-  C 245,202 215,196 195,200
-  C 178,204 162,214 152,228
-  C 144,242 142,256 148,266
-  C 136,272 124,282 118,294
-  C 142,304 174,312 210,316
-  C 260,322 320,326 380,326
-  C 440,326 500,322 545,316
-  C 580,310 605,298 618,280
-  C 628,262 628,242 622,224
-  C 616,212 610,206 602,200 Z
+  M 608,214
+  C 626,232 628,260 618,286
+  C 605,308 578,322 548,330
+  C 488,340 412,344 335,340
+  C 275,336 222,328 188,316
+  C 166,306 150,290 150,272
+  C 150,250 160,226 184,210
+  C 222,194 282,186 348,188
+  C 410,190 462,194 510,196
+  C 548,198 580,202 598,206
+  C 606,208 610,212 608,214 Z
 `;
 
 // Head silhouette. Wedge that tapers from a broad crown to a defined snout.
-// The lower jaw bows out behind the mouth and tucks back to meet the neck,
-// giving the face a clear "jowl" line.
+// The crown rises clearly above the eye to read as a "shelf" for the
+// supraorbital crests; the lower jaw bows down behind the mouth and tucks
+// back to the throat, giving the face a pronounced jowl rather than a flat
+// bottom edge.
 export const HEAD_PATH = `
-  M 608,194
-  C 622,170 648,156 678,152
-  C 708,148 738,158 754,180
-  C 766,196 766,216 754,230
-  C 746,240 734,244 718,244
-  C 718,250 712,254 702,256
-  C 686,260 668,256 650,250
-  C 632,244 618,232 610,218
-  C 604,210 604,200 608,194 Z
+  M 600,200
+  C 612,176 642,156 682,150
+  C 722,146 760,160 780,184
+  C 790,200 786,218 770,228
+  C 758,234 744,236 730,236
+  C 728,248 716,254 698,254
+  C 668,254 642,248 622,238
+  C 608,228 598,214 600,200 Z
 `;
 
-// Tail. Tapered to a point at the bottom-left with a downward curl. The
-// path closes back to the hip with an explicit vertical line so the tail
-// attaches to the body across the full hip width, not just a single point.
+// Tail. Tapers from a wide hip attachment out to a soft point on the
+// lower-left, drooping down as it goes so the tip rests near the branch
+// rather than floating mid-air. The path closes back to the hip with an
+// explicit vertical line so the tail attaches across the full back-of-body
+// height, not just a single point. Upper and lower edges converge to a
+// real point at the tip rather than a blunt flipper end.
 export const TAIL_PATH = `
-  M 170,210
-  C 135,210 95,216 60,230
-  C 32,242 14,260 14,280
-  C 14,294 22,302 34,302
-  C 50,302 72,290 92,274
-  C 116,258 140,242 160,228
-  C 168,222 172,232 170,242
-  L 170,210 Z
+  M 174,236
+  C 132,244 88,258 50,282
+  C 24,300 10,322 12,338
+  C 16,348 30,344 50,330
+  C 88,308 132,290 168,278
+  C 174,276 178,278 174,290
+  L 174,294 Z
 `;
 
-// Dorsum band, clipped to BODY_PATH.
+// Dorsum band, clipped to BODY_PATH. Spans the upper third of the body,
+// with control points pulled in slightly so the band hugs the dorsal arch
+// rather than running straight across.
 export const DORSUM_PATH = `
-  M 138,210
-  C 220,194 360,184 500,190
-  C 555,192 595,200 618,212
-  L 618,252
-  C 555,242 380,240 230,252
-  C 178,256 145,252 138,242 Z
+  M 152,228
+  C 220,206 360,194 500,196
+  C 555,198 595,206 622,222
+  L 622,256
+  C 555,246 380,244 230,256
+  C 178,260 145,256 138,246 Z
 `;
 
 // Flanks band, used by lateral pattern layers.
 export const FLANKS_PATH = `
-  M 120,250
-  L 624,250
-  L 624,296
-  L 120,296 Z
+  M 120,254
+  L 624,254
+  L 624,300
+  L 120,300 Z
 `;
 
-// Belly band.
+// Belly band, sized to cover the new fuller belly.
 export const BELLY_PATH = `
-  M 120,292
-  L 624,292
-  L 624,330
-  L 120,330 Z
+  M 120,294
+  L 624,294
+  L 624,340
+  L 120,340 Z
 `;
 
-// Dorsal crest spikes from above the eye to the hip.
+// Dorsal crest spikes from above the eye to the hip. Spike base x/y traces
+// the new dorsal arch so spikes grow off the back, not above it.
 export function crestSpikes() {
   const spikes = [];
-  const startX = 602, endX = 178;
-  const startY = 188, endY = 214;
+  const startX = 600, endX = 180;
+  const startY = 196, endY = 220;
   const count = 42;
   for (let i = 0; i < count; i += 1) {
     const t = i / (count - 1);
     const x = startX + t * (endX - startX);
-    // Arch up over the dorsum so spike bases trace the gecko's curved back
-    const y = startY + t * (endY - startY) - Math.sin(t * Math.PI) * 8;
+    // Arch up over the dorsum so spike bases follow the curved back rather
+    // than a straight line (deepest arch over the mid-back / shoulder).
+    const y = startY + t * (endY - startY) - Math.sin(t * Math.PI) * 10;
     const h = 5 + Math.sin(t * Math.PI) * 4;
     spikes.push({ x, y, h });
   }
@@ -114,72 +129,97 @@ export function crestSpikes() {
 }
 
 // Supraorbital crest, the iconic "eyelash" ridge. Sits clearly above and
-// forward of the eye so it reads as a prominent ridge in a glance.
+// forward of the eye so it reads as a prominent ridge in a glance. Drawn
+// as an elongated tear-drop with a slight upward tilt so it looks like a
+// frill rather than a bump.
 export const SUPRAORBITAL_PATH = `
-  M 648,162
-  C 666,148 696,144 720,154
-  C 736,162 740,174 730,182
-  C 712,186 690,184 672,182
-  C 660,180 648,172 648,162 Z
+  M 644,166
+  C 666,148 700,142 728,150
+  C 744,156 750,168 740,178
+  C 720,184 696,184 672,182
+  C 656,180 644,174 644,166 Z
 `;
 
-// Legs. Each leg is drawn as a single closed shape: narrow at the hip,
-// widening into a defined foot at the bottom. The shape has a slight forward
-// kink mid-way that reads as a knee. Near-side legs render in front of the
-// body fill, far-side ones behind it for depth.
+// Supraorbital spikes, the row of pointed scales sitting on top of the
+// supraorbital ridge. These are what give the crested gecko its "eyelash"
+// look in profile. Each entry is { x, y, h } with the base point and spike
+// height; Crests.jsx renders them as small triangles aimed up-and-back so
+// they look like a row of frill-tips above the eye, not a smooth bump.
+export function supraorbitalSpikes() {
+  const spikes = [];
+  // Fan along the top of the supraorbital ridge from rear-of-eye forward.
+  // Y values arc gently downward toward the snout matching the ridge curve.
+  const points = [
+    { x: 660, y: 156, h: 8 },
+    { x: 672, y: 150, h: 9 },
+    { x: 686, y: 146, h: 10 },
+    { x: 700, y: 144, h: 10 },
+    { x: 714, y: 146, h: 9 },
+    { x: 726, y: 150, h: 8 },
+    { x: 736, y: 156, h: 7 },
+  ];
+  for (const p of points) spikes.push(p);
+  return spikes;
+}
 
-// Front near leg.
+// Legs. Each leg is drawn as a single closed shape with a clearly bent
+// silhouette: the upper leg runs down from the shoulder/hip, kicks back at
+// the elbow/knee, then the lower leg runs forward and down to the foot.
+// Near-side legs render in front of the body fill, far-side ones behind
+// it for depth.
+
+// Front near leg. Knee on the back edge near y=350.
 export const LEG_FRONT_NEAR_PATH = `
-  M 540,278
-  C 532,302 524,332 520,360
-  C 516,378 514,392 514,406
-  C 514,412 518,414 524,414
-  L 558,414
-  C 562,412 564,408 562,402
-  C 558,388 558,374 562,360
-  C 568,340 576,316 580,290
-  C 582,278 576,270 564,268
-  C 552,266 542,270 540,278 Z
+  M 524,282
+  C 514,304 504,330 502,354
+  C 502,372 506,388 514,400
+  C 518,408 524,414 532,415
+  L 558,415
+  C 564,414 568,408 568,400
+  C 566,386 562,370 560,354
+  C 560,338 564,322 570,304
+  C 574,290 572,280 562,278
+  C 548,276 532,276 524,282 Z
 `;
 
 // Front far leg.
 export const LEG_FRONT_FAR_PATH = `
-  M 568,288
-  C 568,310 568,332 570,352
-  C 572,372 574,388 578,400
-  C 580,404 586,404 590,402
-  L 602,400
-  C 604,396 602,390 600,384
-  C 596,366 592,346 588,326
-  C 586,310 584,296 580,288
-  C 578,282 572,282 568,288 Z
+  M 572,290
+  C 568,312 568,332 572,352
+  C 574,372 578,388 584,400
+  C 586,404 592,406 596,403
+  L 606,400
+  C 608,396 606,390 602,382
+  C 596,366 592,348 590,330
+  C 590,314 590,300 586,290
+  C 582,284 576,284 572,290 Z
 `;
 
-// Back near leg.
+// Back near leg. Knee on the back edge near y=350.
 export const LEG_BACK_NEAR_PATH = `
-  M 220,278
-  C 212,302 204,332 200,360
-  C 196,378 194,392 194,406
-  C 194,412 198,414 204,414
-  L 238,414
-  C 242,412 244,408 242,402
-  C 238,388 238,374 242,360
-  C 248,340 256,316 260,290
-  C 262,278 256,270 244,268
-  C 232,266 222,270 220,278 Z
+  M 204,282
+  C 194,304 184,330 182,354
+  C 182,372 186,388 194,400
+  C 198,408 204,414 212,415
+  L 238,415
+  C 244,414 248,408 248,400
+  C 246,386 242,370 240,354
+  C 240,338 244,322 250,304
+  C 254,290 252,280 242,278
+  C 228,276 212,276 204,282 Z
 `;
 
 // Back far leg.
 export const LEG_BACK_FAR_PATH = `
-  M 250,288
-  C 250,310 250,332 252,352
-  C 254,372 256,388 260,400
-  C 262,404 268,404 272,402
-  L 284,400
-  C 286,396 284,390 282,384
-  C 278,366 274,346 270,326
-  C 268,310 266,296 262,288
-  C 260,282 254,282 250,288 Z
+  M 252,290
+  C 248,312 248,332 252,352
+  C 254,372 258,388 264,400
+  C 266,404 272,406 276,403
+  L 286,400
+  C 288,396 286,390 282,382
+  C 276,366 272,348 270,330
+  C 270,314 270,300 266,290
+  C 262,284 256,284 252,290 Z
 `;
 
 // Toe pads (lamellae) builder. Toes splay outward and slightly downward from
@@ -197,25 +237,27 @@ export function toePads(cx, cy, count = 5, spread = 11, size = 3.2) {
 
 // Foot center coordinates (BaseBody calls toePads at these positions).
 // Set slightly above leg-bottom y so toes splay out past the leg silhouette.
-export const FOOT_FRONT_NEAR = { cx: 540, cy: 402 };
-export const FOOT_FRONT_FAR  = { cx: 594, cy: 392 };
-export const FOOT_BACK_NEAR  = { cx: 220, cy: 402 };
-export const FOOT_BACK_FAR   = { cx: 276, cy: 392 };
+export const FOOT_FRONT_NEAR = { cx: 545, cy: 404 };
+export const FOOT_FRONT_FAR  = { cx: 597, cy: 394 };
+export const FOOT_BACK_NEAR  = { cx: 225, cy: 404 };
+export const FOOT_BACK_FAR   = { cx: 277, cy: 394 };
 
-// Eye + face landmarks.
-export const EYE_CENTER = { cx: 690, cy: 192 };
-export const EYE_RADIUS = 13;
+// Eye + face landmarks. Eye sits in the middle-back of the head, behind the
+// supraorbital crest, with the nostril near the snout tip and the mouth
+// curving back along the lower jaw.
+export const EYE_CENTER = { cx: 700, cy: 195 };
+export const EYE_RADIUS = 14;
 
 // Ear opening (small dark recess behind the eye, a real crested gecko has
 // no external pinna so the ear is just a hole).
-export const EAR_CENTER = { cx: 642, cy: 218 };
+export const EAR_CENTER = { cx: 648, cy: 222 };
 export const EAR_RADIUS = 4;
 
-export const NOSTRIL = { cx: 744, cy: 204 };
-export const MOUTH_PATH = `M 696,232 C 716,242 736,240 748,228`;
+export const NOSTRIL = { cx: 758, cy: 198 };
+export const MOUTH_PATH = `M 700,236 C 720,246 740,244 754,230`;
 
 // A subtle throat fold (dewlap line) under the jaw. Pure cosmetic detail.
-export const THROAT_PATH = `M 624,238 C 640,246 660,250 686,252`;
+export const THROAT_PATH = `M 624,242 C 642,250 662,254 690,256`;
 
 // Branch the gecko perches on.
 export const BRANCH_PATH = `
