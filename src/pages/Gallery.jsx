@@ -34,9 +34,16 @@ export default function Gallery() {
     const [hasMore, setHasMore] = useState(true);
     const offsetRef = useRef(0);
 
-    // Build filter query for API
+    // Build filter query for API.
+    //
+    // `created_by: { $ne: null }` is the gate that keeps the community
+    // gallery to genuine user uploads. Images imported by the scraper or
+    // by URL backfills land in gecko_images with `created_by = NULL`
+    // because no real user submitted them, and they outnumber real
+    // uploads ~100x. Filtering at the DB level (instead of client-side
+    // post-fetch) prevents pagination from returning empty batches.
     const buildQuery = useCallback(() => {
-        const q = {};
+        const q = { created_by: { $ne: null } };
         if (filters.primary_morph !== 'all') q.primary_morph = filters.primary_morph;
         if (filters.base_color !== 'all') q.base_color = filters.base_color;
         return q;

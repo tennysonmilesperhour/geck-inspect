@@ -200,7 +200,13 @@ function applyFilter(query, filterObj) {
         else if (op === '$gte') query = query.gte(key, opVal);
         else if (op === '$lt') query = query.lt(key, opVal);
         else if (op === '$lte') query = query.lte(key, opVal);
-        else if (op === '$ne') query = query.neq(key, opVal);
+        else if (op === '$ne') {
+          // `{ $ne: null }` must mean "IS NOT NULL", not "neq null"
+          // (PostgREST `neq.null` excludes NULL rows because NULL != NULL
+          // is unknown). Route null specifically through `.not('is', null)`.
+          if (opVal === null) query = query.not(key, 'is', null);
+          else query = query.neq(key, opVal);
+        }
         else if (op === '$in') query = query.in(key, opVal);
       }
     } else {
