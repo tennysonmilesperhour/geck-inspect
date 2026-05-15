@@ -149,29 +149,39 @@ const AuthenticatedApp = () => {
 
   // Load page configs to enforce is_enabled at the router level.
   // Deactivated pages redirect to / instead of rendering.
+  //
+  // Refreshes both on auth change AND whenever PageManagement fires
+  // `page_configs_changed` (after the admin toggles a page), so a
+  // deactivation takes effect immediately instead of requiring a
+  // browser reload to invalidate the in-memory disabledPages set.
   useEffect(() => {
     if (!isAuthenticated) return;
-    base44.entities.PageConfig.list().then((configs) => {
-      if (!Array.isArray(configs)) return;
-      // Group by page_name so duplicate rows don't disable a page when
-      // the admin has already re-enabled one of the copies. A page is
-      // only considered disabled if NO row for that page_name is enabled.
-      const byName = new Map();
-      for (const c of configs) {
-        if (!c?.page_name) continue;
-        if (!byName.has(c.page_name)) byName.set(c.page_name, []);
-        byName.get(c.page_name).push(c);
-      }
-      const disabled = new Set();
-      for (const [name, rows] of byName.entries()) {
-        if (rows.every(r => r.is_enabled === false)) disabled.add(name);
-      }
-      // Never disable essential navigation targets
-      ['Membership', 'Settings', 'AuthPortal', 'Notifications', 'Messages'].forEach(
-        p => disabled.delete(p)
-      );
-      setDisabledPages(disabled);
-    }).catch((err) => console.error('Failed to load page configs:', err));
+    const loadDisabled = () => {
+      base44.entities.PageConfig.list().then((configs) => {
+        if (!Array.isArray(configs)) return;
+        // Group by page_name so duplicate rows don't disable a page when
+        // the admin has already re-enabled one of the copies. A page is
+        // only considered disabled if NO row for that page_name is enabled.
+        const byName = new Map();
+        for (const c of configs) {
+          if (!c?.page_name) continue;
+          if (!byName.has(c.page_name)) byName.set(c.page_name, []);
+          byName.get(c.page_name).push(c);
+        }
+        const disabled = new Set();
+        for (const [name, rows] of byName.entries()) {
+          if (rows.every(r => r.is_enabled === false)) disabled.add(name);
+        }
+        // Never disable essential navigation targets
+        ['Membership', 'Settings', 'AuthPortal', 'Notifications', 'Messages'].forEach(
+          p => disabled.delete(p)
+        );
+        setDisabledPages(disabled);
+      }).catch((err) => console.error('Failed to load page configs:', err));
+    };
+    loadDisabled();
+    window.addEventListener('page_configs_changed', loadDisabled);
+    return () => window.removeEventListener('page_configs_changed', loadDisabled);
   }, [isAuthenticated]);
 
   // PWA launch redirect: existing home-screen icons may have been saved

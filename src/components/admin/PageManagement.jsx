@@ -26,6 +26,18 @@ import {
 } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import { SECTIONS, SECTION_FOR_PAGE } from '@/lib/navItems';
+import { dataCache } from '@/lib/layoutCache';
+
+// Tell the rest of the app (sidebar in Layout.jsx, route gating in
+// App.jsx) that page_config rows have changed. Both listen on this
+// event and re-fetch, so deactivating a page takes effect immediately
+// without a full browser reload.
+function notifyPageConfigsChanged() {
+  dataCache.clear('page_configs');
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('page_configs_changed'));
+  }
+}
 
 /**
  * Page Management ,  controls the entire sidebar.
@@ -193,7 +205,8 @@ export default function PageManagement() {
 
   const flashSaved = () => {
     setJustSaved(true);
-    setTimeout(() => setJustSaved(false), 1500);
+    setTimeout(() => setJustSaved(false), 2500);
+    notifyPageConfigsChanged();
   };
 
   const handleToggleEnabled = async (page, newValue) => {
@@ -207,6 +220,10 @@ export default function PageManagement() {
         ids.map((id) => PageConfig.update(id, { is_enabled: newValue }))
       );
       flashSaved();
+      toast({
+        title: newValue ? 'Page enabled' : 'Page disabled',
+        description: `${page.display_name || page.page_name} is now ${newValue ? 'visible' : 'hidden'} in the sidebar.`,
+      });
     } catch (err) {
       console.error('Toggle failed:', err);
       toast({ title: 'Error', description: 'Could not update.', variant: 'destructive' });
@@ -455,17 +472,29 @@ export default function PageManagement() {
                 <span className="text-slate-300">Hidden</span> to disable. Toggling a page off
                 takes effect for every user ,  including admins ,  and the route redirects to home.
               </p>
+              <p className="text-xs text-slate-500 mt-1">
+                Changes save automatically. Watch for the{' '}
+                <span className="text-emerald-400 font-medium">Saved</span> badge in this header.
+              </p>
             </div>
             <div className="flex items-center gap-2">
               {(isSaving || justSaved) && (
-                <span className="flex items-center gap-1.5 text-xs text-emerald-400">
+                <span
+                  className={`flex items-center gap-1.5 text-sm font-medium px-2.5 py-1 rounded-md border ${
+                    isSaving
+                      ? 'border-slate-700 bg-slate-800 text-slate-200'
+                      : 'border-emerald-500/50 bg-emerald-500/15 text-emerald-300'
+                  }`}
+                  role="status"
+                  aria-live="polite"
+                >
                   {isSaving ? (
                     <>
-                      <Loader2 className="w-3.5 h-3.5 animate-spin" /> Saving…
+                      <Loader2 className="w-4 h-4 animate-spin" /> Saving…
                     </>
                   ) : (
                     <>
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Saved
+                      <CheckCircle2 className="w-4 h-4" /> Saved
                     </>
                   )}
                 </span>

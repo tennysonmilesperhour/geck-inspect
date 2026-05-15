@@ -442,6 +442,27 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     fetchData();
   }, [user]);
 
+  // Live sidebar updates when an admin toggles a page in PageManagement.
+  // PageManagement clears `page_configs` in dataCache and fires
+  // `page_configs_changed` after every successful write; we re-fetch
+  // the list here so the sidebar reflects the new state without a
+  // browser reload.
+  useEffect(() => {
+    const refresh = async () => {
+      try {
+        const configs = await retryApiCall(() => base44.entities.PageConfig.list());
+        if (Array.isArray(configs)) {
+          dataCache.set('page_configs', configs);
+          setPageConfigs(configs);
+        }
+      } catch (error) {
+        console.log('Could not refresh page configs after change:', error);
+      }
+    };
+    window.addEventListener('page_configs_changed', refresh);
+    return () => window.removeEventListener('page_configs_changed', refresh);
+  }, []);
+
 
   const handleLogin = () => {
     window.location.href = '/AuthPortal';
