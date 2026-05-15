@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-05-15T18:21:03.358Z",
+  "lastUpdated": "2026-05-15T20:13:20.171Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -85,7 +85,7 @@
       "title": "Lilly White Identification: How Top Breeders Spot Carriers Before Pairing",
       "slug": "lilly-white-identification-breeding",
       "category": "identification",
-      "status": "new",
+      "status": "published",
       "score": {
         "demand": 6,
         "originality": 8,
@@ -94,8 +94,8 @@
         "total": 18
       },
       "createdAt": "2026-05-01T10:54:37.003Z",
-      "draftedAt": null,
-      "publishedAt": null,
+      "draftedAt": "2026-05-15T20:13:20.036Z",
+      "publishedAt": "2026-05-15T20:13:20.171Z",
       "evidence": [
         {
           "source": "youtube",
