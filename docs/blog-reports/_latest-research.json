@@ -1,14 +1,14 @@
 {
-  "ranAt": "2026-05-13T08:49:42.643Z",
+  "ranAt": "2026-05-15T08:53:17.020Z",
   "signals": {
     "googleAc": 95,
     "bluesky": 0,
     "googleTrends": 0,
-    "youtube": 64,
+    "youtube": 62,
     "breederBlogs": 1,
     "errors": [
-      "\"crested gecko\": 403 Forbidden",
-      "\"correlophus ciliatus\": 403 Forbidden",
+      "\"crested gecko\": fetch failed",
+      "\"correlophus ciliatus\": fetch failed",
       "\"cappuccino gecko\": 403 Forbidden",
       "\"lilly white gecko\": 403 Forbidden",
       "\"axanthic gecko\": 403 Forbidden",
@@ -22,7 +22,7 @@
       "AC Reptiles: 404 Not Found"
     ]
   },
-  "costUsd": 0.016327,
+  "costUsd": 0.015578999999999999,
   "addedSlugs": [],
-  "rationale": "The signal set is heavily dominated by Google autocomplete and YouTube, with strong volume around three specific morphs: cappuccino (8 autocomplete variants, 13 videos), lilly white (9 autocomplete variants, 3 recent videos), and axanthic (8 autocomplete variants). No forum heat, Bluesky activity, or Google Trends data emerged. The autocomplete and YouTube signals cluster around identification, breeding logistics, and genetics—not general husbandry. However, three critical facts constrain my recommendations: (1) cappuccino-related topics are already heavily published (cappuccino-crested-gecko-genetics, super-cappuccino-viability-debate, super-cappuccino-breeding-risks, cappuccino-pairing-risks-runts); (2) lilly-white-identification-breeding is already queued; (3) axanthic-breeding-strategy is already queued. YouTube videos like \"Don't buy super cappuccino crested gecko it's a scam and waste of money\" and \"Why So Much Hate for Cappuccino Geckos?\" hint at real breeder sentiment, but we lack forum threads or primary sources to ground a fresh angle. The only unblocked signal is soft-scale (1 autocomplete mention, 1 YouTube sidebar), but it lacks sufficient demand. With no unique demand signal, no forum disagreement, and three already-published/queued morphs dominating the feed, I am not recommending any topics this week."
+  "rationale": "The signals show heavy search demand around morph identification, breeding setup, and specific morphs (Cappuccino, Lilly White, Axanthic), but almost entirely driven by Google autocomplete and YouTube—most of which covers general care, identification, and sales intent. No forum heat, no Bluesky engagement, no rising trends. The breeder blog is promotional only. This is a low-signal environment: the audience is searching for basic info and product deals, not seeking expert breeding strategy or genetics insight. I'm rejecting all topics because the signals lack the specificity (forum confusion, disagreement, or a concrete misconception) needed to justify a breeding-focused blog post. The queued slugs already cover Lilly White ID and Axanthic breeding; YouTube content dominates the morph-education space; and general care is outside our remit."
 }
