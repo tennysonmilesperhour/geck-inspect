@@ -19,6 +19,7 @@ import { fileURLToPath } from 'node:url';
 import { MODELS, callClaude, callClaudeJson, extractText } from './lib/anthropic.mjs';
 import { BudgetExceededError, currentWeekSpend } from './lib/budget.mjs';
 import { loadFactCheckCorpus, loadMorphSlugs } from './lib/fact-check.mjs';
+import { sanitizeDraft, findResidualDashes } from './lib/sanitize.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -138,6 +139,12 @@ function buildWriterSystem({ styleGuide, voiceExamples, factCheck, knownMorphs }
         '',
         'You write opinionated, specific, well-researched posts. Not SEO fluff.',
         '',
+        'HARD PUNCTUATION RULE: do not use em dashes (—) or en dashes (–) anywhere.',
+        'Do not substitute "--" for them either. When a sentence wants to pause, use a',
+        'comma, a period, parentheses, or a colon. This rule applies to titles,',
+        'descriptions, TLDR bullets, body markdown, FAQ entries, and selfCritique.',
+        'Hyphens in compound words (crested-gecko-first, well-known) are fine.',
+        '',
         'Output format: call the write_draft tool with the full structured draft.',
       ].join('\n'),
     },
@@ -221,6 +228,17 @@ async function main() {
     });
     draft = result.data;
     console.log(`[draft] Writer cost: $${result.cost.totalUsd.toFixed(4)} (cache read ${result.cost.cacheReadTokens} / write ${result.cost.cacheWriteTokens} tokens)`);
+
+    // Hard rule from CLAUDE.md: no em dashes anywhere. Strip and verify.
+    // We do this BEFORE the critique pass so the critique sees the final
+    // text the reader will see.
+    draft = sanitizeDraft(draft);
+    const residuals = findResidualDashes(draft);
+    if (residuals.length > 0) {
+      console.error('[draft] Sanitizer left residual dashes; failing run:', residuals);
+      process.exit(1);
+    }
+    console.log('[draft] Dash sanitization OK (zero residuals).');
   } catch (err) {
     if (err instanceof BudgetExceededError) {
       console.log(`[draft] ${err.message}`);

@@ -29,6 +29,7 @@ import { collectBlueskySignals } from './lib/sources/bluesky.mjs';
 import { collectGoogleTrendsSignals } from './lib/sources/google-trends.mjs';
 import { collectYouTubeSignals } from './lib/sources/youtube.mjs';
 import { collectBreederBlogSignals } from './lib/sources/breeder-blogs.mjs';
+import { collectRedditSignals } from './lib/sources/reddit.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -169,14 +170,15 @@ async function main() {
 
   // 1. Gather signals (all in parallel; they're independent).
   console.log('[research] Collecting signals...');
-  const [googleAc, bluesky, googleTrends, youtube, breederBlogs] = await Promise.all([
+  const [googleAc, bluesky, googleTrends, youtube, breederBlogs, reddit] = await Promise.all([
     collectGoogleAutocomplete().catch((e) => ({ items: [], error: e.message })),
     collectBlueskySignals().catch((e) => ({ items: [], errors: [e.message] })),
     collectGoogleTrendsSignals().catch((e) => ({ items: [], errors: [e.message] })),
     collectYouTubeSignals().catch((e) => ({ items: [], errors: [e.message] })),
     collectBreederBlogSignals().catch((e) => ({ items: [], errors: [e.message] })),
+    collectRedditSignals().catch((e) => ({ items: [], errors: [e.message] })),
   ]);
-  console.log(`[research] Signals: google-ac=${googleAc.items.length}, bluesky=${bluesky.items.length}, google-trends=${googleTrends.items.length}, youtube=${youtube.items.length}, breeder-blogs=${breederBlogs.items.length}`);
+  console.log(`[research] Signals: google-ac=${googleAc.items.length}, bluesky=${bluesky.items.length}, google-trends=${googleTrends.items.length}, youtube=${youtube.items.length}, breeder-blogs=${breederBlogs.items.length}, reddit=${reddit.items.length}`);
 
   // 2. Prepare scorer input.
   const queue = readQueue();
@@ -200,8 +202,11 @@ async function main() {
     `YouTube (${youtube.items.length} recent videos):`,
     JSON.stringify(youtube.items.slice(0, 30), null, 2),
     '',
-    `Breeder blogs (${breederBlogs.items.length} recent posts ,  AC Reptiles, LM Reptiles, Pangea):`,
+    `Breeder blogs (${breederBlogs.items.length} recent posts, Pangea Reptile):`,
     JSON.stringify(breederBlogs.items.slice(0, 20), null, 2),
+    '',
+    `Reddit (${reddit.items.length} posts from r/crestedgecko, r/morphmarket, ranked by engagement):`,
+    JSON.stringify(reddit.items.slice(0, 40), null, 2),
   ].join('\n');
 
   // 3. Call the scorer.
@@ -280,12 +285,14 @@ async function main() {
       googleTrends: googleTrends.items.length,
       youtube: youtube.items.length,
       breederBlogs: breederBlogs.items.length,
+      reddit: reddit.items.length,
       errors: [
         ...(googleAc.error ? [`google-ac: ${googleAc.error}`] : []),
         ...(bluesky.errors || []),
         ...(googleTrends.errors || []),
         ...(youtube.errors || []),
         ...(breederBlogs.errors || []),
+        ...(reddit.errors || []),
       ],
     },
     costUsd: result.cost.totalUsd,

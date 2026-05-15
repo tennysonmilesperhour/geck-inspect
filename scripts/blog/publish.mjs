@@ -29,6 +29,8 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import { sanitizeDraft, findResidualDashes } from './lib/sanitize.mjs';
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const QUEUE_PATH = path.join(REPO_ROOT, 'docs', 'blog-queue.json');
@@ -184,22 +186,26 @@ function appendPostToBlogPosts(entry) {
     throw new Error(`Cannot find closing "];" in ${BLOG_POSTS_PATH}; refusing to append.`);
   }
 
-  // Walk backwards from closeIdx to find the last `}` ,  that's the last entry's end.
-  // Track whether we skipped a trailing comma during the walk; we can't infer
-  // it later from a regex on the surrounding text because inner arrays inside
-  // the entry also contain `,]` sequences (externalCitations etc.) that would
-  // give a false positive.
+  // Walk backwards from `];` to find the end of the last entry. We want
+  // `before` to end at the closing `}` PLUS its trailing comma (whether one
+  // existed already or we synthesize it). That way the new entry can be
+  // appended directly after a comma, which is what the array shape demands.
+  //
+  // Earlier versions of this function tracked hasTrailingComma but moved `j`
+  // past the comma, so the comma ended up inside `after` instead of `before`,
+  // and the rewritten file was `}\n  {new},\n];` (invalid JS). The new shape
+  // is unconditional: find `}`, then always emit a comma before the new entry.
   let j = closeIdx - 1;
   while (j > 0 && /\s/.test(src[j])) j--;
-  let hasTrailingComma = false;
-  if (src[j] === ',') { hasTrailingComma = true; j--; }
+  if (src[j] === ',') j--;
   while (j > 0 && /\s/.test(src[j])) j--;
   if (src[j] !== '}') {
     throw new Error(`Unexpected char before "]" at index ${j}: ${JSON.stringify(src[j])}`);
   }
-  let before = src.slice(0, j + 1);
-  const after = src.slice(j + 1);
-  if (!hasTrailingComma) before += ',';
+  // before ends at the previous entry's `}`. Always append a comma; if one
+  // was already there it lived in the slice we discarded.
+  const before = src.slice(0, j + 1) + ',';
+  const after = src.slice(j + 1).replace(/^\s*,/, '');
 
   const emitted = emitObjectLiteral(entry, 2);
   const patched = before + '\n  ' + emitted + after;
@@ -218,9 +224,14 @@ async function main() {
     process.exit(2);
   }
 
-  const metadata = JSON.parse(fs.readFileSync(path.join(draftDir, 'metadata.json'), 'utf8'));
-  const markdown = fs.readFileSync(path.join(draftDir, 'post.md'), 'utf8');
+  const rawMetadata = JSON.parse(fs.readFileSync(path.join(draftDir, 'metadata.json'), 'utf8'));
+  const rawMarkdown = fs.readFileSync(path.join(draftDir, 'post.md'), 'utf8');
 
+  // Defense in depth: even though draft.mjs already sanitized, sanitize again
+  // here so any later code path that bypasses draft.mjs cannot introduce
+  // em dashes into the published file.
+  const metadata = sanitizeDraft(rawMetadata);
+  const markdown = sanitizeDraft(rawMarkdown);
   const body = parseMarkdownIntoBlocks(markdown);
   const tldr = metadata.tldr || [];
 
@@ -240,6 +251,15 @@ async function main() {
     internalLinks: metadata.internalLinks,
     externalCitations: metadata.externalCitations,
   };
+
+  // Last-mile residual check on the assembled entry. If somehow a forbidden
+  // dash survived both passes, refuse to publish and fail loudly so the
+  // notify-failure email fires and we can fix the sanitizer.
+  const residuals = findResidualDashes(entry);
+  if (residuals.length > 0) {
+    console.error('[publish] Refusing to write entry with residual dashes:', residuals);
+    process.exit(1);
+  }
 
   appendPostToBlogPosts(entry);
 

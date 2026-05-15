@@ -31,15 +31,26 @@ const QUERIES = [
   'crested gecko morph',
 ];
 
-const ENDPOINT = 'https://public.api.bsky.app/xrpc/app.bsky.feed.searchPosts';
+// Bluesky deprecated public.api.bsky.app for unauthenticated searchPosts in
+// April 2026 (returns 403). The non-prefixed api.bsky.app host still serves
+// searchPosts without auth, just throttled to ~1 request/sec per IP. If that
+// host starts rejecting us too, the long-term answer is an APP_PASSWORD-backed
+// session, but we'd rather fail-soft and let other sources carry the run.
+const ENDPOINT = 'https://api.bsky.app/xrpc/app.bsky.feed.searchPosts';
 
-async function search(q, limit = 25) {
+async function search(q, limit = 25, attempt = 1) {
   const url = `${ENDPOINT}?q=${encodeURIComponent(q)}&limit=${limit}&sort=latest`;
   try {
     const res = await fetch(url, {
       headers: { 'User-Agent': UA, 'Accept': 'application/json' },
       signal: AbortSignal.timeout(12_000),
     });
+    if (res.status === 429 && attempt < 3) {
+      // Bluesky's IP-level throttle answers with 429 + Retry-After (seconds).
+      const wait = Number(res.headers.get('retry-after')) * 1000 || 2000 * attempt;
+      await new Promise((r) => setTimeout(r, wait));
+      return search(q, limit, attempt + 1);
+    }
     if (!res.ok) return { items: [], error: `${res.status} ${res.statusText}` };
     const json = await res.json();
     const posts = Array.isArray(json?.posts) ? json.posts : [];

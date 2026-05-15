@@ -18,9 +18,11 @@
 
 const UA = 'Mozilla/5.0 (compatible; geckinspect-blog-pipeline/1.0; +https://geckinspect.com)';
 
+// Feeds we actually trust to stay online. LM Reptiles' atom URL started
+// 301-ing to a 404 in 2026 (Shopify storefront moved) and acreptiles.com
+// dropped its blog entirely. If a new feed appears, append it here; the
+// fetcher tolerates one source going dark without breaking the run.
 const FEEDS = [
-  { name: 'Lil Monsters Reptiles',   url: 'https://www.lmreptiles.com/blogs/news.atom' },
-  { name: 'AC Reptiles',             url: 'https://www.acreptiles.com/blogs/news.atom' },
   { name: 'Pangea Reptile blog',     url: 'https://www.pangeareptile.com/blogs/news.atom' },
 ];
 
