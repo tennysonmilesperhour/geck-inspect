@@ -1,37 +1,39 @@
-// Supabase Edge Function — recognize-gecko-morph (v7: prompt caching)
+// Supabase Edge Function — recognize-gecko-morph (v8: bank off by data)
 //
-// Two-pass few-shot bank, all images on geck-inspect Supabase storage,
-// plus Anthropic prompt caching on the bank + instructions so repeat
-// calls within the 5-minute cache window cost ~10% of full price.
+// The bank loader + Anthropic prompt-caching plumbing are fully wired up
+// (see v6/v7 for design) but the bank is DISABLED by default because
+// the eval data says it HURTS primary_morph accuracy.
 //
-//   1. hero_anchor rows WHERE anchor_category = 'primary_morph'
-//      — competition / show-winner photos for the primary_morph axis.
-//      Non-primary_morph hero anchors (genetic_trait, base_color)
-//      exist in gecko_images for the Morph Guide UI but are excluded
-//      from the bank so they don't bias primary_morph predictions.
+// Eval evidence (post credit top-up, post prompt-caching):
 //
-//   2. manual_touch rows — community-verified examples that fill
-//      remaining slots for morphs the hero pool doesn't cover.
-//      Filtered to URLs hosted on this Supabase project so prefetch
-//      stays fast. auto_bulk_approved rows are excluded.
+//   #9  v5 baseline (no bank)          100/100   30.0% top1
+//   #12 v7 cached bank (n=50)           50/50    22.0% top1  ← REGRESSION
 //
-// Prompt-cache layout per request:
-//   [bank images] [bank-intro + instructions text WITH cache_control]
-//   [user images] [optional multi-photo note]
+// What's happening: the bank covers only 5 primary_morphs (harlequin,
+// pinstripe, dalmatian, phantom_pinstripe, tricolor). The model
+// anchors hard on those and over-predicts harlequin while never
+// predicting morphs that aren't in the bank (extreme_harlequin,
+// pinstripe-fallback, etc.). Net regression of ~8 percentage points.
 //
-// Cache hits: cached portion costs 10% of input rate (~5x cheaper per
-// call after the first). Cache misses (first call after cold start or
-// after 5 min idle): cached portion costs 125% of input rate. Stable
-// across module-cached bank composition.
+// Side note: base_color accuracy went UP (+19pp) because the bank
+// text labels include base colors. Not enough to justify the
+// primary_morph hit, since primary_morph is the headline metric.
 //
-// History of eval runs (eval_set_size / top1_accuracy):
-//   #1 baseline (no bank)        100/100  27.0%
-//   #5 v2 manual-touch 12-image  100/100  34.0%  (best, mixed-CDN)
-//   #6 v2.1 6-image lean         100/100  14.0%
-//   #7 v3 hero-anchor 5-image     87/100  23.1%
-//   #8 v4 hybrid 8-image (slow)   18/100   5.6%  (credit balance, not CDN)
-//   #9 v5 disabled               100/100  30.0%  (production safety net)
-//   #10 v6 self-hosted bank        6/100   0.0%  (credit balance again)
+// Re-enable when we have ≥12 primary_morph hero anchors covering
+// extreme_harlequin, super_dalmatian, partial_pinstripe, brindle,
+// tiger, flame at minimum. Until then, defaults stay at 0 and the
+// function runs at baseline 30% / ~$0.01 per user call.
+//
+// Eval history (eval_set_size / top1_accuracy):
+//   #1  baseline (no bank)         100/100  27.0%
+//   #5  v2 manual-touch 12-image   100/100  34.0%  (best, mixed-CDN)
+//   #6  v2.1 6-image lean          100/100  14.0%
+//   #7  v3 hero-anchor 5-image      87/100  23.1%
+//   #8  v4 hybrid 8-image            18/100   5.6%  (credit balance, not CDN)
+//   #9  v5 disabled                100/100  30.0%  ← reference baseline
+//   #10 v6 self-hosted bank          6/100   0.0%  (credit balance)
+//   #11 v7 smoke (cached)            10/10  20.0%  (n too small)
+//   #12 v7 cached bank n=50          50/50  22.0%  (decision point)
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -45,14 +47,15 @@ const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
 const CLAUDE_MODEL = Deno.env.get("CLAUDE_MODEL") || "claude-sonnet-4-6";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-// Bank is ENABLED by default now that anchor images are mirrored to
-// geck-inspect Supabase storage and the manual_touch filler is filtered
-// to URLs on the same project. Set the env vars to 0 to disable for an
-// emergency revert without a code change.
+// Bank is DISABLED by default because the v7 eval showed the
+// 5-primary-morph bank regresses top1 accuracy by ~8pp vs the no-bank
+// baseline (see header eval history). The plumbing stays in place;
+// flip these env vars to 1/10 when ≥12 primary_morph hero anchors are
+// available across the morphs the model currently misses.
 const FEW_SHOT_PER_MORPH = Math.min(2, Math.max(0,
-  Number(Deno.env.get("FEW_SHOT_PER_MORPH") ?? "1") || 0));
+  Number(Deno.env.get("FEW_SHOT_PER_MORPH") ?? "0") || 0));
 const MAX_BANK_TOTAL = Math.min(12, Math.max(0,
-  Number(Deno.env.get("FEW_SHOT_MAX_TOTAL") ?? "10") || 0));
+  Number(Deno.env.get("FEW_SHOT_MAX_TOTAL") ?? "0") || 0));
 // Manual-touch fillers are restricted to URLs hosted on this Supabase
 // project so Anthropic's prefetch is fast. Override via env if a faster
 // CDN is observed and we want to broaden.
@@ -155,7 +158,7 @@ async function loadFewShotBank(): Promise<FewShotExample[]> {
       const heroCount = combined.filter((e) => e.source === "hero_anchor").length;
       const fillerCount = combined.length - heroCount;
       const distinctMorphs = new Set(combined.map((e) => e.primary_morph)).size;
-      console.log(`few-shot bank v7: ${combined.length} examples (${heroCount} hero + ${fillerCount} manual) across ${distinctMorphs} morphs`);
+      console.log(`few-shot bank v8: ${combined.length} examples (${heroCount} hero + ${fillerCount} manual) across ${distinctMorphs} morphs`);
       return combined;
     })();
   }
