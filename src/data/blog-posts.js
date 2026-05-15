@@ -1866,7 +1866,7 @@ export const BLOG_POSTS = [
         label: "TikisGeckos ,  WARNING, NEVER BREED THESE CRESTED GECKOS TOGETHER (YouTube)",
       },
     ],
-  }
+  },
   {
     slug: "soft-scale-super-soft-scale-genetics",
     title: "Soft Scale Genetics: Why Super Soft Scales Are So Rare",
