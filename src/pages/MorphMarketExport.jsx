@@ -317,49 +317,60 @@ function BatchTable({ geckos, onRemove }) {
     );
   }
   return (
-    <div className="overflow-x-auto rounded-xl border border-slate-800 bg-slate-950/40">
-      <table className="w-full text-xs">
-        <thead className="bg-slate-900 text-slate-400 sticky top-0">
-          <tr>
-            <th className="text-left px-2 py-2 font-medium">#</th>
-            {MM_HEADERS.map((h) => (
-              <th key={h} className="text-left px-2 py-2 font-medium whitespace-nowrap">{h}</th>
-            ))}
-            <th className="text-right px-2 py-2 font-medium">Remove</th>
-          </tr>
-        </thead>
-        <tbody>
-          {geckos.map((g, i) => {
-            const row = buildMorphMarketRow(g);
-            const missing = missingFields(g);
-            return (
-              <tr
-                key={g.id}
-                className={`border-t border-slate-800 hover:bg-slate-900/60 ${
-                  missing.length > 0 ? 'bg-amber-500/5' : ''
-                }`}
-              >
-                <td className="px-2 py-2 text-slate-500">{i + 1}</td>
+    <div className="space-y-1">
+      <p className="text-[11px] text-slate-500 flex items-center gap-1">
+        <ArrowRight className="w-3 h-3" /> Scroll horizontally to see all {MM_HEADERS.length} MorphMarket columns.
+      </p>
+      <div className="relative rounded-xl border border-slate-800 bg-slate-950/40">
+        <div className="overflow-x-scroll rounded-xl">
+          <table className="w-full text-xs">
+            <thead className="bg-slate-900 text-slate-400 sticky top-0">
+              <tr>
+                <th className="text-left px-2 py-2 font-medium">#</th>
                 {MM_HEADERS.map((h) => (
-                  <td key={h} className="px-2 py-2 text-slate-200 align-top max-w-[18rem]">
-                    <div className="truncate" title={String(row[h] ?? '')}>{String(row[h] ?? '')}</div>
-                  </td>
+                  <th key={h} className="text-left px-2 py-2 font-medium whitespace-nowrap">{h}</th>
                 ))}
-                <td className="px-2 py-2 text-right">
-                  <button
-                    type="button"
-                    onClick={() => onRemove(g.id)}
-                    className="text-slate-500 hover:text-rose-400 inline-flex items-center"
-                    title="Remove from batch"
-                  >
-                    <X className="w-3.5 h-3.5" />
-                  </button>
-                </td>
+                <th className="text-right px-2 py-2 font-medium">Remove</th>
               </tr>
-            );
-          })}
-        </tbody>
-      </table>
+            </thead>
+            <tbody>
+              {geckos.map((g, i) => {
+                const row = buildMorphMarketRow(g);
+                const missing = missingFields(g);
+                return (
+                  <tr
+                    key={g.id}
+                    className={`border-t border-slate-800 hover:bg-slate-900/60 ${
+                      missing.length > 0 ? 'bg-amber-500/5' : ''
+                    }`}
+                  >
+                    <td className="px-2 py-2 text-slate-500">{i + 1}</td>
+                    {MM_HEADERS.map((h) => (
+                      <td key={h} className="px-2 py-2 text-slate-200 align-top max-w-[12rem]">
+                        <div className="truncate" title={String(row[h] ?? '')}>{String(row[h] ?? '')}</div>
+                      </td>
+                    ))}
+                    <td className="px-2 py-2 text-right">
+                      <button
+                        type="button"
+                        onClick={() => onRemove(g.id)}
+                        className="text-slate-500 hover:text-rose-400 inline-flex items-center"
+                        title="Remove from batch"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                      </button>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
+        <div
+          aria-hidden="true"
+          className="pointer-events-none absolute top-0 right-0 h-full w-8 rounded-r-xl bg-gradient-to-l from-slate-950/80 to-transparent"
+        />
+      </div>
     </div>
   );
 }
@@ -574,7 +585,7 @@ export default function MorphMarketExport() {
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6">
+    <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6 pb-28">
       <div className="flex items-start justify-between gap-4 flex-wrap">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-white">MorphMarket Bulk Export</h1>
@@ -728,6 +739,28 @@ export default function MorphMarketExport() {
             <BatchTable geckos={batchGeckos} onRemove={removeFromBatch} />
 
             {batchGeckos.length > 0 && (
+              <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleCopy}
+                  className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-9"
+                >
+                  {copied ? <Check className="w-3.5 h-3.5 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
+                  {copied ? 'Copied' : 'Copy CSV'}
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleDownload}
+                  className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs h-9"
+                >
+                  <Download className="w-3.5 h-3.5 mr-1" />
+                  Download CSV ({batchGeckos.length})
+                </Button>
+              </div>
+            )}
+
+            {batchGeckos.length > 0 && (
               <details className="rounded-xl border border-slate-800 bg-slate-950/40">
                 <summary className="cursor-pointer px-3 py-2 text-xs text-slate-400 hover:text-slate-200">
                   Show summary by maturity
@@ -748,6 +781,42 @@ export default function MorphMarketExport() {
           </section>
         </div>
       </div>
+
+      {batchGeckos.length > 0 && (
+        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-800 bg-slate-950/95 backdrop-blur-sm">
+          <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+            <div className="text-sm text-slate-200">
+              <span className="font-semibold">{batchGeckos.length}</span>
+              <span className="text-slate-400"> listing{batchGeckos.length === 1 ? '' : 's'} staged for MorphMarket</span>
+              {batchMissingCount > 0 && (
+                <span className="ml-3 text-amber-300 inline-flex items-center gap-1 text-xs">
+                  <AlertTriangle className="w-3.5 h-3.5" />
+                  {batchMissingCount} missing required fields
+                </span>
+              )}
+            </div>
+            <div className="flex items-center gap-2 flex-wrap">
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={handleCopy}
+                className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-9"
+              >
+                {copied ? <Check className="w-3.5 h-3.5 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
+                {copied ? 'Copied' : 'Copy CSV'}
+              </Button>
+              <Button
+                size="sm"
+                onClick={handleDownload}
+                className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs h-9"
+              >
+                <Download className="w-3.5 h-3.5 mr-1" />
+                Download CSV ({batchGeckos.length})
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
