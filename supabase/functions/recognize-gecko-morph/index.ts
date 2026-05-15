@@ -1,28 +1,18 @@
-// Supabase Edge Function — recognize-gecko-morph (v2 few-shot)
+// Supabase Edge Function — recognize-gecko-morph (v3 hero-anchor few-shot)
 //
-// Vision-only morph classifier with a structured tool-use output that
-// clamps to taxonomy.ts. At cold start we load up to FEW_SHOT_PER_MORPH
-// expert-touched verified examples per primary_morph from gecko_images,
-// filtered to small JPEGs/webps and tagged as manually-reviewed (not
-// auto_bulk_approved) to avoid the failure modes that took down v19:
+// Loads few-shot bank from gecko_images rows tagged
+// training_meta.verification_tier='hero_anchor' — these are competition /
+// show-winner photos hand-curated as canonical examples for each morph.
+// Higher signal than scraper-mass-approved seller labels (which are
+// excluded). When the hero anchor pool is empty, the function degrades
+// gracefully to no-bank (~27% baseline accuracy).
 //
-//   - v19 included base44.app PNG screenshots that caused Anthropic's
-//     image-prefetch to 500 on ~84% of calls. v2 enforces a URL allow-list.
-//   - v19 didn't distinguish manually-verified rows from bulk-approved
-//     seller labels. v2 excludes verification_tier='auto_bulk_approved'
-//     so the bank only contains expert-reviewed anchors.
-//
-// Bank is module-cached for the warm instance lifetime.
-//
-// Secrets (required):
-//   ANTHROPIC_API_KEY     Anthropic API key (starts with sk-ant-...)
-//
-// Optional:
-//   CLAUDE_MODEL          Model id (default: claude-sonnet-4-6)
-//   FEW_SHOT_PER_MORPH    Examples to load per primary_morph (default 2,
-//                         max 3). Set to 0 to disable few-shot entirely.
-//
-// Deploy:   supabase functions deploy recognize-gecko-morph --no-verify-jwt
+// v1 (#55) shipped a URL-based bank from manual-touched rows; throttled
+// at Anthropic prefetch with base44 PNG screenshots in the bank. v2.1
+// shrunk to 6 images and dropped accuracy below baseline because too few
+// morphs were anchored. v3 sources from hero_anchor specifically so each
+// anchor is intentional, and caps the bank at 8 to stay under the
+// prefetch budget.
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -36,9 +26,10 @@ const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
 const CLAUDE_MODEL = Deno.env.get("CLAUDE_MODEL") || "claude-sonnet-4-6";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-const FEW_SHOT_PER_MORPH = Math.min(3, Math.max(0,
-  Number(Deno.env.get("FEW_SHOT_PER_MORPH") ?? "2") || 0));
-const MAX_BANK_TOTAL = 12;
+const FEW_SHOT_PER_MORPH = Math.min(2, Math.max(0,
+  Number(Deno.env.get("FEW_SHOT_PER_MORPH") ?? "1") || 0));
+const MAX_BANK_TOTAL = Math.min(12, Math.max(0,
+  Number(Deno.env.get("FEW_SHOT_MAX_TOTAL") ?? "8") || 0));
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -60,28 +51,11 @@ type FewShotExample = {
 
 let fewShotCache: Promise<FewShotExample[]> | null = null;
 
-function urlLooksSafe(url: string): boolean {
-  // Must be a small Supabase-hosted JPEG/webp OR a MorphMarket CDN url.
-  // Excludes the base44.app PNG screenshots that caused v19's 84%
-  // Anthropic prefetch failure rate.
-  if (!url) return false;
-  if (url.includes("/base44.app/")) return false;
-  if (url.endsWith(".png")) return false;
-  const isSupabaseJpegWebp =
-    url.startsWith("https://dhotmtgryuovkmsncdby.supabase.co/storage/") &&
-    (url.endsWith(".jpg") || url.endsWith(".jpeg") || url.endsWith(".webp"));
-  const isMorphMarketCdn = url.includes("cloudfront.net/webp/");
-  return isSupabaseJpegWebp || isMorphMarketCdn;
-}
-
 async function loadFewShotBank(): Promise<FewShotExample[]> {
-  if (FEW_SHOT_PER_MORPH === 0) return [];
+  if (FEW_SHOT_PER_MORPH === 0 || MAX_BANK_TOTAL === 0) return [];
   if (!fewShotCache) {
     fewShotCache = (async () => {
       const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
-      // Pull only manual-touched verified rows. The auto_bulk_approved
-      // tier carries seller labels that we don't want anchoring the
-      // model's visual definitions.
       const { data, error } = await admin
         .from("gecko_images")
         .select("image_url, primary_morph, base_color, training_meta, created_date")
@@ -89,23 +63,20 @@ async function loadFewShotBank(): Promise<FewShotExample[]> {
         .not("primary_morph", "is", null)
         .not("image_url", "is", null)
         .in("primary_morph", PRIMARY_MORPH_IDS)
+        .filter("training_meta->>verification_tier", "eq", "hero_anchor")
         .order("created_date", { ascending: false })
-        .limit(1000);
+        .limit(500);
       if (error) {
         console.error("few-shot bank load failed:", error.message);
         return [];
       }
       const buckets = new Map<string, FewShotExample[]>();
       for (const r of data ?? []) {
-        const url = r.image_url as string;
-        if (!urlLooksSafe(url)) continue;
-        const tier = (r.training_meta as Record<string, unknown> | null)?.verification_tier;
-        if (tier === "auto_bulk_approved") continue;
         const m = r.primary_morph as string;
         const arr = buckets.get(m) ?? [];
         if (arr.length < FEW_SHOT_PER_MORPH) {
           arr.push({
-            image_url: url,
+            image_url: r.image_url as string,
             primary_morph: m,
             base_color: (r.base_color as string | null) ?? null,
           });
@@ -117,7 +88,7 @@ async function loadFewShotBank(): Promise<FewShotExample[]> {
         flat.push(...(buckets.get(morph) ?? []));
       }
       const trimmed = flat.slice(0, MAX_BANK_TOTAL);
-      console.log(`few-shot bank: ${trimmed.length} examples across ${new Set(trimmed.map(t => t.primary_morph)).size} morphs (filtered from ${flat.length} candidates)`);
+      console.log(`few-shot bank (hero_anchor): ${trimmed.length} examples across ${new Set(trimmed.map(t => t.primary_morph)).size} morphs`);
       return trimmed;
     })();
   }
@@ -126,7 +97,7 @@ async function loadFewShotBank(): Promise<FewShotExample[]> {
 
 function buildInstructions(fewShotBank: FewShotExample[]) {
   const bankIntro = fewShotBank.length === 0 ? "" :
-    `\n\nFew-shot reference: the first ${fewShotBank.length} attached image(s) are EXPERT-VERIFIED examples from the geck-inspect training corpus, each labeled with its canonical primary_morph. Use them to anchor your visual definitions BEFORE evaluating the user's photo (the final image). The mapping, in order:\n${fewShotBank.map((ex, i) => `  ${i + 1}. ${ex.primary_morph}${ex.base_color ? ` (base ${ex.base_color})` : ""}`).join("\n")}`;
+    `\n\nFew-shot reference: the first ${fewShotBank.length} attached image(s) are COMPETITION-WINNING examples from the geck-inspect hero-anchor corpus, each labeled with its canonical primary_morph. These are the gold-standard visual definitions — use them to anchor your judgment BEFORE evaluating the user's photo (the final image). The mapping, in order:\n${fewShotBank.map((ex, i) => `  ${i + 1}. ${ex.primary_morph}${ex.base_color ? ` (base ${ex.base_color})` : ""}`).join("\n")}`;
 
   return `You are a world-expert crested gecko (Correlophus ciliatus) morph identifier. Analyze
 the user's photograph(s) and call the \`submit_morph_analysis\` tool with your best
@@ -190,9 +161,8 @@ async function callClaude(imageUrls: string[]) {
   const bankBlocks = bank.map((ex) => ({ type: "image", source: { type: "url", url: ex.image_url } }));
   const userBlocks = imageUrls.map((url) => ({ type: "image", source: { type: "url", url } }));
   const multiNote = imageUrls.length > 1
-    ? `\n\nNOTE: the LAST ${imageUrls.length} photos are of the SAME user-submitted animal (different angles / fired states / lighting). Synthesize across them.`
+    ? `\n\nNOTE: the LAST ${imageUrls.length} photos are of the SAME user-submitted animal. Synthesize across them.`
     : "";
-
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
