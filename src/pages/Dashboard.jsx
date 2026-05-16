@@ -3,8 +3,9 @@ import { Link } from 'react-router-dom';
 import Seo from '@/components/seo/Seo';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import usePageSettings from '@/hooks/usePageSettings';
-import { User, Gecko, GeckoImage, ForumPost, GeckoOfTheDay as GotdEntity } from '@/entities/all';
+import { User, GeckoImage, ForumPost, GeckoOfTheDay as GotdEntity } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
+import { supabase } from '@/lib/supabaseClient';
 import {
     Users,
     GitBranch,
@@ -122,10 +123,15 @@ export default function Dashboard() {
             try {
                 const today = format(new Date(), 'yyyy-MM-dd');
                 // Batched fetch ,  dramatically slimmer than before.
-                const [currentUser, usersData, geckosPreview, posts, gotd, recentImagesData] = await Promise.all([
+                // Community-wide counts (keepers, geckos) come from the
+                // landing_stats RPC so the dashboard cards match the
+                // numbers shown on the public landing page. The other
+                // values are intentionally samples (labeled "Recent
+                // Uploads" / "Forum Buzz" / recent discussions).
+                const [currentUser, usersData, communityStats, posts, gotd, recentImagesData] = await Promise.all([
                     User.me().catch(() => null),
                     User.list('-created_date', 30),
-                    Gecko.list('-created_date', 20), // only used for community count display
+                    supabase.rpc('landing_stats').then(({ data, error }) => (error ? null : data)).catch(() => null),
                     ForumPost.list('-created_date', 10).catch(() => []),
                     GotdEntity.filter({ date: today }, '-created_date', 1).catch(() => []),
                     GeckoImage.list('-created_date', 20),
@@ -136,8 +142,8 @@ export default function Dashboard() {
                 setRecentImages(recentImagesData);
 
                 setStats({
-                    users: usersData.length,
-                    geckos: geckosPreview.filter((g) => !g.archived && g.status !== 'Sold').length,
+                    users: Number(communityStats?.keepers ?? usersData.length) || 0,
+                    geckos: Number(communityStats?.geckos ?? 0) || 0,
                     images: recentImagesData.length,
                     verifiedImages: recentImagesData.filter((img) => img.verified).length,
                     posts: posts.length,
