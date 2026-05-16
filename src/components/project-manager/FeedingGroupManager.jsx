@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Plus, Trash2, Edit, Utensils } from 'lucide-react';
+import { Plus, Trash2, Edit, Utensils, Bell, BellOff, Check } from 'lucide-react';
 import { format, addDays, differenceInDays } from 'date-fns';
 import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
 
@@ -20,20 +20,22 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
     const [groupToDelete, setGroupToDelete] = useState(null);
     const [form, setForm] = useState({
         label: 'A', name: '', diet_type: '', interval_days: 7, last_fed_date: '', color: GROUP_COLORS[0], notes: '',
-        auto_weight_min_g: '', auto_weight_max_g: ''
+        auto_weight_min_g: '', auto_weight_max_g: '', feeding_reminder_enabled: true,
     });
 
     const openCreate = () => {
         const usedLabels = feedingGroups.map(g => g.label);
         const nextLabel = GROUP_LABELS.find(l => !usedLabels.includes(l)) || String.fromCharCode(65 + feedingGroups.length);
         const colorIndex = feedingGroups.length % GROUP_COLORS.length;
-        setForm({ label: nextLabel, name: '', diet_type: '', interval_days: 7, last_fed_date: '', color: GROUP_COLORS[colorIndex], notes: '', auto_weight_min_g: '', auto_weight_max_g: '' });
+        setForm({ label: nextLabel, name: '', diet_type: '', interval_days: 7, last_fed_date: '', color: GROUP_COLORS[colorIndex], notes: '', auto_weight_min_g: '', auto_weight_max_g: '', feeding_reminder_enabled: true });
         setEditingGroup(null);
         setIsModalOpen(true);
     };
 
     const openEdit = (group) => {
-        setForm({ ...group });
+        // Coerce missing flag to true so legacy rows render the toggle as on
+        // (matches the DB default for new rows).
+        setForm({ feeding_reminder_enabled: true, ...group });
         setEditingGroup(group);
         setIsModalOpen(true);
     };
@@ -105,6 +107,14 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
         onUpdate();
     };
 
+    // Inline reminder toggle from the card. Optimistic call; relies on
+    // onUpdate() to re-fetch and reconcile.
+    const handleToggleReminder = async (group) => {
+        const next = !(group.feeding_reminder_enabled !== false);
+        await FeedingGroup.update(group.id, { feeding_reminder_enabled: next });
+        onUpdate();
+    };
+
     const getNextFeedDate = (group) => {
         if (!group.last_fed_date) return null;
         return addDays(parseLocalDate(group.last_fed_date), group.interval_days);
@@ -146,6 +156,8 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
                         const nextFeed = getNextFeedDate(group);
                         const assignedGeckos = geckos.filter(g => g.feeding_group_id === group.id);
                         const fedToday = wasFedToday(group);
+                        // Default reminders to ON for legacy rows that pre-date the column.
+                        const remindersOn = group.feeding_reminder_enabled !== false;
                         // If you fed today the group is not overdue and not
                         // "due soon", regardless of interval math.
                         const isOverdue = !fedToday && daysUntil !== null && daysUntil < 0;
@@ -168,6 +180,17 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
                                             </div>
                                         </div>
                                         <div className="flex gap-1">
+                                            <Button
+                                                size="icon"
+                                                variant="ghost"
+                                                className={`h-7 w-7 ${remindersOn ? 'text-emerald-400 hover:text-emerald-300' : 'text-slate-500 hover:text-slate-400'}`}
+                                                onClick={() => handleToggleReminder(group)}
+                                                title={remindersOn ? 'Alerts on for this group' : 'Alerts off for this group'}
+                                                aria-label={remindersOn ? 'Turn off feeding alerts for this group' : 'Turn on feeding alerts for this group'}
+                                                aria-pressed={remindersOn}
+                                            >
+                                                {remindersOn ? <Bell className="w-3 h-3" /> : <BellOff className="w-3 h-3" />}
+                                            </Button>
                                             <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-slate-200" onClick={() => openEdit(group)}>
                                                 <Edit className="w-3 h-3" />
                                             </Button>
@@ -198,13 +221,29 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
                                         </div>
                                     )}
                                     <div className="text-xs text-slate-500">{assignedGeckos.length} gecko(s){group.auto_weight_min_g != null && group.auto_weight_max_g != null ? ` · Auto: ${group.auto_weight_min_g}–${group.auto_weight_max_g}g` : ''}</div>
-                                    <Button
-                                        size="sm"
-                                        className="w-full h-7 text-xs bg-orange-600 hover:bg-orange-700"
-                                        onClick={() => handleMarkFed(group)}
-                                    >
-                                        ✓ Mark Fed Today
-                                    </Button>
+                                    {fedToday ? (
+                                        <div className="space-y-1">
+                                            <Button
+                                                size="sm"
+                                                disabled
+                                                className="w-full h-7 text-xs bg-emerald-600 hover:bg-emerald-600 text-white opacity-100 cursor-default disabled:opacity-100"
+                                            >
+                                                <Check className="w-3 h-3 mr-1" />
+                                                Fed today
+                                            </Button>
+                                            <p className="text-[11px] text-emerald-400 text-center">
+                                                Marked fed. Next round on {nextFeed ? format(nextFeed, 'MMM d') : `+${group.interval_days}d`}.
+                                            </p>
+                                        </div>
+                                    ) : (
+                                        <Button
+                                            size="sm"
+                                            className="w-full h-7 text-xs bg-orange-600 hover:bg-orange-700"
+                                            onClick={() => handleMarkFed(group)}
+                                        >
+                                            ✓ Mark Fed Today
+                                        </Button>
+                                    )}
                                 </CardContent>
                             </Card>
                         );
@@ -263,6 +302,30 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
                                         style={{ backgroundColor: c }} onClick={() => setForm({...form, color: c})} type="button" />
                                 ))}
                             </div>
+                        </div>
+                        <div className="flex items-start justify-between gap-4 p-3 border border-slate-700 rounded-lg bg-slate-800/50">
+                            <div className="flex-1">
+                                <Label className="text-slate-200 font-medium">Feeding alerts</Label>
+                                <p className="text-xs text-slate-500 mt-1">
+                                    When on, this group fires the in-app feeding-due alert (and push/email if you have those enabled) on the day it's due. Turn it off if you handle this group on a different schedule.
+                                </p>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={() => setForm({ ...form, feeding_reminder_enabled: !(form.feeding_reminder_enabled !== false) })}
+                                className={`flex items-center gap-1.5 px-3 h-9 rounded-md text-sm font-semibold transition-colors ${
+                                    form.feeding_reminder_enabled !== false
+                                        ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                                        : 'bg-slate-700 hover:bg-slate-600 text-slate-300'
+                                }`}
+                                aria-pressed={form.feeding_reminder_enabled !== false}
+                            >
+                                {form.feeding_reminder_enabled !== false ? (
+                                    <><Bell className="w-4 h-4" /> On</>
+                                ) : (
+                                    <><BellOff className="w-4 h-4" /> Off</>
+                                )}
+                            </button>
                         </div>
                         <div>
                             <Label>Auto-Assign by Weight Range (grams)</Label>

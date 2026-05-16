@@ -104,8 +104,12 @@ export default function FeedingAlertSystem({ user, enabled, lateReminders }) {
 
         const newAlerts = [];
 
-        // Check feeding groups
+        // Check feeding groups. Skip any group the user has muted via the
+        // per-group toggle (feeding_reminder_enabled === false). Legacy
+        // rows that pre-date the column have the value default to true at
+        // the DB level, so undefined here also means "alerts on".
         feedingGroups.forEach(group => {
+          if (group.feeding_reminder_enabled === false) return;
           const daysOverdue = calculateDaysOverdue(group.last_fed_date, group.interval_days);
           if (daysOverdue >= 0) {
             newAlerts.push({
