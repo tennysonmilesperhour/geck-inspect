@@ -5,9 +5,10 @@ import { Label } from '@/components/ui/label';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Sparkles, ArrowRight, Camera } from 'lucide-react';
+import { Loader2, Sparkles, ArrowRight, Camera, Lock } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { recognizeGeckoMorph } from '../functions/recognizeGeckoMorph';
+import { useAuth } from '@/lib/AuthContext';
 
 import MorphCorrectionPanel from '../components/morph-id/MorphCorrectionPanel';
 import PhotoTipsCard from '../components/morph-id/PhotoTipsCard';
@@ -16,11 +17,42 @@ import MultiPhotoUploader, { MAX_PHOTOS } from '../components/morph-id/MultiPhot
 import PhotoSlideshow from '../components/morph-id/PhotoSlideshow';
 import { AGE_STAGES } from '../components/morph-id/morphTaxonomy';
 
+// User-facing error copy keyed by edge-function error code. Admins skip
+// this and see the raw upstream message instead, so they can debug the
+// 429 from Replicate or whatever else fired.
+const FRIENDLY_ERROR = {
+  morph_id_credits_exhausted: {
+    title: "You're out of MorphID credits for this month",
+    body: 'Your credits reset on the 1st. Upgrade your plan to identify more geckos now.',
+    cta: { label: 'See plans', href: '/Membership' },
+  },
+  upstream_rate_limited: {
+    title: 'Our AI is busy right now',
+    body: 'Lots of geckos under the lens. Please try again in a minute.',
+  },
+  upstream_error: {
+    title: "We couldn't reach the analyzer",
+    body: 'Try again in a moment. If it keeps happening, message support and we will take a look.',
+  },
+  auth_required: {
+    title: 'Please sign in to use MorphID',
+    body: 'MorphID counts against your monthly plan, so we need to know who you are first.',
+    cta: { label: 'Sign in', href: '/AuthPortal' },
+  },
+  bad_request: {
+    title: 'Upload at least one clear photo',
+    body: 'Drop a JPG or PNG of your gecko and try again.',
+  },
+};
+
 export default function Recognition() {
   const { toast } = useToast();
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [imageUrls, setImageUrls] = useState([]);
   const [ageStage, setAgeStage] = useState('unknown');
   const [analysis, setAnalysis] = useState(null);
+  const [meta, setMeta] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [error, setError] = useState(null);
   const [savedOnce, setSavedOnce] = useState(false);
@@ -31,25 +63,31 @@ export default function Recognition() {
     setImageUrls([]);
     setAgeStage('unknown');
     setAnalysis(null);
+    setMeta(null);
     setError(null);
     setSavedOnce(false);
   };
 
   const analyze = async () => {
     if (imageUrls.length === 0) {
-      setError('Upload at least one photo before analyzing.');
+      setError({ code: 'bad_request', message: 'Upload at least one photo before analyzing.' });
       return;
     }
     setIsAnalyzing(true);
     setError(null);
     setAnalysis(null);
+    setMeta(null);
     try {
-      const { data, error: funcError } = await recognizeGeckoMorph({ imageUrls, ageStage });
-      if (funcError) throw new Error(funcError.message || String(funcError));
-      setAnalysis(data);
+      const { data, error: funcError, meta: respMeta } = await recognizeGeckoMorph({ imageUrls, ageStage });
+      if (funcError) {
+        setError(funcError);
+      } else {
+        setAnalysis(data);
+        setMeta(respMeta || null);
+      }
     } catch (err) {
       console.error('Analysis error:', err);
-      setError(err.message || 'AI analysis failed. Try another photo or check your connection.');
+      setError({ code: 'internal_error', message: err.message || 'AI analysis failed.' });
     } finally {
       setIsAnalyzing(false);
     }
@@ -148,10 +186,64 @@ export default function Recognition() {
           </CardContent>
         </Card>
 
-        {error && (
-          <Card className="bg-rose-950/40 border-rose-800">
-            <CardContent className="p-4 text-rose-200 text-center">{error}</CardContent>
-          </Card>
+        {error && (() => {
+          // Admins get the raw upstream message so they can debug 429s,
+          // Anthropic outages, etc. Regular users get the toned-down copy
+          // keyed off the structured error code from the edge function.
+          if (isAdmin) {
+            return (
+              <Card className="bg-rose-950/40 border-rose-800">
+                <CardContent className="p-4 text-rose-200 space-y-1">
+                  <div className="text-xs uppercase tracking-wide text-rose-300/80">
+                    [admin] {error.code || 'error'}
+                  </div>
+                  <div className="font-mono text-sm whitespace-pre-wrap break-words">
+                    {error.message}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          }
+          const friendly = FRIENDLY_ERROR[error.code] || {
+            title: "We couldn't analyze that photo",
+            body: 'Try a different photo, or check your connection and try again.',
+          };
+          const isExhausted = error.code === 'morph_id_credits_exhausted';
+          return (
+            <Card className={isExhausted
+              ? 'bg-amber-950/40 border-amber-800'
+              : 'bg-rose-950/40 border-rose-800'
+            }>
+              <CardContent className="p-5 flex flex-col items-center text-center gap-3">
+                {isExhausted && <Lock className="w-6 h-6 text-amber-300" />}
+                <div>
+                  <p className={`font-semibold ${isExhausted ? 'text-amber-100' : 'text-rose-100'}`}>
+                    {friendly.title}
+                  </p>
+                  <p className={`text-sm mt-1 ${isExhausted ? 'text-amber-200/80' : 'text-rose-200/80'}`}>
+                    {friendly.body}
+                  </p>
+                </div>
+                {friendly.cta && (
+                  <Button
+                    onClick={() => { window.location.href = friendly.cta.href; }}
+                    className={isExhausted
+                      ? 'bg-amber-500 hover:bg-amber-400 text-slate-950'
+                      : 'bg-rose-500 hover:bg-rose-400 text-white'
+                    }
+                  >
+                    {friendly.cta.label}
+                  </Button>
+                )}
+              </CardContent>
+            </Card>
+          );
+        })()}
+
+        {meta && !meta.is_admin && typeof meta.credits_remaining === 'number' && (
+          <p className="text-xs text-slate-500 text-center">
+            {meta.credits_remaining} of {meta.credits_included} MorphID credits left this month.
+          </p>
         )}
 
         {analysis && (

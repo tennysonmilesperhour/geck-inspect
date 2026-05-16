@@ -3,9 +3,24 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Loader2, Images } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
+import { useAuth } from '@/lib/AuthContext';
 import { labelFor } from './morphTaxonomy';
 
+// Embedding lives behind Replicate; when their free-credit quota throttles
+// us we want a calm "try again in a moment" instead of leaking the 429.
+// Admins still see the raw text so they can spot which provider is rate
+// limiting and act on it.
+function friendlyEmbedError(raw) {
+  const lower = String(raw || '').toLowerCase();
+  if (lower.includes('429') || lower.includes('rate limit') || lower.includes('throttled')) {
+    return 'Similarity search is busy right now. Hang on a moment and refresh.';
+  }
+  return "Couldn't pull similar geckos this time.";
+}
+
 export default function SimilarGeckosStrip({ imageUrl }) {
+  const { user } = useAuth();
+  const isAdmin = user?.role === 'admin';
   const [matches, setMatches] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -71,7 +86,15 @@ export default function SimilarGeckosStrip({ imageUrl }) {
           </h3>
           {isLoading && <Loader2 className="w-4 h-4 animate-spin text-slate-400" />}
         </div>
-        {error && <p className="text-xs text-rose-300">{error}</p>}
+        {error && (
+          isAdmin ? (
+            <p className="text-xs font-mono text-rose-300 break-words">
+              [admin] {error}
+            </p>
+          ) : (
+            <p className="text-xs text-slate-400">{friendlyEmbedError(error)}</p>
+          )
+        )}
         {!isLoading && matches && matches.length === 0 && (
           <p className="text-xs text-slate-500">
             No labeled samples close enough yet. Keep contributing ,  each

@@ -155,6 +155,22 @@ export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageS
           <div className="p-3 rounded-lg bg-slate-800 border border-slate-700">
             <p className="text-xs uppercase tracking-wide text-slate-400 mb-1">AI reasoning</p>
             <p className="text-sm text-slate-300">{result.explanation}</p>
+            {result.value_estimate && Number.isFinite(result.value_estimate.usd_low) && (
+              <div className="mt-3 pt-3 border-t border-slate-700/60">
+                <p className="text-xs uppercase tracking-wide text-amber-300/80 mb-1">
+                  Estimated retail value
+                </p>
+                <p className="text-sm text-slate-200">
+                  ${result.value_estimate.usd_low}&ndash;${result.value_estimate.usd_high} USD
+                </p>
+                {result.value_estimate.notes && (
+                  <p className="text-xs text-slate-400 mt-1">{result.value_estimate.notes}</p>
+                )}
+                <p className="text-[10px] text-slate-500 mt-1">
+                  Ballpark for an unrelated, unproven specimen. Real sales depend on lineage, het status, breeder reputation, and timing.
+                </p>
+              </div>
+            )}
           </div>
         )}
 

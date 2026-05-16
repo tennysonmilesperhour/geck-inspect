@@ -63,6 +63,53 @@ function json(body: unknown, status = 200) {
   });
 }
 
+// Per-tier monthly credit allotments. Keep in sync with
+// src/lib/tierLimits.js#monthlyMorphIDCredits. Unknown / missing tier
+// falls back to `free`, matching the frontend's tierOf() helper.
+const TIER_MORPH_ID_CREDITS: Record<string, number> = {
+  free: 1,
+  keeper: 3,
+  breeder: 6,
+  enterprise: 15,
+};
+
+type Profile = {
+  auth_user_id: string;
+  membership_tier: string | null;
+  subscription_status: string | null;
+  role: string | null;
+  morph_id_show_value_estimate: boolean | null;
+};
+
+async function loadProfile(authToken: string): Promise<Profile | null> {
+  // Use the caller's JWT to identify them, then fetch the profile row
+  // server-side with the service role so RLS doesn't gate the lookup
+  // even for users whose `profiles.email` linkage is legacy.
+  const userClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+    global: { headers: { Authorization: `Bearer ${authToken}` } },
+  });
+  const { data: { user } } = await userClient.auth.getUser();
+  if (!user) return null;
+  const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+  const { data } = await admin.from("profiles")
+    .select("membership_tier, subscription_status, role, morph_id_show_value_estimate")
+    .eq("email", user.email)
+    .maybeSingle();
+  return {
+    auth_user_id: user.id,
+    membership_tier: data?.membership_tier ?? null,
+    subscription_status: data?.subscription_status ?? null,
+    role: data?.role ?? null,
+    morph_id_show_value_estimate: data?.morph_id_show_value_estimate ?? false,
+  };
+}
+
+function resolveTier(profile: Profile): string {
+  if (profile.subscription_status === "grandfathered") return "breeder";
+  const t = profile.membership_tier;
+  return t && t in TIER_MORPH_ID_CREDITS ? t : "free";
+}
+
 type FewShotExample = {
   image_url: string;
   primary_morph: string;
@@ -154,7 +201,7 @@ async function loadFewShotBank(): Promise<FewShotExample[]> {
   return fewShotCache;
 }
 
-function buildInstructions(fewShotBank: FewShotExample[]) {
+function buildInstructions(fewShotBank: FewShotExample[], includeValueEstimate: boolean) {
   const bankIntro = fewShotBank.length === 0 ? "" :
     `\n\nFew-shot reference: the first ${fewShotBank.length} attached image(s) are LABELED reference examples (the final image is the user's photo to identify). Hero-anchor entries are competition-judged show winners (gold-standard visual definitions); manual-touch entries are community-verified examples. Use them as visual anchors for the canonical look of each primary_morph BEFORE evaluating the user's photo. The mapping, in order:\n${fewShotBank.map((ex, i) => {
       const tier = ex.source === "hero_anchor" ? " [hero]" : "";
@@ -162,6 +209,10 @@ function buildInstructions(fewShotBank: FewShotExample[]) {
       const color = ex.base_color ? ` (base ${ex.base_color})` : "";
       return `  ${i + 1}. ${ex.primary_morph}${tier}${name}${color}`;
     }).join("\n")}`;
+
+  const valueLine = includeValueEstimate
+    ? `\n- value_estimate_usd_low / value_estimate_usd_high: a CONSERVATIVE retail price band in US dollars for an unrelated, unproven specimen at the apparent life stage, based on the morph quality you actually see in the photo. Reflect uncertainty by widening the band. value_estimate_notes is one sentence on what drives the band (e.g., "high white expression on a clean pin lifts this; unproven het knocks it down").`
+    : "";
 
   return `You are a world-expert crested gecko (Correlophus ciliatus) morph identifier. Analyze
 the user's photograph(s) and call the \`submit_morph_analysis\` tool with your best
@@ -175,37 +226,54 @@ Rules:
   cappuccino, etc.). Leave empty if you don't see clear evidence.
 - secondary_traits is observational modifiers. Multiple allowed.
 - If the photo is blurry, oddly lit, or shows multiple animals, lower
-  confidence_score substantially and explain why in the explanation field.
+  confidence_score substantially and explain why in the explanation field.${valueLine}
 
 Taxonomy version: ${TAXONOMY_VERSION}.${bankIntro}`;
 }
 
-const TOOL = {
-  name: "submit_morph_analysis",
-  description: "Submit the structured morph analysis for this crested gecko photo.",
-  input_schema: {
-    type: "object",
-    required: ["primary_morph", "confidence_score", "explanation"],
-    properties: {
-      primary_morph:     { type: "string", enum: PRIMARY_MORPH_IDS },
-      genetic_traits:    { type: "array", items: { type: "string", enum: GENETIC_TRAIT_IDS } },
-      secondary_traits:  { type: "array", items: { type: "string", enum: SECONDARY_TRAIT_IDS } },
-      base_color:        { type: "string", enum: BASE_COLOR_IDS },
-      pattern_intensity: { type: "string", enum: PATTERN_INTENSITY_IDS },
-      white_amount:      { type: "string", enum: WHITE_AMOUNT_IDS },
-      fired_state:       { type: "string", enum: FIRED_STATE_IDS },
-      confidence_score:  { type: "integer", minimum: 0, maximum: 100 },
-      explanation:       { type: "string", description: "1-2 sentences citing visual evidence." },
+function buildTool(includeValueEstimate: boolean) {
+  const properties: Record<string, unknown> = {
+    primary_morph:     { type: "string", enum: PRIMARY_MORPH_IDS },
+    genetic_traits:    { type: "array", items: { type: "string", enum: GENETIC_TRAIT_IDS } },
+    secondary_traits:  { type: "array", items: { type: "string", enum: SECONDARY_TRAIT_IDS } },
+    base_color:        { type: "string", enum: BASE_COLOR_IDS },
+    pattern_intensity: { type: "string", enum: PATTERN_INTENSITY_IDS },
+    white_amount:      { type: "string", enum: WHITE_AMOUNT_IDS },
+    fired_state:       { type: "string", enum: FIRED_STATE_IDS },
+    confidence_score:  { type: "integer", minimum: 0, maximum: 100 },
+    explanation:       { type: "string", description: "1-2 sentences citing visual evidence." },
+  };
+  if (includeValueEstimate) {
+    properties.value_estimate_usd_low = {
+      type: "integer", minimum: 0,
+      description: "Conservative low end of retail price band in USD for an unrelated, unproven specimen at apparent life stage.",
+    };
+    properties.value_estimate_usd_high = {
+      type: "integer", minimum: 0,
+      description: "Conservative high end of retail price band in USD.",
+    };
+    properties.value_estimate_notes = {
+      type: "string",
+      description: "One sentence on what drives the price band.",
+    };
+  }
+  return {
+    name: "submit_morph_analysis",
+    description: "Submit the structured morph analysis for this crested gecko photo.",
+    input_schema: {
+      type: "object",
+      required: ["primary_morph", "confidence_score", "explanation"],
+      properties,
     },
-  },
-};
+  };
+}
 
-function clampToTaxonomy(raw: Record<string, unknown>) {
+function clampToTaxonomy(raw: Record<string, unknown>, includeValueEstimate: boolean) {
   const pick = (v: unknown, allowed: string[]) =>
     typeof v === "string" && allowed.includes(v) ? v : null;
   const pickMany = (v: unknown, allowed: string[]) =>
     Array.isArray(v) ? v.filter((x) => typeof x === "string" && allowed.includes(x)) : [];
-  return {
+  const out: Record<string, unknown> = {
     primary_morph:     pick(raw.primary_morph, PRIMARY_MORPH_IDS),
     genetic_traits:    pickMany(raw.genetic_traits, GENETIC_TRAIT_IDS),
     secondary_traits:  pickMany(raw.secondary_traits, SECONDARY_TRAIT_IDS),
@@ -218,15 +286,38 @@ function clampToTaxonomy(raw: Record<string, unknown>) {
     taxonomy_version:  TAXONOMY_VERSION,
     model:             CLAUDE_MODEL,
   };
+  if (includeValueEstimate) {
+    const low = Number(raw.value_estimate_usd_low);
+    const high = Number(raw.value_estimate_usd_high);
+    if (Number.isFinite(low) && Number.isFinite(high) && high >= low && low >= 0) {
+      out.value_estimate = {
+        usd_low: Math.round(low),
+        usd_high: Math.round(high),
+        notes: typeof raw.value_estimate_notes === "string" ? raw.value_estimate_notes : "",
+      };
+    }
+  }
+  return out;
 }
 
-async function callClaude(imageUrls: string[]) {
+class UpstreamError extends Error {
+  status: number;
+  code: string;
+  constructor(message: string, status: number, code: string) {
+    super(message);
+    this.status = status;
+    this.code = code;
+  }
+}
+
+async function callClaude(imageUrls: string[], includeValueEstimate: boolean) {
   const bank = await loadFewShotBank();
   const bankBlocks = bank.map((ex) => ({ type: "image", source: { type: "url", url: ex.image_url } }));
   const userBlocks = imageUrls.map((url) => ({ type: "image", source: { type: "url", url } }));
   const multiNote = imageUrls.length > 1
     ? `\n\nNOTE: the LAST ${imageUrls.length} photos are of the SAME user-submitted animal. Synthesize across them.`
     : "";
+  const tool = buildTool(includeValueEstimate);
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -237,29 +328,59 @@ async function callClaude(imageUrls: string[]) {
     body: JSON.stringify({
       model: CLAUDE_MODEL,
       max_tokens: 1024,
-      tools: [TOOL],
-      tool_choice: { type: "tool", name: TOOL.name },
+      tools: [tool],
+      tool_choice: { type: "tool", name: tool.name },
       messages: [{
         role: "user",
         content: [
           ...bankBlocks,
           ...userBlocks,
-          { type: "text", text: buildInstructions(bank) + multiNote },
+          { type: "text", text: buildInstructions(bank, includeValueEstimate) + multiNote },
         ],
       }],
     }),
   });
-  if (!res.ok) throw new Error(`Anthropic ${res.status}: ${(await res.text()).slice(0, 500)}`);
+  if (!res.ok) {
+    const detail = (await res.text()).slice(0, 500);
+    const code = res.status === 429 ? "upstream_rate_limited" : "upstream_error";
+    throw new UpstreamError(`Anthropic ${res.status}: ${detail}`, res.status, code);
+  }
   const body = await res.json();
   const toolBlock = (body.content || []).find((b: { type: string }) => b.type === "tool_use");
-  if (!toolBlock?.input) throw new Error("Claude did not return a tool_use block");
+  if (!toolBlock?.input) {
+    throw new UpstreamError("Claude did not return a tool_use block", 502, "upstream_error");
+  }
   return { raw: toolBlock.input as Record<string, unknown>, few_shot_count: bank.length };
 }
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
-  if (req.method !== "POST") return json({ error: "POST only" }, 405);
-  if (!ANTHROPIC_API_KEY) return json({ error: "ANTHROPIC_API_KEY not set" }, 500);
+  if (req.method !== "POST") return json({ error: "POST only", code: "method_not_allowed" }, 405);
+  if (!ANTHROPIC_API_KEY) return json({ error: "ANTHROPIC_API_KEY not set", code: "config_error" }, 500);
+
+  const authHeader = req.headers.get("authorization") || "";
+  const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+  if (!token) return json({ error: "auth required", code: "auth_required" }, 401);
+
+  let profile: Profile | null;
+  try {
+    profile = await loadProfile(token);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    return json({ error: `auth lookup failed: ${message}`, code: "auth_required" }, 401);
+  }
+  if (!profile) return json({ error: "auth required", code: "auth_required" }, 401);
+
+  const isAdmin = profile.role === "admin";
+  const tier = resolveTier(profile);
+  const creditsIncluded = TIER_MORPH_ID_CREDITS[tier] ?? TIER_MORPH_ID_CREDITS.free;
+
+  // Paid tiers only get the value estimate, and only when the profile
+  // toggle is on. Admins inherit Breeder-or-better, so we read the
+  // toggle as-is for them.
+  const isPaidTier = tier === "keeper" || tier === "breeder" || tier === "enterprise";
+  const includeValueEstimate = !!profile.morph_id_show_value_estimate && (isPaidTier || isAdmin);
+
   try {
     const body = await req.json().catch(() => ({}));
     let imageUrls: string[] = [];
@@ -268,13 +389,58 @@ serve(async (req) => {
     } else if (typeof body?.imageUrl === "string") {
       imageUrls = [body.imageUrl];
     }
-    if (imageUrls.length === 0) return json({ error: "imageUrls or imageUrl is required" }, 400);
+    if (imageUrls.length === 0) {
+      return json({ error: "imageUrls or imageUrl is required", code: "bad_request" }, 400);
+    }
     imageUrls = imageUrls.slice(0, 5);
-    const { raw, few_shot_count } = await callClaude(imageUrls);
-    const analysis = clampToTaxonomy(raw);
-    return json({ success: true, analysis, model: CLAUDE_MODEL, photo_count: imageUrls.length, few_shot_count });
+
+    let creditsConsumed = 0;
+    let creditsRemaining: number | null = null;
+    if (!isAdmin) {
+      const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      const { data: usage, error: rpcErr } = await admin.rpc("consume_morph_id_credit", {
+        p_user_id: profile.auth_user_id,
+        p_tier: tier,
+        p_credits_included: creditsIncluded,
+      });
+      if (rpcErr) {
+        if ((rpcErr.message || "").includes("morph_id_credits_exhausted")) {
+          return json({
+            error: "Monthly MorphID credit limit reached.",
+            code: "morph_id_credits_exhausted",
+            tier,
+            credits_included: creditsIncluded,
+          }, 402);
+        }
+        return json({
+          error: `credit check failed: ${rpcErr.message}`,
+          code: "credit_check_failed",
+        }, 500);
+      }
+      creditsConsumed = usage?.credits_consumed ?? 0;
+      creditsRemaining = Math.max(0, creditsIncluded - creditsConsumed);
+    }
+
+    const { raw, few_shot_count } = await callClaude(imageUrls, includeValueEstimate);
+    const analysis = clampToTaxonomy(raw, includeValueEstimate);
+    return json({
+      success: true,
+      analysis,
+      model: CLAUDE_MODEL,
+      photo_count: imageUrls.length,
+      few_shot_count,
+      tier,
+      is_admin: isAdmin,
+      credits_included: creditsIncluded,
+      credits_consumed: creditsConsumed,
+      credits_remaining: creditsRemaining,
+      value_estimate_included: includeValueEstimate,
+    });
   } catch (err) {
+    if (err instanceof UpstreamError) {
+      return json({ error: err.message, code: err.code }, err.status === 429 ? 503 : 502);
+    }
     const message = err instanceof Error ? err.message : String(err);
-    return json({ error: message }, 500);
+    return json({ error: message, code: "internal_error" }, 500);
   }
 });

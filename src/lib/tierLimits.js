@@ -16,6 +16,12 @@
  * marketing copy; the actual included count is 30, with overage at the
  * same flat rate.
  *
+ * AI Morph ID credits (`monthlyMorphIDCredits`) are a HARD monthly cap,
+ * not overageable. Each successful identification consumes 1 credit;
+ * when a user runs out, the edge function returns 402 and the UI shows
+ * an upgrade CTA. Admins bypass the limit entirely. See
+ * supabase/migrations/20260516_morph_id_credits.sql for the ledger.
+ *
  * `null` means unlimited. Always check `if (limit == null)` before
  * comparing usage ,  never treat null as 0.
  */
@@ -31,6 +37,7 @@ export const TIER_LIMITS = {
     maxStorageBytes: 1 * GB,
     maxCollaborators: 1,
     monthlySocialPosts: 1,
+    monthlyMorphIDCredits: 1,
     // Promote-only image library. Separate budget from collection
     // storage so a free user can't bury the social tooling under
     // their gecko photo backlog.
@@ -45,6 +52,7 @@ export const TIER_LIMITS = {
     maxStorageBytes: 10 * GB,
     maxCollaborators: 5,
     monthlySocialPosts: 4,
+    monthlyMorphIDCredits: 3,
     promoteImageStorageBytes: 200 * MB,
     promoteImageMaxCount: 100,
     scheduledPostsMax: 5,
@@ -56,6 +64,7 @@ export const TIER_LIMITS = {
     maxStorageBytes: null,
     maxCollaborators: null,
     monthlySocialPosts: 12,
+    monthlyMorphIDCredits: 6,
     promoteImageStorageBytes: 1 * GB,
     promoteImageMaxCount: 500,
     scheduledPostsMax: 10,
@@ -67,6 +76,7 @@ export const TIER_LIMITS = {
     maxStorageBytes: null,
     maxCollaborators: null,
     monthlySocialPosts: 30,
+    monthlyMorphIDCredits: 15,
     promoteImageStorageBytes: 5 * GB,
     promoteImageMaxCount: 2000,
     scheduledPostsMax: 10,

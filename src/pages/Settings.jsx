@@ -372,6 +372,7 @@ export default function SettingsPage() {
                         default_breeding_sort: currentUser.default_breeding_sort || '-created_date',
                         hatch_alert_days: currentUser.hatch_alert_days || 60,
                         is_featured_breeder: currentUser.is_featured_breeder === true,
+                        morph_id_show_value_estimate: currentUser.morph_id_show_value_estimate === true,
                         store_policy: currentUser.store_policy || '',
                         favorite_page_names: Array.isArray(currentUser.favorite_page_names)
                             ? currentUser.favorite_page_names.slice(0, FAVORITES_MAX)
@@ -518,6 +519,7 @@ export default function SettingsPage() {
         { id: 'feeding-alerts', label: 'Feeding Alerts' },
         { id: 'default-sorts', label: 'Defaults' },
         { id: 'id-logic', label: 'Gecko IDs' },
+        { id: 'morph-id', label: 'Morph ID' },
         { id: 'danger-zone', label: 'Danger Zone' },
     ];
 
@@ -970,6 +972,57 @@ export default function SettingsPage() {
                 <section id="id-logic">
                     <IdLogicSettings value={idSettings} onChange={(next) => updateIdSettings(next)} />
                 </section>
+
+                {(() => {
+                    const tier = user?.subscription_status === 'grandfathered'
+                        ? 'breeder'
+                        : (user?.membership_tier || 'free');
+                    const isPaid = tier === 'keeper' || tier === 'breeder' || tier === 'enterprise';
+                    return (
+                        <section id="morph-id">
+                            <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+                                <CardHeader>
+                                    <CardTitle className="text-slate-100 flex items-center gap-2">
+                                        <Crown className="w-5 h-5 text-amber-400" />
+                                        Morph ID preferences
+                                    </CardTitle>
+                                    <CardDescription className="text-slate-400">
+                                        Tune what the AI shows you when it identifies a gecko.
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="space-y-4">
+                                    {isPaid ? (
+                                        renderSwitch(
+                                            'morph_id_show_value_estimate',
+                                            'Show estimated retail value',
+                                            'Adds a conservative USD price band to the AI reasoning. Off by default. The estimate is a ballpark for an unrelated, unproven specimen, not an appraisal.',
+                                            formData.morph_id_show_value_estimate,
+                                            (checked) => handleChange('morph_id_show_value_estimate', checked),
+                                        )
+                                    ) : (
+                                        <div className="flex items-start justify-between gap-4 p-4 border border-slate-700 rounded-lg bg-slate-800/50">
+                                            <div>
+                                                <Label className="font-medium text-slate-200">
+                                                    Show estimated retail value
+                                                </Label>
+                                                <p className="text-sm text-slate-400 mt-1">
+                                                    Available on Keeper and up. Upgrade to add a conservative price band to your MorphID results.
+                                                </p>
+                                            </div>
+                                            <Button
+                                                size="sm"
+                                                className="bg-emerald-600 hover:bg-emerald-500 text-white shrink-0"
+                                                onClick={() => { window.location.href = '/Membership'; }}
+                                            >
+                                                See plans
+                                            </Button>
+                                        </div>
+                                    )}
+                                </CardContent>
+                            </Card>
+                        </section>
+                    );
+                })()}
 
                 <section id="danger-zone">
                 {/* Delete Account Section */}
