@@ -35,6 +35,19 @@ import {
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
 const CLAUDE_MODEL = Deno.env.get("CLAUDE_MODEL") || "claude-sonnet-4-6";
+
+// Allowed per-request model overrides. The eval pipeline switches between
+// haiku (cheap, default for iteration) and sonnet (benchmark) via the
+// request body. Anything else falls back to the env-configured default
+// so a stray client can't make us run opus by accident.
+const ALLOWED_MODELS = new Set([
+  "claude-haiku-4-5",
+  "claude-sonnet-4-6",
+  "claude-opus-4-7",
+]);
+function resolveModel(raw: unknown): string {
+  return typeof raw === "string" && ALLOWED_MODELS.has(raw) ? raw : CLAUDE_MODEL;
+}
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 // Bank is ENABLED by default now that anchor images are mirrored to
@@ -268,7 +281,11 @@ function buildTool(includeValueEstimate: boolean) {
   };
 }
 
-function clampToTaxonomy(raw: Record<string, unknown>, includeValueEstimate: boolean) {
+function clampToTaxonomy(
+  raw: Record<string, unknown>,
+  includeValueEstimate: boolean,
+  model: string,
+) {
   const pick = (v: unknown, allowed: string[]) =>
     typeof v === "string" && allowed.includes(v) ? v : null;
   const pickMany = (v: unknown, allowed: string[]) =>
@@ -284,7 +301,7 @@ function clampToTaxonomy(raw: Record<string, unknown>, includeValueEstimate: boo
     confidence_score:  Math.max(0, Math.min(100, Number(raw.confidence_score) || 0)),
     explanation:       typeof raw.explanation === "string" ? raw.explanation : "",
     taxonomy_version:  TAXONOMY_VERSION,
-    model:             CLAUDE_MODEL,
+    model,
   };
   if (includeValueEstimate) {
     const low = Number(raw.value_estimate_usd_low);
@@ -310,7 +327,11 @@ class UpstreamError extends Error {
   }
 }
 
-async function callClaude(imageUrls: string[], includeValueEstimate: boolean) {
+async function callClaude(
+  imageUrls: string[],
+  includeValueEstimate: boolean,
+  model: string,
+) {
   const bank = await loadFewShotBank();
   const bankBlocks = bank.map((ex) => ({ type: "image", source: { type: "url", url: ex.image_url } }));
   const userBlocks = imageUrls.map((url) => ({ type: "image", source: { type: "url", url } }));
@@ -326,7 +347,7 @@ async function callClaude(imageUrls: string[], includeValueEstimate: boolean) {
       "anthropic-version": "2023-06-01",
     },
     body: JSON.stringify({
-      model: CLAUDE_MODEL,
+      model,
       max_tokens: 1024,
       tools: [tool],
       tool_choice: { type: "tool", name: tool.name },
@@ -394,6 +415,12 @@ serve(async (req) => {
     }
     imageUrls = imageUrls.slice(0, 5);
 
+    // Per-request model override (defaults to env-configured CLAUDE_MODEL).
+    // The eval pipeline sends `model: "claude-haiku-4-5"` for cheap iteration
+    // and "claude-sonnet-4-6" for benchmark runs. Production callers
+    // (Recognition.jsx, TrainModel.jsx) omit `model` and get the env default.
+    const model = resolveModel(body?.model);
+
     let creditsConsumed = 0;
     let creditsRemaining: number | null = null;
     if (!isAdmin) {
@@ -421,12 +448,12 @@ serve(async (req) => {
       creditsRemaining = Math.max(0, creditsIncluded - creditsConsumed);
     }
 
-    const { raw, few_shot_count } = await callClaude(imageUrls, includeValueEstimate);
-    const analysis = clampToTaxonomy(raw, includeValueEstimate);
+    const { raw, few_shot_count } = await callClaude(imageUrls, includeValueEstimate, model);
+    const analysis = clampToTaxonomy(raw, includeValueEstimate, model);
     return json({
       success: true,
       analysis,
-      model: CLAUDE_MODEL,
+      model,
       photo_count: imageUrls.length,
       few_shot_count,
       tier,
