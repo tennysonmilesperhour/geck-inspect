@@ -36,6 +36,91 @@ import {
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
 const CLAUDE_MODEL = Deno.env.get("CLAUDE_MODEL") || "claude-sonnet-4-6";
 
+// Cross-project sink for the per-call spend log. Lives in geck-data's
+// Supabase project (separate from this function's own SUPABASE_URL) so
+// the /data-admin/control panel has a single source of truth for
+// Anthropic spend across production and eval. Logging fails open: a
+// missing env var or a write error never prevents a successful
+// recognition from returning to the caller.
+const GECK_DATA_SUPABASE_URL = Deno.env.get("GECK_DATA_SUPABASE_URL");
+const GECK_DATA_SUPABASE_SERVICE_KEY = Deno.env.get("GECK_DATA_SUPABASE_SERVICE_KEY");
+
+// Shared secret that lets the eval script (scripts/eval_morph_id.py)
+// tag its calls as surface='morph_id_eval' regardless of auth state.
+// Without it, all non-admin callers fall through to 'morph_id_production'.
+const EVAL_SHARED_SECRET = Deno.env.get("EVAL_SHARED_SECRET");
+
+// USD per million tokens. Used to compute est_cost_cents at write time.
+// Frozen here so historic rows don't drift if Anthropic re-prices.
+const PRICE_PER_MTOK_USD: Record<string, { input: number; output: number }> = {
+  "claude-haiku-4-5":  { input: 1,  output: 5 },
+  "claude-sonnet-4-6": { input: 3,  output: 15 },
+  "claude-opus-4-7":   { input: 15, output: 75 },
+};
+
+function computeCostCents(
+  model: string,
+  inputTokens: number,
+  outputTokens: number,
+): number {
+  const price = PRICE_PER_MTOK_USD[model];
+  if (!price) return 0;
+  const dollars = (inputTokens * price.input + outputTokens * price.output) / 1_000_000;
+  return Math.round(dollars * 10000) / 100;
+}
+
+const ALLOWED_SURFACES = new Set([
+  "morph_id_production",
+  "morph_id_eval",
+  "morph_id_train",
+  "morph_id_unknown",
+]);
+
+function resolveSurface(
+  rawSurface: unknown,
+  isAdmin: boolean,
+  evalSecretHeader: string | null,
+): string {
+  const tagAllowed = isAdmin || (
+    !!EVAL_SHARED_SECRET && evalSecretHeader === EVAL_SHARED_SECRET
+  );
+  if (tagAllowed && typeof rawSurface === "string" && ALLOWED_SURFACES.has(rawSurface)) {
+    return rawSurface;
+  }
+  return "morph_id_production";
+}
+
+type InvocationLog = {
+  surface: string;
+  model: string;
+  input_tokens: number | null;
+  output_tokens: number | null;
+  cache_read_tokens: number | null;
+  cache_creation_tokens: number | null;
+  est_cost_cents: number | null;
+  user_id: string | null;
+  tier: string | null;
+  is_admin: boolean;
+  photo_count: number | null;
+  few_shot_count: number | null;
+  http_status: number | null;
+  error_code: string | null;
+  duration_ms: number | null;
+  request_id: string | null;
+};
+
+async function logInvocation(row: InvocationLog): Promise<void> {
+  if (!GECK_DATA_SUPABASE_URL || !GECK_DATA_SUPABASE_SERVICE_KEY) return;
+  try {
+    const sink = createClient(GECK_DATA_SUPABASE_URL, GECK_DATA_SUPABASE_SERVICE_KEY);
+    const { error } = await sink.from("model_invocations").insert(row);
+    if (error) console.error("model_invocations insert failed:", error.message);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("model_invocations sink threw:", message);
+  }
+}
+
 // Allowed per-request model overrides. The eval pipeline switches between
 // haiku (cheap, default for iteration) and sonnet (benchmark) via the
 // request body. Anything else falls back to the env-configured default
@@ -320,18 +405,45 @@ function clampToTaxonomy(
 class UpstreamError extends Error {
   status: number;
   code: string;
-  constructor(message: string, status: number, code: string) {
+  httpStatus: number;
+  requestId: string | null;
+  durationMs: number;
+  constructor(
+    message: string,
+    status: number,
+    code: string,
+    extra: { httpStatus?: number; requestId?: string | null; durationMs?: number } = {},
+  ) {
     super(message);
     this.status = status;
     this.code = code;
+    this.httpStatus = extra.httpStatus ?? status;
+    this.requestId = extra.requestId ?? null;
+    this.durationMs = extra.durationMs ?? 0;
   }
 }
+
+type UpstreamUsage = {
+  input_tokens: number;
+  output_tokens: number;
+  cache_read_input_tokens?: number;
+  cache_creation_input_tokens?: number;
+};
+
+type CallClaudeResult = {
+  raw: Record<string, unknown>;
+  few_shot_count: number;
+  usage: UpstreamUsage;
+  http_status: number;
+  request_id: string | null;
+  duration_ms: number;
+};
 
 async function callClaude(
   imageUrls: string[],
   includeValueEstimate: boolean,
   model: string,
-) {
+): Promise<CallClaudeResult> {
   const bank = await loadFewShotBank();
   const bankBlocks = bank.map((ex) => ({ type: "image", source: { type: "url", url: ex.image_url } }));
   const userBlocks = imageUrls.map((url) => ({ type: "image", source: { type: "url", url } }));
@@ -339,6 +451,7 @@ async function callClaude(
     ? `\n\nNOTE: the LAST ${imageUrls.length} photos are of the SAME user-submitted animal. Synthesize across them.`
     : "";
   const tool = buildTool(includeValueEstimate);
+  const startedAt = Date.now();
   const res = await fetch("https://api.anthropic.com/v1/messages", {
     method: "POST",
     headers: {
@@ -361,17 +474,35 @@ async function callClaude(
       }],
     }),
   });
+  const requestId = res.headers.get("request-id");
+  const durationMs = Date.now() - startedAt;
   if (!res.ok) {
     const detail = (await res.text()).slice(0, 500);
     const code = res.status === 429 ? "upstream_rate_limited" : "upstream_error";
-    throw new UpstreamError(`Anthropic ${res.status}: ${detail}`, res.status, code);
+    throw new UpstreamError(`Anthropic ${res.status}: ${detail}`, res.status, code, {
+      httpStatus: res.status,
+      requestId,
+      durationMs,
+    });
   }
   const body = await res.json();
   const toolBlock = (body.content || []).find((b: { type: string }) => b.type === "tool_use");
   if (!toolBlock?.input) {
-    throw new UpstreamError("Claude did not return a tool_use block", 502, "upstream_error");
+    throw new UpstreamError("Claude did not return a tool_use block", 502, "upstream_error", {
+      httpStatus: res.status,
+      requestId,
+      durationMs,
+    });
   }
-  return { raw: toolBlock.input as Record<string, unknown>, few_shot_count: bank.length };
+  const usage: UpstreamUsage = body.usage ?? { input_tokens: 0, output_tokens: 0 };
+  return {
+    raw: toolBlock.input as Record<string, unknown>,
+    few_shot_count: bank.length,
+    usage,
+    http_status: res.status,
+    request_id: requestId,
+    duration_ms: durationMs,
+  };
 }
 
 serve(async (req) => {
@@ -402,9 +533,15 @@ serve(async (req) => {
   const isPaidTier = tier === "keeper" || tier === "breeder" || tier === "enterprise";
   const includeValueEstimate = !!profile.morph_id_show_value_estimate && (isPaidTier || isAdmin);
 
+  // Hoisted so the catch block can include them in the spend-log row.
+  // Defaults match what `logInvocation` should see if we crash before
+  // parsing the request body.
+  let imageUrls: string[] = [];
+  let model = CLAUDE_MODEL;
+  let surface = "morph_id_production";
+
   try {
     const body = await req.json().catch(() => ({}));
-    let imageUrls: string[] = [];
     if (Array.isArray(body?.imageUrls)) {
       imageUrls = body.imageUrls.filter((u: unknown) => typeof u === "string" && u);
     } else if (typeof body?.imageUrl === "string") {
@@ -419,7 +556,16 @@ serve(async (req) => {
     // The eval pipeline sends `model: "claude-haiku-4-5"` for cheap iteration
     // and "claude-sonnet-4-6" for benchmark runs. Production callers
     // (Recognition.jsx, TrainModel.jsx) omit `model` and get the env default.
-    const model = resolveModel(body?.model);
+    model = resolveModel(body?.model);
+
+    // Surface tag for the spend-log sink. Eval script sends
+    // surface='morph_id_eval' + the shared secret header; admin callers
+    // can tag themselves freely; everyone else gets 'morph_id_production'.
+    surface = resolveSurface(
+      body?.surface,
+      isAdmin,
+      req.headers.get("x-eval-secret"),
+    );
 
     let creditsConsumed = 0;
     let creditsRemaining: number | null = null;
@@ -448,14 +594,36 @@ serve(async (req) => {
       creditsRemaining = Math.max(0, creditsIncluded - creditsConsumed);
     }
 
-    const { raw, few_shot_count } = await callClaude(imageUrls, includeValueEstimate, model);
-    const analysis = clampToTaxonomy(raw, includeValueEstimate, model);
+    const result = await callClaude(imageUrls, includeValueEstimate, model);
+    const analysis = clampToTaxonomy(result.raw, includeValueEstimate, model);
+    await logInvocation({
+      surface,
+      model,
+      input_tokens: result.usage.input_tokens ?? 0,
+      output_tokens: result.usage.output_tokens ?? 0,
+      cache_read_tokens: result.usage.cache_read_input_tokens ?? null,
+      cache_creation_tokens: result.usage.cache_creation_input_tokens ?? null,
+      est_cost_cents: computeCostCents(
+        model,
+        result.usage.input_tokens ?? 0,
+        result.usage.output_tokens ?? 0,
+      ),
+      user_id: profile.auth_user_id,
+      tier,
+      is_admin: isAdmin,
+      photo_count: imageUrls.length,
+      few_shot_count: result.few_shot_count,
+      http_status: result.http_status,
+      error_code: null,
+      duration_ms: result.duration_ms,
+      request_id: result.request_id,
+    });
     return json({
       success: true,
       analysis,
       model,
       photo_count: imageUrls.length,
-      few_shot_count,
+      few_shot_count: result.few_shot_count,
       tier,
       is_admin: isAdmin,
       credits_included: creditsIncluded,
@@ -465,9 +633,45 @@ serve(async (req) => {
     });
   } catch (err) {
     if (err instanceof UpstreamError) {
+      await logInvocation({
+        surface,
+        model,
+        input_tokens: 0,
+        output_tokens: 0,
+        cache_read_tokens: null,
+        cache_creation_tokens: null,
+        est_cost_cents: 0,
+        user_id: profile.auth_user_id,
+        tier,
+        is_admin: isAdmin,
+        photo_count: imageUrls.length,
+        few_shot_count: null,
+        http_status: err.httpStatus,
+        error_code: err.code,
+        duration_ms: err.durationMs,
+        request_id: err.requestId,
+      });
       return json({ error: err.message, code: err.code }, err.status === 429 ? 503 : 502);
     }
     const message = err instanceof Error ? err.message : String(err);
+    await logInvocation({
+      surface,
+      model,
+      input_tokens: 0,
+      output_tokens: 0,
+      cache_read_tokens: null,
+      cache_creation_tokens: null,
+      est_cost_cents: 0,
+      user_id: profile.auth_user_id,
+      tier,
+      is_admin: isAdmin,
+      photo_count: imageUrls.length,
+      few_shot_count: null,
+      http_status: null,
+      error_code: "internal_error",
+      duration_ms: null,
+      request_id: null,
+    });
     return json({ error: message, code: "internal_error" }, 500);
   }
 });
