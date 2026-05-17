@@ -199,7 +199,7 @@ const MEMBERSHIP_JSON_LD = [
         name: 'How much does Geck Inspect cost?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Geck Inspect has a Free tier (10 geckos), a Keeper tier ($4/month, $38.40/year, or $149 lifetime), a Breeder tier ($9/month, $105.60/year, or $349 lifetime), and a custom-quoted Enterprise tier. Annual plans save 20% versus monthly; lifetime plans are a one-time purchase with no renewals.',
+          text: 'Geck Inspect has a Free tier (10 geckos), a Keeper tier ($2.99/month, $30/year, or $149 lifetime), a Breeder tier ($5.99/month, $60/year, or $349 lifetime), and a custom-quoted Enterprise tier. Annual plans save vs monthly; lifetime plans are a one-time purchase with no renewals.',
         },
       },
       {
@@ -370,7 +370,7 @@ export default function MembershipPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 p-6">
       <Seo
         title="Pricing & Plans"
-        description="Geck Inspect plans for crested gecko keepers and breeders. Free (10 geckos), Keeper ($4/mo, $38.40/yr, $149 lifetime), Breeder ($9/mo, $105.60/yr, $349 lifetime), and custom Enterprise. 7-day free trial on recurring plans. Cancel anytime."
+        description="Geck Inspect plans for crested gecko keepers and breeders. Free (10 geckos), Keeper ($2.99/mo, $30/yr, $149 lifetime), Breeder ($5.99/mo, $60/yr, $349 lifetime), and custom Enterprise. 7-day free trial on recurring plans. Cancel anytime."
         path="/Membership"
         type="website"
         imageAlt="Geck Inspect membership plans ,  Free, Keeper, Breeder, and Enterprise tiers"
