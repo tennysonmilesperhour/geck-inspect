@@ -374,16 +374,23 @@ export default function PublicProfile() {
                     )}
                 </div>
                 <div className="md:col-span-2">
+                    {(() => {
+                        const showBreeders = profileUser.show_breeders_publicly !== false;
+                        const tabCount = showBreeders ? 3 : 2;
+                        const gridClass = tabCount === 3 ? 'grid-cols-3' : 'grid-cols-2';
+                        return (
                     <Tabs defaultValue="for-sale" className="w-full">
-                        <TabsList className="grid w-full grid-cols-3 mb-6 bg-slate-800">
+                        <TabsList className={`grid w-full ${gridClass} mb-6 bg-slate-800`}>
                             <TabsTrigger value="for-sale" className="data-[state=active]:bg-orange-600">
                                 <ShoppingCart className="w-4 h-4 mr-2" />
                                 For Sale ({forSaleGeckos.length})
                             </TabsTrigger>
-                            <TabsTrigger value="breeders" className="data-[state=active]:bg-pink-600">
-                                <GitBranch className="w-4 h-4 mr-2" />
-                                Breeders ({breedingGeckos.length})
-                            </TabsTrigger>
+                            {showBreeders && (
+                                <TabsTrigger value="breeders" className="data-[state=active]:bg-pink-600">
+                                    <GitBranch className="w-4 h-4 mr-2" />
+                                    Breeders ({breedingGeckos.length})
+                                </TabsTrigger>
+                            )}
                             <TabsTrigger value="collection" className="data-[state=active]:bg-blue-600">
                                 <Heart className="w-4 h-4 mr-2" />
                                 Collection ({collectionGeckos.length})
@@ -405,6 +412,7 @@ export default function PublicProfile() {
                             )}
                         </TabsContent>
 
+                        {showBreeders && (
                         <TabsContent value="breeders">
                             {breedingGeckos.length > 0 ? (
                                 <div className="space-y-8">
@@ -457,6 +465,7 @@ export default function PublicProfile() {
                                 </div>
                             )}
                         </TabsContent>
+                        )}
 
                         <TabsContent value="collection">
                             {collectionGeckos.length > 0 ? (
@@ -473,6 +482,8 @@ export default function PublicProfile() {
                             )}
                         </TabsContent>
                     </Tabs>
+                        );
+                    })()}
                 </div>
             </div>
         </div>

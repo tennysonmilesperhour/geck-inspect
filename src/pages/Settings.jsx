@@ -5,6 +5,7 @@ import { useToast } from "@/components/ui/use-toast";
 import usePageSettings from '@/hooks/usePageSettings';
 import StorageUsageCard from '@/components/settings/StorageUsageCard';
 import CollectionsCard from '@/components/settings/CollectionsCard';
+import BreederStoreCard from '@/components/settings/BreederStoreCard';
 import IdLogicSettings, { DEFAULT_ID_SETTINGS } from '@/components/settings/IdLogicSettings';
 import PushNotificationsCard from '@/components/settings/PushNotificationsCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -231,6 +232,7 @@ const initialFormData = {
     is_public_profile: true,
     show_username_on_images: true,
     allow_profile_clicks: true,
+    show_breeders_publicly: true,
     website_url: '',
     instagram_handle: '',
     facebook_url: '',
@@ -341,6 +343,7 @@ export default function SettingsPage() {
                         is_public_profile: currentUser.is_public_profile !== false, // Default true
                         show_username_on_images: currentUser.show_username_on_images !== false,
                         allow_profile_clicks: currentUser.allow_profile_clicks !== false,
+                        show_breeders_publicly: currentUser.show_breeders_publicly !== false,
                         website_url: currentUser.website_url || '',
                         instagram_handle: currentUser.instagram_handle || '',
                         facebook_url: currentUser.facebook_url || '',
@@ -771,16 +774,33 @@ export default function SettingsPage() {
                     <CardHeader><CardTitle className="text-slate-100 flex items-center gap-2"><Eye className="w-5 h-5"/>Privacy Settings</CardTitle></CardHeader>
                     <CardContent className="space-y-4">
                         {renderSwitch('is-public-profile', 'Show in Community Directory / Make Profile Public', 'Allow others to find you and view your profile and collection', formData.is_public_profile, (checked) => handleChange('is_public_profile', checked))}
+                        {renderSwitch('show-breeders-publicly', 'Show My Breeders Publicly', 'Display the Breeders tab on your public profile so other keepers can see your active breeding pairs. Turn off to keep that collection private.', formData.show_breeders_publicly, (checked) => handleChange('show_breeders_publicly', checked))}
                         {renderSwitch('show-username', 'Show Username on Images', 'Display your name on images you upload', formData.show_username_on_images, (checked) => handleChange('show_username_on_images', checked))}
                         {renderSwitch('allow-clicks', 'Allow Profile Clicks', 'Let others click your name to view your profile', formData.allow_profile_clicks, (checked) => handleChange('allow_profile_clicks', checked))}
                         {renderSwitch('palm-sync', 'Sync with PalmStreet', 'Allows PalmStreet users to find your public profile', formData.palm_street_sync_enabled, (checked) => handleChange('palm_street_sync_enabled', checked))}
+                        {user?.id && (
+                            <div className="pt-2">
+                                <a
+                                    href={`/PublicProfile?userId=${user.id}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="inline-flex items-center gap-2 text-sm text-emerald-300 hover:text-emerald-200 underline-offset-2 hover:underline"
+                                >
+                                    <Eye className="w-4 h-4" />
+                                    Preview my profile as a visitor would see it
+                                </a>
+                                <p className="text-xs text-slate-500 mt-1">
+                                    Opens your public profile in a new tab. Anything hidden by the toggles above stays hidden.
+                                </p>
+                            </div>
+                        )}
                     </CardContent>
                 </Card>
                 </section>
 
-                {/* Breeder-tier only: opt in to be featured on the home dashboard.
-                    Grandfathered users automatically qualify for Breeder privileges. */}
-                {(user?.membership_tier === 'breeder' || user?.subscription_status === 'grandfathered') && (
+                {/* Breeder/Enterprise-tier only: opt in to be featured on the home dashboard
+                    and run a custom store page. Grandfathered users automatically qualify. */}
+                {(user?.membership_tier === 'breeder' || user?.membership_tier === 'enterprise' || user?.subscription_status === 'grandfathered') && (
                 <section id="breeder-perks">
                     <Card className="bg-emerald-950/20 border-emerald-900/40 backdrop-blur-sm">
                         <CardHeader>
@@ -802,6 +822,10 @@ export default function SettingsPage() {
                         </CardContent>
                     </Card>
                 </section>
+                )}
+
+                {(user?.membership_tier === 'breeder' || user?.membership_tier === 'enterprise' || user?.subscription_status === 'grandfathered') && (
+                    <BreederStoreCard userEmail={user?.email} />
                 )}
 
                 <section id="email-notifications">

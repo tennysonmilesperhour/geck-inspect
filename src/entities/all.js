@@ -50,6 +50,7 @@ export const User = new Proxy({}, {
 
 // All data entities ,  Supabase
 export const AppSettings = sb.AppSettings;
+export const BreederStorePage = sb.BreederStorePage;
 export const BreedingPlan = sb.BreedingPlan;
 export const CareGuideSection = sb.CareGuideSection;
 export const ChangeLog = sb.ChangeLog;

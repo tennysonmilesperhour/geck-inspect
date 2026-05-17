@@ -15,6 +15,7 @@ import {
     Flame,
     Camera,
     Crown,
+    Eye,
 } from 'lucide-react';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -24,6 +25,8 @@ import FeaturedBreeders from '../components/dashboard/FeaturedBreeders';
 import NextActions from '../components/dashboard/NextActions';
 import CommunityPulse from '../components/dashboard/CommunityPulse';
 import { default as GeckoOfTheDayComponent } from '../components/dashboard/GeckoOfTheDay';
+import MyStoreButton from '../components/dashboard/MyStoreButton';
+import DailyPromptCard from '../components/dashboard/DailyPromptCard';
 import ImageDetailModal from '../components/gallery/ImageDetailModal';
 import ChangeLogModal from '../components/changelog/ChangeLogModal';
 import { Button } from '@/components/ui/button';
@@ -202,6 +205,18 @@ export default function Dashboard() {
     const firstName = getDisplayName(user).split(' ')[0];
     const todayLabel = format(now, "EEEE 'in the hatchery'");
 
+    // Seasonal flavor: rotates the hero kicker by month so the page
+    // feels written by someone actually keeping crested geckos through
+    // a breeding year, not a static template.
+    const seasonalKicker = (() => {
+        const m = now.getMonth(); // 0 = Jan
+        if (m >= 2 && m <= 4) return 'Breeding season is on. Who is pairing up this week?';
+        if (m >= 5 && m <= 7) return 'Hatchling parade season. New faces dropping daily.';
+        if (m >= 8 && m <= 9) return 'Late-season eggs and growth weights. The home stretch.';
+        if (m === 10) return 'Diapause prep month. Time to cool things down.';
+        return 'Cozy off-season. Plan your next pairings while the geckos rest.';
+    })();
+
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-emerald-950/30 to-slate-900 relative overflow-hidden">
             <Seo
@@ -259,6 +274,9 @@ export default function Dashboard() {
                                             "Fresh dashboard, no geckos logged yet. Add your first one and watch the lineage tree grow."
                                         )}
                                     </p>
+                                    <p className="text-emerald-300/70 text-sm md:text-base italic">
+                                        {seasonalKicker}
+                                    </p>
                                 </div>
 
                                 <div className="flex flex-wrap gap-2.5">
@@ -284,6 +302,22 @@ export default function Dashboard() {
                                                 My Collection
                                             </Button>
                                         </Link>
+                                    )}
+                                    {user && <MyStoreButton user={user} />}
+                                    {user?.id && (
+                                        <a
+                                            href={`/PublicProfile?userId=${user.id}`}
+                                            target="_blank"
+                                            rel="noopener noreferrer"
+                                        >
+                                            <Button
+                                                variant="outline"
+                                                className="border-slate-600 bg-slate-900/60 text-slate-100 hover:bg-slate-800 backdrop-blur-sm"
+                                            >
+                                                <Eye className="w-4 h-4 mr-2" />
+                                                Preview profile
+                                            </Button>
+                                        </a>
                                     )}
                                     <PageSettingsPanel title="Dashboard Settings">
                                         <div className="flex items-center justify-between">
@@ -354,6 +388,8 @@ export default function Dashboard() {
                             />
                         </div>
                     )}
+
+                    <DailyPromptCard />
 
                     {/* MAIN CONTENT GRID ,  3 columns on large screens */}
                     <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">

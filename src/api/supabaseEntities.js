@@ -51,10 +51,12 @@ export const ENTITIES_WITHOUT_CREATED_BY = new Set([
   'GeckoWaitlist',
   'GeckoWaitlistSignup',
   'PromoteImage',
+  'BreederStorePage',
 ]);
 
 export const TABLE_MAP = {
   AppSettings: 'app_settings',
+  BreederStorePage: 'breeder_store_pages',
   BreedingPlan: 'breeding_plans',
   CareGuideSection: 'care_guide_sections',
   ChangeLog: 'change_logs',
@@ -336,6 +338,7 @@ function createEntityClient(entityName) {
 
 // Named entity exports (same names as Base44)
 export const AppSettings = createEntityClient('AppSettings');
+export const BreederStorePage = createEntityClient('BreederStorePage');
 export const BreedingPlan = createEntityClient('BreedingPlan');
 export const CareGuideSection = createEntityClient('CareGuideSection');
 export const ChangeLog = createEntityClient('ChangeLog');
