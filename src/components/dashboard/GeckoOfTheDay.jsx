@@ -19,8 +19,8 @@ export default function GeckoOfTheDay({ geckoOfTheDay, fallbackGecko = null, onI
                 </CardHeader>
                 <CardContent>
                     <div className="text-center py-8 text-slate-400">
-                        <p>No gecko images available to feature yet.</p>
-                        <p className="text-sm mt-2">Upload some gecko photos to see them featured here!</p>
+                        <p>Quiet day in the gallery so far.</p>
+                        <p className="text-sm mt-2">Drop a photo of one of yours and it could land here tomorrow.</p>
                     </div>
                 </CardContent>
             </Card>
@@ -46,13 +46,15 @@ export default function GeckoOfTheDay({ geckoOfTheDay, fallbackGecko = null, onI
             </CardHeader>
             <CardContent className="space-y-4">
                 <div onClick={handleSelect} className="relative aspect-[4/3] rounded-lg overflow-hidden cursor-pointer group">
-                    <img 
-                        src={image.image_url} 
+                    <img
+                        src={image.image_url}
                         alt={isOfficial ? "Gecko of the day" : "Featured gecko"}
                         className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
                     />
                     <div className="absolute bottom-4 left-4 text-white">
-                        <h3 className="text-xl font-bold drop-shadow-lg">{image.primary_morph.replace(/_/g, ' ')}</h3>
+                        <h3 className="text-xl font-bold drop-shadow-lg">
+                            {image.primary_morph ? image.primary_morph.replace(/_/g, ' ') : 'Crested Gecko'}
+                        </h3>
                     </div>
                 </div>
                 

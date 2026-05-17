@@ -158,12 +158,23 @@ export default function Dashboard() {
                     setFallbackGecko(null);
                 } else if (recentImagesData.length > 0) {
                     const randomImage = recentImagesData[Math.floor(Math.random() * recentImagesData.length)];
-                    const uploaderResult = await User.filter({ email: randomImage.created_by });
+                    const uploaderResult = randomImage.created_by
+                        ? await User.filter({ email: randomImage.created_by })
+                        : [];
                     const uploader = uploaderResult.length > 0 ? uploaderResult[0] : null;
+                    const morphLabel = randomImage.primary_morph
+                        ? randomImage.primary_morph.replace(/_/g, ' ')
+                        : 'crested gecko';
+                    const flavors = [
+                        `A gorgeous ${morphLabel} caught our eye this morning. Tap to see the full shot.`,
+                        `Spotlight on this ${morphLabel}. Patterns like this are why we do this.`,
+                        `This ${morphLabel} is the kind of animal that makes you stop scrolling.`,
+                        `Today's eye candy: a ${morphLabel} shared by the community.`,
+                    ];
                     setFallbackGecko({
                         image: randomImage,
                         uploader,
-                        appreciative_message: `A stunning ${randomImage.primary_morph ? randomImage.primary_morph.replace(/_/g, ' ') : 'gecko'} from our community!`,
+                        appreciative_message: flavors[Math.floor(Math.random() * flavors.length)],
                     });
                     setGeckoOfTheDay(null);
                 }
@@ -179,15 +190,17 @@ export default function Dashboard() {
         setSelectedImageData({ image, uploader });
     };
 
+    const now = new Date();
     const greeting = (() => {
-        const h = new Date().getHours();
-        if (h < 5) return 'Up late';
+        const h = now.getHours();
+        if (h < 5) return 'Burning the midnight oil';
         if (h < 12) return 'Good morning';
         if (h < 17) return 'Good afternoon';
         if (h < 22) return 'Good evening';
         return 'Night owl';
     })();
     const firstName = getDisplayName(user).split(' ')[0];
+    const todayLabel = format(now, "EEEE 'in the hatchery'");
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-emerald-950/30 to-slate-900 relative overflow-hidden">
@@ -215,7 +228,7 @@ export default function Dashboard() {
                                 <div className="space-y-3">
                                     <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-xs font-semibold text-emerald-300">
                                         <Flame className="w-3.5 h-3.5" />
-                                        Live dashboard
+                                        {todayLabel}
                                     </div>
                                     <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-[1.05] bg-gradient-to-b from-white via-emerald-100 to-emerald-300 bg-clip-text text-transparent">
                                         {greeting}, {firstName}
@@ -223,25 +236,27 @@ export default function Dashboard() {
                                     <p className="text-slate-300 text-base md:text-lg max-w-2xl leading-relaxed">
                                         {stats.geckos > 0 ? (
                                             <>
-                                                The community is tracking{' '}
-                                                <span className="font-bold text-white">{stats.geckos.toLocaleString()}</span>{' '}
-                                                geckos across{' '}
+                                                Right now,{' '}
                                                 <span className="font-bold text-white">{stats.users.toLocaleString()}</span>{' '}
-                                                keepers right now. {hatcheryStats.incubating > 0 && (
+                                                keepers are tracking{' '}
+                                                <span className="font-bold text-white">{stats.geckos.toLocaleString()}</span>{' '}
+                                                crested geckos together.{' '}
+                                                {hatcheryStats.incubating > 0 && (
                                                     <>
-                                                        <span className="text-amber-300">{hatcheryStats.incubating}</span> eggs
-                                                        are in incubators.{' '}
+                                                        <span className="text-amber-300">{hatcheryStats.incubating}</span>{' '}
+                                                        {hatcheryStats.incubating === 1 ? 'egg is' : 'eggs are'} warming up,{' '}
                                                     </>
                                                 )}
                                                 {hatcheryStats.plans > 0 && (
                                                     <>
-                                                        <span className="text-emerald-300">{hatcheryStats.plans}</span> active
-                                                        breeding plans.
+                                                        and{' '}
+                                                        <span className="text-emerald-300">{hatcheryStats.plans}</span>{' '}
+                                                        breeding {hatcheryStats.plans === 1 ? 'plan is' : 'plans are'} in motion.
                                                     </>
                                                 )}
                                             </>
                                         ) : (
-                                            'Welcome to your gecko universe. The community is just getting started.'
+                                            "Fresh dashboard, no geckos logged yet. Add your first one and watch the lineage tree grow."
                                         )}
                                     </p>
                                 </div>
@@ -310,32 +325,32 @@ export default function Dashboard() {
                     ) : (
                         <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 ${dashPrefs.compactStats ? 'max-w-3xl' : ''}`}>
                             <StatsCard
-                                title="Community Members"
+                                title="Keepers"
                                 value={stats.users.toLocaleString()}
                                 icon={Users}
                                 gradient="from-cyan-500 to-blue-600"
-                                description={dashPrefs.compactStats ? '' : 'Active keepers'}
+                                description={dashPrefs.compactStats ? '' : 'In the community'}
                             />
                             <StatsCard
-                                title="Geckos Tracked"
+                                title="Crested Geckos"
                                 value={stats.geckos.toLocaleString()}
                                 icon={GitBranch}
                                 gradient="from-emerald-500 to-green-600"
-                                description={dashPrefs.compactStats ? '' : 'Across collections'}
+                                description={dashPrefs.compactStats ? '' : 'Tracked together'}
                             />
                             <StatsCard
-                                title="Recent Uploads"
+                                title="Fresh Photos"
                                 value={stats.images.toLocaleString()}
                                 icon={Camera}
                                 gradient="from-amber-500 to-orange-600"
-                                description={dashPrefs.compactStats ? '' : 'Last 20 photos'}
+                                description={dashPrefs.compactStats ? '' : 'Just uploaded'}
                             />
                             <StatsCard
-                                title="Forum Buzz"
+                                title="Forum Threads"
                                 value={stats.posts.toLocaleString()}
                                 icon={MessageSquare}
                                 gradient="from-violet-500 to-purple-600"
-                                description={dashPrefs.compactStats ? '' : 'Recent discussions'}
+                                description={dashPrefs.compactStats ? '' : 'Buzzing now'}
                             />
                         </div>
                     )}

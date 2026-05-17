@@ -21,7 +21,12 @@ export default function ImageDetailModal({ data, onClose }) {
         ? image.primary_morph.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())
         : 'Unknown';
 
-    const uploaderName = uploader?.full_name || image.created_by.split('@')[0];
+    const uploaderName =
+        uploader?.full_name ||
+        uploader?.breeder_name ||
+        uploader?.email?.split('@')[0] ||
+        image.created_by?.split('@')[0] ||
+        'A community member';
 
     return (
         <Dialog open={true} onOpenChange={onClose}>
@@ -37,7 +42,12 @@ export default function ImageDetailModal({ data, onClose }) {
                         ) : (
                             <span>{uploaderName}</span>
                         )}
-                        {' '} about {formatDistanceToNow(new Date(image.created_date), { addSuffix: true })}.
+                        {image.created_date && (
+                            <>
+                                {' '}
+                                {formatDistanceToNow(new Date(image.created_date), { addSuffix: true })}
+                            </>
+                        )}.
                     </DialogDescription>
                 </DialogHeader>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
