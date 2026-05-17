@@ -565,20 +565,52 @@ html, body, #root {
                         max-height 0.22s cubic-bezier(0, 0, 0.2, 1),
                         padding 0.22s cubic-bezier(0, 0, 0.2, 1);
           }
-          /* Collapsed rail: nav icons / favorites / footer items are
-             2rem (32px) circles. Wrapper paddings are set to 1rem so
-             that circle centers land at 2rem from the rail's left
-             edge (1rem padding + 1rem half-circle = 2rem), matching
-             the logo and avatar above. The avatar's wrapper keeps
-             its 0.75rem padding because the avatar's tier-ring is
-             ~42px wide (0.75 + ~1.25 = 2rem). The logo wrapper also
-             keeps 0.75rem because the logo circle is 2.5rem to
-             visually match the avatar+ring outer size. */
+          /* Collapsed rail centering strategy
+             -----------------------------------
+             The inner sidebar content is forced to width: 16rem (so
+             the expand/collapse transition is smooth, no reflow), but
+             the visible rail is only 4rem (64px) wide and clips the
+             rest. To get every icon to land on the rail's vertical
+             centerline (x = 2rem from rail-left) without per-wrapper
+             padding math, every section wrapper is constrained to
+             width: 4rem with zero horizontal padding, then each child
+             item uses margin-left/right: auto so it auto-centers in
+             that 4rem parent. Children whose width is uneven (logo
+             42px, avatar+ring ~42px, nav circles 32px, footer circles
+             32px) all land at x = 2rem center regardless. */
+          .desktop-sidebar-wrapper.is-collapsed .desktop-sidebar-logo,
+          .desktop-sidebar-wrapper.is-collapsed .sidebar-user-block,
+          .desktop-sidebar-wrapper.is-collapsed nav.space-y-1,
+          .desktop-sidebar-wrapper.is-collapsed .px-3.mb-4,
+          .desktop-sidebar-wrapper.is-collapsed .mt-auto,
+          .desktop-sidebar-wrapper.is-collapsed .mt-auto > .space-y-3 {
+            width: 4rem !important;
+            max-width: 4rem !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+          }
+
+          /* Footer wrapper keeps its vertical p-4 but no horizontal. */
+          .desktop-sidebar-wrapper.is-collapsed .mt-auto {
+            padding-top: 0.75rem !important;
+            padding-bottom: 0.75rem !important;
+          }
+
+          /* Nav items: 2rem (32px) circles, auto-centered in their
+             4rem-wide parent <nav>. Use !important on every layout
+             property so leftover Tailwind utilities on the original
+             Link (px-2 py-2, etc.) can't shift the icon off-axis. */
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item {
             width: 2rem !important;
             height: 2rem !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
             padding: 0 !important;
             border-radius: 9999px !important;
+            display: flex !important;
             justify-content: center !important;
             align-items: center !important;
             overflow: visible !important;
@@ -586,20 +618,14 @@ html, body, #root {
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item > svg,
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item > .mr-2,
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item > .mr-3 {
-            margin-right: 0 !important;
+            margin: 0 !important;
           }
-          .desktop-sidebar-wrapper.is-collapsed nav.space-y-1 {
-            padding-left: 1rem !important;
-            padding-right: 1rem !important;
-          }
-          /* Active state: glowing circular ring in user's tier color.
-             Ring sits tight at the 2rem circle's edge so it reads as
-             "around the icon" not "around an empty area". */
-          .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item.active,
-          .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item.active::before {
+
+          /* Active state: glowing circular ring in the user's tier
+             color. data-tier on the wrapper picks the palette. */
+          .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item.active {
             background: transparent !important;
             border-left: 0 !important;
-            border-radius: 9999px !important;
           }
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item.active::before {
             display: none !important;
@@ -620,57 +646,65 @@ html, body, #root {
               0 0 0 2px rgba(251, 191, 36, 0.95),
               0 0 12px rgba(251, 191, 36, 0.55);
           }
-          /* Favorites grid: single column of 2rem circles. */
+
+          /* Hover: tight pill, no translate / glow shift. */
+          .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item:hover {
+            transform: none;
+            box-shadow: none !important;
+            background: rgba(16, 185, 129, 0.2) !important;
+          }
+
+          /* Favorites grid: single centered column; each tile is a
+             2rem circle to match the nav rows. */
           .desktop-sidebar-wrapper.is-collapsed .grid.grid-cols-2 {
             grid-template-columns: 1fr;
-          }
-          .desktop-sidebar-wrapper.is-collapsed .px-3.mb-4 {
-            padding-left: 1rem !important;
-            padding-right: 1rem !important;
+            justify-items: center;
+            width: 100%;
           }
           .desktop-sidebar-wrapper.is-collapsed .favorite-tile {
             width: 2rem !important;
             height: 2rem !important;
             padding: 0 !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
             border-radius: 9999px !important;
           }
           .desktop-sidebar-wrapper.is-collapsed .favorite-tile > svg {
             width: 1.25rem !important;
             height: 1.25rem !important;
           }
-          .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item:hover {
-            transform: none;
-            box-shadow: none !important;
-            background: rgba(16, 185, 129, 0.2) !important;
-          }
-          /* Footer block: same 2rem circle treatment. .mt-auto's p-4
-             horizontal padding overridden to 1rem so buttons center
-             at 2rem from the rail's left edge. Vertical spacing
-             tightened from space-y-3 (12px) to 6px so the icon
-             column reads as a cohesive stack instead of a scattered
-             list. */
-          .desktop-sidebar-wrapper.is-collapsed .mt-auto {
-            padding-left: 1rem !important;
-            padding-right: 1rem !important;
-            padding-top: 0.75rem !important;
-            padding-bottom: 0.75rem !important;
-          }
+
+          /* Footer items: 2rem circles, auto-centered in their 4rem
+             parent. Vertical spacing tightened from space-y-3 (12px)
+             to 6px so the icon column reads cohesively. */
           .desktop-sidebar-wrapper.is-collapsed .mt-auto .space-y-3 > * + * {
             margin-top: 0.375rem !important;
           }
           .desktop-sidebar-wrapper.is-collapsed .mt-auto a,
+          .desktop-sidebar-wrapper.is-collapsed .mt-auto > .space-y-3 > div,
+          .desktop-sidebar-wrapper.is-collapsed .mt-auto > .space-y-3 > div > a {
+            width: 2rem !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
+            display: flex !important;
+            justify-content: center !important;
+            padding: 0 !important;
+          }
           .desktop-sidebar-wrapper.is-collapsed .mt-auto button {
             width: 2rem !important;
             height: 2rem !important;
             min-height: 2rem !important;
             border-radius: 9999px !important;
-            justify-content: center !important;
-            align-items: center !important;
             padding: 0 !important;
             display: flex !important;
+            justify-content: center !important;
+            align-items: center !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
           }
-          .desktop-sidebar-wrapper.is-collapsed .mt-auto svg.mr-2 {
-            margin-right: 0 !important;
+          .desktop-sidebar-wrapper.is-collapsed .mt-auto svg.mr-2,
+          .desktop-sidebar-wrapper.is-collapsed .mt-auto button > svg {
+            margin: 0 !important;
           }
           .desktop-sidebar-wrapper.is-collapsed .mt-auto button,
           .desktop-sidebar-wrapper.is-collapsed .mt-auto a > button {
@@ -678,26 +712,23 @@ html, body, #root {
             background: transparent !important;
             box-shadow: none !important;
           }
-          /* Logo tile: 2.5rem circle to visually match the avatar +
-             tier-ring outer footprint beneath it. Wrapper keeps
-             0.75rem padding so logo center sits at 0.75 + 1.25 =
-             2rem from rail-left, same axis as everything else. */
-          .desktop-sidebar-wrapper.is-collapsed .desktop-sidebar-logo {
-            padding-left: 0.75rem !important;
-            padding-right: 0.75rem !important;
-          }
+
+          /* Logo tile: 42px circle to visually match the avatar +
+             tier-ring outer footprint beneath it. */
           .desktop-sidebar-wrapper.is-collapsed .desktop-sidebar-logo a {
             border-color: transparent !important;
             background: transparent !important;
-            width: 2.5rem !important;
-            height: 2.5rem !important;
+            width: 42px !important;
+            height: 42px !important;
             padding: 0 !important;
             gap: 0 !important;
+            margin-left: auto !important;
+            margin-right: auto !important;
             border-radius: 9999px !important;
             overflow: hidden;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
           }
           .desktop-sidebar-wrapper.is-collapsed .desktop-sidebar-logo a img {
             width: 100% !important;
