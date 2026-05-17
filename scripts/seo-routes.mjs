@@ -47,6 +47,12 @@ function loadMorphSlugs() {
   return slugs;
 }
 
+function loadProjectLineSlugs() {
+  const src = readFileSync(resolve(REPO_ROOT, 'src/data/project-lines.js'), 'utf8');
+  const matches = [...src.matchAll(/slug:\s*'([a-z0-9-]+)'/g)];
+  return [...new Set(matches.map((m) => m[1]))];
+}
+
 // Resolve blog post entries (slug + title + description + dateModified)
 // from src/data/blog-posts.js so every post automatically gets a sitemap
 // entry, prerendered HTML, and a vercel.json rewrite. Mirrors the morph
@@ -473,11 +479,21 @@ export function getCalculatorMorphRoutes() {
   }));
 }
 
+export function getProjectLineRoutes() {
+  return loadProjectLineSlugs().map((slug) => ({
+    path: `/MorphGuide/lines/${slug}`,
+    priority: 0.7,
+    changefreq: 'monthly',
+    lastmod: TODAY,
+  }));
+}
+
 export function getAllRoutes() {
   return [
     ...STATIC_ROUTES,
     ...getMorphRoutes(),
     ...getMorphTaxonomyRoutes(),
+    ...getProjectLineRoutes(),
     ...getCareTopicRoutes(),
     ...getBlogRoutes(),
     ...getCalculatorMorphRoutes(),
@@ -564,6 +580,7 @@ export function getAllSpaPathPatterns() {
   for (const r of getMorphTaxonomyRoutes()) push(r.path);
   for (const r of getCareTopicRoutes()) push(r.path);
   for (const r of getMorphRoutes()) push(r.path);
+  for (const r of getProjectLineRoutes()) push(r.path);
   for (const r of getCalculatorMorphRoutes()) push(r.path);
   for (const r of getBlogRoutes()) push(r.path);
   for (const p of DYNAMIC_ROUTE_PATTERNS) push(p);

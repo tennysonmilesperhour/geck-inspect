@@ -54,6 +54,7 @@ const CASE_REDIRECTS = [
   { from: '/morphguide/:slug', to: '/MorphGuide/:slug' },
   { from: '/morphguide/category/:categoryId', to: '/MorphGuide/category/:categoryId' },
   { from: '/morphguide/inheritance/:inheritanceId', to: '/MorphGuide/inheritance/:inheritanceId' },
+  { from: '/morphguide/lines/:slug', to: '/MorphGuide/lines/:slug' },
   { from: '/careguide', to: '/CareGuide' },
   { from: '/careguide/:topic', to: '/CareGuide/:topic' },
   { from: '/geneticsguide', to: '/GeneticsGuide' },

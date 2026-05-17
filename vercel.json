@@ -207,6 +207,11 @@
       "permanent": true
     },
     {
+      "source": "/morphguide/lines/:slug",
+      "destination": "/MorphGuide/lines/:slug",
+      "permanent": true
+    },
+    {
       "source": "/careguide",
       "destination": "/CareGuide",
       "permanent": true

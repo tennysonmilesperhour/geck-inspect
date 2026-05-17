@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { MorphGuide } from '@/entities/MorphGuide';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,10 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
-import { Search, BookOpen, Filter, Dna, Sparkles, ArrowRight, Info } from 'lucide-react';
+import {
+  Search, BookOpen, Filter, Dna, Sparkles, ArrowRight, Info,
+  ShieldCheck, GitBranch,
+} from 'lucide-react';
 import Seo from '@/components/seo/Seo';
 import { supabase } from '@/lib/supabaseClient';
 import { morphSlug, pickBestMorphRecord } from '@/lib/morphUtils';
@@ -21,6 +24,7 @@ import {
   INHERITANCE,
   RARITY,
 } from '@/data/morph-guide';
+import { PROJECT_LINES, LINE_CONFIDENCE } from '@/data/project-lines';
 import RotatingMorphImage from '@/components/morphguide/RotatingMorphImage';
 
 // DefinedTermSet treats the morph guide as a controlled vocabulary for
@@ -190,6 +194,58 @@ function MorphCard({ morph }) {
   );
 }
 
+function LineCard({ line }) {
+  const confidence = LINE_CONFIDENCE[line.confidence] || LINE_CONFIDENCE['community-attributed'];
+  const rarity = RARITY[line.rarity] || RARITY.uncommon;
+  return (
+    <Link
+      to={`/MorphGuide/lines/${line.slug}`}
+      className="group rounded-2xl overflow-hidden border border-slate-800 bg-slate-900/60 hover:border-violet-500/50 hover:bg-slate-900 transition-all duration-200 flex flex-col"
+    >
+      <div className="aspect-[4/3] bg-gradient-to-br from-violet-950/40 via-slate-900 to-slate-950 relative overflow-hidden flex items-center justify-center">
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl" />
+        </div>
+        <GitBranch className="w-16 h-16 text-violet-500/40 group-hover:text-violet-400/60 transition-colors" />
+        <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
+          <span
+            className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${confidence.color}`}
+            title={confidence.description}
+          >
+            <ShieldCheck className="w-3 h-3" />
+            {confidence.short}
+          </span>
+          <span
+            className={`inline-flex items-center rounded-full border px-2.5 py-1 text-[11px] font-semibold ${rarity.color}`}
+          >
+            {rarity.label}
+          </span>
+        </div>
+      </div>
+      <div className="flex-1 p-5 flex flex-col">
+        <h3 className="text-lg font-bold text-white mb-1 group-hover:text-violet-300 transition-colors">
+          {line.name}
+        </h3>
+        {line.founder && (
+          <p className="text-xs text-slate-500 mb-2 line-clamp-1">{line.founder}</p>
+        )}
+        <p className="text-sm text-slate-400 leading-relaxed line-clamp-3 flex-1">
+          {line.summary}
+        </p>
+        <div className="mt-4 flex flex-wrap items-center gap-2">
+          {line.priceRange && (
+            <span className="text-[11px] text-slate-500">{line.priceRange}</span>
+          )}
+          <span className="ml-auto inline-flex items-center gap-1 text-xs font-semibold text-violet-400 group-hover:text-violet-300">
+            Read
+            <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-0.5 transition-transform" />
+          </span>
+        </div>
+      </div>
+    </Link>
+  );
+}
+
 function InheritanceLegend() {
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
@@ -239,6 +295,51 @@ export default function MorphGuidePage() {
   const [sortBy, setSortBy] = useState('rarity_rare_first');
   const [isLoading, setIsLoading] = useState(true);
   const [showLegend, setShowLegend] = useState(false);
+
+  // Top-level tab toggle: 'morphs' (default) | 'lines'. Synced with the
+  // ?tab=lines query param so deep links from ProjectLineDetail land on
+  // the correct tab.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const initialView = searchParams.get('tab') === 'lines' ? 'lines' : 'morphs';
+  const [view, setView] = useState(initialView);
+  const [confidenceFilter, setConfidenceFilter] = useState('all');
+
+  const setViewAndUrl = (next) => {
+    setView(next);
+    const next_params = new URLSearchParams(searchParams);
+    if (next === 'lines') next_params.set('tab', 'lines');
+    else next_params.delete('tab');
+    setSearchParams(next_params, { replace: true });
+  };
+
+  const filteredLines = useMemo(() => {
+    let list = [...PROJECT_LINES];
+    if (confidenceFilter !== 'all') {
+      list = list.filter((l) => l.confidence === confidenceFilter);
+    }
+    if (rarityFilter !== 'all') {
+      list = list.filter((l) => l.rarity === rarityFilter);
+    }
+    if (searchTerm) {
+      const q = searchTerm.toLowerCase();
+      list = list.filter(
+        (l) =>
+          l.name.toLowerCase().includes(q) ||
+          (l.aliases || []).some((a) => a.toLowerCase().includes(q)) ||
+          (l.summary || '').toLowerCase().includes(q) ||
+          (l.description || '').toLowerCase().includes(q) ||
+          (l.founder || '').toLowerCase().includes(q),
+      );
+    }
+    list.sort((a, b) => {
+      // Verified first, then community, then disputed; tiebreak alphabetical.
+      const order = { verified: 0, 'community-attributed': 1, disputed: 2 };
+      const ai = order[a.confidence] ?? 3;
+      const bi = order[b.confidence] ?? 3;
+      return ai - bi || a.name.localeCompare(b.name);
+    });
+    return list;
+  }, [confidenceFilter, rarityFilter, searchTerm]);
 
   useEffect(() => {
     (async () => {
@@ -546,6 +647,164 @@ export default function MorphGuidePage() {
         </section>
 
         <section className="max-w-6xl mx-auto px-4 md:px-6 py-10 space-y-6">
+          {/* Top-level tab toggle: Morphs vs Project Lines */}
+          <div
+            role="tablist"
+            aria-label="Morph guide sections"
+            className="inline-flex rounded-2xl border border-slate-800 bg-slate-900/60 p-1"
+          >
+            <button
+              role="tab"
+              aria-selected={view === 'morphs'}
+              type="button"
+              onClick={() => setViewAndUrl('morphs')}
+              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
+                view === 'morphs'
+                  ? 'bg-emerald-600/20 text-emerald-200 border border-emerald-500/40'
+                  : 'text-slate-400 hover:text-slate-200 border border-transparent'
+              }`}
+            >
+              <Dna className="w-4 h-4" />
+              Morphs
+              <span className="text-[10px] opacity-60">{MORPHS.length}</span>
+            </button>
+            <button
+              role="tab"
+              aria-selected={view === 'lines'}
+              type="button"
+              onClick={() => setViewAndUrl('lines')}
+              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
+                view === 'lines'
+                  ? 'bg-violet-600/20 text-violet-200 border border-violet-500/40'
+                  : 'text-slate-400 hover:text-slate-200 border border-transparent'
+              }`}
+            >
+              <GitBranch className="w-4 h-4" />
+              Project Lines
+              <span className="text-[10px] opacity-60">{PROJECT_LINES.length}</span>
+            </button>
+          </div>
+
+          {view === 'lines' && (
+            <>
+              <div className="rounded-2xl border border-violet-500/20 bg-violet-950/10 p-5">
+                <div className="flex items-start gap-3">
+                  <ShieldCheck className="w-5 h-5 text-violet-300 mt-0.5 shrink-0" />
+                  <div className="text-sm text-slate-300 leading-relaxed">
+                    <p className="font-semibold text-violet-200 mb-1">What is a project line?</p>
+                    <p>
+                      A project line is a named bloodline maintained through selective pairings rather than a single Mendelian gene. Some lines (like the Rialto founders behind Sable) eventually prove out as morphs; others stay as a recognizable look passed across generations. Verification is the buyer&apos;s responsibility, this guide flags how well-documented each line is.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Search + filters for lines */}
+              <div className="rounded-2xl border border-slate-800 bg-slate-900/50 p-5">
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                    <Input
+                      placeholder="Search lines, founders, or aliases..."
+                      value={searchTerm}
+                      onChange={(e) => setSearchTerm(e.target.value)}
+                      className="pl-10 bg-slate-950 border-slate-700 text-slate-200 placeholder:text-slate-500"
+                    />
+                  </div>
+                  <div className="flex gap-3 flex-wrap">
+                    <Select value={confidenceFilter} onValueChange={setConfidenceFilter}>
+                      <SelectTrigger className="w-48 bg-slate-950 border-slate-700 text-slate-200">
+                        <SelectValue placeholder="Confidence" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-900 border-slate-700 text-slate-200">
+                        <SelectItem value="all">All confidence levels</SelectItem>
+                        {Object.values(LINE_CONFIDENCE).map((c) => (
+                          <SelectItem key={c.id} value={c.id}>
+                            {c.label}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <Select value={rarityFilter} onValueChange={setRarityFilter}>
+                      <SelectTrigger className="w-36 bg-slate-950 border-slate-700 text-slate-200">
+                        <SelectValue placeholder="Rarity" />
+                      </SelectTrigger>
+                      <SelectContent className="bg-slate-900 border-slate-700 text-slate-200">
+                        <SelectItem value="all">All rarities</SelectItem>
+                        <SelectItem value="common">Common</SelectItem>
+                        <SelectItem value="uncommon">Uncommon</SelectItem>
+                        <SelectItem value="rare">Rare</SelectItem>
+                        <SelectItem value="very_rare">Very rare</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+                <div className="mt-4 pt-4 border-t border-slate-800 flex flex-wrap items-center gap-3 text-xs">
+                  <span className="text-slate-400">
+                    <span className="text-white font-semibold">{filteredLines.length}</span> lines shown
+                  </span>
+                  <span className="text-slate-500">·</span>
+                  <span className="text-slate-400">
+                    <span className="text-white font-semibold">{PROJECT_LINES.length}</span> documented total
+                  </span>
+                </div>
+              </div>
+
+              {/* Confidence legend */}
+              <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-4">
+                <div className="flex items-center gap-2 mb-3 text-slate-300">
+                  <ShieldCheck className="w-4 h-4 text-violet-400" />
+                  <span className="text-xs font-semibold uppercase tracking-wider">Confidence levels</span>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                  {Object.values(LINE_CONFIDENCE).map((c) => (
+                    <div
+                      key={c.id}
+                      className="flex items-start gap-2 rounded-lg border border-slate-800 bg-slate-900/40 p-2"
+                    >
+                      <span
+                        className={`mt-0.5 inline-flex items-center rounded-md border px-1.5 py-0.5 text-[10px] font-semibold uppercase ${c.color}`}
+                      >
+                        {c.short}
+                      </span>
+                      <div className="text-[11px] text-slate-400 leading-snug">
+                        <span className="text-slate-200 font-semibold">{c.label}</span>
+                        <br />
+                        {c.description}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Lines grid */}
+              {filteredLines.length === 0 ? (
+                <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-12 text-center">
+                  <GitBranch className="w-12 h-12 text-slate-600 mx-auto mb-4" />
+                  <p className="text-slate-300 font-semibold mb-1">No lines match those filters</p>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      setSearchTerm('');
+                      setConfidenceFilter('all');
+                      setRarityFilter('all');
+                    }}
+                    className="bg-white text-slate-900 hover:bg-slate-100 border-white/40 mt-3"
+                  >
+                    Clear filters
+                  </Button>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+                  {filteredLines.map((l) => (
+                    <LineCard key={l.slug} line={l} />
+                  ))}
+                </div>
+              )}
+            </>
+          )}
+
+          {view === 'morphs' && <>
           {/* Browse-by block ,  real <Link>s to the taxonomy hubs so
               crawlers can follow every branch of the morph taxonomy
               even without running the client-side filter state. Each
@@ -742,6 +1001,8 @@ export default function MorphGuidePage() {
               ))}
             </div>
           )}
+
+          </>}
 
           {/* Related guides CTA */}
           <div className="mt-10 rounded-2xl border border-slate-800 bg-slate-900/40 p-6 md:p-8">

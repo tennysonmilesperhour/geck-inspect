@@ -45,6 +45,7 @@ const Breeder              = lazy(() => import('./pages/Breeder'));
 const Shipping             = lazy(() => import('./pages/Shipping'));
 const Giveaways            = lazy(() => import('./pages/Giveaways'));
 const MorphDetail          = lazy(() => import('./pages/MorphDetail'));
+const ProjectLineDetail    = lazy(() => import('./pages/ProjectLineDetail'));
 const MorphGuideList       = lazy(() => import('./pages/MorphGuide'));
 // Programmatic taxonomy hubs: /MorphGuide/category/<id> and
 // /MorphGuide/inheritance/<id>. Two routes, one module ,  the module
@@ -231,6 +232,7 @@ const AuthenticatedApp = () => {
           <Route path="/MorphGuide" element={<MorphGuideList />} />
           <Route path="/MorphGuide/category/:categoryId" element={<MorphCategoryHub />} />
           <Route path="/MorphGuide/inheritance/:inheritanceId" element={<MorphInheritanceHub />} />
+          <Route path="/MorphGuide/lines/:slug" element={<ProjectLineDetail />} />
           <Route path="/MorphGuide/:slug" element={<MorphDetail />} />
           <Route path="/CareGuide" element={<CareGuide />} />
           <Route path="/CareGuide/:topic" element={<CareGuideTopic />} />
@@ -310,6 +312,7 @@ const AuthenticatedApp = () => {
             />
           );
         })}
+        <Route path="/MorphGuide/lines/:slug" element={<ProjectLineDetail />} />
         <Route path="/MorphGuide/:slug" element={<MorphDetail />} />
         <Route path="/passport/:passportCode/qr" element={<PassportQR />} />
         {/* /calculator alias inside the authenticated layout so signed-in
