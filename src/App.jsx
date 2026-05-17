@@ -317,7 +317,6 @@ const AuthenticatedApp = () => {
         })}
         <Route path="/MorphGuide/lines/:slug" element={<ProjectLineDetail />} />
         <Route path="/MorphGuide/:slug" element={<MorphDetail />} />
-        <Route path="/store/:slug" element={<StorePage />} />
         <Route path="/passport/:passportCode/qr" element={<PassportQR />} />
         {/* /calculator alias inside the authenticated layout so signed-in
             users hitting the cleaner URL keep their app chrome. */}
@@ -329,6 +328,12 @@ const AuthenticatedApp = () => {
             is mounted) so the brand chrome doesn't double up. */}
         <Route path="/Store/*" element={<Store />} />
       </Route>
+
+      {/* Breeder storefront ,  rendered chrome-free for both guests and
+          authenticated users so it reads as the breeder's own site, not
+          a section of the Geck Inspect app. A small "Geck Inspect" pill
+          inside StorePage is the only nav back. */}
+      <Route path="/store/:slug" element={<StorePage />} />
 
       {/* Editorial blog ,  accessible to authenticated users too */}
       <Route path="/blog" element={<BlogIndex />} />
