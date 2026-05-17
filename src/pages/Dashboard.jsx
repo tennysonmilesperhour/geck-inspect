@@ -200,20 +200,7 @@ export default function Dashboard() {
                         ? await User.filter({ email: randomImage.created_by })
                         : [];
                     const uploader = uploaderResult.length > 0 ? uploaderResult[0] : null;
-                    const morphLabel = randomImage.primary_morph
-                        ? randomImage.primary_morph.replace(/_/g, ' ')
-                        : 'crested gecko';
-                    const flavors = [
-                        `A gorgeous ${morphLabel} caught our eye this morning. Tap to see the full shot.`,
-                        `Spotlight on this ${morphLabel}. Patterns like this are why we do this.`,
-                        `This ${morphLabel} is the kind of animal that makes you stop scrolling.`,
-                        `Today's eye candy: a ${morphLabel} shared by the community.`,
-                    ];
-                    setFallbackGecko({
-                        image: randomImage,
-                        uploader,
-                        appreciative_message: flavors[Math.floor(Math.random() * flavors.length)],
-                    });
+                    setFallbackGecko({ image: randomImage, uploader });
                     setGeckoOfTheDay(null);
                 }
             } catch (error) {

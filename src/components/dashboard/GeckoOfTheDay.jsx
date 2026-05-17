@@ -27,7 +27,7 @@ export default function GeckoOfTheDay({ geckoOfTheDay, fallbackGecko = null, onI
         );
     }
     
-    const { appreciative_message, date, image, uploader } = displayGecko;
+    const { date, image, uploader } = displayGecko;
     const isOfficial = !!geckoOfTheDay;
 
     const handleSelect = () => {
@@ -59,10 +59,6 @@ export default function GeckoOfTheDay({ geckoOfTheDay, fallbackGecko = null, onI
                 </div>
                 
                 <div className="space-y-3">
-                    <p className="text-slate-300 leading-relaxed italic">
-                        {appreciative_message || 'A beautiful example of this morph - check out those amazing colors and patterns!'}
-                    </p>
-                    
                     {uploader && (
                         <p className="text-sm text-slate-400">
                             Shared by{' '}
