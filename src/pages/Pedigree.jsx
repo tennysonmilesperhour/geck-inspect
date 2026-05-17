@@ -519,10 +519,16 @@ export default function Pedigree() {
             [touch-action:pan-x_pan-y] lets the browser handle one-finger
             scrolling/panning while two-finger gestures fall through to
             our pinch-zoom handlers. overscroll-contain stops the iOS
-            rubber-band bounce inside the viewer. */}
+            rubber-band bounce inside the viewer. min-h-0 is required:
+            without it, this flex child defaults to min-height: auto and
+            grows to fit the SVG, which silently breaks overflow-auto ,
+            the canvas claims wheel events as a scroll container but has
+            no internal overflow to scroll, so users see only the outer
+            page scrollbar and can drag it but not wheel-scroll over the
+            chart. */}
         <div
           ref={treeContainerRef}
-          className="flex-1 overflow-auto overscroll-contain [touch-action:pan-x_pan-y] p-3 md:p-6"
+          className="flex-1 min-h-0 overflow-auto overscroll-contain [touch-action:pan-x_pan-y] p-3 md:p-6"
           onTouchStart={handleTouchStart}
           onTouchMove={handleTouchMove}
           onTouchEnd={handleTouchEnd}
