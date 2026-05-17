@@ -141,13 +141,24 @@ export const ThemeProvider = ({ children }) => {
     readStored(SECONDARY_STORAGE_KEY, VALID_IDS, DEFAULT_SECONDARY)
   );
 
+  // Cloud writes are gated until we've confirmed the auth state. On cold
+  // page loads the save effect would otherwise fire before
+  // supabase.auth.getUser() has restored the session, so the early
+  // `if (!user?.id) return` inside saveCloudPref would skip the write
+  // and the profile row never got seeded. With this gate, the save
+  // effect re-runs after authReady flips true with a known user, and
+  // the local theme actually lands in profiles.ui_theme.
+  const [authReady, setAuthReady] = useState(false);
+
   // Tracks whether we should write changes through to the cloud. Stays
   // false while we're hydrating from the cloud, otherwise we'd echo
   // the cloud value right back as a "user change" and burn a write.
   const skipCloudWrite = useRef(false);
 
-  // On mount, hydrate from the cloud if the user is signed in. Also
-  // re-hydrate whenever auth state changes (sign-in, account swap).
+  // On mount, wait for the session to be restored, then hydrate from
+  // the cloud if signed in. Re-hydrate on subsequent sign-ins (account
+  // swaps). authReady flips true once we've finished the first pass,
+  // at which point the save effects below are allowed to fire.
   useEffect(() => {
     let cancelled = false;
     const hydrate = async () => {
@@ -164,7 +175,16 @@ export const ThemeProvider = ({ children }) => {
       // without echoing back to the cloud, then resume normal writes.
       setTimeout(() => { skipCloudWrite.current = false; }, 0);
     };
-    hydrate();
+    const init = async () => {
+      try {
+        const { data } = await supabase.auth.getSession();
+        if (cancelled) return;
+        if (data?.session?.user) await hydrate();
+      } finally {
+        if (!cancelled) setAuthReady(true);
+      }
+    };
+    init();
     const { data: sub } = supabase.auth.onAuthStateChange((event) => {
       if (event === 'SIGNED_IN') hydrate();
     });
@@ -177,14 +197,14 @@ export const ThemeProvider = ({ children }) => {
   useEffect(() => {
     applyAttribute('data-theme', theme);
     try { window.localStorage.setItem(STORAGE_KEY, theme); } catch {}
-    if (!skipCloudWrite.current) saveCloudPref('ui_theme', theme);
-  }, [theme]);
+    if (authReady && !skipCloudWrite.current) saveCloudPref('ui_theme', theme);
+  }, [theme, authReady]);
 
   useEffect(() => {
     applyAttribute('data-secondary', secondary);
     try { window.localStorage.setItem(SECONDARY_STORAGE_KEY, secondary); } catch {}
-    if (!skipCloudWrite.current) saveCloudPref('ui_secondary', secondary);
-  }, [secondary]);
+    if (authReady && !skipCloudWrite.current) saveCloudPref('ui_secondary', secondary);
+  }, [secondary, authReady]);
 
   const setTheme = useCallback((nextId) => {
     if (!VALID_IDS.has(nextId)) return;
