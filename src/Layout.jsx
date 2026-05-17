@@ -1036,7 +1036,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 </Link>
               </div>
 
-              <div className="px-4 mb-4">
+              <div className="px-4 mb-4 sidebar-user-block">
                 {user ? (
                   <div className={`flex items-center gap-3 ${tierRingClass(user)}`}>
                     <Link to={createPageUrl('MyProfile')}>

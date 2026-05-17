@@ -953,10 +953,17 @@ html, body, #root {
              off the right edge of the 4rem rail. The flex children
              marked sidebar-collapse-hide already zero their vertical
              dimensions, but they keep their horizontal width, so we
-             collapse those here too and drop the flex gap. */
+             collapse those here too and drop the flex gap. Wrapper
+             padding is dropped to 0.75rem so the avatar's center sits
+             on the same vertical axis as the logo above (which uses
+             the same 0.75rem inset, see .desktop-sidebar-logo). */
+          .desktop-sidebar-wrapper.is-collapsed .sidebar-user-block {
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+          }
           .desktop-sidebar-wrapper.is-collapsed .tier-ring {
             width: fit-content;
-            padding: 3px;
+            padding: 4px;
             gap: 0;
             border-radius: 9999px;
           }
