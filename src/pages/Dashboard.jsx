@@ -74,6 +74,7 @@ export default function Dashboard() {
         showWelcomeShelf: true,
     });
     const [stats, setStats] = useState({ users: 0, geckos: 0, images: 0, posts: 0, verifiedImages: 0 });
+    const [personalStats, setPersonalStats] = useState({ geckos: 0, pairings: 0 });
     const [isLoading, setIsLoading] = useState(true);
     const [user, setUser] = useState(null);
     const [users, setUsers] = useState([]);
@@ -157,6 +158,29 @@ export default function Dashboard() {
                     verifiedImages: recentImagesData.filter((img) => img.verified).length,
                     posts: posts.length,
                 });
+
+                // Personal tally: lightweight count-only queries so the
+                // stat cards can juxtapose what's yours against what the
+                // community is doing. Both head:true so we never pull
+                // the actual rows over the wire.
+                if (currentUser?.email) {
+                    const [{ count: myGeckos }, { count: myPairings }] = await Promise.all([
+                        supabase
+                            .from('geckos')
+                            .select('id', { count: 'exact', head: true })
+                            .eq('created_by', currentUser.email)
+                            .or('archived.is.null,archived.eq.false'),
+                        supabase
+                            .from('breeding_plans')
+                            .select('id', { count: 'exact', head: true })
+                            .eq('created_by', currentUser.email)
+                            .or('archived.is.null,archived.eq.false'),
+                    ]);
+                    setPersonalStats({
+                        geckos: myGeckos || 0,
+                        pairings: myPairings || 0,
+                    });
+                }
 
                 // Gecko of the Day (official or fallback)
                 if (gotd && gotd.length > 0) {
@@ -376,7 +400,42 @@ export default function Dashboard() {
                                 />
                             ))}
                         </div>
+                    ) : user ? (
+                        // Signed-in keepers see their own numbers next to the
+                        // community totals so the stats feel personal, not
+                        // abstract. Two cards yours, two cards the community.
+                        <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 ${dashPrefs.compactStats ? 'max-w-3xl' : ''}`}>
+                            <StatsCard
+                                title="Your Geckos"
+                                value={personalStats.geckos.toLocaleString()}
+                                icon={GitBranch}
+                                gradient="from-emerald-500 to-green-600"
+                                description={dashPrefs.compactStats ? '' : 'In your collection'}
+                            />
+                            <StatsCard
+                                title="Your Pairings"
+                                value={personalStats.pairings.toLocaleString()}
+                                icon={Egg}
+                                gradient="from-pink-500 to-rose-600"
+                                description={dashPrefs.compactStats ? '' : 'Active breeding plans'}
+                            />
+                            <StatsCard
+                                title="Community Geckos"
+                                value={stats.geckos.toLocaleString()}
+                                icon={Users}
+                                gradient="from-cyan-500 to-blue-600"
+                                description={dashPrefs.compactStats ? '' : `Across ${stats.users.toLocaleString()} keepers`}
+                            />
+                            <StatsCard
+                                title="Forum Threads"
+                                value={stats.posts.toLocaleString()}
+                                icon={MessageSquare}
+                                gradient="from-violet-500 to-purple-600"
+                                description={dashPrefs.compactStats ? '' : 'Buzzing now'}
+                            />
+                        </div>
                     ) : (
+                        // Signed-out / guest view: pure community stats.
                         <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 ${dashPrefs.compactStats ? 'max-w-3xl' : ''}`}>
                             <StatsCard
                                 title="Keepers"
