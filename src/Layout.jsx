@@ -1005,15 +1005,17 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         {isSidebarCollapsed && (
           <div
             aria-hidden="true"
-            className="hidden md:block fixed top-0 left-0 h-full w-3 z-40"
+            className="hidden md:block fixed top-0 left-0 h-full w-3 z-50"
             onMouseEnter={expandSidebar}
           />
         )}
         {/* Desktop sidebar ,  fixed, so the expanded panel overlays the
             page instead of reflowing it. Main content gets enough
-            left-padding at md breakpoint to clear the collapsed rail. */}
+            left-padding at md breakpoint to clear the collapsed rail.
+            Needs z-50 (not z-40) so it sits above sticky in-page bars
+            like the Marketplace tab strip when the user hover-expands. */}
         <div
-          className={`hidden md:flex fixed top-0 left-0 h-full z-40 desktop-sidebar-wrapper ${isSidebarCollapsed ? 'is-collapsed' : ''}`}
+          className={`hidden md:flex fixed top-0 left-0 h-full z-50 desktop-sidebar-wrapper ${isSidebarCollapsed ? 'is-collapsed' : ''}`}
           data-tier={tierKeyFor(user)}
           onMouseEnter={expandSidebar}
           onMouseLeave={scheduleCollapseSidebar}
