@@ -29,7 +29,7 @@ import {
 } from "@/components/ui/Sidebar";
 import { Button } from "@/components/ui/button";
 import UserBadge from "@/components/ui/UserBadge";
-import TierBadge, { tierRingClass } from "@/components/ui/TierBadge";
+import TierBadge, { tierRingClass, tierKeyFor } from "@/components/ui/TierBadge";
 import ReferralLinkCard from "@/components/shared/ReferralLinkCard";
 
 
@@ -1012,6 +1012,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
             left-padding at md breakpoint to clear the collapsed rail. */}
         <div
           className={`hidden md:flex fixed top-0 left-0 h-full z-40 desktop-sidebar-wrapper ${isSidebarCollapsed ? 'is-collapsed' : ''}`}
+          data-tier={tierKeyFor(user)}
           onMouseEnter={expandSidebar}
           onMouseLeave={scheduleCollapseSidebar}
         >

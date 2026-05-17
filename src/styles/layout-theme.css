@@ -565,65 +565,99 @@ html, body, #root {
                         max-height 0.22s cubic-bezier(0, 0, 0.2, 1),
                         padding 0.22s cubic-bezier(0, 0, 0.2, 1);
           }
-          /* Sidebar-nav-item hover: disable translate-x shift, the
-             outer glow box-shadow, and the full-width background fill
-             while collapsed, otherwise the nav item's 16rem-wide
-             hover highlight clips into a hard rectangle and the glow
-             extends past the rail's right edge.
-
-             Each nav item is 3rem wide with content centered. The
-             link stays left-anchored inside its parent <nav>, which
-             keeps its native px-2 (0.5rem) padding. The icon's hidden
-             margin-right (mr-2 from the collapsed label) is zeroed so
-             it doesn't drag the icon left of center. Net effect: icon
-             center sits at 0.5rem (nav padding) + 1.5rem (half link
-             width) = 2rem from the rail's left edge, matching the
-             logo and avatar above. */
+          /* Collapsed rail: every icon container is a 2.5rem (40px)
+             circle whose horizontal center sits at 2rem from the
+             rail's left edge. The container's parent gets a left
+             padding of 0.75rem so 0.75 + 1.25 = 2rem -- matches the
+             logo wrapper and the avatar's tier-ring outer above. */
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item {
-            width: 3rem;
+            width: 2.5rem;
+            height: 2.5rem;
+            padding: 0;
+            border-radius: 9999px;
             justify-content: center;
-            padding-left: 0;
-            padding-right: 0;
+            align-items: center;
+            overflow: visible;
           }
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item > svg,
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item > .mr-2,
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item > .mr-3 {
             margin-right: 0;
           }
-          /* Favorites grid: collapse the 2-column layout to single
-             column and trim per-tile padding so each tile's icon
-             centers on the same vertical axis as the nav icons. The
-             wrapper's px-3 (0.75rem) plus the favorite-tile's 2.5rem
-             width = 3.25rem total, icon center at 0.75 + 1.25 = 2rem.
-             Slight asymmetry on the right is hidden by the rail clip. */
+          /* Nav sections (Collection / Tools / Admin): shift native
+             px-2 (0.5rem) to px-3 (0.75rem) so 2.5rem-wide circular
+             nav items center at 2rem from the rail's left edge. */
+          .desktop-sidebar-wrapper.is-collapsed nav.space-y-1 {
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
+          }
+          /* Active state replacement: drop the rectangle background +
+             left border highlight and use a glowing circular ring in
+             the user's tier color. data-tier on the wrapper picks
+             the color set (same palette as the avatar's tier-ring). */
+          .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item.active,
+          .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item.active::before {
+            background: transparent !important;
+            border-left: 0 !important;
+            border-radius: 9999px;
+          }
+          .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item.active::before {
+            display: none !important;
+          }
+          .desktop-sidebar-wrapper.is-collapsed[data-tier="free"]      .sidebar-nav-item.active,
+          .desktop-sidebar-wrapper.is-collapsed[data-tier="keeper"]    .sidebar-nav-item.active {
+            box-shadow:
+              0 0 0 2px rgba(16, 185, 129, 0.75),
+              0 0 14px rgba(16, 185, 129, 0.45);
+          }
+          .desktop-sidebar-wrapper.is-collapsed[data-tier="breeder"]   .sidebar-nav-item.active {
+            box-shadow:
+              0 0 0 2px rgba(168, 85, 247, 0.85),
+              0 0 14px rgba(168, 85, 247, 0.5);
+          }
+          .desktop-sidebar-wrapper.is-collapsed[data-tier="enterprise"] .sidebar-nav-item.active {
+            box-shadow:
+              0 0 0 2px rgba(251, 191, 36, 0.9),
+              0 0 18px rgba(251, 191, 36, 0.55);
+          }
+          /* Favorites grid: collapse to single column, each tile a
+             2.5rem circle so it lines up with the nav icons. Parent
+             wrapper already has px-3 (0.75rem). */
           .desktop-sidebar-wrapper.is-collapsed .grid.grid-cols-2 {
             grid-template-columns: 1fr;
           }
           .desktop-sidebar-wrapper.is-collapsed .favorite-tile {
             width: 2.5rem !important;
-            padding: 0.5rem 0 !important;
+            height: 2.5rem !important;
+            padding: 0 !important;
+            border-radius: 9999px !important;
+          }
+          .desktop-sidebar-wrapper.is-collapsed .favorite-tile > svg {
+            width: 1.25rem !important;
+            height: 1.25rem !important;
           }
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item:hover {
             transform: none;
             box-shadow: none !important;
-            background: rgba(16, 185, 129, 0.25) !important;
+            background: rgba(16, 185, 129, 0.2) !important;
           }
-          /* Icon-only footer buttons: strip the border/background so
-             the rail reads as a clean icon column instead of a row of
-             half-clipped button shells. The .mt-auto wrapper's p-4
-             (1rem) horizontal padding is overridden to 0.5rem so that
-             3rem-wide buttons sit with their centers at 0.5 + 1.5 =
-             2rem from the rail's left edge, matching the nav icons. */
+          /* Footer buttons (Membership / Tutorial / Settings / Logout /
+             Lock toggle): same circular 2.5rem treatment. Wrapper p-4
+             horizontal padding overridden to 0.75rem so button centers
+             align at 2rem from the rail's left edge. */
           .desktop-sidebar-wrapper.is-collapsed .mt-auto {
-            padding-left: 0.5rem !important;
-            padding-right: 0.5rem !important;
+            padding-left: 0.75rem !important;
+            padding-right: 0.75rem !important;
           }
           .desktop-sidebar-wrapper.is-collapsed .mt-auto a,
           .desktop-sidebar-wrapper.is-collapsed .mt-auto button {
-            width: 3rem !important;
+            width: 2.5rem !important;
+            height: 2.5rem !important;
+            min-height: 2.5rem !important;
+            border-radius: 9999px !important;
             justify-content: center !important;
-            padding-left: 0 !important;
-            padding-right: 0 !important;
+            align-items: center !important;
+            padding: 0 !important;
           }
           .desktop-sidebar-wrapper.is-collapsed .mt-auto svg.mr-2 {
             margin-right: 0 !important;
@@ -634,14 +668,10 @@ html, body, #root {
             background: transparent !important;
             box-shadow: none !important;
           }
-          /* Logo tile: shows as a full-width card with icon + wordmark
-             when the rail is expanded, and reduces to just the icon
-             when collapsed. Icon is horizontally aligned with the
-             user profile picture below it (both centered at 2rem from
-             the rail's left edge, avatar is at px-4 + w-4 center,
-             logo wrapper gets the same 0.75rem outer padding and its
-             inner link shrinks to the icon's intrinsic 2.5rem so the
-             still-present wordmark span can't push things left). */
+          /* Logo tile: when collapsed, the link is a 2.5rem circle so
+             its outer footprint matches the avatar's tier-ring beneath
+             it. The logo image fills the circle. Wrapper keeps px-3
+             so the link's center is at 2rem from the rail's left. */
           .desktop-sidebar-wrapper.is-collapsed .desktop-sidebar-logo {
             padding-left: 0.75rem !important;
             padding-right: 0.75rem !important;
@@ -650,9 +680,20 @@ html, body, #root {
             border-color: transparent !important;
             background: transparent !important;
             width: 2.5rem !important;
+            height: 2.5rem !important;
             padding: 0 !important;
             gap: 0 !important;
+            border-radius: 9999px !important;
             overflow: hidden;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+          }
+          .desktop-sidebar-wrapper.is-collapsed .desktop-sidebar-logo a img {
+            width: 100% !important;
+            height: 100% !important;
+            border-radius: 9999px !important;
+            object-fit: cover !important;
           }
 
           .sidebar-nav-item {
