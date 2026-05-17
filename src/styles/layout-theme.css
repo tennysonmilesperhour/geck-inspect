@@ -968,3 +968,40 @@ html, body, #root {
             margin-left: 0 !important;
             margin-right: 0 !important;
           }
+
+          /* Dashboard polish: gentle drift on the hero gradient so the
+             page feels alive without being distracting. Pauses for users
+             who prefer reduced motion. */
+          @keyframes hero-aurora {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+          }
+          .dashboard-aurora {
+            background-image: linear-gradient(
+              135deg,
+              rgba(16, 185, 129, 0.18) 0%,
+              rgba(56, 167, 242, 0.12) 30%,
+              rgba(120, 80, 200, 0.10) 60%,
+              rgba(16, 185, 129, 0.18) 100%
+            );
+            background-size: 220% 220%;
+            animation: hero-aurora 28s ease-in-out infinite;
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .dashboard-aurora { animation: none; }
+          }
+
+          /* Subtle lift on dashboard interactive cards. Pairs with the
+             existing border / box-shadow transition on .gecko-card. */
+          .dashboard-card-hover {
+            transition: transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
+            will-change: transform;
+          }
+          .dashboard-card-hover:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 28px -16px rgba(16, 185, 129, 0.35);
+          }
+          @media (prefers-reduced-motion: reduce) {
+            .dashboard-card-hover:hover { transform: none; }
+          }

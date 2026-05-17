@@ -27,6 +27,9 @@ import CommunityPulse from '../components/dashboard/CommunityPulse';
 import { default as GeckoOfTheDayComponent } from '../components/dashboard/GeckoOfTheDay';
 import MyStoreButton from '../components/dashboard/MyStoreButton';
 import DailyPromptCard from '../components/dashboard/DailyPromptCard';
+import LiveFeed from '../components/dashboard/LiveFeed';
+import WelcomeShelf from '../components/dashboard/WelcomeShelf';
+import IdNeedsPanel from '../components/dashboard/IdNeedsPanel';
 import ImageDetailModal from '../components/gallery/ImageDetailModal';
 import ChangeLogModal from '../components/changelog/ChangeLogModal';
 import { Button } from '@/components/ui/button';
@@ -66,6 +69,9 @@ export default function Dashboard() {
         showCommunityPulse: true,
         showHatchery: true,
         compactStats: false,
+        showLiveFeed: true,
+        showIdNeeds: true,
+        showWelcomeShelf: true,
     });
     const [stats, setStats] = useState({ users: 0, geckos: 0, images: 0, posts: 0, verifiedImages: 0 });
     const [isLoading, setIsLoading] = useState(true);
@@ -228,13 +234,15 @@ export default function Dashboard() {
             />
             {/* Ambient background */}
             <div className="absolute inset-0 gecko-scale-pattern opacity-5 pointer-events-none" />
+            <div className="absolute inset-0 dashboard-aurora opacity-60 pointer-events-none" />
             <div className="absolute top-0 right-0 w-[32rem] h-[32rem] bg-gradient-radial from-emerald-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-[32rem] h-[32rem] bg-gradient-radial from-teal-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
 
             <div className="relative z-10 p-4 md:p-8">
                 <div className="max-w-7xl mx-auto space-y-6">
                     {/* HERO STRIP ,  personal greeting + live mini stats */}
-                    <div className="relative overflow-hidden rounded-3xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950/60 via-slate-900/80 to-slate-950/80 backdrop-blur-sm">
+                    <div className="relative overflow-hidden rounded-3xl border border-emerald-500/20 bg-gradient-to-br from-emerald-950/60 via-slate-900/80 to-slate-950/80 backdrop-blur-sm dashboard-card-hover">
+                        <div className="absolute inset-0 dashboard-aurora opacity-50 pointer-events-none" />
                         <div className="absolute -top-20 -right-20 w-80 h-80 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
                         <div className="absolute -bottom-16 -left-16 w-72 h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -340,6 +348,18 @@ export default function Dashboard() {
                                             <Label className="text-slate-300 text-sm">Compact Stats</Label>
                                             <Switch checked={dashPrefs.compactStats} onCheckedChange={v => setDashPrefs({ compactStats: v })} />
                                         </div>
+                                        <div className="flex items-center justify-between">
+                                            <Label className="text-slate-300 text-sm">Community Live Feed</Label>
+                                            <Switch checked={dashPrefs.showLiveFeed} onCheckedChange={v => setDashPrefs({ showLiveFeed: v })} />
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <Label className="text-slate-300 text-sm">Help ID Panel</Label>
+                                            <Switch checked={dashPrefs.showIdNeeds} onCheckedChange={v => setDashPrefs({ showIdNeeds: v })} />
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <Label className="text-slate-300 text-sm">Welcome Shelf</Label>
+                                            <Switch checked={dashPrefs.showWelcomeShelf} onCheckedChange={v => setDashPrefs({ showWelcomeShelf: v })} />
+                                        </div>
                                     </PageSettingsPanel>
                                 </div>
                             </div>
@@ -389,6 +409,8 @@ export default function Dashboard() {
                         </div>
                     )}
 
+                    {dashPrefs.showWelcomeShelf && <WelcomeShelf currentUserEmail={user?.email} />}
+
                     <DailyPromptCard />
 
                     {/* MAIN CONTENT GRID ,  3 columns on large screens */}
@@ -397,6 +419,7 @@ export default function Dashboard() {
                         <div className="xl:col-span-4 space-y-6">
                             <NextActions currentUserEmail={user?.email} />
                             {dashPrefs.showCommunityPulse && <CommunityPulse />}
+                            {dashPrefs.showLiveFeed && <LiveFeed currentUserEmail={user?.email} />}
                         </div>
 
                         {/* Middle column ,  Gecko of the Day hero */}
@@ -418,6 +441,7 @@ export default function Dashboard() {
 
                         {/* Right column ,  Featured breeders + hatchery */}
                         <div className="xl:col-span-3 space-y-6">
+                            {dashPrefs.showIdNeeds && <IdNeedsPanel currentUserEmail={user?.email} />}
                             {dashPrefs.showFeaturedBreeders && <FeaturedBreeders />}
 
                             {dashPrefs.showHatchery && <Card className="gecko-card">
