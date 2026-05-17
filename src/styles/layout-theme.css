@@ -947,3 +947,24 @@ html, body, #root {
                 0 0 26px rgba(251, 191, 36, 0.65);
             }
           }
+
+          /* When the desktop rail is collapsed, contract the tier ring
+             down to a circle around just the avatar so it doesn't run
+             off the right edge of the 4rem rail. The flex children
+             marked sidebar-collapse-hide already zero their vertical
+             dimensions, but they keep their horizontal width, so we
+             collapse those here too and drop the flex gap. */
+          .desktop-sidebar-wrapper.is-collapsed .tier-ring {
+            width: fit-content;
+            padding: 3px;
+            gap: 0;
+            border-radius: 9999px;
+          }
+          .desktop-sidebar-wrapper.is-collapsed .tier-ring .sidebar-collapse-hide {
+            max-width: 0 !important;
+            width: 0 !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            margin-left: 0 !important;
+            margin-right: 0 !important;
+          }
