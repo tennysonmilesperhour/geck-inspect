@@ -1,0 +1,69 @@
+# Weekly "What's New" generator. Every Monday morning, summarize the past
+# 7 days of commits on main into a single themed update and post it to the
+# dashboard's "What's New" tab via the public.change_logs Supabase table.
+#
+# Cron is 13:00 UTC = 9 AM EDT (Mar-Nov) / 8 AM EST (Nov-Mar). Adjust if you'd
+# rather it land at exactly 9 AM year-round (pick 14:00 UTC for 9 AM EST).
+#
+# Secrets required (repo, Settings, Secrets and variables, Actions):
+#   ANTHROPIC_API_KEY          Claude API key (reused from blog pipeline)
+#   SUPABASE_URL               https://mmuglfphhwlaluyfyxsp.supabase.co
+#   SUPABASE_SERVICE_ROLE_KEY  service-role key (Supabase, Project Settings, API)
+#
+# Optional secrets:
+#   RESEND_API_KEY             Reused from blog pipeline
+#   BLOG_REPORT_EMAIL          Reused from blog pipeline (recipient)
+#   BLOG_FROM_EMAIL            Reused from blog pipeline (sender)
+
+name: weekly-changelog
+
+on:
+  schedule:
+    - cron: '0 13 * * 1'   # Mondays at 13:00 UTC
+  workflow_dispatch:
+    inputs:
+      dry_run:
+        description: 'Print the entry but do not insert into Supabase'
+        required: false
+        default: 'false'
+        type: choice
+        options: ['false', 'true']
+      force:
+        description: 'Insert even if a recent entry already exists'
+        required: false
+        default: 'false'
+        type: choice
+        options: ['false', 'true']
+
+permissions:
+  contents: read
+
+concurrency:
+  group: weekly-changelog
+  cancel-in-progress: false
+
+jobs:
+  generate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Need full history so `git log --since="7 days ago"` works on a
+          # fresh runner. Default checkout depth is 1.
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - name: Install Anthropic SDK
+        run: npm install --no-save @anthropic-ai/sdk@^0.88.0
+      - name: Generate and publish weekly update
+        env:
+          ANTHROPIC_API_KEY:         ${{ secrets.ANTHROPIC_API_KEY }}
+          SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          RESEND_API_KEY:            ${{ secrets.RESEND_API_KEY }}
+          BLOG_REPORT_EMAIL:         ${{ secrets.BLOG_REPORT_EMAIL }}
+          BLOG_FROM_EMAIL:           ${{ secrets.BLOG_FROM_EMAIL }}
+          DRY_RUN: ${{ inputs.dry_run == 'true' && '1' || '' }}
+          FORCE:   ${{ inputs.force   == 'true' && '1' || '' }}
+        run: node scripts/changelog/generate-weekly.mjs
