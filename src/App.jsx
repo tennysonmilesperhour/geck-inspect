@@ -283,17 +283,31 @@ const AuthenticatedApp = () => {
     <Routes>
       <Route element={<LayoutOutlet />}>
         <Route path="/" element={<MainPage />} />
-        {Object.entries(Pages).map(([path, Page]) => (
-          <Route
-            key={path}
-            path={`/${path}`}
-            element={
-              disabledPages.has(path)
-                ? <Navigate to="/" replace />
-                : <Page />
-            }
-          />
-        ))}
+        {Object.entries(Pages).map(([path, Page]) => {
+          // Authenticated users on /AuthPortal mean they just signed in
+          // (the URL hasn't moved yet). Bounce them to the dashboard so
+          // they actually see the app instead of an empty login form.
+          if (path === 'AuthPortal') {
+            return (
+              <Route
+                key={path}
+                path={`/${path}`}
+                element={<Navigate to="/" replace />}
+              />
+            );
+          }
+          return (
+            <Route
+              key={path}
+              path={`/${path}`}
+              element={
+                disabledPages.has(path)
+                  ? <Navigate to="/" replace />
+                  : <Page />
+              }
+            />
+          );
+        })}
         <Route path="/MorphGuide/:slug" element={<MorphDetail />} />
         <Route path="/passport/:passportCode/qr" element={<PassportQR />} />
         {/* /calculator alias inside the authenticated layout so signed-in
