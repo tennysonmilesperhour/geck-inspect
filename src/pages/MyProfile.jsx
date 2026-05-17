@@ -15,7 +15,7 @@ import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import GeckoCard from '../components/my-geckos/GeckoCard';
-import { createPageUrl } from '@/utils';
+import { createPageUrl, getDisplayName } from '@/utils';
 
 const USER_LEVELS = [
   { geckos: 1, title: "New Collector", badge: "🥚" }, { geckos: 2, title: "Gecko Keeper", badge: "🦎" },
@@ -197,7 +197,13 @@ export default function MyProfile() {
 
     const syncEditData = (currentUser) => {
         if (!currentUser) return;
+        // If full_name still defaults to the email (set during sign-up when
+        // no display name was provided), start the field blank so the user
+        // sees the placeholder prompt instead of an editable email string.
+        const storedFullName = currentUser.full_name || '';
+        const fullNameIsEmail = storedFullName && storedFullName === currentUser.email;
         setEditData({
+            full_name: fullNameIsEmail ? '' : storedFullName,
             bio: currentUser.bio || '',
             location: currentUser.location || '',
             website_url: currentUser.website_url || '',
@@ -435,8 +441,8 @@ export default function MyProfile() {
                     <div className="relative group">
                         <img
                             className="h-24 w-24 rounded-full ring-4 ring-slate-950 sm:h-32 sm:w-32 object-cover"
-                            src={user.profile_image_url || initialsAvatarUrl(user.full_name)}
-                            alt={user.full_name}
+                            src={user.profile_image_url || initialsAvatarUrl(getDisplayName(user))}
+                            alt={getDisplayName(user)}
                         />
                         <label className="absolute inset-0 flex items-center justify-center cursor-pointer rounded-full overflow-hidden">
                             <div className="absolute inset-0 bg-black/50 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity">
@@ -454,7 +460,7 @@ export default function MyProfile() {
                     
                     <div className="mt-6 sm:flex-1 sm:min-w-0 sm:flex sm:items-center sm:justify-end sm:space-x-6 sm:pb-1">
                         <div className="sm:hidden md:block mt-6 min-w-0 flex-1">
-                            <h1 className="text-2xl font-bold text-slate-100 truncate">{user.full_name}</h1>
+                            <h1 className="text-2xl font-bold text-slate-100 truncate">{getDisplayName(user)}</h1>
                             {user.location && (
                                 <p className="text-sm text-slate-400 flex items-center gap-2 mt-1">
                                     <MapPin className="w-4 h-4" />
@@ -493,7 +499,7 @@ export default function MyProfile() {
 
                 {/* Mobile Header */}
                 <div className="block sm:hidden mt-6 min-w-0 flex-1">
-                    <h1 className="text-2xl font-bold text-slate-100 truncate">{user.full_name}</h1>
+                    <h1 className="text-2xl font-bold text-slate-100 truncate">{getDisplayName(user)}</h1>
                     {(user.location || editData.location) && !isEditing && (
                         <p className="text-sm text-slate-400 flex items-center gap-2 mt-1">
                             <MapPin className="w-4 h-4" />
@@ -520,6 +526,21 @@ export default function MyProfile() {
                                         <CardTitle className="text-slate-100">Edit Profile Information</CardTitle>
                                     </CardHeader>
                                     <CardContent className="space-y-4">
+                                        <div>
+                                            <Label htmlFor="full_name" className="block text-sm font-medium text-slate-300 mb-2">
+                                                Display Name
+                                            </Label>
+                                            <Input
+                                                id="full_name"
+                                                value={editData.full_name}
+                                                onChange={(e) => setEditData({...editData, full_name: e.target.value})}
+                                                placeholder="The name shown on your profile"
+                                                className="bg-slate-800 border-slate-600 text-slate-100"
+                                            />
+                                            <p className="text-xs text-slate-400 mt-1">
+                                                This is the name shown on your profile, in greetings, and across the platform. Your login email stays private.
+                                            </p>
+                                        </div>
                                         <div>
                                             <Label htmlFor="bio" className="block text-sm font-medium text-slate-300 mb-2">Bio</Label>
                                             <Textarea

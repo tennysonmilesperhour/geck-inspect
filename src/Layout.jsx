@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import "@/styles/layout-theme.css";
 import { initialsAvatarUrl } from "@/components/shared/InitialsAvatar";
-import { createPageUrl } from "@/utils";
+import { createPageUrl, getDisplayName } from "@/utils";
 import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import { APP_LOGO_URL } from '@/lib/constants';
@@ -868,7 +868,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 <div className="flex items-center gap-3">
                   <Link to={createPageUrl('MyProfile')}>
                       <img
-                            src={user.profile_image_url || initialsAvatarUrl(user.full_name)}
+                            src={user.profile_image_url || initialsAvatarUrl(getDisplayName(user))}
                             alt="User avatar"
                             className="w-8 h-8 rounded-full object-cover"
                             loading="lazy"
@@ -876,7 +876,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                           />
                     </Link>
                   <div className="flex-1">
-                    <Link to={createPageUrl('MyProfile')} className="font-medium text-emerald-100 text-sm">{user.full_name}</Link>
+                    <Link to={createPageUrl('MyProfile')} className="font-medium text-emerald-100 text-sm">{getDisplayName(user)}</Link>
                     <p className="text-xs text-emerald-300/80">{user.email}</p>
                   </div>
                 </div>
@@ -973,7 +973,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                   </Link>
 
                   <div className="text-xs text-emerald-200/50 px-3">
-                    Logged in as {user.full_name}
+                    Logged in as {getDisplayName(user)}
                     {user.is_expert && <span className="ml-2 text-green-600">✓ Expert</span>}
                     {user.role === 'admin' && <span className="ml-2 text-purple-600">⚡ Admin</span>}
                   </div>
@@ -1037,7 +1037,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                   <div className="flex items-center gap-3">
                     <Link to={createPageUrl('MyProfile')}>
                           <img
-                            src={user.profile_image_url || initialsAvatarUrl(user.full_name)}
+                            src={user.profile_image_url || initialsAvatarUrl(getDisplayName(user))}
                             alt="User avatar"
                             className="w-8 h-8 rounded-full object-cover"
                             loading="lazy"
@@ -1045,7 +1045,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                           />
                         </Link>
                     <div className="flex-1 sidebar-collapse-hide">
-                      <Link to={createPageUrl('MyProfile')} className="font-medium text-emerald-100 text-sm">{user.full_name}</Link>
+                      <Link to={createPageUrl('MyProfile')} className="font-medium text-emerald-100 text-sm">{getDisplayName(user)}</Link>
                       <p className="text-xs text-emerald-300/80">{user.email}</p>
                     </div>
                   </div>
@@ -1131,7 +1131,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                       </Link>
 
                       <div className="text-xs text-emerald-200/50 px-3 sidebar-collapse-hide">
-                        Logged in as {user.full_name}
+                        Logged in as {getDisplayName(user)}
                         {user.is_expert && <span className="ml-2 text-green-600">✓ Expert</span>}
                         {user.role === 'admin' && <span className="ml-2 text-purple-600">⚡ Admin</span>}
                       </div>

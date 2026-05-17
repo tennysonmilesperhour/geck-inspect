@@ -28,7 +28,7 @@ import ImageDetailModal from '../components/gallery/ImageDetailModal';
 import ChangeLogModal from '../components/changelog/ChangeLogModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
-import { createPageUrl } from '@/utils';
+import { createPageUrl, getDisplayName } from '@/utils';
 import { format } from 'date-fns';
 
 /**
@@ -187,7 +187,7 @@ export default function Dashboard() {
         if (h < 22) return 'Good evening';
         return 'Night owl';
     })();
-    const firstName = user?.full_name?.split(' ')[0] || user?.breeder_name || 'breeder';
+    const firstName = getDisplayName(user).split(' ')[0];
 
     return (
         <div className="min-h-screen bg-gradient-to-br from-slate-950 via-emerald-950/30 to-slate-900 relative overflow-hidden">
