@@ -250,7 +250,6 @@ export default function Dashboard() {
             />
             {/* Ambient background */}
             <div className="absolute inset-0 gecko-scale-pattern opacity-5 pointer-events-none" />
-            <div className="absolute inset-0 dashboard-aurora opacity-60 pointer-events-none" />
             <div className="absolute top-0 right-0 w-[32rem] h-[32rem] bg-gradient-radial from-emerald-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
             <div className="absolute bottom-0 left-0 w-[32rem] h-[32rem] bg-gradient-radial from-teal-500/10 to-transparent rounded-full blur-3xl pointer-events-none" />
 

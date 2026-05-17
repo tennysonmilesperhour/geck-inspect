@@ -569,52 +569,39 @@ html, body, #root {
              outer glow box-shadow, and the full-width background fill
              while collapsed, otherwise the nav item's 16rem-wide
              hover highlight clips into a hard rectangle and the glow
-             extends past the rail's right edge. Instead, show a
-             compact icon-sized pill on hover.
+             extends past the rail's right edge.
 
-             Each nav item also becomes a 3rem-wide flex container with
-             justify-content: center so the icon's horizontal center sits
-             on the same vertical axis as the logo and the avatar above
-             (both at 2rem from the rail's left edge). The icon's hidden
-             margin-right (mr-2 from the label that gets collapsed) is
-             zeroed so it doesn't drag the icon left of center. */
+             Each nav item is 3rem wide with content centered. The
+             link stays left-anchored inside its parent <nav>, which
+             keeps its native px-2 (0.5rem) padding. The icon's hidden
+             margin-right (mr-2 from the collapsed label) is zeroed so
+             it doesn't drag the icon left of center. Net effect: icon
+             center sits at 0.5rem (nav padding) + 1.5rem (half link
+             width) = 2rem from the rail's left edge, matching the
+             logo and avatar above. */
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item {
             width: 3rem;
             justify-content: center;
             padding-left: 0;
             padding-right: 0;
-            margin-left: auto;
-            margin-right: auto;
           }
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item > svg,
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item > .mr-2,
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item > .mr-3 {
             margin-right: 0;
           }
-          /* Each section's <nav> wrapper (Collection / Tools / Admin)
-             stops applying its px-2 horizontal padding when collapsed and
-             centers its links, so the 3rem nav-item width above sits
-             squarely on the rail's centerline. */
-          .desktop-sidebar-wrapper.is-collapsed nav.space-y-1 {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            padding-left: 0 !important;
-            padding-right: 0 !important;
-          }
-          /* Favorites grid collapses from two columns down to a single
-             centered column so each favorite tile's icon lands on the
-             same vertical axis. */
-          .desktop-sidebar-wrapper.is-collapsed .favorite-tile {
-            width: 3rem !important;
-            padding: 0.5rem 0 !important;
-            margin-left: auto;
-            margin-right: auto;
-          }
-          .desktop-sidebar-wrapper.is-collapsed .favorite-tile + .favorite-tile,
+          /* Favorites grid: collapse the 2-column layout to single
+             column and trim per-tile padding so each tile's icon
+             centers on the same vertical axis as the nav icons. The
+             wrapper's px-3 (0.75rem) plus the favorite-tile's 2.5rem
+             width = 3.25rem total, icon center at 0.75 + 1.25 = 2rem.
+             Slight asymmetry on the right is hidden by the rail clip. */
           .desktop-sidebar-wrapper.is-collapsed .grid.grid-cols-2 {
             grid-template-columns: 1fr;
-            justify-items: center;
+          }
+          .desktop-sidebar-wrapper.is-collapsed .favorite-tile {
+            width: 2.5rem !important;
+            padding: 0.5rem 0 !important;
           }
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item:hover {
             transform: none;
@@ -623,18 +610,13 @@ html, body, #root {
           }
           /* Icon-only footer buttons: strip the border/background so
              the rail reads as a clean icon column instead of a row of
-             half-clipped button shells. Also kill the wrapper's
-             horizontal padding and center the buttons individually so
-             each footer icon sits on the same vertical axis as the
-             nav-section icons above. */
+             half-clipped button shells. The .mt-auto wrapper's p-4
+             (1rem) horizontal padding is overridden to 0.5rem so that
+             3rem-wide buttons sit with their centers at 0.5 + 1.5 =
+             2rem from the rail's left edge, matching the nav icons. */
           .desktop-sidebar-wrapper.is-collapsed .mt-auto {
-            padding-left: 0 !important;
-            padding-right: 0 !important;
-          }
-          .desktop-sidebar-wrapper.is-collapsed .mt-auto > .space-y-3 {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
+            padding-left: 0.5rem !important;
+            padding-right: 0.5rem !important;
           }
           .desktop-sidebar-wrapper.is-collapsed .mt-auto a,
           .desktop-sidebar-wrapper.is-collapsed .mt-auto button {
