@@ -225,18 +225,18 @@ export default function Dashboard() {
         return 'Night owl';
     })();
     const firstName = getDisplayName(user).split(' ')[0];
-    const todayLabel = format(now, "EEEE 'in the hatchery'");
+    const todayLabel = format(now, 'EEEE, MMM d');
 
     // Seasonal flavor: rotates the hero kicker by month so the page
     // feels written by someone actually keeping crested geckos through
     // a breeding year, not a static template.
     const seasonalKicker = (() => {
         const m = now.getMonth(); // 0 = Jan
-        if (m >= 2 && m <= 4) return 'Breeding season is on. Who is pairing up this week?';
-        if (m >= 5 && m <= 7) return 'Hatchling parade season. New faces dropping daily.';
-        if (m >= 8 && m <= 9) return 'Late-season eggs and growth weights. The home stretch.';
-        if (m === 10) return 'Diapause prep month. Time to cool things down.';
-        return 'Cozy off-season. Plan your next pairings while the geckos rest.';
+        if (m >= 2 && m <= 4) return 'Most breeders are pairing up this month.';
+        if (m >= 5 && m <= 7) return 'Hatchlings are coming out. Good time to set up grow-out tubs.';
+        if (m >= 8 && m <= 9) return 'Late season. Keep an eye on female weights as clutches slow down.';
+        if (m === 10) return 'Cooler nights. Cresties eat less around now, that is normal.';
+        return 'Off-season. A good time to review pairings for next year.';
     })();
 
     return (
@@ -294,7 +294,7 @@ export default function Dashboard() {
                                                 )}
                                             </>
                                         ) : (
-                                            "Fresh dashboard, no geckos logged yet. Add your first one and watch the lineage tree grow."
+                                            'No geckos logged yet. Add your first one to start tracking your collection.'
                                         )}
                                     </p>
                                     <p className="text-emerald-300/70 text-sm md:text-base italic">
@@ -459,7 +459,7 @@ export default function Dashboard() {
                         </div>
                     )}
 
-                    {dashPrefs.showWelcomeShelf && <WelcomeShelf currentUserEmail={user?.email} />}
+                    {dashPrefs.showWelcomeShelf && <WelcomeShelf currentUser={user} />}
 
                     <DailyPromptCard />
 

@@ -13,20 +13,20 @@ import { createPageUrl } from '@/utils';
  * feels like it was written by a keeper, not a SaaS template.
  */
 const PROMPTS = [
-    { q: 'What is a Lilly White you are proud of? Drop a photo.', cta: 'Open the gallery', to: 'Gallery' },
-    { q: 'Cappuccino, Sable, or Frappuccino — what is the next morph on your wishlist?', cta: 'Open the forum', to: 'Forum' },
-    { q: 'Anyone else seeing late-season eggs this week?', cta: 'Post about it', to: 'Forum' },
-    { q: 'What is the weirdest fired-state color shift you have caught on camera?', cta: 'Share a photo', to: 'Gallery' },
-    { q: 'How do you label your incubator containers? Show your system.', cta: 'Start a thread', to: 'Forum' },
-    { q: 'Which Harlequin do you think is the cleanest in your collection right now?', cta: 'Show it off', to: 'Gallery' },
-    { q: 'CGD brand preferences. Who is using what and why?', cta: 'Open the forum', to: 'Forum' },
-    { q: 'What is the youngest pair you have ever had a successful clutch from?', cta: 'Tell the story', to: 'Forum' },
-    { q: 'Best-looking Phantom you have seen lately. Bonus points if it is yours.', cta: 'Drop the photo', to: 'Gallery' },
-    { q: 'Tank setup show-and-tell. What is in your bioactive build?', cta: 'Post your build', to: 'Forum' },
-    { q: 'Axanthic out of a non-Axanthic visual parent — anyone hit it this season?', cta: 'Share the story', to: 'Forum' },
-    { q: 'Newest hatchling. Show us the freshest face in your collection.', cta: 'Upload', to: 'Gallery' },
-    { q: 'A morph you used to dismiss that grew on you?', cta: 'Open the forum', to: 'Forum' },
-    { q: 'Favorite breeder photo gear. What camera or phone are you using?', cta: 'Recommend yours', to: 'Forum' },
+    { q: 'A Lilly White in your collection worth posting?', cta: 'Open gallery', to: 'Gallery' },
+    { q: 'What morph is next on your wishlist?', cta: 'Open forum', to: 'Forum' },
+    { q: 'Anyone else getting late-season eggs?', cta: 'Open forum', to: 'Forum' },
+    { q: 'Caught a strong fired-state shift on camera lately?', cta: 'Open gallery', to: 'Gallery' },
+    { q: 'How do you label incubator containers?', cta: 'Open forum', to: 'Forum' },
+    { q: 'Cleanest Harlequin in your collection right now?', cta: 'Open gallery', to: 'Gallery' },
+    { q: 'Which CGD are you feeding right now, and why that one?', cta: 'Open forum', to: 'Forum' },
+    { q: "Youngest pair you've gotten a successful clutch from?", cta: 'Open forum', to: 'Forum' },
+    { q: "Best Phantom you've seen lately, yours or someone else's.", cta: 'Open gallery', to: 'Gallery' },
+    { q: 'What is in your current bioactive build?', cta: 'Open forum', to: 'Forum' },
+    { q: "Surprise morph from a pair you weren't expecting it from?", cta: 'Open forum', to: 'Forum' },
+    { q: 'Newest hatchling in your collection. Post a photo if you have one.', cta: 'Open gallery', to: 'Gallery' },
+    { q: 'A morph you used to overlook that you have come around on?', cta: 'Open forum', to: 'Forum' },
+    { q: 'Phone or camera you use for gecko photos?', cta: 'Open forum', to: 'Forum' },
 ];
 
 function dayOfYear(d) {

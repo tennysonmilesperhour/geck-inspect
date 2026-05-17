@@ -3,19 +3,26 @@ import { Link } from 'react-router-dom';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabaseClient';
-import { Sparkles, MessageCircle } from 'lucide-react';
+import { Sparkles, UserPlus, UserCheck, Eye } from 'lucide-react';
 import { createPageUrl } from '@/utils';
+import { UserFollow } from '@/entities/all';
+import { notifyNewFollower } from '@/components/notifications/NotificationService';
+import { useToast } from '@/components/ui/use-toast';
 
 /**
  * "New this week" rail. Shows up to 6 keepers who joined in the last
- * seven days (public profiles only), with a one-tap "Say hi" that
- * deep-links to the DM compose for that keeper.
+ * seven days (public profiles only). Each card offers a Follow toggle
+ * and a View profile link so the keeper can decide how much engagement
+ * they want, no DM pressure.
  *
  * Returns null when nobody has joined recently so it doesn't render
  * an empty card.
  */
-export default function WelcomeShelf({ currentUserEmail }) {
+export default function WelcomeShelf({ currentUser }) {
     const [keepers, setKeepers] = useState(null);
+    const [followByEmail, setFollowByEmail] = useState({});
+    const [busyEmail, setBusyEmail] = useState({});
+    const { toast } = useToast();
 
     useEffect(() => {
         let cancelled = false;
@@ -25,6 +32,68 @@ export default function WelcomeShelf({ currentUserEmail }) {
         })();
         return () => { cancelled = true; };
     }, []);
+
+    useEffect(() => {
+        if (!currentUser?.email || !keepers || keepers.length === 0) return;
+        let cancelled = false;
+        (async () => {
+            const myFollows = await UserFollow
+                .filter({ follower_email: currentUser.email })
+                .catch(() => []);
+            if (cancelled) return;
+            const idx = {};
+            for (const f of myFollows || []) idx[f.following_email] = f;
+            setFollowByEmail(idx);
+        })();
+        return () => { cancelled = true; };
+    }, [currentUser?.email, keepers]);
+
+    const handleFollowToggle = async (keeper) => {
+        if (!currentUser?.email) {
+            toast({
+                title: 'Sign in to follow',
+                description: 'Follows show up in your activity feed.',
+            });
+            return;
+        }
+        if (busyEmail[keeper.email]) return;
+        setBusyEmail((b) => ({ ...b, [keeper.email]: true }));
+        try {
+            const existing = followByEmail[keeper.email];
+            if (existing) {
+                await UserFollow.delete(existing.id);
+                setFollowByEmail((f) => {
+                    const next = { ...f };
+                    delete next[keeper.email];
+                    return next;
+                });
+            } else {
+                const newFollow = await UserFollow.create({
+                    follower_email: currentUser.email,
+                    following_email: keeper.email,
+                });
+                setFollowByEmail((f) => ({ ...f, [keeper.email]: newFollow }));
+                try {
+                    await notifyNewFollower(
+                        keeper.email,
+                        currentUser.email,
+                        currentUser.full_name,
+                    );
+                } catch (notifyErr) {
+                    console.error('Follower notification failed:', notifyErr);
+                }
+            }
+        } catch (err) {
+            console.error('Follow toggle failed:', err);
+            toast({
+                title: 'Could not update follow',
+                description: 'Try again in a minute.',
+                variant: 'destructive',
+            });
+        } finally {
+            setBusyEmail((b) => ({ ...b, [keeper.email]: false }));
+        }
+    };
 
     if (!keepers || keepers.length === 0) return null;
 
@@ -37,12 +106,14 @@ export default function WelcomeShelf({ currentUserEmail }) {
                         New keepers this week
                     </h3>
                     <span className="text-xs text-slate-500 ml-auto">
-                        Say hi and they'll remember it
+                        Joined in the last seven days
                     </span>
                 </div>
                 <div className="flex gap-3 overflow-x-auto pb-1 -mx-1 px-1">
                     {keepers.map((k) => {
-                        const isMe = currentUserEmail && k.email === currentUserEmail;
+                        const isMe = currentUser?.email && k.email === currentUser.email;
+                        const isFollowing = !!followByEmail[k.email];
+                        const isBusy = !!busyEmail[k.email];
                         return (
                             <div
                                 key={k.id}
@@ -72,16 +143,41 @@ export default function WelcomeShelf({ currentUserEmail }) {
                                         That's you
                                     </p>
                                 ) : (
-                                    <Button
-                                        asChild
-                                        size="sm"
-                                        variant="outline"
-                                        className="w-full mt-2 border-emerald-500/30 bg-emerald-950/40 text-emerald-200 hover:bg-emerald-900/40 h-7 text-xs"
-                                    >
-                                        <Link to={createPageUrl(`Messages?to=${encodeURIComponent(k.email)}`)}>
-                                            <MessageCircle className="w-3 h-3 mr-1" /> Say hi
-                                        </Link>
-                                    </Button>
+                                    <div className="mt-2 space-y-1.5">
+                                        <Button
+                                            size="sm"
+                                            onClick={() => handleFollowToggle(k)}
+                                            disabled={isBusy}
+                                            className={`w-full h-7 text-xs border ${
+                                                isFollowing
+                                                    ? 'bg-slate-800/60 text-slate-200 border-slate-600 hover:bg-slate-800'
+                                                    : 'bg-emerald-600 text-white border-emerald-500 hover:bg-emerald-500'
+                                            }`}
+                                        >
+                                            {isFollowing ? (
+                                                <>
+                                                    <UserCheck className="w-3 h-3 mr-1" />
+                                                    Following
+                                                </>
+                                            ) : (
+                                                <>
+                                                    <UserPlus className="w-3 h-3 mr-1" />
+                                                    Follow
+                                                </>
+                                            )}
+                                        </Button>
+                                        <Button
+                                            asChild
+                                            size="sm"
+                                            variant="outline"
+                                            className="w-full h-7 text-xs border-slate-700 bg-slate-900/40 text-slate-200 hover:bg-slate-800"
+                                        >
+                                            <Link to={createPageUrl(`PublicProfile?userId=${k.id}`)}>
+                                                <Eye className="w-3 h-3 mr-1" />
+                                                View profile
+                                            </Link>
+                                        </Button>
+                                    </div>
                                 )}
                             </div>
                         );
