@@ -309,6 +309,10 @@ export default function MembershipPage() {
     user?.subscription_status === 'grandfathered' && user?.membership_tier === 'breeder';
   const currentTier = user?.membership_tier || null;
   const currentCycle = user?.membership_billing_cycle || null;
+  const currentTierMeta = currentTier
+    ? tiers.find((t) => t.key === currentTier) || null
+    : null;
+  const isLifetimeGrant = currentCycle === 'lifetime';
 
   const handleCTA = async (tier, pricing) => {
     if (tier.comingSoon) {
@@ -403,6 +407,29 @@ export default function MembershipPage() {
               early supporter.
             </div>
           )}
+
+          {!isGrandfathered && currentTierMeta && currentTier !== 'free' && (
+            <div
+              className={`mx-auto inline-flex items-center gap-3 rounded-2xl px-5 py-3 text-sm font-semibold border ${
+                currentTier === 'enterprise'
+                  ? 'tier-ring--enterprise border-transparent text-amber-100'
+                  : currentTier === 'breeder'
+                    ? 'border-purple-400/50 bg-purple-500/10 text-purple-200'
+                    : 'border-emerald-400/50 bg-emerald-500/10 text-emerald-200'
+              }`}
+            >
+              {(() => {
+                const CurrentIcon = currentTierMeta.icon;
+                return <CurrentIcon className="w-5 h-5" />;
+              })()}
+              <span>
+                You're on the{' '}
+                <span className="font-bold tracking-wide">{currentTierMeta.name}</span>{' '}
+                plan
+                {isLifetimeGrant ? ' ,  lifetime access, no renewals.' : '.'}
+              </span>
+            </div>
+          )}
         </div>
 
         {/* Pricing Cards */}
@@ -417,10 +444,21 @@ export default function MembershipPage() {
             // showing stale monthly numbers.
             const enterpriseLifetimeUnavailable = isEnterprise && cycle === 'lifetime' && !pricing;
 
+            // Enterprise members exist (sponsored / comped grants like the
+            // beta-tester program), so the "Coming Soon" Enterprise card
+            // should flip to "Current plan" for them instead of staying
+            // disabled. Free users still match only when they have no
+            // billing cycle on file.
             const isCurrent =
               currentTier === tier.key &&
-              !isEnterprise &&
-              (currentCycle === cycle || (tier.key === 'free' && !currentCycle));
+              (isEnterprise
+                ? true
+                : currentCycle === cycle || (tier.key === 'free' && !currentCycle));
+            // The Enterprise card is greyed out and labeled "Coming Soon"
+            // for the general public, but for members who actually hold
+            // the tier (sponsored / comped grants) it should light up
+            // like any other current plan instead of staying locked.
+            const isEnterpriseLocked = isEnterprise && !isCurrent;
             const busy = loadingTier === tier.key;
 
             // Lifetime tab gets an amber accent so it visually reads as
@@ -435,20 +473,27 @@ export default function MembershipPage() {
                 {isFeatured && cycle === 'lifetime' && (
                   <HoveringBadge variant="lifetime">Best Value</HoveringBadge>
                 )}
-                {isEnterprise && (
+                {isEnterpriseLocked && (
                   <HoveringBadge variant="coming">Coming Soon</HoveringBadge>
+                )}
+                {isCurrent && (
+                  <HoveringBadge variant={tier.key === 'enterprise' ? 'lifetime' : 'popular'}>
+                    Current plan
+                  </HoveringBadge>
                 )}
                 <Card
                   className={`h-full flex flex-col transition-all duration-300 ${
-                    lifetimeAccent && isFeatured
-                      ? 'border-2 border-amber-500 bg-slate-900/95 shadow-2xl shadow-amber-500/20'
-                      : lifetimeAccent
-                        ? 'border-amber-500/40 bg-slate-900/85 hover:border-amber-400/60 hover:shadow-lg hover:shadow-amber-500/10'
-                        : isFeatured
-                          ? 'border-2 border-emerald-500 bg-slate-900/95 shadow-2xl shadow-emerald-500/20'
-                          : isEnterprise
-                            ? 'border-slate-700 bg-slate-900/50 opacity-80'
-                            : 'border-slate-700 bg-slate-900/80 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/10'
+                    isCurrent && tier.key === 'enterprise'
+                      ? 'border-2 border-amber-400 bg-slate-900/95 shadow-2xl shadow-amber-500/30'
+                      : lifetimeAccent && isFeatured
+                        ? 'border-2 border-amber-500 bg-slate-900/95 shadow-2xl shadow-amber-500/20'
+                        : lifetimeAccent
+                          ? 'border-amber-500/40 bg-slate-900/85 hover:border-amber-400/60 hover:shadow-lg hover:shadow-amber-500/10'
+                          : isFeatured
+                            ? 'border-2 border-emerald-500 bg-slate-900/95 shadow-2xl shadow-emerald-500/20'
+                            : isEnterpriseLocked
+                              ? 'border-slate-700 bg-slate-900/50 opacity-80'
+                              : 'border-slate-700 bg-slate-900/80 hover:border-emerald-500/40 hover:shadow-lg hover:shadow-emerald-500/10'
                   }`}
                 >
                   <CardHeader className="space-y-4">
@@ -459,7 +504,7 @@ export default function MembershipPage() {
                             ? 'bg-amber-500/20'
                             : isFeatured
                               ? 'bg-emerald-500/20'
-                              : isEnterprise
+                              : isEnterpriseLocked
                                 ? 'bg-slate-700/50'
                                 : 'bg-slate-800'
                         }`}
@@ -470,9 +515,11 @@ export default function MembershipPage() {
                               ? 'text-amber-300'
                               : isFeatured
                                 ? 'text-emerald-400'
-                                : isEnterprise
+                                : isEnterpriseLocked
                                   ? 'text-slate-400'
-                                  : 'text-slate-300'
+                                  : tier.key === 'enterprise'
+                                    ? 'text-amber-300'
+                                    : 'text-slate-300'
                           }`}
                         />
                       </div>
@@ -482,9 +529,11 @@ export default function MembershipPage() {
                             ? 'text-amber-200'
                             : isFeatured
                               ? 'text-emerald-300'
-                              : isEnterprise
+                              : isEnterpriseLocked
                                 ? 'text-slate-400'
-                                : 'text-white'
+                                : tier.key === 'enterprise'
+                                  ? 'text-amber-200'
+                                  : 'text-white'
                         }`}
                       >
                         {tier.name}
@@ -499,9 +548,11 @@ export default function MembershipPage() {
                               ? 'text-amber-200'
                               : isFeatured
                                 ? 'text-emerald-300'
-                                : isEnterprise
+                                : isEnterpriseLocked
                                   ? 'text-slate-400'
-                                  : 'text-white'
+                                  : tier.key === 'enterprise'
+                                    ? 'text-amber-200'
+                                    : 'text-white'
                           }`}
                         >
                           {enterpriseLifetimeUnavailable ? '—' : (pricing?.price ?? 'Custom')}
@@ -516,7 +567,7 @@ export default function MembershipPage() {
                             ? 'text-amber-200/80'
                             : isFeatured
                               ? 'text-emerald-200/80'
-                              : isEnterprise
+                              : isEnterpriseLocked
                                 ? 'text-slate-500'
                                 : 'text-slate-400'
                         }`}
@@ -543,16 +594,18 @@ export default function MembershipPage() {
                                 ? 'text-amber-400'
                                 : isFeatured
                                   ? 'text-emerald-400'
-                                  : isEnterprise
+                                  : isEnterpriseLocked
                                     ? 'text-slate-500'
-                                    : 'text-slate-400'
+                                    : tier.key === 'enterprise'
+                                      ? 'text-amber-400'
+                                      : 'text-slate-400'
                             }`}
                           />
                           <span
                             className={`text-sm ${
                               isFeatured
                                 ? 'text-slate-100'
-                                : isEnterprise
+                                : isEnterpriseLocked
                                   ? 'text-slate-500'
                                   : 'text-slate-300'
                             }`}
@@ -565,17 +618,21 @@ export default function MembershipPage() {
 
                     <Button
                       onClick={() => handleCTA(tier, pricing)}
-                      disabled={isEnterprise || busy || isCurrent || enterpriseLifetimeUnavailable}
+                      disabled={isEnterpriseLocked || busy || isCurrent || enterpriseLifetimeUnavailable}
                       className={`w-full font-semibold ${
-                        lifetimeAccent && isFeatured
-                          ? 'bg-amber-500 hover:bg-amber-400 text-slate-950'
-                          : lifetimeAccent
-                            ? 'bg-amber-600/90 hover:bg-amber-500 text-slate-950'
-                            : isFeatured
-                              ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
-                              : isEnterprise
-                                ? 'bg-slate-700 hover:bg-slate-700 text-slate-500 cursor-not-allowed'
-                                : 'bg-slate-700 hover:bg-slate-600 text-slate-100'
+                        isCurrent
+                          ? tier.key === 'enterprise'
+                            ? 'bg-amber-500 hover:bg-amber-500 text-slate-950 cursor-default'
+                            : 'bg-emerald-600 hover:bg-emerald-600 text-white cursor-default'
+                          : lifetimeAccent && isFeatured
+                            ? 'bg-amber-500 hover:bg-amber-400 text-slate-950'
+                            : lifetimeAccent
+                              ? 'bg-amber-600/90 hover:bg-amber-500 text-slate-950'
+                              : isFeatured
+                                ? 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                                : isEnterpriseLocked
+                                  ? 'bg-slate-700 hover:bg-slate-700 text-slate-500 cursor-not-allowed'
+                                  : 'bg-slate-700 hover:bg-slate-600 text-slate-100'
                       }`}
                     >
                       {busy ? (

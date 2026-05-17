@@ -29,6 +29,7 @@ import {
 } from "@/components/ui/Sidebar";
 import { Button } from "@/components/ui/button";
 import UserBadge from "@/components/ui/UserBadge";
+import TierBadge, { tierRingClass } from "@/components/ui/TierBadge";
 import ReferralLinkCard from "@/components/shared/ReferralLinkCard";
 
 
@@ -865,7 +866,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
             </div>
             <div className="px-4 mb-4">
               {user ? (
-                <div className="flex items-center gap-3">
+                <div className={`flex items-center gap-3 ${tierRingClass(user)}`}>
                   <Link to={createPageUrl('MyProfile')}>
                       <img
                             src={user.profile_image_url || initialsAvatarUrl(getDisplayName(user))}
@@ -875,9 +876,12 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                             decoding="async"
                           />
                     </Link>
-                  <div className="flex-1">
-                    <Link to={createPageUrl('MyProfile')} className="font-medium text-emerald-100 text-sm">{getDisplayName(user)}</Link>
-                    <p className="text-xs text-emerald-300/80">{user.email}</p>
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <Link to={createPageUrl('MyProfile')} className="font-medium text-emerald-100 text-sm truncate">{getDisplayName(user)}</Link>
+                      <TierBadge user={user} size="xs" />
+                    </div>
+                    <p className="text-xs text-emerald-300/80 truncate">{user.email}</p>
                   </div>
                 </div>
               ) : (
@@ -1034,7 +1038,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
               <div className="px-4 mb-4">
                 {user ? (
-                  <div className="flex items-center gap-3">
+                  <div className={`flex items-center gap-3 ${tierRingClass(user)}`}>
                     <Link to={createPageUrl('MyProfile')}>
                           <img
                             src={user.profile_image_url || initialsAvatarUrl(getDisplayName(user))}
@@ -1044,9 +1048,12 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                             decoding="async"
                           />
                         </Link>
-                    <div className="flex-1 sidebar-collapse-hide">
-                      <Link to={createPageUrl('MyProfile')} className="font-medium text-emerald-100 text-sm">{getDisplayName(user)}</Link>
-                      <p className="text-xs text-emerald-300/80">{user.email}</p>
+                    <div className="flex-1 min-w-0 sidebar-collapse-hide">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <Link to={createPageUrl('MyProfile')} className="font-medium text-emerald-100 text-sm truncate">{getDisplayName(user)}</Link>
+                        <TierBadge user={user} size="xs" />
+                      </div>
+                      <p className="text-xs text-emerald-300/80 truncate">{user.email}</p>
                     </div>
                   </div>
                 ) : (
