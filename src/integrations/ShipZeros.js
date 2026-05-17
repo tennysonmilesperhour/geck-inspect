@@ -5,14 +5,17 @@
  * Geck Inspect. All calls route through a Supabase edge function
  * (`shipzeros-proxy`) that holds the API key and forwards requests.
  *
- * Until the partnership is finalized and API credentials are issued,
- * every public method operates in **demo mode** ,  returning realistic
- * mock data so the full UI can be exercised end-to-end. Once live
- * credentials exist, flip `DEMO_MODE` to false (or set the
- * VITE_SHIPZEROS_LIVE env var) and the real proxy calls take over.
+ * Zero's Geckos is an independent service. There's no formal partnership;
+ * we integrate it because it's the most reliable reptile shipping in the
+ * hobby and we want to make it easier for crested gecko folks to reach.
+ * Booking via Geck Inspect is the same service, pricing, and live arrival
+ * guarantee as booking directly at zerosgeckos.com.
  *
- * Demo mode lets us show Zero's Geckos exactly what the integration
- * looks like before they grant API access.
+ * Until the live API hookup is wired up, every public method operates in
+ * **demo mode**, returning realistic mock data so the full UI can be
+ * exercised end-to-end. Once live credentials exist, flip `DEMO_MODE` to
+ * false (or set the VITE_SHIPZEROS_LIVE env var) and the real proxy calls
+ * take over.
  */
 import { supabase } from '@/lib/supabaseClient';
 

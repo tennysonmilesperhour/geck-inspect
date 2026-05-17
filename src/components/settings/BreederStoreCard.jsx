@@ -11,6 +11,38 @@ import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabaseClient';
 
 const SLUG_RE = /^[a-z0-9-]+$/;
+const MIN_BANNER_WIDTH = 1280;
+const MIN_BANNER_HEIGHT = 320;
+
+function ImageDimensionsHint({ url }) {
+    const [info, setInfo] = useState(null);
+    useEffect(() => {
+        setInfo(null);
+        if (!url) return;
+        let cancelled = false;
+        const img = new Image();
+        img.onload = () => {
+            if (!cancelled) setInfo({ w: img.naturalWidth, h: img.naturalHeight, ok: true });
+        };
+        img.onerror = () => {
+            if (!cancelled) setInfo({ ok: false });
+        };
+        img.src = url;
+        return () => { cancelled = true; };
+    }, [url]);
+
+    if (!info) return <p className="text-xs text-slate-500">Checking image…</p>;
+    if (!info.ok) return <p className="text-xs text-amber-400">Could not load that URL. Double-check it's a direct link to an image.</p>;
+    const tooSmall = info.w < MIN_BANNER_WIDTH || info.h < MIN_BANNER_HEIGHT;
+    return (
+        <p className={`text-xs ${tooSmall ? 'text-amber-400' : 'text-emerald-400'}`}>
+            Your image is {info.w} × {info.h} px.
+            {tooSmall
+                ? ` Below the ${MIN_BANNER_WIDTH} × ${MIN_BANNER_HEIGHT} minimum, so it may look blurry on larger screens.`
+                : ' Looks good for the banner area.'}
+        </p>
+    );
+}
 
 function normalizeSlug(raw) {
     return (raw || '')
@@ -181,7 +213,7 @@ export default function BreederStoreCard({ userEmail }) {
                             </div>
 
                             <div className="space-y-2">
-                                <Label htmlFor="store-header" className="text-slate-200">Header image URL (optional)</Label>
+                                <Label htmlFor="store-header" className="text-slate-200">Cover photo URL (optional)</Label>
                                 <Input
                                     id="store-header"
                                     value={form.header_image_url}
@@ -189,6 +221,23 @@ export default function BreederStoreCard({ userEmail }) {
                                     placeholder="https://..."
                                     className="bg-slate-900/60 border-slate-700"
                                 />
+                                <div className="rounded-md border border-slate-800 bg-slate-950/40 p-3 space-y-2">
+                                    <p className="text-xs text-slate-300 font-medium">Banner sizing</p>
+                                    <p className="text-xs text-slate-500 leading-relaxed">
+                                        The banner renders full-width across the top of your store page at roughly
+                                        <span className="text-slate-300"> 320px tall on desktop</span> and
+                                        <span className="text-slate-300"> 224px tall on mobile</span>.
+                                        It crops to fit (center-cropped), so the most important part of the photo should sit near the middle.
+                                    </p>
+                                    <p className="text-xs text-slate-500 leading-relaxed">
+                                        <span className="text-slate-300">Recommended: 1920 × 480 pixels</span> (4:1 ratio). Anything below
+                                        <span className="text-slate-300"> 1280 × 320</span> will look soft on larger screens.
+                                        Up to 2400 × 600 is fine if you want extra crispness on retina displays.
+                                    </p>
+                                    {form.header_image_url && (
+                                        <ImageDimensionsHint url={form.header_image_url} />
+                                    )}
+                                </div>
                             </div>
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">

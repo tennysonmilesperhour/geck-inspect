@@ -261,7 +261,7 @@ export default function BreederShipping() {
           <div>
             <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300 mb-3">
               <Truck className="w-3.5 h-3.5" />
-              {IS_DEMO ? 'Demo mode ,  partnership pending' : 'Powered by Zero\u2019s Geckos'}
+              {IS_DEMO ? 'Demo mode ,  live API hookup coming soon' : 'Powered by Zero\u2019s Geckos'}
             </div>
             <h1 className="text-3xl md:text-4xl font-bold text-slate-100">Shipping</h1>
             <p className="text-sm text-slate-400 mt-1">
@@ -297,9 +297,18 @@ export default function BreederShipping() {
                 >
                   Zero&rsquo;s Geckos Shipping Project
                 </a>
-                . All data shown is simulated. Once the partnership is finalized and API
-                credentials are issued, this dashboard will connect to real FedEx shipping
-                with live arrival guarantees.
+                , an independent reptile shipping service we integrate to make it easier to use
+                alongside your collection. All data shown here is simulated until the live API
+                hookup is enabled. In the meantime, you can book the same service directly at{' '}
+                <a
+                  href={SHIPZEROS_URL}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-emerald-400 underline underline-offset-2"
+                >
+                  zerosgeckos.com
+                </a>
+                {' '}with no difference in pricing or service.
               </p>
             </div>
           </div>
@@ -312,7 +321,7 @@ export default function BreederShipping() {
           <StatCard label="Delivered" value={deliveredCount} tone="emerald" icon={CheckCircle2} />
           <StatCard
             label="Live arrival rate"
-            value={deliveredCount > 0 ? '100%' : '—'}
+            value={deliveredCount > 0 ? '100%' : '0%'}
             tone="emerald"
             icon={ShieldCheck}
           />

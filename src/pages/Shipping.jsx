@@ -54,7 +54,7 @@ const SHIPPING_JSON_LD = {
   },
   serviceType: 'Live reptile shipping',
   description:
-    'Geck Inspect is partnering with Zero\u2019s Geckos to offer live-arrival-guaranteed, temperature-controlled shipping for crested geckos sold through the platform.',
+    'Geck Inspect integrates Zero\u2019s Geckos Shipping Project so breeders can book live-arrival-guaranteed, temperature-controlled shipping for crested geckos right from their collection. Booking through Geck Inspect is the same as booking directly on zerosgeckos.com.',
   areaServed: 'US',
 };
 
@@ -63,7 +63,7 @@ export default function Shipping() {
     <>
       <Seo
         title="Shipping ,  Live Arrival Guaranteed"
-        description="Geck Inspect is partnering with Zero's Geckos to offer temperature-controlled, live-arrival-guaranteed shipping for crested geckos sold on the platform. Built for breeders, trusted by buyers."
+        description="Geck Inspect integrates Zero's Geckos Shipping Project so breeders can book reptile-safe, live-arrival-guaranteed shipping from inside their collection. Same service as zerosgeckos.com, just easier to use alongside your geckos."
         path="/Shipping"
         jsonLd={SHIPPING_JSON_LD}
       />
@@ -102,7 +102,7 @@ export default function Shipping() {
           </h1>
 
           <p className="text-lg md:text-xl text-slate-300 max-w-2xl leading-relaxed mb-8">
-            Geck Inspect is integrating with{' '}
+            Geck Inspect integrates{' '}
             <a
               href={ZERO_SHIPPING_URL}
               target="_blank"
@@ -111,9 +111,10 @@ export default function Shipping() {
             >
               Zero&rsquo;s Geckos Shipping Project
             </a>{' '}
-            so every gecko sold through the marketplace can be booked, paid for, and tracked in
-            one place ,  the same way MorphMarket users experience shipping, but built for the
-            crested gecko hobby specifically.
+            so you can book reptile-safe overnight shipping right from your collection. There&rsquo;s no
+            exclusive partnership; booking here is the same service, same pricing, and same live
+            arrival guarantee as going to zerosgeckos.com directly. We built the integration to make
+            their service easier to reach inside the tools you&rsquo;re already using.
           </p>
 
           <div className="flex flex-col sm:flex-row gap-3">
@@ -240,6 +241,37 @@ export default function Shipping() {
           </div>
         </section>
 
+        {/* About Zero's Geckos */}
+        <section className="max-w-4xl mx-auto px-6 pb-16">
+          <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-8 md:p-10">
+            <h2 className="text-2xl md:text-3xl font-bold mb-4">About Zero&rsquo;s Geckos Shipping</h2>
+            <p className="text-slate-300 leading-relaxed mb-4">
+              Zero&rsquo;s Geckos Shipping Project is an independent service run by a keeper who built
+              the reptile shipping flow he wished existed. It&rsquo;s become one of the most reliable
+              ways to ship live animals in the hobby, and we wanted to make it easier for crested
+              gecko folks to reach.
+            </p>
+            <p className="text-slate-300 leading-relaxed mb-4">
+              Geck Inspect is not formally partnered with Zero&rsquo;s Geckos and we don&rsquo;t take
+              a cut of bookings. The integration exists because we think their service is worth
+              promoting. Whether you book through Geck Inspect or directly on{' '}
+              <a
+                href={ZERO_SHIPPING_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-emerald-300 hover:text-emerald-200 underline underline-offset-2"
+              >
+                zerosgeckos.com
+              </a>
+              , you get the exact same service, pricing, and live arrival guarantee.
+            </p>
+            <p className="text-slate-400 text-sm leading-relaxed">
+              If you ship live animals, support their work. They&rsquo;re solving a real problem for
+              the community.
+            </p>
+          </div>
+        </section>
+
         {/* Status / CTA */}
         <section className="max-w-4xl mx-auto px-6 pb-24 text-center">
           <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/10 border border-amber-500/30 px-4 py-1.5 text-xs font-semibold text-amber-300 mb-5">
@@ -247,12 +279,12 @@ export default function Shipping() {
             Integration in progress
           </div>
           <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
-            Want to ship with us when this launches?
+            Want a heads-up when booking goes live?
           </h2>
           <p className="text-slate-400 max-w-xl mx-auto mb-8">
-            Geck Inspect is in active partnership discussions with Zero&rsquo;s Geckos. Create an
-            account and you&rsquo;ll be notified the moment booked shipping goes live in the
-            marketplace.
+            The booking flow inside Geck Inspect is wired up and ready; we&rsquo;re waiting on the
+            live API connection to Zero&rsquo;s Geckos. Create an account and you&rsquo;ll get a note
+            the moment booked shipping goes live in the marketplace.
           </p>
           <Link to={createPageUrl('AuthPortal')}>
             <Button

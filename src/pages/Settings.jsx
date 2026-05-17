@@ -33,6 +33,18 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
+const STORE_POLICY_EXAMPLE = [
+    "• Shipping: Live arrival guaranteed. Ships FedEx Priority Overnight, Mon-Wed only. Shipping cost is the buyer's responsibility.",
+    "",
+    "• Payment Plans: 50% non-refundable deposit required to reserve. Remaining balance due before shipping.",
+    "",
+    "• Health Guarantee: 7-day health guarantee from the date of arrival. Buyer must send unboxing photos within 24 hours of delivery.",
+    "",
+    "• Returns: No returns after 7 days. All sales final once the gecko has been feeding for the buyer.",
+    "",
+    "• Weight Minimum: Hatchlings will not ship under 3g, or under the target weight specified at reservation.",
+].join("\n");
+
 // Appearance ,  two independent pickers. Theme drives backgrounds /
 // surfaces / sage / slate scales; Accent drives the emerald brand color
 // used on buttons, the sidebar, the feedback widget, etc. Mix and match
@@ -754,12 +766,27 @@ export default function SettingsPage() {
                     </CardHeader>
                     <CardContent className="space-y-4">
                         <div>
-                            <Label htmlFor="store_policy" className="text-slate-300">Store Policy</Label>
+                            <div className="flex items-center justify-between gap-3 mb-1">
+                                <Label htmlFor="store_policy" className="text-slate-300">Store Policy</Label>
+                                <Button
+                                    type="button"
+                                    size="sm"
+                                    variant="outline"
+                                    className="h-7 px-2.5 text-xs border-emerald-700/60 bg-emerald-900/20 text-emerald-200 hover:bg-emerald-900/40 hover:text-emerald-100"
+                                    onClick={() => {
+                                        const hasContent = (formData.store_policy || '').trim().length > 0;
+                                        if (hasContent && !window.confirm('Replace your current policy with the example template?')) return;
+                                        handleChange('store_policy', STORE_POLICY_EXAMPLE);
+                                    }}
+                                >
+                                    Use example template
+                                </Button>
+                            </div>
                             <Textarea
                                 id="store_policy"
                                 value={formData.store_policy}
                                 onChange={(e) => handleChange('store_policy', e.target.value)}
-                                placeholder={"Example:\n\n• Shipping: Live arrival guaranteed. Ships FedEx Priority Overnight, Mon–Wed only. Shipping cost is buyer's responsibility.\n\n• Payment Plans: 50% deposit required to reserve. Remaining balance due before shipping. Non-refundable deposit.\n\n• Health Guarantee: 7-day health guarantee from date of arrival. Buyer must provide photos within 24 hours of delivery.\n\n• Returns: No returns after 7 days. All sales final once gecko has been feeding for the buyer.\n\n• Weight Minimum: Geckos will not ship under 3g for babies or under target weight specified in the reserve."}
+                                placeholder={"Click 'Use example template' above to start with a sample policy, or write your own here."}
                                 rows={10}
                                 className="bg-slate-800 border-slate-600 text-slate-100 mt-1"
                             />
