@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import Seo from '@/components/seo/Seo';
-import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import usePageSettings from '@/hooks/usePageSettings';
 import { User, GeckoImage, ForumPost, GeckoOfTheDay as GotdEntity } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
@@ -17,8 +16,6 @@ import {
     Crown,
     Eye,
 } from 'lucide-react';
-import { Switch } from '@/components/ui/switch';
-import { Label } from '@/components/ui/label';
 import StatsCard from '../components/dashboard/StatsCard';
 import RecentActivity from '../components/dashboard/RecentActivity';
 import FeaturedBreeders from '../components/dashboard/FeaturedBreeders';
@@ -63,7 +60,7 @@ import { format } from 'date-fns';
  */
 
 export default function Dashboard() {
-    const [dashPrefs, setDashPrefs] = usePageSettings('dashboard_prefs', {
+    const [dashPrefs] = usePageSettings('dashboard_prefs', {
         showGeckoOfTheDay: true,
         showFeaturedBreeders: true,
         showCommunityPulse: true,
@@ -303,21 +300,8 @@ export default function Dashboard() {
                                 </div>
 
                                 <div className="flex flex-wrap gap-2.5">
-                                    <Button
-                                        variant="outline"
-                                        onClick={() => setShowChangelog(true)}
-                                        className={`border-slate-600 bg-slate-900/60 text-slate-100 hover:bg-slate-800 backdrop-blur-sm ${
-                                            changelogGlowing
-                                                ? 'ring-2 ring-emerald-400 shadow-[0_0_16px_4px_rgba(52,211,153,0.4)] animate-pulse'
-                                                : ''
-                                        }`}
-                                    >
-                                        <Newspaper className="w-4 h-4 mr-2" />
-                                        What's New
-                                        {changelogGlowing && (
-                                            <span className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-slate-950" />
-                                        )}
-                                    </Button>
+                                    {/* Order: primary action (My Collection) first, then
+                                        store curation, then passive views (Preview, What's New). */}
                                     {user && (
                                         <Link to={createPageUrl('MyGeckos')}>
                                             <Button className="bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold shadow-lg shadow-emerald-500/20">
@@ -342,40 +326,21 @@ export default function Dashboard() {
                                             </Button>
                                         </a>
                                     )}
-                                    <PageSettingsPanel title="Dashboard Settings">
-                                        <div className="flex items-center justify-between">
-                                            <Label className="text-slate-300 text-sm">Gecko of the Day</Label>
-                                            <Switch checked={dashPrefs.showGeckoOfTheDay} onCheckedChange={v => setDashPrefs({ showGeckoOfTheDay: v })} />
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <Label className="text-slate-300 text-sm">Featured Breeders</Label>
-                                            <Switch checked={dashPrefs.showFeaturedBreeders} onCheckedChange={v => setDashPrefs({ showFeaturedBreeders: v })} />
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <Label className="text-slate-300 text-sm">Community Pulse</Label>
-                                            <Switch checked={dashPrefs.showCommunityPulse} onCheckedChange={v => setDashPrefs({ showCommunityPulse: v })} />
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <Label className="text-slate-300 text-sm">Hatchery Widget</Label>
-                                            <Switch checked={dashPrefs.showHatchery} onCheckedChange={v => setDashPrefs({ showHatchery: v })} />
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <Label className="text-slate-300 text-sm">Compact Stats</Label>
-                                            <Switch checked={dashPrefs.compactStats} onCheckedChange={v => setDashPrefs({ compactStats: v })} />
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <Label className="text-slate-300 text-sm">Community Live Feed</Label>
-                                            <Switch checked={dashPrefs.showLiveFeed} onCheckedChange={v => setDashPrefs({ showLiveFeed: v })} />
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <Label className="text-slate-300 text-sm">Help ID Panel</Label>
-                                            <Switch checked={dashPrefs.showIdNeeds} onCheckedChange={v => setDashPrefs({ showIdNeeds: v })} />
-                                        </div>
-                                        <div className="flex items-center justify-between">
-                                            <Label className="text-slate-300 text-sm">Welcome Shelf</Label>
-                                            <Switch checked={dashPrefs.showWelcomeShelf} onCheckedChange={v => setDashPrefs({ showWelcomeShelf: v })} />
-                                        </div>
-                                    </PageSettingsPanel>
+                                    <Button
+                                        variant="outline"
+                                        onClick={() => setShowChangelog(true)}
+                                        className={`border-slate-600 bg-slate-900/60 text-slate-100 hover:bg-slate-800 backdrop-blur-sm ${
+                                            changelogGlowing
+                                                ? 'ring-2 ring-emerald-400 shadow-[0_0_16px_4px_rgba(52,211,153,0.4)] animate-pulse'
+                                                : ''
+                                        }`}
+                                    >
+                                        <Newspaper className="w-4 h-4 mr-2" />
+                                        What's New
+                                        {changelogGlowing && (
+                                            <span className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-emerald-400 rounded-full border-2 border-slate-950" />
+                                        )}
+                                    </Button>
                                 </div>
                             </div>
                         </div>
