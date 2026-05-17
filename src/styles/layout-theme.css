@@ -583,7 +583,9 @@ html, body, #root {
           .desktop-sidebar-wrapper.is-collapsed nav.space-y-1,
           .desktop-sidebar-wrapper.is-collapsed .px-3.mb-4,
           .desktop-sidebar-wrapper.is-collapsed .mt-auto,
-          .desktop-sidebar-wrapper.is-collapsed .mt-auto > .space-y-3 {
+          .desktop-sidebar-wrapper.is-collapsed .mt-auto > .space-y-3,
+          .desktop-sidebar-wrapper.is-collapsed .desktop-sidebar-inner > div > div,
+          .desktop-sidebar-wrapper.is-collapsed .desktop-sidebar-inner > div > nav {
             width: 4rem !important;
             max-width: 4rem !important;
             padding-left: 0 !important;
@@ -591,6 +593,14 @@ html, body, #root {
             display: flex !important;
             flex-direction: column !important;
             align-items: center !important;
+          }
+
+          /* Section headers (Collection / Tools / Admin titles) get
+             completely hidden in collapsed mode -- max-height: 0 left
+             them in flow with their horizontal padding intact, which
+             could nudge sibling positioning. */
+          .desktop-sidebar-wrapper.is-collapsed .uppercase.tracking-wider {
+            display: none !important;
           }
 
           /* Footer wrapper keeps its vertical p-4 but no horizontal. */
@@ -676,13 +686,29 @@ html, body, #root {
 
           /* Footer items: 2rem circles, auto-centered in their 4rem
              parent. Vertical spacing tightened from space-y-3 (12px)
-             to 6px so the icon column reads cohesively. */
+             to 6px so the icon column reads cohesively.
+
+             Tricky: the footer contains a NESTED `<div className="space-y-3">`
+             that wraps Settings + Logout. Both the outer and the
+             nested .space-y-3 must stay 4rem-wide flex columns; only
+             the leaf wrappers (the Tutorial-button-wrapping div, the
+             links around Membership/Settings) get the 2rem treatment.
+             :not(.space-y-3) on the div selector keeps the nested
+             container from being crushed into a 2rem row. */
+          .desktop-sidebar-wrapper.is-collapsed .mt-auto .space-y-3 {
+            width: 4rem !important;
+            max-width: 4rem !important;
+            padding-left: 0 !important;
+            padding-right: 0 !important;
+            display: flex !important;
+            flex-direction: column !important;
+            align-items: center !important;
+          }
           .desktop-sidebar-wrapper.is-collapsed .mt-auto .space-y-3 > * + * {
             margin-top: 0.375rem !important;
           }
           .desktop-sidebar-wrapper.is-collapsed .mt-auto a,
-          .desktop-sidebar-wrapper.is-collapsed .mt-auto > .space-y-3 > div,
-          .desktop-sidebar-wrapper.is-collapsed .mt-auto > .space-y-3 > div > a {
+          .desktop-sidebar-wrapper.is-collapsed .mt-auto .space-y-3 > div:not(.space-y-3):not(.sidebar-collapse-hide) {
             width: 2rem !important;
             margin-left: auto !important;
             margin-right: auto !important;
