@@ -317,6 +317,7 @@ const AuthenticatedApp = () => {
         })}
         <Route path="/MorphGuide/lines/:slug" element={<ProjectLineDetail />} />
         <Route path="/MorphGuide/:slug" element={<MorphDetail />} />
+        <Route path="/store/:slug" element={<StorePage />} />
         <Route path="/passport/:passportCode/qr" element={<PassportQR />} />
         {/* /calculator alias inside the authenticated layout so signed-in
             users hitting the cleaner URL keep their app chrome. */}
