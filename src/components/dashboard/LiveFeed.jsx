@@ -3,16 +3,17 @@ import { Link } from 'react-router-dom';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/lib/supabaseClient';
-import { Camera, MessageSquare, GitBranch, UserPlus, Activity, Heart, Sparkles, Flame } from 'lucide-react';
+import { Camera, MessageSquare, GitBranch, UserPlus, Activity, Heart, Sparkles, Flame, Egg } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 
 const POLL_MS = 30000;
 
 const TYPE_META = {
-    upload:         { icon: Camera,      tint: 'text-amber-400',   bg: 'bg-amber-500/10 border-amber-500/20' },
-    forum_post:     { icon: MessageSquare, tint: 'text-violet-300', bg: 'bg-violet-500/10 border-violet-500/20' },
-    breeding_plan:  { icon: GitBranch,   tint: 'text-pink-300',     bg: 'bg-pink-500/10 border-pink-500/20' },
-    join:           { icon: UserPlus,    tint: 'text-emerald-300',  bg: 'bg-emerald-500/10 border-emerald-500/20' },
+    upload:         { icon: Camera,        tint: 'text-amber-400',   bg: 'bg-amber-500/10 border-amber-500/20' },
+    forum_post:     { icon: MessageSquare, tint: 'text-violet-300',  bg: 'bg-violet-500/10 border-violet-500/20' },
+    breeding_plan:  { icon: GitBranch,     tint: 'text-pink-300',    bg: 'bg-pink-500/10 border-pink-500/20' },
+    hatched:        { icon: Egg,           tint: 'text-lime-300',    bg: 'bg-lime-500/10 border-lime-500/30' },
+    join:           { icon: UserPlus,      tint: 'text-emerald-300', bg: 'bg-emerald-500/10 border-emerald-500/20' },
 };
 
 const REACTION_META = {

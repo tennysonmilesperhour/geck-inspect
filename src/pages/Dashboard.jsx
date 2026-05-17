@@ -144,7 +144,12 @@ export default function Dashboard() {
                     supabase.rpc('landing_stats').then(({ data, error }) => (error ? null : data)).catch(() => null),
                     ForumPost.list('-created_date', 10).catch(() => []),
                     GotdEntity.filter({ date: today }, '-created_date', 1).catch(() => []),
-                    GeckoImage.list('-created_date', 20),
+                    // Only show photos uploaded by real users in the
+                    // community strip. The scraper inserts gecko_images
+                    // rows with NULL created_by; this filter excludes
+                    // them so trophy / award / press shots don't leak
+                    // into the Latest Community Uploads rail.
+                    GeckoImage.filter({ created_by: { $ne: null } }, '-created_date', 20).catch(() => []),
                 ]);
 
                 setUser(currentUser);
