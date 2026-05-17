@@ -866,24 +866,26 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
             </div>
             <div className="px-4 mb-4">
               {user ? (
-                <div className={`flex items-center gap-3 ${tierRingClass(user)}`}>
-                  <Link to={createPageUrl('MyProfile')}>
-                      <img
-                            src={user.profile_image_url || initialsAvatarUrl(getDisplayName(user))}
-                            alt="User avatar"
-                            className="w-8 h-8 rounded-full object-cover"
-                            loading="lazy"
-                            decoding="async"
-                          />
-                    </Link>
+                <Link
+                  to={createPageUrl('MyProfile')}
+                  className={`flex items-center gap-3 rounded-lg hover:bg-emerald-500/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 transition-colors ${tierRingClass(user)}`}
+                  aria-label={`Open ${getDisplayName(user)}'s profile`}
+                >
+                  <img
+                    src={user.profile_image_url || initialsAvatarUrl(getDisplayName(user))}
+                    alt=""
+                    className="w-8 h-8 rounded-full object-cover"
+                    loading="lazy"
+                    decoding="async"
+                  />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2 flex-wrap">
-                      <Link to={createPageUrl('MyProfile')} className="font-medium text-emerald-100 text-sm truncate">{getDisplayName(user)}</Link>
+                      <span className="font-medium text-emerald-100 text-sm truncate">{getDisplayName(user)}</span>
                       <TierBadge user={user} size="xs" />
                     </div>
                     <p className="text-xs text-emerald-300/80 truncate">{user.email}</p>
                   </div>
-                </div>
+                </Link>
               ) : (
                 <div className="space-y-2">
                   <Button
@@ -1039,24 +1041,26 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
               <div className="px-4 mb-4 sidebar-user-block">
                 {user ? (
-                  <div className={`flex items-center gap-3 ${tierRingClass(user)}`}>
-                    <Link to={createPageUrl('MyProfile')}>
-                          <img
-                            src={user.profile_image_url || initialsAvatarUrl(getDisplayName(user))}
-                            alt="User avatar"
-                            className="w-8 h-8 rounded-full object-cover"
-                            loading="lazy"
-                            decoding="async"
-                          />
-                        </Link>
+                  <Link
+                    to={createPageUrl('MyProfile')}
+                    className={`flex items-center gap-3 rounded-lg hover:bg-emerald-500/5 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-400/60 transition-colors ${tierRingClass(user)}`}
+                    aria-label={`Open ${getDisplayName(user)}'s profile`}
+                  >
+                    <img
+                      src={user.profile_image_url || initialsAvatarUrl(getDisplayName(user))}
+                      alt=""
+                      className="w-8 h-8 rounded-full object-cover"
+                      loading="lazy"
+                      decoding="async"
+                    />
                     <div className="flex-1 min-w-0 sidebar-collapse-hide">
                       <div className="flex items-center gap-2 flex-wrap">
-                        <Link to={createPageUrl('MyProfile')} className="font-medium text-emerald-100 text-sm truncate">{getDisplayName(user)}</Link>
+                        <span className="font-medium text-emerald-100 text-sm truncate">{getDisplayName(user)}</span>
                         <TierBadge user={user} size="xs" />
                       </div>
                       <p className="text-xs text-emerald-300/80 truncate">{user.email}</p>
                     </div>
-                  </div>
+                  </Link>
                 ) : (
                   <div className="space-y-2 sidebar-collapse-hide">
                     <Button
