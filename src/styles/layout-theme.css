@@ -631,30 +631,26 @@ html, body, #root {
             margin: 0 !important;
           }
 
-          /* Active state: glowing circular ring in the user's tier
-             color. data-tier on the wrapper picks the palette. */
+          /* Active state: 3px emerald bar at the rail's left edge,
+             mirroring the expanded sidebar's left-border highlight.
+             The link itself is centered at x=1rem inside the 4rem
+             nav, so the ::before pseudo is shifted left by 1rem to
+             land flush against the rail's left edge. */
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item.active {
             background: transparent !important;
             border-left: 0 !important;
+            box-shadow: none !important;
+            color: var(--gecko-primary) !important;
           }
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item.active::before {
-            display: none !important;
-          }
-          .desktop-sidebar-wrapper.is-collapsed[data-tier="free"]       .sidebar-nav-item.active,
-          .desktop-sidebar-wrapper.is-collapsed[data-tier="keeper"]     .sidebar-nav-item.active {
-            box-shadow:
-              0 0 0 2px rgba(16, 185, 129, 0.8),
-              0 0 10px rgba(16, 185, 129, 0.45);
-          }
-          .desktop-sidebar-wrapper.is-collapsed[data-tier="breeder"]    .sidebar-nav-item.active {
-            box-shadow:
-              0 0 0 2px rgba(168, 85, 247, 0.9),
-              0 0 10px rgba(168, 85, 247, 0.5);
-          }
-          .desktop-sidebar-wrapper.is-collapsed[data-tier="enterprise"] .sidebar-nav-item.active {
-            box-shadow:
-              0 0 0 2px rgba(251, 191, 36, 0.95),
-              0 0 12px rgba(251, 191, 36, 0.55);
+            display: block !important;
+            opacity: 1 !important;
+            left: -1rem !important;
+            top: 0 !important;
+            bottom: 0 !important;
+            width: 3px !important;
+            background: var(--gecko-accent) !important;
+            border-radius: 0 !important;
           }
 
           /* Hover: tight pill, no translate / glow shift. */
