@@ -90,7 +90,7 @@ export const PROJECT_LINES = [
       'Sable proves out as incomplete-dominant; a true visual Sable bred to a normal should produce a known ratio of visual Sable offspring',
       'Be cautious of sellers labeling any dark-toned gecko as "Sable" without pedigree',
     ],
-    morphMarketSearchUrl: 'https://www.morphmarket.com/c/reptiles/lizards/crested-geckos/index?q=sable',
+    morphMarketSearchUrl: 'https://www.morphmarket.com/morphpedia/crested-geckos/sable/',
     relatedMorphs: ['sable'],
     caveats: [
       'Sable is now classified as a morph on MorphMarket and Morphpedia rather than a line. The Rialto line is the founding source of that morph.',
@@ -128,7 +128,7 @@ export const PROJECT_LINES = [
       'Cho Cho is recessive; ask for the parents\' genotype (visual x visual, visual x het, etc.)',
       'Outcross to non-related animals is necessary to avoid inbreeding issues; ask about the seller\'s outcross plan',
     ],
-    morphMarketSearchUrl: 'https://www.morphmarket.com/c/reptiles/lizards/crested-geckos/index?q=cho+cho',
+    morphMarketSearchUrl: 'https://www.morphmarket.com/us/c/reptiles/lizards/crested-geckos?q=cho+cho',
     relatedMorphs: [],
     caveats: [
       'Often classified as a morph rather than a line in modern hobby usage. Listed here because the founder/verification story matches the line format.',
@@ -168,7 +168,7 @@ export const PROJECT_LINES = [
       'No central registry exists; reputation of the breeder matters more than the line name itself',
       'Mardi Gras is a goal phenotype, not a single gene; younger animals may develop more spotting with age',
     ],
-    morphMarketSearchUrl: 'https://www.morphmarket.com/c/reptiles/lizards/crested-geckos/index?q=mardi+gras',
+    morphMarketSearchUrl: 'https://www.morphmarket.com/us/c/reptiles/lizards/crested-geckos?q=mardi+gras',
     relatedMorphs: ['dalmatian', 'super-dalmatian', 'harlequin'],
     caveats: [],
   },
@@ -203,7 +203,7 @@ export const PROJECT_LINES = [
       'Pale animals are easy to mis-label; request photos of fired-up and fired-down states',
       'If sold as a Sable Frost combo, both traits should be independently verifiable',
     ],
-    morphMarketSearchUrl: 'https://www.morphmarket.com/c/reptiles/lizards/crested-geckos/index?q=frost+line',
+    morphMarketSearchUrl: 'https://www.morphmarket.com/us/c/reptiles/lizards/crested-geckos?q=frost',
     relatedMorphs: ['lilly-white', 'sable', 'cream', 'moonglow'],
     caveats: [
       'Boundary between Frost, Cream, Moonglow, and White Wall is contested. Different breeders use the terms differently.',
@@ -242,7 +242,7 @@ export const PROJECT_LINES = [
       'Beware of "Arctic Sunset" being used as a premium tag for any pale cream harlequin',
       'No central registry; check the breeder\'s track record on MorphMarket and social channels',
     ],
-    morphMarketSearchUrl: 'https://www.morphmarket.com/c/reptiles/lizards/crested-geckos/index?q=arctic+sunset',
+    morphMarketSearchUrl: 'https://www.morphmarket.com/us/c/reptiles/lizards/crested-geckos?q=arctic+sunset',
     relatedMorphs: ['cream', 'harlequin'],
     caveats: [],
   },
@@ -279,7 +279,7 @@ export const PROJECT_LINES = [
       'Watch for sellers applying XXX to mid-tier harlequins to justify a premium',
       'Pattern can shift with age; juvenile XXX may settle into a less extreme adult phenotype',
     ],
-    morphMarketSearchUrl: 'https://www.morphmarket.com/c/reptiles/lizards/crested-geckos/index?q=XXX',
+    morphMarketSearchUrl: 'https://www.morphmarket.com/us/c/reptiles/lizards/crested-geckos?q=XXX',
     relatedMorphs: ['extreme-harlequin', 'super-dalmatian', 'harlequin'],
     caveats: [
       'XXX is closer to a marketing convention than a true line. Buyers should evaluate the animal on its own merits rather than the label.',
@@ -318,7 +318,7 @@ export const PROJECT_LINES = [
       'Check the breeder\'s track record on MorphMarket; specialists in Halloween animals will have several past listings',
       'Halloween is recognized as a trait but not a single gene, so juveniles may settle into the adult phenotype with age',
     ],
-    morphMarketSearchUrl: 'https://www.morphmarket.com/c/reptiles/lizards/crested-geckos/index?q=halloween',
+    morphMarketSearchUrl: 'https://www.morphmarket.com/morphpedia/crested-geckos/halloween/',
     relatedMorphs: ['harlequin', 'pinstripe', 'red-base', 'orange-base'],
     caveats: [
       'MorphMarket classifies Halloween as a trait rather than a project line. Listed here because the hobby still references "Halloween lines" when discussing multi-generation breeder projects.',
@@ -357,7 +357,7 @@ export const PROJECT_LINES = [
       'Visual Lilly White is required for the trait to express; there are no het Lilly Whites',
       'ACR\'s historical animals are well-documented; ask for the named ancestor in the pedigree if buying at a premium',
     ],
-    morphMarketSearchUrl: 'https://www.morphmarket.com/c/reptiles/lizards/crested-geckos/index?q=lilly+white',
+    morphMarketSearchUrl: 'https://www.morphmarket.com/morphpedia/crested-geckos/lilly-white/',
     relatedMorphs: ['lilly-white', 'super-lilly-white'],
     caveats: [
       'Lilly White as a morph is widely produced; the ACR-specific line is the historical foundation but no longer the only credible source.',
@@ -396,7 +396,7 @@ export const PROJECT_LINES = [
       'When buying ALT-labeled animals from third parties, ask which generation removed from Altitude foundation',
       'Altitude Exotics maintains a public social presence; reach out directly for high-value verification',
     ],
-    morphMarketSearchUrl: 'https://www.morphmarket.com/c/reptiles/lizards/crested-geckos/index?q=altitude',
+    morphMarketSearchUrl: 'https://www.morphmarket.com/us/c/reptiles/lizards/crested-geckos?q=altitude',
     relatedMorphs: ['harlequin', 'red-base', 'orange-base'],
     caveats: [
       'ALT is more of a breeder-philosophy line than a single phenotype. Verification depends on the seller\'s connection to Altitude Exotics.',
@@ -435,7 +435,7 @@ export const PROJECT_LINES = [
       'Foundation Genetics is a long-form documented project, so seller transparency about lineage should be high',
       'Cross-reference against the Foundation Genetics article series for line-specific notes',
     ],
-    morphMarketSearchUrl: 'https://www.morphmarket.com/c/reptiles/lizards/crested-geckos/index?q=foundation+genetics',
+    morphMarketSearchUrl: 'https://www.morphmarket.com/us/c/reptiles/lizards/crested-geckos?q=foundation',
     relatedMorphs: [],
     caveats: [],
   },
@@ -471,7 +471,7 @@ export const PROJECT_LINES = [
       'Phantom is sometimes used as a premium tag for animals that simply have weak pattern; buyer beware',
       'No central registry exists for Phantom lines; rely on breeder reputation',
     ],
-    morphMarketSearchUrl: 'https://www.morphmarket.com/c/reptiles/lizards/crested-geckos/index?q=phantom',
+    morphMarketSearchUrl: 'https://www.morphmarket.com/morphpedia/crested-geckos/phantom-pinstripe/',
     relatedMorphs: ['pinstripe'],
     caveats: [
       'Phantom Pinstripe is a well-defined pattern descriptor. "Phantom line" as a broader project is loosely defined and varies by breeder.',
@@ -486,4 +486,35 @@ export const PROJECT_LINES = [
 export function getProjectLine(slug) {
   if (!slug) return null;
   return PROJECT_LINES.find((l) => l.slug === slug) || null;
+}
+
+/**
+ * Image-search keywords that uniquely identify this LINE (not generic
+ * morphs). Used to pull line-tagged community photos from
+ * gecko_images.primary_morph. Deliberately excludes relatedMorphs so a
+ * Halloween line page does not fill up with generic harlequin photos,
+ * the same generic photos that every other harlequin-related line would
+ * also pull. Generic morph examples are surfaced separately via the
+ * morph guide cross-link, where the labeling makes clear they are morph
+ * examples, not verified line specimens.
+ *
+ * Returns lowercased, whitespace-normalized candidates in priority order:
+ * line's own name first, then aliases.
+ */
+export function lineImageKeywords(line) {
+  if (!line) return [];
+  const out = [];
+  const push = (s) => {
+    const norm = (s || '').toLowerCase().replace(/[\s_-]+/g, ' ').trim();
+    if (norm && !out.includes(norm)) out.push(norm);
+  };
+  push(line.name);
+  // The trailing " line" suffix is implied; strip it so a name like
+  // "Halloween" matches gecko_images tagged just "halloween".
+  push((line.name || '').replace(/\s+line$/i, ''));
+  (line.aliases || []).forEach((a) => {
+    push(a);
+    push((a || '').replace(/\s+line$/i, ''));
+  });
+  return out;
 }

@@ -24,7 +24,7 @@ import {
   INHERITANCE,
   RARITY,
 } from '@/data/morph-guide';
-import { PROJECT_LINES, LINE_CONFIDENCE } from '@/data/project-lines';
+import { PROJECT_LINES, LINE_CONFIDENCE, lineImageKeywords } from '@/data/project-lines';
 import RotatingMorphImage from '@/components/morphguide/RotatingMorphImage';
 
 // DefinedTermSet treats the morph guide as a controlled vocabulary for
@@ -197,16 +197,30 @@ function MorphCard({ morph }) {
 function LineCard({ line }) {
   const confidence = LINE_CONFIDENCE[line.confidence] || LINE_CONFIDENCE['community-attributed'];
   const rarity = RARITY[line.rarity] || RARITY.uncommon;
+  const hasImages = Array.isArray(line.heroImages) && line.heroImages.length > 0;
   return (
     <Link
       to={`/MorphGuide/lines/${line.slug}`}
       className="group rounded-2xl overflow-hidden border border-slate-800 bg-slate-900/60 hover:border-violet-500/50 hover:bg-slate-900 transition-all duration-200 flex flex-col"
     >
       <div className="aspect-[4/3] bg-gradient-to-br from-violet-950/40 via-slate-900 to-slate-950 relative overflow-hidden flex items-center justify-center">
-        <div className="absolute inset-0 pointer-events-none">
-          <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl" />
-        </div>
-        <GitBranch className="w-16 h-16 text-violet-500/40 group-hover:text-violet-400/60 transition-colors" />
+        {hasImages ? (
+          <RotatingMorphImage
+            images={line.heroImages}
+            alt={`${line.name} crested gecko line reference`}
+            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+          />
+        ) : (
+          <>
+            <div className="absolute inset-0 pointer-events-none">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-violet-500/10 rounded-full blur-3xl" />
+            </div>
+            <GitBranch className="w-16 h-16 text-violet-500/40 group-hover:text-violet-400/60 transition-colors" />
+          </>
+        )}
+        {hasImages && (
+          <div className="absolute inset-0 bg-gradient-to-t from-slate-950/90 via-slate-950/10 to-transparent pointer-events-none" />
+        )}
         <div className="absolute top-3 left-3 right-3 flex items-start justify-between gap-2">
           <span
             className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-[11px] font-semibold ${confidence.color}`}
@@ -340,6 +354,43 @@ export default function MorphGuidePage() {
     });
     return list;
   }, [confidenceFilter, rarityFilter, searchTerm]);
+
+  // Wire real images into each line by matching the line's name/aliases
+  // against the same hero anchor, curated DB, and community pool data
+  // already fetched for the morph grid. Intentionally does NOT fall back
+  // to relatedMorphs, that would put the same generic harlequin photos
+  // on every harlequin-adjacent line and mislead readers into thinking
+  // each line had its own visual identity proven by those photos.
+  const filteredLinesWithImages = useMemo(() => {
+    return filteredLines.map((line) => {
+      const keywords = lineImageKeywords(line);
+      const imgs = [];
+      for (const kw of keywords) {
+        const firstWord = kw.split(' ')[0];
+        const heroNorm = normMorph(kw);
+        const hero = heroByNorm.get(heroNorm);
+        if (hero?.image_url) {
+          const safe = sanitizeImage(hero.image_url);
+          if (safe && !imgs.includes(safe)) imgs.push(safe);
+        }
+        const dbMatch = dbBySlug[firstWord] || dbBySlug[heroNorm.replace(/\s+/g, '-')];
+        const dbImg = sanitizeImage(dbMatch?.example_image_url);
+        if (dbImg && !imgs.includes(dbImg)) imgs.push(dbImg);
+        const community = communityByKeyword[firstWord] || [];
+        for (const url of community) {
+          const safe = sanitizeImage(url);
+          if (safe && !imgs.includes(safe)) imgs.push(safe);
+          if (imgs.length >= 6) break;
+        }
+        if (imgs.length >= 6) break;
+      }
+      return {
+        ...line,
+        heroImage: imgs[0] || null,
+        heroImages: imgs,
+      };
+    });
+  }, [filteredLines, communityByKeyword, heroByNorm, dbBySlug]);
 
   useEffect(() => {
     (async () => {
@@ -741,7 +792,7 @@ export default function MorphGuidePage() {
                 </div>
                 <div className="mt-4 pt-4 border-t border-slate-800 flex flex-wrap items-center gap-3 text-xs">
                   <span className="text-slate-400">
-                    <span className="text-white font-semibold">{filteredLines.length}</span> lines shown
+                    <span className="text-white font-semibold">{filteredLinesWithImages.length}</span> lines shown
                   </span>
                   <span className="text-slate-500">·</span>
                   <span className="text-slate-400">
@@ -778,7 +829,7 @@ export default function MorphGuidePage() {
               </div>
 
               {/* Lines grid */}
-              {filteredLines.length === 0 ? (
+              {filteredLinesWithImages.length === 0 ? (
                 <div className="rounded-2xl border border-slate-800 bg-slate-900/40 p-12 text-center">
                   <GitBranch className="w-12 h-12 text-slate-600 mx-auto mb-4" />
                   <p className="text-slate-300 font-semibold mb-1">No lines match those filters</p>
@@ -796,7 +847,7 @@ export default function MorphGuidePage() {
                 </div>
               ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
-                  {filteredLines.map((l) => (
+                  {filteredLinesWithImages.map((l) => (
                     <LineCard key={l.slug} line={l} />
                   ))}
                 </div>
