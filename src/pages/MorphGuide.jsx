@@ -355,43 +355,6 @@ export default function MorphGuidePage() {
     return list;
   }, [confidenceFilter, rarityFilter, searchTerm]);
 
-  // Wire real images into each line by matching the line's name/aliases
-  // against the same hero anchor, curated DB, and community pool data
-  // already fetched for the morph grid. Intentionally does NOT fall back
-  // to relatedMorphs, that would put the same generic harlequin photos
-  // on every harlequin-adjacent line and mislead readers into thinking
-  // each line had its own visual identity proven by those photos.
-  const filteredLinesWithImages = useMemo(() => {
-    return filteredLines.map((line) => {
-      const keywords = lineImageKeywords(line);
-      const imgs = [];
-      for (const kw of keywords) {
-        const firstWord = kw.split(' ')[0];
-        const heroNorm = normMorph(kw);
-        const hero = heroByNorm.get(heroNorm);
-        if (hero?.image_url) {
-          const safe = sanitizeImage(hero.image_url);
-          if (safe && !imgs.includes(safe)) imgs.push(safe);
-        }
-        const dbMatch = dbBySlug[firstWord] || dbBySlug[heroNorm.replace(/\s+/g, '-')];
-        const dbImg = sanitizeImage(dbMatch?.example_image_url);
-        if (dbImg && !imgs.includes(dbImg)) imgs.push(dbImg);
-        const community = communityByKeyword[firstWord] || [];
-        for (const url of community) {
-          const safe = sanitizeImage(url);
-          if (safe && !imgs.includes(safe)) imgs.push(safe);
-          if (imgs.length >= 6) break;
-        }
-        if (imgs.length >= 6) break;
-      }
-      return {
-        ...line,
-        heroImage: imgs[0] || null,
-        heroImages: imgs,
-      };
-    });
-  }, [filteredLines, communityByKeyword, heroByNorm, dbBySlug]);
-
   useEffect(() => {
     (async () => {
       setIsLoading(true);
@@ -566,6 +529,46 @@ export default function MorphGuidePage() {
     }
     return merged;
   }, [dbBySlug, communityByKeyword]);
+
+  // Wire real images into each line by matching the line's name/aliases
+  // against the same hero anchor, curated DB, and community pool data
+  // already fetched for the morph grid. Intentionally does NOT fall back
+  // to relatedMorphs, that would put the same generic harlequin photos
+  // on every harlequin-adjacent line and mislead readers into thinking
+  // each line had its own visual identity proven by those photos.
+  // Must be declared AFTER dbBySlug/communityByKeyword/heroByNorm or it
+  // hits a temporal-dead-zone error in production (minifier captures
+  // them by reference; useMemo deps array evaluates immediately).
+  const filteredLinesWithImages = useMemo(() => {
+    return filteredLines.map((line) => {
+      const keywords = lineImageKeywords(line);
+      const imgs = [];
+      for (const kw of keywords) {
+        const firstWord = kw.split(' ')[0];
+        const heroNorm = normMorph(kw);
+        const hero = heroByNorm.get(heroNorm);
+        if (hero?.image_url) {
+          const safe = sanitizeImage(hero.image_url);
+          if (safe && !imgs.includes(safe)) imgs.push(safe);
+        }
+        const dbMatch = dbBySlug[firstWord] || dbBySlug[heroNorm.replace(/\s+/g, '-')];
+        const dbImg = sanitizeImage(dbMatch?.example_image_url);
+        if (dbImg && !imgs.includes(dbImg)) imgs.push(dbImg);
+        const community = communityByKeyword[firstWord] || [];
+        for (const url of community) {
+          const safe = sanitizeImage(url);
+          if (safe && !imgs.includes(safe)) imgs.push(safe);
+          if (imgs.length >= 6) break;
+        }
+        if (imgs.length >= 6) break;
+      }
+      return {
+        ...line,
+        heroImage: imgs[0] || null,
+        heroImages: imgs,
+      };
+    });
+  }, [filteredLines, communityByKeyword, heroByNorm, dbBySlug]);
 
   const filtered = useMemo(() => {
     let list = [...allMorphs];
