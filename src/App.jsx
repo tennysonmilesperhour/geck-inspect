@@ -64,6 +64,7 @@ const PrivacyPolicy        = lazy(() => import('./pages/PrivacyPolicy'));
 // and link through to sign-up CTAs where relevant.
 const CareGuide             = lazy(() => import('./pages/CareGuide'));
 const CareGuideTopic        = lazy(() => import('./pages/CareGuideTopic'));
+const CareGuideSeries       = lazy(() => import('./pages/CareGuideSeries'));
 const GeneticsGuide         = lazy(() => import('./pages/GeneticsGuide'));
 const GeneticCalculatorTool = lazy(() => import('./pages/GeneticCalculatorTool'));
 const CalculatorMorph       = lazy(() => import('./pages/CalculatorMorph'));
@@ -235,6 +236,8 @@ const AuthenticatedApp = () => {
           <Route path="/MorphGuide/lines/:slug" element={<ProjectLineDetail />} />
           <Route path="/MorphGuide/:slug" element={<MorphDetail />} />
           <Route path="/CareGuide" element={<CareGuide />} />
+          <Route path="/CareGuide/series" element={<CareGuideSeries />} />
+          <Route path="/CareGuide/series/:guideId" element={<CareGuideSeries />} />
           <Route path="/CareGuide/:topic" element={<CareGuideTopic />} />
           <Route path="/GeneticsGuide" element={<GeneticsGuide />} />
           <Route path="/GeneticCalculatorTool" element={<GeneticCalculatorTool />} />

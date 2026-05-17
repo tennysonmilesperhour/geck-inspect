@@ -402,6 +402,29 @@ export function getMorphTaxonomyRoutes() {
 // care-guide.js sections. Priority is uniform 0.7, high enough to keep
 // them crawled regularly, not so high that the long tail dominates the
 // primary navigation pages (/CareGuide, /MorphGuide, /GeneticsGuide).
+export function getKeepersGuideRoutes() {
+  // Five slide-based deep dives. Static set, no need to parse data files.
+  const guides = ['feeding', 'setup', 'handbook', 'morph', 'breeding'];
+  return [
+    {
+      path: '/CareGuide/series',
+      priority: 0.8,
+      changefreq: 'monthly',
+      lastmod: TODAY,
+      meta: {
+        title: "The Keeper's Guide Series",
+        description: "Five in-depth slide-based guides for crested gecko keepers: feeding troubleshooting, setup and the first 30 days, the handbook of things they do not tell you, morph and genetics, and the complete breeding arc.",
+      },
+    },
+    ...guides.map((id) => ({
+      path: `/CareGuide/series/${id}`,
+      priority: 0.7,
+      changefreq: 'monthly',
+      lastmod: TODAY,
+    })),
+  ];
+}
+
 export function getCareTopicRoutes() {
   const sections = loadCareSections();
   return sections.map(({ id, title }) => ({
@@ -495,6 +518,7 @@ export function getAllRoutes() {
     ...getMorphTaxonomyRoutes(),
     ...getProjectLineRoutes(),
     ...getCareTopicRoutes(),
+    ...getKeepersGuideRoutes(),
     ...getBlogRoutes(),
     ...getCalculatorMorphRoutes(),
   ];
@@ -579,6 +603,7 @@ export function getAllSpaPathPatterns() {
   for (const p of loadAuthenticatedPagePaths()) push(p);
   for (const r of getMorphTaxonomyRoutes()) push(r.path);
   for (const r of getCareTopicRoutes()) push(r.path);
+  for (const r of getKeepersGuideRoutes()) push(r.path);
   for (const r of getMorphRoutes()) push(r.path);
   for (const r of getProjectLineRoutes()) push(r.path);
   for (const r of getCalculatorMorphRoutes()) push(r.path);

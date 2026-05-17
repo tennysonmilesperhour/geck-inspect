@@ -492,7 +492,7 @@ export default function CareGuidePage() {
                 <QuickFactsGrid facts={activeCategory.quickFacts} />
               )}
 
-              <KeepersGuideTabs />
+              <KeepersGuideTabs categoryId={activeCategory.id} />
 
               {localSections.length === 0 && communitySections.length === 0 ? (
                 <Card className="bg-slate-900/40 border-slate-800">
@@ -517,6 +517,13 @@ export default function CareGuidePage() {
                   Keep learning
                 </h3>
                 <div className="flex flex-wrap gap-2">
+                  <a
+                    href="/CareGuide/series"
+                    className="inline-flex items-center gap-1.5 rounded-full border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 px-3 py-1.5 text-sm font-semibold text-emerald-200 transition-colors"
+                  >
+                    Keeper&apos;s Guide Series
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </a>
                   <a
                     href="/MorphGuide"
                     className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/50 hover:text-emerald-200 px-3 py-1.5 text-sm text-slate-300 transition-colors"
