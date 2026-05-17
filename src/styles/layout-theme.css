@@ -565,70 +565,72 @@ html, body, #root {
                         max-height 0.22s cubic-bezier(0, 0, 0.2, 1),
                         padding 0.22s cubic-bezier(0, 0, 0.2, 1);
           }
-          /* Collapsed rail: every icon container is a 2.5rem (40px)
-             circle whose horizontal center sits at 2rem from the
-             rail's left edge. The container's parent gets a left
-             padding of 0.75rem so 0.75 + 1.25 = 2rem -- matches the
-             logo wrapper and the avatar's tier-ring outer above. */
+          /* Collapsed rail: nav icons / favorites / footer items are
+             2rem (32px) circles. Wrapper paddings are set to 1rem so
+             that circle centers land at 2rem from the rail's left
+             edge (1rem padding + 1rem half-circle = 2rem), matching
+             the logo and avatar above. The avatar's wrapper keeps
+             its 0.75rem padding because the avatar's tier-ring is
+             ~42px wide (0.75 + ~1.25 = 2rem). The logo wrapper also
+             keeps 0.75rem because the logo circle is 2.5rem to
+             visually match the avatar+ring outer size. */
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item {
-            width: 2.5rem;
-            height: 2.5rem;
-            padding: 0;
-            border-radius: 9999px;
-            justify-content: center;
-            align-items: center;
-            overflow: visible;
+            width: 2rem !important;
+            height: 2rem !important;
+            padding: 0 !important;
+            border-radius: 9999px !important;
+            justify-content: center !important;
+            align-items: center !important;
+            overflow: visible !important;
           }
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item > svg,
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item > .mr-2,
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item > .mr-3 {
-            margin-right: 0;
+            margin-right: 0 !important;
           }
-          /* Nav sections (Collection / Tools / Admin): shift native
-             px-2 (0.5rem) to px-3 (0.75rem) so 2.5rem-wide circular
-             nav items center at 2rem from the rail's left edge. */
           .desktop-sidebar-wrapper.is-collapsed nav.space-y-1 {
-            padding-left: 0.75rem !important;
-            padding-right: 0.75rem !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
           }
-          /* Active state replacement: drop the rectangle background +
-             left border highlight and use a glowing circular ring in
-             the user's tier color. data-tier on the wrapper picks
-             the color set (same palette as the avatar's tier-ring). */
+          /* Active state: glowing circular ring in user's tier color.
+             Ring sits tight at the 2rem circle's edge so it reads as
+             "around the icon" not "around an empty area". */
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item.active,
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item.active::before {
             background: transparent !important;
             border-left: 0 !important;
-            border-radius: 9999px;
+            border-radius: 9999px !important;
           }
           .desktop-sidebar-wrapper.is-collapsed .sidebar-nav-item.active::before {
             display: none !important;
           }
-          .desktop-sidebar-wrapper.is-collapsed[data-tier="free"]      .sidebar-nav-item.active,
-          .desktop-sidebar-wrapper.is-collapsed[data-tier="keeper"]    .sidebar-nav-item.active {
+          .desktop-sidebar-wrapper.is-collapsed[data-tier="free"]       .sidebar-nav-item.active,
+          .desktop-sidebar-wrapper.is-collapsed[data-tier="keeper"]     .sidebar-nav-item.active {
             box-shadow:
-              0 0 0 2px rgba(16, 185, 129, 0.75),
-              0 0 14px rgba(16, 185, 129, 0.45);
+              0 0 0 2px rgba(16, 185, 129, 0.8),
+              0 0 10px rgba(16, 185, 129, 0.45);
           }
-          .desktop-sidebar-wrapper.is-collapsed[data-tier="breeder"]   .sidebar-nav-item.active {
+          .desktop-sidebar-wrapper.is-collapsed[data-tier="breeder"]    .sidebar-nav-item.active {
             box-shadow:
-              0 0 0 2px rgba(168, 85, 247, 0.85),
-              0 0 14px rgba(168, 85, 247, 0.5);
+              0 0 0 2px rgba(168, 85, 247, 0.9),
+              0 0 10px rgba(168, 85, 247, 0.5);
           }
           .desktop-sidebar-wrapper.is-collapsed[data-tier="enterprise"] .sidebar-nav-item.active {
             box-shadow:
-              0 0 0 2px rgba(251, 191, 36, 0.9),
-              0 0 18px rgba(251, 191, 36, 0.55);
+              0 0 0 2px rgba(251, 191, 36, 0.95),
+              0 0 12px rgba(251, 191, 36, 0.55);
           }
-          /* Favorites grid: collapse to single column, each tile a
-             2.5rem circle so it lines up with the nav icons. Parent
-             wrapper already has px-3 (0.75rem). */
+          /* Favorites grid: single column of 2rem circles. */
           .desktop-sidebar-wrapper.is-collapsed .grid.grid-cols-2 {
             grid-template-columns: 1fr;
           }
+          .desktop-sidebar-wrapper.is-collapsed .px-3.mb-4 {
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+          }
           .desktop-sidebar-wrapper.is-collapsed .favorite-tile {
-            width: 2.5rem !important;
-            height: 2.5rem !important;
+            width: 2rem !important;
+            height: 2rem !important;
             padding: 0 !important;
             border-radius: 9999px !important;
           }
@@ -641,23 +643,31 @@ html, body, #root {
             box-shadow: none !important;
             background: rgba(16, 185, 129, 0.2) !important;
           }
-          /* Footer buttons (Membership / Tutorial / Settings / Logout /
-             Lock toggle): same circular 2.5rem treatment. Wrapper p-4
-             horizontal padding overridden to 0.75rem so button centers
-             align at 2rem from the rail's left edge. */
+          /* Footer block: same 2rem circle treatment. .mt-auto's p-4
+             horizontal padding overridden to 1rem so buttons center
+             at 2rem from the rail's left edge. Vertical spacing
+             tightened from space-y-3 (12px) to 6px so the icon
+             column reads as a cohesive stack instead of a scattered
+             list. */
           .desktop-sidebar-wrapper.is-collapsed .mt-auto {
-            padding-left: 0.75rem !important;
-            padding-right: 0.75rem !important;
+            padding-left: 1rem !important;
+            padding-right: 1rem !important;
+            padding-top: 0.75rem !important;
+            padding-bottom: 0.75rem !important;
+          }
+          .desktop-sidebar-wrapper.is-collapsed .mt-auto .space-y-3 > * + * {
+            margin-top: 0.375rem !important;
           }
           .desktop-sidebar-wrapper.is-collapsed .mt-auto a,
           .desktop-sidebar-wrapper.is-collapsed .mt-auto button {
-            width: 2.5rem !important;
-            height: 2.5rem !important;
-            min-height: 2.5rem !important;
+            width: 2rem !important;
+            height: 2rem !important;
+            min-height: 2rem !important;
             border-radius: 9999px !important;
             justify-content: center !important;
             align-items: center !important;
             padding: 0 !important;
+            display: flex !important;
           }
           .desktop-sidebar-wrapper.is-collapsed .mt-auto svg.mr-2 {
             margin-right: 0 !important;
@@ -668,10 +678,10 @@ html, body, #root {
             background: transparent !important;
             box-shadow: none !important;
           }
-          /* Logo tile: when collapsed, the link is a 2.5rem circle so
-             its outer footprint matches the avatar's tier-ring beneath
-             it. The logo image fills the circle. Wrapper keeps px-3
-             so the link's center is at 2rem from the rail's left. */
+          /* Logo tile: 2.5rem circle to visually match the avatar +
+             tier-ring outer footprint beneath it. Wrapper keeps
+             0.75rem padding so logo center sits at 0.75 + 1.25 =
+             2rem from rail-left, same axis as everything else. */
           .desktop-sidebar-wrapper.is-collapsed .desktop-sidebar-logo {
             padding-left: 0.75rem !important;
             padding-right: 0.75rem !important;
