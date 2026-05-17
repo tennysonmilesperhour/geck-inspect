@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Store, Lock, ExternalLink, Crown } from 'lucide-react';
+import { Store, Lock, Crown } from 'lucide-react';
 import {
     Dialog,
     DialogContent,
@@ -103,18 +103,17 @@ export default function MyStoreButton({ user }) {
     if (storePage?.is_published && storePage.slug) {
         return (
             <Button
-                onClick={() => window.open(`/store/${storePage.slug}`, '_blank', 'noopener,noreferrer')}
+                onClick={() => navigate(createPageUrl('MyStore'))}
                 className="bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-semibold"
             >
                 <Store className="w-4 h-4 mr-2" /> My Store
-                <ExternalLink className="w-3.5 h-3.5 ml-2 opacity-70" />
             </Button>
         );
     }
 
     return (
         <Button
-            onClick={() => navigate(createPageUrl('Settings') + '#breeder-store')}
+            onClick={() => navigate(createPageUrl('MyStore'))}
             variant="outline"
             className="border-emerald-700 bg-emerald-950/40 text-emerald-200 hover:bg-emerald-900/40"
         >

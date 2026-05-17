@@ -6,7 +6,8 @@ import { useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Users, MapPin, Globe, UserPlus, UserMinus, ShoppingCart, GitBranch, Heart, Instagram, Facebook, Youtube, FileText } from 'lucide-react';
+import { Loader2, Users, MapPin, Globe, UserPlus, UserMinus, ShoppingCart, GitBranch, Heart, Instagram, Facebook, Youtube, FileText, Store } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import { createPageUrl } from '@/utils';
 import { useNavigate } from 'react-router-dom';
@@ -93,6 +94,7 @@ export default function PublicProfile() {
     const [currentUser, setCurrentUser] = useState(null);
     const [isFollowing, setIsFollowing] = useState(false);
     const [followRecord, setFollowRecord] = useState(null);
+    const [storePage, setStorePage] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
 
@@ -164,6 +166,16 @@ export default function PublicProfile() {
                 // Fetch public breeding plans
                 const plans = await BreedingPlan.filter({ created_by: user.email, is_public: true }).catch(() => []);
                 setBreedingPlans(plans);
+
+                // Fetch published store page (if any) so we can surface a
+                // "Visit my store" pill next to the website link.
+                const { data: storeData } = await supabase
+                    .from('breeder_store_pages')
+                    .select('slug, is_published, title')
+                    .eq('owner_email', user.email)
+                    .eq('is_published', true)
+                    .maybeSingle();
+                setStorePage(storeData || null);
 
             } catch (err) {
                 console.error("Error fetching public profile:", err);
@@ -322,12 +334,20 @@ export default function PublicProfile() {
                                     {[profileUser.city, profileUser.state_province, profileUser.country].filter(Boolean).join(', ')}
                                 </p>
                             )}
-                            {(profileUser.website_url || profileUser.instagram_handle || profileUser.facebook_url || profileUser.youtube_url || profileUser.tiktok_handle) && (
+                            {(storePage || profileUser.website_url || profileUser.instagram_handle || profileUser.facebook_url || profileUser.youtube_url || profileUser.tiktok_handle) && (
                                 <div className="flex flex-wrap gap-2 pt-2">
                                     {profileUser.website_url && (
                                         <a href={profileUser.website_url} target="_blank" rel="noopener noreferrer">
                                             <Button size="sm" variant="outline" className="border-slate-600 hover:bg-slate-700">
                                                 <Globe className="w-4 h-4" />
+                                            </Button>
+                                        </a>
+                                    )}
+                                    {storePage?.slug && (
+                                        <a href={`/store/${storePage.slug}`} target="_blank" rel="noopener noreferrer">
+                                            <Button size="sm" variant="outline" className="border-emerald-500/50 hover:bg-emerald-500/20 text-emerald-300 gap-1.5">
+                                                <Store className="w-4 h-4" />
+                                                <span className="text-xs font-medium">Visit store</span>
                                             </Button>
                                         </a>
                                     )}

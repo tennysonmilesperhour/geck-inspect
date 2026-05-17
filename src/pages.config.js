@@ -88,6 +88,7 @@ const MorphGuideSubmission  = lazy(() => import('./pages/MorphGuideSubmission'))
 const MorphVisualizer       = lazy(() => import('./pages/MorphVisualizer'));
 const MyGeckos              = lazy(() => import('./pages/MyGeckos'));
 const MyListings            = lazy(() => import('./pages/MyListings'));
+const MyStore               = lazy(() => import('./pages/MyStore'));
 const Notifications         = lazy(() => import('./pages/Notifications'));
 const OtherReptiles         = lazy(() => import('./pages/OtherReptiles'));
 const Pedigree              = lazy(() => import('./pages/Pedigree'));
@@ -152,6 +153,7 @@ export const PAGES = {
     "MyGeckos": MyGeckos,
     "MyListings": MyListings,
     "MyProfile": MyProfile,
+    "MyStore": MyStore,
     "Notifications": Notifications,
     "OtherReptiles": OtherReptiles,
     "Pedigree": Pedigree,
