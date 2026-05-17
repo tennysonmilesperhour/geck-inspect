@@ -56,8 +56,9 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
 
   return (
     <Card className="gecko-card group flex flex-col">
-      {/* Image area */}
-      <div className="relative overflow-hidden rounded-t-[18px]">
+      {/* Image area. Corners are clipped by the parent .gecko-card's
+          overflow:hidden + 9px radius, so no inner radius needed. */}
+      <div className="relative">
         <SmartImage
           src={primaryImage}
           alt={gecko.name}
