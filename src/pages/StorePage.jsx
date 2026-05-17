@@ -401,12 +401,9 @@ export default function StorePage() {
                     <section id="collection" className="scroll-mt-24">
                         <div className="flex items-end justify-between mb-10 gap-6">
                             <div>
-                                <p className="text-[11px] uppercase tracking-[0.25em] text-emerald-300/80 font-semibold mb-2">
+                                <p className="text-[11px] uppercase tracking-[0.25em] text-emerald-300/80 font-semibold">
                                     The Collection
                                 </p>
-                                <h2 className="font-serif text-3xl md:text-4xl text-white">
-                                    Animals on offer
-                                </h2>
                             </div>
                             {owner?.id && (
                                 <Link
