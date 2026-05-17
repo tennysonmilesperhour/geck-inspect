@@ -50,6 +50,77 @@ const GECK_DATA_SUPABASE_SERVICE_KEY = Deno.env.get("GECK_DATA_SUPABASE_SERVICE_
 // Without it, all non-admin callers fall through to 'morph_id_production'.
 const EVAL_SHARED_SECRET = Deno.env.get("EVAL_SHARED_SECRET");
 
+// Salt for hashing client IPs before they hit model_invocations.ip_hash.
+// Stable per-deploy so today's count stays consistent for a given IP;
+// rotating it resets per-IP enforcement (intended only if we believe
+// the salt has leaked). Without this env var, per-IP enforcement is
+// disabled and ip_hash is logged as null.
+const IP_HASH_SALT = Deno.env.get("IP_HASH_SALT");
+
+async function hashIp(ip: string | null): Promise<string | null> {
+  if (!ip || !IP_HASH_SALT) return null;
+  const input = `${IP_HASH_SALT}:${ip}`;
+  const data = new TextEncoder().encode(input);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  return Array.from(new Uint8Array(digest))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+}
+
+function extractClientIp(req: Request): string | null {
+  // Supabase Edge Functions sit behind a Cloudflare-style edge; both
+  // headers are populated for genuine client requests. Local invocations
+  // (curl from the same host) skip these and return null.
+  const cf = req.headers.get("cf-connecting-ip");
+  if (cf) return cf.trim();
+  const xff = req.headers.get("x-forwarded-for");
+  if (xff) {
+    const first = xff.split(",")[0]?.trim();
+    if (first) return first;
+  }
+  return null;
+}
+
+// Returns the morph_id_per_ip_daily cap from runtime_config (or null
+// if missing/zero). Pulled from the geck-data sink because that's where
+// runtime_config lives. Failure modes (missing env var, unreachable DB,
+// row absent) all silently disable enforcement so a config-tier outage
+// can't take down recognition.
+async function fetchPerIpDailyCap(): Promise<number | null> {
+  if (!GECK_DATA_SUPABASE_URL || !GECK_DATA_SUPABASE_SERVICE_KEY) return null;
+  try {
+    const sink = createClient(GECK_DATA_SUPABASE_URL, GECK_DATA_SUPABASE_SERVICE_KEY);
+    const { data } = await sink
+      .from("runtime_config")
+      .select("value")
+      .eq("key", "morph_id_per_ip_daily")
+      .maybeSingle();
+    const v = Number(data?.value);
+    if (!Number.isFinite(v) || v <= 0) return null;
+    return v;
+  } catch (_err) {
+    return null;
+  }
+}
+
+async function countTodaysCallsForIp(ipHash: string): Promise<number> {
+  if (!GECK_DATA_SUPABASE_URL || !GECK_DATA_SUPABASE_SERVICE_KEY) return 0;
+  try {
+    const sink = createClient(GECK_DATA_SUPABASE_URL, GECK_DATA_SUPABASE_SERVICE_KEY);
+    const startOfDay = new Date();
+    startOfDay.setUTCHours(0, 0, 0, 0);
+    const { count } = await sink
+      .from("model_invocations")
+      .select("id", { count: "exact", head: true })
+      .eq("ip_hash", ipHash)
+      .eq("surface", "morph_id_production")
+      .gte("called_at", startOfDay.toISOString());
+    return count ?? 0;
+  } catch (_err) {
+    return 0;
+  }
+}
+
 // USD per million tokens. Used to compute est_cost_cents at write time.
 // Frozen here so historic rows don't drift if Anthropic re-prices.
 const PRICE_PER_MTOK_USD: Record<string, { input: number; output: number }> = {
@@ -107,6 +178,7 @@ type InvocationLog = {
   error_code: string | null;
   duration_ms: number | null;
   request_id: string | null;
+  ip_hash: string | null;
 };
 
 async function logInvocation(row: InvocationLog): Promise<void> {
@@ -540,6 +612,12 @@ serve(async (req) => {
   let model = CLAUDE_MODEL;
   let surface = "morph_id_production";
 
+  // Hash the caller's IP once up front; null when IP_HASH_SALT is unset
+  // or the client IP can't be determined. Both cases skip per-IP
+  // enforcement AND log ip_hash=null so the row is still useful for
+  // every other dashboard slice.
+  const ipHash = await hashIp(extractClientIp(req));
+
   try {
     const body = await req.json().catch(() => ({}));
     if (Array.isArray(body?.imageUrls)) {
@@ -566,6 +644,36 @@ serve(async (req) => {
       isAdmin,
       req.headers.get("x-eval-secret"),
     );
+
+    // Per-IP daily cap. Only enforced for production traffic (eval and
+    // admin self-tagged calls are exempt). Cap value is pulled live from
+    // runtime_config.morph_id_per_ip_daily, so changes via the
+    // /data-admin/control panel take effect on the next request.
+    if (!isAdmin && surface === "morph_id_production" && ipHash) {
+      const cap = await fetchPerIpDailyCap();
+      if (cap && cap > 0) {
+        const used = await countTodaysCallsForIp(ipHash);
+        if (used >= cap) {
+          await logInvocation({
+            surface, model,
+            input_tokens: 0, output_tokens: 0,
+            cache_read_tokens: null, cache_creation_tokens: null,
+            est_cost_cents: 0,
+            user_id: profile.auth_user_id, tier, is_admin: isAdmin,
+            photo_count: imageUrls.length, few_shot_count: null,
+            http_status: 429,
+            error_code: "morph_id_ip_daily_exhausted",
+            duration_ms: 0, request_id: null,
+            ip_hash: ipHash,
+          });
+          return json({
+            error: "Daily MorphID limit reached for this network. Try again tomorrow.",
+            code: "morph_id_ip_daily_exhausted",
+            cap, used,
+          }, 429);
+        }
+      }
+    }
 
     let creditsConsumed = 0;
     let creditsRemaining: number | null = null;
@@ -617,6 +725,7 @@ serve(async (req) => {
       error_code: null,
       duration_ms: result.duration_ms,
       request_id: result.request_id,
+      ip_hash: ipHash,
     });
     return json({
       success: true,
@@ -650,6 +759,7 @@ serve(async (req) => {
         error_code: err.code,
         duration_ms: err.durationMs,
         request_id: err.requestId,
+        ip_hash: ipHash,
       });
       return json({ error: err.message, code: err.code }, err.status === 429 ? 503 : 502);
     }
@@ -671,6 +781,7 @@ serve(async (req) => {
       error_code: "internal_error",
       duration_ms: null,
       request_id: null,
+      ip_hash: ipHash,
     });
     return json({ error: message, code: "internal_error" }, 500);
   }
