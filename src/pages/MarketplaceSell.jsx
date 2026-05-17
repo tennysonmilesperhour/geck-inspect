@@ -33,6 +33,10 @@ import {
   CheckCircle2,
   Search,
   Clock,
+  CheckSquare,
+  Square,
+  ListPlus,
+  X,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -104,22 +108,51 @@ function StatCard({ label, value, tone = 'emerald', icon: Icon }) {
   );
 }
 
-function ListingCard({ gecko, user: _user, onEdit, onToggleVisible, onUnlist, onMarkSold, isToggling }) {
+function ListingCard({
+  gecko,
+  user: _user,
+  onEdit,
+  onToggleVisible,
+  onUnlist,
+  onMarkSold,
+  onQuickList,
+  isToggling,
+  selectMode = false,
+  isSelected = false,
+  onSelectToggle,
+}) {
   const photo = gecko.image_urls?.[0];
   const price = gecko.asking_price;
   const isLive = gecko.status === 'For Sale' && gecko.is_public !== false;
   const isHidden = gecko.status === 'For Sale' && gecko.is_public === false;
+  const isCollection = gecko.status !== 'For Sale' && gecko.status !== 'Sold' && !gecko.archived;
   const daysLive = gecko.updated_date
     ? formatDistanceToNowStrict(new Date(gecko.updated_date), { addSuffix: true })
     : null;
 
-  // Card sizing deliberately mirrors the MyGeckos GeckoCard so Sell and
-  // My Geckos look like the same shelf side-by-side: same fixed image
-  // height (`h-40 sm:h-56`), same grid breakpoints on the parent, same
-  // tight body padding. Prior version used `aspect-square` which made
-  // these cards noticeably larger than their MyGeckos siblings.
+  // Cards in the Your Collection bucket can be batch-selected by the
+  // seller console. Clicking anywhere on a selectable card during
+  // select mode toggles the checkbox, so we route the click through a
+  // wrapping handler instead of letting the buttons inside fire.
+  const selectable = selectMode && isCollection;
+  const handleCardClick = (e) => {
+    if (!selectable) return;
+    if (e.target.closest('[data-no-select]')) return;
+    e.preventDefault();
+    onSelectToggle?.(gecko.id);
+  };
+
   return (
-    <Card className="bg-slate-900 border-slate-800 overflow-hidden flex flex-col group hover:border-emerald-500/40 transition-colors rounded-xl">
+    <Card
+      onClick={handleCardClick}
+      className={`bg-slate-900 overflow-hidden flex flex-col group transition-colors rounded-xl border ${
+        selectable
+          ? isSelected
+            ? 'border-emerald-400 ring-2 ring-emerald-500/40 cursor-pointer'
+            : 'border-slate-700 hover:border-emerald-500/60 cursor-pointer'
+          : 'border-slate-800 hover:border-emerald-500/40'
+      }`}
+    >
       {/* Photo ,  fixed height matches MyGeckos GeckoCard. `object-cover`
           crops to fill regardless of source image dimensions. */}
       <div className="relative h-40 sm:h-56 bg-slate-950 overflow-hidden">
@@ -137,8 +170,20 @@ function ListingCard({ gecko, user: _user, onEdit, onToggleVisible, onUnlist, on
           </div>
         )}
 
-        {/* Top-left: sex chip */}
-        <div className="absolute top-2 left-2">
+        {/* Top-left: select checkbox (when in select mode) or sex chip */}
+        <div className="absolute top-2 left-2 flex items-center gap-1.5">
+          {selectable && (
+            <span
+              className={`inline-flex items-center justify-center w-6 h-6 rounded-md backdrop-blur-sm shadow ${
+                isSelected
+                  ? 'bg-emerald-500 text-white'
+                  : 'bg-slate-900/70 text-slate-200 border border-slate-500'
+              }`}
+              aria-hidden="true"
+            >
+              {isSelected ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+            </span>
+          )}
           <span
             className={`inline-flex items-center rounded-full border px-2 py-0.5 text-[10px] font-semibold backdrop-blur-sm ${
               gecko.sex === 'Male'
@@ -187,7 +232,7 @@ function ListingCard({ gecko, user: _user, onEdit, onToggleVisible, onUnlist, on
         <div>
           <h3 className="font-semibold text-slate-100 truncate text-sm">{gecko.name}</h3>
           <p className="text-[10px] text-slate-500 truncate font-mono uppercase tracking-wider">
-            {gecko.gecko_id_code || '—'}
+            {gecko.gecko_id_code || '-'}
           </p>
         </div>
         {gecko.morphs_traits && (
@@ -202,8 +247,8 @@ function ListingCard({ gecko, user: _user, onEdit, onToggleVisible, onUnlist, on
         )}
 
         {/* Controls */}
-        <div className="mt-auto pt-2 space-y-2">
-          {/* Visibility toggle ,  clean inline row, no nested border */}
+        <div className="mt-auto pt-2 space-y-2" data-no-select>
+          {/* Visibility toggle ,  flips is_public on existing listings */}
           {gecko.status === 'For Sale' && (
             <label className="flex items-center justify-between gap-2 cursor-pointer select-none">
               <span className="flex items-center gap-1.5 text-[11px] text-slate-400 truncate">
@@ -225,12 +270,32 @@ function ListingCard({ gecko, user: _user, onEdit, onToggleVisible, onUnlist, on
             </label>
           )}
 
+          {/* Quick-list toggle ,  one-click conversion of a collection
+              gecko into an active listing. Uses the seller's default
+              visibility pref; the breeder can still open Edit to set a
+              price or description after the fact. */}
+          {isCollection && (
+            <label className="flex items-center justify-between gap-2 cursor-pointer select-none">
+              <span className="flex items-center gap-1.5 text-[11px] text-slate-400 truncate">
+                <ListPlus className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                <span className="truncate">List on marketplace</span>
+              </span>
+              <Switch
+                checked={false}
+                onCheckedChange={(checked) => { if (checked) onQuickList(gecko); }}
+                disabled={isToggling || selectMode}
+                className="data-[state=checked]:bg-emerald-500"
+              />
+            </label>
+          )}
+
           {/* Action row ,  matched sizing, matched height */}
           <div className="grid grid-cols-2 gap-1.5">
             <Button
               variant="outline"
               size="sm"
               onClick={() => onEdit(gecko)}
+              disabled={selectMode}
               className="h-8 border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 text-xs"
             >
               <Edit className="w-3 h-3 mr-1" /> Edit
@@ -239,6 +304,7 @@ function ListingCard({ gecko, user: _user, onEdit, onToggleVisible, onUnlist, on
               <Button
                 size="sm"
                 onClick={() => onMarkSold(gecko)}
+                disabled={selectMode}
                 className="h-8 bg-emerald-600 hover:bg-emerald-500 text-white text-xs"
               >
                 <CheckCircle2 className="w-3 h-3 mr-1" /> Sold
@@ -247,9 +313,11 @@ function ListingCard({ gecko, user: _user, onEdit, onToggleVisible, onUnlist, on
               <Button
                 size="sm"
                 onClick={() => onEdit(gecko)}
+                disabled={selectMode}
                 className="h-8 bg-emerald-600 hover:bg-emerald-500 text-white text-xs"
+                title="Open the edit modal to set a price and description"
               >
-                <DollarSign className="w-3 h-3 mr-1" /> List
+                <DollarSign className="w-3 h-3 mr-1" /> List with details
               </Button>
             )}
           </div>
@@ -281,6 +349,9 @@ export default function MarketplaceSellPage() {
   const [editingGecko, setEditingGecko] = useState(null);
   const [search, setSearch] = useState('');
   const [togglingId, setTogglingId] = useState(null);
+  const [selectMode, setSelectMode] = useState(false);
+  const [selectedIds, setSelectedIds] = useState(() => new Set());
+  const [isBulkListing, setIsBulkListing] = useState(false);
   const [formData, setFormData] = useState({
     asking_price: '',
     status: 'For Sale',
@@ -407,6 +478,76 @@ export default function MarketplaceSellPage() {
     } catch (err) {
       toast({ title: 'Failed', description: err.message, variant: 'destructive' });
     }
+  };
+
+  // Single-click promotion: collection gecko → active (or hidden draft)
+  // listing using the seller's default visibility preference. Price and
+  // description stay unset; the breeder can add them later via Edit.
+  const handleQuickList = async (gecko) => {
+    const visible = sellerPrefs.defaultVisibility !== false;
+    setTogglingId(gecko.id);
+    try {
+      await Gecko.update(gecko.id, { status: 'For Sale', is_public: visible });
+      setAllGeckos((prev) =>
+        prev.map((g) =>
+          g.id === gecko.id ? { ...g, status: 'For Sale', is_public: visible } : g
+        )
+      );
+      toast({
+        title: visible ? 'Listed on marketplace' : 'Saved as hidden draft',
+        description: visible
+          ? `${gecko.name} is live. Click Edit to set a price.`
+          : `${gecko.name} is a hidden draft. Toggle visibility when you're ready.`,
+      });
+    } catch (err) {
+      toast({ title: 'Could not list', description: err.message, variant: 'destructive' });
+    }
+    setTogglingId(null);
+  };
+
+  const toggleSelected = (id) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const exitSelectMode = () => {
+    setSelectMode(false);
+    setSelectedIds(new Set());
+  };
+
+  const handleBulkList = async () => {
+    if (selectedIds.size === 0) return;
+    const visible = sellerPrefs.defaultVisibility !== false;
+    const ids = Array.from(selectedIds);
+    setIsBulkListing(true);
+    try {
+      await Promise.all(
+        ids.map((id) => Gecko.update(id, { status: 'For Sale', is_public: visible }))
+      );
+      setAllGeckos((prev) =>
+        prev.map((g) =>
+          ids.includes(g.id) ? { ...g, status: 'For Sale', is_public: visible } : g
+        )
+      );
+      toast({
+        title: `Listed ${ids.length} gecko${ids.length === 1 ? '' : 's'}`,
+        description: visible
+          ? 'They are now live on the marketplace. Add prices via Edit any time.'
+          : 'Saved as hidden drafts. Toggle visibility when ready.',
+      });
+      exitSelectMode();
+    } catch (err) {
+      toast({
+        title: 'Bulk list failed',
+        description: err.message || 'Some geckos may not have updated. Refresh and try again.',
+        variant: 'destructive',
+      });
+    }
+    setIsBulkListing(false);
   };
 
   // Buckets
@@ -591,7 +732,48 @@ export default function MarketplaceSellPage() {
           <SectionHeader
             title="Your Collection"
             count={availableToList.length}
-            description="Everything else. Click 'List' to create a new marketplace listing."
+            description="Flip the 'List on marketplace' switch on any card to list it instantly, or use Select multiple to list a batch in one go."
+            right={
+              availableToList.length > 0 ? (
+                selectMode ? (
+                  <div className="flex items-center gap-2">
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={() => {
+                        const allIds = availableToList.map((g) => g.id);
+                        const everyOneSelected = allIds.every((id) => selectedIds.has(id));
+                        if (everyOneSelected) {
+                          setSelectedIds(new Set());
+                        } else {
+                          setSelectedIds(new Set(allIds));
+                        }
+                      }}
+                      className="h-8 border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 text-xs"
+                    >
+                      {availableToList.every((g) => selectedIds.has(g.id)) ? 'Clear all' : 'Select all'}
+                    </Button>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      onClick={exitSelectMode}
+                      className="h-8 border-slate-700 bg-slate-800 text-slate-200 hover:bg-slate-700 text-xs"
+                    >
+                      <X className="w-3.5 h-3.5 mr-1" /> Cancel
+                    </Button>
+                  </div>
+                ) : (
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setSelectMode(true)}
+                    className="h-8 border-emerald-700/60 bg-emerald-900/20 text-emerald-200 hover:bg-emerald-900/40 hover:text-emerald-100 text-xs"
+                  >
+                    <CheckSquare className="w-3.5 h-3.5 mr-1" /> Select multiple
+                  </Button>
+                )
+              ) : null
+            }
           />
           {availableToList.length === 0 ? (
             <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/40 p-8 text-center">
@@ -615,13 +797,54 @@ export default function MarketplaceSellPage() {
                   onToggleVisible={handleToggleVisible}
                   onUnlist={handleUnlist}
                   onMarkSold={handleMarkSold}
+                  onQuickList={handleQuickList}
                   isToggling={togglingId === g.id}
+                  selectMode={selectMode}
+                  isSelected={selectedIds.has(g.id)}
+                  onSelectToggle={toggleSelected}
                 />
               ))}
             </div>
           )}
         </section>
       </div>
+
+      {/* Bulk-action bar ,  surfaces when select mode has at least one
+          gecko marked. Sits above the mobile bottom nav so it doesn't
+          collide with it. */}
+      {selectMode && selectedIds.size > 0 && (
+        <div className="fixed left-1/2 -translate-x-1/2 bottom-12 md:bottom-6 z-40 w-[min(96vw,640px)]">
+          <div className="rounded-xl border border-emerald-700/50 bg-slate-900/95 backdrop-blur-md shadow-2xl shadow-black/40 p-3 flex items-center gap-3">
+            <div className="flex items-center gap-2 flex-1 min-w-0">
+              <span className="inline-flex items-center justify-center w-7 h-7 rounded-md bg-emerald-500 text-white shrink-0">
+                <CheckSquare className="w-4 h-4" />
+              </span>
+              <div className="min-w-0">
+                <p className="text-sm font-semibold text-slate-100">
+                  {selectedIds.size} selected
+                </p>
+                <p className="text-[11px] text-slate-400 truncate">
+                  {sellerPrefs.defaultVisibility !== false
+                    ? 'Will go live on the marketplace immediately.'
+                    : 'Will save as hidden drafts (per your seller setting).'}
+                </p>
+              </div>
+            </div>
+            <Button
+              onClick={handleBulkList}
+              disabled={isBulkListing}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white"
+            >
+              {isBulkListing ? (
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              ) : (
+                <ListPlus className="w-4 h-4 mr-2" />
+              )}
+              List {selectedIds.size} {selectedIds.size === 1 ? 'gecko' : 'geckos'}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Edit Modal */}
       <Dialog open={!!editingGecko} onOpenChange={(open) => !open && setEditingGecko(null)}>
