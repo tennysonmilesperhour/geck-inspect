@@ -48,7 +48,10 @@ export default function IdNeedsPanel({ currentUserEmail }) {
         const { error } = await supabase.from('classification_votes').insert({
             gecko_image_id: item.id,
             primary_morph: item.primary_morph,
-            verdict: 'agree',
+            // 'approve' / 'reject' are the only values allowed by the
+            // classification_votes_verdict_chk CHECK constraint. Earlier
+            // code used 'agree' here which failed silently in production.
+            verdict: 'approve',
             created_by: currentUserEmail,
             reviewer_email: currentUserEmail,
         });
