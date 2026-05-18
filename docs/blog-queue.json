@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-05-18T10:12:50.774Z",
+  "lastUpdated": "2026-05-18T11:11:05.258Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -121,7 +121,7 @@
       "title": "Axanthic Crested Geckos: Recessive Genetics and Why Pairing Strategy Matters",
       "slug": "axanthic-breeding-strategy",
       "category": "genetics",
-      "status": "new",
+      "status": "published",
       "score": {
         "demand": 6,
         "originality": 7,
@@ -130,8 +130,8 @@
         "total": 17
       },
       "createdAt": "2026-05-01T10:54:37.003Z",
-      "draftedAt": null,
-      "publishedAt": null,
+      "draftedAt": "2026-05-18T11:11:05.135Z",
+      "publishedAt": "2026-05-18T11:11:05.258Z",
       "evidence": [
         {
           "source": "google-ac",
