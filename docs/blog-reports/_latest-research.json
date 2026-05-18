@@ -1,28 +1,27 @@
 {
-  "ranAt": "2026-05-15T08:53:17.020Z",
+  "ranAt": "2026-05-18T10:12:32.363Z",
   "signals": {
     "googleAc": 95,
-    "bluesky": 0,
-    "googleTrends": 0,
-    "youtube": 62,
+    "bluesky": 80,
+    "googleTrends": 14,
+    "youtube": 66,
     "breederBlogs": 1,
+    "reddit": 0,
     "errors": [
-      "\"crested gecko\": fetch failed",
-      "\"correlophus ciliatus\": fetch failed",
-      "\"cappuccino gecko\": 403 Forbidden",
-      "\"lilly white gecko\": 403 Forbidden",
-      "\"axanthic gecko\": 403 Forbidden",
-      "\"gargoyle gecko\": 403 Forbidden",
-      "\"crested gecko morph\": 403 Forbidden",
-      "\"crested gecko\": explore: 429",
-      "\"crested gecko morph\": explore: 429",
-      "\"cappuccino gecko\": explore: 429",
-      "\"lilly white gecko\": explore: 429",
-      "Lil Monsters Reptiles: 404 Not Found",
-      "AC Reptiles: 404 Not Found"
+      "r/crestedgecko new: 403 Blocked",
+      "r/crestedgecko top: 403 Blocked",
+      "r/morphmarket new: 403 Blocked",
+      "search \"cappuccino\": 403 Blocked",
+      "search \"lilly white\": 403 Blocked",
+      "search \"axanthic\": 403 Blocked",
+      "search \"soft scale\": 403 Blocked",
+      "search \"frappuccino\": 403 Blocked",
+      "search \"super dalmatian\": 403 Blocked",
+      "search \"het \": 403 Blocked",
+      "search \"breeding fail\": 403 Blocked"
     ]
   },
-  "costUsd": 0.015578999999999999,
+  "costUsd": 0.027792,
   "addedSlugs": [],
-  "rationale": "The signals show heavy search demand around morph identification, breeding setup, and specific morphs (Cappuccino, Lilly White, Axanthic), but almost entirely driven by Google autocomplete and YouTube—most of which covers general care, identification, and sales intent. No forum heat, no Bluesky engagement, no rising trends. The breeder blog is promotional only. This is a low-signal environment: the audience is searching for basic info and product deals, not seeking expert breeding strategy or genetics insight. I'm rejecting all topics because the signals lack the specificity (forum confusion, disagreement, or a concrete misconception) needed to justify a breeding-focused blog post. The queued slugs already cover Lilly White ID and Axanthic breeding; YouTube content dominates the morph-education space; and general care is outside our remit."
+  "rationale": "The signals reflect broad, general interest in crested gecko care, morphs, and products, but lack the specific misconceptions, breeding controversies, or forum confusion that would warrant a breeding/genetics blog post. Google Trends shows rising queries around \"morph chart\" (+180%) and \"super dalmatian\" (+130%), but these are primarily informational (people seeking existing guides). YouTube has extensive coverage already (\"Crested Gecko Morph Guide 2026: ULTIMATE Guide\", \"How Top Breeders Create Elite Lilly White\"). Bluesky engagement is dispersed across fan art, pet photos, and marketplace listings—no heated breeding debates or genetics misunderstandings emerge. Reddit provided zero posts, removing a key source of breeder dialogue and confusion signals. The one breeder blog post is a seasonal sale announcement unrelated to genetics/breeding strategy. Cappuccino remains a moderately hot topic in autocomplete and YouTube, but we've already published \"cappuccino-crested-gecko-genetics\" and \"super-cappuccino-viability-debate,\" and the YouTube titles suggest consensus (\"don't buy super cappuccino it's a scam\") rather than actionable breeding angles. Lilly White shows modest search interest but the published slug \"lilly-white-identification-breeding\" already covers that ground. Without forum heat, breeding pitfalls, or verifiable genetic claims we can advance beyond existing posts, no topic clears the bar."
 }
