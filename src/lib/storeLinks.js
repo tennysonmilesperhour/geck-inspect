@@ -70,6 +70,43 @@ export function linkKindMeta(kind) {
     return LINK_KIND_BY_KEY[kind] || LINK_KIND_BY_KEY.other;
 }
 
+// Maps a link kind to a function that turns a bare handle into a full
+// URL. Returning null means "this kind has no handle convention, treat
+// the input as a URL and just fix the scheme."
+const HANDLE_BUILDERS = {
+    morphmarket: (h) => `https://www.morphmarket.com/stores/${h}/`,
+    palmstreet:  (h) => `https://palm.st/${h.replace(/^@+/, '')}`,
+    instagram:   (h) => `https://www.instagram.com/${h.replace(/^@+/, '')}/`,
+    tiktok:      (h) => `https://www.tiktok.com/@${h.replace(/^@+/, '')}`,
+    youtube:     (h) => `https://www.youtube.com/@${h.replace(/^@+/, '')}`,
+    facebook:    (h) => `https://www.facebook.com/${h.replace(/^@+/, '')}`,
+    twitter:     (h) => `https://x.com/${h.replace(/^@+/, '')}`,
+};
+
+// Best-effort coercion of whatever the user typed into a clickable URL.
+//
+//   - has scheme    -> use as-is, just trim
+//   - looks like a domain (foo.bar) -> prepend https://
+//   - looks like a bare handle for a known platform -> build via builder
+//   - otherwise -> prepend https:// (assume domain typo)
+//
+// Returns null for empty input so callers can store NULL.
+export function normalizeLinkUrl(kind, raw) {
+    const v = (raw || '').trim();
+    if (!v) return null;
+    // Already has a URL scheme (http, https, mailto:, etc.)? Leave alone.
+    if (/^[a-z][a-z0-9+.-]*:/i.test(v)) return v;
+    // Contains a dot before the first slash? Treat as a bare domain.
+    const firstSlash = v.indexOf('/');
+    const head = firstSlash === -1 ? v : v.slice(0, firstSlash);
+    if (head.includes('.')) return `https://${v}`;
+    // Pure handle. Build via the kind-specific URL convention if known.
+    const builder = HANDLE_BUILDERS[kind];
+    if (builder) return builder(v);
+    // Unknown kind with no handle convention, last-ditch fallback.
+    return `https://${v}`;
+}
+
 // Days a user must wait between slug renames AFTER their first change.
 // First change is free so they can correct an auto-filled slug they
 // don't like, subsequent changes are rate-limited so external backlinks

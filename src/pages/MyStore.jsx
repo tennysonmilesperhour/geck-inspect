@@ -22,7 +22,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { createPageUrl } from '@/utils';
 import { tierOf } from '@/lib/tierLimits';
 import {
-    LINK_KINDS, linkKindMeta, normalizeSlug, SLUG_RE,
+    LINK_KINDS, linkKindMeta, normalizeLinkUrl, normalizeSlug, SLUG_RE,
     SLUG_COOLDOWN_DAYS, slugCooldownRemaining,
 } from '@/lib/storeLinks';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
@@ -249,12 +249,16 @@ export default function MyStore() {
         }
 
         // Drop links that have an empty URL so the picker doesn't have to
-        // be over-careful about empty rows.
+        // be over-careful about empty rows. normalizeLinkUrl turns a bare
+        // handle ("thereptilegarden" for kind=morphmarket) into the full
+        // https://www.morphmarket.com/stores/thereptilegarden/ URL, and
+        // prepends https:// to anything that looks like a bare domain so
+        // the store page doesn't resolve external links as relative paths.
         const cleanedLinks = (form.external_links || [])
             .map((l) => ({
                 kind: l.kind || 'other',
                 label: (l.label || '').trim() || linkKindMeta(l.kind).label,
-                url: (l.url || '').trim(),
+                url: normalizeLinkUrl(l.kind || 'other', l.url) || '',
             }))
             .filter((l) => l.url);
 

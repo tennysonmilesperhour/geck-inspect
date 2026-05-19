@@ -147,48 +147,134 @@ function GeckoLightbox({ gecko, onClose }) {
     );
 }
 
-function GeckoTile({ gecko, onOpen }) {
+// Map raw gecko.status values to one of four display buckets that drive
+// the gallery layout. Status free-text varies by user, so we coerce.
+function statusBucket(raw) {
+    const s = (raw || '').toLowerCase().trim();
+    if (!s) return 'showcase';
+    if (s === 'for sale' || s === 'available' || s === 'on offer') return 'available';
+    if (s === 'reserved' || s === 'hold' || s === 'holdback' || s === 'pending') return 'reserved';
+    if (s === 'sold') return 'sold';
+    return 'showcase';
+}
+
+const BUCKET_META = {
+    available: {
+        label: 'Available',
+        eyebrow: 'Now offered',
+        pill: 'bg-emerald-500/20 border-emerald-400/50 text-emerald-200',
+        tile: 'opacity-100',
+    },
+    reserved: {
+        label: 'Reserved',
+        eyebrow: 'On hold',
+        pill: 'bg-amber-500/15 border-amber-400/40 text-amber-200',
+        tile: 'opacity-100',
+    },
+    sold: {
+        label: 'Sold',
+        eyebrow: 'Placed',
+        pill: 'bg-stone-500/20 border-stone-400/30 text-stone-300',
+        tile: 'opacity-75 hover:opacity-100',
+    },
+    showcase: {
+        label: 'Showcase',
+        eyebrow: 'From the collection',
+        pill: 'bg-stone-700/40 border-stone-500/40 text-stone-200',
+        tile: 'opacity-100',
+    },
+};
+
+function GeckoTile({ gecko, onOpen, variant = 'large' }) {
     const img = gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE;
     const age = formatAge(gecko.hatch_date);
+    const bucket = statusBucket(gecko.status);
+    const meta = BUCKET_META[bucket];
+    const isSold = bucket === 'sold';
+
+    // Three visual variants drive the gallery hierarchy: large (hero,
+    // 4:5 portrait, full meta), medium (3:4 portrait, compact meta),
+    // and small (square thumbnail for the sold archive).
+    const isSmall = variant === 'small';
+    const isMedium = variant === 'medium';
+    const aspect = isSmall ? 'aspect-square' : isMedium ? 'aspect-[3:4]' : 'aspect-[4/5]';
+
     return (
         <button
             type="button"
             onClick={() => onOpen(gecko)}
-            className="group block text-left w-full"
+            className={`group block text-left w-full ${meta.tile} transition-opacity`}
         >
-            <div className="aspect-[4/5] bg-slate-900 overflow-hidden rounded-md relative">
+            <div className={`${aspect} bg-stone-900 overflow-hidden rounded-md relative`}>
                 <img
                     src={img}
                     alt={gecko.name}
-                    className="w-full h-full object-cover transition-transform duration-[800ms] group-hover:scale-[1.04]"
+                    className={`w-full h-full object-cover transition-transform duration-[800ms] group-hover:scale-[1.04] ${isSold ? 'saturate-[0.6] group-hover:saturate-100' : ''}`}
                     loading="lazy"
                 />
                 <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/0 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
-                {gecko.status && gecko.status !== 'For Sale' && (
-                    <span className="absolute top-3 left-3 text-[10px] font-semibold uppercase tracking-widest bg-black/60 backdrop-blur-sm text-white/90 border border-white/20 rounded-full px-2.5 py-1">
-                        {gecko.status}
+                {!isSmall && (
+                    <span className={`absolute top-3 left-3 text-[10px] font-semibold uppercase tracking-widest backdrop-blur-sm border rounded-full px-2.5 py-1 ${meta.pill}`}>
+                        {meta.label}
+                    </span>
+                )}
+                {!isSmall && gecko.asking_price && bucket === 'available' && (
+                    <span className="absolute bottom-3 right-3 text-sm font-semibold tabular-nums bg-black/70 backdrop-blur-sm border border-emerald-400/40 text-emerald-200 rounded-md px-2.5 py-1">
+                        ${Number(gecko.asking_price).toLocaleString()}
                     </span>
                 )}
             </div>
-            <div className="pt-3 space-y-1">
-                <div className="flex items-baseline justify-between gap-3">
-                    <h3 className="font-serif text-lg text-slate-100 group-hover:text-emerald-200 transition-colors leading-tight">
+            {isSmall ? (
+                <p className="pt-2 text-xs text-stone-300 truncate group-hover:text-emerald-200">
+                    {gecko.name}
+                </p>
+            ) : (
+                <div className="pt-3 space-y-1">
+                    <h3 className={`font-serif ${isMedium ? 'text-base' : 'text-lg'} text-stone-100 group-hover:text-emerald-200 transition-colors leading-tight`}>
                         {gecko.name}
                     </h3>
-                    {gecko.asking_price && (
-                        <span className="text-sm font-semibold text-emerald-300 tabular-nums shrink-0">
-                            ${Number(gecko.asking_price).toLocaleString()}
-                        </span>
+                    {gecko.morphs_traits && (
+                        <p className="text-xs text-stone-400 line-clamp-1">{gecko.morphs_traits}</p>
                     )}
+                    <p className="text-[10px] uppercase tracking-[0.15em] text-stone-500">
+                        {[gecko.sex, age].filter(Boolean).join('  ·  ')}
+                    </p>
                 </div>
-                {gecko.morphs_traits && (
-                    <p className="text-xs text-slate-400 line-clamp-1">{gecko.morphs_traits}</p>
-                )}
-                <p className="text-[10px] uppercase tracking-[0.15em] text-slate-500">
-                    {[gecko.sex, age].filter(Boolean).join(' · ')}
-                </p>
-            </div>
+            )}
         </button>
+    );
+}
+
+function CollectionGroup({ bucket, geckos, onOpen, variant }) {
+    if (!geckos || geckos.length === 0) return null;
+    const meta = BUCKET_META[bucket];
+    const gridCols =
+        variant === 'small'
+            ? 'grid-cols-3 md:grid-cols-5 gap-3 md:gap-4'
+            : variant === 'medium'
+              ? 'grid-cols-2 md:grid-cols-4 gap-4 md:gap-5'
+              : 'grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-10 md:gap-x-8 md:gap-y-14';
+    return (
+        <div className="space-y-6">
+            <div className="flex items-baseline justify-between gap-4 border-t border-stone-800 pt-6">
+                <div>
+                    <p className="text-[10px] uppercase tracking-[0.3em] text-stone-500 mb-1">
+                        {meta.eyebrow}
+                    </p>
+                    <h3 className="font-serif text-2xl md:text-3xl text-white">
+                        {meta.label}
+                        <span className="ml-3 text-base text-stone-500 font-sans tabular-nums">
+                            {geckos.length}
+                        </span>
+                    </h3>
+                </div>
+            </div>
+            <div className={`grid ${gridCols}`}>
+                {geckos.map((g) => (
+                    <GeckoTile key={g.id} gecko={g} onOpen={onOpen} variant={variant} />
+                ))}
+            </div>
+        </div>
     );
 }
 
@@ -308,7 +394,7 @@ export default function StorePage() {
     const externalLinks = Array.isArray(page.external_links) ? page.external_links : [];
     const ContactIcon = page.contact_link?.startsWith('mailto:') ? Mail : MessageCircle;
     const hasHero = Boolean(page.header_image_url);
-    const forSaleCount = featuredGeckos.filter((g) => g.status === 'For Sale' || g.status === 'Available').length;
+    const forSaleCount = featuredGeckos.filter((g) => statusBucket(g.status) === 'available').length;
 
     return (
         <div className="min-h-screen bg-stone-950 text-stone-100">
@@ -396,32 +482,86 @@ export default function StorePage() {
                     </section>
                 )}
 
-                {/* Featured geckos */}
-                {featuredGeckos.length > 0 && (
-                    <section id="collection" className="scroll-mt-24">
-                        <div className="flex items-end justify-between mb-10 gap-6">
-                            <div>
-                                <p className="text-[11px] uppercase tracking-[0.25em] text-emerald-300/80 font-semibold">
-                                    The Collection
-                                </p>
+                {/* Featured geckos, grouped by status to create a gallery
+                    hierarchy. Available animals get the largest treatment,
+                    reserved are medium, sold are a compact archive strip.
+                    Showcase (no status) renders only if nothing else does. */}
+                {featuredGeckos.length > 0 && (() => {
+                    const grouped = {
+                        available: [],
+                        reserved: [],
+                        sold: [],
+                        showcase: [],
+                    };
+                    for (const g of featuredGeckos) {
+                        grouped[statusBucket(g.status)].push(g);
+                    }
+                    const availableCount = grouped.available.length;
+                    return (
+                        <section id="collection" className="scroll-mt-24">
+                            <div className="flex items-end justify-between mb-10 gap-6">
+                                <div>
+                                    <p className="text-[11px] uppercase tracking-[0.25em] text-emerald-300/80 font-semibold mb-2">
+                                        The Collection
+                                    </p>
+                                    <h2 className="font-serif text-3xl md:text-4xl text-white">
+                                        {availableCount > 0
+                                            ? `${availableCount} ${availableCount === 1 ? 'animal' : 'animals'} on offer`
+                                            : 'From the collection'}
+                                    </h2>
+                                </div>
+                                {owner?.id && (
+                                    <Link
+                                        to={createPageUrl(`PublicProfile?userId=${owner.id}`)}
+                                        className="hidden sm:inline-flex items-center gap-1 text-xs uppercase tracking-[0.15em] text-stone-400 hover:text-emerald-300 whitespace-nowrap"
+                                    >
+                                        Full collection
+                                        <ArrowUpRight className="w-3.5 h-3.5" />
+                                    </Link>
+                                )}
                             </div>
-                            {owner?.id && (
-                                <Link
-                                    to={createPageUrl(`PublicProfile?userId=${owner.id}`)}
-                                    className="hidden sm:inline-flex items-center gap-1 text-xs uppercase tracking-[0.15em] text-stone-400 hover:text-emerald-300 whitespace-nowrap"
-                                >
-                                    Full collection
-                                    <ArrowUpRight className="w-3.5 h-3.5" />
-                                </Link>
-                            )}
-                        </div>
-                        <div className="grid grid-cols-2 md:grid-cols-3 gap-x-6 gap-y-10 md:gap-x-8 md:gap-y-14">
-                            {featuredGeckos.map((g) => (
-                                <GeckoTile key={g.id} gecko={g} onOpen={setOpenGecko} />
-                            ))}
-                        </div>
-                    </section>
-                )}
+                            <div className="space-y-16 md:space-y-24">
+                                <CollectionGroup
+                                    bucket="available"
+                                    geckos={grouped.available}
+                                    onOpen={setOpenGecko}
+                                    variant="large"
+                                />
+                                <CollectionGroup
+                                    bucket="reserved"
+                                    geckos={grouped.reserved}
+                                    onOpen={setOpenGecko}
+                                    variant="medium"
+                                />
+                                {/* If the breeder didn't tag statuses, render
+                                    everything in the "Showcase" group as a
+                                    featured set so the page isn't empty. */}
+                                {availableCount === 0 && grouped.reserved.length === 0 && (
+                                    <CollectionGroup
+                                        bucket="showcase"
+                                        geckos={grouped.showcase}
+                                        onOpen={setOpenGecko}
+                                        variant="large"
+                                    />
+                                )}
+                                {availableCount + grouped.reserved.length > 0 && grouped.showcase.length > 0 && (
+                                    <CollectionGroup
+                                        bucket="showcase"
+                                        geckos={grouped.showcase}
+                                        onOpen={setOpenGecko}
+                                        variant="medium"
+                                    />
+                                )}
+                                <CollectionGroup
+                                    bucket="sold"
+                                    geckos={grouped.sold}
+                                    onOpen={setOpenGecko}
+                                    variant="small"
+                                />
+                            </div>
+                        </section>
+                    );
+                })()}
 
                 {/* Featured pairings */}
                 {featuredPlans.length > 0 && (
