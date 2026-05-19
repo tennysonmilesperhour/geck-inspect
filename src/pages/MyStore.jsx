@@ -72,6 +72,20 @@ function ImageDimensionsHint({ url }) {
     );
 }
 
+// Bare email (no scheme) was getting saved verbatim and producing a
+// dead button on the public store page; the <a href="..."> resolved
+// relative to the current URL instead of opening the mail client.
+// Auto-prepend mailto: for bare emails and https:// for bare domains;
+// pass through anything that already has a scheme (mailto, http, https,
+// tel, sms, etc.).
+function normalizeContactLink(value) {
+    const raw = (value || '').trim();
+    if (!raw) return null;
+    if (/^[a-z][a-z0-9+.-]*:/i.test(raw)) return raw;
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(raw)) return `mailto:${raw}`;
+    return `https://${raw}`;
+}
+
 const EMPTY_FORM = {
     slug: '',
     title: '',
@@ -253,7 +267,7 @@ export default function MyStore() {
             tagline: form.tagline.trim() || null,
             description: form.description.trim() || null,
             header_image_url: form.header_image_url.trim() || null,
-            contact_link: form.contact_link.trim() || null,
+            contact_link: normalizeContactLink(form.contact_link),
             policies: form.policies.trim() || null,
             external_links: cleanedLinks,
             featured_gecko_ids: form.featured_gecko_ids,
