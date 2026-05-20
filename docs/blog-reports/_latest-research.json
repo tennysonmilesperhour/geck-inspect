@@ -1,13 +1,14 @@
 {
-  "ranAt": "2026-05-18T10:12:32.363Z",
+  "ranAt": "2026-05-20T09:41:10.453Z",
   "signals": {
     "googleAc": 95,
     "bluesky": 80,
-    "googleTrends": 14,
-    "youtube": 66,
+    "googleTrends": 4,
+    "youtube": 64,
     "breederBlogs": 1,
     "reddit": 0,
     "errors": [
+      "\"crested gecko\": related: 429",
       "r/crestedgecko new: 403 Blocked",
       "r/crestedgecko top: 403 Blocked",
       "r/morphmarket new: 403 Blocked",
@@ -21,7 +22,9 @@
       "search \"breeding fail\": 403 Blocked"
     ]
   },
-  "costUsd": 0.027792,
-  "addedSlugs": [],
-  "rationale": "The signals reflect broad, general interest in crested gecko care, morphs, and products, but lack the specific misconceptions, breeding controversies, or forum confusion that would warrant a breeding/genetics blog post. Google Trends shows rising queries around \"morph chart\" (+180%) and \"super dalmatian\" (+130%), but these are primarily informational (people seeking existing guides). YouTube has extensive coverage already (\"Crested Gecko Morph Guide 2026: ULTIMATE Guide\", \"How Top Breeders Create Elite Lilly White\"). Bluesky engagement is dispersed across fan art, pet photos, and marketplace listings—no heated breeding debates or genetics misunderstandings emerge. Reddit provided zero posts, removing a key source of breeder dialogue and confusion signals. The one breeder blog post is a seasonal sale announcement unrelated to genetics/breeding strategy. Cappuccino remains a moderately hot topic in autocomplete and YouTube, but we've already published \"cappuccino-crested-gecko-genetics\" and \"super-cappuccino-viability-debate,\" and the YouTube titles suggest consensus (\"don't buy super cappuccino it's a scam\") rather than actionable breeding angles. Lilly White shows modest search interest but the published slug \"lilly-white-identification-breeding\" already covers that ground. Without forum heat, breeding pitfalls, or verifiable genetic claims we can advance beyond existing posts, no topic clears the bar."
+  "costUsd": 0.028650000000000002,
+  "addedSlugs": [
+    "frappuccino-genetics-cappuccino-pairing-outcomes"
+  ],
+  "rationale": "The signal set is heavily weighted toward general crested gecko queries (care, diet, enclosure, morphs) with strong search volume but limited breeding-specific controversy or misconception. Google autocomplete shows sustained demand for \"crested gecko morph chart\" (+140%), \"morph identification,\" and \"breeding weight/age,\" while YouTube reveals a heated debate around Cappuccino viability (see \"Don't buy super cappuccino... it's a scam\") and Lilly White breeding strategy. Bluesky engagement is mostly lifestyle/art posts with no substantive breeding discussion. The single breeder blog is promotional. I found no Reddit threads, which limits community friction signals. I'm rejecting generic morph guides (already published: \"how-to-identify-crested-gecko-morphs\", \"cappuccino-crested-gecko-genetics\") and care content (already published). Instead, I'm targeting one high-demand, high-controversy topic with clear breeder-to-breeder disagreement: why Frappuccino outcomes confuse breeders, with a misconception-correction angle that aligns with voice fit."
 }

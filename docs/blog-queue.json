@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-05-18T11:11:05.258Z",
+  "lastUpdated": "2026-05-20T09:41:56.028Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -236,6 +236,48 @@
         "The rarest outcome from Soft Scale × Soft Scale isn't failure—it's misidentification; here's how to spot true Super Soft Scales in your clutches.",
         "Soft Scale breeding projects stall because breeders confuse incomplete dominance with co-dominance; the genetics are simple once you see it.",
         "Google is asking about 'soft scale crested gecko' but breeder forums show confusion about progeny—a clear gap you can fill."
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "tpc_1779270070453_frappuccin",
+      "title": "Frappuccino genetics: Why your Cappuccino + Cappuccino cross isn't guaranteed",
+      "slug": "frappuccino-genetics-cappuccino-pairing-outcomes",
+      "category": "genetics",
+      "status": "new",
+      "score": {
+        "total": 23,
+        "demand": 8,
+        "originality": 8,
+        "voiceFit": 9,
+        "accuracyRisk": 2
+      },
+      "createdAt": "2026-05-20T09:41:10.453Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "youtube",
+          "snippet": "YouTube: \"Frappuccino Crested Geckos Explained.\" by TikisGeckos, 7,278 views (1 year ago)",
+          "url": "https://www.youtube.com/watch?v=AYCFFN7rqEg"
+        },
+        {
+          "source": "google-ac",
+          "snippet": "Google autocomplete for \"cappuccino crested gecko\" suggests \"cappuccino crested gecko morph\"",
+          "url": null
+        },
+        {
+          "source": "youtube",
+          "snippet": "YouTube: \"Everything you need to know about Cappuccino and Super Cappuccino Crested Geckos!\" by Altitude Exotics, 9,535 views (4 years ago)",
+          "url": "https://www.youtube.com/watch?v=u1mxWj9_ZSY"
+        }
+      ],
+      "angleIdeas": [
+        "Most breeders assume Cappuccino × Cappuccino = Cappuccino. Here's what actually happens—and why Frappuccinos are the real outcome.",
+        "You bought two Cappuccinos expecting to breed Cappuccinos. Instead you got Frappuccinos. Here's the incomplete-dominant genetics behind the surprise.",
+        "Cappuccino isn't as simple as it looks: pairing two heterozygotes creates a Mendelian ratio that trips up new breeders.",
+        "The Frappuccino reveal: how a single pairing breaks down into three phenotypes and why that matters for your breeding plan."
       ],
       "rejectionReason": null,
       "prUrl": null
