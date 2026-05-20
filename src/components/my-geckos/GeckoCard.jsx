@@ -9,6 +9,7 @@ import QualityBadge from '@/components/shared/QualityBadge';
 import SmartImage from '@/components/shared/SmartImage';
 import { getSexIcon, getSexColor } from '@/lib/utils';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
+import { parseLocalDate, formatAge } from '@/lib/dateUtils';
 
 const ARCHIVE_ICONS = {
   death: '💀',
@@ -55,7 +56,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
   const archiveIcon = gecko.archived ? ARCHIVE_ICONS[gecko.archive_reason] : null;
 
   return (
-    <Card className="gecko-card group flex flex-col">
+    <Card className="gecko-card group flex flex-col h-full">
       {/* Image area. Corners are clipped by the parent .gecko-card's
           overflow:hidden + 9px radius, so no inner radius needed. */}
       <div className="relative">
@@ -159,7 +160,10 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
           {gecko.hatch_date && (
             <div className="inline-flex items-center gap-1 text-slate-400">
               <Calendar className="w-3 h-3 shrink-0" />
-              <span>{format(new Date(gecko.hatch_date), 'MM/dd/yy')}</span>
+              <span>{format(parseLocalDate(gecko.hatch_date), 'MM/dd/yy')}</span>
+              {formatAge(gecko.hatch_date) && (
+                <span className="text-slate-500">· {formatAge(gecko.hatch_date)}</span>
+              )}
             </div>
           )}
         </div>

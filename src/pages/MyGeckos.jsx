@@ -29,7 +29,7 @@ import { toast } from '@/components/ui/use-toast';
 import { AnimatePresence, motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import PlanLimitModal, { getGeckoLimit } from '../components/subscription/PlanLimitChecker';
-import { todayLocalISO } from '@/lib/dateUtils';
+import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
 import { exportGeckosCSV, exportGeckosPDF } from '@/lib/exportUtils';
 import { captureEvent } from '@/lib/posthog';
 import { useGeckoFilters } from '@/hooks/useGeckoFilters';
@@ -659,6 +659,7 @@ export default function MyGeckosPage() {
                                                     animate={{ opacity: 1, scale: 1 }}
                                                     exit={{ opacity: 0, scale: 0.8 }}
                                                     transition={{ duration: 0.3 }}
+                                                    className="h-full"
                                                 >
                                                     <GeckoCard
                                                         gecko={gecko}
@@ -730,7 +731,7 @@ export default function MyGeckosPage() {
                                                                     {(() => { const r = weightRecords.filter(w => w.gecko_id === gecko.id); const w = r.length > 0 ? [...r].sort((a,b) => new Date(b.record_date)-new Date(a.record_date))[0].weight_grams : (gecko.weight_grams ?? null); return w != null ? <span className="text-slate-400 text-xs bg-slate-800 px-2 py-0.5 rounded-full border border-slate-700">{w}g</span> : null; })()}
                                                                     {gecko.hatch_date && (
                                                                         <span className="text-slate-400 text-xs bg-slate-800 px-2 py-0.5 rounded-full border border-slate-700">
-                                                                            Born: {new Date(gecko.hatch_date).toLocaleDateString()}
+                                                                            Born: {parseLocalDate(gecko.hatch_date).toLocaleDateString()}
                                                                         </span>
                                                                     )}
                                                                     {gecko.sex === 'Female' && gecko.is_gravid && (

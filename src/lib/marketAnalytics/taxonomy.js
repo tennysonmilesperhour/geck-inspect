@@ -43,6 +43,9 @@ export const CANONICAL_MORPHS = [
   { name: 'Full Pinstripe',     kind: TRAIT_KINDS.STRUCTURAL,  premium_tier: 'premium' },
   { name: 'Pinstripe',          kind: TRAIT_KINDS.STRUCTURAL,  premium_tier: 'mid' },
   { name: 'Phantom Pinstripe',  kind: TRAIT_KINDS.STRUCTURAL,  premium_tier: 'premium' },
+  { name: 'Reverse Pinstripe',  kind: TRAIT_KINDS.STRUCTURAL,  premium_tier: 'premium' },
+  { name: 'Quad Stripe',        kind: TRAIT_KINDS.STRUCTURAL,  premium_tier: 'premium' },
+  { name: 'Super Stripe',       kind: TRAIT_KINDS.STRUCTURAL,  premium_tier: 'premium' },
   { name: 'Empty Back',         kind: TRAIT_KINDS.STRUCTURAL,  premium_tier: 'mid' },
   { name: 'Soft Scale',         kind: TRAIT_KINDS.STRUCTURAL,  premium_tier: 'flagship' },
   // Pattern

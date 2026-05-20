@@ -4,7 +4,7 @@ import { Gecko, UserActivity, WeightRecord, FeedingGroup, Collection, Collection
 import { UploadFile } from '@/integrations/Core';
 import { notifyFollowersNewGecko, checkAndNotifyLevelUp } from '@/components/notifications/NotificationService';
 import { useToast } from '@/components/ui/use-toast';
-import { todayLocalISO } from '@/lib/dateUtils';
+import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -120,7 +120,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                 // Set defaults for other fields if null/undefined
                 name: gecko.name || '',
                 gecko_id_code: gecko.gecko_id_code || '',
-                hatch_date: gecko.hatch_date ? new Date(gecko.hatch_date) : null,
+                hatch_date: gecko.hatch_date ? parseLocalDate(gecko.hatch_date) : null,
                 sex: gecko.sex || 'Unsexed',
                 morphs_traits: gecko.morphs_traits || '',
                 notes: gecko.notes || '',
@@ -150,7 +150,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
             setCropData(gecko.image_crop_data || {}); // Set local crop data state
 
             // Also, parse the date parts for the UI inputs.
-            const date = gecko.hatch_date ? new Date(gecko.hatch_date) : null;
+            const date = gecko.hatch_date ? parseLocalDate(gecko.hatch_date) : null;
             if (date && !isNaN(date.getTime())) {
                 setHatchYear(date.getFullYear().toString());
                 setHatchMonth((date.getMonth() + 1).toString());
@@ -242,46 +242,47 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
         }
     };
 
+    // Helper: keep the linked FK in sync with the typed text. If the
+    // text matches a gecko in the collection we set the FK; if it doesn't
+    // (and isn't equal to the currently-selected gecko's display string)
+    // we clear it so the typed name is saved as a free-text breeder
+    // reference (sire_name / dam_name). Without this, switching from
+    // a selected collection parent to an outside breeder kept the old
+    // FK and silently dropped the typed name on save.
+    const syncParent = (value, sex, currentId, setId) => {
+        if (value === '') {
+            setId('');
+            return;
+        }
+        const matchingGecko = userGeckos.find(g =>
+            g.sex === sex && (
+                `${g.name} (${g.gecko_id_code || 'No ID'})` === value ||
+                g.name.toLowerCase() === value.toLowerCase() ||
+                (g.gecko_id_code && g.gecko_id_code.toLowerCase() === value.toLowerCase())
+            )
+        );
+        if (matchingGecko) {
+            setId(matchingGecko.id);
+            return;
+        }
+        // No match. If we currently hold an FK whose display string no
+        // longer matches the typed text, the user has clearly moved on
+        // to an outside breeder ,  drop the FK.
+        if (currentId) {
+            const current = userGeckos.find(g => g.id === currentId);
+            const currentDisplay = current ? `${current.name} (${current.gecko_id_code || 'No ID'})` : '';
+            if (value !== currentDisplay) setId('');
+        }
+    };
+
     const handleSireInputChange = (value) => {
         setSireInput(value);
-        // Only clear ID if user completely empties the input; otherwise keep ID until explicitly changed
-        if (value === '') {
-            setSireId('');
-        } else {
-            // Try to find matching gecko in user's collection
-            const matchingGecko = userGeckos.find(g =>
-                g.sex === 'Male' && (
-                    `${g.name} (${g.gecko_id_code || 'No ID'})` === value ||
-                    g.name.toLowerCase() === value.toLowerCase() ||
-                    (g.gecko_id_code && g.gecko_id_code.toLowerCase() === value.toLowerCase())
-                )
-            );
-            // Only update ID if a fresh match is found; otherwise leave current ID untouched
-            if (matchingGecko) {
-                setSireId(matchingGecko.id);
-            }
-        }
+        syncParent(value, 'Male', sireId, setSireId);
     };
 
     const handleDamInputChange = (value) => {
         setDamInput(value);
-        // Only clear ID if user completely empties the input; otherwise keep ID until explicitly changed
-        if (value === '') {
-            setDamId('');
-        } else {
-            // Try to find matching gecko in user's collection
-            const matchingGecko = userGeckos.find(g =>
-                g.sex === 'Female' && (
-                    `${g.name} (${g.gecko_id_code || 'No ID'})` === value ||
-                    g.name.toLowerCase() === value.toLowerCase() ||
-                    (g.gecko_id_code && g.gecko_id_code.toLowerCase() === value.toLowerCase())
-                )
-            );
-            // Only update ID if a fresh match is found; otherwise leave current ID untouched
-            if (matchingGecko) {
-                setDamId(matchingGecko.id);
-            }
-        }
+        syncParent(value, 'Female', damId, setDamId);
     };
     
     // Upload uses its own isUploadingImage flag so an upload failure
@@ -324,11 +325,10 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         : `${failedCount} images could not be uploaded.`,
                 variant: 'destructive',
             });
-        } else if (uploadedCount > 0) {
-            toast({
-                title: uploadedCount === 1 ? 'Image uploaded' : `${uploadedCount} images uploaded`,
-            });
         }
+        // Success state is conveyed by the new thumbnail appearing in the
+        // grid above; suppressing the toast keeps it from floating over
+        // the "Add Gecko" submit button after a quick upload.
 
         setIsUploadingImage(false);
     };
@@ -362,10 +362,18 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
         try {
             // Construct the payload directly from the most recent form state.
             // Using `null` for empty parent fields for better database consistency.
+            const weightValue = formData.weight_grams !== '' && formData.weight_grams !== null
+                ? parseFloat(formData.weight_grams)
+                : null;
             const dataToSave = {
                 name: formData.name,
                 gecko_id_code: formData.gecko_id_code,
                 hatch_date: formData.hatch_date ? format(formData.hatch_date, 'yyyy-MM-dd') : null,
+                // Mirror the latest weight onto the gecko row so cards and
+                // the detail page show it immediately, without waiting for
+                // the WeightRecord query to resolve. The WeightRecord row
+                // created below remains the source of truth for history.
+                weight_grams: weightValue,
                 sex: formData.sex,
                 sire_id: sireId || null,
                 dam_id: damId || null,
@@ -426,17 +434,15 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                 savedGecko = await Gecko.update(gecko.id, dataToSave);
             }
 
-            // If a weight was provided, always create a WeightRecord (WeightRecord is source of truth)
-             const weightValue = formData.weight_grams !== '' && formData.weight_grams !== null
-                 ? parseFloat(formData.weight_grams)
-                 : null;
-             if (weightValue !== null) {
-                 await WeightRecord.create({
-                     gecko_id: savedGecko.id,
-                     weight_grams: weightValue,
-                     record_date: todayLocalISO(),
-                 });
-             }
+            // If a weight was provided, always create a WeightRecord (WeightRecord is source of truth).
+            // The same value is mirrored onto gecko.weight_grams via dataToSave above.
+            if (weightValue !== null) {
+                await WeightRecord.create({
+                    gecko_id: savedGecko.id,
+                    weight_grams: weightValue,
+                    record_date: todayLocalISO(),
+                });
+            }
 
              // Auto-assign feeding group by weight if weight exists and no group is assigned
              if (weightValue !== null && !savedGecko.feeding_group_id && feedingGroups.length > 0) {

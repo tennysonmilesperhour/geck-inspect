@@ -5,6 +5,8 @@ import { base44 } from '@/api/base44Client';
 import { useNavigate, Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { format } from 'date-fns';
+import { parseLocalDate, formatAge } from '@/lib/dateUtils';
+import { formatHetTag } from '@/lib/hetUtils';
 import { breederSlug, looksLikeBreederName } from '@/lib/breederUtils';
 import {
     Loader2, ArrowLeft, Calendar, GitBranch, StickyNote,
@@ -166,7 +168,10 @@ export default function GeckoDetail() {
                                 {gecko.hatch_date && (
                                     <p className="text-slate-400 text-xs mt-2">
                                         <Calendar className="w-3 h-3 inline mr-1" />
-                                        Hatched: {format(new Date(gecko.hatch_date), 'MMMM d, yyyy')}
+                                        Hatched: {format(parseLocalDate(gecko.hatch_date), 'MMMM d, yyyy')}
+                                        {formatAge(gecko.hatch_date) && (
+                                            <span className="text-slate-500"> · {formatAge(gecko.hatch_date)} old</span>
+                                        )}
                                     </p>
                                 )}
                             </CardContent>
@@ -279,7 +284,7 @@ export default function GeckoDetail() {
                                     {gecko.morph_tags?.length > 0 && (
                                         <div className="flex flex-wrap gap-1.5">
                                             {gecko.morph_tags.map(tag => (
-                                                <Badge key={tag} variant="outline" className="border-emerald-700 text-emerald-300 text-xs">{tag}</Badge>
+                                                <Badge key={tag} variant="outline" className="border-emerald-700 text-emerald-300 text-xs">{formatHetTag(tag)}</Badge>
                                             ))}
                                         </div>
                                     )}

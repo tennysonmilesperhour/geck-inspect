@@ -59,15 +59,17 @@ export default function ParentAutocomplete({
         />
         <ChevronDown className="w-4 h-4 absolute right-2 text-slate-400 pointer-events-none" />
       </div>
-      {showSuggestions && filtered.length > 0 && (
+      {showSuggestions && (filtered.length > 0 || value) && (
         <div
           className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-2xl z-[99999] overflow-y-auto overscroll-contain"
           style={{ maxHeight: 'min(60vh, 420px)' }}
         >
-          <div className="sticky top-0 bg-slate-800 border-b border-slate-700 px-3 py-1.5 text-[10px] uppercase tracking-wider text-slate-500 flex items-center justify-between">
-            <span>{filtered.length} {filtered.length === 1 ? 'match' : 'matches'}</span>
-            <span className="text-slate-600">scroll for more</span>
-          </div>
+          {filtered.length > 0 && (
+            <div className="sticky top-0 bg-slate-800 border-b border-slate-700 px-3 py-1.5 text-[10px] uppercase tracking-wider text-slate-500 flex items-center justify-between">
+              <span>{filtered.length} {filtered.length === 1 ? 'match' : 'matches'} in collection</span>
+              {filtered.length > 6 && <span className="text-slate-600">scroll for more</span>}
+            </div>
+          )}
           {filtered.map((g) => (
             <button
               key={g.id}
@@ -91,6 +93,12 @@ export default function ParentAutocomplete({
               )}
             </button>
           ))}
+          {value && filtered.length === 0 && (
+            <div className="px-3 py-2.5 text-xs text-slate-400 border-t border-slate-700/60">
+              <div className="text-slate-300 font-medium">No match in your collection.</div>
+              <div className="mt-0.5">"{value}" will be saved as a breeder reference (parent not owned).</div>
+            </div>
+          )}
         </div>
       )}
     </div>

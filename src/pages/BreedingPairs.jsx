@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, addDays } from "date-fns";
+import { parseLocalDate } from '@/lib/dateUtils';
 import { Calendar as CalendarIcon } from "lucide-react";
 import { generateHatchedGeckoIdFromEgg } from '@/components/shared/geckoIdUtils';
 import SmartImage from '@/components/shared/SmartImage';
@@ -666,7 +667,7 @@ function EggCard({ egg, onHatch }) {
                         Laid: {format(new Date(egg.lay_date), 'MMM d, yyyy')}
                     </p>
                     <p className="text-xs text-slate-400">
-                        Expected Hatch: {format(new Date(egg.hatch_date_expected), 'MMM d, yyyy')}
+                        Expected Hatch: {format(parseLocalDate(egg.hatch_date_expected), 'MMM d, yyyy')}
                     </p>
                 </div>
             </div>

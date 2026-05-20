@@ -16,6 +16,7 @@ import {
 import Seo from '@/components/seo/Seo';
 import { breederSlug, looksLikeBreederName } from '@/lib/breederUtils';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
+import { formatHetTag } from '@/lib/hetUtils';
 
 // ---------------------------------------------------------------------------
 // Constants & layout math
@@ -220,7 +221,7 @@ function NodeCard({ node, x, y, onClick }) {
           )}
           {Array.isArray(g.morph_tags) && g.morph_tags.length > 0 && (
             <p className="text-[10px] text-emerald-300 truncate leading-tight">
-              {g.morph_tags.slice(0, 2).join(', ')}
+              {g.morph_tags.slice(0, 2).map(formatHetTag).join(', ')}
             </p>
           )}
         </div>
@@ -266,7 +267,12 @@ export default function Pedigree() {
   const [grid, setGrid] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState(null);
-  const [scale, setScale] = useState(1);
+  // Start zoomed out enough to fit the whole tree; the fit-to-container
+  // effect below replaces this with a precise value once the canvas is
+  // measured. Without an initial sub-1 value, a desktop user briefly
+  // sees the top-left corner of a tree that overflows the viewport.
+  const [scale, setScale] = useState(0.6);
+  const [hasUserZoomed, setHasUserZoomed] = useState(false);
 
   // Pinch-to-zoom state (mobile). Two-finger gesture; single-finger
   // panning is handled by the browser via [touch-action:pan-x_pan-y]
@@ -292,6 +298,7 @@ export default function Pedigree() {
         e.touches[0].clientY - e.touches[1].clientY
       );
       const newScale = Math.min(2, Math.max(0.3, initialScale * (dist / initialDistance)));
+      setHasUserZoomed(true);
       setScale(newScale);
     }
   };
@@ -320,6 +327,39 @@ export default function Pedigree() {
       cancelled = true;
     };
   }, [geckoId]);
+
+  // Fit-to-container: pick a default zoom that shows the whole canvas
+  // without horizontal scrolling once the container has measurable
+  // dimensions. Runs on mount, on grid load, and on resize ,  but only
+  // updates `scale` while the user hasn't manually adjusted zoom yet.
+  useEffect(() => {
+    if (hasUserZoomed) return undefined;
+    const el = treeContainerRef.current;
+    if (!el) return undefined;
+    const updateFit = () => {
+      const w = el.clientWidth;
+      const h = el.clientHeight;
+      if (!w || !h) return;
+      const canvasW = totalCanvasWidth();
+      const canvasH = totalCanvasHeight();
+      // Leave a little breathing room (~24px padding) so the outer
+      // cards don't kiss the scroll-container border.
+      const fit = Math.min((w - 48) / canvasW, (h - 48) / canvasH);
+      // Clamp so we don't go below the explicit minimum or zoom past 1.
+      setScale(Math.max(0.3, Math.min(1, fit)));
+    };
+    updateFit();
+    const ro = new ResizeObserver(updateFit);
+    ro.observe(el);
+    return () => ro.disconnect();
+  }, [grid, hasUserZoomed]);
+
+  // Treat any explicit user zoom action as a takeover so the
+  // fit-to-container effect stops adjusting behind their back.
+  const adjustScale = useCallback((updater) => {
+    setHasUserZoomed(true);
+    setScale((prev) => (typeof updater === 'function' ? updater(prev) : updater));
+  }, []);
 
   const rootGecko = useMemo(() => {
     const node = grid?.get('0,0');
@@ -459,7 +499,7 @@ export default function Pedigree() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setScale((s) => Math.max(0.3, s - 0.1))}
+                  onClick={() => adjustScale((s) => Math.max(0.3, s - 0.1))}
                   className="bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800"
                   title="Zoom out"
                 >
@@ -471,7 +511,7 @@ export default function Pedigree() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setScale((s) => Math.min(2, s + 0.1))}
+                  onClick={() => adjustScale((s) => Math.min(2, s + 0.1))}
                   className="bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800"
                   title="Zoom in"
                 >
@@ -480,7 +520,7 @@ export default function Pedigree() {
                 <Button
                   variant="outline"
                   size="sm"
-                  onClick={() => setScale(1)}
+                  onClick={() => { setHasUserZoomed(false); setScale(1); }}
                   className="bg-slate-900 border-slate-700 text-slate-200 hover:bg-slate-800"
                   title="Reset zoom"
                 >

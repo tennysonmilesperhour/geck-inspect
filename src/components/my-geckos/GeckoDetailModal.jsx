@@ -19,7 +19,7 @@ import {
   generateLineageCertificatePDF,
 } from '@/lib/certificateUtils';
 import { toast } from '@/components/ui/use-toast';
-import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
+import { todayLocalISO, parseLocalDate, formatAge } from '@/lib/dateUtils';
 import { useNavigate } from 'react-router-dom';
 import { generatePassportCode } from '@/lib/passportUtils';
 import { supabase } from '@/lib/supabaseClient';
@@ -59,7 +59,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
   // Compute which growth milestone slots to show based on age
   const growthSlots = useMemo(() => {
     if (!gecko?.hatch_date || !gecko?.image_urls?.length) return [];
-    const ageMonths = differenceInMonths(new Date(), new Date(gecko.hatch_date));
+    const ageMonths = differenceInMonths(new Date(), parseLocalDate(gecko.hatch_date));
     const slots = [];
     // Every 6 months up to 36 months (3 years), then every 12 months
     let month = 6;
@@ -439,7 +439,14 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                   <div>
                     <span className="text-slate-400">Hatch Date:</span>
                     <p className="font-medium">
-                      {gecko.hatch_date ? format(new Date(gecko.hatch_date), 'PPP') : 'Unknown'}
+                      {gecko.hatch_date ? (
+                        <>
+                          {format(parseLocalDate(gecko.hatch_date), 'PPP')}
+                          {formatAge(gecko.hatch_date) && (
+                            <span className="text-slate-400 font-normal"> · {formatAge(gecko.hatch_date)} old</span>
+                          )}
+                        </>
+                      ) : 'Unknown'}
                     </p>
                   </div>
                   {gecko.incubation_days && (
@@ -461,10 +468,10 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                       <span className="text-pink-400 font-semibold text-sm">💕 Gravid</span>
                       <div className="flex flex-wrap gap-4 mt-1">
                         {gecko.gravid_since && (
-                          <p className="text-slate-300 text-xs">Since: {format(new Date(gecko.gravid_since), 'MMM d, yyyy')}</p>
+                          <p className="text-slate-300 text-xs">Since: {format(parseLocalDate(gecko.gravid_since), 'MMM d, yyyy')}</p>
                         )}
                         {gecko.egg_drop_date && (
-                          <p className="text-slate-300 text-xs">Egg Drop: {format(new Date(gecko.egg_drop_date), 'MMM d, yyyy')}</p>
+                          <p className="text-slate-300 text-xs">Egg Drop: {format(parseLocalDate(gecko.egg_drop_date), 'MMM d, yyyy')}</p>
                         )}
                       </div>
                     </div>
@@ -809,7 +816,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                         </div>
                         {child.hatch_date && (
                           <p className="text-slate-400 text-xs">
-                            {format(new Date(child.hatch_date), 'MMM yyyy')}
+                            {format(parseLocalDate(child.hatch_date), 'MMM yyyy')}
                           </p>
                         )}
                       </div>

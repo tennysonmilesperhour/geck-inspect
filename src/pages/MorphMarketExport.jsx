@@ -15,6 +15,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
+import { parseLocalDate } from '@/lib/dateUtils';
 import {
   Download,
   Copy,
@@ -761,8 +762,8 @@ export default function MorphMarketExport() {
       if (wMax != null && (g.weight_grams == null || Number(g.weight_grams) > wMax)) return false;
       if (after || before || month != null || year != null) {
         if (!g.hatch_date) return false;
-        const d = new Date(g.hatch_date);
-        if (isNaN(d.getTime())) return false;
+        const d = parseLocalDate(g.hatch_date);
+        if (!d || isNaN(d.getTime())) return false;
         if (after && d < after) return false;
         if (before && d > before) return false;
         if (month != null && d.getMonth() + 1 !== month) return false;

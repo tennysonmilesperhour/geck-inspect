@@ -28,6 +28,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import html2canvas from 'html2canvas';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { inferSeasonLabel, compareSeasonLabels } from '@/lib/seasons';
+import { formatHetTag } from '@/lib/hetUtils';
 
 // Status → color palette for status dot + badge
 const STATUS_COLORS = {
@@ -1277,7 +1278,7 @@ export default function Lineage() {
                                                 key={tag}
                                                 className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-200 border border-emerald-500/30 text-[10px] font-semibold"
                                             >
-                                                {tag}
+                                                {formatHetTag(tag)}
                                             </span>
                                         ))}
                                     </div>
