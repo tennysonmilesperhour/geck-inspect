@@ -105,6 +105,15 @@ export function sortGeckos(geckos, sortBy, weightRecords) {
       return sorted.sort((a, b) => (ARCHIVE_ORDER[a.archive_reason] ?? 3) - (ARCHIVE_ORDER[b.archive_reason] ?? 3));
     case 'species':
       return sorted.sort((a, b) => (a.species || 'Crested Gecko').localeCompare(b.species || 'Crested Gecko'));
+    case 'clutch':
+      // Sort newest-hatched-first within the group; the actual grouping
+      // happens in the view layer where clutches get rendered as
+      // separate sections (sire × dam × season).
+      return sorted.sort((a, b) => {
+        const ad = a.hatch_date ? new Date(a.hatch_date).getTime() : 0;
+        const bd = b.hatch_date ? new Date(b.hatch_date).getTime() : 0;
+        return bd - ad;
+      });
     default:
       return sorted;
   }

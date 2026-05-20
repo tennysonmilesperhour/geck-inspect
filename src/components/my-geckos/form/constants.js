@@ -54,6 +54,10 @@ export const INITIAL_FORM_DATA = {
   // Tier (pet/breeder/high_end/investment) is derived in src/lib/quality.js
   // and mirrored to pattern_grade on save for Market Pricing aggregations.
   quality_score: null,
+  // Tail condition. NULL = unknown; explicit values are intact / dropped /
+  // regenerating. Crested geckos do not regrow dropped tails, so "dropped"
+  // is permanent for adults. Surfaced on the gecko card and detail.
+  tail_status: null,
   image_crop_data: {},
   // Collection ownership. Null tells the trigger / save flow to use
   // the user's default collection. Set explicitly when the user

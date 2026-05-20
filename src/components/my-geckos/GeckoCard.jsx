@@ -54,6 +54,10 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
   const showSpeciesBadge = gecko.species && gecko.species !== 'Crested Gecko';
   const showGravidBadge = gecko.sex === 'Female' && gecko.is_gravid;
   const archiveIcon = gecko.archived ? ARCHIVE_ICONS[gecko.archive_reason] : null;
+  // "Intact" is the default state for most healthy geckos, so we only flag
+  // the deviations from it on the card. NULL stays silent.
+  const showTailBadge = gecko.tail_status === 'dropped' || gecko.tail_status === 'regenerating';
+  const tailBadgeLabel = gecko.tail_status === 'dropped' ? 'Tail dropped' : 'Regen tail';
 
   return (
     <Card className="gecko-card group flex flex-col h-full">
@@ -169,11 +173,23 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
         </div>
 
         {/* Status badges ,  inline so they don't stack as detached chunks */}
-        {(showGravidBadge || showSpeciesBadge) && (
+        {(showGravidBadge || showSpeciesBadge || showTailBadge) && (
           <div className="flex flex-wrap gap-1.5">
             {showGravidBadge && (
               <Badge className="bg-pink-700 text-pink-100 text-[10px] h-5 px-1.5 py-0 font-medium flex items-center gap-1">
                 <Heart className="w-2.5 h-2.5" /> Gravid
+              </Badge>
+            )}
+            {showTailBadge && (
+              <Badge
+                className={`text-[10px] h-5 px-1.5 py-0 font-medium ${
+                  gecko.tail_status === 'dropped'
+                    ? 'bg-amber-900/60 text-amber-200 border border-amber-700/60'
+                    : 'bg-sky-900/60 text-sky-200 border border-sky-700/60'
+                }`}
+                title={gecko.tail_status === 'dropped' ? 'Tail has been dropped (crested geckos do not regrow tails)' : 'Tail is regenerating'}
+              >
+                {tailBadgeLabel}
               </Badge>
             )}
             {showSpeciesBadge && (

@@ -407,6 +407,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     ? null
                     : Number(formData.quality_score),
                 pattern_grade: patternGradeForScore(formData.quality_score) ?? formData.pattern_grade ?? null,
+                tail_status: formData.tail_status || null,
             };
 
             let savedGecko;
@@ -794,6 +795,39 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                             value={formData.quality_score}
                             onChange={(score) => handleChange('quality_score', score)}
                         />
+                    </div>
+
+                    {/* Tail status. Crested geckos drop tails readily and
+                        don't regrow them, so "intact" is a real value worth
+                        recording (and pricing on). NULL stays "unknown". */}
+                    <div>
+                        <Label>Tail Status</Label>
+                        <div className="grid grid-cols-4 gap-2 mt-1">
+                            {[
+                                { value: '',             label: 'Unknown',      desc: 'Not recorded' },
+                                { value: 'intact',       label: 'Intact',       desc: 'Original tail' },
+                                { value: 'dropped',      label: 'Dropped',      desc: 'Caudal autotomy' },
+                                { value: 'regenerating', label: 'Regenerating', desc: 'Partial regrowth' },
+                            ].map(opt => {
+                                const active = (formData.tail_status || '') === opt.value;
+                                return (
+                                    <button
+                                        key={opt.value || 'unknown'}
+                                        type="button"
+                                        onClick={() => handleChange('tail_status', opt.value || null)}
+                                        disabled={isArchived}
+                                        title={opt.desc}
+                                        className={`px-2 py-2 rounded-lg border text-xs font-medium transition-colors ${
+                                            active
+                                                ? 'border-emerald-500 bg-emerald-900/40 text-emerald-200'
+                                                : 'border-slate-700 bg-slate-800 text-slate-300 hover:border-slate-500'
+                                        } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                    >
+                                        {opt.label}
+                                    </button>
+                                );
+                            })}
+                        </div>
                     </div>
 
                     {/* Feeding Group */}

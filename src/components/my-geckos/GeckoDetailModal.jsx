@@ -463,6 +463,12 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                         : gecko.weight_grams ? `${gecko.weight_grams}g` : 'Not recorded'}
                     </p>
                   </div>
+                  {gecko.tail_status && (
+                    <div>
+                      <span className="text-slate-400">Tail:</span>
+                      <p className="font-medium capitalize">{gecko.tail_status}</p>
+                    </div>
+                  )}
                   {gecko.sex === 'Female' && gecko.is_gravid && (
                     <div className="col-span-2">
                       <span className="text-pink-400 font-semibold text-sm">💕 Gravid</span>

@@ -3,7 +3,7 @@ import Seo from '@/components/seo/Seo';
 import { Gecko, WeightRecord, FeedingGroup, CollectionMember } from '@/entities/all';
 import { getVisibleGeckos, canWriteGecko } from '@/lib/geckoAccess';
 import { base44 } from '@/api/base44Client';
-import { PlusCircle, Search, Users, Grid3x3, List, ArrowUpDown, Archive, ArchiveRestore, Download, FileText, FileSpreadsheet } from 'lucide-react';
+import { PlusCircle, Search, Users, Grid3x3, List, ArrowUpDown, Archive, ArchiveRestore, Download, FileText, FileSpreadsheet, Scale } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
@@ -21,6 +21,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import GeckoCard from '../components/my-geckos/GeckoCard';
 import GeckoForm from '../components/my-geckos/GeckoForm';
+import WeighInMode from '../components/my-geckos/WeighInMode';
 import CSVImportModal from '../components/my-geckos/CSVImportModal';
 import GeckoDetailModal from '../components/my-geckos/GeckoDetailModal';
 import GeckoFilters from '../components/my-geckos/GeckoFilters';
@@ -30,6 +31,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { Badge } from '@/components/ui/badge';
 import PlanLimitModal, { getGeckoLimit } from '../components/subscription/PlanLimitChecker';
 import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
+import { inferSeasonLabel, compareSeasonLabels } from '@/lib/seasons';
 import { exportGeckosCSV, exportGeckosPDF } from '@/lib/exportUtils';
 import { captureEvent } from '@/lib/posthog';
 import { useGeckoFilters } from '@/hooks/useGeckoFilters';
@@ -53,6 +55,7 @@ export default function MyGeckosPage() {
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [selectedGecko, setSelectedGecko] = useState(null);
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
+    const [isWeighInOpen, setIsWeighInOpen] = useState(false);
     const [viewMode, setViewMode] = useState('card'); // 'card' or 'list'
     const [sortBy, setSortBy] = useState('date_added'); // sorting option
     const [filters, setFilters] = useState({
@@ -384,6 +387,7 @@ export default function MyGeckosPage() {
                                         <SelectItem value="weight_heaviest">Weight (Heaviest)</SelectItem>
                                         <SelectItem value="weight_lightest">Weight (Lightest)</SelectItem>
                                             <SelectItem value="species">Species (A-Z)</SelectItem>
+                                            <SelectItem value="clutch">Group by Clutch</SelectItem>
                                             {showArchived && <SelectItem value="archive_reason">Archive Reason</SelectItem>}
                                         </SelectContent>
                                         </Select>
@@ -503,6 +507,16 @@ export default function MyGeckosPage() {
                                         </DropdownMenuItem>
                                     </DropdownMenuContent>
                                 </DropdownMenu>
+                                <Button
+                                    variant="outline"
+                                    className="border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700"
+                                    onClick={() => setIsWeighInOpen(true)}
+                                    title="Record weights for all geckos in one pass"
+                                    disabled={geckos.filter(g => !g.archived).length === 0}
+                                >
+                                    <Scale className="w-4 h-4 mr-2 text-emerald-400" />
+                                    Weigh-in
+                                </Button>
                                 <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={() => {
                                     const limit = getGeckoLimit(user);
                                     if (geckos.filter(g => !g.archived).length >= limit) {
@@ -552,6 +566,7 @@ export default function MyGeckosPage() {
                                     <SelectItem value="weight_heaviest">Weight (Heaviest)</SelectItem>
                                     <SelectItem value="weight_lightest">Weight (Lightest)</SelectItem>
                                     <SelectItem value="species">Species (A-Z)</SelectItem>
+                                    <SelectItem value="clutch">Group by Clutch</SelectItem>
                                     {showArchived && <SelectItem value="archive_reason">Archive Reason</SelectItem>}
                                 </SelectContent>
                             </Select>
@@ -594,7 +609,87 @@ export default function MyGeckosPage() {
                 ) : (
                     <>
                         {filteredAndSortedGeckos.length > 0 ? (
-                            sortBy === 'species' ? (
+                            sortBy === 'clutch' ? (
+                                // Clutch-grouped view: sire × dam × season.
+                                // Hatchlings without a recorded sire AND dam
+                                // collapse into a "Founders / unpaired" bucket
+                                // since you can't compare siblings without
+                                // shared parents.
+                                (() => {
+                                    const geckoById = new Map(geckos.map(g => [g.id, g]));
+                                    const parentLabel = (g, parentIdField, parentNameField) => {
+                                        const id = g[parentIdField];
+                                        if (id) {
+                                            const parent = geckoById.get(id);
+                                            if (parent) return parent.name || 'Unnamed';
+                                        }
+                                        const freeText = g[parentNameField];
+                                        return freeText ? freeText : null;
+                                    };
+                                    const clutches = new Map();
+                                    for (const g of filteredAndSortedGeckos) {
+                                        const sire = parentLabel(g, 'sire_id', 'sire_name');
+                                        const dam = parentLabel(g, 'dam_id', 'dam_name');
+                                        const season = inferSeasonLabel(g.hatch_date);
+                                        if (!sire && !dam) {
+                                            const key = '__founders__';
+                                            if (!clutches.has(key)) clutches.set(key, { key, sire: null, dam: null, season: null, label: 'Founders / unpaired', geckos: [] });
+                                            clutches.get(key).geckos.push(g);
+                                            continue;
+                                        }
+                                        const key = `${g.sire_id || sire || '?'}::${g.dam_id || dam || '?'}::${season || 'no-season'}`;
+                                        if (!clutches.has(key)) {
+                                            clutches.set(key, {
+                                                key,
+                                                sire,
+                                                dam,
+                                                season,
+                                                label: `${sire || 'Unknown sire'} × ${dam || 'Unknown dam'}${season ? ` · ${season}` : ''}`,
+                                                geckos: [],
+                                            });
+                                        }
+                                        clutches.get(key).geckos.push(g);
+                                    }
+                                    // Newest season first; founders sink to the bottom.
+                                    const groups = [...clutches.values()].sort((a, b) => {
+                                        if (a.key === '__founders__') return 1;
+                                        if (b.key === '__founders__') return -1;
+                                        if (a.season && b.season) return -compareSeasonLabels(a.season, b.season);
+                                        if (!a.season) return 1;
+                                        if (!b.season) return -1;
+                                        return 0;
+                                    });
+                                    return (
+                                        <div className="space-y-8">
+                                            {groups.map(group => (
+                                                <div key={group.key}>
+                                                    <h2 className="text-base sm:text-lg font-bold text-emerald-300 mb-3 flex items-center gap-2 flex-wrap">
+                                                        <span className="w-2 h-2 rounded-full bg-emerald-400 inline-block"></span>
+                                                        <span className="truncate">{group.label}</span>
+                                                        <span className="text-slate-500 text-sm font-normal">
+                                                            ({group.geckos.length} {group.geckos.length === 1 ? 'gecko' : 'geckos'})
+                                                        </span>
+                                                    </h2>
+                                                    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+                                                        {group.geckos.map(gecko => (
+                                                            <GeckoCard
+                                                                key={gecko.id}
+                                                                gecko={gecko}
+                                                                weightRecords={weightRecords}
+                                                                feedingGroups={feedingGroups}
+                                                                onView={handleOpenDetailModal}
+                                                                onEdit={handleEdit}
+                                                                isOwner={!user?.email || gecko.created_by?.toLowerCase() === user.email.toLowerCase()}
+                                                                canEdit={canWriteGecko(gecko, user, memberships)}
+                                                            />
+                                                        ))}
+                                                    </div>
+                                                </div>
+                                            ))}
+                                        </div>
+                                    );
+                                })()
+                            ) : sortBy === 'species' ? (
                                 // Species-grouped view
                                 (() => {
                                     const bySpecies = filteredAndSortedGeckos.reduce((acc, g) => {
@@ -831,6 +926,15 @@ export default function MyGeckosPage() {
                         onEdit={handleEdit}
                         onArchive={handleArchiveGecko}
                         onDelete={handleDelete}
+                    />
+                )}
+
+                {isWeighInOpen && (
+                    <WeighInMode
+                        geckos={geckos.filter(g => !g.archived && canWriteGecko(g, user, memberships))}
+                        weightRecords={weightRecords}
+                        onClose={() => setIsWeighInOpen(false)}
+                        onSaved={() => loadGeckos()}
                     />
                 )}
 
