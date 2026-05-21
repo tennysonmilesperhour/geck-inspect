@@ -12,14 +12,15 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { format } from "date-fns";
-import { Upload, X, DollarSign, Loader2, Archive } from "lucide-react";
+import { Upload, X, DollarSign, Loader2, Archive, GripVertical, Camera, Star } from "lucide-react";
 import { Switch } from '@/components/ui/switch';
+import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
 import MorphIDSelector from './MorphIDSelector';
 import QualityInput from './QualityInput';
 import { patternGradeForScore } from '@/lib/quality';
 // Extracted helpers / constants / sub-components ,  keeps this file focused
 // on the orchestration logic instead of static data and pure UI pieces.
-import { MONTHS, GECKO_SPECIES, INITIAL_FORM_DATA } from './form/constants';
+import { MONTHS, GECKO_SPECIES, INITIAL_FORM_DATA, LIFE_STAGES } from './form/constants';
 import { generateNextGeckoId } from './form/helpers';
 import ImageCropDialog from './form/ImageCropDialog';
 import ParentAutocomplete from './form/ParentAutocomplete';
@@ -125,7 +126,8 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                 morphs_traits: gecko.morphs_traits || '',
                 notes: gecko.notes || '',
                 status: gecko.status || 'Pet',
-                image_crop_data: gecko.image_crop_data || {}
+                image_crop_data: gecko.image_crop_data || {},
+                growth_slideshow_enabled: gecko.growth_slideshow_enabled || false,
             };
 
             // For new hatched geckos, auto-populate name and parents
@@ -338,10 +340,13 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
         setCropDialogOpen(true);
     };
 
+    // Crop dialog returns the full meta object now ({ x, y, rotation, ... }).
+    // Merge against any existing per-URL data so we don't drop life_stage or
+    // other future keys that aren't part of the focal/rotation dialog.
     const saveCropData = (url, cropInfo) => {
         setCropData(prev => ({
             ...prev,
-            [url]: cropInfo
+            [url]: { ...(prev[url] || {}), ...cropInfo },
         }));
         setCropDialogOpen(false);
     };
@@ -353,7 +358,36 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
             delete newCropData[urlToRemove];
             return newCropData;
         });
-    }
+    };
+
+    const setLifeStage = (url, stage) => {
+        setCropData(prev => ({
+            ...prev,
+            [url]: { ...(prev[url] || { x: 50, y: 50 }), life_stage: stage || undefined },
+        }));
+    };
+
+    const handleImageDragEnd = (result) => {
+        if (!result.destination) return;
+        if (result.destination.index === result.source.index) return;
+        setFormData(prev => {
+            const next = [...prev.image_urls];
+            const [moved] = next.splice(result.source.index, 1);
+            next.splice(result.destination.index, 0, moved);
+            return { ...prev, image_urls: next };
+        });
+    };
+
+    const makePrimary = (url) => {
+        setFormData(prev => {
+            const idx = prev.image_urls.indexOf(url);
+            if (idx <= 0) return prev;
+            const next = [...prev.image_urls];
+            next.splice(idx, 1);
+            next.unshift(url);
+            return { ...prev, image_urls: next };
+        });
+    };
 
     const handleSave = async (e) => {
         e.preventDefault();
@@ -408,6 +442,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     : Number(formData.quality_score),
                 pattern_grade: patternGradeForScore(formData.quality_score) ?? formData.pattern_grade ?? null,
                 tail_status: formData.tail_status || null,
+                growth_slideshow_enabled: !!formData.growth_slideshow_enabled,
             };
 
             let savedGecko;
@@ -798,35 +833,37 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     </div>
 
                     {/* Tail status. Crested geckos drop tails readily and
-                        don't regrow them, so "intact" is a real value worth
-                        recording (and pricing on). NULL stays "unknown". */}
+                        don't regrow them, so "Regenerating" is hidden for
+                        them; other species (leopard, gargoyle, leachie,
+                        etc.) can regrow tails so the option shows. */}
                     <div>
                         <Label>Tail Status</Label>
-                        <div className="grid grid-cols-4 gap-2 mt-1">
+                        <div className={`grid gap-2 mt-1 ${(formData.species || 'Crested Gecko') === 'Crested Gecko' ? 'grid-cols-2' : 'grid-cols-3'}`}>
                             {[
-                                { value: '',             label: 'Unknown',      desc: 'Not recorded' },
                                 { value: 'intact',       label: 'Intact',       desc: 'Original tail' },
                                 { value: 'dropped',      label: 'Dropped',      desc: 'Caudal autotomy' },
-                                { value: 'regenerating', label: 'Regenerating', desc: 'Partial regrowth' },
-                            ].map(opt => {
-                                const active = (formData.tail_status || '') === opt.value;
-                                return (
-                                    <button
-                                        key={opt.value || 'unknown'}
-                                        type="button"
-                                        onClick={() => handleChange('tail_status', opt.value || null)}
-                                        disabled={isArchived}
-                                        title={opt.desc}
-                                        className={`px-2 py-2 rounded-lg border text-xs font-medium transition-colors ${
-                                            active
-                                                ? 'border-emerald-500 bg-emerald-900/40 text-emerald-200'
-                                                : 'border-slate-700 bg-slate-800 text-slate-300 hover:border-slate-500'
-                                        } disabled:opacity-50 disabled:cursor-not-allowed`}
-                                    >
-                                        {opt.label}
-                                    </button>
-                                );
-                            })}
+                                { value: 'regenerating', label: 'Regenerating', desc: 'Partial regrowth', hideFor: ['Crested Gecko'] },
+                            ]
+                                .filter(opt => !opt.hideFor?.includes(formData.species || 'Crested Gecko'))
+                                .map(opt => {
+                                    const active = formData.tail_status === opt.value;
+                                    return (
+                                        <button
+                                            key={opt.value}
+                                            type="button"
+                                            onClick={() => handleChange('tail_status', active ? null : opt.value)}
+                                            disabled={isArchived}
+                                            title={opt.desc}
+                                            className={`px-2 py-2 rounded-lg border text-xs font-medium transition-colors ${
+                                                active
+                                                    ? 'border-emerald-500 bg-emerald-900/40 text-emerald-200'
+                                                    : 'border-slate-700 bg-slate-800 text-slate-300 hover:border-slate-500'
+                                            } disabled:opacity-50 disabled:cursor-not-allowed`}
+                                        >
+                                            {opt.label}
+                                        </button>
+                                    );
+                                })}
                         </div>
                     </div>
 
@@ -889,40 +926,127 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         <Textarea id="notes" value={formData.notes} onChange={(e) => handleChange('notes', e.target.value)} disabled={isArchived} className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed" />
                     </div>
                     
-                    {/* Enhanced Images Section */}
+                    {/* Images: drag to reorder, first image is the primary
+                        display photo. Click a photo to open the crop /
+                        rotate dialog. The life-stage select tags the photo
+                        for the optional Growth Slideshow. */}
                     <div>
                         <Label>Images</Label>
-                        <div className="grid grid-cols-3 gap-2 mb-2">
-                            {formData.image_urls.map((url, index) => (
-                                <div key={url} className="relative group">
-                                    <div 
-                                        className="w-full h-24 rounded overflow-hidden cursor-pointer border-2 border-transparent hover:border-sage-300"
-                                        onClick={() => handleImageCrop(url)}
+                        <p className="text-xs text-slate-500 mt-0.5 mb-2">
+                            Drag photos to reorder. The first photo is the primary display image on cards.
+                            Click any photo to crop or rotate. Tag a life stage to include it in the Growth Slideshow.
+                        </p>
+                        <DragDropContext onDragEnd={handleImageDragEnd}>
+                            <Droppable droppableId="gecko-images" direction="horizontal">
+                                {(droppable) => (
+                                    <div
+                                        ref={droppable.innerRef}
+                                        {...droppable.droppableProps}
+                                        className="grid grid-cols-2 sm:grid-cols-3 gap-2 mb-2"
                                     >
-                                        <img 
-                                            src={url} 
-                                            alt={`gecko ${index + 1}`} 
-                                            className="w-full h-full object-cover"
-                                            style={{
-                                                objectPosition: cropData[url] 
-                                                    ? `${cropData[url].x}% ${cropData[url].y}%`
-                                                    : '50% 50%' // Default to center if no crop data
-                                            }}
-                                        />
+                                        {formData.image_urls.map((url, index) => {
+                                            const meta = cropData[url] || {};
+                                            const rotation = meta.rotation || 0;
+                                            const lifeStage = meta.life_stage || '';
+                                            const isPrimary = index === 0;
+                                            return (
+                                                <Draggable key={url} draggableId={url} index={index} isDragDisabled={isArchived}>
+                                                    {(draggable, snapshot) => (
+                                                        <div
+                                                            ref={draggable.innerRef}
+                                                            {...draggable.draggableProps}
+                                                            className={`relative rounded border ${
+                                                                snapshot.isDragging
+                                                                    ? 'border-emerald-500 shadow-2xl'
+                                                                    : isPrimary
+                                                                        ? 'border-emerald-600/60'
+                                                                        : 'border-slate-700'
+                                                            } bg-slate-800/40`}
+                                                        >
+                                                            <div
+                                                                className="w-full h-28 sm:h-32 rounded-t overflow-hidden cursor-pointer"
+                                                                onClick={() => handleImageCrop(url)}
+                                                            >
+                                                                <img
+                                                                    src={url}
+                                                                    alt={`gecko ${index + 1}`}
+                                                                    className="w-full h-full object-cover transition-transform"
+                                                                    style={{
+                                                                        objectPosition: `${meta.x ?? 50}% ${meta.y ?? 50}%`,
+                                                                        transform: rotation ? `rotate(${rotation}deg)` : undefined,
+                                                                    }}
+                                                                />
+                                                            </div>
+
+                                                            {/* Top-left: drag handle. Touch-friendly hit area. */}
+                                                            {!isArchived && (
+                                                                <div
+                                                                    {...draggable.dragHandleProps}
+                                                                    className="absolute top-1 left-1 h-7 w-7 rounded bg-slate-900/70 backdrop-blur-sm flex items-center justify-center text-slate-300 hover:text-emerald-300 cursor-grab active:cursor-grabbing"
+                                                                    title="Drag to reorder"
+                                                                    aria-label="Drag to reorder"
+                                                                >
+                                                                    <GripVertical className="w-4 h-4" />
+                                                                </div>
+                                                            )}
+
+                                                            {/* Top-right: remove */}
+                                                            {!isArchived && (
+                                                                <Button
+                                                                    type="button"
+                                                                    size="icon"
+                                                                    variant="destructive"
+                                                                    className="absolute top-1 right-1 h-7 w-7"
+                                                                    onClick={() => removeImage(url)}
+                                                                >
+                                                                    <X className="h-4 w-4" />
+                                                                </Button>
+                                                            )}
+
+                                                            {/* Primary badge / make-primary action */}
+                                                            {isPrimary ? (
+                                                                <div
+                                                                    className="absolute bottom-[3.25rem] left-1 px-1.5 py-0.5 rounded bg-emerald-700/90 text-emerald-50 text-[10px] font-semibold flex items-center gap-1"
+                                                                    title="Primary display photo (shown on cards)"
+                                                                >
+                                                                    <Star className="w-3 h-3 fill-current" /> Primary
+                                                                </div>
+                                                            ) : !isArchived ? (
+                                                                <button
+                                                                    type="button"
+                                                                    onClick={() => makePrimary(url)}
+                                                                    className="absolute bottom-[3.25rem] left-1 px-1.5 py-0.5 rounded bg-slate-900/70 backdrop-blur-sm text-slate-300 hover:text-emerald-300 text-[10px] font-medium flex items-center gap-1"
+                                                                    title="Make this the primary display photo"
+                                                                >
+                                                                    <Star className="w-3 h-3" /> Set primary
+                                                                </button>
+                                                            ) : null}
+
+                                                            {/* Bottom: life-stage select */}
+                                                            <div className="px-1.5 py-1.5">
+                                                                <select
+                                                                    value={lifeStage}
+                                                                    onChange={(e) => setLifeStage(url, e.target.value)}
+                                                                    disabled={isArchived}
+                                                                    className="w-full text-[11px] bg-slate-800 border border-slate-600 text-slate-200 rounded px-1.5 py-1 disabled:opacity-50"
+                                                                    aria-label="Life stage tag"
+                                                                >
+                                                                    <option value="">No life-stage tag</option>
+                                                                    {LIFE_STAGES.map(s => (
+                                                                        <option key={s.value} value={s.value}>{s.label}</option>
+                                                                    ))}
+                                                                </select>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </Draggable>
+                                            );
+                                        })}
+                                        {droppable.placeholder}
                                     </div>
-                                    <Button 
-                                        type="button" 
-                                        size="icon" 
-                                        variant="destructive" 
-                                        className="absolute top-1 right-1 h-6 w-6" // Removed opacity classes
-                                        onClick={() => removeImage(url)}
-                                    >
-                                        <X className="h-4 w-4"/>
-                                    </Button>
-                                    {/* Removed: Click to adjust overlay */}
-                                </div>
-                            ))}
-                        </div>
+                                )}
+                            </Droppable>
+                        </DragDropContext>
                         <Button asChild type="button" variant="outline" disabled={isUploadingImage} className="w-full border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700 disabled:opacity-60">
                             <label className="cursor-pointer">
                                 {isUploadingImage ? (
@@ -944,31 +1068,51 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                 />
                             </label>
                         </Button>
+
+                        {/* Growth Slideshow toggle. Only shows when at least
+                            one photo carries a life-stage tag, since the
+                            slideshow has nothing to show without tags. */}
+                        {formData.image_urls.some(u => cropData[u]?.life_stage) && (
+                            <div className="flex items-center justify-between p-3 mt-3 bg-slate-800/60 rounded-lg border border-slate-700">
+                                <div className="flex items-center gap-2">
+                                    <Camera className="w-4 h-4 text-emerald-400" />
+                                    <div>
+                                        <Label className="text-sm text-slate-200">Growth Slideshow</Label>
+                                        <p className="text-xs text-slate-500">Show tagged photos as a life-stage slideshow on the detail view.</p>
+                                    </div>
+                                </div>
+                                <Switch
+                                    checked={!!formData.growth_slideshow_enabled}
+                                    onCheckedChange={(checked) => handleChange('growth_slideshow_enabled', checked)}
+                                    disabled={isArchived}
+                                />
+                            </div>
+                        )}
                     </div>
 
                     {/* Certificates now live on the gecko detail view rather
                         than the edit form ,  see GeckoDetailModal. */}
                 </form>
 
-                <CardFooter className="flex-shrink-0 mt-auto bg-slate-900 border-t border-slate-700 p-4 flex justify-end items-center gap-4">
+                <CardFooter className="flex-shrink-0 mt-auto bg-slate-900 border-t border-slate-700 p-3 sm:p-4 flex flex-wrap justify-end items-center gap-2 sm:gap-3">
                     {gecko && onArchive && !isArchived && (
                         <Button
                             type="button"
                             variant="outline"
                             onClick={() => onArchive(gecko.id, true)}
-                            className="h-10 border-red-600 text-red-400 hover:bg-red-950/40 hover:text-red-300"
+                            className="h-10 px-3 sm:px-4 border-red-600 text-red-400 hover:bg-red-950/40 hover:text-red-300 mr-auto"
                         >
-                            <Archive className="w-4 h-4 mr-2" />
-                            Archive
+                            <Archive className="w-4 h-4 sm:mr-2" />
+                            <span className="hidden sm:inline">Archive</span>
                         </Button>
                     )}
-                            {isArchived && (
-                            <div className="h-10 px-4 rounded border border-slate-600 bg-slate-800 flex items-center text-slate-400 text-sm font-medium cursor-not-allowed">
+                    {isArchived && (
+                        <div className="h-10 px-4 rounded border border-slate-600 bg-slate-800 flex items-center text-slate-400 text-sm font-medium cursor-not-allowed mr-auto">
                             Archived
-                            </div>
-                            )}
-                    <Button variant="outline" onClick={onCancel} className="h-10 border-slate-600 text-slate-300 hover:bg-slate-800">Cancel</Button>
-                    <Button onClick={handleSave} disabled={isSaving} className="bg-emerald-600 hover:bg-emerald-700 h-10">
+                        </div>
+                    )}
+                    <Button variant="outline" onClick={onCancel} className="h-10 px-3 sm:px-4 border-slate-600 text-slate-300 hover:bg-slate-800">Cancel</Button>
+                    <Button onClick={handleSave} disabled={isSaving} className="bg-emerald-600 hover:bg-emerald-700 h-10 px-3 sm:px-4">
                         {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                         {getSaveButtonText()}
                     </Button>

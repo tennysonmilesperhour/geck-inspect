@@ -3,7 +3,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { WeightRecord, BreedingPlan, Egg, Gecko, GeckoEvent, GeckoImage } from '@/entities/all';
-import { format, differenceInMonths } from 'date-fns';
+import { format } from 'date-fns';
 import { X, Plus, Trash2, LineChart, Loader2, Award, GitBranch, Calendar, Baby, Users, Edit, Eye, EyeOff, History, Archive, ArchiveRestore, ChevronLeft, ChevronRight, Camera, QrCode, ArrowRightLeft, ExternalLink } from 'lucide-react';
 import LoadingSpinner from '../shared/LoadingSpinner';
 import SmartImage from '../shared/SmartImage';
@@ -51,30 +51,32 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
   const [isGeneratingCert, setIsGeneratingCert] = useState(false);
   const [isPublic, setIsPublic] = useState(gecko?.is_public ?? true);
   const [slideshowIndex, setSlideshowIndex] = useState(0);
-  const [slideshowImageIndex, setSlideshowImageIndex] = useState(0); // which image is currently shown via arrows
   const [showSlideshow, setShowSlideshow] = useState(false);
-  // slotImageMap: { [slotIndex]: imageIndex } ,  user-assigned image per milestone slot
-  const [slotImageMap, setSlotImageMap] = useState({});
 
-  // Compute which growth milestone slots to show based on age
-  const growthSlots = useMemo(() => {
-    if (!gecko?.hatch_date || !gecko?.image_urls?.length) return [];
-    const ageMonths = differenceInMonths(new Date(), parseLocalDate(gecko.hatch_date));
-    const slots = [];
-    // Every 6 months up to 36 months (3 years), then every 12 months
-    let month = 6;
-    while (month <= ageMonths) {
-      if (month <= 36) {
-        slots.push({ label: month < 12 ? `${month}mo` : month === 12 ? '1yr' : month === 18 ? '18mo' : month === 24 ? '2yr' : month === 30 ? '30mo' : '3yr', months: month });
-        month += 6;
-      } else {
-        const years = month / 12;
-        slots.push({ label: `${years}yr`, months: month });
-        month += 12;
-      }
-    }
-    return slots;
+  // Life-stage slideshow: derived from images the keeper has tagged in the
+  // edit form. image_crop_data[url].life_stage holds the tag, the LIFE_STAGES
+  // order in form/constants.js determines the slideshow ordering.
+  const LIFE_STAGE_ORDER = ['hatchling', '3mo', '6mo', '1yr', '2yr', 'adult'];
+  const LIFE_STAGE_LABELS = {
+    hatchling: 'Hatchling',
+    '3mo': '3 months',
+    '6mo': '6 months',
+    '1yr': '1 year',
+    '2yr': '2 years',
+    adult: 'Adult',
+  };
+
+  const taggedSlides = useMemo(() => {
+    if (!gecko?.image_urls?.length) return [];
+    const cropData = gecko.image_crop_data || {};
+    return gecko.image_urls
+      .map((url) => ({ url, stage: cropData[url]?.life_stage }))
+      .filter((s) => s.stage && LIFE_STAGE_ORDER.includes(s.stage))
+      .sort((a, b) => LIFE_STAGE_ORDER.indexOf(a.stage) - LIFE_STAGE_ORDER.indexOf(b.stage));
   }, [gecko]);
+
+  const slideshowAvailable = gecko?.growth_slideshow_enabled && taggedSlides.length > 0;
+  const currentSlide = taggedSlides[Math.min(slideshowIndex, Math.max(0, taggedSlides.length - 1))];
 
   const loadEventHistory = async () => {
     if (!gecko) return;
@@ -300,7 +302,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
             {/* Left column: Image + Basic Information */}
             <div className="space-y-6">
               <div className="space-y-2">
-                {gecko.image_urls?.length > 1 && (
+                {slideshowAvailable && (
                   <div className="flex items-center justify-between">
                     <button
                       onClick={() => setShowSlideshow(false)}
@@ -308,105 +310,71 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                     >
                       Latest
                     </button>
-                    {growthSlots.length > 0 && (
-                      <button
-                        onClick={() => { setShowSlideshow(true); setSlideshowIndex(0); }}
-                        className={`text-xs px-3 py-1 rounded-full flex items-center gap-1 transition-colors ${showSlideshow ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}`}
-                      >
-                        <Camera className="w-3 h-3" /> Growth Slideshow
-                      </button>
-                    )}
+                    <button
+                      onClick={() => { setShowSlideshow(true); setSlideshowIndex(0); }}
+                      className={`text-xs px-3 py-1 rounded-full flex items-center gap-1 transition-colors ${showSlideshow ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}`}
+                    >
+                      <Camera className="w-3 h-3" /> Growth Slideshow
+                    </button>
                   </div>
                 )}
 
-                {showSlideshow && growthSlots.length > 0 ? (
+                {showSlideshow && slideshowAvailable && currentSlide ? (
                   <div className="space-y-2">
-                    {/* Milestone tabs */}
+                    {/* Life-stage tabs ,  one per tagged photo */}
                     <div className="flex flex-wrap gap-1">
-                      {growthSlots.map((slot, idx) => (
+                      {taggedSlides.map((slide, idx) => (
                         <button
-                          key={slot.months}
-                          onClick={() => {
-                            setSlideshowIndex(idx);
-                            // Reset image index to the assigned image for this slot
-                            const assignedImg = slotImageMap[idx] ?? Math.min(idx, gecko.image_urls.length - 1);
-                            setSlideshowImageIndex(assignedImg);
-                          }}
+                          key={slide.url}
+                          onClick={() => setSlideshowIndex(idx)}
                           className={`text-xs px-2 py-1 rounded transition-colors ${slideshowIndex === idx ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400 hover:bg-slate-600'}`}
                         >
-                          {slot.label}
+                          {LIFE_STAGE_LABELS[slide.stage] || slide.stage}
                         </button>
                       ))}
                     </div>
-                    {/* Image display with navigation ,  arrows cycle through all photos */}
+                    {/* Slideshow display + prev/next */}
                     <div className="flex items-center gap-2">
                       <button
                         type="button"
-                        onPointerDown={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          const prev = Math.max(0, slideshowImageIndex - 1);
-                          setSlideshowImageIndex(prev);
-                          setSlotImageMap(m => ({ ...m, [slideshowIndex]: prev }));
-                        }}
-                        disabled={slideshowImageIndex === 0}
+                        onClick={() => setSlideshowIndex((i) => Math.max(0, i - 1))}
+                        disabled={slideshowIndex === 0}
                         className="bg-slate-700 hover:bg-slate-600 text-white p-1.5 rounded-lg disabled:opacity-30 flex-shrink-0 z-10"
                       >
                         <ChevronLeft className="w-5 h-5" />
                       </button>
                       <div className="relative flex-1 rounded-lg overflow-hidden bg-slate-800 min-h-[160px]">
                         <SmartImage
-                          key={`slide-img-${slideshowImageIndex}`}
-                          src={gecko.image_urls[slideshowImageIndex]}
-                          alt={`${gecko.name} photo ${slideshowImageIndex + 1}`}
+                          key={`slide-${currentSlide.url}`}
+                          src={currentSlide.url}
+                          alt={`${gecko.name} at ${LIFE_STAGE_LABELS[currentSlide.stage] || currentSlide.stage}`}
                           width={800}
                           aspect="auto"
                           containerClassName="w-full max-h-64"
                           className="object-contain"
+                          style={{
+                            transform: gecko.image_crop_data?.[currentSlide.url]?.rotation
+                              ? `rotate(${gecko.image_crop_data[currentSlide.url].rotation}deg)`
+                              : undefined,
+                          }}
                           fallback="https://i.imgur.com/sw9gnDp.png"
                         />
                         <div className="absolute bottom-2 left-2 bg-black/60 text-white text-xs px-2 py-1 rounded">
-                          {growthSlots[slideshowIndex]?.label} · {slideshowImageIndex + 1}/{gecko.image_urls.length}
+                          {LIFE_STAGE_LABELS[currentSlide.stage] || currentSlide.stage} · {slideshowIndex + 1}/{taggedSlides.length}
                         </div>
                       </div>
                       <button
                         type="button"
-                        onPointerDown={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          const next = Math.min(gecko.image_urls.length - 1, slideshowImageIndex + 1);
-                          setSlideshowImageIndex(next);
-                          setSlotImageMap(m => ({ ...m, [slideshowIndex]: next }));
-                        }}
-                        disabled={slideshowImageIndex === gecko.image_urls.length - 1}
+                        onClick={() => setSlideshowIndex((i) => Math.min(taggedSlides.length - 1, i + 1))}
+                        disabled={slideshowIndex === taggedSlides.length - 1}
                         className="bg-slate-700 hover:bg-slate-600 text-white p-1.5 rounded-lg disabled:opacity-30 flex-shrink-0 z-10"
                       >
                         <ChevronRight className="w-5 h-5" />
                       </button>
                     </div>
-                    {/* Image picker for this slot */}
-                    <div>
-                      <p className="text-xs text-slate-500 mb-1">Choose photo for "{growthSlots[slideshowIndex]?.label}":</p>
-                      <div className="flex gap-1 flex-wrap">
-                        {gecko.image_urls.map((url, imgIdx) => (
-                          <button
-                            key={url}
-                            onClick={() => {
-                              setSlideshowImageIndex(imgIdx);
-                              setSlotImageMap(prev => ({ ...prev, [slideshowIndex]: imgIdx }));
-                            }}
-                            className={`w-10 h-10 rounded overflow-hidden border-2 transition-all flex-shrink-0 ${
-                              slideshowImageIndex === imgIdx
-                                ? 'border-emerald-500 scale-110'
-                                : 'border-slate-600 hover:border-slate-400'
-                            }`}
-                          >
-                            <SmartImage src={url} alt={`img ${imgIdx + 1}`} width={120} aspect="auto" containerClassName="w-full h-full" />
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                    <p className="text-xs text-slate-500 text-center">Milestone {slideshowIndex + 1} of {growthSlots.length}</p>
+                    <p className="text-xs text-slate-500 text-center">
+                      Tag more photos in the edit form to add slides.
+                    </p>
                   </div>
                 ) : (
                   <div className="w-full rounded-lg overflow-hidden">
@@ -417,6 +385,11 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                       aspect="auto"
                       containerClassName="w-full max-h-80"
                       className="object-contain"
+                      style={{
+                        transform: gecko.image_urls?.[0] && gecko.image_crop_data?.[gecko.image_urls[0]]?.rotation
+                          ? `rotate(${gecko.image_crop_data[gecko.image_urls[0]].rotation}deg)`
+                          : undefined,
+                      }}
                       fallback="https://i.imgur.com/sw9gnDp.png"
                     />
                   </div>

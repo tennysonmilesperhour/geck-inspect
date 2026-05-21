@@ -40,6 +40,11 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
   }, [gecko.id, weightRecords]);
 
   const primaryImage = gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE;
+  const primaryMeta = gecko.image_crop_data?.[primaryImage] || {};
+  const primaryStyle = {
+    objectPosition: `${primaryMeta.x ?? 50}% ${primaryMeta.y ?? 50}%`,
+    transform: primaryMeta.rotation ? `rotate(${primaryMeta.rotation}deg)` : undefined,
+  };
 
   const handleViewClick = (e) => {
     e.stopPropagation();
@@ -71,6 +76,7 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
           aspect="auto"
           containerClassName="w-full h-40 sm:h-56"
           className="w-full h-full object-cover"
+          style={primaryStyle}
           fallback={DEFAULT_GECKO_IMAGE}
         />
 

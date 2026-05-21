@@ -211,6 +211,11 @@ html, body, #root {
             z-index: 99999 !important;
           }
 
+          /* Select/Dropdown surfaces. Use the theme's slate scale so
+             these match the form inputs and re-tint with the user's
+             chosen Accent color (data-secondary on <html>) instead of
+             being hardcoded emerald. The slate-* HSL vars are
+             redefined per-theme in src/index.css. */
           .dark [role="listbox"],
           .dark [data-radix-select-content],
           .dark [data-radix-select-viewport],
@@ -220,9 +225,8 @@ html, body, #root {
           [role="listbox"],
           [data-radix-select-content],
           [data-radix-select-viewport] {
-            background: rgba(6, 78, 59, 0.95) !important;
-            background-color: rgba(6, 78, 59, 0.95) !important;
-            border: 1px solid #059669 !important;
+            background-color: hsl(var(--slate-800)) !important;
+            border: 1px solid hsl(var(--slate-600)) !important;
             box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.8) !important;
             z-index: 99999 !important;
           }
@@ -233,7 +237,7 @@ html, body, #root {
           .dark [data-radix-collection-item],
           [role="option"],
           [data-radix-collection-item] {
-            color: #d1fae5 !important;
+            color: hsl(var(--slate-100)) !important;
             background: transparent !important;
           }
 
@@ -251,19 +255,20 @@ html, body, #root {
           [role="option"][data-state="checked"],
           [data-radix-collection-item]:hover,
           [data-radix-collection-item][data-highlighted] {
-            background: #047857 !important;
-            background-color: #047857 !important;
+            background-color: hsl(var(--slate-700)) !important;
             color: white !important;
           }
 
-          /* Fix SelectTrigger visibility - use consistent dark emerald theme */
+          /* SelectTrigger: match the slate-tinted inputs across the
+             form. Sizes match h-10 inputs so the trigger doesn't sit
+             larger than its neighbors on mobile. */
           .dark [data-radix-select-trigger],
           .dark button[role="combobox"],
           [data-radix-select-trigger],
           button[role="combobox"] {
-            background: rgba(6, 78, 59, 0.8) !important;
-            border: 1px solid #059669 !important;
-            color: #d1fae5 !important;
+            background-color: hsl(var(--slate-800)) !important;
+            border: 1px solid hsl(var(--slate-600)) !important;
+            color: hsl(var(--slate-100)) !important;
             font-size: 0.875rem !important;
           }
 
@@ -271,7 +276,7 @@ html, body, #root {
           .dark button[role="combobox"]:hover,
           [data-radix-select-trigger]:hover,
           button[role="combobox"]:hover {
-            background: rgba(4, 120, 87, 0.9) !important;
+            background-color: hsl(var(--slate-700)) !important;
           }
 
           /* Hide file input text that shows "Choose file No file chosen" */
