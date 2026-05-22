@@ -64,7 +64,20 @@ export const AuthProvider = ({ children }) => {
         setGuestMode(false);
         setIsGuest(false);
         const basic = normalizeSupabaseUser(session.user);
-        setUser(basic);
+        // Only flash the basic (un-enriched) user when we have nothing to
+        // preserve or the account changed. Token-refresh / visibility-change
+        // events fire onAuthStateChange for the SAME user we already have
+        // enriched; resetting to `basic` there strips `role` and other
+        // profile fields for the few ms until `buildUser` resolves, which
+        // is long enough for role-gated routes (AdminPanel) to evaluate
+        // `user.role !== 'admin'` and bounce to "/". Preserve the existing
+        // enriched fields and let buildUser refresh them in the background.
+        setUser((prev) => {
+          if (prev && prev.email === basic.email) {
+            return { ...prev, ...basic, role: prev.role };
+          }
+          return basic;
+        });
         setIsAuthenticated(true);
         identifyUser(basic);
         buildUser(session.user).then((enriched) => {
@@ -75,7 +88,7 @@ export const AuthProvider = ({ children }) => {
           // failure is logged but never blocks the auth flow.
           applyPendingReferral(enriched);
           // Redeem any pending store signup-grant token (3-month Keeper
-          // trial from a guest checkout). Same fire-and-forget posture , 
+          // trial from a guest checkout). Same fire-and-forget posture ,
           // soft failures clear the token, hard failures retry next sign-in.
           applyPendingSignupGrant();
         });
