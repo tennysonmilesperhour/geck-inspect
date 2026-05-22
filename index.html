@@ -36,6 +36,13 @@
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="googlebot" content="index, follow, max-image-preview:large, max-snippet:-1" />
 
+    <!-- Impact.com site verification (Chewy affiliate program). Impact's
+         snippet uses `value=` (not the spec-standard `content=`); the
+         crawler sniffs that exact attribute, so leave it as-is. Static
+         tag on every page so it's found regardless of which prerendered
+         HTML the verifier hits. -->
+    <meta name="impact-site-verification" value="dbb05fca-bf62-42da-bb56-74ae5a8249a0" />
+
     <!-- NO hardcoded <link rel="canonical">. Per-route canonicals are
          emitted by:
            - scripts/prerender.mjs at build time (static HTML injected into
