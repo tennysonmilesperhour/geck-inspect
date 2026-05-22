@@ -264,8 +264,9 @@ function TaskRow({ task, onToggle, onDelete, busy }) {
         {task.link_url && (
           <a
             href={task.link_url}
-            target={task.link_url.startsWith('http') ? '_blank' : undefined}
-            rel={task.link_url.startsWith('http') ? 'noopener noreferrer' : undefined}
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
             className="inline-flex items-center gap-1 text-xs text-emerald-300 hover:text-emerald-200 mt-2"
           >
             {task.link_label || 'Open link'} <ExternalLink className="w-3 h-3" />
