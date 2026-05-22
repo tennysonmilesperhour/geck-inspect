@@ -67,7 +67,7 @@ export default function TransactionDrilldown({ open, onClose, criteria }) {
 
   return (
     <Dialog open={open} onOpenChange={(v) => !v && onClose?.()}>
-      <DialogContent className="bg-slate-950 border-slate-800 max-w-5xl w-[95vw] p-0 max-h-[85vh] overflow-hidden flex flex-col">
+      <DialogContent hideCloseButton className="bg-slate-950 border-slate-800 max-w-5xl w-[95vw] p-0 max-h-[85vh] overflow-hidden flex flex-col">
         <div className="flex items-center justify-between px-5 py-3 border-b border-slate-800">
           <div>
             <h2 className="text-base font-semibold text-slate-100">{title}</h2>
