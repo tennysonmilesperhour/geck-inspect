@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-05-22T09:34:35.715Z",
+  "lastUpdated": "2026-05-22T10:28:23.621Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -287,7 +287,7 @@
       "title": "Black and Blue Crested Geckos: Why \"Solid Color\" Isn't What You'll Get",
       "slug": "black-blue-crested-gecko-genetics",
       "category": "genetics",
-      "status": "new",
+      "status": "published",
       "score": {
         "demand": 7,
         "originality": 8,
@@ -296,8 +296,8 @@
         "total": 20
       },
       "createdAt": "2026-05-22T09:34:03.636Z",
-      "draftedAt": null,
-      "publishedAt": null,
+      "draftedAt": "2026-05-22T10:28:23.496Z",
+      "publishedAt": "2026-05-22T10:28:23.621Z",
       "evidence": [
         {
           "source": "google-trends",

@@ -3021,6 +3021,267 @@ export const BLOG_POSTS = [
         label: "TikisGeckos: Frappuccino Crested Geckos Explained",
       },
     ],
+  },
+  {
+    slug: "black-blue-crested-gecko-genetics",
+    title: "Black and Blue Crested Geckos: What the Genetics Actually Say",
+    description: "Dark and \"blue\" crested geckos are trending, but they're not separate morphs. Learn the polygenic genetics behind dark crested geckos and why pairings rarely breed true.",
+    keyphrase: "black crested gecko genetics",
+    category: "genetics",
+    tags: [
+      "genetics",
+      "lilly-white",
+      "axanthic",
+    ],
+    datePublished: "2026-05-22",
+    dateModified: "2026-05-22",
+    heroEyebrow: "Genetics",
+    tldr: [
+      "Dark and \"black\" crested geckos are not a proven recessive or incomplete-dominant morph, they are polygenic combinations of melanin expression, base color, and firing state.",
+      "\"Blue\" crested geckos are typically lavender or axanthic animals with cool iridophore reflectivity, not a distinct blue pigment gene.",
+      "Pairing two dark geckos does not reliably produce dark offspring because polygenic traits require multi-generation selection pressure to shift the average.",
+      "Axanthic is the only proven recessive that removes warm pigment, it produces gray, white, and black animals, not blue.",
+      "Buying a \"black\" or \"blue\" crested gecko at a premium without documented lineage is a high-risk purchase for any breeding project.",
+    ],
+    body: [
+      {
+        type: "p",
+        text: "# Black and blue crested geckos: what the genetics actually say",
+      },
+      {
+        type: "p",
+        text: "A seller listed a \"black crested gecko\" on MorphMarket last spring for $850. The photos were stunning, a deeply fired-up animal showing near-solid charcoal with a faint iridescent shimmer along the dorsum. The listing said \"possible het axanthic\" in the genetics field and nothing else. Three breeders I know asked me whether it was worth the price. My honest answer: almost certainly not, and here's why.",
+      },
+      {
+        type: "p",
+        text: "So what are dark and \"blue\" crested geckos, genetically? The short answer is that they are not a morph. There is no proven recessive or incomplete-dominant gene producing \"black\" or \"blue\" expression the way Lilly White produces bright white markings. What you're usually looking at is a layered polygenic combination, high melanin, low-saturation base color, particular iridophore reflectivity, plus the dramatic effect of a fully fired-up animal photographed at exactly the right moment.",
+      },
+      {
+        type: "p",
+        text: "If you're considering paying a premium for one, or pairing one to produce more, you need to understand what you're actually buying.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Why \"black\" geckos look black",
+      },
+      {
+        type: "p",
+        text: "Crested gecko coloration comes from three layers of specialized skin cells called chromatophores. Melanophores (the deepest layer) produce dark melanin and are responsible for the dark base color and the fired-up effect. Xanthophores (the top layer) produce yellow and red pigments. Iridophores (the middle layer) contain reflective crystals that produce brightness and shimmer.",
+      },
+      {
+        type: "p",
+        text: "When a gecko \"fires up\", responding to night, stress, or misting, melanin granules spread through the skin. A gecko with a dark base color and high melanin expression can look strikingly close to black in this state. Photographed in a dark enclosure with no warm-toned lighting, the animal looks even darker. That's the photo that ends up in the listing.",
+      },
+      {
+        type: "p",
+        text: "The problem is that the same gecko, fired down during the day, often looks like a standard dark buckskin or chocolate animal. Not black. Not even particularly dramatic. The buyer who paid $850 is now looking at a gecko that fires up impressively and fires down into something their neighbor's pet-quality animal could pass for.",
+      },
+      {
+        type: "p",
+        text: "**High melanin expression is polygenic.** According to the genetics-sections data in our Foundation Genetics module, base color in crested geckos is controlled by many genes acting additively, not a single switch. The same is true of melanin saturation. You cannot Punnett-square your way to reliably dark offspring by pairing two dark geckos. You can shift the average over multiple generations of consistent selection, but two stunning dark animals will produce a wide spread of offspring, some darker, some lighter, and many in between.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "The firing-state problem",
+      },
+      {
+        type: "p",
+        text: "This is the part that trips up buyers more than any genetics claim. Crested geckos can shift dramatically in color, roughly 30 to 90 minutes to complete a full fire-up or fire-down cycle. A gecko that looks near-black at 11 pm can look entirely ordinary at noon the next day. This is not genetics. It is physiology.",
+      },
+      {
+        type: "p",
+        text: "The mechanism: melanophores contain melanin granules that spread to darken the skin at night (or under stress) and clump up to lighten it during the day. Iridophore reflectivity also shifts between states. Two animals with identical underlying genetics can look completely different in a photo depending on when the photo was taken.",
+      },
+      {
+        type: "p",
+        text: "I've watched breeders at expos fire up an animal in a paper bag for 10 minutes before bringing it to a table. The same animal that looked muted and ordinary in its enclosure looks nearly black under those conditions. That's not fraud, exactly, but it's not a complete picture either.",
+      },
+      {
+        type: "p",
+        text: "If you're evaluating a dark gecko for purchase, ask for photos in both states. A fired-down photo taken in daylight under natural lighting. A fired-up photo taken at night. If the seller only has fired-up shots, that tells you something. If the fired-down photo shows a rich dark chocolate or olive animal with strong saturation, that's a genuinely dark-based gecko worth the interest. If it looks like a standard buckskin, you're paying for a party trick.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "What \"blue\" geckos usually are",
+      },
+      {
+        type: "p",
+        text: "\"Blue crested gecko\" searches have jumped 40% in the US over the last three months, according to Google Trends data. The animals generating that interest are real, and some of them are genuinely striking. But there is no proven blue pigment gene in crested geckos.",
+      },
+      {
+        type: "p",
+        text: "What produces the blue-adjacent appearance falls into two categories.",
+      },
+      {
+        type: "p",
+        text: "The first is iridophore reflectivity in cool-toned animals. Iridophores contain reflective crystal platelets that interact with the wavelengths of light bouncing through the other chromatophore layers. In animals with reduced yellow/red xanthophore expression and high iridophore density, the reflected light can appear blue-gray or steel blue, particularly in certain lighting conditions. This is the same optical principle behind structural blue in other animals, it's light physics, not a blue pigment.",
+      },
+      {
+        type: "p",
+        text: "The second and more genetically interesting case is [axanthic](/MorphGuide/axanthic). Axanthic is the only fully proven recessive morph in crested geckos. It eliminates xanthophore function entirely, removing yellow and red pigment. Visual axanthics appear in shades of charcoal, silver, and white with no warm tones at all. In the right lighting, particularly cool-toned or blue-spectrum light, axanthic animals can photograph with a pronounced blue-gray cast. They're not blue, but the effect is convincing in a photo.",
+      },
+      {
+        type: "p",
+        text: "The important distinction: axanthic is a real morph with predictable Mendelian inheritance (two copies required for visual expression). A lavender-base animal with iridophore shimmer is polygenic and will not breed true. Knowing which one you're looking at matters enormously for any breeding project.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "The axanthic misrepresentation problem",
+      },
+      {
+        type: "p",
+        text: "Because dark geckos can look superficially similar to axanthic animals in a photo, there's a persistent tendency in sales listings to add \"possible het axanthic\" to anything with a cooler or darker appearance. This is where the $850 listing I opened with falls apart.",
+      },
+      {
+        type: "p",
+        text: "The axanthic corpus in our Foundation Genetics module is blunt on this: visual assessment of het status is never valid for any recessive. A gecko that looks dark, gray, or muted is not evidence of axanthic het status. The only way to confirm a het axanthic is documented lineage tracing back to a proven visual or a test-breed result. \"Possible het\" without that documentation is not a genetic claim, it's marketing language.",
+      },
+      {
+        type: "p",
+        text: "Purchasing animals with unverified genetic claims and breeding them into your lines doesn't just waste the purchase price. It contaminates your documentation downstream. Three breeding seasons later, when you're trying to prove het status in your own animals, you'll find yourself tracing back to a purchase you can no longer verify.",
+      },
+      {
+        type: "p",
+        text: "If you want to work with axanthic, buy from breeders with documented lineage. The proven axanthic lines in the hobby trace back to Cabernet Dragons (Matt Parks), who proved the gene around 2018. Reputable breeders building on those lines can provide parent-pair documentation. Expect to pay accordingly, documented 100% het axanthics from quality lines command real prices, and that's appropriate.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "My honest position on \"black gecko\" pricing",
+      },
+      {
+        type: "p",
+        text: "I think dark-based geckos are genuinely beautiful and there's nothing wrong with wanting one as a pet or as a polygenic project animal. A strong chocolate or olive base is a legitimate breeding target and worth selecting for deliberately.",
+      },
+      {
+        type: "p",
+        text: "What I object to is the premium pricing that gets applied when a dark gecko is photographed fired-up and listed as though dark expression is a distinct, predictable genetic trait equivalent to a proven morph. It isn't. The buyer who pays $850 for a \"black crested gecko\" based on fired-up photos and an undocumented \"possible het axanthic\" claim is almost certainly overpaying.",
+      },
+      {
+        type: "p",
+        text: "Compare that to a documented visual axanthic from a reputable line, which might cost $1,500 to $4,000 depending on background traits and proven-producer status. That price is earned. The axanthic gene is real, proven, and Punnett-squareable. You know exactly what you're getting in the offspring.",
+      },
+      {
+        type: "p",
+        text: "A stunning dark-fired photo with no genetics documentation is worth the animal's polygenic breeding value, which is real, but is also not something you can put a single price on without evaluating the offspring across multiple pairings.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Practical takeaways for Monday",
+      },
+      {
+        type: "p",
+        text: "If you're evaluating a dark or \"blue\" crested gecko for purchase, here's what to actually do:",
+      },
+      {
+        type: "p",
+        text: "**Request fired-down photos.** A genuinely dark-based animal holds real saturation even in its pale state. If the fired-down photo looks ordinary, the animal's \"black\" appearance is largely a fire-state effect.",
+      },
+      {
+        type: "p",
+        text: "**Ask for lineage on any axanthic het claim.** \"Possible het axanthic\" without a named sire, dam, and pairing date is not a documented claim. Treat it as unverified and price accordingly.",
+      },
+      {
+        type: "p",
+        text: "**For a dark polygenic project, buy the best fired-up AND fired-down animal you can find, not just the best photo.** Select for both states because your offspring will express across the full range.",
+      },
+      {
+        type: "p",
+        text: "**Don't skip to Cap or Axanthic stacking before your dark base is consistent.** If dark expression is your goal, get two to three generations of dark × dark selection going first. Stacking proven morphs on an inconsistent dark polygenic base just adds complexity without locking in the look you want.",
+      },
+      {
+        type: "p",
+        text: "**Understand what \"blue\" actually means for the individual animal.** Is it iridophore shimmer on a cool-toned base? Is it a verified axanthic? Is it a lavender-base animal? Each has a different breeding value and a different expected price. The [Morph Guide lavender entry](/MorphGuide/lavender) and the [axanthic entry](/MorphGuide/axanthic) are a useful starting point for comparison.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Back to the $850 listing",
+      },
+      {
+        type: "p",
+        text: "The animal was beautiful. I don't doubt that. But the buyer who purchased it at that price on the strength of fired-up photos and an undocumented het claim paid a morph premium for a polygenic trait. If it produces stunning dark offspring through deliberate selection, it was worth it. If it produces a normal spread of colors from a random pairing, the buyer will have learned an $850 lesson about the difference between a morph and a trait.",
+      },
+      {
+        type: "p",
+        text: "That lesson is free here., -",
+      },
+      {
+        type: "p",
+        text: "*For the full breakdown of how melanophores, xanthophores, and iridophores interact to produce crested gecko color, see the [Genetics Guide](/GeneticsGuide). To run pairing predictions on proven morphs like axanthic, use the [Genetic Calculator](/GeneticCalculatorTool).*",
+      },
+    ],
+    faq: [
+      {
+        question: "Is there a real black crested gecko morph?",
+        answer: "No proven single-gene \"black\" morph exists in crested geckos. Dark animals are the result of polygenic melanin expression and base color, combined with the fired-up state. The effect can be dramatic in photos but does not breed true like a proven morph such as Lilly White or Axanthic.",
+      },
+      {
+        question: "Can crested geckos be blue?",
+        answer: "There is no proven blue pigment gene in crested geckos. Animals described as \"blue\" are typically axanthic (a proven recessive that removes yellow and red pigment, leaving gray tones) or lavender-base animals with cool iridophore reflectivity. Neither is a distinct \"blue morph.\"",
+      },
+      {
+        question: "Will pairing two dark crested geckos produce dark offspring?",
+        answer: "It increases the probability across a population, but does not guarantee dark offspring from any individual clutch. Dark coloration is polygenic, controlled by many genes acting additively. Reliable darkening takes multiple generations of consistent selection, not a single pairing.",
+      },
+      {
+        question: "What is the difference between a dark crested gecko and an axanthic?",
+        answer: "A dark crested gecko is a polygenic animal with high melanin expression. An axanthic is a proven recessive morph that removes yellow and red pigment entirely, leaving only gray, white, and black tones regardless of base color genetics. Axanthic requires two gene copies and confirmed lineage documentation.",
+      },
+      {
+        question: "Is \"possible het axanthic\" a valid genetics claim for a dark gecko?",
+        answer: "No. Visual assessment of het status is never valid for any recessive morph. A dark or gray appearance does not confirm axanthic het status. The only valid documentation is a lineage trace to a proven visual axanthic or a test-breed result.",
+      },
+      {
+        question: "Why does my crested gecko look black at night but ordinary during the day?",
+        answer: "This is the fired-up state. At night, melanin granules spread through the skin, darkening the animal significantly. During the day, those granules clump up and the gecko fires down to a much paler state. This is physiology, not genetics, and it affects every crested gecko regardless of morph.",
+      },
+      {
+        question: "Which crested gecko morph produces the darkest animals?",
+        answer: "Axanthic, a proven recessive, produces the most consistently dark (gray, charcoal, and white) animals because it removes all yellow and red pigment. Stacked with a dark polygenic base, axanthic animals can appear nearly black when fired up. This is the closest to a true \"dark morph\" the hobby has.",
+      },
+      {
+        question: "How much should I pay for a dark crested gecko?",
+        answer: "A dark-based gecko with strong fired-up and fired-down saturation has polygenic breeding value worth a modest premium over a standard pet-quality animal. It should not command morph-level pricing unless it carries documented proven genetics like axanthic or cappuccino. Undocumented \"possible het\" claims do not justify premium pricing.",
+      },
+    ],
+    internalLinks: [
+      {
+        href: "/MorphGuide/axanthic",
+        label: "Axanthic morph guide",
+      },
+      {
+        href: "/MorphGuide/lavender",
+        label: "Lavender base color guide",
+      },
+      {
+        href: "/GeneticsGuide",
+        label: "Crested gecko genetics encyclopedia",
+      },
+      {
+        href: "/GeneticCalculatorTool",
+        label: "Genetic pairing calculator",
+      },
+      {
+        href: "/MorphGuide/chocolate",
+        label: "Chocolate base color guide",
+      },
+    ],
+    externalCitations: [
+      {
+        url: "https://trends.google.com/trends/explore?q=black+crested+gecko&date=today+3-m&geo=US",
+        label: "Google Trends: \"black crested gecko\" rising query (US, 90 days)",
+      },
+      {
+        url: "https://trends.google.com/trends/explore?q=blue+crested+gecko&date=today+3-m&geo=US",
+        label: "Google Trends: \"blue crested gecko\" rising query (US, 90 days)",
+      },
+    ],
   }
 ];
 
