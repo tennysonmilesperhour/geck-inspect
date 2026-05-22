@@ -1,14 +1,14 @@
 {
-  "ranAt": "2026-05-20T09:41:10.453Z",
+  "ranAt": "2026-05-22T09:34:03.636Z",
   "signals": {
     "googleAc": 95,
     "bluesky": 80,
-    "googleTrends": 4,
-    "youtube": 64,
+    "googleTrends": 12,
+    "youtube": 67,
     "breederBlogs": 1,
     "reddit": 0,
     "errors": [
-      "\"crested gecko\": related: 429",
+      "\"crested gecko morph\": related: 429",
       "r/crestedgecko new: 403 Blocked",
       "r/crestedgecko top: 403 Blocked",
       "r/morphmarket new: 403 Blocked",
@@ -22,9 +22,9 @@
       "search \"breeding fail\": 403 Blocked"
     ]
   },
-  "costUsd": 0.028650000000000002,
+  "costUsd": 0.02972,
   "addedSlugs": [
-    "frappuccino-genetics-cappuccino-pairing-outcomes"
+    "black-blue-crested-gecko-genetics"
   ],
-  "rationale": "The signal set is heavily weighted toward general crested gecko queries (care, diet, enclosure, morphs) with strong search volume but limited breeding-specific controversy or misconception. Google autocomplete shows sustained demand for \"crested gecko morph chart\" (+140%), \"morph identification,\" and \"breeding weight/age,\" while YouTube reveals a heated debate around Cappuccino viability (see \"Don't buy super cappuccino... it's a scam\") and Lilly White breeding strategy. Bluesky engagement is mostly lifestyle/art posts with no substantive breeding discussion. The single breeder blog is promotional. I found no Reddit threads, which limits community friction signals. I'm rejecting generic morph guides (already published: \"how-to-identify-crested-gecko-morphs\", \"cappuccino-crested-gecko-genetics\") and care content (already published). Instead, I'm targeting one high-demand, high-controversy topic with clear breeder-to-breeder disagreement: why Frappuccino outcomes confuse breeders, with a misconception-correction angle that aligns with voice fit."
+  "rationale": "The signals show strong, consistent demand across Google Trends (rising queries for \"crested gecko colors,\" \"crested gecko care sheet,\" \"black crested gecko,\" \"blue crested gecko\" with +40-300% growth), Google autocomplete volume, and YouTube engagement (67 videos, many focused on morphs and breeding). However, most queries cluster around general care, morph identification, and established morphs (Cappuccino, Lilly White, Axanthic). The Bluesky feed shows heavy MorphMarket listings and enthusiast engagement but no substantive forum debate or emerging controversies. We've already published on cappuccino, super-cappuccino, lilly-white, axanthic, and identification. The opportunity lies in emerging or under-covered color trends (black/blue morphs) and breeding misconceptions that YouTube hints at (\"WARNING NEVER BREED THESE,\" \"Huge Mistake or Hidden Opportunity?\"). A deep genetics topic on color recessive/polygenic pairings, or a practical breeder guide on color morphing pitfalls, could fill a gap without duplicating existing content. I'm selecting one strong candidate that threads together the rising color interest, genetics grounding, and a correctable misconception."
 }

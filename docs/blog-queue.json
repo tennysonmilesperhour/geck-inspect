@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-05-20T10:28:38.156Z",
+  "lastUpdated": "2026-05-22T09:34:35.715Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -278,6 +278,47 @@
         "You bought two Cappuccinos expecting to breed Cappuccinos. Instead you got Frappuccinos. Here's the incomplete-dominant genetics behind the surprise.",
         "Cappuccino isn't as simple as it looks: pairing two heterozygotes creates a Mendelian ratio that trips up new breeders.",
         "The Frappuccino reveal: how a single pairing breaks down into three phenotypes and why that matters for your breeding plan."
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "tpc_1779442443636_blackbluec",
+      "title": "Black and Blue Crested Geckos: Why \"Solid Color\" Isn't What You'll Get",
+      "slug": "black-blue-crested-gecko-genetics",
+      "category": "genetics",
+      "status": "new",
+      "score": {
+        "demand": 7,
+        "originality": 8,
+        "voiceFit": 8,
+        "accuracyRisk": 3,
+        "total": 20
+      },
+      "createdAt": "2026-05-22T09:34:03.636Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "google-trends",
+          "snippet": "Google Trends rising query (related to \"crested gecko\", last 90 days US): \"black crested gecko\" +40%",
+          "url": "https://trends.google.com/trends/explore?q=black+crested+gecko&date=today+3-m&geo=US"
+        },
+        {
+          "source": "google-trends",
+          "snippet": "Google Trends rising query (related to \"crested gecko\", last 90 days US): \"blue crested gecko\" +40%",
+          "url": "https://trends.google.com/trends/explore?q=blue+crested+gecko&date=today+3-m&geo=US"
+        },
+        {
+          "source": "google-ac",
+          "snippet": "Google autocomplete for \"crested gecko\" suggests \"crested gecko colors\"",
+          "url": null
+        }
+      ],
+      "angleIdeas": [
+        "Most breeders who see a dark or blue crested gecko assume it's a separate morph. Here's why it's actually a combination of existing polygenic traits, and why your pairing won't breed true.",
+        "When you buy a \"black crested gecko,\" you're often paying premium prices for what will hatch as ordinary patterns. A breeder's guide to the genetics actually at play.",
+        "Dark and blue crested geckos are trending fast, but they're not recessive morphs—they're polygenic overlays. Understanding the difference saves thousands in failed pairings."
       ],
       "rejectionReason": null,
       "prUrl": null
