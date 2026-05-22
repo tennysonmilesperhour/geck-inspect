@@ -105,11 +105,26 @@ export default function MassMessaging({ prefill, onPrefillConsumed }) {
   const generateUpdateAnnouncement = async () => {
     setIsGenerating(true);
     try {
-      // Grab the most recent published changelog entry as the source of
-      // truth so we never fabricate features.
+      // Pick the most-recently *published* changelog entry so the
+      // announcement always describes the current release.
+      //
+      // We can't trust `-created_date` here: the April 2026 entries were
+      // backfilled from the BUILTIN_UPDATES fallback in mid-May, so their
+      // created_date is newer than the genuinely-most-recent May entry.
+      // Sorting by created_date and picking the first published row would
+      // (and did) surface April instead of May. Sort by published_date
+      // among published rows, with created_date as a tiebreaker.
       const entries = await ChangeLog.list('-created_date');
-      const latest =
-        entries.find((e) => e.is_published) || entries[0] || null;
+      const published = (entries || []).filter((e) => e.is_published);
+      const byPublished = (a, b) => {
+        const ap = a.published_date ? new Date(a.published_date).getTime() : 0;
+        const bp = b.published_date ? new Date(b.published_date).getTime() : 0;
+        if (bp !== ap) return bp - ap;
+        const ac = a.created_date ? new Date(a.created_date).getTime() : 0;
+        const bc = b.created_date ? new Date(b.created_date).getTime() : 0;
+        return bc - ac;
+      };
+      const latest = published.sort(byPublished)[0] || entries?.[0] || null;
 
       if (!latest) {
         toast({
