@@ -1,7 +1,10 @@
-// Supabase Edge Function — recognize-gecko-morph (v6: self-hosted bank)
+// Supabase Edge Function — recognize-gecko-morph (v8: bank off by data + prompt caching)
 //
 // Two-pass few-shot bank, all images on geck-inspect Supabase storage
-// so Anthropic's image-prefetch is fast and reliable:
+// so Anthropic's image-prefetch is fast and reliable. Anthropic prompt
+// caching (`cache_control: ephemeral`) wraps the bank images + the
+// instructions text so repeat callers within the 5-minute cache window
+// pay ~10% of full input rate for the cached portion.
 //
 //   1. hero_anchor rows WHERE anchor_category = 'primary_morph'
 //      — competition / show-winner photos for the primary_morph axis.
@@ -14,16 +17,33 @@
 //      Filtered to URLs hosted on this Supabase project so prefetch
 //      stays fast. auto_bulk_approved rows are excluded.
 //
-// History of eval runs (eval_set_size / top1_accuracy):
-//   #1 baseline (no bank)        100/100  27.0%
-//   #5 v2 manual-touch 12-image  100/100  34.0%  (best, mixed-CDN)
-//   #6 v2.1 6-image lean         100/100  14.0%
-//   #7 v3 hero-anchor 5-image     87/100  23.1%
-//   #8 v4 hybrid 8-image (slow)   18/100   5.6%  (CDN prefetch fails)
-//   #9 v5 disabled               100/100  30.0%  (production safety net)
+// Prompt-cache layout per request:
+//   [bank images] [bank-intro + instructions text WITH cache_control]
+//   [user images] [trailing per-call text]
 //
-// v6 re-enables the bank now that anchor URLs live on geck-inspect
-// storage. Goal: recreate the v2 34% win on a stable substrate.
+// The bank is DISABLED by default (FEW_SHOT_PER_MORPH=0, MAX=0)
+// because the v7 eval data showed the 5-primary-morph bank REGRESSES
+// top1 accuracy by ~8pp vs the no-bank baseline. The model anchors
+// hard on the morphs that ARE in the bank (over-predicts harlequin)
+// and stops predicting morphs that aren't (never predicts pinstripe,
+// extreme_harlequin, etc.). Caching plumbing stays wired up so flipping
+// the env vars to 1/10 immediately gets the cost benefit if/when the
+// bank grows to cover ≥12 primary_morphs.
+//
+// Re-enable criteria: ≥12 primary_morph hero anchors covering at
+// minimum extreme_harlequin, super_dalmatian, partial_pinstripe,
+// brindle, tiger, flame.
+//
+// Eval history (eval_set_size / top1_accuracy):
+//   #1  baseline (no bank)         100/100  27.0%
+//   #5  v2 manual-touch 12-image   100/100  34.0%  (best, mixed-CDN)
+//   #6  v2.1 6-image lean          100/100  14.0%
+//   #7  v3 hero-anchor 5-image      87/100  23.1%
+//   #8  v4 hybrid 8-image            18/100   5.6%  (credit balance, not CDN)
+//   #9  v5 disabled                100/100  30.0%  ← reference baseline
+//   #10 v6 self-hosted bank           6/100   0.0%  (credit balance)
+//   #11 v7 smoke (cached)            10/10  20.0%  (n too small)
+//   #12 v7 cached bank n=50          50/50  22.0%  (decision point ,  REGRESSION)
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -207,14 +227,16 @@ function resolveModel(raw: unknown): string {
 }
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
-// Bank is ENABLED by default now that anchor images are mirrored to
-// geck-inspect Supabase storage and the manual_touch filler is filtered
-// to URLs on the same project. Set the env vars to 0 to disable for an
-// emergency revert without a code change.
+// Bank is DISABLED by default. The v7 eval showed the 5-primary-morph
+// bank regresses top1 accuracy by ~8pp vs the no-bank baseline (see the
+// header eval history). All the plumbing (loader, cache_control on the
+// instructions block, usage accounting) is wired up; flip these env
+// vars to 1 / 10 once ≥12 primary_morph hero anchors cover the morphs
+// the model currently misses.
 const FEW_SHOT_PER_MORPH = Math.min(2, Math.max(0,
-  Number(Deno.env.get("FEW_SHOT_PER_MORPH") ?? "1") || 0));
+  Number(Deno.env.get("FEW_SHOT_PER_MORPH") ?? "0") || 0));
 const MAX_BANK_TOTAL = Math.min(12, Math.max(0,
-  Number(Deno.env.get("FEW_SHOT_MAX_TOTAL") ?? "10") || 0));
+  Number(Deno.env.get("FEW_SHOT_MAX_TOTAL") ?? "0") || 0));
 // Manual-touch fillers are restricted to URLs hosted on this Supabase
 // project so Anthropic's prefetch is fast. Override via env if a faster
 // CDN is observed and we want to broaden.
@@ -364,7 +386,7 @@ async function loadFewShotBank(): Promise<FewShotExample[]> {
       const heroCount = combined.filter((e) => e.source === "hero_anchor").length;
       const fillerCount = combined.length - heroCount;
       const distinctMorphs = new Set(combined.map((e) => e.primary_morph)).size;
-      console.log(`few-shot bank v6: ${combined.length} examples (${heroCount} hero + ${fillerCount} manual) across ${distinctMorphs} morphs`);
+      console.log(`few-shot bank v8: ${combined.length} examples (${heroCount} hero + ${fillerCount} manual) across ${distinctMorphs} morphs`);
       return combined;
     })();
   }
@@ -373,7 +395,7 @@ async function loadFewShotBank(): Promise<FewShotExample[]> {
 
 function buildInstructions(fewShotBank: FewShotExample[], includeValueEstimate: boolean) {
   const bankIntro = fewShotBank.length === 0 ? "" :
-    `\n\nFew-shot reference: the first ${fewShotBank.length} attached image(s) are LABELED reference examples (the final image is the user's photo to identify). Hero-anchor entries are competition-judged show winners (gold-standard visual definitions); manual-touch entries are community-verified examples. Use them as visual anchors for the canonical look of each primary_morph BEFORE evaluating the user's photo. The mapping, in order:\n${fewShotBank.map((ex, i) => {
+    `\n\nFew-shot reference: the first ${fewShotBank.length} attached image(s) are LABELED reference examples (the user's photo(s) follow, after this text). Hero-anchor entries are competition-judged show winners (gold-standard visual definitions); manual-touch entries are community-verified examples. Use them as visual anchors for the canonical look of each primary_morph BEFORE evaluating the user's photo. The mapping, in order:\n${fewShotBank.map((ex, i) => {
       const tier = ex.source === "hero_anchor" ? " [hero]" : "";
       const name = ex.gecko_name ? ` "${ex.gecko_name}"` : "";
       const color = ex.base_color ? ` (base ${ex.base_color})` : "";
@@ -517,11 +539,38 @@ async function callClaude(
   model: string,
 ): Promise<CallClaudeResult> {
   const bank = await loadFewShotBank();
-  const bankBlocks = bank.map((ex) => ({ type: "image", source: { type: "url", url: ex.image_url } }));
-  const userBlocks = imageUrls.map((url) => ({ type: "image", source: { type: "url", url } }));
-  const multiNote = imageUrls.length > 1
-    ? `\n\nNOTE: the LAST ${imageUrls.length} photos are of the SAME user-submitted animal. Synthesize across them.`
-    : "";
+
+  // Cacheable block: bank images + bank-intro + rules text. Stable
+  // across calls within the warm-instance lifetime (and across cold
+  // starts as long as the bank composition + includeValueEstimate are
+  // unchanged). The instructions text always exists (the no-bank
+  // baseline still ships rules), so this block is always non-empty and
+  // safe to anchor the cache on. Marking the LAST cacheable block with
+  // cache_control: ephemeral caches everything up to and including it
+  // for 5 minutes; subsequent requests pay 10% of input rate for that
+  // prefix.
+  const cacheableContent: Record<string, unknown>[] = [
+    ...bank.map((ex) => ({ type: "image", source: { type: "url", url: ex.image_url } })),
+    { type: "text", text: buildInstructions(bank, includeValueEstimate) },
+  ];
+  cacheableContent[cacheableContent.length - 1] = {
+    ...cacheableContent[cacheableContent.length - 1],
+    cache_control: { type: "ephemeral" },
+  };
+
+  // Variable block: user images + a per-call trailing hint. Never
+  // cached because it changes every request.
+  const userBlocks: Record<string, unknown>[] = imageUrls.map((url) => (
+    { type: "image", source: { type: "url", url } }
+  ));
+  const trailingText = imageUrls.length > 1
+    ? `The ${imageUrls.length} images above are of the SAME user-submitted animal. Synthesize across them before calling the tool.`
+    : `The image above is the user's submitted gecko. Call the tool with your analysis.`;
+  const variableContent: Record<string, unknown>[] = [
+    ...userBlocks,
+    { type: "text", text: trailingText },
+  ];
+
   const tool = buildTool(includeValueEstimate);
   const startedAt = Date.now();
   const res = await fetch("https://api.anthropic.com/v1/messages", {
@@ -530,6 +579,9 @@ async function callClaude(
       "Content-Type": "application/json",
       "x-api-key": ANTHROPIC_API_KEY!,
       "anthropic-version": "2023-06-01",
+      // Prompt caching is GA on Sonnet 4 but the beta header is a no-op
+      // when unneeded and required for some account configurations.
+      "anthropic-beta": "prompt-caching-2024-07-31",
     },
     body: JSON.stringify({
       model,
@@ -538,11 +590,7 @@ async function callClaude(
       tool_choice: { type: "tool", name: tool.name },
       messages: [{
         role: "user",
-        content: [
-          ...bankBlocks,
-          ...userBlocks,
-          { type: "text", text: buildInstructions(bank, includeValueEstimate) + multiNote },
-        ],
+        content: [...cacheableContent, ...variableContent],
       }],
     }),
   });
