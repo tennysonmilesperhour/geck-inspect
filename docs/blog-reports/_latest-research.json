@@ -1,14 +1,13 @@
 {
-  "ranAt": "2026-05-22T09:34:03.636Z",
+  "ranAt": "2026-05-25T10:16:05.721Z",
   "signals": {
     "googleAc": 95,
     "bluesky": 80,
-    "googleTrends": 12,
+    "googleTrends": 16,
     "youtube": 67,
     "breederBlogs": 1,
     "reddit": 0,
     "errors": [
-      "\"crested gecko morph\": related: 429",
       "r/crestedgecko new: 403 Blocked",
       "r/crestedgecko top: 403 Blocked",
       "r/morphmarket new: 403 Blocked",
@@ -22,9 +21,7 @@
       "search \"breeding fail\": 403 Blocked"
     ]
   },
-  "costUsd": 0.02972,
-  "addedSlugs": [
-    "black-blue-crested-gecko-genetics"
-  ],
-  "rationale": "The signals show strong, consistent demand across Google Trends (rising queries for \"crested gecko colors,\" \"crested gecko care sheet,\" \"black crested gecko,\" \"blue crested gecko\" with +40-300% growth), Google autocomplete volume, and YouTube engagement (67 videos, many focused on morphs and breeding). However, most queries cluster around general care, morph identification, and established morphs (Cappuccino, Lilly White, Axanthic). The Bluesky feed shows heavy MorphMarket listings and enthusiast engagement but no substantive forum debate or emerging controversies. We've already published on cappuccino, super-cappuccino, lilly-white, axanthic, and identification. The opportunity lies in emerging or under-covered color trends (black/blue morphs) and breeding misconceptions that YouTube hints at (\"WARNING NEVER BREED THESE,\" \"Huge Mistake or Hidden Opportunity?\"). A deep genetics topic on color recessive/polygenic pairings, or a practical breeder guide on color morphing pitfalls, could fill a gap without duplicating existing content. I'm selecting one strong candidate that threads together the rising color interest, genetics grounding, and a correctable misconception."
+  "costUsd": 0.027758,
+  "addedSlugs": [],
+  "rationale": "The signals are dominated by general care, husbandry, and morph identification queries (Google Trends: tail drop, feeding, starter kits; Google Autocomplete: morphs, care, diet). These are low-originality topics already covered by the published slug list. Bluesky and YouTube show strong engagement around morph showcases and breeder content, but lack the specific misconception or pairing-outcome hook we need. The only rising trend with breeding genetics angle is \"melanistic crested gecko\" (+breakout), but it lacks sufficient forum/breeder validation. Google Trends shows \"repashy crested gecko diet\" (+550%), but that's pure care, not genetics/breeding. No forum threads show active disagreement on a specific genetic question. I found no strong signal for a topic that fits our breeding-to-breeder voice AND has grounding in our morph database AND avoids duplication. The rubric rewards concrete breeding outcomes or misconceptions; these signals are too general (care/sales/aesthetics)."
 }
