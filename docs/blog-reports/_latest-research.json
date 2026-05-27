@@ -1,10 +1,10 @@
 {
-  "ranAt": "2026-05-25T10:16:05.721Z",
+  "ranAt": "2026-05-27T09:59:43.776Z",
   "signals": {
     "googleAc": 95,
     "bluesky": 80,
-    "googleTrends": 16,
-    "youtube": 67,
+    "googleTrends": 18,
+    "youtube": 66,
     "breederBlogs": 1,
     "reddit": 0,
     "errors": [
@@ -21,7 +21,10 @@
       "search \"breeding fail\": 403 Blocked"
     ]
   },
-  "costUsd": 0.027758,
-  "addedSlugs": [],
-  "rationale": "The signals are dominated by general care, husbandry, and morph identification queries (Google Trends: tail drop, feeding, starter kits; Google Autocomplete: morphs, care, diet). These are low-originality topics already covered by the published slug list. Bluesky and YouTube show strong engagement around morph showcases and breeder content, but lack the specific misconception or pairing-outcome hook we need. The only rising trend with breeding genetics angle is \"melanistic crested gecko\" (+breakout), but it lacks sufficient forum/breeder validation. Google Trends shows \"repashy crested gecko diet\" (+550%), but that's pure care, not genetics/breeding. No forum threads show active disagreement on a specific genetic question. I found no strong signal for a topic that fits our breeding-to-breeder voice AND has grounding in our morph database AND avoids duplication. The rubric rewards concrete breeding outcomes or misconceptions; these signals are too general (care/sales/aesthetics)."
+  "costUsd": 0.033012,
+  "addedSlugs": [
+    "frappuccino-breeding-outcomes-cappuccino-pairing",
+    "extreme-harlequin-crested-gecko-breeding-reality"
+  ],
+  "rationale": "The signals show strong, consistent demand around crested gecko morphs—especially cappuccino, lilly white, and axanthic—with rising Google Trends interest (+80–150%) and multiple YouTube guides. However, most of our published work already covers cappuccino genetics, super-cappuccino viability, lilly-white identification, and axanthic strategy. The Google autocomplete data is largely generic (care, diet, enclosure), which duplicates our existing guides. Reddit was silent, and Bluesky traffic is mostly social/lifestyle content with low breeding relevance. I found one genuinely novel angle: the confusion around frappuccino breeding outcomes vs. cappuccino, which shows up in Google Trends, YouTube titles, and forum discussion, but lacks a dedicated post. The \"extreme harlequin\" trend is also rising (+70%) and has no published slug, but it's a polygenic morph and harder to ground in breeding strategy without live forum debate. I'll propose the frappuccino breeding angle and pass on the rest due to duplication risk or low actionability."
 }

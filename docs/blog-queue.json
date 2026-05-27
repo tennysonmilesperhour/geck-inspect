@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-05-25T10:16:23.510Z",
+  "lastUpdated": "2026-05-27T10:00:11.124Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -319,6 +319,90 @@
         "Most breeders who see a dark or blue crested gecko assume it's a separate morph. Here's why it's actually a combination of existing polygenic traits, and why your pairing won't breed true.",
         "When you buy a \"black crested gecko,\" you're often paying premium prices for what will hatch as ordinary patterns. A breeder's guide to the genetics actually at play.",
         "Dark and blue crested geckos are trending fast, but they're not recessive morphs—they're polygenic overlays. Understanding the difference saves thousands in failed pairings."
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "tpc_1779875983776_frappuccin",
+      "title": "Why Your Frappuccino Pairing Won't Produce What You Expect",
+      "slug": "frappuccino-breeding-outcomes-cappuccino-pairing",
+      "category": "breeding",
+      "status": "new",
+      "score": {
+        "total": 18,
+        "demand": 7,
+        "originality": 7,
+        "accuracyRisk": 2,
+        "voiceFit": 8
+      },
+      "createdAt": "2026-05-27T09:59:43.776Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "youtube",
+          "snippet": "\"Frappuccino Crested Geckos Explained.\" by TikisGeckos",
+          "url": "https://www.youtube.com/watch?v=AYCFFN7rqEg"
+        },
+        {
+          "source": "google-trends",
+          "snippet": "Google Trends rising query (related to \"crested gecko morph\", last 90 days US): \"crested gecko morph chart\" Breakout",
+          "url": "https://trends.google.com/trends/explore?q=crested+gecko+morph+chart&date=today+3-m&geo=US"
+        },
+        {
+          "source": "google-ac",
+          "snippet": "Google autocomplete for \"cappuccino crested gecko\" suggests \"cappuccino crested gecko morph\"",
+          "url": null
+        }
+      ],
+      "angleIdeas": [
+        "Breeders think Frappuccino × Cappuccino will produce 'enhanced' Cappuccino—here's what genetics actually say.",
+        "Frappuccino is incomplete-dominant on top of another gene; pairing two Frappuccinos together doesn't guarantee the look you want.",
+        "If you're breeding Cappuccino for specific traits, a Frappuccino mate might cost you generations of selection.",
+        "The Frappuccino trend creates false expectations: most breeders don't understand what they're actually pairing."
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "tpc_1779875983776_extremehar",
+      "title": "Extreme Harlequin Crested Geckos: Separating Hype from Reality",
+      "slug": "extreme-harlequin-crested-gecko-breeding-reality",
+      "category": "genetics",
+      "status": "new",
+      "score": {
+        "total": 16,
+        "demand": 8,
+        "originality": 6,
+        "accuracyRisk": 3,
+        "voiceFit": 7
+      },
+      "createdAt": "2026-05-27T09:59:43.776Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "google-trends",
+          "snippet": "Google Trends rising query (related to \"crested gecko\", last 90 days US): \"extreme harlequin crested gecko\" +70%",
+          "url": "https://trends.google.com/trends/explore?q=extreme+harlequin+crested+gecko&date=today+3-m&geo=US"
+        },
+        {
+          "source": "google-ac",
+          "snippet": "Google autocomplete for \"crested gecko\" suggests \"crested gecko colors\" +60%",
+          "url": null
+        },
+        {
+          "source": "youtube",
+          "snippet": "YouTube: \"The Rarest Crested Gecko Morph You've Never Seen!\" by TikisGeckos",
+          "url": "https://www.youtube.com/watch?v=EMYF7q7mJ8g"
+        }
+      ],
+      "angleIdeas": [
+        "Extreme Harlequin is polygenic—you can't guarantee it from any single pairing, and breeders overselling 'guaranteed extremes' are misleading.",
+        "Rising Extreme Harlequin searches suggest demand, but most buyers don't understand the breeding complexity behind the look.",
+        "If you're breeding Harlequin, chasing Extreme means selecting over multiple generations; buyers should know the real timeline.",
+        "YouTube 'rarest morph' hype drives demand but obscures the work: extreme harlequins are outcomes, not reliable genetics."
       ],
       "rejectionReason": null,
       "prUrl": null
