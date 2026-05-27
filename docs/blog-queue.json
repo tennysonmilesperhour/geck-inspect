@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-05-27T10:00:11.124Z",
+  "lastUpdated": "2026-05-27T10:59:27.195Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -328,7 +328,7 @@
       "title": "Why Your Frappuccino Pairing Won't Produce What You Expect",
       "slug": "frappuccino-breeding-outcomes-cappuccino-pairing",
       "category": "breeding",
-      "status": "new",
+      "status": "published",
       "score": {
         "total": 18,
         "demand": 7,
@@ -337,8 +337,8 @@
         "voiceFit": 8
       },
       "createdAt": "2026-05-27T09:59:43.776Z",
-      "draftedAt": null,
-      "publishedAt": null,
+      "draftedAt": "2026-05-27T10:59:27.067Z",
+      "publishedAt": "2026-05-27T10:59:27.195Z",
       "evidence": [
         {
           "source": "youtube",
