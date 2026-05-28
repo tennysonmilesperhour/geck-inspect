@@ -1,16 +1,20 @@
 /**
  * RevenueCat bootstrap and helpers.
  *
- * Today this loads the Web SDK (`@revenuecat/purchases-js`). When a
- * mobile shell is added (Capacitor / React Native), swap the imported
- * SDK by platform in `loadPurchasesSDK` ,  every other call site routes
- * through the helpers below and won't need to change.
+ * Geck Inspect ships against two RevenueCat SDKs:
+ *   - `@revenuecat/purchases-js` for the browser and the PWA. Uses
+ *     Web Billing (Stripe under the hood).
+ *   - `@revenuecat/purchases-capacitor` for the iOS / Android shells.
+ *     Uses Apple StoreKit / Google Play Billing under the hood so
+ *     the apps pass store review.
  *
- * The Web SDK doesn't expose `restorePurchases` (everything is server
- * driven on web); the mobile SDKs do. `restorePurchases()` here is a
- * no-op on web and forwards to the SDK on native.
+ * The two SDKs have slightly different shapes (the native plugin
+ * returns object-wrapped Promises and uses `appUserID`, the web SDK
+ * is sync and uses `appUserId`). This module flattens both behind
+ * one interface so call sites don't have to know which is loaded.
  */
-import { Purchases, LogLevel } from '@revenuecat/purchases-js';
+import { Purchases as PurchasesWeb, LogLevel as LogLevelWeb } from '@revenuecat/purchases-js';
+import { Purchases as PurchasesNative, LOG_LEVEL as LogLevelNative } from '@revenuecat/purchases-capacitor';
 
 // Public (sandbox by default) Web Billing key. Override with
 // VITE_REVENUECAT_WEB_API_KEY in production.
@@ -18,31 +22,24 @@ export const REVENUECAT_WEB_API_KEY =
   import.meta.env?.VITE_REVENUECAT_WEB_API_KEY ||
   'test_OVdgRQzJmflBtKgGkRzhTzumbEo';
 
-// Native keys for when we ship a mobile shell. Wire env vars when the
-// iOS / Android apps are added in the RevenueCat dashboard.
 export const REVENUECAT_IOS_API_KEY =
   import.meta.env?.VITE_REVENUECAT_IOS_API_KEY || '';
 export const REVENUECAT_ANDROID_API_KEY =
   import.meta.env?.VITE_REVENUECAT_ANDROID_API_KEY || '';
 
-// Entitlement identifier as configured in the RevenueCat dashboard.
 export const PRO_ENTITLEMENT_ID = 'Geck Inspect Pro';
 
 // Product identifiers configured for Geck Inspect Pro on Web. iOS /
-// Android use store-native product ids configured separately in the
-// RC dashboard, but they all attach to the same entitlement so the
-// `hasActiveEntitlement` check works the same on every platform.
+// Android use store-native product ids (`com.geckinspect.pro.monthly`,
+// etc) configured separately in the RC dashboard. They all attach to
+// the same entitlement so the `hasActiveEntitlement` check works the
+// same on every platform.
 export const PRODUCT_IDS = {
   lifetime: 'lifetime',
   yearly: 'yearly',
   monthly: 'monthly',
 };
 
-/**
- * Detect which platform shell the app is running inside.
- * Returns 'ios' / 'android' when Capacitor reports a native runtime,
- * 'web' otherwise. Safe to call before any SDK is configured.
- */
 export function detectPlatform() {
   if (typeof window === 'undefined') return 'ssr';
   const cap = /** @type {any} */ (window).Capacitor;
@@ -53,54 +50,46 @@ export function detectPlatform() {
   return 'web';
 }
 
+export function isNativePlatform() {
+  const p = detectPlatform();
+  return p === 'ios' || p === 'android';
+}
+
 export function getApiKeyForPlatform(platform = detectPlatform()) {
   if (platform === 'ios') return REVENUECAT_IOS_API_KEY;
   if (platform === 'android') return REVENUECAT_ANDROID_API_KEY;
   return REVENUECAT_WEB_API_KEY;
 }
 
-/**
- * Pull the Supabase auth uid off our normalized user object. Older
- * profile rows in the codebase keep a legacy text `id` that does NOT
- * match auth.users.id (see lib/AuthContext.jsx), so we prefer
- * auth_user_id when present.
- */
 export function resolveAppUserId(user) {
   if (!user) return null;
   return user.auth_user_id || user.id || null;
 }
 
-/**
- * Configure the SDK on first call. On subsequent calls, swap the active
- * app user id if it changed (sign-in, account switch). When the caller
- * has no authenticated user, fall back to a stable RevenueCat anonymous
- * id so getOfferings / presentPaywall still work pre-auth.
- *
- * Returns the shared Purchases instance, or null if configuration was
- * not possible (e.g. server-side rendering).
- */
-export function configureRevenueCat(user) {
-  if (typeof window === 'undefined') return null;
+// Cache the native-configured flag locally because the native plugin's
+// isConfigured() is async and we want a sync check in some call sites.
+let nativeConfigured = false;
 
-  const platform = detectPlatform();
-  const apiKey = getApiKeyForPlatform(platform);
-  if (!apiKey) {
-    console.warn(`[revenuecat] no API key configured for platform ${platform}`);
-    return null;
+async function configureNative(apiKey, appUserId) {
+  if (!nativeConfigured) {
+    PurchasesNative.setLogLevel({ level: LogLevelNative.WARN });
+    await PurchasesNative.configure({ apiKey, appUserID: appUserId });
+    nativeConfigured = true;
+    return;
   }
-
-  const appUserId =
-    resolveAppUserId(user) || Purchases.generateRevenueCatAnonymousAppUserId();
-
-  if (!Purchases.isConfigured()) {
-    Purchases.configure({ apiKey, appUserId });
-    if (import.meta.env.DEV) {
-      Purchases.setLogLevel(LogLevel.Debug);
-    }
-    return Purchases.getSharedInstance();
+  const current = await PurchasesNative.getAppUserID();
+  if (current?.appUserID !== appUserId) {
+    await PurchasesNative.logIn({ appUserID: appUserId });
   }
+}
 
-  const instance = Purchases.getSharedInstance();
+function configureWeb(apiKey, appUserId) {
+  if (!PurchasesWeb.isConfigured()) {
+    PurchasesWeb.configure({ apiKey, appUserId });
+    if (import.meta.env.DEV) PurchasesWeb.setLogLevel(LogLevelWeb.Debug);
+    return PurchasesWeb.getSharedInstance();
+  }
+  const instance = PurchasesWeb.getSharedInstance();
   if (instance.getAppUserId() !== appUserId) {
     instance.identifyUser(appUserId).catch((err) => {
       console.warn('[revenuecat] identifyUser failed:', err);
@@ -109,16 +98,54 @@ export function configureRevenueCat(user) {
   return instance;
 }
 
-export function getPurchases() {
+/**
+ * Configure the SDK for the current platform. Returns a Promise on
+ * native (the plugin is async) and the shared web instance synchronously
+ * on web. Call sites that just want to fire-and-forget can ignore the
+ * return value.
+ */
+export function configureRevenueCat(user) {
   if (typeof window === 'undefined') return null;
-  if (!Purchases.isConfigured()) return null;
-  return Purchases.getSharedInstance();
+  const platform = detectPlatform();
+  const apiKey = getApiKeyForPlatform(platform);
+  if (!apiKey) {
+    console.warn(`[revenuecat] no API key configured for platform ${platform}`);
+    return null;
+  }
+  const appUserId =
+    resolveAppUserId(user) || PurchasesWeb.generateRevenueCatAnonymousAppUserId();
+
+  if (isNativePlatform()) {
+    return configureNative(apiKey, appUserId);
+  }
+  return configureWeb(apiKey, appUserId);
 }
 
+export function getPurchasesWeb() {
+  if (typeof window === 'undefined') return null;
+  if (!PurchasesWeb.isConfigured()) return null;
+  return PurchasesWeb.getSharedInstance();
+}
+
+/**
+ * Normalize the entitlement bag from both SDKs into the same shape so
+ * `hasActiveEntitlement` works regardless of platform.
+ *
+ * Web SDK CustomerInfo.entitlements.active is keyed by entitlement id.
+ * Native CustomerInfo uses the same shape. Both return an
+ * EntitlementInfo with an `isActive` boolean. The only meaningful
+ * difference is the wrapping: the native plugin returns
+ * `{ customerInfo: CustomerInfo }`, the web SDK returns CustomerInfo.
+ */
 export async function fetchCustomerInfo() {
-  const rc = getPurchases();
-  if (!rc) return null;
+  if (typeof window === 'undefined') return null;
   try {
+    if (isNativePlatform()) {
+      const { customerInfo } = await PurchasesNative.getCustomerInfo();
+      return customerInfo || null;
+    }
+    const rc = getPurchasesWeb();
+    if (!rc) return null;
     return await rc.getCustomerInfo();
   } catch (err) {
     console.warn('[revenuecat] getCustomerInfo failed:', err);
@@ -133,20 +160,19 @@ export function hasActiveEntitlement(customerInfo, entitlementId = PRO_ENTITLEME
 }
 
 export async function isEntitledToPro() {
-  const rc = getPurchases();
-  if (!rc) return false;
-  try {
-    return await rc.isEntitledTo(PRO_ENTITLEMENT_ID);
-  } catch (err) {
-    console.warn('[revenuecat] isEntitledTo failed:', err);
-    return false;
-  }
+  const info = await fetchCustomerInfo();
+  return hasActiveEntitlement(info);
 }
 
 export async function fetchOfferings() {
-  const rc = getPurchases();
-  if (!rc) return null;
+  if (typeof window === 'undefined') return null;
   try {
+    if (isNativePlatform()) {
+      // Native returns the same Offerings shape directly.
+      return await PurchasesNative.getOfferings();
+    }
+    const rc = getPurchasesWeb();
+    if (!rc) return null;
     return await rc.getOfferings();
   } catch (err) {
     console.warn('[revenuecat] getOfferings failed:', err);
@@ -155,23 +181,17 @@ export async function fetchOfferings() {
 }
 
 /**
- * Restore prior purchases. App Store guideline 3.1.1 requires a
- * "Restore Purchases" affordance on iOS; Play Store equivalent is
- * conventional but not strictly required. On Web this is a no-op
- * because Web Billing entitlements are already keyed by appUserId
- * (the Supabase auth uid), so there's nothing to restore from a
- * local receipt.
+ * Restore prior purchases. App Store guideline 3.1.1 requires this
+ * affordance on iOS; Play Store equivalent is conventional. On Web
+ * this is a no-op (Web Billing entitlements are already keyed by
+ * appUserId), so we fall back to refreshing CustomerInfo so callers
+ * still get fresh state.
  */
 export async function restorePurchases() {
-  const platform = detectPlatform();
-  if (platform === 'web' || platform === 'ssr') {
-    return fetchCustomerInfo();
-  }
-  const rc = getPurchases();
-  if (!rc) return null;
-  if (typeof rc.restorePurchases === 'function') {
+  if (isNativePlatform()) {
     try {
-      return await rc.restorePurchases();
+      const result = await PurchasesNative.restorePurchases();
+      return result?.customerInfo || null;
     } catch (err) {
       console.warn('[revenuecat] restorePurchases failed:', err);
       return null;
@@ -181,6 +201,21 @@ export async function restorePurchases() {
 }
 
 export function platformSupportsRestore() {
-  const p = detectPlatform();
-  return p === 'ios' || p === 'android';
+  return isNativePlatform();
+}
+
+/**
+ * Trigger a purchase for a package. On web, this opens the Web Billing
+ * checkout modal. On native, it routes through StoreKit / Play Billing
+ * and returns the resolved CustomerInfo. Both throw on user cancel.
+ */
+export async function purchasePackage(rcPackage, { customerEmail } = {}) {
+  if (isNativePlatform()) {
+    const result = await PurchasesNative.purchasePackage({ aPackage: rcPackage });
+    return result?.customerInfo || null;
+  }
+  const rc = getPurchasesWeb();
+  if (!rc) throw new Error('RevenueCat web SDK is not configured.');
+  const result = await rc.purchase({ rcPackage, customerEmail });
+  return result?.customerInfo || null;
 }

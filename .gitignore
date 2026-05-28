@@ -37,3 +37,22 @@ GEO-follow-up.pdf
 
 .env
 .vercel
+
+# Capacitor / Android build outputs. The android/ project itself is
+# tracked, but Gradle's caches, build artifacts, signing material and
+# IDE state are not.
+android/.gradle/
+android/.idea/
+android/build/
+android/app/build/
+android/app/release/
+android/app/src/main/assets/public/
+android/app/src/main/assets/capacitor.config.json
+android/app/src/main/assets/capacitor.plugins.json
+android/local.properties
+android/captures/
+android/*.iml
+android/app/*.iml
+*.keystore
+!debug.keystore
+keystore.properties
