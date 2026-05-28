@@ -1,25 +1,37 @@
 /**
- * RevenueCat Web SDK bootstrap and helpers.
+ * RevenueCat bootstrap and helpers.
  *
- * The Web SDK is a singleton ,  Purchases.configure(...) must run exactly
- * once per page load. We funnel every call site through this module so
- * the singleton, the API key, and the entitlement / product identifiers
- * are not duplicated around the codebase.
+ * Today this loads the Web SDK (`@revenuecat/purchases-js`). When a
+ * mobile shell is added (Capacitor / React Native), swap the imported
+ * SDK by platform in `loadPurchasesSDK` ,  every other call site routes
+ * through the helpers below and won't need to change.
  *
- * Anonymous visitors get a generated RevenueCat anonymous ID so the SDK
- * can still fetch offerings and present paywalls before sign-in. When
- * the user authenticates, RevenueCatProvider calls identifyUser to
- * alias the anonymous purchases (if any) onto the real Supabase auth id.
+ * The Web SDK doesn't expose `restorePurchases` (everything is server
+ * driven on web); the mobile SDKs do. `restorePurchases()` here is a
+ * no-op on web and forwards to the SDK on native.
  */
 import { Purchases, LogLevel } from '@revenuecat/purchases-js';
 
-// Public (sandbox) Web Billing key. Safe to ship in client code.
-export const REVENUECAT_PUBLIC_API_KEY = 'test_OVdgRQzJmflBtKgGkRzhTzumbEo';
+// Public (sandbox by default) Web Billing key. Override with
+// VITE_REVENUECAT_WEB_API_KEY in production.
+export const REVENUECAT_WEB_API_KEY =
+  import.meta.env?.VITE_REVENUECAT_WEB_API_KEY ||
+  'test_OVdgRQzJmflBtKgGkRzhTzumbEo';
+
+// Native keys for when we ship a mobile shell. Wire env vars when the
+// iOS / Android apps are added in the RevenueCat dashboard.
+export const REVENUECAT_IOS_API_KEY =
+  import.meta.env?.VITE_REVENUECAT_IOS_API_KEY || '';
+export const REVENUECAT_ANDROID_API_KEY =
+  import.meta.env?.VITE_REVENUECAT_ANDROID_API_KEY || '';
 
 // Entitlement identifier as configured in the RevenueCat dashboard.
 export const PRO_ENTITLEMENT_ID = 'Geck Inspect Pro';
 
-// Product identifiers configured for Geck Inspect Pro.
+// Product identifiers configured for Geck Inspect Pro on Web. iOS /
+// Android use store-native product ids configured separately in the
+// RC dashboard, but they all attach to the same entitlement so the
+// `hasActiveEntitlement` check works the same on every platform.
 export const PRODUCT_IDS = {
   lifetime: 'lifetime',
   yearly: 'yearly',
@@ -27,10 +39,31 @@ export const PRODUCT_IDS = {
 };
 
 /**
+ * Detect which platform shell the app is running inside.
+ * Returns 'ios' / 'android' when Capacitor reports a native runtime,
+ * 'web' otherwise. Safe to call before any SDK is configured.
+ */
+export function detectPlatform() {
+  if (typeof window === 'undefined') return 'ssr';
+  const cap = /** @type {any} */ (window).Capacitor;
+  if (cap?.isNativePlatform?.()) {
+    const p = cap.getPlatform?.();
+    if (p === 'ios' || p === 'android') return p;
+  }
+  return 'web';
+}
+
+export function getApiKeyForPlatform(platform = detectPlatform()) {
+  if (platform === 'ios') return REVENUECAT_IOS_API_KEY;
+  if (platform === 'android') return REVENUECAT_ANDROID_API_KEY;
+  return REVENUECAT_WEB_API_KEY;
+}
+
+/**
  * Pull the Supabase auth uid off our normalized user object. Older
  * profile rows in the codebase keep a legacy text `id` that does NOT
- * match auth.users.id (see lib/AuthContext.jsx for the full story), so
- * we prefer auth_user_id when present.
+ * match auth.users.id (see lib/AuthContext.jsx), so we prefer
+ * auth_user_id when present.
  */
 export function resolveAppUserId(user) {
   if (!user) return null;
@@ -49,11 +82,18 @@ export function resolveAppUserId(user) {
 export function configureRevenueCat(user) {
   if (typeof window === 'undefined') return null;
 
+  const platform = detectPlatform();
+  const apiKey = getApiKeyForPlatform(platform);
+  if (!apiKey) {
+    console.warn(`[revenuecat] no API key configured for platform ${platform}`);
+    return null;
+  }
+
   const appUserId =
     resolveAppUserId(user) || Purchases.generateRevenueCatAnonymousAppUserId();
 
   if (!Purchases.isConfigured()) {
-    Purchases.configure({ apiKey: REVENUECAT_PUBLIC_API_KEY, appUserId });
+    Purchases.configure({ apiKey, appUserId });
     if (import.meta.env.DEV) {
       Purchases.setLogLevel(LogLevel.Debug);
     }
@@ -62,11 +102,6 @@ export function configureRevenueCat(user) {
 
   const instance = Purchases.getSharedInstance();
   if (instance.getAppUserId() !== appUserId) {
-    // identifyUser aliases an anonymous id onto the real user id so any
-    // purchases made before sign-in carry over. For non-anonymous
-    // previous ids (account switch) it falls back to a plain user
-    // change. Both cases return the resolved CustomerInfo, which the
-    // provider re-reads to refresh entitlement state.
     instance.identifyUser(appUserId).catch((err) => {
       console.warn('[revenuecat] identifyUser failed:', err);
     });
@@ -80,11 +115,6 @@ export function getPurchases() {
   return Purchases.getSharedInstance();
 }
 
-/**
- * Fetch the latest CustomerInfo. Returns null on failure so callers can
- * treat a network blip as "no entitlement" rather than crashing the
- * surrounding UI.
- */
 export async function fetchCustomerInfo() {
   const rc = getPurchases();
   if (!rc) return null;
@@ -102,11 +132,6 @@ export function hasActiveEntitlement(customerInfo, entitlementId = PRO_ENTITLEME
   return Boolean(ent?.isActive);
 }
 
-/**
- * Lightweight entitlement check that hits the SDK helper. Prefer using
- * the cached value from useRevenueCat() in render paths; this is for
- * imperative checks (e.g. inside an onClick).
- */
 export async function isEntitledToPro() {
   const rc = getPurchases();
   if (!rc) return false;
@@ -127,4 +152,35 @@ export async function fetchOfferings() {
     console.warn('[revenuecat] getOfferings failed:', err);
     return null;
   }
+}
+
+/**
+ * Restore prior purchases. App Store guideline 3.1.1 requires a
+ * "Restore Purchases" affordance on iOS; Play Store equivalent is
+ * conventional but not strictly required. On Web this is a no-op
+ * because Web Billing entitlements are already keyed by appUserId
+ * (the Supabase auth uid), so there's nothing to restore from a
+ * local receipt.
+ */
+export async function restorePurchases() {
+  const platform = detectPlatform();
+  if (platform === 'web' || platform === 'ssr') {
+    return fetchCustomerInfo();
+  }
+  const rc = getPurchases();
+  if (!rc) return null;
+  if (typeof rc.restorePurchases === 'function') {
+    try {
+      return await rc.restorePurchases();
+    } catch (err) {
+      console.warn('[revenuecat] restorePurchases failed:', err);
+      return null;
+    }
+  }
+  return fetchCustomerInfo();
+}
+
+export function platformSupportsRestore() {
+  const p = detectPlatform();
+  return p === 'ios' || p === 'android';
 }

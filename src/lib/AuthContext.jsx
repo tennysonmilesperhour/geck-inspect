@@ -190,6 +190,15 @@ export const AuthProvider = ({ children }) => {
     setUser(null);
   };
 
+  // Lets ambient providers (RevenueCatProvider) graft fields onto the
+  // current user without overwriting profile state. Used to surface
+  // `revenuecat_pro_active` so the synchronous `effectiveTier(user)`
+  // check in PlanLimitChecker can see it.
+  const mergeUserExtras = (extras) => {
+    if (!extras || typeof extras !== 'object') return;
+    setUser((prev) => (prev ? { ...prev, ...extras } : prev));
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -204,6 +213,7 @@ export const AuthProvider = ({ children }) => {
       navigateToLogin,
       enterGuestMode,
       exitGuestMode,
+      mergeUserExtras,
       checkAppState: () => {},
     }}>
       {children}

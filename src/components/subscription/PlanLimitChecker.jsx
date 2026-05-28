@@ -82,9 +82,19 @@ const FEATURE_NAMES = {
 // is just metadata for the billing/UI layer; entitlements are still driven
 // off `membership_tier`, so a lifetime Keeper has the same gates as a
 // monthly Keeper.
+//
+// A user with the RevenueCat "Geck Inspect Pro" entitlement (regardless
+// of which platform they bought it on) is treated as `breeder`, which
+// is the highest paid tier short of Enterprise. `revenuecat_pro_active`
+// is hydrated by RevenueCatContext from the local CustomerInfo cache
+// and from the `revenuecat_entitlements` mirror written by the
+// `revenuecat-webhook` edge function, so this gate works equally well
+// for a web purchase made seconds ago and an iOS purchase made offline
+// last week.
 function effectiveTier(user) {
     if (user?.role === 'admin') return 'enterprise';
     if (user?.subscription_status === 'grandfathered') return 'breeder';
+    if (user?.revenuecat_pro_active) return 'breeder';
     return user?.membership_tier || 'free';
 }
 

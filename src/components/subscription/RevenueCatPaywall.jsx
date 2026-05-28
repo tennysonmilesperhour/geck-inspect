@@ -3,8 +3,8 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { useAuth } from '@/lib/AuthContext';
 import { useRevenueCat } from '@/lib/RevenueCatContext';
-import { getPurchases } from '@/lib/revenuecat';
-import { Loader2, Sparkles } from 'lucide-react';
+import { getPurchases, platformSupportsRestore, restorePurchases } from '@/lib/revenuecat';
+import { Loader2, RotateCcw, Sparkles } from 'lucide-react';
 
 /**
  * Open the RevenueCat-hosted paywall as a full-screen overlay. Resolves
@@ -163,6 +163,69 @@ export function CustomerCenterButton({
       className={className}
     >
       {children ?? 'Manage Subscription'}
+    </Button>
+  );
+}
+
+/**
+ * Restore Purchases button. App Store guideline 3.1.1 requires this
+ * affordance on iOS; we render it on Android too for consistency. On
+ * Web there's nothing to restore (Web Billing entitlements are already
+ * keyed to the signed-in user), so the component returns null and the
+ * surrounding settings panel collapses naturally.
+ */
+export function RestorePurchasesButton({
+  className,
+  variant = 'ghost',
+  size = 'sm',
+  children,
+}) {
+  const { refresh } = useRevenueCat();
+  const { toast } = useToast();
+  const [isRestoring, setIsRestoring] = useState(false);
+
+  const onClick = useCallback(async () => {
+    setIsRestoring(true);
+    try {
+      await restorePurchases();
+      const info = await refresh();
+      const hasAny =
+        info?.entitlements?.active && Object.keys(info.entitlements.active).length > 0;
+      toast({
+        title: hasAny ? 'Purchases restored' : 'Nothing to restore',
+        description: hasAny
+          ? 'Your previous purchases are now active on this device.'
+          : 'We didn’t find any prior purchases for this account.',
+      });
+    } catch (err) {
+      console.error('[revenuecat] restore failed:', err);
+      toast({
+        title: 'Restore failed',
+        description: err?.message || 'Could not restore purchases.',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRestoring(false);
+    }
+  }, [refresh, toast]);
+
+  if (!platformSupportsRestore()) return null;
+
+  return (
+    <Button
+      type="button"
+      onClick={onClick}
+      disabled={isRestoring}
+      variant={variant}
+      size={size}
+      className={className}
+    >
+      {isRestoring ? (
+        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+      ) : (
+        <RotateCcw className="w-4 h-4 mr-2" />
+      )}
+      {children ?? (isRestoring ? 'Restoring...' : 'Restore Purchases')}
     </Button>
   );
 }
