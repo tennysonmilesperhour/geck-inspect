@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-05-29T10:00:24.951Z",
+  "lastUpdated": "2026-05-29T10:52:12.947Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -370,7 +370,7 @@
       "title": "Extreme Harlequin Crested Geckos: Separating Hype from Reality",
       "slug": "extreme-harlequin-crested-gecko-breeding-reality",
       "category": "genetics",
-      "status": "new",
+      "status": "published",
       "score": {
         "total": 16,
         "demand": 8,
@@ -379,8 +379,8 @@
         "voiceFit": 7
       },
       "createdAt": "2026-05-27T09:59:43.776Z",
-      "draftedAt": null,
-      "publishedAt": null,
+      "draftedAt": "2026-05-29T10:52:12.822Z",
+      "publishedAt": "2026-05-29T10:52:12.947Z",
       "evidence": [
         {
           "source": "google-trends",
