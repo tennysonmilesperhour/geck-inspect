@@ -181,19 +181,29 @@ export default function OverviewDashboard({
 function MarketIndexCard({ index, pinProps }) {
   if (!index) return <Skeleton h={180} />;
   const change = index.change_pct ?? 0;
+  const basis = index.price_basis;
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
       <SectionHeader
         icon={Activity}
         title="Geck Inspect Market Index"
-        subtitle="Weighted basket of high-value trait combinations ,  1,000 at period start"
+        subtitle={basis === 'listed'
+          ? 'Weighted basket of high-value trait combinations, asking-price basis (no recent sold data), 1,000 at period start'
+          : basis === 'mixed'
+            ? 'Weighted basket of high-value trait combinations, blended sold + asking prices, 1,000 at period start'
+            : 'Weighted basket of high-value trait combinations, 1,000 at period start'}
         right={
           <div className="flex items-center gap-2">
+            <PriceBasisBadge basis={basis} />
             <ConfidenceChip
               confidence={index.confidence}
               sampleSize={index.sample_size}
               sources={index.sources}
-              methodology="Index = median sold price per month across the high-value combo basket, normalized so the earliest month in the selected timeframe = 1,000."
+              methodology={
+                basis === 'listed'
+                  ? 'No sold transactions in the current snapshot, so this index is built from monthly median ask prices across the high-value combo basket, normalized so the earliest month = 1,000. Confidence is reduced to reflect that asks are an upper bound on sold prices.'
+                  : 'Index = median sold price per month across the high-value combo basket, normalized so the earliest month in the selected timeframe = 1,000.'
+              }
             />
             <MethodologyPopover title="How this index is built">
               <p>The Market Index is a Laspeyres-style basket: we sum the median monthly sold price of each high-value combo, weight it by the combo's 12-month volume share, and normalize the earliest month in view to 1,000. It's designed so a reading of 1,200 means the basket is up 20% from period start.</p>
@@ -397,4 +407,26 @@ function ScoreBar({ score }) {
 // =================== Skeleton ========================================
 function Skeleton({ h = 120 }) {
   return <div className="rounded-xl border border-slate-800 bg-slate-900/40 animate-pulse" style={{ height: h }} />;
+}
+
+// =================== PriceBasisBadge =================================
+// Honest signal of whether a number is built from real sold prices or
+// (because the upstream snapshot is currently missing sold data) from
+// ask prices. Hidden when the basis is the canonical "sold" or absent.
+function PriceBasisBadge({ basis }) {
+  if (!basis || basis === 'sold' || basis === 'none') return null;
+  const label = basis === 'listed' ? 'Listed prices' : 'Listed + sold';
+  const cls = basis === 'listed'
+    ? 'bg-amber-500/15 text-amber-200 border-amber-500/40'
+    : 'bg-sky-500/10 text-sky-300 border-sky-500/30';
+  return (
+    <span
+      className={`inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] leading-none ${cls}`}
+      title={basis === 'listed'
+        ? 'No recent sold transactions in the published snapshot. This number is built from current ask prices.'
+        : 'Built from a mix of sold prices and current ask prices.'}
+    >
+      {label}
+    </span>
+  );
 }

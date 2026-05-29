@@ -202,6 +202,29 @@ function asList(v) {
   return Array.isArray(v) ? v : [v];
 }
 
+// Stopgap fallback: the upstream snapshot currently publishes every row
+// as status='listed' with sold_price=null even though the source DB has
+// thousands of sold listings. Until the snapshot generator is fixed,
+// price aggregates fall back to ask_price when sold prices are absent,
+// which mirrors what other crested-gecko sites display anyway. Aggregates
+// carry a `price_basis` so the UI can flag the fallback honestly, and
+// confidence is dampened when no sold rows contribute.
+const isSoldRow = (r) =>
+  r.status === 'sold' && typeof r.sold_price === 'number' && r.sold_price > 0;
+const effPrice = (r) => (isSoldRow(r) ? r.sold_price : r.ask_price);
+
+function priceBasisFor(rows) {
+  if (!rows.length) return 'none';
+  const sold = rows.filter(isSoldRow).length;
+  if (sold === 0) return 'listed';
+  if (sold === rows.length) return 'sold';
+  return 'mixed';
+}
+
+const BASIS_CONFIDENCE_SCALE = { sold: 1, mixed: 0.85, listed: 0.65, none: 0 };
+const scaleConfidence = (conf, basis) =>
+  +(conf * (BASIS_CONFIDENCE_SCALE[basis] ?? 1)).toFixed(3);
+
 function filterTx({ combo_id, region, regions, source_id, sources, timeframe, status, lineage_tier, age_class } = {}) {
   let out = tx();
   if (combo_id) out = out.filter((r) => r.combo_id === combo_id);
@@ -229,11 +252,12 @@ const ok = (v) => v;
 // start of the timeframe.
 export async function queryMarketIndex({ regions = [], timeframe = '12m' } = {}) {
   await ensureLoaded();
-  const txAll = filterTx({ regions, timeframe, status: 'sold' });
+  const txAll = filterTx({ regions, timeframe });
+  const basis = priceBasisFor(txAll);
   const months = monthKeysForTimeframe(timeframe);
   const byMonth = months.map((key) => {
     const inMonth = txAll.filter((r) => r.date.slice(0, 7) === key);
-    const avg = mean(inMonth.map((r) => r.sold_price).filter(Boolean));
+    const avg = mean(inMonth.map(effPrice).filter(Boolean));
     return { month: key, avg, n: inMonth.length };
   });
   const anchor = byMonth.find((m) => m.avg > 0)?.avg || 1;
@@ -245,12 +269,14 @@ export async function queryMarketIndex({ regions = [], timeframe = '12m' } = {})
   }));
   const headline = series.filter((s) => s.index != null).slice(-1)[0]?.index ?? 1000;
   const first = series.find((s) => s.index != null)?.index ?? 1000;
+  const baseConf = scoreConfidence({ sourceId: 'estimated.blend', sampleSize: txAll.length });
   return ok({
     value: headline,
     change_pct: pct(headline, first),
     series,
     sample_size: txAll.length,
-    confidence: scoreConfidence({ sourceId: 'estimated.blend', sampleSize: txAll.length }),
+    confidence: scaleConfidence(baseConf, basis),
+    price_basis: basis,
     sources: uniq(txAll.map((r) => r.source_id)),
     __mock: true,
   });
@@ -273,12 +299,14 @@ function monthKeysForTimeframe(code) {
 export async function queryTopMovers({ regions = [], timeframe = '90d', limit = 5 } = {}) {
   await ensureLoaded();
   const combos = HIGH_VALUE_COMBOS.map((c) => {
-    const soldRecent = filterTx({ combo_id: c.id, regions, timeframe, status: 'sold' });
-    const soldPrior = filterTx({ combo_id: c.id, regions, status: 'sold' })
+    const recent = filterTx({ combo_id: c.id, regions, timeframe });
+    const prior = filterTx({ combo_id: c.id, regions })
       .filter((r) => !withinTimeframe(r, timeframe));
-    const curAvg = mean(soldRecent.map((r) => r.sold_price));
-    const priorAvg = mean(soldPrior.map((r) => r.sold_price));
-    const series = buildSparkline(soldRecent.concat(soldPrior), 12);
+    const basis = priceBasisFor(recent.concat(prior));
+    const curAvg = mean(recent.map(effPrice).filter(Boolean));
+    const priorAvg = mean(prior.map(effPrice).filter(Boolean));
+    const series = buildSparkline(recent.concat(prior), 12);
+    const baseConf = scoreConfidence({ sourceId: 'estimated.blend', sampleSize: recent.length });
     return {
       combo_id: c.id,
       combo_name: c.name,
@@ -286,10 +314,11 @@ export async function queryTopMovers({ regions = [], timeframe = '90d', limit = 
       current_avg: Math.round(curAvg),
       prior_avg: Math.round(priorAvg),
       change_pct: pct(curAvg, priorAvg),
-      sample_size: soldRecent.length,
+      sample_size: recent.length,
       sparkline: series,
-      confidence: scoreConfidence({ sourceId: 'estimated.blend', sampleSize: soldRecent.length }),
-      sources: uniq(soldRecent.map((r) => r.source_id)),
+      confidence: scaleConfidence(baseConf, basis),
+      price_basis: basis,
+      sources: uniq(recent.map((r) => r.source_id)),
       __mock: true,
     };
   }).filter((c) => c.sample_size >= 3);
@@ -308,7 +337,8 @@ function buildSparkline(records, buckets) {
   const counts = Array(buckets).fill(0);
   records.forEach((r) => {
     const idx = Math.min(buckets - 1, Math.floor(((new Date(r.date).getTime() - min) / span) * buckets));
-    if (r.sold_price) { sums[idx] += r.sold_price; counts[idx] += 1; }
+    const p = effPrice(r);
+    if (p) { sums[idx] += p; counts[idx] += 1; }
   });
   return sums.map((s, i) => (counts[i] ? Math.round(s / counts[i]) : null));
 }
@@ -317,11 +347,12 @@ function buildSparkline(records, buckets) {
 export async function queryPeakIndicators({ regions = [] } = {}) {
   await ensureLoaded();
   const out = HIGH_VALUE_COMBOS.map((c) => {
-    const recent = filterTx({ combo_id: c.id, regions, timeframe: '90d', status: 'sold' });
-    const older  = filterTx({ combo_id: c.id, regions, timeframe: '12m', status: 'sold' })
+    const recent = filterTx({ combo_id: c.id, regions, timeframe: '90d' });
+    const older  = filterTx({ combo_id: c.id, regions, timeframe: '12m' })
       .filter((r) => !withinTimeframe(r, '90d'));
-    const recentAvg = mean(recent.map((r) => r.sold_price));
-    const olderAvg  = mean(older.map((r) => r.sold_price)) || recentAvg;
+    const basis = priceBasisFor(recent.concat(older));
+    const recentAvg = mean(recent.map(effPrice).filter(Boolean));
+    const olderAvg  = mean(older.map(effPrice).filter(Boolean)) || recentAvg;
     const priceMomentum = clamp(pct(recentAvg, olderAvg) / 30);          // +30% → +1
     const volumeMomentum = clamp(pct(recent.length, Math.max(1, older.length / 3)) / 50);
     // Supply pressure: use pipeline signal, normalized against a 50 baseline.
@@ -332,6 +363,7 @@ export async function queryPeakIndicators({ regions = [] } = {}) {
     const adoption = uniq(recent.concat(older).map((r) => r.breeder_id)).length;
     const adoptionBreadth = clamp((adoption - 6) / 8);
     const score = peakScore({ priceMomentum, volumeMomentum, supplyPressure, adoptionBreadth });
+    const baseConf = scoreConfidence({ sourceId: 'estimated.forecast', sampleSize: recent.length + older.length });
     return {
       combo_id: c.id,
       combo_name: c.name,
@@ -339,7 +371,8 @@ export async function queryPeakIndicators({ regions = [] } = {}) {
       label: peakLabel(score),
       components: { priceMomentum, volumeMomentum, supplyPressure, adoptionBreadth },
       sample_size: recent.length + older.length,
-      confidence: scoreConfidence({ sourceId: 'estimated.forecast', sampleSize: recent.length + older.length }),
+      confidence: scaleConfidence(baseConf, basis),
+      price_basis: basis,
       sources: uniq(recent.concat(older).map((r) => r.source_id)),
       __mock: true,
     };
@@ -354,11 +387,17 @@ export async function queryTraitCombos({ regions = [], timeframe = '12m', age_cl
   const out = HIGH_VALUE_COMBOS.map((c) => {
     const sold   = filterTx({ combo_id: c.id, regions, timeframe, status: 'sold',   age_class, lineage_tier, sources });
     const listed = filterTx({ combo_id: c.id, regions, timeframe, status: 'listed', age_class, lineage_tier, sources });
-    const avgSold   = median(sold.map((r) => r.sold_price));
-    const avgAsk    = median(listed.map((r) => r.ask_price).concat(sold.map((r) => r.ask_price)));
-    const spreadPct = avgAsk ? ((avgAsk - avgSold) / avgAsk) * 100 : 0;
+    const all = sold.concat(listed);
+    const basis = priceBasisFor(all);
+    // Fall back to ask-side medians when no sold rows are available so the
+    // table doesn't render a wall of zeros.
+    const soldMedianTrue = median(sold.map((r) => r.sold_price));
+    const avgSold = soldMedianTrue || median(listed.map((r) => r.ask_price));
+    const avgAsk = median(listed.map((r) => r.ask_price).concat(sold.map((r) => r.ask_price)));
+    const spreadPct = avgAsk && soldMedianTrue ? ((avgAsk - soldMedianTrue) / avgAsk) * 100 : 0;
     const daysListed = mean(sold.map((r) => r.time_on_market_days));
-    const confidence = scoreConfidence({ sourceId: 'estimated.blend', sampleSize: sold.length });
+    const baseConf = scoreConfidence({ sourceId: 'estimated.blend', sampleSize: all.length });
+    const confidence = scaleConfidence(baseConf, basis);
     const band = priceBand(avgSold, confidence);
     return {
       combo_id: c.id,
@@ -372,10 +411,11 @@ export async function queryTraitCombos({ regions = [], timeframe = '12m', age_cl
       volume_sold: sold.length,
       active_listings: listed.length,
       confidence,
-      sources: uniq(sold.concat(listed).map((r) => r.source_id)),
+      price_basis: basis,
+      sources: uniq(all.map((r) => r.source_id)),
       __mock: true,
     };
-  }).sort((a, b) => b.volume_sold - a.volume_sold);
+  }).sort((a, b) => (b.volume_sold + b.active_listings) - (a.volume_sold + a.active_listings));
   return ok(out);
 }
 
@@ -383,35 +423,42 @@ export async function queryTraitCombos({ regions = [], timeframe = '12m', age_cl
 export async function queryPriceHistory({ combo_id, region, sources, timeframe = '12m' } = {}) {
   await ensureLoaded();
   const records = filterTx({ combo_id, region, sources, timeframe });
+  const basis = priceBasisFor(records);
   const months = monthKeysForTimeframe(timeframe);
   const series = months.map((key) => {
     const inMonth = records.filter((r) => r.date.slice(0, 7) === key);
-    const soldPrices  = inMonth.filter((r) => r.status === 'sold').map((r) => r.sold_price);
-    const askPrices   = inMonth.map((r) => r.ask_price);
+    const soldPrices  = inMonth.filter(isSoldRow).map((r) => r.sold_price);
+    const askPrices   = inMonth.map((r) => r.ask_price).filter(Boolean);
     const internal    = inMonth.filter((r) => r.source_id.startsWith('internal.'));
     const external    = inMonth.filter((r) => r.source_id.startsWith('external.'));
-    const avgSold     = mean(soldPrices);
-    const conf = scoreConfidence({ sourceId: 'estimated.blend', sampleSize: soldPrices.length });
-    const band = priceBand(avgSold || mean(askPrices), conf);
+    const monthBasis = priceBasisFor(inMonth);
+    const avgSold = soldPrices.length ? mean(soldPrices) : mean(askPrices);
+    const medianSoldOrAsk = soldPrices.length ? median(soldPrices) : median(askPrices);
+    const baseConf = scoreConfidence({ sourceId: 'estimated.blend', sampleSize: inMonth.length });
+    const conf = scaleConfidence(baseConf, monthBasis);
+    const band = priceBand(avgSold, conf);
     return {
       month: key,
       label: new Date(key + '-01').toLocaleString('en', { month: 'short', year: '2-digit' }),
-      median_sold: Math.round(median(soldPrices)),
+      median_sold: Math.round(medianSoldOrAsk),
       median_ask:  Math.round(median(askPrices)),
       avg_sold: Math.round(avgSold),
-      internal_avg: Math.round(mean(internal.map((r) => r.sold_price || r.ask_price))),
-      external_avg: Math.round(mean(external.map((r) => r.sold_price || r.ask_price))),
+      internal_avg: Math.round(mean(internal.map(effPrice).filter(Boolean))),
+      external_avg: Math.round(mean(external.map(effPrice).filter(Boolean))),
       low: band.low, high: band.high,
       volume: inMonth.length,
       confidence: conf,
+      price_basis: monthBasis,
       __mock: true,
     };
   });
+  const baseConf = scoreConfidence({ sourceId: 'estimated.blend', sampleSize: records.length });
   return ok({
     combo_id, region,
     series,
     sample_size: records.length,
-    confidence: scoreConfidence({ sourceId: 'estimated.blend', sampleSize: records.length }),
+    confidence: scaleConfidence(baseConf, basis),
+    price_basis: basis,
     sources: uniq(records.map((r) => r.source_id)),
     __mock: true,
   });
@@ -423,13 +470,14 @@ export async function queryRegionalHeatmap({ timeframe = '12m', metric = 'median
   const cells = [];
   HIGH_VALUE_COMBOS.forEach((c) => {
     REGIONS.forEach((r) => {
-      const inCell = filterTx({ combo_id: c.id, region: r.code, timeframe, status: 'sold' });
+      const inCell = filterTx({ combo_id: c.id, region: r.code, timeframe });
+      const basis = priceBasisFor(inCell);
       const val = metric === 'median_sold'
-        ? median(inCell.map((x) => x.sold_price))
+        ? median(inCell.map(effPrice).filter(Boolean))
         : metric === 'days_listed'
-        ? mean(inCell.map((x) => x.time_on_market_days))
+        ? mean(inCell.filter(isSoldRow).map((x) => x.time_on_market_days))
         : inCell.length;
-      const conf = scoreConfidence({ sourceId: 'estimated.blend', sampleSize: inCell.length });
+      const baseConf = scoreConfidence({ sourceId: 'estimated.blend', sampleSize: inCell.length });
       cells.push({
         combo_id: c.id,
         combo_name: c.name,
@@ -437,7 +485,8 @@ export async function queryRegionalHeatmap({ timeframe = '12m', metric = 'median
         region_name: r.name,
         value: Math.round(val),
         sample_size: inCell.length,
-        confidence: conf,
+        confidence: scaleConfidence(baseConf, basis),
+        price_basis: basis,
         sources: uniq(inCell.map((x) => x.source_id)),
         __mock: true,
       });
@@ -457,10 +506,11 @@ export async function queryArbitrage({ timeframe = '6m', minSample = 4 } = {}) {
   const rows = [];
   HIGH_VALUE_COMBOS.forEach((c) => {
     const byRegion = REGIONS.map((r) => {
-      const s = filterTx({ combo_id: c.id, region: r.code, timeframe, status: 'sold' });
+      const s = filterTx({ combo_id: c.id, region: r.code, timeframe });
       return {
         region: r, sample: s.length,
-        median: median(s.map((x) => x.sold_price)),
+        median: median(s.map(effPrice).filter(Boolean)),
+        basis: priceBasisFor(s),
       };
     }).filter((x) => x.sample >= minSample && x.median > 0);
     if (byRegion.length < 2) return;
@@ -472,7 +522,11 @@ export async function queryArbitrage({ timeframe = '6m', minSample = 4 } = {}) {
     const grossEdge = (sell.median - buy.median - shipping) / buy.median;
     const risk = 1 - ((1 - buy.region.import_friction) * (1 - sell.region.import_friction));
     const riskAdjEdge = grossEdge * (1 - risk * 0.5);
-    const conf = scoreConfidence({ sourceId: 'estimated.blend', sampleSize: buy.sample + sell.sample });
+    const pairBasis = buy.basis === 'sold' && sell.basis === 'sold'
+      ? 'sold'
+      : (buy.basis === 'listed' && sell.basis === 'listed' ? 'listed' : 'mixed');
+    const baseConf = scoreConfidence({ sourceId: 'estimated.blend', sampleSize: buy.sample + sell.sample });
+    const conf = scaleConfidence(baseConf, pairBasis);
     rows.push({
       combo_id: c.id,
       combo_name: c.name,
@@ -488,6 +542,7 @@ export async function queryArbitrage({ timeframe = '6m', minSample = 4 } = {}) {
       risk_score: +risk.toFixed(2),
       sample_size: buy.sample + sell.sample,
       confidence: conf,
+      price_basis: pairBasis,
       __mock: true,
     });
   });
@@ -522,11 +577,18 @@ export async function querySupplyPipeline({ combos } = {}) {
 // ---------- Breeder market share / HHI --------------------------------
 export async function queryBreederShare({ regions = [], timeframe = '12m' } = {}) {
   await ensureLoaded();
-  const records = filterTx({ regions, timeframe, status: 'sold' });
+  // Use all transactions (listed + sold), priced via effPrice. Skip rows
+  // whose breeder is "unknown" so we don't render a misleading "100%
+  // Unknown" tile while the upstream snapshot is missing breeder
+  // attribution. When real breeder_ids start flowing this filter becomes
+  // a no-op.
+  const records = filterTx({ regions, timeframe })
+    .filter((r) => r.breeder_id && r.breeder_id !== 'unknown');
+  const basis = priceBasisFor(records);
   const byBreeder = {};
   records.forEach((r) => {
     byBreeder[r.breeder_id] = byBreeder[r.breeder_id] || { revenue: 0, count: 0 };
-    byBreeder[r.breeder_id].revenue += r.sold_price || 0;
+    byBreeder[r.breeder_id].revenue += effPrice(r) || 0;
     byBreeder[r.breeder_id].count += 1;
   });
   const totalRevenue = Object.values(byBreeder).reduce((s, x) => s + x.revenue, 0) || 1;
@@ -543,12 +605,14 @@ export async function queryBreederShare({ regions = [], timeframe = '12m' } = {}
   })).sort((a, b) => b.revenue - a.revenue);
   // Herfindahl-Hirschman Index, 0..10000. <1500 competitive, >2500 concentrated.
   const hhi = Math.round(ranked.reduce((s, b) => s + Math.pow(b.share_pct, 2), 0));
+  const baseConf = scoreConfidence({ sourceId: 'estimated.blend', sampleSize: records.length });
   return ok({
     breeders: ranked,
     hhi,
     concentration_label: hhi < 1500 ? 'competitive' : hhi < 2500 ? 'moderately concentrated' : 'highly concentrated',
     sample_size: records.length,
-    confidence: scoreConfidence({ sourceId: 'estimated.blend', sampleSize: records.length }),
+    confidence: scaleConfidence(baseConf, basis),
+    price_basis: basis,
     __mock: true,
   });
 }
@@ -601,16 +665,19 @@ export function getAllTimeframes(){ return TIMEFRAMES; }
 // contribution metadata.
 export async function blendedHeadline({ combo_id, region }) {
   await ensureLoaded();
-  const records = filterTx({ combo_id, region, timeframe: '12m', status: 'sold' });
+  const records = filterTx({ combo_id, region, timeframe: '12m' });
+  const basis = priceBasisFor(records);
   const bySource = {};
   records.forEach((r) => {
+    const p = effPrice(r);
+    if (!p) return;
     bySource[r.source_id] = bySource[r.source_id] || [];
-    bySource[r.source_id].push(r.sold_price);
+    bySource[r.source_id].push(p);
   });
   const observations = Object.entries(bySource).map(([sourceId, prices]) => ({
     sourceId, value: mean(prices), sampleSize: prices.length, regionMatch: true,
   }));
   if (!observations.length) return ok(null);
   const blended = blendObservations(observations);
-  return ok({ ...blended, combo_id, region, __mock: true });
+  return ok({ ...blended, combo_id, region, price_basis: basis, __mock: true });
 }
