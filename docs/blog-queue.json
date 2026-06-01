@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-05-29T10:52:12.947Z",
+  "lastUpdated": "2026-06-01T11:43:17.768Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -403,6 +403,122 @@
         "Rising Extreme Harlequin searches suggest demand, but most buyers don't understand the breeding complexity behind the look.",
         "If you're breeding Harlequin, chasing Extreme means selecting over multiple generations; buyers should know the real timeline.",
         "YouTube 'rarest morph' hype drives demand but obscures the work: extreme harlequins are outcomes, not reliable genetics."
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "tpc_1780314171302_cappuccino",
+      "title": "Why Your Two Cappuccinos Won't Make More Cappuccinos: Understanding Incomplete Dominance in Breeding",
+      "slug": "cappuccino-breeding-incomplete-dominance",
+      "category": "genetics",
+      "status": "new",
+      "score": {
+        "total": 19,
+        "demand": 8,
+        "originality": 7,
+        "accuracyRisk": 4,
+        "voiceFit": 8
+      },
+      "createdAt": "2026-06-01T11:42:51.302Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "youtube",
+          "snippet": "Don't buy super cappuccino crested gecko it's a scam and waste of money",
+          "url": "https://www.youtube.com/watch?v=5O_obmlNu9I"
+        },
+        {
+          "source": "youtube",
+          "snippet": "Why So Much Hate for Cappuccino Geckos? The Truth No One Wants to Say…",
+          "url": "https://www.youtube.com/watch?v=3xRF-wumo_E"
+        },
+        {
+          "source": "google-trends",
+          "snippet": "Google Trends rising query (related to \"cappuccino crested gecko\", last 90 days US): \"cappuccino crested gecko\" growing search volume",
+          "url": null
+        }
+      ],
+      "angleIdeas": [
+        "Most breeders who buy two Cappuccinos and pair them assume they'll get more Cappuccinos. Here's why that's expensive.",
+        "The Cappuccino morph's incomplete dominance genetics make it one of the riskiest morphs to breed if you don't understand the math.",
+        "Why 'Cappuccino × Cappuccino' is a recipe for frustrated hatchlings and confused new keepers.",
+        "Incomplete dominance explained through real breeding outcomes: what happens when you pair two heterozygous Cappuccinos."
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "tpc_1780314171302_howtosexcr",
+      "title": "Sex Your Crested Gecko Accurately: A Breeder's Guide to Pore Identification",
+      "slug": "how-to-sex-crested-gecko",
+      "category": "identification",
+      "status": "new",
+      "score": {
+        "total": 18,
+        "demand": 9,
+        "originality": 6,
+        "accuracyRisk": 3,
+        "voiceFit": 8
+      },
+      "createdAt": "2026-06-01T11:42:51.302Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "google-trends",
+          "snippet": "Google Trends rising query (related to \"crested gecko\", last 90 days US): \"how to sex a crested gecko\" +110%",
+          "url": "https://trends.google.com/trends/explore?q=how+to+sex+a+crested+gecko&date=today+3-m&geo=US"
+        },
+        {
+          "source": "google-ac",
+          "snippet": "Google autocomplete for \"crested gecko breeding\" suggests \"crested gecko breeding\"",
+          "url": null
+        }
+      ],
+      "angleIdeas": [
+        "Most new breeders mis-sex their geckos by looking at the wrong feature—here's what the femoral pores actually tell you.",
+        "You can't accurately sex a crested gecko by size alone. Here's what experienced breeders check first.",
+        "Why a hatchling's pore visibility matters more than you think for long-term breeding plans.",
+        "The pore inspection technique that separates confident breeders from guessers."
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "tpc_1780314171302_tigermorph",
+      "title": "Tiger Morph Crested Geckos: Polygenic Pattern Breeding Outcomes You Should Know",
+      "slug": "tiger-morph-breeding-polygenic",
+      "category": "breeding",
+      "status": "new",
+      "score": {
+        "total": 16,
+        "demand": 8,
+        "originality": 7,
+        "accuracyRisk": 2,
+        "voiceFit": 7
+      },
+      "createdAt": "2026-06-01T11:42:51.302Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "google-trends",
+          "snippet": "Google Trends rising query (related to \"crested gecko\", last 90 days US): \"tiger crested gecko\" +80%",
+          "url": "https://trends.google.com/trends/explore?q=tiger+crested+gecko&date=today+3-m&geo=US"
+        },
+        {
+          "source": "bluesky",
+          "snippet": "I based it off a crested gecko morph where they look like oreos :)",
+          "url": "https://bsky.app/profile/grimoirerose.bsky.social/post/3mgju2lhurc2v"
+        }
+      ],
+      "angleIdeas": [
+        "Tiger morphs are polygenic, which means pairing two Tigers won't give you consistent results—here's what you'll actually get.",
+        "The Tiger pattern is subtle enough that breeders often misidentify offspring, leading to expensive mismatches.",
+        "Polygenic traits compound: stacking Tigers with other patterns requires understanding how traits overlap.",
+        "Why Tiger × Tiger breeding is a long game that rewards patience but punishes shortcuts."
       ],
       "rejectionReason": null,
       "prUrl": null

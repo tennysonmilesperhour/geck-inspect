@@ -1,10 +1,10 @@
 {
-  "ranAt": "2026-05-29T10:00:07.307Z",
+  "ranAt": "2026-06-01T11:42:51.302Z",
   "signals": {
     "googleAc": 95,
     "bluesky": 80,
-    "googleTrends": 14,
-    "youtube": 66,
+    "googleTrends": 16,
+    "youtube": 69,
     "breederBlogs": 1,
     "reddit": 0,
     "errors": [
@@ -21,7 +21,11 @@
       "search \"breeding fail\": 403 Blocked"
     ]
   },
-  "costUsd": 0.027608999999999998,
-  "addedSlugs": [],
-  "rationale": "The signals are dominated by broad care/husbandry searches (enclosure, tank, diet, food, care, starter kit) and generic brand/marketplace queries (morphmarket, \"for sale,\" pricing), most of which we've already covered in our existing guides or are handled by the care guide. While there is strong search volume around crested gecko morphs generally, the specific morph-focused signals (cappuccino, lilly white, axanthic) either duplicate our published slugs or lack concrete forum-level friction/misconceptions to angle on. YouTube content on these morphs is mature and plentiful. The Bluesky engagement is mostly emotional/hobbyist chatter and MorphMarket listings, not breeder strategy discussion. Google Trends shows rising interest in \"repashy diet,\" \"morph chart,\" and \"not eating,\" but these are either covered by our diet guide or are care issues, not breeding/genetics angles. No Reddit forum data was provided, which would have been the strongest signal for genuine breeder confusion. Without clear forum threads showing a specific breeding misconception or an actionable genetics angle we haven't published, none of the candidates clear the bar."
+  "costUsd": 0.033578000000000004,
+  "addedSlugs": [
+    "cappuccino-breeding-incomplete-dominance",
+    "how-to-sex-crested-gecko",
+    "tiger-morph-breeding-polygenic"
+  ],
+  "rationale": "The signals show strong, rising search demand for specific genetics and breeding topics (Cappuccino, sexing, Tiger morphs). Google Trends reveals +110% surge in \"how to sex a crested gecko\" and +80% for \"tiger crested gecko\", with multiple breeder videos expressing frustration around Cappuccino breeding outcomes. These align with existing knowledge in our genetics glossary (incomplete dominance, polygenic traits). I rejected general care topics, listicles (\"morph chart\"), and duplicates of already-published slugs. The three topics picked have concrete misconceptions breeders can act on and are grounded in verifiable genetics mechanics."
 }
