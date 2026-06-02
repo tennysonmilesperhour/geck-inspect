@@ -23,7 +23,7 @@
 
 import { readFileSync, writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
@@ -136,55 +136,24 @@ function parseMorphs() {
 // ---- blog parsing --------------------------------------------------------
 
 function parseBlogPosts() {
-  const src = readFileSync(BLOG, 'utf8');
-  const m = src.match(/export const BLOG_POSTS\s*=\s*\[([\s\S]*?)\n\];/);
-  if (!m) return [];
-  const body = m[1];
-  const entries = body.split(/\n\s{2}\},\s*\n\s{2}\{/).map((c, i, arr) => {
-    let x = c;
-    if (i === 0) x = x.replace(/^\s*\{\s*/, '');
-    if (i === arr.length - 1) x = x.replace(/\s*\}\s*,?\s*$/, '');
-    return x;
-  });
-  const out = [];
-  for (const chunk of entries) {
-    const gs = (f) => {
-      const re = new RegExp(`${f}:\\s*'((?:\\\\.|[^'\\\\])*)'`, 's');
-      const hit = chunk.match(re);
-      return hit ? unescape(hit[1]) : null;
-    };
-    const slug = gs('slug');
-    if (!slug) continue;
-    const tldrMatch = chunk.match(/tldr:\s*\[([\s\S]*?)\n\s*\],/);
-    const bodyMatch = chunk.match(/body:\s*\[([\s\S]*?)\n\s{4}\],/);
-    const faqMatch = chunk.match(/faq:\s*\[([\s\S]*?)\n\s{4}\],/);
-
-    const tldr = tldrMatch ? extractStringArray(tldrMatch[1]) : [];
-    const blocks = bodyMatch ? parseBlocks(bodyMatch[1]) : [];
-
-    const faq = [];
-    if (faqMatch) {
-      const qaRe =
-        /question:\s*'((?:\\.|[^'\\])*)',\s*\n\s*answer:\s*\n?\s*'((?:\\.|[^'\\])*)'/g;
-      let q;
-      while ((q = qaRe.exec(faqMatch[1])) !== null) {
-        faq.push({ question: unescape(q[1]), answer: unescape(q[2]) });
-      }
-    }
-
-    out.push({
-      slug,
-      title: gs('title'),
-      description: gs('description'),
-      datePublished: gs('datePublished'),
-      dateModified: gs('dateModified'),
-      keyphrase: gs('keyphrase'),
-      tldr,
-      blocks,
-      faq,
-    });
-  }
-  return out;
+  // Import the canonical data module directly. blog-posts.js is plain ESM
+  // with no JSX or bundler-only imports, so Node can load it. This is more
+  // robust than regex parsing: it handles both single- and double-quoted
+  // post entries, and picks up block types (table, kv, dl) the regex
+  // walker silently skipped.
+  return import(pathToFileURL(BLOG).href).then((mod) =>
+    (mod.BLOG_POSTS || []).map((p) => ({
+      slug: p.slug,
+      title: p.title,
+      description: p.description,
+      datePublished: p.datePublished,
+      dateModified: p.dateModified,
+      keyphrase: p.keyphrase,
+      tldr: p.tldr || [],
+      blocks: p.body || [],
+      faq: p.faq || [],
+    })),
+  );
 }
 
 // ---- markdown rendering --------------------------------------------------
@@ -199,8 +168,22 @@ function blockToMarkdown(block) {
       return block.items.map((i, idx) => `${idx + 1}. ${i}`).join('\n');
     case 'callout': {
       const head = block.title ? `**${block.title}**\n\n` : '';
-      return `${head}${block.items.map((i) => `- ${i}`).join('\n')}`;
+      return `${head}${(block.items || []).map((i) => `- ${i}`).join('\n')}`;
     }
+    case 'table': {
+      if (!block.headers || !block.rows) return '';
+      const head = `| ${block.headers.join(' | ')} |`;
+      const sep = `| ${block.headers.map(() => '---').join(' | ')} |`;
+      const rows = block.rows.map((r) => `| ${r.join(' | ')} |`).join('\n');
+      const cap = block.caption ? `*${block.caption}*\n\n` : '';
+      return `${cap}${head}\n${sep}\n${rows}`;
+    }
+    case 'dl':
+      return (block.items || []).map((it) => `**${it.term}:** ${it.def}`).join('\n');
+    case 'kv':
+      return (block.items || [])
+        .map((it) => `**${it.label}:** ${it.value}${it.note ? ` (${it.note})` : ''}`)
+        .join('\n');
     default:
       return '';
   }
@@ -300,11 +283,11 @@ function blogToMarkdown(posts) {
 
 // ---- compose -------------------------------------------------------------
 
-function build() {
+async function build() {
   const intro = readFileSync(LLMS, 'utf8');
   const care = careToMarkdown(parseCareGuide());
   const morphs = morphsToMarkdown(parseMorphs());
-  const blog = blogToMarkdown(parseBlogPosts());
+  const blog = blogToMarkdown(await parseBlogPosts());
   const now = new Date().toISOString().slice(0, 10);
 
   const body = [
@@ -336,4 +319,7 @@ function build() {
   console.log(`[build-llms-full] wrote ${Buffer.byteLength(body)} bytes → public/llms-full.txt`);
 }
 
-build();
+build().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

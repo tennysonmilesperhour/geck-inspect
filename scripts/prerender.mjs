@@ -168,18 +168,22 @@ function loadBlogPosts() {
   const m = src.match(/export const BLOG_POSTS\s*=\s*\[([\s\S]*?)\n\];/);
   if (!m) return {};
   const body = m[1];
-  const entries = body.split(/\n\s{2}\},\s*\n\s{2}\{/).map((c, i, arr) => {
-    let x = c;
-    if (i === 0) x = x.replace(/^\s*\{\s*/, '');
-    if (i === arr.length - 1) x = x.replace(/\s*\}\s*,?\s*$/, '');
-    return x;
-  });
+  // Slice into per-post chunks at each `slug:` field (the first field of
+  // every post object). Robust to comment separators between posts and to
+  // both indentation and quote-style differences, unlike a `},{` split.
+  const starts = [];
+  const slugRe = /slug:\s*['"][a-z0-9-]+['"]/g;
+  let sm;
+  while ((sm = slugRe.exec(body)) !== null) starts.push(sm.index);
+  const entries = starts.map((s, i) => body.slice(s, starts[i + 1] ?? body.length));
   const out = {};
   for (const chunk of entries) {
     const gs = (f) => {
-      const re = new RegExp(`${f}:\\s*'((?:\\\\.|[^'\\\\])*)'`, 's');
+      // Quote-agnostic: posts mix single and double quotes. Match whichever
+      // quote opens the value and close on the same one via a backreference.
+      const re = new RegExp(`${f}:\\s*(['"])((?:\\\\.|(?!\\1)[^\\\\])*)\\1`, 's');
       const hit = chunk.match(re);
-      return hit ? hit[1].replace(/\\'/g, "'") : null;
+      return hit ? hit[2].replace(/\\(['"])/g, '$1') : null;
     };
     const slug = gs('slug');
     if (!slug) continue;
@@ -189,8 +193,8 @@ function loadBlogPosts() {
     const tldrMatch = chunk.match(/tldr:\s*\[([\s\S]*?)\n\s*\],/);
     let tldrFirst = null;
     if (tldrMatch) {
-      const first = tldrMatch[1].match(/'((?:\\.|[^'\\])*)'/);
-      if (first) tldrFirst = first[1].replace(/\\'/g, "'");
+      const first = tldrMatch[1].match(/(['"])((?:\\.|(?!\1)[^\\])*)\1/);
+      if (first) tldrFirst = first[2].replace(/\\(['"])/g, '$1');
     }
 
     // First FAQ entry. We look for `{ question: '...', answer: '...' }`
@@ -198,12 +202,12 @@ function loadBlogPosts() {
     const faqMatch = chunk.match(/faq:\s*\[([\s\S]*?)\n\s*\],/);
     let faqFirst = null;
     if (faqMatch) {
-      const fq = faqMatch[1].match(/question:\s*'((?:\\.|[^'\\])*)'/);
-      const fa = faqMatch[1].match(/answer:\s*'((?:\\.|[^'\\])*)'/);
+      const fq = faqMatch[1].match(/question:\s*(['"])((?:\\.|(?!\1)[^\\])*)\1/);
+      const fa = faqMatch[1].match(/answer:\s*(['"])((?:\\.|(?!\1)[^\\])*)\1/);
       if (fq && fa) {
         faqFirst = {
-          question: fq[1].replace(/\\'/g, "'"),
-          answer: fa[1].replace(/\\'/g, "'"),
+          question: fq[2].replace(/\\(['"])/g, '$1'),
+          answer: fa[2].replace(/\\(['"])/g, '$1'),
         };
       }
     }

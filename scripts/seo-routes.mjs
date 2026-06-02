@@ -62,20 +62,23 @@ function loadBlogPosts() {
   const m = src.match(/export const BLOG_POSTS\s*=\s*\[([\s\S]*?)\n\];/);
   if (!m) return [];
   const body = m[1];
-  // Each post block opens with `  {` (two-space indent) and closes
-  // with `  },`. Tolerant split, since it's a data file we control.
-  const entries = body.split(/\n\s{2}\},\s*\n\s{2}\{/).map((c, i, arr) => {
-    let x = c;
-    if (i === 0) x = x.replace(/^\s*\{\s*/, '');
-    if (i === arr.length - 1) x = x.replace(/\s*\}\s*,?\s*$/, '');
-    return x;
-  });
+  // Slice into per-post chunks at each `slug:` field (the first field of
+  // every post object). Robust to comment separators between posts and to
+  // both indentation and quote-style differences, unlike a `},{` split.
+  const starts = [];
+  const slugRe = /slug:\s*['"][a-z0-9-]+['"]/g;
+  let sm;
+  while ((sm = slugRe.exec(body)) !== null) starts.push(sm.index);
+  const entries = starts.map((s, i) => body.slice(s, starts[i + 1] ?? body.length));
   const out = [];
   for (const chunk of entries) {
     const gs = (f) => {
-      const re = new RegExp(`${f}:\\s*'((?:\\\\.|[^'\\\\])*)'`, 's');
+      // Quote-agnostic: posts in this file use a mix of single and double
+      // quotes. Match whichever quote opens the value and use it as the
+      // closing delimiter via a backreference.
+      const re = new RegExp(`${f}:\\s*(['"])((?:\\\\.|(?!\\1)[^\\\\])*)\\1`, 's');
       const hit = chunk.match(re);
-      return hit ? hit[1].replace(/\\'/g, "'") : null;
+      return hit ? hit[2].replace(/\\(['"])/g, '$1') : null;
     };
     const slug = gs('slug');
     if (!slug) continue;
