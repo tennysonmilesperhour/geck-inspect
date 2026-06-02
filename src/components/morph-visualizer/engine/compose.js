@@ -176,8 +176,8 @@ export function composePhenotype(selections) {
     reasoning.push({
       trait: 'cappuccino',
       message: mend.cappuccino === Z.SUPER
-        ? 'Super Cappuccino (Frappuccino) ,  dorsum fully patternless, body saturated dark coffee.'
-        : 'Cappuccino ,  connected cream dorsum, coffee-brown body.',
+        ? 'Super Cappuccino (Melanistic), dorsum fully patternless, body saturated dark coffee.'
+        : 'Cappuccino, connected cream dorsum, coffee-brown body.',
     });
   }
 

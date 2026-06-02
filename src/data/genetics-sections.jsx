@@ -271,15 +271,15 @@ const SECTIONS = [
         content: (
           <>
             <BulletList items={[
-              'Inheritance: INCOMPLETE DOMINANT. Single copy = Cappuccino (distinct dark "coffee" coloration with an extended, connected dorsal pattern). Two copies = Super Cappuccino, commonly called FRAPPUCCINO, with more extreme color and pattern.',
+              'Inheritance: INCOMPLETE DOMINANT. Single copy = Cappuccino (distinct dark "coffee" coloration with an extended, connected dorsal pattern). Two copies = Super Cappuccino (also called Melanistic), with more extreme dark coloration.',
               'Visual expression: a signature connected dorsal pattern that runs from the nape down the spine, usually in warm chocolate tones. Body coloration tends toward rich browns. Eye rims and crest lines often darker than normal.',
-              'Super form viability: Frappuccinos exist and are bred, but there is ongoing debate about sublethal effects ,  some breeders report reduced clutch sizes or health issues from Cappuccino × Cappuccino pairings. Proceed with caution and document outcomes.',
-              'Pairing strategy: Cappuccino × Normal is the safest pairing. It produces ~50% Cappuccino, ~50% normal offspring.',
-              'Price: visual Cappuccino commonly $400–$1200+. Frappuccino pricing varies widely with health reputation of the line.',
+              'Super form health: Super Cappuccinos (homozygous CAPP/CAPP) have documented health concerns including reduced nostril size and breathing difficulty. Breeding specifically for the super form is not recommended. A Frappuccino is something separate, the Cappuccino + Lilly White combo, not the homozygous super form.',
+              'Pairing strategy: Cappuccino × Normal is the safest pairing. It produces ~50% Cappuccino, ~50% normal offspring, and no Super Cappuccinos.',
+              'Price: visual Cappuccino commonly $400–$1200+. Super Cappuccino pricing is contentious given the documented health concerns.',
             ]} />
             <Callout items={[
               'Cappuccino × Normal → 50% visual Cappuccino, 50% normal (SAFEST)',
-              'Cappuccino × Cappuccino → 25% Frappuccino, 50% Cappuccino, 25% normal (DOCUMENT OUTCOMES)',
+              'Cappuccino × Cappuccino → 25% Super Cappuccino (Melanistic, health concerns), 50% Cappuccino, 25% normal',
               'Not every brown crested gecko with a dorsal pattern is Cappuccino ,  lineage confirms it',
             ]} />
           </>
@@ -486,13 +486,13 @@ const SECTIONS = [
         )
       },
       {
-        title: 'Super Cappuccino (Frappuccino) ,  Viability Debated',
+        title: 'Super Cappuccino (Melanistic), Health Concerns',
         content: (
           <BulletList items={[
-            'Frappuccinos do exist and are bred. That much is not in question.',
-            'What IS debated: some breeders report reduced clutch sizes, higher egg-failure rates, or subtle developmental issues when producing Frappuccinos from Cappuccino × Cappuccino pairings.',
-            'Conservative recommendation: breed Cappuccino × normal unless you\'re specifically investigating Frappuccino outcomes and prepared to document them.',
-            'If you do breed for Frappuccino, be transparent about clutch outcomes ,  the community needs data to establish whether homozygous viability is a real concern.',
+            'Super Cappuccinos (homozygous Cappuccino, CAPP/CAPP) do hatch, but they carry documented health concerns.',
+            'Documented issues include reduced nostril size, breathing difficulty, and poor thriving in homozygous animals.',
+            'Recommendation: breed Cappuccino × non-Cappuccino. You still get roughly 50% Cappuccino offspring with no Super Cappuccinos.',
+            'Do not confuse the Super Cappuccino with the Frappuccino. A Frappuccino is a separate combo, Cappuccino paired with Lilly White, not the homozygous super form.',
           ]} />
         )
       },

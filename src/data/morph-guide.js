@@ -559,12 +559,12 @@ export const MORPHS = [
     summary:
       'Structural pattern trait creating a distinctive "saddle" mark on the back with a clean dorsal contrast.',
     description:
-      'Cappuccino is a proven incomplete-dominant trait that produces a characteristic "saddle" ,  a distinct, rounded dorsal marking with clean boundaries. The body often shows a warm brown (coffee) tone, hence the name. Combines powerfully with harlequin to produce "mocha" animals, and when paired homozygous produces the super form called frappuccino.',
+      'Cappuccino is a proven incomplete-dominant trait that produces a characteristic "saddle", a distinct, rounded dorsal marking with clean boundaries. The body often shows a warm brown (coffee) tone, hence the name. Combines powerfully with harlequin to produce "mocha" animals. Two copies produce the Super Cappuccino (also called Melanistic), which carries documented health concerns, so Cappuccino is best paired to a non-Cappuccino.',
     keyFeatures: [
       'Defined dorsal "saddle" with clean edges, not a gradient pattern',
       'Warm brown/mocha undertone on body',
       'Proven incomplete-dominant inheritance',
-      'Homozygous form is frappuccino (super cappuccino)',
+      'Homozygous form is the Super Cappuccino (Melanistic), with documented health concerns',
     ],
     visualIdentifiers: [
       'Saddle-shaped dorsal marking that stands out from the surrounding pattern',
@@ -573,27 +573,27 @@ export const MORPHS = [
     ],
     history:
       'Proven in the 2010s. One of the first widely-accepted proven non-recessive morphs in the species.',
-    combinesWith: ['frappuccino', 'lilly-white', 'soft-scale', 'harlequin', 'axanthic', 'dalmatian'],
+    combinesWith: ['lilly-white', 'soft-scale', 'harlequin', 'axanthic', 'dalmatian'],
   },
   {
     slug: 'frappuccino',
     name: 'Frappuccino',
-    aliases: ['Frap', 'Super Cappuccino'],
-    category: 'structure',
+    aliases: ['Frap'],
+    category: 'combo',
     inheritance: 'incomplete-dominant',
     rarity: 'rare',
     priceTier: '$$$$',
     priceRange: '$1,500–$3,500',
     summary:
-      'Homozygous form of cappuccino ,  exaggerated saddle, muted pattern, and a distinctive pale body tone.',
+      'A combo of Cappuccino and Lilly White, brighter and whiter than a standard Lilly White with dramatic head spotting.',
     description:
-      'Frappuccino is the super (homozygous) form of cappuccino. The saddle expression is amplified, body color is paler and more neutral, and the pattern is often more subdued with cleaner boundaries. Rare and sought-after as a breeding animal because pairing a frappuccino to any non-carrier produces 100% het cappuccino offspring.',
+      'Frappuccino is the combination of two incomplete-dominant morphs, Cappuccino and Lilly White, carried in the same animal. It is not a super form, and it does not come from pairing two Cappuccinos. Frappuccinos hatch brighter and whiter than a standard Lilly White and develop dramatic white spotting on the head as they mature. A Frappuccino carries one copy each of Cappuccino and Lilly White.',
     keyFeatures: [
-      'Amplified saddle with very clean edges',
-      'Paler, more neutral body color than single-copy cappuccino',
-      '100% of offspring with a non-carrier will be het cappuccino',
+      'A combo of Cappuccino + Lilly White, not a homozygous super form',
+      'Brighter, whiter coloration than a standard Lilly White',
+      'Dramatic white head spotting develops with age',
     ],
-    combinesWith: ['lilly-white', 'soft-scale', 'harlequin', 'axanthic'],
+    combinesWith: ['soft-scale', 'harlequin', 'axanthic', 'dalmatian'],
   },
   {
     slug: 'lilly-white',

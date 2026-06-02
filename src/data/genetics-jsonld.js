@@ -108,7 +108,7 @@ const GENETICS_GUIDE_JSON_LD = [
       { '@type': 'DefinedTerm', name: 'Polygenic', description: 'A trait controlled by multiple genes acting together rather than a single Mendelian switch. Controls most crested gecko coloration and pattern.' },
       { '@type': 'DefinedTerm', name: 'Lilly White', description: 'An incomplete-dominant crested gecko morph producing high-contrast white body markings. Single copy is visible; the double-copy Super Lilly White is embryonic-lethal.' },
       { '@type': 'DefinedTerm', name: 'Axanthic', description: 'A recessive crested gecko morph lacking yellow and red xanthophore pigments. Visual animals appear black, white, and gray with no warm tones.' },
-      { '@type': 'DefinedTerm', name: 'Cappuccino', description: 'An incomplete-dominant crested gecko morph producing dark coffee coloration with a connected dorsal pattern. The double-copy Super Cappuccino (Frappuccino) has enhanced expression.' },
+      { '@type': 'DefinedTerm', name: 'Cappuccino', description: 'An incomplete-dominant crested gecko morph producing dark coffee coloration with a connected dorsal pattern. The double-copy form is the Super Cappuccino (also called Melanistic), which has enhanced dark expression and documented health concerns.' },
       { '@type': 'DefinedTerm', name: 'Soft Scale', description: 'An incomplete-dominant crested gecko morph with smaller, softer scales. Super form has more dramatic expression and fertility concerns.' },
       { '@type': 'DefinedTerm', name: 'White Wall', description: 'An incomplete-dominant crested gecko morph producing a distinct white lateral stripe along the belly wall.' },
       { '@type': 'DefinedTerm', name: 'Super form', description: 'The homozygous expression of an incomplete-dominant morph. Sometimes more extreme, sometimes lethal.' },
@@ -167,10 +167,10 @@ const GENETICS_GUIDE_JSON_LD = [
       },
       {
         '@type': 'Question',
-        name: 'What is Super Cappuccino or Frappuccino?',
+        name: 'What is a Super Cappuccino, and is it the same as a Frappuccino?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Frappuccino is the homozygous (super) form of the incomplete-dominant Cappuccino morph. It has more extreme dark coloration and dorsal pattern, though some breeders report viability concerns when pairing two Cappuccinos together.',
+          text: 'A Super Cappuccino (also called Melanistic) is the homozygous form of the incomplete-dominant Cappuccino morph, produced when two Cappuccinos are paired. It has documented health concerns including reduced nostril size and breathing difficulty, so breeding for it is not recommended. A Frappuccino is a different animal entirely: it is the combination of Cappuccino and Lilly White, not a super form, and it does not come from a Cappuccino x Cappuccino pairing.',
         },
       },
     ],

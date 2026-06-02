@@ -137,13 +137,13 @@ export function detectWarnings(selections) {
     });
   }
 
-  // Frappuccino fertility note
+  // Super Cappuccino health note
   if (mend.cappuccino === Z.SUPER) {
     warnings.push({
       severity: 'info',
       traitId: 'cappuccino',
-      title: 'Frappuccino (Super Cappuccino)',
-      body: 'Homozygous Cappuccino ,  some breeders report fertility concerns but the genotype is viable.',
+      title: 'Super Cappuccino (Melanistic)',
+      body: 'Homozygous Cappuccino. Documented health concerns include reduced nostril size and breathing difficulty, so breeding for the super form is not recommended.',
     });
   }
 

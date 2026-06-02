@@ -98,9 +98,9 @@ export const PRESETS = [
     },
   },
   {
-    id: 'frappuccino',
-    name: 'Frappuccino',
-    description: 'Super (homozygous) Cappuccino ,  fully patternless cream dorsum over a dark coffee body.',
+    id: 'super-cappuccino',
+    name: 'Super Cappuccino',
+    description: 'Super (homozygous) Cappuccino, also called Melanistic. Fully patternless cream dorsum over a dark coffee body.',
     rarityTier: 5,
     valueHint: 2500,
     selections: {

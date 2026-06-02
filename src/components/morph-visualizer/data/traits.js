@@ -96,10 +96,10 @@ export const MENDELIAN_MORPHS = [
     category: 'mendelian',
     genetics: {
       type: GENETICS_TYPE.INCOMPLETE_DOMINANT,
-      superForm: 'Frappuccino',
+      superForm: 'Super Cappuccino',
       superLethal: false,
       summary:
-        'Incomplete dominant. One copy = visual Cappuccino with a connected dorsum and coffee-brown body. Two copies = Frappuccino with a fully patternless cream dorsum.',
+        'Incomplete dominant. One copy = visual Cappuccino with a connected dorsum and coffee-brown body. Two copies = Super Cappuccino (Melanistic) with a fully patternless cream dorsum.',
     },
     epistasis: { darkensBase: true },
     visual: {
@@ -293,7 +293,7 @@ export const PATTERN_TRAITS = [
     category: 'pattern',
     genetics: {
       type: GENETICS_TYPE.POLYGENIC,
-      summary: 'Polygenic (or induced by Empty Back / Frappuccino). A clean body with no lateral or dorsal pattern.',
+      summary: 'Polygenic (or induced by Empty Back / Super Cappuccino). A clean body with no lateral or dorsal pattern.',
     },
     epistasis: { suppressesLateralPattern: true, suppressesDorsalPattern: true },
     visual: { layer: 'patternless' },

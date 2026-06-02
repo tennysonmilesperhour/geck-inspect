@@ -1,7 +1,7 @@
 /**
- * Cappuccino ,  connected, cream "coffee-stain" dorsum.
+ * Cappuccino: connected, cream "coffee-stain" dorsum.
  * In visual form the dorsum is continuous but with natural irregular edges.
- * In Super (Frappuccino) the dorsum is fully patternless and expansive.
+ * In the Super Cappuccino (Melanistic) the dorsum is fully patternless and expansive.
  */
 
 
@@ -9,7 +9,7 @@ export default function Cappuccino({ expressed, isSuper, palette }) {
   if (!expressed) return null;
 
   // For visual Cappuccino, paint a slightly irregular coffee-stain shape.
-  // For Frappuccino, extend coverage dramatically down the flanks.
+  // For the Super Cappuccino, extend coverage dramatically down the flanks.
   const stainPath = isSuper
     ? `M 80,200 C 160,180 260,170 360,170 C 480,170 580,180 680,190
        C 710,195 725,210 715,230 C 705,245 680,255 640,258
