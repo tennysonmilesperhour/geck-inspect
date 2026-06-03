@@ -3304,6 +3304,295 @@ export const BLOG_POSTS = [
       },
     ],
   },
+  {
+    slug: "how-to-sex-crested-gecko",
+    title: "How to Sex a Crested Gecko: Pore ID for Breeders",
+    description: "Most breeders mis-sex crested geckos before 6 months. Learn the pore identification technique that separates confident breeders from guessers, with age, angle, and lighting tips.",
+    keyphrase: "how to sex a crested gecko",
+    category: "identification",
+    tags: [
+      "identification",
+      "cappuccino",
+      "lilly-white",
+      "axanthic",
+      "soft-scale",
+      "white-wall",
+      "super-lilly-white",
+    ],
+    datePublished: "2026-06-03",
+    dateModified: "2026-06-03",
+    heroEyebrow: "Identification Guide",
+    tldr: [
+      "Crested geckos cannot be sexed reliably before 10-15 grams body weight, cloacal anatomy is too undeveloped before that.",
+      "Males develop a hemipenal bulge posterior to the vent and a clear row of pre-cloacal pores; females lack both.",
+      "Pore visibility depends on angle, lighting, and how well the animal is cooperating, eversion technique is not required.",
+      "Possible-het males and females inherit axanthic and other recessives at identical rates, sex does not change genetic probability.",
+      "When in doubt, weigh the animal and check again in 4-6 weeks rather than guessing.",
+    ],
+    body: [
+      {
+        type: "p",
+        text: "A seller at a 2024 reptile expo handed a buyer a juvenile labeled \"female proven het axanthic\" for $420. Eight months later, the gecko developed a hemipenal bulge and a crisp row of pre-cloacal pores. That \"female\" was a male, and because the buyer had already built a breeding project around it, every pairing plan had to be scrapped.",
+      },
+      {
+        type: "p",
+        text: "Mis-sexing crested geckos is one of the most consequential beginner mistakes in the hobby, and it almost always comes from checking the wrong feature at the wrong age.",
+      },
+      {
+        type: "p",
+        text: "So what should you actually be looking at, and when?",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Why this mistake is so expensive",
+      },
+      {
+        type: "p",
+        text: "If you are building a project around a proven incomplete-dominant morph like Lilly White or Cappuccino, sex is not a cosmetic question. It determines which animal goes to which pairing slot. A mis-sexed Lilly White \"female\" bred to a Lilly White male produces 25% Super Lilly White embryos, embryos that are homozygous lethal and will never hatch. That is not a theoretical risk. It is the outcome of a pairing that should never have happened, triggered by a paperwork error made at 8 weeks of age.",
+      },
+      {
+        type: "p",
+        text: "Beyond genetics, a mis-sexed cohabited pair creates stress and overbreeding risk that directly shortens the female's life. Males harass females constantly during breeding season. A gecko you think is a second female is actually producing that stress.",
+      },
+      {
+        type: "p",
+        text: "The financial hit is real too. A mis-sexed juvenile sold as female can cost you the price difference between a male and female of the same morph, often $100-$300, plus the cost of a disrupted breeding season.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "What you are actually looking for",
+      },
+      {
+        type: "p",
+        text: "Crested gecko sexing relies on two anatomical features in combination, both located on the underside of the animal near the vent. Neither feature alone is definitive in a juvenile. You need both.",
+      },
+      {
+        type: "p",
+        text: "**Pre-cloacal pores** are a row of small, slightly raised, waxy-looking pores arranged in a V or arc shape just anterior to (in front of) the vent. In mature males, these pores are obvious: yellowish, slightly enlarged, often waxy in appearance. In females, these pores are either absent or present only as faint, barely-visible dots with no waxy secretion. In juvenile males, they may be present but require good lighting and a cooperative gecko to confirm.",
+      },
+      {
+        type: "p",
+        text: "**The hemipenal bulge** is the second feature. Males have paired hemipenes housed in a distinct bulge just posterior to (behind) the vent. When you look at the underside of a male's tail base, you see a visible rounded widening behind the vent before the tail tapers. Females have a flat, tapered tail base with no widening.",
+      },
+      {
+        type: "p",
+        text: "In a confident adult identification, both features are present and obvious in a male, and clearly absent in a female. In a juvenile, you work with whatever anatomy has developed so far, and you are honest about uncertainty.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Age and weight thresholds",
+      },
+      {
+        type: "p",
+        text: "The single most reliable rule I follow: do not commit to a sex call on any animal under 10 grams. Before that weight, the hemipenal bulge is often too subtle to distinguish from normal tail-base variation, and the pores may not have differentiated enough to read clearly.",
+      },
+      {
+        type: "p",
+        text: "The practical thresholds the hobby broadly agrees on:",
+      },
+      {
+        type: "ul",
+        items: [
+          "**Under 5 grams (typical hatchling):** Unsexable. Do not try. The anatomy is there in miniature, but the signal-to-noise ratio is too low to be useful.",
+          "**5-10 grams:** Probable sex call is possible on males if you have good light and a calm animal. The hemipenal bulge is often visible in males by this stage. Females at this weight are still difficult to confirm positively, you are mostly confirming \"no obvious male features\" rather than confirming female.",
+          "**10-15 grams:** Reliable sexing for most animals. Males show clear pores and a distinct bulge. Females show neither.",
+          "**15+ grams:** You should be confident. If you are not confident at 15+ grams with good lighting and a cooperative animal, get a second opinion from an experienced keeper, not another guess.",
+        ],
+      },
+      {
+        type: "p",
+        text: "Many sellers list animals as \"female\" at 4-6 grams because buyers want females and animals are ready to ship. The honest label at that weight is \"unsexed\" or \"too young to confirm.\"",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "How to hold the animal for a reliable look",
+      },
+      {
+        type: "p",
+        text: "Technique matters more than any single anatomical feature, because a stressed, curled, or improperly positioned gecko gives you a bad angle. A bad angle gives you a wrong answer.",
+      },
+      {
+        type: "p",
+        text: "The method I use, which most experienced breeders converge on:",
+      },
+      {
+        type: "ol",
+        items: [
+          "Let the gecko walk onto your hand in its enclosure. Do not chase or grab, a stressed gecko will curl its tail and tense, obscuring the anatomy.",
+          "Let it settle for 30-60 seconds. A calm gecko moves more slowly and holds its body in a more natural position.",
+          "Gently rotate your hand so the gecko's belly faces a bright light source. A phone flashlight pointed directly at the tail base from below works well. Natural bright daylight is even better.",
+          "Look at the tail base from the ventral (belly) side. The vent is the transverse slit. Anterior to it, look for the pore row. Posterior to it, look for the hemipenal widening.",
+          "If the gecko is moving too much, a brief containment in a clear deli cup lets you look from below through the plastic, this is a common trick that keeps the animal calmer and gives you a clean view without handling stress.",
+        ],
+      },
+      {
+        type: "p",
+        text: "Eversion (manually prolapsing the hemipenes to confirm sex) is not necessary for routine sexing and is not something a beginner should attempt. The external anatomy is sufficient when done correctly at the right age.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "The features people check instead (and why they do not work)",
+      },
+      {
+        type: "p",
+        text: "**Body size:** Males in crested geckos are typically smaller and slimmer than females at equivalent ages, which is the opposite of what most people expect. A larger juvenile is statistically more likely to be female, but this is a correlation, not a rule. Sell animals on anatomy, not on \"she just looks bigger.\"",
+      },
+      {
+        type: "p",
+        text: "**Head shape:** Some breeders claim males have broader, more angular heads. This is real in adults but is not a useful sexing tool in juveniles, where head shape differences are minimal and overlap with individual variation.",
+      },
+      {
+        type: "p",
+        text: "**Pattern or color intensity:** Pattern does not indicate sex. A Lilly White female and a Lilly White male are indistinguishable from color alone. Morphs, including all the proven incomplete-dominants in the fact-check corpus (Lilly White, Cappuccino, Soft Scale, White Wall), are autosomal, located on non-sex chromosomes, which means males and females express and carry them at equal rates. There is no color shortcut.",
+      },
+      {
+        type: "p",
+        text: "**Cloacal plug presence:** Males produce waxy cloacal plugs that occasionally get expelled. Finding a plug in your enclosure confirms a male is present, but it is not a reliable routine sexing method, only an after-the-fact confirmation.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "My opinion: sell unsexed, label honestly",
+      },
+      {
+        type: "p",
+        text: "Here is where I will take a position. I think the industry norm of sexing animals at 4-8 grams for pricing purposes is doing real harm. A gecko listed as female at 5 grams has a non-trivial chance of being male, and the seller either knows this and prices accordingly anyway, or does not know it and is not experienced enough to be making confident sex calls.",
+      },
+      {
+        type: "p",
+        text: "The honest thing to do is sell animals under 10 grams as \"unsexed\" and price them accordingly. Buyers who need a confirmed female for a specific pairing should be waiting until 15+ grams regardless of what any listing says. The 6-8 week shipping window is not biologically special, it is logistically convenient for the seller.",
+      },
+      {
+        type: "p",
+        text: "Sellers who mark animals \"female (to be confirmed at weight)\" are doing it right. That label is honest. It tells the buyer exactly what they are getting and what they need to verify.",
+      },
+      {
+        type: "p",
+        text: "If you are buying a juvenile for a breeding project and the seller insists on a sex call at 5 grams with full confidence, that is a flag. Not a disqualifier, but a flag worth noting.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Practical takeaways for Monday",
+      },
+      {
+        type: "p",
+        text: "**Buyers:**",
+      },
+      {
+        type: "ul",
+        items: [
+          "Weigh any juvenile you receive and, if it is under 10 grams, mark it \"sex TBD\" in your records regardless of what the seller said.",
+          "Recheck at 10 grams and again at 15. Take photos of the ventral tail base at each check so you have a reference sequence.",
+          "If you are building a paired breeding project, do not purchase \"confirmed female\" animals under 12 grams from unfamiliar sellers without a photo showing the ventral anatomy.",
+        ],
+      },
+      {
+        type: "p",
+        text: "**Sellers:**",
+      },
+      {
+        type: "ul",
+        items: [
+          "List anything under 10 grams as \"unsexed\" or \"sex TBD.\"",
+          "Provide a ventral photo at the time of listing. Buyers who know what they are looking at will appreciate it. Buyers who do not know what they are looking at will learn.",
+          "Do not let shipping-date pressure push you into a sex call the animal's anatomy cannot support.",
+        ],
+      },
+      {
+        type: "p",
+        text: "**Breeders working with proven morphs:**",
+      },
+      {
+        type: "ul",
+        items: [
+          "Sex your project animals twice: once at 10-12 grams and once at 15+ grams. A second check catches the cases where an early call was optimistic.",
+          "For any incomplete-dominant pairing (especially Lilly White × Lilly White, which is a pairing to avoid), confirm sex before finalizing the breeding plan, not after. The cost of a wrong call is a season of failed eggs.",
+          "Keep your genetic records linked to your sex-confirmation dates and photos. If you ever sell offspring and the buyer questions the lineage, your records are the proof.",
+        ],
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Back to that $420 gecko",
+      },
+      {
+        type: "p",
+        text: "The buyer eventually found a male breeder to pair with the mis-sexed animal, and the \"she\" became a sire in a Lilly White project instead of a dam. The season was salvaged. But the buyer lost the breeding slot they had planned for, paid a female premium for a male, and spent two months replanning before the first egg was ever laid.",
+      },
+      {
+        type: "p",
+        text: "A clear ventral photo and an honest \"sex TBD at 8g, will update at 15g\" in the listing would have cost the seller nothing and saved the buyer everything. That is the standard breeders should be holding themselves to.",
+      },
+    ],
+    faq: [
+      {
+        question: "At what age can you sex a crested gecko?",
+        answer: "Weight is more reliable than age. Most experienced breeders wait until 10-15 grams before making a confident sex call. Hatchlings are typically 2-3 grams and unsexable. A gecko can reach 10 grams anywhere from 2 to 5 months old depending on feeding and temperature, so track grams, not weeks.",
+      },
+      {
+        question: "What do male crested gecko pores look like?",
+        answer: "In mature males, pre-cloacal pores appear as a V-shaped or arc-shaped row of small, slightly raised, waxy or yellowish dots just anterior to the vent. They become more obvious with age. In females, pores are either absent or present only as faint, flat dots with no waxy secretion and no clear row formation.",
+      },
+      {
+        question: "Can you sex a crested gecko by size?",
+        answer: "No. Size alone is not a reliable sexing method. Adult male crested geckos tend to be smaller and slimmer than females, which is counterintuitive. Individual variation is too large in juveniles for size to be diagnostic. Always use ventral anatomy: the hemipenal bulge and pre-cloacal pores.",
+      },
+      {
+        question: "What is the hemipenal bulge in crested geckos?",
+        answer: "The hemipenal bulge is the visible widening at the tail base just behind the vent in male crested geckos. Males have paired hemipenes stored there, creating a rounded widening before the tail tapers. Females have a flat, uniformly tapering tail base with no widening posterior to the vent.",
+      },
+      {
+        question: "Do male and female crested geckos carry morphs differently?",
+        answer: "No. All proven crested gecko morphs (Lilly White, Axanthic, Cappuccino, Soft Scale, White Wall) are autosomal, meaning they are located on non-sex chromosomes. Males and females inherit and express every morph at identical rates. Sex has no effect on morph probability.",
+      },
+      {
+        question: "Is it safe to manually evert the hemipenes to sex a crested gecko?",
+        answer: "Manual eversion is not necessary for routine sexing and carries injury risk if done incorrectly. External anatomy (hemipenal bulge and pore row) is sufficient at the right age and weight with good lighting. Leave eversion to experienced reptile veterinarians if there is a clinical reason for it.",
+      },
+      {
+        question: "Why did my 'female' crested gecko develop a hemipenal bulge?",
+        answer: "It was almost certainly mis-sexed when young, before the anatomy was developed enough to read clearly. This is common with animals sexed under 8-10 grams. The hemipenal bulge often becomes obvious between 10 and 20 grams as the animal matures. Update your records and adjust your breeding plans accordingly.",
+      },
+      {
+        question: "How do I sex a crested gecko without stressing it out?",
+        answer: "Let the gecko walk onto your hand voluntarily, then let it settle for 30-60 seconds before rotating your hand under a bright light. A clear deli cup lets you view the ventral tail base from below while the gecko moves freely, reducing handling stress. Calm animals show clearer anatomy than stressed ones.",
+      },
+    ],
+    internalLinks: [
+      {
+        href: "/GeneticsGuide",
+        label: "Crested Gecko Genetics Guide",
+      },
+      {
+        href: "/MorphGuide/lilly-white",
+        label: "Lilly White morph profile",
+      },
+      {
+        href: "/MorphGuide/axanthic",
+        label: "Axanthic morph profile",
+      },
+      {
+        href: "/GeneticCalculatorTool",
+        label: "Genetic Calculator Tool",
+      },
+    ],
+    externalCitations: [
+      {
+        url: "https://www.pangeareptile.com/blogs/news/sexing-crested-geckos",
+        label: "Pangea Reptile, Sexing Crested Geckos",
+      },
+      {
+        url: "https://trends.google.com/trends/explore?q=how+to+sex+a+crested+gecko&date=today+3-m&geo=US",
+        label: "Google Trends, 'how to sex a crested gecko' +110% (US, 90 days)",
+      },
+    ],
+  }
 ];
 
 /**

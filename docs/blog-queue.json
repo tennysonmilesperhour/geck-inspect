@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-06-03T11:07:00.862Z",
+  "lastUpdated": "2026-06-03T12:00:35.059Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -454,7 +454,7 @@
       "title": "Sex Your Crested Gecko Accurately: A Breeder's Guide to Pore Identification",
       "slug": "how-to-sex-crested-gecko",
       "category": "identification",
-      "status": "new",
+      "status": "published",
       "score": {
         "total": 18,
         "demand": 9,
@@ -463,8 +463,8 @@
         "voiceFit": 8
       },
       "createdAt": "2026-06-01T11:42:51.302Z",
-      "draftedAt": null,
-      "publishedAt": null,
+      "draftedAt": "2026-06-03T12:00:34.941Z",
+      "publishedAt": "2026-06-03T12:00:35.059Z",
       "evidence": [
         {
           "source": "google-trends",
