@@ -1,10 +1,10 @@
 {
-  "ranAt": "2026-06-01T11:42:51.302Z",
+  "ranAt": "2026-06-03T11:06:43.386Z",
   "signals": {
     "googleAc": 95,
     "bluesky": 80,
     "googleTrends": 16,
-    "youtube": 69,
+    "youtube": 67,
     "breederBlogs": 1,
     "reddit": 0,
     "errors": [
@@ -21,11 +21,7 @@
       "search \"breeding fail\": 403 Blocked"
     ]
   },
-  "costUsd": 0.033578000000000004,
-  "addedSlugs": [
-    "cappuccino-breeding-incomplete-dominance",
-    "how-to-sex-crested-gecko",
-    "tiger-morph-breeding-polygenic"
-  ],
-  "rationale": "The signals show strong, rising search demand for specific genetics and breeding topics (Cappuccino, sexing, Tiger morphs). Google Trends reveals +110% surge in \"how to sex a crested gecko\" and +80% for \"tiger crested gecko\", with multiple breeder videos expressing frustration around Cappuccino breeding outcomes. These align with existing knowledge in our genetics glossary (incomplete dominance, polygenic traits). I rejected general care topics, listicles (\"morph chart\"), and duplicates of already-published slugs. The three topics picked have concrete misconceptions breeders can act on and are grounded in verifiable genetics mechanics."
+  "costUsd": 0.027927999999999998,
+  "addedSlugs": [],
+  "rationale": "\nThe signals show broad, generalist demand (Google Trends: care, diet, enclosure, morphs) and consistent high-engagement Bluesky posts about morphs and specific lines (Lilly White, Cappuccino). However, most search volume is on basic care/husbandry topics we've already published. The YouTube landscape is dominated by morph guides and Cappuccino breeding debates—many of which duplicate our existing slug \"cappuccino-crested-gecko-genetics\" and \"super-cappuccino-viability-debate.\" Google Trends shows a new rising query: \"crested gecko morph chart\" (breakout) and \"repashy crested gecko diet\" (breakout), suggesting breeders are searching for concrete breeding/pairing tools rather than general education. Reddit provides zero signals, limiting community heat. The strongest actionable angle is polygenic breeding strategy for commonly-bred lines where breeders lack clear expectations—but most low-hanging fruit (extreme harlequin, axanthic strategy, soft-scale genetics) are already published. After screening against our published list, nothing clears the bar for a full blog post this week.\n"
 }
