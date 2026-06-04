@@ -1,5 +1,8 @@
 import './App.css'
-import { Suspense, lazy, useState, useEffect } from 'react';
+import { Suspense, useState, useEffect } from 'react';
+// Retry-wrapped drop-in for React.lazy: recovers from transient chunk
+// fetch failures and stale-deploy hash mismatches. See lazyWithRetry.js.
+import { lazy } from '@/lib/lazyWithRetry';
 import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { HelmetProvider } from 'react-helmet-async'

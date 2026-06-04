@@ -35,7 +35,14 @@ export default class ErrorBoundary extends React.Component {
                             </p>
                         )}
                         <button
-                            onClick={() => window.location.reload()}
+                            onClick={() => {
+                                // Clear the lazyWithRetry one-time-reload
+                                // guard so a manual retry re-runs the
+                                // self-heal flow (retry + reload) from
+                                // scratch instead of being short-circuited.
+                                try { window.sessionStorage?.removeItem('gi:chunk-reload'); } catch {}
+                                window.location.reload();
+                            }}
                             className="mt-4 px-6 py-2 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-sm font-medium transition-colors"
                         >
                             Reload Page

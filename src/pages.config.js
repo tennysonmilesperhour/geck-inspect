@@ -47,7 +47,10 @@
  *
  * The mainPage value must match a key in the PAGES object exactly.
  */
-import { lazy } from 'react';
+// `lazy` here is our retry-wrapped version (resilient to transient chunk
+// fetch failures + stale deploys), a drop-in for React's lazy. See
+// src/lib/lazyWithRetry.js.
+import { lazy } from '@/lib/lazyWithRetry';
 import __Layout from './Layout.jsx';
 
 // Eagerly loaded: the pages a signed-in user is most likely to hit first.
