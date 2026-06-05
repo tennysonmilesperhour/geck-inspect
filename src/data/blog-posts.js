@@ -3592,6 +3592,291 @@ export const BLOG_POSTS = [
         label: "Google Trends, 'how to sex a crested gecko' +110% (US, 90 days)",
       },
     ],
+  },
+  {
+    slug: "pinstripe-crested-gecko-pricing-genetics",
+    title: "Pinstripe Crested Gecko: Why Breeders Overpay",
+    description: "Pinstripe crested geckos are trending at +60% on Google, but the price premium rarely matches the genetics. Here's what you're actually paying for, and when it's worth it.",
+    keyphrase: "pinstripe crested gecko",
+    category: "breeding",
+    tags: [
+      "breeding",
+      "harlequin",
+      "pinstripe",
+    ],
+    datePublished: "2026-06-05",
+    dateModified: "2026-06-05",
+    heroEyebrow: "Breeding + Genetics",
+    tldr: [
+      "Pinstripe is a polygenic trait, not a Mendelian morph. You cannot Punnett-square your way to a 100% pinstripe clutch.",
+      "Full pinstripe (100% coverage) commands $250-$350+ while a partial pin at 70% might fetch $120. The gap is almost entirely about line stability, not rarity.",
+      "Paying a premium for a pinstripe gecko is only justified if the seller can show consistent full-pin offspring across multiple clutches.",
+      "Pairing two full pinstripes improves odds but does not guarantee high-coverage offspring. Background genetics dominate.",
+      "The real breeder skill in pinstripe lines is culling ruthlessly across generations, not a single lucky pairing.",
+    ],
+    body: [
+      {
+        type: "p",
+        text: "A $340 full-pinstripe juvenile sat in a breeders-only Facebook group for eleven minutes before it sold at expo price, no negotiation. Three rows down in the same thread, a 70% partial pin from a less-documented line was asking $95 and got no offers for four days. Same pattern type. Roughly 30 percentage points of coverage difference. More than $245 apart in realized price.",
+      },
+      {
+        type: "p",
+        text: "That gap is the entire story of why pinstripe pricing confuses buyers who are new enough to the hobby to think they understand it.",
+      },
+      {
+        type: "p",
+        text: "So here is the question this post is actually answering: if pinstripe is polygenic, why does a high-coverage animal cost three times more than a low-coverage one, and how do you tell whether any given seller is charging for real line work or just good luck?",
+      },
+      {
+        type: "p",
+        text: "The answer matters if you are buying your next project animal, pricing your own holdbacks, or trying to understand why your pinstripe × pinstripe pairing keeps throwing 60% partials.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Pinstripe is polygenic. That changes everything.",
+      },
+      {
+        type: "p",
+        text: "Start here because it is the thing most buyers misunderstand. Pinstripe is not a recessive. It is not an incomplete dominant. You cannot draw a Punnett square, predict a ratio, and hold a seller to it.",
+      },
+      {
+        type: "p",
+        text: "According to the Geck Inspect morph catalogue, pinstripe is a polygenic pattern trait where the raised scales along the dorsal ridge become cream or yellow, forming a bright parallel line down the back. \"Full pinstripe\" means 100% coverage from the neck to the tail base. Partial pinstripe is far more common.",
+      },
+      {
+        type: "p",
+        text: "Polygenic means the trait is controlled by many genes, each contributing a small additive effect. The result is a continuous spectrum of expression, not a clean on/off. A gecko does not either have pinstripe or not have it. It has somewhere between 0% and 100%, shaped by dozens of small-effect genes inherited from both parents.",
+      },
+      {
+        type: "p",
+        text: "This is why two stunning full-pin parents can produce a clutch where half the offspring show 60% coverage. It is also why two modestly-pinned parents, from the right line, can occasionally throw a near-100% animal. The genes are additive and probabilistic. Individual clutch results vary widely. Averages matter; single animals do not.",
+      },
+      {
+        type: "p",
+        text: "The practical consequence: **a seller who charges a full-pin premium on a gecko from a single high-expression parent, with no documentation of offspring quality, is charging you for luck.**",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "What \"percentage\" actually means and why buyers get confused",
+      },
+      {
+        type: "p",
+        text: "Walk any expo floor and you will hear sellers announce percentages with the same confidence they would announce a birth year. \"This one is a 90% pin.\" Sometimes they are right. Often they are guessing, or measuring when the animal is fired down, or comparing to a 60% animal and calling the comparison flattering.",
+      },
+      {
+        type: "p",
+        text: "Percentage coverage in pinstripe is measured by how much of the raised dorsal scale line, running from the back of the neck crest to the base of the tail, is colored cream or yellow rather than the base color. A true 100% full pinstripe has the entire line covered. A 75% partial has a quarter of that line reverting to base color, usually in a gap near the mid-body or tail base.",
+      },
+      {
+        type: "p",
+        text: "The confusion points:",
+      },
+      {
+        type: "p",
+        text: "First, coverage is easier to read when the animal is fired up. A partial pin fired down can look almost full. Always get fired-up photos. If a seller cannot provide them, treat the percentage claim with skepticism.",
+      },
+      {
+        type: "p",
+        text: "Second, partial pinstripe under 75% typically does not command a meaningful premium in the current market. The morph guide is blunt on this: most buyers pay up only for 90%+ coverage. A \"70% pin\" is a lovely animal but it is not a pinstripe project animal. Pricing it as one is a common seller mistake, and a common buyer mistake when they see the word \"pinstripe\" in a listing and assume premium applies across all coverage levels.",
+      },
+      {
+        type: "p",
+        text: "Third, pinstripe can be hard to distinguish from phantom pinstripe in low-coverage animals. Standard pinstripe has the raised dorsal scales colored differently than the base. Phantom pinstripe keeps those scales the same as the base while the flanks carry bright pattern. They are different looks on the same trait gradient. Know what you are buying before you pay for it.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Why line documentation is the only thing you should be paying extra for",
+      },
+      {
+        type: "p",
+        text: "Here is the thing about polygenic traits: a single gorgeous animal tells you almost nothing about what it will produce. Two gorgeous animals from a documented line that consistently throws full-pin offspring tell you almost everything you need to know.",
+      },
+      {
+        type: "p",
+        text: "This is what \"breeding value\" means in practice. It is the genetic potential an animal contributes to offspring beyond what it displays itself. A 95% pin from a line where the median offspring is 85% has far higher breeding value than a 95% pin whose parents were one-offs from a mixed harlequin project. Both animals look nearly identical. Only one of them is worth the premium.",
+      },
+      {
+        type: "p",
+        text: "The hobbyist-level shortcut for estimating this: ask for photos of the animal's siblings and the breeder's previous clutches from the same pairing. A breeder with genuine line stability will have those photos. They will be proud of them. A breeder who has been lucky with one pair will either not have them or will show you the best animal from each clutch rather than the median.",
+      },
+      {
+        type: "p",
+        text: "Practically, what you are looking for in a documented full-pin line:",
+      },
+      {
+        type: "ul",
+        items: [
+          "At least two clutches from the same pairing showing 80%+ average coverage",
+          "Offspring evaluated at 6+ months, not at hatch (pinstripe expression in hatchlings is not fully representative of adult coverage)",
+          "Both parents documented as full or near-full pin, not just the sire",
+        ],
+      },
+      {
+        type: "p",
+        text: "The third point is commonly cut. I have seen sale listings where the sire is a documented 100% full pin and the dam is described as \"nice partial\" with no percentage listed. That pairing will statistically produce better-than-average pinstripe offspring, but the seller does not get to charge full-line pricing without both parents documented.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "The real work: culling and selection pressure",
+      },
+      {
+        type: "p",
+        text: "Polygenic traits respond to selection, but the response is slow and requires consistent pressure across many generations. The genetics-sections.jsx module in Geck Inspect's corpus puts it clearly: meaningful shift in a polygenic trait takes five to ten generations of consistent selection pressure. A \"one generation overnight transformation\" is almost always polygenic luck.",
+      },
+      {
+        type: "p",
+        text: "What this means for pinstripe lines specifically: the breeders charging $300+ for full-pin animals and backing it up with documentation have almost certainly been selecting hard for multiple generations. They are not just pairing their best animals; they are culling the bottom of their lines, too.",
+      },
+      {
+        type: "p",
+        text: "Selection differential, in the technical sense, is the gap between the average of your breeding animals and the average of your whole collection. The larger that gap, the more pressure you are applying. If you are keeping every pinstripe animal that hatches out and breeding all of them, you are applying almost no selection pressure. If you are keeping only the top 20% of coverage animals and selling or petting out everything below 80%, you are moving the line.",
+      },
+      {
+        type: "p",
+        text: "The heritability of pinstripe coverage in crested geckos has not been formally measured in published research. The practical estimate from experienced breeders, consistent with heritability of similar polygenic color and pattern traits in other reptile species, sits in the 0.3 to 0.5 range. That means roughly a third to half of the variation in coverage you see across animals is actually genetic. The rest is developmental noise, incubation condition effects, and individual variation. Response to selection is real, but it is not dramatic in any single generation.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "My opinion: most pinstripe pricing is disconnected from the genetics",
+      },
+      {
+        type: "p",
+        text: "I think the pinstripe market has a documentation problem that buyers mostly do not notice until they try to build a line from purchased animals.",
+      },
+      {
+        type: "p",
+        text: "The word \"pinstripe\" appears in listings that range from a documented full-pin line with five years of offspring data behind it, to a hatchling from a pet-store pairing where one parent \"had some pinstripe,\" being sold at a 40% markup over a non-pin animal of similar quality. The markup is applied because the word is in the listing. The buyer does not know the difference.",
+      },
+      {
+        type: "p",
+        text: "This is not the same as fraud. The hatchling might carry genuinely good polygenic background genes. But it also might not, and you will not know for two or three generations of your own project work. Paying $250 for that uncertainty is fine if you go in with eyes open. Paying $250 because you assume \"pinstripe\" is a named morph with reliable inheritance is paying for something the seller cannot actually deliver.",
+      },
+      {
+        type: "p",
+        text: "The dissenting view worth acknowledging: some breeders argue that any visual pinstripe, even a partial, is worth a modest premium because it demonstrates the relevant polygenic background genes are present in at least some quantity. That is a reasonable position for a partial pin priced at $130 from a transparent seller. It is not a reasonable position for a partial pin priced at $280 with a \"full-pin project\" marketing claim attached.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Practical takeaways",
+      },
+      {
+        type: "p",
+        text: "If you are buying a pinstripe crested gecko for a breeding project, here is what to actually ask:",
+      },
+      {
+        type: "p",
+        text: "**Ask for fired-up photos of the animal and both parents.** Fired-down coverage looks better than it is. You want all three animals photographed in the same state.",
+      },
+      {
+        type: "p",
+        text: "**Ask for sibling photos from at least one previous clutch.** A breeder with line stability has them. What you want to see is the median sibling, not the hero shot.",
+      },
+      {
+        type: "p",
+        text: "**Know the percentage threshold that matters for your project.** If you are building a full-pin line, you want foundation stock at 90%+. A 70% partial pin is not a shortcut to a 100% clutch, it is a step sideways.",
+      },
+      {
+        type: "p",
+        text: "**Price accordingly.** Based on the morph guide's current pricing, a true full pinstripe from a documented line warrants the $250-$350 range. A partial pin under 80% from an undocumented line warrants the $120-$180 range at most. The overlap in the market between these two categories is where buyers get hurt.",
+      },
+      {
+        type: "p",
+        text: "**Use a genetic calculator for what it can and cannot tell you.** The [Geck Inspect Genetic Calculator](/GeneticCalculatorTool) handles Mendelian traits correctly. For pinstripe, the calculator can track het status for any Mendelian morphs stacked on the same animal, but it cannot predict pinstripe coverage percentages. No tool can. That is what five generations of documented line work is for.",
+      },
+      {
+        type: "p",
+        text: "**Evaluate your own holdbacks honestly.** If you are producing pinstripe animals, photograph every hatchling at 6 months, log the coverage percentage, and be honest about what your median looks like. Your median is your line's actual quality, not your best animal from the last three clutches.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "The $340 juvenile, revisited",
+      },
+      {
+        type: "p",
+        text: "That sold animal at the top of this post was worth $340 because the seller had four clutch records showing a median of 88% coverage, both parents documented, and a waiting list of three buyers. The 95% animal was almost incidental. The price was for the proof.",
+      },
+      {
+        type: "p",
+        text: "The $95 partial pin four rows down is a fine animal. It might even have better background color genetics than the full pin. But the seller had one photo, no sibling documentation, and a partial-pin parent listed as \"female, unknown.\" If you are buying a pet, that is totally fine at $95. If you are buying a breeding project, you are paying for a lottery ticket, not a line.",
+      },
+      {
+        type: "p",
+        text: "Know which one you want before you open your wallet.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is pinstripe in crested geckos a recessive or dominant trait?",
+        answer: "Neither. Pinstripe is a polygenic trait controlled by many genes with additive effects. You cannot predict offspring ratios with a Punnett square. Coverage percentage improves through consistent selective breeding over multiple generations, not from a single pairing of two high-expression animals.",
+      },
+      {
+        question: "What is considered a full pinstripe crested gecko?",
+        answer: "Full pinstripe means 100% of the raised dorsal scales from the neck crest to the tail base are colored cream or yellow, forming a continuous parallel stripe. Most breeders treat 90%+ as \"full\" for practical purposes. Under 75% is generally called a partial pinstripe and does not command the same market premium.",
+      },
+      {
+        question: "Can two full pinstripe crested geckos produce non-pinstripe offspring?",
+        answer: "Yes. Because pinstripe is polygenic, even two 100% full-pin parents can produce offspring with partial or low coverage. They will statistically produce better average coverage than unselected pairs, but individual results vary. This is normal and expected from any polygenic trait.",
+      },
+      {
+        question: "What is phantom pinstripe and is it different from regular pinstripe?",
+        answer: "Yes, they are different looks. Standard pinstripe has the raised dorsal scales colored cream or yellow against the base color. Phantom pinstripe keeps those dorsal scales the same as the base, while the flanks carry the bright pattern instead. Both are polygenic and neither follows a Mendelian inheritance pattern.",
+      },
+      {
+        question: "How much should a pinstripe crested gecko cost?",
+        answer: "A full pinstripe (90%+) from a documented line typically runs $250-$350. A partial pinstripe under 80% from an undocumented line is generally worth $120-$180. The price gap is about line stability and offspring documentation, not rarity. Be skeptical of partial pins priced at full-pin rates.",
+      },
+      {
+        question: "At what age should I evaluate pinstripe coverage in crested geckos?",
+        answer: "Wait until at least 6 months of age. Hatchling pinstripe expression is not fully representative of adult coverage. A hatchling that looks partial may develop better coverage, and one that looks near-full may stabilize lower. Always ask sellers for 6-month-plus photos.",
+      },
+      {
+        question: "Does stacking pinstripe with Lilly White or Axanthic change how the pinstripe inherits?",
+        answer: "No. The Lilly White and Axanthic components follow their own Mendelian inheritance patterns (incomplete dominant and recessive, respectively) and can be Punnett-squared. The pinstripe coverage percentage remains polygenic regardless of what Mendelian morphs are stacked on the same animal.",
+      },
+      {
+        question: "How many generations does it take to improve pinstripe coverage?",
+        answer: "Meaningful improvement in a polygenic trait typically takes 5 to 10 generations of consistent selection pressure. A single pairing of two high-coverage animals shifts the average modestly. Sustained culling of low-coverage animals from the breeding pool across many generations is what actually moves the line.",
+      },
+    ],
+    internalLinks: [
+      {
+        href: "/MorphGuide/pinstripe",
+        label: "Pinstripe morph profile",
+      },
+      {
+        href: "/MorphGuide/phantom-pinstripe",
+        label: "Phantom Pinstripe morph profile",
+      },
+      {
+        href: "/GeneticsGuide",
+        label: "Crested gecko genetics guide",
+      },
+      {
+        href: "/GeneticCalculatorTool",
+        label: "Geck Inspect Genetic Calculator",
+      },
+      {
+        href: "/MorphGuide/inheritance/polygenic",
+        label: "Polygenic trait overview",
+      },
+    ],
+    externalCitations: [
+      {
+        url: "https://www.pangeareptile.com/blogs/news",
+        label: "Pangea Reptile Blog",
+      },
+      {
+        url: "https://www.morphmarket.com/articles/morphpedia/crested-gecko/",
+        label: "MorphMarket Morphpedia: Crested Gecko",
+      },
+    ],
   }
 ];
 

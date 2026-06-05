@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-06-05T09:59:16.516Z",
+  "lastUpdated": "2026-06-05T10:53:02.105Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -528,7 +528,7 @@
       "title": "Pinstripe Crested Gecko: Why Breeders Overpay for This Polygenic Morph",
       "slug": "pinstripe-crested-gecko-pricing-genetics",
       "category": "breeding",
-      "status": "new",
+      "status": "published",
       "score": {
         "total": 22,
         "demand": 8,
@@ -537,8 +537,8 @@
         "accuracyRisk": 2
       },
       "createdAt": "2026-06-05T09:58:17.805Z",
-      "draftedAt": null,
-      "publishedAt": null,
+      "draftedAt": "2026-06-05T10:53:01.989Z",
+      "publishedAt": "2026-06-05T10:53:02.105Z",
       "evidence": [
         {
           "source": "google-trends",
