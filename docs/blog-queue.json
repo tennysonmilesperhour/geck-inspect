@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-06-03T12:00:35.059Z",
+  "lastUpdated": "2026-06-05T09:59:16.516Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -519,6 +519,83 @@
         "The Tiger pattern is subtle enough that breeders often misidentify offspring, leading to expensive mismatches.",
         "Polygenic traits compound: stacking Tigers with other patterns requires understanding how traits overlap.",
         "Why Tiger × Tiger breeding is a long game that rewards patience but punishes shortcuts."
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "tpc_1780653497805_pinstripec",
+      "title": "Pinstripe Crested Gecko: Why Breeders Overpay for This Polygenic Morph",
+      "slug": "pinstripe-crested-gecko-pricing-genetics",
+      "category": "breeding",
+      "status": "new",
+      "score": {
+        "total": 22,
+        "demand": 8,
+        "originality": 8,
+        "voiceFit": 8,
+        "accuracyRisk": 2
+      },
+      "createdAt": "2026-06-05T09:58:17.805Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "google-trends",
+          "snippet": "Google Trends rising query (related to \"crested gecko\", last 90 days US): \"pinstripe crested gecko\" +60%",
+          "url": "https://trends.google.com/trends/explore?q=pinstripe+crested+gecko&date=today+3-m&geo=US"
+        },
+        {
+          "source": "google-ac",
+          "snippet": "Google autocomplete for \"crested gecko morph\" suggests \"crested gecko morphs and prices\"",
+          "url": null
+        }
+      ],
+      "angleIdeas": [
+        "Pinstripes are trending harder than any other polygenic morph right now—but the price premium doesn't match the genetics. Here's why.",
+        "Most buyers see pinstripe and assume it's rare. The reality: it's a recessive-looking trait on a polygenic background, which means consistency is the real breeder skill—not rarity.",
+        "If you're paying breeder markup for a pinstripe over a normal, you're paying for line stability and proven offspring quality. Most sellers charge without proof."
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "tpc_1780653497805_cappuccino",
+      "title": "Cappuccino Crested Gecko Markers: Stop Guessing What You Actually Own",
+      "slug": "cappuccino-identification-markers-breeding",
+      "category": "identification",
+      "status": "new",
+      "score": {
+        "total": 20,
+        "demand": 8,
+        "originality": 7,
+        "voiceFit": 7,
+        "accuracyRisk": 2
+      },
+      "createdAt": "2026-06-05T09:58:17.805Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "google-ac",
+          "snippet": "Google autocomplete for \"cappuccino crested gecko\" suggests \"cappuccino crested gecko markers\"",
+          "url": null
+        },
+        {
+          "source": "youtube",
+          "snippet": "YouTube: \"How To ID Cappuccino Crested Geckos ( & Fraps)\" by Robby's Reptiles, 6,346 views (1 year ago)",
+          "url": "https://www.youtube.com/watch?v=0uKXVa6znhU"
+        },
+        {
+          "source": "youtube",
+          "snippet": "YouTube: \"Don't buy super cappuccino crested gecko it's a scam and waste of money\" by Homestead reptiles, 2,082 views (1 year ago)",
+          "url": "https://www.youtube.com/watch?v=5O_obmlNu9I"
+        }
+      ],
+      "angleIdeas": [
+        "You got sold a cappuccino—or did you? Most buyers can't spot the difference between cappuccino, frappuccino, and a well-marked normal. Here's the actual visual checklist.",
+        "Cappuccino breeders disagree on marker reliability, and sellers exploit that confusion. What markers actually predict a cappuccino hatchling consistently?",
+        "If you're breeding cappuccino to cappuccino, you need to know if you actually own cappuccinos. This guide cuts through the fluff with on-animal ID criteria."
       ],
       "rejectionReason": null,
       "prUrl": null

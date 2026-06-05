@@ -1,13 +1,16 @@
 {
-  "ranAt": "2026-06-03T11:06:43.386Z",
+  "ranAt": "2026-06-05T09:58:17.805Z",
   "signals": {
     "googleAc": 95,
     "bluesky": 80,
-    "googleTrends": 16,
-    "youtube": 67,
+    "googleTrends": 9,
+    "youtube": 68,
     "breederBlogs": 1,
     "reddit": 0,
     "errors": [
+      "\"crested gecko morph\": related: 429",
+      "\"cappuccino gecko\": related: 429",
+      "\"lilly white gecko\": related: 429",
       "r/crestedgecko new: 403 Blocked",
       "r/crestedgecko top: 403 Blocked",
       "r/morphmarket new: 403 Blocked",
@@ -21,7 +24,10 @@
       "search \"breeding fail\": 403 Blocked"
     ]
   },
-  "costUsd": 0.027927999999999998,
-  "addedSlugs": [],
-  "rationale": "\nThe signals show broad, generalist demand (Google Trends: care, diet, enclosure, morphs) and consistent high-engagement Bluesky posts about morphs and specific lines (Lilly White, Cappuccino). However, most search volume is on basic care/husbandry topics we've already published. The YouTube landscape is dominated by morph guides and Cappuccino breeding debates—many of which duplicate our existing slug \"cappuccino-crested-gecko-genetics\" and \"super-cappuccino-viability-debate.\" Google Trends shows a new rising query: \"crested gecko morph chart\" (breakout) and \"repashy crested gecko diet\" (breakout), suggesting breeders are searching for concrete breeding/pairing tools rather than general education. Reddit provides zero signals, limiting community heat. The strongest actionable angle is polygenic breeding strategy for commonly-bred lines where breeders lack clear expectations—but most low-hanging fruit (extreme harlequin, axanthic strategy, soft-scale genetics) are already published. After screening against our published list, nothing clears the bar for a full blog post this week.\n"
+  "costUsd": 0.031541,
+  "addedSlugs": [
+    "pinstripe-crested-gecko-pricing-genetics",
+    "cappuccino-identification-markers-breeding"
+  ],
+  "rationale": "The signal corpus shows strong search volume around specific morphs (tiger, pinstripe, black, cappuccino, lilly white, axanthic) with rising Google Trends, but most are either already-published topics or too general. YouTube content is mature and comprehensive. Bluesky engagement is primarily around pet ownership and art, not breeding/genetics education. No Reddit threads provided signals for emerging confusion. The strongest actionable signal is \"tiger crested gecko\" (+80% Trends interest) and \"pinstripe crested gecko\" (+60%), but tiger-morph-breeding-polygenic is already queued. Pinstripe has no published coverage and shows sustained demand. The second signal is cappuccino confusion—Google autocomplete shows multiple pain points (traits, markers, breeding, hatchling ID), YouTube has a dedicated \"scam\" video, and forums historically show breeder disagreement on viability and economics. The third signal is lower: black/blue morphs appear in Trends (+60%) but we've already published black-blue genetics. Lilly white shows sustained interest but we've published that slug. Axanthic shows volume but no particular novel angle emerges from the signals. I'm proposing pinstripe (strong trending, unpublished, measurable demand) and a cappuccino-focused misconception piece (economics + identification), then declining a third because nothing else clears the bar without duplicating existing work or veering into pure husbandry."
 }
