@@ -10,7 +10,12 @@
  * the same "preview data" banner and the single "view plans" CTA.
  */
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
+// Retry-wrapped lazy: each analytics sub-view is its own chunk so opening
+// Business Tools only downloads the section the user is actually looking at
+// (plus recharts, only for the views that chart). Cuts the initial payload
+// and shrinks the number of must-succeed fetches on first paint.
+import { lazy } from '@/lib/lazyWithRetry';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import {
@@ -25,12 +30,18 @@ import {
 } from '@/components/ui/popover';
 import useUserPreference from '@/hooks/useUserPreference';
 
-import OverviewDashboard from './OverviewDashboard';
-import TraitComboExplorer from './TraitComboExplorer';
-import RegionalHeatmap from './RegionalHeatmap';
-import ArbitrageRadar from './ArbitrageRadar';
-import SupplyPipeline from './SupplyPipeline';
-import BreederMarketShare from './BreederMarketShare';
+// Section sub-views are code-split: only the active section's chunk loads.
+// OverviewDashboard / TraitComboExplorer / SupplyPipeline pull recharts, so
+// recharts is fetched only when one of those is the visible section.
+const OverviewDashboard  = lazy(() => import('./OverviewDashboard'));
+const TraitComboExplorer = lazy(() => import('./TraitComboExplorer'));
+const RegionalHeatmap    = lazy(() => import('./RegionalHeatmap'));
+const ArbitrageRadar     = lazy(() => import('./ArbitrageRadar'));
+const SupplyPipeline     = lazy(() => import('./SupplyPipeline'));
+const BreederMarketShare = lazy(() => import('./BreederMarketShare'));
+// Drilldown modal stays eager: it's light (no charts), is mounted at all
+// times to drive its open/close animation, and is needed the instant a
+// user clicks into any figure.
 import TransactionDrilldown from './TransactionDrilldown';
 
 import {
@@ -146,33 +157,35 @@ export default function MarketAnalytics({ user }) {
       <SubNav section={section} setSection={setSection} pinnedCount={pinState.ids.length} />
 
       <div>
-        {section === 'pinned'    && (
-          pinState.ids.length === 0 ? (
-            <PinnedEmptyState onGoToOverview={() => setSection('overview')} />
-          ) : (
+        <Suspense fallback={<SectionLoading />}>
+          {section === 'pinned'    && (
+            pinState.ids.length === 0 ? (
+              <PinnedEmptyState onGoToOverview={() => setSection('overview')} />
+            ) : (
+              <OverviewDashboard
+                filters={filters}
+                onDrillDown={openDrill}
+                pinnedCardIds={pinState.ids}
+                onTogglePin={togglePin}
+                filterCardIds={pinState.ids}
+                onReorderCards={reorderPins}
+              />
+            )
+          )}
+          {section === 'overview'  && (
             <OverviewDashboard
               filters={filters}
               onDrillDown={openDrill}
               pinnedCardIds={pinState.ids}
               onTogglePin={togglePin}
-              filterCardIds={pinState.ids}
-              onReorderCards={reorderPins}
             />
-          )
-        )}
-        {section === 'overview'  && (
-          <OverviewDashboard
-            filters={filters}
-            onDrillDown={openDrill}
-            pinnedCardIds={pinState.ids}
-            onTogglePin={togglePin}
-          />
-        )}
-        {section === 'combos'    && <TraitComboExplorer filters={filters}   onDrillDown={openDrill} />}
-        {section === 'regional'  && <RegionalHeatmap filters={filters}      onDrillDown={openDrill} />}
-        {section === 'arbitrage' && <ArbitrageRadar filters={filters}       onDrillDown={openDrill} />}
-        {section === 'supply'    && <SupplyPipeline filters={filters} />}
-        {section === 'breeders'  && <BreederMarketShare filters={filters} />}
+          )}
+          {section === 'combos'    && <TraitComboExplorer filters={filters}   onDrillDown={openDrill} />}
+          {section === 'regional'  && <RegionalHeatmap filters={filters}      onDrillDown={openDrill} />}
+          {section === 'arbitrage' && <ArbitrageRadar filters={filters}       onDrillDown={openDrill} />}
+          {section === 'supply'    && <SupplyPipeline filters={filters} />}
+          {section === 'breeders'  && <BreederMarketShare filters={filters} />}
+        </Suspense>
       </div>
 
       <TransactionDrilldown
@@ -180,6 +193,16 @@ export default function MarketAnalytics({ user }) {
         onClose={closeDrill}
         criteria={drillCriteria}
       />
+    </div>
+  );
+}
+
+// Fallback while a section's code-split chunk downloads. Sized to roughly
+// match a populated section so the layout doesn't jump.
+function SectionLoading() {
+  return (
+    <div className="flex items-center justify-center py-24">
+      <div className="w-6 h-6 border-2 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
     </div>
   );
 }
