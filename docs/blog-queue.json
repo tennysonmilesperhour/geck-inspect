@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-06-05T10:53:02.105Z",
+  "lastUpdated": "2026-06-08T11:03:59.650Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -596,6 +596,47 @@
         "You got sold a cappuccino—or did you? Most buyers can't spot the difference between cappuccino, frappuccino, and a well-marked normal. Here's the actual visual checklist.",
         "Cappuccino breeders disagree on marker reliability, and sellers exploit that confusion. What markers actually predict a cappuccino hatchling consistently?",
         "If you're breeding cappuccino to cappuccino, you need to know if you actually own cappuccinos. This guide cuts through the fluff with on-animal ID criteria."
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "tpc_1780916578930_cappuccino",
+      "title": "Why Breeders Keep Losing Money on Cappuccino Pairs (And What Works Instead)",
+      "slug": "cappuccino-breeding-economics",
+      "category": "breeding",
+      "status": "new",
+      "score": {
+        "demand": 7,
+        "originality": 6,
+        "voiceFit": 8,
+        "accuracyRisk": 3,
+        "total": 18
+      },
+      "createdAt": "2026-06-08T11:02:58.930Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "youtube",
+          "snippet": "Don't buy super cappuccino crested gecko it's a scam and waste of money",
+          "url": "https://www.youtube.com/watch?v=5O_obmlNu9I"
+        },
+        {
+          "source": "youtube",
+          "snippet": "Why So Much Hate for Cappuccino Geckos? The Truth No One Wants to Say…",
+          "url": "https://www.youtube.com/watch?v=3xRF-wumo_E"
+        },
+        {
+          "source": "youtube",
+          "snippet": "WARNING, NEVER BREED THESE CRESTED GECKOS TOGETHER",
+          "url": "https://www.youtube.com/watch?v=K1vjq-btadk"
+        }
+      ],
+      "angleIdeas": [
+        "Most breeders assume two cappuccinos will produce cappuccinos—here's why incomplete dominance makes that math expensive.",
+        "Cappuccino-to-cappuccino pairings generate normals and double-recessives in equal proportion; here's the hidden cost.",
+        "You can breed cappuccinos profitably, but not the way most people think—here's the pairing strategy that works."
       ],
       "rejectionReason": null,
       "prUrl": null

@@ -1,13 +1,14 @@
 {
-  "ranAt": "2026-06-05T09:58:17.805Z",
+  "ranAt": "2026-06-08T11:02:58.930Z",
   "signals": {
     "googleAc": 95,
     "bluesky": 80,
-    "googleTrends": 9,
-    "youtube": 68,
-    "breederBlogs": 1,
+    "googleTrends": 0,
+    "youtube": 67,
+    "breederBlogs": 0,
     "reddit": 0,
     "errors": [
+      "\"crested gecko\": related: 429",
       "\"crested gecko morph\": related: 429",
       "\"cappuccino gecko\": related: 429",
       "\"lilly white gecko\": related: 429",
@@ -24,10 +25,9 @@
       "search \"breeding fail\": 403 Blocked"
     ]
   },
-  "costUsd": 0.031541,
+  "costUsd": 0.027488,
   "addedSlugs": [
-    "pinstripe-crested-gecko-pricing-genetics",
-    "cappuccino-identification-markers-breeding"
+    "cappuccino-breeding-economics"
   ],
-  "rationale": "The signal corpus shows strong search volume around specific morphs (tiger, pinstripe, black, cappuccino, lilly white, axanthic) with rising Google Trends, but most are either already-published topics or too general. YouTube content is mature and comprehensive. Bluesky engagement is primarily around pet ownership and art, not breeding/genetics education. No Reddit threads provided signals for emerging confusion. The strongest actionable signal is \"tiger crested gecko\" (+80% Trends interest) and \"pinstripe crested gecko\" (+60%), but tiger-morph-breeding-polygenic is already queued. Pinstripe has no published coverage and shows sustained demand. The second signal is cappuccino confusion—Google autocomplete shows multiple pain points (traits, markers, breeding, hatchling ID), YouTube has a dedicated \"scam\" video, and forums historically show breeder disagreement on viability and economics. The third signal is lower: black/blue morphs appear in Trends (+60%) but we've already published black-blue genetics. Lilly white shows sustained interest but we've published that slug. Axanthic shows volume but no particular novel angle emerges from the signals. I'm proposing pinstripe (strong trending, unpublished, measurable demand) and a cappuccino-focused misconception piece (economics + identification), then declining a third because nothing else clears the bar without duplicating existing work or veering into pure husbandry."
+  "rationale": "The signals show strong, sustained interest in crested gecko morphs overall, with heavy search volume around cappuccino, lilly white, and axanthic variants. However, most raw signals are commerce-driven (MorphMarket listings, YouTube unboxings, price queries) or general awareness content (care guides, lists). The already-published slug list shows we've covered cappuccino genetics, super-cappuccino risks, lilly-white breeding, and axanthic strategy extensively. YouTube reveals recurring frustration themes: \"why so much hate for cappuccino geckos,\" \"super cappuccino is a scam,\" and warnings about which pairings to avoid. This suggests room for a corrective piece on breeding decisions and cost/benefit reality. No forum heat or Reddit activity in this run, limiting demand signals. I am rejecting pure listicles and care content, plus anything that duplicates existing slugs. Remaining viable angles are narrow, genetics-grounded breeding decisions where confusion exists."
 }
