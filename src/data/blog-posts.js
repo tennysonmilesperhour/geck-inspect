@@ -3877,6 +3877,272 @@ export const BLOG_POSTS = [
         label: "MorphMarket Morphpedia: Crested Gecko",
       },
     ],
+  },
+  {
+    slug: "cappuccino-identification-markers-breeding",
+    title: "Cappuccino Crested Gecko Markers: Stop Guessing",
+    description: "Learn the real visual markers that identify a Cappuccino crested gecko. Distinguish Cappuccino from Frappuccino and well-marked normals before your next pairing or purchase.",
+    keyphrase: "cappuccino crested gecko markers",
+    category: "identification",
+    tags: [
+      "identification",
+      "cappuccino",
+      "lilly-white",
+      "harlequin",
+      "frappuccino",
+      "super-cappuccino",
+    ],
+    datePublished: "2026-06-08",
+    dateModified: "2026-06-08",
+    heroEyebrow: "Morph Identification",
+    tldr: [
+      "Cappuccino is an incomplete-dominant morph: one copy produces the visual form, two copies produce the Super Cappuccino (Melanistic) with documented health concerns.",
+      "The three core visual markers are: a connected dorsal saddle pattern, warm chocolate-brown body tone, and darker crest and eye-rim lines relative to the rest of the body.",
+      "A Frappuccino is NOT a super Cappuccino. It carries one copy of Cappuccino plus one copy of Lilly White, and it hatches visibly brighter and whiter than a standard Cappuccino.",
+      "Lineage documentation is the only way to confirm Cappuccino status. Visual assessment alone is not proof.",
+      "Never pair two visual Cappuccinos unless you accept roughly 25% of offspring will be Super Cappuccinos with documented health concerns.",
+    ],
+    body: [
+      {
+        type: "p",
+        text: "A $650 juvenile crested gecko sold as \"proven Cappuccino\" arrived in my collection and, after three weeks of comparison photos, I was genuinely uncertain. The dorsal saddle looked right. The base color was warm brown. But so did four other geckos I owned that came from completely undocumented lines. Nobody had lied to me. The seller believed what they said. The problem is that \"Cappuccino\" is one of the most visually aped looks in the hobby, and without a real identification framework, buyers and sellers are both guessing.",
+      },
+      {
+        type: "p",
+        text: "So: what does a Cappuccino actually look like, and how do you tell it apart from a well-marked normal, a Frappuccino, or a hatchling that just came out brown?",
+      },
+      {
+        type: "p",
+        text: "This matters most when you're planning pairings. If you pair two animals you believe are Cappuccinos but one of them isn't, you lose the 25% odds of producing the Super Cappuccino (with its documented health concerns), which sounds like good news, until you realize you've also lost the 50% of true Cappuccino offspring you were counting on. The math only works when the animals are what you think they are.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "What the genetics actually say",
+      },
+      {
+        type: "p",
+        text: "Cappuccino is a proven incomplete-dominant morph. One copy of the gene produces the visual Cappuccino. Two copies produce the Super Cappuccino, also called Melanistic, which has documented health issues including reduced nostril size and breathing difficulty. Per the morph guide, it is not recommended to breed for the super form.",
+      },
+      {
+        type: "p",
+        text: "The important corollary: Cappuccino pairs should almost always be Cappuccino crossed to a non-Cappuccino. This produces roughly 50% visual Cappuccinos and 50% normal-looking offspring, with zero Super Cappuccinos in the clutch. If you want to run that pairing reliably, you need to be able to identify which animals are visual Cappuccinos.",
+      },
+      {
+        type: "p",
+        text: "The incomplete-dominant model also means there is no such thing as a \"het Cappuccino\" that looks normal. Every animal carrying one copy of the gene should express the morph visually. If an animal was sold to you as \"het Cappuccino\" and looks totally unremarkable, that claim is either wrong or the animal is from a line with very low expressivity. Ask for the pairing documentation.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "The three primary visual markers",
+      },
+      {
+        type: "p",
+        text: "The morph guide describes Cappuccino as having a \"defined dorsal saddle with clean edges,\" a \"warm brown/mocha undertone on body,\" and often \"a clean ring pattern around the eyes.\" Those three things are the core framework. Here is how each one looks in practice.",
+      },
+      {
+        type: "p",
+        text: "**The dorsal saddle.** The most diagnostic marker is a rounded, defined marking running along the dorsum. Unlike a harlequin's pattern, which is about lateral extension, the Cappuccino saddle is centrally positioned and has relatively clean boundaries. It should read as a distinct shape rather than a graduated transition. The saddle runs from approximately the nape down toward the base of the tail and does not dissolve into the flanks the way harlequin pattern does. When you look at the animal from above, you should be able to trace where the saddle ends and the flank begins.",
+      },
+      {
+        type: "p",
+        text: "Poor expressivity exists. Some Cappuccino animals show a subtler saddle, particularly in the fired-down state. Always photograph animals fired up before drawing conclusions about saddle clarity.",
+      },
+      {
+        type: "p",
+        text: "**The warm chocolate-brown body tone.** Cappuccino's name isn't accidental. The body base sits in a warm mocha-to-chocolate range, distinctly warmer than a buckskin and browner than a typical orange or red base. This warm tone is present across the body, not just in the dorsal pattern area. It tends to deepen when the animal fires up. An animal with a cool gray-brown base, or an orange animal with a dorsal saddle, is probably not a Cappuccino.",
+      },
+      {
+        type: "p",
+        text: "The color tone alone is not diagnostic. Many non-Cappuccino geckos come out warm brown. It is one marker among three, not a standalone test.",
+      },
+      {
+        type: "p",
+        text: "**Darker crest and eye-rim lines.** The morph guide notes \"a clean ring pattern around the eyes\" as a visual identifier. In practice, Cappuccino animals often show visibly darker crest lines and a rim of darker pigment around each eye compared to the body base color. This marker is most obvious in fired-up, adult animals. Hatchlings can be harder to evaluate here because crest development is still in progress.",
+      },
+      {
+        type: "p",
+        text: "When all three markers are present at once, you are looking at a strong Cappuccino candidate. When only one or two are present, be more skeptical. A warm brown gecko with no saddle definition and no eye-rim darkening is probably not a Cappuccino.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "What Cappuccino is most often confused with",
+      },
+      {
+        type: "p",
+        text: "**Well-marked normals.** A buckskin or chocolate-base gecko with a naturally defined dorsal pattern can resemble a Cappuccino without carrying the gene. The distinction is that a normal gecko's dorsal pattern, even when well-defined, tends to be lighter relative to the body and less sharply bounded. The Cappuccino saddle has an almost \"stamped\" quality to it. Still, this is where lineage documentation becomes essential. Visual comparison between animals can only take you so far.",
+      },
+      {
+        type: "p",
+        text: "**Harlequin with mocha base.** A mocha-toned harlequin can fool a casual observer, especially when the harlequin pattern is moderate and centered dorsally. The tell here is lateral extension. Harlequin pattern climbs the flanks and legs. A Cappuccino saddle stays dorsal. If the animal has bright lateral pattern on its legs, it is likely a harlequin combination, not a Cappuccino.",
+      },
+      {
+        type: "p",
+        text: "**Frappuccino.** This one matters the most because it is frequently mislabeled in both directions. A Frappuccino is the combination of one copy of Cappuccino and one copy of Lilly White in the same animal. It is not a super Cappuccino, and it is not produced by pairing two Cappuccinos together. Per the genetics guide and morph guide, Frappuccinos hatch brighter and whiter than a standard Lilly White, and they develop dramatic white head spotting as they mature.",
+      },
+      {
+        type: "p",
+        text: "If a seller tells you a Frappuccino is a \"super Cappuccino\" or that it came from a Cappuccino cross Cappuccino pairing, one of those claims is false. A Frappuccino requires one copy of each gene, not two copies of Cappuccino. The visual giveaway is the white head spotting and the overall brightness. A standard Cappuccino looks coffee-brown, warm, and sadle-patterned. A Frappuccino looks bright and creamy with white structural markings that do not fire down.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Why hatchling ID is genuinely hard",
+      },
+      {
+        type: "p",
+        text: "The morph guide notes that the Cappuccino saddle marker and eye-rim darkening are most reliable in adults. Hatchlings are tricky for a few reasons.",
+      },
+      {
+        type: "p",
+        text: "First, crest development is incomplete at hatch, making crest-line darkening unreliable as a marker until the animal has had several months of growth.",
+      },
+      {
+        type: "p",
+        text: "Second, hatchling base color is not always stable. An animal that hatches warm brown can shift toward orange or buckskin over its first year, or vice versa. A Cappuccino hatchling's warmth should hold and deepen as it matures, but judging base tone at week one is risky.",
+      },
+      {
+        type: "p",
+        text: "Third, the saddle definition can look soft on a fresh hatchling and sharpen considerably after the first few sheds. If you're evaluating a Cappuccino hatchling's offspring, wait until the animal has had at least two complete sheds before making a call. The Pangea blog voice has it right: breeders who judge potential morphs at eight weeks often regret it at eight months.",
+      },
+      {
+        type: "p",
+        text: "For hatchling Cappuccino offspring from a confirmed pairing, document them all with a photo at hatch and again at three months. This lets you build a reference library for what the saddle looks like as it develops in your specific line.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "My honest opinion on buying unpapered Cappuccinos",
+      },
+      {
+        type: "p",
+        text: "The hobby has a naming problem. \"Cappuccino\" gets applied to any warm-brown gecko with a tidy dorsal pattern, and sellers often believe their own listings. I've seen animals priced at $700 as \"proven Cappuccino\" with no pairing records, no lineage, and markers that could be explained by a well-selected buckskin base with a naturally high-contrast pattern.",
+      },
+      {
+        type: "p",
+        text: "My rule: if you can't see a direct line of documentation back to a confirmed Cappuccino (visual parent of known genetics), price the animal accordingly. That doesn't mean don't buy it. An undocumented animal with strong Cappuccino markers might be exactly what it appears. But it should be priced as a \"probable Cappuccino pending verification,\" not as a confirmed proven morph.",
+      },
+      {
+        type: "p",
+        text: "The cost of being wrong is not just financial. If you build a project around an animal you believe is Cappuccino, pair it to a confirmed Cappuccino, and it turns out to be a well-marked normal, you've wasted a season and potentially introduced undocumented genetics into a line you were trying to keep clean.",
+      },
+      {
+        type: "p",
+        text: "When purchasing, ask for: sire and dam identity, photos of both parents fired up, and confirmation of the pairing date. A seller who can provide all three is almost always operating honestly. A seller who can only offer \"I've been working with Cappuccino for years\" is asking you to take their word over documentation.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Practical checklist before your next pairing",
+      },
+      {
+        type: "p",
+        text: "Before you put any animal into a Cappuccino project as a \"visual Cappuccino,\" run through this list:",
+      },
+      {
+        type: "ol",
+        items: [
+          "Is the dorsal saddle centrally positioned with defined edges, visible in the fired-up state?",
+          "Does the body base sit in the warm brown-to-chocolate range, not orange, not gray-brown, not buckskin?",
+          "Are the crest lines and eye rims noticeably darker than the body base?",
+          "Does the animal have documented lineage tracing to a confirmed Cappuccino parent?",
+          "Is there lateral leg pattern inconsistent with Cappuccino? (If yes, consider whether you're looking at a harlequin combination instead.)",
+        ],
+      },
+      {
+        type: "p",
+        text: "Three out of four visual markers plus documentation is a strong Cappuccino. Four visual markers without documentation is a plausible Cappuccino that should be verified before you build a project around it. Documentation alone, even from a trusted source, without the visual markers present warrants a closer look at whether the animal is expressing the gene or whether the lineage claim is mistaken.",
+      },
+      {
+        type: "p",
+        text: "If you want to run pairings and see how Cappuccino inheritance plays out across combinations, the [Geck Inspect Genetic Calculator](/GeneticCalculatorTool) handles incomplete-dominant crosses exactly like this one.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Back to that $650 gecko",
+      },
+      {
+        type: "p",
+        text: "I eventually got documentation from the seller. The sire was a confirmed Cappuccino from a reputable breeder, and the dam was a proven Cappuccino producer with multiple clutch records. With that in hand, and with the markers aligning once I knew what to look for, I was confident.",
+      },
+      {
+        type: "p",
+        text: "The identification problem didn't go away. What changed was that I stopped relying on visual ID alone and started treating documentation as a required part of the purchase, not a nice-to-have. The markers tell you where to look. The paperwork tells you whether you're looking at the right thing.",
+      },
+      {
+        type: "p",
+        text: "If you're holding an animal with warm brown coloring, a defined dorsal saddle, darker eye rims, and parents whose genetics are documented, you probably own a Cappuccino. If you're holding an animal with warm brown coloring and a seller's word, you have a question that only a test pairing will answer.",
+      },
+    ],
+    faq: [
+      {
+        question: "What are the visual markers of a Cappuccino crested gecko?",
+        answer: "Three core markers: a defined dorsal saddle with clean edges running from the nape toward the tail base, a warm chocolate-brown body tone across the whole body, and darker crest lines and eye rims relative to the base color. All three together are a strong indicator. One or two alone are not diagnostic. Lineage documentation is still required for confirmation.",
+      },
+      {
+        question: "What is the difference between a Cappuccino and a Frappuccino crested gecko?",
+        answer: "A Cappuccino carries one copy of the Cappuccino gene and shows the characteristic warm brown saddle pattern. A Frappuccino carries one copy of Cappuccino plus one copy of Lilly White. It is not a super Cappuccino. Frappuccinos hatch brighter and whiter than standard Cappuccinos and develop dramatic white head spotting. They are produced by pairing a Cappuccino to a Lilly White, not by pairing two Cappuccinos.",
+      },
+      {
+        question: "Is Cappuccino recessive or dominant in crested geckos?",
+        answer: "Cappuccino is incomplete dominant. One copy produces the visual Cappuccino morph. Two copies produce the Super Cappuccino (Melanistic), which has documented health concerns including reduced nostril size and breathing difficulty. There is no invisible het form: every animal with one copy should express the morph visually.",
+      },
+      {
+        question: "What is a Super Cappuccino and should I breed for it?",
+        answer: "Super Cappuccino is the homozygous form of the Cappuccino gene, produced when two visual Cappuccinos are paired. It has documented health concerns including reduced nostril size and breathing difficulty. Most experienced breeders recommend against deliberately producing Super Cappuccinos. The standard recommendation is Cappuccino crossed to non-Cappuccino.",
+      },
+      {
+        question: "Can I visually identify a Cappuccino hatchling at birth?",
+        answer: "With difficulty. Hatchling crest lines are undeveloped, base color can shift in the first year, and the dorsal saddle often sharpens after two or more sheds. Wait until the animal has had at least two complete sheds before making a confident call. Document photos at hatch and at three months to track how markers develop in your specific line.",
+      },
+      {
+        question: "How do I tell a Cappuccino apart from a well-marked normal crested gecko?",
+        answer: "The Cappuccino dorsal saddle has defined, relatively sharp edges and a centrally-positioned shape that does not bleed into the flanks. A normal gecko's dorsal pattern, even when bold, tends to be lighter relative to body color and less distinctly bounded. If you cannot get lineage documentation, treat the animal as an unverified Cappuccino candidate regardless of how convincing the visual looks.",
+      },
+      {
+        question: "What does a Cappuccino look like compared to a harlequin crested gecko?",
+        answer: "The key difference is pattern location. Harlequin pattern extends up the flanks and legs, which is what defines the morph. Cappuccino pattern is centrally dorsal. If an animal has bright lateral and leg pattern, it is almost certainly a harlequin combination or base pattern trait rather than Cappuccino.",
+      },
+      {
+        question: "Do I need lineage to confirm a crested gecko is Cappuccino?",
+        answer: "Yes. Visual markers are a strong guide but not proof. Dark brown geckos with defined dorsal patterns can arise from polygenic selection without carrying the Cappuccino gene. The only way to confirm Cappuccino status is documented lineage tracing to a confirmed Cappuccino parent, or a test pairing with a known Cappuccino producing the expected 50% Cappuccino offspring ratio.",
+      },
+    ],
+    internalLinks: [
+      {
+        href: "/MorphGuide/cappuccino",
+        label: "Cappuccino morph profile",
+      },
+      {
+        href: "/MorphGuide/frappuccino",
+        label: "Frappuccino morph profile",
+      },
+      {
+        href: "/GeneticCalculatorTool",
+        label: "Geck Inspect Genetic Calculator",
+      },
+      {
+        href: "/GeneticsGuide",
+        label: "Incomplete dominant inheritance explained",
+      },
+      {
+        href: "/MorphGuide/lilly-white",
+        label: "Lilly White morph profile",
+      },
+    ],
+    externalCitations: [
+      {
+        url: "https://www.youtube.com/watch?v=0uKXVa6znhU",
+        label: "Robby's Reptiles: How To ID Cappuccino Crested Geckos (and Fraps)",
+      },
+      {
+        url: "https://www.youtube.com/watch?v=5O_obmlNu9I",
+        label: "Homestead Reptiles: Don't Buy Super Cappuccino Crested Gecko",
+      },
+    ],
   }
 ];
 
