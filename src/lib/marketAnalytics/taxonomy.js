@@ -16,14 +16,16 @@
 // ---------- Trait classification --------------------------------------
 // The "kind" of a trait changes how it contributes to price. Structural
 // traits (pinstripe, dalmatian, etc.) stack with color traits; recessive
-// traits (Axanthic, Cappuccino) only visually express when homozygous
-// but carry significant value as heterozygous carriers.
+// traits (Axanthic) only visually express when homozygous but carry
+// significant value as heterozygous carriers; incomplete-dominant traits
+// (Lilly White, Cappuccino) express visually with a single copy.
 export const TRAIT_KINDS = {
   COLOR: 'color',
   PATTERN: 'pattern',
   STRUCTURAL: 'structural',
   RECESSIVE: 'recessive',
   CODOMINANT: 'codominant',
+  INCOMPLETE_DOMINANT: 'incomplete-dominant',
   POLYGENIC: 'polygenic',
 };
 
@@ -32,12 +34,14 @@ export const TRAIT_KINDS = {
 // premiums in 2025. Not exhaustive, the analytics module can be pointed
 // at any morph but this is the "watched list" surfaced in default views.
 export const CANONICAL_MORPHS = [
-  // Recessive (homozygous-expressing), drive the largest premiums
-  { name: 'Lilly White',        kind: TRAIT_KINDS.CODOMINANT,  premium_tier: 'flagship' },
-  { name: 'Axanthic',           kind: TRAIT_KINDS.RECESSIVE,   premium_tier: 'flagship' },
-  { name: 'Cappuccino',         kind: TRAIT_KINDS.RECESSIVE,   premium_tier: 'flagship' },
-  { name: 'Sable',              kind: TRAIT_KINDS.RECESSIVE,   premium_tier: 'premium' },
-  { name: 'Frappuccino',        kind: TRAIT_KINDS.RECESSIVE,   premium_tier: 'premium' },
+  // Single-gene morphs, drive the largest premiums. Lilly White,
+  // Cappuccino, Sable, and Frappuccino are incomplete dominant (one copy
+  // expresses); Axanthic is the proven recessive.
+  { name: 'Lilly White',        kind: TRAIT_KINDS.INCOMPLETE_DOMINANT, premium_tier: 'flagship' },
+  { name: 'Axanthic',           kind: TRAIT_KINDS.RECESSIVE,           premium_tier: 'flagship' },
+  { name: 'Cappuccino',         kind: TRAIT_KINDS.INCOMPLETE_DOMINANT, premium_tier: 'flagship' },
+  { name: 'Sable',              kind: TRAIT_KINDS.INCOMPLETE_DOMINANT, premium_tier: 'premium' },
+  { name: 'Frappuccino',        kind: TRAIT_KINDS.INCOMPLETE_DOMINANT, premium_tier: 'premium' },
   { name: 'Moonglow',           kind: TRAIT_KINDS.POLYGENIC,   premium_tier: 'premium' },
   // Structural, stack with color/pattern
   { name: 'Full Pinstripe',     kind: TRAIT_KINDS.STRUCTURAL,  premium_tier: 'premium' },

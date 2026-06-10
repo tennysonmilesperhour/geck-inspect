@@ -1,4 +1,4 @@
-// Supabase Edge Function — recognize-import-data
+// Supabase Edge Function: recognize-import-data
 //
 // Calls Anthropic Claude vision to extract gecko, breeding, or egg data
 // from photos of notecards, screenshots, or handwritten records.
@@ -51,7 +51,7 @@ function buildPrompt(mode: string, imageCount: number) {
 
   const base = `You are an expert data extraction assistant for a gecko breeding management application. Your job is to read handwritten notecards, screenshots, spreadsheets, printed records, or any visual data source and extract structured gecko breeding data from them.
 
-Be thorough — capture every piece of information visible. For any data that doesn't have a specific field, put it in the notes field. Dates should be in YYYY-MM-DD format. If a date format is ambiguous (e.g., 03/04/2025), interpret it as MM/DD/YYYY (US format) unless context clearly indicates otherwise.
+Be thorough: capture every piece of information visible. For any data that doesn't have a specific field, put it in the notes field. Dates should be in YYYY-MM-DD format. If a date format is ambiguous (e.g., 03/04/2025), interpret it as MM/DD/YYYY (US format) unless context clearly indicates otherwise.
 
 If text is partially illegible, make your best guess and note the uncertainty in the notes field.${multi}`;
 

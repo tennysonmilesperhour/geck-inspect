@@ -1,4 +1,4 @@
-// Supabase Edge Function — recognize-gecko-morph (v8: bank off by data + prompt caching)
+// Supabase Edge Function: recognize-gecko-morph (v8: bank off by data + prompt caching)
 //
 // Two-pass few-shot bank, all images on geck-inspect Supabase storage
 // so Anthropic's image-prefetch is fast and reliable. Anthropic prompt
@@ -6,13 +6,13 @@
 // instructions text so repeat callers within the 5-minute cache window
 // pay ~10% of full input rate for the cached portion.
 //
-//   1. hero_anchor rows WHERE anchor_category = 'primary_morph'
-//      — competition / show-winner photos for the primary_morph axis.
+//   1. hero_anchor rows WHERE anchor_category = 'primary_morph',
+//      competition / show-winner photos for the primary_morph axis.
 //      Non-primary_morph hero anchors (genetic_trait, base_color)
 //      exist in gecko_images for the Morph Guide UI but are excluded
 //      from the bank so they don't bias primary_morph predictions.
 //
-//   2. manual_touch rows — community-verified examples that fill
+//   2. manual_touch rows: community-verified examples that fill
 //      remaining slots for morphs the hero pool doesn't cover.
 //      Filtered to URLs hosted on this Supabase project so prefetch
 //      stays fast. auto_bulk_approved rows are excluded.
@@ -43,7 +43,7 @@
 //   #9  v5 disabled                100/100  30.0%  ← reference baseline
 //   #10 v6 self-hosted bank           6/100   0.0%  (credit balance)
 //   #11 v7 smoke (cached)            10/10  20.0%  (n too small)
-//   #12 v7 cached bank n=50          50/50  22.0%  (decision point ,  REGRESSION)
+//   #12 v7 cached bank n=50          50/50  22.0%  (decision point: REGRESSION)
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -408,7 +408,7 @@ function buildInstructions(fewShotBank: FewShotExample[], includeValueEstimate: 
 
   return `You are a world-expert crested gecko (Correlophus ciliatus) morph identifier. Analyze
 the user's photograph(s) and call the \`submit_morph_analysis\` tool with your best
-assessment. Use ONLY the ids provided in the tool's schema for each field — do not
+assessment. Use ONLY the ids provided in the tool's schema for each field. Do not
 invent ids; if unsure, pick the closest and lower your confidence score.
 
 Rules:

@@ -103,7 +103,7 @@ function findings(file, html) {
     // Google truncates at ~60 chars on mobile, ~70 on desktop. The
     // ", Geck Inspect" suffix is appended by Seo.jsx for brand
     // consistency; don't penalize the raw headline for carrying it.
-    const raw = title.replace(/ [, -] Geck Inspect$/, '').trim();
+    const raw = title.replace(/\s*[|,-] Geck Inspect$/, '').trim();
     if (raw.length > 65) {
       add('warn', 'long-title', `Title is ${raw.length} chars without suffix (target ≤65)`, raw);
     }

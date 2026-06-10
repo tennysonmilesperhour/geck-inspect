@@ -346,7 +346,7 @@ const HERO_PRELOADS = {
 function injectMeta(html, route) {
   const meta = routeMeta(route);
   const canonical = `${SITE_URL}${route.path}`;
-  const titleFull = meta.title.includes('Geck Inspect') ? meta.title : `${meta.title}, Geck Inspect`;
+  const titleFull = meta.title.includes('Geck Inspect') ? meta.title : `${meta.title} | Geck Inspect`;
   const desc = meta.description.replace(/"/g, '&quot;');
 
   // Rewrite the <title> (exact match on the shell's default title).

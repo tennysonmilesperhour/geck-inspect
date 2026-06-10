@@ -94,7 +94,7 @@ export default function About() {
             </h2>
             <ul className="space-y-2 text-slate-300 leading-relaxed">
               <li className="flex gap-3"><span className="text-emerald-400 mt-1.5">•</span><span>Track every gecko in your collection with weights, photos, notes, and full pedigree back to the breeder.</span></li>
-              <li className="flex gap-3"><span className="text-emerald-400 mt-1.5">•</span><span>Plan breedings with a genetics calculator that understands Lilly White (co-dominant, lethal super), Cappuccino, Axanthic, and Soft Scale.</span></li>
+              <li className="flex gap-3"><span className="text-emerald-400 mt-1.5">•</span><span>Plan breedings with a genetics calculator that understands Lilly White (incomplete dominant, lethal super), Cappuccino, Axanthic, and Soft Scale.</span></li>
               <li className="flex gap-3"><span className="text-emerald-400 mt-1.5">•</span><span>Log egg lays, incubation temps, and hatch dates and watch hatchlings graduate into juveniles and adults.</span></li>
               <li className="flex gap-3"><span className="text-emerald-400 mt-1.5">•</span><span>Identify morphs with AI from a photo, primary morph, secondary traits, and base color.</span></li>
               <li className="flex gap-3"><span className="text-emerald-400 mt-1.5">•</span><span>Read the <Link to="/CareGuide" className="text-emerald-300 underline-offset-2 hover:underline">Care Guide</Link>, <Link to="/MorphGuide" className="text-emerald-300 underline-offset-2 hover:underline">Morph Guide</Link>, and <Link to="/GeneticsGuide" className="text-emerald-300 underline-offset-2 hover:underline">Genetics Guide</Link>, written for beginners, deep enough for long-time breeders.</span></li>

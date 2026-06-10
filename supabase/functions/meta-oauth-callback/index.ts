@@ -5,7 +5,7 @@
 // writes one social_platform_connections row per Facebook Page +
 // per linked Instagram Business account.
 //
-// verify_jwt MUST be false for this function — Meta does the GET
+// verify_jwt MUST be false for this function, because Meta does the GET
 // redirect from the user's browser without our app's bearer token.
 //
 // Required env vars (same as meta-oauth-start, plus secret):

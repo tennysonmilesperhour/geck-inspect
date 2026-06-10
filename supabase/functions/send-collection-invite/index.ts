@@ -1,9 +1,9 @@
-// Supabase Edge Function — send-collection-invite
+// Supabase Edge Function: send-collection-invite
 //
 // Sends a transactional email when a Geck Inspect user invites someone
 // to collaborate on one of their collections. Unlike `send-email`, this
-// function does NOT gate on the recipient's notification preferences —
-// invites are transactional (the user explicitly took an action that
+// function does NOT gate on the recipient's notification preferences.
+// Invites are transactional (the user explicitly took an action that
 // expects an email), and the recipient may not have a profile yet.
 //
 // Provider: Resend, same as send-email. Reuses RESEND_API_KEY +
@@ -32,7 +32,7 @@
 // The row insert is the security boundary: RLS only lets a collection
 // owner create that row, so a hostile caller can't spam this endpoint
 // to trick us into emailing arbitrary addresses for a collection they
-// don't own. The function does NOT validate ownership — it trusts the
+// don't own. The function does NOT validate ownership. It trusts the
 // caller because the row already exists.
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";

@@ -1,6 +1,6 @@
 // Produces a visual embedding for a gecko image and, optionally, persists it
 // on the matching gecko_images row. The embedding unlocks "closest verified
-// samples" retrieval on /recognition — an independent second signal beside
+// samples" retrieval on /recognition, an independent second signal beside
 // the VLM morph call.
 //
 // Default encoder: SigLIP2-base (768-dim unit-norm vectors) on Replicate.
@@ -17,7 +17,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const REPLICATE_API_TOKEN = Deno.env.get("REPLICATE_API_TOKEN");
 const SIGLIP_MODEL = Deno.env.get("SIGLIP_MODEL") ||
-  "krthr/clip-embeddings"; // placeholder — swap to a SigLIP2 model id on Replicate
+  "krthr/clip-embeddings"; // placeholder, swap to a SigLIP2 model id on Replicate
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 

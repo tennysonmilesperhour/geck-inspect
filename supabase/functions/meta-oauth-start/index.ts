@@ -2,7 +2,7 @@
 //
 // Returns a Facebook OAuth dialog URL the client can redirect to.
 // State is an HMAC-signed (user_id, ts) tuple so the callback is
-// stateless — no DB row needed to remember who started the flow.
+// stateless (no DB row needed to remember who started the flow).
 //
 // Required scopes:
 //   pages_show_list             - list user's Facebook Pages

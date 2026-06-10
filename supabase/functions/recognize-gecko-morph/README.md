@@ -18,7 +18,7 @@ enums, so the model can't return an id that isn't in our ontology.
 
 ```bash
 supabase secrets set ANTHROPIC_API_KEY=sk-ant-xxx
-# optional — override the model (default is claude-sonnet-4-6):
+# optional: override the model (default is claude-sonnet-4-6):
 supabase secrets set CLAUDE_MODEL=claude-opus-4-7
 ```
 

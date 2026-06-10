@@ -629,9 +629,9 @@ export default function AnimalPassport() {
   return (
     <>
       <Helmet>
-        <title>{gecko.name}, Geck Inspect Passport</title>
+        <title>{gecko.name} | Geck Inspect Passport</title>
         <meta name="description" content={`${gecko.name}, ${baseMorph || 'Crested Gecko'}. View full history, lineage, and care records on Geck Inspect.`} />
-        <meta property="og:title" content={`${gecko.name}, Geck Inspect Passport`} />
+        <meta property="og:title" content={`${gecko.name} | Geck Inspect Passport`} />
         <meta property="og:description" content={`${baseMorph || 'Crested Gecko'}, View full history and care records.`} />
         {images[0] && <meta property="og:image" content={images[0]} />}
       </Helmet>

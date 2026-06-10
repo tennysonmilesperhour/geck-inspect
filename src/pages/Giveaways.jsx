@@ -69,7 +69,7 @@ function isExpired(g) {
 const PAGE_JSON_LD = {
   '@context': 'https://schema.org',
   '@type': 'CollectionPage',
-  name: 'Crested Gecko Giveaways, Geck Inspect',
+  name: 'Crested Gecko Giveaways | Geck Inspect',
   url: 'https://geckinspect.com/Giveaways',
   description:
     'Active and upcoming crested gecko giveaways hosted by breeders on Geck Inspect. Browse, enter, and track winners for gecko giveaways from verified keepers.',

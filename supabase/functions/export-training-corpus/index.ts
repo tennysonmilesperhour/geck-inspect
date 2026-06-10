@@ -7,7 +7,7 @@
 //     > corpus.jsonl
 //
 // Each line is one sample with every label the ML pipeline cares about,
-// using canonical taxonomy ids — so downstream training code never has to
+// using canonical taxonomy ids, so downstream training code never has to
 // reason about legacy free-text values.
 //
 // Query params:
@@ -16,7 +16,7 @@
 //   limit=1000                  optional cap for smoke tests
 //
 // Auth: requires a Supabase JWT. Admins + expert_reviewers get the full
-// corpus. Anyone else gets a 403 — exporting the whole labeled dataset is
+// corpus. Anyone else gets a 403, because exporting the whole labeled dataset is
 // privileged because it contains provenance / contributor emails.
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";

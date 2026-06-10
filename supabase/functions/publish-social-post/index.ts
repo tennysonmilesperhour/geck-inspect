@@ -1,4 +1,4 @@
-// Supabase Edge Function — publish-social-post
+// Supabase Edge Function: publish-social-post
 //
 // Publishes a social_post_variant to its target platform and bills the user.
 // In v1 we directly post to Bluesky (app-password auth, no OAuth required).
@@ -93,7 +93,7 @@ async function postToFacebookPage(
 }
 
 // Two-step IG publish: create a media container, then publish it.
-// Requires a publicly-fetchable image URL — Meta will not accept binary
+// Requires a publicly-fetchable image URL, since Meta will not accept binary
 // uploads on this API. Caller must provide one or the post fails.
 //
 // IG convention: hashtags are dumped into the first comment rather than
@@ -141,7 +141,7 @@ async function postToInstagram(
   }
   const published = await publishRes.json() as { id: string };
 
-  // Drop the hashtag block as comment #1 if we have one. Best-effort —
+  // Drop the hashtag block as comment #1 if we have one. Best-effort:
   // a failure here doesn't roll back the publish above.
   if (firstCommentHashtags.trim()) {
     try {
@@ -273,7 +273,7 @@ async function postToBluesky(
     throw new Error(`bluesky_post_failed: ${err.slice(0, 300)}`);
   }
   const record = await recordRes.json() as { uri: string; cid: string };
-  // uri looks like at://did:plc:xxxxx/app.bsky.feed.post/abc123 — derive a public URL
+  // uri looks like at://did:plc:xxxxx/app.bsky.feed.post/abc123. Derive a public URL.
   const rkey = record.uri.split("/").pop();
   const postUrl = `https://bsky.app/profile/${session.handle}/post/${rkey}`;
   return { uri: record.uri, cid: record.cid, postUrl };

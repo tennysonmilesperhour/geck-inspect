@@ -1,4 +1,4 @@
-// Supabase Edge Function — report-social-overage
+// Supabase Edge Function: report-social-overage
 //
 // Monthly cron that reads each user's social_post_usage row, finds any
 // overage_posts that haven't been reported to Stripe yet, and reports

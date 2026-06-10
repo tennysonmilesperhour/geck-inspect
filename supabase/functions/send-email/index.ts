@@ -1,4 +1,4 @@
-// Supabase Edge Function — send-email
+// Supabase Edge Function: send-email
 //
 // Sibling to send-push. Called by the same notifications-INSERT trigger
 // (the trigger POSTs to both functions in parallel). This function
@@ -13,7 +13,7 @@
 // just like it does for push, and the user's existing email
 // preferences keep working without migration.
 //
-// Provider: Resend (resend.com) — simplest DX, no SDK needed, 3k
+// Provider: Resend (resend.com). Simplest DX, no SDK needed, 3k
 // free sends/month for solo projects. Swap the fetch in `sendEmail`
 // if you want to go with SendGrid/SES later.
 //
@@ -46,7 +46,7 @@ const SITE_URL = Deno.env.get("SITE_URL") || "https://geckinspect.com";
 // Notification.type -> legacy email preference key.
 // See src/pages/Settings.jsx notificationTypes list for the keys the
 // user has been toggling in the Email Notifications card. If a type
-// isn't mapped, we fall back to the raw key — meaning the user can
+// isn't mapped, we fall back to the raw key, meaning the user can
 // still allowlist new types directly without a code change.
 const TYPE_TO_EMAIL_KEY: Record<string, string> = {
   level_up: "level_up",

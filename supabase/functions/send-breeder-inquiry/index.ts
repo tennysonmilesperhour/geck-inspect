@@ -1,9 +1,9 @@
-// Supabase Edge Function — send-breeder-inquiry
+// Supabase Edge Function: send-breeder-inquiry
 //
 // Public endpoint called by the buyer-inquiry form on the breeder
 // storefront page (/Breeder/<slug>). Unlike send-email (which respects
 // the recipient's email_notification preferences), this function ALWAYS
-// delivers the email — the breeder explicitly published a public
+// delivers the email. The breeder explicitly published a public
 // storefront, so direct buyer contact is the whole point.
 //
 // Flow:
@@ -136,7 +136,7 @@ serve(async (req) => {
     return json({ error: "invalid json body" }, 400);
   }
 
-  // Honeypot — bots fill every field including invisible ones; real
+  // Honeypot: bots fill every field including invisible ones; real
   // buyers leave it empty. Return ok to confuse the bot.
   if (typeof payload.website === "string" && payload.website.length > 0) {
     return json({ ok: true });
@@ -190,8 +190,8 @@ serve(async (req) => {
     return json({ error: "failed to record inquiry" }, 500);
   }
 
-  // Send email to breeder. Skip cleanly if Resend isn't configured —
-  // the inquiry row is still saved.
+  // Send email to breeder. Skip cleanly if Resend isn't configured.
+  // The inquiry row is still saved.
   if (!RESEND_API_KEY) {
     return json({ ok: true, delivered: 0, skipped: "no-resend-key" });
   }
@@ -230,7 +230,7 @@ serve(async (req) => {
     return json({ ok: true, delivered: 1, id: result?.id });
   } catch (err) {
     console.warn("send-breeder-inquiry: delivery failed", err);
-    // Inquiry is recorded — email failure is non-fatal.
+    // Inquiry is recorded, so email failure is non-fatal.
     return json({ ok: true, delivered: 0, skipped: "delivery-failed", error: String(err) });
   }
 });

@@ -65,7 +65,7 @@ export const PRIMARY_MORPHS = [
  * source citations, or Punnett math, this file is for UI labels only.
  */
 export const GENETIC_TRAITS = [
-  { id: 'lily_white',       label: 'Lily White',        inheritance: 'incomplete_dominant',  canonical_trait_id: 'lilly_white',
+  { id: 'lily_white',       label: 'Lilly White',        inheritance: 'incomplete_dominant',  canonical_trait_id: 'lilly_white',
     notes: 'Foundation Genetics: incomplete dominant. Originated by Lilly Exotics (UK). Super Lilly White is LETHAL, never pair Lilly × Lilly. Canonical spelling is "Lilly White" (two Ls).' },
   { id: 'axanthic_vca',     label: 'Axanthic (VCA)',    inheritance: 'recessive',            canonical_trait_id: 'axanthic',
     notes: 'Simple recessive. Removes yellow/red pigment, retains melanin (not albinism). Proven by Altitude Exotics.' },

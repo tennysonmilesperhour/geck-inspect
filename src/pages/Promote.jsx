@@ -172,7 +172,7 @@ export default function PromotePage() {
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto">
       <Seo
-        title="Promote your geckos, Geck Inspect"
+        title="Promote your geckos"
         description="Generate platform-tailored social media posts about your crested geckos using AI trained on crestie-specific best practices."
       />
 

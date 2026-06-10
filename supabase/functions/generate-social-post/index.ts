@@ -1,4 +1,4 @@
-// Supabase Edge Function — generate-social-post
+// Supabase Edge Function: generate-social-post
 //
 // Generates a social-media post variant for a given gecko using Claude with
 // prompt caching. The system prompt (voice presets + platform rules + crestie
@@ -57,7 +57,7 @@ function json(body: unknown, status = 200) {
 }
 
 // ---------------------------------------------------------------------------
-// System prompt — cached. Must be > 1024 tokens for Sonnet caching to take
+// System prompt, cached. Must be > 1024 tokens for Sonnet caching to take
 // effect, > 2048 for Haiku. The full preset library + hashtag library easily
 // clears that bar.
 // ---------------------------------------------------------------------------
@@ -127,7 +127,7 @@ NICHE / EVERGREEN:
   #firedupgecko #firedup (when photo shows fired state)
 
 DO NOT use generic / over-saturated tags as primaries:
-  Avoid leading with #reptiles or #lizards alone — they bury crestie content
+  Avoid leading with #reptiles or #lizards alone, they bury crestie content
   in unrelated traffic. Use them only as supplemental tags after morph-specific.
 `.trim();
 
@@ -213,7 +213,7 @@ const TOOL_DEF = {
 };
 
 // ---------------------------------------------------------------------------
-// Cost helper — returns cents, rounded up. Adds a small safety margin so we
+// Cost helper. Returns cents, rounded up. Adds a small safety margin so we
 // never under-bill ourselves.
 // ---------------------------------------------------------------------------
 function computeCents(model: string, usage: {
@@ -275,7 +275,7 @@ serve(async (req) => {
 
   if (!ANTHROPIC_API_KEY) return json({ error: "anthropic_key_missing" }, 500);
 
-  // Auth — verify_jwt is true, so Supabase already gated us by an authed
+  // Auth: verify_jwt is true, so Supabase already gated us by an authed
   // user. We pull the user id from the JWT for logging + rate limiting.
   const authHeader = req.headers.get("authorization") || "";
   const jwt = authHeader.replace(/^Bearer\s+/i, "");
@@ -312,7 +312,7 @@ serve(async (req) => {
     .maybeSingle();
   const isAdmin = callerProfile?.role === "admin";
 
-  // Iteration cap — atomically increment
+  // Iteration cap (atomically increment)
   const { data: postRow, error: postErr } = await supabase
     .from("social_posts")
     .select("id, iteration_count, created_by_user_id")

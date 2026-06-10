@@ -1,4 +1,4 @@
-// Supabase Edge Function — send-push
+// Supabase Edge Function: send-push
 //
 // Delivers a web-push notification to every active subscription for a
 // given user. Called by a Postgres trigger on notifications.INSERT (see
@@ -9,15 +9,15 @@
 //   POST /send-push
 //   Headers: Authorization: Bearer <service-role-key>
 //   Body: {
-//     user_email: string,        // required — target user
-//     type: string,              // required — matches Notification.type;
+//     user_email: string,        // required, target user
+//     type: string,              // required, matches Notification.type;
 //                                //   used to check per-user allowlist
-//     title: string,             // required — short line shown in the OS
-//     body: string,              // required — longer line shown below
-//     url?: string,              // optional — deep-link opened on click
+//     title: string,             // required, short line shown in the OS
+//     body: string,              // required, longer line shown below
+//     url?: string,              // optional, deep-link opened on click
 //                                //   (default: "/")
-//     icon?: string,             // optional — absolute HTTPS URL
-//     tag?: string,              // optional — collapse-key on device
+//     icon?: string,             // optional, absolute HTTPS URL
+//     tag?: string,              // optional, collapse-key on device
 //   }
 //
 // Response:
@@ -39,7 +39,7 @@
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
-// Node library via Deno's npm compat — more reliable than esm.sh because
+// Node library via Deno's npm compat, more reliable than esm.sh because
 // Deno handles Node's `crypto` / `Buffer` polyfills natively on Edge.
 import webpush from "npm:web-push@3.6.7";
 
@@ -98,7 +98,7 @@ serve(async (req) => {
   });
 
   // Fetch preferences. If master toggle is off or the type isn't in the
-  // allowlist, bail silently — it's not an error, the user just opted
+  // allowlist, bail silently. It's not an error, the user just opted
   // out of this specific thing.
   const { data: profile, error: profileErr } = await supabase
     .from("profiles")
@@ -153,14 +153,14 @@ serve(async (req) => {
             keys: { p256dh: s.p256dh, auth: s.auth },
           },
           notificationPayload,
-          { TTL: 60 * 60 * 24 }, // 1 day — matches typical session cadence
+          { TTL: 60 * 60 * 24 }, // 1 day, matches typical session cadence
         );
         delivered++;
       } catch (err: unknown) {
         // web-push throws with a `.statusCode` set to the response code.
         const statusCode = (err as { statusCode?: number })?.statusCode;
         if (statusCode === 404 || statusCode === 410) {
-          // Subscription is permanently gone — prune it so we stop
+          // Subscription is permanently gone. Prune it so we stop
           // hitting this endpoint on every future push.
           pruneIds.push(s.id);
         } else {

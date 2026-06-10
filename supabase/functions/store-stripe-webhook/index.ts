@@ -1,4 +1,4 @@
-// Supabase Edge Function — store-stripe-webhook
+// Supabase Edge Function: store-stripe-webhook
 //
 // Receives Stripe events for store checkout sessions, marks orders paid,
 // expands order items from the cart snapshot, mints the guest signup
@@ -118,7 +118,7 @@ serve(async (req) => {
 
   const supabase = createClient(SUPABASE_URL, SERVICE_ROLE_KEY);
 
-  // Idempotency — leverage existing stripe_webhook_logs table if present;
+  // Idempotency: leverage existing stripe_webhook_logs table if present;
   // soft-fail if it isn't.
   try {
     const { data: existing } = await supabase
@@ -128,7 +128,7 @@ serve(async (req) => {
       .maybeSingle();
     if (existing) return new Response("already_processed", { status: 200 });
   } catch {
-    // table might not exist in this branch — ignore
+    // table might not exist in this branch, ignore
   }
 
   if (event.type === "checkout.session.completed" || event.type === "checkout.session.async_payment_succeeded") {
@@ -214,7 +214,7 @@ serve(async (req) => {
         .eq("id", cartId);
     }
 
-    // Guest signup grant — only when there's no owner_user_id on the order
+    // Guest signup grant, only when there's no owner_user_id on the order
     // and the subtotal clears the threshold.
     try {
       const { data: order } = await supabase

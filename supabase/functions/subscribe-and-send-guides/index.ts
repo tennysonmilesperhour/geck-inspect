@@ -1,4 +1,4 @@
-// Supabase Edge Function — subscribe-and-send-guides
+// Supabase Edge Function: subscribe-and-send-guides
 //
 // The homepage lead-magnet form posts to this function. It:
 //   1. Validates the payload (email shape, length caps, honeypot).
@@ -63,7 +63,7 @@ function renderHtml(): string {
         <tr><td style="padding:28px 32px;">
           <p style="margin:0 0 8px 0;color:#86efac;font-size:12px;letter-spacing:0.1em;text-transform:uppercase;">Geck Inspect</p>
           <h1 style="margin:0 0 12px 0;color:#d1fae5;font-size:22px;font-weight:700;line-height:1.3;">Your free crested gecko guides</h1>
-          <p style="margin:0 0 22px 0;color:#a7f3d0;font-size:14px;line-height:1.55;">Welcome — both PDFs are linked below. They cover everything from first-clutch husbandry to multi-generation breeding projections.</p>
+          <p style="margin:0 0 22px 0;color:#a7f3d0;font-size:14px;line-height:1.55;">Welcome! Both PDFs are linked below. They cover everything from first-clutch husbandry to multi-generation breeding projections.</p>
 
           <a href="${escapeHtml(CARE_GUIDE_URL)}" style="display:block;background:#10b981;color:#022c22;padding:14px 18px;border-radius:10px;font-weight:700;text-decoration:none;margin-bottom:10px;">
             Download the Care Guide (PDF)
@@ -75,7 +75,7 @@ function renderHtml(): string {
           <p style="margin:0 0 12px 0;color:#a7f3d0;font-size:13px;line-height:1.55;">Want the always-current, interactive versions with diagrams and the live multi-trait genetics calculator?</p>
           <a href="${escapeHtml(SITE_URL)}/" style="display:inline-block;color:#86efac;font-weight:600;text-decoration:none;">Open Geck Inspect &rarr;</a>
 
-          <p style="margin:32px 0 0 0;color:#6ee7b7;font-size:12px;line-height:1.5;">Built by a crested gecko breeder, for crested gecko breeders. You can unsubscribe any time — just reply to this email and we'll remove you.</p>
+          <p style="margin:32px 0 0 0;color:#6ee7b7;font-size:12px;line-height:1.5;">Built by a crested gecko breeder, for crested gecko breeders. You can unsubscribe any time. Just reply to this email and we'll remove you.</p>
         </td></tr>
       </table>
     </td></tr>
@@ -127,7 +127,7 @@ serve(async (req) => {
     auth: { persistSession: false },
   });
 
-  // Idempotent upsert — re-subscribing is fine, just refreshes
+  // Idempotent upsert. Re-subscribing is fine, just refreshes
   // updated_at and clears any unsubscribed_at flag.
   const { error: upsertErr } = await supabase
     .from("newsletter_subscribers")
@@ -155,7 +155,7 @@ serve(async (req) => {
   const text = [
     "Welcome to Geck Inspect.",
     "",
-    "Both guides are below — free, no expiration, share with anyone.",
+    "Both guides are below: free, no expiration, share with anyone.",
     "",
     `Care Guide:     ${CARE_GUIDE_URL}`,
     `Genetics Guide: ${GENETICS_GUIDE_URL}`,

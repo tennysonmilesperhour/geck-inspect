@@ -86,7 +86,7 @@ function buildMarketplaceListJsonLd(geckos, owners) {
     {
       '@type': 'CollectionPage',
       '@id': `${SITE_URL}/MarketplaceBuy#collection`,
-      name: 'Crested Geckos For Sale, Geck Inspect Marketplace',
+      name: 'Crested Geckos For Sale | Geck Inspect Marketplace',
       url: `${SITE_URL}/MarketplaceBuy`,
       description:
         'Live crested gecko listings from Geck Inspect breeders. Browse by morph, sex, age, and price; message sellers directly.',

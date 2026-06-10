@@ -125,7 +125,7 @@ export const STATIC_ROUTES = [
     changefreq: 'weekly',
     lastmod: TODAY,
     meta: {
-      title: 'Geck Inspect: Crested Gecko Collection, Breeding & Community Platform',
+      title: 'Geck Inspect: Crested Gecko Collection, Breeding & Community',
       description:
         'The professional platform for crested gecko breeders and keepers. Track collections, plan breedings, identify morphs with AI, and connect with the community.',
     },
@@ -250,7 +250,7 @@ export const STATIC_ROUTES = [
     changefreq: 'monthly',
     lastmod: TODAY,
     meta: {
-      title: 'Crested Gecko Morph Visualizer, Interactive Trait Simulator',
+      title: 'Crested Gecko Morph Visualizer: Interactive Trait Simulator',
       description:
         'Free interactive crested gecko trait simulator. Pick a base color, set morph genotype zygosity, dial pattern intensity, toggle accents, and watch the resulting phenotype render in real time with rarity and value estimates.',
     },

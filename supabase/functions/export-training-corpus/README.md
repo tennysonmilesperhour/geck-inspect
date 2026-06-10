@@ -1,7 +1,7 @@
 # export-training-corpus
 
 Streams the verified gecko-morph training corpus as newline-delimited JSON
-(JSONL) — one sample per line, every label keyed to canonical taxonomy
+(JSONL): one sample per line, every label keyed to canonical taxonomy
 ids. Plug it into Hugging Face Datasets, LLaMA-Factory, LoRA training on
 Replicate/Modal, or anything else that reads JSONL.
 

@@ -5,9 +5,9 @@ vector by default) and optionally persists it to `gecko_images.image_embedding`.
 
 Used for:
 
-- **/recognition second signal** — at analyze time, embed the query and
+- **/recognition second signal**: at analyze time, embed the query and
   call `nearest_training_samples()` to surface the closest verified samples.
-- **Backfill** — run against every verified row once after the pgvector
+- **Backfill**: run against every verified row once after the pgvector
   migration. Can be invoked from a one-off script / Supabase cron.
 
 ## Secrets
@@ -19,7 +19,7 @@ supabase secrets set SIGLIP_MODEL=<owner/model-name>
 ```
 
 > The default `krthr/clip-embeddings` placeholder above is just a shape
-> example — plug in the SigLIP2 deployment you want to use (or
+> example. Plug in the SigLIP2 deployment you want to use (or
 > `nateraw/siglip` or similar) and verify the output dimension matches
 > the `vector(768)` column. Adjust the migration and HNSW index if you
 > pick a different size.

@@ -1,4 +1,4 @@
-// Supabase Edge Function — store-checkout
+// Supabase Edge Function: store-checkout
 //
 // Builds a Stripe Checkout Session for the customer's cart and
 // returns the redirect URL. Server-side re-prices every line so the
@@ -210,7 +210,7 @@ serve(async (req) => {
     .single();
   if (orderErr || !orderInsert) return jsonResponse({ error: orderErr?.message || "order_insert_failed" }, 500);
 
-  // Stripe Checkout — flat-fee shipping line baked in as a separate line
+  // Stripe Checkout: flat-fee shipping line baked in as a separate line
   // item rather than via shipping_options, which keeps the math identical
   // to what we wrote into the order row.
   const params: Record<string, string | number | undefined> = {

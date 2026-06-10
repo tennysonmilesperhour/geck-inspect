@@ -56,8 +56,8 @@ export default function Seo({
   jsonLd,
 }) {
   const fullTitle = title
-    ? `${title}, ${SITE_NAME}`
-    : `${SITE_NAME}, Crested Gecko Collection, Breeding & Community Platform`;
+    ? (title.includes(SITE_NAME) ? title : `${title} | ${SITE_NAME}`)
+    : `${SITE_NAME}: Crested Gecko Collection, Breeding & Community`;
   const canonical = `${SITE_URL}${path.startsWith('/') ? path : `/${path}`}`;
 
   const mergedKeywords = Array.isArray(keywords)
