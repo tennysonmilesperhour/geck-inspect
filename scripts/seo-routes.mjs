@@ -245,6 +245,17 @@ export const STATIC_ROUTES = [
     },
   },
   {
+    path: '/Mentorship',
+    priority: 0.7,
+    changefreq: 'weekly',
+    lastmod: TODAY,
+    meta: {
+      title: 'Crested Gecko Mentorship, Consults & Courses',
+      description:
+        'Learn from crested gecko breeders who have been there: one-on-one mentorship, genetics consults, and courses on Lilly White lines, Axanthic projects, structure judging, and breeding season planning.',
+    },
+  },
+  {
     path: '/Morphs',
     priority: 0.8,
     changefreq: 'weekly',

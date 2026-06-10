@@ -52,6 +52,7 @@ const MorphDetail          = lazy(() => import('./pages/MorphDetail'));
 const ProjectLineDetail    = lazy(() => import('./pages/ProjectLineDetail'));
 const MorphGuideList       = lazy(() => import('./pages/MorphGuide'));
 const MorphsHub            = lazy(() => import('./pages/Morphs'));
+const MentorshipPublic     = lazy(() => import('./pages/Mentorship'));
 // Programmatic taxonomy hubs: /MorphGuide/category/<id> and
 // /MorphGuide/inheritance/<id>. Two routes, one module, the module
 // exports named components per variant so each route resolves its
@@ -236,6 +237,7 @@ const AuthenticatedApp = () => {
           <Route path="/Shipping" element={<Shipping />} />
           <Route path="/Giveaways" element={<Giveaways />} />
           <Route path="/Morphs" element={<MorphsHub />} />
+          <Route path="/Mentorship" element={<MentorshipPublic />} />
           <Route path="/MorphGuide" element={<MorphGuideList />} />
           <Route path="/MorphGuide/category/:categoryId" element={<MorphCategoryHub />} />
           <Route path="/MorphGuide/inheritance/:inheritanceId" element={<MorphInheritanceHub />} />

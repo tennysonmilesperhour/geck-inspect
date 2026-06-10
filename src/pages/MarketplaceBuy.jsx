@@ -24,6 +24,7 @@ import EmptyState from '../components/shared/EmptyState';
 import { useNavigate, Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import MessageUserButton from '../components/ui/MessageUserButton';
+import TrustPanel from '@/components/marketplace/TrustPanel';
 import { getSexIcon, getSexColor } from '@/lib/utils';
 import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
 
@@ -185,6 +186,14 @@ const MarketplaceGeckoCard = ({ gecko, owner, currentUser, isLiked, onToggleLike
                        <div className="flex items-center gap-1 text-xs text-slate-400">
                            <MapPin className="w-3 h-3" />
                            <span>{owner.location}</span>
+                       </div>
+                    )}
+                    {/* Seller trust layer: provable on-platform history,
+                        cached per seller so a grid of listings from the
+                        same breeder costs one fetch. */}
+                    {owner?.email && (
+                       <div onClick={(e) => e.stopPropagation()}>
+                           <TrustPanel email={owner.email} variant="compact" />
                        </div>
                     )}
                     <div className={`flex items-center ${isRegular ? 'gap-1' : 'gap-2'}`}>

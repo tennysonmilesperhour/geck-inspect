@@ -38,6 +38,13 @@ export const TIER_LIMITS = {
     maxCollaborators: 1,
     monthlySocialPosts: 1,
     monthlyMorphIDCredits: 1,
+    // June 2026 feature wave, all HARD monthly caps metered through the
+    // feature_usage ledger (consume_feature_credit RPC). null = unlimited.
+    monthlyAssistantMessages: 10,   // GeckGenius agentic chat (Claude API)
+    monthlyHealthScreens: 1,        // photo health check (Claude vision)
+    monthlyIotPolls: 0,             // enclosure sensor reads (Govee API); paid tiers only
+    monthlyVisualSearches: 5,       // embedding similarity searches
+    monthlyGrowthReels: 3,          // growth time-lapse renders
     // Promote-only image library. Separate budget from collection
     // storage so a free user can't bury the social tooling under
     // their gecko photo backlog.
@@ -53,6 +60,11 @@ export const TIER_LIMITS = {
     maxCollaborators: 5,
     monthlySocialPosts: 4,
     monthlyMorphIDCredits: 3,
+    monthlyAssistantMessages: 100,
+    monthlyHealthScreens: 5,
+    monthlyIotPolls: 200,
+    monthlyVisualSearches: 50,
+    monthlyGrowthReels: 20,
     promoteImageStorageBytes: 200 * MB,
     promoteImageMaxCount: 100,
     scheduledPostsMax: 5,
@@ -65,6 +77,11 @@ export const TIER_LIMITS = {
     maxCollaborators: null,
     monthlySocialPosts: 12,
     monthlyMorphIDCredits: 6,
+    monthlyAssistantMessages: 400,
+    monthlyHealthScreens: 15,
+    monthlyIotPolls: 2000,
+    monthlyVisualSearches: 250,
+    monthlyGrowthReels: null,
     promoteImageStorageBytes: 1 * GB,
     promoteImageMaxCount: 500,
     scheduledPostsMax: 10,
@@ -77,6 +94,11 @@ export const TIER_LIMITS = {
     maxCollaborators: null,
     monthlySocialPosts: 30,
     monthlyMorphIDCredits: 15,
+    monthlyAssistantMessages: 1000,
+    monthlyHealthScreens: 40,
+    monthlyIotPolls: 10000,
+    monthlyVisualSearches: 1000,
+    monthlyGrowthReels: null,
     promoteImageStorageBytes: 5 * GB,
     promoteImageMaxCount: 2000,
     scheduledPostsMax: 10,

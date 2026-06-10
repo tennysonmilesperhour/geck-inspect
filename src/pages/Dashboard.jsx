@@ -20,6 +20,7 @@ import StatsCard from '../components/dashboard/StatsCard';
 import RecentActivity from '../components/dashboard/RecentActivity';
 import FeaturedBreeders from '../components/dashboard/FeaturedBreeders';
 import NextActions from '../components/dashboard/NextActions';
+import EnclosureClimate from '../components/iot/EnclosureClimate';
 import CommunityPulse from '../components/dashboard/CommunityPulse';
 import { default as GeckoOfTheDayComponent } from '../components/dashboard/GeckoOfTheDay';
 import MyStoreButton from '../components/dashboard/MyStoreButton';
@@ -433,6 +434,8 @@ export default function Dashboard() {
                         {/* Left column, Next Actions + Community Pulse */}
                         <div className="xl:col-span-4 space-y-6">
                             <NextActions currentUserEmail={user?.email} />
+                            {/* Govee enclosure readings; renders nothing without a connection */}
+                            {user && <EnclosureClimate user={user} />}
                             {dashPrefs.showCommunityPulse && <CommunityPulse />}
                             {dashPrefs.showLiveFeed && <LiveFeed currentUserEmail={user?.email} />}
                         </div>

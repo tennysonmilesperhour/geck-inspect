@@ -2,8 +2,11 @@ import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { format } from 'date-fns';
-import { MapPin, ShieldCheck, Star, Edit, Save, FileText, ExternalLink } from 'lucide-react';
+import { MapPin, ShieldCheck, Star, Edit, Save, FileText, ExternalLink, Palette } from 'lucide-react';
 import QualityBadge from '@/components/shared/QualityBadge';
+import {
+  STORE_THEMES, DEFAULT_STORE_SETTINGS, readStoreSettings, applyStoreSettings,
+} from '@/components/storefront/StorefrontSections';
 
 const C = { forest: '#e2e8f0', sage: '#10b981', paleSage: 'rgba(16,185,129,0.1)', warmWhite: '#020617', gold: '#f59e0b', goldLight: 'rgba(245,158,11,0.15)', slate: '#cbd5e1', muted: '#64748b', cardBg: '#0f172a', border: 'rgba(51,65,85,0.5)' };
 
@@ -56,6 +59,90 @@ export default function BreederStorefront() {
 
   const avgRating = reviews.length > 0 ? (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1) : null;
   const isOwner = auth.user?.email && profile?.created_by === auth.user.email;
+
+  // ─── MINI-SITE SETTINGS (owner only) ───
+  // Theme, "Available now" toggle, and attached waitlist live as reserved
+  // `_`-prefixed entries inside breeder_store_pages.external_links jsonb
+  // (the schema has no theme column). See StorefrontSections.jsx for the
+  // storage format. The public /Breeder page reads the same row.
+  const [storePage, setStorePage] = useState(null);
+  const [siteSettings, setSiteSettings] = useState(DEFAULT_STORE_SETTINGS);
+  const [waitlists, setWaitlists] = useState([]);
+  const [settingsSaving, setSettingsSaving] = useState(false);
+  const [settingsNote, setSettingsNote] = useState(null);
+
+  useEffect(() => {
+    if (!isOwner || !auth.user?.email) return;
+    let cancelled = false;
+    const ownerUserId = auth.user.auth_user_id || auth.user.id;
+    (async () => {
+      const [pageRes, wlRes] = await Promise.all([
+        supabase
+          .from('breeder_store_pages')
+          .select('id, slug, title, is_published, external_links')
+          .eq('owner_email', auth.user.email)
+          .maybeSingle(),
+        ownerUserId
+          ? supabase
+              .from('gecko_waitlists')
+              .select('id, title, slug, is_open')
+              .eq('breeder_user_id', ownerUserId)
+              .eq('is_open', true)
+          : Promise.resolve({ data: [] }),
+      ]);
+      if (cancelled) return;
+      setStorePage(pageRes.data || null);
+      setSiteSettings(readStoreSettings(pageRes.data?.external_links));
+      setWaitlists(wlRes.data || []);
+    })();
+    return () => { cancelled = true; };
+  }, [isOwner, auth.user?.email, auth.user?.auth_user_id, auth.user?.id]);
+
+  const saveSiteSettings = async () => {
+    if (!auth.user?.email) return;
+    setSettingsSaving(true);
+    setSettingsNote(null);
+    const external_links = applyStoreSettings(storePage?.external_links, siteSettings);
+    const cols = 'id, slug, title, is_published, external_links';
+    let res;
+    if (storePage?.id) {
+      res = await supabase
+        .from('breeder_store_pages')
+        .update({ external_links, updated_date: new Date().toISOString() })
+        .eq('id', storePage.id)
+        .select(cols)
+        .single();
+    } else {
+      // No store page row yet: create a minimal published one to carry the
+      // settings. It must be published because RLS only exposes published
+      // rows to visitors; an unpublished carrier would leave the public
+      // page on the emerald defaults.
+      const baseSlug =
+        (profile?.custom_slug || auth.user.email.split('@')[0] || 'breeder')
+          .toLowerCase()
+          .replace(/[^a-z0-9-]/g, '') || 'breeder';
+      const insert = {
+        owner_email: auth.user.email,
+        slug: baseSlug,
+        title: profile?.display_name || baseSlug,
+        is_published: true,
+        external_links,
+      };
+      res = await supabase.from('breeder_store_pages').insert(insert).select(cols).single();
+      if (res.error && res.error.message?.toLowerCase().includes('duplicate')) {
+        insert.slug = `${baseSlug}-${Math.random().toString(36).slice(2, 6)}`;
+        res = await supabase.from('breeder_store_pages').insert(insert).select(cols).single();
+      }
+    }
+    if (res.error) {
+      setSettingsNote({ ok: false, text: res.error.message || 'Save failed. Try again.' });
+    } else {
+      setStorePage(res.data);
+      setSiteSettings(readStoreSettings(res.data.external_links));
+      setSettingsNote({ ok: true, text: 'Saved. Your public page is updated.' });
+    }
+    setSettingsSaving(false);
+  };
 
   const saveProfile = async () => {
     const updates = { ...editForm, specialty_morphs: editForm.specialty_morphs.split(',').map(s => s.trim()).filter(Boolean), updated_date: new Date().toISOString() };
@@ -169,6 +256,110 @@ export default function BreederStorefront() {
           {avgRating && <span className="flex items-center gap-1 text-sm" style={{ color: C.slate }}><Star size={13} fill={C.gold} style={{ color: C.gold }} /> {avgRating}</span>}
           {profile.ships_to?.length > 0 && <span className="text-sm" style={{ color: C.muted }}>Ships to: {profile.ships_to.join(', ')}</span>}
         </div>
+
+        {/* Mini-site settings (owner only) */}
+        {isOwner && (
+          <div className="rounded-xl border p-5 mb-8" style={{ borderColor: C.border, backgroundColor: C.cardBg }}>
+            <h2 className="text-xl mb-1 flex items-center gap-2" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>
+              <Palette size={20} /> Mini-site settings
+            </h2>
+            <p className="text-xs mb-5" style={{ color: C.muted }}>
+              Customize your public page{profile.custom_slug ? ` at geckinspect.com/Breeder/${profile.custom_slug}` : ''}. Only you can see this panel.
+            </p>
+
+            <div className="space-y-5">
+              {/* Theme picker */}
+              <div>
+                <label className="text-xs uppercase block mb-2" style={{ color: C.muted }}>Accent theme</label>
+                <div className="flex items-center gap-3">
+                  {Object.values(STORE_THEMES).map(t => (
+                    <button
+                      key={t.key}
+                      type="button"
+                      onClick={() => setSiteSettings(s => ({ ...s, theme: t.key }))}
+                      className="w-9 h-9 rounded-full transition-transform hover:scale-110"
+                      style={{
+                        backgroundColor: t.swatchHex,
+                        border: siteSettings.theme === t.key ? '3px solid #f8fafc' : '3px solid transparent',
+                      }}
+                      title={t.label}
+                      aria-label={`${t.label} accent theme`}
+                      aria-pressed={siteSettings.theme === t.key}
+                    />
+                  ))}
+                  <span className="text-xs" style={{ color: C.slate }}>
+                    {(STORE_THEMES[siteSettings.theme] || STORE_THEMES.emerald).label}
+                  </span>
+                </div>
+                <p className="text-xs mt-1.5" style={{ color: C.muted }}>Colors the headings, buttons, and morph badges on your public page.</p>
+              </div>
+
+              {/* Available now toggle */}
+              <div>
+                <label className="flex items-center gap-2 text-sm cursor-pointer" style={{ color: C.slate }}>
+                  <input
+                    type="checkbox"
+                    checked={siteSettings.showAvailable}
+                    onChange={e => setSiteSettings(s => ({ ...s, showAvailable: e.target.checked }))}
+                    className="w-4 h-4 accent-emerald-500"
+                  />
+                  Show the &quot;Available now&quot; grid
+                </label>
+                <p className="text-xs mt-1.5" style={{ color: C.muted }}>
+                  Auto-syncs with geckos in your collection that are public and marked For Sale (up to 12, sorted by price). Mark a Lilly White as For Sale and it appears here, no extra steps.
+                </p>
+              </div>
+
+              {/* Waitlist picker */}
+              <div>
+                <label className="text-xs uppercase block mb-1" style={{ color: C.muted }}>Featured waitlist</label>
+                <select
+                  value={siteSettings.waitlistId || ''}
+                  onChange={e => setSiteSettings(s => ({ ...s, waitlistId: e.target.value || null }))}
+                  className="w-full rounded-lg border px-3 py-2 text-sm"
+                  style={{ borderColor: C.border, color: C.slate, backgroundColor: C.warmWhite }}
+                >
+                  <option value="">None</option>
+                  {waitlists.map(w => (
+                    <option key={w.id} value={w.id}>{w.title || w.slug}</option>
+                  ))}
+                </select>
+                <p className="text-xs mt-1.5" style={{ color: C.muted }}>
+                  {waitlists.length > 0
+                    ? 'Featuring an open waitlist adds a signup call to action to your public page.'
+                    : 'No open waitlists yet. Create one from the Promote composer on any gecko, then attach it here.'}
+                </p>
+              </div>
+
+              {!storePage && (
+                <p className="text-xs rounded-lg px-3 py-2" style={{ backgroundColor: C.goldLight, color: C.gold }}>
+                  Saving creates your store page record and publishes it, so visitors can see these settings.
+                </p>
+              )}
+              {storePage && !storePage.is_published && (
+                <p className="text-xs rounded-lg px-3 py-2" style={{ backgroundColor: C.goldLight, color: C.gold }}>
+                  Your store page is currently unpublished, so visitors see the default emerald look. Publish it from My Store to apply these settings publicly.
+                </p>
+              )}
+
+              <div className="flex items-center gap-3">
+                <button
+                  onClick={saveSiteSettings}
+                  disabled={settingsSaving}
+                  className="flex items-center gap-1 px-4 py-2 rounded-lg text-sm font-medium text-white disabled:opacity-60"
+                  style={{ backgroundColor: C.sage }}
+                >
+                  <Save size={14} /> {settingsSaving ? 'Saving...' : 'Save mini-site settings'}
+                </button>
+                {settingsNote && (
+                  <span className="text-xs" style={{ color: settingsNote.ok ? C.sage : '#f87171' }}>
+                    {settingsNote.text}
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* For Sale */}
         <h2 className="text-xl mb-4" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>Available Geckos</h2>

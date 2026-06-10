@@ -11,51 +11,13 @@ import {
 import Seo from '@/components/seo/Seo';
 import { breederCanonical, breederDisplayName, breederSlug } from '@/lib/breederUtils';
 import BuyerInquiryModal from '@/components/breeder/BuyerInquiryModal';
+import TrustPanel from '@/components/marketplace/TrustPanel';
+import {
+  DEFAULT_STORE_SETTINGS, readStoreSettings, themeFor,
+  AvailableNowSection, WaitlistCtaSection, BuiltOnGeckInspect,
+} from '@/components/storefront/StorefrontSections';
 
 const LOGO_URL = APP_LOGO_URL;
-
-// Curated tile, used when we have a breeder_profiles row and pull
-// real for-sale geckos by created_by. Click opens a passport page if
-// the gecko has one, otherwise the GeckoDetail page.
-function ForSaleTile({ gecko, onInquire }) {
-  const detailHref = gecko.passport_code
-    ? `/passport/${gecko.passport_code}`
-    : `/GeckoDetail?id=${gecko.id}`;
-  return (
-    <div className="group relative rounded-xl overflow-hidden border border-slate-800 bg-slate-900/60 hover:border-emerald-500/40 transition-colors flex flex-col">
-      <Link to={detailHref} className="block">
-        <div className="aspect-square bg-slate-800">
-          <img
-            src={gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE}
-            alt={gecko.name || 'Crested gecko for sale'}
-            className="w-full h-full object-cover group-hover:opacity-90 transition-opacity"
-            loading="lazy"
-            decoding="async"
-          />
-        </div>
-        <div className="p-3">
-          <p className="text-sm font-semibold text-slate-100 truncate">
-            {gecko.name || 'Unnamed gecko'}
-          </p>
-          <p className="text-xs text-slate-500 truncate">
-            {gecko.morphs_traits || gecko.sex || 'Crested gecko'}
-          </p>
-          {gecko.asking_price != null && (
-            <p className="text-sm font-bold text-emerald-300 mt-1">${gecko.asking_price}</p>
-          )}
-        </div>
-      </Link>
-      <button
-        type="button"
-        onClick={() => onInquire(gecko)}
-        className="mx-3 mb-3 inline-flex items-center justify-center gap-1.5 rounded-lg border border-emerald-500/40 bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-200 text-xs font-semibold py-2 transition-colors"
-      >
-        <Mail className="w-3.5 h-3.5" />
-        Inquire / reserve
-      </button>
-    </div>
-  );
-}
 
 // Inferred tile, same look as the original Breeder page when no
 // breeder_profiles row exists; used by the fallback "people referenced
@@ -128,6 +90,13 @@ export default function Breeder() {
   const [uniqueOwners, setUniqueOwners] = useState(0);
   const [errorMsg, setErrorMsg] = useState(null);
 
+  // Mini-site settings (accent theme, "Available now" toggle, attached
+  // waitlist), read from reserved entries in the owner's published
+  // breeder_store_pages.external_links jsonb. Defaults to the emerald
+  // theme with the grid shown when no settings row exists.
+  const [storeSettings, setStoreSettings] = useState(DEFAULT_STORE_SETTINGS);
+  const [waitlist, setWaitlist] = useState(null);
+
   // Inquiry modal state, `inquiryGecko` is null for the generic
   // "Contact breeder" button, set to a gecko object when the buyer
   // clicked "Inquire" on a specific listing.
@@ -163,15 +132,17 @@ export default function Breeder() {
           // For-sale listings owned by this breeder. We accept any
           // status that mentions "sale" to handle the schema's mixed
           // casing ("For Sale", "for_sale", "available_for_sale", etc).
+          // Only public geckos appear, capped at 12 for the grid.
           if (ownerEmail) {
-            const [{ data: geckos }, { data: revs }, { data: ownerProf }] = await Promise.all([
+            const [{ data: geckos }, { data: revs }, { data: ownerProf }, { data: storePage }] = await Promise.all([
               supabase
                 .from('geckos')
                 .select('id, name, morphs_traits, image_urls, asking_price, passport_code, sex, status')
                 .eq('created_by', ownerEmail)
+                .eq('is_public', true)
                 .or('status.ilike.%sale%,status.eq.For Sale')
                 .order('asking_price', { ascending: true, nullsFirst: false })
-                .limit(60),
+                .limit(12),
               bp.user_id
                 ? supabase
                     .from('breeder_reviews')
@@ -185,11 +156,31 @@ export default function Breeder() {
                 .select('store_policy')
                 .eq('email', ownerEmail)
                 .maybeSingle(),
+              // Mini-site settings carrier. RLS only exposes published
+              // rows to visitors, and we filter on is_published here too
+              // so owners preview exactly what the public sees.
+              supabase
+                .from('breeder_store_pages')
+                .select('external_links')
+                .eq('owner_email', ownerEmail)
+                .eq('is_published', true)
+                .maybeSingle(),
             ]);
             if (cancelled) return;
             setForSaleGeckos(geckos || []);
             setReviews(revs || []);
             if (ownerProf?.store_policy) setStorePolicy(ownerProf.store_policy);
+
+            const settings = readStoreSettings(storePage?.external_links);
+            setStoreSettings(settings);
+            if (settings.waitlistId) {
+              const { data: wl } = await supabase
+                .from('gecko_waitlists')
+                .select('id, slug, title, description, is_open, closes_at')
+                .eq('id', settings.waitlistId)
+                .maybeSingle();
+              if (!cancelled) setWaitlist(wl || null);
+            }
           }
           return;
         }
@@ -255,6 +246,9 @@ export default function Breeder() {
 
   const breederUrl = `https://geckinspect.com/Breeder/${slug}`;
   const isCurated = mode === 'curated' && profile;
+  // Accent theme chosen by the breeder; emerald when unset, so the
+  // inferred mode and pages without settings look unchanged.
+  const theme = themeFor(storeSettings.theme);
   const displayName = isCurated ? (profile.display_name || inferredDisplayName) : inferredDisplayName;
   const avgRating = reviews.length
     ? (reviews.reduce((s, r) => s + (r.rating || 0), 0) / reviews.length).toFixed(1)
@@ -275,7 +269,7 @@ export default function Breeder() {
           logo: profile.profile_photo || LOGO_URL,
           image: profile.banner_photo || profile.profile_photo || LOGO_URL,
           ...(profile.location ? { address: { '@type': 'PostalAddress', addressLocality: profile.location } } : {}),
-          ...(forSaleGeckos.length > 0 ? {
+          ...(storeSettings.showAvailable && forSaleGeckos.length > 0 ? {
             makesOffer: forSaleGeckos.slice(0, 25).map((g) => ({
               '@type': 'Offer',
               name: g.name,
@@ -388,7 +382,7 @@ export default function Breeder() {
               style={{
                 background: profile.banner_photo
                   ? `url(${profile.banner_photo}) center/cover`
-                  : 'linear-gradient(135deg, #064e3b, #022c22)',
+                  : theme.bannerGradient,
               }}
             >
               <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-slate-950/80" />
@@ -415,7 +409,7 @@ export default function Breeder() {
                   <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 text-sm text-slate-400">
                     {profile.location && (
                       <span className="inline-flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5 text-emerald-400" />
+                        <MapPin className={`w-3.5 h-3.5 ${theme.icon}`} />
                         {profile.location}
                       </span>
                     )}
@@ -435,7 +429,7 @@ export default function Breeder() {
                   type="button"
                   onClick={() => { setInquiryGecko(null); setInquiryOpen(true); }}
                   disabled={!profile.created_by}
-                  className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 disabled:bg-slate-700 text-white font-semibold text-sm whitespace-nowrap shadow-lg shadow-emerald-500/20 transition-colors"
+                  className={`inline-flex items-center gap-2 px-5 py-2.5 rounded-lg ${theme.solidBtn} disabled:bg-slate-700 text-white font-semibold text-sm whitespace-nowrap shadow-lg transition-colors`}
                 >
                   <Mail className="w-4 h-4" />
                   Contact breeder
@@ -453,52 +447,44 @@ export default function Breeder() {
                   {profile.specialty_morphs.map((m) => (
                     <span
                       key={m}
-                      className="inline-flex items-center gap-1 rounded-full border border-emerald-500/25 bg-emerald-500/10 px-3 py-1 text-xs font-medium text-emerald-200"
+                      className={`inline-flex items-center gap-1 rounded-full border ${theme.badge} px-3 py-1 text-xs font-medium`}
                     >
                       <Tag className="w-3 h-3" /> {m}
                     </span>
                   ))}
                 </div>
               )}
-            </section>
 
-            {/* For-sale grid */}
-            <section className="max-w-6xl mx-auto px-6 pb-16">
-              <div className="flex items-end justify-between mb-5">
-                <h2 className="text-xl md:text-2xl font-bold text-white">
-                  Available geckos
-                </h2>
-                <span className="text-xs text-slate-500">
-                  {forSaleGeckos.length} listed
-                </span>
-              </div>
-              {forSaleGeckos.length > 0 ? (
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-                  {forSaleGeckos.map((g) => (
-                    <ForSaleTile
-                      key={g.id}
-                      gecko={g}
-                      onInquire={(gecko) => { setInquiryGecko(gecko); setInquiryOpen(true); }}
-                    />
-                  ))}
-                </div>
-              ) : (
-                <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-10 text-center">
-                  <p className="text-slate-400">
-                    No geckos currently for sale from {displayName}.
-                  </p>
-                  <p className="text-slate-500 text-sm mt-2">
-                    Use <span className="text-emerald-300">Contact breeder</span> above to ask about upcoming clutches or holds.
-                  </p>
+              {/* Trust layer: the breeder's provable, timestamped record
+                  on the platform, rendered from real data rather than
+                  self-written claims. Renders nothing if it can't load. */}
+              {profile.created_by && (
+                <div className="mt-6 max-w-lg">
+                  <TrustPanel email={profile.created_by} variant="full" />
                 </div>
               )}
             </section>
+
+            {/* "Available now" grid, auto-synced with the owner's public
+                For Sale geckos. Hidden when toggled off in the storefront
+                editor or when nothing is listed. */}
+            {storeSettings.showAvailable && (
+              <AvailableNowSection
+                geckos={forSaleGeckos}
+                theme={theme}
+                onInquire={(gecko) => { setInquiryGecko(gecko); setInquiryOpen(true); }}
+              />
+            )}
+
+            {/* Waitlist call-to-action, links to /waitlist/:slug. Renders
+                nothing when no waitlist is attached or it has closed. */}
+            <WaitlistCtaSection waitlist={waitlist} theme={theme} />
 
             {/* Store policy */}
             {storePolicy && (
               <section className="max-w-4xl mx-auto px-6 pb-12">
                 <h2 className="text-xl font-bold text-white mb-4 flex items-center gap-2">
-                  <FileText className="w-5 h-5 text-emerald-400" /> Store policy
+                  <FileText className={`w-5 h-5 ${theme.icon}`} /> Store policy
                 </h2>
                 <div className="rounded-xl border border-slate-800 bg-slate-900/40 p-6">
                   <p className="text-sm text-slate-300 whitespace-pre-wrap leading-relaxed">
@@ -535,10 +521,10 @@ export default function Breeder() {
 
             {/* Powered-by + sign-in nudge */}
             <section className="max-w-4xl mx-auto px-6 pb-20">
-              <div className="rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 via-slate-900/60 to-slate-900/40 p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+              <div className={`rounded-2xl border bg-gradient-to-br ${theme.panel} via-slate-900/60 to-slate-900/40 p-6 md:p-8 flex flex-col md:flex-row items-start md:items-center justify-between gap-5`}>
                 <div className="space-y-2 max-w-xl">
                   <div className="flex items-center gap-2">
-                    <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                    <ShieldCheck className={`w-5 h-5 ${theme.icon}`} />
                     <h2 className="text-lg font-bold text-white">Pedigrees you can verify</h2>
                   </div>
                   <p className="text-slate-300 text-sm leading-relaxed">
@@ -546,7 +532,7 @@ export default function Breeder() {
                   </p>
                 </div>
                 <Link to={createPageUrl('AuthPortal')}>
-                  <Button className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold whitespace-nowrap">
+                  <Button className={`${theme.solidBtn} text-white font-semibold whitespace-nowrap`}>
                     Create free account
                     <ArrowRight className="w-4 h-4 ml-2" />
                   </Button>
@@ -661,19 +647,22 @@ export default function Breeder() {
 
         {/* Footer */}
         <footer className="border-t border-slate-800/50">
-          <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
-            <div className="flex items-center gap-3">
-              <img src={LOGO_URL} alt="Geck Inspect" className="h-6 w-6 rounded" />
-              <span>© {new Date().getFullYear()} Geck Inspect · geckOS</span>
-            </div>
-            <div className="flex items-center gap-5">
-              <Link to="/" className="hover:text-slate-300">Home</Link>
-              <Link to={createPageUrl('MorphGuide')} className="hover:text-slate-300">
-                Morph Guide
-              </Link>
-              <Link to={createPageUrl('AuthPortal')} className="hover:text-slate-300">
-                Sign in
-              </Link>
+          <div className="max-w-6xl mx-auto px-6 py-8 space-y-4">
+            <BuiltOnGeckInspect className="text-center" />
+            <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
+              <div className="flex items-center gap-3">
+                <img src={LOGO_URL} alt="Geck Inspect" className="h-6 w-6 rounded" />
+                <span>© {new Date().getFullYear()} Geck Inspect · geckOS</span>
+              </div>
+              <div className="flex items-center gap-5">
+                <Link to="/" className="hover:text-slate-300">Home</Link>
+                <Link to={createPageUrl('MorphGuide')} className="hover:text-slate-300">
+                  Morph Guide
+                </Link>
+                <Link to={createPageUrl('AuthPortal')} className="hover:text-slate-300">
+                  Sign in
+                </Link>
+              </div>
             </div>
           </div>
         </footer>

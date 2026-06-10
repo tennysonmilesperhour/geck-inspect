@@ -9,6 +9,7 @@ import BreederStoreCard from '@/components/settings/BreederStoreCard';
 import IdLogicSettings, { DEFAULT_ID_SETTINGS } from '@/components/settings/IdLogicSettings';
 import PushNotificationsCard from '@/components/settings/PushNotificationsCard';
 import DataExportCard from '@/components/settings/DataExportCard';
+import IotSettingsCard from '@/components/iot/IotSettingsCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -554,6 +555,7 @@ export default function SettingsPage() {
         { id: 'default-sorts', label: 'Defaults' },
         { id: 'id-logic', label: 'Gecko IDs' },
         { id: 'morph-id', label: 'Morph ID' },
+        { id: 'enclosure-sensors', label: 'Enclosure Sensors' },
         { id: 'data-export', label: 'Your Data' },
         { id: 'danger-zone', label: 'Danger Zone' },
     ];
@@ -1117,6 +1119,10 @@ export default function SettingsPage() {
                         </section>
                     );
                 })()}
+
+                <section id="enclosure-sensors">
+                    <IotSettingsCard user={user} />
+                </section>
 
                 <section id="data-export">
                     <DataExportCard user={user} />

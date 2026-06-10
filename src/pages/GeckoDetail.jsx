@@ -9,6 +9,10 @@ import { parseLocalDate, formatAge } from '@/lib/dateUtils';
 import { formatHetTag } from '@/lib/hetUtils';
 import { breederSlug, looksLikeBreederName } from '@/lib/breederUtils';
 import { predictNextShed, formatShedWindow } from '@/lib/shedPrediction';
+import GrowthReel from '@/components/gecko/GrowthReel';
+import HiddenHetPanel from '@/components/gecko/HiddenHetPanel';
+import VisualSiblings from '@/components/gecko/VisualSiblings';
+import HealthScreenCard from '@/components/health/HealthScreenCard';
 import {
     Loader2, ArrowLeft, Calendar, GitBranch, StickyNote,
     DollarSign, LineChart as LineChartIcon, MapPin, Tag, User as UserIcon,
@@ -378,6 +382,18 @@ export default function GeckoDetail() {
                                 </CardContent>
                             </Card>
                         )}
+
+                        {/* Possible hidden genetics inferred from lineage */}
+                        <HiddenHetPanel gecko={gecko} />
+
+                        {/* AI health check (metered server-side) */}
+                        <HealthScreenCard gecko={gecko} user={currentUser} />
+
+                        {/* Growth time-lapse (export metered) */}
+                        <GrowthReel gecko={gecko} weights={weightRecords} user={currentUser} />
+
+                        {/* Embedding-based lookalikes (metered) */}
+                        <VisualSiblings gecko={gecko} user={currentUser} />
 
                         {/* Parentage */}
                         <Card className="bg-slate-900 border-slate-700">
