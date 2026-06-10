@@ -430,6 +430,22 @@ export default function MessagesPage() {
 
         loadData(true);
 
+        // Fallback polling. Realtime may not be enabled for the
+        // direct_messages table on the Supabase project, in which case the
+        // channel below still reports SUBSCRIBED-style statuses but events
+        // never arrive. Keep a poll running as a safety net: a tighter
+        // cadence until the channel confirms it is live, then stretch to
+        // 60s so the channel carries the real load and polling is just a
+        // slow self-heal for missed events.
+        const POLL_FAST_MS = 15 * 1000;
+        const POLL_SLOW_MS = 60 * 1000;
+        let pollTimer = null;
+        const startPolling = (intervalMs) => {
+            if (pollTimer) clearInterval(pollTimer);
+            pollTimer = setInterval(() => loadData(false), intervalMs);
+        };
+        startPolling(POLL_FAST_MS);
+
         // Realtime: any insert/update to direct_messages triggers a refresh.
         // RLS should already scope the stream to rows this user can see; we
         // still guard client-side because the channel fires before RLS
@@ -470,10 +486,25 @@ export default function MessagesPage() {
                     if (relevant(payload.new) || relevant(payload.old)) scheduleRefresh();
                 }
             )
-            .subscribe();
+            .subscribe((status) => {
+                // Once the channel is live, back the fallback poll off to
+                // the slow cadence. If it later drops (network blip, or
+                // Realtime turned off mid-session), tighten back up so the
+                // page keeps working on polling alone.
+                if (status === 'SUBSCRIBED') {
+                    startPolling(POLL_SLOW_MS);
+                } else if (
+                    status === 'CHANNEL_ERROR' ||
+                    status === 'TIMED_OUT' ||
+                    status === 'CLOSED'
+                ) {
+                    startPolling(POLL_FAST_MS);
+                }
+            });
 
         return () => {
             if (refreshTimer) clearTimeout(refreshTimer);
+            if (pollTimer) clearInterval(pollTimer);
             supabase.removeChannel(channel);
         };
     }, []);

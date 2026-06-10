@@ -412,7 +412,7 @@ export default function Home() {
               <Download className="w-5 h-5 text-sky-300 flex-shrink-0 mt-0.5" />
               <div>
                 <div className="text-sm font-semibold text-white">Yours to export</div>
-                <div className="text-xs text-slate-400 leading-snug">Roster, weights, photos, lineage. CSV or PDF, anytime. No lock-in.</div>
+                <div className="text-xs text-slate-400 leading-snug">Full backup in one click: roster CSV plus every record as JSON. No lock-in.</div>
               </div>
             </div>
             <div className="flex items-start gap-3 rounded border border-sky-500/25 bg-sky-950/30 backdrop-blur px-4 py-3">
@@ -504,9 +504,9 @@ export default function Home() {
             {INNOVATIVE_FEATURES.map((f, idx) => {
               const Icon = f.icon;
               // Three complementary tones across the three rows of three.
-              // Row 1 (idx 0–2): amber/gold (warm).
-              // Row 2 (idx 3–5): rose (warm-pink).
-              // Row 3 (idx 6–8): violet (cool purple).
+              // Row 1 (idx 0-2): amber/gold (warm).
+              // Row 2 (idx 3-5): rose (warm-pink).
+              // Row 3 (idx 6-8): violet (cool purple).
               // Tailwind classes are written out as full literals so the
               // JIT compiler picks them up.
               const ROW_TONES = [
@@ -698,7 +698,7 @@ export default function Home() {
               <p>
                 The crested gecko is a species of arboreal gecko native to southern New Caledonia.
                 Thought extinct until its rediscovery in 1994, it has become one of the most
-                popular reptile pets worldwide thanks to a manageable adult size (35–60 grams), a
+                popular reptile pets worldwide thanks to a manageable adult size (35 to 60 grams), a
                 docile temperament, low care requirements, and the extraordinary trait diversity
                 that breeders have developed over the past three decades.
               </p>

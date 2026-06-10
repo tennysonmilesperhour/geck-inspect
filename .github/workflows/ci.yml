@@ -1,0 +1,46 @@
+name: CI
+
+# Quality gates for pushes to main (which deploys to production via
+# Vercel). Keeps the gates that the June 2026 audit got green from
+# silently regressing: lint (0 errors), typecheck (syntax gate), and
+# the full build including prerender + strict SEO audit.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Typecheck
+        run: pnpm typecheck
+
+      - name: Genetics drift check
+        run: node scripts/check-genetics-consistency.mjs
+
+      - name: Build (sitemap, llms, vite, prerender, SEO audit)
+        run: pnpm build
+
+      - name: SEO audit (strict)
+        run: node scripts/seo-audit.mjs --strict

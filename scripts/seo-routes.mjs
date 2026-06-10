@@ -245,6 +245,17 @@ export const STATIC_ROUTES = [
     },
   },
   {
+    path: '/Morphs',
+    priority: 0.8,
+    changefreq: 'weekly',
+    lastmod: TODAY,
+    meta: {
+      title: 'Crested Gecko Morphs: ID, Guide, Calculator & Visualizer',
+      description:
+        'The hub for crested gecko morphs: identify a morph from a photo with AI, browse the full morph guide, simulate trait combos in the visualizer, predict pairings with the genetics calculator, and learn inheritance in the genetics guide.',
+    },
+  },
+  {
     path: '/MorphVisualizer',
     priority: 0.7,
     changefreq: 'monthly',

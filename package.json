@@ -14,6 +14,7 @@
     "build:pdfs": "node scripts/generate-pdfs.mjs",
     "build:prerender": "node scripts/prerender.mjs",
     "audit": "node scripts/seo-audit.mjs",
+    "check:genetics": "node scripts/check-genetics-consistency.mjs",
     "audit:strict": "node scripts/seo-audit.mjs --strict",
     "lint": "eslint .",
     "lint:fix": "eslint . --fix",

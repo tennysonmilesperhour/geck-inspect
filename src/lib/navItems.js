@@ -10,7 +10,8 @@ import {
   Search, Settings as SettingsIcon, Shield, MessageSquare, Heart,
   ShoppingCart, GitBranch, FlaskConical, Star, FolderKanban,
   GraduationCap, Dna, Egg, LayoutGrid, CircleUser, UsersRound, Images,
-  Tag, CalendarDays, Sparkles, Truck, Wrench, Store as StoreIcon,
+  Tag, CalendarDays, CalendarRange, Sparkles, Truck, Wrench,
+  Store as StoreIcon,
 } from 'lucide-react';
 
 // Top-level section tabs. Rendered as a desktop header bar and a mobile
@@ -33,6 +34,7 @@ export const SECTION_FOR_PAGE = {
   OtherReptiles: 'manage',
   Breeding: 'manage',
   BreedingPairs: 'manage',
+  BreedingSeason: 'manage',
   Lineage: 'manage',
   Pedigree: 'manage',
   GeckoDetail: 'manage',
@@ -49,6 +51,7 @@ export const SECTION_FOR_PAGE = {
   Store: 'manage',
 
   // Discover, morphs, community, reference, browsing
+  Morphs: 'discover',
   Recognition: 'discover',
   MorphVisualizer: 'discover',
   MorphGuide: 'discover',
@@ -68,7 +71,10 @@ export const SECTION_FOR_PAGE = {
   TrainModel: 'discover',
   Marketplace: 'discover',
   MarketplaceBuy: 'discover',
-  MarketplaceSell: 'discover',
+  // Sell-side marketplace pages live in Manage so listing an animal sits
+  // next to MyListings and MarketplaceSalesStats instead of bouncing the
+  // seller between section tabs.
+  MarketplaceSell: 'manage',
   MarketplaceVerification: 'discover',
   MarketPricing: 'discover',
   BreedingROI: 'discover',
@@ -89,6 +95,7 @@ export const FALLBACK_NAV_ITEMS = {
     { page_name: "MyGeckos", display_name: "My Geckos", icon: "LayoutGrid", category: "collection", requires_auth: true, is_enabled: true, order: 1 },
     { page_name: "OtherReptiles", display_name: "Other Reptiles", icon: "UsersRound", category: "collection", requires_auth: true, is_enabled: true, order: 2 },
     { page_name: "Breeding", display_name: "Breeding", icon: "Egg", category: "collection", requires_auth: true, is_enabled: true, order: 3 },
+    { page_name: "BreedingSeason", display_name: "Season Timeline", icon: "CalendarRange", category: "collection", requires_auth: true, is_enabled: true, order: 3.5 },
     { page_name: "Lineage", display_name: "Lineage", icon: "GitBranch", category: "collection", requires_auth: true, is_enabled: true, order: 4 },
     { page_name: "Promote", display_name: "Promote", icon: "Sparkles", category: "collection", requires_auth: true, is_enabled: true, order: 5 },
     { page_name: "Store", display_name: "Supplies", icon: "Store", category: "collection", requires_auth: false, is_enabled: true, order: 6 },
@@ -96,6 +103,7 @@ export const FALLBACK_NAV_ITEMS = {
     { page_name: "Forum", display_name: "Forum", icon: "MessageSquare", category: "collection", requires_auth: false, is_enabled: true, order: 8 },
   ],
   tools: [
+    { page_name: "Morphs", display_name: "Morphs Hub", icon: "Dna", category: "tools", requires_auth: false, is_enabled: true, order: 0.5 },
     { page_name: "Recognition", display_name: "Morph ID", icon: "Search", category: "tools", requires_auth: false, is_enabled: true, order: 1 },
     { page_name: "MorphVisualizer", display_name: "Morph Visualizer", icon: "Layers", category: "tools", requires_auth: false, is_enabled: true, order: 2 },
     { page_name: "MorphGuide", display_name: "Morph Guide", icon: "BookOpen", category: "tools", requires_auth: false, is_enabled: true, order: 3 },
@@ -117,7 +125,7 @@ export const NAV_ICON_MAP = {
   Database, ShoppingCart, Users, GitBranch, Upload, Shield, HeartHandshake,
   FolderKanban, Dna, GraduationCap, Star, Settings: SettingsIcon,
   Egg, LayoutGrid, CircleUser, UsersRound, Images, Tag, CalendarDays,
-  Sparkles, Truck, Wrench, Store: StoreIcon,
+  CalendarRange, Sparkles, Truck, Wrench, Store: StoreIcon,
 };
 
 export const FAVORITES_MAX = 4;

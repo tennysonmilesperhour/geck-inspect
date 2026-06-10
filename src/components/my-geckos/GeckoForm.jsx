@@ -5,6 +5,7 @@ import { UploadFile } from '@/integrations/Core';
 import { notifyFollowersNewGecko, checkAndNotifyLevelUp } from '@/components/notifications/NotificationService';
 import { useToast } from '@/components/ui/use-toast';
 import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
+import { canonicalizeMorphTags } from '@/lib/genetics';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -414,7 +415,9 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                 sire_name: sireId ? null : sireInput,
                 dam_name: damId ? null : damInput,
                 morphs_traits: formData.morphs_traits,
-                morph_tags: formData.morph_tags || [],
+                // Canonicalize on write so spelling variants ('Lily White')
+                // never reach the database; filters and analytics rely on it.
+                morph_tags: canonicalizeMorphTags(formData.morph_tags || []),
                 feeding_group_id: formData.feeding_group_id || null,
                 notes: formData.notes,
                 status: formData.status,

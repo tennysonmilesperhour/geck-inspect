@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
-import { Gecko, User, WeightRecord } from '@/entities/all';
+import { Gecko, User, WeightRecord, ShedRecord } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
 import { useNavigate, Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -8,10 +8,11 @@ import { format } from 'date-fns';
 import { parseLocalDate, formatAge } from '@/lib/dateUtils';
 import { formatHetTag } from '@/lib/hetUtils';
 import { breederSlug, looksLikeBreederName } from '@/lib/breederUtils';
+import { predictNextShed, formatShedWindow } from '@/lib/shedPrediction';
 import {
     Loader2, ArrowLeft, Calendar, GitBranch, StickyNote,
     DollarSign, LineChart as LineChartIcon, MapPin, Tag, User as UserIcon,
-    ChevronLeft, ChevronRight, X
+    ChevronLeft, ChevronRight, X, Droplets
 } from 'lucide-react';
 import ShareMenu from '@/components/shared/ShareMenu';
 import { passportUrl } from '@/lib/passportUtils';
@@ -54,6 +55,7 @@ export default function GeckoDetail() {
     const [owner, setOwner] = useState(null);
     const [currentUser, setCurrentUser] = useState(null);
     const [weightRecords, setWeightRecords] = useState([]);
+    const [shedRecords, setShedRecords] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [lightboxIndex, setLightboxIndex] = useState(null);
     const navigate = useNavigate();
@@ -73,18 +75,20 @@ export default function GeckoDetail() {
                 setGecko(fetchedGecko);
                 setCurrentUser(user);
 
-                // Load owner, parents, weights in parallel
-                const [ownerData, weights, sireData, damData] = await Promise.allSettled([
+                // Load owner, parents, weights, sheds in parallel
+                const [ownerData, weights, sheds, sireData, damData] = await Promise.allSettled([
                     fetchedGecko.created_by
                         ? User.filter({ email: fetchedGecko.created_by }).then(r => r[0] || null)
                         : Promise.resolve(null),
                     WeightRecord.filter({ gecko_id: geckoId }, 'record_date'),
+                    ShedRecord.filter({ animal_id: geckoId }, 'date'),
                     fetchedGecko.sire_id ? Gecko.get(fetchedGecko.sire_id) : Promise.resolve(null),
                     fetchedGecko.dam_id ? Gecko.get(fetchedGecko.dam_id) : Promise.resolve(null),
                 ]);
 
                 setOwner(ownerData.status === 'fulfilled' ? ownerData.value : null);
                 setWeightRecords(weights.status === 'fulfilled' ? weights.value : []);
+                setShedRecords(sheds.status === 'fulfilled' ? (sheds.value || []) : []);
                 setSire(sireData.status === 'fulfilled' ? sireData.value : null);
                 setDam(damData.status === 'fulfilled' ? damData.value : null);
             } catch (error) {
@@ -115,6 +119,20 @@ export default function GeckoDetail() {
             date: format(new Date(r.record_date), 'MMM d'),
             weight: r.weight_grams,
         }));
+
+    // Shed Forecast v1: heuristic prediction from this gecko's own shed
+    // rhythm, falling back to age-based defaults. Renders nothing when
+    // there is no usable data, so the page never nags.
+    const shedPrediction = predictNextShed({
+        sheds: shedRecords,
+        weights: weightRecords,
+        hatchDate: gecko.hatch_date,
+    });
+    const confidenceStyles = {
+        high: 'bg-emerald-700',
+        medium: 'bg-amber-700',
+        low: 'bg-slate-700',
+    };
 
     const statusColors = {
         "Ready to Breed": "bg-teal-700", "Proven": "bg-emerald-700", "Holdback": "bg-blue-700",
@@ -329,6 +347,28 @@ export default function GeckoDetail() {
                                             <Line type="monotone" dataKey="weight" stroke="#86efac" strokeWidth={2} dot={{ r: 3 }} />
                                         </LineChart>
                                     </ResponsiveContainer>
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {/* Shed Forecast */}
+                        {shedPrediction && (
+                            <Card className="bg-slate-900 border-slate-700">
+                                <CardHeader className="pb-2 pt-4 px-4">
+                                    <CardTitle className="text-sm flex items-center gap-2 text-slate-300">
+                                        <Droplets className="w-4 h-4" /> Next Shed Window
+                                    </CardTitle>
+                                </CardHeader>
+                                <CardContent className="px-4 pb-4">
+                                    <div className="flex items-center gap-3">
+                                        <span className="text-lg font-semibold text-slate-100">
+                                            {formatShedWindow(shedPrediction)}
+                                        </span>
+                                        <Badge className={`${confidenceStyles[shedPrediction.confidence]} capitalize`}>
+                                            {shedPrediction.confidence} confidence
+                                        </Badge>
+                                    </div>
+                                    <p className="text-xs text-slate-400 mt-1.5">{shedPrediction.basis}</p>
                                 </CardContent>
                             </Card>
                         )}

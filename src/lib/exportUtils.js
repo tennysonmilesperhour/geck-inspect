@@ -1,4 +1,14 @@
 import jsPDF from 'jspdf';
+import {
+  User,
+  Gecko,
+  WeightRecord,
+  BreedingPlan,
+  Egg,
+  Clutch,
+  ShedRecord,
+  FeedingRecord,
+} from '@/entities/all';
 
 /**
  * Roster export utilities.
@@ -8,6 +18,7 @@ import jsPDF from 'jspdf';
  *
  *   exportGeckosCSV(geckos), triggers a .csv download
  *   exportGeckosPDF(geckos, { title }), triggers a .pdf download
+ *   exportFullBackupJSON(), fetches everything and triggers a .json download
  *
  * Both walk the same column spec, so adding a new field only requires
  * updating the COLUMNS array below.
@@ -193,4 +204,72 @@ export function exportGeckosPDF(geckos, { title, filename, userName } = {}) {
   const name = filename || `geck-inspect-roster-${timestampSlug()}.pdf`;
   doc.save(name);
   return name;
+}
+
+/**
+ * Full-account backup as a single JSON file.
+ *
+ * Fetches every record type the signed-in user owns (scoped with
+ * `created_by: email`, the same way the rest of the app queries) and
+ * downloads:
+ *
+ *   {
+ *     exported_at: ISO timestamp,
+ *     app: 'geck-inspect',
+ *     notes: [...],            // only present if something failed
+ *     data: { geckos: [...], weight_records: [...], ... }
+ *   }
+ *
+ * A record type that errors (missing table, RLS hiccup) is included as
+ * an empty array with an explanatory note instead of failing the whole
+ * export. Returns { filename, counts, notes }.
+ */
+export async function exportFullBackupJSON({ filename } = {}) {
+  const me = await User.me();
+  if (!me?.email) {
+    throw new Error('You must be signed in to export your data.');
+  }
+
+  const sources = [
+    ['geckos', Gecko],
+    ['weight_records', WeightRecord],
+    ['breeding_plans', BreedingPlan],
+    ['eggs', Egg],
+    ['clutches', Clutch],
+    ['shed_records', ShedRecord],
+    ['feeding_records', FeedingRecord],
+  ];
+
+  const data = {};
+  const notes = [];
+  await Promise.all(
+    sources.map(async ([key, entity]) => {
+      try {
+        data[key] = (await entity.filter({ created_by: me.email })) || [];
+      } catch (err) {
+        data[key] = [];
+        notes.push(
+          `${key}: could not be fetched (${err?.message || 'unknown error'}), exported as an empty array`
+        );
+      }
+    })
+  );
+
+  const payload = {
+    exported_at: new Date().toISOString(),
+    app: 'geck-inspect',
+    ...(notes.length > 0 ? { notes } : {}),
+    data,
+  };
+
+  const blob = new Blob([JSON.stringify(payload, null, 2)], {
+    type: 'application/json;charset=utf-8;',
+  });
+  const name = filename || `geck-inspect-backup-${timestampSlug()}.json`;
+  downloadBlob(blob, name);
+
+  const counts = Object.fromEntries(
+    Object.entries(data).map(([key, rows]) => [key, rows.length])
+  );
+  return { filename: name, counts, notes };
 }

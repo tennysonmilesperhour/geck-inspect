@@ -8,6 +8,7 @@ import CollectionsCard from '@/components/settings/CollectionsCard';
 import BreederStoreCard from '@/components/settings/BreederStoreCard';
 import IdLogicSettings, { DEFAULT_ID_SETTINGS } from '@/components/settings/IdLogicSettings';
 import PushNotificationsCard from '@/components/settings/PushNotificationsCard';
+import DataExportCard from '@/components/settings/DataExportCard';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -535,6 +536,7 @@ export default function SettingsPage() {
         { id: 'default-sorts', label: 'Defaults' },
         { id: 'id-logic', label: 'Gecko IDs' },
         { id: 'morph-id', label: 'Morph ID' },
+        { id: 'data-export', label: 'Your Data' },
         { id: 'danger-zone', label: 'Danger Zone' },
     ];
 
@@ -1074,6 +1076,10 @@ export default function SettingsPage() {
                         </section>
                     );
                 })()}
+
+                <section id="data-export">
+                    <DataExportCard user={user} />
+                </section>
 
                 <section id="danger-zone">
                 {/* Delete Account Section */}

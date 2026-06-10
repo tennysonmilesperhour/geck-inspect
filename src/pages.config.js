@@ -68,6 +68,7 @@ const Breeder               = lazy(() => import('./pages/Breeder'));
 const BreederConsultant     = lazy(() => import('./pages/BreederConsultant'));
 const Breeding              = lazy(() => import('./pages/Breeding'));
 const BreedingPairs         = lazy(() => import('./pages/BreedingPairs'));
+const BreedingSeason        = lazy(() => import('./pages/BreedingSeason'));
 const CareGuide             = lazy(() => import('./pages/CareGuide'));
 const CommunityConnect      = lazy(() => import('./pages/CommunityConnect'));
 const Forum                 = lazy(() => import('./pages/Forum'));
@@ -89,6 +90,7 @@ const Messages              = lazy(() => import('./pages/Messages'));
 const MorphGuide            = lazy(() => import('./pages/MorphGuide'));
 const MorphGuideSubmission  = lazy(() => import('./pages/MorphGuideSubmission'));
 const MorphVisualizer       = lazy(() => import('./pages/MorphVisualizer'));
+const Morphs                = lazy(() => import('./pages/Morphs'));
 const MyGeckos              = lazy(() => import('./pages/MyGeckos'));
 const MyListings            = lazy(() => import('./pages/MyListings'));
 const MyStore               = lazy(() => import('./pages/MyStore'));
@@ -130,6 +132,7 @@ export const PAGES = {
     "BreederConsultant": BreederConsultant,
     "Breeding": Breeding,
     "BreedingPairs": BreedingPairs,
+    "BreedingSeason": BreedingSeason,
     "CareGuide": CareGuide,
     "CommunityConnect": CommunityConnect,
     "Dashboard": Dashboard,
@@ -153,6 +156,7 @@ export const PAGES = {
     "MorphGuide": MorphGuide,
     "MorphGuideSubmission": MorphGuideSubmission,
     "MorphVisualizer": MorphVisualizer,
+    "Morphs": Morphs,
     "MyGeckos": MyGeckos,
     "MyListings": MyListings,
     "MyProfile": MyProfile,
