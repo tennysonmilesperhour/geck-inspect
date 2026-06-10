@@ -50,6 +50,14 @@ const NOINDEX_PAGES = [
 // in this list. Route pattern redirects are a single entry with
 // `:slug` so the whole prefix family collapses to one rule.
 const CASE_REDIRECTS = [
+  { from: '/morphs', to: '/Morphs' },
+  // Hyphenated spellings people type or guess from other sites.
+  { from: '/morph-guide', to: '/MorphGuide' },
+  { from: '/morph-guide/:slug', to: '/MorphGuide/:slug' },
+  { from: '/care-guide', to: '/CareGuide' },
+  { from: '/care-guide/:topic', to: '/CareGuide/:topic' },
+  { from: '/genetics-guide', to: '/GeneticsGuide' },
+  { from: '/morph-visualizer', to: '/MorphVisualizer' },
   { from: '/morphguide', to: '/MorphGuide' },
   { from: '/morphguide/:slug', to: '/MorphGuide/:slug' },
   { from: '/morphguide/category/:categoryId', to: '/MorphGuide/category/:categoryId' },

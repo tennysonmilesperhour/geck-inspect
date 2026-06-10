@@ -3,6 +3,7 @@
  */
 import * as sb from '@/api/supabaseEntities';
 import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
+import { reportError } from '@/lib/telemetry';
 
 // User: auth + profile from Supabase
 export const User = new Proxy({}, {
@@ -21,6 +22,7 @@ export const User = new Proxy({}, {
           if (profile) return { ...normalizeSupabaseUser(user), ...profile };
         } catch (err) {
           console.error('User.me profile enrichment failed:', err);
+          reportError(err, { component: 'entities/all', extra: { op: 'User.me enrichment' } });
         }
         return normalizeSupabaseUser(user);
       };
@@ -40,6 +42,7 @@ export const User = new Proxy({}, {
             .upsert({ email: user.email, ...data, updated_date: new Date().toISOString() }, { onConflict: 'email' });
         } catch (err) {
           console.error('updateMyUserData profile upsert failed:', err);
+          reportError(err, { component: 'entities/all', extra: { op: 'updateMyUserData' } });
         }
         return normalizeSupabaseUser(user);
       };

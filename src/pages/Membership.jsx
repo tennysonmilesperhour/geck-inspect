@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import { reportError } from '@/lib/telemetry';
 import { Check, Sparkles, Zap, Crown, Star, Loader2, Flame, Infinity as InfinityIcon } from 'lucide-react';
 import { User } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
@@ -360,6 +361,7 @@ export default function MembershipPage() {
       }
     } catch (err) {
       console.error('Checkout failed:', err);
+      reportError(err, { component: 'Membership', extra: { op: 'stripe-checkout' } });
       toast({
         title: 'Checkout unavailable',
         description:

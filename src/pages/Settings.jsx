@@ -21,7 +21,7 @@ import {
   Settings, Upload, Save, Globe, Eye, X, Camera, Mail, Calendar, Loader2, Search, Trash2, AlertTriangle, ArrowUpDown, Clock, Crown, FileText, Palette, Check, Star, Database
 } from 'lucide-react';
 import { useTheme } from '@/lib/ThemeContext';
-import { FALLBACK_NAV_ITEMS, NAV_ICON_MAP, FAVORITES_MAX, flattenNavItems } from '@/lib/navItems';
+import { FALLBACK_NAV_ITEMS, NAV_ICON_MAP, FAVORITES_MAX, flattenNavItems, KEEPER_MODE_STORAGE_KEY } from '@/lib/navItems';
 import {
   AlertDialog,
   AlertDialogAction,
@@ -406,6 +406,23 @@ export default function SettingsPage() {
 
     const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
 
+    // Keeper mode lives in localStorage (per device), not in the profile
+    // form. Adding it to formData would push an unknown column into the
+    // profiles upsert and break saving every other setting, so it gets
+    // its own instant toggle: write the flag, tell Layout, done. No
+    // Save button involved.
+    const [keeperMode, setKeeperMode] = useState(() => {
+        try { return localStorage.getItem(KEEPER_MODE_STORAGE_KEY) === '1'; }
+        catch { return false; }
+    });
+
+    const handleKeeperModeChange = (enabled) => {
+        setKeeperMode(enabled);
+        try { localStorage.setItem(KEEPER_MODE_STORAGE_KEY, enabled ? '1' : '0'); } catch { /* private browsing, toggle still works for this page view */ }
+        // Layout listens for this and re-filters the sidebar in place.
+        window.dispatchEvent(new CustomEvent('keeper_mode_changed'));
+    };
+
     const handleChange = (field, value) => {
         setFormData(prev => ({ ...prev, [field]: value }));
         setHasUnsavedChanges(true);
@@ -521,6 +538,7 @@ export default function SettingsPage() {
     const sectionNav = [
         { id: 'appearance', label: 'Appearance' },
         { id: 'favorite-pages', label: 'Favorite Pages' },
+        { id: 'keeper-mode', label: 'Keeper Mode' },
         { id: 'profile-photos', label: 'Profile Photos' },
         { id: 'basic-information', label: 'Basic Info' },
         { id: 'contact-information', label: 'Contact' },
@@ -636,6 +654,29 @@ export default function SettingsPage() {
                             selected={formData.favorite_page_names}
                             onChange={(next) => handleChange('favorite_page_names', next)}
                         />
+                    </CardContent>
+                </Card>
+                </section>
+
+                <section id="keeper-mode">
+                <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+                    <CardHeader>
+                        <CardTitle className="text-slate-100 flex items-center gap-2">
+                            <Eye className="w-5 h-5" />
+                            Keeper Mode
+                        </CardTitle>
+                        <CardDescription className="text-slate-400">
+                            Just keeping, not breeding? Hide the breeding and selling tools for a simpler app. You can switch back any time.
+                        </CardDescription>
+                    </CardHeader>
+                    <CardContent>
+                        {renderSwitch(
+                            'keeper_mode',
+                            'Keeper mode',
+                            'Removes pages like Breeding, Lineage, and Business Tools from your sidebar so your geckos, the care guide, and Morph ID stay front and center. Applies right away on this device and never touches your data.',
+                            keeperMode,
+                            handleKeeperModeChange
+                        )}
                     </CardContent>
                 </Card>
                 </section>

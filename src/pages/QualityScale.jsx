@@ -11,9 +11,10 @@ import {
 } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
 import PublicPageShell from '@/components/public/PublicPageShell';
+import ScorecardForm from '@/components/quality/ScorecardForm';
 import { breadcrumbSchema, SITE_URL } from '@/lib/organization-schema';
 
-const LAST_UPDATED = '2026-05-09';
+const LAST_UPDATED = '2026-06-10';
 
 const RUBRIC = [
   {
@@ -165,7 +166,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'How do I score my crested gecko?',
-    a: 'Photograph the gecko in good light against a neutral backdrop, confirm it meets the eligibility floor (18 months old, 45 g with tail or 40 g without for the full structure point), then award 0 to 1 point in 0.5 steps for each of the 10 criteria on the rubric. Total the ten scores out of 10 and read the matching grade tier from the score-to-grade table.',
+    a: 'Photograph the gecko in good light against a neutral backdrop, confirm it meets the eligibility floor (18 months old, 45 g with tail or 40 g without for the full structure point), then award 0 to 1 point in 0.5 steps for each of the 10 criteria on the rubric. Total the ten scores out of 10 and read the matching grade tier from the score-to-grade table. The interactive scorecard on this page does the math for you and can save the result straight to a gecko in your Geck Inspect collection.',
   },
   {
     q: 'What is the difference between Pet, Breeder, High-end, and Investment grade?',
@@ -459,6 +460,11 @@ export default function QualityScale() {
           </p>
         </div>
 
+        {/* Interactive scorecard (P11 phase 2 / ROADMAP item 8 Option A).
+            Scores save to geckos.quality_score via Gecko.update;
+            pattern_grade is mirrored for Market Pricing. */}
+        <ScorecardForm criteria={RUBRIC} />
+
         {/* Per-category */}
         <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 mb-8">
           <div className="flex items-center gap-2 mb-3">
@@ -526,7 +532,9 @@ export default function QualityScale() {
             </li>
           </ol>
           <p className="text-slate-500 text-xs mt-4">
-            An interactive worksheet that scores your gecko inside the Animal Passport is on the roadmap. For now, a notebook or a notes app works fine.
+            The{' '}
+            <a href="#scorecard" className="text-emerald-400 hover:text-emerald-300 underline">interactive scorecard</a>{' '}
+            above walks all 10 criteria, totals the score, and saves it to a gecko in your collection.
           </p>
         </div>
 

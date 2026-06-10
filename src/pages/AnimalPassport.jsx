@@ -4,11 +4,11 @@ import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { format } from 'date-fns';
 import {
-  calculateAge, STATUS_BADGE_STYLES, PATTERN_GRADES, TRANSFER_METHOD_LABELS, passportUrl
+  calculateAge, STATUS_BADGE_STYLES, PATTERN_GRADES, passportUrl
 } from '@/lib/passportUtils';
-import { QRCodeSVG } from 'qrcode.react';
+import { QRCodeSVG, QRCodeCanvas } from 'qrcode.react';
 import {
-  Calendar, Scale, Droplets, Heart, Stethoscope, ChevronLeft, ChevronRight, QrCode, ArrowRightLeft, ShieldCheck, Check, X, User as UserIcon, Utensils
+  Calendar, Scale, Droplets, Heart, Stethoscope, ChevronLeft, ChevronRight, QrCode, ArrowRightLeft, ShieldCheck, Check, X, User as UserIcon, Utensils, FileDown
 } from 'lucide-react';
 import {
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
@@ -16,6 +16,8 @@ import {
 import { Helmet } from 'react-helmet-async';
 import ShareMenu from '@/components/shared/ShareMenu';
 import QualityBadge from '@/components/shared/QualityBadge';
+import OwnershipChain from '@/components/passport/OwnershipChain';
+import { exportProvenanceCertificate } from '@/lib/certificateExport';
 
 /* ─── Design tokens ─────────────────────────────────────────────── */
 const C = {
@@ -71,7 +73,7 @@ function StatChip({ icon: Icon, label, value }) {
     <div className="flex items-center gap-1.5 rounded-lg px-3 py-2" style={{ backgroundColor: C.paleSage }}>
       <Icon size={14} style={{ color: C.sage }} />
       <span className="text-xs uppercase tracking-wider" style={{ color: C.muted }}>{label}</span>
-      <span className="text-sm font-medium ml-auto" style={{ color: C.slate }}>{value || '—'}</span>
+      <span className="text-sm font-medium ml-auto" style={{ color: C.slate }}>{value || '-'}</span>
     </div>
   );
 }
@@ -203,55 +205,6 @@ function LineageTree({ gecko, sire, dam }) {
   );
 }
 
-/* ─── Ownership timeline ────────────────────────────────────────── */
-
-function OwnershipTimeline({ records }) {
-  if (!records || records.length === 0) {
-    return (
-      <div className="text-center py-6">
-        <ShieldCheck size={24} style={{ color: C.muted }} className="mx-auto mb-2" />
-        <p className="text-sm" style={{ color: C.muted }}>Original owner, no transfers recorded</p>
-      </div>
-    );
-  }
-  return (
-    <div className="space-y-0">
-      {records.map((r, i) => (
-        <div key={r.id} className="flex gap-4 items-start">
-          <div className="flex flex-col items-center">
-            <div
-              className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-semibold shrink-0"
-              style={{ backgroundColor: C.paleSage, color: C.forest }}
-            >
-              {(r.owner_name || '?')[0].toUpperCase()}
-            </div>
-            {i < records.length - 1 && (
-              <div className="w-px flex-1 my-1" style={{ backgroundColor: 'rgba(78,124,78,0.2)' }} />
-            )}
-          </div>
-          <div className="pb-6">
-            <p className="text-sm font-semibold" style={{ color: C.slate }}>{r.owner_name}</p>
-            <div className="flex items-center gap-2 mt-0.5">
-              <span className="text-xs" style={{ color: C.muted }}>
-                {r.acquired_date ? format(new Date(r.acquired_date), 'MMM d, yyyy') : 'Unknown date'}
-              </span>
-              {r.transfer_method && (
-                <span
-                  className="text-xs rounded-full px-2 py-0.5"
-                  style={{ backgroundColor: C.paleSage, color: C.forest }}
-                >
-                  {TRANSFER_METHOD_LABELS[r.transfer_method] || r.transfer_method}
-                </span>
-              )}
-            </div>
-            {r.notes && <p className="text-xs mt-1" style={{ color: C.muted }}>{r.notes}</p>}
-          </div>
-        </div>
-      ))}
-    </div>
-  );
-}
-
 /* ─── Care history tabs ─────────────────────────────────────────── */
 
 function CareHistoryTabs({ feedingRecords, weightRecords, shedRecords, vetRecords }) {
@@ -366,9 +319,9 @@ function CareHistoryTabs({ feedingRecords, weightRecords, shedRecords, vetRecord
                     {feedingRecords.slice(0, 20).map((f, i) => (
                       <tr key={f.id} style={{ backgroundColor: i % 2 === 0 ? 'transparent' : C.paleSage + '33' }}>
                         <td className="py-1.5 px-2" style={{ color: C.slate }}>
-                          {f.date ? format(new Date(f.date), 'MMM d, yyyy') : '—'}
+                          {f.date ? format(new Date(f.date), 'MMM d, yyyy') : '-'}
                         </td>
-                        <td className="py-1.5 px-2" style={{ color: C.slate }}>{f.food_type || '—'}</td>
+                        <td className="py-1.5 px-2" style={{ color: C.slate }}>{f.food_type || '-'}</td>
                         <td className="py-1.5 px-2">
                           {f.accepted !== false
                             ? <Check size={14} style={{ color: C.sage }} />
@@ -400,7 +353,7 @@ function CareHistoryTabs({ feedingRecords, weightRecords, shedRecords, vetRecord
                   style={{ backgroundColor: C.warmWhite }}
                 >
                   <span className="text-sm" style={{ color: C.slate }}>
-                    {s.date ? format(new Date(s.date), 'MMM d, yyyy') : '—'}
+                    {s.date ? format(new Date(s.date), 'MMM d, yyyy') : '-'}
                   </span>
                   {shedQualityBadge(s.quality)}
                   {s.notes && <span className="text-xs" style={{ color: C.muted }}>{s.notes}</span>}
@@ -448,7 +401,7 @@ function VetRecordCard({ record }) {
         <div>
           <p className="text-sm font-semibold" style={{ color: C.slate }}>{record.reason || 'Vet visit'}</p>
           <p className="text-xs" style={{ color: C.muted }}>
-            {record.date ? format(new Date(record.date), 'MMM d, yyyy') : '—'}
+            {record.date ? format(new Date(record.date), 'MMM d, yyyy') : '-'}
             {record.vet_name && ` · ${record.vet_name}`}
           </p>
         </div>
@@ -625,6 +578,8 @@ export default function AnimalPassport() {
   const status = (gecko.status || 'owned').toLowerCase().replace(/\s/g, '_');
   const isOwner = currentUser?.email && gecko.created_by === currentUser.email;
   const url = passportUrl(passportCode);
+  const hasProvenance = ownershipRecords.length > 0
+    || Boolean(gecko.sire_id || gecko.dam_id || gecko.sire_name || gecko.dam_name || gecko.breeder_name);
 
   return (
     <>
@@ -666,6 +621,17 @@ export default function AnimalPassport() {
                 title={`${gecko.name} on Geck Inspect`}
                 subtitle={[gecko.morphs_traits, gecko.sex].filter(Boolean).join(' · ')}
               />
+              {hasProvenance && (
+                <button
+                  onClick={() => exportProvenanceCertificate(gecko, ownershipRecords, url)}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition hover:opacity-90 border"
+                  style={{ borderColor: C.sage, color: C.sage, backgroundColor: 'transparent' }}
+                  title="Download a printable provenance certificate. The QR code on it links back to this live passport."
+                >
+                  <FileDown size={14} />
+                  Export certificate (PDF)
+                </button>
+              )}
               <StatusBadge status={status} />
             </div>
           </div>
@@ -675,7 +641,7 @@ export default function AnimalPassport() {
             <StatChip icon={Heart} label="Species" value={gecko.species || 'C. ciliatus'} />
             <StatChip icon={UserIcon} label="Sex" value={gecko.sex || 'Unknown'} />
             <StatChip icon={Calendar} label="Age" value={calculateAge(gecko.hatch_date || gecko.date_of_birth, gecko.estimated_hatch_year)} />
-            <StatChip icon={Scale} label="Weight" value={gecko.weight_grams ? `${gecko.weight_grams}g` : '—'} />
+            <StatChip icon={Scale} label="Weight" value={gecko.weight_grams ? `${gecko.weight_grams}g` : '-'} />
           </div>
 
           {/* ─── Morph card ────────────────────────── */}
@@ -719,14 +685,8 @@ export default function AnimalPassport() {
             </div>
           )}
 
-          {/* ─── Ownership timeline ────────────────── */}
-          <div
-            className="rounded-xl border p-6"
-            style={{ borderColor: C.border, backgroundColor: C.cardBg }}
-          >
-            <SectionHeading>Ownership History</SectionHeading>
-            <OwnershipTimeline records={ownershipRecords} />
-          </div>
+          {/* ─── Chain of custody ──────────────────── */}
+          <OwnershipChain records={ownershipRecords} />
 
           {/* ─── Care history ──────────────────────── */}
           <div
@@ -748,6 +708,10 @@ export default function AnimalPassport() {
             style={{ borderColor: C.border, backgroundColor: C.cardBg }}
           >
             <QRCodeSVG value={url} size={120} level="M" className="mx-auto mb-3" />
+            {/* Hidden canvas copy of the QR code, captured by the provenance certificate PDF export */}
+            <div style={{ display: 'none' }} aria-hidden="true">
+              <QRCodeCanvas value={url} size={512} level="M" data-passport-qr="true" />
+            </div>
             <p className="text-sm font-medium" style={{ color: C.forest }}>Scan to view this passport</p>
             <p className="text-xs mt-1" style={{ color: C.muted }}>{url}</p>
           </div>

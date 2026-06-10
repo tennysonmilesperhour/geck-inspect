@@ -187,6 +187,41 @@
       "permanent": true
     },
     {
+      "source": "/morphs",
+      "destination": "/Morphs",
+      "permanent": true
+    },
+    {
+      "source": "/morph-guide",
+      "destination": "/MorphGuide",
+      "permanent": true
+    },
+    {
+      "source": "/morph-guide/:slug",
+      "destination": "/MorphGuide/:slug",
+      "permanent": true
+    },
+    {
+      "source": "/care-guide",
+      "destination": "/CareGuide",
+      "permanent": true
+    },
+    {
+      "source": "/care-guide/:topic",
+      "destination": "/CareGuide/:topic",
+      "permanent": true
+    },
+    {
+      "source": "/genetics-guide",
+      "destination": "/GeneticsGuide",
+      "permanent": true
+    },
+    {
+      "source": "/morph-visualizer",
+      "destination": "/MorphVisualizer",
+      "permanent": true
+    },
+    {
       "source": "/morphguide",
       "destination": "/MorphGuide",
       "permanent": true

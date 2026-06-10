@@ -11,6 +11,7 @@ import { recognizeGeckoMorph } from '../functions/recognizeGeckoMorph';
 import { useAuth } from '@/lib/AuthContext';
 
 import MorphCorrectionPanel from '../components/morph-id/MorphCorrectionPanel';
+import CommunityTrainingStats from '../components/morph-id/CommunityTrainingStats';
 import PhotoTipsCard from '../components/morph-id/PhotoTipsCard';
 import SimilarGeckosStrip from '../components/morph-id/SimilarGeckosStrip';
 import MultiPhotoUploader, { MAX_PHOTOS } from '../components/morph-id/MultiPhotoUploader';
@@ -178,13 +179,15 @@ export default function Recognition() {
                     </Button>
                   </div>
                   <p className="text-xs text-slate-500">
-                    Takes ~5–15 seconds. All uploaded photos are stored so you can save corrections to training data as one submission.
+                    Takes ~5-15 seconds. All uploaded photos are stored so you can save corrections to training data as one submission.
                   </p>
                 </div>
               </div>
             )}
           </CardContent>
         </Card>
+
+        <CommunityTrainingStats />
 
         {error && (() => {
           // Admins get the raw upstream message so they can debug 429s,

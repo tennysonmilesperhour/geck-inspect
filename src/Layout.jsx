@@ -50,6 +50,8 @@ import {
   flattenNavItems,
   SECTIONS,
   getSectionForPage,
+  BREEDER_ONLY_PAGES,
+  KEEPER_MODE_STORAGE_KEY,
 } from '@/lib/navItems';
 
 
@@ -72,6 +74,13 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   const [showTutorial, setShowTutorial] = useState(false);
   const [isSidebarLocked, setIsSidebarLocked] = useState(() => {
     try { return localStorage.getItem('sidebar_locked') === '1'; }
+    catch { return false; }
+  });
+  // Keeper mode: hides breeder-business pages from the sidebar for pet
+  // keepers who never breed. Read synchronously from localStorage so the
+  // very first render is already filtered (no breeder-nav flash).
+  const [keeperMode, setKeeperMode] = useState(() => {
+    try { return localStorage.getItem(KEEPER_MODE_STORAGE_KEY) === '1'; }
     catch { return false; }
   });
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(!isSidebarLocked);
@@ -464,6 +473,18 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     return () => window.removeEventListener('page_configs_changed', refresh);
   }, []);
 
+  // Live sidebar updates when the user flips Keeper mode in Settings.
+  // Settings writes localStorage then fires 'keeper_mode_changed', so
+  // the nav re-filters in place without a browser reload.
+  useEffect(() => {
+    const onKeeperModeChange = () => {
+      try { setKeeperMode(localStorage.getItem(KEEPER_MODE_STORAGE_KEY) === '1'); }
+      catch { setKeeperMode(false); }
+    };
+    window.addEventListener('keeper_mode_changed', onKeeperModeChange);
+    return () => window.removeEventListener('keeper_mode_changed', onKeeperModeChange);
+  }, []);
+
 
   const handleLogin = () => {
     window.location.href = '/AuthPortal';
@@ -688,7 +709,20 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     return dbNav;
   };
 
-  const rawNavItems = getNavItems();
+  // Keeper mode filter. Applied to the built nav (DB rows or fallback)
+  // so breeder-business pages disappear from every category, including
+  // the Favorites grid, which resolves against this filtered list. This
+  // only trims the sidebar; direct URLs to those pages still load.
+  const stripBreederPages = (nav) => {
+    if (!keeperMode) return nav;
+    return {
+      collection: (nav.collection || []).filter((i) => !BREEDER_ONLY_PAGES.has(i.page_name)),
+      tools: (nav.tools || []).filter((i) => !BREEDER_ONLY_PAGES.has(i.page_name)),
+      public: (nav.public || []).filter((i) => !BREEDER_ONLY_PAGES.has(i.page_name)),
+    };
+  };
+
+  const rawNavItems = stripBreederPages(getNavItems());
 
   // Favorite pages, user picks up to FAVORITES_MAX pages in Settings.
   // Those get a prominent 2x2 grid at the top of the sidebar and are

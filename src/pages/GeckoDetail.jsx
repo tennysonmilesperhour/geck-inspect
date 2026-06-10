@@ -149,9 +149,15 @@ export default function GeckoDetail() {
                         <ArrowLeft className="w-4 h-4 mr-2" /> Back
                     </Button>
                     {isOwner && (
-                        <Button onClick={() => navigate(createPageUrl('MyGeckos'))}>
-                            Edit in My Geckos
-                        </Button>
+                        <div className="flex gap-2">
+                            {/* P11 Quality Scale worksheet, preselects this gecko */}
+                            <Button variant="outline" className="border-slate-600 hover:bg-slate-800" onClick={() => navigate(`/QualityScale?geckoId=${gecko.id}`)}>
+                                Score structure
+                            </Button>
+                            <Button onClick={() => navigate(createPageUrl('MyGeckos'))}>
+                                Edit in My Geckos
+                            </Button>
+                        </div>
                     )}
                 </div>
 

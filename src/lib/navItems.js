@@ -130,6 +130,36 @@ export const NAV_ICON_MAP = {
 
 export const FAVORITES_MAX = 4;
 
+// Keeper mode: most crested gecko owners keep one or two pets and never
+// breed. When the toggle in Settings is on, Layout filters these pages
+// out of every sidebar category so a keeper isn't wading through
+// breeding and selling tools to find the care guide. This is nav
+// decluttering only: direct URLs to these pages still work, nothing is
+// access-controlled here.
+//
+// Stored per device in localStorage under KEEPER_MODE_STORAGE_KEY
+// ('1' = on). Settings.jsx fires a 'keeper_mode_changed' window event
+// after writing so Layout updates without a reload.
+export const KEEPER_MODE_STORAGE_KEY = 'geck_keeper_mode';
+
+export const BREEDER_ONLY_PAGES = new Set([
+  'Breeding',
+  'BreedingSeason',
+  'BreedingPairs',
+  'Lineage',
+  'Pedigree',
+  'Promote',
+  'MarketplaceSalesStats',
+  'MyListings',
+  'BreederShipping',
+  'BreederStorefront',
+  'BatchHusbandry',
+  'ProjectManager',
+  'MorphMarketExport',
+  'BreedingROI',
+  'BreedingLoans',
+]);
+
 export function flattenNavItems(navItems) {
   return [
     ...(navItems.collection || []),
