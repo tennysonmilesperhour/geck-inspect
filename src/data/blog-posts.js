@@ -4143,6 +4143,314 @@ export const BLOG_POSTS = [
         label: "Homestead Reptiles: Don't Buy Super Cappuccino Crested Gecko",
       },
     ],
+  },
+  {
+    slug: "cappuccino-breeding-economics",
+    title: "Why Breeders Lose Money on Cappuccino Pairs",
+    description: "Cappuccino x Cappuccino sounds like a sure thing. It isn't. Here's why the incomplete-dominant math burns breeders, and which pairing strategy actually pays.",
+    keyphrase: "cappuccino crested gecko breeding",
+    category: "breeding",
+    tags: [
+      "breeding",
+      "cappuccino",
+      "lilly-white",
+      "harlequin",
+      "frappuccino",
+      "super-cappuccino",
+    ],
+    datePublished: "2026-06-10",
+    dateModified: "2026-06-10",
+    heroEyebrow: "Breeding Economics",
+    tldr: [
+      "Cappuccino is incomplete dominant: Cap x Cap produces 25% Super Cappuccinos, 50% visual Cappuccinos, and 25% normals.",
+      "Super Cappuccinos have documented health concerns including reduced nostril size and breathing difficulty.",
+      "The profitable strategy is Cappuccino x non-Cappuccino: 50% Cappuccino offspring, zero health-compromised supers.",
+      "You can stack Cappuccino with Lilly White to produce Frappuccinos, but that is a combo morph, not a Super Cappuccino.",
+      "Background genetics matter as much as the named morph: buying from the right line reduces surprises.",
+    ],
+    body: [
+      {
+        type: "p",
+        text: "A visual Cappuccino female at a 2024 reptile expo had a price tag of $650. The breeder next to her was selling a pair of Cappuccinos as a \"ready-to-breed starter project\" for $1,400. It sounded like a deal. Run that pairing for one season and you will spend more money managing the fallout than you saved on the purchase price.",
+      },
+      {
+        type: "p",
+        text: "So why does the Cap x Cap pairing keep showing up at expos, in Facebook groups, and in beginner breeding guides as if it's the obvious move?",
+      },
+      {
+        type: "p",
+        text: "The answer is that most people buying into Cappuccino projects understand that it is \"codominant\" in the loose hobby sense, without fully absorbing what the incomplete-dominant math actually produces. That gap between \"I know it's codominant\" and \"I understand what two copies actually does to this animal\" is where the money gets lost.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "What incomplete dominance actually means for Cappuccino",
+      },
+      {
+        type: "p",
+        text: "Cappuccino is a proven incomplete-dominant morph. The genetics-sections data is unambiguous: one copy of the gene produces a visual Cappuccino (the \"coffee\" brown animal with a connected dorsal pattern), and two copies produce the Super Cappuccino, also called the Melanistic.",
+      },
+      {
+        type: "p",
+        text: "Here is the Punnett square for Cap x Cap:",
+      },
+      {
+        type: "p",
+        text: "| | C | + | |, -|, -|, -| | **C** | CC (Super Cap) | C+ (Visual Cap) | | **+** | C+ (Visual Cap) | ++ (Normal) |",
+      },
+      {
+        type: "p",
+        text: "From every Cappuccino x Cappuccino pairing, you can expect:",
+      },
+      {
+        type: "ul",
+        items: [
+          "**25% Super Cappuccino** (homozygous, documented health concerns)",
+          "**50% visual Cappuccino** (the animal you wanted)",
+          "**25% normal** (no Cappuccino gene, no premium value)",
+        ],
+      },
+      {
+        type: "p",
+        text: "That sounds manageable until you price it out. A typical adult Cappuccino produces two eggs per clutch, sometimes three. Over a full season of four to five clutches, that is roughly eight to ten eggs. A quarter of those eggs are Super Cappuccinos you either can't sell at full price or shouldn't sell to uninformed buyers without a full health disclosure. A quarter are normals that command no morph premium at all. Only half of your production is what you were trying to breed.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "The Super Cappuccino problem is not hypothetical",
+      },
+      {
+        type: "p",
+        text: "The morph-guide.js entry for Cappuccino states it plainly: \"Two copies produce the Super Cappuccino (Melanistic), which carries documented health concerns.\" The genetics-sections data is even more specific: Super Cappuccinos have documented issues including reduced nostril size and breathing difficulty.",
+      },
+      {
+        type: "p",
+        text: "This is not a community rumor or a breeder dispute. It is documented enough to appear in the canonical morph data and in the ethics section of the genetics guide, which recommends against specifically breeding for the super form.",
+      },
+      {
+        type: "p",
+        text: "The practical consequence: if you are running Cap x Cap pairings and producing Super Cappuccinos, you have three options. Keep them yourself and absorb the husbandry costs of animals that may struggle to thrive. Sell them with full health disclosure, which is the honest move but significantly limits your buyer pool. Or sell them without disclosure, which is the move that generates refund requests, negative reviews, and a reputation problem that outlasts one bad clutch.",
+      },
+      {
+        type: "p",
+        text: "None of those options are profitable in any straightforward sense. The third option is also just wrong.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Why the \"just sell the supers\" math doesn't hold either",
+      },
+      {
+        type: "p",
+        text: "Some breeders argue that Super Cappuccinos command a price premium because they are visually extreme. The \"melanistic\" all-dark look is genuinely striking. But premium pricing on an animal with known health problems requires finding buyers who understand the risks and want the animal anyway. That is a narrow market, and it shrinks every time someone has a bad experience and posts about it.",
+      },
+      {
+        type: "p",
+        text: "The YouTube community has noticed. Videos with titles like \"Don't buy super cappuccino crested gecko it's a scam and waste of money\" and \"WARNING, NEVER BREED THESE CRESTED GECKOS TOGETHER\" have accumulated enough views to show up in search results ahead of breeder listings. That is your customer base's starting point before they open your sales post.",
+      },
+      {
+        type: "p",
+        text: "Even if you find a buyer, the Super Cappuccino price rarely compensates for the 25% of your clutch that sold as normals at $80 rather than as visual Cappuccinos at $500. Run the expected revenue calculation on a Cap x Cap season and compare it to the alternative. The numbers make the argument without any moral weight attached.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "The pairing that actually works: Cappuccino x non-Cappuccino",
+      },
+      {
+        type: "p",
+        text: "The genetics-sections data is explicit about the recommended strategy: \"breed Cappuccino x non-Cappuccino. You still get roughly 50% Cappuccino offspring with no Super Cappuccinos.\"",
+      },
+      {
+        type: "p",
+        text: "The expected outcomes from Cap x normal:",
+      },
+      {
+        type: "ul",
+        items: [
+          "**50% visual Cappuccino** (sellable at full morph price)",
+          "**50% normal** (no Cappuccino gene)",
+        ],
+      },
+      {
+        type: "p",
+        text: "Yes, you lose the top-of-the-range visual Cappuccino offspring that you might occasionally get from Cap x Cap. But every Cappuccino you produce is healthy, marketable without caveats, and sellable to the full range of buyers. Your normals are still sellable as pet-quality animals or as breeding stock with documented lineage (they are 50% possible hets for... nothing. They carry no Cappuccino). The point is that your liability is zero.",
+      },
+      {
+        type: "p",
+        text: "Over a full season:",
+      },
+      {
+        type: "ul",
+        items: [
+          "Eight to ten eggs at 50% Cappuccino = four to five visual Cappuccinos",
+          "No Super Cappuccinos to manage, disclose, or explain",
+          "No normals produced at the cost of a Super Cappuccino slot",
+        ],
+      },
+      {
+        type: "p",
+        text: "Four to five clean visual Cappuccinos per season at $500 to $800 each is $2,000 to $4,000 in gross production from a single female. Compare that to the Cap x Cap season where roughly two to three of your eggs go to supers, two to three go to normals, and only half become animals you can sell without a conversation about health risks.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "The background genetics argument: why your \"non-Cappuccino\" choice matters",
+      },
+      {
+        type: "p",
+        text: "Here is where breeders who run the math correctly still get surprised. The named Cappuccino gene is only part of what you're selling. The background genetics, the polygenic base color, the harlequin or pattern coverage, the crest quality, all of it travels alongside the Cappuccino gene in every offspring.",
+      },
+      {
+        type: "p",
+        text: "The genetics-sections data makes this point directly: \"buy from a line whose animals look like what you want. The background genetics matter as much as the named morph itself.\"",
+      },
+      {
+        type: "p",
+        text: "A Cappuccino paired to a high-quality harlequin produces Cappuccino harlequins, which command significantly more than a plain visual Cappuccino. The Cappuccino gene stacks with the harlequin pattern to produce the \"mocha\" look that makes these animals genuinely special. That mocha harlequin Cappuccino at $800 to $1,200 is a completely different product from a patternless Cappuccino at $400. Same gene, wildly different value.",
+      },
+      {
+        type: "p",
+        text: "This is where most breeders leave money on the table: they focus on whether to use Cap x Cap or Cap x normal, and they skip the more important question of what non-Cappuccino animal to pair with.",
+      },
+      {
+        type: "p",
+        text: "My personal preference: I would rather pair a proven Cappuccino female to a clean extreme harlequin male with a strong base color than pair her to another Cappuccino. The best Cappuccino + harlequin offspring will consistently outsell the best Cap x Cap offspring, at no health cost, and with zero liability.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "The Frappuccino path: a separate project entirely",
+      },
+      {
+        type: "p",
+        text: "Some breeders ask whether they should pair their Cappuccino with a Lilly White to produce Frappuccinos. The answer is yes, but understand what you are producing.",
+      },
+      {
+        type: "p",
+        text: "The morph-guide.js entry for Frappuccino is clear: \"A Frappuccino is the combination of Cappuccino and Lilly White, carried in the same animal. It is not a super form, and it does not come from pairing two Cappuccinos.\"",
+      },
+      {
+        type: "p",
+        text: "A Frappuccino carries one copy of Cappuccino and one copy of Lilly White. The pairing to produce them is Cappuccino x Lilly White, or any animal carrying both genes. Frappuccinos \"hatch brighter and whiter than a standard Lilly White and develop dramatic white head spotting as they mature.\"",
+      },
+      {
+        type: "p",
+        text: "The important constraint: because Lilly White is also incomplete dominant with a confirmed lethal super form, you still need to follow the Lilly White pairing rules. Never pair two Lilly Whites. The Cappuccino gene does not change that math.",
+      },
+      {
+        type: "p",
+        text: "A Cappuccino x Lilly White pairing produces:",
+      },
+      {
+        type: "ul",
+        items: [
+          "25% Frappuccino (Cap + LW)",
+          "25% visual Cappuccino",
+          "25% visual Lilly White",
+          "25% normal",
+        ],
+      },
+      {
+        type: "p",
+        text: "That is four different phenotypes from one pairing, which makes it excellent for building diverse inventory. The Frappuccino slot is the premium product. Price tags in the $1,500 to $3,500 range per the morph guide. But this is a more complex project than Cap x normal, and it requires having a quality Lilly White animal in your collection already.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Practical takeaways for Monday",
+      },
+      {
+        type: "p",
+        text: "If you are currently running Cappuccino x Cappuccino pairings, finish the season you are in, but start identifying the best non-Cappuccino female or male in your collection to use as the replacement partner next year. Ideally, that is a high-quality harlequin or extreme harlequin with a strong, saturated base color.",
+      },
+      {
+        type: "p",
+        text: "If you have Super Cappuccino offspring from a current or past pairing, sell them with full health disclosure. Price them below visual Cappuccinos to reflect the additional complexity for the buyer. Do not offload health-compromised animals to beginner keepers who don't know what they are getting into.",
+      },
+      {
+        type: "p",
+        text: "If you are shopping for your first Cappuccino, buy from a breeder whose animals are already showing good background genetics. The Cappuccino gene itself is not the whole product. A poorly-expressed Cappuccino from weak harlequin stock is not a good foundation for a project, no matter how clean the Cappuccino documentation.",
+      },
+      {
+        type: "p",
+        text: "If you want to produce Frappuccinos, plan that as a separate project with a separate Lilly White acquisition. Don't conflate it with your Cap x Cap output.",
+      },
+      {
+        type: "p",
+        text: "The Punnett square math for Cappuccino is not complicated. The problem is that it is easy to understand abstractly and still painful to experience when a quarter of your season's production is animals you cannot sell cleanly. Run the numbers before the season, not after., -",
+      },
+      {
+        type: "p",
+        text: "Back to that $1,400 pair at the expo. The breeder selling them was not dishonest, they just hadn't explained the math. The buyer was probably going to find it out the hard way. The tools to predict that outcome exactly, including the Punnett calculations and the production economics, are available now, before the purchase. Use them.",
+      },
+    ],
+    faq: [
+      {
+        question: "Can I breed two Cappuccino crested geckos together?",
+        answer: "Technically yes, but it produces 25% Super Cappuccinos, which have documented health concerns including reduced nostril size and breathing difficulty. The recommended pairing is Cappuccino x non-Cappuccino, which gives you 50% visual Cappuccino offspring with zero Super Cappuccinos and no health liability.",
+      },
+      {
+        question: "What is a Super Cappuccino crested gecko?",
+        answer: "A Super Cappuccino is the homozygous form of the incomplete-dominant Cappuccino morph, produced when two Cappuccinos are paired. It is also called Melanistic. Super Cappuccinos have documented health concerns including reduced nostril size and breathing difficulty, so breeding specifically for the super form is not recommended.",
+      },
+      {
+        question: "Is a Frappuccino the same as a Super Cappuccino?",
+        answer: "No. A Frappuccino is a separate combo morph carrying one copy of Cappuccino and one copy of Lilly White. It is not a Super Cappuccino and does not come from pairing two Cappuccinos. Frappuccinos hatch brighter and whiter than standard Lilly Whites and develop dramatic white head spotting with age.",
+      },
+      {
+        question: "What percentage of offspring are visual Cappuccino from a Cap x Cap pairing?",
+        answer: "50%. The other 25% are Super Cappuccinos (homozygous, health concerns) and 25% are normals with no Cappuccino gene. Only half of your Cap x Cap production is the visual Cappuccino you are trying to breed, which is why Cap x normal is the more productive strategy.",
+      },
+      {
+        question: "What should I pair with a Cappuccino crested gecko?",
+        answer: "A high-quality non-Cappuccino animal. The Cappuccino gene stacks powerfully with harlequin and extreme harlequin patterns to produce the sought-after mocha look. Pairing Cappuccino to a clean extreme harlequin with a strong base color typically produces more valuable offspring than Cap x Cap, with no health-compromised supers.",
+      },
+      {
+        question: "What is the Cappuccino inheritance pattern?",
+        answer: "Cappuccino is incomplete dominant. One copy produces the visual Cappuccino morph. Two copies produce the Super Cappuccino (Melanistic). This means Cap x normal gives 50% visual Cap and 50% normal. Cap x Cap gives 25% Super Cap, 50% visual Cap, 25% normal.",
+      },
+      {
+        question: "Are Super Cappuccinos worth buying?",
+        answer: "Only if you understand the health implications and accept them. Super Cappuccinos have documented reduced nostril size and breathing difficulty. They require a buyer who knows the risks. Most breeders recommend avoiding Super Cappuccino production entirely and instead breeding Cappuccino x non-Cappuccino.",
+      },
+    ],
+    internalLinks: [
+      {
+        href: "/MorphGuide/cappuccino",
+        label: "Cappuccino morph guide",
+      },
+      {
+        href: "/MorphGuide/frappuccino",
+        label: "Frappuccino morph guide",
+      },
+      {
+        href: "/MorphGuide/lilly-white",
+        label: "Lilly White morph guide",
+      },
+      {
+        href: "/GeneticsGuide",
+        label: "Crested gecko genetics guide",
+      },
+      {
+        href: "/GeneticCalculatorTool",
+        label: "Genetic calculator tool",
+      },
+      {
+        href: "/MorphGuide/extreme-harlequin",
+        label: "Extreme Harlequin morph guide",
+      },
+    ],
+    externalCitations: [
+      {
+        url: "https://www.youtube.com/watch?v=5O_obmlNu9I",
+        label: "Don't buy super cappuccino crested gecko it's a scam and waste of money (YouTube)",
+      },
+      {
+        url: "https://www.youtube.com/watch?v=K1vjq-btadk",
+        label: "WARNING, NEVER BREED THESE CRESTED GECKOS TOGETHER (YouTube)",
+      },
+    ],
   }
 ];
 
