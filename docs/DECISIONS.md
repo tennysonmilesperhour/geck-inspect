@@ -295,3 +295,25 @@ These entries capture the strategic decisions made during the initial landing pa
 **Consequences:** Commits to a disciplined testing cadence rather than reactive changes. Requires enough traffic to reach significance. If volume is low, tests take longer. Each test's result goes into DECISIONS.md with the variant that won and by how much.
 
 ---
+
+### 25. Never store secrets on the profiles table
+
+**Date:** 2026-06-10
+**Status:** Accepted (enforced by migration)
+**Context:** The production schema audit found `profiles` is publicly readable by design (`profiles_read_all USING true`, so public breeder pages work), but the Base44-era schema carried `morphmarket_api_key` and `palm_street_api_key` columns on that same table. No code referenced them and all 93 rows held NULL, so nothing leaked, but the shape was a loaded gun.
+**Decision:** Dropped both columns (migration `20260610120000_drop_public_api_key_columns.sql`, applied to production). Standing rule: `profiles` is a public table; secrets and third-party credentials go in an owner-only table or in edge function secrets, never on profiles.
+**Reasoning:** Anonymous visitors can SELECT every profiles column through PostgREST. A future feature storing a key there would expose it to anyone instantly. Removing the columns makes the mistake structurally impossible rather than relying on review to catch it.
+**Consequences:** If MorphMarket or Palm Street API sync is ever built for real, it needs a new owner-only storage design first. `stripe_customer_id` / `stripe_subscription_id` remain on profiles (opaque IDs, unusable without the Stripe secret key, and billing flows depend on them); revisit if that ever becomes uncomfortable.
+
+---
+
+### 26. Morph guide explains BOTH genetics models instead of picking one
+
+**Date:** 2026-06-10
+**Status:** Accepted (enforced by check)
+**Context:** The traditional hobby describes Harlequin, Pinstripe, Dalmatian, Tiger, and the base colors as "polygenic." Foundation Genetics (a reference authority per STRATEGY.md) models the underlying loci as Mendelian (dominant, incomplete dominant, fixed dominant, or recessive) with polygenic expression modifiers on top. The genetics drift check surfaced the conflict between our guide content and the engine the calculator runs on.
+**Decision:** Affected morph guide entries keep their traditional `inheritance` label (which also pins the `/MorphGuide/inheritance/...` hub grouping and existing URLs) and carry a `foundationGenetics` paragraph explaining both readings. MorphDetail renders it as a "Two ways to read the genetics" section. `scripts/check-genetics-consistency.mjs` fails CI if a disagreeing entry lacks the paragraph or the paragraph stops naming the engine's model.
+**Reasoning:** Both framings are genuinely used by breeders; picking one would either contradict the calculator (pure polygenic) or read as revisionist to longtime keepers (pure Mendelian). Explaining both is more honest, more useful, and differentiates the guide from competitors that copy one framing uncritically.
+**Consequences:** Seven entries carry dual-model text today (harlequin, pinstripe, dalmatian, super-dalmatian, tiger, red-base, yellow-base). New entries that disagree with the engine must ship with the explanation or CI fails. If Foundation Genetics updates a model, the engine package update will surface every entry that needs new text.
+
+---

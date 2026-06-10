@@ -18,6 +18,7 @@
  *   aliases: [],                          // alternate names / misspellings
  *   category: 'pattern',                  // base | color | pattern | structure | combo
  *   inheritance: 'polygenic',             // recessive | co-dominant | incomplete-dominant | dominant | polygenic | line-bred
+ *   foundationGenetics: 'optional paragraph explaining the Foundation Genetics single-locus model when it differs from the traditional label',
  *   rarity: 'common',                     // common | uncommon | rare | very_rare
  *   priceTier: '$',                       // $ | $$ | $$$ | $$$$  (see PRICE_TIERS)
  *   priceRange: '$80–$250',               // USD estimate for a typical adult
@@ -155,6 +156,11 @@ export const MORPHS = [
     aliases: ['Harley', 'Harle'],
     category: 'pattern',
     inheritance: 'polygenic',
+    // Dual-model note: the 'inheritance' field keeps the traditional
+    // hobby label (and the hub URL grouping); foundationGenetics explains
+    // the Foundation Genetics single-locus model alongside it.
+    foundationGenetics:
+      'The hobby has two ways of reading Harlequin genetics, and this guide presents both. The traditional framing calls it polygenic: pattern quality visibly improves through selective pairing and no simple ratio predicts outcomes. Foundation Genetics models an underlying single gene that is incomplete dominant: one copy makes a Harlequin, two copies are the genetic basis for Extreme Harlequin expression, while polygenic modifiers still decide how bold and high the pattern climbs. Both models agree on practice: pair your best-patterned animals and expect a quality gradient, not a Punnett-square guarantee.',
     rarity: 'common',
     priceTier: '$$',
     priceRange: '$120–$400',
@@ -215,6 +221,11 @@ export const MORPHS = [
     aliases: ['Pin'],
     category: 'pattern',
     inheritance: 'polygenic',
+    // Dual-model note: the 'inheritance' field keeps the traditional
+    // hobby label (and the hub URL grouping); foundationGenetics explains
+    // the Foundation Genetics single-locus model alongside it.
+    foundationGenetics:
+      'Two readings coexist in the hobby. Traditionally Pinstripe is described as polygenic because completeness (partial to full) responds to selective breeding. Foundation Genetics models it as a dominant gene: one copy produces pinstriping, and homozygous animals often show more complete or stronger stripes. The polygenic part is real either way; it lives in the modifiers that decide how complete the stripe is, not in whether the trait is present.',
     rarity: 'common',
     priceTier: '$$',
     priceRange: '$120–$350',
@@ -273,6 +284,11 @@ export const MORPHS = [
     aliases: ['Dal', 'Dally'],
     category: 'pattern',
     inheritance: 'polygenic',
+    // Dual-model note: the 'inheritance' field keeps the traditional
+    // hobby label (and the hub URL grouping); foundationGenetics explains
+    // the Foundation Genetics single-locus model alongside it.
+    foundationGenetics:
+      'Two readings coexist. The traditional view treats Dalmatian spotting as polygenic since spot count varies wildly and climbs with selective pairing. Foundation Genetics models a dominant gene: one copy gives a visible Dalmatian (passing to about half of offspring), two copies give denser spotting and pass spots to every offspring. Spot count on top of that base is modifier-driven, and spots keep developing with age, so a sparse hatchling can mature into a heavily spotted adult.',
     rarity: 'common',
     priceTier: '$$',
     priceRange: '$100–$400',
@@ -301,6 +317,11 @@ export const MORPHS = [
     aliases: ['Super Dal'],
     category: 'pattern',
     inheritance: 'polygenic',
+    // Dual-model note: the 'inheritance' field keeps the traditional
+    // hobby label (and the hub URL grouping); foundationGenetics explains
+    // the Foundation Genetics single-locus model alongside it.
+    foundationGenetics:
+      'Under the traditional polygenic reading, Super Dalmatian is simply the far end of the spot-count spectrum reached through selective breeding. Foundation Genetics reads it as the homozygous form of a dominant Dalmatian gene, with polygenic modifiers stacking the 100+ spot counts on top. Practical upshot from both models: pairing two heavily spotted animals is how you get there, and a Super Dalmatian passes spotting to every offspring.',
     rarity: 'uncommon',
     priceTier: '$$$',
     priceRange: '$300–$800',
@@ -356,6 +377,11 @@ export const MORPHS = [
     aliases: [],
     category: 'pattern',
     inheritance: 'polygenic',
+    // Dual-model note: the 'inheritance' field keeps the traditional
+    // hobby label (and the hub URL grouping); foundationGenetics explains
+    // the Foundation Genetics single-locus model alongside it.
+    foundationGenetics:
+      'The traditional hobby reading treats Tiger as a polygenic pattern style. Foundation Genetics goes further: it models tiger as a fixed dominant trait present to some degree in every crested gecko, which cannot be bred out. Under that model, the ratio of tiger to other pattern traits decides whether an animal shows subtle freckling, classic vertical tigering, or heavy brindle. Both views agree that pairing strongly tigered animals intensifies the look.',
     rarity: 'uncommon',
     priceTier: '$$',
     priceRange: '$150–$400',
@@ -746,6 +772,11 @@ export const MORPHS = [
     aliases: ['Red'],
     category: 'base',
     inheritance: 'polygenic',
+    // Dual-model note: the 'inheritance' field keeps the traditional
+    // hobby label (and the hub URL grouping); foundationGenetics explains
+    // the Foundation Genetics single-locus model alongside it.
+    foundationGenetics:
+      'Base color is traditionally described as polygenic: reds deepen across generations of selective pairing. Foundation Genetics instead treats Red Base as a suspected recessive gene: two copies produce strong red tones, and single-copy carriers often show a pink cheek blush as a het marker. If the recessive model holds, two non-red animals with blushed cheeks can produce visual reds, which the purely polygenic model would not predict.',
     rarity: 'uncommon',
     priceTier: '$$',
     priceRange: '$180–$450',
@@ -787,6 +818,11 @@ export const MORPHS = [
     aliases: ['Yellow'],
     category: 'base',
     inheritance: 'polygenic',
+    // Dual-model note: the 'inheritance' field keeps the traditional
+    // hobby label (and the hub URL grouping); foundationGenetics explains
+    // the Foundation Genetics single-locus model alongside it.
+    foundationGenetics:
+      'Traditionally lumped in with polygenic base color. Foundation Genetics models Yellow Base as a dominant, naturally hypo-melanistic base that serves as the substrate for combos like Cream and Buckskin. In practice both readings converge: yellow-based animals readily produce yellow-based offspring, and the depth of the yellow still responds to selective pairing.',
     rarity: 'common',
     priceTier: '$',
     priceRange: '$80–$200',

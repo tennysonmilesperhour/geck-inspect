@@ -61,18 +61,20 @@ const GUIDE_TO_ENGINE = {
   'line-bred': 'polygenic', // engine models line-bred looks as polygenic
 };
 
-// KNOWN DISAGREEMENT (documented, intentional): the morph guide follows
-// the traditional hobby framing that pattern traits and base colors are
-// 'polygenic' (their EXPRESSION quality is), while Foundation Genetics
-// models the underlying loci as Mendelian (dominant / incomplete
-// dominant). Until the guide content is editorially revised, 'polygenic'
-// is accepted for these specific traits. Remove entries from this set to
-// enforce the engine's model for them.
-const POLYGENIC_FRAMING_ALLOWED = new Set([
-  'harlequin', 'extreme harlequin', 'pinstripe', 'phantom pinstripe',
-  'dalmatian', 'super dalmatian', 'tiger', 'flame', 'brindle',
-  'red base', 'yellow base', 'orange base', 'buckskin',
-]);
+// DUAL-MODEL POLICY (decided 2026-06-10): where the traditional hobby
+// framing ('polygenic') and the Foundation Genetics single-locus model
+// disagree, the guide EXPLAINS BOTH. The entry keeps the traditional
+// 'inheritance' label (which also pins the hub URL grouping) and must
+// carry a `foundationGenetics` paragraph that names the engine's
+// dominance model. This check enforces that the explanation exists and
+// mentions the right model, so the dual framing can't silently rot.
+const DOMINANCE_PHRASE = {
+  incomplete_dominant: 'incomplete dominant',
+  dominant: 'dominant',
+  fixed_dominant: 'fixed dominant',
+  recessive: 'recessive',
+  polygenic: 'polygenic',
+};
 
 for (const m of MORPHS) {
   const trait = findTrait(m.name);
@@ -80,10 +82,18 @@ for (const m of MORPHS) {
   if (trait.dominance === 'unconfirmed') continue;
   const expected = trait.dominance;
   const got = GUIDE_TO_ENGINE[m.inheritance];
-  if (got === 'polygenic' && POLYGENIC_FRAMING_ALLOWED.has(m.name.toLowerCase())) continue;
-  if (got && got !== expected) {
-    note('morph-guide', `${m.name}: inheritance '${m.inheritance}' but engine says '${expected}'`);
+  if (!got || got === expected) continue;
+  if (got === 'polygenic') {
+    const phrase = DOMINANCE_PHRASE[expected];
+    const fg = String(m.foundationGenetics || '');
+    if (!fg) {
+      note('morph-guide', `${m.name}: labeled '${m.inheritance}' but engine says '${expected}'; add a foundationGenetics paragraph explaining both models`);
+    } else if (!fg.toLowerCase().includes(phrase)) {
+      note('morph-guide', `${m.name}: foundationGenetics paragraph does not mention the engine model '${phrase}'`);
+    }
+    continue;
   }
+  note('morph-guide', `${m.name}: inheritance '${m.inheritance}' but engine says '${expected}'`);
 }
 
 // ---------- 2. tag picker groups ---------------------------------------

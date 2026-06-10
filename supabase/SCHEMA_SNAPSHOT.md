@@ -104,14 +104,17 @@ Full column list for all 96 tables: run query 1 below.
 
 ## Findings worth knowing
 
-1. SECURITY: `profiles` is readable by EVERYONE (`profiles_read_all`,
-   `USING (true)`, role `public`) and the row carries
-   `morphmarket_api_key`, `palm_street_api_key`, `stripe_customer_id`,
-   and `stripe_subscription_id`. Any anonymous visitor can select those
-   columns through PostgREST. Fix direction: move third-party API keys
-   to an owner-only table (or revoke column-level SELECT from anon and
-   authenticated and route the sync features through an edge function).
-   Decided fix pending; do not store new secrets on profiles.
+1. SECURITY (RESOLVED 2026-06-10): `profiles` is readable by EVERYONE
+   (`profiles_read_all`, `USING (true)`, role `public`) and carried
+   Base44-era `morphmarket_api_key` and `palm_street_api_key` columns.
+   Verified no code referenced them and all 93 rows held NULL, then
+   dropped both columns (migration
+   `20260610120000_drop_public_api_key_columns.sql`, applied to prod).
+   Standing rule: never store secrets on `profiles`; it is public-read
+   by design. `stripe_customer_id` / `stripe_subscription_id` remain
+   (opaque identifiers, unusable without the Stripe secret key, and
+   billing flows depend on them) but are also public-read; move them
+   behind an owner-only view if that ever becomes uncomfortable.
 2. `geckos` is fully public-read at RLS level; `is_public` and
    `gallery_display` are enforced by app code only. Acceptable for a
    community gallery, but know that "private" geckos are private by

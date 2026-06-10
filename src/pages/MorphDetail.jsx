@@ -466,6 +466,22 @@ export default function MorphDetail() {
             </section>
           )}
 
+          {/* Dual inheritance models: traditional hobby label vs the
+              Foundation Genetics single-locus reading. Only present on
+              entries where the two frameworks describe the trait
+              differently. */}
+          {localMorph?.foundationGenetics && (
+            <section className="mb-10">
+              <h2 className="text-2xl font-bold text-white mb-3 flex items-center gap-2">
+                <Dna className="w-5 h-5 text-emerald-400" />
+                Two ways to read the genetics
+              </h2>
+              <div className="rounded-xl border border-emerald-500/20 bg-emerald-500/5 p-5">
+                <p className="text-slate-200 leading-relaxed">{localMorph.foundationGenetics}</p>
+              </div>
+            </section>
+          )}
+
           {/* History */}
           {localMorph?.history && (
             <section className="mb-10">
