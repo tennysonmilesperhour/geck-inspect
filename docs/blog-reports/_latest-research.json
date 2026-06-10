@@ -1,16 +1,15 @@
 {
-  "ranAt": "2026-06-08T11:02:58.930Z",
+  "ranAt": "2026-06-10T10:08:42.288Z",
   "signals": {
     "googleAc": 95,
     "bluesky": 80,
     "googleTrends": 0,
-    "youtube": 67,
+    "youtube": 66,
     "breederBlogs": 0,
     "reddit": 0,
     "errors": [
       "\"crested gecko\": related: 429",
       "\"crested gecko morph\": related: 429",
-      "\"cappuccino gecko\": related: 429",
       "\"lilly white gecko\": related: 429",
       "r/crestedgecko new: 403 Blocked",
       "r/crestedgecko top: 403 Blocked",
@@ -25,9 +24,7 @@
       "search \"breeding fail\": 403 Blocked"
     ]
   },
-  "costUsd": 0.027488,
-  "addedSlugs": [
-    "cappuccino-breeding-economics"
-  ],
-  "rationale": "The signals show strong, sustained interest in crested gecko morphs overall, with heavy search volume around cappuccino, lilly white, and axanthic variants. However, most raw signals are commerce-driven (MorphMarket listings, YouTube unboxings, price queries) or general awareness content (care guides, lists). The already-published slug list shows we've covered cappuccino genetics, super-cappuccino risks, lilly-white breeding, and axanthic strategy extensively. YouTube reveals recurring frustration themes: \"why so much hate for cappuccino geckos,\" \"super cappuccino is a scam,\" and warnings about which pairings to avoid. This suggests room for a corrective piece on breeding decisions and cost/benefit reality. No forum heat or Reddit activity in this run, limiting demand signals. I am rejecting pure listicles and care content, plus anything that duplicates existing slugs. Remaining viable angles are narrow, genetics-grounded breeding decisions where confusion exists."
+  "costUsd": 0.025261000000000002,
+  "addedSlugs": [],
+  "rationale": "This signal set is heavily weighted toward general public interest (Google autocomplete, Bluesky lifestyle posts, YouTube beginner guides) rather than breeder-specific or genetics-focused debate. Most morphs mentioned (cappuccino, lilly white, axanthic) already have published slugs. The few YouTube signals that hint at depth—\"Don't buy super cappuccino it's a scam,\" \"Why so much hate for cappuccino geckos\"—suggest community friction, but without forum threads or Reddit posts showing the actual disagreement, it's hard to ground a myth-busting or genetics piece. The queued slug \"cappuccino-breeding-economics\" also pre-empts the most promising angle. Autocomplete volume on \"crested gecko morph calculator\" and \"morph chart\" hints at demand for breeding/prediction tools, but that's infrastructure, not editorial. No signals break through to justify a full post."
 }
