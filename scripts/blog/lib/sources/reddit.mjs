@@ -64,7 +64,7 @@ function postToItem(post, queryContext) {
     source: 'reddit',
     url,
     title: d.title || '',
-    snippet: `r/${d.subreddit}: "${d.title}"${body ? ' ,  ' + body.replace(/\s+/g, ' ').trim() : ''}`,
+    snippet: `r/${d.subreddit}: "${d.title}"${body ? ', ' + body.replace(/\s+/g, ' ').trim() : ''}`,
     score: d.score || 0,
     numComments: d.num_comments || 0,
     upvoteRatio: d.upvote_ratio || 0,

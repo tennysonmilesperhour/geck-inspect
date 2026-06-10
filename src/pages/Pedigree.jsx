@@ -91,7 +91,7 @@ async function buildPedigreeGrid(rootId) {
         node = { kind: 'empty' };
       }
     } else {
-      // No FK ,  we may still have a free-text sire_name / dam_name we can
+      // No FK, we may still have a free-text sire_name / dam_name we can
       // show as a text card.
       const fromParent =
         (row % 2 === 0 ? parentTextSire : parentTextDam) || null;
@@ -122,7 +122,7 @@ async function buildPedigreeGrid(rootId) {
           ),
         ]);
       } else {
-        // Fill with empty slots so the grid stays rectangular ,  keeps the
+        // Fill with empty slots so the grid stays rectangular, keeps the
         // connector geometry simple.
         await Promise.all([
           place(nextCol, sireRow, null),
@@ -137,7 +137,7 @@ async function buildPedigreeGrid(rootId) {
 }
 
 // ---------------------------------------------------------------------------
-// Node card ,  rendered as foreignObject so HTML + image works inside SVG
+// Node card, rendered as foreignObject so HTML + image works inside SVG
 // ---------------------------------------------------------------------------
 function NodeCard({ node, x, y, onClick }) {
   if (!node || node.kind === 'empty') {
@@ -151,7 +151,7 @@ function NodeCard({ node, x, y, onClick }) {
   }
 
   if (node.kind === 'text') {
-    // Free-text breeder / parent name ,  make it linkable if it looks like
+    // Free-text breeder / parent name, make it linkable if it looks like
     // a breeder reference (re-uses the breederUtils heuristic).
     const slug =
       looksLikeBreederName(node.label) ? breederSlug(node.label) : null;
@@ -231,7 +231,7 @@ function NodeCard({ node, x, y, onClick }) {
 }
 
 // ---------------------------------------------------------------------------
-// Connector ,  smooth horizontal Bezier from child's right edge to parent's left
+// Connector, smooth horizontal Bezier from child's right edge to parent's left
 // ---------------------------------------------------------------------------
 function Connector({ from, to }) {
   const startX = from.x + NODE_W;
@@ -330,7 +330,7 @@ export default function Pedigree() {
 
   // Fit-to-container: pick a default zoom that shows the whole canvas
   // without horizontal scrolling once the container has measurable
-  // dimensions. Runs on mount, on grid load, and on resize ,  but only
+  // dimensions. Runs on mount, on grid load, and on resize, but only
   // updates `scale` while the user hasn't manually adjusted zoom yet.
   useEffect(() => {
     if (hasUserZoomed) return undefined;
@@ -465,7 +465,7 @@ export default function Pedigree() {
   return (
     <>
       <Seo
-        title={`Pedigree ,  ${rootGecko.name || 'Crested Gecko'}`}
+        title={`Pedigree, ${rootGecko.name || 'Crested Gecko'}`}
         description={`Multi-generation pedigree chart for ${rootGecko.name || 'this crested gecko'}, showing sire, dam, grandparents, and great-grandparents with photos and morph tags.`}
         path={`/Pedigree?geckoId=${rootGecko.id}`}
       />
@@ -493,7 +493,7 @@ export default function Pedigree() {
             </div>
 
             {/* Zoom + download controls. +/- and reset are desktop-only
-                ,  on mobile the user pinch-zooms. */}
+               , on mobile the user pinch-zooms. */}
             <div className="flex items-center gap-2 flex-wrap">
               <div className="hidden md:flex items-center gap-2">
                 <Button
@@ -555,7 +555,7 @@ export default function Pedigree() {
           </div>
         </header>
 
-        {/* Pedigree canvas ,  horizontally scrollable, SVG scales with zoom.
+        {/* Pedigree canvas, horizontally scrollable, SVG scales with zoom.
             [touch-action:pan-x_pan-y] lets the browser handle one-finger
             scrolling/panning while two-finger gestures fall through to
             our pinch-zoom handlers. overscroll-contain stops the iOS

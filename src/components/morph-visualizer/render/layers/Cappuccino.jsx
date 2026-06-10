@@ -21,7 +21,7 @@ export default function Cappuccino({ expressed, isSuper, palette }) {
   return (
     <g id="cappuccino" opacity="0.98">
       <path d={stainPath} fill={palette.dorsum} />
-      {/* softened natural edge ,  faint outer glow */}
+      {/* softened natural edge, faint outer glow */}
       <path d={stainPath} fill="none" stroke={palette.highlight} strokeWidth="3" opacity="0.4" />
     </g>
   );

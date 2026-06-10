@@ -4,8 +4,7 @@ import {
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Upload, X, Trash2, Tag, Loader2, Check, Image as ImageIcon } from 'lucide-react';
+import { Upload, Trash2, Tag, Loader2, Check, Image as ImageIcon } from 'lucide-react';
 import { PromoteImage } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from '@/components/ui/use-toast';
@@ -86,7 +85,7 @@ export default function PromoteImageGallery({
     }
     // initialSelectedIds intentionally omitted from deps; we resync
     // only when the modal re-opens, not on every parent rerender.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+     
   }, [open, load]);
 
   const handleFiles = async (fileList) => {

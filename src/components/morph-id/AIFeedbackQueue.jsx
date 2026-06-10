@@ -39,7 +39,7 @@ function describeOutcome(action, result) {
   if (result?.verified) {
     return result?.fast_path
       ? 'Verified by admin one-click.'
-      : 'Consensus reached ,  sample promoted to training-grade.';
+      : 'Consensus reached, sample promoted to training-grade.';
   }
   const count = result?.approve_count ?? 1;
   return `Approval recorded (${count}/2). Needs one more reviewer to verify.`;
@@ -245,7 +245,7 @@ export default function AIFeedbackQueue() {
         </CardHeader>
         <CardContent className="space-y-3">
           <p className="text-slate-400">
-            No unverified samples right now. Contribute more ,  or come back later
+            No unverified samples right now. Contribute more, or come back later
             as new ones flow in from Recognition and community uploads.
           </p>
           <Button variant="outline" onClick={load}>
@@ -356,7 +356,7 @@ export default function AIFeedbackQueue() {
           <div className="space-y-4">
             <div className="p-3 rounded-lg bg-slate-800/60 border border-slate-700 space-y-4">
               <p className="text-xs uppercase tracking-wide text-slate-400">
-                Your call ,  edit before approving if needed
+                Your call, edit before approving if needed
               </p>
               {edits && (
                 <>
@@ -455,7 +455,7 @@ export default function AIFeedbackQueue() {
             disabled={isSaving || !edits?.primary_morph || !isExpertReviewer}
             title={isExpertReviewer
               ? 'Promote this sample to verified training data (requires 2 approves for non-admins)'
-              : 'Only expert reviewers can approve ,  your edits will still be saved if you submit feedback from /recognition.'}
+              : 'Only expert reviewers can approve, your edits will still be saved if you submit feedback from /recognition.'}
             className="bg-emerald-600 hover:bg-emerald-700"
           >
             {isSaving
@@ -467,7 +467,7 @@ export default function AIFeedbackQueue() {
             <Button
               onClick={adminVerifyNow}
               disabled={isSaving || !edits?.primary_morph}
-              title="Admin one-click verify ,  bypasses 2-reviewer consensus"
+              title="Admin one-click verify, bypasses 2-reviewer consensus"
               className="bg-indigo-600 hover:bg-indigo-700"
             >
               {isSaving

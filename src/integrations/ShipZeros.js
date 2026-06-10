@@ -122,7 +122,7 @@ export async function trackShipment(trackingNumber) {
     return {
       trackingNumber,
       status: 'in_transit',
-      statusDetail: 'Package in transit ,  on schedule',
+      statusDetail: 'Package in transit, on schedule',
       carrier: 'FedEx',
       estimatedDelivery: new Date(now.getTime() + 86400000).toISOString().split('T')[0],
       events: [
@@ -162,7 +162,7 @@ export async function cancelShipment(shipmentId) {
 }
 
 /**
- * Confirm live arrival ,  buyer calls this after delivery.
+ * Confirm live arrival, buyer calls this after delivery.
  *
  * @param {string} shipmentId
  * @param {{ arrived: boolean, condition: 'healthy'|'stressed'|'doa', notes: string }} confirmation

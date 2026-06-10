@@ -111,7 +111,7 @@ export const AuthProvider = ({ children }) => {
   // Ephemeral session: if the user chose not to stay signed in, clear
   // the session when the browser tab/window closes. sessionStorage is
   // automatically cleared on tab close, so we just check for the flag
-  // on page load ,  if it survived a refresh (sessionStorage persists
+  // on page load, if it survived a refresh (sessionStorage persists
   // across refreshes) that's fine, but on a fresh tab open after the
   // old one closed the flag will be gone and the Supabase session
   // token in localStorage is what keeps the user logged in.
@@ -143,7 +143,7 @@ export const AuthProvider = ({ children }) => {
 
   // Proactively refresh the session when the tab regains visibility.
   // Without this, a tab left in the background can accumulate an expired
-  // JWT ,  and every API call fails with 401 until the user hard-refreshes.
+  // JWT, and every API call fails with 401 until the user hard-refreshes.
   useEffect(() => {
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {

@@ -176,7 +176,7 @@ export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageS
 
         {confused.length > 0 && (
           <p className="text-xs text-amber-300">
-            Often confused with: {confused.map(labelFor).join(', ')} ,  if any of those look
+            Often confused with: {confused.map(labelFor).join(', ')}, if any of those look
             closer, correct the call below.
           </p>
         )}

@@ -1,5 +1,5 @@
 /**
- * PedigreePosterExport ,  one-click export of a pedigree tree as a
+ * PedigreePosterExport, one-click export of a pedigree tree as a
  * high-res PNG with a "Made with Geck Inspect" watermark.
  *
  * Uses html2canvas (already a dep) to render a hidden pedigree

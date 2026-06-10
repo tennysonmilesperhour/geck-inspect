@@ -11,7 +11,7 @@ import { format } from 'date-fns';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 
 /**
- * Weigh-in mode ,  one-row-per-gecko batch weight entry.
+ * Weigh-in mode, one-row-per-gecko batch weight entry.
  *
  * Breeders typically weigh on a fixed cadence (Sunday mornings is common)
  * and opening each gecko's detail modal one at a time is tedious. This
@@ -21,12 +21,12 @@ import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
  * Promise.all. Rows with empty inputs are skipped.
  *
  * Props:
- *   geckos          ,  list of geckos to weigh (caller filters by writable
+ *   geckos         , list of geckos to weigh (caller filters by writable
  *                     + archived state).
- *   weightRecords   ,  current records, used to display "last weight" so
+ *   weightRecords  , current records, used to display "last weight" so
  *                     the user has a reference value as they type.
- *   onClose         ,  close the modal.
- *   onSaved         ,  called after saves succeed so the parent can
+ *   onClose        , close the modal.
+ *   onSaved        , called after saves succeed so the parent can
  *                     refresh its data.
  */
 export default function WeighInMode({ geckos = [], weightRecords = [], onClose, onSaved }) {

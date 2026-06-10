@@ -43,19 +43,19 @@ import { createPageUrl } from '@/utils';
 import { formatDistanceToNowStrict } from 'date-fns';
 
 /**
- * MarketplaceSell ,  April 2026 professional classifieds-style redesign.
+ * MarketplaceSell, April 2026 professional classifieds-style redesign.
  *
  * Replaces the old "sync with MorphMarket / Marketplace Profile" dumping
  * ground with a focused seller-console layout:
  *
  *   1. Stats strip at the top (live / hidden / sold)
- *   2. "Active Listings" grid ,  geckos currently visible on the public
+ *   2. "Active Listings" grid, geckos currently visible on the public
  *      marketplace. Each card has a one-click "Visible"/"Hidden" switch
  *      that flips `is_public` without changing the sale status.
- *   3. "Hidden Drafts" grid ,  status = 'For Sale' but is_public = false.
+ *   3. "Hidden Drafts" grid, status = 'For Sale' but is_public = false.
  *      The breeder is holding them back from the feed but can still
  *      edit price + description. One click republishes.
- *   4. "Your collection" section ,  everything else. One click promotes
+ *   4. "Your collection" section, everything else. One click promotes
  *      a gecko to "For Sale" (status + is_public + asking price flow).
  *
  * Edit modal still exists but has been tightened. Removed the
@@ -153,7 +153,7 @@ function ListingCard({
           : 'border-slate-800 hover:border-emerald-500/40'
       }`}
     >
-      {/* Photo ,  fixed height matches MyGeckos GeckoCard. `object-cover`
+      {/* Photo, fixed height matches MyGeckos GeckoCard. `object-cover`
           crops to fill regardless of source image dimensions. */}
       <div className="relative h-40 sm:h-56 bg-slate-950 overflow-hidden">
         {photo ? (
@@ -248,7 +248,7 @@ function ListingCard({
 
         {/* Controls */}
         <div className="mt-auto pt-2 space-y-2" data-no-select>
-          {/* Visibility toggle ,  flips is_public on existing listings */}
+          {/* Visibility toggle, flips is_public on existing listings */}
           {gecko.status === 'For Sale' && (
             <label className="flex items-center justify-between gap-2 cursor-pointer select-none">
               <span className="flex items-center gap-1.5 text-[11px] text-slate-400 truncate">
@@ -270,7 +270,7 @@ function ListingCard({
             </label>
           )}
 
-          {/* Quick-list toggle ,  one-click conversion of a collection
+          {/* Quick-list toggle, one-click conversion of a collection
               gecko into an active listing. Uses the seller's default
               visibility pref; the breeder can still open Edit to set a
               price or description after the fact. */}
@@ -289,7 +289,7 @@ function ListingCard({
             </label>
           )}
 
-          {/* Action row ,  matched sizing, matched height */}
+          {/* Action row, matched sizing, matched height */}
           <div className="grid grid-cols-2 gap-1.5">
             <Button
               variant="outline"
@@ -649,7 +649,7 @@ export default function MarketplaceSellPage() {
           <StatCard label="Sold all-time" value={soldCount} tone="slate" icon={CheckCircle2} />
         </div>
 
-        {/* MorphMarket CSV sync ,  breeder tier+ */}
+        {/* MorphMarket CSV sync, breeder tier+ */}
         <MorphMarketSync
           geckos={allGeckos}
           user={user}
@@ -809,7 +809,7 @@ export default function MarketplaceSellPage() {
         </section>
       </div>
 
-      {/* Bulk-action bar ,  surfaces when select mode has at least one
+      {/* Bulk-action bar, surfaces when select mode has at least one
           gecko marked. Sits above the mobile bottom nav so it doesn't
           collide with it. */}
       {selectMode && selectedIds.size > 0 && (
@@ -850,7 +850,7 @@ export default function MarketplaceSellPage() {
       <Dialog open={!!editingGecko} onOpenChange={(open) => !open && setEditingGecko(null)}>
         <DialogContent className="bg-slate-900 border-slate-700 text-slate-100 max-w-xl">
           <DialogHeader>
-            <DialogTitle>Edit listing ,  {editingGecko?.name}</DialogTitle>
+            <DialogTitle>Edit listing, {editingGecko?.name}</DialogTitle>
             <DialogDescription className="text-slate-400">
               Update price, description, and visibility. Save to apply instantly.
             </DialogDescription>
@@ -935,7 +935,7 @@ export default function MarketplaceSellPage() {
               />
             </div>
 
-            {/* Price intelligence ,  shows comparable sale prices */}
+            {/* Price intelligence, shows comparable sale prices */}
             {editingGecko?.morphs_traits && (
               <MorphPriceIndex
                 morph={editingGecko.morphs_traits.split(',')[0]?.trim() || editingGecko.morph_tags?.[0]}

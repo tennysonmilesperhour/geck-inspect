@@ -1,5 +1,5 @@
 /**
- * Crest spikes ,  the signature supraorbital + dorsal ridge.
+ * Crest spikes, the signature supraorbital + dorsal ridge.
  * Renders small triangular scales along the back and above the eye.
  * Furred gives them longer, whisker-like extensions.
  */
@@ -17,10 +17,10 @@ export default function Crests({ palette, structural, suppressed }) {
 
   return (
     <g id="crests">
-      {/* Supraorbital ridge ,  the dark base above the eye */}
+      {/* Supraorbital ridge, the dark base above the eye */}
       <path d={SUPRAORBITAL_PATH} fill={spikeColor} opacity="0.95" />
 
-      {/* Supraorbital spikes ,  the iconic "eyelash" row of pointed scales
+      {/* Supraorbital spikes, the iconic "eyelash" row of pointed scales
           sitting on top of the ridge. Drawn as a fan of triangles aimed up
           and back so they read as a frill in a glance instead of a bump. */}
       {orbital.map((s, i) => {
@@ -78,7 +78,7 @@ export default function Crests({ palette, structural, suppressed }) {
         );
       })}
 
-      {/* Crowned ,  extra fan of spikes on the crown of the head */}
+      {/* Crowned, extra fan of spikes on the crown of the head */}
       {crowned && (
         <g opacity="0.95">
           {Array.from({ length: 7 }).map((_, i) => {

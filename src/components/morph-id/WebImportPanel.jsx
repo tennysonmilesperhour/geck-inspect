@@ -50,7 +50,7 @@ export default function WebImportPanel({ onApply }) {
           listing. We'll map the free text into canonical taxonomy ids and
           prefill the contribution form below. Anything we can't map shows
           up as <span className="text-amber-300">unmapped</span> so you can
-          extend the alias table ,  nothing is silently dropped.
+          extend the alias table, nothing is silently dropped.
         </p>
 
         <div>

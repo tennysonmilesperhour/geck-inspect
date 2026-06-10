@@ -1,4 +1,4 @@
-import { useParams, Navigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import GeneticCalculatorTool from './GeneticCalculatorTool';
 import { PICKER_TRAITS_BY_SLUG } from '../components/breeding/ManualGenotypePicker';
 import { breadcrumbSchema, ORG_ID } from '@/lib/organization-schema';
@@ -13,7 +13,7 @@ import PageNotFound from '@/lib/PageNotFound';
  * (manual mode) and only changes the title, description, JSON-LD, and
  * a short morph-specific intro.
  *
- * Slugs are matched against the `slug` field in PICKER_TRAITS ,  see
+ * Slugs are matched against the `slug` field in PICKER_TRAITS, see
  * src/components/breeding/ManualGenotypePicker.jsx. Unknown slugs
  * fall through to PageNotFound rather than to the bare calculator,
  * because any /calculator/:morph URL we shipped a route for is one we
@@ -39,7 +39,7 @@ export default function CalculatorMorph() {
 
   const initialSireZygosity = { [trait.id]: defaultZyg };
 
-  const title = `${trait.label} Genetics Calculator ,  Crested Gecko`;
+  const title = `${trait.label} Genetics Calculator, Crested Gecko`;
   const description = `Free Punnett-square calculator for crested gecko ${trait.label} pairings. Predict offspring outcomes when one parent carries ${trait.label}. ${trait.blurb} No signup required.`;
   const path = `/calculator/${trait.slug}`;
 

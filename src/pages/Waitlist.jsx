@@ -10,7 +10,7 @@ import { Loader2, Check, Sparkles } from 'lucide-react';
 
 // Public waitlist signup page.
 //
-// Route: /waitlist/:slug — no auth required. The breeder shares this
+// Route: /waitlist/:slug, no auth required. The breeder shares this
 // URL on social media; followers land here, see what the post is
 // about, and drop name/email to be notified when the gecko/clutch is
 // ready. Submissions land in gecko_waitlist_signups via an
@@ -112,7 +112,7 @@ export default function Waitlist() {
   return (
     <div className="min-h-screen bg-gradient-to-b from-emerald-950 to-emerald-900 text-emerald-100">
       <Helmet>
-        <title>{`${waitlist.title} ,  Waitlist`}</title>
+        <title>{`${waitlist.title}, Waitlist`}</title>
         <meta name="description" content={waitlist.description?.slice(0, 160) || waitlist.title} />
         <meta name="robots" content="noindex" />
       </Helmet>

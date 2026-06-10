@@ -12,7 +12,7 @@ A live pricing layer showing what morphs are selling for and how values trend ov
 
 Data comes from two sources:
 1. **User-submitted actual sale prices** (anonymized, opted-in)
-2. **Curated price guide data** (from tennyscrestedgeckos.com investment guide)
+2. **Curated price guide data** (from the tennyscrestedgeckos.com investment guide, an unaffiliated third-party site; see CLAUDE.md domain disambiguation)
 
 **Key integration from iHerp analysis:** When a transfer is completed (P1), prompt user to contribute sale price to market data. This closes the loop between the two features.
 

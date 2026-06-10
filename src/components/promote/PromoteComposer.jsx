@@ -28,7 +28,7 @@ const DEFAULT_PLATFORMS = ['bluesky'];
 const DEFAULT_LENGTH = 'medium';
 const ITERATION_CAP = 10;
 
-// The composer ,  generation, edit, voice cycling, copy, publish.
+// The composer, generation, edit, voice cycling, copy, publish.
 //
 // Lifecycle:
 //   Open with a gecko -> create draft social_posts row -> user picks
@@ -415,7 +415,7 @@ export default function PromoteComposer({
   // generation can use it as a style anchor. We don't paste the full
   // text into editedContent because that would clobber the working
   // draft; using starting_point lets the model riff on the angle.
-  const useInspiration = (post) => {
+  const applyInspiration = (post) => {
     if (!post?.variant) return;
     const excerpt = post.variant.content.slice(0, 300);
     setStartingPoint(`Match the angle and rhythm of this past post: ${excerpt}`);
@@ -781,7 +781,7 @@ export default function PromoteComposer({
         <div className="space-y-4 mt-2">
           {/* Inspiration: the user's last 5 published posts. Click one
               to seed it as a style anchor (writes into the
-              starting-point field — keeps the working draft intact). */}
+              starting-point field, keeps the working draft intact). */}
           {inspirationPosts.length > 0 && (
             <div className="rounded-lg border border-emerald-800/40 bg-emerald-950/30 p-3">
               <div className="text-[10px] uppercase tracking-wider text-emerald-300/80 mb-2">
@@ -792,7 +792,7 @@ export default function PromoteComposer({
                   <button
                     key={p.post_id}
                     type="button"
-                    onClick={() => useInspiration(p)}
+                    onClick={() => applyInspiration(p)}
                     className="flex-shrink-0 w-40 text-left rounded-md border border-emerald-800/40 bg-emerald-950/50 hover:border-emerald-500/60 hover:bg-emerald-900/40 transition-colors p-2"
                     title="Use this as a style anchor for the next generation"
                   >
@@ -840,7 +840,7 @@ export default function PromoteComposer({
             </div>
           </div>
 
-          {/* Platforms ,  multi-select. Generation targets the most
+          {/* Platforms, multi-select. Generation targets the most
               restrictive selected platform so the post fits everywhere
               it's sent; per-platform formatting (hashtag placement,
               truncation) happens at publish time. */}
@@ -906,7 +906,7 @@ export default function PromoteComposer({
               {VOICE_PRESETS.find((v) => v.key === voicePreset)?.blurb}
             </p>
 
-            {/* Saved custom voices ,  click a chip to stack a custom voice
+            {/* Saved custom voices, click a chip to stack a custom voice
                 on top of the preset. Saving captures the user's own
                 writing for the model to mimic. */}
             <div className="pt-2 border-t border-emerald-900/40">
@@ -1153,7 +1153,7 @@ export default function PromoteComposer({
                     className="rounded-lg border border-emerald-800/30 bg-emerald-950/40 p-3"
                   >
                     <div className="text-[10px] uppercase tracking-wider text-emerald-300/70 mb-1">
-                      Preview ,  {platformLabel(p.platform)}
+                      Preview, {platformLabel(p.platform)}
                     </div>
                     <div className="text-sm text-emerald-100 whitespace-pre-wrap">
                       {p.text}

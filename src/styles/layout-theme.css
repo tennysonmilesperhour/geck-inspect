@@ -285,7 +285,7 @@ html, body, #root {
           }
 
           /* Radix Select triggers need explicit alignment to avoid
-             baseline shifts in flex rows. Scoped to Radix only , 
+             baseline shifts in flex rows. Scoped to Radix only,
              the previous version targeted ALL button/input/select
              globally with !important, breaking flex layouts, hidden
              inputs, and loading states across the app. */
@@ -914,7 +914,7 @@ html, body, #root {
             height: 18px;
           }
 
-          /* Bottom nav (mobile): mirror the sidebar's glass treatment , 
+          /* Bottom nav (mobile): mirror the sidebar's glass treatment,
              semi-transparent emerald backdrop, soft inner top highlight,
              and an accent bar above the active tab. */
           .gecko-bottom-nav {
@@ -1024,7 +1024,7 @@ html, body, #root {
             100% { transform: rotate(360deg); }
           }
 
-          /* Membership-tier visual indicators ,  used by TierBadge in the
+          /* Membership-tier visual indicators, used by TierBadge in the
              sidebar profile block. Enterprise gets a shimmering gold pill
              and a glowing gold ring around the avatar + name; Breeder and
              Keeper get static gradient rings; Free has no ring at all so

@@ -97,7 +97,7 @@ export default function SimilarGeckosStrip({ imageUrl }) {
         )}
         {!isLoading && matches && matches.length === 0 && (
           <p className="text-xs text-slate-500">
-            No labeled samples close enough yet. Keep contributing ,  each
+            No labeled samples close enough yet. Keep contributing, each
             verified sample grows the retrieval index.
           </p>
         )}

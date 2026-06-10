@@ -4,7 +4,7 @@
 #   2. Deploy the four edge functions.
 #   3. Optionally backfill embeddings for verified rows missing one.
 #
-# Idempotent — every step is safe to re-run. The manual RLS step is NOT
+# Idempotent: every step is safe to re-run. The manual RLS step is NOT
 # done here on purpose (see scripts/README.md).
 #
 # Usage:

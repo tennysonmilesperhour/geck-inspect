@@ -1,5 +1,5 @@
 /**
- * Harlequin pattern ,  lateral cream markings rising up the flanks.
+ * Harlequin pattern, lateral cream markings rising up the flanks.
  * Intensity ladder (0 → 4):
  *   0 = off
  *   1 = trace (a few small blotches low on the flanks)

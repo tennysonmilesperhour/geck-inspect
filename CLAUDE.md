@@ -25,8 +25,8 @@
   Use `mcp__github__merge_pull_request` with `merge_method: "squash"`
   (or `enable_pr_auto_merge` if a required check is still pending).
   This is my default preference: I always want PRs merged straight to
-  `main` the moment they're ready. Do not ask "want me to merge it?" —
-  just do it.
+  `main` the moment they're ready. Do not ask "want me to merge it?"
+  Just do it.
 
 ### Escape hatch: when the sandbox proxy blocks pushes to `main`
 
@@ -40,8 +40,8 @@ client-side workaround.
 When this happens, do NOT just leave commits sitting locally and tell
 me to push them myself. Instead:
 
-1. Push the work to `claude/<topic>-<short-id>` on origin — the proxy
-   allows pushes to `claude/*`.
+1. Push the work to `claude/<topic>-<short-id>` on origin (the proxy
+   allows pushes to `claude/*`).
 2. Open a draft PR `claude/<topic>-<short-id> → main` via
    `mcp__github__create_pull_request`. The GitHub API path bypasses
    the sandbox proxy entirely, so it works even when `git push` to
@@ -49,7 +49,7 @@ me to push them myself. Instead:
 3. Merge it immediately with `mcp__github__merge_pull_request`
    (merge_method: "squash" so main stays linear and the topic-branch
    chatter doesn't land in the public history). The Vercel preview
-   for the `claude/*` branch will trigger and may fail — that's
+   for the `claude/*` branch will trigger and may fail. That's
    expected and ignorable, because the merge to `main` is a separate
    deploy that goes through production CI, not preview.
 4. Delete the `claude/*` branch after merge (`update_pull_request`
@@ -59,7 +59,7 @@ me to push them myself. Instead:
 
 This escape hatch is the only case where the "no PR" default doesn't
 apply. The PR exists for ~5 seconds and serves purely as a transport,
-not as a review surface — same end state as a direct push to main,
+not as a review surface: same end state as a direct push to main,
 just routed around a proxy that won't let me do that directly.
 
 ## Why this matters

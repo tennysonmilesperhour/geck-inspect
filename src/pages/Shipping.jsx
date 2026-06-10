@@ -24,7 +24,7 @@ const FEATURES = [
   {
     icon: Thermometer,
     title: 'Temperature-controlled transit',
-    desc: "Reptile-specific carriers with heat packs, cold packs, and insulated foam. Every box is built for the conditions your geckos actually need ,  not a one-size-fits-all courier bag.",
+    desc: "Reptile-specific carriers with heat packs, cold packs, and insulated foam. Every box is built for the conditions your geckos actually need, not a one-size-fits-all courier bag.",
   },
   {
     icon: PackageCheck,
@@ -62,7 +62,7 @@ export default function Shipping() {
   return (
     <>
       <Seo
-        title="Shipping ,  Live Arrival Guaranteed"
+        title="Shipping, Live Arrival Guaranteed"
         description="Geck Inspect integrates Zero's Geckos Shipping Project so breeders can book reptile-safe, live-arrival-guaranteed shipping from inside their collection. Same service as zerosgeckos.com, just easier to use alongside your geckos."
         path="/Shipping"
         jsonLd={SHIPPING_JSON_LD}
@@ -226,7 +226,7 @@ export default function Shipping() {
               Already a Breeder member?
             </h2>
             <p className="text-slate-400 max-w-xl mx-auto mb-6">
-              Access the full shipping dashboard ,  get quotes, book shipments, print labels, and
+              Access the full shipping dashboard, get quotes, book shipments, print labels, and
               track packages all from inside Geck Inspect.
             </p>
             <Link to={createPageUrl('BreederShipping')}>

@@ -1,5 +1,5 @@
 /**
- * Market Analytics ,  Shared UI Primitives
+ * Market Analytics, Shared UI Primitives
  *
  * Small, self-contained visual components that every analytics view
  * reuses: source badges, confidence chips, freshness indicators,
@@ -46,7 +46,7 @@ export function SourceBadge({ sourceId, size = 'sm' }) {
   );
 }
 
-// ------------ SourceBadgeStack ,  show up to 3 contributing sources ----
+// ------------ SourceBadgeStack, show up to 3 contributing sources ----
 export function SourceBadgeStack({ sourceIds = [] }) {
   if (!sourceIds?.length) return null;
   const internal = sourceIds.filter(isInternal);
@@ -102,7 +102,7 @@ export function ConfidenceChip({ confidence, sampleSize, sources = [], methodolo
 }
 
 // ------------ FreshnessIndicator -------------------------------------
-// Little clock chip next to a headline that indicates "freshness" ,  how
+// Little clock chip next to a headline that indicates "freshness", how
 // recently the underlying sources were scraped/synced.
 export function FreshnessIndicator({ sourceIds = [] }) {
   if (!sourceIds.length) return null;

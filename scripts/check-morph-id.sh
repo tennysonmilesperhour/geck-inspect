@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Read-only health check for the /recognition + /training pipeline.
 # Runs a dozen small probes against your Supabase project and prints
-# PASS / FAIL for each. Designed to be safe to run any time — no writes.
+# PASS / FAIL for each. Designed to be safe to run any time, no writes.
 #
 # Usage:
 #   SUPABASE_URL=https://<ref>.supabase.co \
@@ -50,7 +50,7 @@ if [[ -n "$SERVICE_KEY" ]]; then
   if [[ "$status" != "200" ]]; then
     fail "cannot read gecko_images" "$(cat /tmp/probe-body)"
   else
-    # Use OPTIONS on PostgREST — returns an X-Accept-Profile row definition.
+    # Use OPTIONS on PostgREST, returns an X-Accept-Profile row definition.
     status=$(probe GET "$SUPABASE_URL/rest/v1/gecko_images?select=$(IFS=,; echo "${cols_needed[*]}")&limit=0" "$SERVICE_KEY")
     if [[ "$status" == "200" ]]; then
       pass "all training columns present"
@@ -81,7 +81,7 @@ status=$(rpc nearest_training_samples \
 if [[ "$status" == "200" ]]; then pass "nearest_training_samples()"
 else fail "nearest_training_samples() not callable (status $status)" "$(cat /tmp/probe-body)"; fi
 
-# review_gecko_image — requires auth, so anon calls should fail gracefully.
+# review_gecko_image requires auth, so anon calls should fail gracefully.
 # A 4xx proves the function exists and the auth check is working; 404 means
 # the function wasn't deployed.
 status=$(rpc review_gecko_image \
@@ -96,7 +96,7 @@ esac
 # ---- 3. Edge functions ---------------------------------------------------
 section "Edge functions"
 
-# recognize-gecko-morph — POST with no body should return a 400 JSON error
+# recognize-gecko-morph: POST with no body should return a 400 JSON error
 # ("imageUrl required"). A 404 means the function isn't deployed.
 status=$(probe POST "$SUPABASE_URL/functions/v1/recognize-gecko-morph" "$SUPABASE_ANON_KEY" \
   -H 'Content-Type: application/json' -d '{}')
@@ -136,7 +136,7 @@ if [[ "$status" == "200" ]]; then
   body=$(cat /tmp/probe-body)
   total=$(printf '%s' "$body" | python3 -c 'import sys,json; print(json.load(sys.stdin).get("total","?"))' 2>/dev/null || echo "?")
   verified=$(printf '%s' "$body" | python3 -c 'import sys,json; print(json.load(sys.stdin).get("verified","?"))' 2>/dev/null || echo "?")
-  pass "corpus size — total=$total verified=$verified"
+  pass "corpus size: total=$total verified=$verified"
 else
   skip "stats RPC already failed above"
 fi

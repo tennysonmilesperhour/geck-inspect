@@ -8,7 +8,7 @@ import { SocialPlatformConnection } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
 import { toast } from '@/components/ui/use-toast';
 
-// Connections modal — manages per-user platform credentials.
+// Connections modal: manages per-user platform credentials.
 //
 // Bluesky: app-password auth, no OAuth. Set directly via the
 // set-platform-connection edge function (encrypts at rest).
@@ -460,7 +460,7 @@ export default function ConnectionsModal({ open, onOpenChange, user }) {
             )}
           </div>
 
-          {/* Other platforms — clipboard-only for now */}
+          {/* Other platforms: clipboard-only for now */}
           <div className="rounded-lg border border-emerald-900/40 bg-emerald-950/20 p-3 text-sm text-emerald-200/60">
             <div className="flex items-center justify-between">
               <span>Threads, X, TikTok, YouTube</span>

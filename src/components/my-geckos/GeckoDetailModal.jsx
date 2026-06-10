@@ -26,7 +26,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { createPageUrl } from '@/utils';
 
 // `canEdit` mirrors the geckos UPDATE/DELETE RLS policy on the client
-// ,  it's true for the gecko's original creator and for any accepted
+//, it's true for the gecko's original creator and for any accepted
 // owner/editor member of the gecko's collection. Defaults to true for
 // backwards compatibility with call sites that haven't been migrated
 // to compute it; those sites worked under the old "you only see your
@@ -321,7 +321,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
 
                 {showSlideshow && slideshowAvailable && currentSlide ? (
                   <div className="space-y-2">
-                    {/* Life-stage tabs ,  one per tagged photo */}
+                    {/* Life-stage tabs, one per tagged photo */}
                     <div className="flex flex-wrap gap-1">
                       {taggedSlides.map((slide, idx) => (
                         <button
@@ -500,7 +500,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                           await Gecko.update(gecko.id, { gallery_display: checked });
                           // Sync GeckoImage rows so the public Gallery page
                           // actually shows the gecko's photos. Without this
-                          // the gallery_display flag was decorative ,  the
+                          // the gallery_display flag was decorative, the
                           // public gallery reads from gecko_images, not
                           // from the geckos table.
                           const imageUrls = Array.isArray(gecko.image_urls)

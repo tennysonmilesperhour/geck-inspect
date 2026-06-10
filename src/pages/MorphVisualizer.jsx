@@ -64,7 +64,7 @@ const VISUALIZER_JSON_LD = [
         '@type': 'HowToStep',
         position: 3,
         name: 'Dial in polygenic pattern intensity',
-        text: 'Use the Pattern Intensity sliders for Harlequin, Pinstripe, Dalmatian, and similar polygenic traits ,  these stack continuously rather than as on/off genes.',
+        text: 'Use the Pattern Intensity sliders for Harlequin, Pinstripe, Dalmatian, and similar polygenic traits, these stack continuously rather than as on/off genes.',
       },
       {
         '@type': 'HowToStep',
@@ -179,7 +179,7 @@ export default function MorphVisualizer() {
         title="Crested Gecko Morph Visualizer"
         description="Free interactive crested gecko trait simulator. Pick a base color, set morph genotype zygosity, dial pattern intensity, and watch the resulting phenotype render in real time with a rarity and value estimate."
         path="/MorphVisualizer"
-        imageAlt="Crested gecko morph visualizer ,  interactive trait simulator"
+        imageAlt="Crested gecko morph visualizer, interactive trait simulator"
         keywords={[
           'crested gecko morph visualizer',
           'gecko trait simulator',
@@ -197,7 +197,7 @@ export default function MorphVisualizer() {
             Crested Gecko Morph Visualizer
           </h1>
           <p className="text-sm md:text-base text-slate-400">
-            Explore traits, combinations, and genetics ,  see what every morph actually looks like and why.
+            Explore traits, combinations, and genetics, see what every morph actually looks like and why.
           </p>
         </div>
 
@@ -208,7 +208,7 @@ export default function MorphVisualizer() {
             instead of stacking them all on the left next to empty space. */}
         <div className="grid grid-cols-1 xl:grid-cols-[340px_1fr_320px] gap-4 md:gap-6">
 
-          {/* LEFT ,  primary trait builders (the ones that change the look most) */}
+          {/* LEFT, primary trait builders (the ones that change the look most) */}
           <div className="space-y-4 order-2 xl:order-1">
             <Card className="bg-slate-900 border-slate-700">
               <CardContent className="p-4">
@@ -229,7 +229,7 @@ export default function MorphVisualizer() {
             </Card>
           </div>
 
-          {/* CENTER ,  canvas + reasoning */}
+          {/* CENTER, canvas + reasoning */}
           <div className="space-y-4 order-1 xl:order-2">
             <Card className="bg-slate-900 border-slate-700 shadow-2xl">
               <CardHeader className="pb-3">
@@ -279,7 +279,7 @@ export default function MorphVisualizer() {
                   <HardHat className="w-4 h-4 flex-shrink-0" />
                   <div className="text-[12px] leading-snug">
                     <span className="font-semibold">Under construction.</span>{' '}
-                    The gecko illustration is a playful work-in-progress ,  click around,
+                    The gecko illustration is a playful work-in-progress, click around,
                     stack morphs, load presets, break it in interesting ways. Your
                     experiments help us tune what the final render should emphasize.
                   </div>
@@ -305,7 +305,7 @@ export default function MorphVisualizer() {
             </Card>
           </div>
 
-          {/* RIGHT ,  secondary modifiers + rarity/value */}
+          {/* RIGHT, secondary modifiers + rarity/value */}
           <div className="space-y-4 order-3">
             <Card className="bg-slate-900 border-slate-700">
               <CardContent className="p-4">
@@ -333,7 +333,7 @@ export default function MorphVisualizer() {
           </div>
         </div>
 
-        {/* Preset gallery ,  full-width row below the main grid so it can show
+        {/* Preset gallery, full-width row below the main grid so it can show
             more presets at once and doesn't force either side column to grow
             tall. */}
         <div className="mt-4 md:mt-6">

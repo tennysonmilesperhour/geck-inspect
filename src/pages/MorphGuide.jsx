@@ -28,7 +28,7 @@ import { PROJECT_LINES, LINE_CONFIDENCE, lineImageKeywords } from '@/data/projec
 import RotatingMorphImage from '@/components/morphguide/RotatingMorphImage';
 
 // DefinedTermSet treats the morph guide as a controlled vocabulary for
-// AI assistants ,  every morph becomes a DefinedTerm that can be cited
+// AI assistants, every morph becomes a DefinedTerm that can be cited
 // back ("the term 'Lilly White' as defined by Geck Inspect..."). The
 // parallel ItemList preserves the ordered presentation for crawlers
 // that prefer ItemList over DefinedTermSet, and links each entry to its
@@ -40,7 +40,7 @@ const MORPH_TERMS = MORPHS.map((m) => ({
   ...(Array.isArray(m.aliases) && m.aliases.length > 0 && { alternateName: m.aliases }),
   termCode: m.slug,
   url: `https://geckinspect.com/MorphGuide/${m.slug}`,
-  description: m.summary || m.description || `${m.name} ,  crested gecko morph.`,
+  description: m.summary || m.description || `${m.name}, crested gecko morph.`,
   inDefinedTermSet: { '@id': 'https://geckinspect.com/MorphGuide#termset' },
 }));
 
@@ -67,7 +67,7 @@ const MORPH_GUIDE_JSON_LD = [
     '@id': 'https://geckinspect.com/MorphGuide#termset',
     name: 'Crested Gecko Morph Vocabulary',
     description:
-      'Controlled vocabulary of named crested gecko morphs maintained by Geck Inspect ,  base colors, color modifiers, pattern types, structural traits, and named combinations, each with inheritance model and rarity.',
+      'Controlled vocabulary of named crested gecko morphs maintained by Geck Inspect: base colors, color modifiers, pattern types, structural traits, and named combinations, each with inheritance model and rarity.',
     url: 'https://geckinspect.com/MorphGuide',
     inLanguage: 'en-US',
     publisher: { '@id': 'https://geckinspect.com/#organization' },
@@ -372,7 +372,7 @@ export default function MorphGuidePage() {
   // Pull community gecko photos tagged with a primary_morph so we can
   // use them as card thumbnails when the morph_guides row doesn't have
   // its own example_image_url. Same source MorphDetail already uses for
-  // its community gallery strip ,  just surfaced earlier on the list.
+  // its community gallery strip, just surfaced earlier on the list.
   useEffect(() => {
     let cancelled = false;
     (async () => {
@@ -394,7 +394,7 @@ export default function MorphGuidePage() {
     };
   }, []);
 
-  // Pull HERO ANCHOR photos ,  competition / show-winner images flagged
+  // Pull HERO ANCHOR photos, competition / show-winner images flagged
   // with training_meta.verification_tier='hero_anchor'. These take
   // priority over morph_guides.example_image_url because they're the
   // gold-standard exemplar per morph, sourced from judged competitions.
@@ -458,7 +458,7 @@ export default function MorphGuidePage() {
   function findCommunityImages(name) {
     if (!name) return [];
     const firstWord = name.toLowerCase().split(/\s+/)[0];
-    // Cap at 6 images per morph ,  plenty for a rotating preview,
+    // Cap at 6 images per morph, plenty for a rotating preview,
     // and keeps the DOM lightweight on morph-heavy pages.
     return (communityByKeyword[firstWord] || []).slice(0, 6);
   }
@@ -639,7 +639,7 @@ export default function MorphGuidePage() {
     <>
       <Seo
         title="Crested Gecko Morph Guide"
-        description="Complete reference for crested gecko (Correlophus ciliatus) morphs ,  base colors, color modifiers, pattern types, structural traits, and named combinations. Inheritance models (recessive, co-dominant, incomplete-dominant, polygenic, line-bred), rarity, price tier, and combination notes for Harlequin, Pinstripe, Dalmatian, Lilly White, Axanthic, Cappuccino, Soft Scale, White Wall, and more."
+        description="Complete reference for crested gecko (Correlophus ciliatus) morphs, base colors, color modifiers, pattern types, structural traits, and named combinations. Inheritance models (recessive, co-dominant, incomplete-dominant, polygenic, line-bred), rarity, price tier, and combination notes for Harlequin, Pinstripe, Dalmatian, Lilly White, Axanthic, Cappuccino, Soft Scale, White Wall, and more."
         path="/MorphGuide"
         imageAlt="Crested gecko morph reference guide"
         keywords={[
@@ -694,7 +694,7 @@ export default function MorphGuidePage() {
             <p className="text-lg md:text-xl text-slate-300 max-w-3xl leading-relaxed">
               Every major crested gecko morph, with the genetics, rarity, and
               price tier that matter. Pattern, structure, base color, color
-              modifier, and named combinations ,  all in one place, structured
+              modifier, and named combinations, all in one place, structured
               for keepers and breeders.
             </p>
           </div>
@@ -859,7 +859,7 @@ export default function MorphGuidePage() {
           )}
 
           {view === 'morphs' && <>
-          {/* Browse-by block ,  real <Link>s to the taxonomy hubs so
+          {/* Browse-by block, real <Link>s to the taxonomy hubs so
               crawlers can follow every branch of the morph taxonomy
               even without running the client-side filter state. Each
               linked destination is an indexable hub page with its own

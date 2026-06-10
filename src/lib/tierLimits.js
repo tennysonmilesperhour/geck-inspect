@@ -1,5 +1,5 @@
 /**
- * Tier limits ,  single source of truth for what each membership tier
+ * Tier limits, single source of truth for what each membership tier
  * unlocks. Imported by upload validation, the Settings storage card,
  * the Subscription page, the Promote (social media) page, and any
  * feature gate that needs to know whether a user has hit a quota.
@@ -23,7 +23,7 @@
  * supabase/migrations/20260516_morph_id_credits.sql for the ledger.
  *
  * `null` means unlimited. Always check `if (limit == null)` before
- * comparing usage ,  never treat null as 0.
+ * comparing usage, never treat null as 0.
  */
 
 const MB = 1024 * 1024;

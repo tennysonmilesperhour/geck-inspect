@@ -28,7 +28,7 @@ export function captureSignupGrantFromUrl() {
       window.history.replaceState({}, '', url.toString());
     }
   } catch {
-    // ignore ,  best-effort
+    // ignore, best-effort
   }
 }
 

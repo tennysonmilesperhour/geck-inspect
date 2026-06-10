@@ -21,7 +21,7 @@ export async function generateCSVTemplate({ includeExisting = false } = {}) {
   const headers = TEMPLATE_FIELDS.map(f => f.key);
 
   if (!includeExisting) {
-    // Empty template ,  just the header row
+    // Empty template, just the header row
     const csv = headers.map(escapeCSV).join(',');
     return { data: csv };
   }

@@ -18,7 +18,7 @@ import TrialOfferModal from '@/components/promote/TrialOfferModal';
 import ConnectionsModal from '@/components/promote/ConnectionsModal';
 import { formatDistanceToNow } from 'date-fns';
 
-// Promote ,  the social media manager page.
+// Promote, the social media manager page.
 //
 // Lists the user's geckos sorted by `last_meaningful_change_at` (the
 // "Recently changed" sort) so the breeder can post about what's actually
@@ -65,7 +65,7 @@ export default function PromotePage() {
 
       // 2. This month's usage (or seeded with tier defaults if missing).
       // social_post_usage.user_id is the auth UUID, not the legacy
-      // profile id — see AuthContext.buildUser for the distinction.
+      // profile id (see AuthContext.buildUser) for the distinction.
       const monthKey = new Date().toISOString().slice(0, 7);
       const { data: usageRow } = await supabase
         .from('social_post_usage')
@@ -172,7 +172,7 @@ export default function PromotePage() {
   return (
     <div className="p-4 md:p-6 max-w-6xl mx-auto">
       <Seo
-        title="Promote your geckos ,  Geck Inspect"
+        title="Promote your geckos, Geck Inspect"
         description="Generate platform-tailored social media posts about your crested geckos using AI trained on crestie-specific best practices."
       />
 
@@ -211,7 +211,7 @@ export default function PromotePage() {
         <PostUsageMeter usage={usage} tier={tier} credits={credits} />
       </div>
 
-      {/* Scheduled queue ,  posts the pg_cron worker will publish at
+      {/* Scheduled queue, posts the pg_cron worker will publish at
           their `scheduled_at` time. Up to `scheduledPostsMax` per tier
           enforced in the composer. The cancel button just flips the
           row back to draft so the worker skips it. */}

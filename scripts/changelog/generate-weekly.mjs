@@ -223,7 +223,7 @@ async function sendEmail({ title, bullets }) {
     `This week's "What's New" entry is live on the dashboard.`,
     '',
     title,
-    ...bullets.map((b) => `  ,  ${b}`),
+    ...bullets.map((b) => `- ${b}`),
     '',
     'Users see it in the What\'s New tab next time they open the dashboard.',
     'Edit or unpublish at /AdminPanel?tab=changelog.',

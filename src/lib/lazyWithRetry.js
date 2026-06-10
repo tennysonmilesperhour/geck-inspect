@@ -1,11 +1,11 @@
 /**
- * lazyWithRetry ,  resilient React.lazy for code-split route chunks.
+ * lazyWithRetry, resilient React.lazy for code-split route chunks.
  *
  * Why this exists: every route in the app is `lazy(() => import(...))`,
  * which downloads a separate JS chunk the moment a user navigates to that
  * page. React's built-in `lazy` does NOT retry. If a single chunk fetch
- * fails ,  a flaky mobile connection dropping one request, or a hash that
- * went stale after a new deploy shipped while the tab was open ,  the
+ * fails, a flaky mobile connection dropping one request, or a hash that
+ * went stale after a new deploy shipped while the tab was open, the
  * import rejects with "Importing a module script failed" (Safari) or
  * "Failed to fetch dynamically imported module" (Chrome) and the whole
  * page falls through to the global ErrorBoundary.
@@ -90,7 +90,7 @@ export function lazyWithRetry(factory, { retries = 2, baseDelayMs = 350 } = {}) 
         return mod;
       } catch (err) {
         lastErr = err;
-        // Real error inside the module, not a fetch failure ,  surface it.
+        // Real error inside the module, not a fetch failure, surface it.
         if (!isChunkLoadError(err)) throw err;
         if (attempt < retries) await wait(baseDelayMs * (attempt + 1));
       }

@@ -4,7 +4,7 @@
 #   2. Deploy the send-push and send-email edge functions.
 #   3. Print the ALTER DATABASE commands you must run once.
 #
-# Idempotent — safe to re-run. Migrations already applied are no-ops;
+# Idempotent: safe to re-run. Migrations already applied are no-ops;
 # functions already deployed get overwritten with the current code.
 #
 # Usage:
@@ -59,7 +59,7 @@ run supabase functions deploy send-email --no-verify-jwt
 
 ok "Deploy complete."
 printf '\n'
-warn "One-time setup required — run these SQL statements once against your production DB:"
+warn "One-time setup required. Run these SQL statements once against your production DB:"
 cat <<'SQL'
 
   -- Replace <project-ref> with your Supabase project ref and <key> with

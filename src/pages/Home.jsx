@@ -14,7 +14,6 @@ import {
   ShoppingCart,
   Images,
   ArrowRight,
-  Eye,
   Egg,
   CalendarDays,
   Truck,
