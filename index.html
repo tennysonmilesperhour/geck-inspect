@@ -96,15 +96,17 @@
     <!-- Theme + accent: apply persisted choices synchronously before
          CSS/JS loads so users don't see a flash of the default palette.
          data-theme drives backgrounds/surfaces/sage/slate; data-secondary
-         drives the emerald accent palette. Both default to 'normal'. -->
+         drives the accent palette. Both default to 'blizzard' (blue),
+         matching DEFAULT_THEME / DEFAULT_SECONDARY in ThemeContext.jsx;
+         keep the two in sync. -->
     <script>
       (function () {
         var allowed = ['normal','tangerine','halloween-mask','blizzard','lavender','super-hypo'];
         function pick(key) {
           try {
             var v = localStorage.getItem(key);
-            return allowed.indexOf(v) !== -1 ? v : 'normal';
-          } catch (e) { return 'normal'; }
+            return allowed.indexOf(v) !== -1 ? v : 'blizzard';
+          } catch (e) { return 'blizzard'; }
         }
         document.documentElement.setAttribute('data-theme', pick('geckinspect.theme'));
         document.documentElement.setAttribute('data-secondary', pick('geckinspect.secondary'));

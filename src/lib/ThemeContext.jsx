@@ -107,11 +107,15 @@ const ThemeContext = createContext({
 async function fetchCloudPrefs() {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user?.id) return null;
+    if (!user?.email) return null;
+    // Resolve the profile row by EMAIL, the app-wide convention.
+    // Legacy rows carry Base44-era TEXT ids that do NOT equal the auth
+    // UUID, so an `.eq('id', user.id)` lookup silently missed them and
+    // cloud theme prefs never loaded or saved for long-time users.
     const { data, error } = await supabase
       .from('profiles')
       .select('ui_theme, ui_secondary')
-      .eq('id', user.id)
+      .eq('email', user.email)
       .maybeSingle();
     if (error || !data) return null;
     return { userId: user.id, ...data };
@@ -123,11 +127,11 @@ async function fetchCloudPrefs() {
 async function saveCloudPref(column, value) {
   try {
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user?.id) return;
+    if (!user?.email) return;
     await supabase
       .from('profiles')
       .update({ [column]: value })
-      .eq('id', user.id);
+      .eq('email', user.email);
   } catch {
     // Best-effort. Local copy already updated.
   }
