@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-06-12T10:19:48.353Z",
+  "lastUpdated": "2026-06-12T11:05:47.050Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -491,7 +491,7 @@
       "title": "Tiger Morph Crested Geckos: Polygenic Pattern Breeding Outcomes You Should Know",
       "slug": "tiger-morph-breeding-polygenic",
       "category": "breeding",
-      "status": "new",
+      "status": "published",
       "score": {
         "total": 16,
         "demand": 8,
@@ -500,8 +500,8 @@
         "voiceFit": 7
       },
       "createdAt": "2026-06-01T11:42:51.302Z",
-      "draftedAt": null,
-      "publishedAt": null,
+      "draftedAt": "2026-06-12T11:05:46.928Z",
+      "publishedAt": "2026-06-12T11:05:47.050Z",
       "evidence": [
         {
           "source": "google-trends",

@@ -4451,6 +4451,278 @@ export const BLOG_POSTS = [
         label: "WARNING, NEVER BREED THESE CRESTED GECKOS TOGETHER (YouTube)",
       },
     ],
+  },
+  {
+    slug: "tiger-morph-breeding-polygenic",
+    title: "Tiger Crested Gecko Breeding: What Polygenic Really Means",
+    description: "Tiger crested geckos are polygenic, not Mendelian. Learn what that means for your pairing outcomes, pattern selection, and long-term breeding strategy.",
+    keyphrase: "tiger crested gecko breeding",
+    category: "breeding",
+    tags: [
+      "breeding",
+      "harlequin",
+    ],
+    datePublished: "2026-06-12",
+    dateModified: "2026-06-12",
+    heroEyebrow: "Polygenic Pattern Breeding",
+    tldr: [
+      "Tiger pattern in crested geckos is polygenic, so Punnett squares do not apply and two Tiger parents will not produce consistent Tiger offspring.",
+      "Pattern quality responds to selective pressure over multiple generations, not a single pairing.",
+      "Tiger sits on a continuum with Brindle, animals that fall in between are sold as Tiger/Brindle (T/B), a legitimate category.",
+      "Foundation Genetics models Tiger as a dominant trait present in every crested gecko at varying intensity, which means breeding it out is not possible, only amplifying or suppressing it.",
+      "Stacking Tiger with base color traits like Red Base or Olive produces the most dramatic fired-up contrast, but the combo reads differently in fired-down photos.",
+    ],
+    body: [
+      {
+        type: "p",
+        text: "A breeder at a 2023 regional reptile show sold a pair of well-fired chocolate Tigers for $340 combined. The buyer went home, paired them, and got a clutch of six. Two looked like decent Tigers. Two looked like flame animals with irregular markings. One looked patternless. One looked like a dark buckskin with a smudge across the back.",
+      },
+      {
+        type: "p",
+        text: "The buyer was not cheated. The seller was not lying. Both parties just didn't understand what polygenic means in practice.",
+      },
+      {
+        type: "p",
+        text: "So here is the question this post answers: if Tiger is a real, consistent pattern in the hobby, why does pairing two Tigers produce such unpredictable offspring?",
+      },
+      {
+        type: "p",
+        text: "The answer matters because it changes how you select breeders, how you evaluate hatchlings, how you read sales listings, and how long you should expect any Tiger project to take before it stabilizes., -",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Tiger is not a switch, it's a dial",
+      },
+      {
+        type: "p",
+        text: "Every morph guide in the hobby, including this site's own `morph-guide.js`, classifies Tiger as polygenic. That word gets used a lot, but it's worth unpacking exactly what it means for a single trait.",
+      },
+      {
+        type: "p",
+        text: "Polygenic means the trait is controlled by many genes, each contributing a small additive effect. There is no single Tiger allele sitting at a single locus that you can model with a Punnett square. Instead, there is a collection of genetic variants across multiple loci that, together, produce more or less horizontal banding across the dorsum.",
+      },
+      {
+        type: "p",
+        text: "Foundation Genetics goes a step further: it models Tiger as a dominant trait present at some level in every crested gecko, which cannot be bred out of the population entirely. Under that model, what breeders are actually selecting for is the ratio of Tiger expression relative to other pattern traits. A patternless animal doesn't have zero Tiger genes. It has Tiger expression that is overwhelmed or suppressed by modifiers. A bold Tiger has a genetic background that amplifies banding and reduces competing patterns.",
+      },
+      {
+        type: "p",
+        text: "The practical upshot of both models is the same: you cannot pair two Tigers and expect Tigers. You can pair two Tigers and shift the average quality of Tiger expression across multiple clutches over multiple years. That is a different project entirely., -",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "The Tiger-to-Brindle spectrum",
+      },
+      {
+        type: "p",
+        text: "Tiger does not exist as a standalone phenotype in a vacuum. It sits on a continuum that runs from subtle freckling at one end through clean parallel bands (Tiger), into irregular broken markings (Brindle), and eventually into the pattern-dominant forms called Extreme Brindle.",
+      },
+      {
+        type: "p",
+        text: "The fact that `morph-guide.js` maintains separate entries for Tiger, Brindle, Tiger/Brindle, and Extreme Brindle reflects how the hobby categorizes sale animals, not how the underlying genetics switch between states. Most animals that breeders sell as \"T/B\" (Tiger/Brindle) fall in the middle of that spectrum where the bands are present but not perfectly regular. That intermediate expression is normal and expected.",
+      },
+      {
+        type: "p",
+        text: "This spectrum matters for two reasons.",
+      },
+      {
+        type: "p",
+        text: "First, it means hatchlings from a Tiger pairing may look like Tigers, may look like Brindles, and may look like something breeders wouldn't assign to either category. Evaluating them as failures misses the point. A hatchling that shows moderate banding at eight weeks and holds some pattern structure is a candidate for future selection, regardless of whether it hits a clean Tiger at that age.",
+      },
+      {
+        type: "p",
+        text: "Second, it means Brindle pairings feed the same project. If you're selecting for Tiger, a high-quality Brindle with dense, high-contrast markings is useful breeding stock. The distinction between the categories is real for sales purposes but somewhat artificial for selection purposes., -",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "What the offspring distribution actually looks like",
+      },
+      {
+        type: "p",
+        text: "Here's a concrete way to think about what a Tiger x Tiger pairing produces. Imagine the trait sits on a zero-to-ten scale. Zero is patternless, ten is Extreme Brindle. A sold-as-Tiger parent might sit at a seven. The other might sit at a six.",
+      },
+      {
+        type: "p",
+        text: "In a polygenic system, pairing a six and a seven does not produce all sixes and sevens. It produces a distribution, roughly bell-shaped, centered somewhere around six to seven but with real probability of animals landing at four (barely pattern) or at nine (surprisingly bold Brindle). Some animals will exceed both parents. Some will fall well short. This is not a bug. It is how polygenic traits work.",
+      },
+      {
+        type: "p",
+        text: "The genetics-sections content in the Geck Inspect corpus puts it clearly: \"Two stunning parents often produce offspring that span a wide quality range. Some will exceed both parents, some will fall short. This is normal and expected.\"",
+      },
+      {
+        type: "p",
+        text: "What you can do with repeated selective pressure is shift that bell curve to the right over multiple generations. An F3 Tiger-project clutch from animals selected for the top 20% of expression each generation will look different from an F1 clutch from random Tigers. That shift is real. It just takes time., -",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Why Tiger fires up so dramatically (and why your fired-down photos lie)",
+      },
+      {
+        type: "p",
+        text: "Tiger pattern is most visible when the gecko is fired up: melanophores spread melanin granules through the skin, darkening the base and throwing the horizontal bands into sharp contrast. A Tiger that looks dramatic at night can appear almost unmarked in a daytime photo.",
+      },
+      {
+        type: "p",
+        text: "This is not unique to Tiger, but the effect is stronger here than in most other polygenic patterns because the banding depends specifically on melanin contrast. Harlequin pattern carries cream coloration that persists in fired-down state. Tiger bands are melanin-dependent, so they fade disproportionately when the gecko fires down.",
+      },
+      {
+        type: "p",
+        text: "This creates a specific documentation trap. A breeder photographs their Tiger in fired-down state and the animal looks average. The buyer receives the gecko, fires it up that night, and is surprised by how bold it is. The reverse also happens: a fired-up sale photo of a moderately patterned animal looks dramatically better than the animal appears in normal resting state.",
+      },
+      {
+        type: "p",
+        text: "**The standard for evaluating Tigers: always assess in fired-up state, 20 to 30 minutes after a misting, in the enclosure the animal is used to.** A fired-down photo is not a useful basis for breeding selection. Request fired-up photos for any Tiger purchase above the entry price tier, and apply the same standard to your own records., -",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Stacking Tiger with base color: what actually works",
+      },
+      {
+        type: "p",
+        text: "The most visually striking Tiger animals in current breeding programs are not Tigers on buckskin or average brown bases. They are Tigers on strongly saturated base colors where the melanin banding has maximum contrast against the ground color.",
+      },
+      {
+        type: "p",
+        text: "Red Tiger and Olive Tiger are the two most proven combinations. A deep red base with heavy brindle-style Tiger expression in fired-up state produces an animal that photographs unlike almost anything else in the hobby. Olive Tigers carry an unusual earthy quality that holds up in both fired and unfired states because the olive base color itself is relatively stable.",
+      },
+      {
+        type: "p",
+        text: "The selection strategy for either combo involves treating the base color and the Tiger expression as two separate polygenic problems that compound independently. You can have a deeply colored red animal with weak Tiger, or a bold Tiger animal on a washed-out base. The ones with both traits simultaneously are rarer and worth holding back as breeders rather than selling.",
+      },
+      {
+        type: "p",
+        text: "Chocolate Tiger is less visually dramatic because the chocolate base and the Tiger banding are both dark, reducing contrast. They coexist without competing, which means the fired-up result looks rich and textured but not high-contrast in the way Red Tiger can be., -",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "My take: Tiger projects are undervalued and under-documented",
+      },
+      {
+        type: "p",
+        text: "The crested gecko community runs a lot of Tiger breeding programs but documents them poorly. I've seen breeders sell entire clutches of Tiger and T/B animals without tracking which pairings produced the best expressions or which holdbacks subsequently proved to be strong producers.",
+      },
+      {
+        type: "p",
+        text: "That's a problem that compounds over time. Polygenic traits respond to the best parents, but only if you know which parents those are. Without documentation, you are doing selective breeding in the dark. The animals you sell away might include your best future breeders.",
+      },
+      {
+        type: "p",
+        text: "Here is my actual position: Tiger is one of the more rewarding polygenic projects in the hobby specifically because the trait is visible, responds to selection, stacks well with base color, and has a clear quality gradient you can aim at. The animals at the top of that gradient, a tight, high-count, bold Tiger on a saturated red or olive base, command $300 to $400+ in current markets and are genuinely rare from well-maintained lines.",
+      },
+      {
+        type: "p",
+        text: "But the path to those animals requires treating the project like what it is: a multi-generation selective breeding program, not a \"pair two nice Tigers and see what happens\" experiment., -",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Practical takeaways",
+      },
+      {
+        type: "p",
+        text: "**Evaluate at the right time.** Tiger expression in hatchlings is often partial and misleading. The pattern fills in, darkens, and becomes more distinct through the first six to nine months of life. Score hatchlings provisionally and re-evaluate at the juvenile stage before deciding on holdbacks.",
+      },
+      {
+        type: "p",
+        text: "**Select for the top 20%, not the average.** Because polygenic shifts require selection differentials, holding back your best-patterned, most saturated animals and selling the rest is the mechanism of improvement. If you hold back animals that are slightly above average, you'll produce slightly-above-average offspring. Hold back only animals that genuinely exceed your current breeders.",
+      },
+      {
+        type: "p",
+        text: "**Keep fired-up records.** Photograph every potential holdback in fired-up state, at the same stage of life, under consistent lighting. Fired-down photos stored in a collection of records are nearly useless for comparing animals across a project.",
+      },
+      {
+        type: "p",
+        text: "**Pick one base color to combine and stick with it.** Red Tiger and Olive Tiger are established combinations with known market demand. Mixing base colors across your Tiger project adds a second polygenic variable and makes it harder to read which animals are moving in the right direction.",
+      },
+      {
+        type: "p",
+        text: "**Don't confuse T/B with failure.** An animal that doesn't reach clean Tiger-band quality is not a failed Tiger. It's a Tiger/Brindle, a named and sellable category that reflects where that animal sits on the natural expression spectrum.",
+      },
+      {
+        type: "p",
+        text: "**Document pairings and outcomes.** Every clutch should have a record: which animals produced it, what the offspring distribution looked like, which holdbacks went on to produce well. Without this, you are running a polygenic project on memory and luck., -",
+      },
+      {
+        type: "p",
+        text: "The buyer from that 2023 show wasn't cheated. But if they'd understood that a Tiger pairing is the opening move in a multi-generation project rather than a guarantee, they might have approached that first clutch differently. They might have held back the two decent Tigers, documented the other four, and asked themselves which of those six animals gave them the most to work with. That question, repeated consistently across clutches, is how Tiger lines actually improve.",
+      },
+    ],
+    faq: [
+      {
+        question: "Are tiger crested geckos a proven Mendelian morph?",
+        answer: "No. Tiger is a polygenic trait, meaning it is controlled by many genes with additive effects, not a single locus. You cannot use a Punnett square to predict Tiger offspring ratios. Pattern quality improves through consistent selective breeding over multiple generations.",
+      },
+      {
+        question: "What is the difference between Tiger and Brindle in crested geckos?",
+        answer: "Tiger shows relatively clean, parallel horizontal bands across the dorsum. Brindle shows more irregular, broken, or overlapping dark markings across the same area. Both sit on the same polygenic continuum, and animals that fall in between are sold as Tiger/Brindle (T/B). The distinction is a sales category, not a genetic switch.",
+      },
+      {
+        question: "Will pairing two Tiger crested geckos produce Tiger offspring?",
+        answer: "Not reliably. Because Tiger is polygenic, two Tiger parents produce a spread of offspring ranging from near-patternless to bold Brindle. The average quality shifts toward the parents over many clutches and generations, but individual clutches will vary widely. Consistent selection over 3 to 5 generations is needed to meaningfully tighten expression.",
+      },
+      {
+        question: "Why does my Tiger crested gecko look different during the day vs. at night?",
+        answer: "Tiger banding is melanin-dependent. At night (fired up), melanophores spread melanin granules and the bands become dark and sharp. During the day (fired down), melanin clumps and the bands fade. Evaluate Tigers and photograph them for breeding records only in fired-up state.",
+      },
+      {
+        question: "What base colors work best with Tiger pattern?",
+        answer: "Red Base and Olive provide the most contrast with Tiger banding. A saturated red base makes the dark Tiger bands stand out dramatically when fired up. Olive Tiger carries an unusual earthy quality that holds across fire states. Chocolate Tiger is rich in texture but lower in contrast because both the base and bands are dark.",
+      },
+      {
+        question: "Can you breed Tiger out of a crested gecko line?",
+        answer: "Under the Foundation Genetics model, Tiger expression is present at some level in every crested gecko and cannot be fully removed, only suppressed. What breeders call patternless animals are animals where Tiger expression is overwhelmed by modifiers, not animals with zero Tiger genetics.",
+      },
+      {
+        question: "At what age should I evaluate Tiger hatchlings for holdback?",
+        answer: "Tiger expression is often incomplete and misleading at hatch. Do a provisional assessment at hatch, then re-evaluate at six to nine months when banding has filled in and darkened. Final holdback decisions based on pattern quality should use fired-up photos at the juvenile stage.",
+      },
+      {
+        question: "Is Tiger/Brindle (T/B) a separate morph from Tiger?",
+        answer: "No. Tiger/Brindle is a sales category used for animals with intermediate expression between clean Tiger and full Brindle. It reflects where the animal sits on the polygenic pattern spectrum, not a distinct genetic entity. T/B animals are a natural and expected outcome of Tiger breeding projects.",
+      },
+    ],
+    internalLinks: [
+      {
+        href: "/MorphGuide/tiger",
+        label: "Tiger morph profile",
+      },
+      {
+        href: "/MorphGuide/brindle",
+        label: "Brindle morph profile",
+      },
+      {
+        href: "/GeneticsGuide",
+        label: "Crested Gecko Genetics Guide",
+      },
+      {
+        href: "/MorphGuide/inheritance/polygenic",
+        label: "All polygenic traits in the morph catalogue",
+      },
+      {
+        href: "/GeneticCalculatorTool",
+        label: "Genetic Calculator Tool",
+      },
+      {
+        href: "/MorphGuide/red-base",
+        label: "Red Base profile",
+      },
+    ],
+    externalCitations: [
+      {
+        url: "https://www.pangeareptile.com/blogs/news",
+        label: "Pangea Reptile Blog: breeding and morph resources",
+      },
+      {
+        url: "https://www.morphmarket.com/articles/crested-gecko-morphs/",
+        label: "MorphMarket Morphpedia: Crested Gecko Morphs",
+      },
+    ],
   }
 ];
 
