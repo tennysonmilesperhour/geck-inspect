@@ -1,16 +1,13 @@
 {
-  "ranAt": "2026-06-10T10:08:42.288Z",
+  "ranAt": "2026-06-12T10:19:32.020Z",
   "signals": {
     "googleAc": 95,
     "bluesky": 80,
-    "googleTrends": 0,
-    "youtube": 66,
+    "googleTrends": 14,
+    "youtube": 67,
     "breederBlogs": 0,
     "reddit": 0,
     "errors": [
-      "\"crested gecko\": related: 429",
-      "\"crested gecko morph\": related: 429",
-      "\"lilly white gecko\": related: 429",
       "r/crestedgecko new: 403 Blocked",
       "r/crestedgecko top: 403 Blocked",
       "r/morphmarket new: 403 Blocked",
@@ -24,7 +21,7 @@
       "search \"breeding fail\": 403 Blocked"
     ]
   },
-  "costUsd": 0.025261000000000002,
+  "costUsd": 0.027234,
   "addedSlugs": [],
-  "rationale": "This signal set is heavily weighted toward general public interest (Google autocomplete, Bluesky lifestyle posts, YouTube beginner guides) rather than breeder-specific or genetics-focused debate. Most morphs mentioned (cappuccino, lilly white, axanthic) already have published slugs. The few YouTube signals that hint at depth—\"Don't buy super cappuccino it's a scam,\" \"Why so much hate for cappuccino geckos\"—suggest community friction, but without forum threads or Reddit posts showing the actual disagreement, it's hard to ground a myth-busting or genetics piece. The queued slug \"cappuccino-breeding-economics\" also pre-empts the most promising angle. Autocomplete volume on \"crested gecko morph calculator\" and \"morph chart\" hints at demand for breeding/prediction tools, but that's infrastructure, not editorial. No signals break through to justify a full post."
+  "rationale": "The raw signals show extremely broad, generic search and autocomplete volume (\"crested gecko care,\" \"diet,\" \"enclosure\") but very little forum/breeder community discussion or evidence of confusion. Google Trends shows a spike in \"crested gecko morph chart\" (+300%) and rising interest in specific morphs (black, halloween), but no Reddit threads or breeder blogs to ground misconceptions. YouTube has substantial coverage of morph guides and cappuccino genetics already. The Bluesky engagement is mostly pet-keeper and fan content, not breeder-specific. The signal pattern suggests buyer demand (morphs, prices, care) rather than breeding community discord. I'm rejecting all three potential topics because none meet the bar: no forum confusion threads, no publishable angles beyond what's already covered, and weak breeder-community engagement."
 }
