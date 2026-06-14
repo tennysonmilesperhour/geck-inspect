@@ -257,16 +257,16 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <Card className="max-w-6xl w-full max-h-[90vh] flex flex-col bg-slate-900 border-slate-700">
-        <CardHeader className="flex flex-row items-center justify-between border-b border-slate-700">
-          <div className="flex items-center gap-4">
-            <CardTitle className="text-slate-100">{gecko.name}</CardTitle>
+        <CardHeader className="flex flex-row items-center justify-between gap-3 border-b border-slate-700 p-4 sm:p-6">
+          <div className="flex items-center gap-2 sm:gap-4 min-w-0 flex-1">
+            <CardTitle className="text-slate-100 truncate">{gecko.name}</CardTitle>
             {gecko.gecko_id_code && (
-              <Badge variant="outline" className="text-slate-300">
+              <Badge variant="outline" className="text-slate-300 flex-shrink-0 hidden sm:inline-flex">
                 ID: {gecko.gecko_id_code}
               </Badge>
             )}
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1 sm:gap-2 flex-shrink-0">
             <EventTracker
               entityId={gecko.id}
               entityType="gecko"
