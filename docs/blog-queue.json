@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-06-15T12:23:41.660Z",
+  "lastUpdated": "2026-06-15T13:21:04.683Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -646,7 +646,7 @@
       "title": "Why Most Frappuccino Geckos Never Breed True: The Hidden Genetics",
       "slug": "frappuccino-genetics-breeding-true",
       "category": "genetics",
-      "status": "new",
+      "status": "published",
       "score": {
         "demand": 7,
         "originality": 8,
@@ -655,8 +655,8 @@
         "total": 20
       },
       "createdAt": "2026-06-15T12:22:39.309Z",
-      "draftedAt": null,
-      "publishedAt": null,
+      "draftedAt": "2026-06-15T13:21:04.549Z",
+      "publishedAt": "2026-06-15T13:21:04.682Z",
       "evidence": [
         {
           "source": "youtube",

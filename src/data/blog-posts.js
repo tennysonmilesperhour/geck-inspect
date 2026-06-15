@@ -4723,6 +4723,320 @@ export const BLOG_POSTS = [
         label: "MorphMarket Morphpedia: Crested Gecko Morphs",
       },
     ],
+  },
+  {
+    slug: "frappuccino-genetics-breeding-true",
+    title: "Why Frappuccino Geckos Don't Breed True",
+    description: "Frappuccinos combine two incomplete-dominant morphs, making them genetically impossible to breed true. Learn exactly why, and how to plan pairings that actually work.",
+    keyphrase: "frappuccino crested gecko genetics",
+    category: "genetics",
+    tags: [
+      "genetics",
+      "cappuccino",
+      "lilly-white",
+      "harlequin",
+      "dalmatian",
+      "frappuccino",
+      "super-cappuccino",
+      "super-lilly-white",
+    ],
+    datePublished: "2026-06-15",
+    dateModified: "2026-06-15",
+    heroEyebrow: "Genetics Deep Dive",
+    tldr: [
+      "A Frappuccino is a Cappuccino + Lilly White combo, not a homozygous super form. Two copies of each gene are never both present in the same animal.",
+      "Pairing two Frappuccinos produces, at best, 25% Frappuccinos per clutch. It also risks lethal Super Lilly White embryos in every clutch.",
+      "The safest and most productive Frappuccino pairings are Frappuccino x normal, or Frappuccino x Cappuccino.",
+      "Polygenic background modifiers explain why Frappuccino offspring vary wildly in whiteness and head spotting even from identical-looking parents.",
+      "Frappuccino expression improves with age. Judging hatchlings is unreliable.",
+    ],
+    body: [
+      {
+        type: "p",
+        text: "A breeder at a 2024 reptile expo had two adult Frappuccinos next to each other in identical enclosures. Stunning animals: bright white flanks, dramatic dark spotting on the head, the kind of gecko that stops foot traffic. She was asked how many Frappuccinos their last clutch produced. \"One,\" she said. \"Out of eight eggs.\"",
+      },
+      {
+        type: "p",
+        text: "The crowd around her table assumed she had made a husbandry mistake. She hadn't.",
+      },
+      {
+        type: "p",
+        text: "So why does one of the most visually arresting combos in the crested gecko hobby resist simple replication? The answer lives in the genetic structure of the morph itself, and once you understand it, the math becomes obvious. The frustrating part is that most sellers don't explain it at point of sale.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "What a Frappuccino actually is",
+      },
+      {
+        type: "p",
+        text: "Let's be precise, because a lot of confusion in this hobby starts with sloppy labeling.",
+      },
+      {
+        type: "p",
+        text: "A Frappuccino is not a super form. It is not produced by pairing two Cappuccinos. It is the combination of one copy of the Cappuccino gene and one copy of the Lilly White gene, expressed in the same animal. Per the morph-guide.js data in our canonical catalogue: \"A Frappuccino is a combo morph: Cappuccino + Lilly White, not a homozygous super form, and not produced by Cappuccino x Cappuccino.\"",
+      },
+      {
+        type: "p",
+        text: "Both Cappuccino and Lilly White are proven incomplete-dominant morphs. That means a single copy of each produces the visible form. A Frappuccino carries exactly one copy of Cappuccino and one copy of Lilly White, not two of either.",
+      },
+      {
+        type: "p",
+        text: "This is the fact that determines everything else about how the morph breeds.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "The combo math, spelled out",
+      },
+      {
+        type: "p",
+        text: "Take two Frappuccinos and pair them. Each parent is, genetically: one Cappuccino allele + one non-Cappuccino allele at the Capp locus, AND one Lilly White allele + one non-LW allele at the LW locus.",
+      },
+      {
+        type: "p",
+        text: "At the Cappuccino locus, the pairing is visual Capp x visual Capp, which produces:",
+      },
+      {
+        type: "ul",
+        items: [
+          "25% normal (no Capp)",
+          "50% visual Cappuccino",
+          "25% Super Cappuccino (documented health concerns, reduced nostrils, breathing difficulty)",
+        ],
+      },
+      {
+        type: "p",
+        text: "At the Lilly White locus, the pairing is visual LW x visual LW, which produces:",
+      },
+      {
+        type: "ul",
+        items: [
+          "25% normal (no LW)",
+          "50% visual Lilly White",
+          "25% Super Lilly White (confirmed lethal, embryos fail to hatch)",
+        ],
+      },
+      {
+        type: "p",
+        text: "Now multiply the two distributions together. The probability of any single offspring receiving exactly one Capp and one LW (the Frappuccino outcome) is 50% x 50% = 25%.",
+      },
+      {
+        type: "p",
+        text: "One in four. That's the best you can expect. And those are theoretical odds across large sample sizes, not a guarantee within a single clutch of three or four eggs.",
+      },
+      {
+        type: "p",
+        text: "The remaining 75% of offspring land in one of the other eight genetic combinations: plain normals, visual Cappuccinos without LW, visual Lilly Whites without Capp, Cappuccino + Super LW (lethal), Super Capp + LW, and so on. Of those eight combinations, one (Super LW without compensation from Capp) produces embryos that never hatch.",
+      },
+      {
+        type: "p",
+        text: "**This is why Frappuccino x Frappuccino is a poor pairing strategy** for anyone who wants more Frappuccinos, and actively harmful to animal welfare because every clutch has a real probability of lethal eggs.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "The Lilly White lethal in every Frapp x Frapp clutch",
+      },
+      {
+        type: "p",
+        text: "The genetics-sections.jsx data is unambiguous on this: \"Pairing two visual Lilly Whites produces approximately 25% Super Lilly White embryos. None are expected to hatch.\" The Frappuccino x Frappuccino pairing contains a Lilly White x Lilly White cross embedded inside it. You can't separate them.",
+      },
+      {
+        type: "p",
+        text: "At the LW locus specifically, 25% of the offspring from Frapp x Frapp will be homozygous for Lilly White. Those eggs will stall mid-incubation. The breeder with one Frappuccino from eight eggs almost certainly lost some eggs that looked viable early on.",
+      },
+      {
+        type: "p",
+        text: "This is not a freak outcome. It is the expected result. The community sometimes underplays this because the Super Lilly White lethal is \"only\" one component of the cross, but it fires on every single Frapp x Frapp clutch until proven otherwise.",
+      },
+      {
+        type: "p",
+        text: "The correct pairing to avoid it entirely: Frappuccino x non-LW. A Cappuccino non-LW works perfectly. So does a non-morph gecko from a line with strong Cappuccino or LW background. So does a visual Lilly White (though that pairing requires care, more on that below).",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Why Frappuccino offspring look so different from their parents",
+      },
+      {
+        type: "p",
+        text: "Breeders who produce their first Frappuccino litter are often surprised that the animals look nothing like the parents. Some hatch looking like ordinary Cappuccinos. Some look like dim Lilly Whites. A few look like neither. Almost none look like the full Frappuccino phenotype at hatch.",
+      },
+      {
+        type: "p",
+        text: "Two things are happening here.",
+      },
+      {
+        type: "p",
+        text: "First, most of the offspring are not actually Frappuccinos. As established above, only 25% of a Frapp x Frapp clutch carry both genes. You're looking at a mix of Cappuccinos, Lilly Whites, plain animals, and combination supers, all hatching at the same time and looking like a bag of unrelated animals.",
+      },
+      {
+        type: "p",
+        text: "Second, even the genuine Frappuccinos take time to develop. The morph-guide entry notes: \"Frappuccinos hatch brighter and whiter than a standard Lilly White and develop dramatic white spotting on the head as they mature.\" That dramatic head spotting isn't there at week one. An eight-week-old Frappuccino can look like a pale, slightly odd Cappuccino. If you're judging the pairing's success by hatchling appearance alone, you will consistently undercount your results and overclaim failures.",
+      },
+      {
+        type: "p",
+        text: "Polygenic background modifiers compound this. Both Cappuccino and Lilly White interact with the animal's polygenic base color and pattern stack. A Frappuccino from a high-cream, high-contrast background will look dramatically different from a Frappuccino hatched out of a buckskin line with minimal lateral pattern, even if both carry exactly one copy each of Capp and LW. The genetics-sections.jsx section on polygenic traits addresses this directly: \"Background genetics, all the polygenic 'noise' genes interacting with your target trait, dramatically affect expression. The same proven morph can look completely different coming out of two different breeding programs.\"",
+      },
+      {
+        type: "p",
+        text: "You are not imagining the variation. The genetics guarantee it.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "The pairings that actually work",
+      },
+      {
+        type: "p",
+        text: "Here are the three productive Frappuccino pairings, ordered by the combination of offspring quality and safety.",
+      },
+      {
+        type: "p",
+        text: "**Frappuccino x visual Cappuccino (non-LW).** This is the workhorse pairing. At the LW locus: one parent carries one LW allele, the other carries none. Result: 50% of offspring receive one LW allele (visual Lilly White or Frappuccino, depending on their Capp status), 50% receive no LW allele. At the Capp locus: 50% Cappuccino, 50% normal. Combined: 25% Frappuccino, 25% visual Cappuccino, 25% visual Lilly White, 25% normal. No lethal supers. No Super Cappuccino health concerns. This is the cleanest path to Frappuccinos at scale.",
+      },
+      {
+        type: "p",
+        text: "**Frappuccino x visual Lilly White (non-Capp).** Same math, reversed direction. At the Capp locus, 50% receive one Capp allele. At the LW locus, 50% receive one LW allele. Result: 25% Frappuccino, 25% visual Cappuccino, 25% visual Lilly White, 25% normal. No Super LW possible, because neither parent carries two LW alleles simultaneously. This pairing makes sense if you're sitting on a high-quality Lilly White without Capp and want to introduce Frapp expression into a LW-forward line.",
+      },
+      {
+        type: "p",
+        text: "**Frappuccino x normal (no proven morphs).** Lower Frappuccino yield (12.5% theoretical maximum, since the non-morph parent contributes no Capp or LW alleles at either locus), but this is the right pairing when you need to preserve strong polygenic background traits from a particular line without compounding morph complexity. If the non-morph parent has exceptional harlequin coverage, deep base color, or strong dalmatian spotting, the Frappuccino offspring from this pairing may carry better modifier stacks than anything produced by Frapp x Frapp.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "The opinion section: Frappuccinos are being sold on a story that doesn't match the genetics",
+      },
+      {
+        type: "p",
+        text: "The Frappuccino is genuinely beautiful. I'm not arguing otherwise. But the marketing around this morph has outpaced the education, and that gap is costing buyers money and causing breeder frustration.",
+      },
+      {
+        type: "p",
+        text: "The standard pitch goes something like: \"Two Frappuccinos together, and you'll get Frappuccinos.\" It is technically true in the sense that some offspring will be Frappuccinos. But it ignores the lethal eggs, the Super Cappuccinos, the visual Cappuccinos and Lilly Whites that fill the rest of the clutch, and the fact that the 25% figure assumes large enough samples to approach theoretical probability.",
+      },
+      {
+        type: "p",
+        text: "A breeder who buys a pair of Frappuccinos expecting most of the clutch to be Frappuccinos is going to feel like they were sold defective animals. They weren't. They were sold animals whose genetics are more interesting and more complex than the sale listing communicated.",
+      },
+      {
+        type: "p",
+        text: "The responsible approach: when selling a Frappuccino, disclose exactly what both parents were, which loci are involved, and what pairings the buyer should use to get more. The genetics aren't secrets. They're straightforward once you write them down. The hobby's disclosure standards haven't caught up to the morph's complexity.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Practical takeaways",
+      },
+      {
+        type: "p",
+        text: "Here is what to do differently this breeding season.",
+      },
+      {
+        type: "p",
+        text: "Stop pairing Frapp x Frapp if your goal is more Frappuccinos. You're capping yourself at 25% theoretical yield while accepting lethal eggs and health-compromised Super Cappuccinos in the same clutch. There is no upside to this unless you are specifically researching morph interaction.",
+      },
+      {
+        type: "p",
+        text: "Build a Frapp x Capp pipeline instead. Keep your best Frappuccino as a projector. Source a clean, lineage-documented visual Cappuccino without LW. That pairing produces more Frappuccinos per egg than Frapp x Frapp, with zero lethal risk and no Super Cappuccino exposure.",
+      },
+      {
+        type: "p",
+        text: "Hold Frappuccino offspring to at least four months before evaluating phenotype. Head spotting and whiteness develop with time. Selling Frappuccino offspring at eight weeks, before the phenotype has expressed, undervalues your production and confuses buyers about what the morph should look like.",
+      },
+      {
+        type: "p",
+        text: "Document your pairings. Every clutch from a Frappuccino pairing should record sire genetics, dam genetics, egg count, egg outcomes (hatched, stalled, infertile), and hatchling phenotypes with photos at one, three, and six months. This is how you build evidence about which polygenic backgrounds produce the most expressive Frappuccinos. The difference between a good Frapp line and a mediocre one is entirely in those modifier stacks, and you can't select for them if you're not tracking them.",
+      },
+      {
+        type: "p",
+        text: "Check lineage before you buy a \"Frappuccino.\" The morph requires documented Cappuccino on one parent's side and documented Lilly White on the other. Without that paperwork, you are buying an attractive animal of unknown genetics. That's fine for a pet. It's not fine for a breeding project., -",
+      },
+      {
+        type: "p",
+        text: "Back to that expo table with the breeder and her two adults: eight eggs, one Frappuccino. That's actually not far from expected. A Frapp x Frapp clutch of eight will theoretically produce two Frappuccinos, but \"theoretically\" does a lot of work in small samples. She got one. She may have lost one or two eggs to the Super Lilly White lethal. The rest were Cappuccinos and Lilly Whites she hadn't planned for.",
+      },
+      {
+        type: "p",
+        text: "She knew her genetics. She wasn't frustrated. She was selecting holdbacks from the Cappuccino and Lilly White siblings to run cleaner pairings next season.",
+      },
+      {
+        type: "p",
+        text: "That's the move.",
+      },
+    ],
+    faq: [
+      {
+        question: "What is a Frappuccino crested gecko?",
+        answer: "A Frappuccino is a crested gecko carrying one copy of the Cappuccino gene and one copy of the Lilly White gene. Both are proven incomplete-dominant morphs. It is a combo, not a super form, and is not produced by pairing two Cappuccinos together.",
+      },
+      {
+        question: "Can you breed two Frappuccinos together?",
+        answer: "You can, but it is not efficient or safe. Frapp x Frapp produces roughly 25% Frappuccinos at best, while also generating Super Lilly White embryos (confirmed lethal) and Super Cappuccinos (documented health concerns). Frappuccino x visual Cappuccino is the better pairing.",
+      },
+      {
+        question: "Why do my Frappuccino hatchlings look nothing like the parents?",
+        answer: "Two reasons: most clutch siblings from a Frapp x Frapp pairing are not actually Frappuccinos, they're Cappuccinos, Lilly Whites, or normals. Additionally, true Frappuccinos take months to develop their characteristic head spotting and white expression. Do not judge at eight weeks.",
+      },
+      {
+        question: "Is a Frappuccino the same as a Super Cappuccino?",
+        answer: "No. A Frappuccino is Cappuccino + Lilly White in a single animal. A Super Cappuccino is the homozygous form of the Cappuccino gene alone (two Cappuccino copies). Super Cappuccinos have documented health concerns including reduced nostril size. They are completely different animals.",
+      },
+      {
+        question: "What is the best pairing to produce Frappuccino geckos?",
+        answer: "Frappuccino x visual Cappuccino (without Lilly White) is the most efficient safe pairing. It yields roughly 25% Frappuccinos with no lethal Super Lilly White risk and no Super Cappuccino production. Frappuccino x visual Lilly White (without Cappuccino) achieves the same ratio.",
+      },
+      {
+        question: "Do Frappuccinos breed true?",
+        answer: "No. Because a Frappuccino carries exactly one copy each of two separate incomplete-dominant genes, there is no homozygous Frappuccino form possible. The morph cannot breed true the way a purely polygenic line-bred animal would over many generations.",
+      },
+      {
+        question: "What percentage of eggs from a Frappuccino x Frappuccino pairing are Frappuccinos?",
+        answer: "Approximately 25% in theory, across large sample sizes. A single clutch of three to five eggs may produce zero. Additionally, about 25% of the LW locus outcomes from that pairing produce lethal Super Lilly White embryos that never hatch.",
+      },
+      {
+        question: "Does Frappuccino expression improve with age?",
+        answer: "Yes. Frappuccinos typically hatch brighter and whiter than a standard Lilly White, but the dramatic white head spotting the morph is known for develops as the animal matures. Animals should be evaluated at several months old before conclusions are drawn about phenotype quality.",
+      },
+    ],
+    internalLinks: [
+      {
+        href: "/MorphGuide/frappuccino",
+        label: "Frappuccino morph profile",
+      },
+      {
+        href: "/MorphGuide/lilly-white",
+        label: "Lilly White morph profile",
+      },
+      {
+        href: "/MorphGuide/cappuccino",
+        label: "Cappuccino morph profile",
+      },
+      {
+        href: "/GeneticsGuide",
+        label: "Crested gecko genetics guide",
+      },
+      {
+        href: "/GeneticCalculatorTool",
+        label: "Genetic calculator tool",
+      },
+      {
+        href: "/MorphGuide/inheritance/incomplete-dominant",
+        label: "Incomplete-dominant morphs hub",
+      },
+    ],
+    externalCitations: [
+      {
+        url: "https://www.youtube.com/watch?v=AYCFFN7rqEg",
+        label: "Frappuccino Crested Geckos Explained (YouTube)",
+      },
+      {
+        url: "https://www.youtube.com/watch?v=4Vp0RQst-YI",
+        label: "Capps, Frapps, Sables Pt. 1 | The Gecko Pod Ep. 62 (YouTube)",
+      },
+    ],
   }
 ];
 
