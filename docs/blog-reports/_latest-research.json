@@ -1,13 +1,17 @@
 {
-  "ranAt": "2026-06-12T10:19:32.020Z",
+  "ranAt": "2026-06-15T12:22:39.309Z",
   "signals": {
     "googleAc": 95,
     "bluesky": 80,
-    "googleTrends": 14,
-    "youtube": 67,
+    "googleTrends": 0,
+    "youtube": 66,
     "breederBlogs": 0,
     "reddit": 0,
     "errors": [
+      "\"crested gecko\": related: 429",
+      "\"crested gecko morph\": related: 429",
+      "\"cappuccino gecko\": related: 429",
+      "\"lilly white gecko\": related: 429",
       "r/crestedgecko new: 403 Blocked",
       "r/crestedgecko top: 403 Blocked",
       "r/morphmarket new: 403 Blocked",
@@ -21,7 +25,9 @@
       "search \"breeding fail\": 403 Blocked"
     ]
   },
-  "costUsd": 0.027234,
-  "addedSlugs": [],
-  "rationale": "The raw signals show extremely broad, generic search and autocomplete volume (\"crested gecko care,\" \"diet,\" \"enclosure\") but very little forum/breeder community discussion or evidence of confusion. Google Trends shows a spike in \"crested gecko morph chart\" (+300%) and rising interest in specific morphs (black, halloween), but no Reddit threads or breeder blogs to ground misconceptions. YouTube has substantial coverage of morph guides and cappuccino genetics already. The Bluesky engagement is mostly pet-keeper and fan content, not breeder-specific. The signal pattern suggests buyer demand (morphs, prices, care) rather than breeding community discord. I'm rejecting all three potential topics because none meet the bar: no forum confusion threads, no publishable angles beyond what's already covered, and weak breeder-community engagement."
+  "costUsd": 0.028492999999999997,
+  "addedSlugs": [
+    "frappuccino-genetics-breeding-true"
+  ],
+  "rationale": "\nThe signals show very strong and consistent search demand around crested gecko morphs, breeding, and specific morphs (cappuccino, lilly white, axanthic). Google autocomplete reveals high volume for \"crested gecko morph\" queries and specific morph names. YouTube has substantial evergreen content on morphs and breeding, plus several videos on controversial topics (super cappuccino viability, breeding warnings). However, most search queries are generic (\"care,\" \"price,\" \"for sale\") or already-covered topics. The blog has already published extensively on cappuccino, lilly white, axanthic, soft-scale, and breeding risks. Reddit and forums yielded no recent discussion signals. The highest-potential angles are:\n\n1. A genetics/breeding insight that corrects misconceptions around morph inheritance or breeding outcomes\n2. A specific identification challenge or confusion point (e.g., how breeders misidentify morphs in hatchlings)\n3. A breeding decision framework that goes deeper than existing \"risks\" articles\n\nI am selecting only 1 topic because the other potential angles either duplicate published slugs, lack forum controversy to ground them, or require speculation beyond available signals. The data shows demand but not the forum heat or novel angle needed to justify 2-3 posts.\n"
 }
