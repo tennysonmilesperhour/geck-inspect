@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-06-15T13:21:04.683Z",
+  "lastUpdated": "2026-06-15T16:13:01.668Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -679,6 +679,38 @@
         "You can breed a Frappuccino to a regular gecko and sometimes get a better-looking Frappuccino in the F1. Understanding why reveals the hidden logic of the morph.",
         "Frappuccinos sit in a genetic limbo: they're incomplete-dominant + polygenic. That's why no two breeders seem to agree on how they inherit.",
         "If your Frappuccino hatchlings look nothing like the parents, you're not making mistakes. The morph is just more complex than the standard incomplete-dominant model."
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "gsc-20260615-gecko-breeding-records",
+      "title": "Gecko breeding records",
+      "slug": "gecko-breeding-records",
+      "category": "breeding",
+      "status": "new",
+      "score": {
+        "total": 10,
+        "demand": 1,
+        "originality": 6,
+        "accuracyRisk": 4,
+        "voiceFit": 7
+      },
+      "createdAt": "2026-06-15T16:13:01.668Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "search-console",
+          "url": null,
+          "snippet": "Google Search Console: query \"gecko breeding records\" drove 20 impressions in the last 28 days at average position 10.9 (CTR 0%) but no page on geckinspect.com currently targets this query.",
+          "observedAt": "2026-06-15T16:13:01.668Z"
+        }
+      ],
+      "angleIdeas": [
+        "Direct-answer post titled to match the query phrasing: \"gecko breeding records\"",
+        "Pairing math for \"gecko breeding records\", Punnett square outcomes + safe/risky pair recommendations",
+        "FAQ-first format: lead with 6-8 Q&A pairs answering \"gecko breeding records\" and related long-tails, then long-form explanation"
       ],
       "rejectionReason": null,
       "prUrl": null
