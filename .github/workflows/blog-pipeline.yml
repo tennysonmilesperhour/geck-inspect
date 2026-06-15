@@ -2,6 +2,10 @@
 # happens inside a single workflow run, commits straight to main, no PR gate.
 # An email lands when a post goes live.
 #
+# STATUS: PAUSED as of 2026-06-15. Scheduled runs are disabled (see the `on:`
+# block). The pipeline only runs now via manual workflow_dispatch. Re-enable
+# automatic publishing by uncommenting the schedule crons below.
+#
 # Stages on a shared schedule so each can fail without poisoning the others:
 #
 #   research        Mon/Wed/Fri 06:00 UTC  refreshes docs/blog-queue.json.
@@ -22,10 +26,13 @@
 name: blog-pipeline
 
 on:
-  schedule:
-    - cron: '0 6 * * 1,3,5'   # research
-    - cron: '0 7 * * 1,3,5'   # draft + publish
-    - cron: '0 12 * * 1'      # weekly report
+  # PAUSED 2026-06-15: autonomous publishing is on hold. The scheduled
+  # research/draft-publish/weekly-report runs are disabled so nothing posts
+  # automatically. Re-enable by uncommenting the schedule block below.
+  # schedule:
+  #   - cron: '0 6 * * 1,3,5'   # research
+  #   - cron: '0 7 * * 1,3,5'   # draft + publish
+  #   - cron: '0 12 * * 1'      # weekly report
   workflow_dispatch:
     inputs:
       stage:
