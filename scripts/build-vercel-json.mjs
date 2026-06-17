@@ -50,7 +50,6 @@ const NOINDEX_PAGES = [
 // in this list. Route pattern redirects are a single entry with
 // `:slug` so the whole prefix family collapses to one rule.
 const CASE_REDIRECTS = [
-  { from: '/morphs', to: '/Morphs' },
   // Hyphenated spellings people type or guess from other sites.
   { from: '/morph-guide', to: '/MorphGuide' },
   { from: '/morph-guide/:slug', to: '/MorphGuide/:slug' },
@@ -88,6 +87,17 @@ const CASE_REDIRECTS = [
   { from: '/authportal', to: '/AuthPortal' },
   { from: '/breeder', to: '/Breeder' },
   { from: '/breeder/:slug', to: '/Breeder/:slug' },
+];
+
+// Removed pages that were indexed and may have inbound links. 301 them
+// to the closest canonical surface instead of letting them 404. The
+// /Morphs landing hub was removed as redundant: it only fronted tools
+// (Morph ID, Morph Guide, Visualizer, Calculator, Genetics Guide) that
+// already have their own nav entries and pages. The Morph Guide is the
+// best single canonical target for the "crested gecko morphs" intent.
+const GONE_REDIRECTS = [
+  { from: '/Morphs', to: '/MorphGuide' },
+  { from: '/morphs', to: '/MorphGuide' },
 ];
 
 /*
@@ -225,6 +235,11 @@ function buildConfig() {
         destination: '/Breeder/:slug',
         permanent: true,
       },
+      ...GONE_REDIRECTS.map(({ from, to }) => ({
+        source: from,
+        destination: to,
+        permanent: true,
+      })),
       ...CASE_REDIRECTS.map(({ from, to }) => ({
         source: from,
         destination: to,

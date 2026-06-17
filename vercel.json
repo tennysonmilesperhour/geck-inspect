@@ -187,8 +187,13 @@
       "permanent": true
     },
     {
+      "source": "/Morphs",
+      "destination": "/MorphGuide",
+      "permanent": true
+    },
+    {
       "source": "/morphs",
-      "destination": "/Morphs",
+      "destination": "/MorphGuide",
       "permanent": true
     },
     {

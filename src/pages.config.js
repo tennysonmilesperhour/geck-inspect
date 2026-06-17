@@ -94,7 +94,6 @@ const Messages              = lazy(() => import('./pages/Messages'));
 const MorphGuide            = lazy(() => import('./pages/MorphGuide'));
 const MorphGuideSubmission  = lazy(() => import('./pages/MorphGuideSubmission'));
 const MorphVisualizer       = lazy(() => import('./pages/MorphVisualizer'));
-const Morphs                = lazy(() => import('./pages/Morphs'));
 const MyGeckos              = lazy(() => import('./pages/MyGeckos'));
 const MyListings            = lazy(() => import('./pages/MyListings'));
 const MyStore               = lazy(() => import('./pages/MyStore'));
@@ -164,7 +163,6 @@ export const PAGES = {
     "MorphGuide": MorphGuide,
     "MorphGuideSubmission": MorphGuideSubmission,
     "MorphVisualizer": MorphVisualizer,
-    "Morphs": Morphs,
     "MyGeckos": MyGeckos,
     "MyListings": MyListings,
     "MyProfile": MyProfile,

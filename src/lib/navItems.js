@@ -54,7 +54,6 @@ export const SECTION_FOR_PAGE = {
   Store: 'manage',
 
   // Discover, morphs, community, reference, browsing
-  Morphs: 'discover',
   Recognition: 'discover',
   MorphVisualizer: 'discover',
   MorphGuide: 'discover',
@@ -110,7 +109,6 @@ export const FALLBACK_NAV_ITEMS = {
     { page_name: "Forum", display_name: "Forum", icon: "MessageSquare", category: "collection", requires_auth: false, is_enabled: true, order: 8 },
   ],
   tools: [
-    { page_name: "Morphs", display_name: "Morphs Hub", icon: "Dna", category: "tools", requires_auth: false, is_enabled: true, order: 0.5 },
     { page_name: "Recognition", display_name: "Morph ID", icon: "Search", category: "tools", requires_auth: false, is_enabled: true, order: 1 },
     { page_name: "MorphVisualizer", display_name: "Morph Visualizer", icon: "Layers", category: "tools", requires_auth: false, is_enabled: true, order: 2 },
     { page_name: "MorphGuide", display_name: "Morph Guide", icon: "BookOpen", category: "tools", requires_auth: false, is_enabled: true, order: 3 },
