@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-06-15T16:13:01.668Z",
+  "lastUpdated": "2026-06-22T15:47:20.900Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -711,6 +711,38 @@
         "Direct-answer post titled to match the query phrasing: \"gecko breeding records\"",
         "Pairing math for \"gecko breeding records\", Punnett square outcomes + safe/risky pair recommendations",
         "FAQ-first format: lead with 6-8 Q&A pairs answering \"gecko breeding records\" and related long-tails, then long-form explanation"
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "gsc-20260622-crested-gecko-pedigree-tracker",
+      "title": "Crested gecko pedigree tracker",
+      "slug": "crested-gecko-pedigree-tracker",
+      "category": "genetics",
+      "status": "new",
+      "score": {
+        "total": 11,
+        "demand": 2,
+        "originality": 6,
+        "accuracyRisk": 4,
+        "voiceFit": 7
+      },
+      "createdAt": "2026-06-22T15:47:20.900Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "search-console",
+          "url": null,
+          "snippet": "Google Search Console: query \"crested gecko pedigree tracker\" drove 28 impressions in the last 28 days at average position 16.6 (CTR 0%) but no page on geckinspect.com currently targets this query.",
+          "observedAt": "2026-06-22T15:47:20.900Z"
+        }
+      ],
+      "angleIdeas": [
+        "Direct-answer post titled to match the query phrasing: \"crested gecko pedigree tracker\"",
+        "Foundation Genetics framing: what allele(s) underlie \"crested gecko pedigree tracker\", inheritance pattern, and breeding implications",
+        "FAQ-first format: lead with 6-8 Q&A pairs answering \"crested gecko pedigree tracker\" and related long-tails, then long-form explanation"
       ],
       "rejectionReason": null,
       "prUrl": null
