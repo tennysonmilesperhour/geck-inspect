@@ -6,8 +6,9 @@
  * pure consumer of `filters` + `onDrillDown`; no sub-view fetches or
  * holds its own source of truth outside the queries facade.
  *
- * The enterprise gate is rendered here so every sub-view inside sees
- * the same "preview data" banner and the single "view plans" CTA.
+ * The data-source banners are rendered here so every sub-view inside
+ * sits under the same honest labeling of what is feeding the figures
+ * (live snapshot, dev preview fixtures, or an explicit load error).
  */
 
 import { Suspense, useEffect, useState } from 'react';
@@ -16,14 +17,15 @@ import { Suspense, useEffect, useState } from 'react';
 // (plus recharts, only for the views that chart). Cuts the initial payload
 // and shrinks the number of must-succeed fetches on first paint.
 import { lazy } from '@/lib/lazyWithRetry';
-import { Link } from 'react-router-dom';
-import { createPageUrl } from '@/utils';
 import {
   AlertCircle, LayoutDashboard, Layers, Map as MapIcon, Radar,
   Sprout, Users, Lock, ArrowRight, Settings2, X, Bookmark, Plus, Pin,
   CheckCircle2,
 } from 'lucide-react';
-import { ensureLoaded, getDataSource, getSnapshotGeneratedAt } from '@/lib/marketAnalytics/queries';
+import {
+  ensureLoaded, getDataSource, getSnapshotGeneratedAt, getLoadError,
+  invalidateSnapshot,
+} from '@/lib/marketAnalytics/queries';
 import { Button } from '@/components/ui/button';
 import {
   Popover, PopoverContent, PopoverTrigger,
@@ -208,40 +210,81 @@ function SectionLoading() {
 }
 
 // ============ Banners ================================================
+// Honesty rule for this banner: the data everyone sees here is the same
+// regardless of tier (the shared market snapshot, or labeled preview
+// fixtures in dev). Until a tier actually changes what data loads, this
+// banner must NOT claim that subscribing "activates" anything, and it
+// must not carry a purchase CTA. Selling analytics that don't change on
+// payment is the fastest way to burn breeder trust.
 function EnterpriseBanner() {
   return (
-    <div className="rounded-xl border border-emerald-500/20 bg-emerald-950/20 p-4 flex flex-col sm:flex-row items-start sm:items-center gap-3">
+    <div className="rounded-xl border border-emerald-500/20 bg-emerald-950/20 p-4 flex items-start gap-3">
       <div className="w-10 h-10 rounded-lg bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center shrink-0">
         <Lock className="w-5 h-5 text-emerald-400" />
       </div>
       <div className="flex-1">
-        <h3 className="text-sm font-bold text-white">Market Analytics, Enterprise preview</h3>
+        <h3 className="text-sm font-bold text-white">Market Analytics, open preview</h3>
         <p className="text-xs text-slate-400 mt-0.5">
-          Viewing with preview data. Live internal sales, scraped external feeds, and forward-looking breeding signals activate with an Enterprise subscription.
+          This dashboard is free to explore while the data pipeline is
+          being built out. Every figure is labeled with its source, and
+          the banner below tells you exactly what is feeding it right now.
         </p>
       </div>
-      <Link to={createPageUrl('Membership')}>
-        <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shrink-0">
-          View plans <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
-        </Button>
-      </Link>
     </div>
   );
 }
 function PreviewDataBanner() {
-  // null = still loading; 'live' = remote snapshot loaded; 'preview' = fell back to mocks
+  // null = still loading; 'live' = remote snapshot loaded;
+  // 'preview' = dev fallback to labeled fixtures;
+  // 'error' = production snapshot fetch failed (no data shown).
   const [source, setSource] = useState(getDataSource());
   const [generatedAt, setGeneratedAt] = useState(getSnapshotGeneratedAt());
+  const [retrying, setRetrying] = useState(false);
+
+  const refresh = () => {
+    setSource(getDataSource());
+    setGeneratedAt(getSnapshotGeneratedAt());
+  };
 
   useEffect(() => {
     let mounted = true;
     ensureLoaded().then(() => {
       if (!mounted) return;
-      setSource(getDataSource());
-      setGeneratedAt(getSnapshotGeneratedAt());
+      refresh();
     });
     return () => { mounted = false; };
   }, []);
+
+  const retry = async () => {
+    setRetrying(true);
+    invalidateSnapshot();
+    await ensureLoaded();
+    refresh();
+    setRetrying(false);
+  };
+
+  if (source === 'error') {
+    return (
+      <div className="rounded-lg border border-red-500/30 bg-red-500/5 p-2.5 flex items-start gap-2">
+        <AlertCircle className="w-4 h-4 text-red-400 shrink-0 mt-0.5" />
+        <p className="text-[11px] text-slate-400 leading-relaxed flex-1">
+          <span className="text-red-300 font-semibold">Market data unavailable.</span>{' '}
+          The market snapshot could not be loaded
+          {getLoadError() ? ` (${getLoadError()})` : ''}, so the figures
+          below are empty rather than estimated. Try again in a moment.
+        </p>
+        <Button
+          size="sm"
+          variant="outline"
+          onClick={retry}
+          disabled={retrying}
+          className="shrink-0 border-red-500/40 text-red-200 hover:bg-red-500/10"
+        >
+          {retrying ? 'Retrying...' : 'Retry'}
+        </Button>
+      </div>
+    );
+  }
 
   if (source === 'live') {
     return (

@@ -53,7 +53,7 @@ export default function MarketPricing() {
   }, [filtered]);
 
   const stats = useMemo(() => {
-    if (filtered.length === 0) return { median: 0, activeMorph: '—', highestAvg: 0, trend: 0 };
+    if (filtered.length === 0) return { median: 0, activeMorph: '—', highestAvg: 0, trend: null };
     const allPrices = filtered.map(e => Number(e.sale_price)).sort((a, b) => a - b);
     const median = allPrices[Math.floor(allPrices.length / 2)];
     const morphCounts = {};
@@ -66,7 +66,32 @@ export default function MarketPricing() {
       morphAvgs[e.base_morph].count++;
     });
     const highestAvg = Math.max(...Object.values(morphAvgs).map(m => m.sum / m.count));
-    return { median, activeMorph, highestAvg, trend: 5.2 };
+
+    // Real 90-day trend: median sale price of the last 90 days vs the 90
+    // days before that. Needs at least 3 sales in each window to say
+    // anything; otherwise trend stays null and the tile shows "Not enough
+    // data" instead of inventing a number.
+    const now = Date.now();
+    const DAY = 24 * 60 * 60 * 1000;
+    const priceMedian = (arr) => {
+      if (arr.length === 0) return null;
+      const sorted = [...arr].sort((a, b) => a - b);
+      const mid = Math.floor(sorted.length / 2);
+      return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
+    };
+    const inWindow = (e, from, to) => {
+      const t = new Date(e.sale_date).getTime();
+      return !isNaN(t) && t >= from && t < to;
+    };
+    const recent = filtered.filter(e => inWindow(e, now - 90 * DAY, now + DAY)).map(e => Number(e.sale_price));
+    const prior = filtered.filter(e => inWindow(e, now - 180 * DAY, now - 90 * DAY)).map(e => Number(e.sale_price));
+    let trend = null;
+    if (recent.length >= 3 && prior.length >= 3) {
+      const recentMed = priceMedian(recent);
+      const priorMed = priceMedian(prior);
+      if (priorMed > 0) trend = Math.round(((recentMed - priorMed) / priorMed) * 1000) / 10;
+    }
+    return { median, activeMorph, highestAvg, trend };
   }, [filtered]);
 
   const handleSubmit = async () => {
@@ -126,14 +151,16 @@ export default function MarketPricing() {
             { label: 'Median Price', value: fmt(stats.median), icon: DollarSign },
             { label: 'Most Active Morph', value: stats.activeMorph, icon: Activity },
             { label: 'Highest Avg Sale', value: fmt(stats.highestAvg), icon: BarChart3 },
-            { label: '90-Day Trend', value: `${stats.trend > 0 ? '+' : ''}${stats.trend}%`, icon: TrendingUp, trend: stats.trend },
+            stats.trend == null
+              ? { label: '90-Day Trend', value: 'Not enough data', icon: TrendingUp, small: true }
+              : { label: '90-Day Trend', value: `${stats.trend > 0 ? '+' : ''}${stats.trend}%`, icon: TrendingUp, trend: stats.trend },
           ].map((s, i) => (
             <div key={i} className="rounded-xl border p-5" style={{ borderColor: C.border, backgroundColor: C.cardBg }}>
               <div className="flex items-center gap-2 mb-2">
                 <s.icon size={16} style={{ color: C.sage }} />
                 <span className="text-xs uppercase tracking-wider" style={{ color: C.muted }}>{s.label}</span>
               </div>
-              <div className="text-2xl font-semibold" style={{ color: C.slate, fontFamily: "'DM Sans', sans-serif" }}>
+              <div className={s.small ? 'text-sm font-medium' : 'text-2xl font-semibold'} style={{ color: s.small ? C.muted : C.slate, fontFamily: "'DM Sans', sans-serif" }}>
                 {s.value}
                 {s.trend !== undefined && <TrendIcon value={s.trend} />}
               </div>

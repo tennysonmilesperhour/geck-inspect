@@ -1,6 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { Gecko, User } from '@/entities/all';
+import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -15,12 +16,10 @@ import {
   Calendar,
   ExternalLink,
   Edit,
-  MessageCircle,
-  HelpCircle // Added HelpCircle icon
+  MessageCircle
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { Tooltip as UITooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip'; // Added Shadcn Tooltip components
 
 
 const COLORS = ['#10b981', '#f59e0b', '#ef4444', '#6366f1', '#8b5cf6', '#ec4899'];
@@ -33,8 +32,7 @@ export default function MyListingsPage() {
         totalValue: 0,
         sold: 0,
         active: 0,
-        views: 0, // Mock data removed
-        messages: 0 // Mock data removed
+        inquiries: 0
     });
     const [salesData, setSalesData] = useState([]); // Added state for sales data
     const [_isLoading, setIsLoading] = useState(true);
@@ -55,13 +53,27 @@ export default function MyListingsPage() {
                 const soldGeckosFromFetch = marketplaceGeckos.filter(g => g.status === 'Sold'); // Renamed to avoid conflict with outer scope
                 const active = marketplaceGeckos.filter(g => g.status === 'For Sale').length;
 
+                // Real inquiry count from breeder_inquiries (written by the
+                // send-breeder-inquiry edge function; RLS lets a breeder
+                // read only their own rows). Listing views are not tracked
+                // anywhere yet, so no Views tile is shown at all.
+                let inquiries = 0;
+                try {
+                    const { count } = await supabase
+                        .from('breeder_inquiries')
+                        .select('id', { count: 'exact', head: true })
+                        .eq('breeder_email', currentUser.email);
+                    inquiries = count || 0;
+                } catch {
+                    inquiries = 0;
+                }
+
                 setAnalytics({
                     totalListings: marketplaceGeckos.length,
                     totalValue,
                     sold: soldGeckosFromFetch.length, // Use length of filtered sold geckos
                     active,
-                    views: 0, // Removed mock data, future feature
-                    messages: 0 // Removed mock data, future feature
+                    inquiries
                 });
                 
                 // Generate real sales data for the chart
@@ -230,7 +242,7 @@ export default function MyListingsPage() {
                 </div>
 
                 {/* Analytics Overview */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4 mb-8">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
                     <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
                         <CardContent className="p-4 text-center">
                             <ShoppingCart className="w-6 h-6 text-blue-600 mx-auto mb-2" />
@@ -263,43 +275,13 @@ export default function MyListingsPage() {
                         </CardContent>
                     </Card>
 
-                    <TooltipProvider>
-                        <UITooltip>
-                            <TooltipTrigger asChild>
-                                <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
-                                    <CardContent className="p-4 text-center">
-                                        <Eye className="w-6 h-6 text-purple-600 mx-auto mb-2" />
-                                        <div className="text-2xl font-bold text-sage-900">{analytics.views}</div>
-                                        <div className="text-xs text-sage-600 flex items-center justify-center gap-1">
-                                            Total Views <HelpCircle className="w-3 h-3"/>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>Feature coming soon!</p>
-                            </TooltipContent>
-                        </UITooltip>
-                    </TooltipProvider>
-
-                    <TooltipProvider>
-                        <UITooltip>
-                            <TooltipTrigger asChild>
-                                <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
-                                    <CardContent className="p-4 text-center">
-                                        <MessageCircle className="w-6 h-6 text-orange-600 mx-auto mb-2" />
-                                        <div className="text-2xl font-bold text-sage-900">{analytics.messages}</div>
-                                        <div className="text-xs text-sage-600 flex items-center justify-center gap-1">
-                                            Inquiries <HelpCircle className="w-3 h-3"/>
-                                        </div>
-                                    </CardContent>
-                                </Card>
-                            </TooltipTrigger>
-                            <TooltipContent>
-                                <p>Feature coming soon!</p>
-                            </TooltipContent>
-                        </UITooltip>
-                    </TooltipProvider>
+                    <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
+                        <CardContent className="p-4 text-center">
+                            <MessageCircle className="w-6 h-6 text-orange-600 mx-auto mb-2" />
+                            <div className="text-2xl font-bold text-sage-900">{analytics.inquiries}</div>
+                            <div className="text-xs text-sage-600">Inquiries</div>
+                        </CardContent>
+                    </Card>
                 </div>
 
                 <Tabs defaultValue="active" className="space-y-8">
