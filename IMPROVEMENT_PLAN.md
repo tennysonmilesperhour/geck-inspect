@@ -276,6 +276,14 @@ MarketplaceSalesStats, and MyListings in pnpm dev.
 
 ## 3. Phase 2: Infrastructure safety nets
 
+**STATUS: COMPLETED 2026-07-07.** Notes for later phases:
+- 2.1: `invoke-llm` was fetched from Supabase and committed verbatim under `supabase/functions/invoke-llm/`; the deployed function uses `claude-haiku-4-5-20251001` by default. `shipzeros-proxy` was never deployed, so ShipZeros live mode is guarded by a `PROXY_DEPLOYED=false` flag instead of committing a fabricated function.
+- 2.2: TABLE_MAP was verified against the live 108-table schema; the audit's "possibly missing" tables all exist (false alarm). The real bug was `parseSort` defaulting to `created_date` on tables that use `created_at` (collections, testimonials) or have no timestamp (collection_members, app_settings, social_post_photo_usage), which silently broke shared-collection queries. A true `supabase db dump` baseline still needs the DB password (documented in SCHEMA_SNAPSHOT.md).
+- 2.3: vitest suite now covers tierLimits, seasons, parseSort, morphUtils, usageMeter, imageResize, and blog-helpers (74 tests), wired into CI. The RLS audit (docs/security/rls-admin-audit-2026-07.md) found admin gating is email-based and clean everywhere EXCEPT `profiles`, which has no admin UPDATE policy, so UserManagement's role/expert grants on other users silently no-op. Migration `20260707000000_profiles_admin_update_policy.sql` is committed but NOT APPLIED; it needs a manual `supabase db push` after review.
+- 2.4: the old MORPHS regex silently dropped 4 morphs from the public CSV; both data-parsing scripts now import modules directly and fail loud. Strict SEO audit moved from the push gate to a weekly workflow.
+- 2.5: client-side downscale to 1600px WebP is live in uploadFile.js. `transformImageUrl` (thumbnail helper) is committed but gated behind `VITE_SUPABASE_IMAGE_TRANSFORM` (default off); turning it on requires confirming Supabase image transformations are enabled (a paid feature), then adopting it in grids. That grid adoption is the remaining follow-up.
+- 2.6: react-query was NOT removed (it has a real client + provider + a PageNotFound consumer); standardizing data fetching is still a separate future task. Env vars now warn in dev rather than throw, because production intentionally relies on the bundled fallbacks.
+
 Do these before big refactors. They make every later change safer.
 
 ### 2.1 Commit the missing edge functions
