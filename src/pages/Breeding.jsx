@@ -2,6 +2,7 @@ import React, { useState, useEffect, Suspense } from 'react';
 import Seo from '@/components/seo/Seo';
 import { BreedingPlan, Egg } from '@/entities/all';
 import { base44 } from '@/api/base44Client';
+import { currentSeasonLabel } from '@/lib/seasons';
 import { notifyFollowersNewBreedingPlan } from '@/components/notifications/NotificationService';
 import PlanLimitModal, { checkPlanLimit } from '@/components/subscription/PlanLimitChecker';
 // Extracted sub-components (previously inlined at the top of this file)
@@ -95,16 +96,10 @@ export default function BreedingPage() {
         breeding_season: ''
     });
 
-    const getCurrentSeason = () => {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth();
-        
-        if (month >= 2 && month <= 4) return `${year} Spring`;
-        if (month >= 5 && month <= 7) return `${year} Summer`;
-        if (month >= 8 && month <= 10) return `${year} Fall`;
-        return `${year} Winter`;
-    };
+    // Delegates to the shared seasons helper so the "<year> <Season>"
+    // labels written here follow the same winter rule as everything
+    // else (a December plan belongs to NEXT year's winter).
+    const getCurrentSeason = () => currentSeasonLabel();
 
     useEffect(() => {
         loadData();

@@ -6,12 +6,21 @@
  * we use a simple meteorological quarter split and let the user pick
  * whichever quarter matches their plan.
  *
- *   spring -> Mar 1  – May 31
- *   summer -> Jun 1  – Aug 31
- *   fall   -> Sep 1  – Nov 30
- *   winter -> Dec 1  – Feb 28/29 (of the NEXT calendar year for dec,
- *             same calendar year for jan/feb, but we anchor winter to
- *             the Dec–Feb span that BEGINS in the target year)
+ *   spring -> Mar 1 – May 31
+ *   summer -> Jun 1 – Aug 31
+ *   fall   -> Sep 1 – Nov 30
+ *   winter -> Dec 1 – Feb 28/29
+ *
+ * THE WINTER RULE (canon): a winter belongs to the calendar year it
+ * ENDS in. "2027 Winter" means Dec 1, 2026 through the end of Feb
+ * 2027. Every helper in this file (window math, status checks, label
+ * inference) follows that one rule, so
+ * seasonStatus(inferSeasonLabel(date)) is always 'active' at `date`.
+ * It also means a December clutch and the following January clutch
+ * share one season label, which is how breeders think about a winter.
+ * (Historical note: window math used to anchor winter to the year it
+ * STARTS in while labels anchored Jan/Feb to their own year, so a
+ * January record could report its own season as 'future'.)
  */
 
 export const SEASONS = ['spring', 'summer', 'fall', 'winter'];
@@ -49,11 +58,12 @@ export function computeSeasonWindow(season, year) {
         label: `Sep 1 – Nov 30, ${year}`,
       };
     case 'winter':
-      // Winter spans Dec of the target year through Feb of the next year.
+      // Winter belongs to the year it ENDS in: "<year> Winter" spans
+      // Dec 1 of the previous year through the end of Feb of `year`.
       return {
-        start: new Date(year, 11, 1),
-        end: new Date(year + 1, 2, 0, 23, 59, 59),
-        label: `Dec 1, ${year} – Feb ${new Date(year + 1, 2, 0).getDate()}, ${year + 1}`,
+        start: new Date(year - 1, 11, 1),
+        end: new Date(year, 2, 0, 23, 59, 59),
+        label: `Dec 1, ${year - 1} – Feb ${new Date(year, 2, 0).getDate()}, ${year}`,
       };
     default:
       return null;
@@ -85,9 +95,10 @@ export function seasonStatus(season, year, now = new Date()) {
 //   Sep-Nov  -> Fall
 //   Dec/Jan/Feb -> Winter
 //
-// Winter is anchored to the calendar year of the date (Jan 2024 -> "2024
-// Winter"), matching how the archive already buckets plans. This keeps
-// all breeding-season strings in the app aligned.
+// Winter follows THE WINTER RULE from the file header: it belongs to
+// the year it ends in. Jan 2027 -> "2027 Winter" and Dec 2026 ->
+// "2027 Winter" (same season, one label), matching
+// computeSeasonWindow('winter', 2027) exactly.
 // ---------------------------------------------------------------------------
 
 const SEASON_NAME_BY_MONTH = [
@@ -106,7 +117,9 @@ export function inferSeasonLabel(date) {
   if (!date) return null;
   const d = date instanceof Date ? date : new Date(date);
   if (isNaN(d.getTime())) return null;
-  return `${d.getFullYear()} ${SEASON_NAME_BY_MONTH[d.getMonth()]}`;
+  // December belongs to the NEXT year's winter (see THE WINTER RULE).
+  const year = d.getMonth() === 11 ? d.getFullYear() + 1 : d.getFullYear();
+  return `${year} ${SEASON_NAME_BY_MONTH[d.getMonth()]}`;
 }
 
 /** "<year> <Season>" for right now. */
