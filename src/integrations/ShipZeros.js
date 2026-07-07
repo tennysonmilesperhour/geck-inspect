@@ -16,17 +16,40 @@
  * exercised end-to-end. Once live credentials exist, flip `DEMO_MODE` to
  * false (or set the VITE_SHIPZEROS_LIVE env var) and the real proxy calls
  * take over.
+ *
+ * IMPORTANT: the `shipzeros-proxy` edge function does NOT exist yet. It is
+ * not in supabase/functions/ and is not deployed to the project. Setting
+ * VITE_SHIPZEROS_LIVE=true today would point every call at a function that
+ * returns 404, so `PROXY_DEPLOYED` below gates the live path and throws an
+ * actionable error instead of failing silently. Before enabling live mode:
+ *   1. Write and deploy supabase/functions/shipzeros-proxy/index.ts (it
+ *      holds the Zero's Geckos API key and forwards the `action` payloads
+ *      below: get_quote, book_shipment, track_shipment, cancel_shipment,
+ *      confirm_arrival, get_nearby_hubs).
+ *   2. Flip PROXY_DEPLOYED to true (or remove the guard).
  */
 import { supabase } from '@/lib/supabaseClient';
 
 const DEMO_MODE =
   import.meta.env.VITE_SHIPZEROS_LIVE !== 'true';
 
+// Guard: the shipzeros-proxy edge function is not committed or deployed
+// yet. Keep this false until it is, so turning on live mode fails loudly.
+const PROXY_DEPLOYED = false;
+
 // ---------------------------------------------------------------------------
 // Helpers
 // ---------------------------------------------------------------------------
 
 async function callProxy(action, payload) {
+  if (!PROXY_DEPLOYED) {
+    throw new Error(
+      "ShipZeros live mode is on (VITE_SHIPZEROS_LIVE=true) but the " +
+        "'shipzeros-proxy' edge function is not deployed. Deploy " +
+        "supabase/functions/shipzeros-proxy and set PROXY_DEPLOYED=true in " +
+        "src/integrations/ShipZeros.js before enabling live mode.",
+    );
+  }
   const { data, error } = await supabase.functions.invoke('shipzeros-proxy', {
     body: { action, ...payload },
   });
