@@ -111,14 +111,37 @@ export const TIER_LIMITS = {
 export const SOCIAL_POST_OVERAGE_CENTS = 50;
 
 /**
- * Resolve the tier ID for a user record. Treats grandfathered users
- * as breeder-tier and unknown / missing tiers as free.
+ * Resolve the tier ID for a user record. This is THE single tier
+ * resolver for the whole app: PlanLimitChecker's effectiveTier()
+ * delegates here, and every metered gate (usage meters, storage caps,
+ * health screens, IoT, consultant, Promote) flows through tierOf().
+ *
+ * Priority order:
+ *   1. admin role            -> enterprise (admins bypass every limit)
+ *   2. grandfathered status  -> breeder (legacy accounts never paywalled)
+ *   3. revenuecat_pro_active -> breeder ("Geck Inspect Pro" entitlement,
+ *      hydrated by RevenueCatContext from the CustomerInfo cache and the
+ *      revenuecat_entitlements mirror written by the revenuecat-webhook
+ *      edge function, so purchases on any platform unlock everywhere)
+ *   4. membership_tier       -> as stored (Stripe-direct subscribers)
+ *   5. anything else         -> free
+ *
+ * Tolerant of both user shapes in circulation: the enriched auth user
+ * (profile fields spread onto the top level by AuthContext.buildUser)
+ * and a wrapper object carrying the raw row under `.profile`.
  */
-export function tierOf(user) {
+export function resolveTier(user) {
   if (!user) return 'free';
-  if (user.subscription_status === 'grandfathered') return 'breeder';
-  const t = user.membership_tier;
+  const u = { ...(user.profile || {}), ...user };
+  if (u.role === 'admin') return 'enterprise';
+  if (u.subscription_status === 'grandfathered') return 'breeder';
+  if (u.revenuecat_pro_active) return 'breeder';
+  const t = u.membership_tier;
   return TIER_LIMITS[t] ? t : 'free';
+}
+
+export function tierOf(user) {
+  return resolveTier(user);
 }
 
 export function getTierLimits(user) {

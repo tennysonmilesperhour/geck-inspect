@@ -3,6 +3,7 @@ import { Button } from '@/components/ui/button';
 import { Sparkles, Lock, ArrowRight, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { resolveTier } from '@/lib/tierLimits';
 
 // Plan limits and feature flags. Source of truth for:
 //   - how many geckos the user can own (geckos)
@@ -77,25 +78,16 @@ const FEATURE_NAMES = {
     image_import: 'AI Image Import',
 };
 
-// Admins get enterprise-level access. Grandfathered accounts keep Breeder.
-// Lifetime users keep whatever tier they bought, `membership_billing_cycle`
-// is just metadata for the billing/UI layer; entitlements are still driven
-// off `membership_tier`, so a lifetime Keeper has the same gates as a
-// monthly Keeper.
-//
-// A user with the RevenueCat "Geck Inspect Pro" entitlement (regardless
-// of which platform they bought it on) is treated as `breeder`, which
-// is the highest paid tier short of Enterprise. `revenuecat_pro_active`
-// is hydrated by RevenueCatContext from the local CustomerInfo cache
-// and from the `revenuecat_entitlements` mirror written by the
-// `revenuecat-webhook` edge function, so this gate works equally well
-// for a web purchase made seconds ago and an iOS purchase made offline
-// last week.
+// Tier resolution lives in src/lib/tierLimits.js (resolveTier) so that
+// feature gates here and the metered quotas (usage meters, storage,
+// health screens, IoT, consultant, Promote) always agree. Admins get
+// enterprise-level access, grandfathered accounts keep Breeder, and a
+// user with the RevenueCat "Geck Inspect Pro" entitlement is treated as
+// breeder on every platform. Lifetime users keep whatever tier they
+// bought; `membership_billing_cycle` is just metadata for the billing/UI
+// layer, so a lifetime Keeper has the same gates as a monthly Keeper.
 function effectiveTier(user) {
-    if (user?.role === 'admin') return 'enterprise';
-    if (user?.subscription_status === 'grandfathered') return 'breeder';
-    if (user?.revenuecat_pro_active) return 'breeder';
-    return user?.membership_tier || 'free';
+    return resolveTier(user);
 }
 
 // True for users who bought lifetime access on Keeper or Breeder. Use this
