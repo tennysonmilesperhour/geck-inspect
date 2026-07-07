@@ -65,6 +65,8 @@ Counts for orientation: 83 page files, 61 routed app pages, 23 edge functions in
 
 ## 2. Phase 1: Revenue and trust critical fixes
 
+**STATUS: COMPLETED 2026-07-07** (commits e134931, 85dde32, 96ab275, 9429c59, 0dfd98c on main). Notes for later phases: vitest is now installed with `pnpm test` covering tierLimits and seasons, so Phase 2.3's harness setup is partly done. The winter season rule chosen in 1.4 is "a winter belongs to the year it ENDS in" (Dec 2026 through Feb 2027 is "2027 Winter"). Item 1.5 was adapted to the code as it exists now: the analytics module already had a real snapshot pipeline with an error state, so the fix removed the Enterprise upsell tied to data, added an explicit load-error banner with retry, made the MyListings Inquiries tile count real breeder_inquiries rows (Views tile removed, nothing tracks views), and replaced Market Pricing's hardcoded +5.2% trend with a computed 90-day median comparison. Wiring morph_price_entries into the analytics module's charts should happen in the snapshot generator (geck-data), not the client; that part remains open.
+
 These are the "someone pays and gets a broken product" and "someone gets Pro for free" bugs. Do these first.
 
 ### 1.1 Unify the two tier resolvers
