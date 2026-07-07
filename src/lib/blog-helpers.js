@@ -79,14 +79,29 @@ export function markdownToHtml(md) {
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
 
+  // Only allow safe URL schemes in generated links/images. Blocks
+  // javascript:, data:, vbscript:, etc. (a `[text](javascript:...)` link
+  // would otherwise render an executable href). Relative and anchor URLs
+  // are allowed; anything else falls back to '#'. Note the input has
+  // already been HTML-escaped, so ':' is intact but '<>&' are entities.
+  const safeUrl = (raw) => {
+    const u = (raw || '').trim();
+    if (/^(https?:|mailto:|\/|#|\.)/i.test(u)) return u;
+    // A scheme-looking prefix that isn't in the allowlist: neutralize it.
+    if (/^[a-z][a-z0-9+.-]*:/i.test(u)) return '#';
+    return u; // schemeless (e.g. "example.com/x") is fine
+  };
+
   const inline = (s) =>
     escape(s)
       // images: ![alt](url)
       .replace(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/g,
-        '<img src="$2" alt="$1" loading="lazy" class="rounded-lg my-4" />')
+        (_m, alt, url) =>
+          `<img src="${safeUrl(url)}" alt="${alt}" loading="lazy" class="rounded-lg my-4" />`)
       // links: [text](url)
       .replace(/\[([^\]]+)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/g,
-        '<a href="$2" rel="noopener" target="_blank">$1</a>')
+        (_m, text, url) =>
+          `<a href="${safeUrl(url)}" rel="noopener" target="_blank">${text}</a>`)
       // bold
       .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
       // italic

@@ -206,6 +206,11 @@ export default function BlogPost() {
             ))}
           </div>
         ) : post.contentHtml ? (
+          // contentHtml comes from markdownToHtml() (blog-helpers), which
+          // HTML-escapes all tags and blocks unsafe URL schemes in the
+          // links/images it generates, so this markdown-derived HTML is
+          // safe to inject. Writes to blog_posts are admin-only (RLS
+          // is_blog_admin), so the direct content_html path is trusted too.
           <div
             className="prose prose-invert prose-emerald max-w-none prose-headings:text-slate-100 prose-a:text-emerald-300 prose-strong:text-slate-100 prose-blockquote:border-emerald-500/40 prose-blockquote:text-slate-300 prose-code:text-emerald-200 prose-img:rounded-lg"
             dangerouslySetInnerHTML={{ __html: post.contentHtml }}
