@@ -1,4 +1,3 @@
-import jsPDF from 'jspdf';
 import {
   User,
   Gecko,
@@ -97,8 +96,15 @@ export function exportGeckosCSV(geckos, { filename } = {}) {
  * Generate a landscape PDF of the gecko roster and trigger a download.
  * Rolls our own lightweight table renderer against jsPDF's primitive
  * text/line APIs, avoids needing jspdf-autotable.
+ *
+ * jsPDF is imported dynamically (not at module top) so the ~560 KB
+ * vendor-pdf chunk is fetched only when a user actually clicks "Download
+ * as PDF", not just by loading a page that can also export CSV/JSON.
+ * The function is therefore async; callers must await the returned
+ * filename.
  */
-export function exportGeckosPDF(geckos, { title, filename, userName } = {}) {
+export async function exportGeckosPDF(geckos, { title, filename, userName } = {}) {
+  const { default: jsPDF } = await import('jspdf');
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'letter' });
   const pageWidth = doc.internal.pageSize.getWidth();
   const pageHeight = doc.internal.pageSize.getHeight();

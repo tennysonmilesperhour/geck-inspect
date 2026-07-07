@@ -478,9 +478,9 @@ export default function MyGeckosPage() {
                                         </DropdownMenuItem>
                                         <DropdownMenuItem
                                             className="focus:bg-slate-800 focus:text-white cursor-pointer"
-                                            onClick={() => {
+                                            onClick={async () => {
                                                 try {
-                                                    const name = exportGeckosPDF(filteredAndSortedGeckos, {
+                                                    const name = await exportGeckosPDF(filteredAndSortedGeckos, {
                                                         title: `${user?.full_name || user?.email || 'My'} Gecko Roster`,
                                                         userName: user?.full_name || user?.email,
                                                     });
