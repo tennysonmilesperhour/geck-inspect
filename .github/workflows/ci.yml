@@ -42,8 +42,11 @@ jobs:
       - name: Genetics drift check
         run: node scripts/check-genetics-consistency.mjs
 
+      # Build runs the non-strict SEO audit (scripts/seo-audit.mjs) as its
+      # last step, matching what Vercel runs on deploy. The STRICT audit
+      # is intentionally NOT a per-push gate: it fails on content-only
+      # issues (a stale dateModified, a new route with no inbound links)
+      # that should not block a code deploy. It runs on a schedule instead
+      # (see .github/workflows/seo-audit-weekly.yml).
       - name: Build (sitemap, llms, vite, prerender, SEO audit)
         run: pnpm build
-
-      - name: SEO audit (strict)
-        run: node scripts/seo-audit.mjs --strict

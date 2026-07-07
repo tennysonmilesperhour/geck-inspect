@@ -18,50 +18,49 @@
  * the public dataset.
  */
 
-import { readFileSync, writeFileSync } from 'node:fs';
+import { writeFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
 const OUT = resolve(REPO_ROOT, 'public/morphs.csv');
 const SRC = resolve(REPO_ROOT, 'src/data/morph-guide.js');
 
-function unescape(s) {
-  return s.replace(/\\'/g, "'").replace(/\\n/g, ' ').replace(/\\\\/g, '\\');
-}
+// Minimum morph count we expect. morph-guide.js ships ~32 morphs; if the
+// import yields fewer than this, something truncated the dataset and we
+// fail the build loudly rather than publishing a gutted public CSV.
+const MIN_MORPHS = 20;
 
-function parseMorphs() {
-  const src = readFileSync(SRC, 'utf8');
-  const m = src.match(/export const MORPHS\s*=\s*\[([\s\S]*?)\n\];/);
-  if (!m) throw new Error('MORPHS array not found');
-  const body = m[1];
-  const entries = body.split(/\n\s{2}\},\s*\n\s{2}\{/).map((c, i, arr) => {
-    let x = c;
-    if (i === 0) x = x.replace(/^\s*\{\s*/, '');
-    if (i === arr.length - 1) x = x.replace(/\s*\}\s*$/, '');
-    return x;
-  });
-  const out = [];
-  for (const chunk of entries) {
-    const gs = (f) => {
-      const re = new RegExp(`${f}:\\s*'((?:\\\\.|[^'\\\\])*)'`, 's');
-      const hit = chunk.match(re);
-      return hit ? unescape(hit[1]) : '';
-    };
-    const slug = gs('slug');
-    if (!slug) continue;
-    out.push({
-      slug,
-      name: gs('name'),
-      category: gs('category'),
-      inheritance: gs('inheritance'),
-      rarity: gs('rarity'),
-      priceTier: gs('priceTier'),
-      priceRange: gs('priceRange'),
-      summary: gs('summary').replace(/\s+/g, ' ').trim(),
-      url: `https://geckinspect.com/MorphGuide/${slug}`,
-    });
+async function loadMorphs() {
+  // Import the canonical data module directly instead of regex-parsing
+  // the source. morph-guide.js is plain ESM with no JSX or bundler-only
+  // imports, so Node can load it. This is robust to source reformatting
+  // (the old regex split on exact `\n  },\n  {` whitespace and threw
+  // "MORPHS array not found" the moment that changed).
+  const mod = await import(pathToFileURL(SRC).href);
+  const morphs = mod.MORPHS;
+  if (!Array.isArray(morphs)) {
+    throw new Error('morph-guide.js did not export a MORPHS array');
+  }
+  const out = morphs
+    .filter((m) => m && m.slug)
+    .map((m) => ({
+      slug: m.slug,
+      name: m.name || '',
+      category: m.category || '',
+      inheritance: m.inheritance || '',
+      rarity: m.rarity || '',
+      priceTier: m.priceTier || '',
+      priceRange: m.priceRange || '',
+      summary: (m.summary || '').replace(/\s+/g, ' ').trim(),
+      url: `https://geckinspect.com/MorphGuide/${m.slug}`,
+    }));
+  if (out.length < MIN_MORPHS) {
+    throw new Error(
+      `Only ${out.length} morphs parsed (expected >= ${MIN_MORPHS}). ` +
+        'Refusing to write a truncated public dataset.',
+    );
   }
   return out;
 }
@@ -73,8 +72,8 @@ function csvEscape(v) {
   return s;
 }
 
-function build() {
-  const morphs = parseMorphs();
+async function build() {
+  const morphs = await loadMorphs();
   const headers = [
     'slug',
     'name',
@@ -108,4 +107,7 @@ function build() {
   console.log(`[build-morphs-csv] wrote ${morphs.length} morphs → public/morphs.csv`);
 }
 
-build();
+build().catch((e) => {
+  console.error(e);
+  process.exit(1);
+});

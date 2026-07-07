@@ -279,6 +279,8 @@ Crested geckos (Correlophus ciliatus, formerly Rhacodactylus ciliatus) are a med
 
 They are beginner-friendly because they tolerate room temperatures, eat a shelf-stable powdered diet, do not require UVB for long-term survival, and breed reliably in captivity. Adults top out around 35–60 grams and live 15–20 years with good husbandry.
 
+**Why the crest?**
+
 - The eyelash-like crest running from eye to tail-base is the species signature trait and the reason for both the common name and the species epithet "ciliatus" (Latin: "eyelashed").
 - The structure of the crest is heritable and has been amplified through selective breeding, soft-scale, white-wall, and super-crest lines all modify it.
 
@@ -292,6 +294,8 @@ A healthy crested gecko is a 15–20 year commitment. Before purchasing, confirm
 - Ask for the hatch date, current weight, last-fed date, last shed, and sire/dam morph details. Keep a copy with your records.
 - Avoid "rescue" impulse buys unless you have an experienced reptile vet lined up, husbandry-damaged geckos are a hard first project.
 - Expect 1 week of no handling after arrival. Acclimation is the single most common step new keepers skip.
+
+**Red flags when buying**
 
 - Sunken fat pads on the pelvis, visible hip bones, or a thin tail base, signs of underweight or illness.
 - Kinked spine or tail, swollen jaw (possible MBD), stuck shed on toes or tail tip.
@@ -316,6 +320,15 @@ _Permalink: https://geckinspect.com/CareGuide/enclosure-size_
 
 Crested geckos are arboreal, they use vertical height far more than floor space. Size the enclosure to the animal, not to a fixed minimum. Hatchlings in an oversized setup get lost, stop eating, and lose weight.
 
+| Life stage | Weight | Enclosure | Notes |
+| --- | --- | --- | --- |
+| Hatchling | 0–8 g | 6-qt tub or small Kritter Keeper | Deli cup of CGD + moss + small branches. Easy to monitor feeding. |
+| Juvenile | 8–20 g | 12×12×18 in glass terrarium | Introduce height. Fake or live plants for cover. |
+| Sub-adult | 20–35 g | 18×18×18 in | Optional intermediate step, or skip straight to adult sizing. |
+| Adult | 35 g+ | 18×18×24 in minimum | Larger (24×18×36 in) is always better. Do not house adults together. |
+
+**One gecko per enclosure**
+
 - Do not cohabitate males, they will fight, sometimes to the death, once sexually mature.
 - Do not house males and females together outside of a controlled breeding project. Females can be bred to exhaustion.
 - Female-only pairs are possible but often still result in stress, tail drops, and uneven feeding. Most experienced keepers house solo.
@@ -325,6 +338,13 @@ Crested geckos are arboreal, they use vertical height far more than floor space.
 _Permalink: https://geckinspect.com/CareGuide/substrate_
 
 The goal of substrate is humidity buffering plus safety. Two valid approaches: a simple cleanable setup with paper towel or tile, or a bioactive vivarium with drainage layer, ABG mix, leaf litter, and a springtail/isopod cleanup crew.
+
+**Paper towel:** Cheapest, cleanest, easiest to quarantine. Best choice for hatchlings and any sick or new animal.
+**Coco fiber / coco coir:** Holds humidity well. Safe if the animal does not eat large chunks. Avoid dust-fine peat.
+**ABG mix (bioactive):** Atlanta Botanical Garden mix, bark, charcoal, peat, sphagnum. Long-term solution with live plants and a cleanup crew.
+**Tile or PVC sheet:** Used by high-volume breeders. Zero humidity buffer, requires daily misting.
+
+**Substrates to avoid**
 
 - Sand, calcium sand, walnut shell, impaction risk, no humidity benefit, marketed dishonestly.
 - Cedar or pine shavings, aromatic oils are toxic to reptiles.
@@ -341,6 +361,8 @@ Crested geckos thrive at room temperature. Ambient in the 72–78°F (22–25°C
 - Use a low-wattage DHP (deep heat projector) on a thermostat if your home runs below 68°F. Never use an unregulated heat bulb or pad.
 - Place a digital thermometer at the warmest and coolest points of the enclosure and verify with a temp gun weekly.
 
+**The 82°F rule**
+
 - Ambient temperatures above 82°F are one of the most common causes of keeper-inflicted death in this species.
 - In summer, move the enclosure away from windows and use a fan on the room. A portable AC is cheaper than a replacement gecko.
 
@@ -355,6 +377,10 @@ Crested geckos need a humidity cycle: high at night (80–100%) when they are ac
 3. Light mist or none in the morning if the cage is still damp. Over-misting is a common mistake.
 4. Provide a shallow water dish, not because they drink from it often, but because it buffers humidity and some animals do use it.
 
+**Hand sprayer:** Works fine for 1–2 animals. Cheap, reliable, and forces daily eyes-on inspection.
+**Automatic mister (MistKing, Exo-Terra Monsoon):** Best for collections of 3+ or for keepers who travel. Must be combined with a hygrometer and a dry-down period.
+**Cool-mist fogger:** Used supplementally in very dry climates. Do not replace misting, fog wets surfaces differently than droplets.
+
 ### Lighting and UVB
 
 _Permalink: https://geckinspect.com/CareGuide/lighting_
@@ -365,6 +391,8 @@ Crested geckos do not strictly require UVB because commercial CGD contains vitam
 - UVB: Arcadia ShadeDweller 7% or Zoo Med 5.0 T5, mounted above the mesh top, 10–14 inches from the highest basking spot the animal can reach.
 - Replace UVB bulbs every 12 months, output drops long before the bulb visibly fails.
 - Plant lights (LED full-spectrum) are great for live-plant vivariums but produce no useful UVB. Keep them separate from husbandry lighting.
+
+**UVB is optional, not pointless**
 
 - Keepers who use UVB report better pigment saturation, firmer bones in breeder females, and fewer MBD cases over multi-year projects.
 - If you do not use UVB, stay strict on CGD quality and rotate brands so no single deficiency compounds.
@@ -399,12 +427,30 @@ _Permalink: https://geckinspect.com/CareGuide/cgd-brands_
 
 There is no single "best" CGD. The major brands below are all nutritionally complete and widely used by top breeders. Variety is the point, rotate flavors and brands so the animal does not become food-fixated.
 
+| Brand | Product | Notes |
+| --- | --- | --- |
+| Pangea | Fruit Mix (multiple flavors) | The most common gateway diet. "With Insects" variants are preferred for growing juveniles. |
+| Repashy | Crested Gecko MRP (Classic, Grubs ‘N’ Fruit, Meal Replacement) | Oldest proven brand. "Grubs N Fruit" adds black soldier fly larvae for higher protein. |
+| Black Panther Zoological (BPZ) | Complete Gecko Diet | Smaller producer, fresh batches, fewer artificial ingredients. Rotates seasonal fruit. |
+| Leapin' Leachie | LLG Crested Gecko Diet | Higher protein, popular with breeders producing clutches. |
+| Zoo Med | Crested Gecko Food | Widely available at pet chains. Considered a secondary option, use it alongside a premium brand, not exclusively. |
+
+**Buying tip**
+
 - Check the manufacture date on the pouch. CGD loses vitamin potency after roughly 12 months. Buy small pouches often rather than one giant bag.
 - Freeze unopened pouches if you buy in bulk, sealed and frozen, shelf life extends to 18–24 months.
 
 ### Feeding schedules by age
 
 _Permalink: https://geckinspect.com/CareGuide/feeding-schedules_
+
+| Life stage | CGD frequency | Insect frequency | Notes |
+| --- | --- | --- | --- |
+| Hatchling (0–8 g) | Fresh daily | Optional, 1–2 pinheads 1×/week | Target 0.2–0.5 g gain per week. |
+| Juvenile (8–20 g) | Fresh daily or every other day | 3–5 feeders 1–2×/week | Growth phase, never ration CGD. |
+| Sub-adult (20–35 g) | 3–4×/week | 4–6 feeders 1×/week | Start tracking monthly weight trend. |
+| Adult (35 g+) | 3×/week | 4–6 feeders 1×/2 weeks (optional) | Overfeeding adults causes obesity and fatty liver. |
+| Breeding female | 3–4×/week + extra calcium | 6–8 feeders 1–2×/week | Protein and calcium demand spikes during laying season. |
 
 - Adults that gorge on CGD every night get fat, develop fatty liver disease, and fail to breed. Three to four feedings per week is enough for a non-breeder.
 - Never fast a hatchling "to build appetite." Missed meals at this stage compound, a hatchling that skips 3 meals has lost a meaningful fraction of its body weight.
@@ -414,6 +460,13 @@ _Permalink: https://geckinspect.com/CareGuide/feeding-schedules_
 _Permalink: https://geckinspect.com/CareGuide/insects_
 
 Insects are not required on a complete CGD diet, but they add enrichment, satisfy natural hunting instinct, and provide extra protein for growing juveniles and breeding females. Offer insects 1–2 times per week at most.
+
+**Dubia roaches:** Best all-around feeder. Low fat, high protein, cannot climb smooth glass, long-lived in a colony.
+**Black soldier fly larvae (BSFL / Phoenix worms):** Self-contained calcium source. No dusting required. Soft-bodied and ideal for juveniles.
+**Crickets:** Traditional feeder. Noisy, smelly, bite, and can injure a gecko if left in the enclosure overnight. Remove uneaten crickets.
+**Discoid roaches:** Florida-legal alternative to dubia. Similar nutrition profile.
+**Hornworms:** Treat only. Very high moisture and low calcium. Great rehydration tool for a picky eater.
+**Mealworms / superworms:** Use sparingly. High fat, chitinous exoskeleton is harder to digest. Fine as an occasional treat; not a staple.
 
 - Dust every insect meal with calcium+D3 (Repashy Calcium Plus, Arcadia EarthPro-A, Miner-All). Miss no more than one dusting in four.
 - Gutload feeders with leafy greens or a commercial gutload for 24–48 hours before feeding out. What your insects ate is what your gecko eats.
@@ -463,6 +516,8 @@ _Permalink: https://geckinspect.com/CareGuide/handling-technique_
 - Handle low over a soft surface (bed, couch) so a jump does not result in a fall from height.
 - Never pick up by the tail. Crested gecko tails are autotomous and will drop at the lightest pull.
 - Wash hands before and after. After insects or raw meat, always wash before reaching into the enclosure.
+
+**Stress signals, put the gecko back**
 
 - Mouth held open, slow deliberate panting, darkened colors that do not fade.
 - Violent wriggling, leaping repeatedly, tail whipping side-to-side like a whip.
@@ -516,6 +571,18 @@ Crested geckos drop their tails as a predator-escape response. Unlike leopard ge
 ### Common health issues
 
 _Permalink: https://geckinspect.com/CareGuide/common-issues_
+
+| Issue | Signs | Typical cause | Action |
+| --- | --- | --- | --- |
+| Metabolic Bone Disease (MBD) | Kinked spine, wavy tail, soft jaw, hemipenile prolapse, leg tremors | Chronic low calcium / D3, underfeeding | Vet ASAP. Early MBD is reversible with calcium and UVB; advanced cases are not. |
+| Floppy Tail Syndrome (FTS) | Tail arches over the back when hanging upside-down, pelvic deformity in adults | Prolonged upside-down perching on glass tops, lack of horizontal resting spots | Provide broad leaf perches and cork bark at the top. Prevention only, established FTS is permanent. |
+| Respiratory infection | Open-mouth breathing, mucus bubbles, wheezing, lethargy | Chronic humidity too high + poor ventilation, or cold draft | Dry out the cage, fix ventilation, vet for antibiotics if it persists >48 h. |
+| Impaction | Not defecating for 7+ days, visible bulge, loss of appetite | Substrate ingestion, dehydration, cold | Warm soak (84°F water, 10–15 min). Persistent: vet. |
+| Parasites (pinworms, coccidia, crypto) | Watery or bloody stool, weight loss despite eating, lethargy | Often present at import, spread via shared tools | Fecal float at vet. Crypto is the serious one, ask the vet to test specifically if weight loss is persistent. |
+| Mouth rot (stomatitis) | Cheesy white or yellow material at the gum line, swollen jaw, food refusal | Trauma + bacteria, low humidity, immune stress | Vet. Topical antiseptics and sometimes antibiotics. |
+| Dystocia (egg-binding) | Swollen abdomen, straining without laying, lethargy in a gravid female | Underweight female, calcium deficiency, no lay box, too-hot or too-cold cage | Emergency vet. Provide a warm humid lay box with damp substrate at least a week before expected lay date. |
+
+**Find a reptile-experienced vet before you need one**
 
 - Most "exotic" vets see rabbits and birds, not reptiles. Call ahead and ask specifically about crested gecko cases per year.
 - Keep an emergency kit: digital scale, small plastic tub, damp paper towel, a list of vet phone numbers, a transport carrier.
@@ -593,6 +660,13 @@ _Permalink: https://geckinspect.com/CareGuide/breeding-readiness_
 
 Breeding too soon is the most common mistake new breeders make. The cost is the life or long-term health of the female. Wait for the numbers, weight and age, not for the temptation.
 
+| Sex | Minimum weight | Minimum age | Ideal window |
+| --- | --- | --- | --- |
+| Female | 40 g (strict) | 18 months | 45–55 g, 24+ months, proven feeder |
+| Male | 25–30 g | 12 months | 35 g+, 18+ months, handles calmly |
+
+**Do not breed underweight or underage females**
+
 - Calcium depletion and egg-binding are the two most common causes of keeper-inflicted female mortality.
 - A female bred at 35 g can produce for one season, then die from secondary MBD the next.
 - Males can breed earlier safely, but the female is the limiting factor.
@@ -636,6 +710,12 @@ A female produces a clutch of 2 eggs every 4–6 weeks during the breeding seaso
 _Permalink: https://geckinspect.com/CareGuide/incubation_
 
 Room-temperature incubation (72–76°F, 22–24°C) produces strong, slow-hatching clutches. Higher temperatures shorten incubation and can produce male-biased clutches but also raise deformity rates. Hobby standard has moved toward slightly cool, slow incubation.
+
+| Temperature | Incubation time | Notes |
+| --- | --- | --- |
+| 68–72°F (20–22°C) | 90–120 days | Cool. Strong, vigorous hatchlings. Slight female bias. |
+| 72–76°F (22–24°C) | 60–90 days | Hobby sweet spot. Balanced sex ratio and low deformity rate. |
+| 78–82°F (25–28°C) | 45–60 days | Warm. Higher deformity risk and possible neurological issues. |
 
 - Substrate: 1:1 (by weight) vermiculite and water, or perlite at the same ratio. Some breeders use SuperHatch (baked clay).
 - Container: deli cup with a small cross-slit in the lid. No standing water, too wet is the most common killer.
@@ -874,12 +954,30 @@ Intermediate expression between tiger and brindle, sold as a single "T/B" catego
 
 Many animals fall between pure tiger and full brindle. T/B (tiger/brindle) captures that intermediate expression. Widely used in sale listings when the pattern is banded but not purely regular.
 
-**History.** Proven by North of the Border Reptiles (Frank Payne) in the early 2020s. Verified through controlled test breedings.
-
 **Key features:**
 - Banding visible but not perfectly regular
 - Mix of tiger-like parallel lines and brindle-like irregular patches
 - Common in most polygenic pattern lines
+
+### Soft Scale
+
+_Permalink: https://geckinspect.com/MorphGuide/soft-scale_
+
+**Rarity:** uncommon  
+**Inheritance:** incomplete-dominant  
+**Category:** structure
+
+Incomplete-dominant trait that reduces scale size and texture, the animal looks smoother and more velvety.
+
+Soft scale is a proven incomplete-dominant trait that modifies the structure of the gecko's scales, producing a noticeably smoother and finer-grained skin texture. The super form, super soft scale, takes this further, scales are dramatically reduced and the animal looks almost leather-like. First formally identified and proven by North of the Border (NOTB) in the early 2020s.
+
+**History.** Proven by North of the Border Reptiles (Frank Payne) in the early 2020s. Verified through controlled test breedings.
+
+**Key features:**
+- Visibly smaller, finer scales compared to a wild-type animal
+- Skin appears smoother and more matte
+- Single copy is visible (het form); two copies produce the super form
+- Proven inheritance, works in Punnett squares
 
 **Notes.** Super soft scale can be difficult to distinguish from the single-copy form in photos, request multiple angles when buying.
 
@@ -999,6 +1097,28 @@ Lilly white is the most famous incomplete-dominant morph in crested geckos. A si
 
 **Notes.** Never pair two visual lilly whites unless you accept that roughly 1/4 of eggs will fail to develop, this is the homozygous lethal phenotype.
 
+### Axanthic
+
+_Permalink: https://geckinspect.com/MorphGuide/axanthic_
+
+**Rarity:** rare  
+**Inheritance:** recessive  
+**Category:** color
+
+Proven recessive trait that removes yellow and red pigment, animals appear black, gray, and white.
+
+Axanthic is the only fully-proven recessive morph in crested geckos. It removes yellow (xanthophores) and red (erythrophores) pigment, leaving only melanin (black) and white. Visual axanthics appear in shades of charcoal, silver, and white with no warm tones at all. A heterozygous (het) axanthic looks identical to a normal animal, which is why het purchases require documented lineage. First proven by Cabernet Dragons (Matt Parks) around 2018.
+
+**History.** Proven by Cabernet Dragons (Matt Parks) around 2018 after multiple generations of selective breeding and test pairings.
+
+**Key features:**
+- Proven autosomal recessive, two copies required for visual expression
+- Complete absence of yellow and red pigment, only black, gray, and white
+- Het axanthics are invisible; buy from documented lineage only
+- Stacks with every other trait to produce a "cool-toned" version of that morph
+
+**Notes.** Because it is a clean recessive, Punnett squares work: visual × visual → 100% visual; visual × het → 50% visual, 50% het; het × het → 25% visual, 50% het, 25% non-carrier.
+
 ### Hypo (Hypomelanistic)
 
 _Permalink: https://geckinspect.com/MorphGuide/hypo_
@@ -1068,6 +1188,24 @@ Translucent crested geckos show a degree of skin translucency, most evident in h
 - Visible translucency in skin, especially on the belly
 - Most visible in juveniles, can fade with age
 - Frequently combined with other color modifiers like axanthic
+
+### Red Base
+
+_Permalink: https://geckinspect.com/MorphGuide/red-base_
+
+**Rarity:** uncommon  
+**Inheritance:** polygenic  
+**Category:** base
+
+Polygenic base color showing true red tones, distinct from red dalmatian or rose-brown animals.
+
+Red base describes animals whose base color is true red. Quality is measured by saturation and consistency when fired up. Entry-level red bases are often more of a rust or orange-red; top-quality red bases hold deep saturation even in the fired-down state.
+
+**Key features:**
+- True red base color (not orange, not rust)
+- Saturation holds when fired up
+- Line-bred over multiple generations
+- Pairs well with harlequin for dramatic cream-on-red contrast
 
 ### Orange Base
 
@@ -1170,6 +1308,23 @@ Buckskin describes a warm tan, leather-like base color. One of the more common b
 - Warm tan or leather base color
 - Common and beginner-friendly
 - Works well as a base for a variety of patterns
+
+### Cream
+
+_Permalink: https://geckinspect.com/MorphGuide/cream_
+
+**Rarity:** uncommon  
+**Inheritance:** polygenic  
+**Category:** combo
+
+Cream color applied to harlequin or pinstripe pattern, bright, clean, and highly sought after.
+
+Cream describes animals whose pattern areas are cream-colored rather than yellow or orange. Usually applied as a descriptor stacked on harlequin or pinstripe (cream harlequin, cream pinstripe). Cream is the "vanilla" of pattern colors, bright, pure, and highly valued when it is clean and saturated.
+
+**Key features:**
+- Pattern areas are cream/off-white instead of yellow or orange
+- Usually combined with harlequin or pinstripe for maximum impact
+- Quality judged by purity and consistency of the cream
 
 ### Tricolor
 

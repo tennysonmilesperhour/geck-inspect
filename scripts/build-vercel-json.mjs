@@ -4,17 +4,22 @@
  *
  * Why this exists
  * ---------------
- * Before: vercel.json ended with `{ "source": "/(.*)", "destination":
- * "/index.html" }`. Every unknown path returned HTTP 200 with the SPA
- * shell, which Bing and several AI crawlers classify as a soft-404 and
- * penalize. Only the client-side <meta name="robots" content="noindex">
- * in PageNotFound saved us from actual indexing of garbage URLs.
+ * The rewrite block is a single catch-all: `{ "source": "/(.*)",
+ * "destination": "/index.html" }`. What keeps real routes working is
+ * Vercel's filesystem step, which runs BEFORE rewrites: prerendered
+ * routes (/About/index.html, /MorphGuide/<slug>/index.html, /assets/*,
+ * etc., written by scripts/prerender.mjs) are served as their own files,
+ * so only genuinely dynamic or unknown paths (/MyGeckos, /Dashboard,
+ * typos) fall through to the SPA shell, where React Router and
+ * PageNotFound's client-side <meta name="robots" content="noindex">
+ * take over.
  *
- * After: we enumerate every known SPA path as an explicit rewrite to
- * /index.html, and we drop the catch-all. Vercel now serves
- * /public/404.html with a genuine 404 status for anything not on the
- * list. The enumeration is sourced from scripts/seo-routes.mjs so
- * adding a new page stays a one-line change.
+ * An earlier revision of this script tried to enumerate every known SPA
+ * path as an explicit rewrite and drop the catch-all; that is NOT what
+ * it does now. `cleanUrls: true` was also removed (2026-04-21) because
+ * it silently disabled every rewrite. scripts/seo-routes.mjs is still
+ * the route source for the sitemap and prerender, but this file no
+ * longer enumerates routes into vercel.json.
  *
  * Static config (headers, redirects, cleanUrls, …) lives inline below
  * and is reproduced verbatim each build. Keep non-generated tweaks in

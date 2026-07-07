@@ -34,126 +34,80 @@ const MORPH = resolve(REPO_ROOT, 'src/data/morph-guide.js');
 const BLOG = resolve(REPO_ROOT, 'src/data/blog-posts.js');
 const LLMS = resolve(REPO_ROOT, 'public/llms.txt');
 
-// ---- care guide parsing --------------------------------------------------
+// All three data sources (care guide, morph guide, blog) are plain ESM
+// modules with no JSX or bundler-only imports, so Node imports them
+// directly. This is far more robust than the old regex walkers, which
+// depended on exact source whitespace and silently skipped block types
+// (table, dl, kv) they didn't have patterns for. Each loader fails the
+// build loudly if its dataset comes back empty or truncated, so a
+// reformat or accidental deletion can't ship a gutted llms-full.txt.
 
-/**
- * The care-guide data is a large exported array of category objects;
- * each category has `sections`, each section has a `body` array of
- * block objects. We parse the JS source with a tolerant regex walker.
- */
-function parseCareGuide() {
-  const src = readFileSync(CARE, 'utf8');
+const MIN_CARE_SECTIONS = 15;
+const MIN_MORPHS = 20;
+
+async function loadCareGuide() {
+  const mod = await import(pathToFileURL(CARE).href);
+  const categories = mod.CARE_CATEGORIES;
+  if (!Array.isArray(categories)) {
+    throw new Error('care-guide.js did not export a CARE_CATEGORIES array');
+  }
   const out = [];
-  // Grab each section block: id, title, level, body literal.
-  const re =
-    /\n\s{6}\{\s*\n\s{8}id:\s*'([a-z0-9-]+)',\s*\n\s{8}title:\s*'([^']+)',[\s\S]*?body:\s*\[([\s\S]*?)\n\s{8}\],\s*\n\s{6}\},/g;
-  let m;
-  while ((m = re.exec(src)) !== null) {
-    const id = m[1];
-    const title = m[2];
-    const bodySrc = m[3];
-    out.push({ id, title, blocks: parseBlocks(bodySrc) });
+  for (const cat of categories) {
+    for (const section of cat.sections || []) {
+      out.push({
+        id: section.id,
+        title: section.title,
+        blocks: section.body || [],
+      });
+    }
+  }
+  if (out.length < MIN_CARE_SECTIONS) {
+    throw new Error(
+      `Only ${out.length} care sections parsed (expected >= ${MIN_CARE_SECTIONS}).`,
+    );
   }
   return out;
 }
 
-function parseBlocks(bodySrc) {
-  // Paragraphs: { type: 'p', text: '…' }
-  const blocks = [];
-  const pRe = /type:\s*'p',\s*\n\s*text:\s*'((?:\\.|[^'\\])*)'/g;
-  let m;
-  while ((m = pRe.exec(bodySrc)) !== null) {
-    blocks.push({ type: 'p', text: unescape(m[1]) });
+async function loadMorphs() {
+  const mod = await import(pathToFileURL(MORPH).href);
+  const morphs = mod.MORPHS;
+  if (!Array.isArray(morphs)) {
+    throw new Error('morph-guide.js did not export a MORPHS array');
   }
-  // Unordered lists (items: [ '...', ... ])
-  const ulRe = /type:\s*'ul',\s*\n\s*items:\s*\[([\s\S]*?)\n\s*\],/g;
-  while ((m = ulRe.exec(bodySrc)) !== null) {
-    blocks.push({ type: 'ul', items: extractStringArray(m[1]) });
-  }
-  const olRe = /type:\s*'ol',\s*\n\s*items:\s*\[([\s\S]*?)\n\s*\],/g;
-  while ((m = olRe.exec(bodySrc)) !== null) {
-    blocks.push({ type: 'ol', items: extractStringArray(m[1]) });
-  }
-  const calloutRe =
-    /type:\s*'callout',[\s\S]*?(?:title:\s*'([^']*)',)?[\s\S]*?items:\s*\[([\s\S]*?)\n\s*\],/g;
-  while ((m = calloutRe.exec(bodySrc)) !== null) {
-    blocks.push({ type: 'callout', title: m[1] || null, items: extractStringArray(m[2]) });
-  }
-  return blocks;
-}
-
-function extractStringArray(src) {
-  const out = [];
-  const re = /'((?:\\.|[^'\\])*)'/g;
-  let m;
-  while ((m = re.exec(src)) !== null) out.push(unescape(m[1]));
-  return out;
-}
-
-function unescape(s) {
-  return s.replace(/\\'/g, "'").replace(/\\n/g, '\n').replace(/\\\\/g, '\\');
-}
-
-// ---- morph guide parsing -------------------------------------------------
-
-function parseMorphs() {
-  const src = readFileSync(MORPH, 'utf8');
-  const m = src.match(/export const MORPHS\s*=\s*\[([\s\S]*?)\n\];/);
-  if (!m) throw new Error('MORPHS not found');
-  const body = m[1];
-  const entries = body.split(/\n\s{2}\},\s*\n\s{2}\{/).map((c, i, arr) => {
-    let x = c;
-    if (i === 0) x = x.replace(/^\s*\{\s*/, '');
-    if (i === arr.length - 1) x = x.replace(/\s*\}\s*$/, '');
-    return x;
-  });
-  const out = [];
-  for (const chunk of entries) {
-    const gs = (f) => {
-      const re = new RegExp(`${f}:\\s*'((?:\\\\.|[^'\\\\])*)'`, 's');
-      const hit = chunk.match(re);
-      return hit ? unescape(hit[1]) : null;
-    };
-    const slug = gs('slug');
-    if (!slug) continue;
-    const keyFeaturesMatch = chunk.match(/keyFeatures:\s*\[([\s\S]*?)\]/);
-    out.push({
-      slug,
-      name: gs('name') || slug,
-      summary: gs('summary'),
-      description: gs('description'),
-      history: gs('history'),
-      notes: gs('notes'),
-      inheritance: gs('inheritance'),
-      rarity: gs('rarity'),
-      category: gs('category'),
-      keyFeatures: keyFeaturesMatch ? extractStringArray(keyFeaturesMatch[1]) : [],
-    });
+  const out = morphs
+    .filter((m) => m && m.slug)
+    .map((m) => ({
+      slug: m.slug,
+      name: m.name || m.slug,
+      summary: m.summary || null,
+      description: m.description || null,
+      history: m.history || null,
+      notes: m.notes || null,
+      inheritance: m.inheritance || null,
+      rarity: m.rarity || null,
+      category: m.category || null,
+      keyFeatures: m.keyFeatures || [],
+    }));
+  if (out.length < MIN_MORPHS) {
+    throw new Error(`Only ${out.length} morphs parsed (expected >= ${MIN_MORPHS}).`);
   }
   return out;
 }
 
-// ---- blog parsing --------------------------------------------------------
-
-function parseBlogPosts() {
-  // Import the canonical data module directly. blog-posts.js is plain ESM
-  // with no JSX or bundler-only imports, so Node can load it. This is more
-  // robust than regex parsing: it handles both single- and double-quoted
-  // post entries, and picks up block types (table, kv, dl) the regex
-  // walker silently skipped.
-  return import(pathToFileURL(BLOG).href).then((mod) =>
-    (mod.BLOG_POSTS || []).map((p) => ({
-      slug: p.slug,
-      title: p.title,
-      description: p.description,
-      datePublished: p.datePublished,
-      dateModified: p.dateModified,
-      keyphrase: p.keyphrase,
-      tldr: p.tldr || [],
-      blocks: p.body || [],
-      faq: p.faq || [],
-    })),
-  );
+async function loadBlogPosts() {
+  const mod = await import(pathToFileURL(BLOG).href);
+  return (mod.BLOG_POSTS || []).map((p) => ({
+    slug: p.slug,
+    title: p.title,
+    description: p.description,
+    datePublished: p.datePublished,
+    dateModified: p.dateModified,
+    keyphrase: p.keyphrase,
+    tldr: p.tldr || [],
+    blocks: p.body || [],
+    faq: p.faq || [],
+  }));
 }
 
 // ---- markdown rendering --------------------------------------------------
@@ -285,9 +239,9 @@ function blogToMarkdown(posts) {
 
 async function build() {
   const intro = readFileSync(LLMS, 'utf8');
-  const care = careToMarkdown(parseCareGuide());
-  const morphs = morphsToMarkdown(parseMorphs());
-  const blog = blogToMarkdown(await parseBlogPosts());
+  const care = careToMarkdown(await loadCareGuide());
+  const morphs = morphsToMarkdown(await loadMorphs());
+  const blog = blogToMarkdown(await loadBlogPosts());
   const now = new Date().toISOString().slice(0, 10);
 
   const body = [

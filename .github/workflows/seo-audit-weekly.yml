@@ -1,0 +1,29 @@
+name: SEO audit (strict, scheduled)
+
+# The strict SEO audit is a content-quality gate, not a code gate, so it
+# does not run on every push (that would let a stale dateModified or an
+# orphaned route red-CI a perfectly good code deploy). It runs weekly and
+# on demand instead. A failure here means content needs attention, not
+# that the last deploy was broken.
+on:
+  schedule:
+    - cron: '0 13 * * 1' # Mondays 13:00 UTC
+  workflow_dispatch:
+
+jobs:
+  seo-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build (produces dist/ for the audit to walk)
+        run: pnpm build
+      - name: SEO audit (strict)
+        run: node scripts/seo-audit.mjs --strict
