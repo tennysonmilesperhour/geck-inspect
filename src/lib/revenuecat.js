@@ -14,7 +14,17 @@
  * one interface so call sites don't have to know which is loaded.
  */
 import { Purchases as PurchasesWeb, LogLevel as LogLevelWeb } from '@revenuecat/purchases-js';
-import { Purchases as PurchasesNative, LOG_LEVEL as LogLevelNative } from '@revenuecat/purchases-capacitor';
+
+// The native Capacitor SDK is loaded lazily (dynamic import) so it is
+// code-split out of the web/PWA bundle, which never uses it. Every
+// native call site below is already async, so awaiting the import costs
+// nothing on the platforms that actually need it (iOS/Android), and web
+// users never download it.
+let _nativeModulePromise = null;
+function loadNativeRC() {
+  _nativeModulePromise ||= import('@revenuecat/purchases-capacitor');
+  return _nativeModulePromise;
+}
 
 // Public (sandbox by default) Web Billing key. Override with
 // VITE_REVENUECAT_WEB_API_KEY in production.
@@ -71,6 +81,7 @@ export function resolveAppUserId(user) {
 let nativeConfigured = false;
 
 async function configureNative(apiKey, appUserId) {
+  const { Purchases: PurchasesNative, LOG_LEVEL: LogLevelNative } = await loadNativeRC();
   if (!nativeConfigured) {
     PurchasesNative.setLogLevel({ level: LogLevelNative.WARN });
     await PurchasesNative.configure({ apiKey, appUserID: appUserId });
@@ -141,6 +152,7 @@ export async function fetchCustomerInfo() {
   if (typeof window === 'undefined') return null;
   try {
     if (isNativePlatform()) {
+      const { Purchases: PurchasesNative } = await loadNativeRC();
       const { customerInfo } = await PurchasesNative.getCustomerInfo();
       return customerInfo || null;
     }
@@ -169,6 +181,7 @@ export async function fetchOfferings() {
   try {
     if (isNativePlatform()) {
       // Native returns the same Offerings shape directly.
+      const { Purchases: PurchasesNative } = await loadNativeRC();
       return await PurchasesNative.getOfferings();
     }
     const rc = getPurchasesWeb();
@@ -190,6 +203,7 @@ export async function fetchOfferings() {
 export async function restorePurchases() {
   if (isNativePlatform()) {
     try {
+      const { Purchases: PurchasesNative } = await loadNativeRC();
       const result = await PurchasesNative.restorePurchases();
       return result?.customerInfo || null;
     } catch (err) {
@@ -211,6 +225,7 @@ export function platformSupportsRestore() {
  */
 export async function purchasePackage(rcPackage, { customerEmail } = {}) {
   if (isNativePlatform()) {
+    const { Purchases: PurchasesNative } = await loadNativeRC();
     const result = await PurchasesNative.purchasePackage({ aPackage: rcPackage });
     return result?.customerInfo || null;
   }
