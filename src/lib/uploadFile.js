@@ -19,6 +19,7 @@
  */
 import { supabase } from '@/lib/supabaseClient';
 import { getTierLimits, formatBytes } from '@/lib/tierLimits';
+import { downscaleImage } from '@/lib/imageResize';
 
 const BUCKET = 'geck-inspect-media';
 
@@ -104,7 +105,9 @@ export async function uploadFile({ file, folder = 'uploads' } = {}) {
     );
   }
 
-  // Validate file size, reject uploads larger than 10 MB.
+  // Validate file size on the ORIGINAL, reject uploads larger than 10 MB.
+  // (The cap is a guard against absurd inputs; the resize below is what
+  // shrinks a normal photo before it is stored.)
   if (file.size > MAX_FILE_SIZE) {
     throw new Error(
       `File is too large (${(file.size / 1024 / 1024).toFixed(1)} MB). Maximum allowed: 10 MB.`
@@ -115,6 +118,11 @@ export async function uploadFile({ file, folder = 'uploads' } = {}) {
   if (!/^[a-zA-Z0-9_-]+$/.test(folder)) {
     throw new Error('Invalid upload folder name.');
   }
+
+  // Downscale + WebP-encode client-side before doing anything else with
+  // the bytes. Everything past this point (quota math, key, upload) uses
+  // the resized file. Falls back to the original on any failure.
+  const upload = await downscaleImage(file);
 
   // Namespace by user ID (UUID) so public URLs don't leak emails.
   const { data: { user } } = await supabase.auth.getUser();
@@ -130,22 +138,22 @@ export async function uploadFile({ file, folder = 'uploads' } = {}) {
     ]);
     const limits = getTierLimits(profile);
     const limit = limits.maxStorageBytes;
-    if (limit != null && usedBytes != null && usedBytes + file.size > limit) {
+    if (limit != null && usedBytes != null && usedBytes + upload.size > limit) {
       throw new Error(
-        `Storage quota reached: this upload would put you at ${formatBytes(usedBytes + file.size)} of your ${formatBytes(limit)} (${limits.label}) limit. Upgrade your plan or delete some photos to continue.`,
+        `Storage quota reached: this upload would put you at ${formatBytes(usedBytes + upload.size)} of your ${formatBytes(limit)} (${limits.label}) limit. Upgrade your plan or delete some photos to continue.`,
       );
     }
   }
 
-  const ext = extensionFor(file);
-  const baseName = safeFileName((file.name || 'upload').replace(/\.[a-zA-Z0-9]+$/, ''));
+  const ext = extensionFor(upload);
+  const baseName = safeFileName((upload.name || 'upload').replace(/\.[a-zA-Z0-9]+$/, ''));
   const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
   const path = `${folder}/${ownerSlug}/${stamp}-${baseName}.${ext}`;
 
   const { error: uploadError } = await supabase.storage
     .from(BUCKET)
-    .upload(path, file, {
-      contentType: file.type || undefined,
+    .upload(path, upload, {
+      contentType: upload.type || undefined,
       cacheControl: '3600',
       upsert: false,
     });
@@ -163,6 +171,32 @@ export async function uploadFile({ file, folder = 'uploads' } = {}) {
   }
 
   return { file_url, path };
+}
+
+/**
+ * Rewrite a stored public image URL to a width-constrained thumbnail via
+ * Supabase Storage image transformations, for use in grids and feeds
+ * that don't need the full-resolution original.
+ *
+ * Gated behind VITE_SUPABASE_IMAGE_TRANSFORM because image
+ * transformations are a paid Supabase feature: if it isn't enabled on
+ * the project, the /render/image/ URL 404s. With the flag unset (the
+ * default) this returns the original URL unchanged, so it is safe to
+ * adopt in components now and switch on later by flipping the env var.
+ *
+ * @param {string} url - a public URL previously returned by uploadFile
+ * @param {{ width?: number, quality?: number }} [opts]
+ * @returns {string} the (possibly transformed) URL
+ */
+export function transformImageUrl(url, { width, quality = 75 } = {}) {
+  if (!url || typeof url !== 'string') return url;
+  const enabled = import.meta?.env?.VITE_SUPABASE_IMAGE_TRANSFORM === 'true';
+  if (!enabled || !width || !url.includes('/storage/v1/object/public/')) {
+    return url;
+  }
+  const rendered = url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/');
+  const sep = rendered.includes('?') ? '&' : '?';
+  return `${rendered}${sep}width=${Math.round(width)}&quality=${quality}&resize=contain`;
 }
 
 // Default export too, in case someone does `import uploadFile from ...`
