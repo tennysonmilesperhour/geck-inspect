@@ -455,7 +455,6 @@ export default function AnimalPassport() {
   const [vetRecords, setVetRecords] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [copied, setCopied] = useState(false);
 
   useEffect(() => {
     if (!passportCode) return;
@@ -512,11 +511,9 @@ export default function AnimalPassport() {
     load();
   }, [passportCode, currentUser?.email]);
 
-  const copyLink = () => {
-    navigator.clipboard.writeText(passportUrl(passportCode));
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  };
+  // Sharing and copy-to-clipboard are handled by <ShareMenu/> below; the
+  // old local copyLink/copied state was a dead leftover from before it
+  // was adopted, so it has been removed.
 
   //, Loading state
   if (isLoading) {

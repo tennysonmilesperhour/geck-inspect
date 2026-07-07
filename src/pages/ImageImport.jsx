@@ -25,13 +25,13 @@ export default function ImageImport() {
     const [images, setImages] = useState([]);
     const [uploading, setUploading] = useState(false);
 
+    // `step` is the single source of truth for the wizard's stage and
+    // drives every loading indicator (step === 'processing' / 'importing').
     const [step, setStep] = useState('upload'); // upload | processing | review | importing | done
     const [extractedRecords, setExtractedRecords] = useState([]);
-    const [processing, setProcessing] = useState(false);
     const [processError, setProcessError] = useState(null);
 
     const [importResults, setImportResults] = useState(null);
-    const [importing, setImporting] = useState(false);
 
     const [geckos, setGeckos] = useState([]);
     const [breedingPlans, setBreedingPlans] = useState([]);
@@ -105,7 +105,6 @@ export default function ImageImport() {
 
     const handleProcess = async () => {
         if (images.length === 0) return;
-        setProcessing(true);
         setProcessError(null);
         setStep('processing');
 
@@ -131,7 +130,6 @@ export default function ImageImport() {
             setProcessError(err.message);
             setStep('upload');
         }
-        setProcessing(false);
     };
 
     const toggleRecord = (id) => {
@@ -145,7 +143,6 @@ export default function ImageImport() {
     const handleImport = async () => {
         const selected = extractedRecords.filter(r => r._selected);
         if (selected.length === 0) return;
-        setImporting(true);
         setStep('importing');
 
         const results = { created: 0, errors: [] };
@@ -216,7 +213,6 @@ export default function ImageImport() {
 
         setImportResults(results);
         setStep('done');
-        setImporting(false);
     };
 
     const resetAll = () => {
@@ -237,7 +233,7 @@ export default function ImageImport() {
                         </div>
                         <h1 className="text-3xl md:text-4xl font-bold text-slate-100">AI Image Import</h1>
                     </div>
-                    <p className="text-slate-400">Upload photos of notecards, screenshots, or records, AI extracts the data for you.</p>
+                    <p className="text-slate-400">Upload photos of notecards, screenshots, or records, AI extracts the data for you. Your plan includes {INCLUDED_IMPORTS} imports per month.</p>
                 </div>
 
                 {/* Step indicator */}
