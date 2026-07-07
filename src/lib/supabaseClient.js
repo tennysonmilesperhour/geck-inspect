@@ -1,5 +1,11 @@
 import { createClient } from '@supabase/supabase-js';
 
+// The bundled fallback is the production project (anon key is public by
+// design). It exists so builds work without env vars set. The risk it
+// creates is a local or preview build silently talking to PRODUCTION
+// data when someone forgot to set VITE_SUPABASE_URL, so warn loudly in
+// dev when the fallback is in use. We do NOT throw: prod intentionally
+// relies on this fallback, and failing the build would be worse.
 const SUPABASE_URL =
   import.meta.env.VITE_SUPABASE_URL ||
   'https://mmuglfphhwlaluyfyxsp.supabase.co';
@@ -7,6 +13,17 @@ const SUPABASE_URL =
 const SUPABASE_ANON_KEY =
   import.meta.env.VITE_SUPABASE_ANON_KEY ||
   'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tdWdsZnBoaHdsYWx1eWZ5eHNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MjA5MTksImV4cCI6MjA5MTA5NjkxOX0.mbjrSDZoEvQwPBiZbRtzjC04viNmSJ7sABDJQK9TmIM';
+
+if (
+  import.meta.env.DEV &&
+  (!import.meta.env.VITE_SUPABASE_URL || !import.meta.env.VITE_SUPABASE_ANON_KEY)
+) {
+  console.warn(
+    '[supabaseClient] VITE_SUPABASE_URL / VITE_SUPABASE_ANON_KEY not set; ' +
+      'falling back to the bundled PRODUCTION project. Set them in .env.local ' +
+      'to point this build at a different Supabase project.',
+  );
+}
 
 // Wrap the global fetch with a 30-second timeout so Supabase requests
 // don't hang indefinitely on flaky connections.

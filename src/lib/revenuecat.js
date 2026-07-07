@@ -27,10 +27,19 @@ function loadNativeRC() {
 }
 
 // Public (sandbox by default) Web Billing key. Override with
-// VITE_REVENUECAT_WEB_API_KEY in production.
+// VITE_REVENUECAT_WEB_API_KEY in production. The `test_` fallback is the
+// RevenueCat sandbox, so a build without the env var runs against sandbox
+// billing, real purchases won't process. Warn in dev so that's obvious.
 export const REVENUECAT_WEB_API_KEY =
   import.meta.env?.VITE_REVENUECAT_WEB_API_KEY ||
   'test_OVdgRQzJmflBtKgGkRzhTzumbEo';
+
+if (import.meta.env?.DEV && !import.meta.env?.VITE_REVENUECAT_WEB_API_KEY) {
+  console.warn(
+    '[revenuecat] VITE_REVENUECAT_WEB_API_KEY not set; using the sandbox ' +
+      'test key. Web Billing purchases will not process against production.',
+  );
+}
 
 export const REVENUECAT_IOS_API_KEY =
   import.meta.env?.VITE_REVENUECAT_IOS_API_KEY || '';
