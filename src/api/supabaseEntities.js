@@ -170,14 +170,54 @@ export const TABLE_MAP = {
   PromoteImage: 'promote_images',
 };
 
-function parseSort(sort) {
-  if (!sort) return [{ column: 'created_date', ascending: false }];
-  // Support comma-separated sorts: "-created_date,name"
+// Most tables follow the base44 legacy convention of a `created_date`
+// column, which is the default sort. A few tables predate or postdate
+// that convention and use `created_at`, and a few have no timestamp
+// column at all. Verified against production 2026-07-07. Entities not
+// listed here default to 'created_date'; `null` means "this table has no
+// timestamp column, so do not apply a default sort."
+//
+// Without this map, a bare `.list()` / `.filter({})` on these tables
+// issued `order('created_date')`, which PostgREST rejects with a 400
+// ("column ... does not exist"). Several call sites wrap that in
+// `.catch(() => [])`, so the failure was silent: Collection and
+// CollectionMember queries returned empty, quietly breaking shared
+// collection access.
+const ENTITY_SORT_COLUMN = {
+  Collection: 'created_at',
+  Testimonial: 'created_at',
+  AppSettings: null,
+  CollectionMember: null,
+  SocialPostPhotoUsage: null,
+};
+
+function defaultSortColumn(entityName) {
+  return entityName in ENTITY_SORT_COLUMN
+    ? ENTITY_SORT_COLUMN[entityName]
+    : 'created_date';
+}
+
+export function parseSort(sort, entityName) {
+  const tsColumn = defaultSortColumn(entityName);
+  if (!sort) {
+    // No sort requested: order by the table's timestamp column, or don't
+    // order at all when the table has none.
+    return tsColumn ? [{ column: tsColumn, ascending: false }] : [];
+  }
+  // Support comma-separated sorts: "-created_date,name". Remap a
+  // 'created_date' request to the table's actual timestamp column so a
+  // caller passing the legacy default can't 400 a created_at-only table;
+  // drop it entirely for tables with no timestamp column.
   return sort.split(',').map(s => {
     s = s.trim();
-    if (s.startsWith('-')) return { column: s.slice(1), ascending: false };
-    return { column: s, ascending: true };
-  });
+    let ascending = true;
+    if (s.startsWith('-')) { ascending = false; s = s.slice(1); }
+    if (s === 'created_date' && tsColumn !== 'created_date') {
+      if (!tsColumn) return null;
+      s = tsColumn;
+    }
+    return { column: s, ascending };
+  }).filter(Boolean);
 }
 
 function applyFilter(query, filterObj) {
@@ -241,7 +281,7 @@ function createEntityClient(entityName) {
         let query = supabase.from(tableName).select('*');
         query = applyFilter(query, filterObj);
 
-        const sorts = parseSort(sort);
+        const sorts = parseSort(sort, entityName);
         for (const { column, ascending } of sorts) {
           query = query.order(column, { ascending, nullsFirst: false });
         }

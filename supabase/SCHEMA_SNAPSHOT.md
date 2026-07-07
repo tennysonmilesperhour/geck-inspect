@@ -1,15 +1,25 @@
 # Production schema snapshot (documentation only)
 
-Snapshot date: 2026-06-10. Project: `mmuglfphhwlaluyfyxsp` (Geck Inspect).
+Snapshot date: 2026-07-07. Project: `mmuglfphhwlaluyfyxsp` (Geck Inspect).
 
 This file exists because eight early migrations are empty "remote-only
 snapshot" placeholders, so the repo could not previously tell you what
 schema or RLS the core tables actually have. This is DOCUMENTATION, not
 a migration. Do not apply it. Regenerate with the queries at the bottom.
 
+> A truly reproducible baseline (a runnable migration that rebuilds the
+> schema on a fresh project) still requires `supabase db dump --schema
+> public` run from a machine that has the database password. That is not
+> available from the MCP tooling used to refresh this doc, so this file
+> plus the full table inventory in the appendix is the authoritative
+> in-repo record until that dump is committed. The `TABLE_MAP` in
+> `src/api/supabaseEntities.js` was verified column-for-column against
+> this snapshot on 2026-07-07 (see "Entity/table reconciliation").
+
 ## Tables (public schema)
 
-96 tables. The most-touched core tables and their key columns:
+108 tables (verified 2026-07-07). The full list is in the appendix; the
+most-touched core tables and their key columns follow:
 
 ### geckos (id TEXT, Base44 legacy ids)
 name, species, hatch_date, sex, sire_id, dam_id, sire_name, dam_name,
@@ -69,7 +79,7 @@ animal_id (text), owner_user_id (uuid), owner_name, owner_avatar_url,
 acquired_date, transfer_method, sale_price,
 contributed_to_market_data, notes, created_by
 
-Full column list for all 96 tables: run query 1 below.
+Full column list for all 108 tables: run query 1 below.
 
 ## RLS policies on core tables (as deployed)
 
@@ -123,6 +133,42 @@ Full column list for all 96 tables: run query 1 below.
    not forced to carry the inserter's email at the policy level
    (created_by check exists on the legacy `public`-role policy pair).
 
+## Entity/table reconciliation (2026-07-07)
+
+Every entity in `TABLE_MAP` (`src/api/supabaseEntities.js`) maps to a
+table that exists in production. There are **zero dead mappings**. An
+earlier audit flagged `morph_traits`, `clutches`, `breeding_projects`,
+`genetic_outcome_predictions`, `questions`, `answers`, and
+`lineage_placeholders` as possibly missing; all seven exist and carry a
+`created_date` column. That was a false alarm caused by this doc only
+listing ~10 tables at the time, not by any real gap.
+
+Timestamp-column exceptions (these drive the default-sort logic in
+`parseSort`):
+
+- Use `created_at`, not `created_date`: `collections` (Collection),
+  `testimonials` (Testimonial). Also `breeder_inquiries`, `collections`,
+  `newsletter_subscribers`, `push_subscriptions`, `revenuecat_entitlements`
+  at the table level, but only the two mapped entities matter for the
+  entity layer.
+- No timestamp column at all: `app_settings` (AppSettings),
+  `collection_members` (CollectionMember), `social_post_photo_usage`
+  (SocialPostPhotoUsage), plus `revenuecat_webhook_events` (unmapped).
+
+`parseSort` defaults `list()`/`filter()` with no explicit sort to the
+right column per entity (or no order at all for the timestamp-less
+tables). Before this, a bare `Collection.filter({})` or
+`CollectionMember.filter({...})` issued `order('created_date')` and 400'd;
+several call sites swallowed that with `.catch(() => [])`, silently
+returning empty and breaking shared-collection access.
+
+Tables in production with no entity wrapper (accessed via direct
+`supabase.from(...)`, an edge function, or a React context, which is
+fine): `admin_tasks`, `breeder_inquiries`, `community_event_reactions`,
+`feature_usage`, `iot_connections`, `mentor_offers`, `morph_id_usage`,
+`newsletter_subscribers`, `push_subscriptions`, `revenuecat_entitlements`,
+`revenuecat_webhook_events`.
+
 ## How to regenerate
 
 Query 1 (columns):
@@ -140,4 +186,37 @@ Query 2 (RLS):
 select tablename, policyname, cmd, qual, with_check, roles
 from pg_policies where schemaname='public'
 order by tablename, policyname;
+```
+
+## Appendix: full table inventory (108 tables, 2026-07-07)
+
+```
+admin_tasks, answers, app_settings, blog_categories, blog_logs,
+blog_posts, blog_settings, blog_tags, breeder_inquiries,
+breeder_profiles, breeder_reviews, breeder_store_pages, breeding_loans,
+breeding_plans, breeding_projects, care_guide_sections, change_logs,
+classification_votes, clutches, collection_members, collection_valuations,
+collections, community_event_reactions, direct_messages, eggs, error_logs,
+expert_actions, expert_verification_requests, feature_usage,
+feeding_groups, feeding_records, forum_categories, forum_comments,
+forum_likes, forum_posts, future_breeding_plans, gecko_events,
+gecko_images, gecko_likes, gecko_of_the_day, gecko_waitlist_signups,
+gecko_waitlists, geckos, genetic_outcome_predictions, giveaway_entries,
+giveaways, iot_connections, lineage_placeholders, marketplace_costs,
+marketplace_likes, mentor_offers, morph_guide_comments, morph_guides,
+morph_id_usage, morph_price_cache, morph_price_entries,
+morph_reference_images, morph_traits, newsletter_subscribers,
+notifications, other_reptiles, ownership_records, page_config,
+payment_events, pending_sales, price_alerts, profiles, projects,
+promote_images, push_subscriptions, question_votes, questions,
+reptile_events, revenuecat_entitlements, revenuecat_webhook_events,
+scraped_training_data, shed_records, shipping_orders,
+social_generation_log, social_platform_connections,
+social_post_photo_usage, social_post_usage, social_post_variants,
+social_posts, social_referral_bonuses, store_affiliate_clicks,
+store_cart_items, store_carts, store_categories, store_fulfillments,
+store_order_items, store_orders, store_products, store_promo_codes,
+store_signup_grants, store_vendors, stripe_webhook_logs, support_messages,
+tasks, testimonials, transfer_requests, user_activity, user_badges,
+user_brand_voice, user_events, user_follows, vet_records, weight_records
 ```
