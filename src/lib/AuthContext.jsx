@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
 import { identifyUser, resetUser } from '@/lib/posthog';
 import { isGuestMode, setGuestMode, GUEST_USER } from '@/lib/guestMode';
@@ -33,6 +33,10 @@ export const AuthProvider = ({ children }) => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isGuest, setIsGuest] = useState(() => isGuestMode());
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  // Guards against the double profile fetch on boot: both getSession()
+  // below and onAuthStateChange's INITIAL_SESSION event fire for the same
+  // session on first load. Whichever runs first enriches; the other skips.
+  const bootEnrichedRef = useRef(false);
 
   useEffect(() => {
     // Hydrate from any existing session on mount
@@ -46,10 +50,13 @@ export const AuthProvider = ({ children }) => {
         setUser(basic);
         setIsAuthenticated(true);
         identifyUser(basic);
-        buildUser(session.user).then((enriched) => {
-          setUser(enriched);
-          identifyUser(enriched);
-        });
+        if (!bootEnrichedRef.current) {
+          bootEnrichedRef.current = true;
+          buildUser(session.user).then((enriched) => {
+            setUser(enriched);
+            identifyUser(enriched);
+          });
+        }
       } else if (isGuestMode()) {
         // Keep guest mode alive across refreshes within the tab.
         setUser(GUEST_USER);
@@ -80,6 +87,13 @@ export const AuthProvider = ({ children }) => {
         });
         setIsAuthenticated(true);
         identifyUser(basic);
+        // On boot, INITIAL_SESSION and getSession() both fire for the same
+        // session; skip this enrichment if getSession() already claimed it.
+        // Real sign-ins and token refreshes (other events) always enrich.
+        if (_event === 'INITIAL_SESSION' && bootEnrichedRef.current) {
+          return;
+        }
+        bootEnrichedRef.current = true;
         buildUser(session.user).then((enriched) => {
           setUser(enriched);
           identifyUser(enriched);
