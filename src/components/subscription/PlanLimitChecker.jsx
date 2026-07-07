@@ -15,7 +15,10 @@ import { resolveTier } from '@/lib/tierLimits';
 // Grandfathered accounts keep `breeder` tier indefinitely, they never
 // get paywalled as long as subscription_status === 'grandfathered'.
 //
-// marketplace_sync is Enterprise-only; Breeder does not include it.
+// marketplace_sync is included from Breeder up. It was briefly
+// Enterprise-only, which contradicted the Membership page and JSON-LD
+// that advertised it as a Breeder feature; the marketing was right,
+// a Breeder plan without MorphMarket sync is not a breeder plan.
 const PLAN_LIMITS = {
     free: {
         geckos: 10,
@@ -42,6 +45,7 @@ const PLAN_LIMITS = {
             'advanced_breeding', 'calendar', 'weight_tracking', 'csv_export',
             'lineage_tree', 'breeding_analytics',
             'certificates', 'featured_breeder', 'shipping_integration',
+            'marketplace_sync',
         ],
     },
     enterprise: {

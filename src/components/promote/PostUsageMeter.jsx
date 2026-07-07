@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { KEEPER_PROMO_TRIAL_DAYS } from '@/lib/stripe-config';
 import { Sparkles, AlertTriangle } from 'lucide-react';
 import { formatCents } from '@/lib/socialMedia';
 
@@ -80,7 +81,7 @@ export default function PostUsageMeter({ usage, tier, credits = 0 }) {
           <AlertTriangle className="w-3.5 h-3.5 flex-shrink-0 mt-0.5" />
           <span>
             You're out of free posts for this month. Add a card to keep posting at $0.50/post,
-            or start a free 30-day Keeper trial for 4 posts/month.
+            or start a free {KEEPER_PROMO_TRIAL_DAYS}-day Keeper trial for 4 posts/month.
           </span>
         </div>
       )}

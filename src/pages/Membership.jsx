@@ -7,7 +7,12 @@ import { Check, Sparkles, Zap, Crown, Star, Loader2, Flame, Infinity as Infinity
 import { User } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
 import SupportContactCard from '@/components/support/SupportContactCard';
-import { getTierPricing, TIER_PRICING } from '@/lib/stripe-config';
+import {
+  getTierPricing,
+  TIER_PRICING,
+  TRIAL_DAYS,
+  maxAnnualSavingsPercent,
+} from '@/lib/stripe-config';
 import Seo from '@/components/seo/Seo';
 import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
 
@@ -26,10 +31,12 @@ import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
  * Three billing cadences are surfaced through a top-of-page toggle:
  *
  *   Monthly  , recurring, the default
- *   Annual   , recurring, ~20% cheaper than 12× monthly
- *   Lifetime, one-time payment, never expires (Keeper + Breeder only;
- *               Enterprise is custom-quoted and shows "Lifetime not
- *               available, talk to us" copy when this cadence is on)
+ *   Annual   , recurring, ~17% cheaper than 12x monthly (computed from
+ *               stripe-config, never hardcoded)
+ *   Lifetime, one-time payment, never expires. The Lifetime toggle only
+ *               renders when at least one tier has a live lifetime
+ *               price_id in stripe-config; with none configured the
+ *               cadence is hidden instead of showing dead buy buttons.
  *
  * The cadence is passed through to the (still-to-be-built)
  * `stripe-checkout` edge function as `billing_cycle` along with the
@@ -88,6 +95,7 @@ const tiers = [
       'Unlimited geckos and breeding pairs',
       'Unlimited additional reptiles tracked',
       '6 AI Morph IDs per month',
+      'MorphMarket CSV sync (Palm Street pending)',
       'Sales stats and cost tracking dashboard',
       'Option to be featured on the dashboard',
       'Zero’s Geckos shipping integration',
@@ -105,7 +113,6 @@ const tiers = [
     features: [
       'Everything in Breeder',
       '15 AI Morph IDs per month',
-      'MorphMarket CSV sync (Palm Street pending)',
       'Market intelligence dashboard',
       'Pricing trends and morph demand analytics',
       'Breeding ROI projections',
@@ -115,10 +122,15 @@ const tiers = [
   },
 ];
 
+// Lifetime is only offered when a tier actually has a live Stripe price
+// for it; otherwise the toggle would lead to dead purchase buttons.
+const LIFETIME_AVAILABLE = Object.values(TIER_PRICING).some(
+  (t) => t.lifetime?.price_id,
+);
 const CYCLE_OPTIONS = [
   { key: 'monthly',  label: 'Monthly' },
-  { key: 'annual',   label: 'Annual',   hint: 'Save 20%' },
-  { key: 'lifetime', label: 'Lifetime', hint: 'Pay once' },
+  { key: 'annual',   label: 'Annual',   hint: `Save up to ${maxAnnualSavingsPercent()}%` },
+  ...(LIFETIME_AVAILABLE ? [{ key: 'lifetime', label: 'Lifetime', hint: 'Pay once' }] : []),
 ];
 
 // SoftwareApplication + Offer JSON-LD for the pricing page. AI assistants
@@ -139,7 +151,9 @@ function priceToNumber(p) {
   return Number(String(p).replace(/[^0-9.]/g, ''));
 }
 const MEMBERSHIP_OFFERS = PRICED_TIERS.flatMap((tier) =>
-  Object.entries(TIER_PRICING[tier]).map(([cycle, p]) => ({
+  Object.entries(TIER_PRICING[tier])
+    .filter(([, p]) => p.price_id) // only combos that are actually purchasable
+    .map(([cycle, p]) => ({
     '@type': 'Offer',
     name: `Geck Inspect ${tier[0].toUpperCase() + tier.slice(1)} (${cycle})`,
     price: priceToNumber(p.price).toFixed(2),
@@ -148,8 +162,11 @@ const MEMBERSHIP_OFFERS = PRICED_TIERS.flatMap((tier) =>
     url: `${SITE_URL}/Membership`,
     category: cycle === 'lifetime' ? 'one-time' : 'subscription',
     description: p.priceCaption,
-  })),
+    })),
 );
+const MEMBERSHIP_HIGH_PRICE = Math.max(
+  ...MEMBERSHIP_OFFERS.map((o) => Number(o.price)),
+).toFixed(0);
 const MEMBERSHIP_JSON_LD = [
   {
     '@type': 'SoftwareApplication',
@@ -166,7 +183,7 @@ const MEMBERSHIP_JSON_LD = [
       '@type': 'AggregateOffer',
       priceCurrency: 'USD',
       lowPrice: '0',
-      highPrice: '349',
+      highPrice: MEMBERSHIP_HIGH_PRICE,
       offerCount: MEMBERSHIP_OFFERS.length + 3, // + 3 free-tier rows
       offers: MEMBERSHIP_OFFERS,
     },
@@ -200,7 +217,7 @@ const MEMBERSHIP_JSON_LD = [
         name: 'How much does Geck Inspect cost?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Geck Inspect has a Free tier (10 geckos), a Keeper tier ($2.99/month, $30/year, or $149 lifetime), a Breeder tier ($5.99/month, $60/year, or $349 lifetime), and a custom-quoted Enterprise tier. Annual plans save vs monthly; lifetime plans are a one-time purchase with no renewals.',
+          text: `Geck Inspect has a Free tier (10 geckos), a Keeper tier ($2.99/month or $30/year), a Breeder tier ($5.99/month or $60/year), and an Enterprise tier ($99.99/month or $1,000/year). Every paid plan starts with a ${TRIAL_DAYS}-day free trial, and annual billing saves about 17% vs monthly.`,
         },
       },
       {
@@ -208,7 +225,7 @@ const MEMBERSHIP_JSON_LD = [
         name: 'Can I try a paid plan before subscribing?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Yes, every recurring (monthly or annual) Keeper and Breeder plan includes a 7-day free trial. Lifetime purchases are one-time and do not include a trial.',
+          text: `Yes, every recurring (monthly or annual) paid plan includes a ${TRIAL_DAYS}-day free trial. No charge until the trial ends, and you can cancel before it does.`,
         },
       },
       {
@@ -224,7 +241,7 @@ const MEMBERSHIP_JSON_LD = [
         name: 'Can I cancel anytime?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Yes. Monthly and annual subscriptions can be cancelled at any time from your account settings. Lifetime purchases are one-time and do not require cancellation.',
+          text: 'Yes. Monthly and annual subscriptions can be cancelled at any time from your account settings.',
         },
       },
     ],
@@ -376,7 +393,7 @@ export default function MembershipPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 p-6">
       <Seo
         title="Pricing & Plans"
-        description="Geck Inspect plans for crested gecko keepers and breeders. Free (10 geckos), Keeper ($2.99/mo, $30/yr, $149 lifetime), Breeder ($5.99/mo, $60/yr, $349 lifetime), and custom Enterprise. 7-day free trial on recurring plans. Cancel anytime."
+        description={`Geck Inspect plans for crested gecko keepers and breeders. Free (10 geckos), Keeper ($2.99/mo or $30/yr), Breeder ($5.99/mo or $60/yr), and Enterprise. ${TRIAL_DAYS}-day free trial on paid plans. Cancel anytime.`}
         path="/Membership"
         type="website"
         imageAlt="Geck Inspect membership plans, Free, Keeper, Breeder, and Enterprise tiers"
@@ -394,8 +411,8 @@ export default function MembershipPage() {
         {/* Header */}
         <div className="text-center space-y-4">
           <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-            Choose the tier that fits your collection. Cancel anytime, recurring plans
-            include a 7-day free trial. Lifetime is a one-time purchase.
+            Choose the tier that fits your collection. Every paid plan starts
+            with a {TRIAL_DAYS}-day free trial. Cancel anytime.
           </p>
 
           <div className="flex justify-center pt-2">

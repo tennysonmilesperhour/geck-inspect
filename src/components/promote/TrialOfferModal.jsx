@@ -3,11 +3,13 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } f
 import { Sparkles, CreditCard, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import { KEEPER_PROMO_TRIAL_DAYS, TIER_PRICING } from '@/lib/stripe-config';
 
 // Modal that fires when a Free user tries to publish their 2nd post in a
 // month. Three options:
-//   1. Start a 30-day Keeper trial (recommended). Card required.
-//      Auto-converts to Keeper $2.99/mo unless cancelled.
+//   1. Start a Keeper trial (KEEPER_PROMO_TRIAL_DAYS, currently 30 days;
+//      recommended). Card required.
+//      Auto-converts to paid Keeper (price from stripe-config) unless cancelled.
 //   2. Add a card and keep posting at $0.50/post overage.
 //   3. Upgrade now to a paid tier (skips the trial).
 //
@@ -51,16 +53,16 @@ export default function TrialOfferModal({ open, onOpenChange, tier, trialAlready
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 mb-1">
-                      <span className="font-semibold text-emerald-100">Try Keeper free for 30 days</span>
+                      <span className="font-semibold text-emerald-100">Try Keeper free for {KEEPER_PROMO_TRIAL_DAYS} days</span>
                       <span className="text-[10px] uppercase tracking-wider px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-200 font-bold">
                         Recommended
                       </span>
                     </div>
                     <p className="text-sm text-emerald-200/80 mb-2">
-                      4 posts every month, full feature access, no charge for 30 days.
+                      4 posts every month, full feature access, no charge for {KEEPER_PROMO_TRIAL_DAYS} days.
                     </p>
                     <p className="text-xs text-emerald-300/70">
-                      $2.99/month after the trial. Cancel anytime, day-25 reminder email.
+                      {TIER_PRICING.keeper.monthly.price}/month after the trial. Cancel anytime, day-25 reminder email.
                     </p>
                   </div>
                   <ArrowRight className="w-4 h-4 text-emerald-300 mt-1" />
