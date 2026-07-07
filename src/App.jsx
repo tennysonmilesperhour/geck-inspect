@@ -239,7 +239,11 @@ const AuthenticatedApp = () => {
           <Route path="/MorphGuide" element={<MorphGuideList />} />
           <Route path="/MorphGuide/category/:categoryId" element={<MorphCategoryHub />} />
           <Route path="/MorphGuide/inheritance/:inheritanceId" element={<MorphInheritanceHub />} />
-          <Route path="/MorphGuide/lines/:slug" element={<ProjectLineDetail />} />
+          {/* Legacy self-serve subscription page, removed 2026-07 (it let
+            users set membership_tier without paying). Old links land on
+            the real pricing/checkout page. */}
+        <Route path="/Subscription" element={<Navigate to="/Membership" replace />} />
+        <Route path="/MorphGuide/lines/:slug" element={<ProjectLineDetail />} />
           <Route path="/MorphGuide/:slug" element={<MorphDetail />} />
           <Route path="/CareGuide" element={<CareGuide />} />
           <Route path="/CareGuide/series" element={<CareGuideSeries />} />

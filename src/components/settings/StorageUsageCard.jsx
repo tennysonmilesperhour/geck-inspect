@@ -102,7 +102,7 @@ export default function StorageUsageCard({ user }) {
 
             {!isUnlimited && (
               <div className="pt-2">
-                <Link to={createPageUrl('Subscription')}>
+                <Link to={createPageUrl('Membership')}>
                   <Button
                     variant="outline"
                     size="sm"

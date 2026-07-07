@@ -106,7 +106,6 @@ const PublicProfile         = lazy(() => import('./pages/PublicProfile'));
 const Recognition           = lazy(() => import('./pages/Recognition'));
 const Settings              = lazy(() => import('./pages/Settings'));
 const Shipping              = lazy(() => import('./pages/Shipping'));
-const Subscription          = lazy(() => import('./pages/Subscription'));
 const TrainModel            = lazy(() => import('./pages/TrainModel'));
 const Training              = lazy(() => import('./pages/Training'));
 
@@ -176,7 +175,6 @@ export const PAGES = {
     "Recognition": Recognition,
     "Settings": Settings,
     "Shipping": Shipping,
-    "Subscription": Subscription,
     "TrainModel": TrainModel,
     "Training": Training,
     // P2–P8 Feature pages

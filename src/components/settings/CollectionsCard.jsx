@@ -271,7 +271,7 @@ export default function CollectionsCard({ user }) {
                     for unlimited.
                   </p>
                 </div>
-                <Link to={createPageUrl('Subscription')}>
+                <Link to={createPageUrl('Membership')}>
                   <Button
                     variant="outline"
                     size="sm"

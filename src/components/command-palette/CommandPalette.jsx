@@ -68,7 +68,7 @@ const NAV_ITEMS = [
 
   // Account
   { label: 'Settings',           page: 'Settings',           icon: Settings,        section: 'Account', keywords: ['preferences', 'config'] },
-  { label: 'Subscription',       page: 'Subscription',       icon: Trophy,          section: 'Account', keywords: ['membership', 'billing'] },
+  { label: 'Membership',         page: 'Membership',         icon: Trophy,          section: 'Account', keywords: ['membership', 'billing', 'subscription', 'upgrade'] },
 ];
 
 // Shared row styling so every item looks the same whether it's an action
