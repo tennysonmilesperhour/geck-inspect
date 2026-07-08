@@ -1,1 +1,0 @@
-export { PageConfig } from './all';

@@ -1,1 +1,0 @@
-export { MorphReferenceImage } from './all';

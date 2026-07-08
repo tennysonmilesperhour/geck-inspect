@@ -1,1 +1,0 @@
-export { MorphGuideComment } from './all';
