@@ -314,6 +314,11 @@ export default function MyGeckosPage() {
             has_image: Array.isArray(geckoData?.image_urls) && geckoData.image_urls.length > 0,
             has_lineage: Boolean(geckoData?.sire_id || geckoData?.dam_id || geckoData?.sire_name || geckoData?.dam_name),
         });
+        // Activation milestone: this add was the user's first gecko (the
+        // pre-save list, still in state here, was empty of live geckos).
+        if (isNew && geckos.filter((g) => !g.archived).length === 0) {
+            captureEvent('first_gecko_added');
+        }
 
         // Notify any other page listening on the gecko list (Dashboard,
         // Lineage, Breeding, etc.) so their caches can invalidate.

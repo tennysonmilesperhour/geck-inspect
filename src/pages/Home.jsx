@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/lib/AuthContext';
+import { captureEvent } from '@/lib/posthog';
 import '@/styles/layout-theme.css';
 import {
   Dna,
@@ -242,7 +243,8 @@ export default function Home() {
   const { enterGuestMode, isAuthenticated } = useAuth();
   const navigate = useNavigate();
 
-  const handleContinueAsGuest = () => {
+  const handleContinueAsGuest = (cta = 'hero') => {
+    captureEvent('landing_cta_clicked', { cta, target: 'guest' });
     enterGuestMode();
     navigate(createPageUrl('Dashboard'));
   };
@@ -324,7 +326,10 @@ export default function Home() {
               Giveaways
             </Link>
           </nav>
-          <Link to={createPageUrl('AuthPortal')}>
+          <Link
+            to={createPageUrl('AuthPortal')}
+            onClick={() => captureEvent('landing_cta_clicked', { cta: 'nav', target: 'signin' })}
+          >
             <Button className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold">
               Sign In
             </Button>
@@ -355,7 +360,7 @@ export default function Home() {
             {showGuestCta ? (
               <Button
                 size="lg"
-                onClick={handleContinueAsGuest}
+                onClick={() => handleContinueAsGuest('hero')}
                 className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-base px-8 py-6 gecko-glow"
               >
                 Try Now for Free
@@ -372,7 +377,10 @@ export default function Home() {
                 </Button>
               </Link>
             )}
-            <Link to={createPageUrl('AuthPortal')}>
+            <Link
+              to={createPageUrl('AuthPortal')}
+              onClick={() => captureEvent('landing_cta_clicked', { cta: 'hero', target: 'signin' })}
+            >
               <Button
                 size="lg"
                 variant="outline"
@@ -827,7 +835,7 @@ export default function Home() {
             {showGuestCta ? (
               <Button
                 size="lg"
-                onClick={handleContinueAsGuest}
+                onClick={() => handleContinueAsGuest('bottom')}
                 className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-base px-8 py-6 gecko-glow"
               >
                 Try Now for Free

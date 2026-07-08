@@ -1,9 +1,11 @@
+import { useEffect } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Sparkles, Lock, ArrowRight, Check } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { resolveTier } from '@/lib/tierLimits';
+import { captureEvent } from '@/lib/posthog';
 
 // Plan limits and feature flags. Source of truth for:
 //   - how many geckos the user can own (geckos)
@@ -163,6 +165,11 @@ export function getOtherReptileLimit(user) {
 export { PLAN_LIMITS, effectiveTier };
 
 export default function PlanLimitModal({ isOpen, onClose, limitType, currentCount, featureName }) {
+    // Funnel: a paywall was shown (which limit triggered it).
+    useEffect(() => {
+        if (isOpen) captureEvent('upgrade_prompt_shown', { limit_type: limitType });
+    }, [isOpen, limitType]);
+
     const isGeckoLimit = limitType === 'geckos';
     const isPairLimit = limitType === 'breeding_pairs';
     const isOtherReptileLimit = limitType === 'other_reptiles';
@@ -262,7 +269,11 @@ export default function PlanLimitModal({ isOpen, onClose, limitType, currentCoun
                         <Button variant="outline" onClick={onClose} className="flex-1 border-slate-600">
                             Maybe Later
                         </Button>
-                        <Link to={createPageUrl("Membership")} className="flex-1">
+                        <Link
+                            to={createPageUrl("Membership")}
+                            className="flex-1"
+                            onClick={() => captureEvent('upgrade_prompt_clicked', { limit_type: limitType })}
+                        >
                             <Button className="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700">
                                 View Plans
                                 <ArrowRight className="w-4 h-4 ml-2" />

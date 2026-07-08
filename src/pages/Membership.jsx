@@ -15,6 +15,7 @@ import {
 } from '@/lib/stripe-config';
 import Seo from '@/components/seo/Seo';
 import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
+import { captureEvent } from '@/lib/posthog';
 
 /**
  * Membership / pricing page.
@@ -323,6 +324,20 @@ export default function MembershipPage() {
     User.me().then(setUser).catch(() => setUser(null));
   }, []);
 
+  // Funnel: the pricing page was viewed, and, on return from Stripe, whether
+  // checkout completed or was cancelled.
+  useEffect(() => {
+    captureEvent('membership_viewed');
+    try {
+      const params = new URLSearchParams(window.location.search);
+      const checkout = params.get('checkout');
+      if (checkout === 'success') captureEvent('checkout_completed');
+      else if (checkout === 'cancelled') captureEvent('checkout_cancelled');
+    } catch {
+      // URL parsing unavailable; skip
+    }
+  }, []);
+
   const isGrandfathered =
     user?.subscription_status === 'grandfathered' && user?.membership_tier === 'breeder';
   const currentTier = user?.membership_tier || null;
@@ -359,6 +374,8 @@ export default function MembershipPage() {
       return;
     }
 
+    captureEvent('plan_selected', { tier: tier.key, interval: cycle });
+    captureEvent('checkout_started', { tier: tier.key, interval: cycle });
     setLoadingTier(tier.key);
     try {
       const { data, error } = await supabase.functions.invoke('stripe-checkout', {

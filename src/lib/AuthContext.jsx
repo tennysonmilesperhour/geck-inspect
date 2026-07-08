@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
-import { identifyUser, resetUser } from '@/lib/posthog';
+import { identifyUser, resetUser, captureEvent } from '@/lib/posthog';
 import { isGuestMode, setGuestMode, GUEST_USER } from '@/lib/guestMode';
 import { applyPendingReferral } from '@/lib/referral';
 import { applyPendingSignupGrant } from '@/lib/store/signupGrant';
@@ -90,6 +90,11 @@ export const AuthProvider = ({ children }) => {
         // On boot, INITIAL_SESSION and getSession() both fire for the same
         // session; skip this enrichment if getSession() already claimed it.
         // Real sign-ins and token refreshes (other events) always enrich.
+        // Fire the funnel completion event on an actual sign-in (not on
+        // boot hydration or token refresh).
+        if (_event === 'SIGNED_IN') {
+          captureEvent('login_completed');
+        }
         if (_event === 'INITIAL_SESSION' && bootEnrichedRef.current) {
           return;
         }
@@ -192,6 +197,7 @@ export const AuthProvider = ({ children }) => {
   };
 
   const enterGuestMode = () => {
+    captureEvent('guest_mode_entered');
     setGuestMode(true);
     setUser(GUEST_USER);
     setIsGuest(true);

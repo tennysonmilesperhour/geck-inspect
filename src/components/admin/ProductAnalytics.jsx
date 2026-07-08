@@ -98,9 +98,14 @@ const STARTER_SUGGESTIONS = [
     insight_url_hint: 'Insights → New insight → Trends → Total count, breakdown by event',
   },
   {
+    title: 'Acquisition funnel',
+    why: 'Landing CTA to guest or sign-in to activation. Measures if the landing page converts.',
+    insight_url_hint: 'Funnel → landing_cta_clicked → guest_mode_entered OR login_completed → first_gecko_added',
+  },
+  {
     title: 'Paid conversion funnel',
-    why: 'Free users → /Membership pageview → checkout. Measures if pricing pages convert.',
-    insight_url_hint: 'Insights → New insight → Funnel → $pageview (anywhere) → $pageview (Membership) → check Stripe',
+    why: 'Pricing view to plan select to checkout complete. Upgrade prompts feed the top.',
+    insight_url_hint: 'Funnel → upgrade_prompt_shown → upgrade_prompt_clicked → membership_viewed → plan_selected → checkout_started → checkout_completed',
   },
   {
     title: 'Store conversion funnel (Phase 1)',
