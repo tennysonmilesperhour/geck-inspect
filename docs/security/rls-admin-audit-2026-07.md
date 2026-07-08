@@ -79,7 +79,8 @@ silently filters the UPDATE to zero rows. In production, "Make Admin",
 **Fix:** migration
 `supabase/migrations/20260707000000_profiles_admin_update_policy.sql`
 adds a permissive admin UPDATE policy using the standard email check.
-It is committed but NOT YET APPLIED to production; apply after review.
+APPLIED to production 2026-07-07 (verified: `profiles_update_admin`
+now present alongside `profiles_update_own`).
 The self-referential `exists (select 1 from profiles ...)` is safe here
 because `profiles_read_all` (`using (true)`) makes the subquery
 permissive, the same construction already used by `profiles_delete_admin`

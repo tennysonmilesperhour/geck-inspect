@@ -1,8 +1,8 @@
 -- Add an admin UPDATE policy to public.profiles.
 --
--- NOT YET APPLIED TO PRODUCTION. Committed for review as part of the
--- 2026-07 RLS admin audit (see docs/security/rls-admin-audit-2026-07.md).
--- Apply with `supabase db push` or the dashboard after review.
+-- APPLIED TO PRODUCTION 2026-07-07 (via Supabase apply_migration, after
+-- review). Part of the 2026-07 RLS admin audit
+-- (see docs/security/rls-admin-audit-2026-07.md).
 --
 -- Gap found: the admin User Management screen
 -- (src/components/admin/UserManagement.jsx) grants/revokes the `admin`
