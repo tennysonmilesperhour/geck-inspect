@@ -535,6 +535,11 @@ Verification after each: pnpm lint && pnpm typecheck && pnpm build.
 
 ## 4. Phase 3: Dead code and redundancy cleanup
 
+**STATUS: COMPLETED 2026-07-07.** Notes:
+- 3.1: fresh greps caught two stale audit claims before deleting: `MorphGuideComment` the entity is still live (admin ContentModeration imports it from `@/entities/all`), so only the redundant shim file was removed; and removing `Passport.jsx` fully orphaned `innovations/GeckoPassport.jsx` (both its exports), which was deleted too. Also removed the four unused UI primitives + their four deps, and archived the root `base44/` snapshot to `docs/archive/base44/`. Build/tests/lint stayed green throughout.
+- 3.2: done as a safe first increment, NOT a big-bang rewrite. `KNOWN_MORPH_SLUGS` now derives from the morph guide (it had already drifted, missing `cream`). The six catalogues use three id schemes and genuinely different morph sets, and the genetics dimension is already CI-checked, so the full consolidation is staged in `docs/specs/morph-catalogue-consolidation.md` rather than forced in one risky pass.
+- 3.3: analysis only, delivered as `docs/specs/storefront-consolidation.md`. Recommends one public storefront (`Breeder.jsx`) + one editor (`MyStore.jsx`), with an ordered, publicly-safe execution plan. No storefront code was changed.
+
 All findings verified by import-graph greps. The "do not remove" list at the end matters as much as the deletions.
 
 ### 3.1 Confirmed-dead deletion sweep
