@@ -7,10 +7,14 @@ import { getConnection, pollSensors } from '@/lib/iotClient';
 
 // Crested gecko climate bands. Cresties stress above 78F and overheat
 // fast above 82F, so the temperature scale leans cautious on purpose.
+// Each band carries a `status` WORD, not just a color, so the reading is
+// legible without relying on the red/amber/green tone (colorblind users,
+// screen readers). The word is rendered in the chip and in its aria-label.
 function tempBand(tempF) {
   if (tempF == null) return null;
   if (tempF > 82) {
     return {
+      status: 'Hot',
       tone: 'text-red-300 border-red-500/50 bg-red-500/10',
       alert: 'Above 82F is dangerous for crested geckos. Cool this enclosure now.',
       danger: true,
@@ -18,28 +22,30 @@ function tempBand(tempF) {
   }
   if (tempF >= 78) {
     return {
+      status: 'Warm',
       tone: 'text-amber-300 border-amber-500/40 bg-amber-500/10',
       alert: 'Running warm. Cresties do best below 78F.',
     };
   }
   if (tempF >= 65) {
-    return { tone: 'text-emerald-300 border-emerald-500/40 bg-emerald-500/10' };
+    return { status: 'Good', tone: 'text-emerald-300 border-emerald-500/40 bg-emerald-500/10' };
   }
-  return { tone: 'text-slate-300 border-slate-600 bg-slate-800/60' };
+  return { status: 'Cool', tone: 'text-slate-300 border-slate-600 bg-slate-800/60' };
 }
 
 function humidityBand(humidity) {
   if (humidity == null) return null;
   if (humidity < 40) {
     return {
+      status: 'Low',
       tone: 'text-amber-300 border-amber-500/40 bg-amber-500/10',
       alert: 'Humidity is low. Mist soon.',
     };
   }
   if (humidity >= 50 && humidity <= 80) {
-    return { tone: 'text-emerald-300 border-emerald-500/40 bg-emerald-500/10' };
+    return { status: 'Good', tone: 'text-emerald-300 border-emerald-500/40 bg-emerald-500/10' };
   }
-  return { tone: 'text-slate-300 border-slate-600 bg-slate-800/60' };
+  return { status: 'Check', tone: 'text-slate-300 border-slate-600 bg-slate-800/60' };
 }
 
 /**
@@ -163,13 +169,21 @@ export default function EnclosureClimate({ user }) {
               <div className="flex items-center justify-between gap-3">
                 <p className="text-sm text-slate-200 truncate">{m.label}</p>
                 <div className="flex items-center gap-2 shrink-0">
-                  <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium ${temp ? temp.tone : 'text-slate-500 border-slate-700 bg-slate-800/60'}`}>
-                    <Thermometer className="w-3 h-3" />
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium ${temp ? temp.tone : 'text-slate-500 border-slate-700 bg-slate-800/60'}`}
+                    aria-label={tempF != null ? `Temperature ${tempF} degrees Fahrenheit, ${temp?.status || ''}`.trim() : 'Temperature, no data'}
+                  >
+                    <Thermometer className="w-3 h-3" aria-hidden="true" />
                     {tempF != null ? `${tempF}°F` : 'no data'}
+                    {temp?.status && <span className="opacity-80">· {temp.status}</span>}
                   </span>
-                  <span className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium ${humid ? humid.tone : 'text-slate-500 border-slate-700 bg-slate-800/60'}`}>
-                    <Droplets className="w-3 h-3" />
+                  <span
+                    className={`inline-flex items-center gap-1 rounded-md border px-2 py-0.5 text-xs font-medium ${humid ? humid.tone : 'text-slate-500 border-slate-700 bg-slate-800/60'}`}
+                    aria-label={humidity != null ? `Humidity ${humidity} percent, ${humid?.status || ''}`.trim() : 'Humidity, no data'}
+                  >
+                    <Droplets className="w-3 h-3" aria-hidden="true" />
                     {humidity != null ? `${humidity}%` : 'no data'}
+                    {humid?.status && <span className="opacity-80">· {humid.status}</span>}
                   </span>
                 </div>
               </div>
