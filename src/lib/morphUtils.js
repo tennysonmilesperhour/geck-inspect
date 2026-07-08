@@ -7,6 +7,7 @@
  * back into a display name, and pick the "best" record when multiple
  * rows describe the same morph.
  */
+import { MORPHS } from '@/data/morph-guide';
 
 /**
  * Turn a morph name into a URL slug.
@@ -89,42 +90,12 @@ export function indexMorphsBySlug(records) {
 }
 
 /**
- * Canonical slug list used for sitemap generation and cross-linking.
- * Matches the actual morphs in the database as of migration time. If
- * you add new morph_guides records, add slugs here so they appear in
- * the static sitemap too.
+ * Canonical slug list used for cross-linking and morph-detail navigation.
+ * Derived directly from the morph guide (src/data/morph-guide.js) so it
+ * can never drift from the actual set of morph pages. It previously was a
+ * hand-maintained duplicate that had already fallen out of sync (it was
+ * missing 'cream'), which is the kind of six-sources-of-truth hazard the
+ * morph-catalogue consolidation targets. See
+ * docs/specs/morph-catalogue-consolidation.md.
  */
-export const KNOWN_MORPH_SLUGS = [
-  'axanthic',
-  'bicolor',
-  'brindle',
-  'buckskin',
-  'cappuccino',
-  'chocolate',
-  'dalmatian',
-  'extreme-brindle',
-  'extreme-harlequin',
-  'flame',
-  'frappuccino',
-  'harlequin',
-  'hypo',
-  'lavender',
-  'lilly-white',
-  'moonglow',
-  'olive',
-  'orange-base',
-  'patternless',
-  'phantom-pinstripe',
-  'pinstripe',
-  'red-base',
-  'soft-scale',
-  'super-dalmatian',
-  'super-soft-scale',
-  'tiger',
-  'tiger-brindle',
-  'translucent',
-  'tricolor',
-  'white-wall',
-  'white-wall-white-spot',
-  'yellow-base',
-];
+export const KNOWN_MORPH_SLUGS = MORPHS.map((m) => m.slug);
