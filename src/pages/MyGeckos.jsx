@@ -36,6 +36,7 @@ import { exportGeckosCSV, exportGeckosPDF } from '@/lib/exportUtils';
 import { captureEvent } from '@/lib/posthog';
 import { useGeckoFilters } from '@/hooks/useGeckoFilters';
 import { retryApiCall } from '@/lib/layoutCache';
+import { useLocation } from 'react-router-dom';
 
 const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
 
@@ -50,6 +51,9 @@ export default function MyGeckosPage() {
     const scrollPositionRef = React.useRef(0);
     const [isLoading, setIsLoading] = useState(true);
     const [user, setUser] = useState(null);
+    const location = useLocation();
+    // Guards the one-time consumption of an incoming AI Morph ID draft.
+    const morphDraftConsumedRef = React.useRef(false);
     const [isFormOpen, setIsFormOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
@@ -261,6 +265,41 @@ export default function MyGeckosPage() {
     const handleArchiveReasonConfirm = (reason) => {
         handleArchiveGecko(archiveDialogGeckoId, true, reason);
     };
+
+    // Consume an AI Morph ID draft handed off from the Recognition page
+    // (via router state for signed-in users, or sessionStorage for users
+    // who had to sign in first). Opens the add-gecko form pre-filled with
+    // the identified photos and morphs. Runs once, after the collection
+    // has loaded so the plan limit can be enforced.
+    useEffect(() => {
+        if (isLoading || !user || morphDraftConsumedRef.current) return;
+        let draft = location.state?.geckoDraft || null;
+        if (!draft) {
+            try {
+                const stashed = sessionStorage.getItem('pending_gecko_draft');
+                if (stashed) draft = JSON.parse(stashed);
+            } catch {
+                draft = null;
+            }
+        }
+        if (!draft) return;
+
+        morphDraftConsumedRef.current = true;
+        try { sessionStorage.removeItem('pending_gecko_draft'); } catch { /* ignore */ }
+        // Clear router state so a refresh doesn't reopen the form.
+        if (location.state?.geckoDraft) window.history.replaceState({}, '');
+
+        const limit = getGeckoLimit(user);
+        if (geckos.filter((g) => !g.archived).length >= limit) {
+            setShowUpgradeModal(true);
+            return;
+        }
+        setSelectedGecko(draft);
+        setIsFormOpen(true);
+        captureEvent('morph_id_gecko_prefilled', {
+            morph_count: Array.isArray(draft.morph_tags) ? draft.morph_tags.length : 0,
+        });
+    }, [isLoading, user, geckos, location.state]);
 
     const handleFormSubmit = async (geckoData, isNew) => {
         const savedScroll = scrollPositionRef.current;

@@ -5,10 +5,13 @@ import { Label } from '@/components/ui/label';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Sparkles, ArrowRight, Camera, Lock } from 'lucide-react';
+import { Loader2, Sparkles, ArrowRight, Camera, Lock, PlusCircle } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
+import { useNavigate } from 'react-router-dom';
 import { recognizeGeckoMorph } from '../functions/recognizeGeckoMorph';
 import { useAuth } from '@/lib/AuthContext';
+import { buildGeckoDraftFromAnalysis } from '@/lib/morphIdDraft';
+import { captureEvent } from '@/lib/posthog';
 
 import MorphCorrectionPanel from '../components/morph-id/MorphCorrectionPanel';
 import CommunityTrainingStats from '../components/morph-id/CommunityTrainingStats';
@@ -48,7 +51,8 @@ const FRIENDLY_ERROR = {
 
 export default function Recognition() {
   const { toast } = useToast();
-  const { user } = useAuth();
+  const { user, isGuest } = useAuth();
+  const navigate = useNavigate();
   const isAdmin = user?.role === 'admin';
   const [imageUrls, setImageUrls] = useState([]);
   const [ageStage, setAgeStage] = useState('unknown');
@@ -67,6 +71,30 @@ export default function Recognition() {
     setMeta(null);
     setError(null);
     setSavedOnce(false);
+  };
+
+  // The headline funnel: turn the AI result into a pre-filled new gecko
+  // instead of making the user re-key everything. Signed-in users go
+  // straight to the add flow with the draft in router state; guests get
+  // the draft stashed and are sent to sign in, then it is restored on
+  // their first visit to MyGeckos.
+  const handleAddToCollection = () => {
+    const draft = buildGeckoDraftFromAnalysis(analysis, imageUrls);
+    if (!draft) return;
+    captureEvent('morph_id_add_to_collection_clicked', {
+      morph_count: draft.morph_tags.length,
+      is_guest: Boolean(isGuest) || !user,
+    });
+    if (user && !isGuest) {
+      navigate('/MyGeckos', { state: { geckoDraft: draft } });
+    } else {
+      try {
+        sessionStorage.setItem('pending_gecko_draft', JSON.stringify(draft));
+      } catch {
+        // sessionStorage unavailable (private mode): fall through to sign-in
+      }
+      navigate('/AuthPortal');
+    }
   };
 
   const analyze = async () => {
@@ -247,6 +275,26 @@ export default function Recognition() {
           <p className="text-xs text-slate-500 text-center">
             {meta.credits_remaining} of {meta.credits_included} MorphID credits left this month.
           </p>
+        )}
+
+        {analysis && (
+          <Card className="bg-emerald-950/30 border-emerald-700">
+            <CardContent className="p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <p className="font-semibold text-emerald-100">Add this gecko to your collection</p>
+                <p className="text-sm text-emerald-200/80 mt-1">
+                  We'll pre-fill the photos and the morphs we identified, then you review and save.
+                </p>
+              </div>
+              <Button
+                size="lg"
+                onClick={handleAddToCollection}
+                className="bg-emerald-600 hover:bg-emerald-500 shrink-0"
+              >
+                <PlusCircle className="w-5 h-5 mr-2" /> Add to my collection
+              </Button>
+            </CardContent>
+          </Card>
         )}
 
         {analysis && (
