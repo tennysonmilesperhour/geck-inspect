@@ -254,4 +254,3 @@ The genetics guide is an educational reference. The actual tools live elsewhere 
 - Olsson, M., Stuart-Fox, D., Ballen, C. (2013). Genetics and evolution of colour patterns in reptiles. *Seminars in Cell and Developmental Biology* 24(6-7): 529-541.
 - Garcia-Elfring, A. et al. (2023). Piebaldism and chromatophore development in reptiles are linked to the tfec gene. *Current Biology* 33(4): 755-763.
 - Bagnara, J.T. (1998). Comparative Anatomy and Physiology of Pigment Cells in Nonmammalian Tissues. In *The Pigmentary System: Physiology and Pathophysiology.* Oxford University Press.
-- Tenny's Crested Geckos. Crested Gecko Investment Guide 2025. https://tennyscrestedgeckos.com/crested-gecko-investment-guide-2025/

@@ -265,9 +265,13 @@ This is the kind of feature that gets you written about in the breeder community
    `https://lmreptiles.com/foundation-genetics/`
    PDF version: `https://lmreptiles.com/wp-content/uploads/2023/04/Crested-Gecko-Foundation-Genetics_v0.7.pdf`
 
-4. **Existing internal reference:**
-   `https://tennyscrestedgeckos.com/crested-gecko-investment-guide-2025/`
-   Used elsewhere in the app as the canonical pricing/morph reference.
+4. **Third-party pricing reference (NOT affiliated with Geck Inspect):**
+   An external crested-gecko investment guide exists online, but the
+   domain that hosts it belongs to an unrelated breeder who happens to
+   share Tennyson's first name. It is NOT Tennyson's site and must never
+   be presented as a Geck Inspect or founder reference (see the domain
+   disambiguation note in CLAUDE.md). Do not embed or cite it in
+   app-facing content.
 
 ## Recommended order of operations for Claude Code
 

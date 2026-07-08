@@ -6,7 +6,7 @@
 
 ## 0. Executive summary
 
-**Cretti** (크레티) is a Korean-built, globally-launched mobile platform for crested gecko keepers and breeders, developed by Lee Hyeonwoo (이현우) out of Yongin, South Korea, under Hyeonwoo Lee on the App Store. It is *not* positioning itself as a pet care app. It is positioning itself, in Korean tech press, as **the data infrastructure for a "Reptile Economy"** (파충류 경제) — a verifiable pedigree, trust, and commerce layer that other parts of the reptile industry (vet care, nutrition, supplies) eventually plug into.
+**Cretti** (크레티) is a Korean-built, globally-launched mobile platform for crested gecko keepers and breeders, developed by Lee Hyeonwoo (이현우) out of Yongin, South Korea, under Hyeonwoo Lee on the App Store. It is *not* positioning itself as a pet care app. It is positioning itself, in Korean tech press, as **the data infrastructure for a "Reptile Economy"** (파충류 경제), a verifiable pedigree, trust, and commerce layer that other parts of the reptile industry (vet care, nutrition, supplies) eventually plug into.
 
 It launched on iOS and Android with a coordinated PR push in April 2026, claims roughly 1,000 users and 2,000 individual geckos registered in its first month, and has zero App Store reviews as of pull date. It runs a deliberate two-track marketing strategy: soft enthusiast-community framing in English, hard industry-infrastructure framing in Korean.
 
@@ -23,10 +23,10 @@ It launched on iOS and Android with a coordinated PR push in April 2026, claims 
 ### Identity
 
 - **Brand name:** CRETTI (크레티)
-- **Naming logic:** "크레" is the universal Korean nickname for crested geckos (from English "crested"). Adding "티" gives it a slightly anthropomorphized, personable ring. It's the affectionate hobbyist nickname turned brand. This is genuinely clever naming — it lives inside the existing vocabulary of the audience.
+- **Naming logic:** "크레" is the universal Korean nickname for crested geckos (from English "crested"). Adding "티" gives it a slightly anthropomorphized, personable ring. It's the affectionate hobbyist nickname turned brand. This is genuinely clever naming, it lives inside the existing vocabulary of the audience.
 - **Listed developer:** Hyeonwoo Lee (이현우) on the App Store
 - **CEO:** 이현우 (Lee Hyeonwoo) per all Korean press releases
-- **Headquarters / business address:** Yongin (용인), Gyeonggi-do, South Korea — south of Seoul
+- **Headquarters / business address:** Yongin (용인), Gyeonggi-do, South Korea, south of Seoul
 - **Domain:** cretti.io
 - **Instagram:** @cretti_official
 - **Apple developer ID:** 1879860594
@@ -64,14 +64,14 @@ Whether Lee Hyeonwoo is himself a crested gecko breeder, an outside operator who
 
 The version history reveals the actual development cadence:
 
-- **v1.4** — March 12, 2025. Original/early version. QR code recognition feature added.
-- **v1.4.8** — March 14, 2025. Unregistered animal label support, feed page filter search.
-- **v1.5** — March 16, 2025. Charcoal, cream, dalmatian morph additions.
-- **v1.5.4** — March 17, 2025.
-- **v2.0** — March 22, 2026. Major version jump. Het support added to morph editing. Custom gecko label editing.
-- **v2.1.x through v2.2.x** — late March / early April 2026. Multiple incremental builds. Added feeding tracking, weight tracking, feed blocking, content reporting. The Korean changelog reveals these were released first as Korean-only and then translated.
-- **v2.3** — April 15, 2026. Added Healthcheck. This appears to be the AI-based individual condition analysis.
-- **v2.3.7** — April 25, 2026 (~2 days before research date). Latest version at time of pull.
+- **v1.4**, March 12, 2025. Original/early version. QR code recognition feature added.
+- **v1.4.8**, March 14, 2025. Unregistered animal label support, feed page filter search.
+- **v1.5**, March 16, 2025. Charcoal, cream, dalmatian morph additions.
+- **v1.5.4**, March 17, 2025.
+- **v2.0**, March 22, 2026. Major version jump. Het support added to morph editing. Custom gecko label editing.
+- **v2.1.x through v2.2.x**, late March / early April 2026. Multiple incremental builds. Added feeding tracking, weight tracking, feed blocking, content reporting. The Korean changelog reveals these were released first as Korean-only and then translated.
+- **v2.3**, April 15, 2026. Added Healthcheck. This appears to be the AI-based individual condition analysis.
+- **v2.3.7**, April 25, 2026 (~2 days before research date). Latest version at time of pull.
 
 **Read the cadence carefully.** The gap between v1.5 (March 2025) and v2.0 (March 2026) is a full year. Then 7+ point releases happened in roughly six weeks. This pattern suggests they spent a year building quietly with a small Korean test audience, then sprinted to a global launch coordinated with PR. The rapid post-2.0 patch cadence suggests either healthy iteration with active users, or stability problems being chased. Hard to tell from outside which it is.
 
@@ -85,9 +85,9 @@ The version history reveals the actual development cadence:
 
 **Three Korean tech / business press articles** found, all published April 19-21, 2026, all originating from the same Newswire press release distribution:
 
-1. **Newswire / 뉴스와이어** (April 19, 2026) — Original announcement, framed as "global launch and reptile industry digital transformation."
-2. **Newswire / 뉴스와이어** (April 21, 2026) — Follow-up with technical details, OCR and Genetic Distance Algorithm.
-3. **Korea Data Economy News / 한국데이터경제신문** (April 21, 2026) — Editorial pickup framing it as "Reptile Economy" (파충류 경제) and "shifting trust standard from information power to data power" (정보 권력에서 데이터 권력으로).
+1. **Newswire / 뉴스와이어** (April 19, 2026), Original announcement, framed as "global launch and reptile industry digital transformation."
+2. **Newswire / 뉴스와이어** (April 21, 2026), Follow-up with technical details, OCR and Genetic Distance Algorithm.
+3. **Korea Data Economy News / 한국데이터경제신문** (April 21, 2026), Editorial pickup framing it as "Reptile Economy" (파충류 경제) and "shifting trust standard from information power to data power" (정보 권력에서 데이터 권력으로).
 
 The Data Economy News pickup is the highest-quality. They use the phrase "Vertical Data Ecosystem" (버티컬 데이터 생태계) and "Precision Care" (정밀 사육), which are sophisticated SaaS / vertical AI framings rare in this category.
 
@@ -107,46 +107,46 @@ The Data Economy News pickup is the highest-quality. They use the phrase "Vertic
 
 ### Core record-keeping ("Gecko Registry")
 
-- **Detailed individual profile** — Photos, morphs, acquisition history per animal.
-- **Custom gecko labels** — Editable identifying labels per animal. Critical Korean breeder-culture concession. Added v2.0.
-- **Het support in morph editing** — Heterozygous trait tracking. This is a serious-breeder feature, not a casual-keeper feature, and signals the audience they care about.
+- **Detailed individual profile**, Photos, morphs, acquisition history per animal.
+- **Custom gecko labels**, Editable identifying labels per animal. Critical Korean breeder-culture concession. Added v2.0.
+- **Het support in morph editing**, Heterozygous trait tracking. This is a serious-breeder feature, not a casual-keeper feature, and signals the audience they care about.
 - **Multi-photo galleries** per animal.
 - **Hatch date and acquisition history** as core fields.
 
 ### Husbandry tracking
 
-- **Feeding tracking** — Schedules and logs. Added v2.0.
-- **Weight tracking** — Trends over time, charts. Added v2.0.
-- **Healthcheck** (v2.3, April 2026) — AI-based individual condition analysis. Press materials describe it as "detecting anomaly signs" from individual data. The actual diagnostic accuracy and what specific conditions it screens for is not disclosed publicly. Likely image-based, possibly weight-trend based.
+- **Feeding tracking**, Schedules and logs. Added v2.0.
+- **Weight tracking**, Trends over time, charts. Added v2.0.
+- **Healthcheck** (v2.3, April 2026), AI-based individual condition analysis. Press materials describe it as "detecting anomaly signs" from individual data. The actual diagnostic accuracy and what specific conditions it screens for is not disclosed publicly. Likely image-based, possibly weight-trend based.
 
 ### Genetic and pedigree tools (the technical differentiation)
 
-- **Lineage Tree** — Multi-generational pedigree visualization.
-- **Inbreeding Check** — Their proprietary "Genetic Distance Algorithm" (유전자 거리 알고리즘). They explicitly position this against the standard COI (Coefficient of Inbreeding) calculation, claiming theirs analyzes the full multi-generational pedigree structure rather than just generation count.
+- **Lineage Tree**, Multi-generational pedigree visualization.
+- **Inbreeding Check**, Their proprietary "Genetic Distance Algorithm" (유전자 거리 알고리즘). They explicitly position this against the standard COI (Coefficient of Inbreeding) calculation, claiming theirs analyzes the full multi-generational pedigree structure rather than just generation count.
    - **What this likely means in practice:** Standard COI just counts how many generations back common ancestors appear. A more sophisticated algorithm would weight by how many distinct pathways those ancestors appear through, possibly with corrections for known dominant/recessive trait expressions in cresties. It is plausible that this is genuinely better than naive COI for cresties, where polygenic traits dominate. But "proprietary" with no published methodology means it's a black box, which is a real problem for serious breeders who want to understand the math.
-- **AI Pairing Recommendations** — Based on genetics, morphs, and traits.
-- **Egg / candling analysis** — AI analysis of egg exterior shape and candling (light-transmission imaging) to assess breeding state. Mentioned in Korean press but absent from English App Store description, suggesting newer feature or less-prominent in marketing.
+- **AI Pairing Recommendations**, Based on genetics, morphs, and traits.
+- **Egg / candling analysis**, AI analysis of egg exterior shape and candling (light-transmission imaging) to assess breeding state. Mentioned in Korean press but absent from English App Store description, suggesting newer feature or less-prominent in marketing.
 
 ### Identification and trade infrastructure
 
-- **OCR label scanning** — *This is their single most strategically important feature.* Scans existing breeder text labels (the kind already attached to deli cups, racks, enclosures) and pulls up that animal's pedigree from the database. The pitch: "no need for breeders to change anything they already do."
-- **QR labels** — Each animal gets a generated scannable QR for instant ID and record sharing.
+- **OCR label scanning**, *This is their single most strategically important feature.* Scans existing breeder text labels (the kind already attached to deli cups, racks, enclosures) and pulls up that animal's pedigree from the database. The pitch: "no need for breeders to change anything they already do."
+- **QR labels**, Each animal gets a generated scannable QR for instant ID and record sharing.
 
 ### Community and marketplace
 
-- **Global feed** — Discover geckos and breeders worldwide.
-- **Stories** — Instagram-style ephemeral sharing.
-- **CRETTI Talk** — Direct messaging / chat.
-- **Following** — Follow favorite breeders and animals.
-- **Marketplace** — Confirmed in Korean press materials (라벨 스캔, AI 근친계수, 건강 분석, 마켓플레이스 등을 하나로 통합). Either live or being built. Transaction model not disclosed.
-- **Feed blocking and content reporting** — Standard moderation tools (added v2.0).
+- **Global feed**, Discover geckos and breeders worldwide.
+- **Stories**, Instagram-style ephemeral sharing.
+- **CRETTI Talk**, Direct messaging / chat.
+- **Following**, Follow favorite breeders and animals.
+- **Marketplace**, Confirmed in Korean press materials (라벨 스캔, AI 근친계수, 건강 분석, 마켓플레이스 등을 하나로 통합). Either live or being built. Transaction model not disclosed.
+- **Feed blocking and content reporting**, Standard moderation tools (added v2.0).
 
 ### Stated future direction (from CEO press quotes)
 
 The CEO explicitly names three vertical expansions:
-1. **Exotic-animal veterinary clinics** (특수동물 전문병원) — integrating veterinary records and recommendations.
-2. **Nutrition and feed industry** — partnerships with feed makers, possibly personalized nutrition recommendations.
-3. **Husbandry supplies industry** — gear and equipment partnerships.
+1. **Exotic-animal veterinary clinics** (특수동물 전문병원), integrating veterinary records and recommendations.
+2. **Nutrition and feed industry**, partnerships with feed makers, possibly personalized nutrition recommendations.
+3. **Husbandry supplies industry**, gear and equipment partnerships.
 
 The vision: *"an integrated ecosystem from individual management → medical care → consumption."*
 
@@ -169,7 +169,7 @@ This is not just a feature roadmap. It's a "wedge → platform → ecosystem" pl
 ### The bilingual two-track is the single most important thing to study
 
 **English (consumer-facing):**
-> "The All-in-One platform for Reptile. CRETTI is the ultimate app for crested gecko enthusiasts — built for keeping, tracking, and connecting. Understand your animals better, record their history safely, and share with a global community."
+> "The All-in-One platform for Reptile. CRETTI is the ultimate app for crested gecko enthusiasts, built for keeping, tracking, and connecting. Understand your animals better, record their history safely, and share with a global community."
 
 **Korean (industry-facing):**
 > "Lineage, ownership history, and breeding information converted from records into data assets, connected at a global scale. The trust foundation for reptile commerce, shifting the industry's trust standard from information power to data power."
@@ -199,19 +199,19 @@ The pitch is that Cretti is a **structural fix** to information asymmetry in tra
 
 Based on observable activity:
 
-1. **PR distribution via Newswire.co.kr** — Korean tech, mobile-app, lifestyle, and pet sections.
+1. **PR distribution via Newswire.co.kr**, Korean tech, mobile-app, lifestyle, and pet sections.
 2. **Pickup by tier-2 Korean tech press** (Data Economy News at minimum, likely others).
-3. **Instagram (@cretti_official)** — Official brand handle, presumably paired with breeder partnerships.
-4. **App Store optimization** — Bilingual listings on Korean and global App Stores.
+3. **Instagram (@cretti_official)**, Official brand handle, presumably paired with breeder partnerships.
+4. **App Store optimization**, Bilingual listings on Korean and global App Stores.
 5. **Apparently NOT yet using:** Korean YouTube influencer partnerships, breeder shop partnerships, in-person reptile expo presence (no public evidence).
 
 ### What they're NOT doing (yet, observable)
 
 - Not running a content marketing operation (no blog posts, no care guides on cretti.io that I could verify).
 - Not partnering with the major Korean reptile YouTuber 정브르 (Junggureum) publicly.
-- Not integrating with Korean reptile retail shops (더쥬, 크레팍스, 게코빌리지, etc.) — at least not publicly.
+- Not integrating with Korean reptile retail shops (더쥬, 크레팍스, 게코빌리지, etc.), at least not publicly.
 - Not running US/Western influencer marketing.
-- Not at major Western reptile expos (Tinley Park, Daytona, etc.) — at least not publicly.
+- Not at major Western reptile expos (Tinley Park, Daytona, etc.), at least not publicly.
 
 These are all opportunities for Geck Inspect to fill before Cretti gets there.
 
@@ -241,13 +241,13 @@ This pricing structure shows a real two-tier market: a mass low-end where supply
 ### Korean breeder shop ecosystem
 
 Identified active shops (non-exhaustive):
-- **더쥬** (TheZoo) — xn--9m1b023b.com — large retailer
-- **크레팍스** (CrePax) — crepax.kr — described itself as "Korea's largest crested gecko house"
-- **게코빌리지** (Gecko Village) — geckovillage.co.kr
-- **게코스토리** (Gecko Story) — geckostory.com
-- **반모리** (BanMori) — vanmori.com — couple-run shop
-- **곤충하모니** (Insect Harmony) — owned/affiliated with 정브르 (Junggureum)
-- **The Breeders** — thebreeders.cafe24.com — listed 1,958 crested geckos for sale at one shop alone, indicating very mature retail-scale breeding operations
+- **더쥬** (TheZoo), xn--9m1b023b.com, large retailer
+- **크레팍스** (CrePax), crepax.kr, described itself as "Korea's largest crested gecko house"
+- **게코빌리지** (Gecko Village), geckovillage.co.kr
+- **게코스토리** (Gecko Story), geckostory.com
+- **반모리** (BanMori), vanmori.com, couple-run shop
+- **곤충하모니** (Insect Harmony), owned/affiliated with 정브르 (Junggureum)
+- **The Breeders**, thebreeders.cafe24.com, listed 1,958 crested geckos for sale at one shop alone, indicating very mature retail-scale breeding operations
 
 **This matters for product strategy:** unlike the US where Facebook groups and MorphMarket are the dominant distribution channels, Korea's reptile market has a real shop-based retail ecosystem. A Korean app that integrates with these shops (consignment listings, verified pedigree pass-through on sale) has a different shape than a US-style app.
 
@@ -283,8 +283,8 @@ Each of these is a specific design implication:
 
 ### Korean influence map
 
-- **정브르 (Junggureum)** — *The* dominant Korean exotic-pet YouTuber. Has been interviewed in Korean mainstream media (YTN Science) about crested geckos specifically. Runs his own breeding shop (곤충하모니 / Insect Harmony). Any serious Korean launch should consider him as influencer node #1. He has a strong personal brand and cultivates a thoughtful, science-leaning community.
-- **헌터이 (Heonteo-i)** — Mentioned in Namuwiki as a YouTuber who keeps cresties received from 정브르. Smaller node but real.
+- **정브르 (Junggureum)**, *The* dominant Korean exotic-pet YouTuber. Has been interviewed in Korean mainstream media (YTN Science) about crested geckos specifically. Runs his own breeding shop (곤충하모니 / Insect Harmony). Any serious Korean launch should consider him as influencer node #1. He has a strong personal brand and cultivates a thoughtful, science-leaning community.
+- **헌터이 (Heonteo-i)**, Mentioned in Namuwiki as a YouTuber who keeps cresties received from 정브르. Smaller node but real.
 - **Korean-language Brunch (브런치) writers** publish first-person care-keeping accounts; finding the active ones and partnering would yield deep authentic content.
 
 ### Pet market sizing context
@@ -296,7 +296,7 @@ Korean pet market overall:
 - Reptile-keeping households are a small fraction of total pet households, but Korea's overall pet-tech sector is well-funded and well-recognized as a growth vertical
 - Korean government has formally classified the pet industry as a strategic growth sector (with petfood, pethealthcare, petservice, pettech as the four pillars)
 
-Cretti is positioned at the intersection of pettech and the pet industry's premium/specialty segment — exactly where Korean VCs are most interested.
+Cretti is positioned at the intersection of pettech and the pet industry's premium/specialty segment, exactly where Korean VCs are most interested.
 
 ---
 
@@ -309,7 +309,7 @@ Cretti is one of three meaningful crested-gecko-specific apps, plus a much large
 #### Cretti (Korea, global ambition)
 Covered in detail above.
 
-#### CreOnel (크레오늘) — Korea
+#### CreOnel (크레오늘), Korea
 - Discovered: Google Play Store (com.crenote.breeding)
 - Developer: Dalbong / 서정민 (Seo Jeong-min), based in Hwaseong (화성), Gyeonggi-do
 - Platform: Android (Google Play). iOS status unconfirmed.
@@ -326,9 +326,9 @@ CreOnel's existence with only 100+ downloads also hints that the Korean crested-
 
 #### Geck Inspect (US)
 - Domain: geckinspect.com
-- Self-described: "The professional platform for crested gecko (Correlophus ciliatus) breeders and keepers — collection management, breeding planning, AI-powered morph identification, multi-generation lineage tracking, and a verified community."
+- Self-described: "The professional platform for crested gecko (Correlophus ciliatus) breeders and keepers, collection management, breeding planning, AI-powered morph identification, multi-generation lineage tracking, and a verified community."
 - Existing scope (per public site): Morph Guide, Care Guide, Genetics Guide, Genetic Calculator, Blog, AuthPortal.
-- This is your project. Unlike Cretti, Geck Inspect already has substantial *content* infrastructure (guides, calculators, blog) — which Cretti does not visibly have.
+- This is your project. Unlike Cretti, Geck Inspect already has substantial *content* infrastructure (guides, calculators, blog), which Cretti does not visibly have.
 
 ### Adjacent / multi-species competitors
 
@@ -349,7 +349,7 @@ CreOnel's existence with only 100+ downloads also hints that the Korean crested-
 #### ReptiDex (US/global, AI/pedigree-positioned, in waitlist)
 - Domain: reptidex.com
 - Status: pre-launch waitlist
-- Positioning: "AI-powered platform for reptile breeders and keepers to track genetic lineage, manage husbandry records, verify pedigrees, and securely buy or sell reptiles—all in one trusted, transparent digital ecosystem."
+- Positioning: "AI-powered platform for reptile breeders and keepers to track genetic lineage, manage husbandry records, verify pedigrees, and securely buy or sell reptiles, all in one trusted, transparent digital ecosystem."
 - **Almost identical positioning to Cretti**, but multi-species (Ball Pythons, Bearded Dragons, Leopard Geckos, Corn Snakes, Crested Geckos at launch).
 - Founder background: genetics formal training, started own breeding program.
 - **The Korean and Western markets each appear to have an "AI-powered pedigree platform" entrant emerging simultaneously.** Whether they collide or partition geographically is an open strategic question.
@@ -391,7 +391,7 @@ A long tail of generalist reptile-tracker apps. None Korea-localized. None have 
 - **OCR label scanning** is a category-defining feature.
 - **Bilingual launch** from day one with sophisticated two-track messaging.
 - **First-mover in their specific category** (Korean-built, globally-launched, AI-positioned crested gecko platform).
-- **PR sophistication** — coordinated Newswire push that landed in tier-2 Korean tech press at minimum.
+- **PR sophistication**, coordinated Newswire push that landed in tier-2 Korean tech press at minimum.
 - **Wide product surface** (registry + breeding tools + community + marketplace + AI features) makes them harder to displace if they execute.
 
 ### Cretti's weaknesses
@@ -400,8 +400,8 @@ A long tail of generalist reptile-tracker apps. None Korea-localized. None have 
 - **Many rapid version pushes in a short window** suggests either fast iteration or stability problems.
 - **AI claims are doing heavy lifting** in marketing and would not survive close scrutiny by sophisticated breeders. Specifically, "AI Health Check" anomaly detection and "AI Pairing Recommendations" are categories where the gap between marketing and capability is usually large.
 - **No public methodology** for the proprietary Genetic Distance Algorithm. Serious breeders are technical and will be skeptical of a black-box COI.
-- **Wide product surface** is also a weakness — it's hard to be excellent at registry + community + marketplace + AI vet simultaneously with what appears to be a very small team.
-- **No content infrastructure** — no public care guides, no SEO presence beyond the App Store and Instagram.
+- **Wide product surface** is also a weakness, it's hard to be excellent at registry + community + marketplace + AI vet simultaneously with what appears to be a very small team.
+- **No content infrastructure**, no public care guides, no SEO presence beyond the App Store and Instagram.
 - **Single-species focus** limits TAM. Hinted expansion to "all reptiles" but not yet executed.
 - **No major influencer partnerships** publicly visible (especially: no apparent 정브르 connection in Korea, no major Western breeder partnerships).
 - **Privacy practices unverified by Apple** with extensive data collection. Korean users have meaningful PIPA expectations.
@@ -437,7 +437,7 @@ A long tail of generalist reptile-tracker apps. None Korea-localized. None have 
 4. **Two-track marketing voice.** Industry-grade in Korean (data, trust, infrastructure, science). Community-grade in English (enthusiasts, learning, sharing).
 5. **Bilingual, deliberate launch from day one.**
 6. **Press-distribution strategy.** Newswire-style press release distribution is cheap and effective in Korea. A coordinated Korean tech-press push at launch is high-leverage.
-7. **Industry-narrative framing.** "Reptile Economy" / "Vertical Data Ecosystem" / "Precision Care" / "Genetic Distance Algorithm" — these phrases land. Pick your equivalents and use them.
+7. **Industry-narrative framing.** "Reptile Economy" / "Vertical Data Ecosystem" / "Precision Care" / "Genetic Distance Algorithm", these phrases land. Pick your equivalents and use them.
 
 ### What to differentiate on (your concrete edge over Cretti)
 
@@ -455,12 +455,12 @@ A long tail of generalist reptile-tracker apps. None Korea-localized. None have 
 - **Don't try to out-feature Cretti on day one.** Their wide surface area is their weakness. Pick 2-3 features Geck Inspect Korea will be best in the world at.
 - **Don't ignore the marketplace dimension forever.** If Cretti becomes the dominant pedigree-verification layer for trades, breeders will list there first, and pedigree network effects compound. Even if you don't build a marketplace, build pedigree-export interoperability with marketplaces.
 - **Cultural authenticity matters.** A non-Korean-built app marketed to Koreans without genuine Korean breeder collaboration will feel hollow. Lining up at least one named Korean breeder partner or advisor before launch would change the trust calculus dramatically.
-- **Pricing model decision is significant.** Cretti is free. CreOnel is ad-supported. MorphMarket has tiered pro features. Geck Inspect's monetization choice in Korea will shape adoption — Korean users are generally tolerant of subscription models for serious tools, but freemium with a clear pro tier is the safer bet for a premium-serving product.
+- **Pricing model decision is significant.** Cretti is free. CreOnel is ad-supported. MorphMarket has tiered pro features. Geck Inspect's monetization choice in Korea will shape adoption, Korean users are generally tolerant of subscription models for serious tools, but freemium with a clear pro tier is the safer bet for a premium-serving product.
 - **Don't compete on AI claims.** Compete on AI capability, transparently measured. Cretti's AI claims are vulnerable; Geck Inspect's should be credible.
 
 ### Suggested phased plan for Korean entry
 
-This is a sketch, not a recommendation — a starting point for your own thinking:
+This is a sketch, not a recommendation, a starting point for your own thinking:
 
 **Phase 1 (months 1-3): Foundation.**
 - Localize Geck Inspect's existing care guides, morph guides, genetics guide into Korean. Korea-tune the content (summer heat, CGD-default feeding, hatch-date convention, sex-confirmed flagging).
