@@ -679,7 +679,7 @@ docs/specs/storefront-consolidation.md.
 - 4.1 (morph ID to collection) shipped: Recognition now offers "Add to my collection", building a pre-filled draft (photos, mapped morph tags, AI notes) that MyGeckos opens in the add form; guest path via sessionStorage; funnel events added.
 - 4.3 (onboarding split) shipped: a first-run role prompt sets Keeper mode, and the tour filters breeder-only tiles in Keeper mode.
 - 4.5 (a11y) shipped: EnclosureClimate carries non-color status words; the Expert/Admin badges already had text labels.
-- 4.2 (nav rationalization) OPEN: a large Layout/navItems/CommandPalette refactor. Best done as a focused session with runtime verification, not batched.
+- 4.2 (nav rationalization) PARTIAL: the safe slice shipped, all 8 orphaned pages (BatchHusbandry, ImageImport, PrintableWorksheets, Pedigree, BreedingROI, BreedingLoans, GeckAnswers, MorphGuideSubmission) are now reachable via the command palette. The risky part (unifying the three nav taxonomies into one registry, Dashboard sidebar tile) is deferred to a focused session with runtime verification, since a nav-render bug affects every page.
 - 4.4 (loading/empty states) DEFERRED: diffuse and lower-value; the two highest-traffic list pages (MyGeckos, Breeding) already have empty states, and the rest are reference/tool pages or complex renderers (Lineage) where insertion is risky for modest gain.
 
 ### 4.1 Connect the hero funnel: AI morph ID into the collection
@@ -1101,6 +1101,8 @@ cretti-briefing.md returns nothing; pnpm build stays green.
 ---
 
 ## 7. Phase 6: Mobile
+
+**STATUS (2026-07-09):** the PWA install prompt already ships (`InstallAppButton` in Layout, handling `beforeinstallprompt`/`appinstalled`/standalone; manifest present). The offline caching service worker is DEFERRED by decision (DECISIONS.md entry 28): a caching SW is the highest-risk, hard-to-reverse change and must be built on a preview branch with device testing of the install/update/offline lifecycle, not shipped blind. The current `public/sw.js` is deliberately push-only.
 
 ### 6.1 Decide the Android story honestly
 
