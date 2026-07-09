@@ -675,6 +675,13 @@ docs/specs/storefront-consolidation.md.
 
 ## 5. Phase 4: UX and workflow
 
+**STATUS (2026-07-09): 4.1, 4.3, 4.5 shipped. 4.2 and 4.4 open.**
+- 4.1 (morph ID to collection) shipped: Recognition now offers "Add to my collection", building a pre-filled draft (photos, mapped morph tags, AI notes) that MyGeckos opens in the add form; guest path via sessionStorage; funnel events added.
+- 4.3 (onboarding split) shipped: a first-run role prompt sets Keeper mode, and the tour filters breeder-only tiles in Keeper mode.
+- 4.5 (a11y) shipped: EnclosureClimate carries non-color status words; the Expert/Admin badges already had text labels.
+- 4.2 (nav rationalization) OPEN: a large Layout/navItems/CommandPalette refactor. Best done as a focused session with runtime verification, not batched.
+- 4.4 (loading/empty states) DEFERRED: diffuse and lower-value; the two highest-traffic list pages (MyGeckos, Breeding) already have empty states, and the rest are reference/tool pages or complex renderers (Lineage) where insertion is risky for modest gain.
+
 ### 4.1 Connect the hero funnel: AI morph ID into the collection
 
 **Problem.** The single best acquisition feature dead-ends. `Recognition.jsx` runs the real `recognize-gecko-morph` edge function (line 82) and renders analysis plus similar geckos, but there is no "add this gecko to my collection" handoff; `GeckoForm.jsx` has manual morph tags (line 822) and never consumes the recognition result. A new user's magic moment ends with retyping what the AI just told them.
@@ -858,6 +865,14 @@ Verification: pnpm lint && pnpm typecheck && pnpm build.
 ---
 
 ## 6. Phase 5: Marketing and conversion
+
+**STATUS (2026-07-09): 5.2, 5.4, 5.6 shipped; 5.5 mostly shipped. 5.1 and 5.3 need input/capability.**
+- 5.2 (funnel instrumentation) shipped: landing/guest/login/membership/checkout/upgrade/first-gecko events, with ProductAnalytics funnel descriptions updated to the real event names.
+- 5.4 (pricing memo) shipped: docs/specs/pricing-decision-2026-07.md plus proposed DECISIONS.md entry 27 (keep Keeper $2.99, raise Breeder to $9.99). Needs Tennyson's decision to execute.
+- 5.5 (content) 2 of 3 posts shipped: "Your First Crested Gecko Breeding Season" and "Crested Gecko Breeding Records" (the "how to read a pedigree" post remains).
+- 5.6 (doc hygiene) shipped: banned-domain refs neutralized, cretti-briefing em dashes removed.
+- 5.1 (product screenshots) OPEN, NEEDS CAPTURE: requires driving the running app with demo data and capturing 8 real screens (Playwright). Highest single landing-page fix, but it needs a real UI to photograph.
+- 5.3 (landing conversion) PARTIALLY BLOCKED: the pricing strip, Pricing nav link, data-ownership line on Membership, and brand-casing fix are all doable autonomously; the founder block specifically needs Tennyson's real bio/brand facts (must not be invented).
 
 The growth reports show the honest baseline: about 15 homepage views a week, zero search clicks, rankings on page 1-2 for several money terms with 0% CTR. The product cannot convert visitors it does not show anything to.
 
