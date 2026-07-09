@@ -84,6 +84,10 @@ export default function Breeder() {
   const [mode, setMode] = useState('loading');
   const [profile, setProfile] = useState(null);
   const [forSaleGeckos, setForSaleGeckos] = useState([]);
+  // Optional hand-picked showcase (the old StorePage curation). When the
+  // owner set featured geckos on their store page, we show those instead
+  // of the auto "Available now" grid.
+  const [curatedGeckos, setCuratedGeckos] = useState([]);
   const [reviews, setReviews] = useState([]);
   const [storePolicy, setStorePolicy] = useState('');
   const [inferredGeckos, setInferredGeckos] = useState([]);
@@ -161,7 +165,7 @@ export default function Breeder() {
               // so owners preview exactly what the public sees.
               supabase
                 .from('breeder_store_pages')
-                .select('external_links')
+                .select('external_links, featured_gecko_ids')
                 .eq('owner_email', ownerEmail)
                 .eq('is_published', true)
                 .maybeSingle(),
@@ -170,6 +174,24 @@ export default function Breeder() {
             setForSaleGeckos(geckos || []);
             setReviews(revs || []);
             if (ownerProf?.store_policy) setStorePolicy(ownerProf.store_policy);
+
+            // Hand-picked showcase from the store editor, in the owner's
+            // chosen order. Only public, non-archived geckos.
+            const curatedIds = Array.isArray(storePage?.featured_gecko_ids)
+              ? storePage.featured_gecko_ids
+              : [];
+            if (curatedIds.length) {
+              const { data: curated } = await supabase
+                .from('geckos')
+                .select('id, name, morphs_traits, image_urls, asking_price, passport_code, sex, status')
+                .in('id', curatedIds)
+                .eq('is_public', true)
+                .eq('archived', false);
+              if (!cancelled && Array.isArray(curated)) {
+                const byId = new Map(curated.map((g) => [g.id, g]));
+                setCuratedGeckos(curatedIds.map((id) => byId.get(id)).filter(Boolean));
+              }
+            }
 
             const settings = readStoreSettings(storePage?.external_links);
             setStoreSettings(settings);
@@ -465,12 +487,13 @@ export default function Breeder() {
               )}
             </section>
 
-            {/* "Available now" grid, auto-synced with the owner's public
-                For Sale geckos. Hidden when toggled off in the storefront
-                editor or when nothing is listed. */}
+            {/* Showcase grid. Uses the owner's hand-picked featured geckos
+                when they set any, otherwise auto-syncs with their public For
+                Sale geckos. Hidden when toggled off in the store editor or
+                when nothing is listed. */}
             {storeSettings.showAvailable && (
               <AvailableNowSection
-                geckos={forSaleGeckos}
+                geckos={curatedGeckos.length > 0 ? curatedGeckos : forSaleGeckos}
                 theme={theme}
                 onInquire={(gecko) => { setInquiryGecko(gecko); setInquiryOpen(true); }}
               />

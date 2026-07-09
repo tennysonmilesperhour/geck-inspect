@@ -337,6 +337,10 @@ const AuthenticatedApp = () => {
             authenticated user is detected (i.e. when the parent Layout
             is mounted) so the brand chrome doesn't double up. */}
         <Route path="/Store/*" element={<Store />} />
+        {/* BreederStorefront was merged into MyStore (one editor for the
+            public breeder page + mini-site settings). Keep the old path
+            working for anyone who bookmarked it. */}
+        <Route path="/BreederStorefront" element={<Navigate to="/MyStore" replace />} />
       </Route>
 
       {/* Breeder storefront, rendered chrome-free for both guests and

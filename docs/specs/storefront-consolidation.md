@@ -1,5 +1,19 @@
 # Storefront / Selling-Surface Consolidation
 
+> **UPDATE (2026-07-09, shipped on a preview branch for review):** steps 2, 3, 4,
+> 5, 6, and 8 are now implemented. MyStore is the single editor (it absorbed the
+> profile identity fields and the mini-site appearance settings, writing them on
+> the row it already owns, which removes the two-writer race). BreederStorefront
+> is deleted and `/BreederStorefront` redirects to `/MyStore`. `/store/:slug`
+> redirects to `/Breeder/:custom_slug` when the owner has a profile and otherwise
+> falls back to rendering the old StorePage body, so shared links never break.
+> Breeder.jsx renders the owner's curated featured geckos when set. Step 7 (a SQL
+> `custom_slug` backfill) was intentionally skipped: MyStore now creates the
+> profile with `custom_slug = store slug` on save, and the step-8 redirect has a
+> render fallback, so no data migration is required. Step 9 (Marketplace tab
+> dedupe) is still open (it was always flagged as an independent, secondary
+> cleanup). This is on a preview branch pending review, not yet merged to main.
+>
 > **Usage reality check (2026-07-09, from production):** the whole database has
 > **1** `breeder_store_pages` row and **0** `breeder_profiles` rows. The
 > storefront feature is barely adopted yet, so the two-writer race and the
