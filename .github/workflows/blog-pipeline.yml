@@ -197,6 +197,14 @@ jobs:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           gh label create blog-report --color FFA500 --description "Auto-generated weekly report from blog-pipeline" 2>/dev/null || true
+          # Each week's report is a snapshot, not a task. Close any still-open
+          # report issues from prior weeks before opening this one so they don't
+          # pile up in the tracker (the markdown archive in docs/blog-reports/
+          # keeps the full history). Only the latest report stays open.
+          for n in $(gh issue list --label blog-report --state open --json number --jq '.[].number'); do
+            gh issue close "$n" --reason completed \
+              --comment "Superseded by the newer weekly report. The full archive lives in docs/blog-reports/." || true
+          done
           TITLE=$(node -e "console.log(require('./docs/blog-reports/_latest-report.json').issueTitle)")
           BODY_FILE=$(node -e "console.log(require('./docs/blog-reports/_latest-report.json').reportPath)")
           gh issue create --title "$TITLE" --body-file "$BODY_FILE" --label blog-report
