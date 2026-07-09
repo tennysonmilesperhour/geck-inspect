@@ -36,11 +36,17 @@ const NAV_ITEMS = [
   { label: 'My Geckos',          page: 'MyGeckos',           icon: Users,           section: 'Your Collection', keywords: ['collection', 'animals', 'list'] },
   { label: 'My Profile',         page: 'MyProfile',          icon: Users,           section: 'Your Collection', keywords: ['account', 'public profile'] },
   { label: 'Other Reptiles',     page: 'OtherReptiles',      icon: Users,           section: 'Your Collection', keywords: ['leopard gecko', 'other animals'] },
+  { label: 'Batch Husbandry',    page: 'BatchHusbandry',     icon: Users,           section: 'Your Collection', keywords: ['bulk', 'feeding', 'weigh', 'group log'] },
+  { label: 'AI Image Import',    page: 'ImageImport',        icon: Sparkles,        section: 'Your Collection', keywords: ['import', 'scan', 'extract', 'notecard', 'spreadsheet'] },
+  { label: 'Printable Worksheets', page: 'PrintableWorksheets', icon: BookOpen,     section: 'Your Collection', keywords: ['print', 'pdf', 'sheet', 'record'] },
 
   // Breeding
   { label: 'Breeding Plans',     page: 'Breeding',           icon: GitBranch,       section: 'Breeding', keywords: ['pairings', 'projects', 'season'] },
   { label: 'Breeding Pairs',     page: 'BreedingPairs',      icon: GitBranch,       section: 'Breeding', keywords: ['sire dam', 'match', 'pair'] },
-  { label: 'Lineage Tree',       page: 'Lineage',            icon: GitBranch,       section: 'Breeding', keywords: ['pedigree', 'family tree', 'ancestry'] },
+  { label: 'Lineage Tree',       page: 'Lineage',            icon: GitBranch,       section: 'Breeding', keywords: ['family tree', 'ancestry'] },
+  { label: 'Pedigree',           page: 'Pedigree',           icon: GitBranch,       section: 'Breeding', keywords: ['pedigree', 'certificate', 'lineage record'] },
+  { label: 'Breeding ROI',       page: 'BreedingROI',        icon: FolderKanban,    section: 'Breeding', keywords: ['roi', 'profit', 'cost', 'revenue', 'money'] },
+  { label: 'Breeding Loans',     page: 'BreedingLoans',      icon: GitBranch,       section: 'Breeding', keywords: ['loan', 'co-own', 'lease', 'collab'] },
   { label: 'Project Manager',    page: 'ProjectManager',     icon: FolderKanban,    section: 'Breeding', keywords: ['tasks', 'goals'] },
   { label: 'Genetic Calculator', page: 'GeneticCalculatorTool', icon: FlaskConical, section: 'Breeding', keywords: ['punnett', 'offspring', 'traits'] },
 
@@ -65,6 +71,8 @@ const NAV_ITEMS = [
   { label: 'Care Guide',         page: 'CareGuide',          icon: BookOpen,        section: 'Reference', keywords: ['husbandry', 'care sheet', 'setup'] },
   { label: 'AI Morph Recognition', page: 'Recognition',      icon: Sparkles,        section: 'Reference', keywords: ['identify', 'classify', 'scan'] },
   { label: 'Train the AI Model', page: 'Training',           icon: GraduationCap,   section: 'Reference', keywords: ['label', 'tag', 'annotate'] },
+  { label: 'Geck Answers',       page: 'GeckAnswers',        icon: MessageSquare,   section: 'Reference', keywords: ['q&a', 'questions', 'answers', 'ask'] },
+  { label: 'Submit a Morph',     page: 'MorphGuideSubmission', icon: BookOpen,      section: 'Reference', keywords: ['contribute', 'add morph', 'submit'] },
 
   // Account
   { label: 'Settings',           page: 'Settings',           icon: Settings,        section: 'Account', keywords: ['preferences', 'config'] },
