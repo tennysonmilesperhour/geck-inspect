@@ -328,3 +328,14 @@ These entries capture the strategic decisions made during the initial landing pa
 **Consequences:** Requires new Stripe prices + a grandfathering mapping in stripe-config, an in-app/email announcement (framed as "lock in $5.99 before the raise"), and 30 days of churn monitoring. Depends on the Phase 1 to 2 value fixes already shipped (marketplace_sync now in Breeder, analytics honesty, pricing/trial consistency). Open question: a mid "Business" tier (~$19 to $29) may be warranted later given the large Breeder-to-Enterprise gap.
 
 ---
+
+### 28. PWA install prompt yes, offline caching deferred
+
+**Date:** 2026-07-09
+**Status:** Accepted
+**Context:** Roadmap item 6.1 wanted a PWA push: install-to-home-screen plus offline support via a caching service worker. On inspection, the install path already exists (`InstallAppButton.jsx` wired into `Layout.jsx`, handling `beforeinstallprompt`/`appinstalled`/standalone), the manifest is present, and `public/sw.js` is deliberately push-only with an explicit comment that layering a cache on top is a well-known cause of "stuck on an old version" bugs.
+**Decision:** Keep the install prompt (already live). Do NOT ship an offline caching service worker blind. A caching SW is the single highest-risk change in the whole plan: a bad cache strategy or update lifecycle can white-screen the app for returning users and persists on their devices in a way a git revert does not immediately fix. It cannot be responsibly verified without runtime testing across install, update (skipWaiting), and offline scenarios, which is not available in the headless session where the rest of this work was done.
+**Reasoning:** The user-facing PWA value (installable app, push notifications) is already delivered. Offline read of the collection is a real but secondary benefit, and the failure mode of getting the SW wrong is severe and hard to reverse. The correct place to build it is a focused session with a preview deploy and device testing, not a blind push to production main.
+**Consequences:** Offline collection access remains unbuilt. When it is built, do it on a preview branch: version the cache, precache only the hashed app-shell assets, use network-first for Supabase calls and stale-while-revalidate for static assets, and ship an explicit "update available" toast that calls skipWaiting so users are never stranded on a stale worker. Test the full install/update/offline lifecycle on a real device before merging.
+
+---
