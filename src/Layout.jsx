@@ -10,6 +10,7 @@ import {
   Database, Users, LogOut, Search, Settings, UserPlus, Shield, Mail, Menu, Star, GraduationCap, ChevronDown, Pin, PinOff
 } from "lucide-react";
 import TutorialModal from "@/components/tutorial/TutorialModal";
+import OnboardingRolePrompt from "@/components/tutorial/OnboardingRolePrompt";
 import CommandPalette from "@/components/command-palette/CommandPalette";
 import FeedingAlertSystem from "@/components/feeding/FeedingAlertSystem";
 import HatchAlertSystem from "@/components/breeding/HatchAlertSystem";
@@ -72,6 +73,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   const [appLogo, setAppLogo] = useState(null);
   const [pageConfigs, setPageConfigs] = useState([]);
   const [showTutorial, setShowTutorial] = useState(false);
+  const [showRolePrompt, setShowRolePrompt] = useState(false);
   const [isSidebarLocked, setIsSidebarLocked] = useState(() => {
     try { return localStorage.getItem('sidebar_locked') === '1'; }
     catch { return false; }
@@ -166,12 +168,31 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   useEffect(() => {
     if (typeof window === 'undefined') return;
     if (localStorage.getItem('geck_inspect_tutorial_seen') === '1') return;
+    // First run: ask the keeper-vs-breeder question before the tour, so
+    // the tour (and the sidebar it walks) is already the right shape.
+    // Once a role is chosen we go straight to the tour on later first-runs.
+    const roleChosen = localStorage.getItem('geck_inspect_role_chosen') === '1';
     const timer = setTimeout(() => {
-      setShowTutorial(true);
-      localStorage.setItem('geck_inspect_tutorial_seen', '1');
+      if (roleChosen) {
+        setShowTutorial(true);
+        localStorage.setItem('geck_inspect_tutorial_seen', '1');
+      } else {
+        setShowRolePrompt(true);
+      }
     }, 1500);
     return () => clearTimeout(timer);
   }, []);
+
+  // After the first-run role prompt, persist the choice and roll straight
+  // into the (now mode-appropriate) tour.
+  const handleRoleChosen = () => {
+    try {
+      localStorage.setItem('geck_inspect_role_chosen', '1');
+      localStorage.setItem('geck_inspect_tutorial_seen', '1');
+    } catch { /* ignore */ }
+    setShowRolePrompt(false);
+    setShowTutorial(true);
+  };
 
   const getUserLevel = (geckoCount) => {
     return [...USER_LEVELS].reverse().find((level) => geckoCount >= level.geckos) || USER_LEVELS[0];
@@ -1363,6 +1384,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           })}
         </nav>
       </div>
+      <OnboardingRolePrompt isOpen={showRolePrompt} onChoose={handleRoleChosen} />
       <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
       <CommandPalette />
       <FeedingAlertSystem

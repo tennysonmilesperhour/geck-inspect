@@ -7,6 +7,8 @@ import {
     FALLBACK_NAV_ITEMS,
     flattenNavItems,
     getSectionForPage,
+    KEEPER_MODE_STORAGE_KEY,
+    BREEDER_ONLY_PAGES,
 } from '@/lib/navItems';
 
 /**
@@ -197,7 +199,18 @@ export default function TutorialModal({ isOpen, onClose }) {
     useEffect(() => {
         if (!isOpen) return;
 
-        const flat = flattenNavItems(FALLBACK_NAV_ITEMS);
+        let flat = flattenNavItems(FALLBACK_NAV_ITEMS);
+        // In Keeper mode, drop the breeder/business tiles so a pet keeper's
+        // tour matches their (decluttered) sidebar instead of walking them
+        // through breeding and selling tools they turned off.
+        try {
+            if (typeof localStorage !== 'undefined'
+                && localStorage.getItem(KEEPER_MODE_STORAGE_KEY) === '1') {
+                flat = flat.filter((item) => !BREEDER_ONLY_PAGES.has(item.page_name));
+            }
+        } catch {
+            // localStorage unavailable; fall back to the full tour
+        }
         // Group items by section, preserving each section's source order.
         const itemsBySection = new Map(SECTIONS.map((s) => [s.id, []]));
         for (const item of flat) {
