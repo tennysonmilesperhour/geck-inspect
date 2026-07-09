@@ -81,6 +81,21 @@ export default function About() {
         <div className="mt-12 space-y-10">
           <section>
             <h2 className="text-2xl font-bold text-white mb-3 flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-emerald-400" /> Why I built this
+            </h2>
+            <div className="text-slate-300 leading-relaxed space-y-4">
+              <p>
+                I did not set out to build software. I started by taking in rescue crested geckos, and then a breeder who was retiring handed me their breeding animals. Suddenly I had a lot of geckos to look after, all with different feeding schedules and records to keep, and nothing I could find really met my needs as a new breeder. The tools that did exist felt too expensive for what they were.
+              </p>
+              <p>
+                So I built the thing I wanted for myself. I ran my own collection on it for about a year, and it worked so well that I decided to open it up and share it with everyone else. That is what Geck Inspect is: the app I needed as a new breeder, made free and shared with the community.
+              </p>
+              <p className="text-slate-400 italic">Tennyson, founder</p>
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-2xl font-bold text-white mb-3 flex items-center gap-2">
               <BookOpen className="w-5 h-5 text-emerald-400" /> What Geck Inspect is
             </h2>
             <p className="text-slate-300 leading-relaxed">
