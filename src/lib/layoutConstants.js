@@ -55,7 +55,6 @@ export const userSpecificNavItems = [
   { title: 'Sales Stats',     url: createPageUrl('MarketplaceSalesStats'), icon: BarChart3,   requiresAuth: true },
   { title: 'Batch Husbandry', url: createPageUrl('BatchHusbandry'),        icon: Utensils,    requiresAuth: true },
   { title: 'Worksheets',      url: createPageUrl('PrintableWorksheets'),   icon: Printer,     requiresAuth: true },
-  { title: 'My Storefront',   url: createPageUrl('BreederStorefront'),     icon: Store,       requiresAuth: true },
   { title: 'My Profile',      url: createPageUrl('MyProfile'),             icon: Users,       requiresAuth: true },
   { title: 'Train Model',     url: createPageUrl('Training'),              icon: Upload,      requiresAuth: true },
 ];
