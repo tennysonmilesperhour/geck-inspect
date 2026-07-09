@@ -21,7 +21,7 @@
  */
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { isoWeekKey, weekSummary, currentWeekSpend } from './lib/budget.mjs';
 
@@ -232,12 +232,9 @@ function renderMarkdown(ctx) {
     lines.push(`- Google Trends:       ${latestResearch.signals.googleTrends ?? 0}`);
     lines.push(`- YouTube:             ${latestResearch.signals.youtube ?? 0}`);
     lines.push(`- Breeder blogs:       ${latestResearch.signals.breederBlogs ?? 0}`);
-    if (latestResearch.signals.errors && latestResearch.signals.errors.length > 0) {
-      lines.push('');
-      lines.push('Source errors to investigate:');
-      for (const e of latestResearch.signals.errors) {
-        lines.push(`- ${e}`);
-      }
+    lines.push(`- Reddit:              ${latestResearch.signals.reddit ?? 0}`);
+    for (const line of renderSourceHealth(latestResearch.signals.errors || [])) {
+      lines.push(line);
     }
   }
   lines.push('');
@@ -287,4 +284,73 @@ function renderMarkdown(ctx) {
   return lines.join('\n') + '\n';
 }
 
-main();
+// Split the flat research error list into buckets so the weekly report stops
+// crying wolf. Most "errors" are the same anti-bot walls every week (Reddit
+// and Google Trends block CI datacenter IPs); those are expected and grouped
+// with a count. Genuinely novel failures (404s, timeouts, parse errors) get
+// listed individually so they actually get noticed. Skipped optional sources
+// (e.g. Reddit with no credentials) are called out as configuration, not error.
+export function renderSourceHealth(errors) {
+  const expected = new Map(); // "source|status" -> count
+  const skipped = [];
+  const investigate = [];
+
+  for (const raw of errors) {
+    const { source, rest } = splitSource(raw);
+    if (/^skipped\b/i.test(rest)) {
+      skipped.push({ source, detail: rest.replace(/^skipped:?\s*/i, '') });
+      continue;
+    }
+    const status = statusOf(rest);
+    if (status) {
+      const key = `${source}|${status}`;
+      expected.set(key, (expected.get(key) || 0) + 1);
+    } else {
+      investigate.push(`${source}: ${rest}`);
+    }
+  }
+
+  const out = [];
+  if (skipped.length) {
+    out.push('');
+    out.push('Skipped sources (optional, not configured):');
+    for (const s of skipped) out.push(`- ${s.source}: ${s.detail}`);
+  }
+  if (expected.size) {
+    out.push('');
+    out.push('Expected anti-bot blocks (informational, these endpoints block CI datacenter IPs):');
+    for (const [key, count] of expected) {
+      const [source, status] = key.split('|');
+      const verb = status === 'rate-limited' ? 'rate-limited (429)' : 'blocked (403)';
+      out.push(`- ${source}: ${count} request${count === 1 ? '' : 's'} ${verb}`);
+    }
+  }
+  if (investigate.length) {
+    out.push('');
+    out.push('Errors to investigate:');
+    for (const e of investigate) out.push(`- ${e}`);
+  }
+  return out;
+}
+
+// Errors are stored as "source: message" (see research.mjs prefixErrors).
+// Tolerate legacy unprefixed strings from older snapshots.
+function splitSource(raw) {
+  const m = raw.match(/^([a-z0-9-]+):\s*([\s\S]*)$/i);
+  if (m && /^(reddit|bluesky|google-ac|google-trends|youtube|breeder-blogs)$/i.test(m[1])) {
+    return { source: m[1], rest: m[2] };
+  }
+  return { source: 'unknown', rest: raw };
+}
+
+function statusOf(msg) {
+  if (/\b429\b|too many requests|rate limit/i.test(msg)) return 'rate-limited';
+  if (/\b403\b|forbidden|blocked/i.test(msg)) return 'blocked';
+  return null;
+}
+
+// Only run the report when invoked directly, so tests can import the pure
+// helpers above without triggering file writes.
+if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+  main();
+}

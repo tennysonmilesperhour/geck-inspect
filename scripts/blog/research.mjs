@@ -287,12 +287,12 @@ async function main() {
       breederBlogs: breederBlogs.items.length,
       reddit: reddit.items.length,
       errors: [
-        ...(googleAc.error ? [`google-ac: ${googleAc.error}`] : []),
-        ...(bluesky.errors || []),
-        ...(googleTrends.errors || []),
-        ...(youtube.errors || []),
-        ...(breederBlogs.errors || []),
-        ...(reddit.errors || []),
+        ...prefixErrors('google-ac', googleAc.error ? [googleAc.error] : []),
+        ...prefixErrors('bluesky', bluesky.errors),
+        ...prefixErrors('google-trends', googleTrends.errors),
+        ...prefixErrors('youtube', youtube.errors),
+        ...prefixErrors('breeder-blogs', breederBlogs.errors),
+        ...prefixErrors('reddit', reddit.errors),
       ],
     },
     costUsd: result.cost.totalUsd,
@@ -302,6 +302,13 @@ async function main() {
   fs.writeFileSync(path.join(REPO_ROOT, 'docs', 'blog-reports', `_latest-research.json`), JSON.stringify(summary, null, 2) + '\n');
 
   console.log('[research] Done.');
+}
+
+// Tag each source's error strings with the source name so the weekly report
+// can group them (e.g. "reddit: 11 requests blocked") instead of dumping a
+// flat, un-attributable list.
+function prefixErrors(source, errors) {
+  return (errors || []).map((e) => `${source}: ${e}`);
 }
 
 function partition(arr, pred) {
