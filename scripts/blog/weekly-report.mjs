@@ -24,6 +24,7 @@ import path from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 
 import { isoWeekKey, weekSummary, currentWeekSpend } from './lib/budget.mjs';
+import { sanitizeDashes } from './lib/sanitize.mjs';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
@@ -201,7 +202,7 @@ function renderMarkdown(ctx) {
     lines.push('| Slug | Category | Score | Published |');
     lines.push('|---|---|---|---|');
     for (const t of publishedLastWeek) {
-      lines.push(`| /blog/${t.slug} | ${t.category} | ${t.score?.total ?? '—'} | ${t.publishedAt?.slice(0, 10) || '—'} |`);
+      lines.push(`| /blog/${t.slug} | ${t.category} | ${t.score?.total ?? 'n/a'} | ${t.publishedAt?.slice(0, 10) || 'n/a'} |`);
     }
   }
   lines.push('');
@@ -214,8 +215,8 @@ function renderMarkdown(ctx) {
     lines.push('| Slug | Category | Score | Why |');
     lines.push('|---|---|---|---|');
     for (const t of inQueue.slice(0, 10)) {
-      const firstAngle = (t.angleIdeas && t.angleIdeas[0]) ? t.angleIdeas[0].replace(/\|/g, '\\|') : '—';
-      lines.push(`| ${t.slug} | ${t.category} | ${t.score?.total ?? '—'} | ${firstAngle} |`);
+      const firstAngle = (t.angleIdeas && t.angleIdeas[0]) ? sanitizeDashes(t.angleIdeas[0]).replace(/\|/g, '\\|') : 'n/a';
+      lines.push(`| ${t.slug} | ${t.category} | ${t.score?.total ?? 'n/a'} | ${firstAngle} |`);
     }
   }
   lines.push('');
@@ -350,6 +351,6 @@ function statusOf(msg) {
 
 // Only run the report when invoked directly, so tests can import the pure
 // helpers above without triggering file writes.
-if (import.meta.url === pathToFileURL(process.argv[1]).href) {
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   main();
 }
