@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-07-09T21:32:15.723Z",
+  "lastUpdated": "2026-07-09T23:47:26.464Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -788,7 +788,7 @@
       "title": "Frappuccino Crested Geckos: The Cappuccino Pairing You're Not Planning For",
       "slug": "frappuccino-cappuccino-pairings",
       "category": "breeding",
-      "status": "new",
+      "status": "published",
       "score": {
         "demand": 8,
         "originality": 7,
@@ -797,8 +797,8 @@
         "total": 22
       },
       "createdAt": "2026-07-09T21:31:51.051Z",
-      "draftedAt": null,
-      "publishedAt": null,
+      "draftedAt": "2026-07-09T23:47:26.339Z",
+      "publishedAt": "2026-07-09T23:47:26.464Z",
       "evidence": [
         {
           "source": "youtube",

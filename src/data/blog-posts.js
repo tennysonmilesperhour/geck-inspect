@@ -5074,6 +5074,278 @@ export const BLOG_POSTS = [
       },
     ],
   },
+  {
+    slug: "frappuccino-cappuccino-pairings",
+    title: "Frappuccino Geckos: The Cappuccino Pairing You Missed",
+    description: "Frappuccino crested geckos aren't a super form, they're a Cappuccino plus Lilly White combo most breeders don't plan for. Here's how to predict and value them correctly.",
+    keyphrase: "frappuccino crested gecko",
+    category: "breeding",
+    tags: [
+      "breeding",
+      "cappuccino",
+      "lilly-white",
+      "harlequin",
+      "frappuccino",
+      "super-cappuccino",
+      "super-lilly-white",
+    ],
+    datePublished: "2026-07-09",
+    dateModified: "2026-07-09",
+    heroEyebrow: "Breeding Projects",
+    tldr: [
+      "A Frappuccino is a Cappuccino plus Lilly White combo, not a super form, and not produced by pairing two Cappuccinos.",
+      "Frappuccinos hatch brighter and whiter than standard Lilly Whites and develop dramatic white head spotting with age.",
+      "The only safe path to Frappuccinos is Cappuccino x Lilly White (or a double het pairing). Cap x Cap produces Super Cappuccinos with documented health problems, not Frappuccinos.",
+      "Super Cappuccinos are homozygous Cappuccino animals with confirmed breathing and nostril concerns. They should not be confused with Frappuccinos.",
+      "Pricing Frappuccinos correctly requires understanding what went into producing them: the Lilly White parent's background genetics matter as much as the Cappuccino gene.",
+    ],
+    body: [
+      {
+        type: "p",
+        text: "A Frappuccino sold at a 2024 breeder event went for $2,200 next to a visual Cappuccino priced at $600. The buyer assumed they were getting a \"super Cappuccino variant.\" They weren't. They were getting a Cappuccino and a Lilly White in the same animal, a fundamentally different thing. The seller knew. The buyer didn't.",
+      },
+      {
+        type: "p",
+        text: "That gap in understanding is why this post exists.",
+      },
+      {
+        type: "p",
+        text: "The question worth asking: why does the hobby keep conflating Frappuccinos, Super Cappuccinos, and \"fancy Cappuccino variants\" when these are genetically distinct outcomes with different breeding implications, different health profiles, and different price justifications?",
+      },
+      {
+        type: "p",
+        text: "It matters because if you're planning a Cappuccino project without accounting for Lilly White in your lines, you could produce Frappuccinos and not recognize them. You could also be one Cap x Cap pairing away from a rack full of animals with breathing problems. These are not edge cases. They're predictable outcomes that breeders walk into every season.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "What a Frappuccino actually is",
+      },
+      {
+        type: "p",
+        text: "Let's be precise. A Frappuccino carries one copy of the Cappuccino gene and one copy of the Lilly White gene. That's it. It is not a super form of either morph. It is not produced by pairing two Cappuccinos. It does not require any special or unusual pairing to produce, only the right combination of two already-proven incomplete-dominant morphs showing up in the same animal.",
+      },
+      {
+        type: "p",
+        text: "From the canonical morph data: a Frappuccino \"hatches brighter and whiter than a standard Lilly White and develops dramatic white spotting on the head as it matures.\" That brightness and head spotting is what gives the combo its visual identity. It's not just \"a Cappuccino with white\" or \"a Lilly White with coffee tones.\" The interaction between the two genes creates something that looks distinct from either parent morph alone.",
+      },
+      {
+        type: "p",
+        text: "Because both Cappuccino and Lilly White are incomplete dominant, each requires only one copy for visual expression. A Frappuccino is heterozygous for both. Pairing a visual Cappuccino with a visual Lilly White gives you the four expected outcomes of any double-het x double-het adjacent cross: Cappuccino only, Lilly White only, Frappuccino (both), and animals carrying neither. More on those ratios below.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "What a Super Cappuccino actually is, and why it's not the same thing",
+      },
+      {
+        type: "p",
+        text: "A Super Cappuccino is the homozygous form of the Cappuccino gene: two copies, same locus. It is also called Melanistic. It is produced when two visual Cappuccinos are paired together, which is precisely the pairing that does not produce Frappuccinos.",
+      },
+      {
+        type: "p",
+        text: "This is the source of the confusion. Breeders new to Cappuccino projects see \"Cap x Cap\" and assume they're maximizing Cappuccino output. Statistically, you do get 50% visual Cappuccinos from that cross. But 25% of the offspring will be Super Cappuccinos, and those animals come with documented health concerns: reduced nostril size and breathing difficulty. The genetics-sections.jsx source on this is unambiguous: \"breeding specifically for the super form is not recommended.\"",
+      },
+      {
+        type: "p",
+        text: "Super Cappuccinos do hatch. They are not embryonic-lethal the way Super Lilly Whites are. But \"they survive\" is a low bar, and the animals can struggle. The ethical position here is clear: if you want more Cappuccinos, pair your visual Cappuccino to a non-Cappuccino. You lose the 25% chance of Super Cappuccino offspring. You gain 50% visual Cappuccinos and zero animals with structural breathing concerns.",
+      },
+      {
+        type: "p",
+        text: "Here's the critical distinction breeders need to hold in their heads: **Cap x Cap makes Super Cappuccinos. Cap x Lilly White makes Frappuccinos.** These are different pairings with different outcomes and different ethics attached to them.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "How Frappuccinos are produced, and the math behind it",
+      },
+      {
+        type: "p",
+        text: "The simplest path to a Frappuccino is the most obvious: pair a visual Cappuccino with a visual Lilly White. Because both morphs are incomplete dominant, you're essentially running a double-het cross on two independent loci. The expected offspring breakdown looks like this:",
+      },
+      {
+        type: "ul",
+        items: [
+          "25% Cappuccino only (one Cap, no LW)",
+          "25% Lilly White only (no Cap, one LW)",
+          "25% Frappuccino (one Cap, one LW)",
+          "25% neither (no Cap, no LW)",
+        ],
+      },
+      {
+        type: "p",
+        text: "That's one in four animals per clutch expected to be a Frappuccino, on average. Because crested geckos typically lay two eggs per clutch and you're working with relatively small sample sizes, don't expect this distribution to hold tightly in your first season. Across five or six clutches you'll see it converge.",
+      },
+      {
+        type: "p",
+        text: "The other route to Frappuccinos involves animals that carry both genes without expressing both visually. If you have an animal that is visual Cappuccino but also het for Lilly White (from a Lilly White parent), pairing it with a visual Lilly White would shift the odds. Lineage documentation is how you track this. An animal documented as \"Cappuccino, 50% possible het Lilly White\" from a Cap x LW pairing is worth more in a Frappuccino project than a Cappuccino from a line with no LW history.",
+      },
+      {
+        type: "p",
+        text: "There is no Punnett-square shortcut to producing Frappuccinos from two non-LW animals. If Lilly White isn't in your lines somewhere, you cannot produce Frappuccinos. That sounds obvious, but breeders sometimes see a very bright or high-white Cappuccino and assume it's expressing \"something extra.\" That kind of visual assessment is exactly what the proven morph framework warns against. Bright markings alone are not evidence of Lilly White.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "The Lilly White pairing rule still applies",
+      },
+      {
+        type: "p",
+        text: "Lilly White is a lethal allele in homozygous form. Super Lilly White embryos don't hatch. This is the single most important safety rule in crested gecko breeding, and it does not stop applying just because the Lilly White is sitting in a Frappuccino.",
+      },
+      {
+        type: "p",
+        text: "A Frappuccino carries one copy of Lilly White. If you pair two Frappuccinos together, you are pairing two animals that each carry one copy of LW, which means you are running a LW x LW cross on the Lilly White locus. Roughly 25% of the fertilized eggs will be homozygous Lilly White and will not hatch.",
+      },
+      {
+        type: "p",
+        text: "You're also crossing two Cappuccinos, so 25% of the surviving offspring will be Super Cappuccinos with the health concerns described above.",
+      },
+      {
+        type: "p",
+        text: "Frappuccino x Frappuccino is a pairing that no experienced breeder should be running deliberately. If you want more Frappuccinos from a Frappuccino parent, pair it with a visual Cappuccino (to produce Frappuccinos and regular Cappuccinos, with no lethal risk on the LW locus) or pair it with a visual Lilly White (to produce Frappuccinos and regular LWs, with no Cap x Cap risk). Use the [Genetic Calculator](/GeneticCalculatorTool) to model specific crosses before you commit.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Why Frappuccinos are underpriced or misrepresented",
+      },
+      {
+        type: "p",
+        text: "The hobby hasn't fully figured out how to price Frappuccinos, and the inconsistency frustrates buyers. I've seen Frappuccinos listed for $800 from one breeder and $3,500 from another, for animals that looked roughly comparable in photos. The price gap is almost never explained in the listing.",
+      },
+      {
+        type: "p",
+        text: "Some of this reflects background genetics. A Frappuccino out of a high-quality harlequin Lilly White mother and a Cappuccino father with clean pattern is meaningfully different from a Frappuccino out of a plain-jane Lilly White and a buckskin Cappuccino. The combo gives you the gene, the background gives you the look. Both matter.",
+      },
+      {
+        type: "p",
+        text: "Some of it is plain misrepresentation. \"Frappuccino\" is a recognizable name that commands attention, and not every seller using it is being precise. If a listing says \"Frappuccino\" without naming both parent morphs, ask. A real Frappuccino has documented Cappuccino lineage and documented Lilly White lineage. If the seller can't give you both, the claim is unverified.",
+      },
+      {
+        type: "p",
+        text: "The honest market position for a Frappuccino is somewhere above the sum of its parts as individual animals. You're buying an animal that produces both morphs in a single pairing, which simplifies project planning. That convenience has value. But it's not infinite value, and \"we named it something special\" is not a genetic argument.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "An opinion: most breeders should plan Cap x LW before they plan Cap x Cap",
+      },
+      {
+        type: "p",
+        text: "This is a position I'll defend. If you own a visual Cappuccino and you're deciding what to pair it with next season, a visual Lilly White is a stronger choice than another Cappuccino for most breeding programs.",
+      },
+      {
+        type: "p",
+        text: "Here's why. Cap x non-Cap gives you 50% Cappuccinos and 50% non-Cappuccinos with zero Super Cappuccino risk. Cap x LW specifically gives you 25% Cappuccinos, 25% Lilly Whites, and 25% Frappuccinos, plus 25% animals carrying neither. You're producing three marketable morph categories from one pairing, including one that commands a real premium. And you're not producing a single animal with compromised airways.",
+      },
+      {
+        type: "p",
+        text: "Cap x Cap produces more Cappuccinos per clutch (50% vs 25%), but at the cost of 25% Super Cappuccinos. That math is hard to justify. The extra Cappuccinos don't sell for enough more to offset the ethical weight of producing sick animals as a byproduct, especially when Cap x LW gives you a different but arguably more interesting clutch composition.",
+      },
+      {
+        type: "p",
+        text: "The counterargument is that some breeders are specifically trying to prove Cap genetics in a new line, and Cap x Cap gets them more data per clutch on Cappuccino expression. That's legitimate for a one-season test-pairing with eyes fully open. It's not a sustainable rack strategy.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Practical takeaways",
+      },
+      {
+        type: "p",
+        text: "Before next breeding season, do three things:",
+      },
+      {
+        type: "ol",
+        items: [
+          "**Audit your Lilly White lineage.** If any animal in your Cappuccino project has LW in its recent ancestry, document it. That animal may be a het carrier, and het x visual crosses can produce Frappuccinos unexpectedly if you didn't track it.",
+        ],
+      },
+      {
+        type: "ol",
+        items: [
+          "**Don't pair two Cappuccinos unless you have a specific reason and you're prepared for Super Cappuccino outcomes.** The health concerns are documented and real. If your goal is more Cappuccinos, Cap x non-Cap is the safer route. If your goal is Frappuccinos, Cap x LW is the direct path.",
+        ],
+      },
+      {
+        type: "ol",
+        items: [
+          "**Photograph Frappuccino hatchlings early and at 12 months.** The white head spotting that defines the combo develops with age. A hatchling that looks like a slightly bright Lilly White may look dramatically different by its first birthday. Don't sell or price Frappuccinos at eight weeks based on what you see then.",
+        ],
+      },
+      {
+        type: "p",
+        text: "The $2,200 animal from the opening of this post may have been worth every cent. But only if the buyer understood what they were getting and could use it intelligently in their project. Knowing the difference between a Frappuccino, a Super Cappuccino, and a well-marked Lilly White is not trivia. It's the difference between a pairing that works and one that wastes a season.",
+      },
+    ],
+    faq: [
+      {
+        question: "What is a Frappuccino crested gecko?",
+        answer: "A Frappuccino is a crested gecko that carries one copy of the Cappuccino gene and one copy of the Lilly White gene in the same animal. It is not a super form of either morph. Frappuccinos hatch brighter and whiter than standard Lilly Whites and develop dramatic white head spotting as they mature. They are produced by pairing a visual Cappuccino with a visual Lilly White.",
+      },
+      {
+        question: "Is a Frappuccino the same as a Super Cappuccino?",
+        answer: "No. A Super Cappuccino is a homozygous Cappuccino (two copies of the Cappuccino gene) produced by pairing two visual Cappuccinos. It has documented health concerns including reduced nostril size and breathing difficulty. A Frappuccino is a Cappuccino plus Lilly White combo and carries zero copies of the Super Cappuccino genotype.",
+      },
+      {
+        question: "How do you breed a Frappuccino crested gecko?",
+        answer: "Pair a visual Cappuccino with a visual Lilly White. Expected offspring: roughly 25% Frappuccino, 25% Cappuccino only, 25% Lilly White only, and 25% carrying neither morph. There is no way to produce Frappuccinos from two Cappuccinos or from two Lilly Whites alone.",
+      },
+      {
+        question: "Can you pair two Frappuccinos together?",
+        answer: "This pairing is not recommended. Two Frappuccinos each carry one copy of Lilly White, so roughly 25% of fertilized eggs will be homozygous Lilly White and will not hatch (lethal). The cross also pairs two Cappuccinos, producing approximately 25% Super Cappuccinos with documented health concerns. Pair your Frappuccino to a visual Cappuccino or a visual Lilly White instead.",
+      },
+      {
+        question: "How much does a Frappuccino crested gecko cost?",
+        answer: "Frappuccino pricing varies widely, roughly $800 to $3,500 depending on background genetics, pattern quality, and breeder reputation. The combo morph commands a premium over either individual morph because it produces both Cappuccinos and Lilly Whites in a single pairing. Always ask for documentation of both parent morphs before purchasing.",
+      },
+      {
+        question: "How do I tell a Frappuccino apart from a Lilly White?",
+        answer: "Hatchling Frappuccinos can look similar to bright Lilly Whites. With age, Frappuccinos develop characteristic white head spotting and a generally brighter, whiter body than a standard Lilly White. Lineage documentation is the only reliable confirmation at hatch. Do not price or sell Frappuccinos based solely on hatchling appearance.",
+      },
+      {
+        question: "Does the Lilly White lethal allele risk apply to Frappuccinos?",
+        answer: "Yes. A Frappuccino carries one copy of Lilly White. Pairing two Frappuccinos (or a Frappuccino with any other Lilly White carrier) runs the same lethal homozygous risk as any LW x LW cross. Roughly 25% of fertilized eggs from such a pairing will be Super Lilly White and will not hatch. Always pair Frappuccinos to non-LW or single-LW animals.",
+      },
+      {
+        question: "Is it ethical to breed for Super Cappuccinos?",
+        answer: "Most experienced breeders say no. Super Cappuccinos (homozygous Cappuccino) have documented health concerns including reduced nostril size and breathing difficulty. Pairing Cappuccino x non-Cappuccino gives 50% visual Cappuccinos with zero Super Cappuccino risk, making it the recommended strategy for producing healthy Cappuccino offspring.",
+      },
+    ],
+    internalLinks: [
+      {
+        href: "/MorphGuide/frappuccino",
+        label: "Frappuccino morph profile",
+      },
+      {
+        href: "/MorphGuide/cappuccino",
+        label: "Cappuccino morph profile",
+      },
+      {
+        href: "/MorphGuide/lilly-white",
+        label: "Lilly White morph profile",
+      },
+      {
+        href: "/GeneticCalculatorTool",
+        label: "Genetic Calculator: model your Cap x LW cross",
+      },
+      {
+        href: "/GeneticsGuide",
+        label: "Crested gecko genetics guide: incomplete dominance and lethal alleles",
+      },
+    ],
+    externalCitations: [
+      {
+        url: "https://www.youtube.com/watch?v=AYCFFN7rqEg",
+        label: "TikisGeckos: Frappuccino Crested Geckos Explained (YouTube)",
+      },
+      {
+        url: "https://www.pangeareptile.com/blogs/news",
+        label: "Pangea Reptile Blog: breeding and genetics resources",
+      },
+    ],
+  }
 ];
 
 /**
