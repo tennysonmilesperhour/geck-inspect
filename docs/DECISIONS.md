@@ -321,7 +321,7 @@ These entries capture the strategic decisions made during the initial landing pa
 ### 27. Proposed: keep Keeper at $2.99, raise Breeder to $9.99
 
 **Date:** 2026-07-08
-**Status:** Proposed (memo written, awaiting Tennyson's decision)
+**Status:** REJECTED 2026-07-09. Tennyson decided to keep Breeder at $5.99 (the low, accessible price is intentional; the whole point of the app is that existing options felt too expensive). The value-audit and migration mechanics in the memo stay useful if pricing is ever revisited, but no price change is planned.
 **Context:** Keeper ($2.99) and Breeder ($5.99) both sit below the market band (hobbyist $4.99 to $7.99, serious breeder $9.99 to $19 per STRATEGY.md). Breeder in particular is priced like a hobbyist tier while shipping serious-breeder features (unlimited collection, MorphMarket sync, certificates, analytics). Full analysis in docs/specs/pricing-decision-2026-07.md.
 **Decision (proposed):** Keep Keeper at $2.99 as a keeper-first acquisition wedge (undercuts ReptiDex's $4.99), and raise Breeder from $5.99 to $9.99 (annual $60 to $100), grandfathering existing subscribers via new Stripe price_ids. Do not market Enterprise until its market-intelligence data is live (currently preview-only). Do not raise Breeder until shipping integration works or is dropped from the feature list.
 **Reasoning:** Breeders are the least price-sensitive segment and get the most value, so the raise lands there with least churn risk while roughly doubling Breeder ARPU; keeping Keeper cheap protects the 80%-of-market keeper funnel that is the whole thesis. Modeled ~$174K ARR at 2000 paying users vs ~$142K at current prices, recovering ~85% of a full market-align raise without sacrificing the wedge.

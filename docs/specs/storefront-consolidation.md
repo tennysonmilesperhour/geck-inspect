@@ -1,5 +1,18 @@
 # Storefront / Selling-Surface Consolidation
 
+> **Usage reality check (2026-07-09, from production):** the whole database has
+> **1** `breeder_store_pages` row and **0** `breeder_profiles` rows. The
+> storefront feature is barely adopted yet, so the two-writer race and the
+> overlapping public surfaces affect ~1 real user, and the `/store → /Breeder`
+> redirect cannot even resolve (there are no `breeder_profiles.custom_slug`
+> values to target). This makes the full consolidation LOW-URGENCY
+> maintainability work, not a live-impact fix. **Step 1 (drop the dead
+> BreederStorefront nav entry) shipped 2026-07-09.** The deep editor merge and
+> the public-URL redirect are deferred: they are a large, hard-to-runtime-test
+> refactor whose payoff scales with storefront adoption, which is currently
+> near zero. Revisit when breeders actually start creating storefronts.
+
+
 Status: proposal (analysis only, no code changed)
 Author: file-search analysis, 2026-07-08
 Scope: the overlapping "breeder selling / storefront" page surfaces plus the redundant
