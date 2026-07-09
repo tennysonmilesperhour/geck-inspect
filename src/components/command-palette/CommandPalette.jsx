@@ -4,80 +4,20 @@ import { createPageUrl } from '@/utils';
 import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { Command as CommandPrimitive } from 'cmdk';
 import {
-  LayoutDashboard,
-  Users,
   Images,
-  MessageSquare,
-  BookOpen,
-  Dna,
-  GitBranch,
-  ShoppingCart,
-  Bell,
-  Settings,
-  Heart,
-  Mail,
   Sparkles,
-  Trophy,
-  FlaskConical,
-  GraduationCap,
-  FolderKanban,
   Search,
   Plus,
   LifeBuoy,
   LogOut,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
+import { PALETTE_ITEMS } from '@/lib/navItems';
 
-// Every row is { label, page, icon, keywords, section } so fuzzy search works
-// on both the visible label and a list of synonyms.
-const NAV_ITEMS = [
-  // Collection
-  { label: 'Dashboard',          page: 'Dashboard',          icon: LayoutDashboard, section: 'Your Collection', keywords: ['home', 'overview', 'stats'] },
-  { label: 'My Geckos',          page: 'MyGeckos',           icon: Users,           section: 'Your Collection', keywords: ['collection', 'animals', 'list'] },
-  { label: 'My Profile',         page: 'MyProfile',          icon: Users,           section: 'Your Collection', keywords: ['account', 'public profile'] },
-  { label: 'Other Reptiles',     page: 'OtherReptiles',      icon: Users,           section: 'Your Collection', keywords: ['leopard gecko', 'other animals'] },
-  { label: 'Batch Husbandry',    page: 'BatchHusbandry',     icon: Users,           section: 'Your Collection', keywords: ['bulk', 'feeding', 'weigh', 'group log'] },
-  { label: 'AI Image Import',    page: 'ImageImport',        icon: Sparkles,        section: 'Your Collection', keywords: ['import', 'scan', 'extract', 'notecard', 'spreadsheet'] },
-  { label: 'Printable Worksheets', page: 'PrintableWorksheets', icon: BookOpen,     section: 'Your Collection', keywords: ['print', 'pdf', 'sheet', 'record'] },
-
-  // Breeding
-  { label: 'Breeding Plans',     page: 'Breeding',           icon: GitBranch,       section: 'Breeding', keywords: ['pairings', 'projects', 'season'] },
-  { label: 'Breeding Pairs',     page: 'BreedingPairs',      icon: GitBranch,       section: 'Breeding', keywords: ['sire dam', 'match', 'pair'] },
-  { label: 'Lineage Tree',       page: 'Lineage',            icon: GitBranch,       section: 'Breeding', keywords: ['family tree', 'ancestry'] },
-  { label: 'Pedigree',           page: 'Pedigree',           icon: GitBranch,       section: 'Breeding', keywords: ['pedigree', 'certificate', 'lineage record'] },
-  { label: 'Breeding ROI',       page: 'BreedingROI',        icon: FolderKanban,    section: 'Breeding', keywords: ['roi', 'profit', 'cost', 'revenue', 'money'] },
-  { label: 'Breeding Loans',     page: 'BreedingLoans',      icon: GitBranch,       section: 'Breeding', keywords: ['loan', 'co-own', 'lease', 'collab'] },
-  { label: 'Project Manager',    page: 'ProjectManager',     icon: FolderKanban,    section: 'Breeding', keywords: ['tasks', 'goals'] },
-  { label: 'Genetic Calculator', page: 'GeneticCalculatorTool', icon: FlaskConical, section: 'Breeding', keywords: ['punnett', 'offspring', 'traits'] },
-
-  // Community
-  { label: 'Community Gallery',  page: 'Gallery',            icon: Images,          section: 'Community', keywords: ['photos', 'feed', 'browse'] },
-  { label: 'Liked Geckos',       page: 'LikedGeckos',        icon: Heart,           section: 'Community', keywords: ['hearts', 'favorites'] },
-  { label: 'Forum',              page: 'Forum',              icon: MessageSquare,   section: 'Community', keywords: ['discussion', 'posts'] },
-  { label: 'Community Connect',  page: 'CommunityConnect',   icon: Users,           section: 'Community', keywords: ['social', 'directory'] },
-  { label: 'Messages',           page: 'Messages',           icon: Mail,            section: 'Community', keywords: ['dm', 'inbox', 'chat'] },
-  { label: 'Notifications',      page: 'Notifications',      icon: Bell,            section: 'Community', keywords: ['alerts'] },
-
-  // Marketplace
-  { label: 'Marketplace',        page: 'Marketplace',        icon: ShoppingCart,    section: 'Marketplace', keywords: ['buy', 'shop', 'store'] },
-  { label: 'Buy Geckos',         page: 'MarketplaceBuy',     icon: ShoppingCart,    section: 'Marketplace', keywords: ['purchase', 'for sale'] },
-  { label: 'Sell Geckos',        page: 'MarketplaceSell',    icon: ShoppingCart,    section: 'Marketplace', keywords: ['list', 'post'] },
-  { label: 'My Listings',        page: 'MyListings',         icon: ShoppingCart,    section: 'Marketplace', keywords: ['my sales'] },
-
-  // Reference
-  { label: 'Morph Guide',        page: 'MorphGuide',         icon: Dna,             section: 'Reference', keywords: ['morphs', 'harlequin', 'dalmatian', 'lilly white'] },
-  { label: 'Morph Visualizer',   page: 'MorphVisualizer',    icon: Sparkles,        section: 'Reference', keywords: ['simulator', 'preview'] },
-  { label: 'Genetics Guide',     page: 'GeneticsGuide',      icon: Dna,             section: 'Reference', keywords: ['inheritance', 'heredity'] },
-  { label: 'Care Guide',         page: 'CareGuide',          icon: BookOpen,        section: 'Reference', keywords: ['husbandry', 'care sheet', 'setup'] },
-  { label: 'AI Morph Recognition', page: 'Recognition',      icon: Sparkles,        section: 'Reference', keywords: ['identify', 'classify', 'scan'] },
-  { label: 'Train the AI Model', page: 'Training',           icon: GraduationCap,   section: 'Reference', keywords: ['label', 'tag', 'annotate'] },
-  { label: 'Geck Answers',       page: 'GeckAnswers',        icon: MessageSquare,   section: 'Reference', keywords: ['q&a', 'questions', 'answers', 'ask'] },
-  { label: 'Submit a Morph',     page: 'MorphGuideSubmission', icon: BookOpen,      section: 'Reference', keywords: ['contribute', 'add morph', 'submit'] },
-
-  // Account
-  { label: 'Settings',           page: 'Settings',           icon: Settings,        section: 'Account', keywords: ['preferences', 'config'] },
-  { label: 'Membership',         page: 'Membership',         icon: Trophy,          section: 'Account', keywords: ['membership', 'billing', 'subscription', 'upgrade'] },
-];
+// The searchable page list (label, page, icon, section, keywords) is
+// derived from the single NAV_REGISTRY in navItems.js so it can never drift
+// from the sidebar. Each row's icon is already resolved to a component.
+const NAV_ITEMS = PALETTE_ITEMS;
 
 // Shared row styling so every item looks the same whether it's an action
 // or a navigation link.
