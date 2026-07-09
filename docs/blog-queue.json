@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-06-22T15:47:20.900Z",
+  "lastUpdated": "2026-07-09T21:32:15.723Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -743,6 +743,114 @@
         "Direct-answer post titled to match the query phrasing: \"crested gecko pedigree tracker\"",
         "Foundation Genetics framing: what allele(s) underlie \"crested gecko pedigree tracker\", inheritance pattern, and breeding implications",
         "FAQ-first format: lead with 6-8 Q&A pairs answering \"crested gecko pedigree tracker\" and related long-tails, then long-form explanation"
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "tpc_1783632711051_albinocres",
+      "title": "Why Albino Crested Geckos Might Not Exist (Yet)",
+      "slug": "albino-crested-gecko-myth",
+      "category": "mythbusters",
+      "status": "new",
+      "score": {
+        "demand": 9,
+        "originality": 8,
+        "accuracyRisk": 4,
+        "voiceFit": 8,
+        "total": 21
+      },
+      "createdAt": "2026-07-09T21:31:51.051Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "google-trends",
+          "snippet": "Google Trends rising query (related to \"crested gecko\", last 90 days US): \"albino crested gecko\" +130%",
+          "url": "https://trends.google.com/trends/explore?q=albino+crested+gecko&date=today+3-m&geo=US"
+        },
+        {
+          "source": "google-ac",
+          "snippet": "Google autocomplete suggests \"crested gecko\" → no explicit \"albino\" variant in top suggestions, but search demand exists independently",
+          "url": null
+        }
+      ],
+      "angleIdeas": [
+        "Search volume for 'albino crested gecko' jumped 130% in the last three months, but there's no proven albino line in captive breeding—here's what breeders are actually calling albino and why.",
+        "You've seen listings claiming 'albino' or 'leucistic' crested geckos. What they really are is a misidentified combo, and why the genetics don't support a true albino morph yet.",
+        "The albino crested gecko trend is part rumor, part marketing. We break down what's genetically plausible and what's hype."
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "tpc_1783632711051_frappuccin",
+      "title": "Frappuccino Crested Geckos: The Cappuccino Pairing You're Not Planning For",
+      "slug": "frappuccino-cappuccino-pairings",
+      "category": "breeding",
+      "status": "new",
+      "score": {
+        "demand": 8,
+        "originality": 7,
+        "accuracyRisk": 2,
+        "voiceFit": 9,
+        "total": 22
+      },
+      "createdAt": "2026-07-09T21:31:51.051Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "youtube",
+          "snippet": "YouTube: \"Frappuccino Crested Geckos Explained.\" by TikisGeckos, 7,620 views (1 year ago)",
+          "url": "https://www.youtube.com/watch?v=AYCFFN7rqEg"
+        },
+        {
+          "source": "google-ac",
+          "snippet": "Google autocomplete for \"cappuccino crested gecko\" suggests multiple related searches, including morphs and breeding, indicating active breeder and buyer interest",
+          "url": null
+        }
+      ],
+      "angleIdeas": [
+        "When you pair two cappuccino crested geckos, you don't always get more cappuccinos—you might get frappuccinos, and the market doesn't value them the same way.",
+        "Most breeders buying cappuccino pairs focus on super cappuccino outcomes, but they're overlooking frappuccino genetics and why it matters for your breeding numbers.",
+        "Frappuccino is the under-discussed middle child of cappuccino breeding: here's what it is, how to predict it, and whether it's worth keeping in your rack."
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "tpc_1783632711051_lillywhite",
+      "title": "Juvenile Lilly White Identification: When They Don't Look White Yet",
+      "slug": "lilly-white-juvenile-identification",
+      "category": "identification",
+      "status": "new",
+      "score": {
+        "demand": 7,
+        "originality": 8,
+        "accuracyRisk": 3,
+        "voiceFit": 8,
+        "total": 20
+      },
+      "createdAt": "2026-07-09T21:31:51.051Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "youtube",
+          "snippet": "YouTube: \"Lilly White Crested Gecko Morph Review!\" by TikisGeckos and Gold Standard Gecko Club, 11,643 views (11mo ago)",
+          "url": "https://www.youtube.com/watch?v=fK3PN3mJGnY"
+        },
+        {
+          "source": "google-ac",
+          "snippet": "Google autocomplete for \"lilly white crested gecko\" suggests \"lilly white crested gecko hatchling\" and \"lilly white crested gecko baby\", indicating buyer and breeder confusion over young animal identification",
+          "url": null
+        }
+      ],
+      "angleIdeas": [
+        "You bought what you thought was a lilly white hatchling, but it has color and markings—and now you're unsure if you were sold the wrong morph or if it just hasn't matured yet.",
+        "Lilly white babies are a gamble: they fire up and darken as they age, making hatchling identification nearly impossible. Here's what markers actually predict an adult lilly white.",
+        "The most common hatchling ID mistake is mistaking a light-colored normal or a very light line-bred for a true lilly white. Here's how breeders actually tell them apart early."
       ],
       "rejectionReason": null,
       "prUrl": null

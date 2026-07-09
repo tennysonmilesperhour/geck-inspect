@@ -1,33 +1,18 @@
 {
-  "ranAt": "2026-06-15T12:22:39.309Z",
+  "ranAt": "2026-07-09T21:31:51.051Z",
   "signals": {
     "googleAc": 95,
     "bluesky": 80,
-    "googleTrends": 0,
+    "googleTrends": 15,
     "youtube": 66,
     "breederBlogs": 0,
-    "reddit": 0,
-    "errors": [
-      "\"crested gecko\": related: 429",
-      "\"crested gecko morph\": related: 429",
-      "\"cappuccino gecko\": related: 429",
-      "\"lilly white gecko\": related: 429",
-      "r/crestedgecko new: 403 Blocked",
-      "r/crestedgecko top: 403 Blocked",
-      "r/morphmarket new: 403 Blocked",
-      "search \"cappuccino\": 403 Blocked",
-      "search \"lilly white\": 403 Blocked",
-      "search \"axanthic\": 403 Blocked",
-      "search \"soft scale\": 403 Blocked",
-      "search \"frappuccino\": 403 Blocked",
-      "search \"super dalmatian\": 403 Blocked",
-      "search \"het \": 403 Blocked",
-      "search \"breeding fail\": 403 Blocked"
-    ]
+    "errors": []
   },
-  "costUsd": 0.028492999999999997,
+  "costUsd": 0.033766,
   "addedSlugs": [
-    "frappuccino-genetics-breeding-true"
+    "albino-crested-gecko-myth",
+    "frappuccino-cappuccino-pairings",
+    "lilly-white-juvenile-identification"
   ],
-  "rationale": "\nThe signals show very strong and consistent search demand around crested gecko morphs, breeding, and specific morphs (cappuccino, lilly white, axanthic). Google autocomplete reveals high volume for \"crested gecko morph\" queries and specific morph names. YouTube has substantial evergreen content on morphs and breeding, plus several videos on controversial topics (super cappuccino viability, breeding warnings). However, most search queries are generic (\"care,\" \"price,\" \"for sale\") or already-covered topics. The blog has already published extensively on cappuccino, lilly white, axanthic, soft-scale, and breeding risks. Reddit and forums yielded no recent discussion signals. The highest-potential angles are:\n\n1. A genetics/breeding insight that corrects misconceptions around morph inheritance or breeding outcomes\n2. A specific identification challenge or confusion point (e.g., how breeders misidentify morphs in hatchlings)\n3. A breeding decision framework that goes deeper than existing \"risks\" articles\n\nI am selecting only 1 topic because the other potential angles either duplicate published slugs, lack forum controversy to ground them, or require speculation beyond available signals. The data shows demand but not the forum heat or novel angle needed to justify 2-3 posts.\n"
+  "rationale": "\nThe signals show strong, consistent demand around three core areas: (1) morph identification and genetics across multiple specific morphs (cappuccino, lilly white, axanthic), (2) breeding mechanics and outcomes, and (3) emerging trends like albino interest and diet awareness. Google Trends show +300% rise in \"repashy crested gecko diet\" and +130% for \"albino,\" while YouTube has significant viewership on morph guides and cappuccino breeding controversies. Bluesky engagement clusters around morph aesthetics and breeding discussions. However, most general care, broad morph lists, and established breeding topics are either already published or too generic. I'm focusing on three concrete, actionable angles that address actual breeder confusion: (1) why albino demand is rising but remains genetically unclear/risky, (2) frappuccino as an under-covered outcome of cappuccino pairings, and (3) identifying lilly white juveniles before markers fully express. All three target breeding decisions and avoid duplicating existing slugs.\n"
 }
