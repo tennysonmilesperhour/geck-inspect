@@ -7,7 +7,7 @@ import { base44 } from '@/api/base44Client';
 import { useAuth } from '@/lib/AuthContext';
 import { APP_LOGO_URL } from '@/lib/constants';
 import {
-  Database, Users, LogOut, Search, Settings, UserPlus, Shield, Mail, Menu, Star, GraduationCap, ChevronDown, Pin, PinOff
+  Database, Users, LogOut, Search, Settings, UserPlus, Shield, Mail, Menu, Star, GraduationCap, ChevronDown, Pin, PinOff, Home
 } from "lucide-react";
 import TutorialModal from "@/components/tutorial/TutorialModal";
 import OnboardingRolePrompt from "@/components/tutorial/OnboardingRolePrompt";
@@ -777,6 +777,30 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   const sectionNavItems = flattenNavItems(navItems)
     .filter((item) => resolveSection(item.page_name) === activeSectionId);
 
+  // Persistent Dashboard tile. The section tabs (Manage/Discover) don't
+  // include the dashboard, and the only other way back was clicking the
+  // logo, which isn't obvious. This gives every page a clearly labeled
+  // one-click path home, above the section nav.
+  const renderHomeLink = () => {
+    const dashUrl = createPageUrl('Dashboard');
+    const isActive = location.pathname === dashUrl;
+    return (
+      <div className="px-2 mb-2">
+        <Link
+          to={dashUrl}
+          data-tutorial-id="Dashboard"
+          data-tutorial-label="Dashboard"
+          className={`group flex items-center rounded-md px-2 py-2 text-xs font-medium transition-colors duration-200 sidebar-nav-item ${
+            isActive ? 'active' : 'text-gray-300 hover:bg-gray-700 hover:text-foreground'
+          }`}
+        >
+          <Home className="mr-2 h-5 w-5 flex-shrink-0" />
+          <span className="truncate">Dashboard</span>
+        </Link>
+      </div>
+    );
+  };
+
   const renderFavoritesGrid = () => {
     if (favoriteItems.length === 0) return null;
     return (
@@ -956,6 +980,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
               )}
             </div>
 
+            {renderHomeLink()}
             {renderFavoritesGrid()}
             {renderNavSection(sectionNavItems, activeSection.label)}
             {user?.role === 'admin' && (
@@ -1133,6 +1158,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                 )}
               </div>
 
+              {renderHomeLink()}
               {renderFavoritesGrid()}
               {renderNavSection(sectionNavItems, activeSection.label)}
               {user?.role === 'admin' && (
