@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useParams, Link, useNavigate } from 'react-router-dom';
+import { useParams, Link, useNavigate, Navigate } from 'react-router-dom';
 import { supabase } from '@/lib/supabaseClient';
 import Seo from '@/components/seo/Seo';
 import { Button } from '@/components/ui/button';
@@ -288,6 +288,12 @@ export default function StorePage() {
     const [isLoading, setIsLoading] = useState(true);
     const [error, setError] = useState(null);
     const [openGecko, setOpenGecko] = useState(null);
+    // The public breeder page now lives at /Breeder/:custom_slug. When this
+    // store's owner has a breeder profile, redirect there so there is one
+    // canonical public page. If they have no profile slug yet, we keep
+    // rendering the original store body below as a fallback so shared
+    // /store/:slug links never break.
+    const [redirectSlug, setRedirectSlug] = useState(null);
 
     useEffect(() => {
         let cancelled = false;
@@ -306,6 +312,18 @@ export default function StorePage() {
                     return;
                 }
                 setPage(data);
+
+                // Prefer redirecting to the canonical /Breeder page when the
+                // owner has a breeder profile with a custom slug.
+                const profileSlugRes = await supabase
+                    .from('breeder_profiles')
+                    .select('custom_slug')
+                    .eq('created_by', data.owner_email)
+                    .maybeSingle();
+                if (!cancelled && profileSlugRes.data?.custom_slug) {
+                    setRedirectSlug(profileSlugRes.data.custom_slug);
+                    return;
+                }
 
                 const profilesRes = await supabase
                     .from('profiles')
@@ -370,6 +388,10 @@ export default function StorePage() {
                 <div className="h-10 w-10 rounded-full border-2 border-emerald-500 border-t-transparent animate-spin" />
             </div>
         );
+    }
+
+    if (redirectSlug) {
+        return <Navigate to={`/Breeder/${redirectSlug}`} replace />;
     }
 
     if (error || !page) {

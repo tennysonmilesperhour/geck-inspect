@@ -291,7 +291,6 @@ export const NAV_REGISTRY = [
   { page: 'AnimalPassport', section: 'manage' },
   { page: 'ClaimAnimal', section: 'manage' },
   { page: 'Shipping', section: 'manage' },
-  { page: 'BreederStorefront', section: 'manage', breederOnly: true },
   { page: 'MorphMarketExport', breederOnly: true },
   { page: 'CareGuideTopic', section: 'discover' },
   { page: 'ForumPost', section: 'discover' },

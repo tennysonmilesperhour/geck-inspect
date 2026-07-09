@@ -13,6 +13,7 @@ import {
 
 import {
     Store, Save, Loader2, ExternalLink, ArrowLeft, Plus, X, Lock, Crown, GitBranch,
+    User, Palette,
 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabaseClient';
@@ -23,6 +24,9 @@ import {
     LINK_KINDS, linkKindMeta, normalizeLinkUrl, normalizeSlug, SLUG_RE,
     SLUG_COOLDOWN_DAYS, slugCooldownRemaining,
 } from '@/lib/storeLinks';
+import {
+    STORE_THEMES, DEFAULT_STORE_SETTINGS, readStoreSettings, applyStoreSettings,
+} from '@/components/storefront/StorefrontSections';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 
 const MIN_BANNER_WIDTH = 1280;
@@ -98,6 +102,14 @@ const EMPTY_FORM = {
     is_published: false,
 };
 
+const EMPTY_PROFILE_FORM = {
+    display_name: '',
+    bio: '',
+    location: '',
+    years_breeding: '',
+    specialty_morphs: '',
+};
+
 function defaultSlugFor(user) {
     return normalizeSlug(user?.breeder_name || user?.full_name || user?.email?.split('@')[0] || '');
 }
@@ -118,6 +130,17 @@ export default function MyStore() {
     const [geckos, setGeckos] = useState([]);
     const [plans, setPlans] = useState([]);
 
+    // Absorbed from the retired BreederStorefront editor: the public
+    // breeder_profiles row (identity that powers /Breeder/:slug) plus the
+    // mini-site appearance settings (theme / "Available now" toggle /
+    // featured waitlist) that ride along in this same store page's
+    // external_links. MyStore already owns that row, so writing them here
+    // removes the old two-writer race.
+    const [profileRow, setProfileRow] = useState(null);
+    const [profileForm, setProfileForm] = useState(EMPTY_PROFILE_FORM);
+    const [siteSettings, setSiteSettings] = useState(DEFAULT_STORE_SETTINGS);
+    const [waitlists, setWaitlists] = useState([]);
+
     const tier = tierOf(user);
     const hasPerk =
         tier === 'breeder' ||
@@ -129,7 +152,8 @@ export default function MyStore() {
         let cancelled = false;
         (async () => {
             setLoading(true);
-            const [pageRes, geckoRes, planRes] = await Promise.all([
+            const ownerUserId = user.auth_user_id || user.id;
+            const [pageRes, geckoRes, planRes, profileRes, waitlistRes] = await Promise.all([
                 supabase
                     .from('breeder_store_pages')
                     .select('*')
@@ -145,6 +169,18 @@ export default function MyStore() {
                     .select('id, sire_id, dam_id, pairing_date, status, is_public, archived')
                     .eq('created_by', user.email)
                     .eq('archived', false),
+                supabase
+                    .from('breeder_profiles')
+                    .select('*')
+                    .eq('created_by', user.email)
+                    .maybeSingle(),
+                ownerUserId
+                    ? supabase
+                        .from('gecko_waitlists')
+                        .select('id, title, slug, is_open')
+                        .eq('breeder_user_id', ownerUserId)
+                        .eq('is_open', true)
+                    : Promise.resolve({ data: [] }),
             ]);
             if (cancelled) return;
             const existing = pageRes.data;
@@ -170,6 +206,19 @@ export default function MyStore() {
                     title: defaultTitleFor(user),
                 }));
             }
+            const existingProfile = profileRes.data;
+            setProfileRow(existingProfile || null);
+            setProfileForm({
+                display_name: existingProfile?.display_name || defaultTitleFor(user),
+                bio: existingProfile?.bio || '',
+                location: existingProfile?.location || '',
+                years_breeding: existingProfile?.years_breeding ?? '',
+                specialty_morphs: Array.isArray(existingProfile?.specialty_morphs)
+                    ? existingProfile.specialty_morphs.join(', ')
+                    : '',
+            });
+            setSiteSettings(readStoreSettings(existing?.external_links));
+            setWaitlists(Array.isArray(waitlistRes.data) ? waitlistRes.data : []);
             setGeckos(Array.isArray(geckoRes.data) ? geckoRes.data : []);
             setPlans(Array.isArray(planRes.data) ? planRes.data : []);
             setLoading(false);
@@ -180,6 +229,8 @@ export default function MyStore() {
     const cooldownDays = useMemo(() => slugCooldownRemaining(page), [page]);
     const slugLocked = cooldownDays > 0 && page?.slug && form.slug !== page.slug;
     const set = (k, v) => setForm((prev) => ({ ...prev, [k]: v }));
+    const setProfile = (k, v) => setProfileForm((prev) => ({ ...prev, [k]: v }));
+    const setSite = (patch) => setSiteSettings((prev) => ({ ...prev, ...patch }));
 
     const toggleGecko = (id) => {
         setForm((prev) => {
@@ -260,6 +311,12 @@ export default function MyStore() {
             }))
             .filter((l) => l.url);
 
+        // Fold the mini-site appearance settings (theme / available toggle /
+        // waitlist) back into external_links as the reserved geck: entries the
+        // public /Breeder page reads. applyStoreSettings strips any stale
+        // reserved rows first, so this never double-writes them.
+        const mergedLinks = applyStoreSettings(cleanedLinks, siteSettings);
+
         setSaving(true);
         const nowIso = new Date().toISOString();
         const payload = {
@@ -271,7 +328,7 @@ export default function MyStore() {
             header_image_url: form.header_image_url.trim() || null,
             contact_link: normalizeContactLink(form.contact_link),
             policies: form.policies.trim() || null,
-            external_links: cleanedLinks,
+            external_links: mergedLinks,
             featured_gecko_ids: form.featured_gecko_ids,
             featured_breeding_plan_ids: form.featured_breeding_plan_ids,
             is_published: form.is_published,
@@ -289,14 +346,60 @@ export default function MyStore() {
                 ? 'That URL is already taken. Pick another.'
                 : res.error.message || 'Save failed.';
             toast({ title: 'Could not save', description: msg, variant: 'destructive' });
-        } else {
-            setPage(res.data);
-            setForm((prev) => ({ ...prev, slug: res.data.slug, external_links: res.data.external_links || [] }));
-            toast({
-                title: 'Saved',
-                description: form.is_published ? 'Your store is live.' : 'Saved as a draft.',
-            });
+            setSaving(false);
+            return;
         }
+
+        setPage(res.data);
+        setForm((prev) => ({ ...prev, slug: res.data.slug, external_links: res.data.external_links || [] }));
+        setSiteSettings(readStoreSettings(res.data.external_links));
+
+        // Upsert the public breeder profile that powers /Breeder/:slug. On
+        // first save we create the row and copy the store slug into
+        // custom_slug so the public page resolves at the same handle.
+        const specialtyMorphs = profileForm.specialty_morphs
+            .split(',')
+            .map((s) => s.trim())
+            .filter(Boolean);
+        const yearsBreeding =
+            profileForm.years_breeding === '' || profileForm.years_breeding == null
+                ? null
+                : Number(profileForm.years_breeding);
+        const profilePayload = {
+            display_name: profileForm.display_name.trim() || form.title.trim() || slug,
+            bio: profileForm.bio.trim() || null,
+            location: profileForm.location.trim() || null,
+            years_breeding: Number.isNaN(yearsBreeding) ? null : yearsBreeding,
+            specialty_morphs: specialtyMorphs,
+            updated_date: nowIso,
+        };
+        const profRes = profileRow?.id
+            ? await supabase.from('breeder_profiles').update(profilePayload).eq('id', profileRow.id).select().single()
+            : await supabase.from('breeder_profiles').insert({
+                ...profilePayload,
+                custom_slug: slug,
+                // Must be the auth uid, not the legacy profiles.id: the
+                // public breeder page joins breeder_reviews.reviewed_user_id
+                // to this field. See AuthContext for the id distinction.
+                user_id: user.auth_user_id || user.id,
+                created_by: user.email,
+            }).select().single();
+
+        if (profRes.error) {
+            toast({
+                title: 'Store saved, profile needs a look',
+                description: profRes.error.message || 'Your store saved, but the public breeder profile could not be updated.',
+                variant: 'destructive',
+            });
+            setSaving(false);
+            return;
+        }
+        setProfileRow(profRes.data);
+
+        toast({
+            title: 'Saved',
+            description: form.is_published ? 'Your store is live.' : 'Saved as a draft.',
+        });
         setSaving(false);
     };
 
@@ -478,6 +581,159 @@ export default function MyStore() {
                                         placeholder="What you breed, what you're known for, how long you've been at it."
                                         className="bg-slate-950/60 border-slate-700"
                                     />
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Public breeder profile */}
+                        <Card className="bg-slate-900/60 border-slate-800">
+                            <CardHeader>
+                                <CardTitle className="text-slate-100 text-lg flex items-center gap-2">
+                                    <User className="w-5 h-5 text-emerald-400" /> Public breeder profile
+                                </CardTitle>
+                                <CardDescription className="text-slate-400">
+                                    This is your verified breeder page at
+                                    {' '}
+                                    <code className="text-emerald-300">geckinspect.com/Breeder/{form.slug || 'your-name'}</code>.
+                                    It shows your bio, specialty morphs, reviews, and a live "Available now" grid
+                                    of your for-sale geckos.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-5">
+                                <div className="space-y-2">
+                                    <Label htmlFor="profile-name" className="text-slate-200">Display name</Label>
+                                    <Input
+                                        id="profile-name"
+                                        value={profileForm.display_name}
+                                        onChange={(e) => setProfile('display_name', e.target.value)}
+                                        placeholder="Sunbeam Crested Geckos"
+                                        className="bg-slate-950/60 border-slate-700"
+                                    />
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="profile-bio" className="text-slate-200">Bio</Label>
+                                    <Textarea
+                                        id="profile-bio"
+                                        value={profileForm.bio}
+                                        onChange={(e) => setProfile('bio', e.target.value)}
+                                        rows={4}
+                                        placeholder="Boutique Lilly White and Cappuccino crosses, focused on structure and clean pattern."
+                                        className="bg-slate-950/60 border-slate-700"
+                                    />
+                                </div>
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                    <div className="space-y-2">
+                                        <Label htmlFor="profile-location" className="text-slate-200">Location</Label>
+                                        <Input
+                                            id="profile-location"
+                                            value={profileForm.location}
+                                            onChange={(e) => setProfile('location', e.target.value)}
+                                            placeholder="Boise, ID"
+                                            className="bg-slate-950/60 border-slate-700"
+                                        />
+                                    </div>
+                                    <div className="space-y-2">
+                                        <Label htmlFor="profile-years" className="text-slate-200">Years breeding</Label>
+                                        <Input
+                                            id="profile-years"
+                                            type="number"
+                                            min="0"
+                                            value={profileForm.years_breeding}
+                                            onChange={(e) => setProfile('years_breeding', e.target.value)}
+                                            placeholder="6"
+                                            className="bg-slate-950/60 border-slate-700"
+                                        />
+                                    </div>
+                                </div>
+                                <div className="space-y-2">
+                                    <Label htmlFor="profile-morphs" className="text-slate-200">Specialty morphs</Label>
+                                    <Input
+                                        id="profile-morphs"
+                                        value={profileForm.specialty_morphs}
+                                        onChange={(e) => setProfile('specialty_morphs', e.target.value)}
+                                        placeholder="Lilly White, Extreme Harlequin, Cappuccino"
+                                        className="bg-slate-950/60 border-slate-700"
+                                    />
+                                    <p className="text-xs text-slate-500">Comma-separated. These render as morph badges on your public page.</p>
+                                </div>
+                            </CardContent>
+                        </Card>
+
+                        {/* Mini-site appearance */}
+                        <Card className="bg-slate-900/60 border-slate-800">
+                            <CardHeader>
+                                <CardTitle className="text-slate-100 text-lg flex items-center gap-2">
+                                    <Palette className="w-5 h-5 text-emerald-400" /> Mini-site appearance
+                                </CardTitle>
+                                <CardDescription className="text-slate-400">
+                                    Controls how your public breeder page looks and what it shows. These apply the
+                                    next time you save your store.
+                                </CardDescription>
+                            </CardHeader>
+                            <CardContent className="space-y-6">
+                                {/* Accent theme */}
+                                <div className="space-y-2">
+                                    <Label className="text-slate-200">Accent theme</Label>
+                                    <div className="flex items-center gap-3">
+                                        {Object.values(STORE_THEMES).map((t) => (
+                                            <button
+                                                key={t.key}
+                                                type="button"
+                                                onClick={() => setSite({ theme: t.key })}
+                                                className="w-9 h-9 rounded-full transition-transform hover:scale-110"
+                                                style={{
+                                                    backgroundColor: t.swatchHex,
+                                                    border: siteSettings.theme === t.key ? '3px solid #f8fafc' : '3px solid transparent',
+                                                }}
+                                                title={t.label}
+                                                aria-label={`${t.label} accent theme`}
+                                                aria-pressed={siteSettings.theme === t.key}
+                                            />
+                                        ))}
+                                        <span className="text-xs text-slate-400">
+                                            {(STORE_THEMES[siteSettings.theme] || STORE_THEMES.emerald).label}
+                                        </span>
+                                    </div>
+                                    <p className="text-xs text-slate-500">Colors the headings, buttons, and morph badges on your public page.</p>
+                                </div>
+
+                                {/* Available now toggle */}
+                                <div className="flex items-start justify-between gap-4">
+                                    <div className="space-y-1">
+                                        <Label className="text-slate-200">Show the "Available now" grid</Label>
+                                        <p className="text-xs text-slate-500 max-w-md">
+                                            Auto-syncs with the geckos in your collection that are public and marked For Sale
+                                            (up to 12, sorted by price). Mark a Lilly White as For Sale and it appears here.
+                                        </p>
+                                    </div>
+                                    <Switch
+                                        checked={siteSettings.showAvailable}
+                                        onCheckedChange={(v) => setSite({ showAvailable: v })}
+                                    />
+                                </div>
+
+                                {/* Featured waitlist */}
+                                <div className="space-y-2">
+                                    <Label htmlFor="site-waitlist" className="text-slate-200">Featured waitlist</Label>
+                                    <Select
+                                        value={siteSettings.waitlistId || 'none'}
+                                        onValueChange={(v) => setSite({ waitlistId: v === 'none' ? null : v })}
+                                    >
+                                        <SelectTrigger id="site-waitlist" className="bg-slate-950/60 border-slate-700">
+                                            <SelectValue placeholder="None" />
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-slate-900 border-slate-700 text-slate-100">
+                                            <SelectItem value="none">None</SelectItem>
+                                            {waitlists.map((w) => (
+                                                <SelectItem key={w.id} value={w.id}>{w.title || w.slug}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <p className="text-xs text-slate-500">
+                                        {waitlists.length > 0
+                                            ? 'Featuring an open waitlist adds a signup call to action to your public page.'
+                                            : 'No open waitlists yet. Create one from the Promote composer on any gecko, then attach it here.'}
+                                    </p>
                                 </div>
                             </CardContent>
                         </Card>

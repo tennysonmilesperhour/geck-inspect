@@ -51,7 +51,7 @@ const EXPECTED_SECTION = {
   BreedingSeason: 'manage', PairingPlanner: 'manage', FieldMode: 'manage', Portfolio: 'manage',
   Lineage: 'manage', Pedigree: 'manage', GeckoDetail: 'manage', AnimalPassport: 'manage',
   ClaimAnimal: 'manage', LikedGeckos: 'manage', ProjectManager: 'manage', MarketplaceSalesStats: 'manage',
-  MyListings: 'manage', BreederShipping: 'manage', BreederStorefront: 'manage', Shipping: 'manage',
+  MyListings: 'manage', BreederShipping: 'manage', Shipping: 'manage',
   BatchHusbandry: 'manage', Store: 'manage', MarketplaceSell: 'manage', Promote: 'manage',
   Recognition: 'discover', MorphVisualizer: 'discover', MorphGuide: 'discover', MorphGuideSubmission: 'discover',
   GeneticsGuide: 'discover', GeneticCalculatorTool: 'discover', Gallery: 'discover', CareGuide: 'discover',
@@ -65,7 +65,7 @@ const EXPECTED_SECTION = {
 const EXPECTED_BREEDER_ONLY = [
   'Breeding', 'BreedingSeason', 'PairingPlanner', 'Portfolio', 'BreedingPairs', 'Lineage',
   'Pedigree', 'Promote', 'MarketplaceSalesStats', 'MyListings', 'BreederShipping',
-  'BreederStorefront', 'BatchHusbandry', 'ProjectManager', 'MorphMarketExport', 'BreedingROI',
+  'BatchHusbandry', 'ProjectManager', 'MorphMarketExport', 'BreedingROI',
   'BreedingLoans',
 ];
 

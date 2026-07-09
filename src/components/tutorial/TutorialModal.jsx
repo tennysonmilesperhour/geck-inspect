@@ -136,10 +136,6 @@ const STEP_BLURBS = {
         title: 'My Listings',
         body: 'Manage every active listing in one place, edit price, swap photos, mark as sold, or unlist with one click.',
     },
-    BreederStorefront: {
-        title: 'My Storefront',
-        body: 'A polished public storefront URL you can share: your branding, your for-sale geckos, your story, your store policy, no ads.',
-    },
     BreederShipping: {
         title: 'Shipping',
         body: 'Manage shipping labels, box inventory, heat/cold packs, and live-arrival guarantees for animals you sell. Integrates with the marketplace once a buyer commits.',
