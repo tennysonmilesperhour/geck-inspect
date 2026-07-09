@@ -1397,9 +1397,12 @@ export default function Lineage() {
                     className="p-4 md:p-8 min-h-full"
                     style={{ transform: `scale(${scale})`, transformOrigin: 'top center' }}
                 >
-                    {isLoadingLineage ? (
-                        <div className="w-full h-full flex items-center justify-center pt-20">
+                    {isLoadingLineage || isLoading ? (
+                        <div className="w-full h-full flex flex-col items-center justify-center gap-3 pt-20">
                             <Loader2 className="w-12 h-12 text-emerald-500 animate-spin" />
+                            <p className="text-sm text-slate-500">
+                                {isLoading ? 'Loading your collection…' : 'Building the family tree…'}
+                            </p>
                         </div>
                     ) : selectedGeckoId && lineage?.id ? (
                         <div className={`flex flex-col md:flex-row gap-2 md:gap-3 md:items-start md:justify-center`}>

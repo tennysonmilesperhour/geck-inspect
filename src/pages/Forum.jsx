@@ -28,6 +28,7 @@ import {
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { formatDistanceToNow } from 'date-fns';
+import { Skeleton } from '@/components/ui/skeleton';
 
 /**
  * Forum index, dark theme to match the rest of the app.
@@ -133,10 +134,26 @@ export default function ForumPage() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-                <div className="flex items-center gap-2 text-slate-400">
-                    <Loader2 className="w-5 h-5 animate-spin" />
-                    Loading forum...
+            <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+                <div className="max-w-6xl mx-auto space-y-6" aria-hidden="true">
+                    <div className="space-y-3">
+                        <Skeleton className="h-10 w-64" />
+                        <Skeleton className="h-4 w-96 max-w-full" />
+                    </div>
+                    <Skeleton className="h-11 w-full rounded-lg" />
+                    <div className="space-y-4">
+                        {Array.from({ length: 5 }).map((_, i) => (
+                            <div key={i} className="rounded-xl border border-slate-800 bg-slate-900/40 p-5 space-y-3">
+                                <Skeleton className="h-5 w-2/3" />
+                                <Skeleton className="h-3 w-full" />
+                                <Skeleton className="h-3 w-4/5" />
+                                <div className="flex gap-4 pt-1">
+                                    <Skeleton className="h-3 w-16" />
+                                    <Skeleton className="h-3 w-16" />
+                                </div>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         );

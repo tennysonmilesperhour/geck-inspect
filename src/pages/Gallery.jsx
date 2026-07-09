@@ -5,7 +5,7 @@ import GalleryFilters from '../components/gallery/GalleryFilters';
 import ImageCard from '../components/gallery/ImageCard';
 import ImageDetailModal from '../components/gallery/ImageDetailModal';
 import { ImageOff, Loader2 } from 'lucide-react';
-import LoadingSpinner from '../components/shared/LoadingSpinner';
+import CardGridSkeleton from '../components/shared/CardGridSkeleton';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
 import usePageSettings from '@/hooks/usePageSettings';
 import EmptyState from '../components/shared/EmptyState';
@@ -153,9 +153,11 @@ export default function Gallery() {
                 </div>
 
                 {isLoading ? (
-                    <div className="flex justify-center items-center h-64">
-                        <LoadingSpinner />
-                    </div>
+                    <CardGridSkeleton
+                        count={12}
+                        aspect="aspect-square"
+                        columns={`grid-cols-2 ${galleryPrefs.gridColumns === '3' ? 'md:grid-cols-3' : galleryPrefs.gridColumns === '4' ? 'md:grid-cols-3 lg:grid-cols-4' : 'md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6'}`}
+                    />
                 ) : images.length > 0 ? (
                     <>
                         <div className={`grid grid-cols-2 gap-4 ${galleryPrefs.gridColumns === '3' ? 'md:grid-cols-3' : galleryPrefs.gridColumns === '4' ? 'md:grid-cols-3 lg:grid-cols-4' : 'md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6'}`}>

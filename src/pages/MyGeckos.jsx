@@ -5,6 +5,7 @@ import { getVisibleGeckos, canWriteGecko } from '@/lib/geckoAccess';
 import { base44 } from '@/api/base44Client';
 import { PlusCircle, Search, Users, Grid3x3, List, ArrowUpDown, Archive, ArchiveRestore, Download, FileText, FileSpreadsheet, Scale } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
+import CardGridSkeleton from '../components/shared/CardGridSkeleton';
 import EmptyState from '../components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -647,9 +648,10 @@ export default function MyGeckosPage() {
                 </div>
 
                 {isLoading ? (
-                    <div className="text-center py-20">
-                        <LoadingSpinner />
-                    </div>
+                    <CardGridSkeleton
+                        count={8}
+                        columns="grid-cols-2 md:grid-cols-3 lg:grid-cols-4"
+                    />
                 ) : (
                     <>
                         {filteredAndSortedGeckos.length > 0 ? (
