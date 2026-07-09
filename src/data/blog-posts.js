@@ -77,6 +77,247 @@ export const BLOG_CATEGORIES = [
 
 export const BLOG_POSTS = [
   {
+    slug: 'first-crested-gecko-breeding-season',
+    title: 'Your First Crested Gecko Breeding Season: A Month-by-Month Plan',
+    description:
+      'A beginner breeder plan for your first crested gecko season: readiness weights, cooldown, pairing, egg laying, incubation, and hatchling care, month by month.',
+    keyphrase: 'first crested gecko breeding season',
+    category: 'breeding',
+    tags: ['breeding', 'first-season', 'beginner', 'eggs', 'incubation', 'hatchlings'],
+    datePublished: '2026-07-08',
+    dateModified: '2026-07-08',
+    heroEyebrow: 'Breeding basics',
+    tldr: [
+      'Only breed a female that is at least 18 months old and holding a stable 35 grams or more. Age and weight matter more than the calendar.',
+      'Crested geckos breed through the warm months and rest over winter. A cooldown from roughly November to January resets the cycle.',
+      'A proven female can lay two eggs about every four to five weeks across the season, so plan for many clutches, not one.',
+      'Incubate at cool room temperature (about 70 to 74 F). Eggs hatch in roughly 60 to 90 days. Never chase heat to speed it up.',
+      'Track every pairing, lay date, and hatch so next season is driven by data instead of memory.',
+    ],
+    body: [
+      {
+        type: 'p',
+        text: 'Your first crested gecko breeding season is mostly about patience and preparation, not technique. Correlophus ciliatus is one of the most forgiving reptiles to breed, but the two mistakes that hurt beginners most, pairing a female too young and chasing incubation heat, both happen before a single egg hatches. This month-by-month plan walks the full cycle so you know what to do and, just as importantly, what to leave alone.',
+      },
+      {
+        type: 'callout',
+        tone: 'danger',
+        title: 'Readiness comes first, always',
+        items: [
+          'Female readiness is the single most important rule. She should be at least 18 months old and holding a stable weight of 35 grams or more before her first season. Many experienced breeders wait for 40 grams.',
+          'Breeding an underweight or too-young female risks calcium crashes and egg binding, both of which can be fatal. When in doubt, wait a season. She loses nothing by waiting.',
+          'Males can breed younger and lighter, but a male under about 30 grams is better given another few months too.',
+        ],
+      },
+      {
+        type: 'p',
+        text: 'The season below assumes the Northern Hemisphere. If you keep geckos in the Southern Hemisphere, shift every month by six. The biology follows temperature and day length, not the date.',
+      },
+      {
+        type: 'table',
+        caption: 'A first breeding season, month by month',
+        headers: ['Window', 'What is happening', 'What you do'],
+        rows: [
+          ['Nov to Jan', 'Cooldown / rest', 'Drop night temps to the low 60s F, shorten the light cycle, and let animals rest. No pairing. This rest improves fertility later.'],
+          ['Late Jan to Feb', 'Warm back up', 'Return to normal temps and day length. Boost feeding with a calcium-rich diet. Confirm the female is at weight.'],
+          ['Feb to Mar', 'Introductions', 'Introduce the pair for short supervised sessions. Separate them between sessions. Watch for stress or aggression.'],
+          ['Mar to Sep', 'Laying season', 'Provide a moist lay box. Expect two eggs roughly every four to five weeks. Weigh the female often.'],
+          ['Apr to Dec', 'Incubation and hatching', 'Each clutch hatches about 60 to 90 days after laying. Late clutches hatch into winter.'],
+          ['Sep to Oct', 'Wind down', 'Fertility naturally tapers. Stop introductions and let the female rebuild condition before the next cooldown.'],
+        ],
+      },
+      {
+        type: 'p',
+        text: 'The cooldown is the step first-time breeders most often skip, and it is the cheapest way to improve a season. A rest period of six to ten weeks with cooler nights and a shorter photoperiod mimics winter and helps synchronize a healthy laying cycle when things warm up. It is not strictly required for eggs to appear, but skipping it tends to produce a ragged, less fertile season.',
+      },
+      {
+        type: 'p',
+        text: 'When you introduce the pair, do it in short supervised visits rather than housing them together full time. Crested geckos can be rough during courtship, and a female needs uninterrupted access to food, water, and a hide to stay in condition. Watch for tail drops, bites, or a female who hides constantly. A stressed female is a female losing weight, and weight is the whole game.',
+      },
+      {
+        type: 'callout',
+        tone: 'info',
+        title: 'The lay box',
+        items: [
+          'Give the female a lay box: a small tub of moist coco fiber or a coco fiber and sphagnum mix, deep enough for her to dig (about three to four inches).',
+          'Keep it damp, not wet. If you squeeze the substrate and water runs out, it is too wet and eggs can mold or drown.',
+          'A gravid female will dig test holes before laying. Once she lays, gently recover the eggs and move them to your incubation container.',
+        ],
+      },
+      {
+        type: 'p',
+        text: 'Incubation is where beginners are tempted to intervene and should not. Crested gecko eggs incubate well at cool room temperature, roughly 70 to 74 F, in a lightly moist medium like perlite or vermiculite. Warmer temperatures shorten incubation but raise the risk of deformities and poor hatchlings, and sustained heat above the high 70s can cook a clutch. Cooler is slower and safer. At room temperature, expect roughly 60 to 90 days.',
+      },
+      {
+        type: 'callout',
+        tone: 'warning',
+        title: 'Do not incubate hot',
+        items: [
+          'There is no reptile incubator setting that makes a better crested gecko. Heat only makes them faster, and faster is worse here.',
+          'Keep eggs out of direct sun and away from heat sources. A closet or a cool room shelf is ideal. Check moisture weekly, do not handle or rotate the eggs.',
+        ],
+      },
+      {
+        type: 'p',
+        text: 'When a hatchling emerges, leave it in the incubation container until it has fully absorbed its yolk and the egg tooth is gone, usually a day or two. Then set each hatchling up individually in a small tub with paper towel or a thin substrate, a couple of climbing surfaces, and a shallow humid hide. Hatchlings often skip their first meal or two while they finish their first shed, which is normal. Offer crested gecko diet and lightly mist so they can lap droplets.',
+      },
+      {
+        type: 'p',
+        text: 'The last piece of a good first season is not biological at all: keep records. Log every pairing, every lay date, the clutch size, the incubation start, and the hatch. Even one season of clean data tells you which pairings actually produced, how long your eggs really took at your room temperature, and which female is a reliable layer. That is the difference between guessing next February and planning it.',
+      },
+    ],
+    faq: [
+      {
+        question: 'What age and weight should a female crested gecko be before breeding?',
+        answer:
+          'A female should be at least 18 months old and holding a stable weight of 35 grams or more, and many breeders wait for 40 grams. Age and weight both matter, a heavy but young female is still not ready. Breeding too early risks calcium depletion and egg binding.',
+      },
+      {
+        question: 'When is crested gecko breeding season?',
+        answer:
+          'In the Northern Hemisphere, crested geckos typically breed from roughly February or March through September, with a natural winter rest. A cooldown of six to ten weeks from about November to January before the season helps synchronize a healthy, fertile laying cycle.',
+      },
+      {
+        question: 'How many eggs do crested geckos lay?',
+        answer:
+          'A proven female lays two eggs per clutch and can produce a clutch roughly every four to five weeks across the season, so a healthy female may lay many clutches in a year. This is why keeping her at weight and well supplemented with calcium is critical.',
+      },
+      {
+        question: 'How long do crested gecko eggs take to hatch?',
+        answer:
+          'At cool room temperature (about 70 to 74 F), crested gecko eggs hatch in roughly 60 to 90 days. Warmer incubation is faster but increases the risk of deformities and weak hatchlings, so cooler and slower is the safer choice.',
+      },
+      {
+        question: 'Do I need an incubator for crested gecko eggs?',
+        answer:
+          'No. Crested gecko eggs incubate well at normal room temperature in a lightly moist medium. A dedicated incubator is optional and, if it runs warm, can do more harm than good. A stable cool room is usually the best incubator you have.',
+      },
+      {
+        question: 'Should I let my crested geckos rest over winter?',
+        answer:
+          'Yes. A cooldown with cooler nights and a shorter light cycle for six to ten weeks before the season mimics winter and tends to improve fertility and cycle timing. It also gives the female time to rebuild condition between seasons.',
+      },
+    ],
+    internalLinks: [
+      { label: 'Breeding tools in the app', path: '/Breeding' },
+      { label: 'Genetic Calculator Tool', path: '/calculator' },
+      { label: 'Crested Gecko Care Guide', path: '/CareGuide' },
+      { label: 'Crested Gecko Genetics Guide', path: '/GeneticsGuide' },
+      { label: 'Lineage and family trees', path: '/Lineage' },
+    ],
+  },
+  {
+    slug: 'crested-gecko-breeding-records',
+    title: 'Crested Gecko Breeding Records: What to Track and Why',
+    description:
+      'The breeding records every crested gecko keeper should keep, why spreadsheets break down, and how structured records turn one season of data into better pairings.',
+    keyphrase: 'gecko breeding records',
+    category: 'breeding',
+    tags: ['breeding', 'records', 'pedigree', 'data', 'spreadsheet', 'lineage'],
+    datePublished: '2026-07-08',
+    dateModified: '2026-07-08',
+    heroEyebrow: 'Breeding operations',
+    tldr: [
+      'Good breeding records answer three questions: who did you pair, what did the pairing produce, and how did the offspring turn out.',
+      'Track pairings, lay dates, clutch sizes, incubation start, hatch dates, and each hatchling linked back to its parents.',
+      'Spreadsheets store text but do not connect records, so lineage, weights, and photos drift apart over time.',
+      'Structured records compound: one clean season tells you which pairings actually produce and which female is a reliable layer.',
+      'Whatever you use, make sure you can export your data. Records you cannot take with you are a liability, not an asset.',
+    ],
+    body: [
+      {
+        type: 'p',
+        text: 'Every serious crested gecko breeder eventually hits the same wall: the collection outgrows memory. You can hold one pairing and one clutch in your head. You cannot hold twelve females, their lay dates, which male sired which clutch, and how forty hatchlings are growing out. Breeding records are how you scale past the point where memory fails, and the breeders who keep good ones make visibly better pairing decisions season over season.',
+      },
+      {
+        type: 'p',
+        text: 'Good records answer three questions. Who did you pair? What did that pairing produce? And how did the offspring turn out? Everything worth tracking hangs off one of those three.',
+      },
+      {
+        type: 'table',
+        caption: 'The core breeding records to keep',
+        headers: ['Record', 'Fields that matter', 'Why it matters'],
+        rows: [
+          ['Pairing', 'Sire, dam, pairing date, season', 'Ties every downstream egg and hatchling back to two known parents.'],
+          ['Clutch', 'Lay date, clutch size, incubation start, temperature', 'Tells you real incubation times at your conditions and which females are laying.'],
+          ['Egg outcome', 'Fertile or slug, hatch date, hatchling id', 'Fertility rate per pairing is one of your most useful numbers.'],
+          ['Hatchling', 'Hatch date, sire, dam, morph tags, weights over time', 'Links each animal to its lineage and shows how a pairing actually produced.'],
+          ['Sale or hold', 'Status, price, buyer, transfer of records', 'Closes the loop and keeps provenance intact when an animal leaves.'],
+        ],
+      },
+      {
+        type: 'p',
+        text: 'Notice what connects those rows: every clutch points at a pairing, and every hatchling points at its parents. That linkage is exactly where spreadsheets break down. A spreadsheet stores text in cells, but it does not know that the hatchling in row 40 is the offspring of the pair in a different tab. You end up copying parent names by hand, the copies drift, and two seasons later the lineage is guesswork.',
+      },
+      {
+        type: 'callout',
+        tone: 'info',
+        title: 'Spreadsheet versus structured records',
+        items: [
+          'A spreadsheet is fine for a single season with a couple of pairs. It is fast to start and everyone already has one.',
+          'It falls apart at scale because records are not linked: lineage, weight history, and photos live in separate places and stop agreeing with each other.',
+          'Structured records connect a hatchling to its parents once, so a family tree, a weight chart, and a pedigree all read from the same source of truth.',
+        ],
+      },
+      {
+        type: 'p',
+        text: 'The payoff of structured records is that data compounds. After one clean season you can answer questions that are invisible in a pile of notes: which pairing had the best fertility rate, how long your eggs really took to hatch at your room temperature, which female reliably lays and which one skipped, and how the hatchlings from a given pair are growing compared to another. Those answers are what turn next season from a guess into a plan.',
+      },
+      {
+        type: 'p',
+        text: 'There is one more reason to take records seriously, and it has nothing to do with breeding decisions: ownership. The reptile hobby is full of stories of apps that shut down and took years of records with them. Before you commit a collection to any tool, spreadsheet or app, confirm you can export everything, your animals, weights, breeding log, and photos, in a format you can read without that tool. Records you cannot take with you are a liability.',
+      },
+      {
+        type: 'callout',
+        tone: 'success',
+        title: 'A simple standard to hold yourself to',
+        items: [
+          'Every animal has a unique id and, if bred by you, a link to both parents.',
+          'Every clutch has a lay date and an incubation start, so your hatch-time data is real.',
+          'You can export the whole collection to CSV or a similar open format at any time.',
+        ],
+      },
+      {
+        type: 'p',
+        text: 'Geck Inspect keeps these records connected by design: pairings feed clutches, confirmed eggs hatch into gecko records that inherit their lineage automatically, weights and photos stay attached to each animal, and the whole collection exports to CSV or PDF whenever you want. But the tool matters less than the habit. Whether you use an app or a well-built spreadsheet, the breeders who write it all down are the ones who improve every season.',
+      },
+    ],
+    faq: [
+      {
+        question: 'What breeding records should a crested gecko breeder keep?',
+        answer:
+          'Track five things: pairings (sire, dam, date), clutches (lay date, clutch size, incubation start), egg outcomes (fertile or slug, hatch date), hatchlings (linked to both parents, with morph tags and weights over time), and sale or hold status. The key is that clutches link to pairings and hatchlings link to parents.',
+      },
+      {
+        question: 'Are spreadsheets good enough for gecko breeding records?',
+        answer:
+          'A spreadsheet works for a single season with a couple of pairs, but it stores text without linking records. As the collection grows, lineage, weights, and photos live in separate places and drift out of sync, and rebuilding a pedigree by hand becomes error prone. Structured records connect a hatchling to its parents once so everything stays consistent.',
+      },
+      {
+        question: 'Why does linking hatchlings to parents matter?',
+        answer:
+          'Because lineage is the foundation of both breeding decisions and resale value. When each hatchling is linked to its sire and dam, a family tree, a pedigree certificate, and per-pairing fertility numbers all read from the same data. When parents are copied by hand, those copies drift and the lineage becomes unreliable within a season or two.',
+      },
+      {
+        question: 'How do I make sure I do not lose my breeding records?',
+        answer:
+          'Only trust a tool you can export from. Before committing a collection to any spreadsheet or app, confirm you can export every record, animals, weights, breeding log, and photos, in an open format like CSV that you can read without that tool. Data you cannot take with you is a liability.',
+      },
+      {
+        question: 'What is the single most useful breeding number to track?',
+        answer:
+          'Fertility rate per pairing, the share of eggs from a given pair that are fertile and hatch. It quickly tells you which pairings are worth repeating and which are not, and it is invisible unless you log egg outcomes against the pairing that produced them.',
+      },
+    ],
+    internalLinks: [
+      { label: 'Breeding tools in the app', path: '/Breeding' },
+      { label: 'Lineage and family trees', path: '/Lineage' },
+      { label: 'Your collection', path: '/MyGeckos' },
+      { label: 'Your first breeding season', path: '/blog/first-crested-gecko-breeding-season' },
+      { label: 'Crested Gecko Genetics Guide', path: '/GeneticsGuide' },
+    ],
+  },
+  {
     slug: 'cappuccino-crested-gecko-genetics',
     title: 'Cappuccino Crested Gecko: Why Super Cappuccinos Are Risky',
     description:
