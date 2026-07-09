@@ -22,11 +22,6 @@
 #
 # Optional:
 #   BLOG_FROM_EMAIL     sender address (defaults to onboarding@resend.dev)
-#   REDDIT_CLIENT_ID    Reddit "script" app id, enables the Reddit research
-#   REDDIT_CLIENT_SECRET  source. Create the app at reddit.com/prefs/apps.
-#                       Without both, Reddit is skipped (its .json views 403
-#                       every request from a CI datacenter IP; OAuth is the
-#                       only path that works). The run continues either way.
 
 name: blog-pipeline
 
@@ -74,9 +69,7 @@ jobs:
         run: npm install --no-save @anthropic-ai/sdk@^0.88.0
       - name: Run research agent
         env:
-          ANTHROPIC_API_KEY:    ${{ secrets.ANTHROPIC_API_KEY }}
-          REDDIT_CLIENT_ID:     ${{ secrets.REDDIT_CLIENT_ID }}
-          REDDIT_CLIENT_SECRET: ${{ secrets.REDDIT_CLIENT_SECRET }}
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: node scripts/blog/research.mjs
       - name: Commit queue updates
         run: |

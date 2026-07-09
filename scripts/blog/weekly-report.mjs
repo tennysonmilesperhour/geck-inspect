@@ -232,7 +232,6 @@ function renderMarkdown(ctx) {
     lines.push(`- Google Trends:       ${latestResearch.signals.googleTrends ?? 0}`);
     lines.push(`- YouTube:             ${latestResearch.signals.youtube ?? 0}`);
     lines.push(`- Breeder blogs:       ${latestResearch.signals.breederBlogs ?? 0}`);
-    lines.push(`- Reddit:              ${latestResearch.signals.reddit ?? 0}`);
     for (const line of renderSourceHealth(latestResearch.signals.errors || [])) {
       lines.push(line);
     }
@@ -285,11 +284,11 @@ function renderMarkdown(ctx) {
 }
 
 // Split the flat research error list into buckets so the weekly report stops
-// crying wolf. Most "errors" are the same anti-bot walls every week (Reddit
-// and Google Trends block CI datacenter IPs); those are expected and grouped
-// with a count. Genuinely novel failures (404s, timeouts, parse errors) get
-// listed individually so they actually get noticed. Skipped optional sources
-// (e.g. Reddit with no credentials) are called out as configuration, not error.
+// crying wolf. Most "errors" are the same anti-bot walls every week (Google
+// Trends rate-limits CI datacenter IPs); those are expected and grouped with a
+// count. Genuinely novel failures (404s, timeouts, parse errors) get listed
+// individually so they actually get noticed. Any source that reports itself as
+// skipped is called out as configuration, not error.
 export function renderSourceHealth(errors) {
   const expected = new Map(); // "source|status" -> count
   const skipped = [];
@@ -337,7 +336,7 @@ export function renderSourceHealth(errors) {
 // Tolerate legacy unprefixed strings from older snapshots.
 function splitSource(raw) {
   const m = raw.match(/^([a-z0-9-]+):\s*([\s\S]*)$/i);
-  if (m && /^(reddit|bluesky|google-ac|google-trends|youtube|breeder-blogs)$/i.test(m[1])) {
+  if (m && /^(bluesky|google-ac|google-trends|youtube|breeder-blogs)$/i.test(m[1])) {
     return { source: m[1], rest: m[2] };
   }
   return { source: 'unknown', rest: raw };
