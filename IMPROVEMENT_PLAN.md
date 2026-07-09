@@ -675,12 +675,12 @@ docs/specs/storefront-consolidation.md.
 
 ## 5. Phase 4: UX and workflow
 
-**STATUS (2026-07-09): 4.1, 4.3, 4.5 shipped. 4.2 and 4.4 open.**
+**STATUS (2026-07-09): 4.1, 4.3, 4.4, 4.5 shipped. 4.2 shipped except the internal registry rewrite.**
 - 4.1 (morph ID to collection) shipped: Recognition now offers "Add to my collection", building a pre-filled draft (photos, mapped morph tags, AI notes) that MyGeckos opens in the add form; guest path via sessionStorage; funnel events added.
 - 4.3 (onboarding split) shipped: a first-run role prompt sets Keeper mode, and the tour filters breeder-only tiles in Keeper mode.
 - 4.5 (a11y) shipped: EnclosureClimate carries non-color status words; the Expert/Admin badges already had text labels.
-- 4.2 (nav rationalization) PARTIAL: the safe slice shipped, all 8 orphaned pages (BatchHusbandry, ImageImport, PrintableWorksheets, Pedigree, BreedingROI, BreedingLoans, GeckAnswers, MorphGuideSubmission) are now reachable via the command palette. The risky part (unifying the three nav taxonomies into one registry, Dashboard sidebar tile) is deferred to a focused session with runtime verification, since a nav-render bug affects every page.
-- 4.4 (loading/empty states) DEFERRED: diffuse and lower-value; the two highest-traffic list pages (MyGeckos, Breeding) already have empty states, and the rest are reference/tool pages or complex renderers (Lineage) where insertion is risky for modest gain.
+- 4.2 (nav rationalization) shipped the user-facing pieces: all 8 orphaned pages are reachable via the command palette, and a persistent Dashboard "Home" tile now sits above the section nav in both sidebars (previously the only path home was the logo). The remaining piece, collapsing the three internal nav taxonomies (SECTIONS/SECTION_FOR_PAGE, FALLBACK_NAV_ITEMS, CommandPalette groups) into one NAV_REGISTRY, is intentionally NOT done: it is pure internal maintainability with no user-facing payoff, it rewrites the most-rendered component (Layout.jsx) whose nav is load-bearing and DB-backed (PageConfig order/visibility/section, keeper mode, favorites, dedup), and a render regression there hits every page. It needs a session with real browser verification across every section/keeper/favorite combination, not a blind push to main.
+- 4.4 (loading/empty states) shipped: new shared CardGridSkeleton; MyGeckos and Gallery show a skeleton grid on load; Forum shows a header + post-list skeleton instead of a bare spinner; Lineage's initial collection fetch (which previously showed NO loading UI, so the page read "Select a gecko" before the selector was populated) now shows a labeled loading state.
 
 ### 4.1 Connect the hero funnel: AI morph ID into the collection
 
@@ -1102,7 +1102,7 @@ cretti-briefing.md returns nothing; pnpm build stays green.
 
 ## 7. Phase 6: Mobile
 
-**STATUS (2026-07-09):** the PWA install prompt already ships (`InstallAppButton` in Layout, handling `beforeinstallprompt`/`appinstalled`/standalone; manifest present). The offline caching service worker is DEFERRED by decision (DECISIONS.md entry 28): a caching SW is the highest-risk, hard-to-reverse change and must be built on a preview branch with device testing of the install/update/offline lifecycle, not shipped blind. The current `public/sw.js` is deliberately push-only.
+**STATUS (2026-07-09):** the PWA install prompt already ships (`InstallAppButton` in Layout, handling `beforeinstallprompt`/`appinstalled`/standalone; manifest present). The offline caching service worker is now SHIPPED (DECISIONS.md entry 29, superseding entry 28): `public/sw.js` gained a conservative, network-first cache. Navigations always fetch fresh HTML from the server (cached shell only as an offline fallback), so a stale cache can never white-screen an online user or shadow a deploy; hashed `/assets/` are cache-first, other static is stale-while-revalidate, and cross-origin (Supabase/Stripe/analytics) is never intercepted. All existing web-push behavior is untouched. Entry 29 records a recovery path since a SW outlives a git revert on already-served devices.
 
 ### 6.1 Decide the Android story honestly
 
