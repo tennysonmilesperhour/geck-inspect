@@ -77,6 +77,115 @@ export const BLOG_CATEGORIES = [
 
 export const BLOG_POSTS = [
   {
+    slug: 'how-to-read-a-crested-gecko-pedigree',
+    title: 'How to Read a Crested Gecko Pedigree',
+    description:
+      'What a crested gecko pedigree actually tells you: generations, het notation, visual versus carried traits, and how to verify lineage before you buy.',
+    keyphrase: 'crested gecko pedigree tracker',
+    category: 'breeding',
+    tags: ['pedigree', 'lineage', 'genetics', 'het', 'provenance', 'buying'],
+    datePublished: '2026-07-08',
+    dateModified: '2026-07-08',
+    heroEyebrow: 'Lineage and provenance',
+    tldr: [
+      'A pedigree is a family tree with genetics attached: it shows the sire and dam back through as many generations as the breeder recorded.',
+      'Visual traits are what you can see. Het (heterozygous) traits are carried but hidden, and only a pedigree or a test breeding reveals them.',
+      'Depth matters: a two-generation pedigree is a starting point, a four-plus generation pedigree is real provenance.',
+      'A pedigree is only as trustworthy as its source. Look for verifiable lineage tied to each animal, not a name typed into a listing.',
+    ],
+    body: [
+      {
+        type: 'p',
+        text: 'When you buy a crested gecko beyond pet quality, you are not just buying the animal in the photo, you are buying its genetics, and a pedigree is how those genetics are documented. A good pedigree answers questions a single photo never can: what is this animal carrying that you cannot see, how consistent is the line behind it, and can any of it actually be verified. This guide explains how to read one.',
+      },
+      {
+        type: 'p',
+        text: 'At its simplest, a pedigree is a family tree with genetic information attached. The animal sits at the bottom, its sire (father) and dam (mother) sit above it, their parents above them, and so on back through as many generations as the breeder recorded. Each node ideally carries the animal identifier, its visual traits, and any known heterozygous (het) traits.',
+      },
+      {
+        type: 'callout',
+        tone: 'info',
+        title: 'Visual versus het, the single most important distinction',
+        items: [
+          'Visual trait: expressed and visible on the animal. A visual Lilly White looks like a Lilly White.',
+          'Het (heterozygous) trait: carried on one gene copy but not expressed, so it is invisible on the animal itself. A gecko can be "het axanthic" and look completely normal.',
+          'You cannot see het traits by looking. The only ways to know are a documented pedigree showing a recessive-carrying parent, or proving it out through test breeding.',
+        ],
+      },
+      {
+        type: 'p',
+        text: 'This is why recessive traits like axanthic make pedigrees essential. Axanthic is recessive, meaning an animal needs two copies to look axanthic. A gecko with one copy is het axanthic: normal-looking, but able to pass the trait on. If you pair two het axanthics, roughly a quarter of the offspring are visual axanthic. None of that is knowable from the animals in front of you. It is only knowable from the pedigree behind them, which is exactly what makes lineage records worth money in this hobby.',
+      },
+      {
+        type: 'table',
+        caption: 'How to read each level of a pedigree',
+        headers: ['Level', 'What it should show', 'What it tells you'],
+        rows: [
+          ['The animal', 'Id, visual traits, listed hets', 'What you are buying and what it may carry.'],
+          ['Parents (F1)', 'Sire and dam, their visual traits', 'The immediate genetics driving this animal.'],
+          ['Grandparents (F2)', 'Four animals, traits, hets', 'Whether a trait is consistent or a one-off.'],
+          ['Great-grandparents and beyond', 'Eight-plus animals', 'Real provenance and line consistency.'],
+        ],
+      },
+      {
+        type: 'p',
+        text: 'Depth is the first thing to judge. A pedigree that stops at the parents tells you almost nothing about consistency, one strong-looking pairing can still come from scattered genetics. A pedigree that runs four or more generations deep, with traits that repeat down the line, is what separates a documented project animal from a nice-looking gecko with a story. When a het is claimed, trace it: a legitimate het axanthic should have an axanthic or a proven-het ancestor somewhere in the tree. If the het is asserted but nothing in the lineage supports it, treat it as unproven.',
+      },
+      {
+        type: 'callout',
+        tone: 'warning',
+        title: 'A name is not a pedigree',
+        items: [
+          'A parent name typed into a marketplace listing is a claim, not documentation. Names can be copied, mistyped, or invented.',
+          'Real provenance ties each ancestor to a verifiable record, ideally one that transfers with the animal when it is sold.',
+          'If a seller cannot show you the lineage behind a het or trait claim, price the animal as if the claim is unproven, because to you it is.',
+        ],
+      },
+      {
+        type: 'p',
+        text: 'This is where digital records change the game. A written pedigree on paper is only as good as the honesty and memory of whoever wrote it. A verifiable digital pedigree ties every ancestor to a real record, carries the animal photos and weights alongside the lineage, and transfers to the new owner at sale so the chain of custody stays intact. That is the difference between "the breeder said the grandmother was het axanthic" and being able to open the grandmother record yourself.',
+      },
+      {
+        type: 'p',
+        text: 'In Geck Inspect, every gecko carries its lineage automatically: pair two animals, and confirmed hatchlings inherit their parents, so the family tree builds itself as you breed. Each animal also gets a digital passport, a shareable, verifiable record of its parents, traits, weights, and photos that you can hand to a buyer at sale. Whether you use a tool like that or keep meticulous records by hand, the principle is the same: a pedigree you can verify is worth far more than a pedigree you have to take on faith.',
+      },
+    ],
+    faq: [
+      {
+        question: 'What is a crested gecko pedigree?',
+        answer:
+          'A pedigree is a documented family tree for a crested gecko: its sire and dam, their parents, and so on back through as many generations as the breeder recorded, with the visual and heterozygous (het) traits noted at each level. It tells you what an animal is carrying genetically, not just what it looks like.',
+      },
+      {
+        question: 'What does het mean on a crested gecko pedigree?',
+        answer:
+          'Het is short for heterozygous: the animal carries one copy of a recessive trait but does not visually express it. A het axanthic gecko looks normal but can pass axanthic to its offspring. Because hets are invisible, they can only be known from a documented pedigree or proven through test breeding.',
+      },
+      {
+        question: 'How many generations should a good pedigree have?',
+        answer:
+          'Two generations (the parents) is a starting point but says little about consistency. Four or more generations, with traits that repeat down the line, is real provenance and is what distinguishes a documented project animal from a nice-looking gecko with an unverified story.',
+      },
+      {
+        question: 'How do I verify a crested gecko pedigree before buying?',
+        answer:
+          'Trace each trait and het claim back to an ancestor that supports it, and ask the seller for verifiable records, not just names typed into a listing. A verifiable digital pedigree or passport that ties each ancestor to a real record and transfers with the animal is the strongest form of proof. If a claim cannot be supported by the lineage, price the animal as unproven.',
+      },
+      {
+        question: 'Why does pedigree matter more for recessive traits?',
+        answer:
+          'Recessive traits like axanthic are invisible in carriers, so a normal-looking gecko may or may not be het for them. The only way to know is the pedigree behind the animal. That hidden information is exactly what makes documented lineage valuable, it lets a breeder plan pairings that produce visual recessives.',
+      },
+    ],
+    internalLinks: [
+      { label: 'Lineage and family trees', path: '/Lineage' },
+      { label: 'Crested Gecko Genetics Guide', path: '/GeneticsGuide' },
+      { label: 'Axanthic morph reference', path: '/MorphGuide/axanthic' },
+      { label: 'Crested gecko breeding records', path: '/blog/crested-gecko-breeding-records' },
+      { label: 'Your first breeding season', path: '/blog/first-crested-gecko-breeding-season' },
+    ],
+  },
+  {
     slug: 'first-crested-gecko-breeding-season',
     title: 'Your First Crested Gecko Breeding Season: A Month-by-Month Plan',
     description:
