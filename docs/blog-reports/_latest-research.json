@@ -1,18 +1,17 @@
 {
-  "ranAt": "2026-07-09T21:31:51.051Z",
+  "ranAt": "2026-07-10T09:40:53.048Z",
   "signals": {
     "googleAc": 95,
     "bluesky": 80,
-    "googleTrends": 15,
+    "googleTrends": 0,
     "youtube": 66,
     "breederBlogs": 0,
-    "errors": []
+    "errors": [
+      "google-trends: \"crested gecko\": related: 429",
+      "google-trends: \"crested gecko morph\": related: 429"
+    ]
   },
-  "costUsd": 0.033766,
-  "addedSlugs": [
-    "albino-crested-gecko-myth",
-    "frappuccino-cappuccino-pairings",
-    "lilly-white-juvenile-identification"
-  ],
-  "rationale": "\nThe signals show strong, consistent demand around three core areas: (1) morph identification and genetics across multiple specific morphs (cappuccino, lilly white, axanthic), (2) breeding mechanics and outcomes, and (3) emerging trends like albino interest and diet awareness. Google Trends show +300% rise in \"repashy crested gecko diet\" and +130% for \"albino,\" while YouTube has significant viewership on morph guides and cappuccino breeding controversies. Bluesky engagement clusters around morph aesthetics and breeding discussions. However, most general care, broad morph lists, and established breeding topics are either already published or too generic. I'm focusing on three concrete, actionable angles that address actual breeder confusion: (1) why albino demand is rising but remains genetically unclear/risky, (2) frappuccino as an under-covered outcome of cappuccino pairings, and (3) identifying lilly white juveniles before markers fully express. All three target breeding decisions and avoid duplicating existing slugs.\n"
+  "costUsd": 0.025123,
+  "addedSlugs": [],
+  "rationale": "The signals show very broad, generic search demand (Google autocomplete is dominated by \"crested gecko\" + care/husbandry terms like enclosure, diet, lifespan). Bluesky is mostly fan art and general pet content, not breeder-specific discussion. YouTube has significant watch-through on morph guides and cappuccino debate, but all the high-view content is already 1–8 years old, indicating saturated coverage. No forum heat, no recent breeder blogs, no trending topics. The only signal with slightly fresher debate is cappuccino geckos (some conflicting takes in recent YT titles like \"Huge Mistake or Hidden Opportunity?\" and \"Why So Much Hate?\"), but we already have three cappuccino-related slugs published. Nothing clears the originality bar or shows concrete breeder confusion that warrants a post. Rejecting all topics."
 }
