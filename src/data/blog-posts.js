@@ -5345,6 +5345,260 @@ export const BLOG_POSTS = [
         label: "Pangea Reptile Blog: breeding and genetics resources",
       },
     ],
+  },
+  {
+    slug: "albino-crested-gecko-myth",
+    title: "Why Albino Crested Geckos Might Not Exist (Yet)",
+    description: "Search volume for \"albino crested gecko\" jumped 130% in 90 days. There's no proven albino line in captivity. Here's what those listings actually are, and what the genetics say.",
+    keyphrase: "albino crested gecko",
+    category: "mythbusters",
+    tags: [
+      "mythbusters",
+      "lilly-white",
+      "axanthic",
+      "moonglow",
+      "white-wall",
+      "harlequin",
+      "dalmatian",
+    ],
+    datePublished: "2026-07-10",
+    dateModified: "2026-07-10",
+    heroEyebrow: "Mythbusters",
+    tldr: [
+      "There is no proven albino crested gecko morph in captive breeding as of 2025.",
+      "Animals sold as 'albino' are almost always axanthic, moonglow, leucistic-presenting, or pale harlequin combos.",
+      "True albinism requires the absence of all melanin, a different genetic mechanism from axanthic, which removes yellow and red pigment but leaves melanin intact.",
+      "Axanthic is the only fully proven color-removal recessive in crested geckos, and it is not albinism.",
+      "If a true albino line emerges, it will require documented progeny testing across multiple breeders before the claim holds.",
+    ],
+    body: [
+      {
+        type: "p",
+        text: "# Why albino crested geckos might not exist (yet)",
+      },
+      {
+        type: "p",
+        text: "Searches for \"albino crested gecko\" jumped 130% in the United States over the past three months. At expo tables and on MorphMarket, listings have started using the word. Prices attached to those listings range from $300 to well over $1,000. And the animals being sold under that label are, in most cases, not albinos. They can't be, because no one has proven an albino line in *Correlophus ciliatus*.",
+      },
+      {
+        type: "p",
+        text: "So what's going on? A combination of misapplied terminology, genuine excitement about pale morphs, and the perfectly human tendency to name something before you understand it. This post is for breeders who want to know what's real, what's hype, and what a true albino gecko would actually have to look like genetically to earn that name.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "What \"albino\" actually means in genetics",
+      },
+      {
+        type: "p",
+        text: "The word albino has a specific biological definition. It refers to an animal that cannot produce melanin, the dark pigment made by melanocytes and melanophores. A true albino animal has pink or red eyes (the blood vessels behind the unpigmented iris are visible), and its skin lacks dark coloration entirely because the melanin-producing pathway is broken at the genetic level.",
+      },
+      {
+        type: "p",
+        text: "This matters because melanin is only one of three pigment systems in a crested gecko's skin. The genetics glossary and genetics guide both describe how crested geckos have three stacked chromatophore layers: xanthophores on top (yellow and red pigment), iridophores in the middle (reflective crystal platelets), and melanophores at the base (dark melanin). Take out the xanthophores and you get an axanthic gecko, gray and white, with intact melanin. Take out only the iridophores and you get a matte, flat-looking animal. Take out the melanophores and you get something that could legitimately be called albino.",
+      },
+      {
+        type: "p",
+        text: "Nobody has done the third thing yet. At least, nobody has proven it.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Why axanthic is not albino",
+      },
+      {
+        type: "p",
+        text: "The most common mistake behind \"albino\" listings is misidentifying axanthic animals. Axanthic is the only fully proven recessive color-removal morph in crested geckos, first established by Cabernet Dragons (Matt Parks) around 2018. A visual axanthic carries two copies of the recessive gene, which disables xanthophores, the cells responsible for yellow and red pigments. The result is an animal that appears in shades of charcoal, silver, and white with absolutely no warm tones, even when fully fired up.",
+      },
+      {
+        type: "p",
+        text: "That looks pale. It looks dramatic. And to someone who has never seen an axanthic in person, it might look \"albino-ish.\" But it is not albinism.",
+      },
+      {
+        type: "p",
+        text: "Melanin is still fully present in an axanthic crested gecko. Fire one up at night and the dark melanin pattern darkens normally. The animal can look almost black across its dorsum. The cool gray tones come from the absence of warm pigment on top, not the absence of dark pigment underneath. A true albino would have the opposite profile: warm or flesh tones with pink or red eyes, because nothing would be darkening the base.",
+      },
+      {
+        type: "p",
+        text: "If you're looking at a listing that says \"albino\" and the photos show a dark-dorsum animal with gray flanks, that's almost certainly an axanthic. The two words are not interchangeable.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "What breeders are actually selling as \"albino\"",
+      },
+      {
+        type: "p",
+        text: "There are a handful of morph combinations that generate the pale, dramatic look that drives albino searches. None of them are albinism. Here's what they actually are:",
+      },
+      {
+        type: "p",
+        text: "**Axanthic:** As described above. Gray, white, and black. Proven recessive. Two copies required. Het animals look completely normal, which is why lineage documentation matters more than visual assessment when buying.",
+      },
+      {
+        type: "p",
+        text: "**Moonglow:** A line-bred trait for near-white, patternless animals. These geckos can look strikingly pale, almost cream-white with minimal pattern. Moonglow is not a single gene, it is a look maintained through generations of selective pairing. No melanin pathway is disrupted. The animal is simply very pale in base color due to polygenic effects on the xanthophore and iridophore layers.",
+      },
+      {
+        type: "p",
+        text: "**High-expression Lilly White combos:** Lilly White is an incomplete-dominant morph that produces bold white structural markings. Combine it with an axanthic, and you get an animal that is near-white with cool tones and almost no warm pigment showing. The white markings are structural (they do not fire down), and the axanthic component removes the warm tones. The result can look extraordinary, and it is not an albino. It is a two-morph combo with clear, documented genetics.",
+      },
+      {
+        type: "p",
+        text: "**White Wall animals:** White Wall produces a persistent white lateral stripe that holds even when the rest of the animal fires down. Combined with other pale traits, the animal reads as mostly white. Still not albino, still incomplete-dominant with a known inheritance mechanism.",
+      },
+      {
+        type: "p",
+        text: "**Pale line-bred harlequins and flames:** Some breeders have worked toward extremely high-cream, near-white pattern coverage on a pale base. These animals can appear nearly colorless in photos. They are polygenic products of generations of selective pairing, not the result of a melanin-blocking mutation.",
+      },
+      {
+        type: "p",
+        text: "The pattern is consistent: breeders producing something genuinely visually stunning look for a name that communicates what they have. \"Albino\" is a powerful word with clear public recognition. It gets attention. The problem is it also carries a specific genetic meaning, and when the genetics don't match the label, the listing is wrong regardless of how impressive the animal looks.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Could a true albino crested gecko exist?",
+      },
+      {
+        type: "p",
+        text: "Yes, in principle. Albinism has been documented across dozens of reptile species, including leopard geckos, ball pythons, and corn snakes, where multiple independently proven albino lines exist. The genetic mechanism, a recessive mutation disrupting tyrosinase or a related enzyme in the melanin-synthesis pathway, is well understood. There is no reason the same mutation could not arise in *Correlophus ciliatus*.",
+      },
+      {
+        type: "p",
+        text: "But \"could exist in principle\" and \"has been proven to exist in captivity\" are separated by years of controlled breeding, documented progeny testing, and independent verification across multiple breeders. As of the writing of this post, none of that has happened for crested geckos.",
+      },
+      {
+        type: "p",
+        text: "If someone is sitting on what they believe might be a genuine albino line, the path forward is not a MorphMarket listing. It is test-breeding: pair the suspected animal to known animals, document everything, produce offspring across multiple clutches, and show the data. Specifically, a true albino would need to demonstrate the absence of melanin (pink or red eyes, flesh or pale base coloration with no dark dorsal pattern at any fire state), and the pattern would need to follow a predictable recessive inheritance model over multiple generations.",
+      },
+      {
+        type: "p",
+        text: "One unusual animal from one clutch is interesting. It is not proof.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Why the search spike matters to breeders",
+      },
+      {
+        type: "p",
+        text: "A 130% jump in search volume for a term that has no proven genetic basis in the species is a specific kind of market signal. It means buyers are arriving at listings primed to pay premium prices for animals that may be mislabeled. It means sellers face pressure to use the word because it converts, even when the animal doesn't qualify.",
+      },
+      {
+        type: "p",
+        text: "This is how terminology gets corrupted in the hobby. It happened with \"codominant,\" a word the genetics guide notes is used loosely to describe morphs that are technically incomplete dominant. It happened with \"super\" applied to polygenic traits like super dalmatian, which the morph guide explicitly notes is a polygenic extreme, not a proven Mendelian super form. Now it is happening with \"albino.\"",
+      },
+      {
+        type: "p",
+        text: "The practical cost to you as a breeder is real. If you buy an animal labeled \"albino\" that is actually an axanthic or a moonglow, you are probably paying an albino premium for a phenotype whose genetics you could have acquired more cheaply with accurate terminology. Worse, if you breed that animal into your lines believing you are working with a specific mutation, your records will be wrong. That contaminates downstream documentation for every animal you sell.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "My position: hold the line on the word",
+      },
+      {
+        type: "p",
+        text: "I think the hobby should not use \"albino\" for crested geckos until a line is proven. Not because the word is precious, but because it has a specific meaning that matters for breeding decisions, pricing, and animal welfare. An animal cannot be evaluated, priced, or paired responsibly if its genetic identity is mislabeled.",
+      },
+      {
+        type: "p",
+        text: "Axanthic is beautiful. Moonglow is beautiful. A well-built Lilly White combo with axanthic background is genuinely jaw-dropping. None of them need to be called albino to command real prices. The axanthic alone, the only fully proven recessive color morph in the species, regularly trades at $1,500 to $4,000 depending on the combination. That is not a consolation prize for \"not being albino.\" That is the price of a real, proven, documentable gene.",
+      },
+      {
+        type: "p",
+        text: "When someone eventually produces and proves a genuine albino crested gecko, it will be one of the most significant genetic events in the hobby's history. It will command attention on its own terms. It will not need to borrow the word from unrelated pale morphs.",
+      },
+      {
+        type: "p",
+        text: "Until then, if you see \"albino crested gecko\" in a listing, ask two questions: what are the actual morph designations, and where is the lineage documentation? If the seller cannot answer both, the price is wrong regardless of how the animal looks in photos.",
+      },
+      {
+        type: "callout",
+        tone: "info",
+        title: "Practical takeaways",
+      },
+      {
+        type: "ul",
+        items: [
+          "If you are shopping for pale or white crested geckos, learn to distinguish axanthic (recessive, gray and black, no warm tones), moonglow (line-bred, cream to white, polygenic), Lilly White (incomplete-dominant, white structural markings), and White Wall (incomplete-dominant, persistent white lateral stripe). They are different products with different genetics and different breeding implications.",
+          "Do not pay an \"albino premium\" for an animal whose seller cannot name the actual morph or provide lineage documentation. You are paying for a word, not a gene.",
+          "If you believe you have something genuinely unusual in a clutch, document it before listing it. Note the fire state, photograph the eyes at multiple angles (pink or red irises would be a real signal), and record the exact parentage. Then test-breed before claiming anything publicly.",
+          "Support breeders who use accurate terminology even when less exciting words leave money on the table. That discipline is what makes the whole morph ecosystem trustworthy., -",
+        ],
+      },
+      {
+        type: "p",
+        text: "The 130% search spike will probably produce a wave of mislabeled listings this season. It does not have to produce a wave of mislabeled breeding records. Those are two different problems, and you can control the second one even if the first is already underway.",
+      },
+    ],
+    faq: [
+      {
+        question: "Is there a proven albino crested gecko morph?",
+        answer: "No. As of 2025, there is no proven albino crested gecko line in captive breeding. Animals sold as \"albino\" are almost always axanthic, moonglow, pale Lilly White combos, or other misidentified morphs. A true albino would require documented progeny testing across multiple breeders before the claim could be accepted.",
+      },
+      {
+        question: "What is the difference between albino and axanthic in crested geckos?",
+        answer: "Axanthic removes yellow and red pigment (xanthophores) but leaves melanin intact. These geckos appear gray, white, and black with no warm tones. True albinism removes melanin entirely, which would produce pink or red eyes and flesh-toned or white coloring with no dark pattern. Axanthic is not albinism.",
+      },
+      {
+        question: "Why do some crested gecko listings say \"albino\" if it isn't proven?",
+        answer: "Because \"albino\" is a high-traffic search term that converts buyers. Animals that are axanthic, moonglow, or high-expression Lilly White combos can look very pale and dramatic. Sellers sometimes use \"albino\" loosely to describe the look rather than the genetics. This is inaccurate and misleading for anyone trying to breed responsibly.",
+      },
+      {
+        question: "Could a true albino crested gecko be produced?",
+        answer: "Yes, in principle. Albinism has been documented in many reptile species including leopard geckos, corn snakes, and ball pythons. There is no biological reason it could not arise in Correlophus ciliatus. But it would need to be proven through controlled progeny testing, demonstrated recessive inheritance, and pink or red eyes confirming absent melanin, none of which has happened yet.",
+      },
+      {
+        question: "What does an axanthic crested gecko look like?",
+        answer: "Axanthic crested geckos appear in shades of charcoal, silver, and white with zero warm tones even when fully fired up. No yellow, no red, no cream. Pattern areas that would be cream in a normal animal appear pure white. The dark dorsal pattern still fires up normally because melanin is fully intact.",
+      },
+      {
+        question: "What morph should I buy if I want the palest crested gecko possible?",
+        answer: "The most dramatic pale combinations in the hobby use axanthic (proven recessive, removes warm pigment), Lilly White (incomplete-dominant, structural white markings), and White Wall (incomplete-dominant, persistent white lateral stripe). A high-quality axanthic Lilly White combo can look nearly white with cool undertones and is a genuinely proven genetic combination.",
+      },
+      {
+        question: "How do I spot a mislabeled \"albino\" crested gecko listing?",
+        answer: "Ask two questions: what are the documented morph designations, and where is the lineage paperwork? A true albino would show pink or red eyes and no dark dorsal pattern at any fire state. If the animal fires up dark, has gray coloring, or the seller cannot name a specific proven morph, the \"albino\" label is inaccurate.",
+      },
+    ],
+    internalLinks: [
+      {
+        href: "/MorphGuide/axanthic",
+        label: "Axanthic morph guide",
+      },
+      {
+        href: "/MorphGuide/lilly-white",
+        label: "Lilly White morph guide",
+      },
+      {
+        href: "/MorphGuide/moonglow",
+        label: "Moonglow morph guide",
+      },
+      {
+        href: "/GeneticsGuide",
+        label: "Crested gecko genetics guide",
+      },
+      {
+        href: "/MorphGuide/white-wall",
+        label: "White Wall morph guide",
+      },
+      {
+        href: "/GeneticCalculatorTool",
+        label: "Genetic calculator tool",
+      },
+    ],
+    externalCitations: [
+      {
+        url: "https://trends.google.com/trends/explore?q=albino+crested+gecko&date=today+3-m&geo=US",
+        label: "Google Trends: \"albino crested gecko\" search volume (US, last 90 days)",
+      },
+      {
+        url: "https://www.morphmarket.com/us/c/reptiles/geckos/crested-geckos/",
+        label: "MorphMarket: Crested gecko listings",
+      },
+    ],
   }
 ];
 
