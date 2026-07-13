@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-07-13T09:34:42.401Z",
+  "lastUpdated": "2026-07-13T10:36:06.551Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -932,7 +932,7 @@
       "title": "Lilly White at Hatch vs. Fired-Up: Why Your Juvenile Doesn't Look Like the ID You Bought",
       "slug": "lilly-white-color-change-hatchling-vs-adult",
       "category": "identification",
-      "status": "new",
+      "status": "published",
       "score": {
         "demand": 7,
         "originality": 8,
@@ -941,8 +941,8 @@
         "total": 21
       },
       "createdAt": "2026-07-13T09:33:35.971Z",
-      "draftedAt": null,
-      "publishedAt": null,
+      "draftedAt": "2026-07-13T10:36:06.429Z",
+      "publishedAt": "2026-07-13T10:36:06.551Z",
       "evidence": [
         {
           "source": "google-ac",
