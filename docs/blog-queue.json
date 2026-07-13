@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-07-13T10:36:06.551Z",
+  "lastUpdated": "2026-07-13T13:11:53.748Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -959,6 +959,38 @@
         "A pale hatchling you bought as a Lilly White fires up cream or orange as a juvenile—and you start second-guessing your seller.",
         "Lilly Whites show their true pattern and color only after their first year, but hatchling morphology is still distinct if you know where to look.",
         "You're not being scammed; you're just raising a gecko through a natural color transition that most care guides skip entirely."
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "gsc-20260713-crested-gecko-morph-calculator",
+      "title": "Crested gecko morph calculator",
+      "slug": "crested-gecko-morph-calculator",
+      "category": "genetics",
+      "status": "new",
+      "score": {
+        "total": 10,
+        "demand": 1,
+        "originality": 6,
+        "accuracyRisk": 4,
+        "voiceFit": 7
+      },
+      "createdAt": "2026-07-13T13:11:53.748Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "search-console",
+          "url": null,
+          "snippet": "Google Search Console: query \"crested gecko morph calculator\" drove 20 impressions in the last 28 days at average position 13.2 (CTR 0%) but no page on geckinspect.com currently targets this query.",
+          "observedAt": "2026-07-13T13:11:53.748Z"
+        }
+      ],
+      "angleIdeas": [
+        "Direct-answer post titled to match the query phrasing: \"crested gecko morph calculator\"",
+        "Foundation Genetics framing: what allele(s) underlie \"crested gecko morph calculator\", inheritance pattern, and breeding implications",
+        "FAQ-first format: lead with 6-8 Q&A pairs answering \"crested gecko morph calculator\" and related long-tails, then long-form explanation"
       ],
       "rejectionReason": null,
       "prUrl": null
