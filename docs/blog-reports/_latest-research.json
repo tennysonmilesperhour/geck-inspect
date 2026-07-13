@@ -1,17 +1,23 @@
 {
-  "ranAt": "2026-07-10T09:40:53.048Z",
+  "ranAt": "2026-07-13T09:33:35.971Z",
   "signals": {
     "googleAc": 95,
     "bluesky": 80,
     "googleTrends": 0,
-    "youtube": 66,
+    "youtube": 68,
     "breederBlogs": 0,
     "errors": [
       "google-trends: \"crested gecko\": related: 429",
-      "google-trends: \"crested gecko morph\": related: 429"
+      "google-trends: \"crested gecko morph\": related: 429",
+      "google-trends: \"cappuccino gecko\": related: 429",
+      "google-trends: \"lilly white gecko\": related: 429"
     ]
   },
-  "costUsd": 0.025123,
-  "addedSlugs": [],
-  "rationale": "The signals show very broad, generic search demand (Google autocomplete is dominated by \"crested gecko\" + care/husbandry terms like enclosure, diet, lifespan). Bluesky is mostly fan art and general pet content, not breeder-specific discussion. YouTube has significant watch-through on morph guides and cappuccino debate, but all the high-view content is already 1–8 years old, indicating saturated coverage. No forum heat, no recent breeder blogs, no trending topics. The only signal with slightly fresher debate is cappuccino geckos (some conflicting takes in recent YT titles like \"Huge Mistake or Hidden Opportunity?\" and \"Why So Much Hate?\"), but we already have three cappuccino-related slugs published. Nothing clears the originality bar or shows concrete breeder confusion that warrants a post. Rejecting all topics."
+  "costUsd": 0.030775999999999998,
+  "addedSlugs": [
+    "breeding-pair-compatibility-behavioral-selection",
+    "crested-gecko-morph-prediction-accuracy-reality",
+    "lilly-white-color-change-hatchling-vs-adult"
+  ],
+  "rationale": "The signal set is dominated by broad-intent searches (enclosure, care, price, diet) and inspirational/art content from Bluesky. Very few forums or breeding-specific discussions surfaced. However, three high-demand breeding/genetics angles emerged: (1) YouTube repeatedly surfaces warnings about incompatible pairings and warnings about Super Cappuccinos, (2) \"morph calculator\" is a top autocomplete, suggesting confusion between prediction tools and field reality, and (3) Lilly White hatchling identification is a recurrent query, with viewers asking how to ID juvenile color transitions. Each of these solves a real breeder pain point, has minimal coverage in our published archive, and can be grounded in genetics basics (polygenic modifiers, incomplete dominance color-shifting, behavioral selection). Rejected pure care topics (enclosure, diet, general breeding season) as already covered or too general. Rejected morph-specific listicles without a through-line. These three clear the bar on originality (fresh angles, not rehashes) and voice fit (breeder-to-breeder, actionable, myth-busting tone)."
 }

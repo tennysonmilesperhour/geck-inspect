@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-07-10T10:30:09.886Z",
+  "lastUpdated": "2026-07-13T09:34:42.401Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -851,6 +851,114 @@
         "You bought what you thought was a lilly white hatchling, but it has color and markings—and now you're unsure if you were sold the wrong morph or if it just hasn't matured yet.",
         "Lilly white babies are a gamble: they fire up and darken as they age, making hatchling identification nearly impossible. Here's what markers actually predict an adult lilly white.",
         "The most common hatchling ID mistake is mistaking a light-colored normal or a very light line-bred for a true lilly white. Here's how breeders actually tell them apart early."
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "tpc_1783935215971_breedingpa",
+      "title": "Why Most Breeder Pairs Don't Behave How You Expect: Incompatibility Beyond Genetics",
+      "slug": "breeding-pair-compatibility-behavioral-selection",
+      "category": "breeding",
+      "status": "new",
+      "score": {
+        "demand": 7,
+        "originality": 7,
+        "accuracyRisk": 4,
+        "voiceFit": 8,
+        "total": 18
+      },
+      "createdAt": "2026-07-13T09:33:35.971Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "youtube",
+          "snippet": "WARNING, NEVER BREED THESE CRESTED GECKOS TOGETHER",
+          "url": "https://www.youtube.com/watch?v=K1vjq-btadk"
+        },
+        {
+          "source": "youtube",
+          "snippet": "Breeding Crested Geckos, Everything you NEED to KNOW!",
+          "url": "https://www.youtube.com/watch?v=iaMEkSfBvTI"
+        }
+      ],
+      "angleIdeas": [
+        "Most breeders focus on pairing morphs, but male aggression and size mismatch cause real-world clutch failures that genetics books never mention.",
+        "Two beautiful animals on paper don't guarantee offspring: here's what successful breeders actually watch for in a male-female duo.",
+        "Your male won't court the female if she's not in the right developmental stage—and it has nothing to do with their morphs or bloodlines."
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "tpc_1783935215971_crestedgec",
+      "title": "Morph Calculator vs. Reality: When Your Projection Doesn't Match the Hatchling",
+      "slug": "crested-gecko-morph-prediction-accuracy-reality",
+      "category": "genetics",
+      "status": "new",
+      "score": {
+        "demand": 8,
+        "originality": 8,
+        "accuracyRisk": 5,
+        "voiceFit": 9,
+        "total": 20
+      },
+      "createdAt": "2026-07-13T09:33:35.971Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "google-ac",
+          "snippet": "Google autocomplete for \"crested gecko morph\" suggests \"crested gecko morph calculator\"",
+          "url": null
+        },
+        {
+          "source": "youtube",
+          "snippet": "Crested Gecko Morphs Explained!",
+          "url": "https://www.youtube.com/watch?v=mUSlGPbe7KA"
+        }
+      ],
+      "angleIdeas": [
+        "You enter two parents into a morph calculator and expect the hatchling to match one of six boxes. Here's why real clutches break those odds.",
+        "Polygenic traits don't follow Punnett squares the way recessive morphs do—and online tools rarely account for line-specific modifier genes.",
+        "A hatchling from Cappuccino × Cappuccino doesn't always look like either parent. Understanding why saves you from listing the wrong thing for sale."
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "tpc_1783935215971_lillywhite",
+      "title": "Lilly White at Hatch vs. Fired-Up: Why Your Juvenile Doesn't Look Like the ID You Bought",
+      "slug": "lilly-white-color-change-hatchling-vs-adult",
+      "category": "identification",
+      "status": "new",
+      "score": {
+        "demand": 7,
+        "originality": 8,
+        "accuracyRisk": 3,
+        "voiceFit": 9,
+        "total": 21
+      },
+      "createdAt": "2026-07-13T09:33:35.971Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "google-ac",
+          "snippet": "Google autocomplete for \"lilly white crested gecko\" suggests \"lilly white crested gecko hatchling\"",
+          "url": null
+        },
+        {
+          "source": "youtube",
+          "snippet": "How To Tell If Your Crested Gecko Is A Lilly White! 2022",
+          "url": "https://www.youtube.com/watch?v=ScGE-cqdQqc"
+        }
+      ],
+      "angleIdeas": [
+        "A pale hatchling you bought as a Lilly White fires up cream or orange as a juvenile—and you start second-guessing your seller.",
+        "Lilly Whites show their true pattern and color only after their first year, but hatchling morphology is still distinct if you know where to look.",
+        "You're not being scammed; you're just raising a gecko through a natural color transition that most care guides skip entirely."
       ],
       "rejectionReason": null,
       "prUrl": null
