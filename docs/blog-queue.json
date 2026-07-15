@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-07-15T08:19:44.710Z",
+  "lastUpdated": "2026-07-15T09:19:14.336Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -752,7 +752,7 @@
       "title": "Why Albino Crested Geckos Might Not Exist (Yet)",
       "slug": "albino-crested-gecko-myth",
       "category": "mythbusters",
-      "status": "rejected",
+      "status": "published",
       "score": {
         "demand": 9,
         "originality": 8,
@@ -762,7 +762,7 @@
       },
       "createdAt": "2026-07-09T21:31:51.051Z",
       "draftedAt": "2026-07-10T10:30:09.766Z",
-      "publishedAt": "2026-07-10T10:30:09.886Z",
+      "publishedAt": "2026-07-15T09:19:14.336Z",
       "evidence": [
         {
           "source": "google-trends",
@@ -1000,7 +1000,7 @@
       "title": "Why Albino Crested Geckos Don't Actually Exist (And What People Are Really Buying)",
       "slug": "albino-crested-gecko-myth",
       "category": "mythbusters",
-      "status": "new",
+      "status": "drafted",
       "score": {
         "demand": 8,
         "originality": 9,
@@ -1009,7 +1009,7 @@
         "total": 23
       },
       "createdAt": "2026-07-15T08:19:19.338Z",
-      "draftedAt": null,
+      "draftedAt": "2026-07-15T09:19:14.211Z",
       "publishedAt": null,
       "evidence": [
         {
