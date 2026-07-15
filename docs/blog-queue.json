@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-07-13T13:11:53.748Z",
+  "lastUpdated": "2026-07-15T08:19:44.710Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -991,6 +991,124 @@
         "Direct-answer post titled to match the query phrasing: \"crested gecko morph calculator\"",
         "Foundation Genetics framing: what allele(s) underlie \"crested gecko morph calculator\", inheritance pattern, and breeding implications",
         "FAQ-first format: lead with 6-8 Q&A pairs answering \"crested gecko morph calculator\" and related long-tails, then long-form explanation"
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "tpc_1784103559338_albinocres",
+      "title": "Why Albino Crested Geckos Don't Actually Exist (And What People Are Really Buying)",
+      "slug": "albino-crested-gecko-myth",
+      "category": "mythbusters",
+      "status": "new",
+      "score": {
+        "demand": 8,
+        "originality": 9,
+        "voiceFit": 8,
+        "accuracyRisk": 2,
+        "total": 23
+      },
+      "createdAt": "2026-07-15T08:19:19.338Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "google-trends",
+          "snippet": "Google Trends rising query (related to \"crested gecko\", last 90 days US): \"albino crested gecko\" +60%",
+          "url": "https://trends.google.com/trends/explore?q=albino+crested+gecko&date=today+3-m&geo=US"
+        },
+        {
+          "source": "bluesky",
+          "snippet": "I rescued this gecko as a tiny starving hatchling and he is ridiculously gorgeous? Came from Confetti parents but i'm unsure the exact morph.",
+          "url": "https://bsky.app/profile/mycotae.bsky.social/post/3kvysli6onz2m"
+        }
+      ],
+      "angleIdeas": [
+        "Albino crested geckos don't exist in the hobby—so why are searchers spending 60% more time looking for them in the last quarter?",
+        "When someone claims they're selling you an 'albino' gecko, they're either confused about morphs or they're counting on you to be.",
+        "The genetic basis for albinism is recessive in most reptiles, but crested geckos have never had a confirmed albino line—here's what people actually mean."
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "tpc_1784103559338_crestedgec",
+      "title": "Do Crested Geckos Actually Need Heat Lamps? The Real Temperature Story",
+      "slug": "crested-gecko-heat-lamp-truth",
+      "category": "mythbusters",
+      "status": "new",
+      "score": {
+        "demand": 8,
+        "originality": 8,
+        "voiceFit": 8,
+        "accuracyRisk": 3,
+        "total": 21
+      },
+      "createdAt": "2026-07-15T08:19:19.338Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "google-trends",
+          "snippet": "Google Trends rising query (related to \"crested gecko\", last 90 days US): \"do crested geckos need a heat lamp\" +100%",
+          "url": "https://trends.google.com/trends/explore?q=do+crested+geckos+need+a+heat+lamp&date=today+3-m&geo=US"
+        },
+        {
+          "source": "google-trends",
+          "snippet": "Google Trends rising query (related to \"crested gecko\", last 90 days US): \"crested gecko temperature range\" +50%",
+          "url": "https://trends.google.com/trends/explore?q=crested+gecko+temperature+range&date=today+3-m&geo=US"
+        },
+        {
+          "source": "bluesky",
+          "snippet": "medically i have the heat tolerance of a crested gecko (above 80 F for extended periods will cause me to implode)",
+          "url": "https://bsky.app/profile/chaobunnyarts.bsky.social/post/3mprdb343422j"
+        }
+      ],
+      "angleIdeas": [
+        "Heat lamp searches jumped 100% in 90 days—most breeders are asking the wrong question; here's what matters instead.",
+        "The 70–80°F sweet spot is real, but a heat lamp isn't how you get there; humidity, gradient, and night temps matter way more.",
+        "Overheating kills more captive-bred crested geckos than cold does—why breeders keep defaulting to 'add a lamp' is costing hatchlings."
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "tpc_1784103559338_cappuccino",
+      "title": "Cappuccino Breeding: Why the Hype Turned Into Controversy",
+      "slug": "cappuccino-breeding-controversy-clarified",
+      "category": "breeding",
+      "status": "new",
+      "score": {
+        "demand": 7,
+        "originality": 7,
+        "voiceFit": 9,
+        "accuracyRisk": 4,
+        "total": 19
+      },
+      "createdAt": "2026-07-15T08:19:19.338Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "youtube",
+          "snippet": "YouTube: \"Don't buy super cappuccino crested gecko it's a scam and waste of money\" by Homestead reptiles, 2,092 views (1y ago)",
+          "url": "https://www.youtube.com/watch?v=5O_obmlNu9I"
+        },
+        {
+          "source": "youtube",
+          "snippet": "YouTube: \"Why So Much Hate for Cappuccino Geckos? The Truth No One Wants to Say…\" by Flawless Crested Geckos, 462 views (7mo ago)",
+          "url": "https://www.youtube.com/watch?v=3xRF-wumo_E"
+        },
+        {
+          "source": "google-trends",
+          "snippet": "Google autocomplete for \"cappuccino crested gecko\" suggests \"cappuccino crested gecko price\"",
+          "url": null
+        }
+      ],
+      "angleIdeas": [
+        "Two breeders look at cappuccinos and see opposite things—one calls it a scam, another says it's the future. Here's the incomplete-dominant math that explains both.",
+        "Super cappuccinos exist, but most people confabulate them with regular capps and blame the morph; the real problem is ID at hatchling stage.",
+        "If you're pricing cappuccinos as premium, you're betting on rarity that doesn't persist once the genetics are public—here's the realistic breeding strategy."
       ],
       "rejectionReason": null,
       "prUrl": null

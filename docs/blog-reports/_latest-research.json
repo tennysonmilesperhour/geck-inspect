@@ -1,23 +1,18 @@
 {
-  "ranAt": "2026-07-13T09:33:35.971Z",
+  "ranAt": "2026-07-15T08:19:19.338Z",
   "signals": {
     "googleAc": 95,
     "bluesky": 80,
-    "googleTrends": 0,
-    "youtube": 68,
+    "googleTrends": 14,
+    "youtube": 64,
     "breederBlogs": 0,
-    "errors": [
-      "google-trends: \"crested gecko\": related: 429",
-      "google-trends: \"crested gecko morph\": related: 429",
-      "google-trends: \"cappuccino gecko\": related: 429",
-      "google-trends: \"lilly white gecko\": related: 429"
-    ]
+    "errors": []
   },
-  "costUsd": 0.030775999999999998,
+  "costUsd": 0.034476,
   "addedSlugs": [
-    "breeding-pair-compatibility-behavioral-selection",
-    "crested-gecko-morph-prediction-accuracy-reality",
-    "lilly-white-color-change-hatchling-vs-adult"
+    "albino-crested-gecko-myth",
+    "crested-gecko-heat-lamp-truth",
+    "cappuccino-breeding-controversy-clarified"
   ],
-  "rationale": "The signal set is dominated by broad-intent searches (enclosure, care, price, diet) and inspirational/art content from Bluesky. Very few forums or breeding-specific discussions surfaced. However, three high-demand breeding/genetics angles emerged: (1) YouTube repeatedly surfaces warnings about incompatible pairings and warnings about Super Cappuccinos, (2) \"morph calculator\" is a top autocomplete, suggesting confusion between prediction tools and field reality, and (3) Lilly White hatchling identification is a recurrent query, with viewers asking how to ID juvenile color transitions. Each of these solves a real breeder pain point, has minimal coverage in our published archive, and can be grounded in genetics basics (polygenic modifiers, incomplete dominance color-shifting, behavioral selection). Rejected pure care topics (enclosure, diet, general breeding season) as already covered or too general. Rejected morph-specific listicles without a through-line. These three clear the bar on originality (fresh angles, not rehashes) and voice fit (breeder-to-breeder, actionable, myth-busting tone)."
+  "rationale": "The signals show broad, evergreen searches dominating (care, diet, enclosures—all covered), but three concrete pockets of demand emerge: (1) rising heat/temperature confusion (+100%, +50%), (2) specific morph ID/genetics confusion (Cappuccino, Lilly White, Axanthic appearing across all channels with breeding-related friction), and (3) rare/niche morphs generating comment & debate. The Google Trends spike on \"albino crested gecko\" (+60%) is a red flag—no albino exists in captive geckos, so this is a misconception worth tackling. Cappuccino appears overrepresented in YouTube with conflicting titles (\"scam\" vs \"opportunity\"), suggesting breeder confusion. I'm skipping general care, listicles, and dupes. The heat lamp confusion and \"albino\" myth both have clear corrective angles and grounding in genetics."
 }
