@@ -2,9 +2,11 @@
 # happens inside a single workflow run, commits straight to main, no PR gate.
 # An email lands when a post goes live.
 #
-# STATUS: ACTIVE as of 2026-07-09. Scheduled runs are enabled (see the `on:`
-# block). To pause autonomous publishing again, comment out the schedule
-# crons below; manual workflow_dispatch runs keep working either way.
+# STATUS: PAUSED 2026-07-15 at Tennyson's explicit request ("stop doing blogs
+# for now"). The schedule block below is commented out, so there are NO
+# autonomous research/draft/publish/report runs. Do NOT re-enable the crons
+# without Tennyson asking for it directly. Manual workflow_dispatch runs still
+# work if a one-off run is ever wanted.
 #
 # Stages on a shared schedule so each can fail without poisoning the others:
 #
@@ -26,12 +28,14 @@
 name: blog-pipeline
 
 on:
-  # ACTIVE 2026-07-09: autonomous publishing is on. To pause, comment out the
-  # schedule block below; manual workflow_dispatch runs keep working.
-  schedule:
-    - cron: '0 6 * * 1,3,5'   # research
-    - cron: '0 7 * * 1,3,5'   # draft + publish
-    - cron: '0 12 * * 1'      # weekly report
+  # PAUSED 2026-07-15 at Tennyson's request: autonomous publishing is OFF.
+  # The schedule block is intentionally commented out so nothing runs on its
+  # own. To resume autonomous publishing, uncomment the schedule block below
+  # (only if Tennyson asks). Manual workflow_dispatch runs keep working.
+  # schedule:
+  #   - cron: '0 6 * * 1,3,5'   # research
+  #   - cron: '0 7 * * 1,3,5'   # draft + publish
+  #   - cron: '0 12 * * 1'      # weekly report
   workflow_dispatch:
     inputs:
       stage:

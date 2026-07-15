@@ -748,42 +748,6 @@
       "prUrl": null
     },
     {
-      "id": "tpc_1783632711051_albinocres",
-      "title": "Why Albino Crested Geckos Might Not Exist (Yet)",
-      "slug": "albino-crested-gecko-myth",
-      "category": "mythbusters",
-      "status": "published",
-      "score": {
-        "demand": 9,
-        "originality": 8,
-        "accuracyRisk": 4,
-        "voiceFit": 8,
-        "total": 21
-      },
-      "createdAt": "2026-07-09T21:31:51.051Z",
-      "draftedAt": "2026-07-10T10:30:09.766Z",
-      "publishedAt": "2026-07-15T09:19:14.336Z",
-      "evidence": [
-        {
-          "source": "google-trends",
-          "snippet": "Google Trends rising query (related to \"crested gecko\", last 90 days US): \"albino crested gecko\" +130%",
-          "url": "https://trends.google.com/trends/explore?q=albino+crested+gecko&date=today+3-m&geo=US"
-        },
-        {
-          "source": "google-ac",
-          "snippet": "Google autocomplete suggests \"crested gecko\" → no explicit \"albino\" variant in top suggestions, but search demand exists independently",
-          "url": null
-        }
-      ],
-      "angleIdeas": [
-        "Search volume for 'albino crested gecko' jumped 130% in the last three months, but there's no proven albino line in captive breeding—here's what breeders are actually calling albino and why.",
-        "You've seen listings claiming 'albino' or 'leucistic' crested geckos. What they really are is a misidentified combo, and why the genetics don't support a true albino morph yet.",
-        "The albino crested gecko trend is part rumor, part marketing. We break down what's genetically plausible and what's hype."
-      ],
-      "rejectionReason": "Premise is outdated: the first albino crested geckos have now been confirmed and produced within the last couple of months. The post claimed no proven albino line exists in captivity, which is no longer accurate. Post unpublished and removed.",
-      "prUrl": null
-    },
-    {
       "id": "tpc_1783632711051_frappuccin",
       "title": "Frappuccino Crested Geckos: The Cappuccino Pairing You're Not Planning For",
       "slug": "frappuccino-cappuccino-pairings",
@@ -991,42 +955,6 @@
         "Direct-answer post titled to match the query phrasing: \"crested gecko morph calculator\"",
         "Foundation Genetics framing: what allele(s) underlie \"crested gecko morph calculator\", inheritance pattern, and breeding implications",
         "FAQ-first format: lead with 6-8 Q&A pairs answering \"crested gecko morph calculator\" and related long-tails, then long-form explanation"
-      ],
-      "rejectionReason": null,
-      "prUrl": null
-    },
-    {
-      "id": "tpc_1784103559338_albinocres",
-      "title": "Why Albino Crested Geckos Don't Actually Exist (And What People Are Really Buying)",
-      "slug": "albino-crested-gecko-myth",
-      "category": "mythbusters",
-      "status": "drafted",
-      "score": {
-        "demand": 8,
-        "originality": 9,
-        "voiceFit": 8,
-        "accuracyRisk": 2,
-        "total": 23
-      },
-      "createdAt": "2026-07-15T08:19:19.338Z",
-      "draftedAt": "2026-07-15T09:19:14.211Z",
-      "publishedAt": null,
-      "evidence": [
-        {
-          "source": "google-trends",
-          "snippet": "Google Trends rising query (related to \"crested gecko\", last 90 days US): \"albino crested gecko\" +60%",
-          "url": "https://trends.google.com/trends/explore?q=albino+crested+gecko&date=today+3-m&geo=US"
-        },
-        {
-          "source": "bluesky",
-          "snippet": "I rescued this gecko as a tiny starving hatchling and he is ridiculously gorgeous? Came from Confetti parents but i'm unsure the exact morph.",
-          "url": "https://bsky.app/profile/mycotae.bsky.social/post/3kvysli6onz2m"
-        }
-      ],
-      "angleIdeas": [
-        "Albino crested geckos don't exist in the hobby—so why are searchers spending 60% more time looking for them in the last quarter?",
-        "When someone claims they're selling you an 'albino' gecko, they're either confused about morphs or they're counting on you to be.",
-        "The genetic basis for albinism is recessive in most reptiles, but crested geckos have never had a confirmed albino line—here's what people actually mean."
       ],
       "rejectionReason": null,
       "prUrl": null
