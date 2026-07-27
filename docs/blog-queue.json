@@ -1,6 +1,6 @@
 {
   "$schema": "docs/blog-queue.schema.json",
-  "lastUpdated": "2026-07-20T13:00:26.889Z",
+  "lastUpdated": "2026-07-27T13:32:13.613Z",
   "topics": [
     {
       "id": "tpc_1777291763850_supercappu",
@@ -1133,6 +1133,38 @@
         "Direct-answer post titled to match the query phrasing: \"site:geckinspect.com qr code\"",
         "Foundation Genetics framing: what allele(s) underlie \"site:geckinspect.com qr code\", inheritance pattern, and breeding implications",
         "FAQ-first format: lead with 6-8 Q&A pairs answering \"site:geckinspect.com qr code\" and related long-tails, then long-form explanation"
+      ],
+      "rejectionReason": null,
+      "prUrl": null
+    },
+    {
+      "id": "gsc-20260727-site-geckinspect-com-qr",
+      "title": "Site:geckinspect.com qr",
+      "slug": "site-geckinspect-com-qr",
+      "category": "genetics",
+      "status": "new",
+      "score": {
+        "total": 11,
+        "demand": 2,
+        "originality": 6,
+        "accuracyRisk": 4,
+        "voiceFit": 7
+      },
+      "createdAt": "2026-07-27T13:32:13.613Z",
+      "draftedAt": null,
+      "publishedAt": null,
+      "evidence": [
+        {
+          "source": "search-console",
+          "url": null,
+          "snippet": "Google Search Console: query \"site:geckinspect.com qr\" drove 33 impressions in the last 28 days at average position 1 (CTR 0%) but no page on geckinspect.com currently targets this query.",
+          "observedAt": "2026-07-27T13:32:13.613Z"
+        }
+      ],
+      "angleIdeas": [
+        "Direct-answer post titled to match the query phrasing: \"site:geckinspect.com qr\"",
+        "Foundation Genetics framing: what allele(s) underlie \"site:geckinspect.com qr\", inheritance pattern, and breeding implications",
+        "FAQ-first format: lead with 6-8 Q&A pairs answering \"site:geckinspect.com qr\" and related long-tails, then long-form explanation"
       ],
       "rejectionReason": null,
       "prUrl": null
