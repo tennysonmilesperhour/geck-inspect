@@ -1,0 +1,69 @@
+{
+  "name": "Project",
+  "type": "object",
+  "properties": {
+    "name": {
+      "type": "string",
+      "description": "Name of the project"
+    },
+    "description": {
+      "type": "string",
+      "description": "Description of the project"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "gecko",
+        "breeding",
+        "maintenance",
+        "health",
+        "feeding",
+        "custom"
+      ],
+      "default": "custom",
+      "description": "Category of the project"
+    },
+    "related_gecko_id": {
+      "type": "string",
+      "description": "ID of related gecko if applicable"
+    },
+    "related_breeding_plan_id": {
+      "type": "string",
+      "description": "ID of related breeding plan if applicable"
+    },
+    "custom_relation": {
+      "type": "string",
+      "description": "Manual input for what this project relates to"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "active",
+        "completed",
+        "archived"
+      ],
+      "default": "active",
+      "description": "Status of the project"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Due date for the project"
+    },
+    "color": {
+      "type": "string",
+      "description": "Color tag for the project (hex code)"
+    }
+  },
+  "required": [
+    "name"
+  ],
+  "rls": {
+    "read": {
+      "created_by": "{{user.email}}"
+    },
+    "write": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}

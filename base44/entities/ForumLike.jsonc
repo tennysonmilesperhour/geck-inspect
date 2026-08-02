@@ -1,0 +1,36 @@
+{
+  "name": "ForumLike",
+  "properties": {
+    "target_id": {
+      "description": "ID of the ForumPost or ForumComment that was liked",
+      "type": "string"
+    },
+    "target_type": {
+      "description": "Whether this like is on a post or a comment",
+      "enum": [
+        "post",
+        "comment"
+      ],
+      "type": "string"
+    },
+    "user_email": {
+      "description": "Email of the user who liked the content",
+      "type": "string"
+    }
+  },
+  "required": [
+    "target_id",
+    "target_type",
+    "user_email"
+  ],
+  "rls": {
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "delete": {
+      "created_by": "{{user.email}}"
+    },
+    "read": {}
+  },
+  "type": "object"
+}

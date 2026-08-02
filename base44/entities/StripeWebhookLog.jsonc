@@ -1,0 +1,64 @@
+{
+  "name": "StripeWebhookLog",
+  "properties": {
+    "error_message": {
+      "description": "Error details if processing failed",
+      "type": "string"
+    },
+    "processed_at": {
+      "description": "When the webhook was processed by the app",
+      "format": "date-time",
+      "type": "string"
+    },
+    "processing_status": {
+      "description": "Whether the webhook was handled successfully",
+      "enum": [
+        "received",
+        "processed",
+        "failed",
+        "duplicate"
+      ],
+      "type": "string"
+    },
+    "raw_payload": {
+      "description": "Full raw JSON payload from Stripe for debugging",
+      "type": "string"
+    },
+    "stripe_event_id": {
+      "description": "Stripe event ID for deduplication (evt_...)",
+      "type": "string"
+    },
+    "stripe_event_type": {
+      "description": "Stripe event type string e.g. customer.subscription.updated",
+      "type": "string"
+    }
+  },
+  "required": [
+    "stripe_event_id",
+    "stripe_event_type",
+    "processing_status"
+  ],
+  "rls": {
+    "create": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  },
+  "type": "object"
+}

@@ -1,0 +1,36 @@
+{
+  "name": "MarketplaceLike",
+  "type": "object",
+  "properties": {
+    "gecko_id": {
+      "type": "string",
+      "description": "The ID of the gecko that was liked"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user who liked the gecko"
+    }
+  },
+  "required": [
+    "gecko_id",
+    "user_email"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "created_by": "{{user.email}}"
+        }
+      ]
+    },
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "delete": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}

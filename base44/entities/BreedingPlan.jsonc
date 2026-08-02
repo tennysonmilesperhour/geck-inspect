@@ -1,0 +1,150 @@
+{
+  "name": "BreedingPlan",
+  "type": "object",
+  "properties": {
+    "sire_id": {
+      "type": "string",
+      "description": "The ID of the sire (male gecko)"
+    },
+    "dam_id": {
+      "type": "string",
+      "description": "The ID of the dam (female gecko)"
+    },
+    "breeding_id": {
+      "type": "string",
+      "description": "User-defined breeding pair ID"
+    },
+    "pairing_date": {
+      "type": "string",
+      "format": "date",
+      "description": "The date the pair was introduced"
+    },
+    "copulation_events": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "properties": {
+          "date": {
+            "type": "string",
+            "format": "date"
+          },
+          "notes": {
+            "type": "string"
+          }
+        }
+      },
+      "description": "Recorded lock events for this pair."
+    },
+    "egg_check_day": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 31,
+      "description": "Day of the month to check for eggs"
+    },
+    "egg_check_count": {
+      "type": "number",
+      "default": 0,
+      "description": "Number of times eggs have been laid/checked"
+    },
+    "first_egg_lay_date": {
+      "type": "string",
+      "format": "date",
+      "description": "Date of the first egg lay"
+    },
+    "expected_lay_interval": {
+      "type": "number",
+      "default": 31,
+      "description": "Expected number of days between egg lays \u2014 card glows when exceeded"
+    },
+    "laying_active": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this breeding pair is currently in an active laying season"
+    },
+    "dormant_since": {
+      "type": "string",
+      "format": "date",
+      "description": "Date when the pair was last marked dormant"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Planned",
+        "Active",
+        "Successful",
+        "Failed"
+      ],
+      "default": "Planned",
+      "description": "The current status of the breeding plan"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Notes about this pairing"
+    },
+    "archived": {
+      "type": "boolean",
+      "default": false
+    },
+    "archived_date": {
+      "type": "string",
+      "format": "date"
+    },
+    "breeding_season": {
+      "type": "string",
+      "description": "The breeding season/year (e.g., '2024 Winter')"
+    },
+    "is_public": {
+      "type": "boolean",
+      "default": false
+    }
+  },
+  "required": [
+    "sire_id",
+    "dam_id",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "is_public": true
+        }
+      ]
+    },
+    "create": {
+      "created_by": "{{user.email}}"
+    },
+    "update": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "delete": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    }
+  }
+}

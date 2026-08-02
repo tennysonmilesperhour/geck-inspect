@@ -1,0 +1,49 @@
+{
+  "name": "MorphGuide",
+  "type": "object",
+  "properties": {
+    "morph_name": {
+      "type": "string",
+      "description": "Name of the morph"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the morph characteristics"
+    },
+    "key_features": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Key identifying features of this morph"
+    },
+    "example_image_url": {
+      "type": "string",
+      "description": "Reference image URL for this morph"
+    },
+    "rarity": {
+      "type": "string",
+      "enum": [
+        "common",
+        "uncommon",
+        "rare",
+        "very_rare"
+      ],
+      "description": "How rare this morph is"
+    },
+    "breeding_info": {
+      "type": "string",
+      "description": "Information about breeding and genetics"
+    }
+  },
+  "required": [
+    "morph_name",
+    "description"
+  ],
+  "rls": {
+    "read": {},
+    "write": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}

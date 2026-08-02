@@ -1,0 +1,33 @@
+{
+  "name": "UserFollow",
+  "type": "object",
+  "properties": {
+    "follower_email": {
+      "type": "string",
+      "description": "Email of the user who is following"
+    },
+    "following_email": {
+      "type": "string",
+      "description": "Email of the user being followed"
+    }
+  },
+  "required": [
+    "follower_email",
+    "following_email"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "follower_email": "{{user.email}}"
+        },
+        {
+          "following_email": "{{user.email}}"
+        }
+      ]
+    },
+    "write": {
+      "follower_email": "{{user.email}}"
+    }
+  }
+}

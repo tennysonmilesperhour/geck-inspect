@@ -1,0 +1,82 @@
+{
+  "name": "Task",
+  "type": "object",
+  "properties": {
+    "project_id": {
+      "type": "string",
+      "description": "ID of the project this task belongs to"
+    },
+    "title": {
+      "type": "string",
+      "description": "Title of the task"
+    },
+    "description": {
+      "type": "string",
+      "description": "Detailed description of the task"
+    },
+    "is_completed": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether the task is completed"
+    },
+    "completed_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the task was completed"
+    },
+    "due_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "When the task is due"
+    },
+    "parent_task_id": {
+      "type": "string",
+      "description": "ID of parent task if this is a subtask"
+    },
+    "order_index": {
+      "type": "number",
+      "default": 0,
+      "description": "Order of the task in the list"
+    },
+    "is_recurring": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this task recurs"
+    },
+    "recurring_interval_days": {
+      "type": "number",
+      "description": "Number of days between recurrences"
+    },
+    "last_completed_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Last time this recurring task was completed"
+    },
+    "next_due_date": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Next due date for recurring task"
+    },
+    "reminder_enabled": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether reminders are enabled"
+    },
+    "reminder_days_before": {
+      "type": "number",
+      "description": "Days before due date to send reminder"
+    }
+  },
+  "required": [
+    "project_id",
+    "title"
+  ],
+  "rls": {
+    "read": {
+      "created_by": "{{user.email}}"
+    },
+    "write": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}

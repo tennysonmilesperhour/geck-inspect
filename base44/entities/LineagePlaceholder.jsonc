@@ -1,0 +1,59 @@
+{
+  "name": "LineagePlaceholder",
+  "type": "object",
+  "properties": {
+    "gecko_id": {
+      "type": "string",
+      "description": "ID of the gecko this placeholder is for (as parent)"
+    },
+    "parent_type": {
+      "type": "string",
+      "enum": [
+        "sire",
+        "dam"
+      ],
+      "description": "Whether this is a sire or dam placeholder"
+    },
+    "name": {
+      "type": "string",
+      "description": "Name of the placeholder parent"
+    },
+    "image_url": {
+      "type": "string",
+      "description": "Optional image URL for the placeholder"
+    },
+    "breeder_name": {
+      "type": "string",
+      "description": "Name of the breeder this gecko came from"
+    },
+    "breeder_website": {
+      "type": "string",
+      "description": "Website or profile link for the breeder"
+    },
+    "notes": {
+      "type": "string",
+      "description": "Additional notes about this parent"
+    }
+  },
+  "required": [
+    "gecko_id",
+    "parent_type"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "write": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}

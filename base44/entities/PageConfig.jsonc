@@ -1,0 +1,56 @@
+{
+  "name": "PageConfig",
+  "type": "object",
+  "properties": {
+    "page_name": {
+      "type": "string",
+      "description": "The name of the page (e.g., 'Dashboard', 'MyGeckos')"
+    },
+    "display_name": {
+      "type": "string",
+      "description": "Display name shown in sidebar"
+    },
+    "category": {
+      "type": "string",
+      "enum": [
+        "collection",
+        "tools",
+        "public"
+      ],
+      "default": "public",
+      "description": "Category this page belongs to"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Lucide icon name for this page"
+    },
+    "is_enabled": {
+      "type": "boolean",
+      "default": true,
+      "description": "Whether this page is visible in navigation"
+    },
+    "requires_auth": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this page requires authentication"
+    },
+    "order": {
+      "type": "number",
+      "default": 0,
+      "description": "Order in which the page appears in its category"
+    }
+  },
+  "required": [
+    "page_name",
+    "display_name",
+    "icon"
+  ],
+  "rls": {
+    "read": {},
+    "write": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

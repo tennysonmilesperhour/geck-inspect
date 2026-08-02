@@ -1,0 +1,73 @@
+{
+  "name": "Egg",
+  "type": "object",
+  "properties": {
+    "breeding_plan_id": {
+      "type": "string",
+      "description": "The ID of the parent breeding plan"
+    },
+    "lay_date": {
+      "type": "string",
+      "format": "date",
+      "description": "The date the egg was laid"
+    },
+    "hatch_date_expected": {
+      "type": "string",
+      "format": "date",
+      "description": "The expected hatch date"
+    },
+    "hatch_date_actual": {
+      "type": "string",
+      "format": "date",
+      "description": "The actual date the egg hatched"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "Incubating",
+        "Hatched",
+        "Slug",
+        "Infertile",
+        "Stillbirth"
+      ],
+      "default": "Incubating",
+      "description": "The current status of the egg"
+    },
+    "gecko_id": {
+      "type": "string",
+      "description": "The ID of the resulting gecko after hatching"
+    },
+    "archived": {
+      "type": "boolean",
+      "default": false,
+      "description": "Whether this egg has been archived"
+    },
+    "archived_date": {
+      "type": "string",
+      "format": "date",
+      "description": "The date this egg was archived"
+    }
+  },
+  "required": [
+    "breeding_plan_id",
+    "lay_date",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "created_by": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "write": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}

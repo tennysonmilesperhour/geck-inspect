@@ -1,0 +1,32 @@
+{
+  "name": "GeckoLike",
+  "type": "object",
+  "properties": {
+    "gecko_image_id": {
+      "type": "string",
+      "description": "The ID of the GeckoImage that was liked"
+    },
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user who liked the image"
+    },
+    "owner_email": {
+      "type": "string",
+      "description": "Email of the image owner (for notifications)"
+    }
+  },
+  "required": [
+    "gecko_image_id",
+    "user_email",
+    "owner_email"
+  ],
+  "rls": {
+    "read": {},
+    "write": {
+      "created_by": "{{user.email}}"
+    },
+    "delete": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}

@@ -1,0 +1,63 @@
+{
+  "name": "ExpertVerificationRequest",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "Email of the user requesting expert verification"
+    },
+    "user_name": {
+      "type": "string",
+      "description": "Name of the user making the request"
+    },
+    "experience_description": {
+      "type": "string",
+      "description": "User's description of their experience and expertise"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending",
+        "approved",
+        "denied"
+      ],
+      "default": "pending",
+      "description": "Current status of the request"
+    },
+    "admin_response": {
+      "type": "string",
+      "description": "Optional response from admin when approving/denying"
+    },
+    "reviewed_by": {
+      "type": "string",
+      "description": "Email of the admin who reviewed the request"
+    }
+  },
+  "required": [
+    "user_email",
+    "user_name",
+    "experience_description"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_email": "{{user.email}}"
+        },
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        }
+      ]
+    },
+    "write": {
+      "user_email": "{{user.email}}"
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

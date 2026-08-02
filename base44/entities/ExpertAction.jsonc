@@ -1,0 +1,46 @@
+{
+  "name": "ExpertAction",
+  "type": "object",
+  "properties": {
+    "expert_email": {
+      "type": "string",
+      "description": "Email of the expert who performed the action."
+    },
+    "action_type": {
+      "type": "string",
+      "enum": [
+        "image_verified",
+        "vote_verified"
+      ],
+      "description": "The type of action performed by the expert."
+    },
+    "target_id": {
+      "type": "string",
+      "description": "The ID of the GeckoImage or ClassificationVote that was actioned."
+    }
+  },
+  "required": [
+    "expert_email",
+    "action_type",
+    "target_id"
+  ],
+  "rls": {
+    "read": {
+      "$or": [
+        {
+          "user_condition": {
+            "role": "admin"
+          }
+        },
+        {
+          "expert_email": "{{user.email}}"
+        }
+      ]
+    },
+    "write": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

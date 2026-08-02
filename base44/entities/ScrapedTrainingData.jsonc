@@ -1,0 +1,132 @@
+{
+  "name": "ScrapedTrainingData",
+  "type": "object",
+  "properties": {
+    "image_url": {
+      "type": "string",
+      "description": "URL of the scraped gecko image"
+    },
+    "primary_morph": {
+      "type": "string",
+      "enum": [
+        "flame",
+        "harlequin",
+        "extreme_harlequin",
+        "pinstripe",
+        "phantom_pinstripe",
+        "tiger",
+        "brindle",
+        "extreme_brindle",
+        "dalmatian",
+        "super_dalmatian",
+        "patternless",
+        "bicolor",
+        "tricolor",
+        "lilly_white",
+        "axanthic",
+        "cappuccino",
+        "frappuccino",
+        "hypo",
+        "translucent",
+        "moonglow",
+        "red_base",
+        "yellow_base",
+        "orange_base",
+        "olive",
+        "chocolate",
+        "lavender",
+        "red_harlequin",
+        "yellow_harlequin",
+        "cream_harlequin",
+        "buckskin",
+        "white_wall",
+        "empty_back",
+        "soft_scale",
+        "super_soft_scale"
+      ],
+      "description": "Primary morph classification from source"
+    },
+    "secondary_traits": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "Additional traits identified from source"
+    },
+    "base_color": {
+      "type": "string",
+      "description": "Base color classification from source"
+    },
+    "source_website": {
+      "type": "string",
+      "description": "Website or source where image was found"
+    },
+    "confidence_score": {
+      "type": "number",
+      "minimum": 1,
+      "maximum": 10,
+      "description": "Confidence in the classification accuracy"
+    },
+    "description": {
+      "type": "string",
+      "description": "Original description from the source"
+    },
+    "status": {
+      "type": "string",
+      "enum": [
+        "pending_review",
+        "approved",
+        "rejected"
+      ],
+      "default": "pending_review",
+      "description": "Admin review status"
+    },
+    "admin_notes": {
+      "type": "string",
+      "description": "Notes from admin during review"
+    },
+    "scraped_sources": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "List of sources that were scraped"
+    },
+    "approved_by": {
+      "type": "string",
+      "description": "Email of admin who approved/rejected"
+    },
+    "gecko_image_id": {
+      "type": "string",
+      "description": "ID of the GeckoImage record created after approval"
+    }
+  },
+  "required": [
+    "image_url",
+    "primary_morph",
+    "source_website",
+    "status"
+  ],
+  "rls": {
+    "read": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "write": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "update": {
+      "user_condition": {
+        "role": "admin"
+      }
+    },
+    "delete": {
+      "user_condition": {
+        "role": "admin"
+      }
+    }
+  }
+}

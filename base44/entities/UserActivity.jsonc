@@ -1,0 +1,41 @@
+{
+  "name": "UserActivity",
+  "type": "object",
+  "properties": {
+    "user_email": {
+      "type": "string",
+      "description": "The email of the user performing the action."
+    },
+    "activity_type": {
+      "type": "string",
+      "enum": [
+        "new_gecko",
+        "new_post",
+        "new_comment",
+        "ai_training",
+        "ai_visualizer_use",
+        "like_gecko"
+      ],
+      "description": "The type of community activity."
+    },
+    "points": {
+      "type": "number",
+      "description": "The number of points awarded for this activity."
+    },
+    "related_entity_id": {
+      "type": "string",
+      "description": "The ID of the entity related to this activity (e.g., gecko ID, post ID)."
+    }
+  },
+  "required": [
+    "user_email",
+    "activity_type",
+    "points"
+  ],
+  "rls": {
+    "read": {},
+    "write": {
+      "created_by": "{{user.email}}"
+    }
+  }
+}
