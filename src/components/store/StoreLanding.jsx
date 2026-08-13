@@ -52,7 +52,7 @@ export default function StoreLanding() {
           .eq('status', 'active')
           .eq('is_featured', true)
           .order('updated_date', { ascending: false })
-          .limit(8);
+          .limit(24);
         if (!cancelled) setFeatured(data || []);
       } catch (e) {
         console.warn('store landing featured load failed', e);
@@ -125,9 +125,9 @@ export default function StoreLanding() {
 
       <section className="mb-10">
         <div className="flex items-center justify-between mb-3">
-          <h2 className="text-lg font-bold text-slate-100">Featured</h2>
-          <Link to="/Store/c/apparel" className="text-xs text-emerald-300 hover:text-emerald-200">
-            See all →
+          <h2 className="text-lg font-bold text-slate-100">Keeper essentials</h2>
+          <Link to="/Store/c/diet" className="text-xs text-emerald-300 hover:text-emerald-200">
+            Start with food →
           </Link>
         </div>
         {loading ? (
@@ -139,7 +139,7 @@ export default function StoreLanding() {
             We're seeding the catalog right now, check back in a day or two.
           </div>
         ) : (
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
             {featured.map((p) => (
               <ProductCard key={p.id} product={p} />
             ))}

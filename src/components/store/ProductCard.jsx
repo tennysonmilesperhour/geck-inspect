@@ -18,8 +18,8 @@ export default function ProductCard({ product, vendorName }) {
     null;
   const cartEligible = isCartEligible(product.fulfillment_mode);
   const badge = fulfillmentBadge(product.fulfillment_mode, vendorName);
-
   const showAffiliate = product.fulfillment_mode === 'affiliate_redirect';
+  const hasDisplayPrice = product.our_price_cents != null;
 
   return (
     <div className="group flex flex-col rounded-lg border border-slate-800 bg-slate-900/40 hover:border-slate-700 transition-colors overflow-hidden">
@@ -56,9 +56,9 @@ export default function ProductCard({ product, vendorName }) {
         )}
         <div className="flex items-center justify-between gap-2 pt-1">
           <div className="flex items-baseline gap-1.5">
-            {cartEligible ? (
+            {cartEligible || hasDisplayPrice ? (
               <span className="text-base font-semibold text-emerald-200">
-                {formatCents(product.our_price_cents)}
+                {showAffiliate ? `Est. ${formatCents(product.our_price_cents)}` : formatCents(product.our_price_cents)}
               </span>
             ) : (
               <span className="text-xs text-slate-400">See vendor for price</span>
