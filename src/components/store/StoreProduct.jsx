@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import StoreLayout from '@/components/store/StoreLayout';
 import AddToCartButton from '@/components/store/AddToCartButton';
+import AmazonProductWidget from '@/components/store/AmazonProductWidget';
 import { FtcDisclosureBlock } from '@/components/store/FtcDisclosure';
 import Seo from '@/components/seo/Seo';
 import { SITE_URL } from '@/lib/organization-schema';
@@ -201,6 +202,8 @@ export default function StoreProduct() {
           <AddToCartButton product={product} />
 
           {isAffiliate && <FtcDisclosureBlock />}
+
+          {isAffiliate && <AmazonProductWidget product={product} />}
 
           {product.long_description_md && (
             <div className="prose prose-invert prose-sm max-w-none pt-3 text-slate-300">
