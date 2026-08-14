@@ -152,6 +152,11 @@ export default function StoreProduct() {
               </div>
             )}
           </div>
+          {main?.kind === 'representative' && (
+            <p className="mt-2 text-xs text-slate-500">
+              Representative product image. Packaging and exact appearance may vary.
+            </p>
+          )}
           {images.length > 1 && (
             <div className="mt-3 grid grid-cols-5 gap-2">
               {images.slice(0, 5).map((img, i) => (
