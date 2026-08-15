@@ -154,7 +154,8 @@ export default function StoreProduct() {
           </div>
           {main?.kind === 'representative' && (
             <p className="mt-2 text-xs text-slate-500">
-              Representative product image. Packaging and exact appearance may vary.
+              Temporary AI-generated image. Use the Amazon link to see the real
+              listing photos, packaging, price, and availability.
             </p>
           )}
           {images.length > 1 && (

@@ -4,6 +4,7 @@ import { Gift, Shirt, Sparkles, Wrench } from 'lucide-react';
 import StoreLayout from '@/components/store/StoreLayout';
 import ProductCard from '@/components/store/ProductCard';
 import FoodRunoutWidget from '@/components/store/FoodRunoutWidget';
+import { FtcDisclosureBlock } from '@/components/store/FtcDisclosure';
 import Seo from '@/components/seo/Seo';
 import { SITE_URL } from '@/lib/organization-schema';
 import { supabase } from '@/lib/supabaseClient';
@@ -104,6 +105,10 @@ export default function StoreLanding() {
           </Link>
         </div>
       </section>
+
+      <div className="mb-6">
+        <FtcDisclosureBlock />
+      </div>
 
       <div className="mb-6">
         <FoodRunoutWidget />

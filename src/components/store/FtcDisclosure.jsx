@@ -22,12 +22,20 @@ export function FtcDisclosureBlock() {
   return (
     <div className="flex items-start gap-2 rounded-md border border-slate-800 bg-slate-900/40 px-3 py-2 text-xs text-slate-400">
       <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-slate-500" />
-      <p>
-        Some products on this page are sold by partners we receive a commission
-        from. That doesn't change the price you pay or whether we recommend
-        something, every item is here because it's a real pick by the breeders
-        running this site.
-      </p>
+      <div className="space-y-1.5">
+        <p>
+          Some products on this page are sold by partners we receive a commission
+          from. That doesn't change the price you pay or whether we recommend
+          something, every item is here because it's a real pick by the breeders
+          running this site.
+        </p>
+        <p>
+          <span className="font-medium text-slate-300">Temporary image note:</span>{' '}
+          Some product images are AI-generated placeholders. Amazon links open
+          the real listing, where you can see the current product photos,
+          packaging, price, and availability.
+        </p>
+      </div>
     </div>
   );
 }
