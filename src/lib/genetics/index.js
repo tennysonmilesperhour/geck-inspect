@@ -23,6 +23,7 @@ import {
   COMBO_MORPHS,
   RISK_PAIRINGS,
   WILD_TYPE,
+  LOCI,
 } from 'crested-gecko-app';
 
 export {
@@ -37,6 +38,7 @@ export {
   COMBO_MORPHS,
   RISK_PAIRINGS,
   WILD_TYPE,
+  LOCI,
 };
 
 // ---------- display sanitation ----------------------------------------

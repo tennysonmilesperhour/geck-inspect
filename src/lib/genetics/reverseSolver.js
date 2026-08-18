@@ -412,3 +412,129 @@ export function scanCollection(targetId, geckos, { limit = 10, maxPairs = 2500 }
   results.sort((a, b) => b.p - a.p || a.lethalP + a.compromisedP - (b.lethalP + b.compromisedP));
   return { results: results.slice(0, limit), truncated };
 }
+
+// ---------- two-generation planning ------------------------------------
+
+/** Human label for a child's allele pair at a locus. */
+function holdbackPairLabel(locus, pair) {
+  if (locus === COMPLEX_LOCUS) {
+    const want = [...pair].sort().join('|');
+    const opt = Object.values(COMPLEX_OPTIONS_BY_VALUE).find(
+      (o) => [...o.pair].sort().join('|') === want,
+    );
+    return opt && opt.value !== 'none' ? opt.label.replace(/ \(.*\)$/, '') : null;
+  }
+  const trait = SIMPLE_BY_LOCUS[locus];
+  if (!trait) return null;
+  const copies = pair.filter((a) => a === trait.id).length;
+  if (copies === 0) return null;
+  if (trait.dominance === 'recessive') return copies === 2 ? `visual ${trait.label}` : `het ${trait.label}`;
+  if (copies === 2) return trait.super_label || `Super ${trait.label}`;
+  return trait.label;
+}
+
+/**
+ * Two-generation routes from the user's own collection: pair A x B,
+ * hold back the right offspring, pair it with C (any collection
+ * animal, including a back-cross to A or B, which is flagged). This
+ * is the "you cannot get there in one cross from what you own; here
+ * is the route" feature (Kippenjungle's continue-with move, applied
+ * to a real collection).
+ *
+ * Exact math: P1 = per-egg chance A x B produces the needed holdback
+ * genotype; P2 = per-egg chance holdback x C hits the target. Routes
+ * rank by P1 * P2 (the chance any given gen-1 egg ultimately anchors
+ * a target egg), which favors routes whose holdback is easy to hit.
+ */
+export function scanCollectionTwoGen(targetId, geckos, {
+  limit = 6,
+  maxPairs = 400,
+  maxHoldbacks = 48,
+  minStepP = 0.05,
+} = {}) {
+  const target = REVERSE_TARGETS_BY_ID[targetId];
+  if (!target) return { results: [], truncated: false };
+  const loci = Object.keys(target.conditions);
+
+  const pairFor = (gecko, locus) => {
+    const options = gecko.spec?.loci?.[locus];
+    return options?.[0]?.pair || [WILD_TYPE, WILD_TYPE];
+  };
+
+  const sires = geckos.filter((g) => g.sex === 'Male' || g.sex === 'Unsexed');
+  const dams = geckos.filter((g) => g.sex === 'Female' || g.sex === 'Unsexed');
+
+  const results = [];
+  let pairs = 0;
+  let truncated = false;
+
+  for (const a of sires) {
+    for (const b of dams) {
+      if (a.id === b.id) continue;
+      if (++pairs > maxPairs) { truncated = true; break; }
+
+      // Distribution of gen-1 offspring at each target locus.
+      const perLocus = loci.map((locus) => ({
+        locus,
+        dist: childPairDist(pairFor(a, locus), pairFor(b, locus)),
+      }));
+
+      // Enumerate holdback genotypes (cartesian across target loci).
+      let holdbacks = [{ genotype: {}, p: 1 }];
+      for (const { locus, dist } of perLocus) {
+        const next = [];
+        for (const h of holdbacks) {
+          for (const d of dist) {
+            next.push({ genotype: { ...h.genotype, [locus]: d.pair }, p: h.p * d.p });
+          }
+        }
+        holdbacks = next.sort((x, y) => y.p - x.p).slice(0, maxHoldbacks);
+      }
+
+      for (const h of holdbacks) {
+        if (h.p < minStepP) continue;
+        // A dead holdback cannot breed.
+        if (h.genotype.L?.[0] === 'lilly_white' && h.genotype.L?.[1] === 'lilly_white') continue;
+        for (const c of geckos) {
+          if (c.id === a.id && c.id === b.id) continue;
+          let p2 = 1;
+          for (const locus of loci) {
+            p2 *= pSatisfies(
+              h.genotype[locus] || [WILD_TYPE, WILD_TYPE],
+              pairFor(c, locus),
+              target.conditions[locus],
+            );
+            if (p2 === 0) break;
+          }
+          if (p2 < minStepP) continue;
+          const holdbackLabel = loci
+            .map((locus) => holdbackPairLabel(locus, h.genotype[locus] || [WILD_TYPE, WILD_TYPE]))
+            .filter(Boolean)
+            .join(', ') || 'wild-type';
+          results.push({
+            gen1: { sire: a, dam: b, p: h.p },
+            holdbackLabel,
+            gen2: { mate: c, p: p2 },
+            backcross: c.id === a.id || c.id === b.id,
+            score: h.p * p2,
+          });
+        }
+      }
+    }
+    if (truncated) break;
+  }
+
+  // Keep the best route per (pair, mate) so the list reads as distinct
+  // plans rather than one plan's holdback variants.
+  const best = new Map();
+  for (const r of results) {
+    const key = `${r.gen1.sire.id}|${r.gen1.dam.id}|${r.gen2.mate.id}`;
+    const existing = best.get(key);
+    if (!existing || r.score > existing.score) best.set(key, r);
+  }
+
+  return {
+    results: [...best.values()].sort((x, y) => y.score - x.score).slice(0, limit),
+    truncated,
+  };
+}

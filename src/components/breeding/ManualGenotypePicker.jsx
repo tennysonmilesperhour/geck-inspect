@@ -11,7 +11,7 @@ import { AlertTriangle } from 'lucide-react';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { displayText } from '@/lib/genetics';
 import {
-  SIMPLE_TRAITS,
+  getSimpleTraits,
   COMPLEX_ENTRY,
   COMPLEX_ID,
   COMPLEX_OPTIONS,
@@ -150,8 +150,9 @@ export default function ManualGenotypePicker({ value, onChange, accentClass = 'b
     onChange?.(next);
   };
 
-  const proven = SIMPLE_TRAITS.filter((t) => t.confidence === 'proven');
-  const emerging = SIMPLE_TRAITS.filter((t) => t.confidence !== 'proven');
+  const simpleTraits = getSimpleTraits();
+  const proven = simpleTraits.filter((t) => t.confidence === 'proven');
+  const emerging = simpleTraits.filter((t) => t.confidence !== 'proven');
 
   const complexValue = value?.[COMPLEX_ID] || 'none';
   const complexOption = COMPLEX_OPTIONS_BY_VALUE[complexValue];

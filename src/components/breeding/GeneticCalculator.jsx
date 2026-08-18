@@ -4,7 +4,14 @@ import { Dna, AlertTriangle, ChevronDown, ChevronRight, Shuffle, ExternalLink, I
 import { Badge } from '@/components/ui/badge';
 import { getTrait, getComboMorph, displayText } from '@/lib/genetics';
 import { predictWeighted, tagsToSpec } from '@/lib/genetics/predictWeighted';
-import { MORPH_GUIDE_SLUGS, COMPLEX_LOCUS } from '@/lib/genetics/calculatorCatalog';
+import {
+  MORPH_GUIDE_SLUGS,
+  COMPLEX_LOCUS,
+  genotypeToState,
+  encodeParentState,
+  stateHasSelection,
+} from '@/lib/genetics/calculatorCatalog';
+import OutcomeLogPanel from './OutcomeLogPanel';
 import { downloadClutchCard } from '@/lib/genetics/clutchCard';
 import { expectedSeasonValue, priceForOutcome } from '@/lib/genetics/outcomeValue';
 import HatchClutch from './HatchClutch';
@@ -409,7 +416,7 @@ export default function GeneticCalculator({ sire, dam }) {
                     ≈{roundExpected(o.probability * eggs)} of {eggs} eggs
                   </span>
                 </div>
-                {(links.length > 0 || priceForOutcome(o)) && (
+                {(links.length > 0 || priceForOutcome(o) || o.health_risk !== 'lethal') && (
                   <div className="mt-1 flex flex-wrap items-center gap-2">
                     {priceForOutcome(o) && (
                       <span className="text-[11px] text-slate-500 font-mono">
@@ -427,6 +434,23 @@ export default function GeneticCalculator({ sire, dam }) {
                         <ExternalLink className="w-3 h-3" />
                       </Link>
                     ))}
+                    {(() => {
+                      // Multi-generation planning: any viable predicted
+                      // baby can become the next cross's Parent A.
+                      if (o.health_risk === 'lethal') return null;
+                      const childState = genotypeToState(o.genotype);
+                      if (!childState || !stateHasSelection(childState)) return null;
+                      return (
+                        <Link
+                          to={`/calculator?sire=${encodeURIComponent(encodeParentState(childState))}`}
+                          onClick={(e) => e.stopPropagation()}
+                          className="text-xs text-emerald-300 hover:text-emerald-200 underline ml-auto"
+                          title="Plan the next generation with this offspring as a parent"
+                        >
+                          Breed this baby next
+                        </Link>
+                      );
+                    })()}
                   </div>
                 )}
               </button>
@@ -512,6 +536,21 @@ export default function GeneticCalculator({ sire, dam }) {
 
       {/* Polygenic looks: expression bands, deliberately not odds */}
       <PolygenicPanel sireTags={sireTraits} damTags={damTraits} />
+
+      {/* Outcomes flywheel: collection pairings can log real clutches */}
+      {sire?.id && dam?.id &&
+        !String(sire.id).startsWith('manual_') &&
+        !String(dam.id).startsWith('manual_') && (
+        <OutcomeLogPanel
+          sire={sire}
+          dam={dam}
+          outcomes={outcomes.map((o) => ({
+            label: outcomeLabel(o),
+            probability: o.probability,
+            health_risk: o.health_risk,
+          }))}
+        />
+      )}
 
       {/* Per-gene Punnett math, on demand */}
       <div>

@@ -17,6 +17,7 @@ import {
 } from '@/lib/genetics/calculatorCatalog';
 import { parsePairing } from '@/lib/genetics/pairingParser';
 import { specWithInferredHets } from '@/lib/genetics/collectionSpec';
+import { loadTraitOverrides } from '@/lib/genetics/traitOverrides';
 import { Gecko } from '@/entities/all';
 import Seo from '@/components/seo/Seo';
 import { createPageUrl } from '@/utils';
@@ -115,6 +116,16 @@ export default function GeneticCalculatorTool({
     const [mode, setMode] = useState('manual');
 
     const hasUrlSeed = stateHasSelection(urlSeeded.sire) || stateHasSelection(urlSeeded.dam);
+
+    // Live trait store: merge genetics_trait_overrides into the catalog
+    // so a newly proven gene shows up without a deploy. Re-render once
+    // if anything applied; failures fall back to the static catalog.
+    const [, setOverrideTick] = useState(0);
+    useEffect(() => {
+        loadTraitOverrides().then((applied) => {
+            if (applied.length > 0) setOverrideTick((t) => t + 1);
+        });
+    }, []);
 
     // Keep the URL in sync with the manual pairing so every calculation
     // is a shareable permalink. replace:true so fiddling with the picker
@@ -385,15 +396,22 @@ export default function GeneticCalculatorTool({
                           )}
                         </form>
 
-                        {/* Reverse-mode cross-link */}
-                        <div className="mb-4 rounded-lg border border-purple-500/20 bg-purple-500/5 px-4 py-3 flex items-center justify-between gap-3">
+                        {/* Reverse-mode and learn-mode cross-links */}
+                        <div className="mb-4 rounded-lg border border-purple-500/20 bg-purple-500/5 px-4 py-3 flex flex-wrap items-center justify-between gap-3">
                           <p className="text-sm text-slate-300">
-                            Have a dream gecko in mind? Work backwards from the target instead.
+                            Have a dream gecko in mind? Work backwards from the target. New to
+                            genetics? Learn by playing.
                           </p>
-                          <Link to="/calculator/reverse" className="text-sm text-purple-300 hover:text-purple-200 underline whitespace-nowrap">
-                            Reverse calculator
-                            <ArrowRight className="w-3.5 h-3.5 inline ml-1" />
-                          </Link>
+                          <span className="flex items-center gap-4 whitespace-nowrap">
+                            <Link to="/calculator/reverse" className="text-sm text-purple-300 hover:text-purple-200 underline">
+                              Reverse calculator
+                              <ArrowRight className="w-3.5 h-3.5 inline ml-1" />
+                            </Link>
+                            <Link to="/calculator/learn" className="text-sm text-purple-300 hover:text-purple-200 underline">
+                              Clutch Lab
+                              <ArrowRight className="w-3.5 h-3.5 inline ml-1" />
+                            </Link>
+                          </span>
                         </div>
 
                         {mode === 'manual' ? (

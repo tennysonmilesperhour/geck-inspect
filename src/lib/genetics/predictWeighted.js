@@ -17,9 +17,64 @@
  * wants. Example: 66% poss het Axanthic x visual Axanthic gives
  * 2/3 x 1/2 = 33.3% visual per egg.
  */
-import { predict, tagToGenotype, WILD_TYPE } from '@/lib/genetics';
+import { predict, tagToGenotype, WILD_TYPE, LOCI } from '@/lib/genetics';
+import { getSimpleTraits } from './calculatorCatalog';
 
 const MAX_SCENARIOS = 256;
+
+/**
+ * Loci the vendored engine does not know about (traits added at
+ * runtime through the genetics_trait_overrides store) are computed
+ * here with the same exact gamete math and folded into the merged
+ * result, so a newly proven gene works the day its row is added.
+ */
+function splitExtraLoci(spec) {
+  const engineLoci = {};
+  const extraLoci = {};
+  for (const [locus, options] of Object.entries(spec?.loci || {})) {
+    if (LOCI[locus]) engineLoci[locus] = options;
+    else extraLoci[locus] = options;
+  }
+  return { engineSpec: { loci: engineLoci }, extraLoci };
+}
+
+function extraTraitFor(locus) {
+  return getSimpleTraits().find((t) => t.locus === locus) || null;
+}
+
+/** Phenotype label for an extra-trait allele pair. */
+function extraPairLabel(trait, pair) {
+  const copies = pair.filter((a) => a === trait.id).length;
+  if (copies === 0) return 'Wild-type';
+  if (trait.dominance === 'recessive') {
+    return copies === 2 ? trait.label : `Het ${trait.label}`;
+  }
+  if (copies === 2) return trait.super_label || `Super ${trait.label}`;
+  return trait.label;
+}
+
+/**
+ * Child-pair distribution for one extra locus, marginalized over both
+ * parents' weighted options.
+ */
+function extraLocusOutcomes(trait, sireOptions, damOptions) {
+  const dist = new Map();
+  for (const so of sireOptions) {
+    for (const dop of damOptions) {
+      for (const a of so.pair) {
+        for (const b of dop.pair) {
+          const pair = [a, b].sort();
+          const key = pair.join('|');
+          const p = 0.25 * so.weight * dop.weight;
+          const entry = dist.get(key);
+          if (entry) entry.probability += p;
+          else dist.set(key, { genotype: pair, probability: p, phenotype_label: extraPairLabel(trait, pair) });
+        }
+      }
+    }
+  }
+  return [...dist.values()].sort((a, b) => b.probability - a.probability);
+}
 
 /** Expand { loci: { locus: [{pair, weight}] } } into weighted genotypes. */
 export function expandScenarios(spec) {
@@ -80,12 +135,16 @@ const pairKey = (pair) => `${pair[0]}|${pair[1]}`;
  * }}
  */
 export function predictWeighted(sireSpec, damSpec) {
-  const sireScenarios = expandScenarios(sireSpec);
-  const damScenarios = expandScenarios(damSpec);
+  const { engineSpec: sireEngine, extraLoci: sireExtra } = splitExtraLoci(sireSpec);
+  const { engineSpec: damEngine, extraLoci: damExtra } = splitExtraLoci(damSpec);
+  const sireScenarios = expandScenarios(sireEngine);
+  const damScenarios = expandScenarios(damEngine);
   if (sireScenarios.length * damScenarios.length > MAX_SCENARIOS) {
     throw new Error('Too many genotype scenarios to compute.');
   }
-  const uncertain = sireScenarios.length > 1 || damScenarios.length > 1;
+  const extraUncertain = [...Object.values(sireExtra), ...Object.values(damExtra)]
+    .some((options) => options.length > 1);
+  const uncertain = sireScenarios.length > 1 || damScenarios.length > 1 || extraUncertain;
 
   const phenoMap = new Map();
   const locusMap = new Map();
@@ -148,9 +207,11 @@ export function predictWeighted(sireSpec, damSpec) {
     }
   }
 
-  if (totalWeight <= 0) {
+  const hasExtras = Object.keys(sireExtra).length > 0 || Object.keys(damExtra).length > 0;
+  if (totalWeight <= 0 && !hasExtras) {
     return { offspring_phenotypes: [], locus_predictions: [], warnings: [], uncertain: false };
   }
+  if (totalWeight <= 0) totalWeight = 1;
 
   // Top up loci that were missing from some scenarios with wild-type
   // outcomes so every locus's outcome probabilities sum to 1.
@@ -164,7 +225,7 @@ export function predictWeighted(sireSpec, damSpec) {
     }
   }
 
-  const offspring_phenotypes = [...phenoMap.values()]
+  let offspring_phenotypes = [...phenoMap.values()]
     .map(({ _weight, ...rest }) => ({ ...rest, probability: rest.probability / totalWeight }))
     .sort((a, b) => b.probability - a.probability);
 
@@ -184,6 +245,72 @@ export function predictWeighted(sireSpec, damSpec) {
     // the hazard as certain.
     conditional: _weight < totalWeight - 1e-9,
   }));
+
+  // Fold in override-added loci the engine does not know about.
+  if (hasExtras) {
+    if (offspring_phenotypes.length === 0) {
+      offspring_phenotypes = [{
+        phenotype_description: 'Wild-type',
+        probability: 1,
+        matching_combo_morphs: [],
+        health_risk: undefined,
+        genotype: {},
+      }];
+    }
+    const allExtraLoci = new Set([...Object.keys(sireExtra), ...Object.keys(damExtra)]);
+    const wildOption = [{ pair: [WILD_TYPE, WILD_TYPE], weight: 1 }];
+    for (const locus of allExtraLoci) {
+      const trait = extraTraitFor(locus);
+      if (!trait) continue; // no catalog definition: skip rather than guess
+      const outcomes = extraLocusOutcomes(
+        trait,
+        sireExtra[locus] || wildOption,
+        damExtra[locus] || wildOption,
+      );
+      locus_predictions.push({ locus, trait: trait.id, outcomes });
+
+      const crossed = new Map();
+      for (const op of offspring_phenotypes) {
+        for (const o of outcomes) {
+          const isWild = o.phenotype_label === 'Wild-type';
+          const isLethal = trait.super_lethal &&
+            o.genotype[0] === trait.id && o.genotype[1] === trait.id;
+          const description = isWild
+            ? op.phenotype_description
+            : op.phenotype_description === 'Wild-type'
+              ? o.phenotype_label
+              : `${op.phenotype_description}, ${o.phenotype_label}`;
+          const entry = crossed.get(description);
+          const probability = op.probability * o.probability;
+          if (entry) entry.probability += probability;
+          else {
+            crossed.set(description, {
+              ...op,
+              phenotype_description: description,
+              probability,
+              health_risk: isLethal ? 'lethal' : op.health_risk,
+              genotype: { ...op.genotype, [locus]: [...o.genotype] },
+            });
+          }
+        }
+      }
+      offspring_phenotypes = [...crossed.values()].sort((a, b) => b.probability - a.probability);
+
+      if (trait.super_lethal) {
+        const lethalP = outcomes
+          .filter((o) => o.genotype[0] === trait.id && o.genotype[1] === trait.id)
+          .reduce((s, o) => s + o.probability, 0);
+        if (lethalP > 0) {
+          warnings.push({
+            severity: 'critical',
+            code: `override_lethal_${trait.id}`,
+            message: `${trait.super_label || `Super ${trait.label}`} is flagged lethal: ${Math.round(lethalP * 100)}% of eggs from this pairing are expected non-viable.`,
+            conditional: false,
+          });
+        }
+      }
+    }
+  }
 
   return { offspring_phenotypes, locus_predictions, warnings, uncertain };
 }
