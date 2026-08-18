@@ -1,4 +1,5 @@
 import posthog from 'posthog-js';
+import { trackEvent } from '@/lib/telemetry';
 
 /**
  * PostHog client wrapper.
@@ -93,8 +94,18 @@ export function capturePageview(path) {
  *
  *   captureEvent('gecko_added', { status: 'Ready to Breed' });
  *   captureEvent('giveaway_created', { max_winners: 1 });
+ *
+ * Every event is also mirrored into the first-party `user_events` table
+ * (see src/lib/telemetry.js) so the admin Product Analytics tab can chart
+ * funnels and feature usage without leaving the app. The mirror runs even
+ * when PostHog isn't configured, telemetry must not depend on a third
+ * party being wired up. Pageviews are NOT mirrored here: PostHogPageTracker
+ * already records a first-party page_view per navigation, so mirroring
+ * $pageview would double-count.
  */
 export function captureEvent(name, properties = {}) {
+  // Fire-and-forget; trackEvent swallows its own errors.
+  trackEvent(name, properties);
   if (!initialized) return;
   try {
     posthog.capture(name, properties);

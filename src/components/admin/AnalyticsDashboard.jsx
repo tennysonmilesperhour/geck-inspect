@@ -1074,7 +1074,7 @@ export default function AnalyticsDashboard() {
                           if (f.pct === null) {
                             return (
                               <td key={f.week} className="py-2 px-3 text-center text-slate-600">
-                                —
+                                ·
                               </td>
                             );
                           }

@@ -25,7 +25,12 @@ import {
   Trash2,
 } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from '@hello-pangea/dnd';
-import { SECTIONS, SECTION_FOR_PAGE } from '@/lib/navItems';
+import {
+  SECTIONS,
+  SECTION_FOR_PAGE,
+  FALLBACK_NAV_ITEMS,
+  flattenNavItems,
+} from '@/lib/navItems';
 import { dataCache } from '@/lib/layoutCache';
 
 // Tell the rest of the app (sidebar in Layout.jsx, route gating in
@@ -75,12 +80,52 @@ function sectionOf(page) {
   return page?.section || SECTION_FOR_PAGE[page?.page_name] || ACTIVE_SECTIONS[0];
 }
 
+// Writes order_position for every REAL row in the list. Synthetic rows
+// (sidebar fallbacks with no page_config row yet) are skipped, they keep
+// their code-default order until the admin touches them directly, but
+// their slot in the list still counts so real rows keep relative order.
 async function persistOrder(items) {
   await Promise.all(
-    items.map((item, index) =>
-      PageConfig.update(item.id, { order_position: index })
-    )
+    items
+      .map((item, index) =>
+        item._synthetic
+          ? null
+          : PageConfig.update(item.id, { order_position: index })
+      )
+      .filter(Boolean)
   );
+}
+
+// A page that exists in the sidebar's fallback registry but has never
+// been written to page_config. Shown alongside real rows so every
+// sidebar entry can be toggled; the first write materializes a real row.
+function syntheticRowFor(fallback) {
+  return {
+    id: `fallback:${fallback.page_name}`,
+    page_name: fallback.page_name,
+    display_name: fallback.display_name,
+    icon: fallback.icon,
+    category: fallback.category,
+    requires_auth: fallback.requires_auth,
+    is_enabled: true,
+    order_position: fallback.order,
+    section: SECTION_FOR_PAGE[fallback.page_name] || null,
+    _synthetic: true,
+  };
+}
+
+// Strip UI-only fields before inserting a synthetic row into the DB.
+function seedFieldsOf(page) {
+  return {
+    page_name: page.page_name,
+    display_name: page.display_name,
+    icon: page.icon,
+    category: page.category,
+    requires_auth: page.requires_auth,
+    is_enabled: page.is_enabled,
+    order_position: page.order_position,
+    section: page.section,
+  };
 }
 
 // Pick the "best" row when the same page_name has multiple entries:
@@ -160,6 +205,18 @@ export default function PageManagement() {
     [pages]
   );
 
+  // Sidebar pages that exist only in the code fallback registry
+  // (FALLBACK_NAV_ITEMS) with no page_config row. Without these the
+  // sidebar shows entries the admin can't toggle. Rendered as synthetic
+  // rows; the first toggle/move creates the real DB row.
+  const allRows = useMemo(() => {
+    const dbNames = new Set(pages.map((p) => p.page_name).filter(Boolean));
+    const missing = flattenNavItems(FALLBACK_NAV_ITEMS)
+      .filter((f) => !dbNames.has(f.page_name))
+      .map(syntheticRowFor);
+    return [...canonical, ...missing];
+  }, [pages, canonical]);
+
   // Group + sort. Disabled pages live in the "hidden" bucket regardless
   // of their stored section so the admin can see at a glance what's off.
   const grouped = useMemo(() => {
@@ -172,7 +229,7 @@ export default function PageManagement() {
         p.page_name?.toLowerCase().includes(q)
       );
     };
-    for (const p of canonical.filter(filterFn)) {
+    for (const p of allRows.filter(filterFn)) {
       if (p.is_enabled === false) {
         buckets.hidden.push(p);
       } else {
@@ -187,7 +244,7 @@ export default function PageManagement() {
       );
     }
     return buckets;
-  }, [canonical, search]);
+  }, [allRows, search]);
 
   // All DB ids that share a page_name with the given row (including the
   // row itself). Writes are fanned out to every matching row so state
@@ -210,6 +267,28 @@ export default function PageManagement() {
   };
 
   const handleToggleEnabled = async (page, newValue) => {
+    // Synthetic rows have no DB record yet: the first toggle creates one
+    // with the fallback's defaults plus the new enabled state. The row
+    // then leaves the synthetic list automatically because its page_name
+    // now exists in `pages`.
+    if (page._synthetic) {
+      try {
+        const created = await PageConfig.create({
+          ...seedFieldsOf(page),
+          is_enabled: newValue,
+        });
+        setPages((prev) => [...prev, created]);
+        flashSaved();
+        toast({
+          title: newValue ? 'Page enabled' : 'Page disabled',
+          description: `${page.display_name || page.page_name} is now ${newValue ? 'visible' : 'hidden'} in the sidebar.`,
+        });
+      } catch (err) {
+        console.error('Toggle failed:', err);
+        toast({ title: 'Error', description: 'Could not update.', variant: 'destructive' });
+      }
+      return;
+    }
     const ids = siblingIdsFor(page);
     const idSet = new Set(ids);
     setPages((prev) =>
@@ -233,13 +312,24 @@ export default function PageManagement() {
 
   const handleSectionChange = async (page, newSection) => {
     const target = grouped[newSection] || [];
-    const ids = siblingIdsFor(page);
-    const idSet = new Set(ids);
     const patch = {
       section: newSection,
       order_position: target.length,
       is_enabled: true,
     };
+    if (page._synthetic) {
+      try {
+        const created = await PageConfig.create({ ...seedFieldsOf(page), ...patch });
+        setPages((prev) => [...prev, created]);
+        flashSaved();
+      } catch (err) {
+        console.error('Section change failed:', err);
+        toast({ title: 'Error', description: 'Could not move page.', variant: 'destructive' });
+      }
+      return;
+    }
+    const ids = siblingIdsFor(page);
+    const idSet = new Set(ids);
     setPages((prev) =>
       prev.map((p) => (idSet.has(p.id) ? { ...p, ...patch } : p))
     );
@@ -348,23 +438,35 @@ export default function PageManagement() {
 
     setPages((prev) => {
       const stable = prev.filter((p) => !reorderedIds.has(p.id));
+      // Synthetic rows never enter `pages` state (they're derived); the
+      // moved one is materialized in the async block below instead.
       const withNewOrders = ALL_DROP_ZONES.flatMap((cat) =>
         nextByCat[cat].map((p, i) => ({
           ...p,
           ...(p.id === moved.id ? movePatch : {}),
           order_position: i,
         }))
-      );
+      ).filter((p) => !p._synthetic);
       return [...stable, ...withNewOrders];
     });
 
     setIsSaving(true);
     try {
-      // Fan out the enable/category flip to every duplicate row for
-      // this page_name. Order_position only needs to be written to the
-      // canonical row; duplicates will be deleted by cleanup anyway.
-      const movedIds = siblingIdsFor(moved);
-      await Promise.all(movedIds.map((id) => PageConfig.update(id, movePatch)));
+      if (moved._synthetic) {
+        // First touch of a fallback-only page: create its page_config row
+        // with the new state and slot.
+        await PageConfig.create({
+          ...seedFieldsOf(moved),
+          ...movePatch,
+          order_position: destination.index,
+        });
+      } else {
+        // Fan out the enable/category flip to every duplicate row for
+        // this page_name. Order_position only needs to be written to the
+        // canonical row; duplicates will be deleted by cleanup anyway.
+        const movedIds = siblingIdsFor(moved);
+        await Promise.all(movedIds.map((id) => PageConfig.update(id, movePatch)));
+      }
       if (srcCat === destCat) {
         await persistOrder(nextByCat[srcCat]);
       } else {
@@ -372,6 +474,14 @@ export default function PageManagement() {
           persistOrder(nextByCat[srcCat]),
           persistOrder(nextByCat[destCat]),
         ]);
+      }
+      if (moved._synthetic) {
+        // Silent re-fetch (no spinner) so the fake fallback id is
+        // replaced by the real row id without unmounting the list.
+        try {
+          const all = await PageConfig.list();
+          if (Array.isArray(all)) setPages(all);
+        } catch { /* next full load reconciles */ }
       }
       flashSaved();
     } catch (err) {
@@ -417,6 +527,14 @@ export default function PageManagement() {
               {inHidden && (
                 <EyeOff className="w-3 h-3 text-slate-500" aria-label="Hidden" />
               )}
+              {page._synthetic && (
+                <span
+                  className="text-[9px] font-medium uppercase tracking-wider text-slate-500 border border-slate-700 rounded px-1 py-px shrink-0"
+                  title="Shown from code defaults; toggling or moving it saves a page_config row"
+                >
+                  default
+                </span>
+              )}
             </p>
             <p className="text-[11px] text-slate-500 truncate">
               /{page.page_name}
@@ -443,15 +561,17 @@ export default function PageManagement() {
             onCheckedChange={(v) => handleToggleEnabled(page, v)}
             aria-label={`Toggle ${page.display_name}`}
           />
-          <button
-            type="button"
-            onClick={() => handleDeleteRow(page)}
-            className="text-slate-500 hover:text-rose-400 p-1 rounded transition-colors"
-            aria-label={`Delete ${page.display_name}`}
-            title="Remove this page from page_config"
-          >
-            <Trash2 className="w-4 h-4" />
-          </button>
+          {!page._synthetic && (
+            <button
+              type="button"
+              onClick={() => handleDeleteRow(page)}
+              className="text-slate-500 hover:text-rose-400 p-1 rounded transition-colors"
+              aria-label={`Delete ${page.display_name}`}
+              title="Remove this page from page_config"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          )}
         </div>
       )}
     </Draggable>
