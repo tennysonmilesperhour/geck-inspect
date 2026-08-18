@@ -73,6 +73,7 @@ const CareGuideSeries       = lazy(() => import('./pages/CareGuideSeries'));
 const GeneticsGuide         = lazy(() => import('./pages/GeneticsGuide'));
 const GeneticCalculatorTool = lazy(() => import('./pages/GeneticCalculatorTool'));
 const CalculatorMorph       = lazy(() => import('./pages/CalculatorMorph'));
+const ReverseCalculator     = lazy(() => import('./pages/ReverseCalculator'));
 // Programmatic-SEO static content pages (About / Contact / Terms).
 // These render a public header + footer so unauthenticated visitors
 // (and non-JS crawlers after prerender) see full chrome, not a blank
@@ -262,6 +263,7 @@ const AuthenticatedApp = () => {
               the legacy path is kept above so existing links and the
               authenticated PAGES table keep working. */}
           <Route path="/calculator" element={<GeneticCalculatorTool />} />
+          <Route path="/calculator/reverse" element={<ReverseCalculator />} />
           <Route path="/calculator/:morph" element={<CalculatorMorph />} />
           <Route path="/About" element={<About />} />
           <Route path="/Contact" element={<Contact />} />
@@ -341,6 +343,7 @@ const AuthenticatedApp = () => {
         {/* /calculator alias inside the authenticated layout so signed-in
             users hitting the cleaner URL keep their app chrome. */}
         <Route path="/calculator" element={<GeneticCalculatorTool />} />
+        <Route path="/calculator/reverse" element={<ReverseCalculator />} />
         <Route path="/calculator/:morph" element={<CalculatorMorph />} />
         {/* Store, nested inside Layout so the sidebar persists. The
             StoreLayout component skips its standalone header when an
