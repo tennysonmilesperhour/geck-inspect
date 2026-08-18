@@ -15,6 +15,7 @@ import {
   decodeParentState,
   stateHasSelection,
 } from '@/lib/genetics/calculatorCatalog';
+import { parsePairing } from '@/lib/genetics/pairingParser';
 import Seo from '@/components/seo/Seo';
 import { createPageUrl } from '@/utils';
 import { breadcrumbSchema, ORG_ID } from '@/lib/organization-schema';
@@ -121,6 +122,26 @@ export default function GeneticCalculatorTool({
             return next;
         }, { replace: true });
     }, [mode, sireZygosity, damZygosity, setSearchParams]);
+
+    // Omnibox: breeder shorthand in, both parents filled.
+    const [omniboxText, setOmniboxText] = useState('');
+    const [omniboxNote, setOmniboxNote] = useState('');
+    const handleOmnibox = (e) => {
+        e?.preventDefault?.();
+        const { sire: s, dam: d, unrecognized } = parsePairing(omniboxText);
+        if (!stateHasSelection(s) && !stateHasSelection(d)) {
+            setOmniboxNote(omniboxText.trim() ? 'No genes recognized in that. Try something like "lilly white het axanthic x sable".' : '');
+            return;
+        }
+        setMode('manual');
+        setSireZygosity(s);
+        setDamZygosity(d);
+        setOmniboxNote(
+            unrecognized.length
+              ? `Could not read: ${unrecognized.join(', ')} (polygenic looks like Harlequin and Dalmatian are not Punnett-calculable, so the omnibox skips them).`
+              : '',
+        );
+    };
 
     const handleCopyLink = async () => {
         try {
@@ -291,6 +312,37 @@ export default function GeneticCalculatorTool({
                             </button>
                           </div>
                         )}
+
+                        {/* Omnibox: type a pairing in breeder shorthand */}
+                        <form onSubmit={handleOmnibox} className="mb-4">
+                          <div className="flex gap-2">
+                            <input
+                              type="text"
+                              value={omniboxText}
+                              onChange={(e) => setOmniboxText(e.target.value)}
+                              placeholder='Type a pairing: "lilly white het axanthic x sable"'
+                              className="flex-1 h-10 rounded-md bg-slate-800 border border-slate-600 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/40"
+                              aria-label="Type a pairing in breeder shorthand"
+                            />
+                            <Button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white text-sm h-10">
+                              Fill parents
+                            </Button>
+                          </div>
+                          {omniboxNote && (
+                            <p className="text-xs text-amber-300 mt-1.5">{omniboxNote}</p>
+                          )}
+                        </form>
+
+                        {/* Reverse-mode cross-link */}
+                        <div className="mb-4 rounded-lg border border-purple-500/20 bg-purple-500/5 px-4 py-3 flex items-center justify-between gap-3">
+                          <p className="text-sm text-slate-300">
+                            Have a dream gecko in mind? Work backwards from the target instead.
+                          </p>
+                          <Link to="/calculator/reverse" className="text-sm text-purple-300 hover:text-purple-200 underline whitespace-nowrap">
+                            Reverse calculator
+                            <ArrowRight className="w-3.5 h-3.5 inline ml-1" />
+                          </Link>
+                        </div>
 
                         {mode === 'manual' ? (
                           /* Manual entry, works for everyone */

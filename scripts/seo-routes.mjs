@@ -245,6 +245,20 @@ export const STATIC_ROUTES = [
     },
   },
   {
+    // Reverse (goal-seek) calculator: target morph in, ranked pairings
+    // out. Static route, listed before the /calculator/:morph expansion
+    // so the prerenderer treats it as its own page.
+    path: '/calculator/reverse',
+    priority: 0.8,
+    changefreq: 'monthly',
+    lastmod: TODAY,
+    meta: {
+      title: 'Reverse Genetics Calculator: Crested Gecko',
+      description:
+        'Pick the crested gecko you want (Lilly White, visual Axanthic, Luwak, Frappuccino and more) and see every pairing that produces it, ranked by per-egg odds with lethal and health warnings. Free, no signup.',
+    },
+  },
+  {
     // Public feature landing targeting "crested gecko pedigree tracker"
     // and lineage/family-tree intent. The actual tool lives behind auth
     // (/Pedigree, /Lineage); this page is the crawlable front door.

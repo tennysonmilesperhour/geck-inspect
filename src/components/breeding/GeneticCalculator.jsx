@@ -1,10 +1,13 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Dna, AlertTriangle, ChevronDown, ChevronRight, Shuffle, ExternalLink } from 'lucide-react';
+import { Dna, AlertTriangle, ChevronDown, ChevronRight, Shuffle, ExternalLink, ImageDown } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { getTrait, getComboMorph, displayText } from '@/lib/genetics';
 import { predictWeighted, tagsToSpec } from '@/lib/genetics/predictWeighted';
 import { MORPH_GUIDE_SLUGS, COMPLEX_LOCUS } from '@/lib/genetics/calculatorCatalog';
+import { downloadClutchCard } from '@/lib/genetics/clutchCard';
+import HatchClutch from './HatchClutch';
+import PunnettSquare from './PunnettSquare';
 import {
   EGGS_PER_CLUTCH,
   DEFAULT_CLUTCHES_PER_SEASON,
@@ -81,6 +84,22 @@ function complexAlleles(spec) {
   const options = spec?.loci?.[COMPLEX_LOCUS];
   if (!options || options.length !== 1) return new Set();
   return new Set(options[0].pair.filter((a) => a !== 'wild_type'));
+}
+
+/**
+ * The most informative parent allele pair at a locus for the Punnett
+ * square: with a possible het, show the "carrier proves out" scenario
+ * (the caller notes the uncertainty in copy).
+ */
+function punnettPair(spec, locus) {
+  const options = spec?.loci?.[locus];
+  if (!options || options.length === 0) return ['wild_type', 'wild_type'];
+  let best = options[0];
+  for (const o of options) {
+    const count = (p) => p.pair.filter((a) => a !== 'wild_type').length;
+    if (count(o) > count(best)) best = o;
+  }
+  return best.pair;
 }
 
 function EggArray({ eggs, hits, seed }) {
@@ -252,6 +271,25 @@ export default function GeneticCalculator({ sire, dam }) {
         <div className="flex flex-wrap items-center justify-between gap-2">
           <h4 className="text-sm font-semibold text-slate-200">Predicted offspring</h4>
           <div className="flex items-center gap-2 text-xs text-slate-400">
+            <button
+              type="button"
+              onClick={() =>
+                downloadClutchCard({
+                  sireLabel: (sire.morph_tags || []).join(', ') || 'Wild-type',
+                  damLabel: (dam.morph_tags || []).join(', ') || 'Wild-type',
+                  outcomes: outcomes.map((o) => ({
+                    label: outcomeLabel(o),
+                    probability: o.probability,
+                    health_risk: o.health_risk,
+                  })),
+                  eggs,
+                })
+              }
+              className="inline-flex items-center gap-1 text-slate-400 hover:text-slate-200 border border-slate-600 rounded px-2 py-1"
+              title="Download this pairing's odds as an image for Facebook groups and Discord"
+            >
+              <ImageDown className="w-3.5 h-3.5" /> Clutch card
+            </button>
             <span>Season:</span>
             <select
               value={clutches}
@@ -377,6 +415,8 @@ export default function GeneticCalculator({ sire, dam }) {
           </div>
         )}
 
+        <HatchClutch phenotypes={outcomes} labelFor={outcomeLabel} />
+
         {lethalP > 0 && (
           <div className="rounded-lg border border-red-800 bg-red-950/40 px-3 py-2 text-xs text-red-200">
             Expected loss: about {roundExpected(lethalP * eggs)} of {eggs} eggs this season are
@@ -405,10 +445,21 @@ export default function GeneticCalculator({ sire, dam }) {
         </button>
         {showLocusMath && (
           <div className="space-y-3 mt-3">
+            {locus_predictions.length > 1 && (
+              <p className="text-xs text-slate-500">
+                Genes sort independently, so combined odds multiply. A 1/2 chance of Lilly White
+                and a 1/2 chance of het Axanthic make a 1/4 chance of both in the same egg.
+              </p>
+            )}
             {locus_predictions.map((lp) => {
               const trait = getTrait(lp.trait) || null;
               const badge = dominanceBadge(trait);
               const slug = trait && MORPH_GUIDE_SLUGS[trait.id];
+              const sirePair = punnettPair(sireSpec, lp.locus);
+              const damPair = punnettPair(damSpec, lp.locus);
+              const locusUncertain =
+                (sireSpec?.loci?.[lp.locus]?.length || 0) > 1 ||
+                (damSpec?.loci?.[lp.locus]?.length || 0) > 1;
               return (
                 <div key={lp.locus} className="bg-slate-800 rounded-lg p-4">
                   <div className="flex items-center gap-2 mb-3">
@@ -443,6 +494,17 @@ export default function GeneticCalculator({ sire, dam }) {
                       </div>
                     ))}
                   </div>
+                  <PunnettSquare
+                    sirePair={sirePair}
+                    damPair={damPair}
+                    outcomes={lp.outcomes}
+                  />
+                  {locusUncertain && (
+                    <p className="text-xs text-slate-500 mt-2">
+                      A parent is a possible het at this gene; the square shows the
+                      carrier-proves-out scenario, while the bars above average over both.
+                    </p>
+                  )}
                 </div>
               );
             })}
