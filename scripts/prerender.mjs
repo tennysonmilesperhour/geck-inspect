@@ -40,6 +40,7 @@ import {
   STATIC_ROUTES,
   getMorphRoutes,
   getCalculatorMorphRoutes,
+  getCalculatorPairingRoutes,
   getCareTopicRoutes,
   getMorphTaxonomyRoutes,
   getBlogRoutes,
@@ -524,6 +525,7 @@ function run() {
     ...getCareTopicRoutes(),
     ...getBlogRoutes(),
     ...getCalculatorMorphRoutes(),
+    ...getCalculatorPairingRoutes(),
   ].filter((r) => !SKIP.has(r.path));
 
   for (const route of routes) writeRoute(route);

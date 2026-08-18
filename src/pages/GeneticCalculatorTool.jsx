@@ -16,6 +16,8 @@ import {
   stateHasSelection,
 } from '@/lib/genetics/calculatorCatalog';
 import { parsePairing } from '@/lib/genetics/pairingParser';
+import { specWithInferredHets } from '@/lib/genetics/collectionSpec';
+import { Gecko } from '@/entities/all';
 import Seo from '@/components/seo/Seo';
 import { createPageUrl } from '@/utils';
 import { breadcrumbSchema, ORG_ID } from '@/lib/organization-schema';
@@ -71,6 +73,7 @@ const CALCULATOR_JSON_LD = [
  */
 export default function GeneticCalculatorTool({
   initialSireZygosity,
+  initialDamZygosity,
   pageTitle,
   pageDescription,
   pagePath = '/calculator',
@@ -88,6 +91,10 @@ export default function GeneticCalculatorTool({
     const [sireId, setSireId] = useState('');
     const [damId, setDamId] = useState('');
 
+    // Lineage-enriched genotype specs per collection gecko: tags plus
+    // hidden-het inference (3 generations), keyed by gecko id.
+    const [collectionSpecs, setCollectionSpecs] = useState({});
+
     // Permalink state: ?sire=lilly_white:het,axanthic:ph66&dam=... The URL
     // wins over the per-morph prefill so shared links reproduce exactly
     // what the sharer configured.
@@ -100,7 +107,8 @@ export default function GeneticCalculatorTool({
     // Manual-mode zygosity records, e.g. { lilly_white: 'het', axanthic: 'ph66' }
     const [sireZygosity, setSireZygosity] = useState(() =>
         stateHasSelection(urlSeeded.sire) ? urlSeeded.sire : (initialSireZygosity || {}));
-    const [damZygosity, setDamZygosity] = useState(() => urlSeeded.dam);
+    const [damZygosity, setDamZygosity] = useState(() =>
+        stateHasSelection(urlSeeded.dam) ? urlSeeded.dam : (initialDamZygosity || {}));
 
     // Default mode: manual for everyone (and required for unauthed). Authed
     // users can switch to 'collection' to pull from their saved geckos.
@@ -154,6 +162,24 @@ export default function GeneticCalculatorTool({
         }
     };
 
+    // Enrich selected collection parents with lineage-inferred possible
+    // hets so pairing odds reflect the pedigree, not just visible tags.
+    useEffect(() => {
+        if (mode !== 'collection') return;
+        let cancelled = false;
+        for (const id of [sireId, damId]) {
+            if (!id || collectionSpecs[id]) continue;
+            const gecko = geckos.find((g) => g.id === id);
+            if (!gecko) continue;
+            specWithInferredHets(gecko, { GeckoEntity: Gecko }).then((result) => {
+                if (!cancelled) {
+                    setCollectionSpecs((prev) => ({ ...prev, [id]: result }));
+                }
+            });
+        }
+        return () => { cancelled = true; };
+    }, [mode, sireId, damId, geckos, collectionSpecs]);
+
     useEffect(() => {
         const load = async () => {
             setIsLoading(true);
@@ -163,12 +189,24 @@ export default function GeneticCalculatorTool({
                     setIsAuthed(true);
                     const { getVisibleGeckos } = await import('@/lib/geckoAccess');
                     const data = await getVisibleGeckos(user);
-                    setGeckos(data.filter(g => !g.archived));
-                    // Authed users haven't filled in a manual genotype yet,
-                    // start them on collection mode if they have geckos,
-                    // unless a permalink or per-morph prefill seeded manual
-                    // mode with a pairing.
-                    if (!initialSireZygosity && !hasUrlSeed && data.length > 0) {
+                    const visible = data.filter(g => !g.archived);
+                    setGeckos(visible);
+                    // Deep links from gecko profiles: ?sireGecko=<id> /
+                    // ?damGecko=<id> preselect collection mode.
+                    const params = new URLSearchParams(window.location.search);
+                    const sireGecko = params.get('sireGecko');
+                    const damGecko = params.get('damGecko');
+                    const sireHit = sireGecko && visible.some(g => g.id === sireGecko);
+                    const damHit = damGecko && visible.some(g => g.id === damGecko);
+                    if (sireHit || damHit) {
+                        setMode('collection');
+                        if (sireHit) setSireId(sireGecko);
+                        if (damHit) setDamId(damGecko);
+                    } else if (!initialSireZygosity && !hasUrlSeed && data.length > 0) {
+                        // Authed users haven't filled in a manual genotype
+                        // yet, start them on collection mode if they have
+                        // geckos, unless a permalink or per-morph prefill
+                        // seeded manual mode with a pairing.
                         setMode('collection');
                     }
                 }
@@ -197,16 +235,30 @@ export default function GeneticCalculatorTool({
     // that supports possible hets and the Cappuccino complex); in
     // collection mode we use the user's saved Gecko entities directly.
     const sire = useMemo(
-      () => (mode === 'manual'
-        ? buildParentFromState('manual_sire', 'Parent A (Sire)', sireZygosity)
-        : collectionSire),
-      [mode, sireZygosity, collectionSire],
+      () => {
+        if (mode === 'manual') {
+          return buildParentFromState('manual_sire', 'Parent A (Sire)', sireZygosity);
+        }
+        if (!collectionSire) return null;
+        const enriched = collectionSpecs[collectionSire.id];
+        return enriched
+          ? { ...collectionSire, genotype_spec: enriched.spec, inferred_hets: enriched.inferredHets }
+          : collectionSire;
+      },
+      [mode, sireZygosity, collectionSire, collectionSpecs],
     );
     const dam = useMemo(
-      () => (mode === 'manual'
-        ? buildParentFromState('manual_dam', 'Parent B (Dam)', damZygosity)
-        : collectionDam),
-      [mode, damZygosity, collectionDam],
+      () => {
+        if (mode === 'manual') {
+          return buildParentFromState('manual_dam', 'Parent B (Dam)', damZygosity);
+        }
+        if (!collectionDam) return null;
+        const enriched = collectionSpecs[collectionDam.id];
+        return enriched
+          ? { ...collectionDam, genotype_spec: enriched.spec, inferred_hets: enriched.inferredHets }
+          : collectionDam;
+      },
+      [mode, damZygosity, collectionDam, collectionSpecs],
     );
 
     const handleSwap = () => {

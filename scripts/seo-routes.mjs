@@ -563,6 +563,35 @@ const CALCULATOR_MORPH_SLUGS = [
   { slug: 'chocho',       label: 'ChoCho' },
 ];
 
+// Per-pairing calculator landing pages at /calculator/pairing/<slug>.
+// Source of truth is PAIRING_PAGES in
+// src/lib/genetics/calculatorCatalog.js (sync asserted by unit test).
+const CALCULATOR_PAIRING_SLUGS = [
+  { slug: 'lilly-white-x-lilly-white',   label: 'Lilly White x Lilly White' },
+  { slug: 'lilly-white-x-normal',        label: 'Lilly White x Normal' },
+  { slug: 'cappuccino-x-sable',          label: 'Cappuccino x Sable' },
+  { slug: 'cappuccino-x-cappuccino',     label: 'Cappuccino x Cappuccino' },
+  { slug: 'axanthic-x-axanthic',         label: 'Axanthic x Axanthic' },
+  { slug: 'axanthic-x-het-axanthic',     label: 'Axanthic x Het Axanthic' },
+  { slug: 'het-axanthic-x-het-axanthic', label: 'Het Axanthic x Het Axanthic' },
+  { slug: 'lilly-white-x-axanthic',      label: 'Lilly White x Axanthic' },
+  { slug: 'phantom-x-phantom',           label: 'Phantom x Phantom' },
+  { slug: 'frappuccino-x-normal',        label: 'Frappuccino x Normal' },
+];
+
+export function getCalculatorPairingRoutes() {
+  return CALCULATOR_PAIRING_SLUGS.map(({ slug, label }) => ({
+    path: `/calculator/pairing/${slug}`,
+    priority: 0.7,
+    changefreq: 'monthly',
+    lastmod: TODAY,
+    meta: {
+      title: `${label}: Crested Gecko Odds`,
+      description: `What does ${label} produce? Free Punnett-square calculator with both parents pre-filled, per-egg odds, and clutch math. No signup required.`,
+    },
+  }));
+}
+
 export function getCalculatorMorphRoutes() {
   return CALCULATOR_MORPH_SLUGS.map(({ slug, label }) => ({
     path: `/calculator/${slug}`,
@@ -595,6 +624,7 @@ export function getAllRoutes() {
     ...getKeepersGuideRoutes(),
     ...getBlogRoutes(),
     ...getCalculatorMorphRoutes(),
+    ...getCalculatorPairingRoutes(),
   ];
 }
 
@@ -625,6 +655,7 @@ const DYNAMIC_ROUTE_PATTERNS = [
   '/MorphGuide/category/:categoryId',
   '/MorphGuide/inheritance/:inheritanceId',
   '/MorphGuide/:slug',
+  '/calculator/pairing/:pairing',
   '/calculator/:morph',
   '/CareGuide/:topic',
   '/Breeder/:slug',

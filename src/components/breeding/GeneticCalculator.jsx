@@ -1,13 +1,15 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Dna, AlertTriangle, ChevronDown, ChevronRight, Shuffle, ExternalLink, ImageDown } from 'lucide-react';
+import { Dna, AlertTriangle, ChevronDown, ChevronRight, Shuffle, ExternalLink, ImageDown, Share2, Check } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { getTrait, getComboMorph, displayText } from '@/lib/genetics';
 import { predictWeighted, tagsToSpec } from '@/lib/genetics/predictWeighted';
 import { MORPH_GUIDE_SLUGS, COMPLEX_LOCUS } from '@/lib/genetics/calculatorCatalog';
 import { downloadClutchCard } from '@/lib/genetics/clutchCard';
+import { expectedSeasonValue, priceForOutcome } from '@/lib/genetics/outcomeValue';
 import HatchClutch from './HatchClutch';
 import PunnettSquare from './PunnettSquare';
+import PolygenicPanel from './PolygenicPanel';
 import {
   EGGS_PER_CLUTCH,
   DEFAULT_CLUTCHES_PER_SEASON,
@@ -133,6 +135,7 @@ export default function GeneticCalculator({ sire, dam }) {
   const [selectedKey, setSelectedKey] = useState(null);
   const [shuffleSeed, setShuffleSeed] = useState(1);
   const [showLocusMath, setShowLocusMath] = useState(false);
+  const [shared, setShared] = useState(false);
 
   const prediction = useMemo(() => {
     if (!sire || !dam) return null;
@@ -208,6 +211,11 @@ export default function GeneticCalculator({ sire, dam }) {
               <span key={t} className="text-xs bg-blue-900/60 border border-blue-700 text-blue-200 px-1.5 py-0.5 rounded">{t}</span>
             )) : <span className="text-xs text-slate-500">No genes selected</span>}
           </div>
+          {(sire.inferred_hets || []).map((h) => (
+            <p key={h.trait} className="text-[11px] text-purple-300 mt-1">
+              lineage suggests {pct(h.probability)} poss het {h.trait}
+            </p>
+          ))}
         </div>
         <div className="bg-slate-800 rounded-lg p-3">
           <p className="text-xs text-pink-400 font-semibold mb-1">♀ Dam, {dam.name}</p>
@@ -216,6 +224,11 @@ export default function GeneticCalculator({ sire, dam }) {
               <span key={t} className="text-xs bg-pink-900/60 border border-pink-700 text-pink-200 px-1.5 py-0.5 rounded">{t}</span>
             )) : <span className="text-xs text-slate-500">No genes selected</span>}
           </div>
+          {(dam.inferred_hets || []).map((h) => (
+            <p key={h.trait} className="text-[11px] text-purple-300 mt-1">
+              lineage suggests {pct(h.probability)} poss het {h.trait}
+            </p>
+          ))}
         </div>
       </div>
 
@@ -290,6 +303,45 @@ export default function GeneticCalculator({ sire, dam }) {
             >
               <ImageDown className="w-3.5 h-3.5" /> Clutch card
             </button>
+            {(() => {
+              // Share links need the pairing encoded in the URL, which
+              // manual mode maintains; collection pairings have no
+              // public representation, so the button hides there.
+              const params = new URLSearchParams(window.location.search);
+              if (!params.get('sire') && !params.get('dam')) return null;
+              const handleShare = async () => {
+                const share = new URLSearchParams();
+                if (params.get('sire')) share.set('sire', params.get('sire'));
+                if (params.get('dam')) share.set('dam', params.get('dam'));
+                share.set('s', (sire.morph_tags || []).join(', ') || 'Wild-type');
+                share.set('d', (dam.morph_tags || []).join(', ') || 'Wild-type');
+                share.set(
+                  'o',
+                  outcomes.slice(0, 4).map((o) => `${outcomeLabel(o)}~${pct(o.probability)}`).join('|'),
+                );
+                try {
+                  await navigator.clipboard.writeText(
+                    `${window.location.origin}/api/share?${share.toString()}`,
+                  );
+                  setShared(true);
+                  setTimeout(() => setShared(false), 2000);
+                } catch {
+                  // Clipboard unavailable; the permalink in the URL bar
+                  // still shares the pairing, just without the rich card.
+                }
+              };
+              return (
+                <button
+                  type="button"
+                  onClick={handleShare}
+                  className="inline-flex items-center gap-1 text-slate-400 hover:text-slate-200 border border-slate-600 rounded px-2 py-1"
+                  title="Copy a link that unfurls as a rich odds card in Discord and Facebook"
+                >
+                  {shared ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Share2 className="w-3.5 h-3.5" />}
+                  {shared ? 'Copied' : 'Share link'}
+                </button>
+              );
+            })()}
             <span>Season:</span>
             <select
               value={clutches}
@@ -357,8 +409,13 @@ export default function GeneticCalculator({ sire, dam }) {
                     ≈{roundExpected(o.probability * eggs)} of {eggs} eggs
                   </span>
                 </div>
-                {links.length > 0 && (
-                  <div className="mt-1 flex gap-2">
+                {(links.length > 0 || priceForOutcome(o)) && (
+                  <div className="mt-1 flex flex-wrap items-center gap-2">
+                    {priceForOutcome(o) && (
+                      <span className="text-[11px] text-slate-500 font-mono">
+                        guide price ${priceForOutcome(o).low} to ${priceForOutcome(o).high}
+                      </span>
+                    )}
                     {links.map((l) => (
                       <Link
                         key={l.slug}
@@ -431,7 +488,30 @@ export default function GeneticCalculator({ sire, dam }) {
             Hatch results will tell you which side of the odds you are on.
           </p>
         )}
+
+        {(() => {
+          const value = expectedSeasonValue(outcomes, eggs);
+          if (!value) return null;
+          return (
+            <div className="rounded-lg border border-slate-700 bg-slate-900/50 px-3 py-2">
+              <p className="text-xs text-slate-300">
+                Rough market context: the priced outcomes here suggest roughly{' '}
+                <span className="font-mono text-emerald-300">
+                  ${value.low.toLocaleString()} to ${value.high.toLocaleString()}
+                </span>{' '}
+                across a {eggs}-egg season.
+              </p>
+              <p className="text-[11px] text-slate-500 mt-0.5">
+                Based on Morph Guide price ranges covering {pct(value.coverage)} of the predicted
+                distribution. Quality, lineage, and polygenic looks decide the real numbers.
+              </p>
+            </div>
+          );
+        })()}
       </div>
+
+      {/* Polygenic looks: expression bands, deliberately not odds */}
+      <PolygenicPanel sireTags={sireTraits} damTags={damTraits} />
 
       {/* Per-gene Punnett math, on demand */}
       <div>

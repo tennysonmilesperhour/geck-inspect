@@ -154,6 +154,15 @@ export default function GeckoDetail() {
                     </Button>
                     {isOwner && (
                         <div className="flex gap-2">
+                            {/* Genetics calculator, preselects this gecko as the
+                                matching parent slot (unsexed default to sire). */}
+                            <Button
+                                variant="outline"
+                                className="border-slate-600 hover:bg-slate-800"
+                                onClick={() => navigate(`/calculator?${gecko.sex === 'Female' ? 'damGecko' : 'sireGecko'}=${gecko.id}`)}
+                            >
+                                Pair in calculator
+                            </Button>
                             {/* P11 Quality Scale worksheet, preselects this gecko */}
                             <Button variant="outline" className="border-slate-600 hover:bg-slate-800" onClick={() => navigate(`/QualityScale?geckoId=${gecko.id}`)}>
                                 Score structure

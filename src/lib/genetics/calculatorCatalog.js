@@ -377,6 +377,99 @@ export const CALCULATOR_PAGES_BY_SLUG = Object.fromEntries(
   CALCULATOR_PAGES.map((p) => [p.slug, p]),
 );
 
+// ---------- per-pairing SEO landing pages ------------------------------
+// The crosses people actually search for and argue about in forums.
+// Each gets a /calculator/pairing/<slug> route with both parents
+// pre-filled. Keep scripts/seo-routes.mjs CALCULATOR_PAIRING_SLUGS in
+// sync (asserted by unit test).
+
+export const PAIRING_PAGES = [
+  {
+    slug: 'lilly-white-x-lilly-white',
+    label: 'Lilly White x Lilly White',
+    sire: { lilly_white: 'het' },
+    dam: { lilly_white: 'het' },
+    blurb:
+      'The most-warned-about pairing in the hobby: 25% of eggs are lethal Super Lilly Whites that die in the egg, for the same 50% Lilly White rate a Lilly White x normal pairing gives without the losses. The math below shows exactly why breeders discourage it.',
+  },
+  {
+    slug: 'lilly-white-x-normal',
+    label: 'Lilly White x Normal',
+    sire: { lilly_white: 'het' },
+    dam: {},
+    blurb:
+      'The standard Lilly White pairing: 50% Lilly White per egg with no lethal outcomes. This is the route experienced breeders recommend over Lilly x Lilly.',
+  },
+  {
+    slug: 'cappuccino-x-sable',
+    label: 'Cappuccino x Sable',
+    sire: { [COMPLEX_ID]: 'cappuccino' },
+    dam: { [COMPLEX_ID]: 'sable' },
+    blurb:
+      'The safe way to work the Cappuccino complex: Cappuccino and Sable are different versions of the same gene, so this cross produces Luwak (25%) and can never produce a super.',
+  },
+  {
+    slug: 'cappuccino-x-cappuccino',
+    label: 'Cappuccino x Cappuccino',
+    sire: { [COMPLEX_ID]: 'cappuccino' },
+    dam: { [COMPLEX_ID]: 'cappuccino' },
+    blurb:
+      'This cross risks 25% Super Cappuccino, a homozygote with documented health problems that cannot be sold on MorphMarket. Pairing Cappuccino to Sable instead produces Luwak with no super risk.',
+  },
+  {
+    slug: 'axanthic-x-axanthic',
+    label: 'Axanthic x Axanthic',
+    sire: { axanthic: 'visual' },
+    dam: { axanthic: 'visual' },
+    blurb:
+      'Two visual Axanthics: every egg is a visual Axanthic, because both parents can only pass the Axanthic allele. Recessive genetics at its most satisfying.',
+  },
+  {
+    slug: 'axanthic-x-het-axanthic',
+    label: 'Axanthic x Het Axanthic',
+    sire: { axanthic: 'visual' },
+    dam: { axanthic: 'het' },
+    blurb:
+      'A visual bred to a proven het: 50% visual Axanthic per egg, and every non-visual baby is a guaranteed 100% het.',
+  },
+  {
+    slug: 'het-axanthic-x-het-axanthic',
+    label: 'Het Axanthic x Het Axanthic',
+    sire: { axanthic: 'het' },
+    dam: { axanthic: 'het' },
+    blurb:
+      'Two proven hets: 25% visual Axanthic per egg, and the normal-looking babies are 66% possible hets, which is where that number on sale listings comes from.',
+  },
+  {
+    slug: 'lilly-white-x-axanthic',
+    label: 'Lilly White x Axanthic',
+    sire: { lilly_white: 'het' },
+    dam: { axanthic: 'visual' },
+    blurb:
+      'The first cross of an Axanthic Lilly White project: every baby is 100% het Axanthic and half are Lilly White. The visual Axanthic Lillies come in generation two.',
+  },
+  {
+    slug: 'phantom-x-phantom',
+    label: 'Phantom x Phantom',
+    sire: { phantom: 'visual' },
+    dam: { phantom: 'visual' },
+    blurb:
+      'Two visual Phantoms: every egg is a visual Phantom. Phantom is recessive, so visuals always breed true to each other.',
+  },
+  {
+    slug: 'frappuccino-x-normal',
+    label: 'Frappuccino x Normal',
+    sire: { [COMPLEX_ID]: 'cappuccino', lilly_white: 'het' },
+    dam: {},
+    blurb:
+      'A Frappuccino carries one Cappuccino and one Lilly White allele, so bred to a normal it throws 25% Frappuccino, 25% Cappuccino, 25% Lilly White, and 25% normal.',
+  },
+];
+
+export const PAIRING_PAGES_BY_SLUG = Object.fromEntries(
+  PAIRING_PAGES.map((p) => [p.slug, p]),
+);
+
 // ---------- Morph Guide outcome links ----------------------------------
 // Maps engine trait/combo ids to Morph Guide slugs where an entry
 // exists today. Missing entries (sable, phantom, empty-back, luwak) are
