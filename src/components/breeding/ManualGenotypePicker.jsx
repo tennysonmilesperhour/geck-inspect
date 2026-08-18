@@ -8,215 +8,199 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { AlertTriangle } from 'lucide-react';
+import {
+  SIMPLE_TRAITS,
+  COMPLEX_ENTRY,
+  COMPLEX_ID,
+  COMPLEX_OPTIONS,
+  COMPLEX_OPTIONS_BY_VALUE,
+  zygosityOptions,
+  stateToSpec,
+  stateToChips,
+} from '@/lib/genetics/calculatorCatalog';
 
 /**
- * Curated set of Mendelian crested gecko traits available in the
- * unauthenticated / manual-entry calculator. The list is intentionally
- * shorter than the full TRAITS export from `crested-gecko-app`,
- * polygenic morphs (Harlequin, Pinstripe intensity, base color
- * gradients) don't follow Punnett squares, and the allelic complex at
- * SABLE_COMPLEX is presented as a single picker since selecting two
- * different alleles at the same locus on one parent isn't expressible
- * here.
+ * Manual genotype picker over the full calculator catalog
+ * (src/lib/genetics/calculatorCatalog.js): every proven and emerging
+ * Mendelian trait, the Cappuccino complex as a single allele-pair slot
+ * (which is what makes Luwak and the supers expressible), and
+ * probabilistic "possible het" states for recessives.
  *
- * Each entry encodes the canonical tag strings the upstream
- * `tagToGenotype` library recognizes, so changing labels here is safe
- * but changing `tags.*` strings will silently break genotype mapping.
+ * Polygenic traits are intentionally absent: Punnett math on Harlequin
+ * or Dalmatian density would be fake precision. See
+ * MORPH_CALCULATOR_PLAN.md for the expression-band plan.
+ *
+ * Stateless: the parent owns the state record ({ traitId: zygosity }),
+ * we only emit onChange(next).
  */
-export const PICKER_TRAITS = [
-  {
-    id: 'lilly_white',
-    slug: 'lilly-white',
-    label: 'Lilly White',
-    dominance: 'incomplete_dominant',
-    tags: { het: 'Lilly White', super: 'Super Lilly White' },
-    super_lethal: true,
-    blurb: 'Incomplete dominant. Heterozygous "Lilly White" expresses; the homozygous Super form is lethal in the egg.',
-  },
-  {
-    id: 'cappuccino',
-    slug: 'cappuccino',
-    label: 'Cappuccino',
-    dominance: 'incomplete_dominant',
-    tags: { het: 'Cappuccino', super: 'Super Cappuccino' },
-    super_warning: 'Super Cappuccino (Melanistic) has documented severe health concerns.',
-    blurb: 'Incomplete dominant. The homozygous Super Cappuccino, also called Melanistic, has documented health concerns.',
-  },
-  {
-    id: 'whiteout',
-    slug: 'whiteout',
-    label: 'Whiteout',
-    dominance: 'incomplete_dominant',
-    tags: { het: 'Whiteout', super: 'Super Whiteout' },
-    blurb: 'Incomplete dominant. Het Whiteout adds a clean white belly; Super Whiteout expresses on a much larger scale.',
-  },
-  {
-    id: 'empty_back',
-    slug: 'empty-back',
-    label: 'Empty Back',
-    dominance: 'incomplete_dominant',
-    tags: { het: 'Empty Back', super: 'Super Empty Back' },
-    blurb: 'Incomplete dominant. Reduces dorsal pattern; Super form removes nearly all dorsal markings.',
-  },
-  {
-    id: 'softscale',
-    slug: 'soft-scale',
-    label: 'Soft Scale',
-    dominance: 'incomplete_dominant',
-    tags: { het: 'Softscale', super: 'Super Softscale' },
-    blurb: 'Incomplete dominant. Affects scale texture; Super Softscale is the maximum expression and is healthy.',
-  },
-  {
-    id: 'axanthic',
-    slug: 'axanthic',
-    label: 'Axanthic',
-    dominance: 'recessive',
-    tags: { het: 'Het Axanthic', visual: 'Axanthic' },
-    blurb: 'Recessive. Het carriers look wild-type; only the homozygous visual lacks red and yellow pigments.',
-  },
-  {
-    id: 'phantom',
-    slug: 'phantom',
-    label: 'Phantom',
-    dominance: 'recessive',
-    tags: { het: 'Het Phantom', visual: 'Visual Phantom' },
-    blurb: 'Recessive. Visual Phantom lacks white pattern; Het Phantom is invisible to the eye but doubles offspring odds.',
-  },
-  {
-    id: 'hypo',
-    slug: 'hypo',
-    label: 'Hypo',
-    dominance: 'dominant',
-    tags: { visual: 'Hypo' },
-    blurb: 'Dominant. A single copy expresses; reduces melanin and combines with base colors.',
-  },
-];
 
-export const PICKER_TRAITS_BY_SLUG = Object.fromEntries(
-  PICKER_TRAITS.map((t) => [t.slug, t]),
-);
+const CONFIDENCE_BADGE = {
+  proven: {
+    label: 'Proven',
+    cls: 'bg-emerald-900/50 border-emerald-700 text-emerald-300',
+    title: 'Proven through replicated breeding trials with broad community consensus.',
+  },
+  emerging: {
+    label: 'Emerging',
+    cls: 'bg-amber-900/40 border-amber-700 text-amber-300',
+    title: 'Documented by one or few breeders, or newly proven. Computed like any gene, badged so the state of the science is visible.',
+  },
+};
 
-/**
- * Translate a per-trait zygosity record like
- *   { lilly_white: 'het', axanthic: 'visual' }
- * into the canonical morph_tags array the GeneticCalculator + the
- * upstream tagToGenotype library accept.
- */
-export function zygosityToTags(zygosity) {
-  const tags = [];
-  for (const trait of PICKER_TRAITS) {
-    const z = zygosity?.[trait.id];
-    if (!z || z === 'none') continue;
-    const tag = trait.tags[z];
-    if (tag) tags.push(tag);
-  }
-  return tags;
+function ConfidenceBadge({ confidence }) {
+  const badge = CONFIDENCE_BADGE[confidence];
+  if (!badge) return null;
+  return (
+    <span
+      title={badge.title}
+      className={`text-[10px] uppercase tracking-wider border px-1.5 py-0.5 rounded-full ${badge.cls}`}
+    >
+      {badge.label}
+    </span>
+  );
 }
 
 /**
- * Build a Gecko-shaped object the existing GeneticCalculator + Breeding
- * Simulator components can consume. We pass through `morph_tags` (not
- * a prebuilt genotype) so the same code path runs whether the parents
- * came from the user's collection or from this picker.
+ * Build the animal-shaped object the calculator and simulator consume.
+ * `genotype_spec` carries the weighted-locus spec (the precise path);
+ * `morph_tags` carries display chips so parent summaries render the
+ * same way for manual and collection parents.
  */
-export function buildAnimalFromZygosity(id, name, zygosity) {
+export function buildParentFromState(id, name, state) {
   return {
     id,
     name,
     sex: 'Unsexed',
     image_urls: [],
-    morph_tags: zygosityToTags(zygosity),
+    morph_tags: stateToChips(state),
+    genotype_spec: stateToSpec(state),
   };
 }
 
-function zygosityOptions(trait) {
-  const opts = [{ value: 'none', label: 'No (wild-type)' }];
-  if (trait.dominance === 'recessive') {
-    opts.push({ value: 'het', label: 'Het carrier (1 copy, no visual)' });
-    opts.push({ value: 'visual', label: 'Visual (homozygous)' });
-  } else if (trait.dominance === 'incomplete_dominant') {
-    opts.push({ value: 'het', label: 'Visual (heterozygous, 1 copy)' });
-    opts.push({
-      value: 'super',
-      label: trait.super_lethal
-        ? 'Super (homozygous), lethal in the egg'
-        : 'Super (homozygous)',
-    });
-  } else {
-    // dominant, no super form modeled
-    opts.push({ value: 'visual', label: 'Expressing (1+ copies)' });
-  }
-  return opts;
+function TraitRow({ trait, value, onSelect, accentClass }) {
+  return (
+    <div className="space-y-1">
+      <Label className="text-xs text-slate-300 font-medium flex items-center gap-1.5">
+        {trait.label}
+        <ConfidenceBadge confidence={trait.confidence} />
+      </Label>
+      <Select value={value || 'none'} onValueChange={onSelect}>
+        <SelectTrigger className={`bg-slate-800 ${accentClass} text-slate-100 h-9 text-xs`}>
+          <SelectValue />
+        </SelectTrigger>
+        <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
+          {zygosityOptions(trait).map((opt) => (
+            <SelectItem key={opt.value} value={opt.value} className="text-xs">
+              {opt.label}
+            </SelectItem>
+          ))}
+        </SelectContent>
+      </Select>
+    </div>
+  );
 }
 
-/**
- * Stateless picker, the parent owns the zygosity record and renders
- * the resulting summary tags. We only emit `onChange(newZygosity)`.
- */
 export default function ManualGenotypePicker({ value, onChange, accentClass = 'border-emerald-700' }) {
-  const tags = useMemo(() => zygosityToTags(value || {}), [value]);
-  const lethalSuper = useMemo(
-    () =>
-      PICKER_TRAITS.some(
-        (t) => t.super_lethal && value?.[t.id] === 'super',
-      ),
-    [value],
-  );
+  const chips = useMemo(() => stateToChips(value || {}), [value]);
 
-  const setZyg = (traitId, z) => {
+  const setState = (traitId, v) => {
     const next = { ...(value || {}) };
-    if (z === 'none') delete next[traitId];
-    else next[traitId] = z;
+    if (!v || v === 'none') delete next[traitId];
+    else next[traitId] = v;
     onChange?.(next);
   };
 
+  const proven = SIMPLE_TRAITS.filter((t) => t.confidence === 'proven');
+  const emerging = SIMPLE_TRAITS.filter((t) => t.confidence !== 'proven');
+
+  const complexValue = value?.[COMPLEX_ID] || 'none';
+  const complexOption = COMPLEX_OPTIONS_BY_VALUE[complexValue];
+  const lethalSuper = value?.lilly_white === 'super';
+
   return (
-    <div className="space-y-3">
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-        {PICKER_TRAITS.map((trait) => (
-          <div key={trait.id} className="space-y-1">
-            <Label className="text-xs text-slate-300 font-medium">
-              {trait.label}
-            </Label>
-            <Select
-              value={value?.[trait.id] || 'none'}
-              onValueChange={(v) => setZyg(trait.id, v)}
-            >
-              <SelectTrigger
-                className={`bg-slate-800 ${accentClass} text-slate-100 h-9 text-xs`}
-              >
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
-                {zygosityOptions(trait).map((opt) => (
-                  <SelectItem key={opt.value} value={opt.value} className="text-xs">
-                    {opt.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+    <div className="space-y-4">
+      {/* Proven Mendelian genes */}
+      <div className="space-y-2">
+        <p className="text-[10px] uppercase tracking-widest text-slate-500">Proven genes</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {proven.map((trait) => (
+            <TraitRow
+              key={trait.id}
+              trait={trait}
+              value={value?.[trait.id]}
+              onSelect={(v) => setState(trait.id, v)}
+              accentClass={accentClass}
+            />
+          ))}
+        </div>
+      </div>
+
+      {/* The Cappuccino complex: one locus, one allele-pair slot */}
+      <div className="space-y-1">
+        <p className="text-[10px] uppercase tracking-widest text-slate-500">
+          Cappuccino complex (one gene, allelic)
+        </p>
+        <Label className="text-xs text-slate-300 font-medium flex items-center gap-1.5">
+          {COMPLEX_ENTRY.label}
+          <ConfidenceBadge confidence="proven" />
+        </Label>
+        <Select value={complexValue} onValueChange={(v) => setState(COMPLEX_ID, v)}>
+          <SelectTrigger className={`bg-slate-800 ${accentClass} text-slate-100 h-9 text-xs`}>
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
+            {COMPLEX_OPTIONS.map((opt) => (
+              <SelectItem key={opt.value} value={opt.value} className="text-xs">
+                {opt.label}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <p className="text-[11px] text-slate-500 leading-snug">
+          Cappuccino and Sable are versions of the same gene, so one parent holds at most two
+          complex alleles. Cappuccino x Sable makes Luwak and can never make a super.
+        </p>
+        {complexOption?.caution && (
+          <div className="flex items-start gap-2 rounded-lg border border-amber-700 bg-amber-950/40 px-3 py-2">
+            <AlertTriangle className="w-4 h-4 text-amber-300 flex-shrink-0 mt-0.5" />
+            <p className="text-xs text-amber-200 leading-snug">{complexOption.caution}</p>
           </div>
-        ))}
+        )}
+      </div>
+
+      {/* Emerging genes */}
+      <div className="space-y-2">
+        <p className="text-[10px] uppercase tracking-widest text-slate-500">Emerging genes</p>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+          {emerging.map((trait) => (
+            <TraitRow
+              key={trait.id}
+              trait={trait}
+              value={value?.[trait.id]}
+              onSelect={(v) => setState(trait.id, v)}
+              accentClass={accentClass}
+            />
+          ))}
+        </div>
       </div>
 
       {lethalSuper && (
         <div className="flex items-start gap-2 rounded-lg border border-red-700 bg-red-950/40 px-3 py-2">
           <AlertTriangle className="w-4 h-4 text-red-300 flex-shrink-0 mt-0.5" />
           <p className="text-xs text-red-200 leading-snug">
-            Super Lilly White is lethal in the egg, this combination cannot
-            exist in a living animal. The calculator still runs the math so
-            you can see the predicted distribution, but expect lethal-egg
-            warnings in the results.
+            Super Lilly White is lethal in the egg, so this combination cannot exist in a living
+            animal. The calculator still runs the math so you can see the predicted distribution,
+            but expect lethal-egg warnings in the results.
           </p>
         </div>
       )}
 
-      {tags.length > 0 && (
+      {chips.length > 0 && (
         <div className="flex flex-wrap gap-1.5 pt-1">
           <span className="text-[11px] uppercase tracking-wider text-slate-500 mr-1 self-center">
             Genotype:
           </span>
-          {tags.map((t) => (
+          {chips.map((t) => (
             <span
               key={t}
               className="text-xs bg-slate-700/60 border border-slate-600 text-slate-200 px-1.5 py-0.5 rounded"

@@ -515,20 +515,24 @@ export function getBlogRoutes() {
 }
 
 // Per-morph genetics calculator landing pages at /calculator/<slug>.
-// Source of truth for the slug list is PICKER_TRAITS in
-// src/components/breeding/ManualGenotypePicker.jsx. Keep this list in
-// sync when adding/removing pickable traits. Each entry yields one
+// Source of truth for the slug list is CALCULATOR_PAGES in
+// src/lib/genetics/calculatorCatalog.js. Keep this list in sync when
+// adding/removing pickable traits; the sync is asserted by
+// src/lib/genetics/__tests__/calculator.test.js. Each entry yields one
 // indexable HTML route prerendered with the trait pre-filled into
 // Parent A.
 const CALCULATOR_MORPH_SLUGS = [
   { slug: 'lilly-white',  label: 'Lilly White' },
   { slug: 'cappuccino',   label: 'Cappuccino' },
+  { slug: 'sable',        label: 'Sable' },
+  { slug: 'highway',      label: 'Highway' },
   { slug: 'whiteout',     label: 'Whiteout' },
   { slug: 'empty-back',   label: 'Empty Back' },
   { slug: 'soft-scale',   label: 'Soft Scale' },
   { slug: 'axanthic',     label: 'Axanthic' },
   { slug: 'phantom',      label: 'Phantom' },
   { slug: 'hypo',         label: 'Hypo' },
+  { slug: 'chocho',       label: 'ChoCho' },
 ];
 
 export function getCalculatorMorphRoutes() {

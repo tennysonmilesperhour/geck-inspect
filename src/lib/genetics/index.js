@@ -19,8 +19,10 @@ import {
   detectRisks,
   describeGenotype,
   matchCombos,
+  getComboMorph,
   COMBO_MORPHS,
   RISK_PAIRINGS,
+  WILD_TYPE,
 } from 'crested-gecko-app';
 
 export {
@@ -31,8 +33,10 @@ export {
   detectRisks,
   describeGenotype,
   matchCombos,
+  getComboMorph,
   COMBO_MORPHS,
   RISK_PAIRINGS,
+  WILD_TYPE,
 };
 
 // ---------- display sanitation ----------------------------------------
