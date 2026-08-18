@@ -30,6 +30,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(__dirname, '..', '..');
 const QUEUE_PATH = path.join(REPO_ROOT, 'docs', 'blog-queue.json');
 const REPORTS_DIR = path.join(REPO_ROOT, 'docs', 'blog-reports');
+const GROWTH_REPORTS_DIR = path.join(REPO_ROOT, 'docs', 'growth-reports');
 
 function readJson(p, fallback = null) {
   try { return JSON.parse(fs.readFileSync(p, 'utf8')); }
@@ -90,6 +91,9 @@ function main() {
   // Signal summary pulled from the last research run stored on disk.
   const latestResearch = readJson(path.join(REPORTS_DIR, '_latest-research.json'), null);
 
+  // Per-post traffic pulled from the newest growth report.
+  const traffic = latestGrowthTraffic();
+
   // Top-cost calls from the budget log.
   const biggestCalls = (latestBudgetLog(weekKey) || [])
     .slice().sort((a, b) => b.usd - a.usd).slice(0, 5);
@@ -101,6 +105,7 @@ function main() {
   const md = renderMarkdown({
     weekKey, thisWeekKey, publishedLastWeek, draftedLastWeek, rejectedLastWeek,
     inQueue, budget, currentBudget, avgScore, latestResearch, biggestCalls, suggestions,
+    traffic,
   });
 
   fs.mkdirSync(REPORTS_DIR, { recursive: true });
@@ -128,6 +133,38 @@ function main() {
 
   console.log(`[weekly-report] Wrote ${path.relative(REPO_ROOT, reportPath)}`);
   console.log(`[weekly-report] Stats: ${JSON.stringify(sidecar.stats)}`);
+}
+
+// Pull per-post blog readership out of the most recent growth report so this
+// report answers "are the posts pulling traffic?" without hand-cross-referencing
+// docs/growth-reports/. The growth report is generated from GA4 + Search Console
+// and only lists its top ~20 pages by views, so any published post missing from
+// that table drew traffic below the reporting threshold that week (treated as
+// negligible, rendered "n/a" here rather than a hard zero).
+export function latestGrowthTraffic() {
+  let files;
+  try {
+    files = fs.readdirSync(GROWTH_REPORTS_DIR)
+      .filter((f) => /^\d{4}-\d{2}-\d{2}\.md$/.test(f));
+  } catch (err) {
+    if (err.code === 'ENOENT') return { reportDate: null, bySlug: new Map() };
+    throw err;
+  }
+  if (!files.length) return { reportDate: null, bySlug: new Map() };
+  files.sort(); // ISO-dated filenames sort chronologically
+  const latest = files[files.length - 1];
+  const reportDate = latest.replace(/\.md$/, '');
+  const text = fs.readFileSync(path.join(GROWTH_REPORTS_DIR, latest), 'utf8');
+
+  // Rows in the growth report's "Top pages" table look like:
+  //   | `/blog/<slug>` | 3 | 20.0% | 5 |
+  const bySlug = new Map();
+  const rowRe = /^\|\s*`\/blog\/([^`]+)`\s*\|\s*([\d.]+)\s*\|\s*([\d.]+%)\s*\|\s*([\d.]+)\s*\|/gm;
+  let m;
+  while ((m = rowRe.exec(text)) !== null) {
+    bySlug.set(m[1], { views: Number(m[2]), engagement: m[3], sessions: Number(m[4]) });
+  }
+  return { reportDate, bySlug };
 }
 
 function latestBudgetLog(weekKey) {
@@ -175,6 +212,7 @@ function renderMarkdown(ctx) {
   const {
     weekKey, thisWeekKey, publishedLastWeek, draftedLastWeek, rejectedLastWeek,
     inQueue, budget, currentBudget, avgScore, latestResearch, biggestCalls, suggestions,
+    traffic = { reportDate: null, bySlug: new Map() },
   } = ctx;
 
   const lines = [];
@@ -199,10 +237,37 @@ function renderMarkdown(ctx) {
   if (publishedLastWeek.length === 0) {
     lines.push('_Nothing published this week._');
   } else {
-    lines.push('| Slug | Category | Score | Published |');
-    lines.push('|---|---|---|---|');
+    lines.push('| Slug | Category | Score | Published | Views (7d) | Engagement |');
+    lines.push('|---|---|---|---|---|---|');
     for (const t of publishedLastWeek) {
-      lines.push(`| /blog/${t.slug} | ${t.category} | ${t.score?.total ?? 'n/a'} | ${t.publishedAt?.slice(0, 10) || 'n/a'} |`);
+      const tr = traffic.bySlug.get(t.slug);
+      const views = tr ? String(tr.views) : 'n/a';
+      const eng = tr ? tr.engagement : 'n/a';
+      lines.push(`| /blog/${t.slug} | ${t.category} | ${t.score?.total ?? 'n/a'} | ${t.publishedAt?.slice(0, 10) || 'n/a'} | ${views} | ${eng} |`);
+    }
+    if (traffic.reportDate) {
+      lines.push('');
+      lines.push(`_Views and engagement are last-7-day figures from the ${traffic.reportDate} growth report. "n/a" means the post drew traffic below that report's top-pages threshold. Posts published this week may not have accrued measurable traffic yet._`);
+    }
+  }
+  lines.push('');
+
+  lines.push('## Blog traffic');
+  lines.push('');
+  if (!traffic.reportDate) {
+    lines.push('_No growth report found in docs/growth-reports/ to pull traffic from._');
+  } else {
+    lines.push(`Per-post readership from the latest growth report (${traffic.reportDate}, GA4 last 7 days). The growth report lists only its top pages by views, so any post not shown here drew traffic below that threshold.`);
+    lines.push('');
+    const rows = [...traffic.bySlug.entries()].sort((a, b) => b[1].views - a[1].views);
+    if (rows.length === 0) {
+      lines.push('_No /blog/ pages surfaced in the latest growth report. Blog traffic was below the reporting threshold this week._');
+    } else {
+      lines.push('| Slug | Views (7d) | Engagement | Sessions |');
+      lines.push('|---|---|---|---|');
+      for (const [slug, tr] of rows) {
+        lines.push(`| /blog/${slug} | ${tr.views} | ${tr.engagement} | ${tr.sessions} |`);
+      }
     }
   }
   lines.push('');
@@ -275,7 +340,7 @@ function renderMarkdown(ctx) {
   lines.push('');
   lines.push('- **Kill a bad topic:** edit `docs/blog-queue.json`, set the topic\'s status to `rejected` and add a `rejectionReason`.');
   lines.push('- **Force a specific topic next:** reorder `docs/blog-queue.json`; the draft agent picks highest-scored `new`/`scheduled` entry.');
-  lines.push('- **Pause the pipeline:** disable the workflow in GitHub Actions UI (Settings → Actions → blog-pipeline).');
+  lines.push('- **Pause the pipeline:** disable the workflow in GitHub Actions UI (Settings, Actions, blog-pipeline).');
   lines.push('- **Adjust voice:** edit `docs/blog-voice-examples.md`, the writer agent picks it up on the next run.');
   lines.push('- **Adjust style rules:** edit `docs/blog-style-guide.md`.');
   lines.push('- **Adjust budget cap:** edit `WEEKLY_CAP_USD` in `scripts/blog/lib/budget.mjs`.');
