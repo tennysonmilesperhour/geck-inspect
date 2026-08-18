@@ -239,9 +239,37 @@ export const STATIC_ROUTES = [
     changefreq: 'monthly',
     lastmod: TODAY,
     meta: {
-      title: 'Crested Gecko Genetics Calculator',
+      title: 'Crested Gecko Morph & Breeding Calculator (Genetics)',
       description:
-        'Free Punnett-square genetics calculator for crested gecko breeders. Predict offspring outcomes for Lilly White, Cappuccino, Axanthic, and Soft Scale pairings.',
+        'Free crested gecko morph calculator and breeding calculator. Predict offspring morphs with Punnett-square genetics for Lilly White, Cappuccino, Axanthic, and Soft Scale pairings. No signup required.',
+    },
+  },
+  {
+    // Public feature landing targeting "crested gecko pedigree tracker"
+    // and lineage/family-tree intent. The actual tool lives behind auth
+    // (/Pedigree, /Lineage); this page is the crawlable front door.
+    path: '/pedigree-tracker',
+    priority: 0.85,
+    changefreq: 'monthly',
+    lastmod: TODAY,
+    meta: {
+      title: 'Crested Gecko Pedigree Tracker & Lineage Family Tree',
+      description:
+        'Track crested gecko pedigrees and multi-generation lineage in one place. Build a visual family tree, follow het carriers and inbreeding coefficients across generations, and share a verified lineage with buyers. Free to start.',
+    },
+  },
+  {
+    // Public feature landing targeting "gecko breeding records" and
+    // breeding-log/clutch-tracking intent. The interactive app lives
+    // behind auth (/Breeding); this is the indexable landing page.
+    path: '/breeding-records',
+    priority: 0.85,
+    changefreq: 'monthly',
+    lastmod: TODAY,
+    meta: {
+      title: 'Crested Gecko Breeding Records & Clutch Tracker',
+      description:
+        'Keep complete crested gecko breeding records: pairings, clutches, egg-lay and hatch dates, incubation, and per-offspring outcomes. A digital breeding log that replaces the spreadsheet and links every hatchling back to its parents. Free to start.',
     },
   },
   {

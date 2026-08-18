@@ -86,6 +86,12 @@ const StorePage             = lazy(() => import('./pages/StorePage'));
 // structure, head, pattern, and color. Spec: docs/specs/P11-quality-rubric.md.
 const QualityScale          = lazy(() => import('./pages/QualityScale'));
 
+// Public feature landing pages. Crawlable front doors for the auth-gated
+// pedigree/lineage and breeding tools, targeting "crested gecko pedigree
+// tracker" and "gecko breeding records" search intent.
+const PedigreeTracker       = lazy(() => import('./pages/PedigreeTracker'));
+const BreedingRecords       = lazy(() => import('./pages/BreedingRecords'));
+
 // P1, Animal Passport (public pages, no auth required)
 const AnimalPassport        = lazy(() => import('./pages/AnimalPassport'));
 const PassportQR            = lazy(() => import('./pages/PassportQR'));
@@ -262,6 +268,8 @@ const AuthenticatedApp = () => {
           <Route path="/MarketplaceVerification" element={<MarketplaceVerification />} />
           <Route path="/store/:slug" element={<StorePage />} />
           <Route path="/QualityScale" element={<QualityScale />} />
+          <Route path="/pedigree-tracker" element={<PedigreeTracker />} />
+          <Route path="/breeding-records" element={<BreedingRecords />} />
           <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
           {/* Breeder is indexable under both /Breeder?slug= (legacy) and
               /Breeder/<slug> (clean, preferred); the page itself reads

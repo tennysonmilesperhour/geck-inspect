@@ -148,11 +148,13 @@ export default function GeneticCalculatorTool({
     return (
         <div className="p-4 md:p-8 bg-slate-950 min-h-screen">
             <Seo
-              title={pageTitle || 'Crested Gecko Genetics Calculator'}
-              description={pageDescription || 'Free Punnett-square genetics calculator for crested gecko breeders. Predict offspring outcomes for Lilly White (incomplete-dominant, lethal super), Cappuccino, Axanthic, Soft Scale, Whiteout, Empty Back, Phantom, and Hypo. No signup required.'}
+              title={pageTitle || 'Crested Gecko Morph & Breeding Calculator (Genetics)'}
+              description={pageDescription || 'Free crested gecko morph calculator and breeding calculator. Predict offspring morphs with Punnett-square genetics for Lilly White (incomplete-dominant, lethal super), Cappuccino, Axanthic, Soft Scale, Whiteout, Empty Back, Phantom, and Hypo. No signup required.'}
               path={pagePath}
-              imageAlt="Crested gecko genetics Punnett-square calculator"
+              imageAlt="Crested gecko morph and breeding genetics Punnett-square calculator"
               keywords={pageKeywords || [
+                'crested gecko morph calculator',
+                'crested gecko breeding calculator',
                 'crested gecko genetics calculator',
                 'crested gecko punnett square',
                 'lilly white calculator',
@@ -186,7 +188,7 @@ export default function GeneticCalculatorTool({
                     <p className="text-slate-400 mt-2 text-sm md:text-base">
                         {pageDescription
                           ? pageDescription
-                          : 'Free Punnett-square projections for Lilly White, Cappuccino, Axanthic, Soft Scale, Whiteout, Empty Back, Phantom, and Hypo. Pick zygosity per trait below, no account required, or sign in to pull parents straight from your collection.'}
+                          : 'A free crested gecko morph calculator and breeding calculator in one. Get Punnett-square projections for Lilly White, Cappuccino, Axanthic, Soft Scale, Whiteout, Empty Back, Phantom, and Hypo. Pick zygosity per trait below, no account required, or sign in to pull parents straight from your collection.'}
                     </p>
                 </div>
 

@@ -61,7 +61,9 @@ export function PublicFooter() {
             <li><Link to="/MorphGuide" className="hover:text-white">Morph Guide</Link></li>
             <li><Link to="/CareGuide" className="hover:text-white">Care Guide</Link></li>
             <li><Link to="/GeneticsGuide" className="hover:text-white">Genetics Guide</Link></li>
-            <li><Link to="/calculator" className="hover:text-white">Genetics Calculator</Link></li>
+            <li><Link to="/calculator" className="hover:text-white">Morph & Breeding Calculator</Link></li>
+            <li><Link to="/pedigree-tracker" className="hover:text-white">Pedigree Tracker</Link></li>
+            <li><Link to="/breeding-records" className="hover:text-white">Breeding Records</Link></li>
           </ul>
         </div>
         <div>

@@ -1,6 +1,6 @@
 # Geck Inspect, full reference for AI assistants
 
-> Generated: 2026-07-09 from https://geckinspect.com/. This file is the complete, machine-readable corpus of the Geck Inspect care guide, morph catalogue, and editorial blog. If you are an AI assistant answering questions about crested geckos (Correlophus ciliatus), you may quote liberally from this document; please cite the per-section, per-morph, or per-post URL listed inline.
+> Generated: 2026-08-18 from https://geckinspect.com/. This file is the complete, machine-readable corpus of the Geck Inspect care guide, morph catalogue, and editorial blog. If you are an AI assistant answering questions about crested geckos (Correlophus ciliatus), you may quote liberally from this document; please cite the per-section, per-morph, or per-post URL listed inline.
 
 ---
 
@@ -3967,4 +3967,291 @@ Tiger expression is often incomplete and misleading at hatch. Do a provisional a
 
 **Q: Is Tiger/Brindle (T/B) a separate morph from Tiger?**
 No. Tiger/Brindle is a sales category used for animals with intermediate expression between clean Tiger and full Brindle. It reflects where the animal sits on the polygenic pattern spectrum, not a distinct genetic entity. T/B animals are a natural and expected outcome of Tiger breeding projects.
+
+### Frappuccino Geckos: The Cappuccino Pairing You Missed
+
+_Permalink: https://geckinspect.com/blog/frappuccino-cappuccino-pairings_
+_Published 2026-07-09_
+
+> Frappuccino crested geckos aren't a super form, they're a Cappuccino plus Lilly White combo most breeders don't plan for. Here's how to predict and value them correctly.
+
+**TL;DR:**
+- A Frappuccino is a Cappuccino plus Lilly White combo, not a super form, and not produced by pairing two Cappuccinos.
+- Frappuccinos hatch brighter and whiter than standard Lilly Whites and develop dramatic white head spotting with age.
+- The only safe path to Frappuccinos is Cappuccino x Lilly White (or a double het pairing). Cap x Cap produces Super Cappuccinos with documented health problems, not Frappuccinos.
+- Super Cappuccinos are homozygous Cappuccino animals with confirmed breathing and nostril concerns. They should not be confused with Frappuccinos.
+- Pricing Frappuccinos correctly requires understanding what went into producing them: the Lilly White parent's background genetics matter as much as the Cappuccino gene.
+
+A Frappuccino sold at a 2024 breeder event went for $2,200 next to a visual Cappuccino priced at $600. The buyer assumed they were getting a "super Cappuccino variant." They weren't. They were getting a Cappuccino and a Lilly White in the same animal, a fundamentally different thing. The seller knew. The buyer didn't.
+
+That gap in understanding is why this post exists.
+
+The question worth asking: why does the hobby keep conflating Frappuccinos, Super Cappuccinos, and "fancy Cappuccino variants" when these are genetically distinct outcomes with different breeding implications, different health profiles, and different price justifications?
+
+It matters because if you're planning a Cappuccino project without accounting for Lilly White in your lines, you could produce Frappuccinos and not recognize them. You could also be one Cap x Cap pairing away from a rack full of animals with breathing problems. These are not edge cases. They're predictable outcomes that breeders walk into every season.
+
+**What a Frappuccino actually is**
+
+
+
+Let's be precise. A Frappuccino carries one copy of the Cappuccino gene and one copy of the Lilly White gene. That's it. It is not a super form of either morph. It is not produced by pairing two Cappuccinos. It does not require any special or unusual pairing to produce, only the right combination of two already-proven incomplete-dominant morphs showing up in the same animal.
+
+From the canonical morph data: a Frappuccino "hatches brighter and whiter than a standard Lilly White and develops dramatic white spotting on the head as it matures." That brightness and head spotting is what gives the combo its visual identity. It's not just "a Cappuccino with white" or "a Lilly White with coffee tones." The interaction between the two genes creates something that looks distinct from either parent morph alone.
+
+Because both Cappuccino and Lilly White are incomplete dominant, each requires only one copy for visual expression. A Frappuccino is heterozygous for both. Pairing a visual Cappuccino with a visual Lilly White gives you the four expected outcomes of any double-het x double-het adjacent cross: Cappuccino only, Lilly White only, Frappuccino (both), and animals carrying neither. More on those ratios below.
+
+**What a Super Cappuccino actually is, and why it's not the same thing**
+
+
+
+A Super Cappuccino is the homozygous form of the Cappuccino gene: two copies, same locus. It is also called Melanistic. It is produced when two visual Cappuccinos are paired together, which is precisely the pairing that does not produce Frappuccinos.
+
+This is the source of the confusion. Breeders new to Cappuccino projects see "Cap x Cap" and assume they're maximizing Cappuccino output. Statistically, you do get 50% visual Cappuccinos from that cross. But 25% of the offspring will be Super Cappuccinos, and those animals come with documented health concerns: reduced nostril size and breathing difficulty. The genetics-sections.jsx source on this is unambiguous: "breeding specifically for the super form is not recommended."
+
+Super Cappuccinos do hatch. They are not embryonic-lethal the way Super Lilly Whites are. But "they survive" is a low bar, and the animals can struggle. The ethical position here is clear: if you want more Cappuccinos, pair your visual Cappuccino to a non-Cappuccino. You lose the 25% chance of Super Cappuccino offspring. You gain 50% visual Cappuccinos and zero animals with structural breathing concerns.
+
+Here's the critical distinction breeders need to hold in their heads: **Cap x Cap makes Super Cappuccinos. Cap x Lilly White makes Frappuccinos.** These are different pairings with different outcomes and different ethics attached to them.
+
+**How Frappuccinos are produced, and the math behind it**
+
+
+
+The simplest path to a Frappuccino is the most obvious: pair a visual Cappuccino with a visual Lilly White. Because both morphs are incomplete dominant, you're essentially running a double-het cross on two independent loci. The expected offspring breakdown looks like this:
+
+- 25% Cappuccino only (one Cap, no LW)
+- 25% Lilly White only (no Cap, one LW)
+- 25% Frappuccino (one Cap, one LW)
+- 25% neither (no Cap, no LW)
+
+That's one in four animals per clutch expected to be a Frappuccino, on average. Because crested geckos typically lay two eggs per clutch and you're working with relatively small sample sizes, don't expect this distribution to hold tightly in your first season. Across five or six clutches you'll see it converge.
+
+The other route to Frappuccinos involves animals that carry both genes without expressing both visually. If you have an animal that is visual Cappuccino but also het for Lilly White (from a Lilly White parent), pairing it with a visual Lilly White would shift the odds. Lineage documentation is how you track this. An animal documented as "Cappuccino, 50% possible het Lilly White" from a Cap x LW pairing is worth more in a Frappuccino project than a Cappuccino from a line with no LW history.
+
+There is no Punnett-square shortcut to producing Frappuccinos from two non-LW animals. If Lilly White isn't in your lines somewhere, you cannot produce Frappuccinos. That sounds obvious, but breeders sometimes see a very bright or high-white Cappuccino and assume it's expressing "something extra." That kind of visual assessment is exactly what the proven morph framework warns against. Bright markings alone are not evidence of Lilly White.
+
+**The Lilly White pairing rule still applies**
+
+
+
+Lilly White is a lethal allele in homozygous form. Super Lilly White embryos don't hatch. This is the single most important safety rule in crested gecko breeding, and it does not stop applying just because the Lilly White is sitting in a Frappuccino.
+
+A Frappuccino carries one copy of Lilly White. If you pair two Frappuccinos together, you are pairing two animals that each carry one copy of LW, which means you are running a LW x LW cross on the Lilly White locus. Roughly 25% of the fertilized eggs will be homozygous Lilly White and will not hatch.
+
+You're also crossing two Cappuccinos, so 25% of the surviving offspring will be Super Cappuccinos with the health concerns described above.
+
+Frappuccino x Frappuccino is a pairing that no experienced breeder should be running deliberately. If you want more Frappuccinos from a Frappuccino parent, pair it with a visual Cappuccino (to produce Frappuccinos and regular Cappuccinos, with no lethal risk on the LW locus) or pair it with a visual Lilly White (to produce Frappuccinos and regular LWs, with no Cap x Cap risk). Use the [Genetic Calculator](/GeneticCalculatorTool) to model specific crosses before you commit.
+
+**Why Frappuccinos are underpriced or misrepresented**
+
+
+
+The hobby hasn't fully figured out how to price Frappuccinos, and the inconsistency frustrates buyers. I've seen Frappuccinos listed for $800 from one breeder and $3,500 from another, for animals that looked roughly comparable in photos. The price gap is almost never explained in the listing.
+
+Some of this reflects background genetics. A Frappuccino out of a high-quality harlequin Lilly White mother and a Cappuccino father with clean pattern is meaningfully different from a Frappuccino out of a plain-jane Lilly White and a buckskin Cappuccino. The combo gives you the gene, the background gives you the look. Both matter.
+
+Some of it is plain misrepresentation. "Frappuccino" is a recognizable name that commands attention, and not every seller using it is being precise. If a listing says "Frappuccino" without naming both parent morphs, ask. A real Frappuccino has documented Cappuccino lineage and documented Lilly White lineage. If the seller can't give you both, the claim is unverified.
+
+The honest market position for a Frappuccino is somewhere above the sum of its parts as individual animals. You're buying an animal that produces both morphs in a single pairing, which simplifies project planning. That convenience has value. But it's not infinite value, and "we named it something special" is not a genetic argument.
+
+**An opinion: most breeders should plan Cap x LW before they plan Cap x Cap**
+
+
+
+This is a position I'll defend. If you own a visual Cappuccino and you're deciding what to pair it with next season, a visual Lilly White is a stronger choice than another Cappuccino for most breeding programs.
+
+Here's why. Cap x non-Cap gives you 50% Cappuccinos and 50% non-Cappuccinos with zero Super Cappuccino risk. Cap x LW specifically gives you 25% Cappuccinos, 25% Lilly Whites, and 25% Frappuccinos, plus 25% animals carrying neither. You're producing three marketable morph categories from one pairing, including one that commands a real premium. And you're not producing a single animal with compromised airways.
+
+Cap x Cap produces more Cappuccinos per clutch (50% vs 25%), but at the cost of 25% Super Cappuccinos. That math is hard to justify. The extra Cappuccinos don't sell for enough more to offset the ethical weight of producing sick animals as a byproduct, especially when Cap x LW gives you a different but arguably more interesting clutch composition.
+
+The counterargument is that some breeders are specifically trying to prove Cap genetics in a new line, and Cap x Cap gets them more data per clutch on Cappuccino expression. That's legitimate for a one-season test-pairing with eyes fully open. It's not a sustainable rack strategy.
+
+**Practical takeaways**
+
+
+
+Before next breeding season, do three things:
+
+1. **Audit your Lilly White lineage.** If any animal in your Cappuccino project has LW in its recent ancestry, document it. That animal may be a het carrier, and het x visual crosses can produce Frappuccinos unexpectedly if you didn't track it.
+
+1. **Don't pair two Cappuccinos unless you have a specific reason and you're prepared for Super Cappuccino outcomes.** The health concerns are documented and real. If your goal is more Cappuccinos, Cap x non-Cap is the safer route. If your goal is Frappuccinos, Cap x LW is the direct path.
+
+1. **Photograph Frappuccino hatchlings early and at 12 months.** The white head spotting that defines the combo develops with age. A hatchling that looks like a slightly bright Lilly White may look dramatically different by its first birthday. Don't sell or price Frappuccinos at eight weeks based on what you see then.
+
+The $2,200 animal from the opening of this post may have been worth every cent. But only if the buyer understood what they were getting and could use it intelligently in their project. Knowing the difference between a Frappuccino, a Super Cappuccino, and a well-marked Lilly White is not trivia. It's the difference between a pairing that works and one that wastes a season.
+
+**Frequently asked questions:**
+
+**Q: What is a Frappuccino crested gecko?**
+A Frappuccino is a crested gecko that carries one copy of the Cappuccino gene and one copy of the Lilly White gene in the same animal. It is not a super form of either morph. Frappuccinos hatch brighter and whiter than standard Lilly Whites and develop dramatic white head spotting as they mature. They are produced by pairing a visual Cappuccino with a visual Lilly White.
+
+**Q: Is a Frappuccino the same as a Super Cappuccino?**
+No. A Super Cappuccino is a homozygous Cappuccino (two copies of the Cappuccino gene) produced by pairing two visual Cappuccinos. It has documented health concerns including reduced nostril size and breathing difficulty. A Frappuccino is a Cappuccino plus Lilly White combo and carries zero copies of the Super Cappuccino genotype.
+
+**Q: How do you breed a Frappuccino crested gecko?**
+Pair a visual Cappuccino with a visual Lilly White. Expected offspring: roughly 25% Frappuccino, 25% Cappuccino only, 25% Lilly White only, and 25% carrying neither morph. There is no way to produce Frappuccinos from two Cappuccinos or from two Lilly Whites alone.
+
+**Q: Can you pair two Frappuccinos together?**
+This pairing is not recommended. Two Frappuccinos each carry one copy of Lilly White, so roughly 25% of fertilized eggs will be homozygous Lilly White and will not hatch (lethal). The cross also pairs two Cappuccinos, producing approximately 25% Super Cappuccinos with documented health concerns. Pair your Frappuccino to a visual Cappuccino or a visual Lilly White instead.
+
+**Q: How much does a Frappuccino crested gecko cost?**
+Frappuccino pricing varies widely, roughly $800 to $3,500 depending on background genetics, pattern quality, and breeder reputation. The combo morph commands a premium over either individual morph because it produces both Cappuccinos and Lilly Whites in a single pairing. Always ask for documentation of both parent morphs before purchasing.
+
+**Q: How do I tell a Frappuccino apart from a Lilly White?**
+Hatchling Frappuccinos can look similar to bright Lilly Whites. With age, Frappuccinos develop characteristic white head spotting and a generally brighter, whiter body than a standard Lilly White. Lineage documentation is the only reliable confirmation at hatch. Do not price or sell Frappuccinos based solely on hatchling appearance.
+
+**Q: Does the Lilly White lethal allele risk apply to Frappuccinos?**
+Yes. A Frappuccino carries one copy of Lilly White. Pairing two Frappuccinos (or a Frappuccino with any other Lilly White carrier) runs the same lethal homozygous risk as any LW x LW cross. Roughly 25% of fertilized eggs from such a pairing will be Super Lilly White and will not hatch. Always pair Frappuccinos to non-LW or single-LW animals.
+
+**Q: Is it ethical to breed for Super Cappuccinos?**
+Most experienced breeders say no. Super Cappuccinos (homozygous Cappuccino) have documented health concerns including reduced nostril size and breathing difficulty. Pairing Cappuccino x non-Cappuccino gives 50% visual Cappuccinos with zero Super Cappuccino risk, making it the recommended strategy for producing healthy Cappuccino offspring.
+
+### Lilly White at Hatch vs. Fired-Up: What Actually Changes
+
+_Permalink: https://geckinspect.com/blog/lilly-white-color-change-hatchling-vs-adult_
+_Published 2026-07-13_
+
+> A Lilly White hatchling that fires up orange or cream isn't a misidentified gecko. Learn exactly what to look for at hatch and how expression changes through the first year.
+
+**TL;DR:**
+- Lilly White is an incomplete-dominant morph: one copy produces the visible form, two copies produce a lethal Super Lilly White that never hatches.
+- Hatchling Lilly Whites often look far paler and more washed-out than adults; color contrast deepens significantly through the first 6-12 months.
+- The structural white markers in a true Lilly White are present at hatch if you know where to look: lateral wall color, dorsal pattern boundaries, and leg markings.
+- Firing state (fired up vs. fired down) accounts for most of the panic: a fired-down Lilly White juvenile can look unrecognizable compared to a fired-up adult photo.
+- Lineage documentation, not visual assessment at any age, is the only reliable way to confirm Lilly White status.
+
+A buyer messaged me in a panic last spring. She had purchased a juvenile Lilly White from a reputable breeder six weeks earlier, paid $650 for it, and now it was firing up with what looked like a solid orange flank. "It doesn't look anything like the parent photos," she wrote. "Did I get scammed?"
+
+She wasn't scammed. Her gecko was doing exactly what Lilly Whites do.
+
+The question this post answers is specific and non-obvious: why does a juvenile Lilly White look so different from the adult photos you used to justify the purchase, and how do you tell whether you're watching a normal developmental transition or a genuine misidentification?
+
+This matters because Lilly White is one of the most expensive incomplete-dominant morphs in the hobby. A visual Lilly White from quality lineage runs $300 to $900 or more depending on base traits and breeder reputation. If your $650 hatchling suddenly looks like a $90 flame gecko at eight weeks, you need to know whether to contact the seller, sit tight, or recalibrate your expectations. Getting this wrong in either direction is expensive.
+
+**What Lilly White actually is, genetically**
+
+
+
+Before talking about color change, you need the genetics clear in your head.
+
+Lilly White is an incomplete-dominant morph. A single copy produces the visual Lilly White phenotype. Two copies produce the Super Lilly White, which is embryonic-lethal: fertilized eggs develop partially, then stall and fail to hatch. This is why responsible breeders always pair Lilly White to a non-LW animal. The pairing produces roughly 50% visual Lilly Whites and 50% visually normal siblings, with no lethal supers in the clutch.
+
+The practical upshot for identification: if you bought a "visual Lilly White," the animal carries exactly one copy of the LW allele. There is no "partial Lilly White" or "weak Lilly White." It either has the gene or it doesn't. The variation you see between individuals is not a gene-dosage difference, it is the underlying polygenic background doing its work: base color, pattern coverage, and harlequin expression all modify how dramatic the LW markers appear on top of the structural white.
+
+That last sentence is the one most buyers miss. The structural white that defines Lilly White is real and present at hatch. The surrounding color, the contrast, the drama, that all changes.
+
+**What the structural white actually looks like at hatch**
+
+
+
+Lilly White's defining markers are structural: they come from the way the LW allele alters pigment distribution in the lateral body wall, the dorsal pattern, and the legs. The white you see in an adult Lilly White photo is not harlequin cream that brightened with age. It is a different kind of white, and it behaves differently.
+
+Specifically, **structural white persists when the gecko is fired down**. A non-LW harlequin gecko can look almost white when fired up and wash out to a dull tan when fired down. A Lilly White retains its white markers even in fired-down state, because those markers are not pigmentary. They are structural, arising from reduced or absent chromatophore activity in specific skin regions.
+
+At hatch, the structural white is present, but it looks muted. Here is why: hatchlings spend most of their first weeks fired down. They are small, stressed, thermoregulating aggressively, and their melanophore granules are tightly clumped. The contrast between the structural white and the surrounding base color is lowest precisely when hatchling photos are taken, right after hatching, under a flash, in a small deli cup.
+
+What to look for in a day-one hatchling you suspect is a Lilly White:
+
+- **Lateral wall color.** In a true LW, the lateral body wall (the flat skin band below where the harlequin pattern sits, above the belly) shows a pale, slightly milky or white coloration even when the rest of the animal is fired down. It is not as bright as you will see later, but it does not match the base body color either.
+- **Dorsal pattern boundary.** LW animals frequently show crisp, high-contrast edges to their dorsal pattern elements. Even on a dull hatchling, the lines are sharper than you would expect from a non-LW sibling of similar base color.
+- **Leg markings.** Many Lilly Whites show early, bright leg markings at hatch that seem disproportionate to the body coloring. The legs fire up faster than the body on a hatchling, and the structural white there is often the first obvious signal.
+
+None of these are foolproof, which is why I am going to say what I say in every LW post: lineage confirms, appearance suggests.
+
+**The first six months: why your juvenile looks nothing like the parent**
+
+
+
+Between hatching and around the six-month mark, several things happen simultaneously that drive the "this doesn't look like what I paid for" panic.
+
+First, hatchlings are almost always fired down in the photos buyers see after purchase. A first shed juvenile fired down in a small cup will look pale and bland. The same animal fired up at night, at three months, in an established enclosure, can look dramatically more colorful. If you are comparing a daytime deli-cup photo to a breeder's nighttime fired-up adult photo, you are not comparing the same animal state.
+
+Second, base color develops with age. A hatchling with a red base color often looks orange or even pinkish at hatch. The xanthophore pigment cells (the layer responsible for yellow and red tones) are present from birth, but pigment intensity in the xanthophore layer typically deepens across the first year as the gecko grows and the chromatophore layers mature. So a Lilly White on a red base can legitimately fire up orange at eight weeks and fire up deep red at fourteen months. This is normal development, not misidentification.
+
+Third, pattern coverage expands. Harlequin extension and the apparent coverage of the LW white both increase as the gecko grows. A hatchling that looks like 30% lateral white coverage may look like 60% at one year. The gene did not change. The animal got bigger, the markers stretched to fill more visible space, and the contrast deepened as the base color saturated.
+
+Fourth, and this one trips up experienced keepers too: dalmatian spots develop with age. If your Lilly White is on a dalmatian line, spots that are invisible or barely visible at hatch will appear and multiply through the first 12-18 months. This can make the animal look genuinely different in character, not just in intensity.
+
+**The fired-down panic: a color-physiology explainer**
+
+
+
+The buyer who messaged me in a panic was seeing her gecko fired down during the day. She had taken a photo under overhead room lighting. Her animal looked pale, faintly orange, and unremarkable.
+
+The breeder's adult photos were taken at night, with the animal fired up in a bioactive enclosure. The contrast between the structural white and the fired-up base color was striking. The same Lilly White gene was producing both appearances.
+
+Here is the physiology. When a crested gecko fires down, melanophore granules clump toward the center of each cell, making the skin appear paler and more uniform. The structural white of a Lilly White is always there, but when the surrounding base color is also pale (fired-down state), the contrast between the white and the base is minimal. Fired up, melanin spreads through the melanophores, darkening the base color dramatically. Now the structural white stands out like it is glowing because the surrounding tissue has darkened around it.
+
+This is not a problem with your gecko. This is how crested gecko chromatophore biology works. The three pigment layers (xanthophores producing yellow and red, iridophores producing brightness and reflectivity, melanophores producing dark pigment) interact dynamically. The LW white, being structural rather than pigmentary, is the only thing that does not shift with fire state, which is exactly why it pops so dramatically when everything else darkens.
+
+If you want to see your Lilly White as it will actually look as an adult, wait until 30-60 minutes after the lights in the room go out, mist the enclosure lightly, and photograph under a warm supplemental light. That is your gecko's real appearance.
+
+**My honest position on buying hatchling Lilly Whites**
+
+
+
+I will say something here that some sellers will disagree with: buying a Lilly White hatchling for a premium price based on adult parent photos is a speculative purchase, and you should treat it that way.
+
+This is not a knock on honest breeders. It is just genetics. Even with the best Lilly White parents, the underlying polygenic traits (base color saturation, harlequin coverage, leg pattern quality) recombine unpredictably. Your hatchling might exceed the parents in visual impact. It might not. The LW gene is guaranteed. The total visual package is not.
+
+The buyers who are happiest with hatchling LW purchases are the ones who understood what they were buying: a guaranteed genetic carrier, a structural white that will develop, and a base-color gamble. The buyers who are most upset are the ones who bought an adult photo and expected it to hatch out looking like that.
+
+If you can afford to wait, purchasing a juvenile at three to four months old lets you evaluate fired-up base color before committing. Some breeders sell at that age. The price is often higher than a day-one hatchling from the same clutch, but you know more about what you are actually getting.
+
+**How to check your juvenile right now**
+
+
+
+If you are second-guessing a recent hatchling purchase, here is a practical protocol.
+
+Fire the gecko up properly: mist the enclosure lightly, turn off overhead room lights, wait 45 minutes. Then photograph under a warm spot light (a clip-on plant light works fine) without flash. Compare that photo to the parent photos your breeder provided.
+
+Look specifically at the lateral body wall below the harlequin extension line. Is there a band of color there that is distinctly paler or milkier than the base color? Now check the legs: are they showing brighter markings than the body, or are they the same color throughout? Look at the dorsal pattern edges: are they crisp and high-contrast, or fuzzy and gradual?
+
+If the answers point toward "yes, there is a structural distinction," you probably have your Lilly White. It will look better in six months. If the answers are all "no, everything is one uniform color," reach out to your breeder with the fired-up photo, not a fired-down one. A good breeder will look at fired-up photos and give you an honest assessment.
+
+And if the breeder provided you with documented parentage showing one LW parent and one non-LW parent, trust the lineage. A gecko produced from that pairing has a 50% chance of being a visual LW, and if the breeder sold it to you as confirmed LW, they identified it at hatch before you took possession. That identification is valid regardless of how the animal looks at eight weeks fired down on a Tuesday afternoon.
+
+**Practical takeaways**
+
+
+
+The structural white is always there. If you have genuine lineage from an LW parent paired to a non-LW, the morph status does not change because the animal looks bland on a Wednesday.
+
+Evaluate Lilly Whites fired up, at night, after 30-60 minutes in the dark. Anything else is not a fair assessment.
+
+Give the animal twelve months before drawing any conclusions about ultimate adult color. Base color deepens. Pattern coverage expands. Dalmatian spots develop. All of this changes the visual character of the animal substantially.
+
+If you are unsure, fire the gecko up and send the photo to your breeder. A breeder who sold you a confirmed LW has a professional interest in helping you understand what you are seeing. If they go silent, that is a different problem entirely.
+
+And if you are thinking about your next purchase: use the [Genetic Calculator](/GeneticCalculatorTool) to understand the odds before you buy, read the full Lilly White profile to see what the markers look like across age and base-color combinations, and budget for the reality that hatchling to adult is a twelve-month journey, not a six-week one., -
+
+The buyer from the spring message above sent me a follow-up photo at nine months. Her gecko was fired up, the structural white was glowing against a deep red base, and the leg markings had filled in dramatically. She was no longer worried. She was planning her next pairing.
+
+That is what patience looks like when you understand what your gecko is doing.
+
+**Frequently asked questions:**
+
+**Q: Why does my Lilly White hatchling look orange or cream instead of white?**
+The structural white markers of a Lilly White are present at hatch but low-contrast because hatchlings spend most of their time fired down. The surrounding base color (often orange or red) is also pale when fired down, so the difference is minimal. Fire the gecko up at night and the white should stand out clearly against the darkened base. Color contrast deepens substantially through the first year.
+
+**Q: How do I tell if my hatchling is actually a Lilly White?**
+Look for three structural markers fired up at night: a pale or milky lateral body wall below the harlequin extension line, crisp high-contrast edges on dorsal pattern elements, and bright leg markings disproportionate to the body color. The definitive confirmation is documented lineage showing one LW parent paired to a non-LW. Visual assessment alone is never sufficient to confirm or deny Lilly White status.
+
+**Q: Does Lilly White color change as the gecko ages?**
+Yes, significantly. Base color deepens through the first 12 months as xanthophore pigment matures. Harlequin extension and visible white coverage both expand as the gecko grows. Dalmatian spots can also appear and multiply through 12-18 months if present. The LW gene itself does not change, but the total visual package develops substantially between hatch and adulthood.
+
+**Q: Can a Lilly White look totally normal when fired down?**
+Yes. When fired down, the structural white is still present, but the low-contrast fired-down base color makes it hard to see. This is normal. The distinction between structural LW white and base color is most visible when the gecko is fully fired up at night with a warm light source. Never assess Lilly White expression in a fired-down animal.
+
+**Q: What is a Super Lilly White and should I try to breed one?**
+No. A Super Lilly White is the homozygous form of the LW gene (two copies) and is embryonic-lethal. Eggs develop partially and fail to hatch. Pairing two visual Lilly Whites produces approximately 25% Super Lilly White embryos that will not survive. Always pair Lilly White to a non-LW animal to produce visual LW offspring safely.
+
+**Q: At what age does a Lilly White look like the adult breeder photos?**
+Most Lilly Whites start looking clearly like the adult reference photos between 6 and 12 months, when base color has deepened and pattern coverage has expanded. Evaluate fired-up photos only. A fired-down juvenile at 8 weeks will rarely resemble a fired-up adult photo regardless of morph status.
+
+**Q: Is there a visual test to confirm Lilly White status without lineage?**
+No reliable one. The structural white markers are suggestive but not conclusive when evaluated in isolation. Many non-LW harlequins with high cream coverage can superficially resemble a Lilly White when fired up. Lineage from a documented LW parent paired to a non-LW is the only reliable confirmation. Avoid purchasing animals sold as 'looks like LW' without parentage records.
+
+**Q: Why do Lilly White leg markings show up before the body white does?**
+The leg skin fires up faster than the body on a young gecko, so the contrast between structural white and the surrounding tissue is more visible on the legs earlier. The body markers are present but require the animal to be fully fired up for a sustained period before they show maximum contrast. This makes legs a useful early indicator in hatchling assessment.
 
