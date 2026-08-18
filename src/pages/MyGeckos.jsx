@@ -25,6 +25,7 @@ import GeckoForm from '../components/my-geckos/GeckoForm';
 import WeighInMode from '../components/my-geckos/WeighInMode';
 import CSVImportModal from '../components/my-geckos/CSVImportModal';
 import GeckoDetailModal from '../components/my-geckos/GeckoDetailModal';
+import TransferHistory from '../components/my-geckos/TransferHistory';
 import GeckoFilters from '../components/my-geckos/GeckoFilters';
 import ArchiveReasonDialog from '../components/my-geckos/ArchiveReasonDialog';
 import { toast } from '@/components/ui/use-toast';
@@ -62,6 +63,7 @@ export default function MyGeckosPage() {
     const [isDetailModalOpen, setIsDetailModalOpen] = useState(false);
     const [isWeighInOpen, setIsWeighInOpen] = useState(false);
     const [viewMode, setViewMode] = useState('card'); // 'card' or 'list'
+    const [activeTab, setActiveTab] = useState('collection'); // 'collection' or 'transfers'
     const [sortBy, setSortBy] = useState('date_added'); // sorting option
     const [filters, setFilters] = useState({
         sexes: [],
@@ -580,6 +582,29 @@ export default function MyGeckosPage() {
                     </div>
                 </div>
 
+                {/* Collection / Transfers tabs */}
+                <div className="flex items-center gap-1 mb-6 border-b border-slate-800">
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('collection')}
+                        className={`px-4 py-2 text-sm font-medium -mb-px border-b-2 transition-colors ${activeTab === 'collection' ? 'border-emerald-500 text-emerald-300' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+                    >
+                        Collection
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setActiveTab('transfers')}
+                        className={`px-4 py-2 text-sm font-medium -mb-px border-b-2 transition-colors inline-flex items-center gap-1.5 ${activeTab === 'transfers' ? 'border-emerald-500 text-emerald-300' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+                    >
+                        <ArrowUpDown className="w-3.5 h-3.5" />
+                        Transfers
+                    </button>
+                </div>
+
+                {activeTab === 'transfers' ? (
+                    <TransferHistory user={user} />
+                ) : (
+                <>
                 <div className="mb-6">
                     {/* Toolbar, single row: search (grows) + sort + view + filters */}
                     <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-3 p-2 rounded-xl border border-slate-800 bg-slate-900/60">
@@ -952,6 +977,8 @@ export default function MyGeckosPage() {
                             )}
                         </AnimatePresence>
                     </>
+                )}
+                </>
                 )}
 
                 <CSVImportModal

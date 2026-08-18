@@ -26,6 +26,7 @@ DECLARE
   v_name  TEXT;
   v_tr    transfer_requests%ROWTYPE;
   v_now   TIMESTAMPTZ := now();
+  v_cid   UUID;
 BEGIN
   IF v_email IS NULL OR v_uid IS NULL THEN
     RAISE EXCEPTION 'not authenticated';
@@ -56,6 +57,27 @@ BEGIN
   FROM profiles WHERE email = v_email;
   v_name := COALESCE(v_name, v_email);
 
+  -- Find or create the claimer's default collection. Geckos are scoped to
+  -- MyGeckos by collection_id, not created_by, so the animal has to leave
+  -- the sender's collection and join the claimer's or it will still show
+  -- in the sender's list (and only reach the claimer via a fallback path).
+  -- Mirrors geckos_set_default_collection().
+  SELECT id INTO v_cid
+  FROM collections
+  WHERE lower(owner_email) = lower(v_email) AND is_default = true
+  LIMIT 1;
+
+  IF v_cid IS NULL THEN
+    INSERT INTO collections (owner_email, name, description, is_default)
+    VALUES (v_email, 'My collection', 'Default collection.', true)
+    RETURNING id INTO v_cid;
+
+    INSERT INTO collection_members
+        (collection_id, member_email, role, status, accepted_at)
+    VALUES (v_cid, v_email, 'owner', 'accepted', v_now)
+    ON CONFLICT (collection_id, lower(member_email)) DO NOTHING;
+  END IF;
+
   -- 1. Mark the transfer claimed.
   UPDATE transfer_requests
   SET status = 'claimed',
@@ -64,9 +86,10 @@ BEGIN
       updated_date = v_now
   WHERE id = v_tr.id;
 
-  -- 2. Reassign the animal to the claimer.
+  -- 2. Reassign the animal to the claimer and move it into their collection.
   UPDATE geckos
   SET created_by = v_email,
+      collection_id = v_cid,
       status = 'Owned',
       updated_date = v_now
   WHERE id = v_tr.animal_id;
