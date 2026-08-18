@@ -24,6 +24,28 @@ import { useNavigate } from 'react-router-dom';
 import { generatePassportCode } from '@/lib/passportUtils';
 import { supabase } from '@/lib/supabaseClient';
 import { createPageUrl } from '@/utils';
+import { PRIMARY_MORPHS } from '@/components/morph-id/morphTaxonomy';
+
+// The species ("Crested Gecko") is NOT a morph, and genetic traits
+// (Lilly White, Axanthic, ...) are not primary morphs. When syncing a
+// gecko's photos into the gecko_images training corpus, only fill
+// primary_morph when a tag actually maps to a canonical primary-morph
+// PATTERN id. Anything else stays null instead of polluting the corpus
+// with species/trait labels the AI Morph ID model can't return.
+const PRIMARY_MORPH_ID_BY_LABEL = new Map(
+  PRIMARY_MORPHS.map((m) => [m.label.toLowerCase(), m.id]),
+);
+function resolvePrimaryMorphId(gecko) {
+  const candidates = [
+    ...(Array.isArray(gecko.morph_tags) ? gecko.morph_tags : []),
+    ...String(gecko.morphs_traits || '').split(','),
+  ];
+  for (const candidate of candidates) {
+    const id = PRIMARY_MORPH_ID_BY_LABEL.get(String(candidate).trim().toLowerCase());
+    if (id) return id;
+  }
+  return null;
+}
 
 // `canEdit` mirrors the geckos UPDATE/DELETE RLS policy on the client
 //, it's true for the gecko's original creator and for any accepted
@@ -520,11 +542,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                               try {
                                 await GeckoImage.create({
                                   image_url: url,
-                                  primary_morph: (gecko.morphs_traits || 'crested_gecko')
-                                    .split(',')[0]
-                                    .trim()
-                                    .toLowerCase()
-                                    .replace(/\s+/g, '_') || 'crested_gecko',
+                                  primary_morph: resolvePrimaryMorphId(gecko),
                                   secondary_traits: Array.isArray(gecko.morph_tags)
                                     ? gecko.morph_tags
                                     : [],

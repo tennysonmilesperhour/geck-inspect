@@ -139,6 +139,12 @@ export default function Recognition() {
               across all of them, and you save one feedback record covering the
               whole set.
             </p>
+            <div className="mt-4 mx-auto max-w-2xl rounded-lg border border-amber-500/30 bg-amber-500/10 px-4 py-3 text-sm text-amber-200/90">
+              Crested geckos only. This tool identifies crested gecko
+              (Correlophus ciliatus) morphs. It is not trained on other species,
+              so please only upload crested geckos. Results for gargoyles,
+              leachianus, leopard geckos, or anything else will not be reliable.
+            </div>
           </CardHeader>
         </Card>
 

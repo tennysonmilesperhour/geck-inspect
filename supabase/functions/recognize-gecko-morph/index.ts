@@ -50,7 +50,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
   PRIMARY_MORPH_IDS, GENETIC_TRAIT_IDS, SECONDARY_TRAIT_IDS,
   BASE_COLOR_IDS, PATTERN_INTENSITY_IDS, WHITE_AMOUNT_IDS,
-  FIRED_STATE_IDS, TAXONOMY_VERSION,
+  FIRED_STATE_IDS, AGE_STAGE_IDS, TAXONOMY_VERSION,
 } from "./taxonomy.ts";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
@@ -537,6 +537,7 @@ async function callClaude(
   imageUrls: string[],
   includeValueEstimate: boolean,
   model: string,
+  ageStage: string | null,
 ): Promise<CallClaudeResult> {
   const bank = await loadFewShotBank();
 
@@ -563,9 +564,12 @@ async function callClaude(
   const userBlocks: Record<string, unknown>[] = imageUrls.map((url) => (
     { type: "image", source: { type: "url", url } }
   ));
-  const trailingText = imageUrls.length > 1
+  const ageLine = ageStage && ageStage !== "unknown"
+    ? ` The keeper reports this animal's life stage as "${ageStage}"; weigh traits at that developmental baseline (hatchling whites and pattern read very differently from adult).`
+    : "";
+  const trailingText = (imageUrls.length > 1
     ? `The ${imageUrls.length} images above are of the SAME user-submitted animal. Synthesize across them before calling the tool.`
-    : `The image above is the user's submitted gecko. Call the tool with your analysis.`;
+    : `The image above is the user's submitted gecko. Call the tool with your analysis.`) + ageLine;
   const variableContent: Record<string, unknown>[] = [
     ...userBlocks,
     { type: "text", text: trailingText },
@@ -684,6 +688,14 @@ serve(async (req) => {
     // (Recognition.jsx, TrainModel.jsx) omit `model` and get the env default.
     model = resolveModel(body?.model);
 
+    // Life stage is sent by Recognition.jsx (`age_stage`) so the model can
+    // weigh traits at the right developmental baseline. Validate against the
+    // taxonomy; anything else is treated as unknown and omitted.
+    const ageStage = typeof body?.age_stage === "string"
+      && AGE_STAGE_IDS.includes(body.age_stage)
+      ? body.age_stage
+      : null;
+
     // Surface tag for the spend-log sink. Eval script sends
     // surface='morph_id_eval' + the shared secret header; admin callers
     // can tag themselves freely; everyone else gets 'morph_id_production'.
@@ -750,7 +762,7 @@ serve(async (req) => {
       creditsRemaining = Math.max(0, creditsIncluded - creditsConsumed);
     }
 
-    const result = await callClaude(imageUrls, includeValueEstimate, model);
+    const result = await callClaude(imageUrls, includeValueEstimate, model, ageStage);
     const analysis = clampToTaxonomy(result.raw, includeValueEstimate, model);
     await logInvocation({
       surface,
