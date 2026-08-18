@@ -91,6 +91,7 @@ const QualityScale          = lazy(() => import('./pages/QualityScale'));
 // tracker" and "gecko breeding records" search intent.
 const PedigreeTracker       = lazy(() => import('./pages/PedigreeTracker'));
 const BreedingRecords       = lazy(() => import('./pages/BreedingRecords'));
+const CrestedGeckoPrice     = lazy(() => import('./pages/CrestedGeckoPrice'));
 
 // P1, Animal Passport (public pages, no auth required)
 const AnimalPassport        = lazy(() => import('./pages/AnimalPassport'));
@@ -270,6 +271,7 @@ const AuthenticatedApp = () => {
           <Route path="/QualityScale" element={<QualityScale />} />
           <Route path="/pedigree-tracker" element={<PedigreeTracker />} />
           <Route path="/breeding-records" element={<BreedingRecords />} />
+          <Route path="/crested-gecko-price" element={<CrestedGeckoPrice />} />
           <Route path="/PrivacyPolicy" element={<PrivacyPolicy />} />
           {/* Breeder is indexable under both /Breeder?slug= (legacy) and
               /Breeder/<slug> (clean, preferred); the page itself reads

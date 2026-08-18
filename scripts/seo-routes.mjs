@@ -273,6 +273,20 @@ export const STATIC_ROUTES = [
     },
   },
   {
+    // Public price/value guide targeting "how much is my crested gecko
+    // worth" and "crested gecko price by morph". High buyer intent, weak
+    // specialized competition. Feeds off the Quality Scale tiers.
+    path: '/crested-gecko-price',
+    priority: 0.85,
+    changefreq: 'monthly',
+    lastmod: TODAY,
+    meta: {
+      title: 'How Much Is My Crested Gecko Worth? Price Guide by Morph',
+      description:
+        'Crested gecko price guide by morph and quality. See what common, high-end, and genetic morphs like Lilly White, Cappuccino, and Axanthic are worth in 2026, and the factors (quality, sex, age, lineage) that set the price.',
+    },
+  },
+  {
     path: '/Mentorship',
     priority: 0.7,
     changefreq: 'weekly',

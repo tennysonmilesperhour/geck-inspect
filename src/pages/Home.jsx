@@ -9,6 +9,7 @@ import {
   Dna,
   GitBranch,
   LineChart as LineChartIcon,
+  DollarSign,
   Sparkles,
   Users,
   BookOpen,
@@ -92,6 +93,12 @@ const TOOL_LINKS = [
     icon: Scale,
     title: 'Quality Scale',
     desc: 'A free 10-point rubric for grading a crested gecko on structure, head, pattern, and color, and seeing what it is worth.',
+  },
+  {
+    to: '/crested-gecko-price',
+    icon: DollarSign,
+    title: 'Price Guide',
+    desc: 'How much is my crested gecko worth? Market ranges by morph and quality, from common animals to Lilly White and Axanthic.',
   },
   {
     to: '/MorphVisualizer',
@@ -976,6 +983,7 @@ export default function Home() {
                 <li><Link to="/pedigree-tracker" className="hover:text-white">Pedigree Tracker</Link></li>
                 <li><Link to="/breeding-records" className="hover:text-white">Breeding Records</Link></li>
                 <li><Link to="/QualityScale" className="hover:text-white">Quality Scale</Link></li>
+                <li><Link to="/crested-gecko-price" className="hover:text-white">Price Guide</Link></li>
                 <li><Link to="/blog" className="hover:text-white">Blog</Link></li>
               </ul>
             </div>

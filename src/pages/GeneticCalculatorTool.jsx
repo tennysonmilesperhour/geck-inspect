@@ -434,6 +434,50 @@ export default function GeneticCalculatorTool({
                         {hasParents && <BreedingSimulator sire={sire} dam={dam} />}
                     </>
                 )}
+
+                {/* Positioning + SEO context. Base /calculator only, the
+                    per-morph landing pages carry their own intro copy and
+                    should not repeat this block. Written to state what makes
+                    this calculator accurate for crested geckos specifically,
+                    without naming competitors. */}
+                {!pageBreadcrumb && (
+                  <div className="mt-10 grid gap-4 md:grid-cols-3">
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Dna className="w-4 h-4 text-purple-400" />
+                        <h2 className="text-sm font-semibold text-slate-100">Built crested-gecko-first</h2>
+                      </div>
+                      <p className="text-xs text-slate-400 leading-relaxed">
+                        The inheritance rules here are tuned for crested geckos (Correlophus ciliatus), not adapted from a general reptile calculator. Lilly White is modeled as incomplete-dominant with a lethal super, Cappuccino and Axanthic as recessives, and Soft Scale as dominant, so the outcomes match how these traits actually pass in the hobby. Learn the underlying rules in the{' '}
+                        <Link to="/GeneticsGuide" className="text-purple-300 hover:text-purple-200">genetics guide</Link>.
+                      </p>
+                    </div>
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Users className="w-4 h-4 text-emerald-400" />
+                        <h2 className="text-sm font-semibold text-slate-100">Pulls from your collection</h2>
+                      </div>
+                      <p className="text-xs text-slate-400 leading-relaxed">
+                        Sign in and pick real parents straight from your collection instead of re-entering genotypes by hand. Each projection ties back to the animals you already track, and every hatchling can flow into your{' '}
+                        <Link to="/breeding-records" className="text-emerald-300 hover:text-emerald-200">breeding records</Link> and{' '}
+                        <Link to="/pedigree-tracker" className="text-emerald-300 hover:text-emerald-200">pedigree</Link>.
+                      </p>
+                    </div>
+                    <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
+                      <div className="flex items-center gap-2 mb-2">
+                        <ArrowRight className="w-4 h-4 text-sky-400" />
+                        <h2 className="text-sm font-semibold text-slate-100">Free, no account needed</h2>
+                      </div>
+                      <p className="text-xs text-slate-400 leading-relaxed">
+                        Run any pairing right now without signing up. Explore per-trait calculators for{' '}
+                        <Link to="/calculator/lilly-white" className="text-sky-300 hover:text-sky-200">Lilly White</Link>,{' '}
+                        <Link to="/calculator/cappuccino" className="text-sky-300 hover:text-sky-200">Cappuccino</Link>, and{' '}
+                        <Link to="/calculator/axanthic" className="text-sky-300 hover:text-sky-200">Axanthic</Link>, or browse the full{' '}
+                        <Link to="/MorphGuide" className="text-sky-300 hover:text-sky-200">morph guide</Link>.
+                      </p>
+                    </div>
+                  </div>
+                )}
             </div>
         </div>
     );

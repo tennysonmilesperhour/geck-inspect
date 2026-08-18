@@ -77,44 +77,24 @@ export default function ClaimAnimal() {
     }
     setClaiming(true);
     try {
-      const now = new Date().toISOString();
+      // The claim reassigns the animal across an RLS boundary (the claimer
+      // isn't the owner yet), so it runs server-side in a SECURITY DEFINER
+      // function that validates the token and moves ownership atomically.
+      const { error: rpcError } = await supabase.rpc('claim_transfer', {
+        p_token: token,
+        p_contribute: contributePrice,
+      });
 
-      // Update transfer request
-      await supabase
-        .from('transfer_requests')
-        .update({
-          status: 'claimed',
-          to_user_id: currentUser.id,
-          claimed_at: now,
-          updated_date: now,
-        })
-        .eq('id', transfer.id);
-
-      // Update gecko ownership
-      await supabase
-        .from('geckos')
-        .update({
-          created_by: currentUser.email,
-          status: 'Owned',
-          updated_date: now,
-        })
-        .eq('id', transfer.animal_id);
-
-      // Create ownership record
-      await supabase
-        .from('ownership_records')
-        .insert({
-          animal_id: transfer.animal_id,
-          owner_user_id: currentUser.id,
-          owner_name: currentUser.full_name || currentUser.email,
-          acquired_date: now.split('T')[0],
-          transfer_method: 'purchased',
-          sale_price: transfer.sale_price,
-          contributed_to_market_data: contributePrice && !!transfer.sale_price,
-          created_by: currentUser.email,
-          created_date: now,
-          updated_date: now,
-        });
+      if (rpcError) {
+        console.error('Claim failed:', rpcError);
+        const msg = (rpcError.message || '').toLowerCase();
+        if (msg.includes('already claimed')) setError('already_claimed');
+        else if (msg.includes('cancelled')) setError('cancelled');
+        else if (msg.includes('expired')) setError('expired');
+        else if (msg.includes('not found')) setError('not_found');
+        else setError('claim_failed');
+        return;
+      }
 
       setClaimed(true);
     } catch (err) {
