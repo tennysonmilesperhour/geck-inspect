@@ -8,9 +8,10 @@
 
 CREATE TABLE IF NOT EXISTS pairing_outcome_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  -- Parents from the user's collection (geckos.id is UUID)
-  sire_id UUID,
-  dam_id UUID,
+  -- Parents from the user's collection. geckos.id is TEXT (base44-era
+  -- identifiers), so these must be TEXT, not UUID.
+  sire_id TEXT,
+  dam_id TEXT,
   sire_label TEXT NOT NULL DEFAULT '',
   dam_label TEXT NOT NULL DEFAULT '',
   -- Stable per-user pairing identity (sire_id|dam_id)
