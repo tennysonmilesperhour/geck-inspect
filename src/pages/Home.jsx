@@ -46,6 +46,61 @@ const LOGO_URL =
 const BACKGROUND_IMAGE =
   'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=2400&q=80';
 
+// Public, free reference/tool pages surfaced on the homepage. Anchor text
+// is written to match how people search (morph calculator, breeding
+// calculator, pedigree tracker, breeding records) so these internal links
+// reinforce the target queries for each destination page.
+const TOOL_LINKS = [
+  {
+    to: '/calculator',
+    icon: Dna,
+    title: 'Morph & Breeding Calculator',
+    desc: 'Predict offspring morphs from any pairing. Punnett-square genetics for Lilly White, Cappuccino, Axanthic, and Soft Scale. No signup.',
+  },
+  {
+    to: '/pedigree-tracker',
+    icon: GitBranch,
+    title: 'Pedigree Tracker',
+    desc: 'Build a multi-generation family tree, follow het carriers down the line, and share a verified lineage with buyers.',
+  },
+  {
+    to: '/breeding-records',
+    icon: Egg,
+    title: 'Breeding Records',
+    desc: 'A digital breeding log and clutch tracker: pairings, egg-lay and hatch dates, incubation, and per-offspring outcomes.',
+  },
+  {
+    to: '/MorphGuide',
+    icon: Images,
+    title: 'Morph Guide',
+    desc: 'Every documented crested gecko morph, from Harlequin and Dalmatian to Lilly White and Axanthic, with inheritance and rarity.',
+  },
+  {
+    to: '/CareGuide',
+    icon: BookOpen,
+    title: 'Care Guide',
+    desc: 'Housing, temperature and humidity, diet, handling, shedding, and breeding readiness for Correlophus ciliatus.',
+  },
+  {
+    to: '/GeneticsGuide',
+    icon: Sparkles,
+    title: 'Genetics Guide',
+    desc: 'From Punnett squares to proving recessives: how Lilly White, Cappuccino, Axanthic, and Soft Scale actually inherit.',
+  },
+  {
+    to: '/QualityScale',
+    icon: Scale,
+    title: 'Quality Scale',
+    desc: 'A free 10-point rubric for grading a crested gecko on structure, head, pattern, and color, and seeing what it is worth.',
+  },
+  {
+    to: '/MorphVisualizer',
+    icon: LineChartIcon,
+    title: 'Morph Visualizer',
+    desc: 'Interactive trait simulator: dial in base color, zygosity, and pattern intensity and watch the phenotype render live.',
+  },
+];
+
 const FEATURES = [
   {
     icon: Dna,
@@ -696,6 +751,40 @@ export default function Home() {
             exist in the testimonials table. Curated via the admin tab. */}
         <Testimonials />
 
+        {/* Free tools and guides, descriptive anchor-text links to the
+            public reference/tool pages. Doubles as internal-link equity to
+            the money pages (calculator, pedigree tracker, breeding records)
+            and as a directory for visitors who land on the homepage from a
+            head-term search. */}
+        <section className="relative z-10 max-w-6xl mx-auto px-6 pb-24">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-3">
+              Free crested gecko tools and guides
+            </h2>
+            <p className="text-slate-400 max-w-2xl mx-auto">
+              Every reference and calculator below is free and needs no account. Built crested-gecko-first, not adapted from a generic reptile app.
+            </p>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+            {TOOL_LINKS.map((t) => {
+              const Icon = t.icon;
+              return (
+                <Link
+                  key={t.to}
+                  to={t.to}
+                  className="group gecko-card backdrop-blur p-6 transition-all duration-200 hover:border-emerald-400/40"
+                >
+                  <div className="w-11 h-11 rounded-md border border-emerald-400/25 bg-emerald-500/15 flex items-center justify-center mb-4 transition-colors group-hover:bg-emerald-500/25">
+                    <Icon className="w-5 h-5 text-emerald-300" />
+                  </div>
+                  <h3 className="text-base font-semibold text-white mb-1.5">{t.title}</h3>
+                  <p className="text-sm text-slate-400 leading-relaxed">{t.desc}</p>
+                </Link>
+              );
+            })}
+          </div>
+        </section>
+
         {/* Crested gecko context, this is valuable SEO/AI content */}
         <section className="relative z-10 max-w-4xl mx-auto px-6 pb-24">
           <div className="gecko-card backdrop-blur p-8 md:p-12">
@@ -883,7 +972,10 @@ export default function Home() {
                 <li><Link to="/MorphGuide" className="hover:text-white">Morph Guide</Link></li>
                 <li><Link to="/CareGuide" className="hover:text-white">Care Guide</Link></li>
                 <li><Link to="/GeneticsGuide" className="hover:text-white">Genetics Guide</Link></li>
-                <li><Link to="/calculator" className="hover:text-white">Genetics Calculator</Link></li>
+                <li><Link to="/calculator" className="hover:text-white">Morph & Breeding Calculator</Link></li>
+                <li><Link to="/pedigree-tracker" className="hover:text-white">Pedigree Tracker</Link></li>
+                <li><Link to="/breeding-records" className="hover:text-white">Breeding Records</Link></li>
+                <li><Link to="/QualityScale" className="hover:text-white">Quality Scale</Link></li>
                 <li><Link to="/blog" className="hover:text-white">Blog</Link></li>
               </ul>
             </div>
