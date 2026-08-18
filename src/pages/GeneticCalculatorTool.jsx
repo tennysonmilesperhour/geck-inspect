@@ -1,15 +1,20 @@
-import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect, useMemo } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { base44 } from '@/api/base44Client';
-import { Dna, Loader2, ArrowLeftRight, ArrowRight, Users, Pencil } from 'lucide-react';
+import { Dna, Loader2, ArrowLeftRight, ArrowRight, Users, Pencil, Link2, Check } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Button } from '@/components/ui/button';
 import GeneticCalculator from '../components/breeding/GeneticCalculator';
 import BreedingSimulator from '../components/innovations/BreedingSimulator';
 import ManualGenotypePicker, {
-  buildAnimalFromZygosity,
+  buildParentFromState,
 } from '../components/breeding/ManualGenotypePicker';
+import {
+  encodeParentState,
+  decodeParentState,
+  stateHasSelection,
+} from '@/lib/genetics/calculatorCatalog';
 import Seo from '@/components/seo/Seo';
 import { createPageUrl } from '@/utils';
 import { breadcrumbSchema, ORG_ID } from '@/lib/organization-schema';
@@ -21,7 +26,7 @@ const CALCULATOR_JSON_LD = [
     '@id': 'https://geckinspect.com/calculator#app',
     name: 'Crested Gecko Genetics Calculator',
     url: 'https://geckinspect.com/calculator',
-    description: 'Punnett-square-based genetics calculator for crested gecko (Correlophus ciliatus) breeders. Predicts offspring outcomes for incomplete-dominant, recessive, and dominant traits including Lilly White, Cappuccino, Axanthic, Soft Scale, and Hypo. Free, no signup required.',
+    description: 'Punnett-square-based genetics calculator for crested gecko (Correlophus ciliatus) breeders. Predicts offspring outcomes for incomplete-dominant, recessive, and dominant traits including Lilly White, Cappuccino, Sable, Luwak, Axanthic, Phantom, and Empty Back, with 66% and 50% possible-het inputs and per-clutch odds. Free, no signup required.',
     applicationCategory: 'UtilitiesApplication',
     applicationSubCategory: 'Reptile Breeding Calculator',
     operatingSystem: 'Web',
@@ -29,11 +34,13 @@ const CALCULATOR_JSON_LD = [
     offers: { '@type': 'Offer', price: '0', priceCurrency: 'USD' },
     featureList: [
       'No-signup manual genotype entry',
-      'Single-trait Punnett square projections',
-      'Multi-trait combined projections',
-      'Lilly White lethal-super flagging',
-      'Monte Carlo litter simulation',
-      'Percentage breakdown of visible vs carrier offspring',
+      'Combined offspring projections with combo morph names (Frappuccino, Luwak)',
+      'Cappuccino allelic complex support (Cappuccino, Sable, Highway, Luwak)',
+      '66% and 50% possible-het inputs with correct probability math',
+      'Lilly White lethal-super flagging and expected egg-loss accounting',
+      'Per-clutch and per-season odds (2-egg clutches, at-least-one probability)',
+      'Shareable pairing permalinks',
+      'Season simulation',
     ],
     creator: { '@id': ORG_ID },
   },
@@ -53,9 +60,13 @@ const CALCULATOR_JSON_LD = [
  *                    parent via the `initialSireZygosity` prop.
  *   - 'collection', pick two of the user's saved geckos. Authed only.
  *
- * The downstream `GeneticCalculator` component reads `morph_tags` off
- * each parent, so manual-mode "animals" are constructed by
- * `buildAnimalFromZygosity` to emit the same shape.
+ * Manual-mode "animals" are constructed by `buildParentFromState` and
+ * carry a `genotype_spec` (weighted-locus spec supporting possible
+ * hets and the Cappuccino complex) alongside display `morph_tags`;
+ * collection-mode geckos carry only `morph_tags` and the downstream
+ * `GeneticCalculator` converts those via the engine's tag importer.
+ * The manual pairing is mirrored into the URL (?sire=...&dam=...) so
+ * every calculation is a shareable permalink.
  */
 export default function GeneticCalculatorTool({
   initialSireZygosity,
@@ -70,18 +81,57 @@ export default function GeneticCalculatorTool({
     const [geckos, setGeckos] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
     const [isAuthed, setIsAuthed] = useState(false);
+    const [copied, setCopied] = useState(false);
 
     // Collection-mode selections
     const [sireId, setSireId] = useState('');
     const [damId, setDamId] = useState('');
 
-    // Manual-mode zygosity records, e.g. { lilly_white: 'het', axanthic: 'visual' }
-    const [sireZygosity, setSireZygosity] = useState(initialSireZygosity || {});
-    const [damZygosity, setDamZygosity] = useState({});
+    // Permalink state: ?sire=lilly_white:het,axanthic:ph66&dam=... The URL
+    // wins over the per-morph prefill so shared links reproduce exactly
+    // what the sharer configured.
+    const [searchParams, setSearchParams] = useSearchParams();
+    const [urlSeeded] = useState(() => ({
+        sire: decodeParentState(searchParams.get('sire')),
+        dam: decodeParentState(searchParams.get('dam')),
+    }));
+
+    // Manual-mode zygosity records, e.g. { lilly_white: 'het', axanthic: 'ph66' }
+    const [sireZygosity, setSireZygosity] = useState(() =>
+        stateHasSelection(urlSeeded.sire) ? urlSeeded.sire : (initialSireZygosity || {}));
+    const [damZygosity, setDamZygosity] = useState(() => urlSeeded.dam);
 
     // Default mode: manual for everyone (and required for unauthed). Authed
     // users can switch to 'collection' to pull from their saved geckos.
     const [mode, setMode] = useState('manual');
+
+    const hasUrlSeed = stateHasSelection(urlSeeded.sire) || stateHasSelection(urlSeeded.dam);
+
+    // Keep the URL in sync with the manual pairing so every calculation
+    // is a shareable permalink. replace:true so fiddling with the picker
+    // doesn't pollute browser history.
+    useEffect(() => {
+        if (mode !== 'manual') return;
+        const sireStr = encodeParentState(sireZygosity);
+        const damStr = encodeParentState(damZygosity);
+        setSearchParams((prev) => {
+            const next = new URLSearchParams(prev);
+            if (sireStr) next.set('sire', sireStr); else next.delete('sire');
+            if (damStr) next.set('dam', damStr); else next.delete('dam');
+            return next;
+        }, { replace: true });
+    }, [mode, sireZygosity, damZygosity, setSearchParams]);
+
+    const handleCopyLink = async () => {
+        try {
+            await navigator.clipboard.writeText(window.location.href);
+            setCopied(true);
+            setTimeout(() => setCopied(false), 2000);
+        } catch {
+            // Clipboard can be unavailable (permissions, http); the URL
+            // bar still has the same link, so fail quietly.
+        }
+    };
 
     useEffect(() => {
         const load = async () => {
@@ -94,8 +144,10 @@ export default function GeneticCalculatorTool({
                     const data = await getVisibleGeckos(user);
                     setGeckos(data.filter(g => !g.archived));
                     // Authed users haven't filled in a manual genotype yet,
-                    // start them on collection mode if they have geckos.
-                    if (!initialSireZygosity && data.length > 0) {
+                    // start them on collection mode if they have geckos,
+                    // unless a permalink or per-morph prefill seeded manual
+                    // mode with a pairing.
+                    if (!initialSireZygosity && !hasUrlSeed && data.length > 0) {
                         setMode('collection');
                     }
                 }
@@ -107,7 +159,7 @@ export default function GeneticCalculatorTool({
             setIsLoading(false);
         };
         load();
-    }, [initialSireZygosity]);
+    }, [initialSireZygosity, hasUrlSeed]);
 
     const males = geckos.filter(g => g.sex === 'Male');
     const females = geckos.filter(g => g.sex === 'Female');
@@ -120,14 +172,21 @@ export default function GeneticCalculatorTool({
     const collectionDam = geckos.find(g => g.id === damId) || null;
 
     // The actual sire/dam objects fed to the calculator. In manual mode we
-    // synthesize them from zygosity selections; in collection mode we use
-    // the user's saved Gecko entities directly.
-    const sire = mode === 'manual'
-      ? buildAnimalFromZygosity('manual_sire', 'Parent A (Sire)', sireZygosity)
-      : collectionSire;
-    const dam = mode === 'manual'
-      ? buildAnimalFromZygosity('manual_dam', 'Parent B (Dam)', damZygosity)
-      : collectionDam;
+    // synthesize them from zygosity selections (carrying a genotype_spec
+    // that supports possible hets and the Cappuccino complex); in
+    // collection mode we use the user's saved Gecko entities directly.
+    const sire = useMemo(
+      () => (mode === 'manual'
+        ? buildParentFromState('manual_sire', 'Parent A (Sire)', sireZygosity)
+        : collectionSire),
+      [mode, sireZygosity, collectionSire],
+    );
+    const dam = useMemo(
+      () => (mode === 'manual'
+        ? buildParentFromState('manual_dam', 'Parent B (Dam)', damZygosity)
+        : collectionDam),
+      [mode, damZygosity, collectionDam],
+    );
 
     const handleSwap = () => {
         if (mode === 'manual') {
@@ -142,14 +201,14 @@ export default function GeneticCalculatorTool({
     };
 
     const hasParents = mode === 'manual'
-      ? (sire.morph_tags.length > 0 || dam.morph_tags.length > 0)
+      ? (stateHasSelection(sireZygosity) || stateHasSelection(damZygosity))
       : (sire && dam);
 
     return (
         <div className="p-4 md:p-8 bg-slate-950 min-h-screen">
             <Seo
               title={pageTitle || 'Crested Gecko Morph & Breeding Calculator (Genetics)'}
-              description={pageDescription || 'Free crested gecko morph calculator and breeding calculator. Predict offspring morphs with Punnett-square genetics for Lilly White (incomplete-dominant, lethal super), Cappuccino, Axanthic, Soft Scale, Whiteout, Empty Back, Phantom, and Hypo. No signup required.'}
+              description={pageDescription || 'Free crested gecko morph calculator and breeding calculator. Predict offspring morphs with Punnett-square genetics for Lilly White (lethal super), the Cappuccino complex (Cappuccino, Sable, Highway, Luwak), Axanthic, Phantom, Empty Back, Soft Scale, Whiteout, and Hypo, with possible-het inputs and per-clutch odds. No signup required.'}
               path={pagePath}
               imageAlt="Crested gecko morph and breeding genetics Punnett-square calculator"
               keywords={pageKeywords || [
@@ -188,7 +247,7 @@ export default function GeneticCalculatorTool({
                     <p className="text-slate-400 mt-2 text-sm md:text-base">
                         {pageDescription
                           ? pageDescription
-                          : 'A free crested gecko morph calculator and breeding calculator in one. Get Punnett-square projections for Lilly White, Cappuccino, Axanthic, Soft Scale, Whiteout, Empty Back, Phantom, and Hypo. Pick zygosity per trait below, no account required, or sign in to pull parents straight from your collection.'}
+                          : 'A free crested gecko morph calculator and breeding calculator in one. Projections for every proven gene, including the Cappuccino complex (Cappuccino, Sable, Highway, Luwak), 66% and 50% possible hets, and real 2-egg clutch odds. Pick genes below, no account required, or sign in to pull parents straight from your collection.'}
                     </p>
                 </div>
 
@@ -265,6 +324,22 @@ export default function GeneticCalculatorTool({
                                 />
                               </div>
                             </div>
+                            {hasParents && (
+                              <div className="mt-4 pt-3 border-t border-slate-800 flex items-center justify-between gap-3">
+                                <p className="text-xs text-slate-500">
+                                  This pairing lives in the URL, share it anywhere.
+                                </p>
+                                <Button
+                                  variant="outline"
+                                  size="sm"
+                                  onClick={handleCopyLink}
+                                  className="border-slate-600 text-slate-200 hover:bg-slate-700 text-xs"
+                                >
+                                  {copied ? <Check className="w-3.5 h-3.5 mr-1.5 text-emerald-400" /> : <Link2 className="w-3.5 h-3.5 mr-1.5" />}
+                                  {copied ? 'Copied' : 'Copy link'}
+                                </Button>
+                              </div>
+                            )}
                             {!isAuthed && (
                               <div className="mt-4 pt-4 border-t border-slate-800 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
                                 <p className="text-xs text-slate-500">

@@ -1,18 +1,25 @@
 /**
- * BreedingSimulator, Monte Carlo breeding outcome visualization.
+ * BreedingSimulator, season-level Monte Carlo visualization.
  *
- * Drop into any page that has sire + dam gecko objects.
- * Runs 1,000 virtual clutches and shows:
- *   - Phenotype distribution histogram
- *   - "At least one in clutch" probability per trait
- *   - Adjustable clutch size slider
+ * Drop into any page that has sire + dam gecko objects (with
+ * morph_tags or a genotype_spec). Simulates 1,000 breeding seasons of
+ * N clutches x 2 eggs (crestie biology, not an arbitrary clutch
+ * slider) and shows:
+ *   - Chance of at least one of each combo per clutch and per season
+ *     (computed exactly, no sampling noise)
+ *   - Offspring phenotype distribution histogram (sampled)
  */
 import { useState } from 'react';
 import { useBreedingSimulator } from '@/hooks/useBreedingSimulator';
+import { displayText } from '@/lib/genetics';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
 import { FlaskConical, Dna, AlertTriangle } from 'lucide-react';
+import {
+  DEFAULT_CLUTCHES_PER_SEASON,
+  MAX_CLUTCHES_PER_SEASON,
+} from '@/lib/genetics/clutchMath';
 
 const BAR_COLORS = [
   'bg-emerald-500', 'bg-purple-500', 'bg-blue-500', 'bg-amber-500',
@@ -20,8 +27,8 @@ const BAR_COLORS = [
 ];
 
 export default function BreedingSimulator({ sire, dam }) {
-  const [clutchSize, setClutchSize] = useState(6);
-  const result = useBreedingSimulator(sire, dam, 1000, clutchSize);
+  const [clutchCount, setClutchCount] = useState(DEFAULT_CLUTCHES_PER_SEASON);
+  const result = useBreedingSimulator(sire, dam, 1000, clutchCount);
 
   if (!sire || !dam) {
     return (
@@ -36,7 +43,7 @@ export default function BreedingSimulator({ sire, dam }) {
 
   if (!result) return null;
 
-  const { phenotypeDist, atLeastOneProb, warnings = [] } = result;
+  const { phenotypeDist, atLeastOne, warnings = [], eggsPerSeason } = result;
   const maxPercent = Math.max(...phenotypeDist.map(d => d.percent), 1);
 
   function severityClasses(severity) {
@@ -50,13 +57,14 @@ export default function BreedingSimulator({ sire, dam }) {
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2 text-slate-100">
           <FlaskConical className="w-5 h-5 text-purple-400" />
-          Breeding Simulator
+          Season Simulator
           <Badge variant="outline" className="ml-auto text-xs text-slate-400 border-slate-600">
-            1,000 virtual clutches
+            1,000 simulated seasons
           </Badge>
         </CardTitle>
         <p className="text-xs text-slate-500 mt-1">
-          Monte Carlo simulation, randomized allele draws across {result.trials.toLocaleString()} clutches of {clutchSize} eggs each.
+          Crested geckos lay 2-egg clutches every 30 to 45 days. This simulates {result.trials.toLocaleString()} seasons
+          of {clutchCount} clutches ({eggsPerSeason} eggs) each.
         </p>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -77,56 +85,61 @@ export default function BreedingSimulator({ sire, dam }) {
                 />
                 <div className="text-sm leading-snug">
                   <span className="font-semibold uppercase tracking-wide text-xs mr-1">{w.severity}</span>
-                  {w.message}
+                  {displayText(w.message)}
+                  {w.conditional && (
+                    <span className="text-xs opacity-80"> (applies only if the possible het proves out)</span>
+                  )}
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        {/* Clutch size slider */}
+        {/* Clutches-per-season slider */}
         <div className="space-y-2">
           <div className="flex items-center justify-between text-sm">
-            <span className="text-slate-400">Clutch size</span>
-            <span className="text-emerald-400 font-mono font-bold">{clutchSize} eggs</span>
+            <span className="text-slate-400">Clutches this season</span>
+            <span className="text-emerald-400 font-mono font-bold">
+              {clutchCount} clutches · {eggsPerSeason} eggs
+            </span>
           </div>
           <Slider
-            value={[clutchSize]}
-            onValueChange={([v]) => setClutchSize(v)}
+            value={[clutchCount]}
+            onValueChange={([v]) => setClutchCount(v)}
             min={1}
-            max={12}
+            max={MAX_CLUTCHES_PER_SEASON}
             step={1}
             className="w-full"
           />
           <div className="flex justify-between text-xs text-slate-600">
-            <span>1</span><span>6</span><span>12</span>
+            <span>1</span><span>{Math.round(MAX_CLUTCHES_PER_SEASON / 2)}</span><span>{MAX_CLUTCHES_PER_SEASON}</span>
           </div>
         </div>
 
-        {/* "At least one" probabilities */}
-        {atLeastOneProb.length > 0 && (
+        {/* At-least-one probabilities, per clutch and per season */}
+        {atLeastOne.length > 0 && (
           <div className="space-y-2">
             <h4 className="text-sm font-semibold text-slate-300 flex items-center gap-1.5">
               <Dna className="w-4 h-4 text-emerald-400" />
-              Chance of at least one per clutch
+              Chance of hatching at least one
             </h4>
             <div className="grid gap-1.5">
-              {atLeastOneProb.map(({ trait, probability }) => (
+              {atLeastOne.map(({ trait, perClutch, perSeason }) => (
                 <div key={trait} className="flex items-center gap-3">
-                  <span className="text-sm text-slate-300 w-40 truncate">{trait}</span>
+                  <span className="text-sm text-slate-300 w-36 truncate" title={trait}>{trait}</span>
                   <div className="flex-1 bg-slate-800 rounded-full h-5 overflow-hidden">
                     <div
                       className="h-full bg-gradient-to-r from-emerald-600 to-emerald-400 rounded-full transition-all duration-500 flex items-center justify-end pr-2"
-                      style={{ width: `${Math.max(probability, 3)}%` }}
+                      style={{ width: `${Math.max(perSeason, 3)}%` }}
                     >
-                      {probability >= 15 && (
-                        <span className="text-[10px] font-bold text-white">{probability}%</span>
+                      {perSeason >= 20 && (
+                        <span className="text-[10px] font-bold text-white">{perSeason}% this season</span>
                       )}
                     </div>
                   </div>
-                  {probability < 15 && (
-                    <span className="text-xs text-slate-400 w-12 text-right">{probability}%</span>
-                  )}
+                  <span className="text-xs text-slate-400 w-28 text-right whitespace-nowrap">
+                    {perSeason < 20 && <>{perSeason}% season · </>}{perClutch}%/clutch
+                  </span>
                 </div>
               ))}
             </div>

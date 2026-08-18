@@ -883,6 +883,18 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://geckinspect.com/calculator/sable</loc>
+    <lastmod>2026-08-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://geckinspect.com/calculator/highway</loc>
+    <lastmod>2026-08-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://geckinspect.com/calculator/whiteout</loc>
     <lastmod>2026-08-18</lastmod>
     <changefreq>monthly</changefreq>
@@ -914,6 +926,12 @@
   </url>
   <url>
     <loc>https://geckinspect.com/calculator/hypo</loc>
+    <lastmod>2026-08-18</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://geckinspect.com/calculator/chocho</loc>
     <lastmod>2026-08-18</lastmod>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
