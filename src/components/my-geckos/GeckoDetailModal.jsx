@@ -933,30 +933,34 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                 )}
                 <Button
                   variant="outline"
-                  onClick={() => {
+                  onClick={async () => {
                     const email = prompt('Enter the recipient\'s email address:');
                     if (!email) return;
                     const price = prompt('Sale price (optional, leave blank to skip):');
                     const msg = prompt('Message for the buyer (optional):');
                     const token = crypto.randomUUID();
-                    supabase.from('transfer_requests').insert({
+                    const { data: authData, error: authError } = await supabase.auth.getUser();
+                    if (authError || !authData?.user?.id) {
+                      toast({ title: 'Transfer failed', description: 'You need to be signed in to transfer ownership.', variant: 'destructive' });
+                      return;
+                    }
+                    const { error } = await supabase.from('transfer_requests').insert({
                       animal_id: gecko.id,
-                      from_user_id: null,
+                      from_user_id: authData.user.id,
                       to_email: email,
                       token,
                       sale_price: price ? Number(price) : null,
                       message: msg || null,
                       created_by: gecko.created_by,
                       expires_at: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(),
-                    }).then(({ error }) => {
-                      if (error) {
-                        toast({ title: 'Transfer failed', description: error.message, variant: 'destructive' });
-                      } else {
-                        const claimUrl = `${window.location.origin}/claim/${token}`;
-                        navigator.clipboard.writeText(claimUrl);
-                        toast({ title: 'Transfer initiated!', description: `Claim link copied to clipboard. Share it with ${email}. Expires in 72 hours.` });
-                      }
                     });
+                    if (error) {
+                      toast({ title: 'Transfer failed', description: error.message, variant: 'destructive' });
+                    } else {
+                      const claimUrl = `${window.location.origin}/claim/${token}`;
+                      navigator.clipboard.writeText(claimUrl);
+                      toast({ title: 'Transfer initiated!', description: `Claim link copied to clipboard. Share it with ${email}. Expires in 72 hours.` });
+                    }
                   }}
                   className="w-full border-amber-600 text-amber-400 hover:bg-amber-900/20"
                 >
