@@ -138,6 +138,36 @@ export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageS
           </div>
         </div>
 
+        {Array.isArray(result.alternatives) && result.alternatives.length > 1 && (
+          <div>
+            <p className="text-xs uppercase tracking-wide text-slate-400 mb-1">
+              Other possibilities
+            </p>
+            <div className="flex flex-wrap gap-2">
+              {result.alternatives.map((alt) => (
+                <button
+                  key={alt.primary_morph}
+                  type="button"
+                  onClick={() => { set('primary_morph', alt.primary_morph); setEditing(true); }}
+                  className={`text-xs rounded-full px-3 py-1 border transition-colors ${
+                    alt.primary_morph === state.primary_morph
+                      ? 'bg-emerald-600/30 border-emerald-500 text-emerald-100'
+                      : 'bg-slate-800 border-slate-600 text-slate-300 hover:border-slate-400'
+                  }`}
+                >
+                  {labelFor(alt.primary_morph)}
+                  {Number.isFinite(alt.likelihood) && (
+                    <span className="ml-1 text-slate-400">{Math.round(alt.likelihood)}%</span>
+                  )}
+                </button>
+              ))}
+            </div>
+            <p className="text-[11px] text-slate-500 mt-1">
+              Crested morphs overlap a lot. If a runner-up looks closer, tap it to use it, then save your correction.
+            </p>
+          </div>
+        )}
+
         {state.secondary_traits?.length > 0 && (
           <div>
             <p className="text-xs uppercase tracking-wide text-slate-400 mb-1">Secondary traits</p>

@@ -433,6 +433,18 @@ function buildTool(includeValueEstimate: boolean) {
     white_amount:      { type: "string", enum: WHITE_AMOUNT_IDS },
     fired_state:       { type: "string", enum: FIRED_STATE_IDS },
     confidence_score:  { type: "integer", minimum: 0, maximum: 100 },
+    alternatives: {
+      type: "array",
+      description: "The top 2-3 most likely primary_morph ids ranked most to least likely, INCLUDING your primary_morph pick first, each with a 0-100 likelihood. Crested gecko morphs are frequently confused, so always offer runners-up.",
+      items: {
+        type: "object",
+        required: ["primary_morph", "likelihood"],
+        properties: {
+          primary_morph: { type: "string", enum: PRIMARY_MORPH_IDS },
+          likelihood:    { type: "integer", minimum: 0, maximum: 100 },
+        },
+      },
+    },
     explanation:       { type: "string", description: "1-2 sentences citing visual evidence." },
   };
   if (includeValueEstimate) {
@@ -460,6 +472,24 @@ function buildTool(includeValueEstimate: boolean) {
   };
 }
 
+// Normalize the model's ranked alternatives: keep only valid primary_morph
+// ids, clamp likelihoods, dedupe (first wins), sort most-likely first, and
+// cap at 3. Returns [] when the model omitted the field.
+function clampAlternatives(v: unknown): { primary_morph: string; likelihood: number }[] {
+  if (!Array.isArray(v)) return [];
+  const seen = new Set<string>();
+  const out: { primary_morph: string; likelihood: number }[] = [];
+  for (const item of v) {
+    const m = (item as Record<string, unknown>)?.primary_morph;
+    if (typeof m !== "string" || !PRIMARY_MORPH_IDS.includes(m) || seen.has(m)) continue;
+    seen.add(m);
+    const l = Number((item as Record<string, unknown>)?.likelihood);
+    out.push({ primary_morph: m, likelihood: Math.max(0, Math.min(100, Number.isFinite(l) ? l : 0)) });
+  }
+  out.sort((a, b) => b.likelihood - a.likelihood);
+  return out.slice(0, 3);
+}
+
 function clampToTaxonomy(
   raw: Record<string, unknown>,
   includeValueEstimate: boolean,
@@ -478,6 +508,7 @@ function clampToTaxonomy(
     white_amount:      pick(raw.white_amount, WHITE_AMOUNT_IDS) || "medium",
     fired_state:       pick(raw.fired_state, FIRED_STATE_IDS) || "unknown",
     confidence_score:  Math.max(0, Math.min(100, Number(raw.confidence_score) || 0)),
+    alternatives:      clampAlternatives(raw.alternatives),
     explanation:       typeof raw.explanation === "string" ? raw.explanation : "",
     taxonomy_version:  TAXONOMY_VERSION,
     model,

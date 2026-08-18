@@ -61,12 +61,35 @@ Query params:
     "contributor_confidence": 95,
     "ai_original": null,
     "reviewer_verdict": null,
-    "taxonomy_version": "2026.04.17"
+    "taxonomy_version": "2026.04.17",
+    "verification_tier": null
   },
+  "label_weight": 1.0,
   "verified": true,
   "created_date": "2026-04-17T…"
 }
 ```
+
+### `label_weight`
+
+Each sample carries a `label_weight` in `[0, 1]` so a training or eval
+pipeline can trust curated labels more than noisy ones. Multiply each
+sample's loss (or its vote in an eval) by this value.
+
+| provenance / tier                | weight |
+|----------------------------------|--------|
+| `hero_anchor` tier (show winners)| 1.0    |
+| `expert_owner`                   | 1.0    |
+| `expert_reviewed`                | 0.85   |
+| `ai_then_expert`                 | 0.8    |
+| `community`                      | 0.6    |
+| `geck-data-scraper` (auto-bulk)  | 0.5    |
+| `web_crawl`                      | 0.4    |
+| anything else                    | 0.5    |
+
+Auto-approved scrapes are still included and trusted, just discounted
+relative to a human-confirmed label. Adjust the map in `index.ts`
+(`LABEL_WEIGHT_BY_PROVENANCE`) if the mix changes.
 
 ## ML hookup sketch
 

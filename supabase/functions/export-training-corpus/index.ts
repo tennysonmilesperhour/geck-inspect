@@ -39,6 +39,27 @@ function err(status: number, message: string) {
   });
 }
 
+// Per-sample training weight. Human-verified labels are trusted fully;
+// auto-approved scrapes are trusted but discounted (they're bulk-approved
+// without a human confirming each one), and raw web-crawl labels lower
+// still. A fine-tuning / eval pipeline multiplies each sample's loss (or
+// vote) by this so noisier labels can't outweigh curated ones.
+const LABEL_WEIGHT_BY_PROVENANCE: Record<string, number> = {
+  expert_owner: 1.0,
+  expert_reviewed: 0.85,
+  ai_then_expert: 0.8,
+  community: 0.6,
+  "geck-data-scraper": 0.5,
+  web_crawl: 0.4,
+};
+
+function resolveLabelWeight(meta: Record<string, unknown>): number {
+  // Curated competition/show anchors are gold-standard regardless of source.
+  if (meta.verification_tier === "hero_anchor") return 1.0;
+  const source = typeof meta.provenance === "string" ? meta.provenance : "community";
+  return LABEL_WEIGHT_BY_PROVENANCE[source] ?? 0.5;
+}
+
 function toSample(row: Record<string, unknown>) {
   const meta = (row.training_meta || {}) as Record<string, unknown>;
   return {
@@ -64,7 +85,9 @@ function toSample(row: Record<string, unknown>) {
       reviewer_verdict: meta.reviewer_verdict || null,
       contributor_confidence: row.confidence_score,
       taxonomy_version: meta.taxonomy_version || null,
+      verification_tier: meta.verification_tier || null,
     },
+    label_weight: resolveLabelWeight(meta),
     verified: row.verified === true,
     created_date: row.created_date,
   };

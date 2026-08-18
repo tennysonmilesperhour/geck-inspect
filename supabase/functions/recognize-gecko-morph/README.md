@@ -52,6 +52,11 @@ supabase functions deploy recognize-gecko-morph --no-verify-jwt
     "white_amount": "high",
     "fired_state": "fired_up",
     "confidence_score": 82,
+    "alternatives": [
+      { "primary_morph": "extreme_harlequin", "likelihood": 82 },
+      { "primary_morph": "super_harlequin", "likelihood": 40 },
+      { "primary_morph": "harlequin", "likelihood": 25 }
+    ],
     "explanation": "Heavy red pattern extending onto legs with prominent white belly...",
     "taxonomy_version": "2026.04.17",
     "model": "claude-sonnet-4-6"
