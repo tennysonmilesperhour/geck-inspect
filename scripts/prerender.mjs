@@ -448,6 +448,7 @@ function injectNoscriptBody(html, route) {
             <a href="/calculator">Calculator</a>
             <a href="/pedigree-tracker">Pedigree Tracker</a>
             <a href="/breeding-records">Breeding Records</a>
+            <a href="/crested-gecko-price">Price Guide</a>
             <a href="/blog">Blog</a>
             <a href="/About">About</a>
           </nav>

@@ -64,6 +64,7 @@ export function PublicFooter() {
             <li><Link to="/calculator" className="hover:text-white">Morph & Breeding Calculator</Link></li>
             <li><Link to="/pedigree-tracker" className="hover:text-white">Pedigree Tracker</Link></li>
             <li><Link to="/breeding-records" className="hover:text-white">Breeding Records</Link></li>
+            <li><Link to="/crested-gecko-price" className="hover:text-white">Price Guide</Link></li>
           </ul>
         </div>
         <div>
