@@ -114,6 +114,22 @@ export default function CommandPalette() {
                   <span>Identify morph with AI</span>
                 </CommandPrimitive.Item>
                 <CommandPrimitive.Item
+                  value="calculate pairing genetics calculator punnett odds cross x"
+                  onSelect={() => { setOpen(false); navigate('/calculator'); }}
+                  className={ITEM_CLASS}
+                >
+                  <Sparkles className="h-4 w-4 text-purple-400" />
+                  <span>Calculate a pairing (type it in the omnibox)</span>
+                </CommandPrimitive.Item>
+                <CommandPrimitive.Item
+                  value="reverse calculator make me a target morph goal"
+                  onSelect={() => { setOpen(false); navigate('/calculator/reverse'); }}
+                  className={ITEM_CLASS}
+                >
+                  <Sparkles className="h-4 w-4 text-purple-400" />
+                  <span>Reverse calculator: what makes my target morph?</span>
+                </CommandPrimitive.Item>
+                <CommandPrimitive.Item
                   value="tutorial help tour onboarding"
                   onSelect={() => runAction(() => window.dispatchEvent(new CustomEvent('open_tutorial')))}
                   className={ITEM_CLASS}

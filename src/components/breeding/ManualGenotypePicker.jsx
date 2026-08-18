@@ -8,6 +8,8 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import { AlertTriangle } from 'lucide-react';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { displayText } from '@/lib/genetics';
 import {
   SIMPLE_TRAITS,
   COMPLEX_ENTRY,
@@ -17,6 +19,7 @@ import {
   zygosityOptions,
   stateToSpec,
   stateToChips,
+  engineTrait,
 } from '@/lib/genetics/calculatorCatalog';
 
 /**
@@ -47,16 +50,53 @@ const CONFIDENCE_BADGE = {
   },
 };
 
-function ConfidenceBadge({ confidence }) {
+function ConfidenceBadge({ confidence, traitId }) {
   const badge = CONFIDENCE_BADGE[confidence];
   if (!badge) return null;
-  return (
+  const trait = traitId ? engineTrait(traitId) : null;
+  const sources = trait?.primary_sources || [];
+  const provenBy = trait?.proven_by || trait?.originator;
+
+  const chip = (
     <span
-      title={badge.title}
-      className={`text-[10px] uppercase tracking-wider border px-1.5 py-0.5 rounded-full ${badge.cls}`}
+      className={`text-[10px] uppercase tracking-wider border px-1.5 py-0.5 rounded-full ${badge.cls} ${sources.length ? 'cursor-pointer' : ''}`}
     >
       {badge.label}
     </span>
+  );
+
+  if (sources.length === 0) return <span title={badge.title}>{chip}</span>;
+
+  return (
+    <Popover>
+      <PopoverTrigger asChild>
+        <button type="button" aria-label={`${badge.label}: show sources`}>{chip}</button>
+      </PopoverTrigger>
+      <PopoverContent className="w-72 bg-slate-800 border-slate-600 text-slate-200 text-xs p-3" align="start">
+        <p className="mb-2 text-slate-300">{badge.title}</p>
+        {provenBy && (
+          <p className="mb-1 text-slate-400">
+            Documented by <span className="text-slate-200">{displayText(provenBy)}</span>
+            {trait?.proven_year ? ` (${trait.proven_year})` : ''}
+          </p>
+        )}
+        <p className="text-[10px] uppercase tracking-wider text-slate-500 mb-1">Sources</p>
+        <ul className="space-y-1">
+          {sources.map((s) => (
+            <li key={s.url}>
+              <a
+                href={s.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-purple-300 hover:text-purple-200 underline"
+              >
+                {displayText(s.name)}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </PopoverContent>
+    </Popover>
   );
 }
 
@@ -82,7 +122,7 @@ function TraitRow({ trait, value, onSelect, accentClass }) {
     <div className="space-y-1">
       <Label className="text-xs text-slate-300 font-medium flex items-center gap-1.5">
         {trait.label}
-        <ConfidenceBadge confidence={trait.confidence} />
+        <ConfidenceBadge confidence={trait.confidence} traitId={trait.id} />
       </Label>
       <Select value={value || 'none'} onValueChange={onSelect}>
         <SelectTrigger className={`bg-slate-800 ${accentClass} text-slate-100 h-9 text-xs`}>
@@ -142,7 +182,7 @@ export default function ManualGenotypePicker({ value, onChange, accentClass = 'b
         </p>
         <Label className="text-xs text-slate-300 font-medium flex items-center gap-1.5">
           {COMPLEX_ENTRY.label}
-          <ConfidenceBadge confidence="proven" />
+          <ConfidenceBadge confidence="proven" traitId="cappuccino" />
         </Label>
         <Select value={complexValue} onValueChange={(v) => setState(COMPLEX_ID, v)}>
           <SelectTrigger className={`bg-slate-800 ${accentClass} text-slate-100 h-9 text-xs`}>
