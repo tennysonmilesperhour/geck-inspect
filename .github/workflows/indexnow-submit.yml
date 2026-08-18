@@ -1,0 +1,48 @@
+# Push published URLs to IndexNow (Bing / Yandex / Seznam / DuckDuckGo).
+#
+# The old Google and Bing sitemap "ping" endpoints were both retired, so
+# IndexNow is the current way to actively notify engines of new/changed
+# URLs instead of waiting for them to recrawl. A single POST covers Bing,
+# Yandex, Seznam, and DuckDuckGo.
+#
+# Runs after a change to the sitemap lands on main (the deploy that ships
+# the new URLs goes out on the same push), and can be triggered by hand.
+# GitHub-hosted runners have outbound network, which the sandbox does not,
+# so submission has to happen here rather than from a local session.
+#
+# Google is intentionally not covered: it only accepts sitemaps through
+# Search Console now (one-time human OAuth step). Google auto-discovers our
+# sitemap from the Sitemap: line in robots.txt, so nothing per-deploy is
+# needed on that side.
+
+name: indexnow-submit
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'public/sitemap.xml'
+      - 'scripts/submit-indexnow.mjs'
+  workflow_dispatch:
+
+concurrency:
+  group: indexnow-submit
+  cancel-in-progress: false
+
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      # Give the just-pushed deploy a moment to go live so the submitted
+      # URLs resolve when the engines verify them.
+      - name: Wait for deploy to propagate
+        run: sleep 90
+
+      - name: Submit sitemap URLs to IndexNow
+        run: node scripts/submit-indexnow.mjs
