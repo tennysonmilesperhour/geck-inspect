@@ -177,3 +177,79 @@ export function downloadClutchCard(opts, filename = 'clutch-odds.png') {
   a.download = filename;
   a.click();
 }
+
+/**
+ * Season scorecard: logged hatch results vs the odds, the breeder's
+ * season-recap share moment ("Hatch Wrapped" in the plan).
+ * rows: [{label, observed, expected}]
+ */
+export function drawSeasonCard(canvas, { year, eggs, clutches, rows }) {
+  canvas.width = W;
+  canvas.height = H;
+  const ctx = canvas.getContext('2d');
+  const sans = 'system-ui, -apple-system, "Segoe UI", Roboto, sans-serif';
+
+  ctx.fillStyle = COLORS.bg;
+  ctx.fillRect(0, 0, W, H);
+
+  ctx.fillStyle = COLORS.accent;
+  ctx.font = `600 22px ${sans}`;
+  ctx.fillText(`GECK INSPECT · ${year} SEASON SO FAR`, 60, 66);
+
+  ctx.fillStyle = COLORS.ink;
+  ctx.font = `700 44px ${sans}`;
+  ctx.fillText(`${eggs} eggs · ${clutches} clutch${clutches === 1 ? '' : 'es'} logged`, 60, 128);
+
+  ctx.fillStyle = COLORS.soft;
+  ctx.font = `400 24px ${sans}`;
+  ctx.fillText('What hatched vs what the odds predicted', 60, 168);
+
+  const top = 214;
+  const rowH = 78;
+  const shown = rows.slice(0, 5);
+  shown.forEach((row, i) => {
+    const y = top + i * rowH;
+    ctx.fillStyle = COLORS.panel;
+    ctx.fillRect(60, y, W - 120, rowH - 14);
+    ctx.font = `600 27px ${sans}`;
+    ctx.fillStyle = COLORS.ink;
+    ctx.fillText(truncate(ctx, row.label, 560), 84, y + 40);
+
+    const delta = row.observed - row.expected;
+    const deltaText = Math.abs(delta) < 0.5
+      ? 'right on the odds'
+      : delta > 0
+        ? `${delta.toFixed(1)} above expectation`
+        : `${Math.abs(delta).toFixed(1)} below expectation`;
+    ctx.font = `700 27px ${sans}`;
+    ctx.fillStyle = delta >= 0 ? COLORS.good : COLORS.dam;
+    const right = `${row.observed} hatched · expected ${row.expected.toFixed(1)}`;
+    ctx.fillText(right, W - 84 - ctx.measureText(right).width, y + 34);
+    ctx.font = `400 20px ${sans}`;
+    ctx.fillStyle = COLORS.faint;
+    ctx.fillText(deltaText, W - 84 - ctx.measureText(deltaText).width, y + 58);
+  });
+
+  ctx.strokeStyle = COLORS.line;
+  ctx.lineWidth = 1;
+  ctx.beginPath();
+  ctx.moveTo(60, H - 72);
+  ctx.lineTo(W - 60, H - 72);
+  ctx.stroke();
+  ctx.font = `600 22px ${sans}`;
+  ctx.fillStyle = COLORS.ink;
+  ctx.fillText('geckinspect.com/calculator', 60, H - 32);
+  ctx.font = `400 20px ${sans}`;
+  ctx.fillStyle = COLORS.faint;
+  const tag = 'every egg is an independent draw';
+  ctx.fillText(tag, W - 60 - ctx.measureText(tag).width, H - 32);
+}
+
+export function downloadSeasonCard(opts, filename = 'season-scorecard.png') {
+  const canvas = document.createElement('canvas');
+  drawSeasonCard(canvas, opts);
+  const a = document.createElement('a');
+  a.href = canvas.toDataURL('image/png');
+  a.download = filename;
+  a.click();
+}

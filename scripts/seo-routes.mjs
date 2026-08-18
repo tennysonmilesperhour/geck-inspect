@@ -245,6 +245,18 @@ export const STATIC_ROUTES = [
     },
   },
   {
+    // Clutch Lab: the learn-mode genetics puzzle ladder.
+    path: '/calculator/learn',
+    priority: 0.75,
+    changefreq: 'monthly',
+    lastmod: TODAY,
+    meta: {
+      title: 'Clutch Lab: Crested Gecko Genetics Puzzles',
+      description:
+        'Learn crested gecko genetics by playing: six breeding puzzles from your first Lilly White to a two-generation Phantom Frappuccino project, scored by how few crosses you need. Free, no signup.',
+    },
+  },
+  {
     // Reverse (goal-seek) calculator: target morph in, ranked pairings
     // out. Static route, listed before the /calculator/:morph expansion
     // so the prerenderer treats it as its own page.

@@ -185,6 +185,73 @@ export const COMPLEX_OPTIONS_BY_VALUE = Object.fromEntries(
   COMPLEX_OPTIONS.map((o) => [o.value, o]),
 );
 
+// ---------- runtime trait overrides ------------------------------------
+// The genetics_trait_overrides table (loaded by traitOverrides.js) can
+// patch existing traits (confidence, blurb, labels) or add provisional
+// NEW simple traits without a deploy, which is how the hobby's next
+// proven gene ships the day it is proven. The static SIMPLE_TRAITS
+// export stays frozen for tests and build-time consumers; runtime
+// surfaces read getSimpleTraits().
+
+const TRAIT_PATCHES = new Map();
+const EXTRA_TRAITS = [];
+
+const OVERRIDE_PATCH_KEYS = new Set(['label', 'confidence', 'blurb', 'super_label', 'super_lethal']);
+const VALID_DOMINANCE = new Set(['recessive', 'incomplete_dominant', 'dominant']);
+
+/** Apply override rows ({id, patch, enabled}). Returns what applied. */
+export function applyTraitOverrides(rows) {
+  const applied = [];
+  for (const row of rows || []) {
+    if (!row?.id || row.enabled === false || !row.patch || typeof row.patch !== 'object') continue;
+    const patch = row.patch;
+    const existing = SIMPLE_TRAITS.find((t) => t.id === row.id);
+    if (existing && !patch.new) {
+      const clean = {};
+      for (const key of OVERRIDE_PATCH_KEYS) {
+        if (key in patch) clean[key] = patch[key];
+      }
+      if (Object.keys(clean).length === 0) continue;
+      TRAIT_PATCHES.set(row.id, clean);
+      applied.push(row.id);
+    } else if (patch.new && !existing && !EXTRA_TRAITS.some((t) => t.id === row.id)) {
+      // A brand-new provisional trait needs enough shape to compute.
+      if (!patch.label || !patch.locus || !VALID_DOMINANCE.has(patch.dominance)) continue;
+      EXTRA_TRAITS.push({
+        id: row.id,
+        slug: patch.slug || row.id.replace(/_/g, '-'),
+        label: patch.label,
+        locus: patch.locus,
+        dominance: patch.dominance,
+        confidence: patch.confidence === 'proven' ? 'proven' : 'emerging',
+        super_label: patch.super_label,
+        super_lethal: !!patch.super_lethal,
+        blurb: patch.blurb || 'Provisional trait added from the live trait store.',
+      });
+      applied.push(row.id);
+    }
+  }
+  return applied;
+}
+
+/** Test hook: clear runtime overrides. */
+export function resetTraitOverrides() {
+  TRAIT_PATCHES.clear();
+  EXTRA_TRAITS.length = 0;
+}
+
+/** The live simple-trait list: static catalog + patches + additions. */
+export function getSimpleTraits() {
+  const patched = SIMPLE_TRAITS.map((t) =>
+    TRAIT_PATCHES.has(t.id) ? { ...t, ...TRAIT_PATCHES.get(t.id) } : t,
+  );
+  return [...patched, ...EXTRA_TRAITS];
+}
+
+function simpleById(id) {
+  return getSimpleTraits().find((t) => t.id === id) || null;
+}
+
 /** The complex rendered as a picker entry alongside SIMPLE_TRAITS. */
 export const COMPLEX_ENTRY = {
   id: COMPLEX_ID,
@@ -232,7 +299,7 @@ export function zygosityOptions(trait) {
  */
 export function stateToSpec(state) {
   const loci = {};
-  for (const trait of SIMPLE_TRAITS) {
+  for (const trait of getSimpleTraits()) {
     const z = state?.[trait.id];
     if (!z || z === 'none') continue;
     const a = trait.id;
@@ -261,7 +328,7 @@ export function stateToSpec(state) {
 /** Human-readable chips summarizing a picker state. */
 export function stateToChips(state) {
   const chips = [];
-  for (const trait of SIMPLE_TRAITS) {
+  for (const trait of getSimpleTraits()) {
     const z = state?.[trait.id];
     if (!z || z === 'none') continue;
     if (z === 'ph66') chips.push(`66% poss het ${trait.label}`);
@@ -291,7 +358,6 @@ export function stateHasSelection(state) {
 // gracefully instead of breaking.
 
 const VALID_STATES = new Set(['het', 'visual', 'super', 'hom', 'ph66', 'ph50']);
-const SIMPLE_BY_ID = Object.fromEntries(SIMPLE_TRAITS.map((t) => [t.id, t]));
 
 export function encodeParentState(state) {
   const parts = [];
@@ -299,7 +365,7 @@ export function encodeParentState(state) {
     if (!v || v === 'none') continue;
     if (id === COMPLEX_ID) {
       if (COMPLEX_OPTIONS_BY_VALUE[v]) parts.push(`${id}:${v}`);
-    } else if (SIMPLE_BY_ID[id] && VALID_STATES.has(v)) {
+    } else if (simpleById(id) && VALID_STATES.has(v)) {
       parts.push(`${id}:${v}`);
     }
   }
@@ -314,11 +380,50 @@ export function decodeParentState(encoded) {
     if (!id || !v) continue;
     if (id === COMPLEX_ID && COMPLEX_OPTIONS_BY_VALUE[v]) {
       state[id] = v;
-    } else if (SIMPLE_BY_ID[id] && VALID_STATES.has(v)) {
+    } else if (VALID_STATES.has(v)) {
       // Validate the state fits the trait's dominance
-      const trait = SIMPLE_BY_ID[id];
-      const valid = zygosityOptions(trait).some((o) => o.value === v);
+      const trait = simpleById(id);
+      const valid = trait && zygosityOptions(trait).some((o) => o.value === v);
       if (valid) state[id] = v;
+    }
+  }
+  return state;
+}
+
+/**
+ * Convert an offspring genotype (from a prediction) back into picker
+ * state, so any predicted baby can become the next generation's parent
+ * with one click ("continue with this offspring", the multi-generation
+ * planning move). Loci outside the calculator catalog (polygenic tags
+ * from collection animals) are skipped. Returns null for genotypes the
+ * picker cannot represent (a lethal super parent, an unknown complex
+ * pair).
+ */
+export function genotypeToState(genotype) {
+  const state = {};
+  for (const [locus, pair] of Object.entries(genotype || {})) {
+    const nonWild = pair.filter((a) => a !== WILD_TYPE);
+    if (nonWild.length === 0) continue;
+    if (locus === COMPLEX_LOCUS) {
+      const want = [...pair].sort().join('|');
+      const option = COMPLEX_OPTIONS.find(
+        (o) => [...o.pair].sort().join('|') === want,
+      );
+      if (!option || option.value === 'none') return null;
+      state[COMPLEX_ID] = option.value;
+      continue;
+    }
+    const trait = getSimpleTraits().find((t) => t.locus === locus);
+    if (!trait) continue; // polygenic or unmodeled locus: skip honestly
+    const copies = pair.filter((a) => a === trait.id).length;
+    if (copies === 0) continue;
+    if (trait.dominance === 'recessive') {
+      state[trait.id] = copies === 2 ? 'visual' : 'het';
+    } else if (trait.dominance === 'incomplete_dominant') {
+      if (copies === 2 && trait.super_lethal) return null;
+      state[trait.id] = copies === 2 ? 'super' : 'het';
+    } else {
+      state[trait.id] = copies === 2 ? 'hom' : 'visual';
     }
   }
   return state;

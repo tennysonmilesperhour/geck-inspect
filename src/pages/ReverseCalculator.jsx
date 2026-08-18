@@ -18,6 +18,7 @@ import {
   REVERSE_TARGETS_BY_ID,
   solveTarget,
   scanCollection,
+  scanCollectionTwoGen,
 } from '@/lib/genetics/reverseSolver';
 import { tagsToSpec } from '@/lib/genetics/predictWeighted';
 import {
@@ -172,6 +173,14 @@ export default function ReverseCalculator() {
     () => (geckos ? scanCollection(targetId, geckos) : null),
     [targetId, geckos],
   );
+  // When no single pairing in the collection can get there, plan the
+  // two-generation route: pair, hold back the right baby, pair again.
+  const twoGenScan = useMemo(
+    () => (geckos && collectionScan && collectionScan.results.length === 0
+      ? scanCollectionTwoGen(targetId, geckos)
+      : null),
+    [targetId, geckos, collectionScan],
+  );
 
   const grouped = GROUP_ORDER.map((group) => ({
     group,
@@ -256,10 +265,40 @@ export default function ReverseCalculator() {
               From your collection
             </h2>
             {collectionScan.results.length === 0 ? (
-              <p className="text-sm text-slate-400">
-                None of your current pairings can produce {target?.label}. The routes below show
-                what genetics to bring in.
-              </p>
+              <div className="space-y-3">
+                <p className="text-sm text-slate-400">
+                  No single pairing in your collection can produce {target?.label}.
+                  {twoGenScan?.results.length
+                    ? ' But a two-generation project can get there:'
+                    : ' The routes below show what genetics to bring in.'}
+                </p>
+                {twoGenScan?.results.map((route, index) => (
+                  <div
+                    key={`${route.gen1.sire.id}-${route.gen1.dam.id}-${route.gen2.mate.id}`}
+                    className="rounded-lg border border-slate-700 bg-slate-900/60 p-3 text-sm text-slate-200 space-y-1"
+                  >
+                    <p className="text-xs text-slate-500 font-mono">
+                      Two-generation route #{index + 1}
+                      {route.backcross && <span className="ml-2 text-amber-300">back-cross</span>}
+                    </p>
+                    <p>
+                      1. Pair <span className="text-blue-300">{route.gen1.sire.name}</span>
+                      <span className="text-slate-500"> x </span>
+                      <span className="text-pink-300">{route.gen1.dam.name}</span> and hold back a{' '}
+                      <span className="text-purple-200">{route.holdbackLabel}</span>{' '}
+                      <span className="text-slate-500 font-mono">({pct(route.gen1.p)} of eggs)</span>
+                    </p>
+                    <p>
+                      2. Pair the holdback to <span className="text-emerald-300">{route.gen2.mate.name}</span>{' '}
+                      <span className="text-slate-500 font-mono">({pct(route.gen2.p)} per egg)</span>
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      Season one makes the parent, season two makes the goal. Serious projects are
+                      measured in seasons.
+                    </p>
+                  </div>
+                ))}
+              </div>
             ) : (
               <div className="space-y-2">
                 {collectionScan.results.map((r) => (

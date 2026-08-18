@@ -150,3 +150,5 @@ export const SocialReferralBonus = sb.SocialReferralBonus;
 export const GeckoWaitlist = sb.GeckoWaitlist;
 export const GeckoWaitlistSignup = sb.GeckoWaitlistSignup;
 export const PromoteImage = sb.PromoteImage;
+export const PairingOutcomeLog = sb.PairingOutcomeLog;
+export const GeneticsTraitOverride = sb.GeneticsTraitOverride;

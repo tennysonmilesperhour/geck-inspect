@@ -40,6 +40,7 @@ async function withAuthRetry(queryFn) {
 // cache". Add new entities here when you ship a table that doesn't follow
 // the legacy base44 convention.
 export const ENTITIES_WITHOUT_CREATED_BY = new Set([
+  'GeneticsTraitOverride',
   'SocialPost',
   'SocialPostVariant',
   'SocialPlatformConnection',
@@ -168,6 +169,10 @@ export const TABLE_MAP = {
   GeckoWaitlistSignup: 'gecko_waitlist_signups',
   // Promote-only image library (separate from gecko_images)
   PromoteImage: 'promote_images',
+  // Genetics calculator: predicted-vs-actual clutch logging (the
+  // outcomes flywheel) and the runtime trait-override store.
+  PairingOutcomeLog: 'pairing_outcome_logs',
+  GeneticsTraitOverride: 'genetics_trait_overrides',
 };
 
 // Most tables follow the base44 legacy convention of a `created_date`
@@ -488,3 +493,7 @@ export const SocialReferralBonus = createEntityClient('SocialReferralBonus');
 export const GeckoWaitlist = createEntityClient('GeckoWaitlist');
 export const GeckoWaitlistSignup = createEntityClient('GeckoWaitlistSignup');
 export const PromoteImage = createEntityClient('PromoteImage');
+
+// Genetics calculator flywheel + trait-velocity store
+export const PairingOutcomeLog = createEntityClient('PairingOutcomeLog');
+export const GeneticsTraitOverride = createEntityClient('GeneticsTraitOverride');
