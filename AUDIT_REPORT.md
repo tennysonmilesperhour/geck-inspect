@@ -1,4 +1,13 @@
-# Geck Inspect — Pre-Integration Audit
+# Geck Inspect - Pre-Integration Audit
+
+> **Historical document, point in time.** This audit describes the repo as
+> of the commits listed below. It is kept as a record and is not a live
+> tracker, so some findings are already resolved. Notably, the legacy
+> `qtrypzzcjebvfcihiynt` / `base44-prod` logo asset flagged below as
+> "Active" is gone: `src/lib/constants.js` and `organization-schema.js`
+> now use `geckinspect.com/logo.png`, and the PWA manifest uses local
+> icons as of August 2026. For current database conventions see
+> [supabase/SCHEMA_CONVENTIONS.md](supabase/SCHEMA_CONVENTIONS.md).
 
 **Repo:** `geck-inspect/` (root) on branch `claude/audit-geck-inspect-qw2Ua`, working tree clean (this audit creates one new untracked file: `AUDIT_REPORT.md`).
 **Most recent commits** (top of `git log --oneline`):
