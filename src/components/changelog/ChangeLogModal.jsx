@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/appClient';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -88,7 +88,7 @@ export default function ChangeLogModal({ isOpen, onClose }) {
         const load = async () => {
             setIsLoading(true);
             try {
-                const all = await base44.entities.ChangeLog.filter({ is_published: true }, '-published_date');
+                const all = await api.entities.ChangeLog.filter({ is_published: true }, '-published_date');
 
                 // Use admin-created entries if available, otherwise show built-in updates
                 const displayEntries = all.length > 0 ? all : BUILTIN_UPDATES;

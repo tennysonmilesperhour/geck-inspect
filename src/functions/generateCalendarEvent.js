@@ -1,5 +1,5 @@
 /**
- * Client-side iCalendar (.ics) generator (replaces dead Base44 backend function).
+ * Client-side iCalendar (.ics) generator.
  *
  * generateCalendarEvent({ title, description, startTime, endTime, repeatMonthly, repeatCount })
  *   - Builds an all-day VEVENT, optionally repeating monthly.

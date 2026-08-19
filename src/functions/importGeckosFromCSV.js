@@ -1,5 +1,5 @@
 /**
- * Client-side gecko CSV import (replaces dead Base44 backend function).
+ * Client-side gecko CSV import.
  *
  * Accepts an array of row objects (already mapped to template field keys)
  * and creates/updates geckos directly in Supabase.

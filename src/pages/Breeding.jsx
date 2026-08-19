@@ -1,7 +1,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import Seo from '@/components/seo/Seo';
 import { BreedingPlan, Egg } from '@/entities/all';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/appClient';
 import { currentSeasonLabel } from '@/lib/seasons';
 import { notifyFollowersNewBreedingPlan } from '@/components/notifications/NotificationService';
 import PlanLimitModal, { checkPlanLimit } from '@/components/subscription/PlanLimitChecker';
@@ -111,7 +111,7 @@ export default function BreedingPage() {
     const loadData = async () => {
         setIsLoading(true);
         try {
-            const currentUser = await base44.auth.me();
+            const currentUser = await api.auth.me();
             setUser(currentUser);
             setAuthChecked(true);
             

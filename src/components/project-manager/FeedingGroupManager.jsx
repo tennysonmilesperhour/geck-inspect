@@ -72,8 +72,8 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
         if (!targetGroupId) return;
 
         // Only fetch geckos the current user owns (avoids permission errors on public geckos)
-        const { base44 } = await import('@/api/base44Client');
-        const currentUser = await base44.auth.me();
+        const { api } = await import('@/api/appClient');
+        const currentUser = await api.auth.me();
         if (!currentUser) return;
         const { getVisibleGeckos } = await import('@/lib/geckoAccess');
         const allGeckos = await getVisibleGeckos(currentUser);

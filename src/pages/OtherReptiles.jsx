@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import Seo from '@/components/seo/Seo';
 import { OtherReptile } from '@/entities/all';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/appClient';
 import { PlusCircle, Search, Users, Archive, ArchiveRestore, Lock } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
@@ -51,7 +51,7 @@ export default function OtherReptilesPage() {
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const currentUser = await base44.auth.me();
+                const currentUser = await api.auth.me();
                 setUser(currentUser);
             } catch (error) {
                 console.error("Failed to load user:", error);

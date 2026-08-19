@@ -34,7 +34,7 @@ import {
  *   2. A Notification row pointing at /Messages
  *
  * AI generation now goes through our own invoke-llm edge function instead
- * of the dead Base44 `InvokeLLM`. The generator reads the latest published
+ * of a dead hosted `InvokeLLM`. The generator reads the latest published
  * changelog entry and uses it as the source material, so the output is
  * tied to real deploys instead of fabricated features.
  *

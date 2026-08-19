@@ -1,6 +1,6 @@
 /**
  * Supabase entity compatibility layer.
- * Provides the same API as base44.entities.* so pages work without changes.
+ * Backs `api.entities.*` (see appClient.js).
  *
  * API:
  *   Entity.filter(query, sort, limit, skip) → Array
@@ -38,7 +38,7 @@ async function withAuthRetry(queryFn) {
 // instead; injecting `created_by` here would make PostgREST reject the
 // insert with "Could not find the 'created_by' column ... in the schema
 // cache". Add new entities here when you ship a table that doesn't follow
-// the legacy base44 convention.
+// the legacy `created_by` convention (see supabase/SCHEMA_CONVENTIONS.md).
 export const ENTITIES_WITHOUT_CREATED_BY = new Set([
   'GeneticsTraitOverride',
   'SocialPost',
@@ -175,8 +175,8 @@ export const TABLE_MAP = {
   GeneticsTraitOverride: 'genetics_trait_overrides',
 };
 
-// Most tables follow the base44 legacy convention of a `created_date`
-// column, which is the default sort. A few tables predate or postdate
+// Most tables follow the legacy `created_date` column convention, which
+// is the default sort (see supabase/SCHEMA_CONVENTIONS.md). A few tables predate or postdate
 // that convention and use `created_at`, and a few have no timestamp
 // column at all. Verified against production 2026-07-07. Entities not
 // listed here default to 'created_date'; `null` means "this table has no
@@ -381,7 +381,7 @@ function createEntityClient(entityName) {
   };
 }
 
-// Named entity exports (same names as Base44)
+// Named entity exports
 export const AppSettings = createEntityClient('AppSettings');
 export const BreederStorePage = createEntityClient('BreederStorePage');
 export const BreedingPlan = createEntityClient('BreedingPlan');

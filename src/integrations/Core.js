@@ -1,9 +1,9 @@
 /**
  * Core integrations shim.
  *
- * Base44's hosted integrations (InvokeLLM, SendEmail, etc.) are no longer
- * live, so we route them to our own replacements where we have one and
- * leave the rest as a stub that throws a clear error.
+ * A previous host provided these integrations (InvokeLLM, SendEmail, and
+ * friends). They now route to our own implementations where we have one,
+ * and the rest are stubs that throw a clear error.
  *
  * - InvokeLLM  -> Supabase edge function `invoke-llm` (Anthropic proxy)
  * - UploadFile -> Supabase Storage (geck-inspect-media bucket)
@@ -19,7 +19,7 @@ export const UploadFile = supabaseUploadFile;
 function notImplemented(name) {
   return async () => {
     throw new Error(
-      `${name} is not wired up. The Base44 integration shut down; add a replacement before calling this.`
+      `${name} is not wired up. Add an implementation before calling this.`
     );
   };
 }

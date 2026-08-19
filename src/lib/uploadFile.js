@@ -1,7 +1,7 @@
 /**
  * uploadFile, client wrapper for Supabase Storage.
  *
- * Replaces the dead Base44 `UploadFile` shim. Every image upload in
+ * Supabase Storage upload helper. Every image upload in
  * the app (profile photos, cover photos, gecko photos, reptile photos)
  * ultimately calls this, so it's the single source of truth for:
  *
@@ -9,7 +9,7 @@
  *   - how we name the key
  *   - what the returned object looks like
  *
- * Public API intentionally matches the old Base44 contract so no
+ * Public API intentionally matches the original contract so no
  * caller has to change:
  *
  *   const { file_url } = await uploadFile({ file });

@@ -1,7 +1,7 @@
 /**
  * Breeder attribution helpers.
  *
- * Base44 stored the breeder a gecko came from as free-text in
+ * Legacy records stored the breeder a gecko came from as free-text in
  * `geckos.sire_name` / `geckos.dam_name` / `geckos.notes`. These helpers
  * turn those messy strings into a normalized slug so we can:
  *

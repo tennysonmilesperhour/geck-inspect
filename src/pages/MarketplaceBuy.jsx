@@ -3,7 +3,7 @@ import Seo from '@/components/seo/Seo';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
 import SmartImage from '@/components/shared/SmartImage';
 import { Gecko, User, MarketplaceLike } from '@/entities/all';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/appClient';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
@@ -284,7 +284,7 @@ export default function MarketplaceBuyPage() {
             setIsLoading(true);
             try {
                 // Fetch user first (non-blocking)
-                const loggedInUser = await base44.auth.me().catch(() => null);
+                const loggedInUser = await api.auth.me().catch(() => null);
                 setCurrentUser(loggedInUser);
 
                 // Get initial 24 geckos

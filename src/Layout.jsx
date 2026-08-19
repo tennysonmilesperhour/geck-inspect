@@ -3,7 +3,7 @@ import { Link, useLocation } from "react-router-dom";
 import "@/styles/layout-theme.css";
 import { initialsAvatarUrl } from "@/components/shared/InitialsAvatar";
 import { createPageUrl, getDisplayName } from "@/utils";
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/appClient';
 import { useAuth } from '@/lib/AuthContext';
 import { APP_LOGO_URL } from '@/lib/constants';
 import {
@@ -274,7 +274,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         if (errorCount < MAX_ERRORS) {
           dataCache.markRequestMade(cacheKey);
           const unreadNotifications = await retryApiCall(() => 
-            base44.entities.Notification.filter({ user_email: user.email, is_read: false })
+            api.entities.Notification.filter({ user_email: user.email, is_read: false })
           );
           if (unreadNotifications) {
             // Filter out any notifications the user dismissed this session
@@ -341,7 +341,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           if (dataCache.canMakeRequest(cacheKey) && errorCount < MAX_ERRORS) {
             dataCache.markRequestMade(cacheKey);
             const unread = await retryApiCall(() =>
-              base44.entities.DirectMessage.filter({ recipient_email: user.email, is_read: false })
+              api.entities.DirectMessage.filter({ recipient_email: user.email, is_read: false })
             );
             setUnreadMessages(unread.length);
             dataCache.set(cacheKey, unread.length);
@@ -387,7 +387,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         if (!configs && dataCache.canMakeRequest('page_configs')) {
           try {
             dataCache.markRequestMade('page_configs');
-            configs = await retryApiCall(() => base44.entities.PageConfig.list());
+            configs = await retryApiCall(() => api.entities.PageConfig.list());
             if (Array.isArray(configs)) {
               dataCache.set('page_configs', configs);
               setPageConfigs(configs);
@@ -408,9 +408,9 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
               dataCache.markRequestMade(`user_contributions_${user.email}`);
 
               const results = await Promise.allSettled([
-                retryApiCall(() => base44.entities.Gecko.filter({ created_by: user.email })),
-                retryApiCall(() => base44.entities.GeckoImage.filter({ created_by: user.email })),
-                retryApiCall(() => base44.entities.ForumPost.filter({ created_by: user.email }))
+                retryApiCall(() => api.entities.Gecko.filter({ created_by: user.email })),
+                retryApiCall(() => api.entities.GeckoImage.filter({ created_by: user.email })),
+                retryApiCall(() => api.entities.ForumPost.filter({ created_by: user.email }))
               ]);
 
               userContributions = {
@@ -442,7 +442,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         if (!images && dataCache.canMakeRequest('gecko_images')) {
           try {
             dataCache.markRequestMade('gecko_images');
-            images = await retryApiCall(() => base44.entities.GeckoImage.list());
+            images = await retryApiCall(() => api.entities.GeckoImage.list());
             if (images) {
               dataCache.set('gecko_images', images);
             }
@@ -481,7 +481,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   useEffect(() => {
     const refresh = async () => {
       try {
-        const configs = await retryApiCall(() => base44.entities.PageConfig.list());
+        const configs = await retryApiCall(() => api.entities.PageConfig.list());
         if (Array.isArray(configs)) {
           dataCache.set('page_configs', configs);
           setPageConfigs(configs);
@@ -550,7 +550,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     setRecentNotifications((prev) => prev.filter((n) => n.id !== notificationId));
     setUnreadNotificationsCount((c) => Math.max(0, c - 1));
     try {
-      await base44.entities.Notification.update(notificationId, { is_read: true });
+      await api.entities.Notification.update(notificationId, { is_read: true });
       // Clear cache so the next poll gets fresh data (after DB write)
       const cacheKey = `notifications_${user?.email}`;
       dataCache.clear(cacheKey);
@@ -573,11 +573,11 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     setUnreadNotificationsCount(0);
     try {
       // Mark every unread notification for this user, not just the recent slice
-      const all = await base44.entities.Notification.filter(
+      const all = await api.entities.Notification.filter(
         { user_email: user.email, is_read: false }
       );
       await Promise.all(
-        all.map((n) => base44.entities.Notification.update(n.id, { is_read: true }))
+        all.map((n) => api.entities.Notification.update(n.id, { is_read: true }))
       );
       const cacheKey = `notifications_${user.email}`;
       dataCache.clear(cacheKey);

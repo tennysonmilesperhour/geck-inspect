@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import Seo from '@/components/seo/Seo';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/appClient';
 import { MorphPriceCache } from '@/api/supabaseEntities';
 import {
   predict,
@@ -144,7 +144,7 @@ export default function PairingPlannerPage() {
     (async () => {
       setIsLoading(true);
       try {
-        const currentUser = await base44.auth.me();
+        const currentUser = await api.auth.me();
         setUser(currentUser);
         setAuthChecked(true);
         if (!currentUser) {

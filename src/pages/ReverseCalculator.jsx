@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/appClient';
 import { Target, ArrowRight, AlertTriangle, Dna } from 'lucide-react';
 import {
   Select,
@@ -146,7 +146,7 @@ export default function ReverseCalculator() {
     let cancelled = false;
     (async () => {
       try {
-        const user = await base44.auth.me();
+        const user = await api.auth.me();
         if (!user || cancelled) return;
         const { getVisibleGeckos } = await import('@/lib/geckoAccess');
         const data = await getVisibleGeckos(user);

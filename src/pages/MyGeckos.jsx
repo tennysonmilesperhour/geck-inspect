@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback } from 'react';
 import Seo from '@/components/seo/Seo';
 import { Gecko, WeightRecord, FeedingGroup, CollectionMember } from '@/entities/all';
 import { getVisibleGeckos, canWriteGecko } from '@/lib/geckoAccess';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/appClient';
 import { PlusCircle, Search, Users, Grid3x3, List, ArrowUpDown, Archive, ArchiveRestore, Download, FileText, FileSpreadsheet, Scale } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import CardGridSkeleton from '../components/shared/CardGridSkeleton';
@@ -136,7 +136,7 @@ export default function MyGeckosPage() {
     useEffect(() => {
         const fetchUser = async () => {
             try {
-                const currentUser = await retryApiCall(async () => base44.auth.me());
+                const currentUser = await retryApiCall(async () => api.auth.me());
                 setUser(currentUser);
             } catch (error) {
                 console.error("Failed to load initial user:", error);

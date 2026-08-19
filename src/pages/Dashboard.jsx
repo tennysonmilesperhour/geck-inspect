@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import Seo from '@/components/seo/Seo';
 import usePageSettings from '@/hooks/usePageSettings';
 import { User, GeckoImage, ForumPost, GeckoOfTheDay as GotdEntity } from '@/entities/all';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/appClient';
 import { supabase } from '@/lib/supabaseClient';
 import {
     Users,
@@ -88,7 +88,7 @@ export default function Dashboard() {
     useEffect(() => {
         const checkUnread = async () => {
             try {
-                const latest = await base44.entities.ChangeLog.filter({ is_published: true }, '-published_date', 1);
+                const latest = await api.entities.ChangeLog.filter({ is_published: true }, '-published_date', 1);
                 if (latest && latest.length > 0) {
                     const lastRead = localStorage.getItem('changelog_last_read');
                     if (!lastRead || new Date(latest[0].published_date) > new Date(lastRead)) {
@@ -110,8 +110,8 @@ export default function Dashboard() {
         (async () => {
             try {
                 const [eggs, plans] = await Promise.all([
-                    base44.entities.Egg.list().catch(() => []),
-                    base44.entities.BreedingPlan.list().catch(() => []),
+                    api.entities.Egg.list().catch(() => []),
+                    api.entities.BreedingPlan.list().catch(() => []),
                 ]);
                 setHatcheryStats({
                     hatched: eggs.filter((e) => e.status === 'Hatched').length,

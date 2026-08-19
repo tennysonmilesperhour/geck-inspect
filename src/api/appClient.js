@@ -1,19 +1,18 @@
 /**
- * Pure Supabase-backed facade for `base44.*`.
+ * The app-wide data facade: `api.auth`, `api.entities`, `api.functions`.
  *
- * Older code across the app still imports `{ base44 }` and calls
- * `base44.auth.me()`, `base44.entities.Gecko.filter(...)`, etc. This module
- * used to instantiate `@base44/sdk`'s `createClient(...)`, which on every
- * page load would:
- *   - start a 60s heartbeat POSTing to https://base44.app/api/.../analytics/track/batch
- *   - fire an init `me()` request to https://base44.app/api/.../entities/User/me
- *   - open a websocket to base44.app
- *   - rehydrate a `base44_access_token` from localStorage
+ * Everything here runs on Supabase. The facade exists because most
+ * pages want one import for "current user" plus "entity CRUD" rather
+ * than wiring `supabase.auth` and the entity clients separately, and
+ * because guest mode needs a single place to intercept reads and
+ * writes.
  *
- * That meant every visit to /AuthPortal still talked to Base44's dead
- * servers even though the login form itself uses Supabase. This file
- * replaces the SDK entirely with Supabase calls, so nothing in the app
- * runtime reaches base44.app anymore.
+ *   api.auth.me()                     -> current user, or throws
+ *   api.entities.Gecko.filter({...})  -> entity CRUD (see supabaseEntities.js)
+ *   api.functions.invoke(name, body)  -> Supabase edge functions
+ *
+ * For third-party integrations (LLM calls, file uploads) import from
+ * '@/integrations/Core' instead.
  */
 import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
 import * as sbEntities from '@/api/supabaseEntities';
@@ -64,25 +63,8 @@ const functionsFacade = {
   },
 };
 
-const integrationsFacade = {
-  Core: new Proxy({}, {
-    get(_target, prop) {
-      return () => {
-        throw new Error(
-          `base44.integrations.Core.${String(prop)}() was removed during the Supabase migration.`
-        );
-      };
-    },
-  }),
-};
-
-export const base44 = {
+export const api = {
   auth: authFacade,
   entities: entitiesFacade,
   functions: functionsFacade,
-  integrations: integrationsFacade,
 };
-
-export function redirectToLogin() {
-  window.location.href = '/AuthPortal';
-}
