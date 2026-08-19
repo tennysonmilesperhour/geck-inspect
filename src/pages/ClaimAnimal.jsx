@@ -18,7 +18,7 @@ export default function ClaimAnimal() {
   const currentUser = auth.user;
 
   const [transfer, setTransfer] = useState(null);
-  const [gecko, setGecko] = useState(null);
+  const [animal, setAnimal] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [claiming, setClaiming] = useState(false);
@@ -54,13 +54,41 @@ export default function ClaimAnimal() {
         }
         setTransfer(tr);
 
-        // Load gecko info
-        const { data: g } = await supabase
-          .from('geckos')
-          .select('id, name, morphs_traits, image_urls, passport_code, sex, weight_grams')
-          .eq('id', tr.animal_id)
-          .maybeSingle();
-        setGecko(g);
+        // Load the animal from whichever table the transfer points at, and
+        // normalize into a shared shape the UI below can render either way.
+        if (tr.animal_type === 'other_reptile') {
+          const { data: r } = await supabase
+            .from('other_reptiles')
+            .select('id, name, species, morph, image_urls')
+            .eq('id', tr.animal_id)
+            .maybeSingle();
+          setAnimal(r ? {
+            isReptile: true,
+            name: r.name,
+            subtitle: [r.species, r.morph].filter(Boolean).join(' • ') || 'Reptile',
+            image_urls: r.image_urls,
+            passport_code: null,
+            emoji: '🦎',
+            collectionPath: '/OtherReptiles',
+            successHeading: 'Welcome to your new reptile!',
+          } : null);
+        } else {
+          const { data: g } = await supabase
+            .from('geckos')
+            .select('id, name, morphs_traits, image_urls, passport_code, sex, weight_grams')
+            .eq('id', tr.animal_id)
+            .maybeSingle();
+          setAnimal(g ? {
+            isReptile: false,
+            name: g.name,
+            subtitle: g.morphs_traits || 'Crested Gecko',
+            image_urls: g.image_urls,
+            passport_code: g.passport_code,
+            emoji: '🦎',
+            collectionPath: '/MyGeckos',
+            successHeading: 'Welcome to your new gecko!',
+          } : null);
+        }
       } catch (err) {
         console.error(err);
         setError('error');
@@ -129,22 +157,22 @@ export default function ClaimAnimal() {
             <Check size={32} style={{ color: C.sage }} />
           </div>
           <h1 className="text-2xl mb-2" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>
-            Welcome to your new gecko!
+            {animal?.successHeading || 'Welcome to your new animal!'}
           </h1>
           <p className="text-sm mb-6" style={{ color: C.muted }}>
-            <strong>{gecko?.name}</strong> has been added to your collection with full history intact.
+            <strong>{animal?.name}</strong> has been added to your collection with full history intact.
           </p>
           <div className="flex gap-3 justify-center flex-wrap">
             <Link
-              to="/MyGeckos"
+              to={animal?.collectionPath || '/MyGeckos'}
               className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium text-white"
               style={{ backgroundColor: C.sage }}
             >
               View My Collection
             </Link>
-            {gecko?.passport_code && (
+            {animal?.passport_code && (
               <Link
-                to={`/passport/${gecko.passport_code}`}
+                to={`/passport/${animal.passport_code}`}
                 className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium border"
                 style={{ borderColor: C.sage, color: C.sage }}
               >
@@ -189,7 +217,7 @@ export default function ClaimAnimal() {
   }
 
   // Main claim page
-  const profileImg = gecko?.image_urls?.[0];
+  const profileImg = animal?.image_urls?.[0];
 
   return (
     <div className="min-h-screen" style={{ backgroundColor: C.warmWhite, fontFamily: "'DM Sans', sans-serif" }}>
@@ -211,22 +239,22 @@ export default function ClaimAnimal() {
         >
           <div className="flex items-center gap-4">
             {profileImg ? (
-              <img src={profileImg} alt={gecko?.name} className="w-20 h-20 rounded-xl object-cover" />
+              <img src={profileImg} alt={animal?.name} className="w-20 h-20 rounded-xl object-cover" />
             ) : (
               <div className="w-20 h-20 rounded-xl flex items-center justify-center text-3xl" style={{ backgroundColor: C.paleSage }}>
-                🦎
+                {animal?.emoji || '🦎'}
               </div>
             )}
             <div>
               <h2 className="text-lg font-semibold" style={{ color: C.forest, fontFamily: "'DM Serif Display', serif" }}>
-                {gecko?.name || 'Unknown'}
+                {animal?.name || 'Unknown'}
               </h2>
               <p className="text-sm" style={{ color: C.muted }}>
-                {gecko?.morphs_traits || 'Crested Gecko'}
+                {animal?.subtitle || 'Animal'}
               </p>
-              {gecko?.passport_code && (
+              {animal?.passport_code && (
                 <code className="text-xs font-mono px-1.5 py-0.5 rounded mt-1 inline-block" style={{ backgroundColor: C.paleSage, color: C.muted }}>
-                  {gecko.passport_code}
+                  {animal.passport_code}
                 </code>
               )}
             </div>

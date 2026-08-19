@@ -39,25 +39,25 @@ function StatusBadge({ status, expiresAt }) {
   );
 }
 
-function TransferRow({ transfer, gecko, direction, myEmail }) {
+function TransferRow({ transfer, animal, direction, myEmail }) {
   const isOutgoing = direction === 'outgoing';
   const counterparty = isOutgoing
     ? transfer.to_email
     : (transfer.from_email || 'Previous owner');
   const dateStr = transfer.claimed_at || transfer.created_date;
-  const img = gecko?.image_urls?.[0];
+  const img = animal?.image_urls?.[0];
 
   return (
     <div className="flex items-center gap-3 p-3 rounded-lg border border-slate-700 bg-slate-900 hover:border-slate-600 transition-colors">
       {img ? (
-        <img src={img} alt={gecko?.name || 'Gecko'} className="w-12 h-12 rounded-lg object-cover shrink-0" />
+        <img src={img} alt={animal?.name || 'Animal'} className="w-12 h-12 rounded-lg object-cover shrink-0" />
       ) : (
         <div className="w-12 h-12 rounded-lg bg-slate-800 flex items-center justify-center text-xl shrink-0">🦎</div>
       )}
 
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2 flex-wrap">
-          <span className="font-medium text-slate-100 truncate">{gecko?.name || 'Unknown animal'}</span>
+          <span className="font-medium text-slate-100 truncate">{animal?.name || 'Unknown animal'}</span>
           <span
             className={`inline-flex items-center gap-1 text-xs ${isOutgoing ? 'text-sky-400' : 'text-violet-400'}`}
           >
@@ -76,9 +76,9 @@ function TransferRow({ transfer, gecko, direction, myEmail }) {
         </div>
       </div>
 
-      {gecko?.passport_code && (
+      {animal?.passport_code && (
         <a
-          href={`/passport/${gecko.passport_code}`}
+          href={`/passport/${animal.passport_code}`}
           target="_blank"
           rel="noopener noreferrer"
           className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-md text-xs font-medium border border-emerald-700/60 text-emerald-300 hover:bg-emerald-900/20 shrink-0"
@@ -96,7 +96,7 @@ export default function TransferHistory({ user }) {
   const [isLoading, setIsLoading] = useState(true);
   const [outgoing, setOutgoing] = useState([]);
   const [incoming, setIncoming] = useState([]);
-  const [geckosById, setGeckosById] = useState({});
+  const [animalsById, setAnimalsById] = useState({});
   const [error, setError] = useState(false);
 
   const load = useCallback(async () => {
@@ -132,19 +132,25 @@ export default function TransferHistory({ user }) {
       setOutgoing(outRows);
       setIncoming(inRows);
 
-      // Fetch the animals referenced by either list in one query.
-      const animalIds = [...new Set([...outRows, ...inRows].map((r) => r.animal_id).filter(Boolean))];
-      if (animalIds.length > 0) {
-        const { data: geckos } = await supabase
-          .from('geckos')
-          .select('id, name, passport_code, image_urls, morphs_traits')
-          .in('id', animalIds);
-        const map = {};
-        for (const g of geckos || []) map[g.id] = g;
-        setGeckosById(map);
-      } else {
-        setGeckosById({});
-      }
+      // Fetch the animals referenced by either list. animal_id can point at
+      // either the geckos or the other_reptiles table, split by animal_type,
+      // so look each set up in its own table and merge them by id.
+      const allRows = [...outRows, ...inRows];
+      const geckoIds = [...new Set(allRows.filter((r) => r.animal_type !== 'other_reptile').map((r) => r.animal_id).filter(Boolean))];
+      const reptileIds = [...new Set(allRows.filter((r) => r.animal_type === 'other_reptile').map((r) => r.animal_id).filter(Boolean))];
+
+      const map = {};
+      const [geckosRes, reptilesRes] = await Promise.all([
+        geckoIds.length > 0
+          ? supabase.from('geckos').select('id, name, passport_code, image_urls, morphs_traits').in('id', geckoIds)
+          : Promise.resolve({ data: [] }),
+        reptileIds.length > 0
+          ? supabase.from('other_reptiles').select('id, name, species, morph, image_urls').in('id', reptileIds)
+          : Promise.resolve({ data: [] }),
+      ]);
+      for (const g of geckosRes.data || []) map[g.id] = g;
+      for (const r of reptilesRes.data || []) map[r.id] = r;
+      setAnimalsById(map);
     } catch (err) {
       console.error('Failed to load transfer history:', err);
       setError(true);
@@ -198,7 +204,7 @@ export default function TransferHistory({ user }) {
           </p>
           <div className="space-y-2">
             {outgoing.map((t) => (
-              <TransferRow key={t.id} transfer={t} gecko={geckosById[t.animal_id]} direction="outgoing" myEmail={user?.email} />
+              <TransferRow key={t.id} transfer={t} animal={animalsById[t.animal_id]} direction="outgoing" myEmail={user?.email} />
             ))}
           </div>
         </section>
@@ -212,7 +218,7 @@ export default function TransferHistory({ user }) {
           </h2>
           <div className="space-y-2">
             {incoming.map((t) => (
-              <TransferRow key={t.id} transfer={t} gecko={geckosById[t.animal_id]} direction="incoming" myEmail={user?.email} />
+              <TransferRow key={t.id} transfer={t} animal={animalsById[t.animal_id]} direction="incoming" myEmail={user?.email} />
             ))}
           </div>
         </section>

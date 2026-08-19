@@ -4,12 +4,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { ReptileEvent } from '@/entities/all';
 import { format } from 'date-fns';
 import { parseLocalDate } from '@/lib/dateUtils';
-import { X, Plus, Trash2, LineChart, Loader2, History, Edit, Archive, ArchiveRestore } from 'lucide-react';
+import { X, Plus, Trash2, LineChart, Loader2, History, Edit, Archive, ArchiveRestore, ArrowRightLeft } from 'lucide-react';
 import EventTracker from '../my-geckos/EventTracker';
 import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { toast } from '@/components/ui/use-toast';
+import { supabase } from '@/lib/supabaseClient';
 
 export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit, onArchive }) {
     const [weightRecords, setWeightRecords] = useState([]);
@@ -103,6 +105,37 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
             console.error('Failed to delete weight record:', error);
         }
         setWeightToDelete(null);
+    };
+
+    const handleTransferOwnership = async () => {
+        const email = prompt("Enter the recipient's email address:");
+        if (!email) return;
+        const price = prompt('Sale price (optional, leave blank to skip):');
+        const msg = prompt('Message for the buyer (optional):');
+        const token = crypto.randomUUID();
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        if (authError || !authData?.user?.id) {
+            toast({ title: 'Transfer failed', description: 'You need to be signed in to transfer ownership.', variant: 'destructive' });
+            return;
+        }
+        const { error } = await supabase.from('transfer_requests').insert({
+            animal_id: reptile.id,
+            animal_type: 'other_reptile',
+            from_user_id: authData.user.id,
+            to_email: email,
+            token,
+            sale_price: price ? Number(price) : null,
+            message: msg || null,
+            created_by: reptile.created_by,
+            expires_at: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(),
+        });
+        if (error) {
+            toast({ title: 'Transfer failed', description: error.message, variant: 'destructive' });
+        } else {
+            const claimUrl = `${window.location.origin}/claim/${token}`;
+            navigator.clipboard.writeText(claimUrl);
+            toast({ title: 'Transfer initiated!', description: `Claim link copied to clipboard. Share it with ${email}. Expires in 72 hours.` });
+        }
     };
 
     const chartData = [...weightRecords].reverse().map(r => ({
@@ -219,6 +252,17 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
                                     EventEntity={ReptileEvent}
                                     onEventAdded={loadEventHistory}
                                 />
+
+                                {!reptile.archived && (
+                                    <Button
+                                        variant="outline"
+                                        onClick={handleTransferOwnership}
+                                        className="w-full border-amber-600 text-amber-400 hover:bg-amber-900/20"
+                                    >
+                                        <ArrowRightLeft className="w-4 h-4 mr-2" />
+                                        Transfer Ownership
+                                    </Button>
+                                )}
 
                                 {onArchive && (
                                     <Button
