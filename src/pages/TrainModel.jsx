@@ -36,7 +36,7 @@ export default function TrainModelPage() {
     // Inventory in geck-data (the standalone Market Intelligence project,
     // populated by the Eye in the Sky extension and the external reference
     // importers). Surfaced here so admins can see how much labeled training
-    // material is available beyond the local base44 store.
+    // material is available beyond the local store.
     const [geckDataStats, setGeckDataStats] = useState(null);
     const [geckDataError, setGeckDataError] = useState(null);
     

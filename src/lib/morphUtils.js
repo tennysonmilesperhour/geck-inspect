@@ -2,7 +2,7 @@
  * Morph guide helpers.
  *
  * The `morph_guides` table contains multiple records for many morphs
- * (the result of Base44 letting different users add their own versions).
+ * (the result of different users historically adding their own versions).
  * These helpers canonicalize morph names into URL slugs, turn a slug
  * back into a display name, and pick the "best" record when multiple
  * rows describe the same morph.

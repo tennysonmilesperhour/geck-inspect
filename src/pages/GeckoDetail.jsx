@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
 import { Gecko, User, WeightRecord, ShedRecord } from '@/entities/all';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/appClient';
 import { useNavigate, Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { format } from 'date-fns';
@@ -74,7 +74,7 @@ export default function GeckoDetail() {
             try {
                 const [fetchedGecko, user] = await Promise.all([
                     Gecko.get(geckoId),
-                    base44.auth.me().catch(() => null),
+                    api.auth.me().catch(() => null),
                 ]);
                 setGecko(fetchedGecko);
                 setCurrentUser(user);
@@ -296,7 +296,7 @@ export default function GeckoDetail() {
                                     )}
                                     {!currentUser && (
                                         <p className="text-xs text-slate-500 text-center mt-1">
-                                            <a href="#" onClick={() => base44.auth.redirectToLogin()} className="text-emerald-400 hover:underline">Log in</a> to contact this breeder
+                                            <a href="#" onClick={() => api.auth.redirectToLogin()} className="text-emerald-400 hover:underline">Log in</a> to contact this breeder
                                         </p>
                                     )}
                                 </CardContent>

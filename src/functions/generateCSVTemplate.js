@@ -1,5 +1,5 @@
 /**
- * Client-side CSV template generator (replaces dead Base44 backend function).
+ * Client-side CSV template generator.
  *
  * generateCSVTemplate({ includeExisting })
  *   - includeExisting = false → returns an empty template with all column headers

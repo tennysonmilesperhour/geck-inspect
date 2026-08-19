@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/appClient';
 import { Gecko, MarketplaceCost, PendingSale } from '@/entities/all';
 import { toast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -826,7 +826,7 @@ export default function MarketplaceSalesStats() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const currentUser = await base44.auth.me();
+        const currentUser = await api.auth.me();
         if (!currentUser) { navigate(createPageUrl('Home')); return; }
         setUser(currentUser);
 

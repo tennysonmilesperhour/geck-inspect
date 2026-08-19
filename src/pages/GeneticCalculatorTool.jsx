@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/appClient';
 import { Dna, Loader2, ArrowLeftRight, ArrowRight, Users, Pencil, Link2, Check } from 'lucide-react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
@@ -195,7 +195,7 @@ export default function GeneticCalculatorTool({
         const load = async () => {
             setIsLoading(true);
             try {
-                const user = await base44.auth.me();
+                const user = await api.auth.me();
                 if (user) {
                     setIsAuthed(true);
                     const { getVisibleGeckos } = await import('@/lib/geckoAccess');

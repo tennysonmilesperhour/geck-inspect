@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Award, Camera, ClipboardCheck, Loader2, Save, Sparkles } from 'lucide-react';
 import { Gecko, User } from '@/entities/all';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/appClient';
 import { tierForScore, formatScore, patternGradeForScore } from '@/lib/quality';
 import QualityBadge from '@/components/shared/QualityBadge';
 import { parseLocalDate } from '@/lib/dateUtils';
@@ -196,7 +196,7 @@ export default function ScorecardForm({ criteria = [] }) {
           You can walk the rubric below without an account, but saving a score to a gecko needs one.{' '}
           <button
             type="button"
-            onClick={() => base44.auth.redirectToLogin()}
+            onClick={() => api.auth.redirectToLogin()}
             className="text-emerald-400 hover:text-emerald-300 underline"
           >
             Sign in

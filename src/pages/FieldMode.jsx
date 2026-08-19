@@ -23,7 +23,7 @@ import {
   X,
 } from 'lucide-react';
 import { Gecko, WeightRecord, ShedRecord, FeedingRecord, GeckoEvent, CollectionMember } from '@/entities/all';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/appClient';
 import { getVisibleGeckos, canWriteGecko } from '@/lib/geckoAccess';
 import { todayLocalISO } from '@/lib/dateUtils';
 import { createPageUrl } from '@/utils';
@@ -201,7 +201,7 @@ export default function FieldModePage() {
     let cancelled = false;
     (async () => {
       try {
-        const currentUser = await base44.auth.me();
+        const currentUser = await api.auth.me();
         if (cancelled) return;
         setUser(currentUser);
         const [allGeckos, memberships] = await Promise.all([

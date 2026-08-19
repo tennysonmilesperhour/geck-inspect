@@ -1,12 +1,12 @@
 /**
  * InvokeLLM, client wrapper for the `invoke-llm` Supabase edge function.
  *
- * Replaces the Base44 `base44.integrations.Core.InvokeLLM` API (which is
- * dead because Base44 shut down) with a Supabase-backed equivalent. The
+ * Supabase-backed LLM helper, replacing a hosted `InvokeLLM` API from a
+ * previous platform. The
  * edge function stores the ANTHROPIC_API_KEY server-side and proxies to
  * Anthropic's Messages API.
  *
- * Usage (matches the old Base44 shape so existing callers keep working):
+ * Usage (keeps the original call shape so existing callers work):
  *   const result = await InvokeLLM({
  *     prompt: '...',
  *     response_json_schema: { type: 'object', properties: {...} },

@@ -1,5 +1,5 @@
 /**
- * Client-side hatchling creation (replaces dead Base44 backend function).
+ * Client-side hatchling creation.
  *
  * createGeckoFromEgg({ eggId })
  *   - Looks up the egg's breeding plan and parents, generates an ID code and

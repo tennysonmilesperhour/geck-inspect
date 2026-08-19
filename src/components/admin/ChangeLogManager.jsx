@@ -24,9 +24,9 @@ import { format } from 'date-fns';
  * an LLM for plain-English bullets, save as draft, publish, and (optionally)
  * broadcast the published entry to users via the Mass Messaging surface.
  *
- * This version drops the dead `base44.integrations.Core.InvokeLLM` call and
+ * This version drops a dead hosted `InvokeLLM` call and
  * uses our own Supabase edge function via `@/lib/invokeLlm` instead. It also
- * switches from `base44.entities.ChangeLog` to the Supabase entity client.
+ * switches from `api.entities.ChangeLog` to the Supabase entity client.
  */
 
 function defaultForm() {

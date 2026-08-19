@@ -1,5 +1,10 @@
 # Production schema snapshot (documentation only)
 
+> Writing a migration or a new entity? Read
+> [SCHEMA_CONVENTIONS.md](./SCHEMA_CONVENTIONS.md) first: legacy tables use
+> TEXT ids and `created_date` / `created_by`, and merging a migration does
+> not apply it to production.
+
 Snapshot date: 2026-07-07. Project: `mmuglfphhwlaluyfyxsp` (Geck Inspect).
 
 This file exists because eight early migrations are empty "remote-only

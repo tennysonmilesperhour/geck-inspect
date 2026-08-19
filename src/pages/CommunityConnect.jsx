@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useCallback } from 'react';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
 import { User, Gecko, UserFollow, ForumCategory, ForumPost, UserActivity } from '@/entities/all';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/appClient';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -205,7 +205,7 @@ function ForumTab() {
             setIsLoading(true);
             try {
                 const [user, fetchedCategories, fetchedPosts] = await Promise.all([
-                    base44.auth.me().catch(() => null),
+                    api.auth.me().catch(() => null),
                     ForumCategory.list(),
                     ForumPost.list('-created_date')
                 ]);
@@ -531,7 +531,7 @@ export default function CommunityConnectPage() {
             setIsLoading(true);
             try {
                 // Fetch user first
-                const user = await base44.auth.me().catch(() => null);
+                const user = await api.auth.me().catch(() => null);
                 setCurrentUser(user);
 
                 // Fetch initial 24 breeders and all geckos

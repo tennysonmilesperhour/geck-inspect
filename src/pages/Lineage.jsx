@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback, useRef, useMemo } from 'react';
 import Seo from '@/components/seo/Seo';
 import { useLocation } from 'react-router-dom';
 import { Gecko, BreedingPlan, LineagePlaceholder } from '@/entities/all';
-import { base44 as base44Client } from '@/api/base44Client';
+import { api } from '@/api/appClient';
 import { uploadFile } from '@/lib/uploadFile';
 import SmartImage from '@/components/shared/SmartImage';
 import { Loader2, Search, ZoomIn, ZoomOut, GitBranch, Heart, Users2, Edit2, Upload, Download, AlertTriangle, ExternalLink, Dna, Calendar, Scale, Tag, X, Link as LinkIcon, Check, ChevronUp, ChevronDown } from 'lucide-react';
@@ -539,7 +539,7 @@ export default function Lineage() {
     const fetchAllData = useCallback(async () => {
         setIsLoading(true);
         try {
-            const currentUser = await base44Client.auth.me().catch(() => null);
+            const currentUser = await api.auth.me().catch(() => null);
             const { getVisibleGeckos } = await import('@/lib/geckoAccess');
             const [userGeckos, allVisibleGeckos, userPlaceholders] = await Promise.all([
                 currentUser ? getVisibleGeckos(currentUser) : [],

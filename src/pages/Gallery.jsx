@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Seo from '@/components/seo/Seo';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/appClient';
 import GalleryFilters from '../components/gallery/GalleryFilters';
 import ImageCard from '../components/gallery/ImageCard';
 import ImageDetailModal from '../components/gallery/ImageDetailModal';
@@ -56,7 +56,7 @@ export default function Gallery() {
 
     const fetchBatch = useCallback(async (offset = 0, replace = false) => {
          const query = buildQuery();
-         const results = await base44.entities.GeckoImage.filter(query, sortField, BATCH_SIZE, offset);
+         const results = await api.entities.GeckoImage.filter(query, sortField, BATCH_SIZE, offset);
 
          // Client-side filter: exclude images with empty/missing data and secondary_traits
          const filtered = results.filter(img => 
@@ -83,7 +83,7 @@ export default function Gallery() {
             await fetchBatch(0, true);
             // Load users once
             if (users.length === 0) {
-                const allUsers = await base44.entities.User.list().catch(() => []);
+                const allUsers = await api.entities.User.list().catch(() => []);
                 setUsers(allUsers);
             }
             setIsLoading(false);

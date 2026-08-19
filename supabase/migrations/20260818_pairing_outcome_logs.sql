@@ -8,8 +8,8 @@
 
 CREATE TABLE IF NOT EXISTS pairing_outcome_logs (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  -- Parents from the user's collection. geckos.id is TEXT (base44-era
-  -- identifiers), so these must be TEXT, not UUID.
+  -- Parents from the user's collection. geckos.id is TEXT, not UUID,
+  -- so these must be TEXT. See supabase/SCHEMA_CONVENTIONS.md.
   sire_id TEXT,
   dam_id TEXT,
   sire_label TEXT NOT NULL DEFAULT '',

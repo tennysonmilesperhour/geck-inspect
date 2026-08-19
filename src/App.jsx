@@ -20,7 +20,7 @@ import { ThemeProvider } from '@/lib/ThemeContext';
 import UpdateNotification from '@/components/ui/UpdateNotification';
 import LoginPortal from '@/components/auth/LoginPortal';
 import ScrollToTop from '@/components/shared/ScrollToTop';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/appClient';
 import { captureReferralFromUrl } from '@/lib/referral';
 import { captureSignupGrantFromUrl } from '@/lib/store/signupGrant';
 
@@ -175,7 +175,7 @@ const AuthenticatedApp = () => {
   useEffect(() => {
     if (!isAuthenticated) return;
     const loadDisabled = () => {
-      base44.entities.PageConfig.list().then((configs) => {
+      api.entities.PageConfig.list().then((configs) => {
         if (!Array.isArray(configs)) return;
         // Group by page_name so duplicate rows don't disable a page when
         // the admin has already re-enabled one of the copies. A page is

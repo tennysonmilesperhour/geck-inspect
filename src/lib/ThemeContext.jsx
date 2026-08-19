@@ -109,9 +109,10 @@ async function fetchCloudPrefs() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user?.email) return null;
     // Resolve the profile row by EMAIL, the app-wide convention.
-    // Legacy rows carry Base44-era TEXT ids that do NOT equal the auth
-    // UUID, so an `.eq('id', user.id)` lookup silently missed them and
-    // cloud theme prefs never loaded or saved for long-time users.
+    // Legacy rows carry TEXT ids that do NOT equal the auth UUID, so an
+    // `.eq('id', user.id)` lookup silently missed them and cloud theme
+    // prefs never loaded or saved for long-time users. See
+    // supabase/SCHEMA_CONVENTIONS.md.
     const { data, error } = await supabase
       .from('profiles')
       .select('ui_theme, ui_secondary')

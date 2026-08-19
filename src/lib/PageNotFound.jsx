@@ -1,5 +1,5 @@
 import { useLocation, Link } from 'react-router-dom';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/appClient';
 import { useQuery } from '@tanstack/react-query';
 import Seo from '@/components/seo/Seo';
 
@@ -12,7 +12,7 @@ export default function PageNotFound({}) {
         queryKey: ['user'],
         queryFn: async () => {
             try {
-                const user = await base44.auth.me();
+                const user = await api.auth.me();
                 return { user, isAuthenticated: true };
             } catch {
                 return { user: null, isAuthenticated: false };

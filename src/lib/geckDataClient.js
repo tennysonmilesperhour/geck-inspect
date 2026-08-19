@@ -50,7 +50,7 @@ export const geckData = ANON_KEY
 
 /**
  * Counts of training-relevant rows in geck-data. Used by TrainModel to show
- * how much labeled inventory is available beyond the local base44 stores.
+ * how much labeled inventory is available beyond the local stores.
  */
 export async function getGeckDataTrainingStats() {
   if (!geckData) {

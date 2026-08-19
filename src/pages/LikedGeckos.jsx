@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
 import { Gecko, User, MarketplaceLike } from '@/entities/all';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/appClient';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Heart, Loader2, DollarSign, MapPin, Trash2 } from 'lucide-react';
@@ -20,7 +20,7 @@ export default function LikedGeckosPage() {
         const fetchData = async () => {
             setIsLoading(true);
             try {
-                const user = await base44.auth.me();
+                const user = await api.auth.me();
                 if (!user) {
                     setIsLoading(false);
                     return;

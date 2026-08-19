@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import Seo from '@/components/seo/Seo';
 import { BreedingPlan, Egg } from '@/entities/all';
-import { base44 } from '@/api/base44Client';
+import { api } from '@/api/appClient';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -280,7 +280,7 @@ export default function BreedingSeasonPage() {
         const loadData = async () => {
             setIsLoading(true);
             try {
-                const currentUser = await base44.auth.me();
+                const currentUser = await api.auth.me();
                 setUser(currentUser);
                 setAuthChecked(true);
                 if (!currentUser) {
