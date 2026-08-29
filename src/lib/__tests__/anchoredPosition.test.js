@@ -84,14 +84,44 @@ describe('vertical placement', () => {
   });
 });
 
+describe('an anchor scrolled out of view keeps its panel pinned on screen', () => {
+  // Scrolling with the panel open used to drag it off the screen with its
+  // trigger, because only the "no room below" case was clamped.
+  const viewport = { width: 390, height: 750 };
+  const panel = { width: 288, height: 300 };
+
+  it('pins to the top edge when the anchor scrolls off the top', () => {
+    const anchor = { top: -200, bottom: -168, right: 48 };
+    const pos = computeAnchoredPosition({ anchor, panel, viewport });
+    expect(pos.top).toBe(M);
+    expectInsideViewport(pos, panel, viewport);
+  });
+
+  it('pins to the bottom edge when the anchor scrolls off the bottom', () => {
+    const anchor = { top: 900, bottom: 932, right: 48 };
+    const pos = computeAnchoredPosition({ anchor, panel, viewport });
+    expect(pos.top + panel.height).toBe(viewport.height - M);
+    expectInsideViewport(pos, panel, viewport);
+  });
+
+  it('stays pinned however far the anchor scrolls away', () => {
+    for (let top = -3000; top <= 3000; top += 25) {
+      const anchor = { top, bottom: top + 32, right: 48 };
+      const pos = computeAnchoredPosition({ anchor, panel, viewport });
+      expectInsideViewport(pos, panel, viewport);
+    }
+  });
+});
+
 describe('every anchor position on a phone stays inside the viewport', () => {
-  // Sweep the anchor across the whole screen. Regardless of where the trigger
+  // Sweep the anchor across the whole screen, and past every edge so the
+  // scrolled-away cases are covered too. Regardless of where the trigger
   // button lands, the panel it opens must remain fully visible.
   const viewport = { width: 390, height: 750 };
   const panel = { width: 288, height: 300 };
 
-  for (let right = 0; right <= viewport.width; right += 15) {
-    for (let top = 0; top <= viewport.height; top += 50) {
+  for (let right = -100; right <= viewport.width + 100; right += 25) {
+    for (let top = -300; top <= viewport.height + 300; top += 75) {
       it(`anchor at right=${right}, top=${top}`, () => {
         const anchor = { top, bottom: top + 32, right };
         const pos = computeAnchoredPosition({ anchor, panel, viewport });

@@ -20,10 +20,9 @@ export const ANCHOR_MARGIN = 8;
  * viewport on both axes, and the panel flips above the anchor when there is
  * not enough room below it.
  *
- * The guarantee holds for an anchor that is itself visible. An anchor scrolled
- * out of view takes its panel with it, which is what a dropdown should do:
- * pinning the panel to the edge instead would leave it floating with no
- * visible trigger.
+ * The panel stays on screen even when its anchor does not. Scrolling an open
+ * panel's trigger out of view pins the panel to the nearest viewport edge
+ * rather than letting it slide away with the trigger.
  *
  * @param {object} args
  * @param {{top: number, bottom: number, right: number}} args.anchor  Anchor rect, viewport-relative
@@ -45,8 +44,11 @@ export function computeAnchoredPosition({ anchor, panel, viewport, margin = ANCH
     let top = anchor.bottom + margin;
     if (top + panelH > vh - margin) {
         const above = anchor.top - margin - panelH;
-        top = above >= margin ? above : Math.max(margin, vh - margin - panelH);
+        top = above >= margin ? above : vh - margin - panelH;
     }
+    // Pin into the viewport. Without this the panel rides off the top or
+    // bottom of the screen once its anchor scrolls out of view.
+    top = Math.max(margin, Math.min(top, vh - margin - panelH));
 
     return { top, left, maxWidth: vw - margin * 2, maxHeight: vh - margin * 2 };
 }
