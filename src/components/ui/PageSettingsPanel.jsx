@@ -1,8 +1,10 @@
-import { useState, useRef } from 'react';
+import { useState } from 'react';
+import { createPortal } from 'react-dom';
 import { Settings, X, ArrowRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
+import useAnchoredPosition from '@/hooks/useAnchoredPosition';
 
 /**
  * Reusable page-level settings panel.
@@ -11,8 +13,10 @@ import { Button } from '@/components/ui/button';
  * page-specific settings. A footer link directs users to the main
  * Settings page for account-wide preferences.
  *
- * The panel is rendered with fixed positioning so it always floats
- * above page content regardless of parent stacking contexts.
+ * The panel is portalled to the document body and positioned with
+ * useAnchoredPosition, so it floats above page content regardless of
+ * parent stacking contexts and stays inside the viewport on mobile,
+ * where the gear often sits at the far left of a full-width toolbar.
  *
  * Usage:
  *   <PageSettingsPanel title="My Geckos Settings">
@@ -21,22 +25,12 @@ import { Button } from '@/components/ui/button';
  */
 export default function PageSettingsPanel({ title = 'Page Settings', children, className = '' }) {
     const [open, setOpen] = useState(false);
-    const btnRef = useRef(null);
-
-    const getPanelStyle = () => {
-        if (!btnRef.current) return {};
-        const rect = btnRef.current.getBoundingClientRect();
-        return {
-            position: 'fixed',
-            top: rect.bottom + 8,
-            right: Math.max(8, window.innerWidth - rect.right),
-        };
-    };
+    const { anchorRef, panelRef, style } = useAnchoredPosition(open);
 
     return (
         <div className={`${className}`}>
             <Button
-                ref={btnRef}
+                ref={anchorRef}
                 variant="outline"
                 size="icon"
                 onClick={() => setOpen(o => !o)}
@@ -46,12 +40,16 @@ export default function PageSettingsPanel({ title = 'Page Settings', children, c
                 <Settings className="w-4 h-4" />
             </Button>
 
-            {open && (
+            {open && createPortal(
                 <>
                     {/* Backdrop */}
                     <div className="fixed inset-0 z-[9998]" onClick={() => setOpen(false)} />
                     {/* Panel */}
-                    <div style={getPanelStyle()} className="z-[9999] w-72 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-4 space-y-3">
+                    <div
+                        ref={panelRef}
+                        style={style}
+                        className="z-[9999] w-72 bg-slate-900 border border-slate-700 rounded-xl shadow-2xl p-4 space-y-3"
+                    >
                         <div className="flex items-center justify-between mb-1">
                             <h3 className="text-slate-100 font-semibold text-sm flex items-center gap-2">
                                 <Settings className="w-4 h-4 text-emerald-400" />
@@ -75,7 +73,8 @@ export default function PageSettingsPanel({ title = 'Page Settings', children, c
                             </Link>
                         </div>
                     </div>
-                </>
+                </>,
+                document.body
             )}
         </div>
     );

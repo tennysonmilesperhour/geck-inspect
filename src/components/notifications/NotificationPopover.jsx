@@ -1,9 +1,10 @@
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react';
 import { createPortal } from 'react-dom';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Bell, ArrowRight, Check, CheckCheck, Award, Shield, ImagePlus, User as UserIcon, MessageSquare, Star, ShoppingCart } from 'lucide-react';
 import { formatDistanceToNowStrict } from 'date-fns';
+import useAnchoredPosition from '@/hooks/useAnchoredPosition';
 
 const ICONS = {
   level_up: <Award className="w-4 h-4 text-yellow-400" />,
@@ -29,25 +30,14 @@ const ICONS = {
  */
 export default function NotificationPopover({ notifications = [], unreadCount = 0, onMarkRead, onMarkAllRead }) {
   const [open, setOpen] = useState(false);
-  const buttonRef = useRef(null);
-  const [position, setPosition] = useState({ top: 0, right: 0 });
-
-  useEffect(() => {
-    if (open && buttonRef.current) {
-      const rect = buttonRef.current.getBoundingClientRect();
-      setPosition({
-        top: rect.bottom + 8,
-        right: window.innerWidth - rect.right,
-      });
-    }
-  }, [open]);
+  const { anchorRef, panelRef, style } = useAnchoredPosition(open);
 
   const recent = notifications.slice(0, 5);
 
   return (
     <div className="relative">
       <button
-        ref={buttonRef}
+        ref={anchorRef}
         onClick={() => setOpen((o) => !o)}
         className="gecko-header-action"
         aria-label="Notifications"
@@ -64,8 +54,9 @@ export default function NotificationPopover({ notifications = [], unreadCount = 
         <>
           <div className="fixed inset-0 z-[200]" onClick={() => setOpen(false)} />
           <div
-            className="fixed z-[201] w-80 rounded-xl border border-emerald-900/40 bg-slate-950 shadow-2xl overflow-hidden"
-            style={{ top: position.top, right: position.right }}
+            ref={panelRef}
+            className="z-[201] w-80 rounded-xl border border-emerald-900/40 bg-slate-950 shadow-2xl overflow-hidden"
+            style={style}
           >
             {/* Header */}
             <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-emerald-900/30">
