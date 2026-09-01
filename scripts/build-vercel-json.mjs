@@ -159,6 +159,11 @@ function buildConfig() {
   // in this file and in scripts/seo-routes.mjs instead.
   return {
     $schema: 'https://openapi.vercel.sh/vercel.json',
+    // Keep Vercel on the package manager and lockfile used by CI and local
+    // development. The project-level install command was previously set to
+    // `npm install`, which ignored pnpm-lock.yaml and failed while resolving
+    // stale cached dependencies before the application build could start.
+    installCommand: 'pnpm install --frozen-lockfile',
     rewrites,
     headers: [
       {
