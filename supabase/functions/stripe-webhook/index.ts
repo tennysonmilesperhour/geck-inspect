@@ -179,15 +179,33 @@ Deno.serve(async (req: Request) => {
     return data || null;
   };
 
+  // Writes the billing columns for an account.
+  //
+  // This used to be a plain .update().eq("email"), which matches zero rows
+  // and reports no error when the account has no profile row. Nothing
+  // created a profile row on signup until the on_auth_user_created trigger
+  // landed, so live paid subscriptions were being dropped on the floor: the
+  // webhook logged "processed" and the member stayed on Free. A real upsert
+  // means a missing row can never lose a payment again.
   const upsertProfileByEmail = async (
     email: string,
     patch: Record<string, unknown>,
   ) => {
-    const { error } = await supabase
+    const now = new Date().toISOString();
+    const { data, error } = await supabase
       .from("profiles")
-      .update({ ...patch, updated_date: new Date().toISOString() })
-      .eq("email", email);
-    if (error) console.warn("profile update failed:", error.message);
+      .upsert(
+        { email, created_by: email, ...patch, updated_date: now },
+        { onConflict: "email" },
+      )
+      .select("id");
+    if (error) {
+      console.warn("profile upsert failed:", email, error.message);
+      return;
+    }
+    if (!data || data.length === 0) {
+      console.warn("profile upsert wrote no row:", email);
+    }
   };
 
   try {
@@ -206,6 +224,7 @@ Deno.serve(async (req: Request) => {
           const tier = session.metadata?.tier || null;
           const cycle = session.metadata?.billing_cycle || null;
           const isKeeperPromoTrial = session.metadata?.keeper_promo_trial === "1";
+          const isStandardTrial = session.metadata?.free_trial === "1";
           await upsertProfileByEmail(email, {
             stripe_customer_id: session.customer,
             stripe_subscription_id: session.subscription,
@@ -215,6 +234,12 @@ Deno.serve(async (req: Request) => {
             paid_membership_started_at: new Date().toISOString(),
             ...(isKeeperPromoTrial
               ? { keeper_trial_used: true, keeper_trial_started_at: new Date().toISOString() }
+              : {}),
+            // The one standard free trial per account is spent here rather
+            // than when the session was created, so abandoning Checkout
+            // leaves the offer intact.
+            ...(isStandardTrial
+              ? { free_trial_used: true, free_trial_started_at: new Date().toISOString() }
               : {}),
           });
         }

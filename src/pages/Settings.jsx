@@ -1129,7 +1129,7 @@ export default function SettingsPage() {
                                     <p className="basis-full text-xs text-slate-500">
                                         {canManageBilling
                                             ? 'Manage billing opens your secure Stripe portal to change plans, update your card, download invoices, or cancel.'
-                                            : 'Paid plans include a free trial and can be cancelled anytime from this page.'}
+                                            : 'Paid plans can be cancelled anytime from this page. The free trial is optional and offered on the Membership page.'}
                                     </p>
                                 </CardContent>
                             </Card>

@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { TIER_PRICING } from '../stripe-config.js';
+import { TIER_PRICING, TRIAL_DAYS, KEEPER_PROMO_TRIAL_DAYS } from '../stripe-config.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const FUNCTIONS = ['stripe-checkout', 'stripe-webhook'];
@@ -51,4 +51,37 @@ describe('Stripe price catalog stays in sync with the edge functions', () => {
       for (const id of ids) expect(known.has(id), `${name}: unknown ${id}`).toBe(true);
     });
   }
+});
+
+/**
+ * The trial lengths are declared twice as well: once in stripe-config.js
+ * (which the Membership page renders as copy) and once in the checkout
+ * function (which is what Stripe actually applies). If they drift, the page
+ * promises a trial length the customer does not get.
+ */
+describe('Trial lengths stay in sync with stripe-checkout', () => {
+  const src = readFileSync(
+    resolve(__dirname, '../../../supabase/functions/stripe-checkout/index.ts'),
+    'utf8',
+  );
+
+  const constant = (name) => {
+    const match = src.match(new RegExp(`const ${name} = (\\d+);`));
+    return match ? Number(match[1]) : null;
+  };
+
+  it('matches the standard trial length', () => {
+    expect(constant('STANDARD_TRIAL_DAYS')).toBe(TRIAL_DAYS);
+  });
+
+  it('matches the one-time Keeper promo length', () => {
+    expect(constant('KEEPER_PROMO_TRIAL_DAYS')).toBe(KEEPER_PROMO_TRIAL_DAYS);
+  });
+
+  it('only attaches a trial when one was asked for', () => {
+    // A plain purchase must be billed today. The guard below is what makes
+    // that true, so its absence is a regression worth failing on.
+    expect(src).toMatch(/if \(trialDays > 0\) \{/);
+    expect(src).toMatch(/let trialDays = 0;/);
+  });
 });

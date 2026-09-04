@@ -22,13 +22,18 @@
 //     billing_cycle?: 'monthly' | 'annual',
 //     price_id?: string,          // must match the catalog for tier+cycle
 //     returnUrl?: string,
-//     intent?: 'keeper_trial' }
+//     intent?: 'purchase' | 'trial' | 'keeper_trial' }
 //
-// Trial behavior:
+// Trial behavior. A trial is opt-in: the member has to ask for one, so
+// "buy a membership" means billed today, not billed in a week.
+//   intent='trial' AND profile.free_trial_used=false
+//     -> STANDARD_TRIAL_DAYS trial; the webhook marks free_trial_used=true
+//        when the checkout completes, so the same account cannot claim a
+//        second one
 //   intent='keeper_trial' AND tier='keeper' AND profile.keeper_trial_used=false
-//     -> 30-day trial, marks keeper_trial_used=true on the profile so the
-//        same user can never trial again
-//   default                                   -> 7-day trial
+//     -> KEEPER_PROMO_TRIAL_DAYS trial, marks keeper_trial_used=true (the
+//        one-time first-timer promo the Promote page offers)
+//   anything else (the default)               -> no trial, billed immediately
 
 import "jsr:@supabase/functions-js/edge-runtime.d.ts";
 import { createClient } from "jsr:@supabase/supabase-js@2";
@@ -65,6 +70,12 @@ const PRICE_CATALOG: Record<string, Partial<Record<Cycle, string>>> = {
     annual: "price_1TVMQYLBdc4xGjxqpZFuqV96",
   },
 };
+
+// Trial lengths, mirroring TRIAL_DAYS and KEEPER_PROMO_TRIAL_DAYS in
+// src/lib/stripe-config.js. A unit test keeps the two copies in sync so the
+// trial length the Membership page promises is the one Stripe applies.
+const STANDARD_TRIAL_DAYS = 7;
+const KEEPER_PROMO_TRIAL_DAYS = 30;
 
 // Env overrides for the monthly prices, kept so an existing deployment
 // that set STRIPE_<TIER>_PRICE_ID keeps working unchanged.
@@ -215,7 +226,7 @@ Deno.serve(async (req: Request) => {
 
   const { data: profile } = await admin
     .from("profiles")
-    .select("stripe_customer_id, subscription_status, keeper_trial_used")
+    .select("stripe_customer_id, subscription_status, keeper_trial_used, free_trial_used")
     .eq("email", user.email)
     .maybeSingle();
 
@@ -231,18 +242,29 @@ Deno.serve(async (req: Request) => {
   let customerId = profile?.stripe_customer_id || null;
   if (!customerId) {
     customerId = await findOrCreateCustomer(stripeKey, user.email);
+    // Upsert, not update. An account with no profile row would otherwise
+    // silently drop its Stripe customer id here, and then the webhook could
+    // not match the subscription back to the member.
     const { error: saveErr } = await admin
       .from("profiles")
-      .update({ stripe_customer_id: customerId, updated_date: new Date().toISOString() })
-      .eq("email", user.email);
+      .upsert(
+        {
+          email: user.email,
+          created_by: user.email,
+          stripe_customer_id: customerId,
+          updated_date: new Date().toISOString(),
+        },
+        { onConflict: "email" },
+      );
     if (saveErr) console.error("could not save stripe_customer_id:", saveErr.message);
   }
 
-  // Trial-period decision tree.
-  //   keeper_trial intent + tier=keeper + first-time = 30 days, mark used
-  //   otherwise                                      = 7-day trial
-  let trialDays = 7;
+  // Trial-period decision tree. Zero means no trial, which is the default:
+  // someone who clicks "Get Keeper" is buying a membership and expects the
+  // first charge today. Only an explicit trial intent adds free days.
+  let trialDays = 0;
   let isKeeperPromoTrial = false;
+  let isStandardTrial = false;
   if (intent === "keeper_trial" && tier === "keeper") {
     if (profile?.keeper_trial_used) {
       return jsonResponse(
@@ -250,8 +272,21 @@ Deno.serve(async (req: Request) => {
         400,
       );
     }
-    trialDays = 30;
+    trialDays = KEEPER_PROMO_TRIAL_DAYS;
     isKeeperPromoTrial = true;
+  } else if (intent === "trial") {
+    if (profile?.free_trial_used) {
+      return jsonResponse(
+        {
+          error:
+            "You have already used your free trial. Starting this plan bills you today.",
+          trial_already_used: true,
+        },
+        400,
+      );
+    }
+    trialDays = STANDARD_TRIAL_DAYS;
+    isStandardTrial = true;
   }
 
   const returnUrl = safeReturnUrl(body.returnUrl);
@@ -276,7 +311,11 @@ Deno.serve(async (req: Request) => {
 
   sessionForm.set("success_url", `${returnUrl}?checkout=success&session_id={CHECKOUT_SESSION_ID}`);
   sessionForm.set("cancel_url", `${returnUrl}?checkout=cancelled`);
-  sessionForm.set("subscription_data[trial_period_days]", String(trialDays));
+  // Stripe treats trial_period_days=0 as an error, and omitting it is what
+  // "bill me now" means.
+  if (trialDays > 0) {
+    sessionForm.set("subscription_data[trial_period_days]", String(trialDays));
+  }
   sessionForm.set("subscription_data[metadata][supabase_email]", user.email);
   sessionForm.set("subscription_data[metadata][tier]", tier);
   sessionForm.set("subscription_data[metadata][billing_cycle]", cycle);
@@ -285,6 +324,8 @@ Deno.serve(async (req: Request) => {
   sessionForm.set("metadata[billing_cycle]", cycle);
   sessionForm.set("metadata[intent]", intent);
   sessionForm.set("metadata[keeper_promo_trial]", isKeeperPromoTrial ? "1" : "0");
+  sessionForm.set("metadata[free_trial]", isStandardTrial ? "1" : "0");
+  sessionForm.set("metadata[trial_days]", String(trialDays));
   sessionForm.set("allow_promotion_codes", "true");
 
   try {
@@ -294,13 +335,18 @@ Deno.serve(async (req: Request) => {
       stripeKey,
       sessionForm,
     );
+    // The Keeper promo is burned here, at session creation, which is how it
+    // has always worked. The standard trial is burned by the webhook when
+    // the checkout actually completes (metadata[free_trial]), so opening
+    // Checkout and closing the tab does not cost a member their one trial.
     if (isKeeperPromoTrial) {
+      const now = new Date().toISOString();
       await admin
         .from("profiles")
         .update({
           keeper_trial_used: true,
-          keeper_trial_started_at: new Date().toISOString(),
-          updated_date: new Date().toISOString(),
+          keeper_trial_started_at: now,
+          updated_date: now,
         })
         .eq("email", user.email);
     }

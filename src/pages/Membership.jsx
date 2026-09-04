@@ -11,6 +11,7 @@ import {
   getTierPricing,
   TIER_PRICING,
   TRIAL_DAYS,
+  KEEPER_PROMO_TRIAL_DAYS,
   maxAnnualSavingsPercent,
 } from '@/lib/stripe-config';
 import Seo from '@/components/seo/Seo';
@@ -218,7 +219,7 @@ const MEMBERSHIP_JSON_LD = [
         name: 'How much does Geck Inspect cost?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: `Geck Inspect has a Free tier (10 geckos), a Keeper tier ($2.99/month or $30/year), a Breeder tier ($5.99/month or $60/year), and an Enterprise tier ($99.99/month or $1,000/year). Every paid plan starts with a ${TRIAL_DAYS}-day free trial, and annual billing saves about 17% vs monthly.`,
+          text: `Geck Inspect has a Free tier (10 geckos), a Keeper tier ($2.99/month or $30/year), a Breeder tier ($5.99/month or $60/year), and an Enterprise tier ($99.99/month or $1,000/year). Subscribing bills you straight away, and every recurring plan also offers an optional ${TRIAL_DAYS}-day free trial. Annual billing saves about 17% vs monthly.`,
         },
       },
       {
@@ -226,7 +227,7 @@ const MEMBERSHIP_JSON_LD = [
         name: 'Can I try a paid plan before subscribing?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: `Yes, every recurring (monthly or annual) paid plan includes a ${TRIAL_DAYS}-day free trial. No charge until the trial ends, and you can cancel before it does.`,
+          text: `Yes. Every recurring (monthly or annual) paid plan has a ${TRIAL_DAYS}-day free trial you can start from the plan card. It is one per account, and it is optional: subscribing without it bills you today.`,
         },
       },
       {
@@ -316,7 +317,9 @@ function CycleToggle({ value, onChange }) {
 
 export default function MembershipPage() {
   const [user, setUser] = useState(null);
-  const [loadingTier, setLoadingTier] = useState(null);
+  // Keyed `${tier}:${intent}` so the buy button and the trial button on the
+  // same card spin independently.
+  const [loadingAction, setLoadingAction] = useState(null);
   const [cycle, setCycle] = useState('monthly');
   const { toast } = useToast();
 
@@ -338,6 +341,17 @@ export default function MembershipPage() {
     }
   }, []);
 
+  // The Promote page links here as ?intent=keeper_trial to offer the
+  // one-time 30-day Keeper promo. Read it once on mount; the page never
+  // rewrites the query string.
+  const [urlIntent] = useState(() => {
+    try {
+      return new URLSearchParams(window.location.search).get('intent') || null;
+    } catch {
+      return null;
+    }
+  });
+
   const isGrandfathered =
     user?.subscription_status === 'grandfathered' && user?.membership_tier === 'breeder';
   const currentTier = user?.membership_tier || null;
@@ -346,6 +360,12 @@ export default function MembershipPage() {
     ? tiers.find((t) => t.key === currentTier) || null
     : null;
   const isLifetimeGrant = currentCycle === 'lifetime';
+  // One free trial per account. The checkout function is the enforcer
+  // (profiles.free_trial_used); this only decides whether to show the offer.
+  const trialUsed = Boolean(user?.free_trial_used);
+  const hasPaidPlan = Boolean(currentTier && currentTier !== 'free');
+  const keeperPromoAvailable =
+    urlIntent === 'keeper_trial' && !user?.keeper_trial_used && !hasPaidPlan;
   // Stripe-backed subscriptions are the only ones with anything to manage.
   // Grandfathered and lifetime members have no recurring billing.
   const canManageBilling = Boolean(
@@ -369,7 +389,7 @@ export default function MembershipPage() {
     }
   };
 
-  const handleCTA = async (tier, pricing) => {
+  const handleCTA = async (tier, pricing, intent = 'purchase') => {
     if (tier.comingSoon) {
       toast({
         title: 'Enterprise waitlist',
@@ -396,9 +416,9 @@ export default function MembershipPage() {
       return;
     }
 
-    captureEvent('plan_selected', { tier: tier.key, interval: cycle });
-    captureEvent('checkout_started', { tier: tier.key, interval: cycle });
-    setLoadingTier(tier.key);
+    captureEvent('plan_selected', { tier: tier.key, interval: cycle, intent });
+    captureEvent('checkout_started', { tier: tier.key, interval: cycle, intent });
+    setLoadingAction(`${tier.key}:${intent}`);
     try {
       const { data, error } = await supabase.functions.invoke('stripe-checkout', {
         body: {
@@ -406,10 +426,31 @@ export default function MembershipPage() {
           billing_cycle: cycle,
           price_id: pricing?.price_id || null,
           mode: pricing?.mode || null,
+          intent,
           returnUrl: `${window.location.origin}/Membership`,
         },
       });
-      if (error) throw error;
+      // FunctionsHttpError hides the JSON body behind error.context, so a
+      // 400 like "you have already used your free trial" would otherwise
+      // reach the member as "non-2xx status code".
+      if (error) {
+        let detail = error.message;
+        const ctx = error.context;
+        if (ctx && typeof ctx.text === 'function') {
+          try {
+            detail = (await ctx.text()) || detail;
+          } catch {
+            // keep the generic message
+          }
+        }
+        let parsed = null;
+        try {
+          parsed = JSON.parse(detail);
+        } catch {
+          // not JSON
+        }
+        throw new Error(parsed?.error || parsed?.message || detail);
+      }
       if (data?.url) {
         window.location.href = data.url;
       } else {
@@ -425,14 +466,14 @@ export default function MembershipPage() {
         variant: 'destructive',
       });
     }
-    setLoadingTier(null);
+    setLoadingAction(null);
   };
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 p-6">
       <Seo
         title="Pricing & Plans"
-        description={`Geck Inspect plans for crested gecko keepers and breeders. Free (10 geckos), Keeper ($2.99/mo or $30/yr), Breeder ($5.99/mo or $60/yr), and Enterprise. ${TRIAL_DAYS}-day free trial on paid plans. Cancel anytime.`}
+        description={`Geck Inspect plans for crested gecko keepers and breeders. Free (10 geckos), Keeper ($2.99/mo or $30/yr), Breeder ($5.99/mo or $60/yr), and Enterprise. Optional ${TRIAL_DAYS}-day free trial on paid plans. Cancel anytime.`}
         path="/Membership"
         type="website"
         imageAlt="Geck Inspect membership plans, Free, Keeper, Breeder, and Enterprise tiers"
@@ -450,8 +491,8 @@ export default function MembershipPage() {
         {/* Header */}
         <div className="text-center space-y-4">
           <p className="text-xl text-slate-300 max-w-2xl mx-auto">
-            Choose the tier that fits your collection. Every paid plan starts
-            with a {TRIAL_DAYS}-day free trial. Cancel anytime.
+            Choose the tier that fits your collection. Subscribe and it starts
+            today, or take the {TRIAL_DAYS}-day free trial first. Cancel anytime.
           </p>
 
           <div className="flex justify-center pt-2">
@@ -540,7 +581,30 @@ export default function MembershipPage() {
             // the tier (sponsored / comped grants) it should light up
             // like any other current plan instead of staying locked.
             const isEnterpriseLocked = isEnterprise && !isCurrent;
-            const busy = loadingTier === tier.key;
+            const busy = loadingAction === `${tier.key}:purchase`;
+            const trialBusy = loadingAction === `${tier.key}:trial`;
+            const anyBusy = Boolean(loadingAction);
+
+            // The Keeper card carries the longer one-time promo instead of
+            // the standard trial when the member arrived from the Promote
+            // offer (/Membership?intent=keeper_trial).
+            const isKeeperPromoCard = keeperPromoAvailable && tier.key === 'keeper';
+            const trialLength = isKeeperPromoCard ? KEEPER_PROMO_TRIAL_DAYS : TRIAL_DAYS;
+
+            // The trial is opt-in and lives on its own button, so a member
+            // who just wants to pay is never pushed through one. Offered on
+            // recurring paid plans only: lifetime is a one-time purchase and
+            // Free has nothing to trial. One per account, and there is
+            // nothing to trial once you already hold a paid plan.
+            const canStartTrial =
+              !isCurrent &&
+              !isEnterpriseLocked &&
+              tier.key !== 'free' &&
+              cycle !== 'lifetime' &&
+              Boolean(pricing?.price_id) &&
+              !isGrandfathered &&
+              !hasPaidPlan &&
+              (isKeeperPromoCard || !trialUsed);
 
             // Lifetime tab gets an amber accent so it visually reads as
             // a different commercial proposition from the recurring tabs.
@@ -729,6 +793,31 @@ export default function MembershipPage() {
                         pricing?.cta || 'Choose plan'
                       )}
                     </Button>
+
+                    {canStartTrial && (
+                      <div className="-mt-3 text-center">
+                        <button
+                          type="button"
+                          onClick={() =>
+                            handleCTA(
+                              tier,
+                              pricing,
+                              isKeeperPromoCard ? 'keeper_trial' : 'trial',
+                            )
+                          }
+                          disabled={anyBusy}
+                          className="text-sm text-emerald-400 hover:text-emerald-300 underline underline-offset-4 disabled:opacity-50"
+                        >
+                          {trialBusy
+                            ? 'Starting your trial...'
+                            : `or start a ${trialLength}-day free trial first`}
+                        </button>
+                        <p className="text-xs text-slate-500 mt-1.5">
+                          No charge for {trialLength} days. Cancel before it ends and you
+                          pay nothing.
+                        </p>
+                      </div>
+                    )}
                   </CardContent>
                 </Card>
               </div>

@@ -27,8 +27,10 @@ export const BILLING_CYCLES = ['monthly', 'annual', 'lifetime'];
  * `stripe-checkout` edge function actually configures on the Stripe
  * subscription (subscription_data[trial_period_days]), so any copy
  * derived from these constants stays truthful:
- *   - TRIAL_DAYS: default trial attached to every recurring (monthly
- *     or annual) checkout, all paid tiers.
+ *   - TRIAL_DAYS: the opt-in trial, offered by its own button on the
+ *     Membership page and sent as intent='trial'. A plain purchase
+ *     gets no trial and is billed on the spot. The function enforces
+ *     free_trial_used so an account only gets one.
  *   - KEEPER_PROMO_TRIAL_DAYS: the one-time first-timer promo used by
  *     the Promote flow (?intent=keeper_trial); the function enforces
  *     keeper_trial_used so it can never be claimed twice.
@@ -78,20 +80,20 @@ export const TIER_PRICING = {
     lifetime: { price: '$0',     billing: '',         priceCaption: 'Free forever',                         mode: null,            price_id: null, cta: 'Get Started Free' },
   },
   keeper: {
-    monthly:  { price: '$2.99',  billing: '/month',   priceCaption: `${TRIAL_DAYS}-day free trial. Billed monthly. Cancel anytime.`,      mode: 'subscription',  price_id: 'price_1TUxEsLBdc4xGjxqyPV4DOYb', cta: 'Start Keeper' },
-    annual:   { price: '$30',    billing: '/year',    priceCaption: `${TRIAL_DAYS}-day free trial. Billed yearly, save vs monthly. Cancel anytime.`, mode: 'subscription',  price_id: 'price_1TVMLeLBdc4xGjxqA856z0Oe', cta: 'Start Keeper' },
+    monthly:  { price: '$2.99',  billing: '/month',   priceCaption: 'Billed monthly, starting today. Cancel anytime.',                    mode: 'subscription',  price_id: 'price_1TUxEsLBdc4xGjxqyPV4DOYb', cta: 'Start Keeper' },
+    annual:   { price: '$30',    billing: '/year',    priceCaption: 'Billed yearly, starting today. Save vs monthly. Cancel anytime.',     mode: 'subscription',  price_id: 'price_1TVMLeLBdc4xGjxqA856z0Oe', cta: 'Start Keeper' },
     lifetime: { price: '$149',   billing: 'one-time', priceCaption: 'Pay once. Lifetime access. No renewals.', mode: 'payment',   price_id: null, cta: 'Get Lifetime Keeper' },
   },
   breeder: {
-    monthly:  { price: '$5.99',  billing: '/month',   priceCaption: `${TRIAL_DAYS}-day free trial. Billed monthly. Cancel anytime.`,      mode: 'subscription',  price_id: 'price_1TUxHGLBdc4xGjxqeieYNdE4', cta: 'Start Breeder' },
-    annual:   { price: '$60',    billing: '/year',    priceCaption: `${TRIAL_DAYS}-day free trial. Billed yearly, save vs monthly. Cancel anytime.`, mode: 'subscription',  price_id: 'price_1TVMOCLBdc4xGjxqK2HTmGfm', cta: 'Start Breeder' },
+    monthly:  { price: '$5.99',  billing: '/month',   priceCaption: 'Billed monthly, starting today. Cancel anytime.',                    mode: 'subscription',  price_id: 'price_1TUxHGLBdc4xGjxqeieYNdE4', cta: 'Start Breeder' },
+    annual:   { price: '$60',    billing: '/year',    priceCaption: 'Billed yearly, starting today. Save vs monthly. Cancel anytime.',     mode: 'subscription',  price_id: 'price_1TVMOCLBdc4xGjxqK2HTmGfm', cta: 'Start Breeder' },
     lifetime: { price: '$349',   billing: 'one-time', priceCaption: 'Pay once. Lifetime access. No renewals.', mode: 'payment',   price_id: null, cta: 'Get Lifetime Breeder' },
   },
   // Enterprise: real pricing, $99.99/mo or $1,000/yr, both self-serve. No
   // lifetime entry; Enterprise doesn't get a one-time pay-once option.
   enterprise: {
-    monthly:  { price: '$99.99', billing: '/month',   priceCaption: `${TRIAL_DAYS}-day free trial. Billed monthly. Cancel anytime.`, mode: 'subscription',  price_id: 'price_1TVLvmLBdc4xGjxqCVzbz0GQ', cta: 'Start Enterprise' },
-    annual:   { price: '$1,000', billing: '/year',    priceCaption: `${TRIAL_DAYS}-day free trial. Billed yearly, save ~17% vs monthly.`, mode: 'subscription',  price_id: 'price_1TVMQYLBdc4xGjxqpZFuqV96', cta: 'Start Enterprise' },
+    monthly:  { price: '$99.99', billing: '/month',   priceCaption: 'Billed monthly, starting today. Cancel anytime.', mode: 'subscription',  price_id: 'price_1TVLvmLBdc4xGjxqCVzbz0GQ', cta: 'Start Enterprise' },
+    annual:   { price: '$1,000', billing: '/year',    priceCaption: 'Billed yearly, starting today. Save ~17% vs monthly.', mode: 'subscription',  price_id: 'price_1TVMQYLBdc4xGjxqpZFuqV96', cta: 'Start Enterprise' },
     // No lifetime row. The UI surfaces a "Lifetime not available" message.
   },
 };
