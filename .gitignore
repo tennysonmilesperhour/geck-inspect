@@ -56,3 +56,6 @@ android/app/*.iml
 *.keystore
 !debug.keystore
 keystore.properties
+
+# Committed template, values intentionally blank
+!.env.example
