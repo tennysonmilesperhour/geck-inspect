@@ -50,10 +50,59 @@ function loadMorphSlugs() {
   return slugs;
 }
 
-function loadProjectLineSlugs() {
+// Quote-agnostic string field reader for the regex-based data parsers
+// below. Matches `field: 'value'` or `field: "value"` (value may sit on the
+// next line and may contain escaped quotes) and returns the raw value.
+function readStringField(chunk, field) {
+  const re = new RegExp(`\\b${field}:\\s*(["'])((?:\\\\.|(?!\\1)[^\\\\])*)\\1`);
+  const m = chunk.match(re);
+  if (!m) return null;
+  return m[2].replace(/\\(['"])/g, '$1').trim();
+}
+
+// Project lines: slug, display name, and one-paragraph summary, so the
+// line routes ship real meta instead of the site-level fallback.
+function loadProjectLines() {
   const src = readFileSync(resolve(REPO_ROOT, 'src/data/project-lines.js'), 'utf8');
-  const matches = [...src.matchAll(/slug:\s*'([a-z0-9-]+)'/g)];
-  return [...new Set(matches.map((m) => m[1]))];
+  const starts = [];
+  const slugRe = /\bslug:\s*'([a-z0-9-]+)'/g;
+  let sm;
+  while ((sm = slugRe.exec(src)) !== null) starts.push(sm.index);
+  const seen = new Set();
+  const out = [];
+  starts.forEach((start, i) => {
+    const chunk = src.slice(start, starts[i + 1] ?? src.length);
+    const slug = readStringField(chunk, 'slug');
+    if (!slug || seen.has(slug)) return;
+    seen.add(slug);
+    out.push({
+      slug,
+      name: readStringField(chunk, 'name') || slug,
+      summary: readStringField(chunk, 'summary') || null,
+    });
+  });
+  return out;
+}
+
+function loadProjectLineSlugs() {
+  return loadProjectLines().map((l) => l.slug);
+}
+
+// Keeper's Guide series: title + description from each guide module.
+function loadKeepersGuide(id) {
+  try {
+    const src = readFileSync(resolve(REPO_ROOT, `src/data/keepers-guides/${id}.js`), 'utf8');
+    // The guide-level fields sit at two-space indentation above `slides`;
+    // slide titles are nested deeper, so anchoring on the indentation keeps
+    // us on the guide header.
+    const head = src.split(/\n\s*slides:/)[0];
+    return {
+      title: readStringField(head, 'title'),
+      description: readStringField(head, 'description'),
+    };
+  } catch {
+    return { title: null, description: null };
+  }
 }
 
 // Resolve blog post entries (slug + title + description + dateModified)
@@ -342,6 +391,11 @@ export const STATIC_ROUTES = [
     priority: 0.8,
     changefreq: 'daily',
     lastmod: TODAY,
+    meta: {
+      title: 'Crested Gecko Photo Gallery',
+      description:
+        'Browse crested gecko photos from breeders worldwide. Filter by morph, color, and trait to compare Lilly Whites, Harlequins, Phantoms, Cappuccinos, and more.',
+    },
   },
   {
     path: '/CommunityConnect',
@@ -359,6 +413,11 @@ export const STATIC_ROUTES = [
     priority: 0.7,
     changefreq: 'daily',
     lastmod: TODAY,
+    meta: {
+      title: 'Crested Gecko Community Forum',
+      description:
+        'Ask questions and swap notes with crested gecko keepers and breeders. Breeding, morphs, care, feeding, and health discussions on the Geck Inspect forum.',
+    },
   },
   {
     path: '/Marketplace',
@@ -387,12 +446,22 @@ export const STATIC_ROUTES = [
     priority: 0.8,
     changefreq: 'monthly',
     lastmod: TODAY,
+    meta: {
+      title: 'Crested Gecko Shipping, Live Arrival Guaranteed',
+      description:
+        "Book reptile-safe, live-arrival-guaranteed shipping for crested geckos from inside your Geck Inspect collection through the Zero's Geckos Shipping Project.",
+    },
   },
   {
     path: '/Giveaways',
     priority: 0.8,
     changefreq: 'daily',
     lastmod: TODAY,
+    meta: {
+      title: 'Crested Gecko Giveaways',
+      description:
+        'Active and upcoming crested gecko giveaways hosted by breeders on Geck Inspect. Browse, enter, and track winners.',
+    },
   },
   {
     path: '/Membership',
@@ -405,12 +474,8 @@ export const STATIC_ROUTES = [
         `Geck Inspect plans for crested gecko keepers and breeders. Free (10 geckos), Keeper (${TIER_PRICING.keeper.monthly.price}/mo or ${TIER_PRICING.keeper.annual.price}/yr), Breeder (${TIER_PRICING.breeder.monthly.price}/mo or ${TIER_PRICING.breeder.annual.price}/yr), and Enterprise. ${TRIAL_DAYS}-day free trial on paid plans. Cancel anytime.`,
     },
   },
-  {
-    path: '/AuthPortal',
-    priority: 0.3,
-    changefreq: 'yearly',
-    lastmod: TODAY,
-  },
+  // /AuthPortal is intentionally absent: a sign-in form has no place in the
+  // sitemap. Its SPA rewrite still comes from pages.config.js.
 ];
 
 // Morph detail pages. Priority weighted by how central the morph is to
@@ -501,12 +566,23 @@ export function getKeepersGuideRoutes() {
         description: "Five in-depth slide-based guides for crested gecko keepers: feeding troubleshooting, setup and the first 30 days, the handbook of things they do not tell you, morph and genetics, and the complete breeding arc.",
       },
     },
-    ...guides.map((id) => ({
-      path: `/CareGuide/series/${id}`,
-      priority: 0.7,
-      changefreq: 'monthly',
-      lastmod: TODAY,
-    })),
+    ...guides.map((id) => {
+      const g = loadKeepersGuide(id);
+      const title = g.title || `${id.charAt(0).toUpperCase()}${id.slice(1)} Guide`;
+      return {
+        path: `/CareGuide/series/${id}`,
+        priority: 0.7,
+        changefreq: 'monthly',
+        lastmod: TODAY,
+        meta: {
+          title: `${title}, Keeper's Guide`,
+          description: (
+            g.description ||
+            `${title}, part of the Keeper's Guide Series on Geck Inspect. Slide-based crested gecko guidance you can read in one sitting.`
+          ).slice(0, 320),
+        },
+      };
+    }),
   ];
 }
 
@@ -621,11 +697,18 @@ export function getCalculatorMorphRoutes() {
 }
 
 export function getProjectLineRoutes() {
-  return loadProjectLineSlugs().map((slug) => ({
+  return loadProjectLines().map(({ slug, name, summary }) => ({
     path: `/MorphGuide/lines/${slug}`,
     priority: 0.7,
     changefreq: 'monthly',
     lastmod: TODAY,
+    meta: {
+      title: `${name}, Crested Gecko Project Line`,
+      description: (
+        summary ||
+        `${name}: founder, history, visual identifiers, and what to ask a seller. Part of the Geck Inspect crested gecko project line guide.`
+      ).slice(0, 320),
+    },
   }));
 }
 

@@ -10,6 +10,7 @@ import IdLogicSettings, { DEFAULT_ID_SETTINGS } from '@/components/settings/IdLo
 import PushNotificationsCard from '@/components/settings/PushNotificationsCard';
 import DataExportCard from '@/components/settings/DataExportCard';
 import IotSettingsCard from '@/components/iot/IotSettingsCard';
+import { openBillingPortal } from '@/lib/billingPortal';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -19,7 +20,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Settings, Upload, Save, Globe, Eye, X, Camera, Mail, Calendar, Loader2, Search, Trash2, AlertTriangle, ArrowUpDown, Clock, Crown, FileText, Palette, Check, Star, Database
+  Settings, Upload, Save, Globe, Eye, X, Camera, Mail, Calendar, Loader2, Search, Trash2, AlertTriangle, ArrowUpDown, Clock, Crown, FileText, Palette, Check, Star, Database, CreditCard
 } from 'lucide-react';
 import { useTheme } from '@/lib/ThemeContext';
 import { FALLBACK_NAV_ITEMS, NAV_ICON_MAP, FAVORITES_MAX, flattenNavItems, KEEPER_MODE_STORAGE_KEY } from '@/lib/navItems';
@@ -333,6 +334,7 @@ export default function SettingsPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [formData, setFormData] = useState(initialFormData);
     const [isSaving, setIsSaving] = useState(false);
+    const [portalBusy, setPortalBusy] = useState(false);
     const [newSpecialty, setNewSpecialty] = useState('');
     const [idSettings, updateIdSettings] = usePageSettings('gecko_id_settings', DEFAULT_ID_SETTINGS);
     const { toast } = useToast();
@@ -554,6 +556,7 @@ export default function SettingsPage() {
         { id: 'feeding-alerts', label: 'Feeding Alerts' },
         { id: 'default-sorts', label: 'Defaults' },
         { id: 'id-logic', label: 'Gecko IDs' },
+        { id: 'membership', label: 'Membership' },
         { id: 'morph-id', label: 'Morph ID' },
         { id: 'enclosure-sensors', label: 'Enclosure Sensors' },
         { id: 'data-export', label: 'Your Data' },
@@ -1068,6 +1071,71 @@ export default function SettingsPage() {
                 <section id="id-logic">
                     <IdLogicSettings value={idSettings} onChange={(next) => updateIdSettings(next)} />
                 </section>
+
+                {(() => {
+                    const isGrandfathered = user?.subscription_status === 'grandfathered';
+                    const tier = isGrandfathered ? 'breeder' : (user?.membership_tier || 'free');
+                    const isLifetime = user?.membership_billing_cycle === 'lifetime';
+                    const isPaid = tier === 'keeper' || tier === 'breeder' || tier === 'enterprise';
+                    // Only Stripe-backed subscriptions have billing to manage.
+                    const canManageBilling = isPaid && !isGrandfathered && !isLifetime;
+                    const tierLabel = tier.charAt(0).toUpperCase() + tier.slice(1);
+                    const handleManageBilling = async () => {
+                        setPortalBusy(true);
+                        try {
+                            await openBillingPortal({ returnPath: '/Settings' });
+                        } catch (err) {
+                            toast({
+                                title: 'Billing portal unavailable',
+                                description: err?.message || 'Stripe could not open the billing portal. Email support and we will sort it out by hand.',
+                                variant: 'destructive',
+                            });
+                            setPortalBusy(false);
+                        }
+                    };
+                    return (
+                        <section id="membership">
+                            <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
+                                <CardHeader>
+                                    <CardTitle className="text-slate-100 flex items-center gap-2">
+                                        <CreditCard className="w-5 h-5 text-emerald-400" />
+                                        Membership and billing
+                                    </CardTitle>
+                                    <CardDescription className="text-slate-400">
+                                        You are on the {tierLabel} plan
+                                        {isGrandfathered ? ' (grandfathered, free for life).' : isLifetime ? ' (lifetime access, no renewals).' : '.'}
+                                    </CardDescription>
+                                </CardHeader>
+                                <CardContent className="flex flex-wrap items-center gap-3">
+                                    <Button
+                                        type="button"
+                                        variant="outline"
+                                        className="border-slate-600 text-slate-200 hover:bg-slate-800"
+                                        onClick={() => { window.location.href = '/Membership'; }}
+                                    >
+                                        {isPaid ? 'Compare plans' : 'See plans'}
+                                    </Button>
+                                    {canManageBilling && (
+                                        <Button
+                                            type="button"
+                                            className="bg-emerald-600 hover:bg-emerald-500 text-white"
+                                            onClick={handleManageBilling}
+                                            disabled={portalBusy}
+                                        >
+                                            {portalBusy ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <CreditCard className="w-4 h-4 mr-2" />}
+                                            Manage billing
+                                        </Button>
+                                    )}
+                                    <p className="basis-full text-xs text-slate-500">
+                                        {canManageBilling
+                                            ? 'Manage billing opens your secure Stripe portal to change plans, update your card, download invoices, or cancel.'
+                                            : 'Paid plans include a free trial and can be cancelled anytime from this page.'}
+                                    </p>
+                                </CardContent>
+                            </Card>
+                        </section>
+                    );
+                })()}
 
                 {(() => {
                     const tier = user?.subscription_status === 'grandfathered'

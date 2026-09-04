@@ -35,16 +35,7 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
 import { resolve, join, dirname } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import {
-  SITE_URL,
-  STATIC_ROUTES,
-  getMorphRoutes,
-  getCalculatorMorphRoutes,
-  getCalculatorPairingRoutes,
-  getCareTopicRoutes,
-  getMorphTaxonomyRoutes,
-  getBlogRoutes,
-} from './seo-routes.mjs';
+import { SITE_URL, getAllRoutes } from './seo-routes.mjs';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
@@ -309,9 +300,10 @@ function routeMeta(route) {
   // Morph detail override
   const morphMatch = route.path.match(/^\/MorphGuide\/([a-z0-9-]+)$/);
   if (morphMatch) return morphMeta(morphMatch[1]);
-  // Care topic override
+  // Care topic override. /CareGuide/series is the Keeper's Guide index,
+  // not a care-guide.js section, so it keeps the meta from seo-routes.
   const careMatch = route.path.match(/^\/CareGuide\/([a-z0-9-]+)$/);
-  if (careMatch) return careTopicMeta(careMatch[1]);
+  if (careMatch && CARE_SECTIONS[careMatch[1]]) return careTopicMeta(careMatch[1]);
   // Blog post override
   const blogMatch = route.path.match(/^\/blog\/([a-z0-9-]+)$/);
   if (blogMatch) return blogPostMeta(blogMatch[1], route);
@@ -505,28 +497,15 @@ function run() {
   // rules instead of this list.
   //
   // High-commercial-intent + content pages (Membership, Marketplace,
-  // MorphVisualizer, CommunityConnect) used to live here, but the AI
-  // visibility audit caught that GPTBot/CCBot were getting the bare
-  // shell on those URLs, no canonical, no OG, no schema. They now go
-  // through the prerender so non-JS crawlers see the full route-level
-  // meta block.
-  const SKIP = new Set([
-    '/Forum',
-    '/Gallery',
-    '/Shipping',
-    '/Giveaways',
-    '/AuthPortal',
-  ]);
-
-  const routes = [
-    ...STATIC_ROUTES,
-    ...getMorphRoutes(),
-    ...getMorphTaxonomyRoutes(),
-    ...getCareTopicRoutes(),
-    ...getBlogRoutes(),
-    ...getCalculatorMorphRoutes(),
-    ...getCalculatorPairingRoutes(),
-  ].filter((r) => !SKIP.has(r.path));
+  // MorphVisualizer, CommunityConnect) used to live in a skip list here,
+  // but the AI visibility audit caught that GPTBot/CCBot were getting the
+  // bare shell on those URLs, no canonical, no OG, no schema. The same
+  // later happened to /Gallery, /Forum, /Shipping, /Giveaways, the project
+  // line pages, and the Keeper's Guide series. Every route in the sitemap
+  // now goes through the prerender so non-JS crawlers see the full
+  // route-level meta block. /AuthPortal is no longer in the sitemap at
+  // all, so there is nothing left to skip.
+  const routes = getAllRoutes();
 
   for (const route of routes) writeRoute(route);
   console.log(`[prerender] wrote ${routes.length} route HTML files into dist/`);

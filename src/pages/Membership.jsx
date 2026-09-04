@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { reportError } from '@/lib/telemetry';
-import { Check, Sparkles, Zap, Crown, Star, Loader2, Flame, Infinity as InfinityIcon } from 'lucide-react';
+import { Check, Sparkles, Zap, Crown, Star, Loader2, Flame, Infinity as InfinityIcon, CreditCard } from 'lucide-react';
 import { User } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
 import SupportContactCard from '@/components/support/SupportContactCard';
@@ -16,6 +16,7 @@ import {
 import Seo from '@/components/seo/Seo';
 import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
 import { captureEvent } from '@/lib/posthog';
+import { openBillingPortal } from '@/lib/billingPortal';
 
 /**
  * Membership / pricing page.
@@ -241,7 +242,7 @@ const MEMBERSHIP_JSON_LD = [
         name: 'Can I cancel anytime?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Yes. Monthly and annual subscriptions can be cancelled at any time from your account settings.',
+          text: 'Yes. Monthly and annual subscriptions can be cancelled at any time. Use the Manage billing button on this page or in Settings to open your Stripe billing portal, where you can cancel, change plans, update your card, or download invoices.',
         },
       },
     ],
@@ -345,6 +346,28 @@ export default function MembershipPage() {
     ? tiers.find((t) => t.key === currentTier) || null
     : null;
   const isLifetimeGrant = currentCycle === 'lifetime';
+  // Stripe-backed subscriptions are the only ones with anything to manage.
+  // Grandfathered and lifetime members have no recurring billing.
+  const canManageBilling = Boolean(
+    user && currentTier && currentTier !== 'free' && !isGrandfathered && !isLifetimeGrant,
+  );
+  const [portalBusy, setPortalBusy] = useState(false);
+
+  const handleManageBilling = async () => {
+    captureEvent('billing_portal_opened', { tier: currentTier });
+    setPortalBusy(true);
+    try {
+      await openBillingPortal({ returnPath: '/Membership' });
+    } catch (err) {
+      reportError(err, { component: 'Membership', extra: { op: 'stripe-billing-portal', code: err?.code } });
+      toast({
+        title: 'Billing portal unavailable',
+        description: err?.message || 'Stripe could not open the billing portal. Email support and we will sort it out by hand.',
+        variant: 'destructive',
+      });
+      setPortalBusy(false);
+    }
+  };
 
   const handleCTA = async (tier, pricing) => {
     if (tier.comingSoon) {
@@ -463,6 +486,29 @@ export default function MembershipPage() {
                 plan
                 {isLifetimeGrant ? ', lifetime access, no renewals.' : '.'}
               </span>
+            </div>
+          )}
+
+          {canManageBilling && (
+            <div className="pt-1">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleManageBilling}
+                disabled={portalBusy}
+                className="border-slate-600 bg-slate-900/60 text-slate-200 hover:bg-slate-800 hover:text-white"
+              >
+                {portalBusy ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                ) : (
+                  <CreditCard className="w-4 h-4 mr-2" />
+                )}
+                Manage billing
+              </Button>
+              <p className="text-xs text-slate-500 mt-2">
+                Change plans, update your card, download invoices, or cancel. Opens your secure Stripe portal.
+              </p>
             </div>
           )}
         </div>
