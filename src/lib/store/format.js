@@ -3,7 +3,7 @@
  */
 
 export function formatCents(cents, opts = {}) {
-  const { currency = 'usd', placeholder = '—' } = opts;
+  const { currency = 'usd', placeholder = '-' } = opts;
   if (cents == null || Number.isNaN(Number(cents))) return placeholder;
   const n = Number(cents) / 100;
   return new Intl.NumberFormat('en-US', {

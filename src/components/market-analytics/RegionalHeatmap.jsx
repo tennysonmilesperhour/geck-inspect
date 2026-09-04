@@ -104,7 +104,7 @@ export default function RegionalHeatmap({ filters, onDrillDown }) {
                         min={min} max={max}
                         confidence={cell?.confidence ?? 0}
                         onClick={() => onDrillDown?.({ combo_id: c.id, region: r.code })}
-                        label={cell ? `${c.name}, ${r.name}: ${fmt(cell.value)} (n=${cell.sample_size})` : '—'}
+                        label={cell ? `${c.name}, ${r.name}: ${fmt(cell.value)} (n=${cell.sample_size})` : '-'}
                       />
                     </td>
                   );

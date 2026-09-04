@@ -162,7 +162,7 @@ export default function BlogPostsList({ onCreatePost, onEditPost }) {
                         <StatusBadge status={post.status} />
                       </div>
                       <p className="text-xs text-slate-500 truncate">
-                        /{post.slug || '—'}
+                        /{post.slug || '-'}
                         {post.target_keyword && <> · keyword: {post.target_keyword}</>}
                         {post.published_at && post.status === 'published' && (
                           <> · published {formatDistanceToNow(new Date(post.published_at))} ago</>

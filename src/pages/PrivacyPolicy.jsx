@@ -48,7 +48,7 @@ export default function PrivacyPolicy() {
                         <Shield className="w-8 h-8 text-emerald-400 flex-shrink-0" />
                         <div>
                             <h1 className="text-2xl font-bold text-slate-100">Privacy Policy</h1>
-                            <p className="text-slate-500 text-sm">Last updated: April 5, 2026</p>
+                            <p className="text-slate-500 text-sm">Last updated: September 4, 2026</p>
                         </div>
                     </div>
 
@@ -89,17 +89,22 @@ export default function PrivacyPolicy() {
                     </Section>
 
                     <Section title="5. Cookies & Local Storage">
-                        <p>We use browser localStorage to store your authentication token and application preferences (such as sidebar scroll position and display settings). No third-party advertising cookies are used.</p>
+                        <p>We use browser localStorage to store your authentication token and application preferences (such as sidebar scroll position and display settings). Google Analytics and PostHog set their own first-party cookies and localStorage entries to recognise a returning browser. No third-party advertising cookies are used.</p>
                     </Section>
 
                     <Section title="6. Third-Party Services">
-                        <p>We may use the following third-party services to operate the platform:</p>
+                        <p>These are the services that receive some of your data in order to run Geck Inspect, and what each one gets:</p>
                         <ul className="list-disc list-inside space-y-1 ml-2">
-                            <li><strong className="text-slate-300">Cloud Infrastructure:</strong> For hosting, storage, and database services</li>
-                            <li><strong className="text-slate-300">AI Services:</strong> Morph identification and AI consultant features process gecko images and prompts via third-party AI providers</li>
-                            <li><strong className="text-slate-300">Analytics:</strong> Basic usage analytics to improve the product</li>
+                            <li><strong className="text-slate-300">Supabase</strong> (database, authentication, file storage): your account, your collection, and the photos you upload.</li>
+                            <li><strong className="text-slate-300">Vercel</strong> (hosting): standard web server logs, including IP address and browser type.</li>
+                            <li><strong className="text-slate-300">Stripe</strong> (payments): your email and payment details when you buy a membership. Card numbers never touch our servers.</li>
+                            <li><strong className="text-slate-300">RevenueCat</strong> (subscription management): a subscriber identifier and your subscription status.</li>
+                            <li><strong className="text-slate-300">Anthropic</strong> (AI): the gecko photos and text you submit to the morph identifier, health screen, breeder consultant, and social post generator.</li>
+                            <li><strong className="text-slate-300">Resend</strong> (email delivery): your email address and the content of emails we send you.</li>
+                            <li><strong className="text-slate-300">Google Analytics</strong> and <strong className="text-slate-300">PostHog</strong> (analytics): pages visited, features used, and general device information. PostHog is configured to mask the text on the page and does not record sessions. Both honour the browser Do Not Track setting.</li>
+                            <li><strong className="text-slate-300">Robauto</strong> (AI referral attribution): the path of the page you visit and the referring site, so we can tell when a visit came from an AI assistant. No account data is sent.</li>
                         </ul>
-                        <p>These providers are contractually obligated to handle your data securely and only for the purposes we specify.</p>
+                        <p>Each provider handles data under its own privacy policy and our agreement with it, and only for the purpose listed above.</p>
                     </Section>
 
                     <Section title="7. Your Rights (GDPR & CCPA)">

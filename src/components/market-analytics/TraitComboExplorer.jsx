@@ -240,7 +240,7 @@ function ComboDetail({ combo, history, blend, onDrillDown }) {
               <RechartsTooltip
                 contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 8, fontSize: 11 }}
                 labelStyle={{ color: '#e2e8f0' }}
-                formatter={(v, name) => [v ? `$${Number(v).toLocaleString()}` : '—', name]}
+                formatter={(v, name) => [v ? `$${Number(v).toLocaleString()}` : '-', name]}
               />
               <Legend wrapperStyle={{ fontSize: 10 }} />
               <Area type="monotone" dataKey="high" stroke="none" fill="url(#tcBand)" name="Upper band" />

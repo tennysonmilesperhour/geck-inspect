@@ -339,21 +339,21 @@ export default function BlogAIGenerator({ onDraftCreated }) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs text-slate-400 pt-2 border-t border-slate-800">
               <div>
                 <span className="text-slate-500">Meta title: </span>
-                <span className="text-slate-200">{result.ai?.meta_title || '—'}</span>
+                <span className="text-slate-200">{result.ai?.meta_title || '-'}</span>
               </div>
               <div>
                 <span className="text-slate-500">Suggested category: </span>
-                <span className="text-slate-200">{result.ai?.suggested_category || '—'}</span>
+                <span className="text-slate-200">{result.ai?.suggested_category || '-'}</span>
               </div>
               <div className="md:col-span-2">
                 <span className="text-slate-500">Suggested tags: </span>
                 <span className="text-slate-200">
-                  {(result.ai?.suggested_tags || []).join(', ') || '—'}
+                  {(result.ai?.suggested_tags || []).join(', ') || '-'}
                 </span>
               </div>
               <div className="md:col-span-2">
                 <span className="text-slate-500">Image prompt: </span>
-                <span className="text-slate-300">{result.ai?.featured_image_prompt || '—'}</span>
+                <span className="text-slate-300">{result.ai?.featured_image_prompt || '-'}</span>
               </div>
             </div>
           </CardContent>

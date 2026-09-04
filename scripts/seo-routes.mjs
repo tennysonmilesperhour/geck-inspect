@@ -81,6 +81,7 @@ function loadProjectLines() {
       summary: readStringField(chunk, 'summary') || null,
     });
   });
+  if (out.length === 0) throw new Error('seo-routes: no project lines parsed from src/data/project-lines.js');
   return out;
 }
 
@@ -112,7 +113,7 @@ function loadKeepersGuide(id) {
 function loadBlogPosts() {
   const src = readFileSync(resolve(REPO_ROOT, 'src/data/blog-posts.js'), 'utf8');
   const m = src.match(/export const BLOG_POSTS\s*=\s*\[([\s\S]*?)\n\];/);
-  if (!m) return [];
+  if (!m) throw new Error('seo-routes: could not find BLOG_POSTS in src/data/blog-posts.js');
   const body = m[1];
   // Slice into per-post chunks at each `slug:` field (the first field of
   // every post object). Robust to comment separators between posts and to
@@ -142,6 +143,9 @@ function loadBlogPosts() {
       dateModified: gs('dateModified') || gs('datePublished'),
     });
   }
+  if (out.length === 0 && /slug:/.test(body)) {
+    throw new Error('seo-routes: BLOG_POSTS has entries but none parsed; the parser drifted from the data file');
+  }
   return out;
 }
 
@@ -160,6 +164,7 @@ function loadCareSections() {
   while ((m = re.exec(src)) !== null) {
     out.push({ id: m[1], title: m[2] });
   }
+  if (out.length === 0) throw new Error('seo-routes: no care sections parsed from src/data/care-guide.js');
   return out;
 }
 
@@ -168,6 +173,28 @@ function loadCareSections() {
 // at build time.
 const TODAY = new Date().toISOString().slice(0, 10);
 
+// Real content dates (last commit touching each source file), written by
+// scripts/build-content-dates.mjs. <lastmod> used to be the build date on
+// every route, which told crawlers the whole site changed every deploy.
+let CONTENT_DATES = {};
+try {
+  CONTENT_DATES = JSON.parse(readFileSync(resolve(__dirname, 'content-dates.json'), 'utf8')).files || {};
+} catch {
+  console.warn('[seo-routes] scripts/content-dates.json missing, falling back to the build date. Run pnpm build:content-dates.');
+}
+
+// Newest commit date across the files a route depends on. Falls back to
+// the build date only when none of them has a recorded date.
+function dateOf(...files) {
+  const dates = files.map((f) => CONTENT_DATES[f]).filter(Boolean).sort();
+  return dates.length ? dates[dates.length - 1] : TODAY;
+}
+
+const MORPH_DATA = 'src/data/morph-guide.js';
+const CARE_DATA = 'src/data/care-guide.js';
+const LINES_DATA = 'src/data/project-lines.js';
+const CALC_DATA = 'src/lib/genetics/calculatorCatalog.js';
+
 // Primary landing routes. Priorities follow the "home > guides > tools >
 // everything else" hierarchy the audit recommended.
 export const STATIC_ROUTES = [
@@ -175,7 +202,7 @@ export const STATIC_ROUTES = [
     path: '/',
     priority: 1.0,
     changefreq: 'weekly',
-    lastmod: TODAY,
+    lastmod: dateOf('src/pages/Home.jsx'),
     meta: {
       title: 'Geck Inspect: Crested Gecko Collection, Breeding & Community',
       description:
@@ -186,7 +213,7 @@ export const STATIC_ROUTES = [
     path: '/About',
     priority: 0.5,
     changefreq: 'yearly',
-    lastmod: TODAY,
+    lastmod: dateOf('src/pages/About.jsx'),
     meta: {
       title: 'About Geck Inspect',
       description:
@@ -197,7 +224,7 @@ export const STATIC_ROUTES = [
     path: '/Contact',
     priority: 0.4,
     changefreq: 'yearly',
-    lastmod: TODAY,
+    lastmod: dateOf('src/pages/Contact.jsx'),
     meta: {
       title: 'Contact Geck Inspect',
       description:
@@ -241,7 +268,7 @@ export const STATIC_ROUTES = [
     path: '/CareGuide',
     priority: 0.95,
     changefreq: 'monthly',
-    lastmod: TODAY,
+    lastmod: dateOf('src/pages/CareGuide.jsx', CARE_DATA, 'src/data/keepers-guides.js'),
     meta: {
       title: 'Crested Gecko Care Guide',
       description:
@@ -252,7 +279,7 @@ export const STATIC_ROUTES = [
     path: '/MorphGuide',
     priority: 0.95,
     changefreq: 'weekly',
-    lastmod: TODAY,
+    lastmod: dateOf('src/pages/MorphGuide.jsx', MORPH_DATA, LINES_DATA),
     meta: {
       title: 'Crested Gecko Morph Guide, Every Known Morph',
       description:
@@ -264,7 +291,7 @@ export const STATIC_ROUTES = [
     path: '/QualityScale',
     priority: 0.9,
     changefreq: 'monthly',
-    lastmod: TODAY,
+    lastmod: dateOf('src/pages/QualityScale.jsx'),
     meta: {
       title: 'Crested Gecko Quality Scale (Geck Inspect Standard)',
       description:
@@ -275,7 +302,7 @@ export const STATIC_ROUTES = [
     path: '/GeneticsGuide',
     priority: 0.9,
     changefreq: 'monthly',
-    lastmod: TODAY,
+    lastmod: dateOf('src/pages/GeneticsGuide.jsx', 'src/data/genetics-sections.jsx', 'src/data/genetics-glossary.js'),
     meta: {
       title: 'Crested Gecko Genetics Guide',
       description:
@@ -289,7 +316,7 @@ export const STATIC_ROUTES = [
     path: '/calculator',
     priority: 0.85,
     changefreq: 'monthly',
-    lastmod: TODAY,
+    lastmod: dateOf('src/pages/GeneticCalculator.jsx', CALC_DATA),
     meta: {
       title: 'Crested Gecko Morph & Breeding Calculator (Genetics)',
       description:
@@ -301,7 +328,7 @@ export const STATIC_ROUTES = [
     path: '/calculator/learn',
     priority: 0.75,
     changefreq: 'monthly',
-    lastmod: TODAY,
+    lastmod: dateOf('src/pages/GeneticCalculatorTool.jsx', CALC_DATA),
     meta: {
       title: 'Clutch Lab: Crested Gecko Genetics Puzzles',
       description:
@@ -315,7 +342,7 @@ export const STATIC_ROUTES = [
     path: '/calculator/reverse',
     priority: 0.8,
     changefreq: 'monthly',
-    lastmod: TODAY,
+    lastmod: dateOf('src/pages/ReverseCalculator.jsx', CALC_DATA),
     meta: {
       title: 'Reverse Genetics Calculator: Crested Gecko',
       description:
@@ -329,7 +356,7 @@ export const STATIC_ROUTES = [
     path: '/pedigree-tracker',
     priority: 0.85,
     changefreq: 'monthly',
-    lastmod: TODAY,
+    lastmod: dateOf('src/pages/PedigreeTracker.jsx'),
     meta: {
       title: 'Crested Gecko Pedigree Tracker & Lineage Family Tree',
       description:
@@ -343,7 +370,7 @@ export const STATIC_ROUTES = [
     path: '/breeding-records',
     priority: 0.85,
     changefreq: 'monthly',
-    lastmod: TODAY,
+    lastmod: dateOf('src/pages/BreedingRecords.jsx'),
     meta: {
       title: 'Crested Gecko Breeding Records & Clutch Tracker',
       description:
@@ -357,7 +384,7 @@ export const STATIC_ROUTES = [
     path: '/crested-gecko-price',
     priority: 0.85,
     changefreq: 'monthly',
-    lastmod: TODAY,
+    lastmod: dateOf('src/pages/CrestedGeckoPrice.jsx'),
     meta: {
       title: 'How Much Is My Crested Gecko Worth? Price Guide by Morph',
       description:
@@ -368,7 +395,7 @@ export const STATIC_ROUTES = [
     path: '/Mentorship',
     priority: 0.7,
     changefreq: 'weekly',
-    lastmod: TODAY,
+    lastmod: dateOf('src/pages/Mentorship.jsx'),
     meta: {
       title: 'Crested Gecko Mentorship, Consults & Courses',
       description:
@@ -379,7 +406,7 @@ export const STATIC_ROUTES = [
     path: '/MorphVisualizer',
     priority: 0.7,
     changefreq: 'monthly',
-    lastmod: TODAY,
+    lastmod: dateOf('src/pages/MorphVisualizer.jsx'),
     meta: {
       title: 'Crested Gecko Morph Visualizer: Interactive Trait Simulator',
       description:
@@ -390,7 +417,7 @@ export const STATIC_ROUTES = [
     path: '/Gallery',
     priority: 0.8,
     changefreq: 'daily',
-    lastmod: TODAY,
+    lastmod: dateOf('src/pages/Gallery.jsx'),
     meta: {
       title: 'Crested Gecko Photo Gallery',
       description:
@@ -401,7 +428,7 @@ export const STATIC_ROUTES = [
     path: '/CommunityConnect',
     priority: 0.7,
     changefreq: 'daily',
-    lastmod: TODAY,
+    lastmod: dateOf('src/pages/CommunityConnect.jsx'),
     meta: {
       title: 'Community, Find Crested Gecko Breeders & Forum',
       description:
@@ -412,7 +439,7 @@ export const STATIC_ROUTES = [
     path: '/Forum',
     priority: 0.7,
     changefreq: 'daily',
-    lastmod: TODAY,
+    lastmod: dateOf('src/pages/Forum.jsx'),
     meta: {
       title: 'Crested Gecko Community Forum',
       description:
@@ -423,7 +450,7 @@ export const STATIC_ROUTES = [
     path: '/Marketplace',
     priority: 0.8,
     changefreq: 'daily',
-    lastmod: TODAY,
+    lastmod: dateOf('src/pages/Marketplace.jsx'),
     meta: {
       title: 'Crested Gecko Marketplace, Buy and Sell Geckos',
       description:
@@ -434,7 +461,7 @@ export const STATIC_ROUTES = [
     path: '/MarketplaceBuy',
     priority: 0.7,
     changefreq: 'daily',
-    lastmod: TODAY,
+    lastmod: dateOf('src/pages/MarketplaceBuy.jsx'),
     meta: {
       title: 'Buy Crested Geckos, Marketplace',
       description:
@@ -445,7 +472,7 @@ export const STATIC_ROUTES = [
     path: '/Shipping',
     priority: 0.8,
     changefreq: 'monthly',
-    lastmod: TODAY,
+    lastmod: dateOf('src/pages/Shipping.jsx'),
     meta: {
       title: 'Crested Gecko Shipping, Live Arrival Guaranteed',
       description:
@@ -456,7 +483,7 @@ export const STATIC_ROUTES = [
     path: '/Giveaways',
     priority: 0.8,
     changefreq: 'daily',
-    lastmod: TODAY,
+    lastmod: dateOf('src/pages/Giveaways.jsx'),
     meta: {
       title: 'Crested Gecko Giveaways',
       description:
@@ -467,7 +494,7 @@ export const STATIC_ROUTES = [
     path: '/Membership',
     priority: 0.6,
     changefreq: 'monthly',
-    lastmod: TODAY,
+    lastmod: dateOf('src/pages/Membership.jsx', 'src/lib/stripe-config.js'),
     meta: {
       title: 'Pricing & Plans, Geck Inspect',
       description:
@@ -499,7 +526,7 @@ export function getMorphRoutes() {
     path: `/MorphGuide/${slug}`,
     priority: HIGH_VALUE_MORPHS.has(slug) ? 0.9 : 0.7,
     changefreq: 'monthly',
-    lastmod: TODAY,
+    lastmod: dateOf(MORPH_DATA, 'src/pages/MorphDetail.jsx'),
   }));
 }
 
@@ -529,7 +556,7 @@ export function getMorphTaxonomyRoutes() {
     path: `/MorphGuide/category/${id}`,
     priority: 0.8,
     changefreq: 'weekly',
-    lastmod: TODAY,
+    lastmod: dateOf(MORPH_DATA, 'src/pages/MorphTaxonomyHub.jsx'),
     meta: {
       title: `${label}: Crested Gecko Morph Guide`,
       description: `Every crested gecko ${label.toLowerCase()} in one place, with inheritance, rarity, and deep links to per-morph detail pages.`,
@@ -539,7 +566,7 @@ export function getMorphTaxonomyRoutes() {
     path: `/MorphGuide/inheritance/${id}`,
     priority: 0.8,
     changefreq: 'weekly',
-    lastmod: TODAY,
+    lastmod: dateOf(MORPH_DATA, 'src/pages/MorphTaxonomyHub.jsx'),
     meta: {
       title: label,
       description: `${label} grouped by inheritance mode. Complete list with rarity, visual cues, and links to per-morph detail pages.`,
@@ -560,7 +587,7 @@ export function getKeepersGuideRoutes() {
       path: '/CareGuide/series',
       priority: 0.8,
       changefreq: 'monthly',
-      lastmod: TODAY,
+      lastmod: dateOf('src/pages/CareGuideSeries.jsx', 'src/data/keepers-guides.js', 'src/data/keepers-guides/feeding.js', 'src/data/keepers-guides/setup.js', 'src/data/keepers-guides/handbook.js', 'src/data/keepers-guides/morph.js', 'src/data/keepers-guides/breeding.js'),
       meta: {
         title: "The Keeper's Guide Series",
         description: "Five in-depth slide-based guides for crested gecko keepers: feeding troubleshooting, setup and the first 30 days, the handbook of things they do not tell you, morph and genetics, and the complete breeding arc.",
@@ -573,7 +600,7 @@ export function getKeepersGuideRoutes() {
         path: `/CareGuide/series/${id}`,
         priority: 0.7,
         changefreq: 'monthly',
-        lastmod: TODAY,
+        lastmod: dateOf('src/pages/CareGuideSeries.jsx', 'src/data/keepers-guides.js', 'src/data/keepers-guides/feeding.js', 'src/data/keepers-guides/setup.js', 'src/data/keepers-guides/handbook.js', 'src/data/keepers-guides/morph.js', 'src/data/keepers-guides/breeding.js'),
         meta: {
           title: `${title}, Keeper's Guide`,
           description: (
@@ -592,7 +619,7 @@ export function getCareTopicRoutes() {
     path: `/CareGuide/${id}`,
     priority: 0.7,
     changefreq: 'monthly',
-    lastmod: TODAY,
+    lastmod: dateOf(CARE_DATA, 'src/pages/CareGuideTopic.jsx'),
     meta: {
       title: `${title}: Crested Gecko Care`,
       description: `${title}, part of the Geck Inspect crested gecko (Correlophus ciliatus) care guide.`,
@@ -675,7 +702,7 @@ export function getCalculatorPairingRoutes() {
     path: `/calculator/pairing/${slug}`,
     priority: 0.7,
     changefreq: 'monthly',
-    lastmod: TODAY,
+    lastmod: dateOf(CALC_DATA, 'src/pages/CalculatorPairing.jsx'),
     meta: {
       title: `${label}: Crested Gecko Odds`,
       description: `What does ${label} produce? Free Punnett-square calculator with both parents pre-filled, per-egg odds, and clutch math. No signup required.`,
@@ -688,7 +715,7 @@ export function getCalculatorMorphRoutes() {
     path: `/calculator/${slug}`,
     priority: 0.75,
     changefreq: 'monthly',
-    lastmod: TODAY,
+    lastmod: dateOf(CALC_DATA, 'src/pages/CalculatorMorph.jsx'),
     meta: {
       title: `${label} Genetics Calculator: Crested Gecko`,
       description: `Free Punnett-square calculator for crested gecko ${label} pairings. Predict offspring outcomes when one parent carries ${label}. No signup required.`,
@@ -701,7 +728,7 @@ export function getProjectLineRoutes() {
     path: `/MorphGuide/lines/${slug}`,
     priority: 0.7,
     changefreq: 'monthly',
-    lastmod: TODAY,
+    lastmod: dateOf(LINES_DATA, 'src/pages/ProjectLineDetail.jsx'),
     meta: {
       title: `${name}, Crested Gecko Project Line`,
       description: (

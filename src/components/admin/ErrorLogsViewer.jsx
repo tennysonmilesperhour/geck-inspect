@@ -350,7 +350,7 @@ export default function ErrorLogsViewer() {
                                 <div className="grid grid-cols-2 gap-4 text-xs">
                                     <div>
                                         <p className="text-slate-500 uppercase tracking-wider mb-1">URL</p>
-                                        <p className="text-slate-200 break-all">{selected.url || '—'}</p>
+                                        <p className="text-slate-200 break-all">{selected.url || '-'}</p>
                                     </div>
                                     <div>
                                         <p className="text-slate-500 uppercase tracking-wider mb-1">User</p>
@@ -358,7 +358,7 @@ export default function ErrorLogsViewer() {
                                     </div>
                                     <div className="col-span-2">
                                         <p className="text-slate-500 uppercase tracking-wider mb-1">User agent</p>
-                                        <p className="text-slate-200 break-all">{selected.user_agent || '—'}</p>
+                                        <p className="text-slate-200 break-all">{selected.user_agent || '-'}</p>
                                     </div>
                                     {selected.context && Object.keys(selected.context).length > 0 && (
                                         <div className="col-span-2">

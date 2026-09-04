@@ -85,7 +85,7 @@ export default function BlogDashboard({ onNavigate, onCreatePost, onGenerate }) 
                       {post.title || '(untitled)'}
                     </p>
                     <p className="text-xs text-slate-500 mt-0.5">
-                      {post.updated_date ? `Updated ${formatDistanceToNow(new Date(post.updated_date))} ago` : '—'}
+                      {post.updated_date ? `Updated ${formatDistanceToNow(new Date(post.updated_date))} ago` : '-'}
                       {post.scheduled_at && post.status === 'scheduled' && (
                         <> · scheduled for {format(new Date(post.scheduled_at), 'PP p')}</>
                       )}

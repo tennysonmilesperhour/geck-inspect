@@ -227,7 +227,7 @@ export function HeatmapCell({ value, min, max, confidence, onClick, label }) {
       style={{ background: bg }}
       title={label}
     >
-      {value ? `$${value}` : '—'}
+      {value ? `$${value}` : '-'}
     </button>
   );
 }

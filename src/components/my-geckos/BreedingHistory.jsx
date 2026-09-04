@@ -11,7 +11,7 @@ function formatPct(value) {
 }
 
 function formatWeight(min, max) {
-  if (min == null || max == null) return '—';
+  if (min == null || max == null) return '-';
   if (min === max) return `${min}g`;
   return `${min}–${max}g`;
 }

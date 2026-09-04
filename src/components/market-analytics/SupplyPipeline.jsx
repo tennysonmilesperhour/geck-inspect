@@ -67,7 +67,7 @@ export default function SupplyPipeline({ filters: _filters }) {
         <div className="grid grid-cols-3 gap-3 mb-4">
           <Stat label="Active pairs tracked"  value={totalPairs} suffix="pairs" />
           <Stat label="Projected 9m hatchlings" value={totalHatch} suffix="juveniles" />
-          <Stat label="Peak month" value={peakMonth(stacked, pipeline) ?? '—'} />
+          <Stat label="Peak month" value={peakMonth(stacked, pipeline) ?? '-'} />
         </div>
 
         <div className="h-60">

@@ -98,7 +98,7 @@ export default function BlogLogs() {
                     <p className="text-sm text-slate-300 mt-1">{log.message}</p>
                   )}
                   <p className="text-[11px] text-slate-500 mt-1">
-                    {log.created_date ? format(new Date(log.created_date), 'PP p') : '—'}
+                    {log.created_date ? format(new Date(log.created_date), 'PP p') : '-'}
                     {log.created_by && <> · by {log.created_by}</>}
                     {log.related_post_id && <> · post {String(log.related_post_id).slice(0, 8)}</>}
                   </p>

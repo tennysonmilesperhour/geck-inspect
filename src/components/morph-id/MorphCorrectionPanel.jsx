@@ -124,7 +124,7 @@ export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageS
           <div>
             <p className="text-xs uppercase tracking-wide text-slate-400">Base color</p>
             <p className="text-lg text-slate-200 capitalize">
-              {labelFor(state.base_color, '—')}
+              {labelFor(state.base_color, '-')}
             </p>
           </div>
           <div>

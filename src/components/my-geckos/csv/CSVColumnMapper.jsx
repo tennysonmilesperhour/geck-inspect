@@ -135,7 +135,7 @@ export default function CSVColumnMapper({
 
                 {/* Preview */}
                 <div className="text-xs text-slate-500 truncate min-w-0" title={preview || ''}>
-                  {preview || <span className="italic">—</span>}
+                  {preview || <span className="italic">-</span>}
                 </div>
               </div>
             );

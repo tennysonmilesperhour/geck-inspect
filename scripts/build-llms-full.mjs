@@ -238,7 +238,22 @@ function blogToMarkdown(posts) {
 // ---- compose -------------------------------------------------------------
 
 async function build() {
-  const intro = readFileSync(LLMS, 'utf8');
+  // Stamp llms.txt with the newest content date so "Last updated" is not
+  // a hand-typed value from months ago.
+  let intro = readFileSync(LLMS, 'utf8');
+  try {
+    const dates = JSON.parse(readFileSync(resolve(REPO_ROOT, 'scripts/content-dates.json'), 'utf8')).files || {};
+    const newest = Object.values(dates).sort().pop();
+    if (newest && /Last updated: \d{4}-\d{2}-\d{2}/.test(intro)) {
+      const stamped = intro.replace(/Last updated: \d{4}-\d{2}-\d{2}/, `Last updated: ${newest}`);
+      if (stamped !== intro) {
+        writeFileSync(LLMS, stamped);
+        intro = stamped;
+      }
+    }
+  } catch {
+    // content-dates.json missing; leave the file alone
+  }
   const care = careToMarkdown(await loadCareGuide());
   const morphs = morphsToMarkdown(await loadMorphs());
   const blog = blogToMarkdown(await loadBlogPosts());

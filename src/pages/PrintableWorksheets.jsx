@@ -174,16 +174,16 @@ function VetHealthCardTemplate({ gecko, weights, sheds, feedingRecords }) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
         <div>
           <p style={{ fontSize: 11, color: '#888', margin: '0 0 2px' }}>Name</p>
-          <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>{gecko.name || '—'}</p>
+          <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>{gecko.name || '-'}</p>
         </div>
         <div>
           <p style={{ fontSize: 11, color: '#888', margin: '0 0 2px' }}>Morph</p>
-          <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>{gecko.morph || '—'}</p>
+          <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>{gecko.morph || '-'}</p>
         </div>
         <div>
           <p style={{ fontSize: 11, color: '#888', margin: '0 0 2px' }}>Date of Birth</p>
           <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>
-            {gecko.date_of_birth ? format(parseISO(gecko.date_of_birth), 'MMM d, yyyy') : '—'}
+            {gecko.date_of_birth ? format(parseISO(gecko.date_of_birth), 'MMM d, yyyy') : '-'}
           </p>
         </div>
         <div>
@@ -192,7 +192,7 @@ function VetHealthCardTemplate({ gecko, weights, sheds, feedingRecords }) {
         </div>
         <div>
           <p style={{ fontSize: 11, color: '#888', margin: '0 0 2px' }}>Sex</p>
-          <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>{gecko.sex || '—'}</p>
+          <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>{gecko.sex || '-'}</p>
         </div>
         <div>
           <p style={{ fontSize: 11, color: '#888', margin: '0 0 2px' }}>ID</p>
@@ -222,13 +222,13 @@ function VetHealthCardTemplate({ gecko, weights, sheds, feedingRecords }) {
                 return (
                   <tr key={w.id || idx}>
                     <td style={{ border: '1px solid #ccc', padding: '4px 8px' }}>
-                      {w.date ? format(parseISO(w.date), 'MMM d, yyyy') : '—'}
+                      {w.date ? format(parseISO(w.date), 'MMM d, yyyy') : '-'}
                     </td>
                     <td style={{ border: '1px solid #ccc', padding: '4px 8px', textAlign: 'right' }}>
                       {curr}g
                     </td>
                     <td style={{ border: '1px solid #ccc', padding: '4px 8px', textAlign: 'right', color: change != null ? (change >= 0 ? '#2D7A2D' : '#C0392B') : '#999' }}>
-                      {change != null ? `${change >= 0 ? '+' : ''}${change.toFixed(1)}g` : '—'}
+                      {change != null ? `${change >= 0 ? '+' : ''}${change.toFixed(1)}g` : '-'}
                     </td>
                   </tr>
                 );
@@ -250,7 +250,7 @@ function VetHealthCardTemplate({ gecko, weights, sheds, feedingRecords }) {
             <ul style={{ margin: 0, padding: '0 0 0 16px', fontSize: 12 }}>
               {recentSheds.map((s, idx) => (
                 <li key={s.id || idx} style={{ marginBottom: 2 }}>
-                  {s.date ? format(parseISO(s.date), 'MMM d, yyyy') : '—'}
+                  {s.date ? format(parseISO(s.date), 'MMM d, yyyy') : '-'}
                   {s.completeness && `, ${s.completeness}`}
                 </li>
               ))}
@@ -406,12 +406,12 @@ function LineageCardTemplate({ gecko }) {
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 20 }}>
         <div style={{ textAlign: 'center', padding: 8, border: '1px solid #ddd', borderRadius: 4 }}>
           <p style={{ fontSize: 10, color: '#888', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: 1 }}>Sex</p>
-          <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>{gecko.sex || '—'}</p>
+          <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>{gecko.sex || '-'}</p>
         </div>
         <div style={{ textAlign: 'center', padding: 8, border: '1px solid #ddd', borderRadius: 4 }}>
           <p style={{ fontSize: 10, color: '#888', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: 1 }}>Date of Birth</p>
           <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>
-            {gecko.date_of_birth ? format(parseISO(gecko.date_of_birth), 'MMM d, yyyy') : '—'}
+            {gecko.date_of_birth ? format(parseISO(gecko.date_of_birth), 'MMM d, yyyy') : '-'}
           </p>
         </div>
       </div>
@@ -425,7 +425,7 @@ function LineageCardTemplate({ gecko }) {
           <div>
             <p style={{ fontSize: 11, color: '#888', margin: '0 0 2px' }}>Sire (Father)</p>
             <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>
-              {gecko.sire_name || gecko.sire_id || '—'}
+              {gecko.sire_name || gecko.sire_id || '-'}
             </p>
             {gecko.sire_morph && (
               <p style={{ fontSize: 11, color: '#666', margin: '2px 0 0' }}>{gecko.sire_morph}</p>
@@ -434,7 +434,7 @@ function LineageCardTemplate({ gecko }) {
           <div>
             <p style={{ fontSize: 11, color: '#888', margin: '0 0 2px' }}>Dam (Mother)</p>
             <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>
-              {gecko.dam_name || gecko.dam_id || '—'}
+              {gecko.dam_name || gecko.dam_id || '-'}
             </p>
             {gecko.dam_morph && (
               <p style={{ fontSize: 11, color: '#666', margin: '2px 0 0' }}>{gecko.dam_morph}</p>
@@ -450,7 +450,7 @@ function LineageCardTemplate({ gecko }) {
             Breeder
           </p>
           <p style={{ fontSize: 14, fontWeight: 600, margin: '0 0 2px' }}>
-            {gecko.breeder || gecko.created_by || '—'}
+            {gecko.breeder || gecko.created_by || '-'}
           </p>
           <p style={{ fontSize: 10, color: '#888', margin: 0 }}>
             Issued {format(new Date(), 'MMMM d, yyyy')}

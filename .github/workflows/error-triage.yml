@@ -72,11 +72,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # @anthropic-ai/sdk is only used by scheduled jobs (this one +
-      # blog-pipeline), so we keep it out of package.json and install
-      # just-in-time. --no-save leaves lockfile + manifest untouched.
-      - name: Install Anthropic SDK
-        run: npm install --no-save @anthropic-ai/sdk@^0.88.0
 
       - name: Run error-triage agent
         env:
@@ -87,6 +82,24 @@ jobs:
           ERROR_TRIAGE_BASE_BRANCH:  main
           ERROR_TRIAGE_PLACEHOLDER:  ${{ inputs.placeholder == 'true' && '1' || '' }}
         run: node scripts/error-triage/triage.mjs
+
+      # A failed nightly run used to vanish: 129 to 135 failed in a row and
+      # nobody saw it. Now a failure opens one issue (or comments on the
+      # open one), which lands in GitHub email notifications.
+      - name: Report failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh label create ci-failure --color B60205 --description "A scheduled workflow failed" --force >/dev/null 2>&1 || true
+          existing=$(gh issue list --label ci-failure --state open --search "error-triage failed" --json number --jq '.[0].number')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "error-triage failed again: $RUN_URL"
+          else
+            gh issue create --title "error-triage failed" --label ci-failure \
+              --body "The nightly error-triage workflow failed. Latest run: $RUN_URL. This issue is reused until the job is green; close it when fixed."
+          fi
 
       - name: Commit state file
         run: |

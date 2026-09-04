@@ -52,8 +52,8 @@
              (what JS-executing crawlers like Googlebot see).
          Shipping a global canonical here would tell every inner URL it
          is actually the homepage (the pre-2026-04 audit bug). -->
-    <link rel="alternate" hreflang="x-default" href="https://geckinspect.com/" />
-    <link rel="alternate" hreflang="en" href="https://geckinspect.com/" />
+    <!-- No hreflang: the site is English only, and the old site-wide pair
+         pointed every inner URL at the homepage. -->
 
     <!-- Auto-noindex on any host that isn't production. Keeps staging,
          preview deployments, and the vercel.app subdomain out of Google

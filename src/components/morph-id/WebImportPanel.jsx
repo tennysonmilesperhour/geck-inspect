@@ -101,7 +101,7 @@ export default function WebImportPanel({ onApply }) {
 
           <Readout title="Sex · life stage · fired">
             <span className="text-sm text-slate-200">
-              {parsed.sex || '—'} · {parsed.age_stage || '—'} · {parsed.fired_state || '—'}
+              {parsed.sex || '-'} · {parsed.age_stage || '-'} · {parsed.fired_state || '-'}
             </span>
           </Readout>
         </div>

@@ -179,6 +179,30 @@ function buildConfig() {
               'accelerometer=(), autoplay=(self), camera=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(self), usb=(), interest-cohort=()',
           },
           { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
+          // Report-only for now: violations show in the browser console
+          // without blocking anything. Promote to Content-Security-Policy
+          // once a week of real traffic shows no unexpected origins.
+          // Sources: Vite chunks (self), GA4, PostHog, Stripe.js, Google
+          // Fonts, Supabase (API, storage, the Robauto pixel project),
+          // RevenueCat, Unsplash and Supabase images, inline theme scripts
+          // in index.html ('unsafe-inline' for script until they get nonces).
+          {
+            key: 'Content-Security-Policy-Report-Only',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' https://www.googletagmanager.com https://www.google-analytics.com https://us-assets.i.posthog.com https://us.i.posthog.com https://js.stripe.com",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' https://fonts.gstatic.com data:",
+              "img-src 'self' data: blob: https:",
+              "media-src 'self' blob: https:",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://api.revenuecat.com https://api.stripe.com https://images.unsplash.com",
+              "frame-src https://js.stripe.com https://checkout.stripe.com https://billing.stripe.com",
+              "worker-src 'self' blob:",
+              "object-src 'none'",
+              "base-uri 'self'",
+              "form-action 'self' https://checkout.stripe.com",
+            ].join('; '),
+          },
           {
             key: 'X-Robots-Tag',
             value: 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',

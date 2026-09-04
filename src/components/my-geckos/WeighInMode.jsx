@@ -179,7 +179,7 @@ export default function WeighInMode({ geckos = [], weightRecords = [], onClose, 
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-semibold text-slate-100 truncate">{gecko.name}</p>
                       <p className="text-[11px] text-slate-500 truncate">
-                        {gecko.gecko_id_code || '—'}
+                        {gecko.gecko_id_code || '-'}
                         {last?.weight_grams != null && (
                           <span className="ml-2 text-slate-400">
                             last: <span className="text-slate-300">{last.weight_grams}g</span>

@@ -53,12 +53,12 @@ export default function MarketPricing() {
   }, [filtered]);
 
   const stats = useMemo(() => {
-    if (filtered.length === 0) return { median: 0, activeMorph: '—', highestAvg: 0, trend: null };
+    if (filtered.length === 0) return { median: 0, activeMorph: '-', highestAvg: 0, trend: null };
     const allPrices = filtered.map(e => Number(e.sale_price)).sort((a, b) => a - b);
     const median = allPrices[Math.floor(allPrices.length / 2)];
     const morphCounts = {};
     filtered.forEach(e => { morphCounts[e.base_morph] = (morphCounts[e.base_morph] || 0) + 1; });
-    const activeMorph = Object.entries(morphCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || '—';
+    const activeMorph = Object.entries(morphCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
     const morphAvgs = {};
     filtered.forEach(e => {
       if (!morphAvgs[e.base_morph]) morphAvgs[e.base_morph] = { sum: 0, count: 0 };
@@ -216,7 +216,7 @@ export default function MarketPricing() {
                         <div className="space-y-1">
                           {row.entries.slice(0, 5).map(e => (
                             <div key={e.id} className="flex gap-4 text-xs" style={{ color: C.slate }}>
-                              <span>{e.sale_date ? format(new Date(e.sale_date), 'MMM d, yyyy') : '—'}</span>
+                              <span>{e.sale_date ? format(new Date(e.sale_date), 'MMM d, yyyy') : '-'}</span>
                               <span className="font-medium">{fmt(e.sale_price)}</span>
                               <span style={{ color: C.muted }}>{e.sex} · {e.age_category}</span>
                               {e.verified && <span className="text-xs px-1.5 rounded" style={{ backgroundColor: C.paleSage, color: C.sage }}>verified</span>}

@@ -529,7 +529,7 @@ function BatchWeighView({ group, groupGeckos, weightRecords, onBack, onSaved }) 
               </div>
               <div className="text-right">
                 <span className="text-sm" style={{ color: C.muted }}>
-                  {row.lastWeight != null ? `${row.lastWeight}g` : '—'}
+                  {row.lastWeight != null ? `${row.lastWeight}g` : '-'}
                 </span>
               </div>
               <div className="flex items-center justify-end gap-1">

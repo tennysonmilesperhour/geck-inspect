@@ -55,11 +55,11 @@ const ROLE_FILTERS = [
 ];
 
 function timeAgo(date) {
-    if (!date) return '—';
+    if (!date) return '-';
     try {
         return formatDistanceToNowStrict(new Date(date), { addSuffix: true });
     } catch {
-        return '—';
+        return '-';
     }
 }
 

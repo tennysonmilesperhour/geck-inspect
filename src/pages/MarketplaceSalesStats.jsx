@@ -112,7 +112,7 @@ function CostRow({ cost, onDelete, onUpdate }) {
       <div className="flex-1 min-w-0">
         <p className="font-medium text-slate-100 text-sm truncate">{cost.description}</p>
         <div className="flex items-center gap-2 mt-0.5">
-          <span className="text-xs text-slate-500">{cost.date ? format(new Date(cost.date), 'MMM d, yyyy') : '—'}</span>
+          <span className="text-xs text-slate-500">{cost.date ? format(new Date(cost.date), 'MMM d, yyyy') : '-'}</span>
           <Badge className="text-[10px] px-1.5 py-0 bg-emerald-900/50 text-emerald-300 border-emerald-800/50">{getCategoryLabel(cost.category)}</Badge>
         </div>
       </div>
@@ -1271,7 +1271,7 @@ export default function MarketplaceSalesStats() {
                             <div className="flex-1 min-w-[8rem]">
                               <p className="font-medium text-slate-100 text-sm truncate">{item.name}</p>
                               <p className="text-xs text-slate-500">
-                                {item.archived_date ? format(new Date(item.archived_date), 'MMM d, yyyy') : '—'}
+                                {item.archived_date ? format(new Date(item.archived_date), 'MMM d, yyyy') : '-'}
                                 {item.isManualSale && <span className="ml-1 text-emerald-500/70">(manual)</span>}
                               </p>
                             </div>

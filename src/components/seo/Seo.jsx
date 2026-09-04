@@ -26,7 +26,6 @@ import { Helmet } from 'react-helmet-async';
  */
 const SITE_URL = 'https://geckinspect.com';
 const SITE_NAME = 'Geck Inspect';
-const SITE_HANDLE = '@geckinspect';
 const DEFAULT_IMAGE = 'https://geckinspect.com/og-image.png';
 
 // Default keyword base that every page picks up, keeps the top-level
@@ -110,8 +109,8 @@ export default function Seo({
 
       {/* Twitter */}
       <meta name="twitter:card" content="summary_large_image" />
-      <meta name="twitter:site" content={SITE_HANDLE} />
-      <meta name="twitter:creator" content={SITE_HANDLE} />
+      {/* No twitter:site or twitter:creator: there is no @geckinspect
+          account, and a handle that does not exist is a negative signal. */}
       <meta name="twitter:title" content={fullTitle} />
       {description && <meta name="twitter:description" content={description} />}
       <meta name="twitter:image" content={image} />

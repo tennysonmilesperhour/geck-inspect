@@ -700,7 +700,7 @@ export default function MembershipPage() {
                                     : 'text-white'
                           }`}
                         >
-                          {enterpriseLifetimeUnavailable ? '—' : (pricing?.price ?? 'Custom')}
+                          {enterpriseLifetimeUnavailable ? '-' : (pricing?.price ?? 'Custom')}
                         </span>
                         {!enterpriseLifetimeUnavailable && pricing?.billing && (
                           <span className="text-slate-400 text-sm">{pricing.billing}</span>

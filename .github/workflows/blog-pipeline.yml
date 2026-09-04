@@ -68,8 +68,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Install Anthropic SDK
-        run: npm install --no-save @anthropic-ai/sdk@^0.88.0
       - name: Run research agent
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -107,8 +105,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Install Anthropic SDK
-        run: npm install --no-save @anthropic-ai/sdk@^0.88.0
       - name: Run draft agent
         env:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -177,8 +173,6 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Install Anthropic SDK
-        run: npm install --no-save @anthropic-ai/sdk@^0.88.0
       - name: Generate weekly report
         run: node scripts/blog/weekly-report.mjs
       - name: Commit report

@@ -408,7 +408,7 @@ function GeckoRow({ gecko, selected, onToggle, onQuickFix, onAddOne }) {
         </div>
         <div className="text-right shrink-0">
           <p className="text-sm text-emerald-300 font-semibold">
-            {gecko.asking_price != null ? `$${gecko.asking_price}` : '—'}
+            {gecko.asking_price != null ? `$${gecko.asking_price}` : '-'}
           </p>
           {missing.length > 0 && (
             <div className="text-[10px] text-amber-300 inline-flex items-center gap-1">
@@ -507,7 +507,7 @@ function EditableCell({ value, displayValue, config, onCommit }) {
         disabled={isSaving}
         className="bg-slate-800 border border-slate-600 text-slate-100 text-xs rounded px-1 py-0.5 w-full"
       >
-        <option value="">—</option>
+        <option value="">-</option>
         {config.options.map((o) => (
           <option key={o} value={o}>{o}</option>
         ))}

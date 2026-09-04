@@ -143,6 +143,7 @@ function loadCareSections() {
       .slice(0, 2);
     out[id] = { id, title, summary: paras.join(' ') };
   }
+  if (Object.keys(out).length === 0) throw new Error('prerender: no care sections parsed; parser drifted from the data file');
   return out;
 }
 
@@ -212,6 +213,7 @@ function loadBlogPosts() {
       faqFirst,
     };
   }
+  if (Object.keys(out).length === 0) throw new Error('prerender: no blog posts parsed; parser drifted from the data file');
   return out;
 }
 
@@ -383,11 +385,14 @@ function injectMeta(html, route) {
     `<meta name="twitter:description" content="${desc}" />`,
   );
 
-  // Insert the route's <link rel="canonical"> right after the hreflang block.
+  // Insert the route's <link rel="canonical"> right after the googlebot
+  // meta (the hreflang pair it used to follow is gone; single-language site).
+  const beforeCanonical = out;
   out = out.replace(
-    /(<link rel="alternate" hreflang="en"[^>]*\/>)/,
+    /(<meta name="googlebot" content="[^"]*"\s*\/>)/,
     `$1\n    <link rel="canonical" href="${canonical}" />`,
   );
+  if (out === beforeCanonical) throw new Error(`prerender: could not place canonical for ${route.path}`);
 
   // Route-specific hero image preload. Only emits for routes listed in
   // HERO_PRELOADS so we don't waste a mandatory fetch on pages that
