@@ -1,9 +1,32 @@
 # ROADMAP.md - Geck Inspect
 
-Last updated: May 2026
+Last updated: September 2026
 Source: Landscape analysis recommendations (full doc in /docs/landscape-analysis-vol1.docx and /docs/landscape-analysis-vol2.docx)
 
 This is the active priority list. Items are formatted so Claude Code can act on them. Each item has a definition of done. Check items off when they ship.
+
+---
+
+## LAUNCH REVIEW FOLLOW-UPS (from the 4 September 2026 review)
+
+The full review, with every finding, its location and its status, is in `docs/planning/launch-review-2026-09-04.md`. Start there when picking this work up in any Claude Code session. Items below are the ones still open the night before launch; check them off here and update the status in that file when they ship.
+
+**Open**
+- [ ] F30: Hero image is a 2,400 px external hotlink with no srcset; logo and icons are oversized
+- [ ] F34: Non-JS crawlers see thin shells and cannot reach 134 child pages
+- [ ] F60: Production builds failed on every push from 15 to 29 August and nobody was told
+- [ ] F28: Leaked-password protection is off
+- [ ] F41: Referral program was never applied to production
+- [ ] F48: Enterprise is 'coming soon' in the UI but purchasable in JSON-LD; lifetime tiers have no price id
+- [ ] F49: Free tier gives one AI morph ID per month and guests cannot try it
+- [ ] F61: A newer commit on main adds three large unapplied migrations (7,900 lines, 55 tables in a geck_data schema)
+
+**Partly fixed (remainder described in the review file)**
+- [ ] F33: Production schema has drifted from the repo and the deploy scripts would replay stale SQL
+- [ ] F43: No Content-Security-Policy despite five third-party script origins
+- [ ] F46: 208 RLS policies re-evaluate auth functions per row; 271 duplicate permissive policies
+- [ ] F47: Dashboard fans out to about 40 requests with a waterfall; background polling in every tab
+- [ ] F55: Mobile and accessibility gaps
 
 ---
 

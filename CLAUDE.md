@@ -127,4 +127,5 @@ docs/INTENT.md - what we are trying to accomplish
 docs/DECISIONS.md - log of important choices
 docs/MIGRATIONS.md - how the database schema is managed and why the deploy scripts must not replay migrations
 docs/planning/ - older audit and planning documents, kept for history
+docs/planning/launch-review-2026-09-04.md - the pre-launch review (62 findings with status) and its open items. Start here to continue that work.
 IDENTITY.md and ARCHITECTURE.md do not exist yet. If you need brand voice or technical structure, read docs/CONTEXT.md and this file; do not invent those documents' contents.
