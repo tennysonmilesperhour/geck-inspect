@@ -416,11 +416,10 @@ export default function Home() {
           <p className="text-xl md:text-2xl text-emerald-200/90 max-w-2xl mx-auto mb-4 font-medium">
             Every gecko, every clutch, every gene. In one place.
           </p>
-          <p className="text-base md:text-lg max-w-2xl mx-auto mb-10 leading-relaxed bg-gradient-to-b from-sky-200 via-sky-300 to-blue-500 bg-clip-text text-transparent">
-            The crested gecko platform built for the way breeders actually work: AI morph ID, multi-trait
-            breeding projections, lineage trees, digital pedigrees buyers can verify, marketplace analytics
-            and trends, social-media posting assistance and automation, and a gecko quality scoring rubric.
-            Your new <span className="font-semibold text-emerald-200">geckOS</span>.
+          <p className="text-base md:text-lg max-w-2xl mx-auto mb-10 leading-relaxed text-slate-300">
+            Log a gecko in under a minute, then let Geck Inspect handle the rest: pairing projections,
+            hatch reminders, and a pedigree any buyer can verify from a link. Built only for crested geckos,
+            by a breeder who keeps them.
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
             {showGuestCta ? (

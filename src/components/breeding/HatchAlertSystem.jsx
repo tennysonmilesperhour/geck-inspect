@@ -62,6 +62,19 @@ export default function HatchAlertSystem({ user, enabled }) {
       try {
         const eggs = await Egg.filter({ created_by: user.email });
         const today = new Date();
+        // Eggs already alerted in the last 7 days, whether by this tab,
+        // another tab, or the nightly server job (enqueue_hatch_alerts).
+        const recent = await Notification.filter(
+          { user_email: user.email, type: 'hatch_alert' },
+          '-created_date',
+          50,
+        ).catch(() => []);
+        const cutoff = Date.now() - 7 * 24 * 60 * 60 * 1000;
+        const alertedEggIds = new Set(
+          (recent || [])
+            .filter((n) => n?.metadata?.egg_id && new Date(n.created_date).getTime() > cutoff)
+            .map((n) => n.metadata.egg_id),
+        );
 
         for (const egg of eggs || []) {
           if (egg.status !== 'Incubating') continue;
@@ -69,6 +82,7 @@ export default function HatchAlertSystem({ user, enabled }) {
           if (!egg.lay_date) continue;
           const daysIncubating = differenceInDays(today, parseLocalDate(egg.lay_date));
           if (daysIncubating < threshold) continue;
+          if (alertedEggIds.has(egg.id)) continue;
           if (!shouldNotify(egg.id)) continue;
 
           // Build a friendly description. Prefer the explicit

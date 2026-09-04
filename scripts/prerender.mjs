@@ -425,12 +425,42 @@ function escapeHtml(s) {
  * clobber the noscript content, browsers ignore <noscript> when JS is
  * enabled, and bots without JS see it as real content.
  */
+// Child links for hub pages. Non-JS crawlers (GPTBot, ClaudeBot, CCBot)
+// only follow what is in the static HTML, and until this list existed
+// the hub shells linked to ten hubs and nothing below them, leaving 134
+// topic pages unreachable without JavaScript.
+let ALL_ROUTES_CACHE = null;
+function allRoutes() {
+  ALL_ROUTES_CACHE ||= getAllRoutes();
+  return ALL_ROUTES_CACHE;
+}
+function childLinksFor(route) {
+  const prefixes = {
+    '/MorphGuide': [/^\/MorphGuide\/[^/]+$/, /^\/MorphGuide\/lines\//, /^\/MorphGuide\/traits\//],
+    '/CareGuide': [/^\/CareGuide\//],
+    '/blog': [/^\/blog\//],
+    '/calculator': [/^\/calculator\//],
+    '/GeneticsGuide': [/^\/calculator\//],
+  }[route.path];
+  if (!prefixes) return [];
+  return allRoutes()
+    .filter((r) => r.path !== route.path && prefixes.some((re) => re.test(r.path)))
+    .map((r) => ({ path: r.path, title: routeMeta(r).title.replace(/\s*\|\s*Geck Inspect$/, '') }))
+    .sort((a, b) => a.title.localeCompare(b.title));
+}
+
 function injectNoscriptBody(html, route) {
   const meta = routeMeta(route);
   const canonical = `${SITE_URL}${route.path}`;
   const heading = meta.bodyHeading || 'Geck Inspect';
   const lead = meta.bodyLead || '';
   const extra = meta.bodyExtra || '';
+  const children = childLinksFor(route);
+  const childList = children.length
+    ? `<section><h2>In this section</h2><ul>${children
+        .map((c) => `<li><a href="${c.path}">${escapeHtml(c.title)}</a></li>`)
+        .join('')}</ul></section>`
+    : '';
 
   const body = `
     <noscript>
@@ -442,6 +472,8 @@ function injectNoscriptBody(html, route) {
         .geck-noscript-shell p{line-height:1.6;margin:0 0 16px;}
         .geck-noscript-shell nav{font-size:0.875rem;margin-bottom:24px;color:#94a3b8;}
         .geck-noscript-shell nav a{margin-right:12px;}
+        .geck-noscript-shell h2{color:#fff;font-size:1.25rem;margin:24px 0 8px;}
+        .geck-noscript-shell ul{columns:2;column-gap:24px;padding-left:18px;line-height:1.7;}
         .geck-noscript-shell footer{margin-top:40px;padding-top:20px;border-top:1px solid #1e293b;font-size:0.8125rem;color:#64748b;}
       </style>
       <div class="geck-noscript-shell">
@@ -461,6 +493,7 @@ function injectNoscriptBody(html, route) {
           <h1>${escapeHtml(heading)}</h1>
           ${lead ? `<p>${escapeHtml(lead)}</p>` : ''}
           ${extra ? `<p>${escapeHtml(extra)}</p>` : ''}
+          ${childList}
           <p>Canonical URL: <a href="${canonical}">${canonical}</a></p>
           <p>
             Geck Inspect is the professional platform for crested gecko

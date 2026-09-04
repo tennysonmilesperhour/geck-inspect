@@ -944,8 +944,16 @@ export default function MyGeckosPage() {
                                     ) : (
                                     <EmptyState
                                 icon={Users}
-                                title="No Geckos Found"
-                                message="Add your first gecko to get started!"
+                                title={geckos.length === 0 ? 'No geckos yet' : 'No geckos match'}
+                                message={
+                                    geckos.length === 0
+                                        ? 'Add your first crested gecko and Geck Inspect starts tracking weight, sheds, pairings, and lineage for it.'
+                                        : 'Nothing matches the current search or filters. Clear them, or add a new gecko.'
+                                }
+                                action={{
+                                    label: geckos.length === 0 ? 'Add your first gecko' : 'Add a gecko',
+                                    onClick: () => setIsFormOpen(true),
+                                }}
                             />
                         )}
 
