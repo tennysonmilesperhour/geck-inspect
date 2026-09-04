@@ -45,6 +45,7 @@ interface CartItemRow {
   id: string;
   quantity: number;
   unit_price_cents_snapshot: number;
+  customization: Record<string, unknown> | null;
   product: {
     id: string;
     slug: string;
@@ -65,6 +66,28 @@ interface CartItemRow {
 }
 
 const CART_ELIGIBLE_MODES = new Set(["direct_self", "direct_pod", "dropship_wholesale"]);
+
+const CUSTOM_STICKER_SLUG = "custom-pet-sticker";
+
+function isCustomSticker(it: CartItemRow): boolean {
+  const kind = it.customization ? String(it.customization.kind ?? "") : "";
+  return kind === "custom_sticker" || it.product?.slug === CUSTOM_STICKER_SLUG;
+}
+
+/**
+ * Short label appended to the Stripe line item for a custom sticker, so the
+ * receipt and the Stripe dashboard say which design was bought rather than
+ * repeating the generic product name on every line.
+ */
+function stickerLineLabel(it: CartItemRow): string | null {
+  const c = it.customization;
+  if (!c) return null;
+  const name = String(c.name ?? "").trim();
+  const size = String(c.size ?? "").trim();
+  const finish = String(c.finish ?? "").trim();
+  const bits = [name, [size, finish].filter(Boolean).join(" ")].filter(Boolean);
+  return bits.length ? bits.join(" · ") : null;
+}
 
 function jsonResponse(body: unknown, status = 200) {
   return new Response(JSON.stringify(body), {
@@ -153,7 +176,7 @@ serve(async (req) => {
   const { data: items, error: itemsErr } = await supabase
     .from("store_cart_items")
     .select(`
-      id, quantity, unit_price_cents_snapshot,
+      id, quantity, unit_price_cents_snapshot, customization,
       product:store_products (
         id, slug, name, short_description, our_price_cents, images,
         fulfillment_mode, pricing_constraint, map_floor_cents, vendor_id,
@@ -187,11 +210,28 @@ serve(async (req) => {
     .maybeSingle();
   const freeShippingThreshold = Number((thresholdRow?.value as number) ?? 5000);
 
+  const { data: stickerShipRow } = await supabase
+    .from("app_settings")
+    .select("value")
+    .eq("key", "store_custom_sticker_shipping_cents")
+    .maybeSingle();
+  const stickerShippingCents = Number((stickerShipRow?.value as number) ?? 500);
+
   let subtotalCents = 0;
   for (const it of cartItems) {
     subtotalCents += Number(it.product.our_price_cents) * Number(it.quantity);
   }
-  const shippingCents = subtotalCents >= freeShippingThreshold ? 0 : 800; // $8 flat else free over threshold
+
+  // Shipping. An order made up entirely of custom stickers ships for the
+  // flat sticker fee no matter how many stickers it holds. Any other mix
+  // uses the normal store rules and the stickers ride along inside that
+  // shipment at no extra charge, so no order is ever charged both fees.
+  const stickersOnly = cartItems.length > 0 && cartItems.every(isCustomSticker);
+  const shippingCents = stickersOnly
+    ? stickerShippingCents
+    : subtotalCents >= freeShippingThreshold
+      ? 0
+      : 800; // $8 flat else free over threshold
 
   // Mint an Order row in pending state. The webhook flips it to paid.
   const orderNumber = await nextOrderNumber(supabase);
@@ -235,12 +275,21 @@ serve(async (req) => {
     params[`line_items[${i}][price_data][currency]`] = "usd";
     params[`line_items[${i}][price_data][unit_amount]`] = it.product.our_price_cents;
     params[`line_items[${i}][price_data][tax_behavior]`] = "exclusive";
-    params[`line_items[${i}][price_data][product_data][name]`] = it.product.name.slice(0, 100);
-    if (it.product.short_description) {
+    const stickerLabel = stickerLineLabel(it);
+    params[`line_items[${i}][price_data][product_data][name]`] = (
+      stickerLabel ? `${it.product.name}: ${stickerLabel}` : it.product.name
+    ).slice(0, 100);
+    if (stickerLabel) {
+      params[`line_items[${i}][price_data][product_data][description]`] =
+        "Printed from the design you built at checkout.";
+    } else if (it.product.short_description) {
       params[`line_items[${i}][price_data][product_data][description]`] =
         String(it.product.short_description).slice(0, 200);
     }
-    if (primary?.url) {
+    const stickerPhoto = it.customization ? it.customization.photo_url : null;
+    if (typeof stickerPhoto === "string" && stickerPhoto.startsWith("https://")) {
+      params[`line_items[${i}][price_data][product_data][images][0]`] = stickerPhoto;
+    } else if (primary?.url) {
       params[`line_items[${i}][price_data][product_data][images][0]`] = primary.url;
     }
     params[`line_items[${i}][price_data][product_data][metadata][product_id]`] = it.product.id;
@@ -254,6 +303,10 @@ serve(async (req) => {
     params[`line_items[${idx}][price_data][unit_amount]`] = shippingCents;
     params[`line_items[${idx}][price_data][tax_behavior]`] = "exclusive";
     params[`line_items[${idx}][price_data][product_data][name]`] = "Shipping";
+    if (stickersOnly) {
+      params[`line_items[${idx}][price_data][product_data][description]`] =
+        "Flat rate on a stickers-only order.";
+    }
   }
 
   let session: { id: string; url: string };

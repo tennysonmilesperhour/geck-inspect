@@ -10,9 +10,17 @@ import {
   updateCartItemQuantity,
   removeFromCart,
   cartSubtotalCents,
+  cartLineKey,
   getSessionToken,
 } from '@/lib/store/cart';
 import { formatCents } from '@/lib/store/format';
+import StickerCardPreview from '@/components/store/StickerCardPreview';
+import {
+  isCustomStickerLine,
+  designSummary,
+  stickerOnlyCart,
+  CUSTOM_STICKER_SHIPPING_CENTS,
+} from '@/lib/store/customSticker';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/lib/supabaseClient';
 import { captureEvent } from '@/lib/posthog';
@@ -79,7 +87,7 @@ export default function StoreCart() {
   async function handleQty(item, q) {
     setBusy(true);
     try {
-      await updateCartItemQuantity(item.id, item.product_id, q);
+      await updateCartItemQuantity(item.id, cartLineKey(item), q);
       await refresh();
     } finally {
       setBusy(false);
@@ -89,7 +97,7 @@ export default function StoreCart() {
   async function handleRemove(item) {
     setBusy(true);
     try {
-      await removeFromCart(item.id, item.product_id);
+      await removeFromCart(item.id, cartLineKey(item));
       await refresh();
     } finally {
       setBusy(false);
@@ -140,6 +148,13 @@ export default function StoreCart() {
   const subtotal = cartSubtotalCents(items);
   const remainingForFreeShipping = Math.max(0, settings.free_shipping_threshold_cents - subtotal);
 
+  // A cart made up only of custom stickers ships for a flat fee no matter
+  // how many stickers are in it, so we can show a real number here instead
+  // of deferring to checkout. Any other mix falls back to the usual rules.
+  const stickersOnly = stickerOnlyCart(items);
+  const estimatedShipping = stickersOnly ? CUSTOM_STICKER_SHIPPING_CENTS : null;
+  const estimatedTotal = subtotal + (estimatedShipping ?? 0);
+
   // Loyalty perk eligibility, paid subscriber, tenure check is server-side
   // at order time; here we surface the cart-side dollar threshold only.
   const loyaltyTier = user?.membership_tier;
@@ -176,26 +191,36 @@ export default function StoreCart() {
           <div className="space-y-3">
             {items.map((item) => {
               const p = item.product;
+              const sticker = isCustomStickerLine(item);
+              const design = sticker ? item.customization : null;
               const primary =
                 (Array.isArray(p?.images) && p.images.find((i) => i.is_primary)) ||
                 (Array.isArray(p?.images) && p.images[0]);
+              const detailPath = sticker ? '/Store/stickers' : `/Store/p/${p?.slug}`;
               return (
                 <div
-                  key={item.id || item.product_id}
+                  key={item.id || cartLineKey(item)}
                   className="flex gap-3 rounded-lg border border-slate-800 bg-slate-900/40 p-3"
                 >
                   <Link
-                    to={`/Store/p/${p?.slug}`}
-                    className="w-20 h-20 shrink-0 rounded overflow-hidden bg-slate-950"
+                    to={detailPath}
+                    className={`shrink-0 rounded overflow-hidden bg-slate-950 ${sticker ? 'w-16' : 'w-20 h-20'}`}
                   >
-                    {primary ? (
+                    {design ? (
+                      <StickerCardPreview design={design} />
+                    ) : primary ? (
                       <img src={primary.url} alt={primary.alt || p?.name} className="w-full h-full object-cover" />
                     ) : null}
                   </Link>
                   <div className="flex-1 min-w-0">
-                    <Link to={`/Store/p/${p?.slug}`} className="text-sm font-semibold text-slate-100 hover:text-emerald-200">
+                    <Link to={detailPath} className="text-sm font-semibold text-slate-100 hover:text-emerald-200">
                       {p?.name}
                     </Link>
+                    {design && (
+                      <div className="text-xs text-emerald-300/90 mt-0.5 truncate">
+                        {designSummary(design)}
+                      </div>
+                    )}
                     <div className="text-xs text-slate-500 mt-0.5">
                       {formatCents(item.unit_price_cents_snapshot ?? p?.our_price_cents)} each
                     </div>
@@ -238,7 +263,11 @@ export default function StoreCart() {
               </div>
               <div className="flex justify-between text-slate-400">
                 <span>Shipping</span>
-                <span className="text-slate-500 italic">Calculated at checkout</span>
+                {estimatedShipping != null ? (
+                  <span className="text-slate-200">{formatCents(estimatedShipping)}</span>
+                ) : (
+                  <span className="text-slate-500 italic">Calculated at checkout</span>
+                )}
               </div>
               <div className="flex justify-between text-slate-400">
                 <span>Tax</span>
@@ -247,7 +276,13 @@ export default function StoreCart() {
             </div>
 
             <div className="mt-4 space-y-2">
-              {remainingForFreeShipping > 0 ? (
+              {stickersOnly ? (
+                <div className="text-xs rounded border border-slate-700 bg-slate-950 px-2.5 py-2 text-slate-300">
+                  Flat <strong className="text-emerald-300">{formatCents(CUSTOM_STICKER_SHIPPING_CENTS)}</strong> shipping
+                  on a stickers-only order, however many you add. Add supplies to
+                  the same order and the stickers ship inside it.
+                </div>
+              ) : remainingForFreeShipping > 0 ? (
                 <div className="text-xs rounded border border-slate-700 bg-slate-950 px-2.5 py-2 text-slate-300">
                   Add <strong className="text-emerald-300">{formatCents(remainingForFreeShipping)}</strong> for free shipping.
                 </div>
@@ -302,7 +337,7 @@ export default function StoreCart() {
 
             <div className="flex justify-between text-base font-bold">
               <span className="text-slate-200">Estimated total</span>
-              <span className="text-emerald-200">{formatCents(subtotal)}</span>
+              <span className="text-emerald-200">{formatCents(estimatedTotal)}</span>
             </div>
 
             <Button

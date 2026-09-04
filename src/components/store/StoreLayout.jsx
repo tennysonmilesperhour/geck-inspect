@@ -3,6 +3,7 @@ import { Link, useLocation } from 'react-router-dom';
 import {
   ShoppingCart,
   Gift,
+  Sticker,
   ChevronRight,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -57,6 +58,12 @@ export default function StoreLayout({ children, breadcrumbs }) {
         className="text-sm text-slate-300 hover:text-emerald-200 px-2 py-1 rounded inline-flex items-center gap-1 whitespace-nowrap"
       >
         <Gift className="w-3.5 h-3.5" /> Gifts
+      </Link>
+      <Link
+        to="/Store/stickers"
+        className="text-sm text-slate-300 hover:text-emerald-200 px-2 py-1 rounded inline-flex items-center gap-1 whitespace-nowrap"
+      >
+        <Sticker className="w-3.5 h-3.5" /> Custom stickers
       </Link>
       <Link to="/Store/c/apparel" className="text-sm text-slate-300 hover:text-emerald-200 px-2 py-1 rounded whitespace-nowrap">
         Apparel

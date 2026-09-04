@@ -1,8 +1,10 @@
 import { useState } from 'react';
-import { ShoppingCart, ExternalLink, Check } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ShoppingCart, ExternalLink, Check, Wand2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { addToCart } from '@/lib/store/cart';
 import { isCartEligible } from '@/lib/store/format';
+import { CUSTOM_STICKER_SLUG } from '@/lib/store/customSticker';
 import { captureEvent } from '@/lib/posthog';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -15,6 +17,9 @@ import { supabase } from '@/lib/supabaseClient';
  *
  * Compact variant (used on cards) shows just the icon + short label;
  * default variant shows full button text on the PDP.
+ *
+ * The custom sticker product is the one exception: it can't be added to
+ * the cart without a design, so it sends the customer to the builder.
  */
 export default function AddToCartButton({ product, compact = false, quantity = 1 }) {
   const [busy, setBusy] = useState(false);
@@ -22,6 +27,20 @@ export default function AddToCartButton({ product, compact = false, quantity = 1
 
   if (!product) return null;
   const cartEligible = isCartEligible(product.fulfillment_mode);
+
+  if (product.slug === CUSTOM_STICKER_SLUG) {
+    return (
+      <Link to="/Store/stickers" className="block">
+        <Button
+          size={compact ? 'sm' : 'default'}
+          className="w-full bg-emerald-600 hover:bg-emerald-500 text-white"
+        >
+          <Wand2 className={`${compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} mr-1`} />
+          {compact ? 'Build' : 'Build your sticker'}
+        </Button>
+      </Link>
+    );
+  }
 
   async function handleAdd() {
     setBusy(true);

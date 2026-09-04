@@ -27,6 +27,26 @@ export function getSessionToken() {
   return t;
 }
 
+function newLineId() {
+  return crypto?.randomUUID?.() || `l-${Date.now()}-${Math.random().toString(36).slice(2, 10)}`;
+}
+
+/**
+ * Stable identity for a guest cart line. Lines added before customized
+ * lines existed have no line_id, so they still fall back to product_id.
+ */
+function guestLineKey(item) {
+  return item?.line_id || item?.product_id;
+}
+
+/**
+ * Identity a component passes back to updateCartItemQuantity/removeFromCart.
+ * Postgres-backed lines use their row id; guest lines use their line key.
+ */
+export function cartLineKey(item) {
+  return item?.line_id || item?.product_id;
+}
+
 export function clearGuestCart() {
   if (typeof window === 'undefined') return;
   window.localStorage.removeItem(GUEST_CART_KEY);
@@ -80,7 +100,7 @@ export async function fetchCart() {
     const { data: items, error } = await supabase
       .from('store_cart_items')
       .select(`
-        id, quantity, unit_price_cents_snapshot, created_date, product_id,
+        id, quantity, unit_price_cents_snapshot, created_date, product_id, customization,
         product:store_products (
           id, slug, name, short_description, our_price_cents, images,
           fulfillment_mode, vendor_id, status, free_shipping_eligible
@@ -97,56 +117,74 @@ export async function fetchCart() {
   return { mode: 'guest', cart: { id: null, session_token: getSessionToken() }, items: guest.items };
 }
 
-export async function addToCart(product, quantity = 1) {
+/**
+ * Add a product to the cart.
+ *
+ * `customization` is an optional per-line payload (a custom sticker
+ * design, for example). Customized lines never merge with an existing
+ * line: two stickers of two different geckos are two separate lines even
+ * though they share a catalog product. Plain catalog lines still merge by
+ * product as before.
+ */
+export async function addToCart(product, quantity = 1, customization = null) {
   if (!product || !product.id) throw new Error('addToCart: product required');
   const user = await getCurrentUser();
   const unitPrice = product.our_price_cents ?? 0;
   if (user) {
     const cart = await ensureUserCart(user.id);
-    const { data: existing } = await supabase
-      .from('store_cart_items')
-      .select('*')
-      .eq('cart_id', cart.id)
-      .eq('product_id', product.id)
-      .maybeSingle();
-    if (existing) {
-      const { error } = await supabase
+    if (!customization) {
+      const { data: existing } = await supabase
         .from('store_cart_items')
-        .update({ quantity: existing.quantity + quantity, updated_date: new Date().toISOString() })
-        .eq('id', existing.id);
-      if (error) throw error;
-    } else {
-      const { error } = await supabase
-        .from('store_cart_items')
-        .insert({
-          cart_id: cart.id,
-          product_id: product.id,
-          quantity,
-          unit_price_cents_snapshot: unitPrice,
-        });
-      if (error) throw error;
+        .select('*')
+        .eq('cart_id', cart.id)
+        .eq('product_id', product.id)
+        .is('customization', null)
+        .maybeSingle();
+      if (existing) {
+        const { error } = await supabase
+          .from('store_cart_items')
+          .update({ quantity: existing.quantity + quantity, updated_date: new Date().toISOString() })
+          .eq('id', existing.id);
+        if (error) throw error;
+        return;
+      }
     }
+    const { error } = await supabase
+      .from('store_cart_items')
+      .insert({
+        cart_id: cart.id,
+        product_id: product.id,
+        quantity,
+        unit_price_cents_snapshot: unitPrice,
+        customization,
+      });
+    if (error) throw error;
     return;
   }
   // Guest path
   const guest = readGuestCart();
-  const idx = guest.items.findIndex((i) => i.product_id === product.id);
-  if (idx >= 0) {
-    guest.items[idx].quantity += quantity;
-  } else {
-    guest.items.push({
-      product_id: product.id,
-      quantity,
-      unit_price_cents_snapshot: unitPrice,
-      product,
-    });
+  if (!customization) {
+    const idx = guest.items.findIndex((i) => i.product_id === product.id && !i.customization);
+    if (idx >= 0) {
+      guest.items[idx].quantity += quantity;
+      writeGuestCart(guest);
+      return;
+    }
   }
+  guest.items.push({
+    line_id: newLineId(),
+    product_id: product.id,
+    quantity,
+    unit_price_cents_snapshot: unitPrice,
+    customization,
+    product,
+  });
   writeGuestCart(guest);
 }
 
-export async function updateCartItemQuantity(itemId, productId, quantity) {
+export async function updateCartItemQuantity(itemId, lineKey, quantity) {
   const user = await getCurrentUser();
-  if (quantity <= 0) return removeFromCart(itemId, productId);
+  if (quantity <= 0) return removeFromCart(itemId, lineKey);
   if (user) {
     const { error } = await supabase
       .from('store_cart_items')
@@ -156,14 +194,14 @@ export async function updateCartItemQuantity(itemId, productId, quantity) {
     return;
   }
   const guest = readGuestCart();
-  const idx = guest.items.findIndex((i) => i.product_id === productId);
+  const idx = guest.items.findIndex((i) => guestLineKey(i) === lineKey);
   if (idx >= 0) {
     guest.items[idx].quantity = quantity;
     writeGuestCart(guest);
   }
 }
 
-export async function removeFromCart(itemId, productId) {
+export async function removeFromCart(itemId, lineKey) {
   const user = await getCurrentUser();
   if (user) {
     const { error } = await supabase
@@ -174,7 +212,7 @@ export async function removeFromCart(itemId, productId) {
     return;
   }
   const guest = readGuestCart();
-  const next = guest.items.filter((i) => i.product_id !== productId);
+  const next = guest.items.filter((i) => guestLineKey(i) !== lineKey);
   writeGuestCart({ ...guest, items: next });
 }
 

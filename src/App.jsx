@@ -273,7 +273,11 @@ const AuthenticatedApp = () => {
           <Route path="/Contact" element={<Contact />} />
           <Route path="/Terms" element={<Terms />} />
           <Route path="/MarketplaceVerification" element={<MarketplaceVerification />} />
-          <Route path="/store/:slug" element={<StorePage />} />
+          {/* caseSensitive: React Router matches case-insensitively by
+              default, so without it /Store/cart and /Store/stickers would
+              land on a breeder storefront named "cart" instead of the
+              supplies store. */}
+          <Route path="/store/:slug" caseSensitive element={<StorePage />} />
           <Route path="/QualityScale" element={<QualityScale />} />
           <Route path="/pedigree-tracker" element={<PedigreeTracker />} />
           <Route path="/breeding-records" element={<BreedingRecords />} />
@@ -365,8 +369,9 @@ const AuthenticatedApp = () => {
       {/* Breeder storefront, rendered chrome-free for both guests and
           authenticated users so it reads as the breeder's own site, not
           a section of the Geck Inspect app. A small "Geck Inspect" pill
-          inside StorePage is the only nav back. */}
-      <Route path="/store/:slug" element={<StorePage />} />
+          inside StorePage is the only nav back. caseSensitive keeps this
+          from swallowing single-segment /Store/* supplies routes. */}
+      <Route path="/store/:slug" caseSensitive element={<StorePage />} />
 
       {/* Editorial blog, accessible to authenticated users too */}
       <Route path="/blog" element={<BlogIndex />} />

@@ -142,6 +142,7 @@ serve(async (req) => {
       id: string;
       quantity: number;
       unit_price_cents_snapshot: number;
+      customization: Record<string, unknown> | null;
       product: {
         id: string;
         name: string;
@@ -155,7 +156,7 @@ serve(async (req) => {
       const { data } = await supabase
         .from("store_cart_items")
         .select(`
-          id, quantity, unit_price_cents_snapshot,
+          id, quantity, unit_price_cents_snapshot, customization,
           product:store_products ( id, name, vendor_id, vendor_sku, vendor_extra, fulfillment_mode )
         `)
         .eq("cart_id", cartId);
@@ -204,6 +205,10 @@ serve(async (req) => {
           unit_price_cents: ci.unit_price_cents_snapshot,
           line_total_cents: Number(ci.unit_price_cents_snapshot) * Number(ci.quantity),
           vendor_extra_snapshot: ci.product!.vendor_extra,
+          // Custom sticker designs are snapshotted here so production
+          // prints from the order, not from a cart that may be edited or
+          // cleared after payment.
+          customization: ci.customization,
         }));
       if (rows.length > 0) await supabase.from("store_order_items").insert(rows);
 

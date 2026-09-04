@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Gift, Shirt, Sparkles, Wrench } from 'lucide-react';
+import { Gift, Shirt, Sparkles, Wrench, Sticker } from 'lucide-react';
 import StoreLayout from '@/components/store/StoreLayout';
 import ProductCard from '@/components/store/ProductCard';
 import FoodRunoutWidget from '@/components/store/FoodRunoutWidget';
@@ -10,10 +10,11 @@ import { SITE_URL } from '@/lib/organization-schema';
 import { supabase } from '@/lib/supabaseClient';
 
 const HERO_TILES = [
-  { slug: 'apparel',      label: 'Apparel',           Icon: Shirt,    blurb: 'Original Geck Inspect tees, hoodies, hats.' },
-  { slug: 'gifts',        label: 'Gift ideas',        Icon: Gift,     blurb: 'For keepers, breeders, and the people who love them.' },
-  { slug: 'diet',         label: 'Diet (CGD)',        Icon: Sparkles, blurb: 'The brands we feed our own animals.' },
-  { slug: 'enclosures',   label: 'Enclosures',        Icon: Wrench,   blurb: 'Tubs, glass, PVC, every life stage.' },
+  { to: '/Store/stickers',        label: 'Custom stickers',   Icon: Sticker,  blurb: 'Your gecko on a trading card. $10 each.' },
+  { to: '/Store/c/apparel',       label: 'Apparel',           Icon: Shirt,    blurb: 'Original Geck Inspect tees, hoodies, hats.' },
+  { to: '/Store/c/gifts',         label: 'Gift ideas',        Icon: Gift,     blurb: 'For keepers, breeders, and the people who love them.' },
+  { to: '/Store/c/diet',          label: 'Diet (CGD)',        Icon: Sparkles, blurb: 'The brands we feed our own animals.' },
+  { to: '/Store/c/enclosures',    label: 'Enclosures',        Icon: Wrench,   blurb: 'Tubs, glass, PVC, every life stage.' },
 ];
 
 const LANDING_JSON_LD = [
@@ -98,6 +99,12 @@ export default function StoreLanding() {
             <Gift className="w-4 h-4" /> Browse gifts
           </Link>
           <Link
+            to="/Store/stickers"
+            className="inline-flex items-center gap-1.5 border border-slate-700 hover:bg-slate-800 text-slate-200 text-sm font-semibold px-4 py-2 rounded-md"
+          >
+            <Sticker className="w-4 h-4" /> Custom pet stickers
+          </Link>
+          <Link
             to="/Store/c/apparel"
             className="inline-flex items-center gap-1.5 border border-slate-700 hover:bg-slate-800 text-slate-200 text-sm font-semibold px-4 py-2 rounded-md"
           >
@@ -114,11 +121,11 @@ export default function StoreLanding() {
         <FoodRunoutWidget />
       </div>
 
-      <section className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-10">
-        {HERO_TILES.map(({ slug, label, blurb, Icon }) => (
+      <section className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-10">
+        {HERO_TILES.map(({ to, label, blurb, Icon }) => (
           <Link
-            key={slug}
-            to={`/Store/c/${slug}`}
+            key={to}
+            to={to}
             className="rounded-lg border border-slate-800 bg-slate-900/40 hover:bg-slate-900 hover:border-slate-700 transition-colors p-4"
           >
             <Icon className="w-5 h-5 text-emerald-400 mb-2" />
@@ -126,6 +133,28 @@ export default function StoreLanding() {
             <div className="text-xs text-slate-400 mt-1 leading-relaxed">{blurb}</div>
           </Link>
         ))}
+      </section>
+
+      <section className="mb-10">
+        <Link
+          to="/Store/stickers"
+          className="group flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-xl border border-emerald-700/30 bg-gradient-to-r from-emerald-950/50 to-slate-950 p-5 hover:border-emerald-600/60 transition-colors"
+        >
+          <Sticker className="w-8 h-8 text-emerald-400 shrink-0" />
+          <div className="flex-1">
+            <h2 className="text-base font-bold text-emerald-100">
+              Custom pet stickers
+            </h2>
+            <p className="text-sm text-slate-400 mt-1 leading-relaxed">
+              Upload a photo of your gecko, pick the type, HP, attacks, and
+              rarity, and we print it as a die-cut trading card sticker. $10
+              each plus $5 flat shipping.
+            </p>
+          </div>
+          <span className="text-sm font-semibold text-emerald-300 group-hover:text-emerald-200 shrink-0">
+            Build one →
+          </span>
+        </Link>
       </section>
 
       <section className="mb-10">

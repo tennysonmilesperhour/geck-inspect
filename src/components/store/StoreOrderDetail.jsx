@@ -4,6 +4,8 @@ import StoreLayout from '@/components/store/StoreLayout';
 import Seo from '@/components/seo/Seo';
 import { supabase } from '@/lib/supabaseClient';
 import { formatCents } from '@/lib/store/format';
+import StickerCardPreview from '@/components/store/StickerCardPreview';
+import { isCustomStickerLine, designSummary } from '@/lib/store/customSticker';
 
 export default function StoreOrderDetail() {
   const { orderNumber } = useParams();
@@ -34,7 +36,7 @@ export default function StoreOrderDetail() {
         setOrder(o);
         const { data: it } = await supabase
           .from('store_order_items')
-          .select('id, product_name_snapshot, quantity, unit_price_cents, line_total_cents, fulfillment_status')
+          .select('id, product_name_snapshot, quantity, unit_price_cents, line_total_cents, fulfillment_status, customization')
           .eq('order_id', o.id)
           .order('created_date', { ascending: true });
         if (!cancelled) setItems(it || []);
@@ -76,19 +78,30 @@ export default function StoreOrderDetail() {
           </header>
 
           <div className="rounded-lg border border-slate-800 bg-slate-900/40 divide-y divide-slate-800">
-            {items.map((it) => (
-              <div key={it.id} className="px-4 py-3 flex items-center justify-between gap-3">
-                <div>
-                  <div className="text-sm font-semibold text-slate-100">{it.product_name_snapshot}</div>
-                  <div className="text-xs text-slate-500">
-                    Qty {it.quantity} · {formatCents(it.unit_price_cents)} each · {it.fulfillment_status}
+            {items.map((it) => {
+              const design = isCustomStickerLine(it) ? it.customization : null;
+              return (
+                <div key={it.id} className="px-4 py-3 flex items-center justify-between gap-3">
+                  {design && (
+                    <div className="w-16 shrink-0">
+                      <StickerCardPreview design={design} />
+                    </div>
+                  )}
+                  <div className="flex-1 min-w-0">
+                    <div className="text-sm font-semibold text-slate-100">{it.product_name_snapshot}</div>
+                    {design && (
+                      <div className="text-xs text-emerald-300/90 truncate">{designSummary(design)}</div>
+                    )}
+                    <div className="text-xs text-slate-500">
+                      Qty {it.quantity} · {formatCents(it.unit_price_cents)} each · {it.fulfillment_status}
+                    </div>
+                  </div>
+                  <div className="text-sm font-semibold text-emerald-200">
+                    {formatCents(it.line_total_cents)}
                   </div>
                 </div>
-                <div className="text-sm font-semibold text-emerald-200">
-                  {formatCents(it.line_total_cents)}
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
 
           <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-4 text-sm space-y-1.5">
