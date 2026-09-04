@@ -43,6 +43,7 @@ const CHECKS = [
   ['VITE_MARKET_SNAPSHOT_URL', false, null],
   ['VITE_MARKET_INTEL_URL', false, null],
   ['VITE_SHIPZEROS_LIVE', false, null],
+  ['VITE_IMAGE_TRANSFORMS', false, null],
 ];
 
 function describe(name, value, classify) {

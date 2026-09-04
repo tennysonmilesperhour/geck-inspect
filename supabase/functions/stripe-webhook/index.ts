@@ -253,13 +253,16 @@ Deno.serve(async (req: Request) => {
           const priceId = sub.items?.data?.[0]?.price?.id;
           const plan = priceIdToPlan(priceId);
           const cycle = plan?.cycle || sub.metadata?.billing_cycle || null;
+          // Stripe API versions from 2025-03 moved current_period_end from
+          // the subscription to each subscription item.
+          const periodEnd = sub.current_period_end ?? sub.items?.data?.[0]?.current_period_end ?? null;
           await upsertProfileByEmail(profile.email, {
             stripe_subscription_id: sub.id,
             subscription_status: sub.status,
             ...(plan ? { membership_tier: plan.tier } : {}),
             ...(cycle ? { membership_billing_cycle: cycle } : {}),
-            membership_expires_at: sub.current_period_end
-              ? new Date(sub.current_period_end * 1000).toISOString()
+            membership_expires_at: periodEnd
+              ? new Date(periodEnd * 1000).toISOString()
               : null,
           });
         }

@@ -27,6 +27,14 @@ const ASPECT_PRESETS = {
   auto: 'auto',
 };
 
+// Supabase image transformations are a paid add-on that this project does
+// not have. With the flag off every image loads its original URL directly
+// instead of first requesting /render/image/, getting a 403, and falling
+// back (two requests and a delayed paint per photo). Flip the flag once
+// the plan supports transforms.
+const IMAGE_TRANSFORMS_ENABLED = import.meta.env.VITE_IMAGE_TRANSFORMS === '1';
+const INITIAL_STAGE = IMAGE_TRANSFORMS_ENABLED ? 0 : 1;
+
 function transformUrl(src, width) {
   if (!src || !width) return src;
   // Supabase Storage image transformations require the /render/image/ path,
@@ -58,12 +66,12 @@ export default function SmartImage({
 }) {
   // failStage: 0 = trying transformed URL, 1 = trying original URL,
   // 2 = trying fallback placeholder. Each onError advances the stage.
-  const [failStage, setFailStage] = useState(0);
+  const [failStage, setFailStage] = useState(INITIAL_STAGE);
   const [loaded, setLoaded] = useState(false);
 
   // Reset on src change so a new gecko's image actually rerenders.
   useEffect(() => {
-    setFailStage(0);
+    setFailStage(INITIAL_STAGE);
     setLoaded(false);
   }, [src]);
 

@@ -76,11 +76,39 @@ export async function trackPageView(pageName) {
   return trackEvent('page_view', { page: pageName || getPagePath() });
 }
 
+// Client-side guard so one render loop cannot flood error_logs: the same
+// message from the same component is sent once a minute, and a page load
+// sends at most ERROR_BUDGET_PER_MINUTE reports in any minute. The
+// database applies its own per-reporter cap on top of this.
+const ERROR_DEDUP_WINDOW_MS = 60_000;
+const ERROR_BUDGET_PER_MINUTE = 10;
+const recentErrors = new Map();
+let errorBudget = { windowStart: 0, sent: 0 };
+
+function shouldReportError(message, component) {
+  const now = Date.now();
+  const key = `${component || ''}:${message.slice(0, 200)}`;
+  const last = recentErrors.get(key) || 0;
+  if (now - last < ERROR_DEDUP_WINDOW_MS) return false;
+  if (now - errorBudget.windowStart > ERROR_DEDUP_WINDOW_MS) {
+    errorBudget = { windowStart: now, sent: 0 };
+  }
+  if (errorBudget.sent >= ERROR_BUDGET_PER_MINUTE) return false;
+  errorBudget.sent += 1;
+  recentErrors.set(key, now);
+  if (recentErrors.size > 200) {
+    const oldest = recentErrors.keys().next().value;
+    recentErrors.delete(oldest);
+  }
+  return true;
+}
+
 export async function reportError(error, info = {}) {
   if (!error) return;
   try {
-    const email = await getCurrentEmail();
     const message = error?.message || String(error);
+    if (!shouldReportError(message, info.component)) return;
+    const email = await getCurrentEmail();
     const stack = error?.stack || null;
     await supabase.from('error_logs').insert({
       level: info.level || 'error',

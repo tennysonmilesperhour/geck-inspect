@@ -44,10 +44,13 @@ async function fetchCurrentUserProfile() {
   try {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
+    // profiles.id is a legacy text id, not the auth uid. Look up by email
+    // like AuthContext does, otherwise every paying member reads as free
+    // tier here and hits the free storage cap.
     const { data: profile } = await supabase
       .from('profiles')
       .select('membership_tier, subscription_status')
-      .eq('id', user.id)
+      .eq('email', user.email)
       .maybeSingle();
     return profile || {};
   } catch {

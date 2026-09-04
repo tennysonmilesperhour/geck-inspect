@@ -7,7 +7,10 @@ import { Toaster } from "@/components/ui/toaster"
 import { QueryClientProvider } from '@tanstack/react-query'
 import { HelmetProvider } from 'react-helmet-async'
 import { queryClientInstance } from '@/lib/query-client'
-import VisualEditAgent from '@/lib/VisualEditAgent'
+// Base44-era visual editor bridge. Only mounted in dev: it registers a
+// window message handler and there is no editor left to talk to in
+// production. The build drops the import entirely when DEV is false.
+const VisualEditAgent = import.meta.env.DEV ? lazy(() => import('@/lib/VisualEditAgent')) : null;
 import NavigationTracker from '@/lib/NavigationTracker'
 import PostHogPageTracker from '@/lib/PostHogPageTracker'
 import GA4PageTracker from '@/lib/GA4PageTracker'
@@ -424,7 +427,11 @@ function App() {
                 <AuthenticatedApp />
               </Router>
               <Toaster />
-              <VisualEditAgent />
+              {VisualEditAgent && (
+                <Suspense fallback={null}>
+                  <VisualEditAgent />
+                </Suspense>
+              )}
               <UpdateNotification />
             </QueryClientProvider>
           </RevenueCatProvider>
