@@ -157,6 +157,6 @@ Every one of these has a matching file under `supabase/migrations/` so the repo 
 - `function_search_path_pins`: five trigger and helper functions.
 - `store_copy_no_em_dashes`: 23 live store product rows.
 - Earlier the same night: `audit_batch_a`, `audit_batch_d`, `free_tier_no_morph_id`, `launch_security_hardening`.
-- Late session: `referral_keeper_month` (referral columns, reward ledger, award and expiry functions, pg_cron job).
+- Late session: `referral_keeper_month` (referral columns, reward ledger, award and expiry functions, pg_cron job) and `referral_function_grants` (explicit revokes, because Supabase default privileges had made the award function callable by any signed-in member).
 
 Edge functions redeployed from repo source: stripe-checkout, stripe-webhook, stripe-billing-portal, recognize-gecko-morph, recognize-import-data (first deployment, JWT verification on). Late session: stripe-webhook again, for the referral reward.
