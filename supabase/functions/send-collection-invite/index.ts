@@ -27,18 +27,37 @@
 //
 // Deploy: supabase functions deploy send-collection-invite --no-verify-jwt
 //
-// JWT verification is disabled because the client invokes this with
-// the anon key right after creating a pending collection_members row.
-// The row insert is the security boundary: RLS only lets a collection
-// owner create that row, so a hostile caller can't spam this endpoint
-// to trick us into emailing arbitrary addresses for a collection they
-// don't own. The function does NOT validate ownership. It trusts the
-// caller because the row already exists.
+// JWT verification is off at the gateway, so the function verifies the
+// caller itself: the bearer must be a valid user session, that user must
+// be the inviter, the target address must already have a pending
+// collection_members row in a collection the caller owns, and the link
+// must point at our own /collection-invite/ route. Anything else is 401,
+// 403 or 400. Before this check the endpoint was an open email relay.
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2.43.4";
 
 const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY") || "";
 const EMAIL_FROM = Deno.env.get("EMAIL_FROM") || "Geck Inspect <invites@geckinspect.com>";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") || "";
+const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") || "";
+const SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") || "";
+
+// Only links into our own claim route may be mailed out.
+const ALLOWED_INVITE_PREFIXES = [
+  "https://geckinspect.com/collection-invite/",
+  "https://www.geckinspect.com/collection-invite/",
+];
+
+function bearerToken(req: Request): string {
+  const auth = req.headers.get("authorization") || "";
+  return auth.startsWith("Bearer ") ? auth.slice(7).trim() : auth.trim();
+}
+
+// Escape the two LIKE wildcards so an ilike equality check stays exact.
+function likeLiteral(s: string): string {
+  return s.replace(/[\\%_]/g, (m) => `\\${m}`);
+}
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -99,7 +118,7 @@ function renderHtml(opts: {
             <a href="${safeUrl}" style="color:#86efac;">${safeUrl}</a>
           </p>
           <p style="margin:0;color:#6ee7b7;font-size:12px;line-height:1.5;">
-            This invitation expires in 30 days. If you weren&rsquo;t expecting this email, you can safely ignore it &mdash; nothing happens until you click the link.
+            This invitation expires in 30 days. If you weren&rsquo;t expecting this email, you can safely ignore it. Nothing happens until you click the link.
           </p>
         </td></tr>
       </table>
@@ -171,8 +190,60 @@ serve(async (req) => {
   if (role !== "editor" && role !== "viewer") {
     return json({ error: "invalid role" }, 400);
   }
-  if (!inviteUrl.startsWith("https://")) {
-    return json({ error: "invite_url must be https" }, 400);
+  if (!ALLOWED_INVITE_PREFIXES.some((p) => inviteUrl.startsWith(p))) {
+    return json({ error: "invite_url must point at geckinspect.com/collection-invite" }, 400);
+  }
+
+  // Who is calling? The bearer must be a real user session and that user
+  // must be the inviter named in the payload.
+  const token = bearerToken(req);
+  if (!token || !SUPABASE_URL || !SUPABASE_ANON_KEY || !SERVICE_ROLE_KEY) {
+    return json({ error: "unauthorized" }, 401);
+  }
+  const userClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+    auth: { persistSession: false },
+    global: { headers: { Authorization: `Bearer ${token}` } },
+  });
+  const { data: userData, error: userErr } = await userClient.auth.getUser();
+  const callerEmail = String(userData?.user?.email || "").trim().toLowerCase();
+  if (userErr || !callerEmail) {
+    return json({ error: "unauthorized" }, 401);
+  }
+  if (callerEmail !== inviterEmail) {
+    return json({ error: "inviter does not match the signed-in user" }, 403);
+  }
+
+  // Does the caller own a collection with a pending invite for this
+  // address? The pending row is created by the client under RLS before
+  // this function is called, so its absence means the request is forged.
+  const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+    auth: { persistSession: false },
+  });
+  const { data: owned, error: ownedErr } = await admin
+    .from("collections")
+    .select("id")
+    .ilike("owner_email", likeLiteral(callerEmail));
+  if (ownedErr) {
+    console.warn("send-collection-invite: collections lookup failed", ownedErr);
+    return json({ error: "lookup failed" }, 500);
+  }
+  const ownedIds = (owned || []).map((c: { id: string }) => c.id);
+  if (ownedIds.length === 0) {
+    return json({ error: "no collection owned by caller" }, 403);
+  }
+  const { data: pending, error: pendingErr } = await admin
+    .from("collection_members")
+    .select("id")
+    .in("collection_id", ownedIds)
+    .ilike("member_email", likeLiteral(toEmail))
+    .eq("status", "pending")
+    .limit(1);
+  if (pendingErr) {
+    console.warn("send-collection-invite: members lookup failed", pendingErr);
+    return json({ error: "lookup failed" }, 500);
+  }
+  if (!pending || pending.length === 0) {
+    return json({ error: "no pending invite for that address" }, 403);
   }
 
   const inviterDisplay = inviterName || inviterEmail;

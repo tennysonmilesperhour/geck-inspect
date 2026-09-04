@@ -30,11 +30,13 @@ export default function ClaimAnimal() {
     (async () => {
       setIsLoading(true);
       try {
+        // transfer_requests is no longer world-readable (only the sender
+        // and the intended recipient can read rows), so the public claim
+        // page reads a display-only preview through a SECURITY DEFINER
+        // function keyed by the token. It returns status, expiry, the
+        // animal pointer, message, price and a masked recipient email.
         const { data: tr, error: trErr } = await supabase
-          .from('transfer_requests')
-          .select('*')
-          .eq('token', token)
-          .maybeSingle();
+          .rpc('get_transfer_preview', { p_token: token });
 
         if (trErr || !tr) {
           setError('not_found');
@@ -120,6 +122,7 @@ export default function ClaimAnimal() {
         else if (msg.includes('cancelled')) setError('cancelled');
         else if (msg.includes('expired')) setError('expired');
         else if (msg.includes('not found')) setError('not_found');
+        else if (msg.includes('intended recipient')) setError('wrong_account');
         else setError('claim_failed');
         return;
       }
@@ -192,6 +195,12 @@ export default function ClaimAnimal() {
       already_claimed: { title: 'Already claimed', msg: 'This transfer has already been completed by another user.' },
       cancelled: { title: 'Transfer cancelled', msg: 'The seller cancelled this transfer before it was claimed.' },
       expired: { title: 'Transfer expired', msg: 'This transfer link has expired. Ask the seller to send a new one.' },
+      wrong_account: {
+        title: 'Wrong account',
+        msg: transfer?.to_email_masked
+          ? `This transfer was sent to ${transfer.to_email_masked}. Sign in with that email address to claim it.`
+          : 'This transfer was sent to a different email address. Sign in with that address to claim it.',
+      },
       claim_failed: { title: 'Claim failed', msg: 'Something went wrong. Please try again or contact the seller.' },
       error: { title: 'Something went wrong', msg: 'Please try again later.' },
     };

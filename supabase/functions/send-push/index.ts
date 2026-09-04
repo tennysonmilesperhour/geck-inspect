@@ -66,9 +66,54 @@ function json(body: unknown, status = 200) {
   });
 }
 
+// Caller authentication. JWT verification is off at the gateway (the DB
+// trigger is not a user), so the function checks the bearer itself. Two
+// callers are trusted: application code holding the service-role key,
+// and the notifications dispatcher trigger, which sends the Vault secret
+// `notification_service_role_key`. The secret never leaves the database:
+// verify_notification_dispatch_secret() compares it server-side and only
+// the service role may call that RPC.
+function constantTimeEq(a: string, b: string): boolean {
+  if (a.length !== b.length) return false;
+  let diff = 0;
+  for (let i = 0; i < a.length; i++) diff |= a.charCodeAt(i) ^ b.charCodeAt(i);
+  return diff === 0;
+}
+
+function bearerToken(req: Request): string {
+  const auth = req.headers.get("authorization") || "";
+  return auth.startsWith("Bearer ") ? auth.slice(7).trim() : auth.trim();
+}
+
+async function isAuthorizedCaller(provided: string): Promise<boolean> {
+  if (!provided) return false;
+  if (SERVICE_ROLE_KEY && constantTimeEq(provided, SERVICE_ROLE_KEY)) return true;
+  if (!SUPABASE_URL || !SERVICE_ROLE_KEY) return false;
+  try {
+    const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, {
+      auth: { persistSession: false },
+    });
+    const { data, error } = await admin.rpc("verify_notification_dispatch_secret", {
+      p_secret: provided,
+    });
+    if (error) {
+      console.warn("send-push: dispatch secret check failed", error);
+      return false;
+    }
+    return data === true;
+  } catch (err) {
+    console.warn("send-push: dispatch secret check threw", err);
+    return false;
+  }
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
   if (req.method !== "POST") return json({ error: "method not allowed" }, 405);
+
+  if (!(await isAuthorizedCaller(bearerToken(req)))) {
+    return json({ error: "unauthorized" }, 401);
+  }
 
   if (!VAPID_PUBLIC_KEY || !VAPID_PRIVATE_KEY) {
     return json({ error: "server missing VAPID keys" }, 500);
