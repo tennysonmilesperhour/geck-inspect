@@ -77,13 +77,24 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
     setIsLoading(true);
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({
+        const { data, error } = await supabase.auth.signUp({
           email,
           password,
           options: { emailRedirectTo: `${origin()}/MyGeckos` },
         });
         if (error) {
           toast({ title: 'Sign up failed', description: error.message, variant: 'destructive' });
+        } else if (data?.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
+          // Supabase answers a signup for an already-confirmed email with a
+          // fake success and sends nothing (it hides which addresses exist).
+          // The one visible tell is an empty identities array. Without this
+          // branch the user sits on "Check your email" waiting for a message
+          // that was never sent.
+          toast({
+            title: 'This email already has an account',
+            description: 'Sign in with your password, or use "Forgot password" if you need a new one.',
+          });
+          setIsSignUp(false);
         } else {
           setSignUpSent(true);
         }
@@ -101,6 +112,21 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
       }
     } catch (err) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+    setIsLoading(false);
+  };
+
+  const handleResendConfirmation = async () => {
+    setIsLoading(true);
+    const { error } = await supabase.auth.resend({
+      type: 'signup',
+      email,
+      options: { emailRedirectTo: `${origin()}/MyGeckos` },
+    });
+    if (error) {
+      toast({ title: 'Could not resend the email', description: error.message, variant: 'destructive' });
+    } else {
+      toast({ title: 'Sent again', description: `A fresh confirmation link is on its way to ${email}.` });
     }
     setIsLoading(false);
   };
@@ -148,6 +174,16 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
           <p className="text-slate-500 text-sm">
             Nothing in your inbox after a minute? Check spam, or try again with the address you used.
           </p>
+          {!isReset && (
+            <button
+              type="button"
+              onClick={handleResendConfirmation}
+              disabled={isLoading}
+              className="text-emerald-400 hover:text-emerald-300 underline text-sm disabled:opacity-50 block mx-auto"
+            >
+              {isLoading ? 'Sending...' : 'Resend confirmation email'}
+            </button>
+          )}
           <button
             onClick={() => { setIsSignUp(false); setIsForgot(false); setSignUpSent(false); setResetSent(false); }}
             className="text-emerald-400 hover:text-emerald-300 underline text-sm"
