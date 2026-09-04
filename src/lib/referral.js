@@ -49,39 +49,25 @@ export function clearPendingReferralCode() {
 }
 
 // If a referral code is pending and the signed-in user has not already
-// been attributed to a referrer, link them. No-ops on self-referral or
-// any failure; the referral link is best-effort and never blocks auth.
+// been attributed to a referrer, link them. The database function
+// apply_referral_code() does the checking (code exists, not the member's
+// own, nobody recorded yet) and is the only thing allowed to write
+// referred_by, so a member cannot re-point their attribution later.
+// Best-effort: never blocks auth. A transient failure keeps the pending
+// code so the next sign-in retries.
 export async function applyPendingReferral(user) {
   if (!user?.email) return;
   const code = getPendingReferralCode();
   if (!code) return;
 
-  // Already attributed, or trying to self-refer; drop the pending code.
   if (user.referred_by || user.referral_code === code) {
     clearPendingReferralCode();
     return;
   }
 
   try {
-    const { data: referrer } = await supabase
-      .from('profiles')
-      .select('id, email')
-      .eq('referral_code', code)
-      .maybeSingle();
-
-    if (!referrer || referrer.email === user.email) {
-      clearPendingReferralCode();
-      return;
-    }
-
-    await supabase
-      .from('profiles')
-      .update({
-        referred_by: code,
-        referrer_user_id: referrer.id,
-      })
-      .eq('email', user.email);
-
+    const { error } = await supabase.rpc('apply_referral_code', { p_code: code });
+    if (error) throw error;
     clearPendingReferralCode();
   } catch (err) {
     console.warn('applyPendingReferral failed:', err);

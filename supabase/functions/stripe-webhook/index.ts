@@ -2,8 +2,9 @@
 //
 // Stripe posts subscription lifecycle events here. We verify the
 // signature and mirror the relevant state into the `profiles` table.
-// On the first paid invoice we also fire the referral signup bonus
-// (separate from the lifetime 10% revenue share).
+// On every paid invoice we also settle the referral reward for whoever
+// referred the paying member (one free month of Keeper, see
+// award_referral_reward in supabase/migrations).
 //
 // Required env vars:
 //   STRIPE_WEBHOOK_SECRET      whsec_... (from the Stripe dashboard endpoint)
@@ -68,6 +69,93 @@ function priceIdToPlan(priceId: string | null | undefined): { tier: string; cycl
 
 function priceIdToTier(priceId: string | null | undefined): string | null {
   return priceIdToPlan(priceId)?.tier || null;
+}
+
+function monthlyPriceIdForTier(tier: string): string | null {
+  const envKey = `STRIPE_${tier.toUpperCase()}_PRICE_ID`;
+  return Deno.env.get(envKey) || PRICE_CATALOG[tier]?.monthly || null;
+}
+
+// Referral reward for a referrer who already pays through Stripe: one month
+// of their current plan, at the monthly price, credited to their Stripe
+// customer balance. Stripe applies a negative balance to the next invoice
+// on its own. Free-tier referrers are handled entirely inside
+// award_referral_reward() (a 30 day Keeper grant), so this only acts on
+// rows the database marked stripe_credit and has not applied yet.
+async function applyReferralStripeCredit(supabase: any, reward: any) {
+  if (!reward || reward.reward_kind !== "stripe_credit" || reward.applied_at) return;
+  const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
+  if (!stripeKey) {
+    console.warn("referral credit skipped: STRIPE_SECRET_KEY not set");
+    return;
+  }
+  const tier = reward.referrer_tier_at_award || "keeper";
+  const priceId = monthlyPriceIdForTier(tier);
+  const customerId = reward.referrer_stripe_customer_id;
+  if (!priceId || !customerId) {
+    console.warn("referral credit skipped: no monthly price or customer for", tier);
+    return;
+  }
+
+  // Claim the row before touching Stripe so a retried webhook delivery
+  // (Stripe sends invoice.paid and invoice.payment_succeeded for the same
+  // invoice) cannot credit the same referral twice.
+  const { data: claimed } = await supabase
+    .from("referral_rewards")
+    .update({ stripe_balance_transaction_id: `pending:${reward.stripe_invoice_id || reward.id}` })
+    .eq("id", reward.id)
+    .is("stripe_balance_transaction_id", null)
+    .select("id")
+    .maybeSingle();
+  if (!claimed) return;
+
+  const releaseClaim = async (why: string) => {
+    console.warn("referral credit failed:", why);
+    await supabase
+      .from("referral_rewards")
+      .update({ stripe_balance_transaction_id: null, note: `Stripe credit failed: ${why}` })
+      .eq("id", reward.id);
+  };
+
+  const priceRes = await fetch(`https://api.stripe.com/v1/prices/${priceId}`, {
+    headers: { Authorization: `Bearer ${stripeKey}` },
+  });
+  const price = await priceRes.json();
+  if (!priceRes.ok || !price?.unit_amount) {
+    await releaseClaim(price?.error?.message || `price ${priceId} has no unit_amount`);
+    return;
+  }
+
+  const tierLabel = tier.charAt(0).toUpperCase() + tier.slice(1);
+  const body = new URLSearchParams({
+    amount: String(-price.unit_amount),
+    currency: price.currency || "usd",
+    description: `Geck Inspect referral reward: one free month of ${tierLabel}`,
+  });
+  const txRes = await fetch(`https://api.stripe.com/v1/customers/${customerId}/balance_transactions`, {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${stripeKey}`,
+      "Content-Type": "application/x-www-form-urlencoded",
+      "Idempotency-Key": `referral-${reward.id}`,
+    },
+    body,
+  });
+  const tx = await txRes.json();
+  if (!txRes.ok || !tx?.id) {
+    await releaseClaim(tx?.error?.message || `balance transaction returned ${txRes.status}`);
+    return;
+  }
+
+  await supabase
+    .from("referral_rewards")
+    .update({
+      stripe_balance_transaction_id: tx.id,
+      amount_cents: price.unit_amount,
+      currency: price.currency || "usd",
+      applied_at: new Date().toISOString(),
+    })
+    .eq("id", reward.id);
 }
 
 async function verifyStripeSignature(
@@ -293,22 +381,27 @@ Deno.serve(async (req: Request) => {
       case "invoice.paid":
       case "invoice.payment_succeeded": {
         const inv = event.data.object;
-        const billingReason = inv.billing_reason || "";
-        const isFirstPaidInvoice = billingReason === "subscription_create";
-        if (isFirstPaidInvoice && (inv.amount_paid || 0) > 0) {
+        // Referral reward. award_referral_reward() hands out exactly one
+        // reward per referred member and returns null for members nobody
+        // referred, so it is safe to call on every paid invoice. It is not
+        // limited to billing_reason=subscription_create because a member
+        // who took the explicit trial pays their first real invoice on the
+        // first renewal.
+        if ((inv.amount_paid || 0) > 0) {
           const profile = await findProfileFromCustomer(inv.customer);
-          if (profile?.id && profile.email) {
+          if (profile?.email) {
             const priceId = inv.lines?.data?.[0]?.price?.id || inv.lines?.data?.[0]?.pricing?.price_details?.price;
             const tier = priceIdToTier(priceId) || "keeper";
             try {
-              await supabase.rpc("award_referral_signup_bonus", {
-                p_referred_user_id: profile.id,
+              const { data: reward, error } = await supabase.rpc("award_referral_reward", {
                 p_referred_email: profile.email,
                 p_referred_tier: tier,
                 p_stripe_invoice_id: inv.id,
               });
+              if (error) throw error;
+              await applyReferralStripeCredit(supabase, reward);
             } catch (err) {
-              console.warn("award_referral_signup_bonus failed:", (err as Error).message);
+              console.warn("referral reward failed:", (err as Error).message);
             }
           }
         }

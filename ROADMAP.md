@@ -13,9 +13,9 @@ The full review, with every finding, its location and its status, is in `docs/pl
 
 **Open**
 - [ ] F60: Production builds failed on every push from 15 to 29 August and nobody was told
-- [ ] F28: Leaked-password protection is off
-- [ ] F41: Referral program was never applied to production
-- [ ] F61: A newer commit on main adds three large unapplied migrations (7,900 lines, 55 tables in a geck_data schema)
+- [ ] F28: Leaked-password protection is off (advisor no longer flags it as of 4 Sep, late session; confirm the toggle and tick)
+- [x] F41: Referral program was never applied to production (4 Sep, late session: applied with the reward changed to one free month of Keeper per paid referral)
+- [x] F61: A newer commit on main adds three large unapplied migrations (7,900 lines, 55 tables in a geck_data schema) (closed 4 Sep, late session: they were already applied to production after the review)
 
 **Partly fixed (remainder described in the review file)**
 - [ ] F30: Hero image is a 2,400 px external hotlink with no srcset; logo and icons are oversized

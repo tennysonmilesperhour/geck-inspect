@@ -2,7 +2,7 @@
 
 Read-only review of the whole repo and the live Supabase and Vercel setup, done the day before the 5 September launch, followed by five batches of fixes (A to E) pushed straight to main the same night. This file is the handoff copy of the interactive report so any session (desktop app, web, or the terminal CLI) can pick the work up. The interactive version, with the same data, is at https://claude.ai/code/artifact/6136b837-8feb-4df0-806b-f375095dc677.
 
-Totals: 62 findings. 51 closed (fixed, done, or decided), 7 partly fixed, 4 open.
+Totals: 62 findings. 53 closed (fixed, done, or decided), 7 partly fixed, 2 open.
 
 Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the database or an edge function, applied to production and verified. "Partly fixed" and "Mostly fixed" list what is left inside the status text. "Confirmed" means verified real and untouched.
 
@@ -13,7 +13,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 3. Database changes go through a timestamped file in `supabase/migrations/` plus a by-hand apply, as described in `docs/MIGRATIONS.md`. Edge functions are deployed from the merged repo source.
 4. When a finding closes, update its status here and in ROADMAP.md.
 
-## Open (4)
+## Open (2)
 
 ### F60: Production builds failed on every push from 15 to 29 August and nobody was told
 
@@ -29,23 +29,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Where: Supabase Auth settings (advisor auth_leaked_password_protection)
 - Why it matters: Users can sign up with passwords known to be breached.
 - Proposed fix: Toggle it on in Authentication settings.
-- Status: Confirmed live
-
-### F41: Referral program was never applied to production
-
-- Severity: medium. Area: Retention. Effort: S.
-- Where: src/lib/referral.js:77; supabase/migrations/20260430_referral_program.sql; live profiles has no referral columns
-- Why it matters: The referral card hides itself, attribution updates fail silently, and the payout table does not exist.
-- Proposed fix: Apply the migration (after F33's baseline) or remove the UI.
-- Status: Confirmed live
-
-### F61: A newer commit on main adds three large unapplied migrations (7,900 lines, 55 tables in a geck_data schema)
-
-- Severity: medium. Area: Ops. Effort: S.
-- Where: origin/main 334d430 (Record consolidated Geck Data schema #82); supabase/migrations/20260904070000_consolidate_geck_data.sql and two follow-ups; not in the live migration list
-- Why it matters: This landed after the reviewed commit. It is data-platform work, not launch work, and it has not been applied to production. Applying a migration of this size on launch night is an avoidable risk.
-- Proposed fix: Leave it unapplied until after launch week; apply it in a quiet window with a fresh backup taken first.
-- Status: Confirmed
+- Status: Probably on. The Supabase security advisor no longer reports auth_leaked_password_protection (checked 4 Sep, late session). Confirm the toggle in Authentication settings and close
 
 ## Partly fixed (7)
 
@@ -105,7 +89,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Proposed fix: capture=environment on photo inputs, alt text pass, reduced-motion guard on framer animations, verify HEIC on a real iPhone.
 - Status: Partly fixed 4 Sep: global prefers-reduced-motion rule, missing alt on MarketplaceSalesStats. Touch-target and contrast items still open
 
-## Closed (51)
+## Closed (53)
 
 | ID | Severity | Area | Finding | Effort | Status |
 |---|---|---|---|---|---|
@@ -145,6 +129,8 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 | F38 | high | Security | Vet, feeding, ownership (with sale prices), and transfer records are world-readable | M | Fixed (batch D, migration audit_batch_d): vet, feeding, shed and ownership reads limited to author, owner, admin, or a public passport |
 | F58 | high | Ops | PostHog is switched off in production: no VITE_POSTHOG_KEY in the deployed bundle | S | Fixed (deploy b53b38c): build log shows VITE_POSTHOG_KEY present |
 | F62 | high | Correctness | Tier lookup compared uuid to text, so every metered feature returned 500 | S | Fixed 4 Sep: effective_tier_uuid_fix applied and verified (keeper resolves, a health screen credit debits) |
+| F41 | medium | Retention | Referral program was never applied to production | S | Fixed 4 Sep, late session: migration referral_keeper_month applied and verified. The unpayable 10 percent revenue share is gone; the reward is one free month of Keeper per referred member who pays a first invoice (a month credited on Stripe for subscribers, needs_manual for App Store and grandfathered accounts). Attribution moved server-side (apply_referral_code), referral columns write-protected, daily expire-referral-grants cron returns lapsed months to free, stripe-webhook redeployed |
+| F61 | medium | Ops | A newer commit on main adds three large unapplied migrations (7,900 lines, 55 tables in a geck_data schema) | S | Closed 4 Sep, late session: all three are in the live migration history and geck_data holds 81 tables, so they were applied after the review. Nothing left to apply |
 | F39 | medium | Performance | Every image first requests a paid transform that returns 403, then falls back | S | Fixed (batch A): transforms off by default, VITE_IMAGE_TRANSFORMS=1 re-enables |
 | F40 | medium | Landing page | 'Keepers signed up' counts 94 profiles while 36 accounts can log in | S | Fixed (batch A): landing_stats() counts confirmed accounts (36 today) |
 | F42 | medium | Security | Privacy policy does not disclose GA4, PostHog, or the Robauto pixel | S | Fixed (batch C): privacy policy names Supabase, Vercel, Stripe, RevenueCat, Anthropic, Resend, GA4, PostHog and Robauto with what each receives |
@@ -171,5 +157,6 @@ Every one of these has a matching file under `supabase/migrations/` so the repo 
 - `function_search_path_pins`: five trigger and helper functions.
 - `store_copy_no_em_dashes`: 23 live store product rows.
 - Earlier the same night: `audit_batch_a`, `audit_batch_d`, `free_tier_no_morph_id`, `launch_security_hardening`.
+- Late session: `referral_keeper_month` (referral columns, reward ledger, award and expiry functions, pg_cron job).
 
-Edge functions redeployed from repo source: stripe-checkout, stripe-webhook, stripe-billing-portal, recognize-gecko-morph, recognize-import-data (first deployment, JWT verification on).
+Edge functions redeployed from repo source: stripe-checkout, stripe-webhook, stripe-billing-portal, recognize-gecko-morph, recognize-import-data (first deployment, JWT verification on). Late session: stripe-webhook again, for the referral reward.

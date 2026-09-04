@@ -355,3 +355,14 @@ These entries capture the strategic decisions made during the initial landing pa
 **Recovery path (important, since a SW outlives a git revert):** If a future SW change ever misbehaves on a device, the fix is to (1) bump `CACHE_VERSION` and change the SW body so the browser detects an update and `skipWaiting()` swaps it in on next load, or (2) as a hard reset, ship a SW whose `activate` handler runs `caches.keys()` then deletes every `geck-*` cache and calls `self.registration.unregister()`. Because navigations are network-first, even a totally empty/broken cache still falls through to the live network, so a returning user is never fully stranded.
 
 ---
+
+### 30. Referral reward is a free month of Keeper, not a revenue share
+
+**Date:** 2026-09-04
+**Status:** Accepted
+**Context:** The launch review (F41) found the referral program half-built: the sidebar card promised "10% of every subscription paid by anyone who signs up through it, for life", but the migration that adds the referral columns and the payout ledger was never applied, and no code anywhere wrote a payout. The card hid itself, attribution updates failed silently, and the Stripe webhook called a Social Media Manager bonus function that reads columns that do not exist. Removing the program or shipping the 10 percent promise without a payout path were both on the table.
+**Decision:** Keep the program, change the reward to something the platform delivers on its own. When a referred member pays their first real invoice, the referrer gets exactly one reward per referred member: a free-tier referrer becomes Keeper for 30 days (stacking when several referrals pay), a Stripe subscriber gets one month of their plan credited to their Stripe balance, and anyone else (grandfathered, App Store, lifetime) gets a ledger row marked needs_manual for an admin to settle. Free signups earn nothing, so fake accounts are worthless. Attribution is recorded server-side once and cannot be re-pointed by the member. A daily pg_cron job returns lapsed months to free and never touches a live Stripe or RevenueCat subscriber.
+**Reasoning:** A cash revenue share needs payout rails (Stripe Connect or manual transfers), tax handling, and terms, none of which exist, and promising it to members without them is a liability. A free month of Keeper is understood instantly, costs forgone revenue rather than cash, converts free members into Keeper users for a month, and reuses the tier machinery that already gates every feature. The missing piece was expiry enforcement, which is one small function and a cron entry.
+**Consequences:** `referral_rewards` is the ledger; rows with `applied_at` null need attention (Stripe credit failed or needs_manual). The webhook needs `STRIPE_SECRET_KEY`, which the project's edge functions already share. If the reward changes again, the copy lives in ReferralLinkCard.jsx and the rules in `award_referral_reward()`.
+
+---

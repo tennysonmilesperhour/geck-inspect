@@ -10,7 +10,7 @@ cannot replay them by accident.
 | 20260417000008_gecko_images_multi_photo.sql | Adds `gecko_images.image_urls`. Nothing in the app reads or writes that column. |
 | 20260422210000_notifications_send_email_trigger.sql | Superseded by `notification_dispatch_via_vault`, which sends email and push from one trigger with a Vault secret. Applying this would double-send. |
 | 20260423100000_profiles_favorite_pages.sql | Adds `profiles.favorite_pages`. No code uses it; favourites live in localStorage. |
-| 20260430_referral_program.sql | The referral program was never launched. `award_referral_signup_bonus()` in production expects a different schema (`social_referral_bonuses`). Decide the program's design before applying anything. |
+| 20260430_referral_program.sql | Superseded on 4 Sep 2026 by `20260904234500_referral_keeper_month.sql`, which was applied. This file promised a lifetime 10 percent revenue share that nothing could pay; the live program rewards one free month of Keeper per paid referral instead. Kept for history only. |
 
 To adopt one of these, copy it back with a fresh 14-digit timestamp and
 apply it deliberately. See docs/MIGRATIONS.md.
