@@ -71,7 +71,7 @@ Main goes straight to production, which is what I want by default.
 Project identity
 Geck Inspect is the crested-gecko-first platform for breeders and keepers. Live at geckinspect.com.
 Core features: collection management, breeding planning, AI-powered morph identification, multi-generation lineage tracking, verified breeder community, morph guide, care guide, genetics guide, genetics calculator.
-Built and maintained by Tennyson, solo. Stack is Next.js + Supabase + Vercel + GitHub.
+Built and maintained by Tennyson, solo. Stack is Vite + React (single-page app) + Supabase + Vercel + GitHub. There is no Next.js in this repo; do not add server components or Next-style routing.
 How to think about feature decisions
 Geck Inspect competes in a real but specialized market. Before suggesting product direction, feature additions, or strategic pivots, read these files:
 
