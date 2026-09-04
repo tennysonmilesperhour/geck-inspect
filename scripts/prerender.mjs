@@ -330,10 +330,17 @@ function routeMeta(route) {
 // Source URLs:
 //   /           → src/pages/Home.jsx BACKGROUND_IMAGE
 //   /MorphGuide → src/pages/MorphGuide.jsx MORPH_GUIDE_HERO (mirrored below)
+const HERO_BASE = 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&q=80';
+const HERO_WIDTHS = [640, 1024, 1600, 2400];
 const HERO_PRELOADS = {
-  '/': 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=2400&q=80',
-  '/MorphGuide':
-    'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=2400&q=80',
+  '/': `${HERO_BASE}&w=2400`,
+  '/MorphGuide': `${HERO_BASE}&w=2400`,
+};
+// The homepage <img> carries a srcset (Home.jsx BACKGROUND_IMAGE_SRCSET),
+// so its preload must carry the same candidates or a phone would preload
+// the 2400 px file and then fetch the 640 px one anyway.
+const HERO_PRELOAD_SRCSET = {
+  '/': HERO_WIDTHS.map((w) => `${HERO_BASE}&w=${w} ${w}w`).join(', '),
 };
 
 function injectMeta(html, route) {
@@ -388,10 +395,11 @@ function injectMeta(html, route) {
   // to start the request before the React bundle evaluates, which is
   // where the Lighthouse mobile LCP win comes from.
   const heroUrl = HERO_PRELOADS[route.path];
+  const heroSrcset = HERO_PRELOAD_SRCSET[route.path] || null;
   if (heroUrl) {
     out = out.replace(
       /(<link rel="canonical" href="[^"]*"\s*\/>)/,
-      `$1\n    <link rel="preload" as="image" href="${heroUrl}" fetchpriority="high" />`,
+      `$1\n    <link rel="preload" as="image" href="${heroUrl}"${heroSrcset ? ` imagesrcset="${heroSrcset}" imagesizes="100vw"` : ''} fetchpriority="high" />`,
     );
   }
 

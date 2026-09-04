@@ -1,4 +1,5 @@
-import { useState, useEffect, useRef, useMemo } from "react";
+import { useState, useEffect, useRef, useMemo, Suspense } from "react";
+import { lazy } from "@/lib/lazyWithRetry";
 import { Link, useLocation } from "react-router-dom";
 import "@/styles/layout-theme.css";
 import { initialsAvatarUrl } from "@/components/shared/InitialsAvatar";
@@ -13,7 +14,8 @@ import {
 import TutorialModal from "@/components/tutorial/TutorialModal";
 import OnboardingRolePrompt from "@/components/tutorial/OnboardingRolePrompt";
 import CommandPalette from "@/components/command-palette/CommandPalette";
-import FeedingAlertSystem from "@/components/feeding/FeedingAlertSystem";
+// Lazy: it drags framer-motion (about 100 KB) into the shell otherwise.
+const FeedingAlertSystem = lazy(() => import("@/components/feeding/FeedingAlertSystem"));
 import HatchAlertSystem from "@/components/breeding/HatchAlertSystem";
 import NotificationPopover from "@/components/notifications/NotificationPopover";
 import PushEnableBanner from "@/components/notifications/PushEnableBanner";
@@ -1440,11 +1442,13 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       <OnboardingRolePrompt isOpen={showRolePrompt} onChoose={handleRoleChosen} onDismiss={handleRoleDismissed} />
       <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
       <CommandPalette />
-      <FeedingAlertSystem
-        user={user}
-        enabled={user?.feeding_alerts_enabled !== false}
-        lateReminders={user?.feeding_late_reminders_enabled === true}
-      />
+      <Suspense fallback={null}>
+        <FeedingAlertSystem
+          user={user}
+          enabled={user?.feeding_alerts_enabled !== false}
+          lateReminders={user?.feeding_late_reminders_enabled === true}
+        />
+      </Suspense>
       {/* Always run the hatch producer for signed-in users; per-channel
           (push/email) opt-out lives in Settings → Notifications. The bell
           notification is non-disruptive, so no separate master toggle. */}

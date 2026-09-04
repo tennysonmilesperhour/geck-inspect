@@ -1,4 +1,3 @@
-import { APP_LOGO_URL } from "@/lib/constants";
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Button } from '@/components/ui/button';
@@ -37,15 +36,21 @@ import LiveStats from '@/components/landing/LiveStats';
 import ProductTour from '@/components/landing/ProductTour';
 import EmailCaptureCard from '@/components/landing/EmailCaptureCard';
 
-const LOGO_URL =
-  APP_LOGO_URL;
+// Header and footer show the mark at 32 to 40 px. The 600 px master
+// (APP_LOGO_URL in constants, still used for Open Graph and schema) is
+// 170 KB; this 96 px copy is 8 KB.
+const LOGO_URL = '/logo-96.png';
 
 // Jungle hero background from Unsplash (free-license, hotlinking allowed).
 // Sebastian Unrau's classic forest, dense, misty, reads as wild habitat
 // once darkened with an overlay. Swap this URL for a more specifically
 // tropical photo whenever you find one you like; the overlay will handle it.
-const BACKGROUND_IMAGE =
-  'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&w=2400&q=80';
+const BACKGROUND_IMAGE_BASE = 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&q=80';
+const BACKGROUND_IMAGE_WIDTHS = [640, 1024, 1600, 2400];
+const BACKGROUND_IMAGE = `${BACKGROUND_IMAGE_BASE}&w=2400`;
+// One candidate per width so a phone downloads the 640 px file, not the
+// 2400 px one. Keep in sync with the preload in scripts/prerender.mjs.
+const BACKGROUND_IMAGE_SRCSET = BACKGROUND_IMAGE_WIDTHS.map((w) => `${BACKGROUND_IMAGE_BASE}&w=${w} ${w}w`).join(', ');
 
 // Public, free reference/tool pages surfaced on the homepage. Anchor text
 // is written to match how people search (morph calculator, breeding
@@ -348,9 +353,14 @@ export default function Home() {
         <div className="fixed inset-0 z-0 pointer-events-none overflow-hidden">
           <img
             src={BACKGROUND_IMAGE}
+            srcSet={BACKGROUND_IMAGE_SRCSET}
+            sizes="100vw"
+            width="2400"
+            height="1600"
             alt="Lush tropical rainforest canopy, the natural habitat of the crested gecko (Correlophus ciliatus) in New Caledonia."
             className="w-full h-full object-cover opacity-80"
             loading="eager"
+            decoding="async"
             fetchPriority="high"
           />
           <div className="absolute inset-0" style={{ background: 'rgba(0, 0, 0, 0.65)' }} />

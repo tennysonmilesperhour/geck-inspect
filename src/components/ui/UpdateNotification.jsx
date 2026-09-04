@@ -2,7 +2,10 @@ import { useState, useEffect, useRef } from 'react';
 import { RefreshCw, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
-const CHECK_INTERVAL_MS = 60 * 1000; // Check every 60 seconds
+// Ten minutes, and only while the tab is visible. The old 60 second timer
+// re-downloaded the HTML shell in every open tab all day, which is real
+// bandwidth (and Vercel edge requests) for a notice that can wait.
+const CHECK_INTERVAL_MS = 10 * 60 * 1000;
 
 async function fetchCurrentScriptHash() {
   try {
@@ -26,7 +29,11 @@ export default function UpdateNotification() {
       initialHashRef.current = hash;
     });
 
-    const interval = setInterval(async () => {
+    let stopped = false;
+    let lastCheck = Date.now();
+    const check = async () => {
+      if (stopped || document.visibilityState !== 'visible') return;
+      lastCheck = Date.now();
       const latestHash = await fetchCurrentScriptHash();
       if (
         latestHash &&
@@ -34,11 +41,21 @@ export default function UpdateNotification() {
         latestHash !== initialHashRef.current
       ) {
         setShowBanner(true);
-        clearInterval(interval);
+        stopped = true;
       }
-    }, CHECK_INTERVAL_MS);
+    };
+    const interval = setInterval(check, CHECK_INTERVAL_MS);
+    // A tab that comes back after being hidden for a while checks at once.
+    const onVisible = () => {
+      if (document.visibilityState === 'visible' && Date.now() - lastCheck > CHECK_INTERVAL_MS) check();
+    };
+    document.addEventListener('visibilitychange', onVisible);
 
-    return () => clearInterval(interval);
+    return () => {
+      stopped = true;
+      clearInterval(interval);
+      document.removeEventListener('visibilitychange', onVisible);
+    };
   }, []);
 
   if (!showBanner) return null;

@@ -62,12 +62,27 @@ export function RevenueCatProvider({ children }) {
   }, []);
 
   useEffect(() => {
-    const instance = configureRevenueCat(user);
-    if (!instance) return;
-    const nextId = instance.getAppUserId();
-    if (lastAppUserIdRef.current === nextId && isReady) return;
-    lastAppUserIdRef.current = nextId;
-    refresh();
+    let cancelled = false;
+    (async () => {
+      const instance = await configureRevenueCat(user);
+      if (cancelled) return;
+      if (!instance) {
+        // Signed out (or no SDK for this platform): nothing to fetch, but
+        // consumers waiting on isReady must not hang.
+        lastAppUserIdRef.current = null;
+        setCustomerInfo(null);
+        setOfferings(null);
+        setIsReady(true);
+        return;
+      }
+      const nextId = typeof instance.getAppUserId === 'function' ? instance.getAppUserId() : null;
+      if (nextId && lastAppUserIdRef.current === nextId && isReady) return;
+      lastAppUserIdRef.current = nextId;
+      refresh();
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [user, refresh, isReady]);
 
   // Pull the mirrored entitlement on auth change. This is what catches

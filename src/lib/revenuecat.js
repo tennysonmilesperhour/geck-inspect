@@ -13,7 +13,18 @@
  * is sync and uses `appUserId`). This module flattens both behind
  * one interface so call sites don't have to know which is loaded.
  */
-import { Purchases as PurchasesWeb, LogLevel as LogLevelWeb } from '@revenuecat/purchases-js';
+// The web SDK (about 660 KB of JavaScript) is loaded on demand, and only
+// for signed-in members. Anonymous visitors on the landing page never
+// download it. `_web` holds the module once it arrives.
+let _webModulePromise = null;
+let _web = null;
+function loadWebRC() {
+  _webModulePromise ||= import('@revenuecat/purchases-js').then((m) => {
+    _web = { Purchases: m.Purchases, LogLevel: m.LogLevel };
+    return _web;
+  });
+  return _webModulePromise;
+}
 
 // The native Capacitor SDK is loaded lazily (dynamic import) so it is
 // code-split out of the web/PWA bundle, which never uses it. Every
@@ -103,13 +114,14 @@ async function configureNative(apiKey, appUserId) {
   }
 }
 
-function configureWeb(apiKey, appUserId) {
-  if (!PurchasesWeb.isConfigured()) {
-    PurchasesWeb.configure({ apiKey, appUserId });
-    if (import.meta.env.DEV) PurchasesWeb.setLogLevel(LogLevelWeb.Debug);
-    return PurchasesWeb.getSharedInstance();
+async function configureWeb(apiKey, appUserId) {
+  const { Purchases, LogLevel } = await loadWebRC();
+  if (!Purchases.isConfigured()) {
+    Purchases.configure({ apiKey, appUserId });
+    if (import.meta.env.DEV) Purchases.setLogLevel(LogLevel.Debug);
+    return Purchases.getSharedInstance();
   }
-  const instance = PurchasesWeb.getSharedInstance();
+  const instance = Purchases.getSharedInstance();
   if (instance.getAppUserId() !== appUserId) {
     instance.identifyUser(appUserId).catch((err) => {
       console.warn('[revenuecat] identifyUser failed:', err);
@@ -119,32 +131,38 @@ function configureWeb(apiKey, appUserId) {
 }
 
 /**
- * Configure the SDK for the current platform. Returns a Promise on
- * native (the plugin is async) and the shared web instance synchronously
- * on web. Call sites that just want to fire-and-forget can ignore the
- * return value.
+ * Configure the SDK for the current platform. Always returns a Promise:
+ * null when there is nothing to configure (server render, no API key,
+ * or no signed-in user), otherwise the shared web instance. On native
+ * the plugin configures itself and the Promise resolves to undefined.
+ *
+ * Anonymous visitors get nothing on purpose. Loading the SDK for them
+ * cost every landing-page visit two thirds of a megabyte and gave them
+ * an anonymous RevenueCat identity they will never use.
  */
-export function configureRevenueCat(user) {
+export async function configureRevenueCat(user) {
   if (typeof window === 'undefined') return null;
+  if (!user) return null;
   const platform = detectPlatform();
   const apiKey = getApiKeyForPlatform(platform);
   if (!apiKey) {
     console.warn(`[revenuecat] no API key configured for platform ${platform}`);
     return null;
   }
-  const appUserId =
-    resolveAppUserId(user) || PurchasesWeb.generateRevenueCatAnonymousAppUserId();
-
   if (isNativePlatform()) {
+    const appUserId = resolveAppUserId(user) || `anon-${crypto.randomUUID()}`;
     return configureNative(apiKey, appUserId);
   }
+  const { Purchases } = await loadWebRC();
+  const appUserId =
+    resolveAppUserId(user) || Purchases.generateRevenueCatAnonymousAppUserId();
   return configureWeb(apiKey, appUserId);
 }
 
 export function getPurchasesWeb() {
   if (typeof window === 'undefined') return null;
-  if (!PurchasesWeb.isConfigured()) return null;
-  return PurchasesWeb.getSharedInstance();
+  if (!_web || !_web.Purchases.isConfigured()) return null;
+  return _web.Purchases.getSharedInstance();
 }
 
 /**

@@ -31,16 +31,12 @@ export default defineConfig({
         // async chunk that is fetched only when a user lands on a page
         // that imports it.
         //
-        // `manualChunks` receives the resolved module id; match on the
-        // package path so transitive imports (e.g. jspdf pulls in
-        // fflate) land in the expected chunk rather than fragmenting
-        // across a dozen tiny files.
-        manualChunks(id) {
-          if (id.includes('node_modules/recharts')) return 'vendor-recharts';
-          if (id.includes('node_modules/html2canvas')) return 'vendor-pdf';
-          if (id.includes('node_modules/jspdf')) return 'vendor-pdf';
-          return undefined;
-        },
+        // No manualChunks. The earlier recharts/pdf split looked good on
+        // paper but Rollup made every route chunk, the entry included,
+        // import both vendor chunks, so anonymous visitors preloaded
+        // charts and PDF code they never used. Letting Rollup split on
+        // dynamic-import boundaries keeps those libraries inside the
+        // routes that need them.
       },
     },
   },

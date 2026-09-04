@@ -1,4 +1,3 @@
-import posthog from 'posthog-js';
 import { trackEvent } from '@/lib/telemetry';
 
 /**
@@ -24,15 +23,55 @@ const API_HOST = import.meta.env.VITE_POSTHOG_HOST || 'https://us.i.posthog.com'
 // Whether PostHog is actually initialized, other modules check this before
 // calling into the client to avoid a hard dependency in tests / local dev.
 let initialized = false;
+let posthog = null;
+let loading = null;
+
+// Calls made before the SDK has arrived are queued and replayed once it
+// has, so the first pageview and any early product events are not lost.
+const pending = [];
+function withClient(fn) {
+  if (initialized && posthog) {
+    try {
+      fn(posthog);
+    } catch {
+      // never let analytics break the app
+    }
+    return;
+  }
+  if (API_KEY && pending.length < 50) pending.push(fn);
+}
+
+// Run `fn` after the page has painted. posthog-js is about 150 KB, and
+// nothing about analytics needs to be on the critical path.
+function afterFirstPaint(fn) {
+  const schedule = () => {
+    if ('requestIdleCallback' in window) window.requestIdleCallback(fn, { timeout: 4000 });
+    else window.setTimeout(fn, 1500);
+  };
+  if (document.readyState === 'complete') schedule();
+  else window.addEventListener('load', schedule, { once: true });
+}
 
 export function initPostHog() {
-  if (initialized) return;
-  if (!API_KEY) {
+  if (initialized || loading) return;
+  if (!API_KEY || typeof window === 'undefined') {
     // Intentionally quiet, noisy warnings in local dev are annoying.
     return;
   }
+  afterFirstPaint(() => {
+    loading = import('posthog-js')
+      .then(({ default: ph }) => {
+        initClient(ph);
+      })
+      .catch((err) => {
+        console.warn('[posthog] failed to load', err);
+      });
+  });
+}
+
+function initClient(ph) {
   try {
-    posthog.init(API_KEY, {
+    ph.init(API_KEY, {
       api_host: API_HOST,
       // SPAs need manual pageview capture (we do it in PostHogPageTracker).
       capture_pageview: false,
@@ -49,43 +88,44 @@ export function initPostHog() {
       disable_session_recording: true,
       // Honor Do-Not-Track headers on user browsers.
       respect_dnt: true,
-      loaded: (ph) => {
-        if (import.meta.env.DEV) ph.debug(false);
+      loaded: (client) => {
+        if (import.meta.env.DEV) client.debug(false);
       },
     });
+    posthog = ph;
     initialized = true;
+    while (pending.length) {
+      const fn = pending.shift();
+      try {
+        fn(ph);
+      } catch {
+        // ignore
+      }
+    }
   } catch (err) {
     console.warn('[posthog] init failed', err);
   }
 }
 
 export function identifyUser(user) {
-  if (!initialized || !user?.email) return;
-  try {
-    posthog.identify(user.email, {
+  if (!user?.email) return;
+  withClient((ph) =>
+    ph.identify(user.email, {
       email: user.email,
       name: user.full_name || null,
       membership_tier: user.membership_tier || 'free',
       role: user.role || 'user',
-    });
-  } catch {}
+    }),
+  );
 }
 
 export function resetUser() {
-  if (!initialized) return;
-  try {
-    posthog.reset();
-  } catch {}
+  withClient((ph) => ph.reset());
 }
 
 export function capturePageview(path) {
-  if (!initialized) return;
-  try {
-    posthog.capture('$pageview', {
-      $current_url: window.location.href,
-      path,
-    });
-  } catch {}
+  const url = typeof window !== 'undefined' ? window.location.href : null;
+  withClient((ph) => ph.capture('$pageview', { $current_url: url, path }));
 }
 
 /**
@@ -106,10 +146,10 @@ export function capturePageview(path) {
 export function captureEvent(name, properties = {}) {
   // Fire-and-forget; trackEvent swallows its own errors.
   trackEvent(name, properties);
-  if (!initialized) return;
-  try {
-    posthog.capture(name, properties);
-  } catch {}
+  withClient((ph) => ph.capture(name, properties));
 }
 
-export { posthog };
+/** The live client, or null until posthog-js has loaded. */
+export function getPostHog() {
+  return initialized ? posthog : null;
+}
