@@ -101,20 +101,23 @@ Deno.serve(async (req: Request) => {
   if (!authHeader.startsWith("Bearer ")) {
     return jsonResponse({ error: "unauthenticated" }, 401);
   }
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    { global: { headers: { Authorization: authHeader } } },
-  );
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  // userClient identifies the caller; admin reads the profile as the
+  // service role so RLS on profiles can never hide the billing columns.
+  const userClient = createClient(supabaseUrl, serviceKey, {
+    global: { headers: { Authorization: authHeader } },
+  });
+  const admin = createClient(supabaseUrl, serviceKey);
   const {
     data: { user },
     error: userErr,
-  } = await supabase.auth.getUser();
+  } = await userClient.auth.getUser();
   if (userErr || !user?.email) {
     return jsonResponse({ error: "unauthenticated" }, 401);
   }
 
-  const { data: profile } = await supabase
+  const { data: profile } = await admin
     .from("profiles")
     .select("stripe_customer_id, subscription_status, membership_billing_cycle")
     .eq("email", user.email)

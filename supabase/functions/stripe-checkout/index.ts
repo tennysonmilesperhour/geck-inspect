@@ -113,6 +113,25 @@ async function stripeRequest(
   return data;
 }
 
+// Reuse an existing Stripe customer for this email before creating one.
+// A failed attempt earlier in the flow (or a lost profile write) must not
+// leave a trail of duplicate customers in Stripe.
+async function findOrCreateCustomer(stripeKey: string, email: string): Promise<string> {
+  const q = new URLSearchParams({ email, limit: "1" });
+  try {
+    const found = await stripeRequest(`/customers?${q}`, "GET", stripeKey);
+    const existing = found?.data?.[0]?.id;
+    if (existing) return existing;
+  } catch (err) {
+    console.warn("customer lookup failed, creating a new one:", (err as Error).message);
+  }
+  const form = new URLSearchParams();
+  form.set("email", email);
+  form.set("metadata[supabase_email]", email);
+  const customer = await stripeRequest("/customers", "POST", stripeKey, form);
+  return customer.id;
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: CORS_HEADERS });
@@ -173,20 +192,28 @@ Deno.serve(async (req: Request) => {
   if (!authHeader.startsWith("Bearer ")) {
     return jsonResponse({ error: "Missing Authorization header" }, 401);
   }
-  const supabase = createClient(
-    Deno.env.get("SUPABASE_URL") ?? "",
-    Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
-    { global: { headers: { Authorization: authHeader } } },
-  );
+  const supabaseUrl = Deno.env.get("SUPABASE_URL") ?? "";
+  const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+  // Two clients on purpose. `userClient` carries the caller's JWT so
+  // getUser() tells us who is asking. `admin` carries no user header, so
+  // its writes run as the service role. Writing through the user-scoped
+  // client made the profile update run as the member, and the
+  // profiles_protect_privileged_columns trigger (correctly) reverts
+  // stripe_customer_id and keeper_trial_used for non-privileged callers,
+  // which silently dropped the customer id after checkout.
+  const userClient = createClient(supabaseUrl, serviceKey, {
+    global: { headers: { Authorization: authHeader } },
+  });
+  const admin = createClient(supabaseUrl, serviceKey);
   const {
     data: { user },
     error: userErr,
-  } = await supabase.auth.getUser();
+  } = await userClient.auth.getUser();
   if (userErr || !user?.email) {
     return jsonResponse({ error: "Not authenticated" }, 401);
   }
 
-  const { data: profile } = await supabase
+  const { data: profile } = await admin
     .from("profiles")
     .select("stripe_customer_id, subscription_status, keeper_trial_used")
     .eq("email", user.email)
@@ -203,15 +230,12 @@ Deno.serve(async (req: Request) => {
 
   let customerId = profile?.stripe_customer_id || null;
   if (!customerId) {
-    const customerForm = new URLSearchParams();
-    customerForm.set("email", user.email);
-    customerForm.set("metadata[supabase_email]", user.email);
-    const customer = await stripeRequest("/customers", "POST", stripeKey, customerForm);
-    customerId = customer.id;
-    await supabase
+    customerId = await findOrCreateCustomer(stripeKey, user.email);
+    const { error: saveErr } = await admin
       .from("profiles")
       .update({ stripe_customer_id: customerId, updated_date: new Date().toISOString() })
       .eq("email", user.email);
+    if (saveErr) console.error("could not save stripe_customer_id:", saveErr.message);
   }
 
   // Trial-period decision tree.
@@ -241,8 +265,12 @@ Deno.serve(async (req: Request) => {
   // set so the report-social-overage cron has a subscription_item to post
   // usage records against. Metered prices do NOT take a quantity field on
   // line_items (the quantity is reported per-period via usage records).
+  // Monthly subscriptions only: the overage price bills monthly, and
+  // Stripe Checkout refuses a session that mixes billing intervals
+  // ("Checkout does not support multiple prices with different billing
+  // intervals"), which made every annual checkout fail.
   const overagePriceId = Deno.env.get("STRIPE_OVERAGE_PRICE_ID");
-  if (overagePriceId) {
+  if (overagePriceId && cycle === "monthly") {
     sessionForm.set("line_items[1][price]", overagePriceId);
   }
 
@@ -267,7 +295,7 @@ Deno.serve(async (req: Request) => {
       sessionForm,
     );
     if (isKeeperPromoTrial) {
-      await supabase
+      await admin
         .from("profiles")
         .update({
           keeper_trial_used: true,
