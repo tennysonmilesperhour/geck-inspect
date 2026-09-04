@@ -496,9 +496,6 @@ function injectNoscriptBody(html, route) {
             <a href="/Marketplace">Marketplace</a>
             <a href="/MarketplaceBuy">Buy</a>
             <a href="/MarketplaceVerification">Verification</a>
-            <a href="/Shipping">Shipping</a>
-            <a href="/Giveaways">Giveaways</a>
-            <a href="/Mentorship">Mentorship</a>
             <a href="/Membership">Pricing</a>
             <a href="/About">About</a>
           </nav>

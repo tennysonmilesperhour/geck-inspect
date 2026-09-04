@@ -26,8 +26,6 @@ Geck Inspect is designed as a definitive reference and working tool for anyone k
 - **Community gallery**, browse photos uploaded by other keepers, filtered by morph and trait
 - **Forum**, discuss husbandry, genetics, breeding, and morph identification
 - **Marketplace**, buy and sell crested geckos from verified keepers
-- **Shipping integration**, planned partnership with Zero's Geckos for temperature-controlled, live-arrival-guaranteed shipping
-- **Giveaways**, create and run crested gecko giveaways with random winner selection
 - **Morph reference guide**, curated entries covering 30+ crested gecko morphs with descriptions, rarity, key features, and breeding info
 - **Quality Scale (Geck Inspect Standard)**, free public 10-point rubric for grading a crested gecko on structure, head, pattern, and color, mapped to four tiers (Pet, Breeder, High-end, Investment) and to live market price bands. Modeled on, and giving credit to, the Gold Standard Gecko Club. Live at https://geckinspect.com/QualityScale.
 - **Genetics calculator**, predict offspring outcomes from parent trait combinations
@@ -214,8 +212,6 @@ Every documented crested gecko morph is also available as a raw, machine-readabl
 - **Quality Scale (Geck Inspect Standard)**: https://geckinspect.com/QualityScale
 - **Community gallery**: https://geckinspect.com/Gallery
 - **Marketplace**: https://geckinspect.com/Marketplace
-- **Shipping (Zero's Geckos partnership)**: https://geckinspect.com/Shipping
-- **Giveaways**: https://geckinspect.com/Giveaways
 - **Terms of service**: https://geckinspect.com/Terms
 - **Privacy policy**: https://geckinspect.com/PrivacyPolicy
 - **Sign in / create account**: https://geckinspect.com/AuthPortal

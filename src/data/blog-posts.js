@@ -1570,7 +1570,7 @@ export const BLOG_POSTS = [
       {
         question: 'Can AI identify crested gecko morphs?',
         answer:
-          'Yes. Geck Inspect offers a free AI morph identification tool that analyzes a photo and classifies primary morph, secondary traits, and base color. Upload a clear dorsal view photo for the best results at geckinspect.com/Recognition.',
+          'Yes. Geck Inspect offers an AI morph identification tool (included with the Keeper and Breeder plans) that analyzes a photo and classifies primary morph, secondary traits, and base color. Upload a clear dorsal view photo for the best results at geckinspect.com/Recognition.',
       },
       {
         question: 'What is the most expensive crested gecko morph?',

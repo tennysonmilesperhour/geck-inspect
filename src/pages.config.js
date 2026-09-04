@@ -72,7 +72,6 @@ const BreedingSeason        = lazy(() => import('./pages/BreedingSeason'));
 const PairingPlanner        = lazy(() => import('./pages/PairingPlanner'));
 const FieldMode             = lazy(() => import('./pages/FieldMode'));
 const Portfolio             = lazy(() => import('./pages/Portfolio'));
-const Mentorship            = lazy(() => import('./pages/Mentorship'));
 const CareGuide             = lazy(() => import('./pages/CareGuide'));
 const CommunityConnect      = lazy(() => import('./pages/CommunityConnect'));
 const Forum                 = lazy(() => import('./pages/Forum'));
@@ -81,7 +80,6 @@ const Gallery               = lazy(() => import('./pages/Gallery'));
 const GeckoDetail           = lazy(() => import('./pages/GeckoDetail'));
 const GeneticCalculatorTool = lazy(() => import('./pages/GeneticCalculatorTool'));
 const GeneticsGuide         = lazy(() => import('./pages/GeneticsGuide'));
-const Giveaways             = lazy(() => import('./pages/Giveaways'));
 const LikedGeckos           = lazy(() => import('./pages/LikedGeckos'));
 const Lineage               = lazy(() => import('./pages/Lineage'));
 const Marketplace           = lazy(() => import('./pages/Marketplace'));
@@ -105,7 +103,6 @@ const ProjectManager        = lazy(() => import('./pages/ProjectManager'));
 const PublicProfile         = lazy(() => import('./pages/PublicProfile'));
 const Recognition           = lazy(() => import('./pages/Recognition'));
 const Settings              = lazy(() => import('./pages/Settings'));
-const Shipping              = lazy(() => import('./pages/Shipping'));
 const TrainModel            = lazy(() => import('./pages/TrainModel'));
 const Training              = lazy(() => import('./pages/Training'));
 
@@ -116,7 +113,6 @@ const BreedingLoans         = lazy(() => import('./pages/BreedingLoans'));
 const GeckAnswers           = lazy(() => import('./pages/GeckAnswers'));
 const BatchHusbandry        = lazy(() => import('./pages/BatchHusbandry'));
 const PrintableWorksheets   = lazy(() => import('./pages/PrintableWorksheets'));
-const BreederShipping       = lazy(() => import('./pages/BreederShipping'));
 const ImageImport           = lazy(() => import('./pages/ImageImport'));
 
 // P11 Quality Scale: public rubric, also resolvable inside the auth shell.
@@ -137,7 +133,6 @@ export const PAGES = {
     "PairingPlanner": PairingPlanner,
     "FieldMode": FieldMode,
     "Portfolio": Portfolio,
-    "Mentorship": Mentorship,
     "CareGuide": CareGuide,
     "CommunityConnect": CommunityConnect,
     "Dashboard": Dashboard,
@@ -147,7 +142,6 @@ export const PAGES = {
     "GeckoDetail": GeckoDetail,
     "GeneticCalculatorTool": GeneticCalculatorTool,
     "GeneticsGuide": GeneticsGuide,
-    "Giveaways": Giveaways,
     "Home": Home,
     "LikedGeckos": LikedGeckos,
     "Lineage": Lineage,
@@ -173,7 +167,6 @@ export const PAGES = {
     "PublicProfile": PublicProfile,
     "Recognition": Recognition,
     "Settings": Settings,
-    "Shipping": Shipping,
     "TrainModel": TrainModel,
     "Training": Training,
     // P2–P8 Feature pages
@@ -183,7 +176,6 @@ export const PAGES = {
     "GeckAnswers": GeckAnswers,
     "BatchHusbandry": BatchHusbandry,
     "PrintableWorksheets": PrintableWorksheets,
-    "BreederShipping": BreederShipping,
     "ImageImport": ImageImport,
     "QualityScale": QualityScale,
     // Social media manager

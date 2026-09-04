@@ -63,7 +63,7 @@ const tiers = [
       'Up to 5 additional reptiles tracked',
       'Basic breeding log (1 active pair)',
       'Weight tracking',
-      '1 AI Morph ID per month',
+      'Morph Guide, genetics calculator, and care guides',
       'Public marketplace browsing',
       'Community forum access',
     ],

@@ -34,14 +34,12 @@ const EXPECTED_FALLBACK = {
     { page_name: 'GeneticsGuide', display_name: 'Genetics Guide', icon: 'Dna', category: 'tools', requires_auth: false, is_enabled: true, order: 4 },
     { page_name: 'Gallery', display_name: 'Image Gallery', icon: 'Images', category: 'tools', requires_auth: false, is_enabled: true, order: 5 },
     { page_name: 'BreederConsultant', display_name: 'AI Consultant', icon: 'FlaskConical', category: 'tools', requires_auth: false, is_enabled: true, order: 6 },
-    { page_name: 'Mentorship', display_name: 'Mentorship', icon: 'GraduationCap', category: 'tools', requires_auth: false, is_enabled: true, order: 6.5 },
     { page_name: 'ProjectManager', display_name: 'Season Planner', icon: 'CalendarDays', category: 'tools', requires_auth: true, is_enabled: true, order: 7 },
   ],
   public: [
     { page_name: 'Dashboard', display_name: 'Dashboard', icon: 'BarChart3', category: 'public', requires_auth: false, is_enabled: true, order: 1 },
     { page_name: 'Marketplace', display_name: 'Marketplace', icon: 'ShoppingCart', category: 'public', requires_auth: false, is_enabled: true, order: 2 },
     { page_name: 'MarketplaceSalesStats', display_name: 'Business Tools', icon: 'BarChart3', category: 'public', requires_auth: true, is_enabled: true, order: 3 },
-    { page_name: 'BreederShipping', display_name: 'Shipping', icon: 'Truck', category: 'public', requires_auth: true, is_enabled: true, order: 4 },
   ],
 };
 
@@ -51,20 +49,20 @@ const EXPECTED_SECTION = {
   BreedingSeason: 'manage', PairingPlanner: 'manage', FieldMode: 'manage', Portfolio: 'manage',
   Lineage: 'manage', Pedigree: 'manage', GeckoDetail: 'manage', AnimalPassport: 'manage',
   ClaimAnimal: 'manage', LikedGeckos: 'manage', ProjectManager: 'manage', MarketplaceSalesStats: 'manage',
-  MyListings: 'manage', BreederShipping: 'manage', Shipping: 'manage',
+  MyListings: 'manage',
   BatchHusbandry: 'manage', Store: 'manage', MarketplaceSell: 'manage', Promote: 'manage',
   Recognition: 'discover', MorphVisualizer: 'discover', MorphGuide: 'discover', MorphGuideSubmission: 'discover',
   GeneticsGuide: 'discover', GeneticCalculatorTool: 'discover', Gallery: 'discover', CareGuide: 'discover',
   CareGuideTopic: 'discover', Forum: 'discover', ForumPost: 'discover', BreederConsultant: 'discover',
-  GeckAnswers: 'discover', Mentorship: 'discover', PrintableWorksheets: 'discover', ImageImport: 'discover',
+  GeckAnswers: 'discover', PrintableWorksheets: 'discover', ImageImport: 'discover',
   Training: 'discover', TrainModel: 'discover', Marketplace: 'discover', MarketplaceBuy: 'discover',
   MarketplaceVerification: 'discover', MarketPricing: 'discover', BreedingROI: 'discover', BreedingLoans: 'discover',
-  Giveaways: 'discover', Breeder: 'discover',
+  Breeder: 'discover',
 };
 
 const EXPECTED_BREEDER_ONLY = [
   'Breeding', 'BreedingSeason', 'PairingPlanner', 'Portfolio', 'BreedingPairs', 'Lineage',
-  'Pedigree', 'Promote', 'MarketplaceSalesStats', 'MyListings', 'BreederShipping',
+  'Pedigree', 'Promote', 'MarketplaceSalesStats', 'MyListings',
   'BatchHusbandry', 'ProjectManager', 'MorphMarketExport', 'BreedingROI',
   'BreedingLoans',
 ];

@@ -17,7 +17,6 @@ import {
   ArrowRight,
   Egg,
   CalendarDays,
-  Truck,
   Shield,
   ShieldCheck,
   Scale,
@@ -162,11 +161,6 @@ const INNOVATIVE_FEATURES = [
     desc: 'Every photo stays with its gecko. Watch a hatchling morph out into adulthood in one auto-advancing slideshow. This is the history a buyer actually wants to see.',
   },
   {
-    icon: Truck,
-    title: 'Built-in Reptile Shipping',
-    desc: 'Breeder-tier accounts ship through integrated reptile-safe couriers. Rates, labels, and buyer notifications without a separate account or portal.',
-  },
-  {
     icon: Shield,
     title: 'Verified Expert Network',
     desc: 'Ask vetted breeders and morph specialists for IDs, breeding advice, or project planning. Expert status is earned through real contributions, not purchased.',
@@ -211,7 +205,7 @@ const LANDING_FAQS = [
   },
   {
     q: 'What is Geck Inspect?',
-    a: 'Geck Inspect is a free web platform built specifically for crested gecko keepers and breeders. It combines collection management, breeding planning, AI-powered morph identification, lineage tracking, a community gallery, a forum, and a verified marketplace into one tool. It is used by hobbyists with a single gecko through commercial breeders managing hundreds of animals.',
+    a: 'Geck Inspect is a web platform built specifically for crested gecko keepers and breeders, free to start. It combines collection management, breeding planning, AI-powered morph identification (Keeper plan and up), lineage tracking, a community gallery, a forum, and a verified marketplace into one tool. It is used by hobbyists with a single gecko through commercial breeders managing hundreds of animals.',
   },
   {
     q: 'How do I track my crested gecko collection?',
@@ -384,12 +378,6 @@ export default function Home() {
             </Link>
             <Link to="/Membership" className="hover:text-emerald-300 transition-colors">
               Pricing
-            </Link>
-            <Link to={createPageUrl('Shipping')} className="hover:text-emerald-300 transition-colors">
-              Shipping
-            </Link>
-            <Link to={createPageUrl('Giveaways')} className="hover:text-emerald-300 transition-colors">
-              Giveaways
             </Link>
           </nav>
           <Link

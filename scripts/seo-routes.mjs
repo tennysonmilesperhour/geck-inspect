@@ -250,7 +250,7 @@ export const STATIC_ROUTES = [
     meta: {
       title: 'Marketplace Verification & Trust, Geck Inspect',
       description:
-        "How Geck Inspect verifies sellers on the crested gecko marketplace, the Zero's Geckos shipping partnership, buyer protections, and what to check before buying.",
+        "How Geck Inspect verifies sellers on the crested gecko marketplace, how live animals should be shipped, buyer protections, and what to check before buying.",
     },
   },
   {
@@ -392,17 +392,6 @@ export const STATIC_ROUTES = [
     },
   },
   {
-    path: '/Mentorship',
-    priority: 0.7,
-    changefreq: 'weekly',
-    lastmod: dateOf('src/pages/Mentorship.jsx'),
-    meta: {
-      title: 'Crested Gecko Mentorship, Consults & Courses',
-      description:
-        'Learn from crested gecko breeders who have been there: one-on-one mentorship, genetics consults, and courses on Lilly White lines, Axanthic projects, structure judging, and breeding season planning.',
-    },
-  },
-  {
     path: '/MorphVisualizer',
     priority: 0.7,
     changefreq: 'monthly',
@@ -466,28 +455,6 @@ export const STATIC_ROUTES = [
       title: 'Buy Crested Geckos, Marketplace',
       description:
         'Browse crested geckos for sale from trusted breeders. Filter by morph, sex, age, and price to find your next gecko.',
-    },
-  },
-  {
-    path: '/Shipping',
-    priority: 0.8,
-    changefreq: 'monthly',
-    lastmod: dateOf('src/pages/Shipping.jsx'),
-    meta: {
-      title: 'Crested Gecko Shipping, Live Arrival Guaranteed',
-      description:
-        "Book reptile-safe, live-arrival-guaranteed shipping for crested geckos from inside your Geck Inspect collection through the Zero's Geckos Shipping Project.",
-    },
-  },
-  {
-    path: '/Giveaways',
-    priority: 0.8,
-    changefreq: 'daily',
-    lastmod: dateOf('src/pages/Giveaways.jsx'),
-    meta: {
-      title: 'Crested Gecko Giveaways',
-      description:
-        'Active and upcoming crested gecko giveaways hosted by breeders on Geck Inspect. Browse, enter, and track winners.',
     },
   },
   {

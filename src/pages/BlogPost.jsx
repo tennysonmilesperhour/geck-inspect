@@ -362,8 +362,8 @@ export default function BlogPost() {
             Track every gecko, pairing, and lineage on Geck Inspect
           </h2>
           <p className="text-slate-300 mb-5 leading-relaxed">
-            Free collection management with breeding planning, AI morph identification,
-            multi-generation lineage, and Punnett-square genetics calculation.
+            Free collection management with breeding planning, multi-generation lineage,
+            and Punnett-square genetics calculation. AI morph identification on paid plans.
           </p>
           <Link to={createPageUrl('AuthPortal')}>
             <Button size="lg" className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold shadow-lg shadow-emerald-500/30">

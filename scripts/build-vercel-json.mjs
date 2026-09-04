@@ -81,8 +81,6 @@ const CASE_REDIRECTS = [
   { from: '/gallery', to: '/Gallery' },
   { from: '/forum', to: '/Forum' },
   { from: '/communityconnect', to: '/CommunityConnect' },
-  { from: '/shipping', to: '/Shipping' },
-  { from: '/giveaways', to: '/Giveaways' },
   { from: '/geckanswers', to: '/GeckAnswers' },
   { from: '/membership', to: '/Membership' },
   { from: '/about', to: '/About' },
@@ -103,6 +101,15 @@ const CASE_REDIRECTS = [
 const GONE_REDIRECTS = [
   { from: '/Morphs', to: '/MorphGuide' },
   { from: '/morphs', to: '/MorphGuide' },
+  // Hidden until finished (Sept 2026): unfinished surfaces next to paid
+  // ones cost trust. Send stale links home.
+  { from: '/Mentorship', to: '/' },
+  { from: '/mentorship', to: '/' },
+  { from: '/Shipping', to: '/' },
+  { from: '/shipping', to: '/' },
+  { from: '/Giveaways', to: '/' },
+  { from: '/giveaways', to: '/' },
+  { from: '/BreederShipping', to: '/' },
 ];
 
 /*

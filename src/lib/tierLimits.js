@@ -37,7 +37,11 @@ export const TIER_LIMITS = {
     maxStorageBytes: 1 * GB,
     maxCollaborators: 1,
     monthlySocialPosts: 1,
-    monthlyMorphIDCredits: 1,
+    // Free accounts get no AI Morph ID. It is the headline paid feature and
+    // each call costs real money; the free tier gets the Morph Guide,
+    // calculator and care guides instead. Mirrored server-side in
+    // consume_morph_id_credit() and recognize-gecko-morph.
+    monthlyMorphIDCredits: 0,
     // June 2026 feature wave, all HARD monthly caps metered through the
     // feature_usage ledger (consume_feature_credit RPC). null = unlimited.
     monthlyAssistantMessages: 10,   // GeckGenius agentic chat (Claude API)

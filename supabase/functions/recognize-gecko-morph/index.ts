@@ -259,7 +259,7 @@ function json(body: unknown, status = 200) {
 // src/lib/tierLimits.js#monthlyMorphIDCredits. Unknown / missing tier
 // falls back to `free`, matching the frontend's tierOf() helper.
 const TIER_MORPH_ID_CREDITS: Record<string, number> = {
-  free: 1,
+  free: 0,
   keeper: 3,
   breeder: 6,
   enterprise: 15,

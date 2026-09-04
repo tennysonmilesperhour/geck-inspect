@@ -202,6 +202,41 @@
       "permanent": true
     },
     {
+      "source": "/Mentorship",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/mentorship",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/Shipping",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/shipping",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/Giveaways",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/giveaways",
+      "destination": "/",
+      "permanent": true
+    },
+    {
+      "source": "/BreederShipping",
+      "destination": "/",
+      "permanent": true
+    },
+    {
       "source": "/morph-guide",
       "destination": "/MorphGuide",
       "permanent": true
@@ -314,16 +349,6 @@
     {
       "source": "/communityconnect",
       "destination": "/CommunityConnect",
-      "permanent": true
-    },
-    {
-      "source": "/shipping",
-      "destination": "/Shipping",
-      "permanent": true
-    },
-    {
-      "source": "/giveaways",
-      "destination": "/Giveaways",
       "permanent": true
     },
     {

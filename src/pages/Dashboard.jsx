@@ -368,9 +368,9 @@ export default function Dashboard() {
                                             Add your first gecko
                                         </Button>
                                     </Link>
-                                    <Link to={createPageUrl('Recognition')}>
+                                    <Link to={createPageUrl('MorphGuide')}>
                                         <Button variant="outline" className="border-slate-600 bg-slate-900/60 text-slate-100 hover:bg-slate-800">
-                                            Identify a morph from a photo
+                                            Browse the Morph Guide
                                         </Button>
                                     </Link>
                                     <Link to={createPageUrl('CareGuide')}>

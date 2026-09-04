@@ -51,12 +51,9 @@ import Home from './pages/Home';
 // crawlers and erase the SEO investment in that page's content +
 // structured data, so move pages OUT of this list carefully.
 const Breeder              = lazy(() => import('./pages/Breeder'));
-const Shipping             = lazy(() => import('./pages/Shipping'));
-const Giveaways            = lazy(() => import('./pages/Giveaways'));
 const MorphDetail          = lazy(() => import('./pages/MorphDetail'));
 const ProjectLineDetail    = lazy(() => import('./pages/ProjectLineDetail'));
 const MorphGuideList       = lazy(() => import('./pages/MorphGuide'));
-const MentorshipPublic     = lazy(() => import('./pages/Mentorship'));
 // Programmatic taxonomy hubs: /MorphGuide/category/<id> and
 // /MorphGuide/inheritance/<id>. Two routes, one module, the module
 // exports named components per variant so each route resolves its
@@ -263,9 +260,12 @@ const AuthenticatedApp = () => {
           <Route path="/" element={<Home />} />
           <Route path="/Home" element={<Home />} />
           <Route path="/Breeder" element={<Breeder />} />
-          <Route path="/Shipping" element={<Shipping />} />
-          <Route path="/Giveaways" element={<Giveaways />} />
-          <Route path="/Mentorship" element={<MentorshipPublic />} />
+          {/* Mentorship, Shipping and Giveaways are hidden until they are
+              finished. vercel.json 301s these at the edge; this covers
+              client-side navigation from stale links. */}
+          <Route path="/Shipping" element={<Navigate to="/" replace />} />
+          <Route path="/Giveaways" element={<Navigate to="/" replace />} />
+          <Route path="/Mentorship" element={<Navigate to="/" replace />} />
           <Route path="/MorphGuide" element={<MorphGuideList />} />
           <Route path="/MorphGuide/category/:categoryId" element={<MorphCategoryHub />} />
           <Route path="/MorphGuide/inheritance/:inheritanceId" element={<MorphInheritanceHub />} />

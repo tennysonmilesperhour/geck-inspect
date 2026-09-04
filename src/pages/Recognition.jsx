@@ -10,6 +10,8 @@ import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { recognizeGeckoMorph } from '../functions/recognizeGeckoMorph';
 import { useAuth } from '@/lib/AuthContext';
+import { getTierLimits, TIER_LIMITS } from '@/lib/tierLimits';
+import { TIER_PRICING } from '@/lib/stripe-config';
 import { buildGeckoDraftFromAnalysis } from '@/lib/morphIdDraft';
 import { captureEvent } from '@/lib/posthog';
 
@@ -63,6 +65,11 @@ export default function Recognition() {
   const [savedOnce, setSavedOnce] = useState(false);
 
   const primaryUrl = imageUrls[0] || null;
+
+  // Free accounts have no MorphID credits. Show the upgrade card up front
+  // instead of an uploader that ends in a 402 after the photo is chosen.
+  const morphIdLocked =
+    Boolean(user) && !isGuest && !isAdmin && getTierLimits(user).monthlyMorphIDCredits === 0;
 
   const reset = () => {
     setImageUrls([]);
@@ -150,6 +157,28 @@ export default function Recognition() {
 
         <PhotoTipsCard />
 
+        {morphIdLocked && (
+          <Card className="bg-amber-950/40 border-amber-800">
+            <CardContent className="p-6 flex flex-col items-center text-center gap-3">
+              <Lock className="w-6 h-6 text-amber-300" />
+              <p className="font-semibold text-amber-100">AI Morph ID is included with Keeper and up</p>
+              <p className="text-sm text-amber-200/80 max-w-md">
+                Keeper is {TIER_PRICING.keeper.monthly.price} a month and includes {TIER_LIMITS.keeper.monthlyMorphIDCredits} identifications
+                a month. Free accounts can browse the Morph Guide, use the genetics calculator, and track their collection.
+              </p>
+              <div className="flex flex-wrap gap-3 justify-center">
+                <Button className="bg-emerald-600 hover:bg-emerald-500 text-white" onClick={() => navigate('/Membership')}>
+                  See plans
+                </Button>
+                <Button variant="outline" className="border-slate-600 text-slate-200" onClick={() => navigate('/MorphGuide')}>
+                  Open the Morph Guide
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+        )}
+
+        {!morphIdLocked && (
         <Card className="bg-slate-900 border-slate-700">
           <CardContent className="p-6 space-y-5">
             <MultiPhotoUploader
@@ -220,6 +249,7 @@ export default function Recognition() {
             )}
           </CardContent>
         </Card>
+        )}
 
         <CommunityTrainingStats />
 

@@ -279,25 +279,19 @@ export const NAV_REGISTRY = [
     sidebar: { category: 'collection', order: 6, label: 'Supplies', icon: 'Store', requiresAuth: false } },
   { page: 'BreederConsultant', section: 'discover',
     sidebar: { category: 'tools', order: 6, label: 'AI Consultant', icon: 'FlaskConical', requiresAuth: false } },
-  { page: 'Mentorship', section: 'discover',
-    sidebar: { category: 'tools', order: 6.5, label: 'Mentorship', icon: 'GraduationCap', requiresAuth: false } },
   { page: 'MarketplaceSalesStats', section: 'manage', breederOnly: true,
     sidebar: { category: 'public', order: 3, label: 'Business Tools', icon: 'BarChart3', requiresAuth: true } },
-  { page: 'BreederShipping', section: 'manage', breederOnly: true,
-    sidebar: { category: 'public', order: 4, label: 'Shipping', icon: 'Truck', requiresAuth: true } },
 
   // ----- Section-only pages (routed, section-assigned, no sidebar/palette) -----
   { page: 'GeckoDetail', section: 'manage' },
   { page: 'AnimalPassport', section: 'manage' },
   { page: 'ClaimAnimal', section: 'manage' },
-  { page: 'Shipping', section: 'manage' },
   { page: 'MorphMarketExport', breederOnly: true },
   { page: 'CareGuideTopic', section: 'discover' },
   { page: 'ForumPost', section: 'discover' },
   { page: 'TrainModel', section: 'discover' },
   { page: 'MarketplaceVerification', section: 'discover' },
   { page: 'MarketPricing', section: 'discover' },
-  { page: 'Giveaways', section: 'discover' },
   { page: 'Breeder', section: 'discover' },
 ];
 

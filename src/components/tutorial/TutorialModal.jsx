@@ -136,10 +136,6 @@ const STEP_BLURBS = {
         title: 'My Listings',
         body: 'Manage every active listing in one place, edit price, swap photos, mark as sold, or unlist with one click.',
     },
-    BreederShipping: {
-        title: 'Shipping',
-        body: 'Manage shipping labels, box inventory, heat/cold packs, and live-arrival guarantees for animals you sell. Integrates with the marketplace once a buyer commits.',
-    },
     BreedingROI: {
         title: 'Breeding ROI',
         body: 'Project the cost-versus-revenue of a planned breeding season, including food, equipment depreciation, and a per-clutch revenue estimate based on morph rarity.',

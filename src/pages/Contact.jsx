@@ -108,7 +108,7 @@ export default function Contact() {
           <div className="space-y-4 text-slate-300 leading-relaxed">
             <div>
               <h3 className="font-semibold text-slate-100 mb-1">Is Geck Inspect really free?</h3>
-              <p className="text-sm text-slate-400">Yes. Every feature (collection management, breeding planning, AI morph identification, lineage tracking, the marketplace) is free to use.</p>
+              <p className="text-sm text-slate-400">The core is free: collection management, breeding planning, lineage tracking, the marketplace and the community. AI morph identification and higher collection limits come with the Keeper and Breeder plans.</p>
             </div>
             <div>
               <h3 className="font-semibold text-slate-100 mb-1">Do you support species other than crested geckos?</h3>

@@ -18,7 +18,7 @@ const VERIFICATION_JSON_LD = [
     '@id': `${URL}#article`,
     headline: 'Geck Inspect Marketplace, Breeder Verification & Trust Policy',
     description:
-      'How Geck Inspect verifies breeders and marketplace sellers, the Zero\'s Geckos shipping partnership, buyer protections, and what to expect when buying or selling a crested gecko through the platform.',
+      'How Geck Inspect verifies breeders and marketplace sellers, how live animals should be shipped, buyer protections, and what to expect when buying or selling a crested gecko through the platform.',
     url: URL,
     author: authorSchema(),
     reviewedBy: authorSchema(),
@@ -57,10 +57,10 @@ const VERIFICATION_JSON_LD = [
       },
       {
         '@type': 'Question',
-        name: 'What is the Zero\'s Geckos shipping partnership?',
+        name: 'How should a crested gecko be shipped?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: 'Geck Inspect partners with Zero\'s Geckos, a specialty reptile shipping service, to offer temperature-controlled overnight shipping with live-arrival guarantees on marketplace purchases. Sellers who opt in to Zero\'s Geckos shipping follow standardized packing protocols (insulated box, heat or cold pack as appropriate, ventilation) and the animal is tracked door-to-door.',
+          text: 'Only with a specialty reptile shipper offering temperature-controlled overnight delivery and a written live-arrival guarantee. The seller packs the animal in an insulated box with a heat or cold pack matched to the forecast, with ventilation and padding, and the box is tracked door to door. Geck Inspect does not ship animals itself; confirm the seller\'s live-arrival policy in writing before paying.',
         },
       },
       {
@@ -108,7 +108,7 @@ export default function MarketplaceVerification() {
     <PublicPageShell>
       <Seo
         title="Marketplace Verification & Trust"
-        description="How Geck Inspect verifies marketplace sellers, the Zero's Geckos shipping partnership, buyer protections, and what to expect when buying or selling a crested gecko on the platform."
+        description="How Geck Inspect verifies marketplace sellers, how live animals should be shipped, buyer protections, and what to expect when buying or selling a crested gecko on the platform."
         path={PATH}
         type="article"
         modifiedTime={EDITORIAL.modified}
@@ -116,7 +116,6 @@ export default function MarketplaceVerification() {
           'crested gecko marketplace',
           'gecko breeder verification',
           'reptile shipping guarantee',
-          "Zero's Geckos shipping",
           'safe gecko marketplace',
           'buy crested gecko online',
         ]}
@@ -141,7 +140,7 @@ export default function MarketplaceVerification() {
           Marketplace Verification & Trust
         </h1>
         <p className="text-lg text-slate-300 leading-relaxed max-w-3xl mb-3">
-          How we surface trust signals on marketplace listings, the Zero's Geckos shipping partnership, what Geck Inspect is and isn't responsible for, and how to evaluate a seller before you buy.
+          How we surface trust signals on marketplace listings, how live animals should be shipped, what Geck Inspect is and isn't responsible for, and how to evaluate a seller before you buy.
         </p>
         <p className="text-xs text-slate-500 mb-10">{bylineText(PATH)}</p>
 
@@ -155,15 +154,15 @@ export default function MarketplaceVerification() {
             </p>
           </Section>
 
-          <Section icon={Package} title="Zero's Geckos shipping partnership">
+          <Section icon={Package} title="Shipping live animals safely">
             <p>
-              Live animal shipping is the highest-risk step in a marketplace transaction. Geck Inspect partners with <strong className="text-slate-100">Zero's Geckos</strong>, a specialty reptile shipping service, so sellers can offer standardized temperature-controlled overnight shipping with a live-arrival guarantee.
+              Live animal shipping is the highest-risk step in a marketplace transaction. Ask the seller to use a specialty reptile shipper with temperature-controlled overnight delivery and a written live-arrival guarantee. Geck Inspect does not ship animals and does not act as a carrier.
             </p>
             <p>
-              Sellers who opt in follow a standard packing protocol (insulated box, heat or cold pack appropriate to forecast temperatures, ventilation, stability). The animal is tracked door-to-door. If the worst happens and the animal arrives unhealthy despite proper packing, the Zero's Geckos guarantee engages.
+              A sound packing protocol is an insulated box, a heat or cold pack matched to the forecast at both ends, ventilation, and padding that keeps the deli cup from shifting. The box should be tracked door to door and someone should be home to receive it.
             </p>
             <p className="text-sm text-slate-400">
-              Sellers who ship independently set their own policies. Always confirm the live-arrival policy with your seller in writing before paying.
+              Sellers set their own shipping policies. Always confirm the live-arrival policy with your seller in writing before paying.
             </p>
           </Section>
 
@@ -181,7 +180,7 @@ export default function MarketplaceVerification() {
               <li>Ask for the hatch date, current weight, last feeding, and last shed, the seller has these on hand in their Geck Inspect tracking.</li>
               <li>Check the lineage view for sire/dam + multi-generation provenance.</li>
               <li>Request recent, date-stamped photos of the specific animal.</li>
-              <li>Confirm the shipping option (Zero's Geckos or independent) and the live-arrival policy in writing before paying.</li>
+              <li>Confirm the shipping method, the live-arrival guarantee, and who pays for shipping in writing before sending money.</li>
               <li>Verify that the seller is shipping to your jurisdiction, some states and countries have restrictions on reptile imports.</li>
               <li>Prefer sellers with visible account history and lineage depth over new accounts.</li>
             </ul>

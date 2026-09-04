@@ -68,7 +68,7 @@ export default function About() {
           We built the platform we wanted as breeders
         </h1>
         <p className="text-lg text-slate-300 leading-relaxed max-w-3xl">
-          Geck Inspect is a free, professional web platform for crested gecko (<em>Correlophus ciliatus</em>) breeders and keepers. It combines collection management, breeding planning, AI-powered morph identification, multi-generation lineage tracking, and a verified community, in one place, built specifically for this species.
+          Geck Inspect is a professional web platform (free to start) for crested gecko (<em>Correlophus ciliatus</em>) breeders and keepers. It combines collection management, breeding planning, AI-powered morph identification on paid plans, multi-generation lineage tracking, and a verified community, in one place, built specifically for this species.
         </p>
 
         <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-6 border-y border-slate-800/50 py-6">
