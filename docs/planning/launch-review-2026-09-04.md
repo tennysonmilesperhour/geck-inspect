@@ -2,9 +2,9 @@
 
 Read-only review of the whole repo and the live Supabase and Vercel setup, done the day before the 5 September launch, followed by five batches of fixes (A to E) pushed straight to main the same night. This file is the handoff copy of the interactive report so any session (desktop app, web, or the terminal CLI) can pick the work up. The interactive version, with the same data, is at https://claude.ai/code/artifact/6136b837-8feb-4df0-806b-f375095dc677.
 
-Totals: 62 findings. 49 fixed, 5 partly fixed, 8 open.
+Totals: 62 findings. 51 closed (fixed, done, or decided), 7 partly fixed, 4 open.
 
-Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the database or an edge function, applied to production and verified. "Partly fixed" lists what is left inside the status text. Anything else is untouched.
+Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the database or an edge function, applied to production and verified. "Partly fixed" and "Mostly fixed" list what is left inside the status text. "Confirmed" means verified real and untouched.
 
 ## How to continue
 
@@ -13,23 +13,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 3. Database changes go through a timestamped file in `supabase/migrations/` plus a by-hand apply, as described in `docs/MIGRATIONS.md`. Edge functions are deployed from the merged repo source.
 4. When a finding closes, update its status here and in ROADMAP.md.
 
-## Open (8)
-
-### F30: Hero image is a 2,400 px external hotlink with no srcset; logo and icons are oversized
-
-- Severity: high. Area: Performance. Effort: S.
-- Where: src/pages/Home.jsx:47 and :371; public/logo.png (204 KB at 40 px); public/icon-512.png (563 KB)
-- Why it matters: Phones download the desktop image from a third-party host, and the request is only discovered after React renders.
-- Proposed fix: Self-host WebP at three widths with srcset and sizes, add width and height, resize the logo and icons.
-- Status: Mostly fixed (batch B): hero has a 640 to 2400 srcset with a matching preload, header logo is an 8 KB 96 px file, icon-512 cut from 563 KB to 151 KB. Self-hosting the hero as WebP is still open (this sandbox cannot fetch Unsplash)
-
-### F34: Non-JS crawlers see thin shells and cannot reach 134 child pages
-
-- Severity: high. Area: SEO. Effort: M.
-- Where: scripts/prerender.mjs:444 (hub shells link only to ten hubs); noscript body about 1,400 characters
-- Why it matters: GPTBot, ClaudeBot, and CCBot do not run JavaScript. They see one sentence per morph, two care paragraphs, and no route to the topic pages.
-- Proposed fix: Add child links to hub shells; ship the first two or three real paragraphs, the FAQ block, and page JSON-LD in the static HTML.
-- Status: Mostly fixed (batch D): hub shells list every child page; prerendered orphans 155 to 24. Fuller body text and page JSON-LD in the static HTML still open
+## Open (4)
 
 ### F60: Production builds failed on every push from 15 to 29 August and nobody was told
 
@@ -55,22 +39,6 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Proposed fix: Apply the migration (after F33's baseline) or remove the UI.
 - Status: Confirmed live
 
-### F48: Enterprise is 'coming soon' in the UI but purchasable in JSON-LD; lifetime tiers have no price id
-
-- Severity: medium. Area: Monetization. Effort: S.
-- Where: src/pages/Membership.jsx:221; src/lib/stripe-config.js:83 and :88
-- Why it matters: Structured data promises what the page does not sell.
-- Proposed fix: Filter offers to combos with a price_id (the code already does for Keeper and Breeder) and align the copy.
-- Status: Mostly moot: JSON-LD offers already excluded Enterprise; Enterprise stays visibly Coming Soon on the pricing page
-
-### F49: Free tier gives one AI morph ID per month and guests cannot try it
-
-- Severity: medium. Area: Retention. Effort: S.
-- Where: src/lib/tierLimits.js:44
-- Why it matters: The headline hook is spent on the first try, and the demo never shows it.
-- Proposed fix: Three IDs in the first week for new accounts, one server-metered ID for guests.
-- Status: Decided differently: free tier gets zero credits (server-enforced, upgrade card before upload); paid tiers keep 3, 6 and 15
-
 ### F61: A newer commit on main adds three large unapplied migrations (7,900 lines, 55 tables in a geck_data schema)
 
 - Severity: medium. Area: Ops. Effort: S.
@@ -79,7 +47,15 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Proposed fix: Leave it unapplied until after launch week; apply it in a quiet window with a fresh backup taken first.
 - Status: Confirmed
 
-## Partly fixed (5)
+## Partly fixed (7)
+
+### F30: Hero image is a 2,400 px external hotlink with no srcset; logo and icons are oversized
+
+- Severity: high. Area: Performance. Effort: S.
+- Where: src/pages/Home.jsx:47 and :371; public/logo.png (204 KB at 40 px); public/icon-512.png (563 KB)
+- Why it matters: Phones download the desktop image from a third-party host, and the request is only discovered after React renders.
+- Proposed fix: Self-host WebP at three widths with srcset and sizes, add width and height, resize the logo and icons.
+- Status: Mostly fixed (batch B): hero has a 640 to 2400 srcset with a matching preload, header logo is an 8 KB 96 px file, icon-512 cut from 563 KB to 151 KB. Self-hosting the hero as WebP is still open (this sandbox cannot fetch Unsplash)
 
 ### F33: Production schema has drifted from the repo and the deploy scripts would replay stale SQL
 
@@ -88,6 +64,14 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Why it matters: 26 live migrations have no repo file, 11 repo files were never applied (referral program, the email trigger). Running the scripts would overwrite the vault-based notification dispatcher and silently stop all email and push.
 - Proposed fix: Do not run the scripts this week; baseline with supabase db pull, migration repair, archive orphans, regenerate the snapshot.
 - Status: Partly fixed 4 Sep: deploy scripts no longer run db push, four never-applied files archived under _never_applied with a README, docs/MIGRATIONS.md explains the drift and the workflow. Snapshot regeneration and a full baseline still open
+
+### F34: Non-JS crawlers see thin shells and cannot reach 134 child pages
+
+- Severity: high. Area: SEO. Effort: M.
+- Where: scripts/prerender.mjs:444 (hub shells link only to ten hubs); noscript body about 1,400 characters
+- Why it matters: GPTBot, ClaudeBot, and CCBot do not run JavaScript. They see one sentence per morph, two care paragraphs, and no route to the topic pages.
+- Proposed fix: Add child links to hub shells; ship the first two or three real paragraphs, the FAQ block, and page JSON-LD in the static HTML.
+- Status: Mostly fixed (batch D): hub shells list every child page; prerendered orphans 155 to 24. Fuller body text and page JSON-LD in the static HTML still open
 
 ### F43: No Content-Security-Policy despite five third-party script origins
 
@@ -121,7 +105,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Proposed fix: capture=environment on photo inputs, alt text pass, reduced-motion guard on framer animations, verify HEIC on a real iPhone.
 - Status: Partly fixed 4 Sep: global prefers-reduced-motion rule, missing alt on MarketplaceSalesStats. Touch-target and contrast items still open
 
-## Fixed (49)
+## Closed (51)
 
 | ID | Severity | Area | Finding | Effort | Status |
 |---|---|---|---|---|---|
@@ -166,6 +150,8 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 | F42 | medium | Security | Privacy policy does not disclose GA4, PostHog, or the Robauto pixel | S | Fixed (batch C): privacy policy names Supabase, Vercel, Stripe, RevenueCat, Anthropic, Resend, GA4, PostHog and Robauto with what each receives |
 | F44 | medium | Security | Base44-era VisualEditAgent ships to production with its origin check commented out | S | Fixed (batch A): dev-only lazy mount, not in the production bundle |
 | F45 | medium | Ops | error_logs accepts anonymous inserts with no throttle | S | Fixed (batch A): client dedup and 10/min budget, plus a database trigger capping 20 per reporter and 200 overall per minute |
+| F48 | medium | Monetization | Enterprise is 'coming soon' in the UI but purchasable in JSON-LD; lifetime tiers have no price id | S | Mostly moot: JSON-LD offers already excluded Enterprise; Enterprise stays visibly Coming Soon on the pricing page |
+| F49 | medium | Retention | Free tier gives one AI morph ID per month and guests cannot try it | S | Decided differently: free tier gets zero credits (server-enforced, upgrade card before upload); paid tiers keep 3, 6 and 15 |
 | F50 | medium | Landing page | Hero paragraph lists seven features in gradient text; My Geckos empty state has no button | S | Fixed (batch D): two-sentence hero in plain text; Add your first gecko button in the My Geckos empty state |
 | F51 | medium | Strategy | Facades a user can reach: passport claim is a browser alert; Mentorship, Shipping, Giveaways, Business Tools previews | S | Fixed: Mentorship, Shipping, BreederShipping and Giveaways hidden from nav, routes, sitemap, landing and llms.txt; stale links 301 home; partnership copy removed |
 | F53 | medium | SEO | Metadata drift: hreflang points to the homepage everywhere, sitemap lastmod is the build date, llms.txt is stale, schema claims a Twitter handle and search action that do not exist, parsers fail silently | S | Fixed (batch C): lastmod from git content dates, llms.txt stamped at build, site-wide hreflang removed, placeholder Twitter handle removed, parsers throw on zero entries |
