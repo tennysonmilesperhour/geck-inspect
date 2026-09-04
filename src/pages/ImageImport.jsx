@@ -1,6 +1,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { User, Gecko, BreedingPlan, Egg } from '@/entities/all';
 import { canUseFeature } from '@/components/subscription/PlanLimitChecker';
+import { resolveTier } from '@/lib/tierLimits';
 import { supabase } from '@/lib/supabaseClient';
 import { uploadFile } from '@/lib/uploadFile';
 import { Button } from '@/components/ui/button';
@@ -14,7 +15,33 @@ import { todayLocalISO } from '@/lib/dateUtils';
 
 const LoginPortal = React.lazy(() => import('@/components/auth/LoginPortal'));
 
-const INCLUDED_IMPORTS = 25;
+// Scans per month by plan. One scan is one batch of up to 10 photos. Must
+// match feature_credit_allotments for import_scan (see
+// supabase/migrations/20260905001000_import_scan_allotments.sql); the
+// server enforces the limit, this only drives the copy below.
+const IMPORT_SCANS_PER_MONTH = { breeder: 20, enterprise: 200 };
+
+// supabase.functions.invoke reports every non-2xx as a generic
+// FunctionsHttpError and stashes the real Response on error.context. The
+// server puts the human-readable reason (plan required, monthly limit
+// reached, signed out) in that JSON body, so read it before giving up.
+async function readEdgeError(error) {
+    const fallback = error?.message || 'Edge function error';
+    const ctx = error?.context;
+    if (!ctx || typeof ctx.text !== 'function') return fallback;
+    try {
+        const body = await ctx.text();
+        if (!body) return fallback;
+        try {
+            const parsed = JSON.parse(body);
+            return parsed?.error || parsed?.message || body;
+        } catch {
+            return body;
+        }
+    } catch {
+        return fallback;
+    }
+}
 
 export default function ImageImport() {
     const [user, setUser] = useState(null);
@@ -72,7 +99,7 @@ export default function ImageImport() {
                     <h1 className="text-3xl font-bold text-slate-100 mb-3">AI Image Import</h1>
                     <p className="text-slate-400 mb-6">
                         Snap photos of notecards, screenshots, or records and let AI extract your gecko data automatically.
-                        This feature is available on the Enterprise plan.
+                        This feature is included with the Breeder and Enterprise plans.
                     </p>
                     <Button asChild className="bg-gradient-to-r from-emerald-600 to-teal-600">
                         <a href="/Membership">View Plans <ArrowRight className="w-4 h-4 ml-2" /></a>
@@ -119,7 +146,7 @@ export default function ImageImport() {
                 const { data, error } = await supabase.functions.invoke('recognize-import-data', {
                     body: { imageUrls: batch, mode },
                 });
-                if (error) throw new Error(error.message || 'Edge function error');
+                if (error) throw new Error(await readEdgeError(error));
                 if (data?.error) throw new Error(data.error);
                 if (data?.records) allRecords = [...allRecords, ...data.records];
             }
@@ -233,7 +260,12 @@ export default function ImageImport() {
                         </div>
                         <h1 className="text-3xl md:text-4xl font-bold text-slate-100">AI Image Import</h1>
                     </div>
-                    <p className="text-slate-400">Upload photos of notecards, screenshots, or records, AI extracts the data for you. Your plan includes {INCLUDED_IMPORTS} imports per month.</p>
+                    <p className="text-slate-400">
+                        Upload photos of notecards, screenshots, or records and AI extracts the data for you.
+                        {user?.role === 'admin'
+                            ? ' Admin accounts have no monthly scan limit.'
+                            : ` Your plan includes ${IMPORT_SCANS_PER_MONTH[resolveTier(user)] ?? 0} scans per month. Each scan reads up to 10 photos.`}
+                    </p>
                 </div>
 
                 {/* Step indicator */}

@@ -2,20 +2,49 @@
 //
 // Calls Anthropic Claude vision to extract gecko, breeding, or egg data
 // from photos of notecards, screenshots, or handwritten records.
-// Enterprise-only feature with per-call usage metering.
+//
+// Access: Breeder and Enterprise members (plus admins). Every call costs
+// one import_scan credit from the feature_usage ledger, consumed through
+// the consume_feature_credit RPC with the caller's own JWT so auth.uid()
+// inside the function is the real user. The RPC reads the tier from the
+// profile itself, so a client cannot claim a higher tier. Allotments per
+// tier live in feature_credit_allotments (free 0, keeper 0, breeder 20,
+// enterprise 200 per month) and are seeded by
+// supabase/migrations/20260905001000_import_scan_allotments.sql.
+//
+// Before this the function ran with no auth and no metering, so anyone
+// who found the URL could spend Anthropic API budget for free.
 //
 // Secrets (required):
 //   ANTHROPIC_API_KEY     Anthropic API key
+//   SUPABASE_URL / SUPABASE_ANON_KEY / SUPABASE_SERVICE_ROLE_KEY
+//                         provided automatically by the platform
 //
 // Optional:
 //   CLAUDE_MODEL          Model id (default: claude-sonnet-4-6)
 //
-// Deploy:   supabase functions deploy recognize-import-data --no-verify-jwt
+// Responses:
+//   200 -> { success, mode, records, image_count, record_count, model,
+//            credits_remaining }   (credits_remaining null for admins)
+//   401 -> { error, code: "unauthenticated" }
+//   402 -> { error, code: "import_scan_credits_exhausted", tier }
+//   403 -> { error, code: "plan_required", tier }
+//
+// Deploy with JWT verification on (the default):
+//   supabase functions deploy recognize-import-data
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
+import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
 const CLAUDE_MODEL = Deno.env.get("CLAUDE_MODEL") || "claude-sonnet-4-6";
+const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
+const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY") ?? "";
+
+// Tiers that may use image import at all. Mirrors the image_import entry
+// in TIER_LIMITS (src/components/subscription/PlanLimitChecker.jsx).
+const IMPORT_TIERS = new Set(["breeder", "enterprise"]);
 
 const CORS = {
   "Access-Control-Allow-Origin": "*",
@@ -271,19 +300,57 @@ serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
   if (!ANTHROPIC_API_KEY)
-    return json({ error: "ANTHROPIC_API_KEY not set" }, 500);
+    return json({ error: "ANTHROPIC_API_KEY not set", code: "config_error" }, 500);
 
   try {
+    // 1. Who is calling? The user's JWT rides in the Authorization header.
+    const authHeader = req.headers.get("Authorization") || "";
+    const token = authHeader.replace(/^Bearer\s+/i, "");
+    if (!token) {
+      return json({ error: "Sign in to use image import.", code: "unauthenticated" }, 401);
+    }
+    const userClient = createClient(SUPABASE_URL, ANON_KEY, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
+    const { data: { user } } = await userClient.auth.getUser();
+    if (!user?.email) {
+      return json({ error: "Sign in to use image import.", code: "unauthenticated" }, 401);
+    }
+
+    // 2. Which plan? Read as the service role so RLS on profiles can never
+    //    hide the billing columns from us.
+    const admin = createClient(SUPABASE_URL, SERVICE_KEY);
+    const { data: prof } = await admin
+      .from("profiles")
+      .select("membership_tier, subscription_status, role")
+      .eq("email", user.email)
+      .maybeSingle();
+    const isAdmin = prof?.role === "admin";
+    const tier = isAdmin
+      ? "enterprise"
+      : prof?.subscription_status === "grandfathered"
+        ? "breeder"
+        : (typeof prof?.membership_tier === "string" ? prof.membership_tier : "free");
+
+    if (!isAdmin && !IMPORT_TIERS.has(tier)) {
+      return json({
+        error: "AI Image Import is included with the Breeder and Enterprise plans.",
+        code: "plan_required",
+        tier,
+      }, 403);
+    }
+
+    // 3. Validate the request body.
     const body = await req.json().catch(() => ({}));
 
     let imageUrls: string[] = [];
     if (Array.isArray(body?.imageUrls)) {
       imageUrls = body.imageUrls.filter(
-        (u: unknown) => typeof u === "string" && u
+        (u: unknown) => typeof u === "string" && /^https?:\/\//i.test(u)
       );
     }
     if (imageUrls.length === 0) {
-      return json({ error: "imageUrls (string[]) is required" }, 400);
+      return json({ error: "imageUrls (string[]) is required", code: "bad_request" }, 400);
     }
     imageUrls = imageUrls.slice(0, 10);
 
@@ -291,6 +358,34 @@ serve(async (req) => {
       ? body.mode
       : "geckos";
 
+    // 4. Spend one import_scan credit, only once the request is valid so a
+    //    malformed call never costs the member anything. The RPC re-derives
+    //    the tier from the profile, so p_tier and p_included are
+    //    informational only.
+    let creditsRemaining: number | null = null;
+    if (!isAdmin) {
+      const { data: usage, error: rpcErr } = await userClient.rpc("consume_feature_credit", {
+        p_feature: "import_scan",
+        p_tier: tier,
+        p_included: null,
+        p_cost: 1,
+      });
+      if (rpcErr) {
+        if ((rpcErr.message || "").includes("feature_credits_exhausted")) {
+          return json({
+            error: "Monthly image import limit reached for your plan.",
+            code: "import_scan_credits_exhausted",
+            tier,
+          }, 402);
+        }
+        return json({ error: `credit check failed: ${rpcErr.message}`, code: "credit_error" }, 500);
+      }
+      creditsRemaining = usage?.credits_included == null
+        ? null
+        : Math.max(0, usage.credits_included - usage.credits_consumed);
+    }
+
+    // 5. Do the work.
     const raw = await callClaude(imageUrls, mode);
     const records = Array.isArray(raw.records) ? raw.records : [];
 
@@ -310,9 +405,10 @@ serve(async (req) => {
       image_count: imageUrls.length,
       record_count: sanitized.length,
       model: CLAUDE_MODEL,
+      credits_remaining: creditsRemaining,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
-    return json({ error: message }, 500);
+    return json({ error: message, code: "internal_error" }, 500);
   }
 });

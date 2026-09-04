@@ -49,7 +49,13 @@ fi
 ok "supabase CLI present"
 
 say "Applying migrations to linked project…"
-run supabase db push --include-all
+# Schema changes are applied deliberately (docs/MIGRATIONS.md). This script
+# used to run `supabase db push --include-all`, which would replay every repo
+# migration that production's history does not list by name, including
+# superseded ones that would overwrite the vault-based notification
+# dispatcher. Never do that here.
+say "Skipping database migrations: apply them by hand per docs/MIGRATIONS.md"
+
 
 say "Deploying send-push edge function…"
 run supabase functions deploy send-push --no-verify-jwt

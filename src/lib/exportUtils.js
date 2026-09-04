@@ -51,7 +51,14 @@ function renderCell(gecko, col) {
 // Escape a CSV field per RFC 4180: wrap in quotes when it contains a
 // comma, quote, or newline; double any interior quotes.
 function csvEscape(value) {
-  const s = value == null ? '' : String(value);
+  let s = value == null ? '' : String(value);
+  // Spreadsheet formula injection: a cell starting with = + - @ or a tab
+  // or carriage return is executed as a formula by Excel and Sheets. A
+  // leading apostrophe makes it plain text. Negative numbers are left
+  // alone; only text values get the guard.
+  if (/^[=+\-@\t\r]/.test(s) && !/^-?\d+(\.\d+)?$/.test(s)) {
+    s = `'${s}`;
+  }
   if (/[",\n\r]/.test(s)) {
     return `"${s.replace(/"/g, '""')}"`;
   }

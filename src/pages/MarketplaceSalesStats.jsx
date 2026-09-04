@@ -631,7 +631,7 @@ function PendingSalesTab({ user, pendingSales, setPendingSales, onCompleteSale, 
                         <button key={g.id} type="button"
                           onMouseDown={(e) => { e.preventDefault(); selectGeckoForSale(g); }}
                           className="w-full text-left px-3 py-1.5 text-xs text-slate-200 hover:bg-slate-600 flex items-center gap-2">
-                          {g.image_urls?.[0] && <img src={g.image_urls[0]} className="w-5 h-5 rounded object-cover" />}
+                          {g.image_urls?.[0] && <img src={g.image_urls[0]} alt="" className="w-5 h-5 rounded object-cover" />}
                           <span className="truncate">{g.name}</span>
                           {g.asking_price && <span className="text-emerald-400 ml-auto">${g.asking_price}</span>}
                         </button>

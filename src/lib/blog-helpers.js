@@ -78,6 +78,9 @@ export function markdownToHtml(md) {
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;');
+  // Attribute values additionally need quotes neutralised, otherwise a
+  // crafted alt text or URL could close the attribute and add its own.
+  const attr = (s) => escape(String(s ?? '')).replace(/"/g, '&quot;').replace(/'/g, '&#39;');
 
   // Only allow safe URL schemes in generated links/images. Blocks
   // javascript:, data:, vbscript:, etc. (a `[text](javascript:...)` link
@@ -97,11 +100,11 @@ export function markdownToHtml(md) {
       // images: ![alt](url)
       .replace(/!\[([^\]]*)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/g,
         (_m, alt, url) =>
-          `<img src="${safeUrl(url)}" alt="${alt}" loading="lazy" class="rounded-lg my-4" />`)
+          `<img src="${attr(safeUrl(url))}" alt="${attr(alt)}" loading="lazy" class="rounded-lg my-4" />`)
       // links: [text](url)
       .replace(/\[([^\]]+)\]\(([^)\s]+)(?:\s+"([^"]*)")?\)/g,
         (_m, text, url) =>
-          `<a href="${safeUrl(url)}" rel="noopener" target="_blank">${text}</a>`)
+          `<a href="${attr(safeUrl(url))}" rel="noopener" target="_blank">${text}</a>`)
       // bold
       .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
       // italic

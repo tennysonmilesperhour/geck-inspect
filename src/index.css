@@ -892,3 +892,19 @@ button:focus-visible {
 .lineage-main-scroll::-webkit-scrollbar-thumb:hover {
   background: var(--scrollbar-thumb-hover);
 }
+
+
+/* Respect the OS "reduce motion" setting everywhere. Tailwind's animate-*
+   utilities, framer-motion transitions and our own keyframes all become
+   near-instant. Two page-specific rules in layout-theme.css already did
+   this locally; this is the global fallback. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

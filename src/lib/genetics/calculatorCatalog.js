@@ -23,7 +23,7 @@
  * Polygenic traits (Harlequin, Pinstripe coverage, Dalmatian density,
  * base colors) are deliberately NOT in this catalog: Punnett math on
  * them would be fake precision. They arrive in a later phase as
- * expression bands, per MORPH_CALCULATOR_PLAN.md.
+ * expression bands, per docs/planning/MORPH_CALCULATOR_PLAN.md.
  */
 import { getTrait, WILD_TYPE } from '@/lib/genetics';
 

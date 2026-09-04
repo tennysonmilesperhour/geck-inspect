@@ -47,7 +47,7 @@ const PLAN_LIMITS = {
             'advanced_breeding', 'calendar', 'weight_tracking', 'csv_export',
             'lineage_tree', 'breeding_analytics',
             'certificates', 'featured_breeder', 'shipping_integration',
-            'marketplace_sync',
+            'marketplace_sync', 'image_import',
         ],
     },
     enterprise: {
@@ -80,7 +80,7 @@ const FEATURE_NAMES = {
     featured_breeder: 'Featured Breeder on Dashboard',
     market_intelligence: 'Market Intelligence Dashboard',
     breeding_roi: 'Breeding ROI Projections',
-    shipping_integration: 'Zero\u2019s Geckos Shipping Integration',
+    shipping_integration: 'Shipping Integration',
     image_import: 'AI Image Import',
 };
 

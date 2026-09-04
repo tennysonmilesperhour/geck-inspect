@@ -118,12 +118,13 @@ Crested gecko terminology should always be specific (Lilly White, Harlequin, Pha
 **Domain disambiguation.** `tennyscrestedgeckos.com` is NOT Tennyson's site. Another breeder happens to share the first name. Do not put that domain on the landing page, in the founder section, in marketing copy, or anywhere a visitor could read it as Tennyson's brand. The strategy docs (INTENT.md, DECISIONS.md, CONTEXT.md) historically referenced it as a "founder credibility" signal; that was a mistake based on the name collision and is being unwound. If a future doc or generated copy reintroduces it, treat that as a bug. The right founder credibility signal is Tennyson's actual breeding operation under whatever brand name he chooses to publish; ask before assuming.
 
 Project files
-Standard project documentation lives in the repo root:
+Where the project documentation actually lives:
 
-CONTEXT.md - what this project is and why it exists
-INTENT.md - what we are trying to accomplish
-IDENTITY.md - brand voice, visual identity, positioning
-ARCHITECTURE.md - technical structure and decisions
-DECISIONS.md - log of important choices
-STRATEGY.md - competitive landscape and market position
-ROADMAP.md - active priorities and action items
+STRATEGY.md (root) - competitive landscape and market position
+ROADMAP.md (root) - active priorities and action items
+docs/CONTEXT.md - what this project is and why it exists
+docs/INTENT.md - what we are trying to accomplish
+docs/DECISIONS.md - log of important choices
+docs/MIGRATIONS.md - how the database schema is managed and why the deploy scripts must not replay migrations
+docs/planning/ - older audit and planning documents, kept for history
+IDENTITY.md and ARCHITECTURE.md do not exist yet. If you need brand voice or technical structure, read docs/CONTEXT.md and this file; do not invent those documents' contents.

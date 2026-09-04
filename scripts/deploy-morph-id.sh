@@ -55,8 +55,13 @@ command -v supabase >/dev/null || die "supabase CLI not found. Install: https://
 # --include-all lets the CLI apply local migrations whose timestamps are
 # before the last remote-applied one. Without it, any backfill added to
 # the repo after an ad-hoc prod change refuses to deploy.
-say "Applying SQL migrations (supabase db push --include-all)"
-run supabase db push --include-all
+# Schema changes are applied deliberately (docs/MIGRATIONS.md). This script
+# used to run `supabase db push --include-all`, which would replay every repo
+# migration that production's history does not list by name, including
+# superseded ones that would overwrite the vault-based notification
+# dispatcher. Never do that here.
+say "Skipping database migrations: apply them by hand per docs/MIGRATIONS.md"
+
 ok  "migrations applied"
 
 # ---- 2. Edge functions ----------------------------------------------------

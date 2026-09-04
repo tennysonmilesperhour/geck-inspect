@@ -80,6 +80,17 @@ function buildProfileJsonLd(profileUser, counts) {
   ];
 }
 
+
+// Member-entered links render as real anchors, so only web URLs are
+// allowed through. A javascript: or data: value becomes no link at all.
+function safeExternalUrl(value) {
+  if (typeof value !== 'string') return null;
+  const trimmed = value.trim();
+  if (!trimmed) return null;
+  const withScheme = /^[a-z][a-z0-9+.-]*:/i.test(trimmed) ? trimmed : `https://${trimmed}`;
+  return /^https?:\/\//i.test(withScheme) ? withScheme : null;
+}
+
 export default function PublicProfile() {
     const location = useLocation();
     const navigate = useNavigate();
@@ -336,8 +347,8 @@ export default function PublicProfile() {
                             )}
                             {(storePage || profileUser.website_url || profileUser.instagram_handle || profileUser.facebook_url || profileUser.youtube_url || profileUser.tiktok_handle) && (
                                 <div className="flex flex-wrap gap-2 pt-2">
-                                    {profileUser.website_url && (
-                                        <a href={profileUser.website_url} target="_blank" rel="noopener noreferrer">
+                                    {safeExternalUrl(profileUser.website_url) && (
+                                        <a href={safeExternalUrl(profileUser.website_url)} target="_blank" rel="noopener noreferrer">
                                             <Button size="sm" variant="outline" className="border-slate-600 hover:bg-slate-700">
                                                 <Globe className="w-4 h-4" />
                                             </Button>
@@ -352,28 +363,28 @@ export default function PublicProfile() {
                                         </a>
                                     )}
                                     {profileUser.instagram_handle && (
-                                        <a href={`https://instagram.com/${profileUser.instagram_handle}`} target="_blank" rel="noopener noreferrer">
+                                        <a href={`https://instagram.com/${encodeURIComponent(String(profileUser.instagram_handle).replace(/^@/, ''))}`} target="_blank" rel="noopener noreferrer">
                                             <Button size="sm" variant="outline" className="border-pink-500/50 hover:bg-pink-500/20 text-pink-400">
                                                 <Instagram className="w-4 h-4" />
                                             </Button>
                                         </a>
                                     )}
-                                    {profileUser.facebook_url && (
-                                        <a href={profileUser.facebook_url} target="_blank" rel="noopener noreferrer">
+                                    {safeExternalUrl(profileUser.facebook_url) && (
+                                        <a href={safeExternalUrl(profileUser.facebook_url)} target="_blank" rel="noopener noreferrer">
                                             <Button size="sm" variant="outline" className="border-blue-500/50 hover:bg-blue-500/20 text-blue-400">
                                                 <Facebook className="w-4 h-4" />
                                             </Button>
                                         </a>
                                     )}
-                                    {profileUser.youtube_url && (
-                                        <a href={profileUser.youtube_url} target="_blank" rel="noopener noreferrer">
+                                    {safeExternalUrl(profileUser.youtube_url) && (
+                                        <a href={safeExternalUrl(profileUser.youtube_url)} target="_blank" rel="noopener noreferrer">
                                             <Button size="sm" variant="outline" className="border-red-500/50 hover:bg-red-500/20 text-red-400">
                                                 <Youtube className="w-4 h-4" />
                                             </Button>
                                         </a>
                                     )}
                                     {profileUser.tiktok_handle && (
-                                        <a href={`https://tiktok.com/@${profileUser.tiktok_handle}`} target="_blank" rel="noopener noreferrer">
+                                        <a href={`https://tiktok.com/@${encodeURIComponent(String(profileUser.tiktok_handle).replace(/^@/, ''))}`} target="_blank" rel="noopener noreferrer">
                                             <Button size="sm" variant="outline" className="border-slate-500/50 hover:bg-slate-500/20 text-slate-300">
                                                 <span className="font-bold text-sm">TT</span>
                                             </Button>
