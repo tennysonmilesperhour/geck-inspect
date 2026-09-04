@@ -1,8 +1,8 @@
-# P8 — Enhanced Breeder Storefront
+# P8: Enhanced Breeder Storefront
 
 **Priority:** P8
 **Dependencies:** P1 (Animal Passport), P2 (Market Pricing)
-**Origin:** iHerp analysis — turns each breeder's public profile into a proper business page
+**Origin:** iHerp analysis, turns each breeder's public profile into a proper business page
 
 ---
 
@@ -50,7 +50,7 @@ BreederReview {
 
 ## UI Spec
 
-### Breeder Storefront (`/b/:slug`) — Public URL
+### Breeder Storefront (`/b/:slug`): Public URL
 
 - **Profile header:** banner photo, profile photo, display name, location, verified badge, bio, years breeding, specialty morphs, social links, "Contact" button
 - **For sale animals grid** (matching collection view but filtered to for_sale status)
@@ -74,7 +74,7 @@ BreederReview {
 
 - Generate iframe embed code for "Available animals from [breeder]"
 - Minimal widget: 2-col grid of for_sale animals with price and passport link
-- Must work on external sites — no auth, public data only
+- Must work on external sites, no auth, public data only
 
 ---
 
@@ -93,7 +93,7 @@ DATABASE:
 
 BUILD:
 
-1. STOREFRONT PAGE (/b/:slug) — PUBLIC
+1. STOREFRONT PAGE (/b/:slug): PUBLIC
 Banner photo (full-width hero), profile photo overlaid bottom-left.
 Header: display name, location, verified badge (sage checkmark if is_verified),
 specialty morphs as pills, bio, years breeding, social links, "Contact" button.
@@ -114,9 +114,9 @@ Reviews display on storefront and in animal passport ownership timeline.
 4. EMBED WIDGET (/b/:slug/widget)
 Generate iframe embed code for "Available animals from [breeder]".
 Minimal widget: 2-col grid of for_sale animals with price and passport link.
-Must work on external sites — no auth, public data only.
+Must work on external sites, no auth, public data only.
 
 QUALITY: Breeders will share this URL on Instagram, Facebook, at expos.
 It is Geck Inspect's public face in the wild. Make it look like a real business page,
-not a web app profile. Verified badge matters — make it clearly visible.
+not a web app profile. Verified badge matters, make it clearly visible.
 ```

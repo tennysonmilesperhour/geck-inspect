@@ -1,15 +1,15 @@
 -- =============================================================================
--- Store schema — supplies, gifts, merch, affiliate redirects, unified cart
+-- Store schema, supplies, gifts, merch, affiliate redirects, unified cart
 -- =============================================================================
 -- Backbone for the new Manage > Supplies tab. Designed around four
 -- fulfillment modes so a single catalog handles in-house inventory,
 -- print-on-demand, wholesale dropship, and affiliate redirects:
 --
---   direct_self        — we hold inventory and ship (private label, branded)
---   direct_pod         — Printful/Printify; we API-trigger production on order
---   dropship_wholesale — we re-order on a wholesale account (Pangea, Repashy,
+--   direct_self: we hold inventory and ship (private label, branded)
+--   direct_pod: Printful/Printify; we API-trigger production on order
+--   dropship_wholesale: we re-order on a wholesale account (Pangea, Repashy,
 --                        Lugarti, BPZ, Reptile Basics) once approved
---   affiliate_redirect — we don't take payment; outbound link, commission only
+--   affiliate_redirect: we don't take payment; outbound link, commission only
 --                        (Amazon Associates, Chewy/Partnerize, NEHERP, MistKing)
 --
 -- Cart-eligible modes: direct_self, direct_pod, dropship_wholesale.
@@ -80,7 +80,7 @@ create table if not exists public.store_vendors (
 );
 
 -- -----------------------------------------------------------------------------
--- store_categories — taxonomy + URL slugs
+-- store_categories: taxonomy + URL slugs
 -- -----------------------------------------------------------------------------
 create table if not exists public.store_categories (
   id uuid primary key default gen_random_uuid(),
@@ -107,7 +107,7 @@ create index if not exists store_categories_parent_idx on public.store_categorie
 create index if not exists store_categories_gift_idx on public.store_categories(is_gift_category) where is_gift_category;
 
 -- -----------------------------------------------------------------------------
--- store_products — master catalog
+-- store_products: master catalog
 -- -----------------------------------------------------------------------------
 create table if not exists public.store_products (
   id uuid primary key default gen_random_uuid(),
@@ -319,7 +319,7 @@ create table if not exists public.store_fulfillments (
 create index if not exists store_fulfillments_order_idx on public.store_fulfillments(order_id);
 
 -- -----------------------------------------------------------------------------
--- store_affiliate_clicks — outbound click attribution
+-- store_affiliate_clicks: outbound click attribution
 -- -----------------------------------------------------------------------------
 create table if not exists public.store_affiliate_clicks (
   id uuid primary key default gen_random_uuid(),
@@ -339,7 +339,7 @@ create index if not exists store_affiliate_clicks_user_idx on public.store_affil
 create index if not exists store_affiliate_clicks_created_idx on public.store_affiliate_clicks(created_date);
 
 -- -----------------------------------------------------------------------------
--- store_signup_grants — trial-grant tokens issued in receipts
+-- store_signup_grants: trial-grant tokens issued in receipts
 -- -----------------------------------------------------------------------------
 -- Guest checkouts emit a single-use token. The receipt email links to
 -- AuthPortal with ?grant=<token>; on signup, we atomically apply the
@@ -524,7 +524,7 @@ create policy "Admins read affiliate clicks" on public.store_affiliate_clicks fo
   using (exists (select 1 from public.profiles p where p.id = auth.uid()::text and p.role = 'admin'));
 
 -- -- Signup grants: server-managed; user can read by token only (via fn) ----
--- We do NOT expose direct row reads to anon — token redemption goes through
+-- We do NOT expose direct row reads to anon, token redemption goes through
 -- a SECURITY DEFINER function so the token is never returned to the client.
 drop policy if exists "Admins read signup grants" on public.store_signup_grants;
 create policy "Admins read signup grants" on public.store_signup_grants for select
@@ -556,7 +556,7 @@ on conflict (slug) do nothing;
 -- Top-level categories
 insert into public.store_categories (slug, name, description, display_order, is_gift_category)
 values
-  ('apparel',         'Apparel',                'T-shirts, hoodies, hats — original Geck Inspect designs.', 10,  false),
+  ('apparel',         'Apparel',                'T-shirts, hoodies, hats: original Geck Inspect designs.', 10,  false),
   ('accessories',     'Accessories',            'Stickers, mugs, pins, and small gear.',                    20,  false),
   ('enclosures',      'Enclosures',             'Glass and PVC habitats from yearling tubs to adult builds.', 30,  false),
   ('diet',            'Diet',                   'Crested gecko diet (CGD) from the brands we trust.',        40,  false),
@@ -577,50 +577,50 @@ values
   ('gifts',           'Gift ideas',             'Crested gecko themed gifts for keepers, breeders, and the people who love them.', 5, true)
 on conflict (slug) do nothing;
 
--- Gift sub-categories — separate URL slugs for SEO. Parent set after seeding.
+-- Gift sub-categories, separate URL slugs for SEO. Parent set after seeding.
 insert into public.store_categories (slug, name, description, display_order, is_gift_category, seo_title, seo_description)
 values
   ('gifts/under-25',
     'Crested gecko gifts under $25',
-    'Affordable, thoughtful gifts for crested gecko owners — mugs, stickers, prints, and small accessories under $25.',
+    'Affordable, thoughtful gifts for crested gecko owners: mugs, stickers, prints, and small accessories under $25.',
     10, true,
-    'Crested gecko gifts under $25 — Geck Inspect',
+    'Crested gecko gifts under $25: Geck Inspect',
     'Affordable crested gecko gift ideas under $25. Curated picks for the gecko keeper in your life.'),
   ('gifts/under-50',
     'Crested gecko gifts under $50',
     'Mid-range crested gecko gifts: apparel, decor, and starter accessories under $50.',
     20, true,
-    'Crested gecko gifts under $50 — Geck Inspect',
+    'Crested gecko gifts under $50: Geck Inspect',
     'The best crested gecko gifts under $50. Curated picks for keepers, breeders, and gecko-obsessed friends.'),
   ('gifts/christmas',
     'Crested gecko Christmas gifts',
     'Holiday gift guide for crested gecko owners. Stocking stuffers, themed apparel, and useful supplies for the gecko person in your life.',
     1, true,
-    'Crested gecko Christmas gifts 2026 — Geck Inspect',
+    'Crested gecko Christmas gifts 2026: Geck Inspect',
     'The complete crested gecko Christmas gift guide. Hand-curated by breeders for keepers of every level.'),
   ('gifts/birthday',
     'Crested gecko birthday gifts',
     'Birthday gift ideas for the crested gecko keeper in your life. From silly tees to genuinely useful gear.',
     30, true,
-    'Crested gecko birthday gifts — Geck Inspect',
+    'Crested gecko birthday gifts: Geck Inspect',
     'Find the perfect birthday gift for a crested gecko keeper. Curated by people who actually keep them.'),
   ('gifts/for-new-keepers',
     'Crested gecko gifts for new keepers',
     'Setup essentials and care guides for someone just starting with crested geckos.',
     40, true,
-    'Crested gecko gifts for new keepers — Geck Inspect',
+    'Crested gecko gifts for new keepers: Geck Inspect',
     'The most useful crested gecko gifts for someone new to the hobby. Picked by experienced keepers.'),
   ('gifts/for-breeders',
     'Crested gecko gifts for breeders',
-    'Tools and gear that breeders actually want — scales, label printers, lay-box kits.',
+    'Tools and gear that breeders actually want: scales, label printers, lay-box kits.',
     50, true,
-    'Crested gecko gifts for breeders — Geck Inspect',
+    'Crested gecko gifts for breeders: Geck Inspect',
     'Practical crested gecko gifts for breeders. Things they''ll actually use and not return.'),
   ('gifts/stocking-stuffers',
     'Crested gecko stocking stuffers',
     'Small, fun gecko-themed stocking stuffers under $15.',
     60, true,
-    'Crested gecko stocking stuffers — Geck Inspect',
+    'Crested gecko stocking stuffers: Geck Inspect',
     'Stocking-stuffer-sized crested gecko gifts. Stickers, magnets, small decor.')
 on conflict (slug) do nothing;
 

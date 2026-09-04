@@ -33,8 +33,8 @@ Query params:
 | param             | default | notes                                           |
 |-------------------|---------|-------------------------------------------------|
 | `verified_only`   | `true`  | `false` to include unverified contributions     |
-| `since`           | —       | ISO date, only rows created at/after            |
-| `limit`           | —       | cap (useful for smoke tests); max 50 000        |
+| `since`           | n/a     | ISO date, only rows created at/after            |
+| `limit`           | n/a     | cap (useful for smoke tests); max 50 000        |
 
 ## Sample line
 

@@ -177,7 +177,7 @@ create policy morphs_read_authenticated on geck_data.morphs
 
 -- BEGIN SOURCE MIGRATION: 0001_init_geck_inspect.sql
 -- ============================================================================
--- Geck Inspect / Geck Data — initial schema additions
+-- Geck Inspect / Geck Data, initial schema additions
 --
 -- Assumes market_listings and market_sellers already exist (from the earlier
 -- Python upload). This migration:
@@ -226,7 +226,7 @@ on conflict (id) do nothing;
 
 -- ----------------------------------------------------------------------------
 -- 3. RLS on market tables
---    Dashboard reads with the anon key — needs public SELECT.
+--    Dashboard reads with the anon key, needs public SELECT.
 --    Writes only happen through the server-side API route using the service
 --    role key, which bypasses RLS, so we don't add public write policies.
 -- ----------------------------------------------------------------------------
@@ -256,20 +256,20 @@ drop policy if exists "public read listing-images" on storage.objects;
 create policy "public read listing-images" on storage.objects
   for select using (bucket_id = 'listing-images');
 
--- (no policies on raw-uploads — service role only)
+-- (no policies on raw-uploads, service role only)
 
 -- END SOURCE MIGRATION: 0001_init_geck_inspect.sql
 
 
 -- BEGIN SOURCE MIGRATION: 0002_extension_streams.sql
 -- ============================================================================
--- Geck Inspect — 0002: extension streams
+-- Geck Inspect: 0002: extension streams
 --
 -- Adds the tables the browser extension needs to stream live events into,
 -- beyond the batch .db import covered by 0001. Every table is
 --   a) an append-only observation log (price_history, listing_status_events,
 --      seller_snapshots, show_mentions, auction_results, price_drops,
---      alert_matches) — or
+--      alert_matches): or
 --   b) an upsert-on-external-key store (cross_platform_listings, alerts).
 --
 -- Also extends market_listings with first_seen_at / last_seen_at so we can
@@ -293,7 +293,7 @@ create index if not exists idx_market_listings_current_status
   on geck_data.market_listings(current_status);
 
 -- ----------------------------------------------------------------------------
--- 1. price_history — every observed price for a listing
+-- 1. price_history, every observed price for a listing
 -- ----------------------------------------------------------------------------
 create table if not exists geck_data.price_history (
   id uuid primary key default gen_random_uuid(),
@@ -309,7 +309,7 @@ create index if not exists idx_price_history_listing_observed
   on geck_data.price_history(listing_id, observed_at desc);
 
 -- ----------------------------------------------------------------------------
--- 2. price_drops — explicit drop deltas (faster than window-fn over history)
+-- 2. price_drops, explicit drop deltas (faster than window-fn over history)
 -- ----------------------------------------------------------------------------
 create table if not exists geck_data.price_drops (
   id uuid primary key default gen_random_uuid(),
@@ -330,7 +330,7 @@ create index if not exists idx_price_drops_observed_at
   on geck_data.price_drops(observed_at desc);
 
 -- ----------------------------------------------------------------------------
--- 3. listing_status_events — state transitions (live / sold / hold / removed)
+-- 3. listing_status_events, state transitions (live / sold / hold / removed)
 -- ----------------------------------------------------------------------------
 create table if not exists geck_data.listing_status_events (
   id uuid primary key default gen_random_uuid(),
@@ -348,7 +348,7 @@ create index if not exists idx_listing_status_events_status_observed
   on geck_data.listing_status_events(status, observed_at desc);
 
 -- ----------------------------------------------------------------------------
--- 4. auction_results — when an auction closes, capture the final state
+-- 4. auction_results, when an auction closes, capture the final state
 -- ----------------------------------------------------------------------------
 create table if not exists geck_data.auction_results (
   id uuid primary key default gen_random_uuid(),
@@ -369,7 +369,7 @@ create index if not exists idx_auction_results_listing
   on geck_data.auction_results(listing_id);
 
 -- ----------------------------------------------------------------------------
--- 5. seller_snapshots — periodic capture of seller-level stats
+-- 5. seller_snapshots, periodic capture of seller-level stats
 -- ----------------------------------------------------------------------------
 create table if not exists geck_data.seller_snapshots (
   id uuid primary key default gen_random_uuid(),
@@ -388,7 +388,7 @@ create index if not exists idx_seller_snapshots_seller_observed
   on geck_data.seller_snapshots(seller_id, observed_at desc);
 
 -- ----------------------------------------------------------------------------
--- 6. show_mentions — expo / show references found on listings or in bios
+-- 6. show_mentions, expo / show references found on listings or in bios
 -- ----------------------------------------------------------------------------
 create table if not exists geck_data.show_mentions (
   id uuid primary key default gen_random_uuid(),
@@ -407,8 +407,8 @@ create index if not exists idx_show_mentions_observed_at
   on geck_data.show_mentions(observed_at desc);
 
 -- ----------------------------------------------------------------------------
--- 7. cross_platform_listings — listings observed on Fauna Classifieds,
---    Reptile Forums, Preloved, Kijiji, etc. — keyed by (platform, external_id).
+-- 7. cross_platform_listings, listings observed on Fauna Classifieds,
+--    Reptile Forums, Preloved, Kijiji, etc. keyed by (platform, external_id).
 -- ----------------------------------------------------------------------------
 create table if not exists geck_data.cross_platform_listings (
   id uuid primary key default gen_random_uuid(),
@@ -435,7 +435,7 @@ create index if not exists idx_cross_platform_last_seen_at
   on geck_data.cross_platform_listings(last_seen_at desc);
 
 -- ----------------------------------------------------------------------------
--- 8. alerts + alert_matches — saved queries and their hits
+-- 8. alerts + alert_matches, saved queries and their hits
 -- ----------------------------------------------------------------------------
 create table if not exists geck_data.alerts (
   id uuid primary key default gen_random_uuid(),
@@ -463,7 +463,7 @@ create index if not exists idx_alert_matches_alert on geck_data.alert_matches(al
 create index if not exists idx_alert_matches_matched_at on geck_data.alert_matches(matched_at desc);
 
 -- ----------------------------------------------------------------------------
--- 9. RLS — public read (reads via anon key, writes via service role only)
+-- 9. RLS, public read (reads via anon key, writes via service role only)
 -- ----------------------------------------------------------------------------
 alter table geck_data.price_history            enable row level security;
 alter table geck_data.price_drops              enable row level security;
@@ -557,7 +557,7 @@ where lse.status = 'sold';
 
 -- BEGIN SOURCE MIGRATION: 0002a_ingest_metadata.sql
 -- ============================================================================
--- Geck Data — 0002a: ingest metadata
+-- Geck Data: 0002a: ingest metadata
 --
 -- Additive follow-up to 0002_extension_streams. Introduces the minimal schema
 -- the salvaged artifacts from PR #1 need to be useful on current main:
@@ -572,14 +572,14 @@ where lse.status = 'sold';
 --
 --   3) ingest_events audit log.
 --      Read by /api/stats (last event timestamp). Currently no writer on main
---      — the table is there so the stats endpoint can read from it without
+-- the table is there so the stats endpoint can read from it without
 --      500'ing; rows will start appearing when /api/ingest is wired to append
 --      here in a follow-up.
 --
 -- Numbered 0002a so it sorts AFTER 0002_extension_streams and BEFORE
 -- 0003_admin_analytics / 0003_training_dataset, which depend on its columns.
 --
--- Fully idempotent — safe to re-run. Paste into Supabase Dashboard → SQL
+-- Fully idempotent, safe to re-run. Paste into Supabase Dashboard → SQL
 -- Editor → New query → Run, or apply via `supabase db push`.
 -- ============================================================================
 
@@ -625,28 +625,28 @@ create index if not exists idx_ingest_events_created_at
   on geck_data.ingest_events(created_at desc);
 
 alter table geck_data.ingest_events enable row level security;
--- No public policies — the service role writes/reads; everyone else gets nothing.
+-- No public policies, the service role writes/reads; everyone else gets nothing.
 
 -- END SOURCE MIGRATION: 0002a_ingest_metadata.sql
 
 
 -- BEGIN SOURCE MIGRATION: 0003_admin_analytics.sql
 -- ============================================================================
--- Geck Inspect — 0003: admin analytics
+-- Geck Inspect: 0003: admin analytics
 --
 -- Adds the three tables that back the /admin/analytics dashboard:
 --
---   1. profiles        — extends auth.users with a role (user | admin).
+--   1. profiles, extends auth.users with a role (user | admin).
 --                        Used by RLS on every admin-only read below, and by
 --                        the Next.js admin gate for /admin/* routes.
---   2. user_events     — append-only product telemetry. Populated by
+--   2. user_events, append-only product telemetry. Populated by
 --                        src/lib/telemetry.ts (trackEvent / trackPageView)
 --                        on the web app, and by any external source that
 --                        POSTs into the Supabase REST API with the anon key.
 --                        Every row carries a `source` tag so we can slice
 --                        events coming in from the browser extension, the
 --                        scraper, or future inspectors alongside geck-inspect.
---   3. error_logs      — frontend + global handler error capture. Populated
+--   3. error_logs, frontend + global handler error capture. Populated
 --                        by reportError() + installGlobalErrorHandlers().
 --
 -- Plus a convenience view `v_daily_activity` for 90-day DAU/event-count
@@ -658,7 +658,7 @@ alter table geck_data.ingest_events enable row level security;
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
--- 1. profiles — one row per auth user, with role
+-- 1. profiles, one row per auth user, with role
 -- ----------------------------------------------------------------------------
 create table if not exists geck_data.profiles (
   id         uuid primary key references auth.users(id) on delete cascade,
@@ -693,7 +693,7 @@ select id, email from auth.users
 on conflict (id) do nothing;
 
 -- ----------------------------------------------------------------------------
--- 2. is_admin() — shared predicate used by every admin RLS policy
+-- 2. is_admin(): shared predicate used by every admin RLS policy
 -- ----------------------------------------------------------------------------
 create or replace function geck_data.is_admin()
 returns boolean
@@ -709,7 +709,7 @@ as $$
 $$;
 
 -- ----------------------------------------------------------------------------
--- 3. user_events — product telemetry
+-- 3. user_events, product telemetry
 -- ----------------------------------------------------------------------------
 create table if not exists geck_data.user_events (
   id           uuid primary key default gen_random_uuid(),
@@ -737,7 +737,7 @@ create index if not exists idx_user_events_session
   on geck_data.user_events(session_id);
 
 -- ----------------------------------------------------------------------------
--- 4. error_logs — frontend + global handler errors
+-- 4. error_logs, frontend + global handler errors
 -- ----------------------------------------------------------------------------
 create table if not exists geck_data.error_logs (
   id            uuid primary key default gen_random_uuid(),
@@ -766,7 +766,7 @@ create index if not exists idx_error_logs_source_date
   on geck_data.error_logs(source, created_date desc);
 
 -- ----------------------------------------------------------------------------
--- 5. RLS — anon can INSERT, admins can SELECT/UPDATE/DELETE
+-- 5. RLS, anon can INSERT, admins can SELECT/UPDATE/DELETE
 -- ----------------------------------------------------------------------------
 alter table geck_data.profiles    enable row level security;
 alter table geck_data.user_events enable row level security;
@@ -820,7 +820,7 @@ create policy "admin delete error_logs" on geck_data.error_logs
   for delete using (geck_data.is_admin());
 
 -- ----------------------------------------------------------------------------
--- 6. v_daily_activity — 90-day rollup for DAU + event_count charts
+-- 6. v_daily_activity: 90-day rollup for DAU + event_count charts
 -- ----------------------------------------------------------------------------
 create or replace view geck_data.v_daily_activity as
 select
@@ -851,19 +851,19 @@ order by 1 desc;
 
 -- BEGIN SOURCE MIGRATION: 0003_training_dataset.sql
 -- ============================================================================
--- Geck Data — training dataset views for the morph-ID model
+-- Geck Data, training dataset views for the morph-ID model
 --
 -- Produces flat (image_url, traits[]) pairs suitable for PyTorch / HF /
 -- whatever you point at it. Two image sources are unioned:
 --
---   A) `listing_images` — photos uploaded through /upload and stored in the
+--   A) `listing_images`: photos uploaded through /upload and stored in the
 --      `listing-images` Supabase Storage bucket. URLs are geck_data.
---   B) `market_listings.raw` — extension-captured MorphMarket listings with
+--   B) `market_listings.raw`: extension-captured MorphMarket listings with
 --      embedded image URLs pointing at MorphMarket's own CDN. Much larger
 --      source; grows with every page browsed.
 --
 -- Trait extraction is deliberately forgiving. MorphMarket listings don't use
--- a single canonical shape — sometimes traits live at raw->'traits', other
+-- a single canonical shape, sometimes traits live at raw->'traits', other
 -- times raw->'trait_list' or raw->'genetics'->'traits'. We COALESCE across
 -- the likely locations and let the downstream trainer deduplicate.
 --
@@ -871,11 +871,11 @@ order by 1 desc;
 -- pipeline is responsible for cleaning; this view just surfaces the raw
 -- joins so experiments can iterate quickly.
 --
--- Idempotent — safe to re-run. Run AFTER 0002_extension_ingest.sql.
+-- Idempotent: safe to re-run. Run AFTER 0002_extension_ingest.sql.
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
--- 1. normalize_trait_name(text) — lowercase, trim, collapse whitespace
+-- 1. normalize_trait_name(text): lowercase, trim, collapse whitespace
 --    Minimal normalization only; avoids taking a position on synonyms.
 -- ----------------------------------------------------------------------------
 create or replace function geck_data.normalize_trait_name(raw text)
@@ -890,7 +890,7 @@ as $$
 $$;
 
 -- ----------------------------------------------------------------------------
--- 2. extract_listing_traits(raw jsonb) — returns text[] of trait names
+-- 2. extract_listing_traits(raw jsonb): returns text[] of trait names
 --    Looks in the plausible locations, flattens, normalizes, dedupes.
 -- ----------------------------------------------------------------------------
 create or replace function geck_data.extract_listing_traits(raw jsonb)
@@ -925,7 +925,7 @@ as $$
 $$;
 
 -- ----------------------------------------------------------------------------
--- 3. extract_listing_image_urls(raw jsonb) — returns text[] of absolute URLs
+-- 3. extract_listing_image_urls(raw jsonb): returns text[] of absolute URLs
 --    Looks in raw->'images' / 'photos' / 'media', pulls out the URL field.
 -- ----------------------------------------------------------------------------
 create or replace function geck_data.extract_listing_image_urls(raw jsonb)
@@ -952,7 +952,7 @@ as $$
 $$;
 
 -- ----------------------------------------------------------------------------
--- 4. v_listing_labels — one row per listing, with traits[] and source info
+-- 4. v_listing_labels, one row per listing, with traits[] and source info
 -- ----------------------------------------------------------------------------
 create or replace view geck_data.v_listing_labels as
   select
@@ -967,7 +967,7 @@ create or replace view geck_data.v_listing_labels as
   from geck_data.market_listings l;
 
 -- ----------------------------------------------------------------------------
--- 5. v_training_pairs — one row per (image_url, listing_id) pair
+-- 5. v_training_pairs, one row per (image_url, listing_id) pair
 --    Union of uploaded images + extension-captured remote image URLs.
 -- ----------------------------------------------------------------------------
 create or replace view geck_data.v_training_pairs as
@@ -1010,7 +1010,7 @@ create or replace view geck_data.v_training_pairs as
   ) as url;
 
 -- ----------------------------------------------------------------------------
--- 6. v_trait_frequencies — sanity check: how common is each label?
+-- 6. v_trait_frequencies, sanity check: how common is each label?
 -- ----------------------------------------------------------------------------
 create or replace view geck_data.v_trait_frequencies as
   select
@@ -1022,7 +1022,7 @@ create or replace view geck_data.v_trait_frequencies as
   order by listing_count desc;
 
 -- ----------------------------------------------------------------------------
--- 7. RLS — views inherit from the base tables. market_listings and
+-- 7. RLS, views inherit from the base tables. market_listings and
 --    listing_images are already public-read (set in 0001), so no new
 --    policies are needed. The view itself doesn't need RLS.
 -- ----------------------------------------------------------------------------
@@ -1037,7 +1037,7 @@ create or replace view geck_data.v_trait_frequencies as
 --      select image_url, traits from v_training_pairs limit 5;
 --
 --    If the setting isn't set, the uploaded rows will have a NULL-prefixed
---    URL — harmless, just skip them in the trainer.
+--    URL: harmless, just skip them in the trainer.
 -- ----------------------------------------------------------------------------
 
 -- END SOURCE MIGRATION: 0003_training_dataset.sql
@@ -1045,7 +1045,7 @@ create or replace view geck_data.v_trait_frequencies as
 
 -- BEGIN SOURCE MIGRATION: 0004_ingest_audit.sql
 -- ============================================================================
--- Geck Inspect — 0004: ingest audit
+-- Geck Inspect: 0004: ingest audit
 --
 -- Until now, the log of "what did the extension push and when?" was scattered
 -- across the destination tables (price_drops, listing_status_events, etc).
@@ -1085,7 +1085,7 @@ create index if not exists idx_ingest_audit_event_types
 
 alter table geck_data.ingest_audit enable row level security;
 
--- Admins read. No public insert — writes come from the server-side route
+-- Admins read. No public insert, writes come from the server-side route
 -- handler using the service-role key (which bypasses RLS), so the table
 -- cannot be polluted by anon or authenticated callers.
 drop policy if exists "admin read ingest_audit" on geck_data.ingest_audit;
@@ -1097,7 +1097,7 @@ create policy "admin delete ingest_audit" on geck_data.ingest_audit
   for delete using (geck_data.is_admin());
 
 -- ----------------------------------------------------------------------------
--- v_ingest_daily — convenience view for the admin ingest timeline. Buckets
+-- v_ingest_daily: convenience view for the admin ingest timeline. Buckets
 -- the last 30 days and surfaces success rate + most common event types.
 -- ----------------------------------------------------------------------------
 create or replace view geck_data.v_ingest_daily as
@@ -1124,14 +1124,14 @@ order by 1 desc;
 
 -- BEGIN SOURCE MIGRATION: 0005_market_analytics_views.sql
 -- ============================================================================
--- Geck Inspect — 0005: market analytics views
+-- Geck Inspect: 0005: market analytics views
 --
 -- Wires the /market dashboard to real Supabase data. Builds on the tables
 -- created by 0001 (market_listings, market_sellers, listing_images),
 -- 0002 (price_history, price_drops, listing_status_events, auction_results,
 -- seller_snapshots, show_mentions, cross_platform_listings).
 --
--- Everything here is read-only derived structure — no new base tables. The
+-- Everything here is read-only derived structure, no new base tables. The
 -- application reads through these views with the anon key; RLS on the
 -- underlying tables already permits public SELECT.
 --
@@ -1140,14 +1140,14 @@ order by 1 desc;
 --
 -- NOTE: all round(x, n) calls below cast to ::numeric first.
 -- percentile_cont(...) and exp()/ln() return double precision, and Postgres
--- only implements round(numeric, int) — not round(double precision, int).
+-- only implements round(numeric, int): not round(double precision, int).
 -- If you see "function round(double precision, integer) does not exist",
 -- you're on the pre-cast version of this file; re-run it (everything here
 -- is CREATE OR REPLACE so it's safe to re-apply).
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
--- 1. combo_catalog — the canonical list of trait combinations the dashboard
+-- 1. combo_catalog, the canonical list of trait combinations the dashboard
 -- recognizes. UI components keep an identical list in TypeScript; this is
 -- the SQL mirror so views can do set-based joins instead of per-row ifs.
 --
@@ -1183,7 +1183,7 @@ create policy "public read combo_catalog" on geck_data.combo_catalog
   for select using (true);
 
 -- ----------------------------------------------------------------------------
--- 2. combo_match(traits text) — returns the first combo_catalog row whose
+-- 2. combo_match(traits text): returns the first combo_catalog row whose
 -- tokens all appear in `traits` (lowercased). Returns NULL if no match.
 -- A listing can match at most one combo for the purposes of rollups so
 -- high-specificity combos are checked first (longest tokens first).
@@ -1208,11 +1208,11 @@ as $$
 $$;
 
 -- ----------------------------------------------------------------------------
--- 3. region_of(seller_location text) — coarse region classification used by
+-- 3. region_of(seller_location text): coarse region classification used by
 -- the Regional heatmap and Breeders table. Returns one of:
 --   'US', 'CA', 'EU', 'UK', 'AU', 'JP', 'SE', 'SEA', or NULL.
 --
--- Heuristics only — the dataset's seller_location is free-form text (city,
+-- Heuristics only, the dataset's seller_location is free-form text (city,
 -- state, country). We match the country or country-code tail first, then
 -- fall through to a few US/UK state abbreviations.
 -- ----------------------------------------------------------------------------
@@ -1246,7 +1246,7 @@ as $$
 $$;
 
 -- ----------------------------------------------------------------------------
--- 4. v_combo_rollups(window_days) — for each combo, compute median sold,
+-- 4. v_combo_rollups(window_days): for each combo, compute median sold,
 -- median ask, % spread, avg days-to-sell, sold count, live count, and a
 -- confidence score over the given window.
 --
@@ -1332,7 +1332,7 @@ from per_combo pc;
 $$;
 
 -- ----------------------------------------------------------------------------
--- 5. v_regional_pivot — combo × region median sold/ask over window. Uses
+-- 5. v_regional_pivot, combo × region median sold/ask over window. Uses
 -- region_of() on the seller location to bucket listings. Unlike
 -- v_combo_rollups we don't parameterize by window here; a materialized view
 -- keyed on "last 365 days" is a reasonable default, with the app re-issuing
@@ -1398,7 +1398,7 @@ group by combo_name, region;
 $$;
 
 -- ----------------------------------------------------------------------------
--- 6. v_market_index — weekly weighted basket of high-value combos. The
+-- 6. v_market_index, weekly weighted basket of high-value combos. The
 -- index value represents the geometric average of the top-8 combos' median
 -- sold prices, normalized so the oldest week in the requested window = 1000.
 -- ----------------------------------------------------------------------------
@@ -1461,7 +1461,7 @@ order by week_start;
 $$;
 
 -- ----------------------------------------------------------------------------
--- 7. v_combo_source_blend — for each combo, break down its observations
+-- 7. v_combo_source_blend, for each combo, break down its observations
 -- across price_history.source so the Combo detail panel can show "how the
 -- headline is assembled" (GI sales / GI listings / breeder / …).
 -- ----------------------------------------------------------------------------
@@ -1517,17 +1517,17 @@ order by ps.n desc;
 $$;
 
 -- ----------------------------------------------------------------------------
--- 8. Grants — anon reads everything the functions return through RLS on the
+-- 8. Grants, anon reads everything the functions return through RLS on the
 -- underlying tables; no explicit grants required.
 -- ----------------------------------------------------------------------------
--- (intentionally empty — function security comes from table policies.)
+-- (intentionally empty, function security comes from table policies.)
 
 -- END SOURCE MIGRATION: 0005_market_analytics_views.sql
 
 
 -- BEGIN SOURCE MIGRATION: 0006_breeding_schema.sql
 -- ============================================================================
--- Geck Inspect — 0006: breeding schema
+-- Geck Inspect: 0006: breeding schema
 --
 -- Adds user-tracked breeding records that back the /market Supply tab. Each
 -- table is owner-scoped (authenticated users can only see their own rows);
@@ -1630,7 +1630,7 @@ create index if not exists idx_hatchlings_clutch on geck_data.hatchlings(clutch_
 create index if not exists idx_hatchlings_hatched on geck_data.hatchlings(hatched_on desc);
 
 -- ----------------------------------------------------------------------------
--- 4. RLS — owner read/write own; admin reads everything.
+-- 4. RLS, owner read/write own; admin reads everything.
 -- ----------------------------------------------------------------------------
 alter table geck_data.breeding_pairs enable row level security;
 alter table geck_data.clutches       enable row level security;
@@ -1647,7 +1647,7 @@ drop policy if exists "admin read breeding_pairs" on geck_data.breeding_pairs;
 create policy "admin read breeding_pairs" on geck_data.breeding_pairs
   for select using (geck_data.is_admin());
 
--- clutches — owner via the pair
+-- clutches: owner via the pair
 drop policy if exists "owner crud clutches" on geck_data.clutches;
 create policy "owner crud clutches" on geck_data.clutches
   for all
@@ -1668,7 +1668,7 @@ drop policy if exists "admin read clutches" on geck_data.clutches;
 create policy "admin read clutches" on geck_data.clutches
   for select using (geck_data.is_admin());
 
--- hatchlings — owner via the clutch's pair
+-- hatchlings: owner via the clutch's pair
 drop policy if exists "owner crud hatchlings" on geck_data.hatchlings;
 create policy "owner crud hatchlings" on geck_data.hatchlings
   for all
@@ -1694,7 +1694,7 @@ create policy "admin read hatchlings" on geck_data.hatchlings
   for select using (geck_data.is_admin());
 
 -- ----------------------------------------------------------------------------
--- 5. v_supply_pipeline_monthly — aggregate supply projection for the Supply
+-- 5. v_supply_pipeline_monthly, aggregate supply projection for the Supply
 -- tab. Runs with security_invoker so RLS on breeding_pairs + clutches
 -- applies to the caller: owners see their own pairs, admins see all pairs.
 -- The view aggregates to (month, combo) so no owner identity leaks.
@@ -1815,7 +1815,7 @@ create index if not exists idx_listing_images_pending_hydrate
 -- 0007 created a partial unique index on (listing_id, image_url) to de-dupe
 -- URL-only rows coming from gallery events. It worked for queries but
 -- PostgREST's upsert with `on_conflict=listing_id,image_url` can't infer
--- partial indexes — ON CONFLICT requires either a matching unique CONSTRAINT
+-- partial indexes. ON CONFLICT requires either a matching unique CONSTRAINT
 -- or a full (non-partial) unique index. The result was every listingImage
 -- event failing at upsert with "there is no unique or exclusion constraint
 -- matching the ON CONFLICT specification", so no rows ever landed.
@@ -2082,7 +2082,7 @@ on conflict (id) do nothing;
 
 -- BEGIN SOURCE MIGRATION: 0011_canonical_listings.sql
 -- ============================================================================
--- 0011 — Track the scrape pipeline schema + mark canonical-source rows
+-- 0011: Track the scrape pipeline schema + mark canonical-source rows
 --
 -- Background: the geck-data scrape pipeline writes to three tables that were
 -- created outside this repo's migrations folder (originally via SQL Editor
@@ -2243,21 +2243,21 @@ create policy "public read scrape_runs"      on geck_data.scrape_runs      for s
 
 -- BEGIN SOURCE MIGRATION: 0012_canonical_cleanup.sql
 -- ============================================================================
--- 0012 — Clean up legacy bare-numeric market_listings rows + ghost sellers
+-- 0012: Clean up legacy bare-numeric market_listings rows + ghost sellers
 --
 -- After 0011 enabled RLS and the canonical dual-write established the
 -- mm_-prefixed id convention, 21 bare-numeric market_listings rows from
 -- the 2026-04 bulk Python upload remained as dead-letter placeholders.
 -- 16 of them anchored listing_images uploaded through the geck-data UI,
 -- 3 anchored legacy price_history rows, and 18 of the 21 collided with
--- mm_-prefixed siblings created by the canonical backfill — leaving 3
+-- mm_-prefixed siblings created by the canonical backfill, leaving 3
 -- hand-uploaded images on listing 3615035 unreachable from the public
 -- listing page because they were attached to the bare id.
 --
 -- This migration:
 --
 --   1. Inserts mm_-prefixed siblings for the 3 bare rows that lacked one
---      (preserving whatever data they had — typically just `price`).
+--      (preserving whatever data they had, typically just `price`).
 --   2. Re-points listing_images.listing_id from bare to mm_-prefixed (68 rows).
 --   3. Re-points price_history.listing_id likewise (3 rows).
 --   4. Deletes all 21 bare market_listings rows.
@@ -2267,7 +2267,7 @@ create policy "public read scrape_runs"      on geck_data.scrape_runs      for s
 --
 -- Pre-condition: a sane bare row count (<=100) to guard against running
 -- this in an unexpected state. Post-condition: 0 bare rows and 0 ghost
--- sellers remain. Idempotent — a second run finds 0 bare rows and is
+-- sellers remain. Idempotent, a second run finds 0 bare rows and is
 -- a no-op.
 -- ============================================================================
 
@@ -2279,7 +2279,7 @@ begin
   select count(*) into bare_count
     from geck_data.market_listings where id not like 'mm_%';
   if bare_count = 0 then
-    raise notice '0012: no bare-numeric market_listings rows found — already cleaned.';
+    raise notice '0012: no bare-numeric market_listings rows found: already cleaned.';
     return;
   end if;
   if bare_count > 100 then
@@ -2358,7 +2358,7 @@ end$$;
 
 -- BEGIN SOURCE MIGRATION: 0013_canonical_status_bootstrap.sql
 -- ============================================================================
--- 0013 — Bootstrap current_status + listing_status_events from scraper data
+-- 0013: Bootstrap current_status + listing_status_events from scraper data
 --
 -- The /market dashboard views from migration 0005 (v_combo_rollups,
 -- v_regional_heatmap, v_market_index) read market_listings.current_status
@@ -2371,7 +2371,7 @@ end$$;
 -- expect:
 --
 --   1. current_status = 'sold' when is_sold = true, else 'live' (only when
---      currently NULL — leaves extension-set values untouched).
+--      currently NULL, leaves extension-set values untouched).
 --   2. Synthesizes one listing_status_events row per sold listing that
 --      doesn't already have one, using last_seen_at as the observation time
 --      and days_since_first_seen as the listing's lifespan.
@@ -2412,7 +2412,7 @@ where ml.current_status = 'sold'
 
 -- BEGIN SOURCE MIGRATION: 0014_morph_training_dataset.sql
 -- ============================================================================
--- 0014 — Morph ID training dataset views + crested morph taxonomy
+-- 0014: Morph ID training dataset views + crested morph taxonomy
 --
 -- Produces a flat (image_url, listing_id, traits[], ...) training set ready
 -- for a PyTorch multi-label classifier. Two key differences from 0003's
@@ -2520,7 +2520,7 @@ create policy "public read crested_morph_taxonomy"
   on geck_data.crested_morph_taxonomy for select using (true);
 
 -- ----------------------------------------------------------------------------
--- 2. is_training_trait — filter out the seller-questionnaire noise
+-- 2. is_training_trait, filter out the seller-questionnaire noise
 --
 -- The scraper picks up free-text labels including things like "Diet: Meal
 -- Replacement, Cricket" and "Proven breeder: No" which are not morphs.
@@ -2556,7 +2556,7 @@ as $$
 $$;
 
 -- ----------------------------------------------------------------------------
--- 3. v_morph_training — flat (image_url, listing_id, traits[], ...) per image
+-- 3. v_morph_training, flat (image_url, listing_id, traits[], ...) per image
 --
 -- Sources:
 --   A. geck_data.listings.primary_image_url      (one row per listing)
@@ -2663,7 +2663,7 @@ left join geck_data.listings l on l.listing_id = (
 );
 
 -- ----------------------------------------------------------------------------
--- 4. v_morph_training_stats — per-trait coverage + per-split count
+-- 4. v_morph_training_stats, per-trait coverage + per-split count
 -- ----------------------------------------------------------------------------
 create or replace view geck_data.v_morph_training_stats as
 with images_by_split as (
@@ -2701,21 +2701,21 @@ from per_trait;
 
 
 -- BEGIN SOURCE MIGRATION: 0015_taxonomy_align_geck_inspect.sql
--- 0015 — Align crested_morph_taxonomy to geck-inspect's snake_case canonical
+-- 0015: Align crested_morph_taxonomy to geck-inspect's snake_case canonical
 -- ids so wild scraper images can be seeded into geck-inspect.gecko_images
 -- without any further label translation.
 --
 -- geck-inspect's edge function (recognize-gecko-morph) consumes ids defined
 -- in supabase/functions/recognize-gecko-morph/taxonomy.ts. Those ids are
--- the contract our seeder must produce — primary_morph, genetic_traits,
+-- the contract our seeder must produce, primary_morph, genetic_traits,
 -- secondary_traits, base_color, etc.
 --
 -- This migration adds two columns:
---   canonical_id  text   — the geck-inspect snake_case id
---   trait_kind    text   — primary_morph / genetic_trait / secondary_trait / base_color
+--   canonical_id  text, the geck-inspect snake_case id
+--   trait_kind    text, primary_morph / genetic_trait / secondary_trait / base_color
 -- plus a helper function geck_data.canonical_trait(text) for the seeder.
 --
--- Idempotent — adds columns IF NOT EXISTS and overwrites a known mapping
+-- Idempotent: adds columns IF NOT EXISTS and overwrites a known mapping
 -- so a synonyms update only requires re-running this file.
 
 alter table geck_data.crested_morph_taxonomy
@@ -2818,7 +2818,7 @@ $$;
 
 
 -- BEGIN SOURCE MIGRATION: 0016_morph_training_canonical_view.sql
--- 0016 — v_morph_training_canonical: emit geck-inspect-canonical ids.
+-- 0016: v_morph_training_canonical: emit geck-inspect-canonical ids.
 --
 -- Where v_morph_training emits scraper-native trait names, this view
 -- maps them through crested_morph_taxonomy to geck-inspect's snake_case
@@ -2830,7 +2830,7 @@ $$;
 --   secondary_traits (text[] of SECONDARY_TRAIT_IDS)
 --   base_color       (single BASE_COLOR_ID)
 --
--- Rows where no primary_morph can be resolved are filtered out — those
+-- Rows where no primary_morph can be resolved are filtered out, those
 -- aren't useful for seeding gecko_images since primary_morph is the
 -- main label.
 
@@ -2886,7 +2886,7 @@ where (primary_morph_ids)[1] is not null;
 
 
 -- BEGIN SOURCE MIGRATION: 0017_morph_eval_runs.sql
--- 0017 — Persistence for Morph ID eval runs.
+-- 0017: Persistence for Morph ID eval runs.
 --
 -- Each row records one execution of scripts/eval_morph_id.py against the
 -- geck-inspect recognize-gecko-morph edge function. The /data-admin/training/
@@ -2946,7 +2946,7 @@ CREATE TABLE IF NOT EXISTS geck_data.sellers (
     seller_slug      text PRIMARY KEY,    -- URL slug, e.g. "rosethornexotics"
     store_name       text,                -- display name from <title>
     owner_name       text,                -- parsed from meta description
-    location_raw     text,                -- "Atlanta, GA, USA" — raw, unsplit
+    location_raw     text,                -- "Atlanta, GA, USA": raw, unsplit
     member_since     text,                -- "Basic Member since 2025"
     listings_count   int,                 -- self-reported active listings
     avatar_url       text,
@@ -3002,13 +3002,13 @@ WHERE l.seller_slug IS NOT NULL
 -- Cleanup strategy
 -- ----------------
 -- 1. Split cached_traits on " | ".
--- 2. Drop any segment whose head is a known non-trait property name —
+-- 2. Drop any segment whose head is a known non-trait property name,
 --    either `<key>: <value>` or the bare `<key>` (the extension
 --    sometimes emits the bare name).
 -- 3. Re-join the surviving segments with " | ".
 -- 4. Rebuild norm_traits from the cleaned cached_traits by lowercasing
 --    and replacing "|" with a space (the same flattening the writer
---    pipeline does). This is the lossless path — trying to clean
+--    pipeline does). This is the lossless path, trying to clean
 --    norm_traits in place via comma-split drops real trait tokens that
 --    happen to be trapped in the same comma-segment as a polluted key.
 -- 5. Idempotent: rows whose cached_traits no longer contain any matching
@@ -3145,7 +3145,7 @@ sold_events as (
   where lse.status = 'sold'
     and lse.observed_at >= now() - make_interval(days => p_window_days)
 ),
--- Listings that were first seen within the window — gates the "live"
+-- Listings that were first seen within the window, gates the "live"
 -- side to the same period so the ratio is window-consistent.
 in_window_listings as (
   select id from geck_data.market_listings
@@ -3280,8 +3280,8 @@ grant execute on function geck_data.v_combo_profitability(int, int, int) to anon
 --
 -- Promote the historical text-typed `first_listed` column (YYYY-MM-DD)
 -- into the typed `first_listed_at` timestamptz column. This unlocks
--- chronological trend queries by *MorphMarket listing date* — the date
--- the listing actually appeared on the marketplace — rather than the
+-- chronological trend queries by *MorphMarket listing date*: the date
+-- the listing actually appeared on the marketplace, rather than the
 -- date our scraper first observed it.
 --
 -- Why this matters: the catalog scraper bootstrapped over a 3-day
@@ -3310,16 +3310,16 @@ where first_listed_at is null
 -- profitability ranking can distinguish value-driving traits from
 -- incidental descriptors.
 --
---   Tier 1  Genetic morphs — predictable inheritance, breeder demand drivers
+--   Tier 1  Genetic morphs, predictable inheritance, breeder demand drivers
 --           (Axanthic, Lilly White, Cappuccino, Frappuccino, Moonglow,
 --           Sable, Soft Scale, Phantom, het-* versions).
 --
---   Tier 2  Premium structural patterns — desirable look traits that aren't
+--   Tier 2  Premium structural patterns, desirable look traits that aren't
 --           simple-recessive genetic morphs but command a premium
 --           (Extreme Harlequin, Full Pinstripe, Super Dalmatian, Crowned,
 --           Drippy, Quad-Stripe, …).
 --
---   Tier 3  Cosmetic descriptors — colours, markings, base coats, generic
+--   Tier 3  Cosmetic descriptors, colours, markings, base coats, generic
 --           pattern descriptors that ride along on listings whose value
 --           comes from a Tier 1/2 trait (Snowflake, Tri-Color, Red,
 --           Harlequin, Dalmatian, Partial Pinstripe, …).
@@ -3437,7 +3437,7 @@ grant select on geck_data.trait_tiers to anon, authenticated;
 -- (0019):
 --
 --   1. Single-sale "medians."   p_min_pair_listings only required 20
---      total listings (live + sold) — pairs with sold_count = 1 ranked
+--      total listings (live + sold): pairs with sold_count = 1 ranked
 --      to the top because percentile_cont(0.5) of one row is that row's
 --      price. A single $1,250 outlier sale of a complex multi-trait
 --      gecko got attributed to every pair of tokens that gecko was
@@ -3449,11 +3449,11 @@ grant select on geck_data.trait_tiers to anon, authenticated;
 --   2. Incidental pair labels.  Auto-discovered pairs emit a tile for
 --      every pair of frequent trait tokens that co-occur on the same
 --      listing. A listing tagged with 8 traits emits C(8,2)=28 pairs.
---      Many of these are statistical noise — "Snowflake × Tri-Color"
+--      Many of these are statistical noise: "Snowflake × Tri-Color"
 --      is not a combo anyone shops for. The new function joins each
 --      token to geck_data.trait_tiers (migration 0021) and:
 --        * orders the pair name so the lower-tier (more primary) token
---          comes first — "Axanthic × Snowflake" not "Snowflake × Axanthic"
+--          comes first: "Axanthic × Snowflake" not "Snowflake × Axanthic"
 --        * returns is_incidental = true when both tokens are Tier 3
 --          (cosmetic descriptors only). The UI surfaces incidental
 --          combos in a separate section so the main ranking shows
@@ -3629,7 +3629,7 @@ pair_rollup as (
   having count(*) >= p_min_pair_listings
 ),
 -- Sorted-token dedup key so anchor "Lilly White × Cappuccino" and
--- discovered "Cappuccino × Lilly White" merge — same pair, different
+-- discovered "Cappuccino × Lilly White" merge, same pair, different
 -- string order. Without this both surface as separate rows with
 -- identical metrics.
 anchor_keyed as (
@@ -3699,7 +3699,7 @@ grant execute on function geck_data.v_combo_profitability(int, int, int, int) to
 
 
 -- BEGIN SOURCE MIGRATION: 0023_model_invocations.sql
--- 0021 — Per-call log of every Anthropic model invocation that hits
+-- 0021: Per-call log of every Anthropic model invocation that hits
 -- the recognize-gecko-morph edge function (and any future LLM-backed
 -- edge function that opts in). One row per upstream Anthropic request,
 -- written from the edge function via the geck-data service role.
@@ -3714,9 +3714,9 @@ create table if not exists geck_data.model_invocations (
 
   -- Which feature called Claude. Free-text so we can add new surfaces
   -- without a schema change; canonical values today:
-  --   'morph_id_production' — Recognition.jsx, TrainModel.jsx (paying users)
-  --   'morph_id_eval'       — scripts/eval_morph_id.py
-  --   'morph_id_unknown'    — fallback when the caller didn't tag itself
+  --   'morph_id_production'. Recognition.jsx, TrainModel.jsx (paying users)
+  --   'morph_id_eval', scripts/eval_morph_id.py
+  --   'morph_id_unknown', fallback when the caller didn't tag itself
   surface text not null,
 
   -- Resolved Claude model id at request time
@@ -3788,7 +3788,7 @@ create or replace view geck_data.v_model_spend_7d as
 
 
 -- BEGIN SOURCE MIGRATION: 0024_runtime_config.sql
--- 0022 — Runtime configuration knobs that the /data-admin/control panel
+-- 0022: Runtime configuration knobs that the /data-admin/control panel
 -- can change without a redeploy. The eval script and the
 -- recognize-gecko-morph edge function read these instead of (or as a
 -- preferred override on top of) their existing env-var defaults, so
@@ -3876,7 +3876,7 @@ on conflict (key) do nothing;
 
 
 -- BEGIN SOURCE MIGRATION: 0025_model_invocations_ip_hash.sql
--- 0025 — Add ip_hash to model_invocations so the recognize-gecko-morph
+-- 0025: Add ip_hash to model_invocations so the recognize-gecko-morph
 -- edge function can enforce runtime_config.morph_id_per_ip_daily.
 --
 -- We store a SHA-256(salt + ip) hash, not the raw IP, so the table
@@ -3897,7 +3897,7 @@ create index if not exists idx_model_invocations_ip_hash_called_at
 
 
 -- BEGIN SOURCE MIGRATION: 0026_anthropic_billing_daily.sql
--- 0026 — Mirror of Anthropic's actual daily cost report. Populated by
+-- 0026: Mirror of Anthropic's actual daily cost report. Populated by
 -- scripts/pull_anthropic_billing.py against the
 -- /v1/organizations/cost_report Admin API endpoint.
 --
@@ -3936,7 +3936,7 @@ create policy "public read anthropic_billing_daily" on geck_data.anthropic_billi
 --    the policy to owner-scoped by joining through alerts.owner_id.
 --
 -- 2. cross_platform_listings is fine for public read (it's market data),
---    but we never set up a write policy for the service role — confirm it
+--    but we never set up a write policy for the service role, confirm it
 --    explicitly so the contract is documented.
 --
 -- 3. Add listing_images.phash (perceptual hash) + index for the future
@@ -3969,7 +3969,7 @@ create policy "owner read alert_matches" on geck_data.alert_matches
 -- evaluation runs server-side with the admin client.
 
 -- ----------------------------------------------------------------------------
--- 2. listing_images.phash — 64-bit perceptual hash, stored as bytea.
+-- 2. listing_images.phash: 64-bit perceptual hash, stored as bytea.
 --    Indexed for fast "show me other listings with a similar image" queries.
 -- ----------------------------------------------------------------------------
 alter table geck_data.listing_images
@@ -3991,7 +3991,7 @@ create index if not exists idx_xpl_images_phash
   where phash is not null;
 
 -- ----------------------------------------------------------------------------
--- 3. listing_image_phash_pairs — materialized candidate matches.
+-- 3. listing_image_phash_pairs, materialized candidate matches.
 --    The dedup worker computes pHash, finds near-neighbours, and writes one
 --    row per candidate pair. Read-side just consumes this table.
 -- ----------------------------------------------------------------------------
@@ -4183,7 +4183,7 @@ update geck_data.market_listings ml
 -- All are CREATE OR REPLACE so the file is replayable. They live in the
 -- public schema so the anon key can SELECT them (no RLS on views).
 --
--- Cresteds only — every view filters species in ('crested','unknown').
+-- Cresteds only, every view filters species in ('crested','unknown').
 -- ============================================================================
 
 -- ----------------------------------------------------------------------------
@@ -4339,7 +4339,7 @@ where li.phash is not null;
 -- 4. v_seller_reputation
 --    Latest seller_snapshots row per seller + recent sold count. We drive
 --    off seller_snapshots (created in 0002) rather than market_sellers
---    because market_sellers has no migration-defined column set — its
+--    because market_sellers has no migration-defined column set, its
 --    schema is whatever the original Python uploader laid down. Display
 --    name resolution stays in application code (it falls back to listings).
 -- ----------------------------------------------------------------------------
@@ -4725,7 +4725,7 @@ create index if not exists idx_alert_matches_unack
 -- ----------------------------------------------------------------------------
 -- 11. model_invocations.confidence
 --     Explicit per-call confidence, populated by the classifier itself
---     (currently inferred from output_tokens — keep that as a fallback in
+--     (currently inferred from output_tokens, keep that as a fallback in
 --     /api/training/queue). NULL for legacy invocations.
 -- ----------------------------------------------------------------------------
 alter table geck_data.model_invocations
@@ -4843,7 +4843,7 @@ $$;
 --
 -- Why multipliers rather than further segmentation of the view:
 --   Segmenting v_combo_price_distribution by (combo, age, sex, proven)
---   fragments sample sizes to nothing for rare combos — e.g., only
+--   fragments sample sizes to nothing for rare combos, e.g., only
 --   ~4 sold "proven breeder" Lilly White × Axanthic in any 180d window.
 --   Multipliers borrow strength across combos: a proven-breeder uplift
 --   applies the same way to all morphs, derived from the population
@@ -4907,7 +4907,7 @@ insert into geck_data.price_adjustment_factors (category, bucket, multiplier, so
   ('sex', 'female',  1.15, 'seed'),
   ('sex', 'male',    1.00, 'seed'),
   ('sex', 'unknown', 1.00, 'seed'),
-  -- Proven flag — distinct from age=proven_breeder so a young confirmed
+  -- Proven flag, distinct from age=proven_breeder so a young confirmed
   -- breeder also picks up the bonus.
   ('proven', 'true',  1.10, 'seed'),
   ('proven', 'false', 1.00, 'seed'),
@@ -4916,14 +4916,14 @@ insert into geck_data.price_adjustment_factors (category, bucket, multiplier, so
   --   adult/proven >= 60g -> heavy
   --   subadult   < 18g    -> underweight
   --   subadult   >= 40g   -> heavy
-  --   etc. — see lib/market/price-adjust.ts
+  --   etc.: see lib/market/price-adjust.ts
   ('weight_bucket', 'underweight', 0.85, 'seed'),
   ('weight_bucket', 'normal',      1.00, 'seed'),
   ('weight_bucket', 'heavy',       1.05, 'seed')
 on conflict (category, bucket) do nothing;
 
 -- ----------------------------------------------------------------------------
--- v_recent_combo_sales — the 5 most recent comparable sales per combo,
+-- v_recent_combo_sales: the 5 most recent comparable sales per combo,
 -- used by /api/market/fair-price?recent_sales=N to give the morph-card
 -- response three or five concrete examples next to the percentile band.
 -- ----------------------------------------------------------------------------

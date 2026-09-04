@@ -1,6 +1,6 @@
-# Geck Inspect — native iOS / Android shell plan
+# Geck Inspect: native iOS / Android shell plan
 
-Status: planning. No code yet — this doc exists so the next session
+Status: planning. No code yet, this doc exists so the next session
 can execute against a decided path rather than rehashing trade-offs.
 
 ## Goal
@@ -12,7 +12,7 @@ on the App Store / Play Store.
 
 ## Context
 
-- The web app at geckinspect.com is a working responsive PWA — React
+- The web app at geckinspect.com is a working responsive PWA. React
   18 + Vite + Supabase, Tailwind, ~104 prerendered SEO pages.
 - Existing PWA hooks: `<link rel="manifest">` in `index.html`,
   apple-touch-icon, theme-color. There's already a standalone-launch
@@ -32,8 +32,8 @@ on the App Store / Play Store.
 
 | Path | Effort | Code reuse | App Store presence | Push notifications | Risk |
 |---|---|---|---|---|---|
-| **Capacitor wrap** (recommended) | ~1 week | 100% — same React tree runs in WebView | Yes | Yes (FCM + APNs via plugin) | Low. Apple has occasionally cracked down on "wrappers", but Capacitor apps with real native plugins (camera, push, share) are routinely approved. |
-| Expo / React Native rewrite | ~2–3 months | ~30% — share business logic, rebuild every screen with native components | Yes | Yes (native) | High. Throws away the prerendering work and the SEO-shared component tree. |
+| **Capacitor wrap** (recommended) | ~1 week | 100%, same React tree runs in WebView | Yes | Yes (FCM + APNs via plugin) | Low. Apple has occasionally cracked down on "wrappers", but Capacitor apps with real native plugins (camera, push, share) are routinely approved. |
+| Expo / React Native rewrite | ~2–3 months | ~30%, share business logic, rebuild every screen with native components | Yes | Yes (native) | High. Throws away the prerendering work and the SEO-shared component tree. |
 | PWA-plus (no native shell) | ~1 week | 100% | **No** | Web push only (no iOS Safari support) | Low. But concedes the App Store credibility goal indefinitely. |
 
 **Recommendation: Capacitor wrap.** Closes the credibility gap fast,
@@ -42,7 +42,7 @@ later if specific surfaces need real native components.
 
 ## Phased rollout (Capacitor)
 
-### Phase 0 — prerequisites (you / the user)
+### Phase 0: prerequisites (you / the user)
 - Apple Developer account ($99/yr) + Play Console ($25 one-time)
 - Bundle identifiers picked (e.g. `com.geckinspect.app`)
 - Decide: do we want anonymous browse (guest mode) on native? App
@@ -50,14 +50,14 @@ later if specific surfaces need real native components.
   app-using-public-data; we read public morph guides without auth so
   we should be safe.
 
-### Phase 1 — bootstrap (~1 day)
+### Phase 1: bootstrap (~1 day)
 - `pnpm add @capacitor/core @capacitor/ios @capacitor/android`
 - `npx cap init "Geck Inspect" com.geckinspect.app --web-dir=dist`
 - `npx cap add ios && npx cap add android`
 - Wire `pnpm build && npx cap sync` into a `build:native` script.
 - First successful boot in iOS Simulator + Android Emulator.
 
-### Phase 2 — universal / app links (~1 day)
+### Phase 2: universal / app links (~1 day)
 - iOS: ship `apple-app-site-association` at `geckinspect.com/.well-known/apple-app-site-association`.
   Currently `vercel.json` rewrites everything; need an exception for `.well-known/*`.
 - Android: ship `assetlinks.json` at the same prefix.
@@ -69,7 +69,7 @@ later if specific surfaces need real native components.
   works as-is; just need to make sure the links don't bounce out to
   Safari on iOS.
 
-### Phase 3 — camera (~½ day)
+### Phase 3: camera (~½ day)
 - `<input type="file" accept="image/*" capture="environment">` works
   inside Capacitor's WebView on both platforms. Verify and decide
   whether to bother with `@capacitor/camera`.
@@ -77,7 +77,7 @@ later if specific surfaces need real native components.
   `Capacitor.isNativePlatform()` and switch to the plugin for the
   picker, while keeping the Blob upload path intact.
 
-### Phase 4 — push notifications (~2–3 days)
+### Phase 4: push notifications (~2–3 days)
 - `pnpm add @capacitor/push-notifications`
 - iOS: APNs cert in Apple Developer portal, capability enabled in
   Xcode, `aps-environment` entitlement.
@@ -92,7 +92,7 @@ later if specific surfaces need real native components.
   Out of scope for v1: forum activity, marketplace activity (those
   belong on web push if anything).
 
-### Phase 5 — auth session (~½ day)
+### Phase 5: auth session (~½ day)
 - Supabase JS persists sessions in localStorage by default; that
   works inside the WebView. Confirm refresh-token rotation works
   across app suspend/resume.
@@ -100,17 +100,17 @@ later if specific surfaces need real native components.
   storage on iOS (Safari's ITP doesn't apply inside Capacitor, but
   WKWebView storage can still be reset by iCloud restore).
 
-### Phase 6 — store metadata (~2 days)
+### Phase 6: store metadata (~2 days)
 - Screenshots (6.7" iPhone, 12.9" iPad, 6" Android phone, 10" tablet)
-- App Store privacy nutrition labels — disclose Supabase data
+- App Store privacy nutrition labels, disclose Supabase data
   collection: email, profile data, photos, gecko data,
   device identifier (push tokens).
-- Play Store data-safety form — same disclosure plus location-not-
+- Play Store data-safety form, same disclosure plus location-not-
   collected affirmation.
 - Promotional copy reusing the landing-page hero rewrite from
   earlier this session.
 
-### Phase 7 — CI build (~1 day)
+### Phase 7: CI build (~1 day)
 - GitHub Actions workflow that runs `pnpm build && npx cap sync` on
   push to main, then triggers a Fastlane lane to build + upload to
   TestFlight / Play Console internal track.
@@ -118,16 +118,16 @@ later if specific surfaces need real native components.
 
 ## Open questions to confirm before any code
 
-1. **Bundle ID + display name** — `com.geckinspect.app` and
+1. **Bundle ID + display name**: `com.geckinspect.app` and
    "Geck Inspect" sound right but lock these in early. Renaming
    later is painful.
-2. **Push notification scope** — confirm the v1 trigger list above.
-3. **Web-only-forever surfaces** — admin panel and store/checkout
+2. **Push notification scope**: confirm the v1 trigger list above.
+3. **Web-only-forever surfaces**: admin panel and store/checkout
    probably stay web-only. Worth deciding vs. building shells.
 4. **Existing PWA install nudge in `src/pages/Home.jsx`** flips to
    "Download on the App Store" / "Get it on Google Play" once
    shipped. That's a one-line edit when the time comes.
-5. **Tier-limit messaging** — `src/pages/Subscription.jsx` should
+5. **Tier-limit messaging**: `src/pages/Subscription.jsx` should
    call out that all features are available on every platform.
    Today it doesn't differentiate.
 

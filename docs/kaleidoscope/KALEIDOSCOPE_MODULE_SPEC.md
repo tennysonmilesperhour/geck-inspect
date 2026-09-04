@@ -1,4 +1,4 @@
-# Kaleidoscope Inheritance Module — Implementation Spec
+# Kaleidoscope Inheritance Module: Implementation Spec
 
 This is the specification for a headless TypeScript module that implements Kaleidoscope-Model breeding predictions. It is designed to live alongside the existing "Foundation Genetics" module, not replace it.
 
@@ -634,7 +634,7 @@ export function formatGenotype(g: KaleidoscopeGenotype): string {
  */
 export function parseNotation(input: string): Partial<KaleidoscopeGenotype> | null {
   // Implementation: regex parse of the format above
-  // (Detail this when implementing — straightforward but tedious)
+  // (Detail this when implementing, straightforward but tedious)
   return null; // TODO
 }
 ```
@@ -665,7 +665,7 @@ Write unit tests for:
 3. **predict.ts**: 
    - Test the canonical Tri-Color pairing: (2/0/2, T0, P0, Hq2, CvG=both) × (2/0/2, T0, P0, Hq2, CvG=both) should yield ~100% Tri-Color offspring.
    - Test (2/2/0, Hq=1) × (2/2/0, Hq=1) should yield zero phantom probability.
-   - Test (2/0/0 Hq=2) × (0/2/0 Hq=0) — Yellow Harlequin × Red Phantom — should yield orange-tinted offspring per the paper's example.
+   - Test (2/0/0 Hq=2) × (0/2/0 Hq=0): Yellow Harlequin × Red Phantom, should yield orange-tinted offspring per the paper's example.
 
 4. **phenotype.ts**:
    - Phantom classification correctly identifies Pure Yellow/Red/Black phantoms.

@@ -4,7 +4,7 @@
 --
 -- Adds the data layer for the admin blog feature. Creates five tables:
 --
---   blog_settings    one row per admin user — site-wide blog configuration
+--   blog_settings    one row per admin user, site-wide blog configuration
 --   blog_categories  per-admin category taxonomy (name + slug + active flag)
 --   blog_tags        per-admin tag taxonomy
 --   blog_posts       the posts themselves (draft / scheduled / published / archived)
@@ -233,7 +233,7 @@ CREATE POLICY blog_posts_public_read ON public.blog_posts
     AND (published_at IS NULL OR published_at <= now())
   );
 
--- blog_logs: admin-only. No UPDATE / DELETE — append-only.
+-- blog_logs: admin-only. No UPDATE / DELETE, append-only.
 DROP POLICY IF EXISTS blog_logs_admin_select ON public.blog_logs;
 DROP POLICY IF EXISTS blog_logs_admin_insert ON public.blog_logs;
 CREATE POLICY blog_logs_admin_select ON public.blog_logs

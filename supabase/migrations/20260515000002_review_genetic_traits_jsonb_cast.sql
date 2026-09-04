@@ -1,4 +1,4 @@
--- 20260515 — Fix COALESCE(text[], jsonb) in review RPCs
+-- 20260515: Fix COALESCE(text[], jsonb) in review RPCs
 --
 -- After the previous migration cast p_secondary_traits to jsonb at
 -- the column write sites, a second type mismatch surfaced:

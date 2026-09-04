@@ -31,7 +31,7 @@ module.exports = {
   			// are blue-grey) so neutrals carry the active theme's hue.
   			// `sage` is the brand accent scale (50 = darkest surface,
   			// 900 = lightest text) matching the always-dark render model.
-  			// `earth` is a warm-accent palette intentionally NOT themed —
+  			// `earth` is a warm-accent palette intentionally NOT themed,
   			// it stays orange across all themes for semantic alerts /
   			// breeder perks / hatchling badges.
   			slate: {
@@ -72,7 +72,7 @@ module.exports = {
   				800: 'hsl(var(--sage-800) / <alpha-value>)',
   				900: 'hsl(var(--sage-900) / <alpha-value>)',
   			},
-  			// emerald is the app's "brand accent" — overridden to read
+  			// emerald is the app's "brand accent", overridden to read
   			// CSS variables driven by the data-secondary attribute so
   			// users can mix-and-match a theme (backgrounds/surfaces)
   			// with an independent accent color. Defaults in :root

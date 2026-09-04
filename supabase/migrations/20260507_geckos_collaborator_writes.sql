@@ -9,7 +9,7 @@
 -- This migration widens UPDATE and DELETE so accepted members of a
 -- collection (role = owner or editor) can mutate rows whose
 -- collection_id points at that collection. Viewers and pending invites
--- get no write access — they can only SELECT (which is already
+-- get no write access, they can only SELECT (which is already
 -- everything-readable per the geckos_read_all policy).
 --
 -- INSERT is left at the original `auth.email() = created_by` check.

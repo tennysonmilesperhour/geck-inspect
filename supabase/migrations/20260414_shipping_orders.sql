@@ -1,4 +1,4 @@
--- Shipping orders — tracks shipments booked through the Zero's Geckos
+-- Shipping orders, tracks shipments booked through the Zero's Geckos
 -- integration. One row per shipment. Status updated via webhook or
 -- manual polling.
 
@@ -26,7 +26,7 @@ create table if not exists public.shipping_orders (
   recipient_state   text,
   recipient_zip     text,
 
-  -- Gecko linkage — array of gecko UUIDs shipped in this box.
+  -- Gecko linkage, array of gecko UUIDs shipped in this box.
   gecko_ids         uuid[] default '{}',
 
   estimated_delivery date,

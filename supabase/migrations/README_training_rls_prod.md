@@ -1,11 +1,11 @@
-# Training-data RLS — prod setup
+# Training-data RLS: prod setup
 
 Apply this SQL **manually** in the Supabase SQL editor against production.
 Not wired into the auto-applied migrations because the policies reference
 `profiles.role`, which only exists in prod (preview branches don't have
 the dashboard-managed profile table).
 
-One-time copy/paste — idempotent, safe to re-run.
+One-time copy/paste, idempotent, safe to re-run.
 
 Introduces an **`expert_reviewer`** role on `profiles.role` and locks
 the `gecko_images.verified = true` transition to admins + expert

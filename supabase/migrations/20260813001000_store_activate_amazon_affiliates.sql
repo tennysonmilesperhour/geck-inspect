@@ -1,5 +1,5 @@
 -- =============================================================================
--- Store launch pass — Amazon-only affiliate products
+-- Store launch pass. Amazon-only affiliate products
 -- =============================================================================
 -- We can publish Amazon Associates products before setting up the other
 -- reptile-company partner programs. This keeps Chewy/Pangea/Repashy/Dubia/etc.

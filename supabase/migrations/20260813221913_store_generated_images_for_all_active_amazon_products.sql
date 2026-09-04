@@ -1,5 +1,5 @@
 -- =============================================================================
--- Store cleanup — generated images for active Amazon products
+-- Store cleanup, generated images for active Amazon products
 -- =============================================================================
 -- Amazon Product Advertising API images are not wired yet. Until then, every
 -- active affiliate product gets category artwork so the public store never

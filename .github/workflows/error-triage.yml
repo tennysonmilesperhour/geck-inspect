@@ -5,7 +5,7 @@
 # If you ever want Mountain-WITH-DST instead, the cron becomes
 #   0 10 * * 3-11  (DST active, 04:00 MDT)
 #   0 11 * * 12-2  (DST inactive, 04:00 MST)
-# — one schedule won't cover it because MT flips twice a year.
+# one schedule won't cover it because MT flips twice a year.
 #
 # Flow:
 #   1. scripts/error-triage/triage.mjs queries error_logs for the last
@@ -19,11 +19,11 @@
 #      back to main so the same signature doesn't retrigger.
 #
 # Secrets required (repo → Settings → Secrets and variables → Actions):
-#   ANTHROPIC_API_KEY           — already present for blog-pipeline
-#   SUPABASE_URL                — https://<project>.supabase.co
-#   SUPABASE_SERVICE_ROLE_KEY   — service role key; bypasses RLS. Only
+#   ANTHROPIC_API_KEY: already present for blog-pipeline
+#   SUPABASE_URL: https://<project>.supabase.co
+#   SUPABASE_SERVICE_ROLE_KEY: service role key; bypasses RLS. Only
 #                                 used to read error_logs. Do NOT reuse
-#                                 an anon key — RLS blocks reads for it.
+#                                 an anon key. RLS blocks reads for it.
 #
 # If any secret is missing the script runs in placeholder mode: it logs
 # a message, writes lastRun, and exits 0 without touching PRs.
@@ -67,7 +67,7 @@ jobs:
         with:
           version: 10.33.0
 
-      # Full install — the agent runs pnpm lint + pnpm typecheck as its
+      # Full install, the agent runs pnpm lint + pnpm typecheck as its
       # gate before opening a PR, both of which need devDependencies.
       - name: Install dependencies
         run: pnpm install --frozen-lockfile

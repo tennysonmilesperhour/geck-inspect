@@ -8,7 +8,7 @@
 --
 -- Auth: we pass the project's service-role key in the Authorization
 -- header. send-push doesn't verify caller identity beyond checking that
--- the key matches SUPABASE_SERVICE_ROLE_KEY (implicit — Supabase routes
+-- the key matches SUPABASE_SERVICE_ROLE_KEY (implicit. Supabase routes
 -- service-role-signed requests with full privileges to edge functions
 -- regardless of --no-verify-jwt).
 --
@@ -21,7 +21,7 @@
 --
 -- The trigger uses NULLIF + try/catch pattern so that if these settings
 -- aren't configured yet (first deploy, local dev, etc.), the INSERT on
--- notifications still succeeds — we just skip the push fanout.
+-- notifications still succeeds, we just skip the push fanout.
 -- =============================================================================
 
 create extension if not exists pg_net with schema extensions;

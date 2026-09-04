@@ -192,7 +192,7 @@ comment on function public.estimate_food_runout(text) is
 -- =============================================================================
 -- Daily scan: for every user with cgd_reorder_reminders_enabled, food
 -- order history, and a runout date 14 days out, insert a notification.
--- Idempotent on cgd_reorder_last_estimated_runout_at — once we've
+-- Idempotent on cgd_reorder_last_estimated_runout_at, once we've
 -- alerted for a given runout estimate, we don't alert again until the
 -- next reorder shifts the estimate.
 --
@@ -203,7 +203,7 @@ comment on function public.estimate_food_runout(text) is
 --   select cron.schedule('cgd_reorder_reminder_daily', '0 9 * * *',
 --     'select public.cgd_reorder_reminder_run();');
 --
--- Idempotent on cgd_reorder_last_estimated_runout_at — once we've
+-- Idempotent on cgd_reorder_last_estimated_runout_at, once we've
 -- alerted for a given runout estimate, we don't alert again until the
 -- next reorder shifts the estimate.
 -- =============================================================================

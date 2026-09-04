@@ -1,12 +1,12 @@
 -- =============================================================================
--- testimonials — public-facing user quotes shown on the landing page
+-- testimonials: public-facing user quotes shown on the landing page
 -- =============================================================================
 -- Admin-curated quotes from real users that get rendered on / when at
 -- least N approved entries exist. Only `approved = true` rows are
 -- returned to the public; everything else is admin-only. Ordering on
 -- the landing page is by `sort_order ASC, created_at DESC`.
 --
--- Deliberately NO user-submission flow yet — testimonials must be
+-- Deliberately NO user-submission flow yet, testimonials must be
 -- entered by an admin to avoid spam/fake reviews. A later phase can
 -- add a "submit your story" form that creates rows with approved=false.
 -- =============================================================================

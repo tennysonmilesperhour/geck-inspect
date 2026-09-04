@@ -1,5 +1,5 @@
 -- =============================================================================
--- Store affiliate catalog expansion — keeper-relevant draft products
+-- Store affiliate catalog expansion, keeper-relevant draft products
 -- =============================================================================
 -- These rows fill out the supply catalog without publishing unreviewed links.
 -- Keep status='draft' until the vendor_product_url has the correct affiliate

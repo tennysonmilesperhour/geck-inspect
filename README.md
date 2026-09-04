@@ -51,7 +51,8 @@ so the sitemap's lastmod values reflect real change dates.
 - No em dashes anywhere in copy, UI strings, docs, or comments.
 - Crested gecko terminology stays specific (Lilly White, Harlequin,
   Phantom, Cappuccino, Axanthic, Sable, Highway).
-- `tennyscrestedgeckos.com` is a different breeder. It never appears in
-  this product.
+- A different breeder shares Tennyson's first name and runs a similarly
+  named site. It is not his brand and never appears in this product
+  (CLAUDE.md names it under domain disambiguation).
 
 See CLAUDE.md for the full working agreement.

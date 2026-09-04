@@ -1,8 +1,8 @@
-# P10 — Community Morph Photo Contributions
+# P10: Community Morph Photo Contributions
 
-**Priority:** P10 (Low — build only after morph guide is fully established)
+**Priority:** P10 (Low, build only after morph guide is fully established)
 **Dependencies:** Existing Morph Guide
-**Origin:** iHerp analysis — community-contributed species gallery
+**Origin:** iHerp analysis, community-contributed species gallery
 
 ---
 

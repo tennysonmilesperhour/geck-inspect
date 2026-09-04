@@ -215,11 +215,11 @@ function renderReport({ summary, trafficSources, topQueries, topPages, findings 
   lines.push('## At a glance (last 7 days)');
   lines.push('');
   if (summary) {
-    lines.push(`- **Sessions:** ${summary.sessions ?? '—'}`);
-    lines.push(`- **Users:** ${summary.totalUsers ?? '—'}`);
-    lines.push(`- **Pageviews:** ${summary.screenPageViews ?? '—'}`);
-    lines.push(`- **Engagement rate:** ${summary.engagementRate != null ? (summary.engagementRate * 100).toFixed(1) + '%' : '—'}`);
-    lines.push(`- **Avg session duration:** ${summary.averageSessionDuration != null ? summary.averageSessionDuration.toFixed(0) + 's' : '—'}`);
+    lines.push(`- **Sessions:** ${summary.sessions ?? 'n/a'}`);
+    lines.push(`- **Users:** ${summary.totalUsers ?? 'n/a'}`);
+    lines.push(`- **Pageviews:** ${summary.screenPageViews ?? 'n/a'}`);
+    lines.push(`- **Engagement rate:** ${summary.engagementRate != null ? (summary.engagementRate * 100).toFixed(1) + '%' : 'n/a'}`);
+    lines.push(`- **Avg session duration:** ${summary.averageSessionDuration != null ? summary.averageSessionDuration.toFixed(0) + 's' : 'n/a'}`);
   } else {
     lines.push('_GA4 summary unavailable (data not yet flowing or GA4_PROPERTY_ID missing)._');
   }

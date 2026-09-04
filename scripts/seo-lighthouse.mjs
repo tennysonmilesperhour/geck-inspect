@@ -99,7 +99,7 @@ function extract(psi, url) {
 }
 
 function emoji(score) {
-  if (score == null) return '—';
+  if (score == null) return 'n/a';
   if (score >= 90) return '🟢';
   if (score >= 50) return '🟡';
   return '🔴';
@@ -147,7 +147,7 @@ async function main() {
       continue;
     }
     md.push(
-      `| [\`${t.path}\`](${data.url}) | ${emoji(data.performance)} ${data.performance ?? '—'} | ${emoji(data.accessibility)} ${data.accessibility ?? '—'} | ${emoji(data.seo)} ${data.seo ?? '—'} | ${emoji(data.bestPractices)} ${data.bestPractices ?? '—'} | ${data.lab.lcp ?? '—'} | ${data.lab.cls ?? '—'} | ${data.field.lcp ?? '—'} | ${data.field.cls ?? '—'} | ${data.field.inp ?? '—'} |`,
+      `| [\`${t.path}\`](${data.url}) | ${emoji(data.performance)} ${data.performance ?? 'n/a'} | ${emoji(data.accessibility)} ${data.accessibility ?? 'n/a'} | ${emoji(data.seo)} ${data.seo ?? 'n/a'} | ${emoji(data.bestPractices)} ${data.bestPractices ?? 'n/a'} | ${data.lab.lcp ?? 'n/a'} | ${data.lab.cls ?? 'n/a'} | ${data.field.lcp ?? 'n/a'} | ${data.field.cls ?? 'n/a'} | ${data.field.inp ?? 'n/a'} |`,
     );
   }
   md.push('');

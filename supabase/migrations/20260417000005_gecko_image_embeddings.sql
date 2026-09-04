@@ -16,7 +16,7 @@
 CREATE EXTENSION IF NOT EXISTS vector WITH SCHEMA extensions;
 
 -- 2. Column -----------------------------------------------------------------
--- Nullable — backfill happens asynchronously via the edge function or an
+-- Nullable: backfill happens asynchronously via the edge function or an
 -- offline batch job. Missing embeddings just mean the image doesn't show
 -- up in kNN results until backfilled.
 ALTER TABLE IF EXISTS public.gecko_images

@@ -8,9 +8,9 @@
 # the report history is the canonical record of Google's signals.
 #
 # Secrets required for a real report (placeholder mode otherwise):
-#   GOOGLE_SERVICE_ACCOUNT_JSON — service-account key JSON (paste contents)
-#   GA4_PROPERTY_ID             — GA4 numeric property id (e.g. 346789123)
-#   GSC_SITE_URL                — "sc-domain:geckinspect.com" (domain
+#   GOOGLE_SERVICE_ACCOUNT_JSON: service-account key JSON (paste contents)
+#   GA4_PROPERTY_ID: GA4 numeric property id (e.g. 346789123)
+#   GSC_SITE_URL: "sc-domain:geckinspect.com" (domain
 #                                 property) or "https://geckinspect.com/"
 #                                 (URL-prefix property)
 
@@ -18,7 +18,7 @@ name: growth-report
 
 on:
   schedule:
-    # Monday 11:00 UTC — after blog-pipeline research (06:00) and draft
+    # Monday 11:00 UTC, after blog-pipeline research (06:00) and draft
     # (07:00) on MWF, so the blog-queue feed from this job can influence
     # the NEXT Wednesday's research pass.
     - cron: '0 11 * * 1'

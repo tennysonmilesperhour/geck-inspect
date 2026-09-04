@@ -75,7 +75,7 @@ CREATE POLICY "classification_votes insert self" ON public.classification_votes
   FOR INSERT TO authenticated
   WITH CHECK (reviewer_email = auth.jwt() ->> 'email');
 
--- No UPDATE/DELETE — votes are append-only. The unique constraint above
+-- No UPDATE/DELETE, votes are append-only. The unique constraint above
 -- means a reviewer can't change their mind by re-inserting; to change
 -- their vote they must rely on a new version of the sample.
 

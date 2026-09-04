@@ -1,4 +1,4 @@
--- 20260515 — Fix review_gecko_image / admin_verify_gecko_image
+-- 20260515: Fix review_gecko_image / admin_verify_gecko_image
 --
 -- secondary_traits on both gecko_images and classification_votes is jsonb,
 -- but the RPCs accept p_secondary_traits as text[] and write it straight

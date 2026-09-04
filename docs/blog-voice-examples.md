@@ -1,7 +1,7 @@
 # Blog Voice Examples
 
 **Status:** seeded by the pipeline author with three reference writers.
-Replace when Tennyson sends his preferred picks — just swap the files in
+Replace when Tennyson sends his preferred picks, just swap the files in
 §2 and rerun the pipeline; the draft agent reads whatever is in this file.
 
 This file is pasted into the writer agent's prompt verbatim as
@@ -14,10 +14,10 @@ imitate any single writer word-for-word.
 ## 1. The target blend, in one sentence
 
 Earnestness of a working breeder, precision of a science writer, and
-confidence of a columnist — with short sentences that earn the long
+confidence of a columnist, with short sentences that earn the long
 ones.
 
-## 2. Reference writers (temporary picks — replace with Tennyson's)
+## 2. Reference writers (temporary picks: replace with Tennyson's)
 
 ### 2a. Ed Yong (science writing)
 
@@ -29,10 +29,10 @@ condescends.
 
 > The world is teeming with organisms. There are millions of plants
 > and animals. Somewhere between 10 and 100 million. But these are
-> dwarfed, almost beyond comprehension, by microbes — the bacteria,
+> dwarfed, almost beyond comprehension, by microbes, the bacteria,
 > viruses, archaea, and fungi that together make up the bulk of Earth's
 > living tissue. Every animal you have ever seen, every plant, every
-> fungus — each is a walking community. Your own body is home to
+> fungus, each is a walking community. Your own body is home to
 > trillions of bacteria. They are not hangers-on. You are their host.
 
 What to copy: opening with scale and specificity, short sentences
@@ -51,7 +51,7 @@ the "here's why the conventional wisdom is wrong" move.
 > Everyone in the industry knows credit cards exist because they make
 > the customer feel good. Everyone is wrong. Credit cards exist because
 > they solve an extraordinarily specific coordination problem between
-> banks, merchants, and regulators — a problem that was not obvious
+> banks, merchants, and regulators, a problem that was not obvious
 > until the 1950s, and the solution to which is the most elegant piece
 > of financial plumbing in the modern economy. Customer psychology is
 > at best the tenth most important thing. Let me show you the first
@@ -90,17 +90,17 @@ these, it gets rewritten.
 
 - **Generic SEO listicle.** *"1. Choose the right morph. 2. Set up
   your enclosure. 3. Monitor humidity. These 10 steps will make you
-  a successful breeder."* — No personality, no stakes, no
+  a successful breeder."* No personality, no stakes, no
   specificity.
 - **Medical-disclaimer voice.** *"It is important to consult a
   qualified veterinarian before making any changes to your
-  animal's husbandry."* — Reads as liability-first, reader-second.
+  animal's husbandry."* Reads as liability-first, reader-second.
 - **Influencer hype voice.** *"Crested geckos are ABSOLUTELY the
   most incredible pet you can own. You won't BELIEVE how easy
-  they are."* — Emotion without content.
+  they are."* Emotion without content.
 - **Textbook voice.** *"The Correlophus ciliatus species, commonly
   known as the crested gecko, is a member of the family
-  Diplodactylidae…"* — Reads like Wikipedia. Save the taxonomy for
+  Diplodactylidae…"* Reads like Wikipedia. Save the taxonomy for
   the glossary.
 
 ## 4. Rhythm rule
@@ -112,10 +112,10 @@ open a sentence. A question the reader will answer in their head
 before you answer it on the page.
 
 If the draft reads smoothly at 1.5× speed but sounds lifeless at
-1.0×, the rhythm is broken — rewrite.
+1.0×, the rhythm is broken, rewrite.
 
 ## 5. Replace me
 
 When Tennyson sends his voice picks, replace §2 wholesale. Keep §1,
-§3, §4, §5 — they're the meta rules the writer agent enforces
+§3, §4, §5, they're the meta rules the writer agent enforces
 regardless of who the voice targets are.

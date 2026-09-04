@@ -1,5 +1,5 @@
 -- =============================================================================
--- Storage quota helper — sums bytes a user has uploaded to the
+-- Storage quota helper, sums bytes a user has uploaded to the
 -- geck-inspect-media bucket so the UI / upload pipeline can enforce
 -- per-tier quotas.
 -- =============================================================================

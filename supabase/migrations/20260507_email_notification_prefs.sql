@@ -17,7 +17,7 @@
 --      which POSTs the same payload to BOTH send-push and send-email
 --      via pg_net. Each function checks per-user prefs independently.
 --   3. Reads the service-role key from Vault (notification_service_role_key
---      secret). Edge function URLs are hardcoded — they aren't secrets,
+--      secret). Edge function URLs are hardcoded, they aren't secrets,
 --      and ALTER DATABASE for GUCs is not available to any user role on
 --      hosted Supabase.
 -- =============================================================================
@@ -67,7 +67,7 @@ comment on column public.profiles.email_notification_types is
 -- any role available to users (including the dashboard SQL editor),
 -- so a GUC-based config strategy is unreachable. We use Vault for the
 -- only actually-secret value (the service-role key) and hardcode the
--- two URLs, which aren't secret — the function names and project ref
+-- two URLs, which aren't secret, the function names and project ref
 -- are visible from the Edge Functions list and every Supabase URL.
 --
 -- Setup left to the user (one statement in the dashboard SQL editor):

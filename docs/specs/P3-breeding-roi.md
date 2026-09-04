@@ -1,14 +1,14 @@
-# P3 — Breeding ROI Dashboard
+# P3: Breeding ROI Dashboard
 
 **Priority:** P3
 **Dependencies:** P1 (Animal Passport), P2 (Market Pricing)
-**Origin:** Original spec — unchanged
+**Origin:** Original spec, unchanged
 
 ---
 
 ## What It Is
 
-A financial planning tool for breeding projects. Select a pairing, enter expected morph outcomes and probabilities, enter costs — get a full projected P&L with cash flow timeline, break-even analysis, and actuals tracking as the season progresses.
+A financial planning tool for breeding projects. Select a pairing, enter expected morph outcomes and probabilities, enter costs, get a full projected P&L with cash flow timeline, break-even analysis, and actuals tracking as the season progresses.
 
 This turns Geck Inspect from a recordkeeping app into a **business planning tool**. It's the feature serious breeders will pay for.
 
@@ -70,7 +70,7 @@ Clutch {
   egg_count:             integer
   infertile_count:       integer nullable
   incubation_temp_f:     decimal
-  expected_hatch_date:   date  (laid_date + 75 days — midpoint of 60–90 day range)
+  expected_hatch_date:   date  (laid_date + 75 days, midpoint of 60–90 day range)
   actual_hatch_date:     date nullable
   status:                enum [incubating, hatched, failed]
   hatchling_animal_ids:  array of UUID → Animal
@@ -93,31 +93,31 @@ Clutch {
 
 4-step wizard:
 
-1. **Step 1:** Sire/dam selection (search animals or free text), project name (auto-suggest: "Dam x Sire — Year"), planned start/end dates
-2. **Step 2:** Genetic outcome table — editable rows: Morph combination / Probability % / Expected eggs (auto-calc) / Price range (auto-loaded from market data, editable). Probability column must sum to 100% — live validation bar shown. **Note:** do NOT auto-calculate CG genetics. Breeders enter their own outcomes.
-3. **Step 3:** Cost inputs — acquisition sire, acquisition dam, feeding/month, housing/month, incubation/clutch, other. Project duration (months).
+1. **Step 1:** Sire/dam selection (search animals or free text), project name (auto-suggest: "Dam x Sire. Year"), planned start/end dates
+2. **Step 2:** Genetic outcome table, editable rows: Morph combination / Probability % / Expected eggs (auto-calc) / Price range (auto-loaded from market data, editable). Probability column must sum to 100%, live validation bar shown. **Note:** do NOT auto-calculate CG genetics. Breeders enter their own outcomes.
+3. **Step 3:** Cost inputs, acquisition sire, acquisition dam, feeding/month, housing/month, incubation/clutch, other. Project duration (months).
 4. **Step 4:** P&L preview (read-only) -> "Create project"
 
 ### Project ROI Dashboard (`/breeding/:id`)
 
 **This is the centrepiece.** Full-page professional financial dashboard.
 
-**Top row — 4 metric cards:**
+**Top row: 4 metric cards:**
 Projected revenue | Projected costs | Projected profit (green if positive, red if negative) | ROI % (profit/costs x 100)
 
 If costs > revenue: **red alert banner** at page top: "This project is projected to lose money at current market prices."
 
-**Left panel (55% desktop) — Morph outcomes:**
+**Left panel (55% desktop): Morph outcomes:**
 - Horizontal stacked bar chart (morph probability distribution, sage color family)
 - Table below: Morph / Probability / Expected # / Price range / Expected revenue
 - Totals row
 
-**Right panel (45% desktop) — Cost breakdown:**
+**Right panel (45% desktop): Cost breakdown:**
 - Donut chart by cost category
 - Itemized table: Category / Monthly / Duration / Total
 - Break-even callout box: "Sell X hatchlings at median price to break even" (formula: total_costs / average midpoint price, rounded up)
 
-**Bottom — Cash flow chart (full width):**
+**Bottom: Cash flow chart (full width):**
 - Monthly grouped bar chart: costs as downward bars (coral/red), revenue as upward bars (sage)
 - Cumulative net as overlaid line chart (secondary axis)
 - Revenue assumed to start 3 months before project end, spread over 2 months

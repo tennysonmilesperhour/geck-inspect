@@ -36,7 +36,7 @@ Project facts you must respect:
 - Brand rule: Geck Inspect is crested-gecko-FIRST. Never generalize copy to "reptiles"
   or "lizards." Use real crested gecko morph names in examples (Lilly White,
   Harlequin, Phantom, Cappuccino, Axanthic, Sable, Highway).
-- The domain tennyscrestedgeckos.com is NOT this project's founder. Never cite it as a
+- The third-party breeder site that shares Tennyson's first name (named in CLAUDE.md under domain disambiguation) is NOT this project's founder. Never cite it as a
   founder or credibility signal anywhere.
 - Verification: run `pnpm lint && pnpm typecheck && pnpm build` before finishing.
   All three must pass.

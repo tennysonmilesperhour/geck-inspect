@@ -4,7 +4,7 @@
 -- Every profile gets a unique short `referral_code`. Sharing a link of the form
 -- `/?ref=<code>` records `referred_by` on the new profile at signup, linking the
 -- new user back to the referrer. The referrer earns 10% of all subscription
--- revenue from referred users for life — a separate Stripe webhook writes
+-- revenue from referred users for life, a separate Stripe webhook writes
 -- entries into `referral_payouts` whenever a referred user pays.
 -- =============================================================================
 
@@ -68,7 +68,7 @@ update public.profiles
  where referral_code is null;
 
 -- =============================================================================
--- referral_payouts — ledger of revenue-share entries
+-- referral_payouts: ledger of revenue-share entries
 -- =============================================================================
 -- One row per Stripe charge attributable to a referred user. The Stripe
 -- webhook handler is responsible for inserting these and crediting

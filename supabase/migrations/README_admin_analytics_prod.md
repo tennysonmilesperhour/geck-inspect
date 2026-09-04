@@ -1,4 +1,4 @@
-# Admin Analytics — prod setup
+# Admin Analytics: prod setup
 
 Apply this SQL **manually** in the Supabase SQL editor against production.
 It is not wired into the auto-applied migrations because preview branches
@@ -6,7 +6,7 @@ don't have the dashboard-managed tables this script extends
 (`support_messages`, `page_config`) and because the RLS policies depend
 on the `profiles.role` column that only exists in prod.
 
-One-time copy/paste — idempotent, safe to re-run.
+One-time copy/paste, idempotent, safe to re-run.
 
 ```sql
 -- ============================================================================
@@ -107,7 +107,7 @@ CREATE POLICY "admins can read events" ON public.user_events
   ));
 
 -- ============================================================================
--- 3. support_messages — source / page / rating so the feedback widget
+-- 3. support_messages, source / page / rating so the feedback widget
 --    can tag and the admin inbox can filter.
 -- ============================================================================
 ALTER TABLE support_messages ADD COLUMN IF NOT EXISTS source TEXT DEFAULT 'support';
@@ -130,7 +130,7 @@ CREATE INDEX IF NOT EXISTS support_messages_source_idx
   ON support_messages (source, created_date DESC);
 
 -- ============================================================================
--- 4. page_config — backfill defaults.
+-- 4. page_config, backfill defaults.
 -- ============================================================================
 UPDATE page_config SET category = 'public' WHERE category IS NULL OR category = '';
 UPDATE page_config SET order_position = 999 WHERE order_position IS NULL;

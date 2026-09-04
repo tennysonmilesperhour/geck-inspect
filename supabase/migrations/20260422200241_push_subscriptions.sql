@@ -6,15 +6,15 @@
 -- installed the PWA on both their iPhone and an Android tablet will own two
 -- rows here, each keyed by a different `endpoint`. The endpoint is globally
 -- unique across the whole web (it's the URL the push service hands back when
--- we subscribe), so we enforce uniqueness on it directly — not on
--- (user_email, endpoint) — to make re-subscribe logic simpler.
+-- we subscribe), so we enforce uniqueness on it directly, not on
+-- (user_email, endpoint): to make re-subscribe logic simpler.
 --
 -- Rows are deleted, never soft-deleted: once a push returns 410 Gone (the
 -- endpoint has been unsubscribed), the row is useless and the user will
 -- re-subscribe from the current device's fresh keys on their next visit.
 --
 -- `user_email` is the owner. We match existing app convention (profiles,
--- notifications, etc. all key on email) rather than auth.users.id — this
+-- notifications, etc. all key on email) rather than auth.users.id, this
 -- keeps RLS policies straightforward and lets the send-push edge function
 -- look up subscriptions without joining against auth.
 -- =============================================================================
@@ -39,7 +39,7 @@ create index if not exists push_subscriptions_last_seen_idx
 
 -- Row-level security: a user can only see/delete their own subscriptions.
 -- The edge functions that SEND pushes run under the service-role key and
--- bypass RLS entirely — that's fine, they're trusted server code.
+-- bypass RLS entirely, that's fine, they're trusted server code.
 alter table public.push_subscriptions enable row level security;
 
 drop policy if exists push_subscriptions_select_own on public.push_subscriptions;

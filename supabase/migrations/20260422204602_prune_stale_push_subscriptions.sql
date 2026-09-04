@@ -4,7 +4,7 @@
 --
 -- iOS silently expires web-push subscriptions after ~8 weeks of the
 -- installed PWA not being opened. The push service never returns a 410
--- in that case — we just get 0 delivered forever. The send-push edge
+-- in that case, we just get 0 delivered forever. The send-push edge
 -- function already bumps last_seen_at on every successful delivery and
 -- the touchPushSubscription() client helper bumps it on every
 -- authenticated page load, so a row that hasn't moved in 56 days is
@@ -56,7 +56,7 @@ exception when others then
 end;
 $$;
 
--- Run every day at 03:17 UTC — off-hours for both US and EU so it
+-- Run every day at 03:17 UTC, off-hours for both US and EU so it
 -- doesn't compete with peak user activity.
 select cron.schedule(
   'prune-stale-push-subscriptions',

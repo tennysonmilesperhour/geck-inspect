@@ -1,4 +1,4 @@
-# Genetics Guide — Page Content
+# Genetics Guide: Page Content
 
 This file contains the body content for the Genetics Guide page. Each section below corresponds to one record in the `genetics_guide_section` table (or one block in a static page if you go the markdown route). Section order matches display order.
 
@@ -44,7 +44,7 @@ Think of a crested gecko as a printed image. Color is the ink. Pattern is the st
 
 ---
 
-## Section 3: Color — the Y/R/B base system
+## Section 3: Color: the Y/R/B base system
 
 **Title:** Yellow, Red, and Black: The Three Base Colors
 
@@ -68,7 +68,7 @@ A 2/2/2 gecko has all three base colors at full strength. A 0/2/0 is pure Red wi
 
 ---
 
-## Section 4: Pattern — Tiger and Pinstripe forces
+## Section 4: Pattern: Tiger and Pinstripe forces
 
 **Title:** The Antagonistic Pattern Forces
 
@@ -90,7 +90,7 @@ Tiger and Pinstripe are the two pattern genes in the Kaleidoscope Model. They be
 
 ---
 
-## Section 5: Coverage — the Harlequin/CvG hypothesis
+## Section 5: Coverage: the Harlequin/CvG hypothesis
 
 **Title:** Why Phantom May Not Be Recessive
 
@@ -120,7 +120,7 @@ This debate is unresolved. Geck Inspect tracks both interpretations so users can
 
 ---
 
-## Section 6: The Perfect Recipe — 2/0/2
+## Section 6: The Perfect Recipe: 2/0/2
 
 **Title:** Why Tri-Colors Come from a Specific Genotype
 

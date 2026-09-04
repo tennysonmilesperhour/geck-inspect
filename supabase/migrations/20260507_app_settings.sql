@@ -1,5 +1,5 @@
 -- =============================================================================
--- app_settings — single source of truth for site-wide knobs
+-- app_settings: single source of truth for site-wide knobs
 -- =============================================================================
 -- Flat key/value table backed by Postgres. Stores tunables admins need
 -- to flip without a code deploy: PostHog dashboard embeds, store

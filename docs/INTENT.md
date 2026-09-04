@@ -47,7 +47,7 @@ Do not dilute the message by mentioning other reptile species, other pet categor
 
 ### 4.2 "By a breeder, for breeders" is non-negotiable
 
-The founder story is not optional flavor: it is a structural trust mechanism. Tennyson breeds cresties. That single fact separates Geck Inspect from the faceless "AI-powered platform" pitches of ReptiDex and HerpTracker. Put a photo. Name his actual breeding operation under whatever brand name he chooses to publish (ask before assuming; tennyscrestedgeckos.com is NOT his site, that domain belongs to an unrelated breeder with the same first name). Say it in the first person.
+The founder story is not optional flavor: it is a structural trust mechanism. Tennyson breeds cresties. That single fact separates Geck Inspect from the faceless "AI-powered platform" pitches of ReptiDex and HerpTracker. Put a photo. Name his actual breeding operation under whatever brand name he chooses to publish (ask before assuming; the similarly named site that belongs to an unrelated breeder with the same first name is NOT his, see CLAUDE.md under domain disambiguation). Say it in the first person.
 
 ### 4.3 Show the product, don't describe it
 

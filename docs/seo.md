@@ -6,7 +6,7 @@ Geck Inspect's SEO layer is cross-cutting and data-driven: every
 content page is generated from structured data (morphs, care topics,
 breeders), then prerendered at build time so non-JS crawlers see real
 HTML, not the React SPA shell. This document is the map of that layer
-— read it before changing anything that touches rendering, metadata,
+read it before changing anything that touches rendering, metadata,
 or public routes.
 
 ## What's shipped
@@ -20,7 +20,7 @@ or public routes.
 | llms-full.txt | `scripts/build-llms-full.mjs` → `public/llms-full.txt` | Complete markdown corpus of care guide + morph catalog. Generated on every build. |
 | IndexNow | `public/c9f2d53b0ac96f2ef77485a2b5d9b280.txt` | Bing / Yandex / Seznam push-indexing key. |
 | Security + caching | `vercel.json` | HSTS, CSP headers, X-Frame-Options, Referrer-Policy, Permissions-Policy, long-lived asset caching, noindex X-Robots-Tag on admin surfaces. |
-| Per-page SEO component | `src/components/seo/Seo.jsx` | Runtime metadata via react-helmet-async — overrides the static HTML for JS-executing crawlers. |
+| Per-page SEO component | `src/components/seo/Seo.jsx` | Runtime metadata via react-helmet-async, overrides the static HTML for JS-executing crawlers. |
 | Organization + WebSite JSON-LD | `src/lib/organization-schema.js` | Canonical Organization and WebSite schema, shared across pages. Also exports `breadcrumbSchema()`. |
 | Editorial metadata | `src/lib/editorial.js` | `author`, `reviewedBy`, `datePublished`, `dateModified` for every content path. `bylineText()` renders the visible E-E-A-T byline. |
 | Per-morph FAQPage | `src/lib/morphFaq.js` | Generates 3–6 Q&A pairs per morph from structured data; used for both visible FAQ section and FAQPage JSON-LD. |
@@ -31,20 +31,20 @@ Everything below is indexable. Anything not listed is either auth-gated
 or explicitly `noindex` via `vercel.json` X-Robots-Tag.
 
 ```
-/                                   — Home
-/About                              — About page (with Organization reference)
-/Contact                            — Contact page
-/Terms                              — Terms of service
-/PrivacyPolicy                      — Privacy policy
-/CareGuide                          — Care guide hub
-/CareGuide/<topic>                  — 34 topic deep-links (humidity, diet, incubation, etc.)
-/MorphGuide                         — Morph guide index
-/MorphGuide/<slug>                  — 30+ per-morph pages
-/MorphGuide/category/<id>           — 5 category hubs (pattern, base, color, structure, combo)
-/MorphGuide/inheritance/<id>        — 6 inheritance hubs (recessive, co-dominant, etc.)
-/GeneticsGuide                      — Genetics reference
-/GeneticCalculatorTool              — Genetics calculator (public explainer + auth-gated tool)
-/Breeder/<slug>                     — Clean-path breeder pages (legacy ?slug= redirects here)
+/: Home
+/About: About page (with Organization reference)
+/Contact: Contact page
+/Terms: Terms of service
+/PrivacyPolicy: Privacy policy
+/CareGuide: Care guide hub
+/CareGuide/<topic>: 34 topic deep-links (humidity, diet, incubation, etc.)
+/MorphGuide: Morph guide index
+/MorphGuide/<slug>: 30+ per-morph pages
+/MorphGuide/category/<id>: 5 category hubs (pattern, base, color, structure, combo)
+/MorphGuide/inheritance/<id>: 6 inheritance hubs (recessive, co-dominant, etc.)
+/GeneticsGuide: Genetics reference
+/GeneticCalculatorTool: Genetics calculator (public explainer + auth-gated tool)
+/Breeder/<slug>. Clean-path breeder pages (legacy ?slug= redirects here)
 ```
 
 ## Rendering contract
@@ -66,7 +66,7 @@ or explicitly `noindex` via `vercel.json` X-Robots-Tag.
 2. React hydrates; `react-helmet-async` replaces `<title>`, meta tags,
    canonical, and injects per-page JSON-LD (Article, DefinedTerm,
    FAQPage, HowTo, BreadcrumbList, CollectionPage, ItemList).
-3. No duplicate content — Helmet replaces in-place.
+3. No duplicate content. Helmet replaces in-place.
 
 ## Adding a new indexable URL
 
@@ -82,7 +82,7 @@ or explicitly `noindex` via `vercel.json` X-Robots-Tag.
    `getXxxRoutes()` function that expands the dataset into route
    objects, and include it in `getAllRoutes()`.
 5. If the route has extractable text content, teach `prerender.mjs`
-   how to build a useful `<noscript>` body for it — see `careTopicMeta`
+   how to build a useful `<noscript>` body for it, see `careTopicMeta`
    and `morphMeta` as patterns.
 
 ## Adding a new morph
@@ -121,11 +121,11 @@ prerender, and `llms-full.txt` all pick it up.
   but not invited to those URLs beyond the sitemap mention.
 - **We don't ship a Node render-to-string step** for React components.
   The prerender builds static HTML from structured data sources and
-  injects a noscript block — this gives us the crawler signal we need
+  injects a noscript block, this gives us the crawler signal we need
   without a bundler-aware SSR pipeline.
 - **We don't maintain hand-written sitemap.xml**. Every URL in
   `public/sitemap.xml` is generated on `pnpm build` from
-  `scripts/seo-routes.mjs`. Don't edit the XML directly — the file
+  `scripts/seo-routes.mjs`. Don't edit the XML directly, the file
   is overwritten on every build.
 
 ## When the audit comes back
@@ -134,7 +134,7 @@ The 2026-04 audit is tracked as the baseline. Items we considered out
 of scope for the first pass:
 
 - Populate `Organization.sameAs` with real social profiles (Instagram,
-  YouTube, LinkedIn, TikTok, MorphMarket, Reddit, Wikidata) — the
+  YouTube, LinkedIn, TikTok, MorphMarket, Reddit, Wikidata): the
   shape is in `src/lib/organization-schema.js`; add URLs to `SAME_AS`.
 - Wire an IndexNow POST call into the deploy pipeline so content
   changes push to Bing / Yandex in near-real-time.

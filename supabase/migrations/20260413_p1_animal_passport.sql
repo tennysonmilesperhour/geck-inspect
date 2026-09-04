@@ -14,7 +14,7 @@ ALTER TABLE geckos
   ADD COLUMN IF NOT EXISTS listing_price NUMERIC(10,2),
   ADD COLUMN IF NOT EXISTS estimated_hatch_year INTEGER;
 
--- 2. Ownership records — chain of custody
+-- 2. Ownership records, chain of custody
 CREATE TABLE IF NOT EXISTS ownership_records (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   animal_id UUID NOT NULL REFERENCES geckos(id) ON DELETE CASCADE,
@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS ownership_records (
   updated_date TIMESTAMPTZ DEFAULT now()
 );
 
--- 3. Feeding records — per-animal feeding logs
+-- 3. Feeding records, per-animal feeding logs
 CREATE TABLE IF NOT EXISTS feeding_records (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   animal_id UUID NOT NULL REFERENCES geckos(id) ON DELETE CASCADE,
@@ -74,7 +74,7 @@ CREATE TABLE IF NOT EXISTS vet_records (
   updated_date TIMESTAMPTZ DEFAULT now()
 );
 
--- 6. Transfer requests — ownership transfer workflow
+-- 6. Transfer requests, ownership transfer workflow
 CREATE TABLE IF NOT EXISTS transfer_requests (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   animal_id UUID NOT NULL REFERENCES geckos(id) ON DELETE CASCADE,

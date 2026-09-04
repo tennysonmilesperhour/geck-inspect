@@ -4,7 +4,7 @@
 -- AI/expert corrections, photo quality, genetics context) and an index to
 -- keep the /training review queue fast once the dataset grows.
 --
--- Safe to re-run — every change uses IF NOT EXISTS / ADD COLUMN IF NOT EXISTS.
+-- Safe to re-run, every change uses IF NOT EXISTS / ADD COLUMN IF NOT EXISTS.
 
 -- 1. training_meta JSONB column -------------------------------------------
 -- Consumed by:

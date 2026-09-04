@@ -1,4 +1,4 @@
--- 20260514 — Review queue full-axes support
+-- 20260514: Review queue full-axes support
 --
 -- Two changes:
 --
@@ -140,7 +140,7 @@ GRANT EXECUTE ON FUNCTION public.review_gecko_image(
 
 
 -- ============================================================================
--- admin_verify_gecko_image — admin one-click verify with full edits
+-- admin_verify_gecko_image: admin one-click verify with full edits
 -- ============================================================================
 -- Admins can promote a sample to verified=TRUE in a single call, applying
 -- their edits across all label axes. Skips the 2-vote consensus that
@@ -258,7 +258,7 @@ GRANT EXECUTE ON FUNCTION public.admin_verify_gecko_image(
 
 
 -- ============================================================================
--- is_admin — companion of is_expert_reviewer for client gating
+-- is_admin: companion of is_expert_reviewer for client gating
 -- ============================================================================
 CREATE OR REPLACE FUNCTION public.is_admin()
   RETURNS boolean

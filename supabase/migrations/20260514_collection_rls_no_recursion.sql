@@ -12,7 +12,7 @@
 --           →  back to collection_members SELECT policies … (loop)
 --
 -- Postgres aborts with `infinite recursion detected in policy for relation
--- "collection_members"`, which kills every UPDATE/DELETE on geckos — even
+-- "collection_members"`, which kills every UPDATE/DELETE on geckos, even
 -- for the plain owner path (`auth.email() = created_by`), because Postgres
 -- still evaluates the OR branch.
 --
@@ -25,7 +25,7 @@
 -- Helpers are STABLE (Postgres can cache per-row), SECURITY DEFINER (RLS
 -- bypass for the internal lookup), and `set search_path = public` (so the
 -- definer-owned function can't be hijacked by a session-local search_path
--- override — standard hardening for SECURITY DEFINER functions).
+-- override: standard hardening for SECURITY DEFINER functions).
 -- =============================================================================
 
 create or replace function public.is_collection_owner(

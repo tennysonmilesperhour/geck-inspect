@@ -14,7 +14,7 @@ proposed fixes. Runs daily at **04:00 Arizona MST** (UTC-7, no DST).
    with a tool-use loop (`search_code`, `read_file`, `list_directory`,
    `propose_fix`, `skip`).
 5. For any proposed fix with medium/high confidence, applies the file
-   changes, runs `pnpm lint` and `pnpm typecheck`, and — if both pass —
+   changes, runs `pnpm lint` and `pnpm typecheck`, and, if both pass,
    opens a **draft PR** on a branch named `error-triage/<sig>-<date>`
    with the label `error-triage`.
 6. Commits the updated state ledger back to `main` so the next run skips
@@ -61,7 +61,7 @@ Cooldowns (from `scripts/error-triage/lib.mjs`):
 | `fix_failed` | 2 days      |
 | `patched`    | 14 days     |
 
-The ledger is git-tracked — to force a signature back into the rotation,
+The ledger is git-tracked, to force a signature back into the rotation,
 delete its entry in a commit to `main`.
 
 > **TODO:** `open_pr` entries currently stay forever until you clear them
@@ -72,13 +72,13 @@ delete its entry in a commit to `main`.
 
 - **Draft PRs only** (`gh pr create --draft`).
 - **Max 3 PRs per run** (`MAX_FIXES_PER_RUN` in lib.mjs).
-- **Lint + typecheck gate** — a fix that breaks either is discarded and
+- **Lint + typecheck gate**: a fix that breaks either is discarded and
   recorded as `fix_failed`.
-- **Confidence floor** — Claude is instructed to `skip` unless at least
+- **Confidence floor**: Claude is instructed to `skip` unless at least
   "medium" confident; the orchestrator also rejects "low" for belt-and-braces.
-- **Path allowlist** via the system prompt — no config, CI, package.json,
+- **Path allowlist** via the system prompt, no config, CI, package.json,
   lockfiles, migrations, or content/.
-- **No new files** — the agent may only edit files that already exist.
+- **No new files**: the agent may only edit files that already exist.
 - **Cooldowns** prevent the same bad idea being re-tried every night.
 
 ## Manual runs

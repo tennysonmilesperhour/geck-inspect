@@ -16,7 +16,7 @@ The platform combines five things in one product:
 4. **Multi-generation pedigrees**: visual, clickable pedigree trees per animal. Each animal gets a QR code that resolves to its live record. Cross-breeder lineage linking with approval workflow.
 5. **Market analytics (in development)**: combines first-party app data (listings, completed sales, search behavior, regional activity, trait-level transactions) with scraped external market signals (MorphMarket, Pangea, FB groups, international classifieds, expo releases) to give breeders, investors, and shop owners strategic market intelligence.
 
-Historical pricing benchmarks (entry $50–250, mid $120–450, high-end $400–800+, Lilly White $250–1,200, axanthic up to $2,500, average ~$350) were originally sourced from an external investment guide at tennyscrestedgeckos.com. Note: that site belongs to an unrelated breeder who happens to share Tennyson's first name. It is NOT Tennyson's brand and must never be presented as such (see the domain disambiguation note in CLAUDE.md). Treat it as a third-party data citation only.
+Historical pricing benchmarks (entry $50–250, mid $120–450, high-end $400–800+, Lilly White $250–1,200, axanthic up to $2,500, average ~$350) were originally sourced from an external investment guide (linked under external references below). Note: that site belongs to an unrelated breeder who happens to share Tennyson's first name. It is NOT Tennyson's brand and must never be presented as such (see the domain disambiguation note in CLAUDE.md). Treat it as a third-party data citation only.
 
 ## 2. Who it's for
 

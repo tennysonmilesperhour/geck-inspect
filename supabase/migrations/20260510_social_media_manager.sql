@@ -395,7 +395,7 @@ create policy "Users manage their brand voices"
 -- Tracks which gecko photos have been used in published posts. Lets the
 -- composer surface "X has 3 unposted photos" hints and avoid suggesting the
 -- same image twice. Written by the publish edge function on successful
--- publish only — drafts and failed publishes do not count.
+-- publish only, drafts and failed publishes do not count.
 -- ============================================================================
 
 create table if not exists public.social_post_photo_usage (
@@ -472,7 +472,7 @@ create policy "Referrers read their bonuses"
   using (referrer_user_id = auth.uid());
 
 -- ============================================================================
--- Helpers — get-or-create monthly usage row, increment counters
+-- Helpers: get-or-create monthly usage row, increment counters
 -- ============================================================================
 
 create or replace function public.month_key_now()
@@ -516,7 +516,7 @@ grant execute on function public.upsert_social_usage(uuid, text, integer) to ser
 -- ============================================================================
 -- Seed: ensure Enterprise tier value is allowed wherever profiles.membership_tier
 -- is used. Existing code treats unknown tier strings as Free (see
--- src/lib/tierLimits.js#tierOf), so this is purely a data hint — no DB-level
+-- src/lib/tierLimits.js#tierOf), so this is purely a data hint, no DB-level
 -- check exists. Documenting here for future migrations.
 -- ============================================================================
 

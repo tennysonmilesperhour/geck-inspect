@@ -9,7 +9,7 @@
 -- whether the earlier versions existed.
 
 -- ---------------------------------------------------------------------------
--- 1. review_gecko_image — TEXT id, JSONB array
+-- 1. review_gecko_image. TEXT id, JSONB array
 -- ---------------------------------------------------------------------------
 DROP FUNCTION IF EXISTS public.review_gecko_image(UUID, TEXT, TEXT, TEXT[], JSONB, TEXT);
 DROP FUNCTION IF EXISTS public.review_gecko_image(TEXT, TEXT, TEXT, TEXT[], JSONB, TEXT);
@@ -111,7 +111,7 @@ GRANT EXECUTE ON FUNCTION public.review_gecko_image(TEXT, TEXT, TEXT, JSONB, JSO
   TO authenticated;
 
 -- ---------------------------------------------------------------------------
--- 2. nearest_training_samples — TEXT id, JSONB array for secondary_traits
+-- 2. nearest_training_samples. TEXT id, JSONB array for secondary_traits
 -- ---------------------------------------------------------------------------
 DROP FUNCTION IF EXISTS public.nearest_training_samples(extensions.vector, INT, BOOLEAN);
 DROP FUNCTION IF EXISTS public.nearest_training_samples(vector, INT, BOOLEAN);

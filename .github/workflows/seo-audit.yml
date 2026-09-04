@@ -12,7 +12,7 @@
 #     internal links, orphans, Core Web Vitals)
 #
 # Secrets used (optional):
-#   PAGESPEED_API_KEY — Google PageSpeed Insights API key. Without it
+#   PAGESPEED_API_KEY: Google PageSpeed Insights API key. Without it
 #                       the workflow falls back to unauthenticated
 #                       requests, which work but are rate-limited to
 #                       ~25k/day across all unauthenticated callers.
@@ -65,7 +65,7 @@ jobs:
 
       - name: Run static SEO audit
         run: node scripts/seo-audit.mjs
-        # Exit 0 even on findings — the report is the deliverable.
+        # Exit 0 even on findings, the report is the deliverable.
 
       - name: Run PageSpeed Insights Lighthouse
         if: ${{ github.event.inputs.skip_lighthouse != 'true' }}

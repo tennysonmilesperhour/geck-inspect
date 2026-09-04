@@ -31,7 +31,7 @@ declare
   v_link       text;
   v_payload    jsonb;
 begin
-  -- No service role, no outbound calls — silent exit.
+  -- No service role, no outbound calls, silent exit.
   if v_key is null or v_key = '' then
     return NEW;
   end if;

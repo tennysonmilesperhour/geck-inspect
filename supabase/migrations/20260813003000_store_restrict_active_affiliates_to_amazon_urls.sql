@@ -1,5 +1,5 @@
 -- =============================================================================
--- Store cleanup — active affiliate rows must point to Amazon
+-- Store cleanup, active affiliate rows must point to Amazon
 -- =============================================================================
 -- Some early seed rows used the Amazon vendor as a temporary placeholder while
 -- pointing at other reptile-company URLs. For the Amazon-only launch, keep only

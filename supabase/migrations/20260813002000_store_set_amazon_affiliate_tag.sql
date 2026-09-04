@@ -1,5 +1,5 @@
 -- =============================================================================
--- Store affiliate tag — Amazon Associates
+-- Store affiliate tag. Amazon Associates
 -- =============================================================================
 -- Applies the Amazon Associates tracking ID supplied for Geck Inspect and
 -- appends it to active Amazon affiliate product URLs.

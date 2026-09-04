@@ -7,7 +7,7 @@ Paste this block into every Claude Code prompt you write.
 ## Brand Identity
 
 - **Name:** Geck Inspect
-- **Tone:** Professional, science-forward, trusted — like a Bloomberg terminal built specifically for gecko breeders. Not cutesy. Not gamified. A serious tool for people who treat this as a real business.
+- **Tone:** Professional, science-forward, trusted, like a Bloomberg terminal built specifically for gecko breeders. Not cutesy. Not gamified. A serious tool for people who treat this as a real business.
 
 ### Typography
 
@@ -18,7 +18,7 @@ Paste this block into every Claude Code prompt you write.
 
 ### Color Palette
 
-Exact hex values — use these everywhere, no substitutions.
+Exact hex values, use these everywhere, no substitutions.
 
 | Name | Hex | Usage |
 |------|-----|-------|
@@ -75,4 +75,4 @@ Shape: `border-radius: 999px`, 12px font, `padding: 4px 10px`
 - **Loading:** Skeleton screens, not spinners
 - **Destructive actions** (delete, transfer, end loan): Confirmation dialog requiring the animal's name to be typed before proceeding
 - **Transitions:** 200ms ease-out on all state changes
-- **Tooltips:** On any abbreviated stat or icon — never assume the user knows what it means
+- **Tooltips:** On any abbreviated stat or icon, never assume the user knows what it means

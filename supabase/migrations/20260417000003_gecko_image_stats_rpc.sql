@@ -7,9 +7,9 @@
 -- Returns:
 --   total, verified, recent_week, morph_categories_seen, avg_confidence,
 --   top_morphs (array of {id, count}),
---   undersampled_morphs (array of {id, count}) — known primary morphs with
+--   undersampled_morphs (array of {id, count}): known primary morphs with
 --                                                fewer than 5 samples,
---   seen_genetic_traits (array of ids) — aggregated from training_meta plus
+--   seen_genetic_traits (array of ids): aggregated from training_meta plus
 --                                        legacy secondary_morph fallback.
 
 CREATE OR REPLACE FUNCTION public.gecko_image_stats()

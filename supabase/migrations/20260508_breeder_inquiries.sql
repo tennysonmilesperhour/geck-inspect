@@ -1,4 +1,4 @@
--- Breeder inquiries — buyer-to-breeder contact form on the public
+-- Breeder inquiries, buyer-to-breeder contact form on the public
 -- storefront. Anyone (logged in or not) can submit an inquiry. Only the
 -- target breeder can read or update their own inquiries.
 --

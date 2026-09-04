@@ -1,4 +1,4 @@
--- Newsletter subscribers — captured via the homepage lead-magnet form.
+-- Newsletter subscribers, captured via the homepage lead-magnet form.
 -- The email-capture flow promises a Care Guide + Genetics Guide PDF in
 -- return for an email; the `subscribe-and-send-guides` edge function
 -- inserts here and then sends the PDFs via Resend.

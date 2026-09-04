@@ -1,4 +1,4 @@
-# Kaleidoscope Model Integration — Claude Code Handoff
+# Kaleidoscope Model Integration: Claude Code Handoff
 
 **Project:** Geck Inspect (`tennysonmilesperhour/geck-inspect`)
 **Local path:** `/Users/tennyson/dyad-apps/geck inspect`
@@ -24,7 +24,7 @@ Per prior audits and migration notes:
 - **Genetics Calculator** exists and handles Lilly White (incomplete dominant), axanthic (recessive), Phantom (current model treats as recessive), Cappuccino/Sable/Frappuccino allelic series, and polygenic patterning.
 - **Morph Guide** page exists but is currently parked/disabled, with a known RLS bug (read rule restricted to creator).
 - **Genetics Guide** page exists but is parked/disabled.
-- **Headless "Foundation Genetics" TypeScript module** exists as a canonical traits/inheritance source. Integration into the app is pending — not a drop-in.
+- **Headless "Foundation Genetics" TypeScript module** exists as a canonical traits/inheritance source. Integration into the app is pending, not a drop-in.
 - Traits taxonomy entity exists in Supabase as the "genetic truth layer."
 - Pedigree, clutch, breeding pair, and gecko entities exist with parent foreign keys.
 
@@ -32,13 +32,13 @@ Per prior audits and migration notes:
 
 ---
 
-## Integration plan — five workstreams
+## Integration plan: five workstreams
 
 These are listed in dependency order. Workstream 1 is foundational and must be done before 2-5.
 
 ### Workstream 1: Database schema additions
 
-Add Kaleidoscope-specific fields to the existing geckos table (or a linked `gecko_genotype` table — see Decision Point 1.A below) without breaking any existing morph-tag or trait fields.
+Add Kaleidoscope-specific fields to the existing geckos table (or a linked `gecko_genotype` table, see Decision Point 1.A below) without breaking any existing morph-tag or trait fields.
 
 **Decision Point 1.A:** Whether to add columns directly to the `geckos` table or create a new linked `gecko_genotype` table with a 1:1 relationship.
 
@@ -115,16 +115,16 @@ Re-enable the parked Genetics Guide page (`/genetics` or whatever path is set in
 
 **Page structure:**
 
-1. **Introduction** — what is the Kaleidoscope Model, who created it, why it matters. Short. Link to the source PDF.
-2. **The four trait categories** — Pattern, Color, Coverage, Structure. Visual diagram showing how they layer.
-3. **Color: Y/R/B base system** — the triplet notation (0/0/0 to 2/2/2), chromatophore layering (Yellow on top, Red middle, Black bottom), polygenic inheritance, the 27-combination Punnett square.
-4. **Pattern: Tiger and Pinstripe forces** — incomplete dominance, vertical vs. horizontal influence, the antagonistic interaction, the nine-combination two-gene Punnett, why "breaks" in pinstripe indicate Tiger presence.
-5. **Coverage: the Harlequin/CvG hypothesis** — Phantom as wild-type, Coverage as a derived gene, the linked-genes mechanism, why some non-phantoms can directly produce phantoms and others cannot, the (2/2/0) edge case.
-6. **The "Perfect Recipe" 2/0/2** — why Tri-Colors come from this genotype.
-7. **Lavender reframed** — explanation of why Lavender is likely a base color combination phenotype, not a "Hypo Black."
-8. **True Hypo base colors** — selective breeding history, 0/0/0 pale cream, pink (0/1/0), hypo yellow (1/0/0).
-9. **Comparison to Foundation Genetics (LIL Monsters) framework** — side-by-side, honest about disagreements (especially on Phantom).
-10. **How to use this in your breeding program** — links to the calculator, the genotype editor, the prediction tool.
+1. **Introduction**: what is the Kaleidoscope Model, who created it, why it matters. Short. Link to the source PDF.
+2. **The four trait categories**: Pattern, Color, Coverage, Structure. Visual diagram showing how they layer.
+3. **Color: Y/R/B base system**: the triplet notation (0/0/0 to 2/2/2), chromatophore layering (Yellow on top, Red middle, Black bottom), polygenic inheritance, the 27-combination Punnett square.
+4. **Pattern: Tiger and Pinstripe forces**: incomplete dominance, vertical vs. horizontal influence, the antagonistic interaction, the nine-combination two-gene Punnett, why "breaks" in pinstripe indicate Tiger presence.
+5. **Coverage: the Harlequin/CvG hypothesis**: Phantom as wild-type, Coverage as a derived gene, the linked-genes mechanism, why some non-phantoms can directly produce phantoms and others cannot, the (2/2/0) edge case.
+6. **The "Perfect Recipe" 2/0/2**: why Tri-Colors come from this genotype.
+7. **Lavender reframed**: explanation of why Lavender is likely a base color combination phenotype, not a "Hypo Black."
+8. **True Hypo base colors**: selective breeding history, 0/0/0 pale cream, pink (0/1/0), hypo yellow (1/0/0).
+9. **Comparison to Foundation Genetics (LIL Monsters) framework**: side-by-side, honest about disagreements (especially on Phantom).
+10. **How to use this in your breeding program**: links to the calculator, the genotype editor, the prediction tool.
 
 **Content sourcing:**
 
@@ -201,7 +201,7 @@ create table clutch_prediction (
 
 When offspring hatch and are recorded, a "Score predictions" function compares each model's predicted probability distribution against the actual offspring phenotypes and computes a Brier score (a standard probabilistic prediction accuracy metric). Aggregate scores over time and across users tell us which model predicts crested gecko genetics most accurately.
 
-**Privacy note:** Aggregate scoring should anonymize user data. Surface results as "Across 1,247 clutches recorded in Geck Inspect, the Kaleidoscope Model predicted 73% of phenotype outcomes correctly vs. 68% for the Classic Morph Tags model" — never per-user.
+**Privacy note:** Aggregate scoring should anonymize user data. Surface results as "Across 1,247 clutches recorded in Geck Inspect, the Kaleidoscope Model predicted 73% of phenotype outcomes correctly vs. 68% for the Classic Morph Tags model", never per-user.
 
 This is the kind of feature that gets you written about in the breeder community.
 

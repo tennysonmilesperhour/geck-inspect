@@ -1,7 +1,7 @@
-# P2 — Market Pricing Intelligence
+# P2: Market Pricing Intelligence
 
 **Priority:** P2
-**Dependencies:** P1 (Animal Passport — animals must exist)
+**Dependencies:** P1 (Animal Passport, animals must exist)
 **Origin:** Original spec, enhanced by iHerp analysis (transfer -> sale price contribution loop)
 
 ---
@@ -12,7 +12,7 @@ A live pricing layer showing what morphs are selling for and how values trend ov
 
 Data comes from two sources:
 1. **User-submitted actual sale prices** (anonymized, opted-in)
-2. **Curated price guide data** (from the tennyscrestedgeckos.com investment guide, an unaffiliated third-party site; see CLAUDE.md domain disambiguation)
+2. **Curated price guide data** (from an unaffiliated third-party investment guide, linked under external references in docs/CONTEXT.md)
 
 **Key integration from iHerp analysis:** When a transfer is completed (P1), prompt user to contribute sale price to market data. This closes the loop between the two features.
 
@@ -89,7 +89,7 @@ CollectionValuation {
 
 - Estimated value range (low-high), 3 comparable sales, asking vs market gap
 - 6-month trend chart for this morph/grade/sex/age combination
-- If <3 comps: "Not enough data yet — be the first to log a sale"
+- If <3 comps: "Not enough data yet, be the first to log a sale"
 
 ### Portfolio Value Banner (component embedded in collection page)
 
@@ -115,9 +115,9 @@ DESIGN SYSTEM: [PASTE GLOBAL DESIGN SYSTEM]
 CONTEXT: Animal Passport (P1) is already built. The animals table exists with morph,
 pattern_grade, sex, and care log data. This feature adds market pricing on top.
 When a transfer is completed (P1 flow), there is already a prompt asking the user
-to contribute the sale price to market data — that contribution lands in morph_price_entries.
+to contribute the sale price to market data, that contribution lands in morph_price_entries.
 
-DATABASE — create these tables:
+DATABASE: create these tables:
 [PASTE MorphPriceEntry, PriceAlert, CollectionValuation models]
 
 BUILD:
@@ -137,8 +137,8 @@ BUILD:
 5. PRICE ALERTS (/settings/alerts): list of user alerts, "Add alert" form (morph,
    price, above/below direction), active toggle per alert.
 
-QUALITY: Price table must be scannable — breeders compare morphs at a glance.
+QUALITY: Price table must be scannable, breeders compare morphs at a glance.
 Trend indicators: green arrow >5% up, red arrow >5% down, gray dash +/-5%.
 All prices in USD $X,XXX.XX format. Charts handle sparse data gracefully.
-Anonymous means anonymous — never expose submitted_by on any public view.
+Anonymous means anonymous, never expose submitted_by on any public view.
 ```

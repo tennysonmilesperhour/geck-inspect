@@ -2,12 +2,12 @@
 -- Collections + per-collection collaborators (email-keyed identity)
 -- =============================================================================
 -- Adds two tables:
---   collections           — a named bucket of geckos owned by one email
---   collection_members    — invitation + role records linking an email to a
+--   collections: a named bucket of geckos owned by one email
+--   collection_members: invitation + role records linking an email to a
 --                           collection (roles: owner / editor / viewer)
 --
 -- Adds one column:
---   geckos.collection_id  — every gecko belongs to exactly one collection
+--   geckos.collection_id: every gecko belongs to exactly one collection
 --
 -- Identity model
 -- --------------
@@ -20,12 +20,12 @@
 --
 -- RLS posture
 -- -----------
---   collections           — readable by owner; readable by any
+--   collections: readable by owner; readable by any
 --                           accepted/pending member; writable by owner.
---   collection_members    — readable by collection owner; readable by
+--   collection_members: readable by collection owner; readable by
 --                           the member themselves; writable by owner;
 --                           updatable (status only) by the member.
---   geckos                — UNCHANGED here. The existing geckos_read_all
+--   geckos: UNCHANGED here. The existing geckos_read_all
 --                           policy already returns true for any authed
 --                           user, so collaborator visibility is already
 --                           there. Phase B updates the WRITE policies
@@ -36,7 +36,7 @@
 -- "My collection", insert an owner row in collection_members, and set
 -- collection_id on each of that owner's geckos.
 --
--- Idempotent — safe to run twice.
+-- Idempotent: safe to run twice.
 -- =============================================================================
 
 -- 1. collections -----------------------------------------------------------
@@ -274,7 +274,7 @@ create trigger geckos_set_default_collection_trg
   for each row execute function public.geckos_set_default_collection();
 
 -- This is a trigger function, not an RPC. Revoke EXECUTE so it can't
--- be invoked via /rest/v1/rpc — Postgres still fires it on inserts
+-- be invoked via /rest/v1/rpc. Postgres still fires it on inserts
 -- because triggers don't check EXECUTE on the underlying function.
 revoke execute on function public.geckos_set_default_collection() from anon, authenticated, public;
 

@@ -82,7 +82,7 @@ $$;
 
 -- Lock the RPC to service_role. Supabase auto-grants execute to anon and
 -- authenticated when a function is created in the public schema, so revoke
--- explicitly from those roles too — the advisor flags this otherwise.
+-- explicitly from those roles too, the advisor flags this otherwise.
 revoke execute on function public.consume_morph_id_credit(uuid, text, integer) from public, anon, authenticated;
 grant execute on function public.consume_morph_id_credit(uuid, text, integer) to service_role;
 

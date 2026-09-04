@@ -1,8 +1,8 @@
-# P6 — Batch Husbandry Operations
+# P6: Batch Husbandry Operations
 
 **Priority:** P6
-**Dependencies:** P1 (Animal Passport — FeedingRecord and WeightRecord tables)
-**Origin:** iHerp analysis — iHerp's "batch feed a group" is one of its most-used daily features
+**Dependencies:** P1 (Animal Passport. FeedingRecord and WeightRecord tables)
+**Origin:** iHerp analysis, iHerp's "batch feed a group" is one of its most-used daily features
 
 ---
 
@@ -26,7 +26,7 @@ FeedingGroup {
 }
 ```
 
-No other new tables needed — batch operations create individual FeedingRecord and WeightRecord entries per animal.
+No other new tables needed, batch operations create individual FeedingRecord and WeightRecord entries per animal.
 
 ---
 
@@ -44,13 +44,13 @@ No other new tables needed — batch operations create individual FeedingRecord 
 Sorted list of animals in group, each with:
 - Profile photo + name
 - Last fed indicator (days ago, color coded)
-- "Fed / Refused" toggle — defaults to Fed
+- "Fed / Refused" toggle, defaults to Fed
 - Optional notes field (collapsed, expand per animal)
 
 **Actions:**
 - "Log all as Fed" button at top (bulk action)
 - "Save batch log" -> creates individual FeedingRecord for each toggled animal
-- **Summary:** "Logged 18/20 — 2 refused. View animals with refusals ->"
+- **Summary:** "Logged 18/20 to 2 refused. View animals with refusals ->"
 
 ### Batch Weight Screen (`/groups/:id/weigh`)
 
@@ -70,7 +70,7 @@ Build Batch Husbandry Operations for Geck Inspect.
 DESIGN SYSTEM: [PASTE GLOBAL DESIGN SYSTEM]
 
 CONTEXT: Animal Passport (P1) is built. Animals have FeedingRecord and WeightRecord tables.
-This is an enhancement to the existing collection UX — no new tables needed,
+This is an enhancement to the existing collection UX, no new tables needed,
 just new UI that creates multiple records at once.
 
 New table needed:
@@ -97,7 +97,7 @@ BUILD:
      | Fed / Refused toggle (default: Fed) | notes field (collapsed).
    "Mark all as Fed" bulk toggle at top.
    "Save log" → creates FeedingRecord for each toggled animal with today's date.
-   Post-save summary: "Logged X/Y — Z refused. View refusals →" with link to filter collection.
+   Post-save summary: "Logged X/Y. Z refused. View refusals →" with link to filter collection.
 
 3. BATCH WEIGHT SCREEN (/groups/:id/weigh):
    Compact table: animal name | last weight (date) | new weight input.
@@ -107,6 +107,6 @@ BUILD:
 
 QUALITY:
 This feature is used daily, often on a phone in a gecko room.
-It must be extremely fast to interact with — large touch targets, minimal taps.
+It must be extremely fast to interact with, large touch targets, minimal taps.
 The batch feed screen must load and save within 1 second.
 ```

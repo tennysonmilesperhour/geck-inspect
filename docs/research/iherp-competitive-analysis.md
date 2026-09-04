@@ -15,7 +15,7 @@ iHerp (iherp.com) is a veteran reptile management platform branded as "Hardcore 
 
 ### 1. Animal Ownership Transfer (HIGH PRIORITY)
 
-**What iHerp does:** When a user sells or rehomes an animal, they can formally "transfer" it to the new owner's iHerp account. The new owner receives ALL historical data — feeding records, weight history, shedding logs, health events, photos, and full lineage — automatically.
+**What iHerp does:** When a user sells or rehomes an animal, they can formally "transfer" it to the new owner's iHerp account. The new owner receives ALL historical data, feeding records, weight history, shedding logs, health events, photos, and full lineage, automatically.
 
 **Why this matters:**
 - Buyers get instant, verified husbandry history for animals they purchase
@@ -35,14 +35,14 @@ iHerp (iherp.com) is a veteran reptile management platform branded as "Hardcore 
 
 ---
 
-### 2. iHerp Answers — Dedicated Q&A Knowledge Base (HIGH PRIORITY)
+### 2. iHerp Answers: Dedicated Q&A Knowledge Base (HIGH PRIORITY)
 
 **What iHerp does:** A Stack Overflow-style Q&A system called "iHerp Answers" where users post specific husbandry questions and the community answers. Questions are searchable, categorized, and persist as a knowledge base.
 
 **Why this matters:**
 - Forum threads bury answers in discussion; Q&A surfaces the best answer
 - Creates an evergreen, searchable knowledge base over time
-- Lower barrier than writing a forum post — good for beginners
+- Lower barrier than writing a forum post, good for beginners
 - SEO goldmine: specific questions match what people Google
 
 **What Geck Inspect has today:** Forum with categories and comments, but no dedicated Q&A format with accepted answers, voting, or knowledge-base structure.
@@ -59,7 +59,7 @@ iHerp (iherp.com) is a veteran reptile management platform branded as "Hardcore 
 
 ### 3. Breeding Loans (MEDIUM-HIGH PRIORITY)
 
-**What iHerp does:** Formal "breeding loan" management — users can lend animals to other breeders for pairing, with tracking of loan status, duration, and return.
+**What iHerp does:** Formal "breeding loan" management, users can lend animals to other breeders for pairing, with tracking of loan status, duration, and return.
 
 **Why this matters:**
 - Extremely common practice in the gecko hobby, especially for rare morphs
@@ -67,7 +67,7 @@ iHerp (iherp.com) is a veteran reptile management platform branded as "Hardcore 
 - Having this formalized builds trust and accountability
 - Natural extension of the breeding and community features
 
-**What Geck Inspect has today:** Breeding plans, pairing management, and direct messaging — but no formal loan tracking system.
+**What Geck Inspect has today:** Breeding plans, pairing management, and direct messaging, but no formal loan tracking system.
 
 **Recommendation:** Add a "Breeding Loan" feature:
 - Loan request/offer workflow between two users
@@ -81,11 +81,11 @@ iHerp (iherp.com) is a veteran reptile management platform branded as "Hardcore 
 
 ### 4. Batch Operations for Daily Husbandry (MEDIUM PRIORITY)
 
-**What iHerp does:** "Batch Feed a Group" — users organize animals into groups and log feeding events for the entire group in one action. Can be done quickly from mobile.
+**What iHerp does:** "Batch Feed a Group", users organize animals into groups and log feeding events for the entire group in one action. Can be done quickly from mobile.
 
 **Why this matters:**
 - Breeders with 50+ geckos don't want to log feeding one by one
-- This is THE daily workflow — if it's painful, people stop tracking
+- This is THE daily workflow, if it's painful, people stop tracking
 - Mobile-first batch actions = faster record keeping = better data
 
 **What Geck Inspect has today:** Feeding Groups exist as a feature, but the batch workflow could be streamlined.
@@ -109,7 +109,7 @@ iHerp (iherp.com) is a veteran reptile management platform branded as "Hardcore 
 - Expo/show sellers need printed lineage cards and care sheets
 - Not everyone has their phone while doing rounds in the gecko room
 
-**What Geck Inspect has today:** CSV/PDF export of gecko roster, certificate generation — but not purpose-built printable worksheets.
+**What Geck Inspect has today:** CSV/PDF export of gecko roster, certificate generation, but not purpose-built printable worksheets.
 
 **Recommendation:** Add printable templates:
 - Daily feeding/misting log sheet (blank, per rack/group)
@@ -122,7 +122,7 @@ iHerp (iherp.com) is a veteran reptile management platform branded as "Hardcore 
 
 ### 6. Personal Collection Webpage / Breeder Storefront (MEDIUM PRIORITY)
 
-**What iHerp does:** Users can create a "personal webpage" showcasing their collection — essentially a mini-website within iHerp that acts as their public-facing breeder page.
+**What iHerp does:** Users can create a "personal webpage" showcasing their collection, essentially a mini-website within iHerp that acts as their public-facing breeder page.
 
 **Why this matters:**
 - Many gecko breeders don't have their own website
@@ -168,11 +168,11 @@ iHerp (iherp.com) is a veteran reptile management platform branded as "Hardcore 
 
 ### 8. Species Gallery (Community-Wide) (LOW PRIORITY)
 
-**What iHerp does:** A gallery organized by species where all members' photos are aggregated — a visual encyclopedia of species and morphs contributed by the community.
+**What iHerp does:** A gallery organized by species where all members' photos are aggregated, a visual encyclopedia of species and morphs contributed by the community.
 
 **Why this matters:**
 - Visual discovery tool for newcomers ("what morph is this?")
-- Community pride — seeing your gecko in the species gallery
+- Community pride, seeing your gecko in the species gallery
 - Reference material for morph identification
 
 **What Geck Inspect has today:** Gallery page, Morph Guide with reference images, Morph Visualizer.
@@ -223,17 +223,17 @@ During research, several other platforms surfaced that are worth noting:
 
 | Priority | Feature | Effort | Impact |
 |----------|---------|--------|--------|
-| **HIGH** | Animal Ownership Transfer | Medium | High — network effect, trust, data continuity |
-| **HIGH** | Q&A Knowledge Base (Geck Answers) | Medium | High — SEO, community value, beginner onboarding |
-| **MED-HIGH** | Breeding Loan Management | Medium | Medium-High — common practice, differentiator |
-| **MEDIUM** | Batch Husbandry Operations | Low-Medium | High — daily workflow improvement |
-| **MEDIUM** | Printable Worksheets & Vet Records | Low | Medium — practical utility |
-| **MEDIUM** | Enhanced Breeder Storefront | Medium | Medium — acquisition, breeder identity |
-| **LOW-MED** | Breeding Journal / Keeper Blog | Medium | Medium — engagement, SEO, community |
-| **LOW** | Community Photo Gallery Contributions | Low | Low — already strong morph tools |
+| **HIGH** | Animal Ownership Transfer | Medium | High: network effect, trust, data continuity |
+| **HIGH** | Q&A Knowledge Base (Geck Answers) | Medium | High: SEO, community value, beginner onboarding |
+| **MED-HIGH** | Breeding Loan Management | Medium | Medium-High: common practice, differentiator |
+| **MEDIUM** | Batch Husbandry Operations | Low-Medium | High: daily workflow improvement |
+| **MEDIUM** | Printable Worksheets & Vet Records | Low | Medium: practical utility |
+| **MEDIUM** | Enhanced Breeder Storefront | Medium | Medium: acquisition, breeder identity |
+| **LOW-MED** | Breeding Journal / Keeper Blog | Medium | Medium: engagement, SEO, community |
+| **LOW** | Community Photo Gallery Contributions | Low | Low: already strong morph tools |
 
 ---
 
 ## Key Takeaway
 
-iHerp's greatest strength isn't any single feature — it's the **community flywheel**: transfers create network effects, Q&A creates a knowledge base, blogs create content, classifieds create transactions, and all of it keeps users coming back. Geck Inspect has superior individual tools, but adopting iHerp's community-connective tissue (especially ownership transfers and the Q&A system) would significantly strengthen the platform's stickiness and growth.
+iHerp's greatest strength isn't any single feature, it's the **community flywheel**: transfers create network effects, Q&A creates a knowledge base, blogs create content, classifieds create transactions, and all of it keeps users coming back. Geck Inspect has superior individual tools, but adopting iHerp's community-connective tissue (especially ownership transfers and the Q&A system) would significantly strengthen the platform's stickiness and growth.
