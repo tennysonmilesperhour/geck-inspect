@@ -392,7 +392,7 @@ begin
     select 1 from revenuecat_entitlements e
     where e.is_active = true
       and (e.expires_at is null or e.expires_at > now())
-      and (e.app_user_id = v_uid::text or e.app_user_id = v_prof.id or lower(e.app_user_id) = lower(v_email))
+      and (e.app_user_id = v_uid or e.app_user_id::text = v_prof.id)
   ) into v_rc;
   if v_rc then return 'breeder'; end if;
 
