@@ -47,7 +47,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Where: scripts/deploy-morph-id.sh:59 and deploy-push-notifications.sh:52 (db push --include-all); supabase/SCHEMA_SNAPSHOT.md dated 2026-07-07
 - Why it matters: 26 live migrations have no repo file, 11 repo files were never applied (referral program, the email trigger). Running the scripts would overwrite the vault-based notification dispatcher and silently stop all email and push.
 - Proposed fix: Do not run the scripts this week; baseline with supabase db pull, migration repair, archive orphans, regenerate the snapshot.
-- Status: Partly fixed 4 Sep: deploy scripts no longer run db push, four never-applied files archived under _never_applied with a README, docs/MIGRATIONS.md explains the drift and the workflow. Snapshot regeneration and a full baseline still open
+- Status: Mostly fixed 4 Sep: deploy scripts no longer run db push, four never-applied files archived under _never_applied with a README, docs/MIGRATIONS.md explains the drift and the workflow. Late session: supabase/SCHEMA_SNAPSHOT.md regenerated from the live catalog (112 tables, policies, functions, triggers, cron, buckets) and the baseline plan written into docs/MIGRATIONS.md with the exact file-to-history mapping (22 exact, 57 renamed, 8 unmatched, 26 live-only). Executing the baseline (renames, placeholders, db pull) waits for Tennyson's go-ahead
 
 ### F34: Non-JS crawlers see thin shells and cannot reach 134 child pages
 
