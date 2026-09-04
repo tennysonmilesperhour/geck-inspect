@@ -436,7 +436,7 @@ function allRoutes() {
 }
 function childLinksFor(route) {
   const prefixes = {
-    '/MorphGuide': [/^\/MorphGuide\/[^/]+$/, /^\/MorphGuide\/lines\//, /^\/MorphGuide\/traits\//],
+    '/MorphGuide': [/^\/MorphGuide\/[^/]+$/, /^\/MorphGuide\/lines\//, /^\/MorphGuide\/traits\//, /^\/MorphGuide\/category\//, /^\/MorphGuide\/inheritance\//],
     '/CareGuide': [/^\/CareGuide\//],
     '/blog': [/^\/blog\//],
     '/calculator': [/^\/calculator\//],
@@ -488,6 +488,18 @@ function injectNoscriptBody(html, route) {
             <a href="/breeding-records">Breeding Records</a>
             <a href="/crested-gecko-price">Price Guide</a>
             <a href="/blog">Blog</a>
+            <a href="/QualityScale">Quality Scale</a>
+            <a href="/MorphVisualizer">Morph Visualizer</a>
+            <a href="/Gallery">Gallery</a>
+            <a href="/Forum">Forum</a>
+            <a href="/CommunityConnect">Community</a>
+            <a href="/Marketplace">Marketplace</a>
+            <a href="/MarketplaceBuy">Buy</a>
+            <a href="/MarketplaceVerification">Verification</a>
+            <a href="/Shipping">Shipping</a>
+            <a href="/Giveaways">Giveaways</a>
+            <a href="/Mentorship">Mentorship</a>
+            <a href="/Membership">Pricing</a>
             <a href="/About">About</a>
           </nav>
           <h1>${escapeHtml(heading)}</h1>
