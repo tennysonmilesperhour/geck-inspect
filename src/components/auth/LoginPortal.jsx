@@ -1,4 +1,5 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
 import { APP_LOGO_URL } from '@/lib/constants';
 import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent } from '@/components/ui/card';
@@ -32,21 +33,37 @@ function GoogleIcon() {
   );
 }
 
-export default function LoginPortal({ requiredFeature = null }) {
+// Where email links bring people back. Confirmation lands in the app;
+// password resets land on the "choose a new password" form.
+const origin = () => (typeof window !== 'undefined' ? window.location.origin : 'https://geckinspect.com');
+
+export default function LoginPortal({ requiredFeature: _requiredFeature = null }) {
+  // ?mode=signup opens on Create Account (landing page CTAs and the morph
+  // ID guest hand-off use it); ?mode=forgot opens the reset form.
+  const [searchParams] = useSearchParams();
+  const initialMode = searchParams.get('mode');
+
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isGoogleLoading, setIsGoogleLoading] = useState(false);
-  const [isSignUp, setIsSignUp] = useState(false);
+  const [isSignUp, setIsSignUp] = useState(initialMode === 'signup');
+  const [isForgot, setIsForgot] = useState(initialMode === 'forgot');
   const [signUpSent, setSignUpSent] = useState(false);
+  const [resetSent, setResetSent] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (initialMode === 'signup') setIsSignUp(true);
+    if (initialMode === 'forgot') setIsForgot(true);
+  }, [initialMode]);
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: 'google',
-      options: { redirectTo: window.location.origin },
+      options: { redirectTo: origin() },
     });
     if (error) {
       toast({ title: 'Google sign-in failed', description: error.message, variant: 'destructive' });
@@ -60,7 +77,11 @@ export default function LoginPortal({ requiredFeature = null }) {
     setIsLoading(true);
     try {
       if (isSignUp) {
-        const { error } = await supabase.auth.signUp({ email, password });
+        const { error } = await supabase.auth.signUp({
+          email,
+          password,
+          options: { emailRedirectTo: `${origin()}/MyGeckos` },
+        });
         if (error) {
           toast({ title: 'Sign up failed', description: error.message, variant: 'destructive' });
         } else {
@@ -84,7 +105,30 @@ export default function LoginPortal({ requiredFeature = null }) {
     setIsLoading(false);
   };
 
-  if (signUpSent) {
+  const handleForgot = async (e) => {
+    e.preventDefault();
+    if (!email) {
+      toast({ title: 'Enter the email you signed up with', variant: 'destructive' });
+      return;
+    }
+    setIsLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email, {
+        redirectTo: `${origin()}/AuthPortal?mode=reset`,
+      });
+      if (error) {
+        toast({ title: 'Could not send the reset email', description: error.message, variant: 'destructive' });
+      } else {
+        setResetSent(true);
+      }
+    } catch (err) {
+      toast({ title: 'Error', description: err.message, variant: 'destructive' });
+    }
+    setIsLoading(false);
+  };
+
+  if (signUpSent || resetSent) {
+    const isReset = resetSent;
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 flex items-center justify-center p-4">
         <div className="w-full max-w-md text-center space-y-6">
@@ -95,12 +139,17 @@ export default function LoginPortal({ requiredFeature = null }) {
           />
           <h1 className="text-3xl font-bold text-white">Check your email</h1>
           <p className="text-slate-300">
-            We sent a confirmation link to{' '}
-            <span className="text-emerald-400">{email}</span>.
-            Click it to activate your account, then come back and sign in.
+            We sent {isReset ? 'a password reset link' : 'a confirmation link'} to{' '}
+            <span className="text-emerald-400">{email}</span>.{' '}
+            {isReset
+              ? 'Open it on this device and you will be asked to choose a new password.'
+              : 'Click the link and we will bring you straight into the app.'}
+          </p>
+          <p className="text-slate-500 text-sm">
+            Nothing in your inbox after a minute? Check spam, or try again with the address you used.
           </p>
           <button
-            onClick={() => { setIsSignUp(false); setSignUpSent(false); }}
+            onClick={() => { setIsSignUp(false); setIsForgot(false); setSignUpSent(false); setResetSent(false); }}
             className="text-emerald-400 hover:text-emerald-300 underline text-sm"
           >
             Back to sign in
@@ -128,111 +177,176 @@ export default function LoginPortal({ requiredFeature = null }) {
         <Card className="bg-slate-900 border-slate-700 shadow-xl">
           <CardContent className="pt-6 space-y-5">
 
-            {/* Tab toggle */}
-            <div className="flex bg-slate-800 rounded-lg p-1 gap-1">
-              <button
-                onClick={() => setIsSignUp(false)}
-                className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
-                  !isSignUp
-                    ? 'bg-emerald-600 text-white shadow'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Sign In
-              </button>
-              <button
-                onClick={() => setIsSignUp(true)}
-                className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
-                  isSignUp
-                    ? 'bg-emerald-600 text-white shadow'
-                    : 'text-slate-400 hover:text-white'
-                }`}
-              >
-                Create Account
-              </button>
-            </div>
-
-            {/* Google OAuth */}
-            <Button
-              type="button"
-              variant="outline"
-              onClick={handleGoogleSignIn}
-              disabled={isGoogleLoading || isLoading}
-              className="w-full bg-white hover:bg-slate-100 text-slate-900 border-slate-300 font-medium gap-2"
-            >
-              {isGoogleLoading
-                ? <Loader2 className="w-4 h-4 animate-spin" />
-                : <GoogleIcon />}
-              Continue with Google
-            </Button>
-
-            {/* Divider */}
-            <div className="flex items-center gap-3">
-              <div className="flex-1 h-px bg-slate-700" />
-              <span className="text-xs text-slate-500 uppercase tracking-wider">or</span>
-              <div className="flex-1 h-px bg-slate-700" />
-            </div>
-
-            {/* Email / password form */}
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="space-y-1">
-                <Label htmlFor="email" className="text-slate-300 text-sm">Email</Label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <Input
-                    id="email"
-                    type="email"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
-                    placeholder="you@example.com"
-                    className="pl-10 bg-slate-800 border-slate-600 text-white placeholder-slate-500 focus:border-emerald-500"
-                    required
-                  />
+            {isForgot ? (
+              <form onSubmit={handleForgot} className="space-y-4">
+                <div className="space-y-1">
+                  <h2 className="text-lg font-semibold text-white">Reset your password</h2>
+                  <p className="text-sm text-slate-400">
+                    Enter the email you signed up with and we will send a link to choose a new password.
+                  </p>
                 </div>
-              </div>
-
-              <div className="space-y-1">
-                <Label htmlFor="password" className="text-slate-300 text-sm">Password</Label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
-                  <Input
-                    id="password"
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="pl-10 bg-slate-800 border-slate-600 text-white placeholder-slate-500 focus:border-emerald-500"
-                    required
-                    minLength={6}
-                  />
+                <div className="space-y-1">
+                  <Label htmlFor="email" className="text-slate-300 text-sm">Email</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                    <Input
+                      id="email"
+                      type="email"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      placeholder="you@example.com"
+                      className="pl-10 bg-slate-800 border-slate-600 text-white placeholder-slate-500 focus:border-emerald-500"
+                      required
+                      autoComplete="email"
+                    />
+                  </div>
                 </div>
-              </div>
+                <Button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+                >
+                  {isLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                  Send reset link
+                </Button>
+                <button
+                  type="button"
+                  onClick={() => setIsForgot(false)}
+                  className="w-full text-center text-sm text-slate-400 hover:text-white"
+                >
+                  Back to sign in
+                </button>
+              </form>
+            ) : (
+              <>
+                {/* Tab toggle */}
+                <div className="flex bg-slate-800 rounded-lg p-1 gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setIsSignUp(false)}
+                    className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
+                      !isSignUp
+                        ? 'bg-emerald-600 text-white shadow'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Sign In
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setIsSignUp(true)}
+                    className={`flex-1 py-2 rounded-md text-sm font-medium transition-colors ${
+                      isSignUp
+                        ? 'bg-emerald-600 text-white shadow'
+                        : 'text-slate-400 hover:text-white'
+                    }`}
+                  >
+                    Create Account
+                  </button>
+                </div>
 
-              {!isSignUp && (
-                <label className="flex items-center gap-2 cursor-pointer select-none">
-                  <Checkbox
-                    checked={rememberMe}
-                    onCheckedChange={(checked) => setRememberMe(!!checked)}
-                  />
-                  <span className="text-sm text-slate-400">Stay signed in</span>
-                </label>
-              )}
+                {/* Google OAuth */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={handleGoogleSignIn}
+                  disabled={isGoogleLoading || isLoading}
+                  className="w-full bg-white hover:bg-slate-100 text-slate-900 border-slate-300 font-medium gap-2"
+                >
+                  {isGoogleLoading
+                    ? <Loader2 className="w-4 h-4 animate-spin" />
+                    : <GoogleIcon />}
+                  Continue with Google
+                </Button>
 
-              <Button
-                type="submit"
-                disabled={isLoading || isGoogleLoading}
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
-              >
-                {isLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
-                {isSignUp ? 'Create Account' : 'Sign In'}
-              </Button>
-            </form>
+                {/* Divider */}
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-px bg-slate-700" />
+                  <span className="text-xs text-slate-500 uppercase tracking-wider">or</span>
+                  <div className="flex-1 h-px bg-slate-700" />
+                </div>
+
+                {/* Email / password form */}
+                <form onSubmit={handleSubmit} className="space-y-4">
+                  <div className="space-y-1">
+                    <Label htmlFor="email" className="text-slate-300 text-sm">Email</Label>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <Input
+                        id="email"
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="you@example.com"
+                        className="pl-10 bg-slate-800 border-slate-600 text-white placeholder-slate-500 focus:border-emerald-500"
+                        required
+                        autoComplete="email"
+                      />
+                    </div>
+                  </div>
+
+                  <div className="space-y-1">
+                    <div className="flex items-center justify-between">
+                      <Label htmlFor="password" className="text-slate-300 text-sm">Password</Label>
+                      {!isSignUp && (
+                        <button
+                          type="button"
+                          onClick={() => setIsForgot(true)}
+                          className="text-xs text-emerald-400 hover:text-emerald-300"
+                        >
+                          Forgot password?
+                        </button>
+                      )}
+                    </div>
+                    <div className="relative">
+                      <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
+                      <Input
+                        id="password"
+                        type="password"
+                        value={password}
+                        onChange={(e) => setPassword(e.target.value)}
+                        placeholder="••••••••"
+                        className="pl-10 bg-slate-800 border-slate-600 text-white placeholder-slate-500 focus:border-emerald-500"
+                        required
+                        minLength={isSignUp ? 8 : 6}
+                        autoComplete={isSignUp ? 'new-password' : 'current-password'}
+                      />
+                    </div>
+                    {isSignUp && (
+                      <p className="text-xs text-slate-500">At least 8 characters.</p>
+                    )}
+                  </div>
+
+                  {!isSignUp && (
+                    <label className="flex items-center gap-2 cursor-pointer select-none">
+                      <Checkbox
+                        checked={rememberMe}
+                        onCheckedChange={(checked) => setRememberMe(!!checked)}
+                      />
+                      <span className="text-sm text-slate-400">Stay signed in</span>
+                    </label>
+                  )}
+
+                  <Button
+                    type="submit"
+                    disabled={isLoading || isGoogleLoading}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-semibold"
+                  >
+                    {isLoading && <Loader2 className="w-4 h-4 animate-spin mr-2" />}
+                    {isSignUp ? 'Create free account' : 'Sign In'}
+                  </Button>
+                </form>
+              </>
+            )}
 
           </CardContent>
         </Card>
 
-        <p className="text-center text-xs text-slate-600">
-          By continuing you agree to our terms of service and privacy policy.
+        <p className="text-center text-xs text-slate-500">
+          By continuing you agree to our{' '}
+          <Link to="/Terms" className="underline hover:text-slate-300">terms of service</Link>
+          {' '}and{' '}
+          <Link to="/PrivacyPolicy" className="underline hover:text-slate-300">privacy policy</Link>.
         </p>
       </div>
     </div>

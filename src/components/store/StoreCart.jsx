@@ -23,6 +23,7 @@ import {
 } from '@/lib/store/customSticker';
 import { useAuth } from '@/lib/AuthContext';
 import { supabase } from '@/lib/supabaseClient';
+import { STORE_CHECKOUT_ENABLED } from '@/lib/store/checkoutFlags';
 import { captureEvent } from '@/lib/posthog';
 
 export default function StoreCart() {
@@ -341,14 +342,18 @@ export default function StoreCart() {
             </div>
 
             <Button
-              disabled={busy || items.length === 0}
+              disabled={!STORE_CHECKOUT_ENABLED || busy || items.length === 0}
               onClick={handleCheckout}
               className="w-full mt-4 bg-emerald-600 hover:bg-emerald-500 text-white"
             >
-              {busy ? 'Working…' : 'Continue to checkout'}
+              {!STORE_CHECKOUT_ENABLED
+                ? 'Checkout opens soon'
+                : busy ? 'Working…' : 'Continue to checkout'}
             </Button>
             <p className="text-[11px] text-slate-500 mt-2 text-center">
-              Stripe-hosted checkout · Apple Pay · Google Pay · Cards
+              {STORE_CHECKOUT_ENABLED
+                ? 'Stripe-hosted checkout · Apple Pay · Google Pay · Cards'
+                : 'Online checkout is being switched on. Your cart is saved and will be here when it opens.'}
             </p>
           </aside>
         </div>

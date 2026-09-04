@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Gecko, ForumPost, GeckoImage, BreedingPlan, User } from '@/entities/all';
+import { Gecko, ForumPost, GeckoImage, BreedingPlan } from '@/entities/all';
+import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import {
     Activity as ActivityIcon,
@@ -87,11 +88,13 @@ export default function CommunityPulse() {
                 // Hydrate user display names for the rows we actually show
                 const emails = Array.from(new Set(merged.map((x) => x.email).filter(Boolean)));
                 if (emails.length > 0) {
-                    const userRows = await User.list().catch(() => []);
+                    // Only the profiles on screen, display columns only.
+                    const { data: userRows } = await supabase
+                        .from('profiles')
+                        .select('id, email, full_name, business_name, profile_image_url')
+                        .in('email', emails);
                     const map = new Map();
-                    for (const u of userRows) {
-                        if (emails.includes(u.email)) map.set(u.email, u);
-                    }
+                    for (const u of userRows || []) map.set(u.email, u);
                     setUsersByEmail(map);
                 }
             } catch (err) {

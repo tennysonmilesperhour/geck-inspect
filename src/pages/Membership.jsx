@@ -99,7 +99,6 @@ const tiers = [
       'MorphMarket CSV sync (Palm Street pending)',
       'Sales stats and cost tracking dashboard',
       'Option to be featured on the dashboard',
-      'Zero’s Geckos shipping integration',
       'Expert verification eligibility',
       'Early access to new features',
     ],

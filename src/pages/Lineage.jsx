@@ -541,9 +541,8 @@ export default function Lineage() {
         try {
             const currentUser = await api.auth.me().catch(() => null);
             const { getVisibleGeckos } = await import('@/lib/geckoAccess');
-            const [userGeckos, allVisibleGeckos, userPlaceholders] = await Promise.all([
+            const [userGeckos, userPlaceholders] = await Promise.all([
                 currentUser ? getVisibleGeckos(currentUser) : [],
-                Gecko.list(),
                 currentUser ? LineagePlaceholder.filter({ created_by: currentUser.email }).catch(() => []) : []
             ]);
             
@@ -554,8 +553,39 @@ export default function Lineage() {
                 console.warn("Could not load breeding plans:", error);
             }
             
-            setMyGeckos(userGeckos.filter(g => !g.notes?.startsWith('[Manual sale]')));
-            setAllGeckosMap(Object.fromEntries(allVisibleGeckos.filter(g => !g.notes?.startsWith('[Manual sale]')).map(g => [g.id, g])));
+            // Resolve ancestors and breeding-plan mates by id, generation
+            // by generation, instead of downloading every gecko in the
+            // database. Parents can belong to other keepers (geckos are
+            // publicly readable), so this follows sire_id / dam_id across
+            // owners up to eight generations deep.
+            const isManualSale = (g) => g?.notes?.startsWith('[Manual sale]');
+            const geckoMap = {};
+            for (const g of userGeckos) {
+                if (!isManualSale(g)) geckoMap[g.id] = g;
+            }
+            let frontier = new Set();
+            const queueParents = (g) => {
+                if (g?.sire_id && !geckoMap[g.sire_id]) frontier.add(g.sire_id);
+                if (g?.dam_id && !geckoMap[g.dam_id]) frontier.add(g.dam_id);
+            };
+            Object.values(geckoMap).forEach(queueParents);
+            for (const plan of breedingPlans) {
+                if (plan.sire_id && !geckoMap[plan.sire_id]) frontier.add(plan.sire_id);
+                if (plan.dam_id && !geckoMap[plan.dam_id]) frontier.add(plan.dam_id);
+            }
+            for (let depth = 0; depth < 8 && frontier.size > 0; depth++) {
+                const ids = Array.from(frontier);
+                frontier = new Set();
+                const rows = await Gecko.filter({ id: { $in: ids } }).catch(() => []);
+                for (const g of rows || []) {
+                    if (isManualSale(g) || geckoMap[g.id]) continue;
+                    geckoMap[g.id] = g;
+                    queueParents(g);
+                }
+            }
+
+            setMyGeckos(userGeckos.filter(g => !isManualSale(g)));
+            setAllGeckosMap(geckoMap);
             setAllBreedingPlans(breedingPlans);
             
             const placeholderMap = {};

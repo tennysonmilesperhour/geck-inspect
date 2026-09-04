@@ -28,6 +28,9 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+// Live prices, so the prerendered /Membership snippet can never drift
+// from what the page actually charges.
+import { TIER_PRICING, TRIAL_DAYS } from '../src/lib/stripe-config.js';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
 const REPO_ROOT = resolve(__dirname, '..');
@@ -399,7 +402,7 @@ export const STATIC_ROUTES = [
     meta: {
       title: 'Pricing & Plans, Geck Inspect',
       description:
-        'Geck Inspect plans for crested gecko keepers and breeders. Free (10 geckos), Keeper ($4/mo, $38.40/yr, $149 lifetime), Breeder ($9/mo, $105.60/yr, $349 lifetime), and custom Enterprise. 7-day free trial on recurring plans. Cancel anytime.',
+        `Geck Inspect plans for crested gecko keepers and breeders. Free (10 geckos), Keeper (${TIER_PRICING.keeper.monthly.price}/mo or ${TIER_PRICING.keeper.annual.price}/yr), Breeder (${TIER_PRICING.breeder.monthly.price}/mo or ${TIER_PRICING.breeder.annual.price}/yr), and Enterprise. ${TRIAL_DAYS}-day free trial on paid plans. Cancel anytime.`,
     },
   },
   {

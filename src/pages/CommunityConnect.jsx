@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useCallback } from 'react';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
-import { User, Gecko, UserFollow, ForumCategory, ForumPost, UserActivity } from '@/entities/all';
+import { User, UserFollow, ForumCategory, ForumPost, UserActivity } from '@/entities/all';
+import { supabase } from '@/lib/supabaseClient';
 import { api } from '@/api/appClient';
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -534,37 +535,25 @@ export default function CommunityConnectPage() {
                 const user = await api.auth.me().catch(() => null);
                 setCurrentUser(user);
 
-                // Fetch initial 24 breeders and all geckos
+                // Fetch initial 24 breeders and the per-breeder gecko counts.
+                // The counts (keeping / selling / breeding plus a cover
+                // image) come from the community_gecko_counts() function so
+                // the browser never downloads the whole geckos table.
                 const initialBreeders = await fetchBreederBatch(0);
-                const allGeckos = await Gecko.list().catch(() => []);
+                const { data: countRows, error: countsError } = await supabase.rpc('community_gecko_counts');
+                if (countsError) console.warn('Community gecko counts failed:', countsError);
 
-                // Filter to public, non-archived geckos only
-                const publicGeckos = (allGeckos || []).filter(g => g.is_public !== false && !g.archived);
-
-                // Calculate gecko counts and cover images per user
                 const counts = {};
                 const coverImages = {};
-                publicGeckos.forEach(gecko => {
-                    if (!counts[gecko.created_by]) {
-                        counts[gecko.created_by] = { selling: 0, breeding: 0, keeping: 0 };
-                    }
-                    // Skip Sold geckos entirely from counts
-                    if (gecko.status === 'Sold') return;
-                    // All active geckos count toward collection
-                    counts[gecko.created_by].keeping++;
-                    // For Sale
-                    if (gecko.status === 'For Sale') {
-                        counts[gecko.created_by].selling++;
-                    }
-                    // Breeding-related statuses
-                    if (['Ready to Breed', 'Proven', 'Future Breeder'].includes(gecko.status)) {
-                        counts[gecko.created_by].breeding++;
-                    }
-                    // Save first gecko image as potential cover
-                    if (!coverImages[gecko.created_by] && gecko.image_urls?.length > 0) {
-                        coverImages[gecko.created_by] = gecko.image_urls[0];
-                    }
-                });
+                for (const row of countRows || []) {
+                    if (!row.created_by) continue;
+                    counts[row.created_by] = {
+                        selling: row.selling || 0,
+                        breeding: row.breeding || 0,
+                        keeping: row.keeping || 0,
+                    };
+                    if (row.cover_image) coverImages[row.created_by] = row.cover_image;
+                }
                 setGeckoCounts(counts);
                 setGeckoCoverImages(coverImages);
 

@@ -16,7 +16,7 @@ import { captureEvent } from '@/lib/posthog';
  * Props: { isOpen, onChoose(role) }. onChoose fires after the preference
  * is persisted so the caller can open the (now mode-appropriate) tour.
  */
-export default function OnboardingRolePrompt({ isOpen, onChoose }) {
+export default function OnboardingRolePrompt({ isOpen, onChoose, onDismiss }) {
   const choose = (role) => {
     const keeper = role === 'keeper';
     try {
@@ -30,8 +30,8 @@ export default function OnboardingRolePrompt({ isOpen, onChoose }) {
   };
 
   return (
-    <Dialog open={isOpen}>
-      <DialogContent className="bg-slate-900 border-slate-700 max-w-lg" hideCloseButton>
+    <Dialog open={isOpen} onOpenChange={(open) => { if (!open) onDismiss?.(); }}>
+      <DialogContent className="bg-slate-900 border-slate-700 max-w-lg">
         <div className="text-center space-y-2 pt-2">
           <h2 className="text-2xl font-bold text-slate-100">
             Welcome to Geck Inspect

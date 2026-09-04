@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { User, Gecko } from '@/entities/all';
+import { User } from '@/entities/all';
+import { supabase } from '@/lib/supabaseClient';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Crown, MapPin, ChevronRight, Sparkles } from 'lucide-react';
 import { DEFAULT_GECKO_IMAGE as DEFAULT_AVATAR } from '@/lib/constants';
@@ -14,7 +15,9 @@ import { DEFAULT_GECKO_IMAGE as DEFAULT_AVATAR } from '@/lib/constants';
  * the same day, and the rotation advances once a day rather than on
  * every refresh. Clicking a card takes you to their public profile.
  *
- * Uses Gecko.list() to bucket sale counts client-side, the table is
+ * Sale counts come from the community_gecko_counts() database function
+ * (status = 'For Sale' per breeder). Historically this used Gecko.list()
+ * to bucket counts client-side on the theory that the table is
  * small enough that a single fetch is fine. When it grows we can move
  * this to a materialized view.
  */
@@ -53,9 +56,11 @@ export default function FeaturedBreeders() {
     (async () => {
       setIsLoading(true);
       try {
-        const [users, geckos] = await Promise.all([
+        const [users, countRows] = await Promise.all([
           User.filter({ is_featured_breeder: true }).catch(() => []),
-          Gecko.list().catch(() => []),
+          // Per-breeder counts computed in the database instead of
+          // downloading every gecko row to bucket them in the browser.
+          supabase.rpc('community_gecko_counts').then(({ data }) => data || []),
         ]);
 
         // Deterministic 24h rotation: seed the shuffle with the current
@@ -65,12 +70,10 @@ export default function FeaturedBreeders() {
         const shuffled = seededShuffle(users, todaySeed).slice(0, FEATURED_COUNT);
         setBreeders(shuffled);
 
-        // Bucket geckos for sale by created_by email
+        // Geckos with status 'For Sale' per breeder.
         const counts = {};
-        for (const g of geckos) {
-          if (g.for_sale && g.created_by) {
-            counts[g.created_by] = (counts[g.created_by] || 0) + 1;
-          }
+        for (const row of countRows) {
+          if (row.created_by && row.selling > 0) counts[row.created_by] = row.selling;
         }
         setSaleCounts(counts);
       } catch (err) {

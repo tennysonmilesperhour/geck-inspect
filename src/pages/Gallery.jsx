@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import Seo from '@/components/seo/Seo';
 import { api } from '@/api/appClient';
+import { supabase } from '@/lib/supabaseClient';
 import GalleryFilters from '../components/gallery/GalleryFilters';
 import ImageCard from '../components/gallery/ImageCard';
 import ImageDetailModal from '../components/gallery/ImageDetailModal';
@@ -73,19 +74,34 @@ export default function Gallery() {
 
         setHasMore(results.length === BATCH_SIZE);
         offsetRef.current = offset + results.length;
+        return filtered;
     }, [buildQuery, sortField, filters.secondary_traits]);
+
+    // Uploader display names for the images on screen. Fetches only the
+    // profiles we have not seen yet, and only display columns, instead of
+    // downloading every profile row (emails, billing ids and all) on
+    // every Gallery visit.
+    const knownEmailsRef = useRef(new Set());
+    const ensureUsers = useCallback(async (batch) => {
+        const missing = Array.from(new Set((batch || []).map((img) => img.created_by).filter(Boolean)))
+            .filter((email) => !knownEmailsRef.current.has(email));
+        if (missing.length === 0) return;
+        missing.forEach((email) => knownEmailsRef.current.add(email));
+        const { data, error } = await supabase
+            .from('profiles')
+            .select('id, email, full_name, business_name, profile_image_url, is_expert, is_featured_breeder')
+            .in('email', missing);
+        if (error || !data) return;
+        setUsers((prev) => [...prev, ...data]);
+    }, []);
 
     // Initial load + reload on filter change
     useEffect(() => {
         const load = async () => {
             setIsLoading(true);
             offsetRef.current = 0;
-            await fetchBatch(0, true);
-            // Load users once
-            if (users.length === 0) {
-                const allUsers = await api.entities.User.list().catch(() => []);
-                setUsers(allUsers);
-            }
+            const firstBatch = await fetchBatch(0, true);
+            await ensureUsers(firstBatch);
             setIsLoading(false);
         };
         load();
@@ -93,7 +109,8 @@ export default function Gallery() {
 
     const loadMore = async () => {
         setIsLoadingMore(true);
-        await fetchBatch(offsetRef.current, false);
+        const batch = await fetchBatch(offsetRef.current, false);
+        await ensureUsers(batch);
         setIsLoadingMore(false);
     };
 

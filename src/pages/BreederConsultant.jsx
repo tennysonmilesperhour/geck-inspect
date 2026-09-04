@@ -4,11 +4,12 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Send, Bot, User as UserIcon, Loader2, Sparkles, Crown, LogIn, Check, X, Undo2, CheckCircle2 } from 'lucide-react';
-import { InvokeLLM } from '@/integrations/Core';
+import { InvokeLLMDetailed } from '@/lib/invokeLlm';
+import { isGuestMode } from '@/lib/guestMode';
 import ReactMarkdown from 'react-markdown';
 import { User } from '@/entities/all';
 import { getVisibleGeckos } from '@/lib/geckoAccess';
-import { consumeFeatureCredit, getFeatureUsage } from '@/lib/usageMeter';
+import { getFeatureUsage } from '@/lib/usageMeter';
 import { getTierLimits } from '@/lib/tierLimits';
 import { createPageUrl } from '@/utils';
 import { ACTIONS, buildActionProtocolPrompt, parseAssistantAction } from '@/lib/assistantActions';
@@ -132,20 +133,13 @@ export default function BreederConsultantPage() {
         if (!text || isLoading) return;
         setGate(null);
 
-        // Metering: one credit per user message, consumed BEFORE the LLM call.
-        let credit;
-        try {
-            credit = await consumeFeatureCredit('assistant_message', user);
-        } catch (error) {
-            console.error('Credit check failed:', error);
-            appendMessage({ role: 'assistant', content: "I couldn't check your message allotment just now. Please try again in a moment." });
+        // Metering happens inside the invoke-llm edge function now: one
+        // assistant_message credit per call, with the allotment resolved
+        // from the caller's real tier on the server. Guests never reach it.
+        if (isGuestMode() || !user) {
+            setGate({ type: 'guest' });
             return;
         }
-        if (!credit.ok) {
-            setGate(credit.guest ? { type: 'guest' } : { type: 'exhausted', included: credit.included });
-            return;
-        }
-        if (credit.remaining != null) setRemaining(credit.remaining);
 
         const priorMessages = messages;
         appendMessage({ role: 'user', content: text });
@@ -157,7 +151,8 @@ export default function BreederConsultantPage() {
             const conversationHistory = priorMessages.map(historyLine).join('\n\n');
             const fullPrompt = `${systemPrompt}\n\nHere is the conversation so far:\n${conversationHistory}\n\n**User**: ${text}\n\n**GeckoGenius AI**:`;
 
-            const response = await InvokeLLM({ prompt: fullPrompt });
+            const { text: response, credits } = await InvokeLLMDetailed({ prompt: fullPrompt });
+            if (credits?.remaining != null) setRemaining(credits.remaining);
 
             const parsed = parseAssistantAction(response);
             if (parsed) {
@@ -166,6 +161,10 @@ export default function BreederConsultantPage() {
                 appendMessage({ role: 'assistant', content: response });
             }
         } catch (error) {
+            if (error?.code === 'credits_exhausted') {
+                setGate({ type: 'exhausted', included: error.included ?? null });
+                return;
+            }
             console.error("Error calling LLM:", error);
             appendMessage({ role: 'assistant', content: "I'm sorry, I'm having trouble connecting right now. Please try again later." });
         } finally {

@@ -8,8 +8,8 @@ import '@/styles/layout-theme.css';
 import {
   Dna,
   GitBranch,
-  LineChart as LineChartIcon,
   DollarSign,
+  LineChart as LineChartIcon,
   Sparkles,
   Users,
   BookOpen,
@@ -100,19 +100,13 @@ const TOOL_LINKS = [
     title: 'Price Guide',
     desc: 'How much is my crested gecko worth? Market ranges by morph and quality, from common animals to Lilly White and Axanthic.',
   },
-  {
-    to: '/MorphVisualizer',
-    icon: LineChartIcon,
-    title: 'Morph Visualizer',
-    desc: 'Interactive trait simulator: dial in base color, zygosity, and pattern intensity and watch the phenotype render live.',
-  },
 ];
 
 const FEATURES = [
   {
     icon: Dna,
     title: 'AI Morph Identification',
-    desc: 'Upload a photo and get an instant classification of primary morph, secondary traits, and base color. The classifier is trained on thousands of verified crested geckos.',
+    desc: 'Upload a photo and get an instant read on primary morph, secondary traits, and base color, checked against a reference library of thousands of crested gecko photos.',
   },
   {
     icon: GitBranch,
@@ -378,8 +372,8 @@ export default function Home() {
             <Link to={createPageUrl('CareGuide')} className="hover:text-emerald-300 transition-colors">
               Care Guide
             </Link>
-            <Link to={createPageUrl('Marketplace')} className="hover:text-emerald-300 transition-colors">
-              Marketplace
+            <Link to="/Membership" className="hover:text-emerald-300 transition-colors">
+              Pricing
             </Link>
             <Link to={createPageUrl('Shipping')} className="hover:text-emerald-300 transition-colors">
               Shipping
@@ -420,14 +414,28 @@ export default function Home() {
           </p>
           <div className="flex flex-col sm:flex-row gap-3 justify-center items-center">
             {showGuestCta ? (
-              <Button
-                size="lg"
-                onClick={() => handleContinueAsGuest('hero')}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-base px-8 py-6 gecko-glow"
-              >
-                Try Now for Free
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
+              <>
+                <Link
+                  to="/AuthPortal?mode=signup"
+                  onClick={() => captureEvent('landing_cta_clicked', { cta: 'hero', target: 'signup' })}
+                >
+                  <Button
+                    size="lg"
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-base px-8 py-6 gecko-glow"
+                  >
+                    Create free account
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => handleContinueAsGuest('hero')}
+                  className="bg-emerald-950/40 text-emerald-100 hover:bg-emerald-900/60 hover:text-white border-emerald-500/40 font-semibold text-base px-8 py-6 backdrop-blur"
+                >
+                  Try the demo first
+                </Button>
+              </>
             ) : (
               <Link to={createPageUrl('Dashboard')}>
                 <Button
@@ -439,21 +447,22 @@ export default function Home() {
                 </Button>
               </Link>
             )}
-            <Link
-              to={createPageUrl('AuthPortal')}
-              onClick={() => captureEvent('landing_cta_clicked', { cta: 'hero', target: 'signin' })}
-            >
-              <Button
-                size="lg"
-                variant="outline"
-                className="bg-emerald-950/40 text-emerald-100 hover:bg-emerald-900/60 hover:text-white border-emerald-500/40 font-semibold text-base px-8 py-6 backdrop-blur"
-              >
-                Sign In
-              </Button>
-            </Link>
           </div>
           <p className="text-xs text-slate-500 mt-6">
-            No credit card required. Saving requires a free account, and your collection stays yours.
+            No credit card required. Your collection stays yours.
+            {showGuestCta && (
+              <>
+                {' '}Already have an account?{' '}
+                <Link
+                  to={createPageUrl('AuthPortal')}
+                  onClick={() => captureEvent('landing_cta_clicked', { cta: 'hero', target: 'signin' })}
+                  className="text-emerald-300 hover:text-white underline"
+                >
+                  Sign in
+                </Link>
+                .
+              </>
+            )}
           </p>
         </section>
 
@@ -847,10 +856,10 @@ export default function Home() {
                   Genetics
                 </Button>
               </Link>
-              <Link to={createPageUrl('Gallery')}>
+              <Link to="/Membership">
                 <Button variant="outline" className="bg-emerald-950/40 text-emerald-100 hover:bg-emerald-900/60 hover:text-white border-emerald-500/40 font-semibold backdrop-blur">
-                  <Images className="w-4 h-4 mr-2 text-emerald-300" />
-                  Community Gallery
+                  <DollarSign className="w-4 h-4 mr-2 text-emerald-300" />
+                  Pricing
                 </Button>
               </Link>
             </div>
@@ -927,16 +936,30 @@ export default function Home() {
             <Smartphone className="w-4 h-4" />
             Add to your iOS or Android home screen, full-screen, like a native app, no app store needed.
           </p>
-          <div className="flex justify-center items-center">
+          <div className="flex flex-col sm:flex-row justify-center items-center gap-3">
             {showGuestCta ? (
-              <Button
-                size="lg"
-                onClick={() => handleContinueAsGuest('bottom')}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-base px-8 py-6 gecko-glow"
-              >
-                Try Now for Free
-                <ArrowRight className="w-4 h-4 ml-2" />
-              </Button>
+              <>
+                <Link
+                  to="/AuthPortal?mode=signup"
+                  onClick={() => captureEvent('landing_cta_clicked', { cta: 'bottom', target: 'signup' })}
+                >
+                  <Button
+                    size="lg"
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-base px-8 py-6 gecko-glow"
+                  >
+                    Create free account
+                    <ArrowRight className="w-4 h-4 ml-2" />
+                  </Button>
+                </Link>
+                <Button
+                  size="lg"
+                  variant="outline"
+                  onClick={() => handleContinueAsGuest('bottom')}
+                  className="bg-emerald-950/40 text-emerald-100 hover:bg-emerald-900/60 hover:text-white border-emerald-500/40 font-semibold text-base px-8 py-6 backdrop-blur"
+                >
+                  Try the demo first
+                </Button>
+              </>
             ) : (
               <Link to={createPageUrl('Dashboard')}>
                 <Button
@@ -1000,6 +1023,7 @@ export default function Home() {
             <div>
               <div className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">Company</div>
               <ul className="space-y-2 text-slate-400">
+                <li><Link to="/Membership" className="hover:text-white">Pricing</Link></li>
                 <li><Link to="/About" className="hover:text-white">About</Link></li>
                 <li><Link to="/Contact" className="hover:text-white">Contact</Link></li>
                 <li><Link to="/MarketplaceVerification" className="hover:text-white">Marketplace Trust</Link></li>

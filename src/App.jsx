@@ -12,13 +12,15 @@ import NavigationTracker from '@/lib/NavigationTracker'
 import PostHogPageTracker from '@/lib/PostHogPageTracker'
 import GA4PageTracker from '@/lib/GA4PageTracker'
 import { pagesConfig } from './pages.config'
-import { BrowserRouter as Router, Route, Routes, Navigate, Outlet } from 'react-router-dom';
+import { BrowserRouter as Router, Route, Routes, Navigate, Outlet, useLocation } from 'react-router-dom';
 import PageNotFound from './lib/PageNotFound';
 import { AuthProvider, useAuth } from '@/lib/AuthContext';
 import { RevenueCatProvider } from '@/lib/RevenueCatContext';
 import { ThemeProvider } from '@/lib/ThemeContext';
 import UpdateNotification from '@/components/ui/UpdateNotification';
 import LoginPortal from '@/components/auth/LoginPortal';
+import SetNewPassword from '@/components/auth/SetNewPassword';
+import PublicPageShell from '@/components/public/PublicPageShell';
 import ScrollToTop from '@/components/shared/ScrollToTop';
 import { api } from '@/api/appClient';
 import { captureReferralFromUrl } from '@/lib/referral';
@@ -88,6 +90,10 @@ const StorePage             = lazy(() => import('./pages/StorePage'));
 // P11 Quality Scale: public rubric for grading a crested gecko on
 // structure, head, pattern, and color. Spec: docs/specs/P11-quality-rubric.md.
 const QualityScale          = lazy(() => import('./pages/QualityScale'));
+// Pricing must be readable before anyone creates an account. Rendered in
+// the public shell for visitors; signed-in users get it inside Layout via
+// the PAGES map as before.
+const MembershipPublic      = lazy(() => import('./pages/Membership'));
 
 // Public feature landing pages. Crawlable front doors for the auth-gated
 // pedigree/lineage and breeding tools, targeting "crested gecko pedigree
@@ -160,6 +166,17 @@ const LazyFallback = (
     <div className="w-8 h-8 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
   </div>
 );
+
+// A signed-in user on /AuthPortal normally just bounces to the dashboard.
+// The one exception is the password reset link, which lands here as
+// /AuthPortal?mode=reset with a recovery session and needs the
+// choose-a-new-password form.
+const AuthPortalAuthed = () => {
+  const location = useLocation();
+  const mode = new URLSearchParams(location.search).get('mode');
+  if (mode === 'reset') return <SetNewPassword />;
+  return <Navigate to="/" replace />;
+};
 
 const AuthenticatedApp = () => {
   const { isLoadingAuth, isAuthenticated, isGuest } = useAuth();
@@ -279,6 +296,7 @@ const AuthenticatedApp = () => {
               supplies store. */}
           <Route path="/store/:slug" caseSensitive element={<StorePage />} />
           <Route path="/QualityScale" element={<QualityScale />} />
+          <Route path="/Membership" element={<PublicPageShell><MembershipPublic /></PublicPageShell>} />
           <Route path="/pedigree-tracker" element={<PedigreeTracker />} />
           <Route path="/breeding-records" element={<BreedingRecords />} />
           <Route path="/crested-gecko-price" element={<CrestedGeckoPrice />} />
@@ -329,7 +347,7 @@ const AuthenticatedApp = () => {
               <Route
                 key={path}
                 path={`/${path}`}
-                element={<Navigate to="/" replace />}
+                element={<AuthPortalAuthed />}
               />
             );
           }

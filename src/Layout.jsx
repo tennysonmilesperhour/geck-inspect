@@ -4,6 +4,7 @@ import "@/styles/layout-theme.css";
 import { initialsAvatarUrl } from "@/components/shared/InitialsAvatar";
 import { createPageUrl, getDisplayName } from "@/utils";
 import { api } from '@/api/appClient';
+import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { APP_LOGO_URL } from '@/lib/constants';
 import {
@@ -167,6 +168,10 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   // browser. A small delay avoids colliding with the initial page load.
   useEffect(() => {
     if (typeof window === 'undefined') return;
+    // Only real, signed-in accounts get the first-run prompt. Guests used
+    // to get it 1.5 seconds into the demo, and choosing a role there set
+    // the "seen" flag that then hid onboarding from the real account.
+    if (isGuest || !user) return;
     if (localStorage.getItem('geck_inspect_tutorial_seen') === '1') return;
     // First run: ask the keeper-vs-breeder question before the tour, so
     // the tour (and the sidebar it walks) is already the right shape.
@@ -181,7 +186,16 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       }
     }, 1500);
     return () => clearTimeout(timer);
-  }, []);
+  }, [isGuest, user?.email]);
+
+  // Closing the role prompt without choosing means "show me everything":
+  // mark onboarding seen so it never nags, but do not launch the tour.
+  const handleRoleDismissed = () => {
+    try {
+      localStorage.setItem('geck_inspect_tutorial_seen', '1');
+    } catch { /* ignore */ }
+    setShowRolePrompt(false);
+  };
 
   // After the first-run role prompt, persist the choice and roll straight
   // into the (now mode-appropriate) tour.
@@ -407,16 +421,26 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
             try {
               dataCache.markRequestMade(`user_contributions_${user.email}`);
 
+              // Count-only queries: the level badges need numbers, not
+              // every row the user owns. Guest mode keeps the mock entity
+              // path so the demo sidebar still looks populated.
+              const countOwned = (entity, table) => isGuest
+                ? api.entities[entity].filter({ created_by: user.email }).then((rows) => (rows || []).length)
+                : supabase
+                    .from(table)
+                    .select('id', { count: 'exact', head: true })
+                    .eq('created_by', user.email)
+                    .then(({ count }) => count || 0);
               const results = await Promise.allSettled([
-                retryApiCall(() => api.entities.Gecko.filter({ created_by: user.email })),
-                retryApiCall(() => api.entities.GeckoImage.filter({ created_by: user.email })),
-                retryApiCall(() => api.entities.ForumPost.filter({ created_by: user.email }))
+                retryApiCall(() => countOwned('Gecko', 'geckos')),
+                retryApiCall(() => countOwned('GeckoImage', 'gecko_images')),
+                retryApiCall(() => countOwned('ForumPost', 'forum_posts'))
               ]);
 
               userContributions = {
-                geckoCount: results[0].status === 'fulfilled' ? results[0].value.length : 0,
-                imageCount: results[1].status === 'fulfilled' ? results[1].value.length : 0,
-                postCount: results[2].status === 'fulfilled' ? results[2].value.length : 0
+                geckoCount: results[0].status === 'fulfilled' ? results[0].value : 0,
+                imageCount: results[1].status === 'fulfilled' ? results[1].value : 0,
+                postCount: results[2].status === 'fulfilled' ? results[2].value : 0
               };
               dataCache.set(`user_contributions_${user.email}`, userContributions);
             } catch (error) {
@@ -437,24 +461,27 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           }
         }
 
-        // Load public data with very heavy caching
-        let images = dataCache.get('gecko_images');
-        if (!images && dataCache.canMakeRequest('gecko_images')) {
+        // Community image total for the milestone badge. A head-only
+        // count instead of downloading every gecko_images row (each one
+        // carries a 768-float embedding) just to read .length.
+        let imageTotal = dataCache.get('gecko_images_count');
+        if (imageTotal == null && dataCache.canMakeRequest('gecko_images_count')) {
           try {
-            dataCache.markRequestMade('gecko_images');
-            images = await retryApiCall(() => api.entities.GeckoImage.list());
-            if (images) {
-              dataCache.set('gecko_images', images);
-            }
+            dataCache.markRequestMade('gecko_images_count');
+            const { count } = await retryApiCall(() =>
+              supabase.from('gecko_images').select('id', { count: 'exact', head: true })
+            );
+            imageTotal = count || 0;
+            dataCache.set('gecko_images_count', imageTotal);
           } catch (error) {
-            console.log("Could not load images (rate limited):", error);
-            images = dataCache.get('gecko_images') || [];
+            console.log("Could not count images (rate limited):", error);
+            imageTotal = dataCache.get('gecko_images_count') || 0;
           }
         }
 
-        if (images && images.length > 0) {
-          setImageCount(images.length);
-          const milestone = [...MILESTONES].reverse().find((m) => images.length >= m.count);
+        if (imageTotal > 0) {
+          setImageCount(imageTotal);
+          const milestone = [...MILESTONES].reverse().find((m) => imageTotal >= m.count);
           setCurrentMilestone(milestone);
         } else {
           setImageCount(0);
@@ -1410,7 +1437,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           })}
         </nav>
       </div>
-      <OnboardingRolePrompt isOpen={showRolePrompt} onChoose={handleRoleChosen} />
+      <OnboardingRolePrompt isOpen={showRolePrompt} onChoose={handleRoleChosen} onDismiss={handleRoleDismissed} />
       <TutorialModal isOpen={showTutorial} onClose={() => setShowTutorial(false)} />
       <CommandPalette />
       <FeedingAlertSystem

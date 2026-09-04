@@ -5,6 +5,7 @@ import usePageSettings from '@/hooks/usePageSettings';
 import { User, GeckoImage, ForumPost, GeckoOfTheDay as GotdEntity } from '@/entities/all';
 import { api } from '@/api/appClient';
 import { supabase } from '@/lib/supabaseClient';
+import { isGuestMode } from '@/lib/guestMode';
 import {
     Users,
     GitBranch,
@@ -270,7 +271,7 @@ export default function Dashboard() {
                                         {greeting}, {firstName}
                                     </h1>
                                     <p className="text-slate-300 text-base md:text-lg max-w-2xl leading-relaxed">
-                                        {stats.geckos > 0 ? (
+                                        {(personalStats.geckos > 0 || !user || isGuestMode()) ? (
                                             <>
                                                 Right now,{' '}
                                                 <span className="font-bold text-white">{stats.users.toLocaleString()}</span>{' '}
@@ -346,6 +347,41 @@ export default function Dashboard() {
                             </div>
                         </div>
                     </div>
+
+                    {/* ACTIVATION: a signed-in keeper with no animals yet gets
+                        the one thing that matters first, not community totals
+                        and breeder tools. */}
+                    {!isLoading && user && !isGuestMode() && personalStats.geckos === 0 && (
+                        <Card className="gecko-card border-emerald-500/30 bg-emerald-950/20">
+                            <CardContent className="p-5 md:p-6 flex flex-col md:flex-row md:items-center gap-4">
+                                <div className="flex-1">
+                                    <p className="text-lg font-semibold text-slate-100">Start with one gecko</p>
+                                    <p className="text-sm text-slate-400 mt-1">
+                                        Add your first crested gecko and Geck Inspect starts tracking weights, sheds,
+                                        photos, and lineage from day one. Not sure of the morph? Let the AI take a
+                                        look at a photo first.
+                                    </p>
+                                </div>
+                                <div className="flex flex-wrap gap-2">
+                                    <Link to={createPageUrl('MyGeckos')}>
+                                        <Button className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold">
+                                            Add your first gecko
+                                        </Button>
+                                    </Link>
+                                    <Link to={createPageUrl('Recognition')}>
+                                        <Button variant="outline" className="border-slate-600 bg-slate-900/60 text-slate-100 hover:bg-slate-800">
+                                            Identify a morph from a photo
+                                        </Button>
+                                    </Link>
+                                    <Link to={createPageUrl('CareGuide')}>
+                                        <Button variant="ghost" className="text-slate-300 hover:text-white">
+                                            Read the care guide
+                                        </Button>
+                                    </Link>
+                                </div>
+                            </CardContent>
+                        </Card>
+                    )}
 
                     {/* STATS STRIP */}
                     {isLoading ? (
