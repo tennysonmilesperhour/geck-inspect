@@ -6,12 +6,19 @@
 // (separate from the lifetime 10% revenue share).
 //
 // Required env vars:
-//   STRIPE_SECRET_KEY          sk_live_... / sk_test_...
 //   STRIPE_WEBHOOK_SECRET      whsec_... (from the Stripe dashboard endpoint)
-//   STRIPE_KEEPER_PRICE_ID     price_... (used to map price_id -> tier)
-//   STRIPE_BREEDER_PRICE_ID    price_...
-//   STRIPE_ENTERPRISE_PRICE_ID price_...
 //   SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY (available automatically)
+// Optional:
+//   STRIPE_KEEPER_PRICE_ID     price_... overrides the monthly Keeper price
+//   STRIPE_BREEDER_PRICE_ID    price_... overrides the monthly Breeder price
+//   STRIPE_ENTERPRISE_PRICE_ID price_... overrides the monthly Enterprise price
+//
+// Register the endpoint in Stripe as
+//   https://<project-ref>.supabase.co/functions/v1/stripe-webhook
+// with these events: checkout.session.completed,
+// customer.subscription.created, customer.subscription.updated,
+// customer.subscription.deleted, invoice.paid,
+// invoice.payment_succeeded, invoice.payment_failed.
 //
 // verify_jwt=false. Stripe can't send a Supabase JWT, so we authenticate
 // via the webhook signature instead.
@@ -24,6 +31,43 @@ function jsonResponse(body: unknown, status = 200) {
     status,
     headers: { "Content-Type": "application/json" },
   });
+}
+
+// Price catalog, tier x billing cycle. Mirrors TIER_PRICING in
+// src/lib/stripe-config.js and the copy in stripe-checkout (a unit test
+// keeps all three in sync). Used to turn a Stripe price id back into a
+// tier and a billing cycle when a subscription renews or changes.
+type Cycle = "monthly" | "annual";
+const PRICE_CATALOG: Record<string, Partial<Record<Cycle, string>>> = {
+  keeper: {
+    monthly: "price_1TUxEsLBdc4xGjxqyPV4DOYb",
+    annual: "price_1TVMLeLBdc4xGjxqA856z0Oe",
+  },
+  breeder: {
+    monthly: "price_1TUxHGLBdc4xGjxqeieYNdE4",
+    annual: "price_1TVMOCLBdc4xGjxqK2HTmGfm",
+  },
+  enterprise: {
+    monthly: "price_1TVLvmLBdc4xGjxqCVzbz0GQ",
+    annual: "price_1TVMQYLBdc4xGjxqpZFuqV96",
+  },
+};
+
+function priceIdToPlan(priceId: string | null | undefined): { tier: string; cycle: Cycle } | null {
+  if (!priceId) return null;
+  if (priceId === Deno.env.get("STRIPE_KEEPER_PRICE_ID")) return { tier: "keeper", cycle: "monthly" };
+  if (priceId === Deno.env.get("STRIPE_BREEDER_PRICE_ID")) return { tier: "breeder", cycle: "monthly" };
+  if (priceId === Deno.env.get("STRIPE_ENTERPRISE_PRICE_ID")) return { tier: "enterprise", cycle: "monthly" };
+  for (const [tier, cycles] of Object.entries(PRICE_CATALOG)) {
+    for (const [cycle, id] of Object.entries(cycles)) {
+      if (id === priceId) return { tier, cycle: cycle as Cycle };
+    }
+  }
+  return null;
+}
+
+function priceIdToTier(priceId: string | null | undefined): string | null {
+  return priceIdToPlan(priceId)?.tier || null;
 }
 
 async function verifyStripeSignature(
@@ -64,14 +108,6 @@ async function verifyStripeSignature(
   return true;
 }
 
-function priceIdToTier(priceId: string | null | undefined): string | null {
-  if (!priceId) return null;
-  if (priceId === Deno.env.get("STRIPE_KEEPER_PRICE_ID")) return "keeper";
-  if (priceId === Deno.env.get("STRIPE_BREEDER_PRICE_ID")) return "breeder";
-  if (priceId === Deno.env.get("STRIPE_ENTERPRISE_PRICE_ID")) return "enterprise";
-  return null;
-}
-
 Deno.serve(async (req: Request) => {
   if (req.method !== "POST") {
     return jsonResponse({ error: "Method not allowed" }, 405);
@@ -104,13 +140,34 @@ Deno.serve(async (req: Request) => {
     Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "",
   );
 
+  // Audit row. Column names match the stripe_webhook_logs table
+  // (stripe_event_id, stripe_event_type, processing_status, raw_payload).
+  // The previous version used event_type/payload, which do not exist, so
+  // every insert failed silently and the table stayed empty.
+  const logId = crypto.randomUUID();
   await supabase.from("stripe_webhook_logs").insert({
-    event_type: event.type,
-    payload: event,
+    id: logId,
+    stripe_event_id: String(event.id || ""),
+    stripe_event_type: String(event.type || "unknown"),
+    processing_status: "received",
+    raw_payload: payload,
     created_date: new Date().toISOString(),
-  }).throwOnError().then(() => {}, (err) => {
-    console.warn("Failed to log webhook event:", err.message);
+  }).then(({ error }) => {
+    if (error) console.warn("Failed to log webhook event:", error.message);
   });
+
+  const markLog = async (status: string, errorMessage?: string) => {
+    await supabase
+      .from("stripe_webhook_logs")
+      .update({
+        processing_status: status,
+        processed_at: new Date().toISOString(),
+        updated_date: new Date().toISOString(),
+        ...(errorMessage ? { error_message: errorMessage.slice(0, 1000) } : {}),
+      })
+      .eq("id", logId)
+      .then(() => {}, () => {});
+  };
 
   const findProfileFromCustomer = async (customerId: string | null) => {
     if (!customerId) return null;
@@ -147,12 +204,15 @@ Deno.serve(async (req: Request) => {
           null;
         if (email) {
           const tier = session.metadata?.tier || null;
+          const cycle = session.metadata?.billing_cycle || null;
           const isKeeperPromoTrial = session.metadata?.keeper_promo_trial === "1";
           await upsertProfileByEmail(email, {
             stripe_customer_id: session.customer,
             stripe_subscription_id: session.subscription,
             subscription_status: "active",
             ...(tier ? { membership_tier: tier } : {}),
+            ...(cycle ? { membership_billing_cycle: cycle } : {}),
+            paid_membership_started_at: new Date().toISOString(),
             ...(isKeeperPromoTrial
               ? { keeper_trial_used: true, keeper_trial_started_at: new Date().toISOString() }
               : {}),
@@ -166,11 +226,13 @@ Deno.serve(async (req: Request) => {
         const profile = await findProfileFromCustomer(sub.customer);
         if (profile?.email) {
           const priceId = sub.items?.data?.[0]?.price?.id;
-          const tier = priceIdToTier(priceId);
+          const plan = priceIdToPlan(priceId);
+          const cycle = plan?.cycle || sub.metadata?.billing_cycle || null;
           await upsertProfileByEmail(profile.email, {
             stripe_subscription_id: sub.id,
             subscription_status: sub.status,
-            ...(tier ? { membership_tier: tier } : {}),
+            ...(plan ? { membership_tier: plan.tier } : {}),
+            ...(cycle ? { membership_billing_cycle: cycle } : {}),
             membership_expires_at: sub.current_period_end
               ? new Date(sub.current_period_end * 1000).toISOString()
               : null,
@@ -185,6 +247,7 @@ Deno.serve(async (req: Request) => {
           await upsertProfileByEmail(profile.email, {
             subscription_status: "canceled",
             membership_tier: "free",
+            membership_billing_cycle: null,
           });
         }
         break;
@@ -226,8 +289,10 @@ Deno.serve(async (req: Request) => {
     }
   } catch (err) {
     console.error("Webhook handler crash:", err);
+    await markLog("failed", (err as Error).message);
     return jsonResponse({ error: (err as Error).message }, 500);
   }
 
+  await markLog("processed");
   return jsonResponse({ received: true });
 });
