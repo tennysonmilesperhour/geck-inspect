@@ -14,6 +14,11 @@ Read this before running any `supabase db ...` command against production.
   versions that were applied straight from the MCP, three data-only
   files that ran by hand moved to `_applied_by_hand/`, and the four files
   that never ran stay in `_never_applied/`.
+- One repo file has no history row even though its SQL is live:
+  `20260904000001_morph_id_launch_integrity.sql` ran through the SQL
+  editor on 4 September (its function, column and policy all exist in
+  production). It needs `supabase migration repair --status applied
+  20260904000001` the next time the CLI is linked (baselining step 6).
 - What is still missing is the runnable baseline: `supabase db pull`
   (step 7) needs the database password on a machine with the CLI linked,
   and has not been run yet. Until then `supabase db push` should still be

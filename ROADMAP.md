@@ -22,7 +22,7 @@ The full review, with every finding, its location and its status, is in `docs/pl
 - [ ] F33: Production schema has drifted from the repo and the deploy scripts would replay stale SQL (snapshot regenerated and baseline plan written 4 Sep, late session; the renames and db pull still need a go-ahead)
 - [x] F34: Non-JS crawlers see thin shells and cannot reach 134 child pages (4 Sep, late session: fuller noscript bodies and per-page JSON-LD in the prerendered shells)
 - [ ] F43: No Content-Security-Policy despite five third-party script origins
-- [ ] F46: 208 RLS policies re-evaluate auth functions per row; 271 duplicate permissive policies (merge plan in docs/planning/rls-policy-consolidation.md, eight batches, awaiting go-ahead)
+- [x] F46: 208 RLS policies re-evaluate auth functions per row; 271 duplicate permissive policies (4 Sep, late session: all eight merge batches applied and verified; only geck_data tables remain, owned by the geck-data repo)
 - [ ] F47: Dashboard fans out to about 40 requests with a waterfall; background polling in every tab (4 Sep, late session: all pollers visibility-aware, Dashboard on react-query with head-only counts; other hot pages still to migrate)
 - [ ] F55: Mobile and accessibility gaps (4 Sep, late session: contrast and touch-target pass shipped; HEIC check on a real iPhone still open)
 

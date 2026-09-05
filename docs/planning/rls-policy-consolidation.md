@@ -1,8 +1,11 @@
 # RLS policy consolidation (F46 remainder)
 
-Proposed 4 September 2026 from the live performance advisor. Nothing in
-this file has been applied yet; each batch becomes one timestamped
-migration when approved, applied by hand as described in docs/MIGRATIONS.md.
+Proposed 4 September 2026 from the live performance advisor and applied
+the same night with Tennyson's approval, one batch at a time, as
+migrations 20260905010000 to 20260905017000 (rls_batch1 to rls_batch8).
+Each batch was smoke-tested as visitor, member and admin before the next
+was applied. This file stays as the record of what each batch changed and
+why.
 
 ## Why this matters, in plain language
 
