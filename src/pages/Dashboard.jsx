@@ -29,6 +29,7 @@ import MyStoreButton from '../components/dashboard/MyStoreButton';
 import DailyPromptCard from '../components/dashboard/DailyPromptCard';
 import LiveFeed from '../components/dashboard/LiveFeed';
 import WelcomeShelf from '../components/dashboard/WelcomeShelf';
+import IncubatorTimeline from '../components/dashboard/IncubatorTimeline';
 import IdNeedsPanel from '../components/dashboard/IdNeedsPanel';
 import ImageDetailModal from '../components/gallery/ImageDetailModal';
 import ChangeLogModal from '../components/changelog/ChangeLogModal';
@@ -508,6 +509,8 @@ export default function Dashboard() {
                         <div className="xl:col-span-3 space-y-6">
                             {dashPrefs.showIdNeeds && <IdNeedsPanel currentUserEmail={user?.email} />}
                             {dashPrefs.showFeaturedBreeders && <FeaturedBreeders />}
+
+                            {dashPrefs.showHatchery && <IncubatorTimeline email={email} />}
 
                             {dashPrefs.showHatchery && <Card className="gecko-card">
                                 <CardContent className="p-5 space-y-4">
