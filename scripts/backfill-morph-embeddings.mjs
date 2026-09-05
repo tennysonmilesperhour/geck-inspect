@@ -99,7 +99,17 @@ for (const row of candidates
     try { return reachableHosts.has(new URL(candidate.image_url).host); } catch { return false; }
   })
   .sort((a, b) => provenanceWeight(b) - provenanceWeight(a))) {
-  const source = row.training_meta?.listing_id || row.training_meta?.gecko_id || row.id;
+  // Keep the embedding bank independent by breeder first, then listing.
+  // Scraper rows use geck_data_* keys; omitting them let multiple photos of
+  // the same animal (and the same breeder's photo style) crowd the bank.
+  const seller = row.training_meta?.geck_data_seller_slug
+    || row.training_meta?.geck_data_seller_name;
+  const listing = row.training_meta?.listing_id
+    || row.training_meta?.geck_data_listing_id
+    || row.training_meta?.gecko_id;
+  const source = seller ? `seller:${String(seller).trim().toLowerCase()}`
+    : listing ? `listing:${listing}`
+      : row.id;
   if (seenSources.has(source)) continue;
   seenSources.add(source);
   const label = row.primary_morph || 'Unclassified';
