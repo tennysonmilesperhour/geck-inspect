@@ -2,16 +2,16 @@
  * The two reference stickers shown on the custom sticker page.
  *
  * Each entry carries both a printed image and the design spec behind it.
- * If the printed image is missing (it lives in public/store/custom-stickers/
- * and is not in version control until the photo is dropped in), the gallery
- * falls back to rendering the spec through StickerCardPreview, so the page
- * is never broken and always shows what the options do.
+ * The printed images live in public/store/custom-stickers/ (Tennyson's own
+ * Moonlight and Bat Geck cards, trimmed and encoded as WebP). If an image
+ * ever fails to load, the gallery falls back to rendering the spec through
+ * StickerCardPreview, so the page is never broken.
  */
 
 export const STICKER_EXAMPLES = [
   {
     id: 'moonlight',
-    image: '/store/custom-stickers/moonlight.png',
+    image: '/store/custom-stickers/moonlight.webp',
     caption: 'Classic frame, Psychic, two attacks.',
     note: 'Stage 1 with an evolves-from line, HT/WT bar under the photo, weakness and retreat along the bottom.',
     design: {
@@ -49,7 +49,7 @@ export const STICKER_EXAMPLES = [
   },
   {
     id: 'bat-geck',
-    image: '/store/custom-stickers/bat-geck.png',
+    image: '/store/custom-stickers/bat-geck.webp',
     caption: 'Full art, silver border, no attack block.',
     note: 'The photo runs edge to edge. Name, HP, and type sit on top; weakness, retreat, and the morph line sit along the bottom.',
     design: {

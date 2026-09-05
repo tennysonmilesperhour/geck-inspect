@@ -1,13 +1,10 @@
 # Custom sticker example images
 
-Drop the two printed reference cards here so the store page shows the real
-prints instead of the rendered fallback:
+`moonlight.webp` and `bat-geck.webp` are Tennyson's own printed reference
+cards (the Geckomon set), trimmed to the card edge and encoded as WebP at
+720 px wide. `src/lib/store/stickerExamples.js` points at these paths, and
+`CustomStickerStudio` falls back to rendering each example from its stored
+design spec if an image ever fails to load.
 
-- `moonlight.png`, the Moonlight card (classic frame, yellow border)
-- `bat-geck.png`, the Bat Geck card (full art, silver border)
-
-`src/lib/store/stickerExamples.js` points at these paths. Until the files
-exist, `CustomStickerStudio` renders each example from its stored design
-spec through `StickerCardPreview`, so the page still explains every option.
-
-Recommended: 1080px wide PNG, transparent or dark background, under 500 KB.
+To replace one: export the card at 1080 px wide, trim to the card edge,
+then `cwebp -q 84 -m 6 in.png -o moonlight.webp`.

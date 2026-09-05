@@ -39,6 +39,7 @@ import {
   X,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
+import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { createPageUrl } from '@/utils';
 import { formatDistanceToNowStrict } from 'date-fns';
 
@@ -121,7 +122,14 @@ function ListingCard({
   isSelected = false,
   onSelectToggle,
 }) {
-  const photo = gecko.image_urls?.[0];
+  const photo = gecko.image_urls?.[0] || DEFAULT_GECKO_IMAGE;
+  // Same crop metadata My Geckos uses, so the card shows the framing the
+  // keeper chose instead of a centre crop.
+  const photoMeta = gecko.image_crop_data?.[photo] || {};
+  const photoStyle = {
+    objectPosition: `${photoMeta.x ?? 50}% ${photoMeta.y ?? 50}%`,
+    transform: photoMeta.rotation ? `rotate(${photoMeta.rotation}deg)` : undefined,
+  };
   const price = gecko.asking_price;
   const isLive = gecko.status === 'For Sale' && gecko.is_public !== false;
   const isHidden = gecko.status === 'For Sale' && gecko.is_public === false;
@@ -156,19 +164,14 @@ function ListingCard({
       {/* Photo, fixed height matches MyGeckos GeckoCard. `object-cover`
           crops to fill regardless of source image dimensions. */}
       <div className="relative h-40 sm:h-56 bg-slate-950 overflow-hidden">
-        {photo ? (
-          <img
-            src={photo}
-            alt={gecko.name}
-            className="absolute inset-0 w-full h-full object-cover"
-            loading="lazy"
-            decoding="async"
-          />
-        ) : (
-          <div className="absolute inset-0 flex items-center justify-center">
-            <ShoppingBag className="w-10 h-10 text-slate-700" />
-          </div>
-        )}
+        <img
+          src={photo}
+          alt={gecko.name}
+          className="absolute inset-0 w-full h-full object-cover"
+          style={photoStyle}
+          loading="lazy"
+          decoding="async"
+        />
 
         {/* Top-left: select checkbox (when in select mode) or sex chip */}
         <div className="absolute top-2 left-2 flex items-center gap-1.5">
@@ -258,7 +261,7 @@ function ListingCard({
                   <EyeOff className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                 )}
                 <span className="truncate">
-                  {isLive ? 'Visible on marketplace' : 'Hidden'}
+                  {isLive ? 'Visible' : 'Hidden'}
                 </span>
               </span>
               <Switch
@@ -278,7 +281,7 @@ function ListingCard({
             <label className="flex items-center justify-between gap-2 cursor-pointer select-none">
               <span className="flex items-center gap-1.5 text-[11px] text-slate-400 truncate">
                 <ListPlus className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                <span className="truncate">List on marketplace</span>
+                <span className="truncate">Quick list</span>
               </span>
               <Switch
                 checked={false}
@@ -317,7 +320,7 @@ function ListingCard({
                 className="h-8 bg-emerald-600 hover:bg-emerald-500 text-white text-xs"
                 title="Open the edit modal to set a price and description"
               >
-                <DollarSign className="w-3 h-3 mr-1" /> List with details
+                <DollarSign className="w-3 h-3 mr-1" /> Set price
               </Button>
             )}
           </div>
@@ -732,7 +735,7 @@ export default function MarketplaceSellPage() {
           <SectionHeader
             title="Your Collection"
             count={availableToList.length}
-            description="Flip the 'List on marketplace' switch on any card to list it instantly, or use Select multiple to list a batch in one go."
+            description="Quick list puts a gecko on the marketplace at once. Set price opens the full listing form."
             right={
               availableToList.length > 0 ? (
                 selectMode ? (

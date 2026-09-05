@@ -90,6 +90,8 @@ export const STICKER_SIZES = [
   { value: '4in', label: '4 inch', blurb: 'Rack panel, cooler, toolbox.' },
 ];
 
+// No longer offered in the builder (every sticker ships glossy). Kept so older
+// cart and order rows that still carry a finish value stay readable.
 export const STICKER_FINISHES = [
   { value: 'matte',        label: 'Matte',        blurb: 'No glare, softest color.' },
   { value: 'glossy',       label: 'Glossy',       blurb: 'Deepest blacks, closest to a real card.' },
@@ -267,9 +269,8 @@ export function isCustomStickerLine(line) {
 export function designSummary(design) {
   if (!design) return '';
   const size = STICKER_SIZES.find((s) => s.value === design.size)?.label || design.size;
-  const finish = STICKER_FINISHES.find((f) => f.value === design.finish)?.label || design.finish;
   const type = cardType(design.type).label;
-  return [design.name, `${type} · ${design.hp} HP`, `${size} ${String(finish).toLowerCase()}`]
+  return [design.name, `${type} · ${design.hp} HP`, size]
     .filter(Boolean)
     .join(' · ');
 }

@@ -27,7 +27,6 @@ import {
   WEAKNESS_MULTIPLIERS,
   RESISTANCE_AMOUNTS,
   STICKER_SIZES,
-  STICKER_FINISHES,
   MORPH_LINE_SUGGESTIONS,
   MAX_ATTACKS,
   FIELD_LIMITS,
@@ -680,20 +679,12 @@ export default function CustomStickerStudio() {
             </div>
           </Section>
 
-          <Section title="The physical sticker" hint="Every size and finish is the same price.">
+          <Section title="The physical sticker" hint="Every size is the same price. All stickers ship glossy and weatherproof.">
             <Field label="Size">
               <ChipGroup
                 value={design.size}
                 onChange={(v) => patch({ size: v })}
                 options={STICKER_SIZES}
-                columns={3}
-              />
-            </Field>
-            <Field label="Finish">
-              <ChipGroup
-                value={design.finish}
-                onChange={(v) => patch({ finish: v })}
-                options={STICKER_FINISHES}
                 columns={3}
               />
             </Field>
