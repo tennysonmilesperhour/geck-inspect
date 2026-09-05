@@ -6,6 +6,8 @@ import {
 } from 'lucide-react';
 import StoreLayout from '@/components/store/StoreLayout';
 import StickerCardPreview from '@/components/store/StickerCardPreview';
+import StickerPreview from '@/components/store/StickerThemePreviews';
+import { STICKER_THEMES, THEME_FIELD_META, THEME_FIELD_LIMITS, isCardTheme, stickerTheme } from '@/lib/store/stickerThemes';
 import Seo from '@/components/seo/Seo';
 import { Button } from '@/components/ui/button';
 import { supabase } from '@/lib/supabaseClient';
@@ -276,6 +278,7 @@ export default function CustomStickerStudio() {
     builderRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   }
 
+  const isCard = isCardTheme(design.theme);
   const problems = useMemo(() => validateDesign(design), [design]);
   const unitPrice = product?.our_price_cents ?? CUSTOM_STICKER_PRICE_CENTS;
   const canAdd = problems.length === 0 && !uploading && !!product && !!design.photo_path;
@@ -311,7 +314,7 @@ export default function CustomStickerStudio() {
   return (
     <StoreLayout breadcrumbs={[{ label: 'Supplies', to: '/Store' }, { label: 'Custom pet stickers' }]}>
       <Seo
-        title="Custom crested gecko trading card stickers, Geck Inspect"
+        title="Custom crested gecko stickers, six themes, Geck Inspect"
         description="Upload a photo of your gecko and build a die-cut trading card sticker. Pick the type, HP, stage, attacks, weakness, retreat cost, and rarity. $10 each plus $5 flat shipping."
         path="/Store/stickers"
         keywords={[
@@ -330,14 +333,14 @@ export default function CustomStickerStudio() {
           <Sticker className="w-3.5 h-3.5" /> New in the store
         </div>
         <h1 className="text-2xl md:text-4xl font-bold text-emerald-100 max-w-2xl">
-          Turn your gecko into a trading card sticker.
+          Turn your gecko into a sticker.
         </h1>
         <p className="text-slate-300 mt-3 max-w-2xl text-sm md:text-base leading-relaxed">
-          Upload a photo of your own animal, then build the card around it. You
-          pick the stage, the HP, the type, up to two attacks with their own
-          damage and flavor text, the weakness, the retreat cost, the rarity,
-          and the morph line printed along the bottom. We print it die-cut on
-          weatherproof vinyl and ship it to you.
+          Upload a photo of your own animal and pick a look: a trading card with
+          stats and attacks, a museum field-guide plate, a gecko passport, a
+          park badge, an instant photo, or a show rosette. Every one prints
+          die-cut on weatherproof vinyl with the morph line on it. Same price
+          whichever you choose.
         </p>
         <div className="mt-5 flex flex-wrap items-center gap-4">
           <div className="flex items-baseline gap-2">
@@ -355,10 +358,11 @@ export default function CustomStickerStudio() {
 
       {/* ---------------------------- Examples ---------------------------- */}
       <section className="mb-10">
-        <h2 className="text-lg font-bold text-slate-100 mb-1">Two we made</h2>
+        <h2 className="text-lg font-bold text-slate-100 mb-1">Two trading cards we made</h2>
         <p className="text-sm text-slate-400 mb-4 max-w-3xl leading-relaxed">
-          Same option set, two different looks. Pick either as a starting
-          point and swap in your own photo and stats.
+          Moonlight and Bat Geck, printed. Pick either as a starting point and
+          swap in your own photo and stats, or choose one of the other five
+          themes in the builder below.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl">
           {STICKER_EXAMPLES.map((ex) => (
@@ -411,273 +415,325 @@ export default function CustomStickerStudio() {
             )}
           </Section>
 
-          <Section title="Layout" hint="How the photo and the stats sit on the card.">
+          <Section title="Sticker theme" hint="Six looks, one price. The trading card has the most to fill in; the other five need a name, a morph line and a few words.">
             <ChipGroup
-              value={design.layout}
-              onChange={(v) => patch({ layout: v })}
-              options={CARD_LAYOUTS}
+              value={design.theme || 'trading_card'}
+              onChange={(v) => patch({ theme: v })}
+              options={STICKER_THEMES}
               columns={2}
             />
-            <Field label="Border color">
-              <ChipGroup
-                value={design.border_color}
-                onChange={(v) => patch({ border_color: v })}
-                options={BORDER_COLORS.map((b) => ({ value: b.value, label: b.label, swatch: b.hex }))}
-                columns={5}
-              />
-            </Field>
           </Section>
 
-          <Section title="Name plate" hint="The top of the card.">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="Card name">
-                <TextInput
-                  value={design.name}
-                  maxLength={FIELD_LIMITS.name}
-                  placeholder="Moonlight"
-                  onChange={(e) => patch({ name: e.target.value })}
-                />
-              </Field>
-              <Field label="HP" hint={`${FIELD_LIMITS.hp_min} to ${FIELD_LIMITS.hp_max}`}>
-                <input
-                  type="number"
-                  className={inputClass}
-                  min={FIELD_LIMITS.hp_min}
-                  max={FIELD_LIMITS.hp_max}
-                  step={10}
-                  value={design.hp}
-                  onChange={(e) => patch({ hp: e.target.value })}
-                />
-              </Field>
-            </div>
-            <Field label="Stage">
+          {isCard ? (
+            <>
+            <Section title="Layout" hint="How the photo and the stats sit on the card.">
               <ChipGroup
-                value={design.stage}
-                onChange={(v) => patch({ stage: v })}
-                options={CARD_STAGES}
-                columns={3}
+                value={design.layout}
+                onChange={(v) => patch({ layout: v })}
+                options={CARD_LAYOUTS}
+                columns={2}
               />
-            </Field>
-            {stageEvolves(design.stage) && (
-              <Field label="Evolves from" hint="Printed under the name, the way a Stage 1 card reads.">
-                <TextInput
-                  value={design.evolves_from}
-                  maxLength={FIELD_LIMITS.evolves_from}
-                  placeholder="starlight"
-                  onChange={(e) => patch({ evolves_from: e.target.value })}
+              <Field label="Border color">
+                <ChipGroup
+                  value={design.border_color}
+                  onChange={(v) => patch({ border_color: v })}
+                  options={BORDER_COLORS.map((b) => ({ value: b.value, label: b.label, swatch: b.hex }))}
+                  columns={5}
                 />
               </Field>
+            </Section>
+
+            <Section title="Name plate" hint="The top of the card.">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Field label="Card name">
+                  <TextInput
+                    value={design.name}
+                    maxLength={FIELD_LIMITS.name}
+                    placeholder="Moonlight"
+                    onChange={(e) => patch({ name: e.target.value })}
+                  />
+                </Field>
+                <Field label="HP" hint={`${FIELD_LIMITS.hp_min} to ${FIELD_LIMITS.hp_max}`}>
+                  <input
+                    type="number"
+                    className={inputClass}
+                    min={FIELD_LIMITS.hp_min}
+                    max={FIELD_LIMITS.hp_max}
+                    step={10}
+                    value={design.hp}
+                    onChange={(e) => patch({ hp: e.target.value })}
+                  />
+                </Field>
+              </div>
+              <Field label="Stage">
+                <ChipGroup
+                  value={design.stage}
+                  onChange={(v) => patch({ stage: v })}
+                  options={CARD_STAGES}
+                  columns={3}
+                />
+              </Field>
+              {stageEvolves(design.stage) && (
+                <Field label="Evolves from" hint="Printed under the name, the way a Stage 1 card reads.">
+                  <TextInput
+                    value={design.evolves_from}
+                    maxLength={FIELD_LIMITS.evolves_from}
+                    placeholder="starlight"
+                    onChange={(e) => patch({ evolves_from: e.target.value })}
+                  />
+                </Field>
+              )}
+              <Field label="Type" hint="Sets the card color and the energy symbol on the attacks.">
+                <ChipGroup
+                  value={design.type}
+                  onChange={(v) => patch({ type: v })}
+                  options={typeOptions}
+                  columns={4}
+                />
+              </Field>
+            </Section>
+
+            {design.layout === 'classic' && (
+              <Section title="Info bar" hint="The small strip under the photo. Leave any of these blank to drop them.">
+                <div className="grid grid-cols-3 gap-3">
+                  <Field label="No.">
+                    <TextInput
+                      value={design.dex_number}
+                      maxLength={FIELD_LIMITS.dex_number}
+                      placeholder="1"
+                      onChange={(e) => patch({ dex_number: e.target.value })}
+                    />
+                  </Field>
+                  <Field label="Height">
+                    <TextInput
+                      value={design.height}
+                      maxLength={FIELD_LIMITS.measurement}
+                      placeholder="12"
+                      onChange={(e) => patch({ height: e.target.value })}
+                    />
+                  </Field>
+                  <Field label="Weight (lbs)">
+                    <TextInput
+                      value={design.weight}
+                      maxLength={FIELD_LIMITS.measurement}
+                      placeholder="12"
+                      onChange={(e) => patch({ weight: e.target.value })}
+                    />
+                  </Field>
+                </div>
+              </Section>
             )}
-            <Field label="Type" hint="Sets the card color and the energy symbol on the attacks.">
-              <ChipGroup
-                value={design.type}
-                onChange={(v) => patch({ type: v })}
-                options={typeOptions}
-                columns={4}
-              />
-            </Field>
-          </Section>
 
-          {design.layout === 'classic' && (
-            <Section title="Info bar" hint="The small strip under the photo. Leave any of these blank to drop them.">
-              <div className="grid grid-cols-3 gap-3">
-                <Field label="No.">
+            <Section
+              title="Attacks"
+              hint={`Up to ${MAX_ATTACKS}. Cost is how many energy symbols print to the left of the name. On a full art card the attack block is left off, but we keep what you wrote.`}
+            >
+              {(design.attacks || []).map((a, i) => (
+                <div key={i} className="rounded-md border border-slate-800 bg-slate-950/60 p-3 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs font-bold text-slate-300">Attack {i + 1}</span>
+                    {(design.attacks || []).length > 1 && (
+                      <button
+                        type="button"
+                        className="text-rose-300 hover:text-rose-200"
+                        onClick={() => { setDesign((d) => removeAttack(d, i)); setAdded(false); }}
+                        aria-label={`Remove attack ${i + 1}`}
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    )}
+                  </div>
+                  <div className="grid grid-cols-1 sm:grid-cols-[1fr_90px_90px] gap-3">
+                    <Field label="Name">
+                      <TextInput
+                        value={a.name}
+                        maxLength={FIELD_LIMITS.attack_name}
+                        placeholder="Bark"
+                        onChange={(e) => { setDesign((d) => updateAttack(d, i, { name: e.target.value })); setAdded(false); }}
+                      />
+                    </Field>
+                    <Field label="Cost">
+                      <Select
+                        value={String(a.cost ?? 0)}
+                        onChange={(e) => { setDesign((d) => updateAttack(d, i, { cost: Number(e.target.value) })); setAdded(false); }}
+                        options={[0, 1, 2, 3, 4].map((n) => ({ value: String(n), label: String(n) }))}
+                      />
+                    </Field>
+                    <Field label="Damage">
+                      <TextInput
+                        value={a.damage}
+                        maxLength={FIELD_LIMITS.attack_damage}
+                        placeholder="10"
+                        onChange={(e) => { setDesign((d) => updateAttack(d, i, { damage: e.target.value })); setAdded(false); }}
+                      />
+                    </Field>
+                  </div>
+                  <Field label="Flavor text" hint={`What the attack does. Up to ${FIELD_LIMITS.attack_text} characters.`}>
+                    <textarea
+                      className={`${inputClass} resize-none`}
+                      rows={2}
+                      maxLength={FIELD_LIMITS.attack_text}
+                      value={a.text}
+                      placeholder="Super cute, not very effective."
+                      onChange={(e) => { setDesign((d) => updateAttack(d, i, { text: e.target.value })); setAdded(false); }}
+                    />
+                  </Field>
+                </div>
+              ))}
+              {(design.attacks || []).length < MAX_ATTACKS && (
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  className="border-slate-700 text-slate-200 hover:bg-slate-800"
+                  onClick={() => { setDesign(addAttack); setAdded(false); }}
+                >
+                  <Plus className="w-3.5 h-3.5 mr-1.5" /> Add a second attack
+                </Button>
+              )}
+            </Section>
+
+            <Section title="Bottom bar" hint="Weakness, resistance, and retreat cost.">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Field label="Weakness type">
+                  <Select
+                    value={design.weakness_type}
+                    onChange={(e) => patch({ weakness_type: e.target.value })}
+                    options={typeOptionsWithNone}
+                  />
+                </Field>
+                <Field label="Weakness multiplier">
+                  <Select
+                    value={design.weakness_multiplier}
+                    onChange={(e) => patch({ weakness_multiplier: e.target.value })}
+                    options={WEAKNESS_MULTIPLIERS.map((m) => ({ value: m, label: m }))}
+                    disabled={!design.weakness_type}
+                  />
+                </Field>
+                <Field label="Resistance type">
+                  <Select
+                    value={design.resistance_type}
+                    onChange={(e) => patch({ resistance_type: e.target.value })}
+                    options={typeOptionsWithNone}
+                  />
+                </Field>
+                <Field label="Resistance amount">
+                  <Select
+                    value={design.resistance_amount}
+                    onChange={(e) => patch({ resistance_amount: e.target.value })}
+                    options={RESISTANCE_AMOUNTS.map((m) => ({ value: m, label: m }))}
+                    disabled={!design.resistance_type}
+                  />
+                </Field>
+              </div>
+              <Field label="Retreat cost" hint="How many colorless symbols print in the retreat box.">
+                <ChipGroup
+                  value={String(design.retreat_cost)}
+                  onChange={(v) => patch({ retreat_cost: Number(v) })}
+                  options={[0, 1, 2, 3, 4].map((n) => ({ value: String(n), label: String(n) }))}
+                  columns={5}
+                />
+              </Field>
+            </Section>
+
+            <Section title="Set line" hint="The fine print along the bottom edge.">
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <Field label="Set code">
                   <TextInput
-                    value={design.dex_number}
-                    maxLength={FIELD_LIMITS.dex_number}
+                    value={design.set_code}
+                    maxLength={FIELD_LIMITS.set_code}
+                    placeholder="GI1"
+                    onChange={(e) => patch({ set_code: e.target.value })}
+                  />
+                </Field>
+                <Field label="Card no.">
+                  <TextInput
+                    value={design.card_number}
+                    maxLength={FIELD_LIMITS.card_number}
                     placeholder="1"
-                    onChange={(e) => patch({ dex_number: e.target.value })}
+                    onChange={(e) => patch({ card_number: e.target.value })}
                   />
                 </Field>
-                <Field label="Height">
+                <Field label="Set total">
                   <TextInput
-                    value={design.height}
-                    maxLength={FIELD_LIMITS.measurement}
-                    placeholder="12"
-                    onChange={(e) => patch({ height: e.target.value })}
+                    value={design.set_total}
+                    maxLength={FIELD_LIMITS.set_total}
+                    placeholder="150"
+                    onChange={(e) => patch({ set_total: e.target.value })}
                   />
                 </Field>
-                <Field label="Weight (lbs)">
-                  <TextInput
-                    value={design.weight}
-                    maxLength={FIELD_LIMITS.measurement}
-                    placeholder="12"
-                    onChange={(e) => patch({ weight: e.target.value })}
+                <Field label="Rarity">
+                  <Select
+                    value={design.rarity}
+                    onChange={(e) => patch({ rarity: e.target.value })}
+                    options={RARITIES.map((r) => ({ value: r.value, label: `${r.symbol} ${r.label}` }))}
                   />
+                </Field>
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Field label="Illustrator" hint="Printed as “Illus. yourname”. Leave blank to drop it.">
+                  <TextInput
+                    value={design.illustrator}
+                    maxLength={FIELD_LIMITS.illustrator}
+                    placeholder="tennyson"
+                    onChange={(e) => patch({ illustrator: e.target.value })}
+                  />
+                </Field>
+                <Field label="Morph line" hint="Bottom right. This is where the morph goes.">
+                  <TextInput
+                    value={design.morph_line}
+                    maxLength={FIELD_LIMITS.morph_line}
+                    placeholder="Lilly White"
+                    list="sticker-morph-suggestions"
+                    onChange={(e) => patch({ morph_line: e.target.value })}
+                  />
+                  <datalist id="sticker-morph-suggestions">
+                    {MORPH_LINE_SUGGESTIONS.map((m) => <option key={m} value={m} />)}
+                  </datalist>
                 </Field>
               </div>
             </Section>
-          )}
-
-          <Section
-            title="Attacks"
-            hint={`Up to ${MAX_ATTACKS}. Cost is how many energy symbols print to the left of the name. On a full art card the attack block is left off, but we keep what you wrote.`}
-          >
-            {(design.attacks || []).map((a, i) => (
-              <div key={i} className="rounded-md border border-slate-800 bg-slate-950/60 p-3 space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-bold text-slate-300">Attack {i + 1}</span>
-                  {(design.attacks || []).length > 1 && (
-                    <button
-                      type="button"
-                      className="text-rose-300 hover:text-rose-200"
-                      onClick={() => { setDesign((d) => removeAttack(d, i)); setAdded(false); }}
-                      aria-label={`Remove attack ${i + 1}`}
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                    </button>
-                  )}
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-[1fr_90px_90px] gap-3">
-                  <Field label="Name">
-                    <TextInput
-                      value={a.name}
-                      maxLength={FIELD_LIMITS.attack_name}
-                      placeholder="Bark"
-                      onChange={(e) => { setDesign((d) => updateAttack(d, i, { name: e.target.value })); setAdded(false); }}
-                    />
-                  </Field>
-                  <Field label="Cost">
-                    <Select
-                      value={String(a.cost ?? 0)}
-                      onChange={(e) => { setDesign((d) => updateAttack(d, i, { cost: Number(e.target.value) })); setAdded(false); }}
-                      options={[0, 1, 2, 3, 4].map((n) => ({ value: String(n), label: String(n) }))}
-                    />
-                  </Field>
-                  <Field label="Damage">
-                    <TextInput
-                      value={a.damage}
-                      maxLength={FIELD_LIMITS.attack_damage}
-                      placeholder="10"
-                      onChange={(e) => { setDesign((d) => updateAttack(d, i, { damage: e.target.value })); setAdded(false); }}
-                    />
-                  </Field>
-                </div>
-                <Field label="Flavor text" hint={`What the attack does. Up to ${FIELD_LIMITS.attack_text} characters.`}>
-                  <textarea
-                    className={`${inputClass} resize-none`}
-                    rows={2}
-                    maxLength={FIELD_LIMITS.attack_text}
-                    value={a.text}
-                    placeholder="Super cute, not very effective."
-                    onChange={(e) => { setDesign((d) => updateAttack(d, i, { text: e.target.value })); setAdded(false); }}
+            </>
+          ) : (
+            <Section title={`${stickerTheme(design.theme).label} details`} hint="What gets printed around the photo.">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <Field label="Name">
+                  <TextInput
+                    value={design.name}
+                    maxLength={FIELD_LIMITS.name}
+                    placeholder="Moonlight"
+                    onChange={(e) => patch({ name: e.target.value })}
                   />
                 </Field>
+                <Field label="Morph line" hint="Lilly White, Dark Base Harlequin, Axanthic Phantom.">
+                  <TextInput
+                    value={design.morph_line}
+                    maxLength={FIELD_LIMITS.morph_line}
+                    placeholder="Lilly White"
+                    list="sticker-morph-suggestions"
+                    onChange={(e) => patch({ morph_line: e.target.value })}
+                  />
+                  <datalist id="sticker-morph-suggestions">
+                    {MORPH_LINE_SUGGESTIONS.map((m) => <option key={m} value={m} />)}
+                  </datalist>
+                </Field>
+                {stickerTheme(design.theme).fields.map((key) => {
+                  const meta = THEME_FIELD_META[key] || { label: key };
+                  const limit = THEME_FIELD_LIMITS[key] || FIELD_LIMITS[key] || FIELD_LIMITS.measurement;
+                  return (
+                    <Field key={key} label={meta.label} hint={meta.hint}>
+                      <TextInput
+                        value={design[key] ?? ''}
+                        maxLength={limit}
+                        placeholder={meta.placeholder}
+                        onChange={(e) => patch({ [key]: e.target.value })}
+                      />
+                    </Field>
+                  );
+                })}
               </div>
-            ))}
-            {(design.attacks || []).length < MAX_ATTACKS && (
-              <Button
-                type="button"
-                size="sm"
-                variant="outline"
-                className="border-slate-700 text-slate-200 hover:bg-slate-800"
-                onClick={() => { setDesign(addAttack); setAdded(false); }}
-              >
-                <Plus className="w-3.5 h-3.5 mr-1.5" /> Add a second attack
-              </Button>
-            )}
-          </Section>
-
-          <Section title="Bottom bar" hint="Weakness, resistance, and retreat cost.">
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="Weakness type">
-                <Select
-                  value={design.weakness_type}
-                  onChange={(e) => patch({ weakness_type: e.target.value })}
-                  options={typeOptionsWithNone}
-                />
-              </Field>
-              <Field label="Weakness multiplier">
-                <Select
-                  value={design.weakness_multiplier}
-                  onChange={(e) => patch({ weakness_multiplier: e.target.value })}
-                  options={WEAKNESS_MULTIPLIERS.map((m) => ({ value: m, label: m }))}
-                  disabled={!design.weakness_type}
-                />
-              </Field>
-              <Field label="Resistance type">
-                <Select
-                  value={design.resistance_type}
-                  onChange={(e) => patch({ resistance_type: e.target.value })}
-                  options={typeOptionsWithNone}
-                />
-              </Field>
-              <Field label="Resistance amount">
-                <Select
-                  value={design.resistance_amount}
-                  onChange={(e) => patch({ resistance_amount: e.target.value })}
-                  options={RESISTANCE_AMOUNTS.map((m) => ({ value: m, label: m }))}
-                  disabled={!design.resistance_type}
-                />
-              </Field>
-            </div>
-            <Field label="Retreat cost" hint="How many colorless symbols print in the retreat box.">
-              <ChipGroup
-                value={String(design.retreat_cost)}
-                onChange={(v) => patch({ retreat_cost: Number(v) })}
-                options={[0, 1, 2, 3, 4].map((n) => ({ value: String(n), label: String(n) }))}
-                columns={5}
-              />
-            </Field>
-          </Section>
-
-          <Section title="Set line" hint="The fine print along the bottom edge.">
-            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-              <Field label="Set code">
-                <TextInput
-                  value={design.set_code}
-                  maxLength={FIELD_LIMITS.set_code}
-                  placeholder="GI1"
-                  onChange={(e) => patch({ set_code: e.target.value })}
-                />
-              </Field>
-              <Field label="Card no.">
-                <TextInput
-                  value={design.card_number}
-                  maxLength={FIELD_LIMITS.card_number}
-                  placeholder="1"
-                  onChange={(e) => patch({ card_number: e.target.value })}
-                />
-              </Field>
-              <Field label="Set total">
-                <TextInput
-                  value={design.set_total}
-                  maxLength={FIELD_LIMITS.set_total}
-                  placeholder="150"
-                  onChange={(e) => patch({ set_total: e.target.value })}
-                />
-              </Field>
-              <Field label="Rarity">
-                <Select
-                  value={design.rarity}
-                  onChange={(e) => patch({ rarity: e.target.value })}
-                  options={RARITIES.map((r) => ({ value: r.value, label: `${r.symbol} ${r.label}` }))}
-                />
-              </Field>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <Field label="Illustrator" hint="Printed as “Illus. yourname”. Leave blank to drop it.">
-                <TextInput
-                  value={design.illustrator}
-                  maxLength={FIELD_LIMITS.illustrator}
-                  placeholder="tennyson"
-                  onChange={(e) => patch({ illustrator: e.target.value })}
-                />
-              </Field>
-              <Field label="Morph line" hint="Bottom right. This is where the morph goes.">
-                <TextInput
-                  value={design.morph_line}
-                  maxLength={FIELD_LIMITS.morph_line}
-                  placeholder="Lilly White"
-                  list="sticker-morph-suggestions"
-                  onChange={(e) => patch({ morph_line: e.target.value })}
-                />
-                <datalist id="sticker-morph-suggestions">
-                  {MORPH_LINE_SUGGESTIONS.map((m) => <option key={m} value={m} />)}
-                </datalist>
-              </Field>
-            </div>
-          </Section>
+            </Section>
+          )}
 
           <Section title="The physical sticker" hint="Every size is the same price. All stickers ship glossy and weatherproof.">
             <Field label="Size">
@@ -702,11 +758,11 @@ export default function CustomStickerStudio() {
         {/* --------------------------- Live preview --------------------------- */}
         <aside className="order-1 lg:order-2 lg:sticky lg:top-20 space-y-3">
           <div className="rounded-xl border border-slate-800 bg-slate-950 p-3">
-            <StickerCardPreview design={design} />
+            <StickerPreview design={design} />
           </div>
           <p className="text-[11px] text-slate-500 text-center leading-relaxed">
             Live preview. Print colors run slightly warmer than the screen, and
-            the sticker is die-cut to the card outline.
+            the sticker is die-cut to the outline of the design.
           </p>
 
           <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-4 space-y-2">

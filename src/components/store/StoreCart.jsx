@@ -14,7 +14,9 @@ import {
   getSessionToken,
 } from '@/lib/store/cart';
 import { formatCents } from '@/lib/store/format';
-import StickerCardPreview from '@/components/store/StickerCardPreview';
+import StickerPreview from '@/components/store/StickerThemePreviews';
+import ShirtPreview from '@/components/store/ShirtPreview';
+import { isCustomShirtLine, shirtDesignSummary } from '@/lib/store/customShirt';
 import {
   isCustomStickerLine,
   designSummary,
@@ -193,11 +195,12 @@ export default function StoreCart() {
             {items.map((item) => {
               const p = item.product;
               const sticker = isCustomStickerLine(item);
-              const design = sticker ? item.customization : null;
+              const shirt = isCustomShirtLine(item);
+              const design = sticker || shirt ? item.customization : null;
               const primary =
                 (Array.isArray(p?.images) && p.images.find((i) => i.is_primary)) ||
                 (Array.isArray(p?.images) && p.images[0]);
-              const detailPath = sticker ? '/Store/stickers' : `/Store/p/${p?.slug}`;
+              const detailPath = sticker ? '/Store/stickers' : shirt ? '/Store/tees' : `/Store/p/${p?.slug}`;
               return (
                 <div
                   key={item.id || cartLineKey(item)}
@@ -205,10 +208,10 @@ export default function StoreCart() {
                 >
                   <Link
                     to={detailPath}
-                    className={`shrink-0 rounded overflow-hidden bg-slate-950 ${sticker ? 'w-16' : 'w-20 h-20'}`}
+                    className={`shrink-0 rounded overflow-hidden bg-slate-950 ${sticker ? 'w-16' : shirt ? 'w-20' : 'w-20 h-20'}`}
                   >
                     {design ? (
-                      <StickerCardPreview design={design} />
+                      shirt ? <ShirtPreview design={design} /> : <StickerPreview design={design} />
                     ) : primary ? (
                       <img src={primary.url} alt={primary.alt || p?.name} className="w-full h-full object-cover" />
                     ) : null}
@@ -219,7 +222,7 @@ export default function StoreCart() {
                     </Link>
                     {design && (
                       <div className="text-xs text-emerald-300/90 mt-0.5 truncate">
-                        {designSummary(design)}
+                        {shirt ? shirtDesignSummary(design) : designSummary(design)}
                       </div>
                     )}
                     <div className="text-xs text-slate-500 mt-0.5">

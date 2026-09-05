@@ -14,6 +14,8 @@
  * chosen, so the cart math stays trivial.
  */
 
+import { themeFieldDefaults, THEME_FIELD_LIMITS, isCardTheme, stickerTheme } from '@/lib/store/stickerThemes';
+
 export const CUSTOM_STICKER_SLUG = 'custom-pet-sticker';
 export const CUSTOM_STICKER_PRICE_CENTS = 1000;
 export const CUSTOM_STICKER_SHIPPING_CENTS = 500;
@@ -170,6 +172,7 @@ export function createDefaultDesign() {
     morph_line: '',
     size: '3in',
     finish: 'glossy',
+    ...themeFieldDefaults(),
   };
 }
 
@@ -201,7 +204,10 @@ export function validateDesign(design) {
   const problems = [];
   if (!design) return ['Start a design first.'];
   if (!design.photo_url) problems.push('Upload a photo of your pet.');
-  if (!String(design.name || '').trim()) problems.push('Give the card a name.');
+  if (!String(design.name || '').trim()) problems.push(isCardTheme(design.theme) ? 'Give the card a name.' : 'Give the sticker a name.');
+  // Everything below is trading-card only. The other themes print the name,
+  // the morph line, the photo and a few words; nothing else can be wrong.
+  if (!isCardTheme(design.theme)) return problems;
   if (stageEvolves(design.stage) && !String(design.evolves_from || '').trim()) {
     problems.push(`A ${CARD_STAGES.find((s) => s.value === design.stage)?.label} card needs an "Evolves from" name.`);
   }
@@ -255,6 +261,12 @@ export function serializeDesign(design) {
     morph_line: clean(design.morph_line, FIELD_LIMITS.morph_line),
     size: design.size || '3in',
     finish: design.finish || 'glossy',
+    theme: stickerTheme(design.theme).value,
+    caption: clean(design.caption, THEME_FIELD_LIMITS.caption),
+    hatch_label: clean(design.hatch_label, THEME_FIELD_LIMITS.hatch_label),
+    badge_location: clean(design.badge_location, THEME_FIELD_LIMITS.badge_location),
+    award_text: clean(design.award_text, THEME_FIELD_LIMITS.award_text),
+    award_event: clean(design.award_event, THEME_FIELD_LIMITS.award_event),
   };
 }
 
@@ -269,6 +281,9 @@ export function isCustomStickerLine(line) {
 export function designSummary(design) {
   if (!design) return '';
   const size = STICKER_SIZES.find((s) => s.value === design.size)?.label || design.size;
+  if (!isCardTheme(design.theme)) {
+    return [design.name, stickerTheme(design.theme).label, design.morph_line, size].filter(Boolean).join(' · ');
+  }
   const type = cardType(design.type).label;
   return [design.name, `${type} · ${design.hp} HP`, size]
     .filter(Boolean)

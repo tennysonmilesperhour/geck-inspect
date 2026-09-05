@@ -7,6 +7,7 @@ const StoreCategory = lazy(() => import('@/components/store/StoreCategory'));
 const StoreProduct = lazy(() => import('@/components/store/StoreProduct'));
 const StoreCart = lazy(() => import('@/components/store/StoreCart'));
 const CustomStickerStudio = lazy(() => import('@/components/store/CustomStickerStudio'));
+const CustomShirtStudio = lazy(() => import('@/components/store/CustomShirtStudio'));
 const StoreCheckoutSuccess = lazy(() => import('@/components/store/StoreCheckoutSuccess'));
 const StoreOrders = lazy(() => import('@/components/store/StoreOrders'));
 const StoreOrderDetail = lazy(() => import('@/components/store/StoreOrderDetail'));
@@ -27,6 +28,7 @@ const Spinner = () => (
  *   /Store/c/:slug+                   → category (:slug+ supports gifts/under-25)
  *   /Store/p/:slug                    → product detail
  *   /Store/stickers                   → custom pet sticker builder
+ *   /Store/tees                       → custom gecko tee builder
  *   /Store/cart                       → cart
  *   /Store/checkout/success           → post-Stripe-redirect confirmation
  *   /Store/orders                     → user order history (auth)
@@ -40,6 +42,7 @@ export default function Store() {
         <Route path="c/*" element={<StoreCategory />} />
         <Route path="p/:slug" element={<StoreProduct />} />
         <Route path="stickers" element={<CustomStickerStudio />} />
+        <Route path="tees" element={<CustomShirtStudio />} />
         <Route path="cart" element={<StoreCart />} />
         <Route path="checkout/success" element={<StoreCheckoutSuccess />} />
         <Route path="orders" element={<StoreOrders />} />

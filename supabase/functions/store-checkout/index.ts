@@ -82,6 +82,10 @@ function isCustomSticker(it: CartItemRow): boolean {
 function stickerLineLabel(it: CartItemRow): string | null {
   const c = it.customization;
   if (!c) return null;
+  if (String(c.kind ?? "") === "custom_shirt") {
+    const bits = [String(c.headline ?? "").trim(), [c.color, c.fit, c.size].map((v) => String(v ?? "").trim()).filter(Boolean).join(" "), String(c.placement ?? "").trim()].filter(Boolean);
+    return bits.length ? bits.join(" · ") : null;
+  }
   const name = String(c.name ?? "").trim();
   const size = String(c.size ?? "").trim();
   const finish = String(c.finish ?? "").trim();

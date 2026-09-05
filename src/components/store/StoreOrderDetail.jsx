@@ -4,8 +4,10 @@ import StoreLayout from '@/components/store/StoreLayout';
 import Seo from '@/components/seo/Seo';
 import { supabase } from '@/lib/supabaseClient';
 import { formatCents } from '@/lib/store/format';
-import StickerCardPreview from '@/components/store/StickerCardPreview';
+import StickerPreview from '@/components/store/StickerThemePreviews';
 import { isCustomStickerLine, designSummary } from '@/lib/store/customSticker';
+import ShirtPreview from '@/components/store/ShirtPreview';
+import { isCustomShirtLine, shirtDesignSummary } from '@/lib/store/customShirt';
 
 export default function StoreOrderDetail() {
   const { orderNumber } = useParams();
@@ -79,18 +81,19 @@ export default function StoreOrderDetail() {
 
           <div className="rounded-lg border border-slate-800 bg-slate-900/40 divide-y divide-slate-800">
             {items.map((it) => {
-              const design = isCustomStickerLine(it) ? it.customization : null;
+              const shirt = isCustomShirtLine(it);
+              const design = isCustomStickerLine(it) || shirt ? it.customization : null;
               return (
                 <div key={it.id} className="px-4 py-3 flex items-center justify-between gap-3">
                   {design && (
                     <div className="w-16 shrink-0">
-                      <StickerCardPreview design={design} />
+                      {shirt ? <ShirtPreview design={design} /> : <StickerPreview design={design} />}
                     </div>
                   )}
                   <div className="flex-1 min-w-0">
                     <div className="text-sm font-semibold text-slate-100">{it.product_name_snapshot}</div>
                     {design && (
-                      <div className="text-xs text-emerald-300/90 truncate">{designSummary(design)}</div>
+                      <div className="text-xs text-emerald-300/90 truncate">{shirt ? shirtDesignSummary(design) : designSummary(design)}</div>
                     )}
                     <div className="text-xs text-slate-500">
                       Qty {it.quantity} · {formatCents(it.unit_price_cents)} each · {it.fulfillment_status}

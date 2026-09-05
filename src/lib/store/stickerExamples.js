@@ -86,5 +86,5 @@ export const STICKER_EXAMPLES = [
 
 /** Load one example into the builder as a starting point. */
 export function exampleAsStartingDesign(example) {
-  return { ...example.design, photo_url: '', photo_path: '', name: '', morph_line: example.design.morph_line };
+  return { ...example.design, theme: 'trading_card', photo_url: '', photo_path: '', name: '', morph_line: example.design.morph_line };
 }

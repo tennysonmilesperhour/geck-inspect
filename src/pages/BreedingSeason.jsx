@@ -23,7 +23,7 @@ import {
     Sparkles,
     ArrowRight,
 } from 'lucide-react';
-import { format, addDays, getDaysInMonth } from 'date-fns';
+import { format, addDays, getDayOfYear, getDaysInYear, differenceInCalendarDays } from 'date-fns';
 import { parseLocalDate } from '@/lib/dateUtils';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 
@@ -45,20 +45,37 @@ const MONTH_LABELS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'S
 
 const FALLBACK_PHOTO = 'https://i.imgur.com/sw9gnDp.png';
 
-// Vertical lanes inside each pair row so same-day markers don't overlap:
-// copulations ride high, lays in the middle, hatches low.
-const LANE_TOP = { copulation: '25%', lay: '50%', expected: '75%', hatch: '75%' };
+// Layout of one pair row. The timeline reads like a project roadmap (the
+// style GitHub Projects and Linear use for their roadmap views): every
+// clutch is a labelled bar that runs from the lay date to the hatch date,
+// locks are thin ticks along the top rail, and today is a vertical rule.
+// Bars are positioned as a fraction of the whole year, so a clutch laid on
+// 28 March and hatched on 4 June is one continuous bar across three months.
+const LOCK_RAIL_HEIGHT = 18;
+const CLUTCH_LANE_HEIGHT = 30;
+const ROW_PADDING = 8;
 
-const MARKER_STYLES = {
-    copulation: 'bg-blue-400 border border-blue-200/60',
-    lay: 'bg-amber-400 border border-amber-200/60',
-    expected: 'bg-transparent border-2 border-slate-300/80',
-    hatch: 'bg-emerald-400 border border-emerald-200/60',
+// Colour says outcome. A clutch is "hatched" when every egg hatched,
+// "incubating" while any egg is still in the incubator, "failed" when
+// every egg was infertile or a slug, and "mixed" for anything else.
+const CLUTCH_STYLES = {
+    hatched: 'bg-emerald-500/25 border-emerald-400/70 text-emerald-50',
+    incubating: 'bg-amber-500/20 border-amber-400/70 text-amber-50',
+    failed: 'bg-rose-500/15 border-rose-400/50 text-rose-100',
+    mixed: 'bg-slate-600/40 border-slate-400/60 text-slate-100',
 };
 
-// Fractional position of a date within its month, 0 = first day, ~1 = last.
-function dayFraction(date) {
-    return (date.getDate() - 1) / getDaysInMonth(date);
+const FAILED_STATUSES = new Set(['Infertile', 'Slug', 'Failed']);
+
+// Position of a date across the selected year, 0 = 1 January, 1 = 31 December.
+// Dates outside the year clamp to the edge so a clutch laid in December and
+// hatched in February still draws to the year boundary.
+function yearFraction(date, year) {
+    if (!date) return 0;
+    if (date.getFullYear() < year) return 0;
+    if (date.getFullYear() > year) return 1;
+    const days = getDaysInYear(new Date(year, 0, 1));
+    return (getDayOfYear(date) - 1) / days;
 }
 
 // Group a plan's eggs into clutches by shared lay_date.
@@ -79,68 +96,62 @@ function eggEndDate(egg, layDate) {
     return addDays(layDate, INCUBATION_FALLBACK_DAYS);
 }
 
-// Builds a 12-slot array (one per month of `year`), each slot holding the
-// incubation band segments and event markers that fall inside that month.
-function buildPairTimeline(plan, eggs, year) {
-    const months = Array.from({ length: 12 }, () => ({ bands: [], markers: [] }));
-    const inYear = (d) => d && d.getFullYear() === year;
-
-    const pushMarker = (date, marker) => {
-        if (inYear(date)) {
-            months[date.getMonth()].markers.push({ ...marker, frac: dayFraction(date) });
-        }
-    };
-
-    for (const event of plan.copulation_events || []) {
-        const d = parseLocalDate(event.date);
-        if (d) pushMarker(d, { type: 'copulation', label: `Lock observed ${format(d, 'MMM d')}` });
-    }
-
-    for (const clutch of groupClutches(eggs)) {
-        const lay = parseLocalDate(clutch.layDate);
-        if (!lay) continue;
-
-        let end = null;
-        for (const egg of clutch.eggs) {
-            const e = eggEndDate(egg, lay);
-            if (e && (!end || e > end)) end = e;
-        }
-
-        const count = clutch.eggs.length;
-        pushMarker(lay, {
-            type: 'lay',
-            label: `Clutch laid ${format(lay, 'MMM d')} (${count} egg${count !== 1 ? 's' : ''})`,
-        });
-
-        // Slate incubation band from lay to expected/actual hatch, clipped
-        // to the selected year and split into per-month segments.
-        if (end && end > lay) {
-            const yearStart = new Date(year, 0, 1);
-            const yearEnd = new Date(year, 11, 31);
-            const bandStart = lay < yearStart ? yearStart : lay;
-            const bandEnd = end > yearEnd ? yearEnd : end;
-            if (bandStart <= bandEnd && inYear(bandStart) && inYear(bandEnd)) {
-                for (let m = bandStart.getMonth(); m <= bandEnd.getMonth(); m++) {
-                    const left = m === bandStart.getMonth() ? dayFraction(bandStart) : 0;
-                    const right = m === bandEnd.getMonth() ? dayFraction(bandEnd) : 1;
-                    months[m].bands.push({ left, width: Math.max(right - left, 0.04) });
-                }
+// One bar per clutch, oldest first, with the outcome that decides its colour
+// and the label text drawn inside it.
+function buildClutchBars(eggs, year, today) {
+    return groupClutches(eggs)
+        .map(({ layDate, eggs: clutchEggs }) => {
+            const lay = parseLocalDate(layDate);
+            if (!lay) return null;
+            let end = null;
+            for (const egg of clutchEggs) {
+                const e = eggEndDate(egg, lay);
+                if (e && (!end || e > end)) end = e;
             }
-        }
+            if (!end || end < lay) end = addDays(lay, INCUBATION_FALLBACK_DAYS);
 
-        if (end && clutch.eggs.some(e => e.status === 'Incubating')) {
-            pushMarker(end, { type: 'expected', label: `Expected hatch around ${format(end, 'MMM d')}` });
-        }
+            const count = clutchEggs.length;
+            const hatched = clutchEggs.filter(e => e.status === 'Hatched').length;
+            const incubating = clutchEggs.filter(e => e.status === 'Incubating').length;
+            const failed = clutchEggs.filter(e => FAILED_STATUSES.has(e.status)).length;
+            const outcome = hatched === count ? 'hatched'
+                : incubating > 0 ? 'incubating'
+                : failed === count ? 'failed'
+                : 'mixed';
 
-        for (const egg of clutch.eggs) {
-            if (egg.status === 'Hatched' && egg.hatch_date_actual) {
-                const hd = parseLocalDate(egg.hatch_date_actual);
-                if (hd) pushMarker(hd, { type: 'hatch', label: `Hatched ${format(hd, 'MMM d')}` });
-            }
-        }
-    }
+            const daysLeft = outcome === 'incubating' ? differenceInCalendarDays(end, today) : null;
+            const endLabel = outcome === 'hatched' ? `hatched ${format(end, 'MMM d')}`
+                : outcome === 'incubating'
+                    ? (daysLeft > 0 ? `due ${format(end, 'MMM d')}, ${daysLeft}d` : `due ${format(end, 'MMM d')}`)
+                : outcome === 'failed' ? (failed === 1 ? 'infertile' : `${failed} infertile`)
+                : `${hatched} of ${count} hatched`;
 
-    return months;
+            return {
+                key: layDate,
+                lay,
+                end,
+                count,
+                hatched,
+                incubating,
+                failed,
+                outcome,
+                left: yearFraction(lay, year),
+                right: yearFraction(end, year),
+                label: `${count} ${count === 1 ? 'egg' : 'eggs'}`,
+                layLabel: `laid ${format(lay, 'MMM d')}`,
+                endLabel,
+                title: `Clutch laid ${format(lay, 'MMM d, yyyy')}: ${count} ${count === 1 ? 'egg' : 'eggs'}, ${hatched} hatched, ${incubating} incubating${failed ? `, ${failed} infertile or slug` : ''}. ${outcome === 'hatched' ? 'Last hatch' : 'Expected hatch'} ${format(end, 'MMM d')}.`,
+            };
+        })
+        .filter(Boolean)
+        .sort((a, b) => a.lay - b.lay);
+}
+
+function lockTicks(plan, year) {
+    return (plan.copulation_events || [])
+        .map((event) => parseLocalDate(event.date))
+        .filter((d) => d && d.getFullYear() === year)
+        .map((d) => ({ key: d.toISOString(), frac: yearFraction(d, year), label: `Lock observed ${format(d, 'MMM d')}` }));
 }
 
 // Every calendar year this plan (or its eggs) has activity in.
@@ -168,6 +179,30 @@ function LegendItem({ swatch, label }) {
     );
 }
 
+// The three numbers that matter for a pair this season, set as figures with
+// small labels instead of three coloured badges fighting for attention.
+function CountStrip({ laid, hatched, incubating }) {
+    const rate = laid > 0 ? Math.round((hatched / laid) * 100) : null;
+    const items = [
+        { value: laid, label: 'laid', tone: 'text-slate-100' },
+        { value: hatched, label: 'hatched', tone: 'text-emerald-300' },
+        { value: incubating, label: 'incubating', tone: 'text-amber-300' },
+    ];
+    return (
+        <div className="flex items-baseline gap-3 mt-1" style={{ fontVariantNumeric: 'tabular-nums' }}>
+            {items.map((it) => (
+                <div key={it.label} className="leading-none">
+                    <span className={`text-sm font-semibold ${it.tone}`}>{it.value}</span>
+                    <span className="ml-1 text-[10px] uppercase tracking-wide text-slate-500">{it.label}</span>
+                </div>
+            ))}
+            {rate !== null && laid > 0 && hatched > 0 && (
+                <span className="text-[10px] text-slate-500 leading-none">{rate}% hatch rate</span>
+            )}
+        </div>
+    );
+}
+
 function PairRowSkeleton() {
     return (
         <div className="flex items-center gap-4 py-3 border-b border-slate-800">
@@ -179,26 +214,29 @@ function PairRowSkeleton() {
                     <Skeleton className="h-3 w-20 bg-slate-800" />
                 </div>
             </div>
-            <Skeleton className="h-10 flex-1 bg-slate-800" />
+            <Skeleton className="h-14 flex-1 bg-slate-800" />
         </div>
     );
 }
 
 function PairRow({ plan, sire, dam, seasonEggs, year, today }) {
-    const months = useMemo(() => buildPairTimeline(plan, seasonEggs, year), [plan, seasonEggs, year]);
+    const bars = useMemo(() => buildClutchBars(seasonEggs, year, today), [seasonEggs, year, today]);
+    const locks = useMemo(() => lockTicks(plan, year), [plan, year]);
 
     const laid = seasonEggs.length;
     const hatched = seasonEggs.filter(e => e.status === 'Hatched').length;
     const incubating = seasonEggs.filter(e => e.status === 'Incubating').length;
 
     const todayInYear = today.getFullYear() === year;
+    const lanes = Math.max(bars.length, 1);
+    const height = ROW_PADDING * 2 + LOCK_RAIL_HEIGHT + lanes * CLUTCH_LANE_HEIGHT;
 
     return (
         <div className="flex items-stretch gap-4 py-3 border-b border-slate-800 last:border-b-0">
             {/* Pair identity, links back to the Breeding page */}
             <Link
                 to={createPageUrl('Breeding')}
-                className="w-44 sm:w-56 flex-shrink-0 flex items-center gap-3 group"
+                className="w-44 sm:w-56 flex-shrink-0 flex items-start gap-3 group pt-1"
                 title="Open Breeding Management"
             >
                 <div className="flex flex-shrink-0">
@@ -219,47 +257,79 @@ function PairRow({ plan, sire, dam, seasonEggs, year, today }) {
                     <div className="text-sm font-semibold text-slate-200 truncate group-hover:text-emerald-400 transition-colors">
                         {sire?.name || 'Unknown sire'} x {dam?.name || 'Unknown dam'}
                     </div>
-                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                        <Badge variant="outline" className="border-amber-700/60 text-amber-400 text-[10px] px-1.5 py-0">
-                            {laid} laid
-                        </Badge>
-                        <Badge variant="outline" className="border-slate-600 text-slate-400 text-[10px] px-1.5 py-0">
-                            {incubating} incubating
-                        </Badge>
-                        <Badge variant="outline" className="border-emerald-700/60 text-emerald-400 text-[10px] px-1.5 py-0">
-                            {hatched} hatched
-                        </Badge>
-                    </div>
+                    <CountStrip laid={laid} hatched={hatched} incubating={incubating} />
                 </div>
             </Link>
 
-            {/* Month grid timeline */}
-            <div className="flex-1 grid grid-cols-12 rounded-md overflow-hidden bg-slate-900/60">
-                {months.map((month, mi) => (
-                    <div key={mi} className="relative h-14 border-l border-slate-800 first:border-l-0">
-                        {month.bands.map((band, bi) => (
-                            <div
-                                key={bi}
-                                className="absolute top-2 bottom-2 bg-slate-700/50 rounded-sm"
-                                style={{ left: `${band.left * 100}%`, width: `${band.width * 100}%` }}
-                            />
-                        ))}
-                        {todayInYear && today.getMonth() === mi && (
-                            <div
-                                className="absolute top-0 bottom-0 w-px bg-emerald-500/60"
-                                style={{ left: `${dayFraction(today) * 100}%` }}
-                            />
-                        )}
-                        {month.markers.map((marker, ki) => (
-                            <div
-                                key={ki}
-                                title={marker.label}
-                                className={`absolute w-2.5 h-2.5 rounded-full -translate-x-1/2 -translate-y-1/2 ${MARKER_STYLES[marker.type]}`}
-                                style={{ left: `${marker.frac * 100}%`, top: LANE_TOP[marker.type] }}
-                            />
-                        ))}
-                    </div>
+            {/* Year timeline: month bands, lock rail, one labelled bar per clutch */}
+            <div className="flex-1 relative rounded-md overflow-hidden bg-slate-900/60" style={{ height }}>
+                {MONTH_LABELS.map((label, mi) => (
+                    <div
+                        key={label}
+                        className={`absolute top-0 bottom-0 border-l border-slate-800 first:border-l-0 ${mi % 2 ? 'bg-slate-800/20' : ''}`}
+                        style={{ left: `${(mi / 12) * 100}%`, width: `${100 / 12}%` }}
+                    />
                 ))}
+
+                {/* Lock rail */}
+                {locks.map((lock) => (
+                    <div
+                        key={lock.key}
+                        title={lock.label}
+                        className="absolute w-0.5 rounded-full bg-sky-400"
+                        style={{ left: `${lock.frac * 100}%`, top: ROW_PADDING, height: LOCK_RAIL_HEIGHT - 6 }}
+                    />
+                ))}
+
+                {bars.length === 0 && (
+                    <div
+                        className="absolute inset-x-3 flex items-center text-[11px] text-slate-500"
+                        style={{ top: ROW_PADDING + LOCK_RAIL_HEIGHT, height: CLUTCH_LANE_HEIGHT }}
+                    >
+                        {locks.length > 0 ? 'Locks recorded, no clutch yet' : `No clutches recorded in ${year}`}
+                    </div>
+                )}
+
+                {bars.map((bar, i) => {
+                    const widthPct = Math.max((bar.right - bar.left) * 100, 1.5);
+                    const wide = widthPct >= 14;
+                    const roomRight = bar.right < 0.8;
+                    return (
+                        <div
+                            key={bar.key}
+                            className="absolute flex items-center"
+                            style={{
+                                top: ROW_PADDING + LOCK_RAIL_HEIGHT + i * CLUTCH_LANE_HEIGHT,
+                                height: CLUTCH_LANE_HEIGHT,
+                                left: `${bar.left * 100}%`,
+                                width: `${widthPct}%`,
+                            }}
+                        >
+                            <div
+                                title={bar.title}
+                                className={`h-[22px] w-full rounded-md border px-2 flex items-center gap-1.5 text-[11px] whitespace-nowrap overflow-hidden ${CLUTCH_STYLES[bar.outcome]}`}
+                            >
+                                <EggIcon className="w-3 h-3 shrink-0 opacity-90" />
+                                <span className="font-semibold">{bar.label}</span>
+                                {wide && <span className="opacity-80">{bar.layLabel}</span>}
+                                {wide && <span className="ml-auto opacity-90">{bar.endLabel}</span>}
+                            </div>
+                            {!wide && roomRight && (
+                                <span className="absolute left-full ml-1.5 text-[11px] text-slate-400 whitespace-nowrap">
+                                    {bar.layLabel}, {bar.endLabel}
+                                </span>
+                            )}
+                        </div>
+                    );
+                })}
+
+                {todayInYear && (
+                    <div
+                        className="absolute top-0 bottom-0 w-px bg-emerald-400/80"
+                        style={{ left: `${yearFraction(today, year) * 100}%` }}
+                        title={`Today, ${format(today, 'MMM d')}`}
+                    />
+                )}
             </div>
         </div>
     );
@@ -465,11 +535,11 @@ export default function BreedingSeasonPage() {
                                     </Badge>
                                 </div>
                                 <div className="flex items-center gap-4 flex-wrap">
-                                    <LegendItem swatch={<span className="w-2.5 h-2.5 rounded-full bg-blue-400 inline-block" />} label="Lock" />
-                                    <LegendItem swatch={<span className="w-2.5 h-2.5 rounded-full bg-amber-400 inline-block" />} label="Clutch laid" />
-                                    <LegendItem swatch={<span className="w-5 h-2.5 rounded-sm bg-slate-700 inline-block" />} label="Incubating" />
-                                    <LegendItem swatch={<span className="w-2.5 h-2.5 rounded-full border-2 border-slate-300/80 inline-block" />} label="Expected hatch" />
-                                    <LegendItem swatch={<span className="w-2.5 h-2.5 rounded-full bg-emerald-400 inline-block" />} label="Hatched" />
+                                    <LegendItem swatch={<span className="w-0.5 h-3 rounded-full bg-sky-400 inline-block" />} label="Lock" />
+                                    <LegendItem swatch={<span className="w-5 h-2.5 rounded-sm bg-amber-500/30 border border-amber-400/70 inline-block" />} label="Incubating" />
+                                    <LegendItem swatch={<span className="w-5 h-2.5 rounded-sm bg-emerald-500/30 border border-emerald-400/70 inline-block" />} label="Hatched" />
+                                    <LegendItem swatch={<span className="w-5 h-2.5 rounded-sm bg-rose-500/20 border border-rose-400/50 inline-block" />} label="Infertile or slug" />
+                                    <LegendItem swatch={<span className="w-px h-3 bg-emerald-400/80 inline-block" />} label="Today" />
                                 </div>
                             </div>
 

@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { addToCart } from '@/lib/store/cart';
 import { isCartEligible } from '@/lib/store/format';
 import { CUSTOM_STICKER_SLUG } from '@/lib/store/customSticker';
+import { CUSTOM_SHIRT_SLUG } from '@/lib/store/customShirt';
 import { captureEvent } from '@/lib/posthog';
 import { supabase } from '@/lib/supabaseClient';
 
@@ -27,6 +28,20 @@ export default function AddToCartButton({ product, compact = false, quantity = 1
 
   if (!product) return null;
   const cartEligible = isCartEligible(product.fulfillment_mode);
+
+  if (product.slug === CUSTOM_SHIRT_SLUG) {
+    return (
+      <Link to="/Store/tees" className="block">
+        <Button
+          size={compact ? 'sm' : 'default'}
+          className="w-full bg-emerald-600 hover:bg-emerald-500 text-white"
+        >
+          <Wand2 className={`${compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} mr-1`} />
+          {compact ? 'Build' : 'Build your tee'}
+        </Button>
+      </Link>
+    );
+  }
 
   if (product.slug === CUSTOM_STICKER_SLUG) {
     return (

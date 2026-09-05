@@ -10,7 +10,8 @@ import { SITE_URL } from '@/lib/organization-schema';
 import { supabase } from '@/lib/supabaseClient';
 
 const HERO_TILES = [
-  { to: '/Store/stickers',        label: 'Custom stickers',   Icon: Sticker,  blurb: 'Your gecko on a trading card. $10 each.' },
+  { to: '/Store/stickers',        label: 'Custom stickers',   Icon: Sticker,  blurb: 'Your gecko on a sticker, six themes. $10 each.' },
+  { to: '/Store/tees',            label: 'Custom tee',        Icon: Shirt,    blurb: 'Your gecko on a shirt. Pick colour, size and print.' },
   { to: '/Store/c/apparel',       label: 'Apparel',           Icon: Shirt,    blurb: 'Original Geck Inspect tees, hoodies, hats.' },
   { to: '/Store/c/gifts',         label: 'Gift ideas',        Icon: Gift,     blurb: 'For keepers, breeders, and the people who love them.' },
   { to: '/Store/c/diet',          label: 'Diet (CGD)',        Icon: Sparkles, blurb: 'The brands we feed our own animals.' },
@@ -121,7 +122,7 @@ export default function StoreLanding() {
         <FoodRunoutWidget />
       </div>
 
-      <section className="grid grid-cols-2 md:grid-cols-5 gap-3 mb-10">
+      <section className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-10">
         {HERO_TILES.map(({ to, label, blurb, Icon }) => (
           <Link
             key={to}
@@ -146,13 +147,30 @@ export default function StoreLanding() {
               Custom pet stickers
             </h2>
             <p className="text-sm text-slate-400 mt-1 leading-relaxed">
-              Upload a photo of your gecko, pick the type, HP, attacks, and
-              rarity, and we print it as a die-cut trading card sticker. $10
-              each plus $5 flat shipping.
+              Upload a photo of your gecko and pick a look: trading card,
+              field-guide plate, passport, park badge, instant photo or show
+              rosette. Die-cut and weatherproof, $10 each plus $5 flat shipping.
             </p>
           </div>
           <span className="text-sm font-semibold text-emerald-300 group-hover:text-emerald-200 shrink-0">
-            Build one →
+            Build one
+          </span>
+        </Link>
+        <Link
+          to="/Store/tees"
+          className="group mt-3 flex flex-col sm:flex-row items-start sm:items-center gap-4 rounded-xl border border-slate-700/60 bg-slate-900/40 hover:bg-slate-900 p-5 transition-colors"
+        >
+          <Shirt className="w-8 h-8 text-emerald-400 shrink-0" />
+          <div className="flex-1">
+            <h2 className="text-base font-bold text-slate-100">Custom gecko tee</h2>
+            <p className="text-sm text-slate-400 mt-1 leading-relaxed">
+              The same photo, on a heavyweight cotton shirt. Six colours, sizes
+              S to 3XL, and four print styles with the name and morph line
+              printed exactly as you type them.
+            </p>
+          </div>
+          <span className="text-sm font-semibold text-emerald-300 group-hover:text-emerald-200 shrink-0">
+            Build one
           </span>
         </Link>
       </section>
