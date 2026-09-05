@@ -159,7 +159,20 @@ This list records the remaining launch checks and their latest state.
    and is far behind origin. Decide whether that work is wanted; commit
    it or discard it, then `git pull`. Sessions currently use the clean
    worktree at ~/dev/geck-inspect-launch instead.
-8. **geck-data repo.** Four duplicate policy groups and 14 per-row
+8. **Repo secret for the weekly What's New (five minutes).** GitHub, repo
+   Settings, Secrets and variables, Actions: add
+   `SUPABASE_SERVICE_ROLE_KEY` (Supabase, Project settings, API, service
+   role). Every Monday run since May failed for want of it; SUPABASE_URL
+   is already set. The same secret is what error-triage needs when it
+   writes back to the database. Then run the weekly-changelog workflow
+   once by hand (Actions, weekly-changelog, Run workflow) to confirm.
+9. **Store decisions (yours).** The custom tee is live at $28 with
+   standard shipping as a placeholder; change `our_price_cents` on the
+   product row or `store_custom_tee_price_cents` in app_settings. The two
+   printed sticker examples carry a real Pokemon and Nintendo copyright
+   line along the bottom edge; decide whether to keep them as shown,
+   crop that line, or replace them with prints of the new themes.
+10. **geck-data repo.** Four duplicate policy groups and 14 per-row
    auth calls remain in the geck_data schema; same recipe as batches 1
    to 8, but the migrations belong to that repo.
 

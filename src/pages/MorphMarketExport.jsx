@@ -707,7 +707,29 @@ export default function MorphMarketExport() {
         if (me) {
           const list = await Gecko.filter({ created_by: me.email }, '-created_date');
           if (!cancelled) {
-            setAllGeckos((list || []).filter((g) => !g.archived && !g.notes?.startsWith('[Manual sale]')));
+            const usable = (list || []).filter((g) => !g.archived && !g.notes?.startsWith('[Manual sale]'));
+            setAllGeckos(usable);
+            // Sell Geckos hands a listing over as /MorphMarketExport?add=<id>.
+            // Put it straight into the batch so the breeder lands one click
+            // from the CSV, then drop the parameter so a reload does not
+            // add it twice.
+            if (typeof window !== 'undefined') {
+              const params = new URLSearchParams(window.location.search);
+              const wanted = (params.get('add') || '').split(',').filter(Boolean);
+              const ids = wanted.filter((id) => usable.some((g) => g.id === id));
+              if (ids.length) {
+                setBatchIds((prev) => [...new Set([...prev, ...ids])]);
+                toast({
+                  title: ids.length === 1 ? 'Added to the MorphMarket batch' : `Added ${ids.length} to the MorphMarket batch`,
+                  description: 'Check the fields, then download the CSV and upload it on MorphMarket.',
+                });
+              }
+              if (params.has('add')) {
+                params.delete('add');
+                const rest = params.toString();
+                window.history.replaceState({}, '', window.location.pathname + (rest ? `?${rest}` : ''));
+              }
+            }
           }
         }
       } catch (err) {

@@ -29,6 +29,7 @@ import {
   EyeOff,
   Save,
   ShoppingBag,
+  ExternalLink,
   Loader2,
   CheckCircle2,
   Search,
@@ -326,13 +327,25 @@ function ListingCard({
           </div>
 
           {gecko.status === 'For Sale' && (
-            <button
-              type="button"
-              onClick={() => onUnlist(gecko)}
-              className="w-full text-[10px] text-slate-500 hover:text-rose-400 transition-colors py-0.5"
-            >
-              Remove from marketplace
-            </button>
+            <div className="flex items-center justify-between gap-2">
+              {/* MorphMarket has no listing API, so the handoff is their
+                  Bulk Import CSV. This lands on the export page with this
+                  gecko already in the batch, one click from the download. */}
+              <Link
+                to={`${createPageUrl('MorphMarketExport')}?add=${encodeURIComponent(gecko.id)}`}
+                className="inline-flex items-center gap-1 text-[10px] text-slate-400 hover:text-emerald-300 transition-colors py-0.5"
+                title="Add this listing to your MorphMarket CSV batch"
+              >
+                <ExternalLink className="w-3 h-3" /> Send to MorphMarket
+              </Link>
+              <button
+                type="button"
+                onClick={() => onUnlist(gecko)}
+                className="text-[10px] text-slate-500 hover:text-rose-400 transition-colors py-0.5"
+              >
+                Remove
+              </button>
+            </div>
           )}
         </div>
       </CardContent>
