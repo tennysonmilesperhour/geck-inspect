@@ -26,7 +26,6 @@ import EnclosureClimate from '../components/iot/EnclosureClimate';
 import CommunityPulse from '../components/dashboard/CommunityPulse';
 import { default as GeckoOfTheDayComponent } from '../components/dashboard/GeckoOfTheDay';
 import MyStoreButton from '../components/dashboard/MyStoreButton';
-import DailyPromptCard from '../components/dashboard/DailyPromptCard';
 import LiveFeed from '../components/dashboard/LiveFeed';
 import WelcomeShelf from '../components/dashboard/WelcomeShelf';
 import IncubatorTimeline from '../components/dashboard/IncubatorTimeline';
@@ -475,7 +474,6 @@ export default function Dashboard() {
 
                     {dashPrefs.showWelcomeShelf && <WelcomeShelf currentUser={user} />}
 
-                    <DailyPromptCard />
 
                     {/* MAIN CONTENT GRID, 3 columns on large screens */}
                     <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
