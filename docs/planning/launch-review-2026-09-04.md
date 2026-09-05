@@ -2,7 +2,7 @@
 
 Read-only review of the whole repo and the live Supabase and Vercel setup, done the day before the 5 September launch, followed by five batches of fixes (A to E) pushed straight to main the same night. This file is the handoff copy of the interactive report so any session (desktop app, web, or the terminal CLI) can pick the work up. The interactive version, with the same data, is at https://claude.ai/code/artifact/6136b837-8feb-4df0-806b-f375095dc677.
 
-Totals: 62 findings. 54 closed (fixed, done, or decided), 6 partly fixed, 2 open.
+Totals: 62 findings. 55 closed (fixed, done, or decided), 5 partly fixed, 2 open.
 
 Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the database or an edge function, applied to production and verified. "Partly fixed" and "Mostly fixed" list what is left inside the status text. "Confirmed" means verified real and untouched.
 
@@ -31,15 +31,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Proposed fix: Toggle it on in Authentication settings.
 - Status: Probably on. The Supabase security advisor no longer reports auth_leaked_password_protection (checked 4 Sep, late session). Confirm the toggle in Authentication settings and close
 
-## Partly fixed (6)
-
-### F30: Hero image is a 2,400 px external hotlink with no srcset; logo and icons are oversized
-
-- Severity: high. Area: Performance. Effort: S.
-- Where: src/pages/Home.jsx:47 and :371; public/logo.png (204 KB at 40 px); public/icon-512.png (563 KB)
-- Why it matters: Phones download the desktop image from a third-party host, and the request is only discovered after React renders.
-- Proposed fix: Self-host WebP at three widths with srcset and sizes, add width and height, resize the logo and icons.
-- Status: Mostly fixed (batch B): hero has a 640 to 2400 srcset with a matching preload, header logo is an 8 KB 96 px file, icon-512 cut from 563 KB to 151 KB. Self-hosting the hero as WebP is still open (this sandbox cannot fetch Unsplash)
+## Partly fixed (5)
 
 ### F33: Production schema has drifted from the repo and the deploy scripts would replay stale SQL
 
@@ -81,7 +73,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Proposed fix: capture=environment on photo inputs, alt text pass, reduced-motion guard on framer animations, verify HEIC on a real iPhone.
 - Status: Partly fixed 4 Sep: global prefers-reduced-motion rule, missing alt on MarketplaceSalesStats. Touch-target and contrast items still open
 
-## Closed (54)
+## Closed (55)
 
 | ID | Severity | Area | Finding | Effort | Status |
 |---|---|---|---|---|---|
@@ -121,6 +113,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 | F38 | high | Security | Vet, feeding, ownership (with sale prices), and transfer records are world-readable | M | Fixed (batch D, migration audit_batch_d): vet, feeding, shed and ownership reads limited to author, owner, admin, or a public passport |
 | F58 | high | Ops | PostHog is switched off in production: no VITE_POSTHOG_KEY in the deployed bundle | S | Fixed (deploy b53b38c): build log shows VITE_POSTHOG_KEY present |
 | F62 | high | Correctness | Tier lookup compared uuid to text, so every metered feature returned 500 | S | Fixed 4 Sep: effective_tier_uuid_fix applied and verified (keeper resolves, a health screen credit debits) |
+| F30 | high | Performance | Hero image is a 2,400 px external hotlink with no srcset; logo and icons are oversized | S | Fixed (batch B plus late session 4 Sep): hero self-hosted as WebP at three widths with srcset and a landing-only preload; logo and icons resized in batch B |
 | F34 | high | SEO | Non-JS crawlers see thin shells and cannot reach 134 child pages | M | Fixed (batch D plus late session 4 Sep): every child page linked from its hub; noscript bodies carry the first three paragraphs, key points and FAQ; page-level JSON-LD per route; Seo.jsx drops the static block on mount |
 | F41 | medium | Retention | Referral program was never applied to production | S | Fixed 4 Sep, late session: migration referral_keeper_month applied and verified. The unpayable 10 percent revenue share is gone; the reward is one free month of Keeper per referred member who pays a first invoice (a month credited on Stripe for subscribers, needs_manual for App Store and grandfathered accounts). Attribution moved server-side (apply_referral_code), referral columns write-protected, daily expire-referral-grants cron returns lapsed months to free, stripe-webhook redeployed |
 | F61 | medium | Ops | A newer commit on main adds three large unapplied migrations (7,900 lines, 55 tables in a geck_data schema) | S | Closed 4 Sep, late session: all three are in the live migration history and geck_data holds 81 tables, so they were applied after the review. Nothing left to apply |

@@ -18,7 +18,7 @@ The full review, with every finding, its location and its status, is in `docs/pl
 - [x] F61: A newer commit on main adds three large unapplied migrations (7,900 lines, 55 tables in a geck_data schema) (closed 4 Sep, late session: they were already applied to production after the review)
 
 **Partly fixed (remainder described in the review file)**
-- [ ] F30: Hero image is a 2,400 px external hotlink with no srcset; logo and icons are oversized
+- [x] F30: Hero image is a 2,400 px external hotlink with no srcset; logo and icons are oversized (4 Sep, late session: hero self-hosted as WebP at 800, 1600 and 2400 px)
 - [ ] F33: Production schema has drifted from the repo and the deploy scripts would replay stale SQL (snapshot regenerated and baseline plan written 4 Sep, late session; the renames and db pull still need a go-ahead)
 - [x] F34: Non-JS crawlers see thin shells and cannot reach 134 child pages (4 Sep, late session: fuller noscript bodies and per-page JSON-LD in the prerendered shells)
 - [ ] F43: No Content-Security-Policy despite five third-party script origins

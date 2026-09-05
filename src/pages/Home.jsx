@@ -44,12 +44,19 @@ const LOGO_URL = '/logo-96.png';
 // Sebastian Unrau's classic forest, dense, misty, reads as wild habitat
 // once darkened with an overlay. Swap this URL for a more specifically
 // tropical photo whenever you find one you like; the overlay will handle it.
-const BACKGROUND_IMAGE_BASE = 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&q=80';
-const BACKGROUND_IMAGE_WIDTHS = [640, 1024, 1600, 2400];
-const BACKGROUND_IMAGE = `${BACKGROUND_IMAGE_BASE}&w=2400`;
+// Self-hosted WebP (launch review F30). The photo used to be hotlinked
+// from Unsplash at 2,400 px for every screen; it now ships from our own
+// origin at three widths so a phone downloads about 45 KB instead of a
+// megabyte, and the request needs no third-party DNS lookup or TLS
+// handshake. Source: Unsplash photo 1441974231531-c6227db76b6e (Unsplash
+// licence, free to use). Regenerate with cwebp at q=62 from a 2,400 px
+// JPEG export, see docs/planning/launch-review-2026-09-04.md (F30).
+const BACKGROUND_IMAGE_WIDTHS = [800, 1600, 2400];
+const heroImagePath = (w) => `/hero/crested-gecko-hero-${w}.webp`;
+const BACKGROUND_IMAGE = heroImagePath(2400);
 // One candidate per width so a phone downloads the 640 px file, not the
 // 2400 px one. Keep in sync with the preload in scripts/prerender.mjs.
-const BACKGROUND_IMAGE_SRCSET = BACKGROUND_IMAGE_WIDTHS.map((w) => `${BACKGROUND_IMAGE_BASE}&w=${w} ${w}w`).join(', ');
+const BACKGROUND_IMAGE_SRCSET = BACKGROUND_IMAGE_WIDTHS.map((w) => `${heroImagePath(w)} ${w}w`).join(', ');
 
 // Public, free reference/tool pages surfaced on the homepage. Anchor text
 // is written to match how people search (morph calculator, breeding
@@ -350,7 +357,7 @@ export default function Home() {
             srcSet={BACKGROUND_IMAGE_SRCSET}
             sizes="100vw"
             width="2400"
-            height="1600"
+            height="1598"
             alt="Lush tropical rainforest canopy, the natural habitat of the crested gecko (Correlophus ciliatus) in New Caledonia."
             className="w-full h-full object-cover opacity-80"
             loading="eager"

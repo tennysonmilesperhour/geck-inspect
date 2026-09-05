@@ -502,26 +502,22 @@ function routeMeta(route) {
 
 // ------- HTML mutation -----------------------------------------------------
 
-// Hero image preloads. Mirrors the static URLs the pages render so the
-// browser can start fetching the LCP candidate before the JS bundle
-// evaluates. Keep this list tight, every preload is a mandatory high
-// priority fetch, and preloading something the page doesn't use hurts
-// LCP instead of helping it.
-//
-// Source URLs:
-//   /           -> src/pages/Home.jsx BACKGROUND_IMAGE
-//   /MorphGuide -> src/pages/MorphGuide.jsx MORPH_GUIDE_HERO (mirrored below)
-const HERO_BASE = 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&q=80';
-const HERO_WIDTHS = [640, 1024, 1600, 2400];
+// Hero image preload for the landing page. Mirrors Home.jsx exactly (same
+// files, same widths) so the browser starts fetching the LCP image before
+// the JS bundle evaluates. Keep this list tight: every preload is a
+// mandatory high-priority fetch, and preloading something a page does not
+// render hurts LCP instead of helping it. The Morph Guide no longer uses
+// this photo, so it is no longer preloaded there.
+const HERO_WIDTHS = [800, 1600, 2400];
+const heroImagePath = (w) => `/hero/crested-gecko-hero-${w}.webp`;
 const HERO_PRELOADS = {
-  '/': `${HERO_BASE}&w=2400`,
-  '/MorphGuide': `${HERO_BASE}&w=2400`,
+  '/': heroImagePath(2400),
 };
 // The homepage <img> carries a srcset (Home.jsx BACKGROUND_IMAGE_SRCSET),
 // so its preload must carry the same candidates or a phone would preload
-// the 2400 px file and then fetch the 640 px one anyway.
+// the 2400 px file and then fetch the 800 px one anyway.
 const HERO_PRELOAD_SRCSET = {
-  '/': HERO_WIDTHS.map((w) => `${HERO_BASE}&w=${w} ${w}w`).join(', '),
+  '/': HERO_WIDTHS.map((w) => `${heroImagePath(w)} ${w}w`).join(', '),
 };
 
 function escapeHtml(s) {
