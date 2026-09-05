@@ -22,6 +22,24 @@ SUPABASE_SERVICE_ROLE_KEY=<key> \
 scripts/deploy-morph-id.sh --dry-run
 ```
 
+For a large one-time backfill on Apple Silicon without Replicate rate limits,
+use the locally compatible encoder. It loads the exact
+`openai/clip-vit-large-patch14` weights used by `krthr/clip-embeddings`, checks
+cosine compatibility against an existing production vector, and stores one
+representative image per animal while round-robining breeders within morphs:
+
+```bash
+uv run --with torch --with transformers --with pillow --with requests \
+  scripts/backfill-morph-embeddings-local.py --validate --limit 5000
+```
+
+Measure the resulting bank without leaking a breeder's images into its own
+test neighbors:
+
+```bash
+uv run --with numpy --with requests scripts/eval-morph-retrieval.py
+```
+
 ### One-time prereqs (do these by hand, once)
 
 1. Install + auth the Supabase CLI.

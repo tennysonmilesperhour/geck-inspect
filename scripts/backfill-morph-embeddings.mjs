@@ -18,17 +18,17 @@ const concurrency = Math.max(1, Math.min(8, Number(args.get('concurrency') || 1)
 const maxAttempts = Math.max(1, Math.min(10, Number(args.get('max-attempts') || 3)));
 const dryRun = args.get('dry-run') === 'true';
 
-if (!supabaseUrl || !serviceKey || !backfillKey) {
-  console.error('SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, and MORPH_EMBED_BACKFILL_KEY are required.');
+if (!supabaseUrl || !serviceKey) {
+  console.error('SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY are required.');
   process.exit(1);
 }
 
 const headers = {
   apikey: serviceKey,
   Authorization: `Bearer ${serviceKey}`,
-  'x-morph-embed-key': backfillKey,
   'Content-Type': 'application/json',
 };
+if (backfillKey) headers['x-morph-embed-key'] = backfillKey;
 
 const query = new URL(`${supabaseUrl}/rest/v1/gecko_images`);
 query.searchParams.set('select', 'id,image_url,primary_morph,training_meta,embedding_status,embedding_attempts');
@@ -51,6 +51,32 @@ for (let offset = 0; offset < 5000; offset += 1000) {
   candidates.push(...page);
   if (page.length < 1000) break;
 }
+
+const sellerKey = (row) => String(
+  row.training_meta?.geck_data_seller_slug
+    || row.training_meta?.geck_data_seller_name
+    || 'unknown',
+).trim().toLowerCase();
+const animalKey = (row) => {
+  const listing = row.training_meta?.listing_id
+    || row.training_meta?.geck_data_listing_id
+    || row.training_meta?.gecko_id;
+  return listing ? `${sellerKey(row)}|listing:${listing}` : `image:${row.id}`;
+};
+
+// If any photo for an animal is already embedded, do not pay to embed a
+// second angle from the same listing. Retrieval needs independent animals.
+const readyQuery = new URL(`${supabaseUrl}/rest/v1/gecko_images`);
+readyQuery.searchParams.set('select', 'id,training_meta');
+readyQuery.searchParams.set('image_embedding', 'not.is.null');
+readyQuery.searchParams.set('verified', 'eq.true');
+readyQuery.searchParams.set('primary_morph', 'not.is.null');
+readyQuery.searchParams.set('limit', '5000');
+const readyResponse = await fetch(readyQuery, { headers });
+if (!readyResponse.ok) {
+  throw new Error(`Could not load ready embeddings (${readyResponse.status}): ${(await readyResponse.text()).slice(0, 500)}`);
+}
+const readyAnimals = new Set((await readyResponse.json()).map(animalKey));
 const hostSamples = new Map();
 for (const row of candidates) {
   try {
@@ -93,31 +119,40 @@ const provenanceWeight = (row) => {
   return 0.5;
 };
 const groups = new Map();
-const seenSources = new Set();
+const seenAnimals = new Set();
 for (const row of candidates
   .filter((candidate) => {
     try { return reachableHosts.has(new URL(candidate.image_url).host); } catch { return false; }
   })
   .sort((a, b) => provenanceWeight(b) - provenanceWeight(a))) {
-  // Keep the embedding bank independent by breeder first, then listing.
-  // Scraper rows use geck_data_* keys; omitting them let multiple photos of
-  // the same animal (and the same breeder's photo style) crowd the bank.
-  const seller = row.training_meta?.geck_data_seller_slug
-    || row.training_meta?.geck_data_seller_name;
-  const listing = row.training_meta?.listing_id
-    || row.training_meta?.geck_data_listing_id
-    || row.training_meta?.gecko_id;
-  const source = seller ? `seller:${String(seller).trim().toLowerCase()}`
-    : listing ? `listing:${listing}`
-      : row.id;
-  if (seenSources.has(source)) continue;
-  seenSources.add(source);
+  // Embed one representative photo per animal/listing. Within every morph,
+  // breeder queues are round-robined below so the first batch is diverse but
+  // later batches can still cover additional animals from the same breeder.
+  const animal = animalKey(row);
+  if (readyAnimals.has(animal) || seenAnimals.has(animal)) continue;
+  seenAnimals.add(animal);
   const label = row.primary_morph || 'Unclassified';
-  if (!groups.has(label)) groups.set(label, []);
-  groups.get(label).push(row);
+  if (!groups.has(label)) groups.set(label, new Map());
+  const seller = sellerKey(row);
+  if (!groups.get(label).has(seller)) groups.get(label).set(seller, []);
+  groups.get(label).get(seller).push(row);
 }
 const rows = [];
-const queues = [...groups.entries()].sort(([a], [b]) => a.localeCompare(b)).map(([, group]) => group);
+const queues = [...groups.entries()]
+  .sort(([a], [b]) => a.localeCompare(b))
+  .map(([, sellers]) => {
+    const sellerQueues = [...sellers.entries()]
+      .sort(([a], [b]) => a.localeCompare(b))
+      .map(([, queue]) => queue);
+    const balanced = [];
+    while (sellerQueues.some((queue) => queue.length > 0)) {
+      for (const queue of sellerQueues) {
+        const row = queue.shift();
+        if (row) balanced.push(row);
+      }
+    }
+    return balanced;
+  });
 while (rows.length < limit && queues.some((queue) => queue.length > 0)) {
   for (const queue of queues) {
     if (rows.length >= limit) break;
@@ -125,7 +160,7 @@ while (rows.length < limit && queues.some((queue) => queue.length > 0)) {
     if (row) rows.push(row);
   }
 }
-console.log(`Embedding queue: ${rows.length} row(s) across ${groups.size} morph label(s), concurrency ${concurrency}${dryRun ? ' [dry run]' : ''}`);
+console.log(`Embedding queue: ${rows.length} distinct animal(s) across ${groups.size} morph label(s), concurrency ${concurrency}${dryRun ? ' [dry run]' : ''}`);
 if (dryRun) console.log(`Morph labels: ${[...groups.keys()].sort().join(', ')}`);
 
 if (dryRun || rows.length === 0) process.exit(0);

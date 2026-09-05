@@ -67,6 +67,9 @@ server-side job; browser callers still require an admin or expert role.
 ```bash
 SUPABASE_URL=https://<ref>.supabase.co \
 SUPABASE_SERVICE_ROLE_KEY=<service-role-key> \
-MORPH_EMBED_BACKFILL_KEY=<backfill-key> \
 pnpm backfill:morph-embeddings -- --limit 500 --concurrency 1
 ```
+
+`MORPH_EMBED_BACKFILL_KEY` is optional when the service-role key is used. The
+queue processes one representative image per animal/listing and round-robins
+breeders within each morph before taking additional animals from one breeder.
