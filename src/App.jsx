@@ -94,6 +94,7 @@ const QualityScale          = lazy(() => import('./pages/QualityScale'));
 // the public shell for visitors; signed-in users get it inside Layout via
 // the PAGES map as before.
 const MembershipPublic      = lazy(() => import('./pages/Membership'));
+const RecognitionPublic     = lazy(() => import('./pages/Recognition'));
 
 // Public feature landing pages. Crawlable front doors for the auth-gated
 // pedigree/lineage and breeding tools, targeting "crested gecko pedigree
@@ -300,6 +301,7 @@ const AuthenticatedApp = () => {
           <Route path="/store/:slug" caseSensitive element={<StorePage />} />
           <Route path="/QualityScale" element={<QualityScale />} />
           <Route path="/Membership" element={<PublicPageShell><MembershipPublic /></PublicPageShell>} />
+          <Route path="/Recognition" element={<RecognitionPublic />} />
           <Route path="/pedigree-tracker" element={<PedigreeTracker />} />
           <Route path="/breeding-records" element={<BreedingRecords />} />
           <Route path="/crested-gecko-price" element={<CrestedGeckoPrice />} />
