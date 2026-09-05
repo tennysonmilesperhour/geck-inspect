@@ -18,6 +18,12 @@ import { supabase } from '@/lib/supabaseClient';
 //     message: string,
 //     tier?, credits_included?, status? }
 async function readEdgeError(error) {
+  if (error?.context?.name === 'AbortError') {
+    return {
+      code: 'request_timeout',
+      message: 'Morph ID exceeded the client request deadline.',
+    };
+  }
   let detail = error.message;
   let parsed = null;
   const ctx = error.context;
@@ -31,7 +37,7 @@ async function readEdgeError(error) {
     } catch { /* ignore */ }
   }
   return {
-    code: parsed?.code || 'internal_error',
+    code: parsed?.code || (error?.name === 'FunctionsFetchError' ? 'network_error' : 'internal_error'),
     message: detail,
     tier: parsed?.tier,
     credits_included: parsed?.credits_included,

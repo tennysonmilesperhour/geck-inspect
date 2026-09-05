@@ -836,7 +836,7 @@ async function callClaude(
   // images and a per-call trailing hint. Never cached because retrieval
   // changes with every request.
   const retrievalNeighbors = visualEvidence.status === "available"
-    ? visualEvidence.neighbors.slice(0, 6)
+    ? visualEvidence.neighbors.slice(0, 3)
     : [];
   const retrievalBlocks: Record<string, unknown>[] = retrievalNeighbors.length > 0
     ? [

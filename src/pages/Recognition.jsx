@@ -39,6 +39,14 @@ const FRIENDLY_ERROR = {
     title: "We couldn't reach the analyzer",
     body: 'Try again in a moment. If it keeps happening, message support and we will take a look.',
   },
+  request_timeout: {
+    title: 'The analysis took too long',
+    body: 'Your photos are still here. Please try once more; failed analyzer calls are not charged.',
+  },
+  network_error: {
+    title: 'The analyzer request was interrupted',
+    body: 'Your photos are still here. Check your connection or browser privacy extension, then try again.',
+  },
   auth_required: {
     title: 'Please sign in to use MorphID',
     body: 'MorphID counts against your monthly plan, so we need to know who you are first.',
@@ -123,6 +131,10 @@ export default function Recognition() {
     try {
       const { data, error: funcError, meta: respMeta } = await recognizeGeckoMorph({ imageUrls, ageStage, firedState });
       if (funcError) {
+        captureEvent('morph_id_analysis_failed', {
+          error_code: funcError.code || 'unknown',
+          photo_count: imageUrls.length,
+        });
         setError(funcError);
       } else {
         setAnalysis(data);

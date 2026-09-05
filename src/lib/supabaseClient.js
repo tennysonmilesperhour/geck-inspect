@@ -25,11 +25,16 @@ if (
   );
 }
 
-// Wrap the global fetch with a 30-second timeout so Supabase requests
-// don't hang indefinitely on flaky connections.
+// Most data calls should fail quickly on a bad connection. Morph ID is a
+// long-running vision request, though: two photos plus evidence can take
+// longer than 30 seconds even when the analyzer is healthy.
 const fetchWithTimeout = (url, options = {}) => {
+  const requestUrl = typeof url === 'string' ? url : url?.url || String(url);
+  const timeoutMs = requestUrl.includes('/functions/v1/recognize-gecko-morph')
+    ? 120000
+    : 30000;
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 30000);
+  const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
   return fetch(url, { ...options, signal: controller.signal }).finally(() =>
     clearTimeout(timeoutId)
   );
