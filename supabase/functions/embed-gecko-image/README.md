@@ -1,12 +1,13 @@
 # embed-gecko-image
 
-Computes a visual embedding for a gecko image (SigLIP2-base / 768-dim unit
-vector by default) and optionally persists it to `gecko_images.image_embedding`.
+Computes a 768-dimension unit-normalized visual embedding and optionally
+persists it to `gecko_images.image_embedding`.
 
 Used for:
 
-- **/recognition second signal**: at analyze time, embed the query and
-  call `nearest_training_samples()` to surface the closest verified samples.
+- **/recognition evidence**: one user photo is embedded by default and sent to
+  the service-only `morph_visual_neighbors()` RPC. The configurable two-photo
+  mode averages normalized vectors when provider rate limits allow it.
 - **Backfill**: run against every verified row once after the pgvector
   migration. Can be invoked from a one-off script / Supabase cron.
 
@@ -14,15 +15,15 @@ Used for:
 
 ```bash
 supabase secrets set REPLICATE_API_TOKEN=r8_xxx
+supabase secrets set MORPH_EMBED_BACKFILL_KEY=<high-entropy-random-value>
 # Replace with a real SigLIP2 endpoint on Replicate (whichever is live):
 supabase secrets set SIGLIP_MODEL=<owner/model-name>
 ```
 
-> The default `krthr/clip-embeddings` placeholder above is just a shape
-> example. Plug in the SigLIP2 deployment you want to use (or
-> `nateraw/siglip` or similar) and verify the output dimension matches
-> the `vector(768)` column. Adjust the migration and HNSW index if you
-> pick a different size.
+The default `krthr/clip-embeddings` model preserves the existing 768-dimension
+index. Benchmark a SigLIP2 or DINO-family endpoint before changing the model,
+then backfill the entire corpus with one model version; never mix embeddings
+from different encoders in the same index.
 
 ## Deploy
 
@@ -33,13 +34,16 @@ supabase functions deploy embed-gecko-image
 ## Call
 
 ```bash
-# Just get the embedding (useful for real-time query embedding):
+# Just get the embedding (authenticated user):
 curl -X POST "$SUPABASE_URL/functions/v1/embed-gecko-image" \
+  -H "Authorization: Bearer $USER_ACCESS_TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"imageUrl":"https://..."}'
 
 # Embed and persist onto an existing gecko_images row:
 curl -X POST "$SUPABASE_URL/functions/v1/embed-gecko-image" \
+  -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
+  -H "x-morph-embed-key: $MORPH_EMBED_BACKFILL_KEY" \
   -H 'Content-Type: application/json' \
   -d '{"imageUrl":"https://...","geckoImageId":"<uuid>"}'
 ```
@@ -56,14 +60,13 @@ Response shape:
 
 ## Backfill
 
-Once the pgvector column exists, fill it for every row that doesn't
-have an embedding yet:
+Once the pgvector column exists, fill it with the resumable queue script.
+The separate backfill key authorizes persistence specifically for this
+server-side job; browser callers still require an admin or expert role.
 
 ```bash
-supabase sql "SELECT id, image_url FROM gecko_images WHERE image_embedding IS NULL LIMIT 5000" \
-  | jq -rc '.[] | {imageUrl: .image_url, geckoImageId: .id}' \
-  | while read body; do
-      curl -s -X POST "$SUPABASE_URL/functions/v1/embed-gecko-image" \
-           -H "Content-Type: application/json" -d "$body" > /dev/null
-    done
+SUPABASE_URL=https://<ref>.supabase.co \
+SUPABASE_SERVICE_ROLE_KEY=<service-role-key> \
+MORPH_EMBED_BACKFILL_KEY=<backfill-key> \
+pnpm backfill:morph-embeddings -- --limit 500 --concurrency 1
 ```

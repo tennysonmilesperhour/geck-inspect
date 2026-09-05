@@ -5,9 +5,16 @@ five `{ imageUrls }`, returns the analysis shape `/recognition` and `/training` 
 clamped to the canonical taxonomy (see `taxonomy.ts`, mirrored from
 `src/components/morph-id/morphTaxonomy.js`).
 
-Powered by **Anthropic Claude vision** with tool-use for guaranteed
-structured JSON output. The tool's `input_schema` encodes the taxonomy
-enums, so the model can't return an id that isn't in our ontology.
+Powered by **Anthropic Claude vision** plus query-specific visual retrieval.
+The function embeds one user photo by default (or up to two when configured),
+averages normalized vectors when more than one is used,
+retrieves source-de-duplicated corpus neighbors, and sends a compact evidence
+packet to Claude. Seller labels are explicitly treated as weak positives, not
+ground truth.
+
+The structured result includes orthogonal `visual_profile` axes for pattern
+coverage, pinning, banding, spotting, and white/cream placement. This avoids
+forcing compatible traits into one mutually exclusive label.
 
 This is an identification aid, not a genetic test. It can abstain when photos
 are unusable, and it never treats model scores as calibrated probabilities.
@@ -15,24 +22,29 @@ are unusable, and it never treats model scores as calibrated probabilities.
 ## Prerequisites
 
 - Supabase CLI installed and linked to the project
-- An Anthropic API key
+- Anthropic and Replicate API keys
+- `20260905031350_morph_retrieval_evidence.sql` applied
 
 ## Secrets
 
 ```bash
 supabase secrets set ANTHROPIC_API_KEY=sk-ant-xxx
+supabase secrets set REPLICATE_API_TOKEN=r8_xxx
 # optional: override the model (default is claude-sonnet-4-6):
 supabase secrets set CLAUDE_MODEL=claude-opus-4-7
 ```
 
-## Few-shot bank (reverted, see PR #56)
+## Retrieval and the static few-shot bank
 
-An earlier version (#55) loaded verified rows from `gecko_images` at
-cold start and prepended them to the prompt as labeled image blocks.
-That version was reverted because stacking multiple base44-prefixed
-PNG screenshots with the user photo caused Anthropic's image-prefetch
-to 500 on ~84% of calls. Re-introducing requires curating the bank to
-small, well-formed JPEGs first.
+The static few-shot bank remains disabled by default because broad, imbalanced
+examples regressed the internal benchmark. Query-specific retrieval replaces
+that behavior: at most six visual neighbors are selected for the submitted
+animal, capped per morph and de-duplicated by listing/source cluster.
+
+Retrieval fails open. If Replicate or the corpus index is unavailable, Claude
+still analyzes the user photos. When strong retrieval conflicts with the model,
+the final assessment is downgraded to tentative rather than presenting a strong
+match.
 
 ## Deploy
 
@@ -49,6 +61,13 @@ supabase functions deploy recognize-gecko-morph --no-verify-jwt
   "analysis": {
     "assessment_status": "best_match",
     "primary_morph": "extreme_harlequin",
+    "visual_profile": {
+      "pattern_family": "extreme_harlequin",
+      "pinning": "partial",
+      "banding": "none",
+      "spotting": "dalmatian",
+      "white_cream_traits": ["white_fringe", "portholes"]
+    },
     "candidate_morphs": [
       {
         "morph": "extreme_harlequin",
@@ -78,8 +97,20 @@ supabase functions deploy recognize-gecko-morph --no-verify-jwt
       "issues": [],
       "next_photo_needed": "Add a top-down photo to check dorsal coverage."
     },
+    "visual_evidence": {
+      "status": "available",
+      "model": "krthr/clip-embeddings",
+      "photo_count": 2,
+      "consensus": {
+        "primary_morph": "extreme_harlequin",
+        "agreement": 0.63,
+        "support": 2,
+        "source_diversity": 2
+      },
+      "neighbors": []
+    },
     "explanation": "The visible leg and flank coverage support extreme harlequin. A top-down view would make the distinction stronger.",
-    "taxonomy_version": "2026.09.04",
+    "taxonomy_version": "2026.09.05",
     "model": "claude-sonnet-4-6"
   }
 }

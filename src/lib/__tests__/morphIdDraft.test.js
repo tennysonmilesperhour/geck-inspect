@@ -39,6 +39,30 @@ describe('buildGeckoDraftFromAnalysis', () => {
     expect(new Set(draft.morph_tags).size).toBe(draft.morph_tags.length);
   });
 
+  it('carries co-occurring visual axes into the collection draft', () => {
+    const draft = buildGeckoDraftFromAnalysis(
+      {
+        primary_morph: 'harlequin',
+        visual_profile: {
+          pattern_family: 'harlequin',
+          pinning: 'partial',
+          banding: 'tiger',
+          spotting: 'dalmatian',
+          white_cream_traits: ['portholes'],
+        },
+      },
+      [],
+    );
+
+    expect(draft.morph_tags).toEqual(expect.arrayContaining([
+      'Harlequin',
+      'Partial Pinstripe',
+      'Tiger',
+      'Dalmatian',
+      'Portholes',
+    ]));
+  });
+
   it('writes a notes line that marks the suggestion unverified and labels the model signal', () => {
     const draft = buildGeckoDraftFromAnalysis(
       { primary_morph: 'harlequin', confidence_score: 73 },

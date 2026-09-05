@@ -18,7 +18,8 @@ import TraitPicker from './TraitPicker';
 import ConfidenceSlider from './ConfidenceSlider';
 import {
   BASE_COLORS, PATTERN_INTENSITIES, WHITE_AMOUNTS,
-  FIRED_STATES, TAXONOMY_VERSION, labelFor,
+  FIRED_STATES, TAXONOMY_VERSION, VISUAL_PROFILE_AXES,
+  labelFor, visualAxisLabel,
 } from './morphTaxonomy';
 
 const STATUS = {
@@ -90,6 +91,7 @@ export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageS
   const status = STATUS[result.assessment_status] || STATUS.tentative;
   const StatusIcon = status.icon;
   const photo = result.photo_assessment || {};
+  const visualProfile = result.visual_profile || null;
   const withholdIdentification = result.assessment_status === 'insufficient_evidence';
 
   const saveFeedback = async () => {
@@ -208,6 +210,39 @@ export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageS
               We withhold the model's fallback when the subject or photo evidence is not usable.
             </p>
           </div>
+        )}
+
+        {visualProfile && !withholdIdentification && (
+          <section className="rounded-lg border border-slate-700 bg-slate-950/30 p-4">
+            <div className="mb-3">
+              <h3 className="font-semibold text-slate-100">Visible trait profile</h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Traits are assessed independently because pattern, pinning, banding, and spotting can coexist.
+              </p>
+            </div>
+            <dl className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {VISUAL_PROFILE_AXES.map((axis) => (
+                <div key={axis.key} className="rounded-md bg-slate-800/70 border border-slate-700 p-3">
+                  <dt className="text-[11px] uppercase tracking-wide text-slate-500">{axis.label}</dt>
+                  <dd className="text-sm font-medium text-slate-100 mt-1">
+                    {visualAxisLabel(visualProfile[axis.key])}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+            {visualProfile.white_cream_traits?.length > 0 && (
+              <div className="mt-3 pt-3 border-t border-slate-700">
+                <p className="text-[11px] uppercase tracking-wide text-slate-500 mb-2">White and cream placement</p>
+                <div className="flex flex-wrap gap-2">
+                  {visualProfile.white_cream_traits.map((trait) => (
+                    <Badge key={trait} variant="secondary" className="bg-slate-700 text-slate-200">
+                      {labelFor(trait)}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </section>
         )}
 
         {candidates.length > 0 && !withholdIdentification && (

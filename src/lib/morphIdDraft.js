@@ -25,6 +25,25 @@ function idToTag(id) {
   return TAG_BY_LOWER.get(label.toLowerCase()) || null;
 }
 
+const VISUAL_AXIS_TO_TAXONOMY_ID = {
+  partial: 'partial_pinstripe',
+  full: 'full_pinstripe',
+  phantom: 'phantom_pinstripe',
+  reverse: 'reverse_pinstripe',
+  quad: 'quad_stripe',
+};
+
+function visualProfileIds(profile) {
+  if (!profile) return [];
+  return [
+    profile.pattern_family,
+    VISUAL_AXIS_TO_TAXONOMY_ID[profile.pinning] || profile.pinning,
+    profile.banding,
+    profile.spotting,
+    ...(profile.white_cream_traits || []),
+  ].filter((id) => id && !['unknown', 'none'].includes(id));
+}
+
 /** All morph/trait ids the analysis identified, primary first. */
 function analysisIds(analysis) {
   return [
@@ -32,6 +51,7 @@ function analysisIds(analysis) {
     analysis.base_color,
     ...(analysis.genetic_traits || analysis.genetics || []),
     ...(analysis.secondary_traits || []),
+    ...visualProfileIds(analysis.visual_profile),
   ].filter(Boolean);
 }
 

@@ -353,7 +353,9 @@ export default function Recognition() {
           />
         )}
 
-        {analysis && primaryUrl && <SimilarGeckosStrip imageUrl={primaryUrl} />}
+        {analysis && primaryUrl && (
+          <SimilarGeckosStrip imageUrl={primaryUrl} evidence={analysis.visual_evidence} />
+        )}
 
         {analysis && analysis.assessment_status !== 'insufficient_evidence' && (
           <Card className="bg-emerald-950/30 border-emerald-700">

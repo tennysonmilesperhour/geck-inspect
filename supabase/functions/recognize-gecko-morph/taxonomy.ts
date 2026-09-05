@@ -2,7 +2,7 @@
 // Kept as a flat list here so the edge function prompt can constrain the
 // model to return canonical ids. If you change the client taxonomy, update
 // this file and bump TAXONOMY_VERSION below.
-export const TAXONOMY_VERSION = "2026.09.04";
+export const TAXONOMY_VERSION = "2026.09.05";
 
 export const PRIMARY_MORPH_IDS = [
   "patternless", "flame", "chevron_flame", "harlequin", "extreme_harlequin",
@@ -42,3 +42,23 @@ export const PATTERN_INTENSITY_IDS = ["unknown", "none", "low", "medium", "high"
 export const WHITE_AMOUNT_IDS = ["unknown", "none", "trace", "low", "medium", "high", "extreme"];
 export const FIRED_STATE_IDS = ["fired_up", "fired_down", "transitioning", "unknown"];
 export const AGE_STAGE_IDS = ["hatchling", "juvenile", "subadult", "adult", "unknown"];
+
+// Orthogonal visual axes. Unlike primary_morph, these fields are designed
+// to co-exist, which matches how seller tags and visible traits actually
+// describe crested geckos.
+export const PATTERN_FAMILY_IDS = [
+  "unknown", "patternless", "flame", "harlequin", "extreme_harlequin",
+];
+export const PINNING_IDS = [
+  "unknown", "none", "partial", "full", "phantom", "reverse", "quad", "super_stripe",
+];
+export const BANDING_IDS = [
+  "unknown", "none", "tiger", "super_tiger", "brindle", "extreme_brindle",
+];
+export const SPOTTING_IDS = [
+  "unknown", "none", "dalmatian", "super_dalmatian", "red_dalmatian", "ink_spot",
+];
+export const WHITE_PLACEMENT_IDS = [
+  "white_fringe", "white_belly", "white_tipped_crests", "portholes",
+  "kneecaps", "side_stripe", "high_white", "white_wall", "empty_back",
+];

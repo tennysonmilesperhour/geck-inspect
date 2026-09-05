@@ -45,7 +45,7 @@ rpc() {
 # ---- 1. Schema: columns on gecko_images ----------------------------------
 section "Schema on public.gecko_images"
 if [[ -n "$SERVICE_KEY" ]]; then
-  cols_needed=(training_meta confidence_score pattern_intensity white_amount fired_state age_estimate image_embedding embedding_model embedding_date)
+  cols_needed=(training_meta confidence_score pattern_intensity white_amount fired_state age_estimate image_embedding embedding_model embedding_date embedding_status embedding_attempts embedding_error)
   status=$(probe GET "$SUPABASE_URL/rest/v1/gecko_images?limit=0" "$SERVICE_KEY")
   if [[ "$status" != "200" ]]; then
     fail "cannot read gecko_images" "$(cat /tmp/probe-body)"
@@ -80,6 +80,16 @@ status=$(rpc nearest_training_samples \
   "$SUPABASE_ANON_KEY")
 if [[ "$status" == "200" ]]; then pass "nearest_training_samples()"
 else fail "nearest_training_samples() not callable (status $status)" "$(cat /tmp/probe-body)"; fi
+
+if [[ -n "$SERVICE_KEY" ]]; then
+  status=$(rpc morph_visual_neighbors \
+    "{\"query_embedding\":$zero_vec,\"match_count\":1}" \
+    "$SERVICE_KEY")
+  if [[ "$status" == "200" ]]; then pass "morph_visual_neighbors() service-only retrieval"
+  else fail "morph_visual_neighbors() unavailable (status $status)" "$(cat /tmp/probe-body)"; fi
+else
+  skip "skipping service-only morph_visual_neighbors() check"
+fi
 
 # review_gecko_image requires auth, so anon calls should fail gracefully.
 # A 4xx proves the function exists and the auth check is working; 404 means

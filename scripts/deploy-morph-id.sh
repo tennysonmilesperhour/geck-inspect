@@ -100,33 +100,13 @@ if $BACKFILL; then
   say "Backfilling embeddings for verified rows without one"
   : "${SUPABASE_URL:?SUPABASE_URL must be set to run backfill (e.g. https://<ref>.supabase.co)}"
   : "${SUPABASE_SERVICE_ROLE_KEY:?SUPABASE_SERVICE_ROLE_KEY must be set to run backfill}"
-
-  # Pull candidate rows as JSONL via PostgREST, then POST each to the embed fn.
-  resp=$(curl -sS \
-    -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
-    -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
-    "$SUPABASE_URL/rest/v1/gecko_images?image_embedding=is.null&select=id,image_url&limit=500")
-
-  count=$(printf '%s' "$resp" | python3 -c 'import sys,json; print(len(json.load(sys.stdin)))' 2>/dev/null || echo 0)
-  say "Found $count rows missing embeddings (capping this run at 500)"
-
-  printf '%s' "$resp" \
-    | python3 -c 'import sys,json
-for r in json.load(sys.stdin):
-  print(json.dumps({"geckoImageId": r["id"], "imageUrl": r["image_url"]}))' \
-    | while IFS= read -r body; do
-        if $DRY; then
-          printf '%s  $ POST /embed-gecko-image %s%s\n' "$DIM" "$body" "$RST"
-        else
-          curl -sS -X POST "$SUPABASE_URL/functions/v1/embed-gecko-image" \
-            -H "apikey: $SUPABASE_SERVICE_ROLE_KEY" \
-            -H "Authorization: Bearer $SUPABASE_SERVICE_ROLE_KEY" \
-            -H 'Content-Type: application/json' \
-            -d "$body" > /dev/null \
-            || warn "embed call failed for $(printf '%s' "$body" | head -c 80)"
-        fi
-      done
-  ok "backfill run complete (re-run if count > 500)"
+  : "${MORPH_EMBED_BACKFILL_KEY:?MORPH_EMBED_BACKFILL_KEY must be set to run backfill}"
+  if $DRY; then
+    run pnpm backfill:morph-embeddings -- --limit 500 --concurrency 1 --dry-run
+  else
+    pnpm backfill:morph-embeddings -- --limit 500 --concurrency 1
+  fi
+  ok "backfill run complete (re-run until the queue is empty)"
 fi
 
 ok "All done. Verify with: scripts/check-morph-id.sh"

@@ -1,4 +1,4 @@
-// Supabase Edge Function: recognize-gecko-morph (v8: bank off by data + prompt caching)
+// Supabase Edge Function: recognize-gecko-morph (v9: raw-data visual retrieval)
 //
 // Two-pass few-shot bank, all images on geck-inspect Supabase storage
 // so Anthropic's image-prefetch is fast and reliable. Anthropic prompt
@@ -51,10 +51,31 @@ import {
   PRIMARY_MORPH_IDS, GENETIC_TRAIT_IDS, SECONDARY_TRAIT_IDS,
   BASE_COLOR_IDS, PATTERN_INTENSITY_IDS, WHITE_AMOUNT_IDS,
   FIRED_STATE_IDS, AGE_STAGE_IDS, TAXONOMY_VERSION,
+  PATTERN_FAMILY_IDS, PINNING_IDS, BANDING_IDS, SPOTTING_IDS,
+  WHITE_PLACEMENT_IDS,
 } from "./taxonomy.ts";
+import {
+  buildVisualEvidence,
+  evidenceAssessment,
+  type RawVisualNeighbor,
+  type VisualEvidence,
+} from "../_shared/morph-evidence.ts";
+import {
+  createVisualEmbedding,
+  DEFAULT_VISUAL_EMBEDDING_MODEL,
+  meanNormalizedEmbeddings,
+} from "../_shared/visual-embedding.ts";
 
 const ANTHROPIC_API_KEY = Deno.env.get("ANTHROPIC_API_KEY");
 const CLAUDE_MODEL = Deno.env.get("CLAUDE_MODEL") || "claude-sonnet-4-6";
+const REPLICATE_API_TOKEN = Deno.env.get("REPLICATE_API_TOKEN");
+const VISUAL_EMBEDDING_MODEL = Deno.env.get("SIGLIP_MODEL") ||
+  DEFAULT_VISUAL_EMBEDDING_MODEL;
+const VISUAL_RETRIEVAL_ENABLED = Deno.env.get("MORPH_VISUAL_RETRIEVAL") !== "false";
+const RETRIEVAL_MAX_PHOTOS = Math.min(3, Math.max(1,
+  Number(Deno.env.get("MORPH_RETRIEVAL_MAX_PHOTOS") || "1") || 1));
+const RETRIEVAL_MIN_SIMILARITY = Math.min(0.95, Math.max(0,
+  Number(Deno.env.get("MORPH_RETRIEVAL_MIN_SIMILARITY") || "0.50") || 0.50));
 
 // Cross-project sink for the per-call spend log. Lives in geck-data's
 // Supabase project (separate from this function's own SUPABASE_URL) so
@@ -404,6 +425,101 @@ async function loadFewShotBank(): Promise<FewShotExample[]> {
   return fewShotCache;
 }
 
+async function loadVisualEvidence(imageUrls: string[]): Promise<VisualEvidence> {
+  if (!VISUAL_RETRIEVAL_ENABLED) {
+    return {
+      status: "unavailable",
+      model: null,
+      photo_count: 0,
+      neighbors: [],
+      consensus: null,
+      note: "Visual retrieval is disabled.",
+    };
+  }
+  if (!REPLICATE_API_TOKEN) {
+    return {
+      status: "unavailable",
+      model: null,
+      photo_count: 0,
+      neighbors: [],
+      consensus: null,
+      note: "Visual embedding provider is not configured.",
+    };
+  }
+
+  try {
+    const settled = await Promise.allSettled(
+      imageUrls.slice(0, RETRIEVAL_MAX_PHOTOS).map((imageUrl) =>
+        createVisualEmbedding(imageUrl, {
+          token: REPLICATE_API_TOKEN,
+          model: VISUAL_EMBEDDING_MODEL,
+          timeoutMs: 52_000,
+        })
+      ),
+    );
+    const embeddings = settled.flatMap((result) =>
+      result.status === "fulfilled" ? [result.value.embedding] : []
+    );
+    const queryEmbedding = meanNormalizedEmbeddings(embeddings);
+    if (queryEmbedding.length === 0) {
+      const firstError = settled.find((result) => result.status === "rejected");
+      const detail = firstError?.status === "rejected"
+        ? String(firstError.reason instanceof Error ? firstError.reason.message : firstError.reason)
+        : "No query embedding was produced.";
+      return {
+        status: "unavailable",
+        model: VISUAL_EMBEDDING_MODEL,
+        photo_count: 0,
+        neighbors: [],
+        consensus: null,
+        note: detail.slice(0, 180),
+      };
+    }
+
+    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { data, error } = await admin.rpc("morph_visual_neighbors", {
+      query_embedding: queryEmbedding,
+      match_count: 48,
+    });
+    if (error) throw new Error(`visual neighbor query failed: ${error.message}`);
+    return buildVisualEvidence((data || []) as RawVisualNeighbor[], {
+      model: VISUAL_EMBEDDING_MODEL,
+      photoCount: embeddings.length,
+      minSimilarity: RETRIEVAL_MIN_SIMILARITY,
+      maxNeighbors: 8,
+      maxPerMorph: 2,
+    });
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("visual evidence unavailable:", message);
+    return {
+      status: "unavailable",
+      model: VISUAL_EMBEDDING_MODEL,
+      photo_count: 0,
+      neighbors: [],
+      consensus: null,
+      note: message.slice(0, 180),
+    };
+  }
+}
+
+function buildRetrievalContext(evidence: VisualEvidence): string {
+  if (evidence.status !== "available" || evidence.neighbors.length === 0) return "";
+  const mapping = evidence.neighbors.map((neighbor, index) => {
+    const traits = [
+      ...neighbor.genetic_traits,
+      ...neighbor.secondary_traits,
+      neighbor.base_color,
+    ].filter(Boolean).slice(0, 6).join(", ");
+    const detail = traits ? `; observed tags=${traits}` : "";
+    return `  ${index + 1}. weak primary tag=${neighbor.primary_morph}${detail}; similarity=${neighbor.similarity.toFixed(3)}; label weight=${neighbor.label_weight.toFixed(2)}`;
+  }).join("\n");
+  const consensus = evidence.consensus
+    ? `Weighted retrieval leader=${evidence.consensus.primary_morph}; agreement=${evidence.consensus.agreement.toFixed(2)} across ${evidence.consensus.source_diversity} independent source cluster(s).`
+    : "No retrieval consensus.";
+  return `The ${evidence.neighbors.length} image(s) immediately before this note are query-specific visual neighbors from raw listing data. Their tags are WEAK POSITIVE OBSERVATIONS, not verified biological truth. A missing tag is unknown, not negative. Use the images as comparison evidence and override their labels when the user's visible anatomy disagrees.\n${mapping}\n${consensus}`;
+}
+
 function buildInstructions(fewShotBank: FewShotExample[], includeValueEstimate: boolean) {
   const bankIntro = fewShotBank.length === 0 ? "" :
     `\n\nFew-shot reference: the first ${fewShotBank.length} attached image(s) are LABELED reference examples (the user's photo(s) follow, after this text). Hero-anchor entries are competition-judged show winners (gold-standard visual definitions); manual-touch entries are community-verified examples. Use them as visual anchors for the canonical look of each primary_morph BEFORE evaluating the user's photo. The mapping, in order:\n${fewShotBank.map((ex, i) => {
@@ -428,6 +544,10 @@ Rules:
 - primary_morph is the best visual pattern-class candidate. If evidence is
   insufficient, provide a technical fallback but set usable_for_id=false. The app
   will withhold that fallback as an identification.
+- visual_profile is the primary representation of what is actually visible.
+  Classify pattern family, pinning, banding, and spotting independently because
+  these traits can co-occur. Use unknown when the relevant body region is not
+  visible; use none only when the region is visible and the trait is absent.
 - Return up to three distinct candidate_morphs in descending visual-evidence order.
   Scores are relative model signals, not calibrated probabilities. Cite the visual
   feature that supports or weakens each candidate.
@@ -442,7 +562,8 @@ Rules:
 - uncertainty_reasons must name missing views, ambiguous lookalikes, age effects,
   fired state, blur, glare, or color cast when relevant.
 - confidence_score is a model signal about the top visual candidate, not the
-  probability that the identification is correct.${valueLine}
+  probability that the identification is correct. Retrieved seller labels are
+  weak evidence and must never outweigh contradictory visible anatomy.${valueLine}
 
 Taxonomy version: ${TAXONOMY_VERSION}.${bankIntro}`;
 }
@@ -457,6 +578,21 @@ function buildTool(includeValueEstimate: boolean) {
     white_amount:      { type: "string", enum: WHITE_AMOUNT_IDS },
     fired_state:       { type: "string", enum: FIRED_STATE_IDS },
     confidence_score:  { type: "integer", minimum: 0, maximum: 100 },
+    visual_profile: {
+      type: "object",
+      required: ["pattern_family", "pinning", "banding", "spotting", "white_cream_traits"],
+      properties: {
+        pattern_family: { type: "string", enum: PATTERN_FAMILY_IDS },
+        pinning: { type: "string", enum: PINNING_IDS },
+        banding: { type: "string", enum: BANDING_IDS },
+        spotting: { type: "string", enum: SPOTTING_IDS },
+        white_cream_traits: {
+          type: "array",
+          uniqueItems: true,
+          items: { type: "string", enum: WHITE_PLACEMENT_IDS },
+        },
+      },
+    },
     candidate_morphs:  {
       type: "array",
       maxItems: 3,
@@ -506,7 +642,8 @@ function buildTool(includeValueEstimate: boolean) {
       type: "object",
       required: [
         "primary_morph", "confidence_score", "candidate_morphs",
-        "evidence_markers", "uncertainty_reasons", "photo_assessment", "explanation",
+        "visual_profile", "evidence_markers", "uncertainty_reasons",
+        "photo_assessment", "explanation",
       ],
       properties,
     },
@@ -517,6 +654,7 @@ function clampToTaxonomy(
   raw: Record<string, unknown>,
   includeValueEstimate: boolean,
   model: string,
+  visualEvidence: VisualEvidence,
 ) {
   const pick = (v: unknown, allowed: string[]) =>
     typeof v === "string" && allowed.includes(v) ? v : null;
@@ -568,14 +706,30 @@ function clampToTaxonomy(
   const margin = candidateMorphs.length > 1
     ? candidateMorphs[0].score - candidateMorphs[1].score
     : modelSignal;
-  const assessmentStatus = !primaryMorph
-      || !photoAssessment.subject_is_crested_gecko
-      || !photoAssessment.usable_for_id
-      || photoAssessment.quality_grade === "poor"
-    ? "insufficient_evidence"
-    : modelSignal >= 75 && margin >= 12
-      ? "best_match"
-      : "tentative";
+  const assessment = evidenceAssessment(
+    primaryMorph,
+    modelSignal,
+    margin,
+    photoAssessment,
+    visualEvidence,
+  );
+  const rawVisualProfile = raw.visual_profile && typeof raw.visual_profile === "object"
+    ? raw.visual_profile as Record<string, unknown>
+    : {};
+  const visualProfile = {
+    pattern_family: pick(rawVisualProfile.pattern_family, PATTERN_FAMILY_IDS) || "unknown",
+    pinning: pick(rawVisualProfile.pinning, PINNING_IDS) || "unknown",
+    banding: pick(rawVisualProfile.banding, BANDING_IDS) || "unknown",
+    spotting: pick(rawVisualProfile.spotting, SPOTTING_IDS) || "unknown",
+    white_cream_traits: pickMany(rawVisualProfile.white_cream_traits, WHITE_PLACEMENT_IDS),
+  };
+  const uncertaintyReasons = pickTextMany(raw.uncertainty_reasons, 5);
+  if (assessment.conflict && visualEvidence.consensus) {
+    uncertaintyReasons.unshift(
+      `The visual model and raw-data neighbors disagree (${primaryMorph} vs ${visualEvidence.consensus.primary_morph}).`,
+    );
+    uncertaintyReasons.splice(5);
+  }
   const out: Record<string, unknown> = {
     primary_morph:     primaryMorph,
     genetic_traits:    pickMany(raw.genetic_traits, GENETIC_TRAIT_IDS),
@@ -586,11 +740,13 @@ function clampToTaxonomy(
     fired_state:       pick(raw.fired_state, FIRED_STATE_IDS) || "unknown",
     confidence_score:  modelSignal,
     model_signal:      modelSignal,
+    visual_profile:    visualProfile,
     candidate_morphs:  candidateMorphs,
     evidence_markers:  pickTextMany(raw.evidence_markers, 6),
-    uncertainty_reasons: pickTextMany(raw.uncertainty_reasons, 5),
+    uncertainty_reasons: uncertaintyReasons,
     photo_assessment:  photoAssessment,
-    assessment_status: assessmentStatus,
+    assessment_status: assessment.status,
+    visual_evidence:   visualEvidence,
     explanation:       typeof raw.explanation === "string" ? raw.explanation : "",
     taxonomy_version:  TAXONOMY_VERSION,
     model,
@@ -651,6 +807,7 @@ async function callClaude(
   includeValueEstimate: boolean,
   model: string,
   context: { ageStage: string; firedState: string },
+  visualEvidence: VisualEvidence,
 ): Promise<CallClaudeResult> {
   const bank = await loadFewShotBank();
 
@@ -672,16 +829,33 @@ async function callClaude(
     cache_control: { type: "ephemeral" },
   };
 
-  // Variable block: user images + a per-call trailing hint. Never
-  // cached because it changes every request.
+  // Variable block: query-specific visual neighbors followed by the user
+  // images and a per-call trailing hint. Never cached because retrieval
+  // changes with every request.
+  const retrievalNeighbors = visualEvidence.status === "available"
+    ? visualEvidence.neighbors.slice(0, 6)
+    : [];
+  const retrievalBlocks: Record<string, unknown>[] = retrievalNeighbors.length > 0
+    ? [
+      ...retrievalNeighbors.map((neighbor) => ({
+        type: "image",
+        source: { type: "url", url: neighbor.image_url },
+      })),
+      { type: "text", text: buildRetrievalContext({
+        ...visualEvidence,
+        neighbors: retrievalNeighbors,
+      }) },
+    ]
+    : [];
   const userBlocks: Record<string, unknown>[] = imageUrls.map((url) => (
     { type: "image", source: { type: "url", url } }
   ));
   const photoText = imageUrls.length > 1
-    ? `The ${imageUrls.length} images above are of the same user-submitted animal. Synthesize across them.`
-    : `The image above is the user's submitted animal.`;
+    ? `The immediately preceding ${imageUrls.length} images are of the same user-submitted animal. Synthesize across them.`
+    : `The immediately preceding image is the user's submitted animal.`;
   const trailingText = `${photoText} User-provided context: life stage=${context.ageStage}; fired state=${context.firedState}. Treat unknown values as unavailable context. Call the tool with your analysis.`;
   const variableContent: Record<string, unknown>[] = [
+    ...retrievalBlocks,
     ...userBlocks,
     { type: "text", text: trailingText },
   ];
@@ -879,8 +1053,20 @@ serve(async (req) => {
       creditWasConsumed = true;
     }
 
-    const result = await callClaude(imageUrls, includeValueEstimate, model, { ageStage, firedState });
-    const analysis = clampToTaxonomy(result.raw, includeValueEstimate, model);
+    const visualEvidence = await loadVisualEvidence(imageUrls);
+    const result = await callClaude(
+      imageUrls,
+      includeValueEstimate,
+      model,
+      { ageStage, firedState },
+      visualEvidence,
+    );
+    const analysis = clampToTaxonomy(
+      result.raw,
+      includeValueEstimate,
+      model,
+      visualEvidence,
+    );
     analysis.age_stage = ageStage;
     analysis.user_reported_fired_state = firedState;
     await logInvocation({

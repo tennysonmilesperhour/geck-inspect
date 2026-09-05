@@ -18,7 +18,30 @@
 // and prefer adding new entries over mutating existing ids (ids are persisted
 // in the `gecko_images` table and used for label stability across versions).
 
-export const TAXONOMY_VERSION = '2026.09.04';
+export const TAXONOMY_VERSION = '2026.09.05';
+
+export const VISUAL_PROFILE_AXES = [
+  { key: 'pattern_family', label: 'Pattern coverage' },
+  { key: 'pinning', label: 'Pinning' },
+  { key: 'banding', label: 'Banding' },
+  { key: 'spotting', label: 'Spotting' },
+];
+
+const VISUAL_AXIS_VALUE_LABELS = {
+  none: 'None seen',
+  unknown: 'Not enough evidence',
+  partial: 'Partial pinning',
+  full: 'Full pinning',
+  phantom: 'Phantom pinning',
+  reverse: 'Reverse pinning',
+  quad: 'Quad stripe',
+  super_stripe: 'Super stripe',
+};
+
+export function visualAxisLabel(value) {
+  if (!value) return 'Not enough evidence';
+  return VISUAL_AXIS_VALUE_LABELS[value] || labelFor(value, value);
+}
 
 /**
  * Primary morph = the dominant visual pattern class.
