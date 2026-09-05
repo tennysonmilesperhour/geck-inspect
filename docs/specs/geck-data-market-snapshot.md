@@ -31,7 +31,7 @@ the charts depend on to "unknown". The data to fill these fields already
 exists in the geck-data database; the generator just is not mapping or
 including it.
 
-## The data exists (geck-data Supabase, project `dhotmtgryuovkmsncdby`)
+## The data exists (`geck_data` schema in the Geck Inspect Supabase project)
 
 Two listing tables hold the source data. The generator currently appears to
 read the sparser one.
