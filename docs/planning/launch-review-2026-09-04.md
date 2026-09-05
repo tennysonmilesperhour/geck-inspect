@@ -166,12 +166,12 @@ This list records the remaining launch checks and their latest state.
    is already set. The same secret is what error-triage needs when it
    writes back to the database. Then run the weekly-changelog workflow
    once by hand (Actions, weekly-changelog, Run workflow) to confirm.
-9. **Store decisions (yours).** The custom tee is live at $28 with
-   standard shipping as a placeholder; change `our_price_cents` on the
-   product row or `store_custom_tee_price_cents` in app_settings. The two
-   printed sticker examples carry a real Pokemon and Nintendo copyright
-   line along the bottom edge; decide whether to keep them as shown,
-   crop that line, or replace them with prints of the new themes.
+9. **Store decisions, decided 5 Sep.** Keep the custom tee at $28 with
+   standard shipping. Keep the two printed sticker references intact for
+   now, but present them on a green field and label them clearly as temporary
+   layout examples. The customer-facing copy records that the builder is
+   moving to original styling and user-owned photos without third-party
+   characters, logos, card trade dress, or copyright text.
 10. **geck-data repo, done 5 Sep.** The 14 remaining auth calls are init-plan
    wrapped and all four duplicate groups are consolidated. Production was
    smoke-tested, all 115 tests pass, commit `89b5d5c` is on main, and the

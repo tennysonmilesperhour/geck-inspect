@@ -160,12 +160,12 @@ function ExampleCard({ example, onUseAsStart }) {
   const [imageOk, setImageOk] = useState(true);
   return (
     <figure className="flex flex-col gap-2">
-      <div className="rounded-xl border border-slate-800 bg-slate-950 p-3">
+      <div className="rounded-xl bg-[#064e3b] p-3">
         {imageOk ? (
           <img
             src={example.image}
             alt={`${example.design.name} custom sticker example`}
-            className="w-full rounded-lg"
+            className="w-full"
             loading="lazy"
             decoding="async"
             onError={() => setImageOk(false)}
@@ -175,6 +175,9 @@ function ExampleCard({ example, onUseAsStart }) {
         )}
       </div>
       <figcaption className="text-xs text-slate-400 leading-relaxed">
+        <span className="mb-1 block w-max rounded-full bg-[#064e3b] px-2 py-0.5 font-medium text-[#a7f3d0]">
+          Placeholder example
+        </span>
         <span className="font-semibold text-slate-200">{example.design.name}.</span>{' '}
         {example.note}
       </figcaption>
@@ -360,9 +363,12 @@ export default function CustomStickerStudio() {
       <section className="mb-10">
         <h2 className="text-lg font-bold text-slate-100 mb-1">Two trading cards we made</h2>
         <p className="text-sm text-slate-400 mb-4 max-w-3xl leading-relaxed">
-          Moonlight and Bat Geck, printed. Pick either as a starting point and
-          swap in your own photo and stats, or choose one of the other five
-          themes in the builder below.
+          Moonlight and Bat Geck are temporary examples of the layout. Pick
+          either as a starting point and swap in your own photo and stats, or
+          choose one of the other five themes in the builder below. We are
+          still developing the artwork system so final designs use original
+          styling and user-owned photos without third-party characters, logos,
+          card trade dress, or copyright text.
         </p>
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 max-w-3xl">
           {STICKER_EXAMPLES.map((ex) => (
