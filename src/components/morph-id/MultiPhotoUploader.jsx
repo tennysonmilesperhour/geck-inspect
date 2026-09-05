@@ -18,6 +18,7 @@ export const MAX_PHOTOS = 5;
 export default function MultiPhotoUploader({
   value = [],
   onChange,
+  onBusyChange,
   max = MAX_PHOTOS,
   label = 'Photos',
 }) {
@@ -125,6 +126,9 @@ export default function MultiPhotoUploader({
 
   const hasRoom = items.length < max;
   const uploadingCount = items.filter((i) => i.status === 'pending').length;
+  useEffect(() => {
+    onBusyChange?.(uploadingCount > 0);
+  }, [onBusyChange, uploadingCount]);
 
   return (
     <div className="space-y-3">
@@ -169,7 +173,7 @@ export default function MultiPhotoUploader({
             <button
               type="button"
               onClick={() => remove(item.id)}
-              className="absolute top-1 right-1 p-1 bg-black/60 hover:bg-rose-600 rounded-full"
+              className="absolute top-1 right-1 p-2 bg-black/70 hover:bg-rose-600 rounded-full min-w-11 min-h-11 grid place-items-center"
               aria-label="Remove photo"
             >
               <X className="w-3.5 h-3.5 text-white" />
@@ -183,7 +187,7 @@ export default function MultiPhotoUploader({
                 type="button"
                 onClick={() => makePrimary(item.id)}
                 disabled={item.status !== 'ready'}
-                className="absolute bottom-1 left-1 p-1 bg-black/60 hover:bg-emerald-600 rounded-full disabled:opacity-40"
+                className="absolute bottom-1 left-1 p-2 bg-black/70 hover:bg-emerald-600 rounded-full disabled:opacity-40 min-w-11 min-h-11 grid place-items-center"
                 aria-label="Make primary"
                 title="Make this the primary / cover photo"
               >

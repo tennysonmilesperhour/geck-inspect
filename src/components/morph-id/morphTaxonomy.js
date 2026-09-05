@@ -5,7 +5,7 @@
 // descriptive modifiers that combine orthogonally.
 //
 // Inheritance classifications follow the Foundation Genetics consensus
-// (Lil Monsters Reptiles + Geckological, 2020–2026). Canonical vocabulary
+// (Lil Monsters Reptiles + Geckological, 2020-2026). Canonical vocabulary
 // comes from `crested-gecko-app`:
 //   - "incomplete dominant" (NOT "codominant") for Lilly White, Cappuccino,
 //     Sable, Whiteout, Empty Back, Softscale, Fire.
@@ -18,7 +18,7 @@
 // and prefer adding new entries over mutating existing ids (ids are persisted
 // in the `gecko_images` table and used for label stability across versions).
 
-export const TAXONOMY_VERSION = '2026.04.18';
+export const TAXONOMY_VERSION = '2026.09.04';
 
 /**
  * Primary morph = the dominant visual pattern class.
@@ -183,6 +183,7 @@ export const BASE_COLORS = [
 ];
 
 export const PATTERN_INTENSITIES = [
+  { id: 'unknown',  label: 'Unknown' },
   { id: 'none',     label: 'None (patternless)' },
   { id: 'low',      label: 'Low' },
   { id: 'medium',   label: 'Medium' },
@@ -191,6 +192,7 @@ export const PATTERN_INTENSITIES = [
 ];
 
 export const WHITE_AMOUNTS = [
+  { id: 'unknown',  label: 'Unknown' },
   { id: 'none',     label: 'None' },
   { id: 'trace',    label: 'Trace' },
   { id: 'low',      label: 'Low' },
@@ -208,8 +210,8 @@ export const FIRED_STATES = [
 
 export const AGE_STAGES = [
   { id: 'hatchling', label: 'Hatchling (<3mo)' },
-  { id: 'juvenile',  label: 'Juvenile (3–12mo)' },
-  { id: 'subadult',  label: 'Subadult (12–18mo)' },
+  { id: 'juvenile',  label: 'Juvenile (3-12mo)' },
+  { id: 'subadult',  label: 'Subadult (12-18mo)' },
   { id: 'adult',     label: 'Adult (18mo+)' },
   { id: 'unknown',   label: 'Unknown' },
 ];

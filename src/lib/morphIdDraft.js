@@ -46,12 +46,12 @@ export function buildGeckoDraftFromAnalysis(analysis, imageUrls = []) {
   const ids = analysisIds(analysis);
   const morph_tags = [...new Set(ids.map(idToTag).filter(Boolean))];
 
-  const conf = Number(analysis.confidence_score ?? analysis.confidence ?? 0);
+  const conf = Number(analysis.model_signal ?? analysis.confidence_score ?? analysis.confidence ?? 0);
   const labels = ids.map((id) => labelFor(id, null)).filter(Boolean);
   const summary = labels.length ? labels.join(', ') : 'see the analysis';
-  const confText = conf ? ` (confidence ${Math.round(conf)}%)` : '';
+  const confText = conf ? ` (model signal ${Math.round(conf)}/100)` : '';
   const notes =
-    `Morph ID by Geck Inspect AI${confText}: ${summary}. ` +
+    `Unverified Morph ID suggestion from Geck Inspect${confText}: ${summary}. ` +
     'Review and edit before saving.';
 
   return {

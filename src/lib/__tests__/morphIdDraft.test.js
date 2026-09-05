@@ -39,13 +39,13 @@ describe('buildGeckoDraftFromAnalysis', () => {
     expect(new Set(draft.morph_tags).size).toBe(draft.morph_tags.length);
   });
 
-  it('writes a notes line that credits the AI and includes the confidence', () => {
+  it('writes a notes line that marks the suggestion unverified and labels the model signal', () => {
     const draft = buildGeckoDraftFromAnalysis(
       { primary_morph: 'harlequin', confidence_score: 73 },
       [],
     );
-    expect(draft.notes).toMatch(/Geck Inspect AI/);
-    expect(draft.notes).toMatch(/73%/);
+    expect(draft.notes).toMatch(/Unverified Morph ID suggestion/);
+    expect(draft.notes).toMatch(/model signal 73\/100/);
     expect(draft.notes).toMatch(/Harlequin/);
   });
 

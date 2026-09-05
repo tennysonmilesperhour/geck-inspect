@@ -96,18 +96,13 @@ esac
 # ---- 3. Edge functions ---------------------------------------------------
 section "Edge functions"
 
-# recognize-gecko-morph: POST with no body should return a 400 JSON error
-# ("imageUrl required"). A 404 means the function isn't deployed.
+# Both image functions authenticate before reading a request body. An anon-key
+# call must return 401. A 404 means the function is not deployed.
 status=$(probe POST "$SUPABASE_URL/functions/v1/recognize-gecko-morph" "$SUPABASE_ANON_KEY" \
   -H 'Content-Type: application/json' -d '{}')
 case "$status" in
-  400) pass "recognize-gecko-morph deployed (rejects empty body)" ;;
-  500) warn_body=$(cat /tmp/probe-body)
-       if echo "$warn_body" | grep -qi "REPLICATE_API_TOKEN"; then
-         fail "recognize-gecko-morph missing REPLICATE_API_TOKEN secret" "$warn_body"
-       else
-         fail "recognize-gecko-morph 500" "$warn_body"
-       fi ;;
+  401) pass "recognize-gecko-morph deployed (rejects unauthenticated calls)" ;;
+  500) fail "recognize-gecko-morph 500" "$(cat /tmp/probe-body)" ;;
   404) fail "recognize-gecko-morph not deployed" "$(cat /tmp/probe-body)" ;;
   *)   fail "recognize-gecko-morph unexpected status $status" "$(cat /tmp/probe-body)" ;;
 esac
@@ -115,7 +110,7 @@ esac
 status=$(probe POST "$SUPABASE_URL/functions/v1/embed-gecko-image" "$SUPABASE_ANON_KEY" \
   -H 'Content-Type: application/json' -d '{}')
 case "$status" in
-  400) pass "embed-gecko-image deployed (rejects empty body)" ;;
+  401) pass "embed-gecko-image deployed (rejects unauthenticated calls)" ;;
   500) fail "embed-gecko-image 500" "$(cat /tmp/probe-body)" ;;
   404) fail "embed-gecko-image not deployed" "$(cat /tmp/probe-body)" ;;
   *)   fail "embed-gecko-image unexpected status $status" "$(cat /tmp/probe-body)" ;;

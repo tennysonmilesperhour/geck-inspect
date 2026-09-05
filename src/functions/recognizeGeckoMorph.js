@@ -7,8 +7,8 @@ import { supabase } from '@/lib/supabaseClient';
 // supabase/migrations/20260516_morph_id_credits.sql.
 //
 // Accepts either { imageUrl: string } or { imageUrls: string[] } (up to 5).
-// Optional ageStage (hatchling | juvenile | subadult | adult | unknown) feeds
-// the prompt so the model weighs traits at the right developmental baseline.
+// Optional ageStage (hatchling | juvenile | subadult | adult | unknown) and
+// firedState feed the prompt so the model weighs traits in context.
 // Claude synthesizes across multiple photos of the same gecko.
 //
 // Resolved error shape (for upstream UI):
@@ -39,7 +39,7 @@ async function readEdgeError(error) {
   };
 }
 
-export async function recognizeGeckoMorph({ imageUrl, imageUrls, ageStage } = {}) {
+export async function recognizeGeckoMorph({ imageUrl, imageUrls, ageStage, firedState } = {}) {
   const urls = Array.isArray(imageUrls) && imageUrls.length
     ? imageUrls
     : imageUrl ? [imageUrl] : [];
@@ -49,6 +49,7 @@ export async function recognizeGeckoMorph({ imageUrl, imageUrls, ageStage } = {}
 
   const body = { imageUrls: urls };
   if (typeof ageStage === 'string' && ageStage) body.age_stage = ageStage;
+  if (typeof firedState === 'string' && firedState) body.fired_state = firedState;
 
   const { data, error } = await supabase.functions.invoke('recognize-gecko-morph', {
     body,
