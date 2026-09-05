@@ -12,7 +12,7 @@ This is the active priority list. Items are formatted so Claude Code can act on 
 The full review, with every finding, its location and its status, is in `docs/planning/launch-review-2026-09-04.md`. Start there when picking this work up in any Claude Code session. Items below are the ones still open the night before launch; check them off here and update the status in that file when they ship.
 
 **Open**
-- [x] F60: Production builds failed on every push from 15 to 29 August and nobody was told (deploy-watch workflow opens a ci-failure issue on a red production deploy; Vercel Deployment Failures email verified enabled on 4 Sep; GitHub mention-email delivery still needs account confirmation)
+- [x] F60: Production builds failed on every push from 15 to 29 August and nobody was told (deploy-watch workflow opens a ci-failure issue on a red production deploy; Vercel Deployment Failures email and GitHub Participating/@mentions email delivery verified enabled on 4 Sep)
 - [x] F28: Leaked-password protection is enabled (verified in the Supabase dashboard on 4 Sep)
 - [x] F41: Referral program was never applied to production (4 Sep, late session: applied with the reward changed to one free month of Keeper per paid referral)
 - [x] F61: A newer commit on main adds three large unapplied migrations (7,900 lines, 55 tables in a geck_data schema) (closed 4 Sep, late session: they were already applied to production after the review)

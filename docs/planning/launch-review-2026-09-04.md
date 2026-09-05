@@ -21,7 +21,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Where: Vercel deployments dpl_CZYbdRr8 through dpl_EmFGUhLj (8 consecutive ERROR builds); build log: npm ERESOLVE on the knip dev dependency because Vercel ran npm instead of pnpm
 - Why it matters: The site kept serving the 14 August build for two weeks while main moved on. CI was green the whole time because CI uses pnpm. There is no deploy-failure notification.
 - Proposed fix: Turn on Vercel deployment failure notifications (email or Slack) and check the deployment state after every push during launch week. The pnpm lockfile fix on 29 August resolved the immediate cause.
-- Status: Fixed 4 Sep: .github/workflows/deploy-watch.yml listens for the deployment status Vercel posts back to GitHub and, on a failed or errored production deployment, opens or updates a ci-failure issue that mentions Tennyson. Vercel's Deployment Failures email notification was verified enabled on 4 Sep as the second channel. GitHub's mention-email delivery still needs confirmation after signing in to the correct GitHub account
+- Status: Fixed 4 Sep: .github/workflows/deploy-watch.yml listens for the deployment status Vercel posts back to GitHub and, on a failed or errored production deployment, opens or updates a ci-failure issue that mentions Tennyson. Vercel's Deployment Failures email notification was verified enabled as the second channel, and GitHub's Participating, @mentions and custom setting was verified delivering to both GitHub and email
 
 ### F28: Leaked-password protection is off
 
@@ -139,9 +139,9 @@ This list records the remaining launch checks and their latest state.
 
 1. **F28, Supabase, done 4 Sep.** Leaked-password protection was verified
    enabled in Authentication, Attack protection.
-2. **F60, Vercel, done 4 Sep.** Deployment Failures email was verified
-   enabled. The GitHub issue channel still needs the correct account to
-   confirm that Participating and @mentions deliver to email.
+2. **F60, Vercel and GitHub, done 4 Sep.** Vercel Deployment Failures
+   email was verified enabled. GitHub Participating, @mentions and custom
+   notifications were also verified delivering on GitHub and by email.
 3. **F33, migration baseline, blocked.** The CLI is logged in and linked,
    the Morph ID history repair ran, and all 121 rows now match local and
    remote. `supabase db pull` fails because the eight earliest
