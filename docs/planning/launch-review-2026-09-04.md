@@ -71,7 +71,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Where: Live performance advisors (auth_rls_initplan, multiple_permissive_policies)
 - Why it matters: Each is small, together they scale badly as tables grow.
 - Proposed fix: Rewrite to (select auth.uid()) and consolidate policies per table and action.
-- Status: Partly fixed 4 Sep: 213 policies rewritten to (select auth.uid()) via rls_initplan_rewrite, 0 bare calls remain. Duplicate permissive policy groups still open
+- Status: Partly fixed 4 Sep: 213 policies rewritten to (select auth.uid()) via rls_initplan_rewrite, 0 bare calls remain in public (14 remain in geck_data, owned by the geck-data repo). Duplicate permissive groups: 274 warnings across 53 tables mapped to eight batches with the exact rewrite for each in docs/planning/rls-policy-consolidation.md (late session). Batch 1, gecko_images, is also a security fix: the legacy policy pair lets a member edit a verified image. Awaiting go-ahead per batch
 
 ### F47: Dashboard fans out to about 40 requests with a waterfall; background polling in every tab
 
