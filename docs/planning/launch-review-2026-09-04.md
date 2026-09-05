@@ -133,6 +133,50 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 | F56 | low | Style | Docs drift and root clutter | S | Fixed 4 Sep: README rewritten, CLAUDE.md stack line and file map corrected, planning docs moved to docs/planning, docs/MIGRATIONS.md added |
 | F57 | low | Style | Em dashes remain despite the hard rule | S | Fixed 4 Sep: src (batch C) plus 723 in docs, SQL comments, workflows, report placeholders and 23 live store product rows. Left in place: the CLAUDE.md rule text and the sanitizers that strip them |
 
+## Tennyson's checklist (as of the 4 September late session)
+
+Everything a session could do is done. These need a human with the
+dashboard logins, in rough priority order.
+
+1. **F28, Supabase.** Authentication, then Attack protection: confirm
+   "Leaked password protection" is on. The advisor no longer flags it, so
+   this is a confirmation, not a change. Then tick F28 above.
+2. **F60, Vercel.** Project settings, Notifications (or account
+   Settings, Notifications): turn on "Deployment failed" for email. The
+   deploy-watch workflow already opens a GitHub issue that mentions you
+   when a production deploy fails; Vercel's email is the second channel.
+   Also check GitHub, Settings, Notifications: "Participating and
+   @mentions" must deliver to email, or the issue mention is silent.
+3. **F33, migration baseline (needs the database password).** On this
+   machine, in the repo: `supabase login` (opens a browser), then
+   `supabase link --project-ref mmuglfphhwlaluyfyxsp` (it asks for the
+   database password; Dashboard, Project settings, Database), then
+   `supabase migration list` (every row should show local and remote),
+   `supabase migration repair --status applied 20260904000001`,
+   `supabase db pull` (writes a new remote_schema file), then commit the
+   result. Or run only `supabase login` and tell a session to do the rest.
+4. **F43, CSP enforce, from about 11 September.** Ask a session to run
+   the csp-report query (under F43 above) and, if the only rows are
+   expected origins or none at all, change the header name in
+   scripts/build-vercel-json.mjs from Content-Security-Policy-Report-Only
+   to Content-Security-Policy. One line.
+5. **Referral and billing, live check.** Sign up a second account through
+   your own referral link (sidebar card, Copy referral link), pay a first
+   invoice with a Stripe test card, then confirm: the referrer got the
+   notification, referral_rewards has one row, and (for a free referrer)
+   membership_tier is keeper with referral_grant_until 30 days out. This
+   also completes the F24 test-card checkout still marked as yours.
+6. **F55, real iPhone.** Upload a HEIC photo from the camera roll on
+   the Add Gecko form and on Morph ID; both should preview and save.
+7. **Local checkout hygiene.** ~/dev/geck-inspect has another session's
+   uncommitted edits (Home.jsx, blog helpers, several edge functions)
+   and is far behind origin. Decide whether that work is wanted; commit
+   it or discard it, then `git pull`. Sessions currently use the clean
+   worktree at ~/dev/geck-inspect-launch instead.
+8. **geck-data repo.** Four duplicate policy groups and 14 per-row
+   auth calls remain in the geck_data schema; same recipe as batches 1
+   to 8, but the migrations belong to that repo.
+
 ## Production changes applied outside git
 
 Every one of these has a matching file under `supabase/migrations/` so the repo tells the truth, but they were applied by hand through the Supabase MCP rather than by a deploy script:
