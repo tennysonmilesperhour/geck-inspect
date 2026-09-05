@@ -1,11 +1,2 @@
--- Placeholder for migration 20260508202718 (landing_stats_function).
---
--- This version exists in production's migration history but was applied
--- straight from the Supabase MCP or SQL editor on the day, so the repo
--- never had the file. It is recorded here so `supabase migration list`
--- sees local and remote in step and `supabase db push` never tries to
--- replay it. The objects it created are described in
--- supabase/SCHEMA_SNAPSHOT.md; `supabase db pull` produces the runnable
--- baseline that captures them (docs/MIGRATIONS.md, baselining step 7).
---
--- Intentionally empty. Do not add SQL here.
+-- Historical migration retained as an applied-version marker after the 2026-09-05 schema rebaseline.
+-- The complete current schema is in 20260410025954_remote_schema.sql; original SQL is under _pre_rebaseline_history/.

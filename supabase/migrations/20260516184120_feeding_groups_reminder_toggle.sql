@@ -1,7 +1,2 @@
--- Per-feeding-group reminder switch. Mirrors
--- public.other_reptiles.feeding_reminder_enabled so the alert system can
--- gate both entity types on the same flag. Defaults to true so groups
--- created before this column existed keep firing alerts (matching the
--- prior behavior).
-alter table public.feeding_groups
-  add column if not exists feeding_reminder_enabled boolean not null default true;
+-- Historical migration retained as an applied-version marker after the 2026-09-05 schema rebaseline.
+-- The complete current schema is in 20260410025954_remote_schema.sql; original SQL is under _pre_rebaseline_history/.

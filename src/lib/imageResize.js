@@ -19,6 +19,54 @@ export const RESIZE_DEFAULTS = {
   skipUnderBytes: 400 * 1024, // don't bother re-encoding small files that are already within maxEdge
 };
 
+const HEIC_MIME_TYPES = new Set([
+  'image/heic',
+  'image/heif',
+  'image/heic-sequence',
+  'image/heif-sequence',
+]);
+
+export function isHeicFile(file) {
+  if (!file) return false;
+  const type = String(file.type || '').toLowerCase();
+  const name = String(file.name || '').toLowerCase();
+  return HEIC_MIME_TYPES.has(type) || /\.(heic|heif)$/.test(name);
+}
+
+/**
+ * Convert an iPhone HEIC/HEIF photo to a browser-safe JPEG before preview,
+ * resizing, or upload. The decoder is loaded only for HEIC files so it does
+ * not increase the normal application bundle.
+ */
+export async function convertHeicForUpload(file, { quality = 0.9 } = {}) {
+  if (!isHeicFile(file)) return file;
+
+  try {
+    // The CSP build avoids unsafe-eval, which is required once F43 moves from
+    // report-only to an enforcing Content-Security-Policy header.
+    const { heicTo } = await import('heic-to/csp');
+    const result = await heicTo({
+      blob: file,
+      type: 'image/jpeg',
+      quality,
+    });
+    const jpeg = Array.isArray(result) ? result[0] : result;
+    if (!(jpeg instanceof Blob) || jpeg.size === 0) {
+      throw new Error('converter returned no image');
+    }
+
+    const baseName = String(file.name || 'photo').replace(/\.(heic|heif)$/i, '');
+    return new File([jpeg], `${baseName || 'photo'}.jpg`, {
+      type: 'image/jpeg',
+      lastModified: file.lastModified || Date.now(),
+    });
+  } catch (error) {
+    throw new Error(
+      `This HEIC photo could not be converted. Try exporting it as JPEG or PNG. ${error?.message || ''}`.trim(),
+    );
+  }
+}
+
 /**
  * Pure helper: compute the target dimensions so the long edge is at most
  * maxEdge, preserving aspect ratio. Returns `scaled: false` when the

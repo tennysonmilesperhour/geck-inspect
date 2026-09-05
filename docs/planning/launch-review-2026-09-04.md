@@ -2,7 +2,7 @@
 
 Read-only review of the whole repo and the live Supabase and Vercel setup, done the day before the 5 September launch, followed by five batches of fixes (A to E) pushed straight to main the same night. This file is the handoff copy of the interactive report so any session (desktop app, web, or the terminal CLI) can pick the work up. The interactive version, with the same data, is at https://claude.ai/code/artifact/6136b837-8feb-4df0-806b-f375095dc677.
 
-Totals: 62 findings. 57 closed (fixed, done, or decided), 5 partly fixed, 0 open.
+Totals: 62 findings. 60 closed (fixed, done, or decided), 2 partly fixed, 0 open.
 
 Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the database or an edge function, applied to production and verified. "Partly fixed" and "Mostly fixed" list what is left inside the status text. "Confirmed" means verified real and untouched.
 
@@ -13,7 +13,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 3. Database changes go through a timestamped file in `supabase/migrations/` plus a by-hand apply, as described in `docs/MIGRATIONS.md`. Edge functions are deployed from the merged repo source.
 4. When a finding closes, update its status here and in ROADMAP.md.
 
-## Recently closed (2)
+## Recently closed (4)
 
 ### F60: Production builds failed on every push from 15 to 29 August and nobody was told
 
@@ -31,15 +31,20 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Proposed fix: Toggle it on in Authentication settings.
 - Status: Fixed 4 Sep: verified in Authentication, Attack protection that leaked-password protection is enabled
 
-## Partly fixed (4)
-
 ### F33: Production schema has drifted from the repo and the deploy scripts would replay stale SQL
 
 - Severity: high. Area: Ops. Effort: M.
-- Where: scripts/deploy-morph-id.sh:59 and deploy-push-notifications.sh:52 (db push --include-all); supabase/SCHEMA_SNAPSHOT.md dated 2026-07-07
-- Why it matters: 26 live migrations have no repo file, 11 repo files were never applied (referral program, the email trigger). Running the scripts would overwrite the vault-based notification dispatcher and silently stop all email and push.
-- Proposed fix: Do not run the scripts this week; baseline with supabase db pull, migration repair, archive orphans, regenerate the snapshot.
-- Status: Partly fixed 5 Sep: deploy scripts no longer run db push, unapplied files are archived, the live catalog snapshot is current, the Morph ID repair was recorded, and all 121 rows in `supabase migration list` now show matching local and remote versions. `supabase db pull` was attempted and failed while building its shadow database: the eight earliest remote_snapshot files are empty, so p1_animal_passport runs before `public.geckos` exists. A direct linked schema dump succeeds, but appending it would not repair replay. F33 now needs a reviewed squash/rebaseline that also preserves data, storage and cron setup; keep `db push` disabled until that is complete
+- Where: `supabase/migrations/` and `docs/MIGRATIONS.md`
+- Why it matters: The old chain began with empty snapshot markers and could not recreate `public.geckos` on a clean database.
+- Status: Fixed 5 Sep: the runnable chain now begins with a direct production schema dump; the original 125 migration files are archived outside the CLI path and applied versions are retained as no-op markers. Later live changes remain as real migrations. All 131 local and remote versions match, `supabase db push --dry-run` reports production up to date, and an isolated replay applied every migration before Docker failed while starting its remaining services.
+
+### F46: 208 RLS policies re-evaluate auth functions per row; 271 duplicate permissive policies
+
+- Severity: medium. Area: Data layer. Effort: M.
+- Where: RLS policies in `public` and `geck_data`
+- Status: Fixed 5 Sep: all public batches and the final geck-data batch are live. The 14 remaining geck_data auth calls are init-plan wrapped, its four duplicate permissive groups are consolidated, authenticated access was smoke-tested, all 115 geck-data tests pass, and the production deployment is Ready.
+
+## Partly fixed (2)
 
 ### F43: No Content-Security-Policy despite five third-party script origins
 
@@ -49,21 +54,13 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Proposed fix: Start with Content-Security-Policy-Report-Only listing Google, PostHog, Supabase, RevenueCat, and Stripe, then enforce.
 - Status: Mostly fixed (batch C plus late session 4 Sep): Content-Security-Policy-Report-Only shipped with the real origin list. Late session: report-only mode was reporting to nobody (no report-uri), so violations only ever appeared in visitors' own consoles. A csp-report edge function now receives them (report-uri plus report-to and a Reporting-Endpoints header) and writes one row per distinct violation per page per hour to error_logs with created_by = 'csp-report', throttled by the audit batch A trigger. verify_jwt is off because browsers send these reports with no session; the function accepts only geckinspect.com documents and never returns data. Decide on enforcing from about 11 Sep with: select message, url, count(*) from error_logs where created_by = 'csp-report' and created_date > now() - interval '7 days' group by 1, 2 order by 3 desc
 
-### F46: 208 RLS policies re-evaluate auth functions per row; 271 duplicate permissive policies
-
-- Severity: medium. Area: Data layer. Effort: M.
-- Where: Live performance advisors (auth_rls_initplan, multiple_permissive_policies)
-- Why it matters: Each is small, together they scale badly as tables grow.
-- Proposed fix: Rewrite to (select auth.uid()) and consolidate policies per table and action.
-- Status: Partly fixed 4 Sep: 213 policies rewritten to (select auth.uid()) via rls_initplan_rewrite, 0 bare calls remain in public (14 remain in geck_data, owned by the geck-data repo). Duplicate permissive groups: 274 warnings across 53 tables mapped to eight batches with the exact rewrite for each in docs/planning/rls-policy-consolidation.md (late session). Tennyson approved all eight batches one at a time and all eight are applied (rls_batch1_gecko_images through rls_batch8_collections_votes_offers), each smoke-tested as visitor, member and admin inside a rolled-back transaction before the next was applied. gecko_images: nine policies down to four and a member can no longer edit a verified image or insert one pre-verified. is_admin() and is_expert_reviewer() marked STABLE. Four duplicate animal_id indexes dropped. The dead five-minute unsend rule on direct_messages removed. A whole-schema check after batch 8 finds no (table, command) with more than one permissive policy in public. Remaining: the 14 geck_data policies and four geck_data duplicate groups belong to the geck-data repo
-
 ### F55: Mobile and accessibility gaps
 
 - Severity: medium. Area: Mobile. Effort: S.
 - Where: 24 file inputs with no capture attribute; 18 img tags without alt; reduced-motion honoured in 2 files; safe-area in 6
 - Why it matters: Most keepers will use a phone. None of these break the app, together they make it feel less native.
 - Proposed fix: capture=environment on photo inputs, alt text pass, reduced-motion guard on framer animations, verify HEIC on a real iPhone.
-- Status: Mostly fixed 4 Sep (late session): global prefers-reduced-motion rule, missing alt on MarketplaceSalesStats. Late session: 41 muted text runs moved from slate-600/700 (about 3:1 on the dark ground, below WCAG AA) to slate-500 (about 4.6:1), icons and decorative marks untouched; six 9 px labels raised to 10 px; the eleven sub-36 px buttons (weight delete, egg edit, feeding group edit and delete, payment add, keep offspring) are 36 px on phones and unchanged from md up. capture=environment was deliberately not added: keepers upload existing gecko photos far more often than they shoot new ones, and capture hides the photo library on iOS. Still open: verify HEIC uploads on a real iPhone
+- Status: Mostly fixed 4 to 5 Sep: global prefers-reduced-motion rule, missing alt on MarketplaceSalesStats. Late session: 41 muted text runs moved from slate-600/700 (about 3:1 on the dark ground, below WCAG AA) to slate-500 (about 4.6:1), icons and decorative marks untouched; six 9 px labels raised to 10 px; the eleven sub-36 px buttons (weight delete, egg edit, feeding group edit and delete, payment add, keep offspring) are 36 px on phones and unchanged from md up. capture=environment was deliberately not added: keepers upload existing gecko photos far more often than they shoot new ones, and capture hides the photo library on iOS. On 5 Sep the shared upload path gained HEIC/HEIF detection and in-browser JPEG conversion, including Morph ID's preview path; unit tests and a browser conversion of a standard HEIC pass. Still open: verify Add Gecko and Morph ID with a camera-roll HEIC on a real iPhone.
 
 ## Closed (56)
 
@@ -126,7 +123,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 | F56 | low | Style | Docs drift and root clutter | S | Fixed 4 Sep: README rewritten, CLAUDE.md stack line and file map corrected, planning docs moved to docs/planning, docs/MIGRATIONS.md added |
 | F57 | low | Style | Em dashes remain despite the hard rule | S | Fixed 4 Sep: src (batch C) plus 723 in docs, SQL comments, workflows, report placeholders and 23 live store product rows. Left in place: the CLAUDE.md rule text and the sanitizers that strip them |
 
-## Tennyson's checklist (as of the 4 September late session)
+## Tennyson's checklist (updated 5 September)
 
 This list records the remaining launch checks and their latest state.
 
@@ -135,12 +132,12 @@ This list records the remaining launch checks and their latest state.
 2. **F60, Vercel and GitHub, done 4 Sep.** Vercel Deployment Failures
    email was verified enabled. GitHub Participating, @mentions and custom
    notifications were also verified delivering on GitHub and by email.
-3. **F33, migration baseline, blocked.** The CLI is logged in and linked,
-   the Morph ID history repair ran, and all 121 rows now match local and
-   remote. `supabase db pull` fails because the eight earliest
-   remote_snapshot files are empty and cannot recreate `public.geckos` in
-   the shadow database. See `docs/MIGRATIONS.md` before attempting the
-   required squash/rebaseline.
+3. **F33, migration baseline, done 5 Sep.** The runnable chain now begins
+   with a direct production schema baseline. The original SQL is archived,
+   all 131 local and remote versions match, and `supabase db push --dry-run`
+   reports that production is up to date. Every migration applied during an
+   isolated SQL replay. A full `supabase db reset` remains an optional
+   environment check after repairing Docker Desktop's local metadata error.
 4. **F43, CSP enforce, from about 11 September.** Ask a session to run
    the csp-report query (under F43 above) and, if the only rows are
    expected origins or none at all, change the header name in
@@ -152,13 +149,16 @@ This list records the remaining launch checks and their latest state.
    notification, referral_rewards has one row, and (for a free referrer)
    membership_tier is keeper with referral_grant_until 30 days out. This
    also completes the F24 test-card checkout still marked as yours.
-6. **F55, real iPhone.** Upload a HEIC photo from the camera roll on
-   the Add Gecko form and on Morph ID; both should preview and save.
-7. **Local checkout hygiene.** ~/dev/geck-inspect has another session's
-   uncommitted edits (Home.jsx, blog helpers, several edge functions)
-   and is far behind origin. Decide whether that work is wanted; commit
-   it or discard it, then `git pull`. Sessions currently use the clean
-   worktree at ~/dev/geck-inspect-launch instead.
+6. **F55, real iPhone.** HEIC/HEIF conversion now runs in the shared upload
+   path and a standard HEIC converts successfully in a browser. On a real
+   iPhone, upload a camera-roll HEIC on Add Gecko and Morph ID; both should
+   preview and save before this item is checked off.
+7. **Local checkout hygiene, done 5 Sep.** The active checkout is current
+   with main. The saved sidebar edit was already present upstream, the blog
+   and edge-function changes were superseded by stronger fixes, and the old
+   Home/LiveCollection files were an unshipped landing-page prototype. Those
+   obsolete stashes were discarded after the baseline and HEIC work was
+   committed.
 8. **Repo secret for the weekly What's New (five minutes).** GitHub, repo
    Settings, Secrets and variables, Actions: add
    `SUPABASE_SERVICE_ROLE_KEY` (Supabase, Project settings, API, service
@@ -172,9 +172,10 @@ This list records the remaining launch checks and their latest state.
    printed sticker examples carry a real Pokemon and Nintendo copyright
    line along the bottom edge; decide whether to keep them as shown,
    crop that line, or replace them with prints of the new themes.
-10. **geck-data repo.** Four duplicate policy groups and 14 per-row
-   auth calls remain in the geck_data schema; same recipe as batches 1
-   to 8, but the migrations belong to that repo.
+10. **geck-data repo, done 5 Sep.** The 14 remaining auth calls are init-plan
+   wrapped and all four duplicate groups are consolidated. Production was
+   smoke-tested, all 115 tests pass, commit `89b5d5c` is on main, and the
+   Vercel production deployment is Ready.
 
 ## Production changes applied outside git
 

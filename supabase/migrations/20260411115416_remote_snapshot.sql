@@ -1,1 +1,2 @@
--- Remote-only migration snapshot placeholder.
+-- Historical migration retained as an applied-version marker after the 2026-09-05 schema rebaseline.
+-- The complete current schema is in 20260410025954_remote_schema.sql; original SQL is under _pre_rebaseline_history/.

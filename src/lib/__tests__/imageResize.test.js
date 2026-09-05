@@ -1,5 +1,15 @@
-import { describe, it, expect } from 'vitest';
-import { targetDimensions, downscaleImage, RESIZE_DEFAULTS } from '../imageResize';
+import { describe, it, expect, vi } from 'vitest';
+import {
+  convertHeicForUpload,
+  downscaleImage,
+  isHeicFile,
+  RESIZE_DEFAULTS,
+  targetDimensions,
+} from '../imageResize';
+
+vi.mock('heic-to/csp', () => ({
+  heicTo: vi.fn(async () => new Blob(['jpeg-bytes'], { type: 'image/jpeg' })),
+}));
 
 describe('targetDimensions', () => {
   it('leaves images already within the long-edge limit unscaled', () => {
@@ -65,5 +75,31 @@ describe('downscaleImage fail-safe fallbacks', () => {
   it('handles null/undefined input without throwing', async () => {
     expect(await downscaleImage(null)).toBeNull();
     expect(await downscaleImage(undefined)).toBeUndefined();
+  });
+});
+
+describe('HEIC upload normalization', () => {
+  it('detects HEIC and HEIF from MIME types or filenames', () => {
+    expect(isHeicFile({ type: 'image/heic', name: 'photo' })).toBe(true);
+    expect(isHeicFile({ type: '', name: 'IMG_1234.HEIF' })).toBe(true);
+    expect(isHeicFile({ type: 'image/jpeg', name: 'photo.jpg' })).toBe(false);
+  });
+
+  it('converts HEIC to a JPEG File for preview and upload', async () => {
+    const source = new File(['heic-bytes'], 'IMG_1234.HEIC', {
+      type: 'image/heic',
+      lastModified: 123,
+    });
+    const converted = await convertHeicForUpload(source);
+
+    expect(converted).toBeInstanceOf(File);
+    expect(converted.name).toBe('IMG_1234.jpg');
+    expect(converted.type).toBe('image/jpeg');
+    expect(converted.lastModified).toBe(123);
+  });
+
+  it('does not load or alter ordinary image files', async () => {
+    const source = new File(['jpeg'], 'photo.jpg', { type: 'image/jpeg' });
+    expect(await convertHeicForUpload(source)).toBe(source);
   });
 });

@@ -1,9 +1,2 @@
--- Placeholder for migration 20260905013707 (morph_id_launch_integrity).
---
--- Supabase recorded this migration when the same Morph ID integrity SQL
--- was applied through the MCP after it had already run in the SQL editor.
--- The runnable SQL is retained in
--- 20260904000001_morph_id_launch_integrity.sql; this placeholder keeps the
--- local migration history aligned without replaying the change twice.
---
--- Intentionally empty. Do not add SQL here.
+-- Historical migration retained as an applied-version marker after the 2026-09-05 schema rebaseline.
+-- The complete current schema is in 20260410025954_remote_schema.sql; original SQL is under _pre_rebaseline_history/.

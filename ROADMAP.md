@@ -19,12 +19,12 @@ The full review, with every finding, its location and its status, is in `docs/pl
 
 **Partly fixed (remainder described in the review file)**
 - [x] F30: Hero image is a 2,400 px external hotlink with no srcset; logo and icons are oversized (4 Sep, late session: hero self-hosted as WebP at 800, 1600 and 2400 px)
-- [ ] F33: Production schema has drifted from the repo and the deploy scripts would replay stale SQL (all 121 history rows now match local and remote; `db pull` is blocked because the eight earliest remote_snapshot files are empty and shadow replay reaches p1_animal_passport before `geckos` exists)
+- [x] F33: Production schema has drifted from the repo and the deploy scripts would replay stale SQL (5 Sep: replaced the broken replay chain with a live schema baseline, archived the original SQL, matched all 131 local and remote versions, and verified a dry run reports production up to date)
 - [x] F34: Non-JS crawlers see thin shells and cannot reach 134 child pages (4 Sep, late session: fuller noscript bodies and per-page JSON-LD in the prerendered shells)
 - [ ] F43: No Content-Security-Policy despite five third-party script origins (report-only shipped 4 Sep; reports now land in error_logs via csp-report; decide on enforcing from about 11 Sep)
-- [x] F46: 208 RLS policies re-evaluate auth functions per row; 271 duplicate permissive policies (4 Sep, late session: all eight merge batches applied and verified; only geck_data tables remain, owned by the geck-data repo)
+- [x] F46: 208 RLS policies re-evaluate auth functions per row; 271 duplicate permissive policies (5 Sep: public and geck_data batches applied and smoke-tested; all remaining geck_data auth calls are init-plan wrapped and its four duplicate policy groups are consolidated)
 - [x] F47: Dashboard fans out to about 40 requests with a waterfall; background polling in every tab (4 to 5 Sep: all pollers visibility-aware; Dashboard, My Geckos, Gallery and Breeding on react-query)
-- [ ] F55: Mobile and accessibility gaps (4 Sep, late session: contrast and touch-target pass shipped; HEIC check on a real iPhone still open)
+- [ ] F55: Mobile and accessibility gaps (4 to 5 Sep: contrast and touch-target pass shipped; shared uploads now convert HEIC/HEIF to JPEG in-browser and a standard HEIC passed browser verification; Add Gecko and Morph ID still need a real-iPhone check)
 
 ---
 

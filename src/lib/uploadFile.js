@@ -19,7 +19,7 @@
  */
 import { supabase } from '@/lib/supabaseClient';
 import { getTierLimits, formatBytes } from '@/lib/tierLimits';
-import { downscaleImage } from '@/lib/imageResize';
+import { convertHeicForUpload, downscaleImage, isHeicFile } from '@/lib/imageResize';
 
 const BUCKET = 'geck-inspect-media';
 
@@ -101,10 +101,11 @@ export async function uploadFile({ file, folder = 'uploads' } = {}) {
     throw new Error('uploadFile: no file provided');
   }
 
-  // Validate MIME type, reject anything that isn't an allowed image format.
-  if (!ALLOWED_MIME_TYPES.has(file.type)) {
+  // HEIC/HEIF is converted to JPEG below. Some iOS pickers report an empty
+  // MIME type, so the filename extension is also accepted for this format.
+  if (!ALLOWED_MIME_TYPES.has(file.type) && !isHeicFile(file)) {
     throw new Error(
-      `Unsupported file type "${file.type || 'unknown'}". Allowed: JPEG, PNG, WebP, GIF, AVIF.`
+      `Unsupported file type "${file.type || 'unknown'}". Allowed: JPEG, PNG, WebP, GIF, AVIF, HEIC, HEIF.`
     );
   }
 
@@ -122,10 +123,12 @@ export async function uploadFile({ file, folder = 'uploads' } = {}) {
     throw new Error('Invalid upload folder name.');
   }
 
-  // Downscale + WebP-encode client-side before doing anything else with
+  // Convert iPhone HEIC/HEIF photos first, then downscale + WebP-encode
+  // client-side before doing anything else with
   // the bytes. Everything past this point (quota math, key, upload) uses
-  // the resized file. Falls back to the original on any failure.
-  const upload = await downscaleImage(file);
+  // the browser-safe resized file.
+  const browserSafeFile = await convertHeicForUpload(file);
+  const upload = await downscaleImage(browserSafeFile);
 
   // Namespace by user ID (UUID) so public URLs don't leak emails.
   const { data: { user } } = await supabase.auth.getUser();

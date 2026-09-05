@@ -80,9 +80,12 @@ export default function MultiPhotoUploader({
     for (const it of newItems) {
       try {
         const { file_url } = await UploadFile({ file: it.file });
+        if (it.previewUrl?.startsWith('blob:')) URL.revokeObjectURL(it.previewUrl);
         setItems((prev) => {
           const next = prev.map((p) =>
-            p.id === it.id ? { ...p, url: file_url, status: 'ready' } : p,
+            p.id === it.id
+              ? { ...p, url: file_url, previewUrl: file_url, status: 'ready' }
+              : p,
           );
           emit(next);
           return next;

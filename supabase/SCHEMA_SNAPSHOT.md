@@ -6,17 +6,18 @@
 > not apply it to production. How migrations are actually managed is in
 > [docs/MIGRATIONS.md](../docs/MIGRATIONS.md).
 
-Snapshot date: 2026-09-04 (late session, after the launch review fixes).
+Snapshot date: 2026-09-05 (baseline and summary refreshed; detailed table
+inventory below remains the 4 September catalog).
 Project: `mmuglfphhwlaluyfyxsp` (Geck Inspect). Previous snapshot: 2026-07-07.
 
 This file is DOCUMENTATION, not a migration. Do not apply it. It was
 generated from the live catalog with the queries under "How to
 regenerate", through the Supabase MCP (no database password needed).
 
-> A runnable baseline (a single migration that rebuilds the schema on a
-> fresh project) still needs `supabase db dump --schema public` from a
-> machine that holds the database password. Until that dump is committed,
-> this file plus the appendix is the authoritative in-repo record.
+> The runnable schema baseline is
+> `migrations/20260410025954_remote_schema.sql`. It contains the live
+> `public` and `geck_data` schemas; later root-level migrations carry the
+> changes made after that dump.
 
 ## At a glance
 
@@ -25,12 +26,12 @@ regenerate", through the Supabase MCP (no database password needed).
 | Tables in `public` | 112 (45 with TEXT ids, 63 with UUID ids, 4 keyed some other way) |
 | Tables in `geck_data` | 54 tables plus 27 views (the market data platform, consolidated 4 Sep 2026) |
 | Every `public` table has RLS enabled | yes (one, `revenuecat_webhook_events`, has RLS on with no policy, so only the service role can touch it) |
-| Functions in `public` | 64 (52 SECURITY DEFINER) |
+| Functions in `public` | 66 |
 | Views in `public` | external_reference_images, listing_images, market_listings, morph_taxonomy (compatibility views over `geck_data`), promote_image_usage, v_daily_activity |
 | Enum types | blog_post_status, store_fulfillment_mode, store_fulfillment_status, store_order_status, store_pricing_constraint, store_product_status, store_shipping_class |
 | Extensions | pg_cron 1.6.4, pg_net 0.20.0, pg_stat_statements 1.11, pgcrypto 1.3, supabase_vault 0.3.1, uuid-ossp 1.1, vector 0.8.0 |
 | Storage buckets | geck-inspect-media (public), listing-images (public), promote-images (public), archive-listing-images (private), raw-uploads (private) |
-| Migration history entries | 105 (latest version 20260904232042) |
+| Migration history entries | 131 (latest version 20260905151309) |
 
 ### Scheduled jobs (pg_cron)
 
@@ -43,6 +44,7 @@ regenerate", through the Supabase MCP (no database password needed).
 | hatch-alerts-daily | 13:00 daily | writes hatch-window notifications |
 | weighin-reminders-weekly | 15:00 Sundays | writes weigh-in reminders |
 | monthly-overage-billing | 02:00 on the 1st | calls report-social-overage for Social Media Manager overage |
+| weekly-digest-sunday | 16:00 Sundays | writes one weekly collection summary notification per active keeper |
 
 ### Triggers
 
@@ -167,11 +169,11 @@ note, created_date
 
 ## RLS policies on core tables (as deployed, 4 Sep 2026)
 
-All policies now use `(select auth.email())` / `(select auth.uid())` so
-the auth call runs once per query, not once per row (F46, batch
-rls_initplan_rewrite). Several tables still carry two overlapping
-permissive policies for the same command (the legacy `public`-role pair
-plus a newer `authenticated`-role one); those are the remaining F46 work.
+All policies now use init-plan wrappers such as `(select auth.email())`
+and `(select auth.uid())`, so auth calls run once per query rather than
+once per row. The F46 consolidation is complete in both `public` and
+`geck_data`; no duplicate permissive policy groups remain from the
+audited batches.
 
 | Table | Policy | Cmd | Rule |
 |---|---|---|---|
@@ -246,10 +248,9 @@ columns. `SocialReferralBonus` is mapped but the table is unused.
 
 ## Migration history versus repo files
 
-See docs/MIGRATIONS.md. Summary on the snapshot date: 105 live history
-entries; 22 repo files match a live entry exactly, 57 match by name under
-a different version number, 8 have no live entry with the same name, and
-26 live entries have no repo file at all.
+See docs/MIGRATIONS.md. All 131 live history entries have matching
+root-level files. The runnable baseline replaces the previously broken
+chain; original SQL is retained under `_pre_rebaseline_history/`.
 
 ## How to regenerate
 
