@@ -110,7 +110,7 @@ const FEATURES = [
   {
     icon: Dna,
     title: 'AI Morph Identification',
-    desc: 'Upload a photo and get an instant read on primary morph, secondary traits, and base color, checked against a reference library of thousands of crested gecko photos.',
+    desc: 'Upload up to five photos and get a ranked visual shortlist, the evidence behind it, and a clear prompt when better photos or expert review are needed.',
   },
   {
     icon: GitBranch,
@@ -225,11 +225,11 @@ const LANDING_FAQS = [
   },
   {
     q: 'Can Geck Inspect identify the morph of my crested gecko?',
-    a: 'Yes. Geck Inspect has an AI-powered morph identification feature. Upload a photo of your gecko and the model will return a classification of primary morph, secondary traits, and base color. The classifier is trained on thousands of verified crested gecko photos from the community.',
+    a: 'Yes. Geck Inspect has an AI-assisted visual identification feature for crested geckos. Upload up to five photos and it returns a ranked morph shortlist, visible traits, photo-quality feedback, and the evidence behind the leading candidate. It also lets you submit a correction for independent expert review.',
   },
   {
     q: 'How accurate is the AI crested gecko morph identifier?',
-    a: 'The morph identifier performs well on common primary morphs (Harlequin, Pinstripe, Dalmatian, Flame, and base colors) and reports a confidence score with every prediction. For ambiguous animals, expressing traits (partial pin, dal spotting, tiger, brindle) are returned as secondary tags. You can always request a human second-opinion from the verified expert network inside the app.',
+    a: 'Morph ID is an identification aid, not a substitute for lineage records or an expert assessment. It ranks visual candidates and cites visible markers instead of presenting its model score as accuracy. Ambiguous or poor-quality submissions are marked tentative or held for better photos, and user corrections stay unverified until two expert reviewers submit the same full label set.',
   },
   {
     q: 'Does Geck Inspect sync with MorphMarket or Palm Street?',

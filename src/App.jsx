@@ -339,20 +339,17 @@ const AuthenticatedApp = () => {
   return (
     <Suspense fallback={LazyFallback}>
     <Routes>
+      <Route
+        path="/AuthPortal"
+        element={isGuest ? <LoginPortal /> : <AuthPortalAuthed />}
+      />
       <Route element={<LayoutOutlet />}>
         <Route path="/" element={<MainPage />} />
         {Object.entries(Pages).map(([path, Page]) => {
-          // Authenticated users on /AuthPortal mean they just signed in
-          // (the URL hasn't moved yet). Bounce them to the dashboard so
-          // they actually see the app instead of an empty login form.
+          // AuthPortal is handled outside the authenticated layout. Guests
+          // need the real sign-in form; authenticated users are sent home.
           if (path === 'AuthPortal') {
-            return (
-              <Route
-                key={path}
-                path={`/${path}`}
-                element={<AuthPortalAuthed />}
-              />
-            );
+            return null;
           }
           return (
             <Route

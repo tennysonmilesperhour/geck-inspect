@@ -1536,9 +1536,9 @@ export const BLOG_POSTS = [
         tone: 'success',
         title: 'Use AI to identify your gecko\'s morph',
         items: [
-          'Geck Inspect\'s AI morph identification tool analyzes a photo and classifies primary morph, secondary traits, and base color.',
-          'Upload a clear, well-lit photo showing the gecko from above (dorsal view) for the best results.',
-          'The AI cross-references against the full morph database for a detailed breakdown.',
+          'Geck Inspect\'s Morph ID tool compares up to five photos and returns a ranked visual shortlist, visible traits, and photo-quality feedback.',
+          'Upload sharp dorsal and side views in neutral daylight, and include both fired states when possible.',
+          'Treat the result as an identification aid. Photos cannot prove lineage, genotype, or hidden hets.',
           'Try it now at geckinspect.com/Recognition.',
         ],
       },
@@ -1560,7 +1560,7 @@ export const BLOG_POSTS = [
       {
         question: 'What is the difference between Harlequin and Extreme Harlequin?',
         answer:
-          'Harlequin crested geckos have cream or light pattern on the sides and limbs. When lateral pattern coverage reaches approximately 80%+ of the body, the gecko is classified as Extreme Harlequin. It is a matter of degree, not a separate genetic trait.',
+          'Harlequin crested geckos have cream or light pattern on the sides and limbs. Extreme Harlequin describes especially heavy body and leg coverage, commonly over 60%. It is a matter of degree, not a separate genetic trait.',
       },
       {
         question: 'What is a fired-up crested gecko?',
@@ -1570,7 +1570,7 @@ export const BLOG_POSTS = [
       {
         question: 'Can AI identify crested gecko morphs?',
         answer:
-          'Yes. Geck Inspect offers an AI morph identification tool (included with the Keeper and Breeder plans) that analyzes a photo and classifies primary morph, secondary traits, and base color. Upload a clear dorsal view photo for the best results at geckinspect.com/Recognition.',
+          'Yes. Geck Inspect offers AI-assisted Morph ID with plan-based monthly credits. It returns a ranked visual shortlist, explains visible markers, and asks for better evidence when the photos are not usable. Try it at geckinspect.com/Recognition.',
       },
       {
         question: 'What is the most expensive crested gecko morph?',

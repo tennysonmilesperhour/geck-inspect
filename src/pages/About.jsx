@@ -99,7 +99,7 @@ export default function About() {
               <BookOpen className="w-5 h-5 text-emerald-400" /> What Geck Inspect is
             </h2>
             <p className="text-slate-300 leading-relaxed">
-              Crested geckos were rediscovered in 1994 and the hobby has exploded in the years since. Spreadsheets, breeder Facebook groups, and generic reptile apps have not kept up. Geck Inspect treats this species as the specialist domain it is: morphs and their polygenic/Mendelian distinctions are modeled as first-class data, lineage is tracked across breeders not just owners, and the AI morph identifier is trained on community-uploaded crested geckos, not a generic reptile dataset.
+              Crested geckos were rediscovered in 1994 and the hobby has exploded in the years since. Spreadsheets, breeder Facebook groups, and generic reptile apps have not kept up. Geck Inspect treats this species as the specialist domain it is: morphs and their polygenic or Mendelian distinctions are modeled as first-class data, lineage is tracked across breeders rather than only owners, and Morph ID uses a crested-gecko-specific taxonomy with a community and expert review loop.
             </p>
           </section>
 

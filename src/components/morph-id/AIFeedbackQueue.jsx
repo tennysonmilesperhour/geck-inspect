@@ -6,13 +6,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Label } from '@/components/ui/label';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import {
   Loader2, Check, X as XIcon, ChevronLeft, ChevronRight,
-  RefreshCw, Scale, ShieldCheck, Plus, Zap,
+  RefreshCw, Scale, ShieldCheck, Plus,
 } from 'lucide-react';
 
 import MorphPicker from './MorphPicker';
@@ -35,17 +36,18 @@ function urlsFor(row) {
 }
 
 function describeOutcome(action, result) {
-  if (action === 'reject') return 'Rejection recorded. Sample stays unverified.';
+  if (action === 'reject') return 'Rejection recorded. This sample is excluded from the review queue.';
   if (result?.verified) {
-    return result?.fast_path
-      ? 'Verified by admin one-click.'
-      : 'Consensus reached, sample promoted to training-grade.';
+    return 'Consensus reached, sample promoted to training-grade.';
   }
-  const count = result?.approve_count ?? 1;
-  return `Approval recorded (${count}/2). Needs one more reviewer to verify.`;
+  const matching = result?.matching_approve_count ?? result?.approve_count ?? 1;
+  if (result?.review_status === 'disputed') {
+    return `Review recorded. Current labels disagree, so the sample stays unverified (${matching}/2 matching).`;
+  }
+  return `Review recorded (${matching}/2 matching). Another expert must independently submit the same full label set.`;
 }
 
-const PAGE_SIZE = 50;
+const PAGE_SIZE = 100;
 // Default to NEWEST first. The previous oldest-first default buried freshly
 // seeded scraper candidates behind a backlog of legacy user submissions, so
 // the queue looked empty even with ~3,700 pending rows. Users still
@@ -65,8 +67,8 @@ function initialEdits(row) {
     genetics:          Array.isArray(meta.genetic_traits) ? meta.genetic_traits : [],
     secondary_traits:  row?.secondary_traits || [],
     base_color:        row?.base_color || '',
-    pattern_intensity: row?.pattern_intensity || 'medium',
-    white_amount:      row?.white_amount || 'medium',
+    pattern_intensity: row?.pattern_intensity || 'unknown',
+    white_amount:      row?.white_amount || 'unknown',
     fired_state:       row?.fired_state || 'unknown',
   };
 }
@@ -84,25 +86,54 @@ export default function AIFeedbackQueue() {
   const [edits, setEdits] = useState(null);
   const [sortMode, setSortMode] = useState('newest');
   const [totalCount, setTotalCount] = useState(null);
+  const [reviewNotes, setReviewNotes] = useState('');
+  const [fetchOffset, setFetchOffset] = useState(0);
+  const [reviewedIds, setReviewedIds] = useState(() => new Set());
 
   const load = useCallback(async () => {
     setIsLoading(true);
     try {
       const sortExpr = SORT_OPTIONS.find((s) => s.id === sortMode)?.expr ?? '-created_date';
-      const [rows, expertRpc, adminRpc, countRes] = await Promise.all([
-        GeckoImage.filter({ verified: false }, sortExpr, PAGE_SIZE).catch(() => []),
+      const [expertRpc, adminRpc, authRes] = await Promise.all([
         supabase.rpc('is_expert_reviewer').then((r) => r.data).catch(() => false),
         supabase.rpc('is_admin').then((r) => r.data).catch(() => false),
+        supabase.auth.getUser().catch(() => ({ data: { user: null } })),
+      ]);
+      const canReview = Boolean(expertRpc) || Boolean(adminRpc);
+      setIsExpertReviewer(Boolean(expertRpc));
+      setIsAdmin(Boolean(adminRpc));
+      if (!canReview) {
+        setQueue([]);
+        setTotalCount(0);
+        setHasMore(false);
+        return;
+      }
+
+      const reviewerEmail = authRes?.data?.user?.email;
+      const [rows, countRes, voteRes] = await Promise.all([
+        GeckoImage.filter({ verified: false }, sortExpr, PAGE_SIZE).catch(() => []),
         supabase
           .from('gecko_images')
           .select('id', { count: 'exact', head: true })
           .eq('verified', false)
           .then((r) => r)
           .catch(() => ({ count: null })),
+        reviewerEmail
+          ? supabase
+            .from('classification_votes')
+            .select('gecko_image_id')
+            .eq('reviewer_email', reviewerEmail)
+            .not('label_fingerprint', 'is', null)
+          : Promise.resolve({ data: [] }),
       ]);
-      setIsExpertReviewer(Boolean(expertRpc));
-      setIsAdmin(Boolean(adminRpc));
-      setQueue(rows || []);
+      const alreadyVoted = new Set((voteRes?.data || []).map((vote) => String(vote.gecko_image_id)));
+      const availableRows = (rows || []).filter((row) => (
+        row?.training_meta?.review_status !== 'rejected'
+        && !alreadyVoted.has(String(row.id))
+      ));
+      setQueue(availableRows);
+      setReviewedIds(alreadyVoted);
+      setFetchOffset((rows || []).length);
       setHasMore((rows || []).length === PAGE_SIZE);
       setTotalCount(typeof countRes?.count === 'number' ? countRes.count : null);
       setIdx(0);
@@ -121,17 +152,22 @@ export default function AIFeedbackQueue() {
         { verified: false },
         sortExpr,
         PAGE_SIZE,
-        queue.length,
+        fetchOffset,
       ).catch(() => []);
-      const dedup = (next || []).filter((r) => !queue.some((q) => q.id === r.id));
+      const dedup = (next || []).filter((row) => (
+        row?.training_meta?.review_status !== 'rejected'
+        && !reviewedIds.has(String(row.id))
+        && !queue.some((queued) => queued.id === row.id)
+      ));
       setQueue((prev) => [...prev, ...dedup]);
-      setHasMore(dedup.length === PAGE_SIZE);
+      setFetchOffset((offset) => offset + (next || []).length);
+      setHasMore((next || []).length === PAGE_SIZE);
     } catch (err) {
       toast({ title: 'Failed to load more', description: err.message, variant: 'destructive' });
     } finally {
       setIsLoadingMore(false);
     }
-  }, [queue, toast, sortMode]);
+  }, [fetchOffset, queue, reviewedIds, toast, sortMode]);
 
   useEffect(() => { load(); }, [load]);
 
@@ -139,6 +175,7 @@ export default function AIFeedbackQueue() {
   useEffect(() => {
     if (!current) { setEdits(null); return; }
     setEdits(initialEdits(current));
+    setReviewNotes('');
   }, [current]);
 
   const step = (delta) => {
@@ -156,6 +193,14 @@ export default function AIFeedbackQueue() {
   // Standard reviewer vote (2-vote consensus path)
   const persist = async (action) => {
     if (!current || !edits) return;
+    if (reviewNotes.trim().length < 10) {
+      toast({
+        title: 'Add a short evidence note',
+        description: 'Name the visible feature that supports your call or makes the photo unsuitable.',
+        variant: 'destructive',
+      });
+      return;
+    }
     setIsSaving(true);
     try {
       const { data, error } = await supabase.rpc('review_gecko_image', {
@@ -164,7 +209,7 @@ export default function AIFeedbackQueue() {
         p_primary_morph:     edits.primary_morph || current.primary_morph,
         p_secondary_traits:  edits.secondary_traits || current.secondary_traits || [],
         p_edits:             { taxonomy_version: TAXONOMY_VERSION, edits },
-        p_notes:             null,
+        p_notes:             reviewNotes.trim(),
         p_genetic_traits:    edits.genetics || [],
         p_base_color:        edits.base_color || null,
         p_pattern_intensity: edits.pattern_intensity || null,
@@ -178,48 +223,10 @@ export default function AIFeedbackQueue() {
         description: describeOutcome(action, data),
       });
 
-      // Reject + consensus-promoted rows leave the queue; otherwise keep
-      // visible so a second reviewer can confirm.
-      if (action === 'reject' || data?.verified) {
-        removeCurrentFromQueue();
-      } else {
-        step(1);
-      }
-    } catch (err) {
-      toast({ title: 'Save failed', description: err.message, variant: 'destructive' });
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  // Admin fast-path: one click, no consensus wait
-  const adminVerifyNow = async () => {
-    if (!current || !edits) return;
-    if (!edits.primary_morph) {
-      toast({ title: 'Pick a primary morph first', variant: 'destructive' });
-      return;
-    }
-    setIsSaving(true);
-    try {
-      const { data, error } = await supabase.rpc('admin_verify_gecko_image', {
-        p_image_id:          current.id,
-        p_primary_morph:     edits.primary_morph,
-        p_secondary_traits:  edits.secondary_traits || [],
-        p_genetic_traits:    edits.genetics || [],
-        p_base_color:        edits.base_color || null,
-        p_pattern_intensity: edits.pattern_intensity || null,
-        p_white_amount:      edits.white_amount || null,
-        p_fired_state:       edits.fired_state || null,
-        p_notes:             null,
-      });
-      if (error) throw error;
-      toast({
-        title: 'Verified',
-        description: describeOutcome('approve', data),
-      });
+      // A reviewer should never see their own completed item again.
       removeCurrentFromQueue();
     } catch (err) {
-      toast({ title: 'Verify failed', description: err.message, variant: 'destructive' });
+      toast({ title: 'Save failed', description: err.message, variant: 'destructive' });
     } finally {
       setIsSaving(false);
     }
@@ -230,6 +237,23 @@ export default function AIFeedbackQueue() {
       <Card className="bg-slate-900 border-slate-700">
         <CardContent className="p-8 text-center text-slate-400">
           <Loader2 className="w-6 h-6 animate-spin inline mr-2" /> Loading review queue…
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!isExpertReviewer && !isAdmin) {
+    return (
+      <Card className="bg-slate-900 border-slate-700">
+        <CardHeader>
+          <CardTitle className="text-slate-100 flex items-center gap-2">
+            <ShieldCheck className="w-5 h-5 text-emerald-400" /> Expert review queue
+          </CardTitle>
+        </CardHeader>
+        <CardContent>
+          <p className="text-slate-400">
+            This queue is limited to approved expert reviewers. You can still submit a correction from Morph ID for independent review.
+          </p>
         </CardContent>
       </Card>
     );
@@ -315,7 +339,8 @@ export default function AIFeedbackQueue() {
                 </p>
                 {current.confidence_score != null && (
                   <p className="text-xs text-slate-400 mt-1">
-                    contributor confidence: {Math.round(current.confidence_score)}%
+                    {current.training_meta?.reviewer_verdict === 'agree' ? 'model signal' : 'contributor confidence'}:{' '}
+                    {Math.round(current.confidence_score)}/100
                   </p>
                 )}
               </div>
@@ -407,7 +432,7 @@ export default function AIFeedbackQueue() {
                     </div>
                     <div>
                       <Label className="text-slate-300 text-xs uppercase tracking-wide">Pattern intensity</Label>
-                      <Select value={edits.pattern_intensity || 'medium'} onValueChange={(v) => setEdit('pattern_intensity', v)}>
+                      <Select value={edits.pattern_intensity || 'unknown'} onValueChange={(v) => setEdit('pattern_intensity', v)}>
                         <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-100">
                           <SelectValue />
                         </SelectTrigger>
@@ -420,7 +445,7 @@ export default function AIFeedbackQueue() {
                     </div>
                     <div>
                       <Label className="text-slate-300 text-xs uppercase tracking-wide">White amount</Label>
-                      <Select value={edits.white_amount || 'medium'} onValueChange={(v) => setEdit('white_amount', v)}>
+                      <Select value={edits.white_amount || 'unknown'} onValueChange={(v) => setEdit('white_amount', v)}>
                         <SelectTrigger className="bg-slate-800 border-slate-600 text-slate-100">
                           <SelectValue />
                         </SelectTrigger>
@@ -431,6 +456,16 @@ export default function AIFeedbackQueue() {
                         </SelectContent>
                       </Select>
                     </div>
+                  </div>
+                  <div>
+                    <Label className="text-slate-300 text-xs uppercase tracking-wide">Evidence note</Label>
+                    <Textarea
+                      value={reviewNotes}
+                      onChange={(event) => setReviewNotes(event.target.value)}
+                      placeholder="Name the visible feature that supports this label, the closest alternative you ruled out, or why the photo is unusable."
+                      className="bg-slate-800 border-slate-600 text-slate-100 mt-2"
+                    />
+                    <p className="text-xs text-slate-500 mt-1">Required so later reviewers can audit why this decision was made.</p>
                   </div>
                 </>
               )}
@@ -445,17 +480,15 @@ export default function AIFeedbackQueue() {
           <Button
             variant="outline"
             onClick={() => persist('reject')}
-            disabled={isSaving}
+            disabled={isSaving || reviewNotes.trim().length < 10}
             className="text-rose-300 border-rose-600/50 hover:bg-rose-950"
           >
             <XIcon className="w-4 h-4 mr-2" /> Reject
           </Button>
           <Button
             onClick={() => persist('approve')}
-            disabled={isSaving || !edits?.primary_morph || !isExpertReviewer}
-            title={isExpertReviewer
-              ? 'Promote this sample to verified training data (requires 2 approves for non-admins)'
-              : 'Only expert reviewers can approve, your edits will still be saved if you submit feedback from /recognition.'}
+            disabled={isSaving || !edits?.primary_morph || (!isExpertReviewer && !isAdmin) || reviewNotes.trim().length < 10}
+            title="Record an independent label. Two matching full label sets are required."
             className="bg-emerald-600 hover:bg-emerald-700"
           >
             {isSaving
@@ -463,24 +496,6 @@ export default function AIFeedbackQueue() {
               : <Check className="w-4 h-4 mr-2" />}
             Approve
           </Button>
-          {isAdmin && (
-            <Button
-              onClick={adminVerifyNow}
-              disabled={isSaving || !edits?.primary_morph}
-              title="Admin one-click verify, bypasses 2-reviewer consensus"
-              className="bg-indigo-600 hover:bg-indigo-700"
-            >
-              {isSaving
-                ? <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                : <Zap className="w-4 h-4 mr-2" />}
-              Verify now (admin)
-            </Button>
-          )}
-          {!isExpertReviewer && !isAdmin && (
-            <span className="text-xs text-slate-500">
-              You can review + suggest edits, but only expert reviewers can verify.
-            </span>
-          )}
           <div className="flex-1" />
           {hasMore && idx >= queue.length - 3 && (
             <Button

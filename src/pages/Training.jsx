@@ -123,7 +123,7 @@ export default function TrainingPage() {
     return (
       <div className="flex flex-col items-center justify-center h-screen bg-slate-950 text-white p-8">
         <Loader2 className="w-16 h-16 mb-4 text-emerald-500 animate-spin" />
-        <h2 className="text-2xl font-bold">Loading AI Training Center…</h2>
+        <h2 className="text-2xl font-bold">Loading Morph ID Evidence Lab...</h2>
         <p className="text-slate-400">Fetching the latest dataset.</p>
       </div>
     );
@@ -138,9 +138,9 @@ export default function TrainingPage() {
               <Brain className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold text-slate-100">AI Training Center</h1>
+              <h1 className="text-4xl font-bold text-slate-100">Morph ID Evidence Lab</h1>
               <p className="text-slate-400">
-                Contribute, review, and benchmark the crested gecko morph model.
+                Build an auditable crested gecko reference set for review and benchmarking.
                 Taxonomy v{TAXONOMY_VERSION}.
               </p>
             </div>
@@ -167,10 +167,10 @@ export default function TrainingPage() {
             <div className="flex items-start gap-3 text-slate-400 text-sm">
               <Sparkles className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
               <p>
-                Label every axis that matters for ML, primary morph, genetic
+                Label every axis that matters for visual identification: primary morph, possible genetic
                 traits, descriptive modifiers, base color, pattern intensity,
-                fired state, photo quality, and (optionally) lineage. The more
-                axes you provide, the more weight the sample carries in training.
+                fired state, photo quality, and optional lineage. Contributions
+                stay unverified until expert consensus.
               </p>
             </div>
             <ExpertContributionForm onSaved={reload} />
@@ -180,10 +180,9 @@ export default function TrainingPage() {
             <div className="flex items-start gap-3 text-slate-400 text-sm">
               <ShieldCheck className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
               <p>
-                Approving promotes a sample to <span className="text-emerald-300">verified</span>,
-                the flag ML uses to select training-grade rows. Rejecting keeps
-                it in the corpus but marks it unreliable, so the model can
-                learn from the disagreement too.
+                Two experts must independently submit the same full label set before a sample becomes
+                <span className="text-emerald-300"> verified</span>. Conflicting calls remain disputed,
+                and rejected photos are excluded from the review queue.
               </p>
             </div>
             <AIFeedbackQueue />
@@ -362,4 +361,3 @@ function DataBar({ label, value, sub, color }) {
     </div>
   );
 }
-

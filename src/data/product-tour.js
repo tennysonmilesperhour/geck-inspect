@@ -37,7 +37,7 @@ export const PRODUCT_TOUR_SLIDES = [
     id: 'calculator',
     file: 'genetics-calculator.png',
     title: 'Multi-trait genetics calculator',
-    caption: 'Project full clutch outcomes across every proven crested gecko trait. Co-dominant, recessive, polygenic.',
+    caption: 'Project full clutch outcomes across every proven crested gecko trait. Incomplete dominant, recessive, polygenic.',
     captureUrl: 'https://geckinspect.com/calculator',
   },
   {
@@ -51,8 +51,8 @@ export const PRODUCT_TOUR_SLIDES = [
     id: 'morph-id',
     file: 'ai-morph-id.png',
     title: 'AI morph identification',
-    caption: 'Upload a photo, get primary morph, secondary traits, base color, and a confidence score.',
-    captureUrl: 'https://geckinspect.com/MorphIdentifier',
+    caption: 'Compare up to five photos, get a ranked visual shortlist, and see what evidence or next photo matters.',
+    captureUrl: 'https://geckinspect.com/Recognition',
   },
   {
     id: 'storefront',

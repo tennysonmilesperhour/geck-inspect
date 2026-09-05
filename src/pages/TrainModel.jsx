@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { User, GeckoImage, ScrapedTrainingData } from '@/entities/all';
-import { InvokeLLM } from '@/integrations/Core';
+import { InvokeLLM, UploadFile } from '@/integrations/Core';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -117,8 +117,9 @@ export default function TrainModelPage() {
         
         setIsAnalyzing(true);
         try {
-            const { data } = await recognizeGeckoMorph({ image: testImage });
-            setTestResult(data);
+            const { file_url: imageUrl } = await UploadFile({ file: testImage });
+            const { data, error } = await recognizeGeckoMorph({ imageUrl });
+            setTestResult(error ? { error: error.message } : data);
         } catch (error) {
             setTestResult({ error: 'Analysis failed: ' + error.message });
         }
@@ -304,7 +305,7 @@ Please be specific about crested gecko morphs and use standard morph terminology
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-6">
                             <div className="text-center">
                                 <Badge variant={completionPercentage > 80 ? "default" : "secondary"}>
-                                    Data Quality: {completionPercentage > 80 ? "Excellent" : completionPercentage > 50 ? "Good" : "Needs Improvement"}
+                                    Label coverage: {completionPercentage > 80 ? "High" : completionPercentage > 50 ? "Medium" : "Low"}
                                 </Badge>
                             </div>
                             <div className="text-center">
@@ -376,7 +377,8 @@ Please be specific about crested gecko morphs and use standard morph terminology
                                                     ) : (
                                                         <div className="space-y-2">
                                                             <p><strong>Primary Morph:</strong> {testResult.primary_morph || 'Unknown'}</p>
-                                                            <p><strong>Confidence:</strong> {testResult.confidence || 'N/A'}%</p>
+                                                            <p><strong>Assessment state:</strong> {testResult.assessment_status || 'Unknown'}</p>
+                                                            <p><strong>Model signal:</strong> {testResult.model_signal ?? testResult.confidence_score ?? 'N/A'}/100</p>
                                                             <p><strong>Secondary Traits:</strong> {testResult.secondary_traits?.join(', ') || 'None detected'}</p>
                                                         </div>
                                                     )}

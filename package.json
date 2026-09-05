@@ -17,6 +17,7 @@
     "build:prerender": "node scripts/prerender.mjs",
     "audit": "node scripts/seo-audit.mjs",
     "check:genetics": "node scripts/check-genetics-consistency.mjs",
+    "eval:morph-id": "node scripts/eval-morph-id.mjs",
     "audit:strict": "node scripts/seo-audit.mjs --strict",
     "test": "vitest run",
     "lint": "eslint .",

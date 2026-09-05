@@ -3,8 +3,8 @@
 // samples" retrieval on /recognition, an independent second signal beside
 // the VLM morph call.
 //
-// Default encoder: SigLIP2-base (768-dim unit-norm vectors) on Replicate.
-// Swap via SIGLIP_MODEL env var to plug in a different encoder; if the
+// Default encoder: CLIP ViT-L/14 (768-dim vectors) on Replicate.
+// Swap via SIGLIP_MODEL env var to plug in a morph-specific encoder; if the
 // dimension changes, also update the vector(N) column and HNSW index.
 //
 // Request shape:
@@ -17,7 +17,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const REPLICATE_API_TOKEN = Deno.env.get("REPLICATE_API_TOKEN");
 const SIGLIP_MODEL = Deno.env.get("SIGLIP_MODEL") ||
-  "krthr/clip-embeddings"; // placeholder, swap to a SigLIP2 model id on Replicate
+  "krthr/clip-embeddings";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL")!;
 const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
@@ -104,22 +104,49 @@ async function callReplicate(imageUrl: string) {
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
   if (req.method !== "POST") return json({ error: "POST only" }, 405);
-  if (!REPLICATE_API_TOKEN) return json({ error: "REPLICATE_API_TOKEN not set" }, 500);
 
   try {
+    const authHeader = req.headers.get("authorization") || "";
+    const token = authHeader.replace(/^Bearer\s+/i, "").trim();
+    if (!token) return json({ error: "auth required", code: "auth_required" }, 401);
+    const authClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, {
+      global: { headers: { Authorization: `Bearer ${token}` } },
+    });
+    const { data: { user } } = await authClient.auth.getUser();
+    if (!user) return json({ error: "auth required", code: "auth_required" }, 401);
+    if (!REPLICATE_API_TOKEN) {
+      return json({ error: "Image similarity is not configured", code: "config_error" }, 500);
+    }
+
     const body = await req.json().catch(() => ({}));
     const imageUrl = body?.imageUrl;
     const geckoImageId = body?.geckoImageId;
-    if (!imageUrl || typeof imageUrl !== "string") {
-      return json({ error: "imageUrl (string) is required" }, 400);
+    let parsedUrl: URL;
+    try {
+      parsedUrl = new URL(imageUrl);
+    } catch {
+      return json({ error: "A valid HTTPS imageUrl is required", code: "bad_request" }, 400);
+    }
+    if (parsedUrl.protocol !== "https:" || String(imageUrl).length > 2048) {
+      return json({ error: "A valid HTTPS imageUrl is required", code: "bad_request" }, 400);
     }
 
     const raw = await callReplicate(imageUrl);
     const embedding = normalize(raw);
+    if (embedding.length !== 768 || embedding.some((value) => !Number.isFinite(value))) {
+      return json({ error: "Embedding model returned an invalid vector", code: "upstream_error" }, 502);
+    }
 
     let persisted = false;
     if (geckoImageId) {
       const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+      const { data: profile } = await admin.from("profiles")
+        .select("role")
+        .eq("email", user.email)
+        .maybeSingle();
+      if (!profile || !["admin", "expert_reviewer"].includes(profile.role)) {
+        return json({ error: "expert role required to persist embeddings", code: "forbidden" }, 403);
+      }
       const { error } = await admin.from("gecko_images")
         .update({
           image_embedding: embedding,

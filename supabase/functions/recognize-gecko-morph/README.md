@@ -1,13 +1,16 @@
 # recognize-gecko-morph edge function
 
-Structured crested-gecko morph ID. Takes `{ imageUrl }`, returns the morph
-analysis shape `/recognition` and `/training` consume, with every field
+Evidence-first crested gecko visual Morph ID. Takes `{ imageUrl }` or up to
+five `{ imageUrls }`, returns the analysis shape `/recognition` and `/training` consume, with every field
 clamped to the canonical taxonomy (see `taxonomy.ts`, mirrored from
 `src/components/morph-id/morphTaxonomy.js`).
 
 Powered by **Anthropic Claude vision** with tool-use for guaranteed
 structured JSON output. The tool's `input_schema` encodes the taxonomy
 enums, so the model can't return an id that isn't in our ontology.
+
+This is an identification aid, not a genetic test. It can abstain when photos
+are unusable, and it never treats model scores as calibrated probabilities.
 
 ## Prerequisites
 
@@ -44,7 +47,20 @@ supabase functions deploy recognize-gecko-morph --no-verify-jwt
   "success": true,
   "model": "claude-sonnet-4-6",
   "analysis": {
+    "assessment_status": "best_match",
     "primary_morph": "extreme_harlequin",
+    "candidate_morphs": [
+      {
+        "morph": "extreme_harlequin",
+        "score": 82,
+        "why": "Heavy cream pattern continues across the legs and flanks."
+      },
+      {
+        "morph": "harlequin",
+        "score": 64,
+        "why": "A plausible lower-coverage alternative."
+      }
+    ],
     "genetic_traits": ["lily_white"],
     "secondary_traits": ["white_fringe", "portholes"],
     "base_color": "dark_red",
@@ -52,13 +68,18 @@ supabase functions deploy recognize-gecko-morph --no-verify-jwt
     "white_amount": "high",
     "fired_state": "fired_up",
     "confidence_score": 82,
-    "alternatives": [
-      { "primary_morph": "extreme_harlequin", "likelihood": 82 },
-      { "primary_morph": "super_harlequin", "likelihood": 40 },
-      { "primary_morph": "harlequin", "likelihood": 25 }
-    ],
-    "explanation": "Heavy red pattern extending onto legs with prominent white belly...",
-    "taxonomy_version": "2026.04.17",
+    "model_signal": 82,
+    "evidence_markers": ["Heavy leg coverage", "Cream pattern across both flanks"],
+    "uncertainty_reasons": ["Tail base is partly hidden"],
+    "photo_assessment": {
+      "subject_is_crested_gecko": true,
+      "usable_for_id": true,
+      "quality_grade": "good",
+      "issues": [],
+      "next_photo_needed": "Add a top-down photo to check dorsal coverage."
+    },
+    "explanation": "The visible leg and flank coverage support extreme harlequin. A top-down view would make the distinction stronger.",
+    "taxonomy_version": "2026.09.04",
     "model": "claude-sonnet-4-6"
   }
 }
@@ -67,8 +88,11 @@ supabase functions deploy recognize-gecko-morph --no-verify-jwt
 Error shape:
 
 ```json
-{ "error": "Anthropic 429: rate limit exceeded" }
+{ "error": "The recognition service is temporarily busy.", "code": "upstream_rate_limited" }
 ```
+
+The function requires a valid user access token. It reserves a monthly credit
+before calling the model and refunds that credit if the analysis fails.
 
 ## Upgrading the taxonomy
 

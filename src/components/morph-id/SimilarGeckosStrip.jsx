@@ -103,7 +103,7 @@ export default function SimilarGeckosStrip({ imageUrl }) {
         )}
         {matches && matches.length > 0 && (
           <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-            {matches.map((m) => (
+            {matches.map((m, index) => (
               <div key={m.id} className="space-y-1">
                 <img
                   src={m.image_url}
@@ -115,7 +115,7 @@ export default function SimilarGeckosStrip({ imageUrl }) {
                   {labelFor(m.primary_morph)}
                 </p>
                 <Badge variant="secondary" className="text-[10px] bg-slate-800 text-slate-300">
-                  {Math.round((m.similarity ?? 0) * 100)}% match
+                  visual neighbor {index + 1}
                 </Badge>
               </div>
             ))}
@@ -123,8 +123,8 @@ export default function SimilarGeckosStrip({ imageUrl }) {
         )}
         {matches && matches.length > 0 && (
           <p className="text-xs text-slate-500">
-            These are expert-verified geckos that visually resemble your photo.
-            If several share a morph, that's strong corroborating evidence.
+            These verified samples are ranked by general visual similarity, not
+            morph probability. Use them for comparison, not as independent votes.
           </p>
         )}
       </CardContent>

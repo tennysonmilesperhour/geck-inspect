@@ -2,7 +2,7 @@
 // Kept as a flat list here so the edge function prompt can constrain the
 // model to return canonical ids. If you change the client taxonomy, update
 // this file and bump TAXONOMY_VERSION below.
-export const TAXONOMY_VERSION = "2026.04.17";
+export const TAXONOMY_VERSION = "2026.09.04";
 
 export const PRIMARY_MORPH_IDS = [
   "patternless", "flame", "chevron_flame", "harlequin", "extreme_harlequin",
@@ -38,7 +38,7 @@ export const BASE_COLOR_IDS = [
   "lavender", "charcoal", "near_black",
 ];
 
-export const PATTERN_INTENSITY_IDS = ["none", "low", "medium", "high", "extreme"];
-export const WHITE_AMOUNT_IDS = ["none", "trace", "low", "medium", "high", "extreme"];
+export const PATTERN_INTENSITY_IDS = ["unknown", "none", "low", "medium", "high", "extreme"];
+export const WHITE_AMOUNT_IDS = ["unknown", "none", "trace", "low", "medium", "high", "extreme"];
 export const FIRED_STATE_IDS = ["fired_up", "fired_down", "transitioning", "unknown"];
 export const AGE_STAGE_IDS = ["hatchling", "juvenile", "subadult", "adult", "unknown"];

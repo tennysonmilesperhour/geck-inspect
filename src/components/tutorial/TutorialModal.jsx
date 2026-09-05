@@ -78,7 +78,7 @@ const STEP_BLURBS = {
     },
     Recognition: {
         title: 'Morph ID',
-        body: 'Upload a photo of a gecko and our AI calls out the morphs and traits it sees, with confidence scores. Great for unboxing day or sanity-checking a hatchling.',
+        body: 'Compare up to five photos and get a ranked visual shortlist, evidence markers, and a clear request when better photos are needed. Great for narrowing an unboxing-day or hatchling call.',
     },
     MorphVisualizer: {
         title: 'Morph Visualizer',

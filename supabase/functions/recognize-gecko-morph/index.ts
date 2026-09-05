@@ -65,7 +65,7 @@ const CLAUDE_MODEL = Deno.env.get("CLAUDE_MODEL") || "claude-sonnet-4-6";
 const GECK_DATA_SUPABASE_URL = Deno.env.get("GECK_DATA_SUPABASE_URL");
 const GECK_DATA_SUPABASE_SERVICE_KEY = Deno.env.get("GECK_DATA_SUPABASE_SERVICE_KEY");
 
-// Shared secret that lets the eval script (scripts/eval_morph_id.py)
+// Shared secret that lets the eval script (scripts/eval-morph-id.mjs)
 // tag its calls as surface='morph_id_eval' regardless of auth state.
 // Without it, all non-admin callers fall through to 'morph_id_production'.
 const EVAL_SHARED_SECRET = Deno.env.get("EVAL_SHARED_SECRET");
@@ -296,6 +296,17 @@ async function loadProfile(authToken: string): Promise<Profile | null> {
   };
 }
 
+async function refundMorphIdCredit(userId: string): Promise<void> {
+  try {
+    const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
+    const { error } = await admin.rpc("refund_morph_id_credit", { p_user_id: userId });
+    if (error) console.error("MorphID credit refund failed:", error.message);
+  } catch (err) {
+    const message = err instanceof Error ? err.message : String(err);
+    console.error("MorphID credit refund threw:", message);
+  }
+}
+
 function resolveTier(profile: Profile): string {
   if (profile.subscription_status === "grandfathered") return "breeder";
   const t = profile.membership_tier;
@@ -406,19 +417,32 @@ function buildInstructions(fewShotBank: FewShotExample[], includeValueEstimate: 
     ? `\n- value_estimate_usd_low / value_estimate_usd_high: a CONSERVATIVE retail price band in US dollars for an unrelated, unproven specimen at the apparent life stage, based on the morph quality you actually see in the photo. Reflect uncertainty by widening the band. value_estimate_notes is one sentence on what drives the band (e.g., "high white expression on a clean pin lifts this; unproven het knocks it down").`
     : "";
 
-  return `You are a world-expert crested gecko (Correlophus ciliatus) morph identifier. Analyze
-the user's photograph(s) and call the \`submit_morph_analysis\` tool with your best
-assessment. Use ONLY the ids provided in the tool's schema for each field. Do not
-invent ids; if unsure, pick the closest and lower your confidence score.
+  return `You are a world-expert crested gecko (Correlophus ciliatus) visual morph
+identification assistant. Analyze the user's photograph(s) and call the
+\`submit_morph_analysis\` tool. Use only ids in the schema.
 
 Rules:
-- primary_morph is the single best pattern-class id. Don't call "harlequin" for a
-  flame, or "extreme_harlequin" without >60% leg pattern.
-- genetic_traits is ONLY for named/proven heritable traits (lily_white, axanthic,
-  cappuccino, etc.). Leave empty if you don't see clear evidence.
+- First assess whether the images show one crested gecko clearly enough for visual
+  identification. Set usable_for_id=false for the wrong subject, multiple animals,
+  severe blur, heavy obstruction, or lighting that prevents a responsible call.
+- primary_morph is the best visual pattern-class candidate. If evidence is
+  insufficient, provide a technical fallback but set usable_for_id=false. The app
+  will withhold that fallback as an identification.
+- Return up to three distinct candidate_morphs in descending visual-evidence order.
+  Scores are relative model signals, not calibrated probabilities. Cite the visual
+  feature that supports or weakens each candidate.
+- Do not call harlequin for a flame, or extreme_harlequin without more than 60%
+  leg pattern.
+- genetic_traits is only for a trait whose visible phenotype is strongly expressed.
+  A photo cannot prove genotype, carrier status, lineage, or hidden hets. Leave the
+  array empty when lineage would be required.
 - secondary_traits is observational modifiers. Multiple allowed.
-- If the photo is blurry, oddly lit, or shows multiple animals, lower
-  confidence_score substantially and explain why in the explanation field.${valueLine}
+- evidence_markers must name concrete visible features such as dorsal coverage,
+  leg coverage, pin continuity, spot count, flank pattern, and white placement.
+- uncertainty_reasons must name missing views, ambiguous lookalikes, age effects,
+  fired state, blur, glare, or color cast when relevant.
+- confidence_score is a model signal about the top visual candidate, not the
+  probability that the identification is correct.${valueLine}
 
 Taxonomy version: ${TAXONOMY_VERSION}.${bankIntro}`;
 }
@@ -433,19 +457,33 @@ function buildTool(includeValueEstimate: boolean) {
     white_amount:      { type: "string", enum: WHITE_AMOUNT_IDS },
     fired_state:       { type: "string", enum: FIRED_STATE_IDS },
     confidence_score:  { type: "integer", minimum: 0, maximum: 100 },
-    alternatives: {
+    candidate_morphs:  {
       type: "array",
-      description: "The top 2-3 most likely primary_morph ids ranked most to least likely, INCLUDING your primary_morph pick first, each with a 0-100 likelihood. Crested gecko morphs are frequently confused, so always offer runners-up.",
+      maxItems: 3,
       items: {
         type: "object",
-        required: ["primary_morph", "likelihood"],
+        required: ["morph", "score", "why"],
         properties: {
-          primary_morph: { type: "string", enum: PRIMARY_MORPH_IDS },
-          likelihood:    { type: "integer", minimum: 0, maximum: 100 },
+          morph: { type: "string", enum: PRIMARY_MORPH_IDS },
+          score: { type: "integer", minimum: 0, maximum: 100 },
+          why: { type: "string", description: "Short visual evidence for or against this candidate." },
         },
       },
     },
-    explanation:       { type: "string", description: "1-2 sentences citing visual evidence." },
+    evidence_markers:    { type: "array", maxItems: 6, items: { type: "string" } },
+    uncertainty_reasons: { type: "array", maxItems: 5, items: { type: "string" } },
+    photo_assessment: {
+      type: "object",
+      required: ["subject_is_crested_gecko", "usable_for_id", "quality_grade", "issues", "next_photo_needed"],
+      properties: {
+        subject_is_crested_gecko: { type: "boolean" },
+        usable_for_id: { type: "boolean" },
+        quality_grade: { type: "string", enum: ["good", "usable", "poor"] },
+        issues: { type: "array", maxItems: 5, items: { type: "string" } },
+        next_photo_needed: { type: "string", description: "The single most useful next photo, or an empty string." },
+      },
+    },
+    explanation: { type: "string", description: "Two concise sentences grounded in visible evidence and uncertainty." },
   };
   if (includeValueEstimate) {
     properties.value_estimate_usd_low = {
@@ -466,28 +504,13 @@ function buildTool(includeValueEstimate: boolean) {
     description: "Submit the structured morph analysis for this crested gecko photo.",
     input_schema: {
       type: "object",
-      required: ["primary_morph", "confidence_score", "explanation"],
+      required: [
+        "primary_morph", "confidence_score", "candidate_morphs",
+        "evidence_markers", "uncertainty_reasons", "photo_assessment", "explanation",
+      ],
       properties,
     },
   };
-}
-
-// Normalize the model's ranked alternatives: keep only valid primary_morph
-// ids, clamp likelihoods, dedupe (first wins), sort most-likely first, and
-// cap at 3. Returns [] when the model omitted the field.
-function clampAlternatives(v: unknown): { primary_morph: string; likelihood: number }[] {
-  if (!Array.isArray(v)) return [];
-  const seen = new Set<string>();
-  const out: { primary_morph: string; likelihood: number }[] = [];
-  for (const item of v) {
-    const m = (item as Record<string, unknown>)?.primary_morph;
-    if (typeof m !== "string" || !PRIMARY_MORPH_IDS.includes(m) || seen.has(m)) continue;
-    seen.add(m);
-    const l = Number((item as Record<string, unknown>)?.likelihood);
-    out.push({ primary_morph: m, likelihood: Math.max(0, Math.min(100, Number.isFinite(l) ? l : 0)) });
-  }
-  out.sort((a, b) => b.likelihood - a.likelihood);
-  return out.slice(0, 3);
 }
 
 function clampToTaxonomy(
@@ -499,16 +522,75 @@ function clampToTaxonomy(
     typeof v === "string" && allowed.includes(v) ? v : null;
   const pickMany = (v: unknown, allowed: string[]) =>
     Array.isArray(v) ? v.filter((x) => typeof x === "string" && allowed.includes(x)) : [];
+  const pickTextMany = (v: unknown, max: number) =>
+    Array.isArray(v)
+      ? v.filter((x) => typeof x === "string" && x.trim()).slice(0, max)
+      : [];
+  const signal = Math.max(0, Math.min(100, Number(raw.confidence_score) || 0));
+  const rawPrimaryMorph = pick(raw.primary_morph, PRIMARY_MORPH_IDS);
+  const rawCandidates = Array.isArray(raw.candidate_morphs) ? raw.candidate_morphs : [];
+  const seenCandidates = new Set<string>();
+  const candidateMorphs = rawCandidates.flatMap((candidate) => {
+    if (!candidate || typeof candidate !== "object") return [];
+    const item = candidate as Record<string, unknown>;
+    const morph = pick(item.morph, PRIMARY_MORPH_IDS);
+    if (!morph || seenCandidates.has(morph)) return [];
+    seenCandidates.add(morph);
+    return [{
+      morph,
+      score: Math.max(0, Math.min(100, Number(item.score) || 0)),
+      why: typeof item.why === "string" ? item.why : "",
+    }];
+  }).slice(0, 3);
+  if (rawPrimaryMorph && !seenCandidates.has(rawPrimaryMorph)) {
+    candidateMorphs.unshift({ morph: rawPrimaryMorph, score: signal, why: "Top visual candidate." });
+    candidateMorphs.splice(3);
+  }
+  candidateMorphs.sort((a, b) => b.score - a.score);
+  const primaryMorph = candidateMorphs[0]?.morph ?? rawPrimaryMorph;
+  const modelSignal = candidateMorphs[0]?.score ?? signal;
+
+  const rawPhoto = raw.photo_assessment && typeof raw.photo_assessment === "object"
+    ? raw.photo_assessment as Record<string, unknown>
+    : {};
+  const qualityGrade = ["good", "usable", "poor"].includes(String(rawPhoto.quality_grade))
+    ? String(rawPhoto.quality_grade)
+    : "poor";
+  const photoAssessment = {
+    subject_is_crested_gecko: rawPhoto.subject_is_crested_gecko === true,
+    usable_for_id: rawPhoto.usable_for_id === true,
+    quality_grade: qualityGrade,
+    issues: pickTextMany(rawPhoto.issues, 5),
+    next_photo_needed: typeof rawPhoto.next_photo_needed === "string"
+      ? rawPhoto.next_photo_needed
+      : "Add a sharp top-down photo in neutral daylight.",
+  };
+  const margin = candidateMorphs.length > 1
+    ? candidateMorphs[0].score - candidateMorphs[1].score
+    : modelSignal;
+  const assessmentStatus = !primaryMorph
+      || !photoAssessment.subject_is_crested_gecko
+      || !photoAssessment.usable_for_id
+      || photoAssessment.quality_grade === "poor"
+    ? "insufficient_evidence"
+    : modelSignal >= 75 && margin >= 12
+      ? "best_match"
+      : "tentative";
   const out: Record<string, unknown> = {
-    primary_morph:     pick(raw.primary_morph, PRIMARY_MORPH_IDS),
+    primary_morph:     primaryMorph,
     genetic_traits:    pickMany(raw.genetic_traits, GENETIC_TRAIT_IDS),
     secondary_traits:  pickMany(raw.secondary_traits, SECONDARY_TRAIT_IDS),
     base_color:        pick(raw.base_color, BASE_COLOR_IDS),
-    pattern_intensity: pick(raw.pattern_intensity, PATTERN_INTENSITY_IDS) || "medium",
-    white_amount:      pick(raw.white_amount, WHITE_AMOUNT_IDS) || "medium",
+    pattern_intensity: pick(raw.pattern_intensity, PATTERN_INTENSITY_IDS) || "unknown",
+    white_amount:      pick(raw.white_amount, WHITE_AMOUNT_IDS) || "unknown",
     fired_state:       pick(raw.fired_state, FIRED_STATE_IDS) || "unknown",
-    confidence_score:  Math.max(0, Math.min(100, Number(raw.confidence_score) || 0)),
-    alternatives:      clampAlternatives(raw.alternatives),
+    confidence_score:  modelSignal,
+    model_signal:      modelSignal,
+    candidate_morphs:  candidateMorphs,
+    evidence_markers:  pickTextMany(raw.evidence_markers, 6),
+    uncertainty_reasons: pickTextMany(raw.uncertainty_reasons, 5),
+    photo_assessment:  photoAssessment,
+    assessment_status: assessmentStatus,
     explanation:       typeof raw.explanation === "string" ? raw.explanation : "",
     taxonomy_version:  TAXONOMY_VERSION,
     model,
@@ -568,7 +650,7 @@ async function callClaude(
   imageUrls: string[],
   includeValueEstimate: boolean,
   model: string,
-  ageStage: string | null,
+  context: { ageStage: string; firedState: string },
 ): Promise<CallClaudeResult> {
   const bank = await loadFewShotBank();
 
@@ -595,12 +677,10 @@ async function callClaude(
   const userBlocks: Record<string, unknown>[] = imageUrls.map((url) => (
     { type: "image", source: { type: "url", url } }
   ));
-  const ageLine = ageStage && ageStage !== "unknown"
-    ? ` The keeper reports this animal's life stage as "${ageStage}"; weigh traits at that developmental baseline (hatchling whites and pattern read very differently from adult).`
-    : "";
-  const trailingText = (imageUrls.length > 1
-    ? `The ${imageUrls.length} images above are of the SAME user-submitted animal. Synthesize across them before calling the tool.`
-    : `The image above is the user's submitted gecko. Call the tool with your analysis.`) + ageLine;
+  const photoText = imageUrls.length > 1
+    ? `The ${imageUrls.length} images above are of the same user-submitted animal. Synthesize across them.`
+    : `The image above is the user's submitted animal.`;
+  const trailingText = `${photoText} User-provided context: life stage=${context.ageStage}; fired state=${context.firedState}. Treat unknown values as unavailable context. Call the tool with your analysis.`;
   const variableContent: Record<string, unknown>[] = [
     ...userBlocks,
     { type: "text", text: trailingText },
@@ -663,7 +743,6 @@ async function callClaude(
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: CORS });
   if (req.method !== "POST") return json({ error: "POST only", code: "method_not_allowed" }, 405);
-  if (!ANTHROPIC_API_KEY) return json({ error: "ANTHROPIC_API_KEY not set", code: "config_error" }, 500);
 
   const authHeader = req.headers.get("authorization") || "";
   const token = authHeader.replace(/^Bearer\s+/i, "").trim();
@@ -677,6 +756,7 @@ serve(async (req) => {
     return json({ error: `auth lookup failed: ${message}`, code: "auth_required" }, 401);
   }
   if (!profile) return json({ error: "auth required", code: "auth_required" }, 401);
+  if (!ANTHROPIC_API_KEY) return json({ error: "Morph ID is not configured", code: "config_error" }, 500);
 
   const isAdmin = profile.role === "admin";
   const tier = resolveTier(profile);
@@ -694,6 +774,9 @@ serve(async (req) => {
   let imageUrls: string[] = [];
   let model = CLAUDE_MODEL;
   let surface = "morph_id_production";
+  let creditWasConsumed = false;
+  let ageStage = "unknown";
+  let firedState = "unknown";
 
   // Hash the caller's IP once up front; null when IP_HASH_SALT is unset
   // or the client IP can't be determined. Both cases skip per-IP
@@ -703,29 +786,31 @@ serve(async (req) => {
 
   try {
     const body = await req.json().catch(() => ({}));
+    const isSafeImageUrl = (value: unknown) => {
+      if (typeof value !== "string" || value.length > 2048) return false;
+      try { return new URL(value).protocol === "https:"; } catch { return false; }
+    };
     if (Array.isArray(body?.imageUrls)) {
-      imageUrls = body.imageUrls.filter((u: unknown) => typeof u === "string" && u);
-    } else if (typeof body?.imageUrl === "string") {
+      imageUrls = body.imageUrls.filter(isSafeImageUrl) as string[];
+    } else if (isSafeImageUrl(body?.imageUrl)) {
       imageUrls = [body.imageUrl];
     }
     if (imageUrls.length === 0) {
       return json({ error: "imageUrls or imageUrl is required", code: "bad_request" }, 400);
     }
     imageUrls = imageUrls.slice(0, 5);
+    ageStage = typeof body?.age_stage === "string" && AGE_STAGE_IDS.includes(body.age_stage)
+      ? body.age_stage
+      : "unknown";
+    firedState = typeof body?.fired_state === "string" && FIRED_STATE_IDS.includes(body.fired_state)
+      ? body.fired_state
+      : "unknown";
 
     // Per-request model override (defaults to env-configured CLAUDE_MODEL).
     // The eval pipeline sends `model: "claude-haiku-4-5"` for cheap iteration
     // and "claude-sonnet-4-6" for benchmark runs. Production callers
     // (Recognition.jsx, TrainModel.jsx) omit `model` and get the env default.
     model = resolveModel(body?.model);
-
-    // Life stage is sent by Recognition.jsx (`age_stage`) so the model can
-    // weigh traits at the right developmental baseline. Validate against the
-    // taxonomy; anything else is treated as unknown and omitted.
-    const ageStage = typeof body?.age_stage === "string"
-      && AGE_STAGE_IDS.includes(body.age_stage)
-      ? body.age_stage
-      : null;
 
     // Surface tag for the spend-log sink. Eval script sends
     // surface='morph_id_eval' + the shared secret header; admin callers
@@ -791,10 +876,13 @@ serve(async (req) => {
       }
       creditsConsumed = usage?.credits_consumed ?? 0;
       creditsRemaining = Math.max(0, creditsIncluded - creditsConsumed);
+      creditWasConsumed = true;
     }
 
-    const result = await callClaude(imageUrls, includeValueEstimate, model, ageStage);
+    const result = await callClaude(imageUrls, includeValueEstimate, model, { ageStage, firedState });
     const analysis = clampToTaxonomy(result.raw, includeValueEstimate, model);
+    analysis.age_stage = ageStage;
+    analysis.user_reported_fired_state = firedState;
     await logInvocation({
       surface,
       model,
@@ -832,6 +920,7 @@ serve(async (req) => {
       value_estimate_included: includeValueEstimate,
     });
   } catch (err) {
+    if (creditWasConsumed) await refundMorphIdCredit(profile.auth_user_id);
     if (err instanceof UpstreamError) {
       await logInvocation({
         surface,
