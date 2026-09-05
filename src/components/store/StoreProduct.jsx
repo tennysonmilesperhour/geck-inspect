@@ -147,7 +147,7 @@ export default function StoreProduct() {
                 className="w-full h-full object-cover"
               />
             ) : (
-              <div className="w-full h-full flex items-center justify-center text-slate-700">
+              <div className="w-full h-full flex items-center justify-center text-slate-500">
                 No image
               </div>
             )}

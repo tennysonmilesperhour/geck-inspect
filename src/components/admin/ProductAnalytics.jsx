@@ -712,7 +712,7 @@ function LiveMetrics() {
                   <code className="flex-1 min-w-0 text-[12px] font-mono text-emerald-300 truncate">{r.name}</code>
                   <span className="text-xs text-slate-400 shrink-0">{r.count.toLocaleString()} events</span>
                   <span className="text-xs text-slate-500 shrink-0">{r.users.toLocaleString()} users</span>
-                  <span className="text-[10px] text-slate-600 shrink-0 hidden md:inline">
+                  <span className="text-[10px] text-slate-500 shrink-0 hidden md:inline">
                     last {format(new Date(r.lastSeen), 'MMM d')}
                   </span>
                 </div>

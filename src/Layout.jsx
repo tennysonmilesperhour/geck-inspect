@@ -921,7 +921,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                     upfront which tabs they can actually use.           */}
                 {isGuest && item.requires_auth && (
                   <span
-                    className="ml-auto shrink-0 text-[9px] font-bold uppercase tracking-wider text-yellow-200 bg-yellow-400/15 border border-yellow-300/30 rounded px-1.5 py-0.5"
+                    className="ml-auto shrink-0 text-[10px] font-bold uppercase tracking-wider text-yellow-200 bg-yellow-400/15 border border-yellow-300/30 rounded px-1.5 py-0.5"
                     title="Guests can view this page but cannot save changes"
                   >
                     view only

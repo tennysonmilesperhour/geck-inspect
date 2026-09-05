@@ -790,7 +790,7 @@ export default function FieldModePage() {
                   </button>
                 </div>
                 <div className="text-center text-5xl font-bold mb-4 min-h-16">
-                  {weightInput || <span className="text-slate-600">0.0</span>}
+                  {weightInput || <span className="text-slate-500">0.0</span>}
                   <span className="text-2xl text-slate-500 ml-1">g</span>
                 </div>
                 <div className="grid grid-cols-3 gap-2 mb-3">

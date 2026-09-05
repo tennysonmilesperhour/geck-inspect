@@ -111,7 +111,7 @@ export default function BreedingSimulator({ sire, dam }) {
             step={1}
             className="w-full"
           />
-          <div className="flex justify-between text-xs text-slate-600">
+          <div className="flex justify-between text-xs text-slate-500">
             <span>1</span><span>{Math.round(MAX_CLUTCHES_PER_SEASON / 2)}</span><span>{MAX_CLUTCHES_PER_SEASON}</span>
           </div>
         </div>
@@ -166,7 +166,7 @@ export default function BreedingSimulator({ sire, dam }) {
             ))}
           </div>
           {phenotypeDist.length > 10 && (
-            <p className="text-xs text-slate-600 text-center mt-1">
+            <p className="text-xs text-slate-500 text-center mt-1">
               + {phenotypeDist.length - 10} more rare outcomes
             </p>
           )}

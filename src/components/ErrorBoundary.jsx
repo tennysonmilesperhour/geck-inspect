@@ -30,7 +30,7 @@ export default class ErrorBoundary extends React.Component {
                             An unexpected error occurred. Your data is safe, please refresh the page to continue.
                         </p>
                         {this.state.error?.message && (
-                            <p className="text-xs text-slate-600 font-mono bg-slate-800 rounded p-2 text-left break-all">
+                            <p className="text-xs text-slate-500 font-mono bg-slate-800 rounded p-2 text-left break-all">
                                 {this.state.error.message}
                             </p>
                         )}

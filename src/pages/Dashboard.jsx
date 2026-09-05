@@ -536,7 +536,7 @@ export default function Dashboard() {
                                     </div>
                                     <div className="grid grid-cols-2 gap-2 text-xs">
                                         <div className="rounded-lg border border-slate-800 bg-slate-800/40 p-2">
-                                            <p className="text-slate-500 uppercase tracking-wider text-[9px]">
+                                            <p className="text-slate-500 uppercase tracking-wider text-[10px]">
                                                 Incubating
                                             </p>
                                             <p className="text-lg font-bold text-amber-300">
@@ -544,7 +544,7 @@ export default function Dashboard() {
                                             </p>
                                         </div>
                                         <div className="rounded-lg border border-slate-800 bg-slate-800/40 p-2">
-                                            <p className="text-slate-500 uppercase tracking-wider text-[9px]">
+                                            <p className="text-slate-500 uppercase tracking-wider text-[10px]">
                                                 Active Pairs
                                             </p>
                                             <p className="text-lg font-bold text-emerald-300">

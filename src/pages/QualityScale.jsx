@@ -319,7 +319,7 @@ function PlaceholderTile({ tier }) {
     <div className="aspect-square rounded-lg border border-dashed border-slate-700 bg-slate-900/60 flex flex-col items-center justify-center text-center px-2">
       <ImageOff className="w-5 h-5 text-slate-600 mb-1" />
       <p className="text-[10px] uppercase tracking-wider text-slate-500">{tier}</p>
-      <p className="text-[10px] text-slate-600 mt-1">Reference photo coming</p>
+      <p className="text-[10px] text-slate-500 mt-1">Reference photo coming</p>
     </div>
   );
 }

@@ -330,7 +330,7 @@ export default function SupportInbox() {
                                             addSuffix: true,
                                         })}
                                         {msg.page && (
-                                            <span className="ml-2 text-slate-600">
+                                            <span className="ml-2 text-slate-500">
                                                 · from {msg.page}
                                             </span>
                                         )}

@@ -100,7 +100,7 @@ function Field({ label, hint, children }) {
 
 const inputClass =
   'w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-sm text-slate-100 ' +
-  'placeholder:text-slate-600 focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600/40';
+  'placeholder:text-slate-500 focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600/40';
 
 function TextInput(props) {
   return <input type="text" className={inputClass} {...props} />;

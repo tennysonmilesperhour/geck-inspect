@@ -655,7 +655,7 @@ export default function BlogEditor({ postId, initialPost, onBack, onSaved }) {
           </Card>
 
           {form.id && (
-            <p className="text-[11px] text-slate-600 text-center">
+            <p className="text-[11px] text-slate-500 text-center">
               <Sparkles className="inline w-3 h-3 mr-0.5" /> id {form.id}
             </p>
           )}

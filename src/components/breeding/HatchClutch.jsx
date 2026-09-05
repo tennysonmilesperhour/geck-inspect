@@ -155,7 +155,7 @@ export default function HatchClutch({ phenotypes, labelFor }) {
               return (
                 <p key={label} className="font-mono">
                   {count}x {label}
-                  <span className="text-slate-600"> (expected {expected.toFixed(1)})</span>
+                  <span className="text-slate-500"> (expected {expected.toFixed(1)})</span>
                 </p>
               );
             })}

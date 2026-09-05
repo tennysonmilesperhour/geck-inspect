@@ -114,7 +114,7 @@ export default function TransactionDrilldown({ open, onClose, criteria }) {
                   <td className="px-3 py-1.5 text-slate-300">{r.breeder_name}</td>
                   <td className="px-3 py-1.5 text-right text-slate-300 tabular-nums">${r.ask_price.toLocaleString()}</td>
                   <td className="px-3 py-1.5 text-right tabular-nums font-semibold">
-                    {r.sold_price ? <span className="text-emerald-300">${r.sold_price.toLocaleString()}</span> : <span className="text-slate-600">listed</span>}
+                    {r.sold_price ? <span className="text-emerald-300">${r.sold_price.toLocaleString()}</span> : <span className="text-slate-500">listed</span>}
                   </td>
                   <td className="px-3 py-1.5 text-right text-slate-400 tabular-nums">{r.time_on_market_days}d</td>
                   <td className="px-3 py-1.5"><SourceBadge sourceId={r.source_id} size="xs" /></td>

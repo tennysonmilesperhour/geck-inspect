@@ -124,12 +124,12 @@ function BreederCard({ breeder, currentUser, isFollowing, onFollow, onUnfollow, 
                                     {[breeder.city, breeder.state_province, breeder.country].filter(Boolean).join(', ')}
                                 </>
                             ) : (
-                                <span className="text-slate-600 italic">No location set</span>
+                                <span className="text-slate-500 italic">No location set</span>
                             )}
                         </p>
 
                         <p className="text-sm text-slate-300 mt-2 line-clamp-2 min-h-[2.5rem]">
-                            {breeder.bio || <span className="text-slate-600 italic">No bio yet</span>}
+                            {breeder.bio || <span className="text-slate-500 italic">No bio yet</span>}
                         </p>
 
                         <div className="flex flex-wrap gap-2 mt-3 min-h-[1.5rem]">

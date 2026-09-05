@@ -506,7 +506,7 @@ function FilterPresets({ presets, activePreset, onLoadPreset, onSavePreset, onDe
         <button
           onClick={handleSave}
           disabled={!canSave && !activePreset}
-          className="w-full inline-flex items-center gap-1.5 text-xs px-2 py-1.5 rounded text-emerald-200 hover:bg-emerald-500/10 disabled:text-slate-600 disabled:hover:bg-transparent disabled:cursor-not-allowed"
+          className="w-full inline-flex items-center gap-1.5 text-xs px-2 py-1.5 rounded text-emerald-200 hover:bg-emerald-500/10 disabled:text-slate-500 disabled:hover:bg-transparent disabled:cursor-not-allowed"
           title={!canSave && !activePreset ? 'Change a filter first to save a preset' : 'Save the current filter state as a preset'}
         >
           <Plus className="w-3.5 h-3.5" />

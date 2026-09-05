@@ -545,7 +545,7 @@ export default function AdminTasks() {
             return (
               <div key={cat}>
                 <h3 className="text-xs uppercase tracking-wider text-slate-500 mb-2">
-                  {CATEGORY_LABEL[cat]} <span className="text-slate-600">({items.length})</span>
+                  {CATEGORY_LABEL[cat]} <span className="text-slate-500">({items.length})</span>
                 </h3>
                 <div className="space-y-2">
                   {items.map((t) => (

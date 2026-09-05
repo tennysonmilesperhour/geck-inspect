@@ -36,7 +36,7 @@ export default function ProductCard({ product, vendorName }) {
             className="w-full h-full object-cover group-hover:scale-[1.02] transition-transform duration-300"
           />
         ) : (
-          <div className="w-full h-full flex items-center justify-center text-slate-700 text-xs">
+          <div className="w-full h-full flex items-center justify-center text-slate-500 text-xs">
             No image
           </div>
         )}

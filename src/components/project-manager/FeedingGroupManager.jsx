@@ -191,10 +191,10 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
                                             >
                                                 {remindersOn ? <Bell className="w-3 h-3" /> : <BellOff className="w-3 h-3" />}
                                             </Button>
-                                            <Button size="icon" variant="ghost" className="h-7 w-7 text-slate-400 hover:text-slate-200" onClick={() => openEdit(group)}>
+                                            <Button size="icon" variant="ghost" className="h-9 w-9 md:h-7 md:w-7 text-slate-400 hover:text-slate-200" onClick={() => openEdit(group)}>
                                                 <Edit className="w-3 h-3" />
                                             </Button>
-                                            <Button size="icon" variant="ghost" className="h-7 w-7 text-red-400 hover:text-red-300" onClick={() => setGroupToDelete(group.id)}>
+                                            <Button size="icon" variant="ghost" className="h-9 w-9 md:h-7 md:w-7 text-red-400 hover:text-red-300" onClick={() => setGroupToDelete(group.id)}>
                                                 <Trash2 className="w-3 h-3" />
                                             </Button>
                                         </div>

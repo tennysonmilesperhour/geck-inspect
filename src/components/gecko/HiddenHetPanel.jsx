@@ -119,7 +119,7 @@ export default function HiddenHetPanel({ gecko }) {
           </ul>
         )}
 
-        <p className="mt-3 text-[11px] leading-relaxed text-slate-600">
+        <p className="mt-3 text-[11px] leading-relaxed text-slate-500">
           Estimates from recorded lineage only. Breeding trials or genetic
           testing confirm hets.
         </p>

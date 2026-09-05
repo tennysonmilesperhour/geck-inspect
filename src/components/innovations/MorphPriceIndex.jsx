@@ -78,7 +78,7 @@ export default function MorphPriceIndex({ morph, sellerPrice }) {
   if (loading) {
     return (
       <Card className="bg-slate-900 border-slate-700 animate-pulse">
-        <CardContent className="py-4 text-center text-slate-600 text-sm">
+        <CardContent className="py-4 text-center text-slate-500 text-sm">
           Loading price data...
         </CardContent>
       </Card>
@@ -87,7 +87,7 @@ export default function MorphPriceIndex({ morph, sellerPrice }) {
   if (!stats) {
     return (
       <Card className="bg-slate-900 border-slate-700">
-        <CardContent className="py-4 text-center text-slate-600 text-sm">
+        <CardContent className="py-4 text-center text-slate-500 text-sm">
           No price history available for {morph}.
         </CardContent>
       </Card>

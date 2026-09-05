@@ -341,7 +341,7 @@ export default function ClutchLab() {
                           <div className="flex items-center gap-3 whitespace-nowrap">
                             <span className="text-xs font-mono text-slate-400">{pct(option.p)}</span>
                             {!option.lethal && (
-                              <Button size="sm" variant="outline" className="border-purple-700 text-purple-200 hover:bg-purple-950/50 h-7 text-xs" onClick={() => keepOffspring(option)}>
+                              <Button size="sm" variant="outline" className="border-purple-700 text-purple-200 hover:bg-purple-950/50 h-9 md:h-7 text-xs" onClick={() => keepOffspring(option)}>
                                 Keep
                               </Button>
                             )}
@@ -356,7 +356,7 @@ export default function ClutchLab() {
           </div>
         )}
 
-        <p className="text-xs text-slate-600 mt-8">
+        <p className="text-xs text-slate-500 mt-8">
           Odds shown are real Punnett probabilities from the calculator's engine. In the Lab you
           choose which baby to keep; in a real season, the eggs choose. The{' '}
           <Link to="/calculator" className="underline text-slate-500">calculator</Link> and its

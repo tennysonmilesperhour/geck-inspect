@@ -101,7 +101,7 @@ function CostRow({ cost, onDelete, onUpdate }) {
         </div>
         <div className="flex gap-2 justify-end">
           <Button size="sm" variant="ghost" onClick={() => setEditing(false)} className="h-7 text-slate-400"><X className="w-3 h-3" /></Button>
-          <Button size="sm" onClick={handleSave} className="h-7 bg-slate-600 hover:bg-slate-500 text-white"><Check className="w-3 h-3 mr-1" />Save</Button>
+          <Button size="sm" onClick={handleSave} className="h-9 md:h-7 bg-slate-600 hover:bg-slate-500 text-white"><Check className="w-3 h-3 mr-1" />Save</Button>
         </div>
       </div>
     );
@@ -293,7 +293,7 @@ function PendingSaleCard({ sale, onUpdate, onComplete, onCancel, onDelete }) {
         <div className="space-y-2">
           <div className="flex items-center justify-between">
             <Label className="text-xs text-slate-300 font-semibold">Payment Schedule</Label>
-            <Button size="sm" variant="ghost" onClick={addPayment} className="h-7 text-xs text-emerald-400 hover:text-emerald-300">
+            <Button size="sm" variant="ghost" onClick={addPayment} className="h-9 md:h-7 text-xs text-emerald-400 hover:text-emerald-300">
               <Plus className="w-3 h-3 mr-1" />Add Payment
             </Button>
           </div>
@@ -686,7 +686,7 @@ function PendingSalesTab({ user, pendingSales, setPendingSales, onCompleteSale, 
             <div className="space-y-2 bg-slate-900/50 rounded-lg p-3 border border-slate-700/50">
               <div className="flex items-center justify-between">
                 <Label className="text-xs text-amber-400 font-semibold flex items-center gap-1"><DollarSign className="w-3 h-3" />Payment Schedule</Label>
-                <Button size="sm" variant="ghost" onClick={addPaymentToNew} className="h-6 text-[10px] text-emerald-400"><Plus className="w-3 h-3 mr-1" />Add</Button>
+                <Button size="sm" variant="ghost" onClick={addPaymentToNew} className="h-9 md:h-6 text-[10px] text-emerald-400"><Plus className="w-3 h-3 mr-1" />Add</Button>
               </div>
               {newSale.payment_schedule.map((p, idx) => (
                 <div key={idx} className="grid grid-cols-[1fr_1fr_auto] gap-2">

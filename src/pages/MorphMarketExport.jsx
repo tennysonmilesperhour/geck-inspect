@@ -293,7 +293,7 @@ function GeckoTile({ gecko, selected, onToggle, onQuickFix, onAddOne }) {
           {thumb ? (
             <img src={thumb} alt={gecko.name || ''} className="w-full h-full object-cover" loading="lazy" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-slate-700 text-xs">No photo</div>
+            <div className="w-full h-full flex items-center justify-center text-slate-500 text-xs">No photo</div>
           )}
           <div className="absolute top-2 left-2">
             <Checkbox
@@ -384,7 +384,7 @@ function GeckoRow({ gecko, selected, onToggle, onQuickFix, onAddOne }) {
           {thumb ? (
             <img src={thumb} alt="" className="w-full h-full object-cover" loading="lazy" />
           ) : (
-            <div className="w-full h-full flex items-center justify-center text-slate-700 text-[9px]">No photo</div>
+            <div className="w-full h-full flex items-center justify-center text-slate-500 text-[10px]">No photo</div>
           )}
         </div>
         <div className="flex-1 min-w-0">
@@ -492,7 +492,7 @@ function EditableCell({ value, displayValue, config, onCommit }) {
         className="text-left w-full truncate hover:bg-slate-800/60 rounded px-1 -mx-1 py-0.5 -my-0.5"
         title="Click to edit"
       >
-        {displayValue || <span className="text-slate-600 italic">empty</span>}
+        {displayValue || <span className="text-slate-500 italic">empty</span>}
       </button>
     );
   }

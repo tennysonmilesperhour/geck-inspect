@@ -1364,7 +1364,7 @@ export default function Lineage() {
                                         />
                                         <span className="truncate max-w-[110px]">{g.name}</span>
                                         {i < recentGeckos.length - 1 && (
-                                            <span className="text-slate-600 ml-1">·</span>
+                                            <span className="text-slate-500 ml-1">·</span>
                                         )}
                                     </button>
                                 ))}

@@ -278,7 +278,7 @@ export function WaitlistCtaSection({ waitlist, theme }) {
 // links back home.
 export function BuiltOnGeckInspect({ className = '' }) {
   return (
-    <p className={`text-xs text-slate-600 ${className}`}>
+    <p className={`text-xs text-slate-500 ${className}`}>
       Built on{' '}
       <Link to="/" className="text-slate-400 hover:text-emerald-300 underline underline-offset-2">
         Geck Inspect

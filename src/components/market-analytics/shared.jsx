@@ -136,7 +136,7 @@ export function MethodologyPopover({ title, children }) {
 // Tiny inline SVG sparkline. Null values are skipped (break the line).
 export function Sparkline({ data = [], width = 100, height = 28, stroke = '#34d399', fill = 'rgba(52,211,153,0.12)' }) {
   const valid = data.filter((v) => v != null && Number.isFinite(v));
-  if (valid.length < 2) return <div className="text-[10px] text-slate-600">, </div>;
+  if (valid.length < 2) return <div className="text-[10px] text-slate-500">, </div>;
   const min = Math.min(...valid);
   const max = Math.max(...valid);
   const range = max - min || 1;

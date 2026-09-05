@@ -162,7 +162,7 @@ function HHIBar({ hhi }) {
         className="absolute top-[-2px] w-1 h-3 bg-white rounded-full shadow-[0_0_4px_rgba(255,255,255,0.6)]"
         style={{ left: `${pct}%`, transform: 'translateX(-50%)' }}
       />
-      <div className="flex justify-between text-[9px] text-slate-500 mt-1">
+      <div className="flex justify-between text-[10px] text-slate-500 mt-1">
         <span>0 competitive</span>
         <span>1,500</span>
         <span>2,500</span>

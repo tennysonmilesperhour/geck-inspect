@@ -203,7 +203,7 @@ export default function ContentModeration() {
                   <p className="text-xs text-slate-400 line-clamp-2 mt-0.5">{p.content}</p>
                   <div className="flex items-center gap-3 mt-1.5">
                     <span className="text-[11px] text-slate-500">{p.created_by}</span>
-                    <span className="text-[11px] text-slate-600">·</span>
+                    <span className="text-[11px] text-slate-500">·</span>
                     <span className="text-[11px] text-slate-500">{timeAgo(p.created_date)}</span>
                   </div>
                 </>
@@ -222,7 +222,7 @@ export default function ContentModeration() {
                   <p className="text-sm text-slate-200 line-clamp-3">{c.content}</p>
                   <div className="flex items-center gap-3 mt-1.5">
                     <span className="text-[11px] text-slate-500">{c.created_by}</span>
-                    <span className="text-[11px] text-slate-600">·</span>
+                    <span className="text-[11px] text-slate-500">·</span>
                     <span className="text-[11px] text-slate-500">{timeAgo(c.created_date)}</span>
                   </div>
                 </>
@@ -258,7 +258,7 @@ export default function ContentModeration() {
                   )}
                   <div className="flex items-center gap-3 mt-1.5">
                     <span className="text-[11px] text-slate-500">{g.created_by}</span>
-                    <span className="text-[11px] text-slate-600">·</span>
+                    <span className="text-[11px] text-slate-500">·</span>
                     <span className="text-[11px] text-slate-500">{timeAgo(g.created_date)}</span>
                   </div>
                 </>
@@ -277,7 +277,7 @@ export default function ContentModeration() {
                   <p className="text-sm text-slate-200 line-clamp-3">{c.content}</p>
                   <div className="flex items-center gap-3 mt-1.5">
                     <span className="text-[11px] text-slate-500">{c.created_by}</span>
-                    <span className="text-[11px] text-slate-600">·</span>
+                    <span className="text-[11px] text-slate-500">·</span>
                     <span className="text-[11px] text-slate-500">{timeAgo(c.created_date)}</span>
                   </div>
                 </>

@@ -529,7 +529,7 @@ export default function PageManagement() {
               )}
               {page._synthetic && (
                 <span
-                  className="text-[9px] font-medium uppercase tracking-wider text-slate-500 border border-slate-700 rounded px-1 py-px shrink-0"
+                  className="text-[10px] font-medium uppercase tracking-wider text-slate-500 border border-slate-700 rounded px-1 py-px shrink-0"
                   title="Shown from code defaults; toggling or moving it saves a page_config row"
                 >
                   default

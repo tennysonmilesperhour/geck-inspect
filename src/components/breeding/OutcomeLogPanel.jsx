@@ -178,7 +178,7 @@ export default function OutcomeLogPanel({ sire, dam, outcomes }) {
       {logs === null ? (
         <p className="text-xs text-slate-500">Loading your logs...</p>
       ) : eggs === 0 ? (
-        <p className="text-xs text-slate-600">No clutches logged for this pairing yet.</p>
+        <p className="text-xs text-slate-500">No clutches logged for this pairing yet.</p>
       ) : (
         <div className="space-y-1">
           <p className="text-xs text-slate-400 font-semibold">
@@ -198,7 +198,7 @@ export default function OutcomeLogPanel({ sire, dam, outcomes }) {
               </p>
             );
           })}
-          <p className="text-[11px] text-slate-600">
+          <p className="text-[11px] text-slate-500">
             Small samples swing hard; the odds win over full seasons. Nothing here is ever "due."
           </p>
         </div>

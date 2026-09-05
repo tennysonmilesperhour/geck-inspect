@@ -325,8 +325,8 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
                                                 />
                                             </div>
                                             <div className="flex gap-2">
-                                                <Button size="sm" className="h-7 text-xs" onClick={() => handleSaveEggEdit(egg.id, eggEdit)}>Save</Button>
-                                                <Button size="sm" variant="outline" className="border-slate-600 h-7 text-xs" onClick={() => handleCancelEggEdit(egg.id)}>Cancel</Button>
+                                                <Button size="sm" className="h-9 md:h-7 text-xs" onClick={() => handleSaveEggEdit(egg.id, eggEdit)}>Save</Button>
+                                                <Button size="sm" variant="outline" className="border-slate-600 h-9 md:h-7 text-xs" onClick={() => handleCancelEggEdit(egg.id)}>Cancel</Button>
                                             </div>
                                         </div>
                                     ) : (
@@ -338,7 +338,7 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
                                                     <p className="text-xs text-green-400 mt-1">✓ Gecko created in collection</p>
                                                 )}
                                             </div>
-                                            <Button size="sm" variant="ghost" className="text-slate-400 hover:text-slate-200 h-7 text-xs px-2" onClick={() => handleStartEggEdit(egg)}>
+                                            <Button size="sm" variant="ghost" className="text-slate-400 hover:text-slate-200 h-9 md:h-7 text-xs px-2" onClick={() => handleStartEggEdit(egg)}>
                                                 <Edit size={12} className="mr-1" /> Edit
                                             </Button>
                                         </div>

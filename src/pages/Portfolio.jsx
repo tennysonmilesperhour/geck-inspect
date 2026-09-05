@@ -446,7 +446,7 @@ export default function Portfolio() {
                       <div className="flex items-baseline justify-between text-sm mb-1">
                         <span className="text-slate-200 font-medium">{row.morph}</span>
                         <span className="text-slate-400">
-                          {formatCurrency(row.total)} <span className="text-slate-600">({row.count} {row.count === 1 ? 'animal' : 'animals'})</span>
+                          {formatCurrency(row.total)} <span className="text-slate-500">({row.count} {row.count === 1 ? 'animal' : 'animals'})</span>
                         </span>
                       </div>
                       <div className="h-2 bg-slate-800 rounded-full overflow-hidden">
@@ -503,7 +503,7 @@ export default function Portfolio() {
                         {morphs.length > 0 ? morphs.slice(0, 3).join(', ') + (morphs.length > 3 ? ` +${morphs.length - 3}` : '') : (gecko.morphs_traits || 'Not tagged')}
                       </td>
                       <td className="py-2.5 px-3 font-semibold text-slate-100">
-                        {valuation.value > 0 ? formatCurrency(valuation.value) : <span className="text-slate-600">$0</span>}
+                        {valuation.value > 0 ? formatCurrency(valuation.value) : <span className="text-slate-500">$0</span>}
                       </td>
                       <td className="py-2.5 px-3"><BasisChip valuation={valuation} /></td>
                     </tr>
@@ -511,7 +511,7 @@ export default function Portfolio() {
                 })}
               </tbody>
             </table>
-            <p className="text-xs text-slate-600 mt-3">
+            <p className="text-xs text-slate-500 mt-3">
               Morph comps use community average prices and a quality tier multiplier (investment 1.5x, high-end 1.25x, breeder 1.0x, pet 0.6x).
               Set a listing or asking price on a gecko to override the estimate.
             </p>

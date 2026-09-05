@@ -143,7 +143,7 @@ function NodeCard({ node, x, y, onClick }) {
   if (!node || node.kind === 'empty') {
     return (
       <foreignObject x={x} y={y} width={NODE_W} height={NODE_H}>
-        <div className="w-full h-full rounded-xl border-2 border-dashed border-slate-700 bg-slate-900/40 flex items-center justify-center text-xs text-slate-600 uppercase tracking-widest">
+        <div className="w-full h-full rounded-xl border-2 border-dashed border-slate-700 bg-slate-900/40 flex items-center justify-center text-xs text-slate-500 uppercase tracking-widest">
           Unknown
         </div>
       </foreignObject>

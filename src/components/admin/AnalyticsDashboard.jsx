@@ -1073,14 +1073,14 @@ export default function AnalyticsDashboard() {
                         {row.followups.map((f) => {
                           if (f.pct === null) {
                             return (
-                              <td key={f.week} className="py-2 px-3 text-center text-slate-600">
+                              <td key={f.week} className="py-2 px-3 text-center text-slate-500">
                                 ·
                               </td>
                             );
                           }
                           if (row.size === 0) {
                             return (
-                              <td key={f.week} className="py-2 px-3 text-center text-slate-600">
+                              <td key={f.week} className="py-2 px-3 text-center text-slate-500">
                                 0%
                               </td>
                             );

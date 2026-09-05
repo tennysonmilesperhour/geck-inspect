@@ -636,7 +636,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                           <span className="font-bold text-emerald-400">{record.weight_grams}g</span>
                           <AlertDialog open={weightToDelete === record.id} onOpenChange={(open) => { if (!open) setWeightToDelete(null); }}>
                             <AlertDialogTrigger asChild>
-                              <Button variant="ghost" size="icon" className="h-6 w-6" onClick={() => setWeightToDelete(record.id)}>
+                              <Button variant="ghost" size="icon" className="h-9 w-9 md:h-6 md:w-6" onClick={() => setWeightToDelete(record.id)}>
                                 <Trash2 className="w-3 h-3 text-red-500"/>
                               </Button>
                             </AlertDialogTrigger>

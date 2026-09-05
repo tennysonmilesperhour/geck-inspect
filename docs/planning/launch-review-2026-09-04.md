@@ -71,7 +71,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Where: 24 file inputs with no capture attribute; 18 img tags without alt; reduced-motion honoured in 2 files; safe-area in 6
 - Why it matters: Most keepers will use a phone. None of these break the app, together they make it feel less native.
 - Proposed fix: capture=environment on photo inputs, alt text pass, reduced-motion guard on framer animations, verify HEIC on a real iPhone.
-- Status: Partly fixed 4 Sep: global prefers-reduced-motion rule, missing alt on MarketplaceSalesStats. Touch-target and contrast items still open
+- Status: Mostly fixed 4 Sep (late session): global prefers-reduced-motion rule, missing alt on MarketplaceSalesStats. Late session: 41 muted text runs moved from slate-600/700 (about 3:1 on the dark ground, below WCAG AA) to slate-500 (about 4.6:1), icons and decorative marks untouched; six 9 px labels raised to 10 px; the eleven sub-36 px buttons (weight delete, egg edit, feeding group edit and delete, payment add, keep offspring) are 36 px on phones and unchanged from md up. capture=environment was deliberately not added: keepers upload existing gecko photos far more often than they shoot new ones, and capture hides the photo library on iOS. Still open: verify HEIC uploads on a real iPhone
 
 ## Closed (55)
 

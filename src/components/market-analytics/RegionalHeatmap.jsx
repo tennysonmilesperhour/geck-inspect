@@ -130,7 +130,7 @@ export default function RegionalHeatmap({ filters, onDrillDown }) {
             <div className="w-4 h-4 rounded" style={{ background: 'hsla(0, 65%, 45%, 0.6)' }} />
             <span>high</span>
           </div>
-          <span className="text-slate-600">· opacity ∝ confidence</span>
+          <span className="text-slate-500">· opacity ∝ confidence</span>
         </div>
         <div>{metric === 'median_sold' ? `range ${fmt(min)}–${fmt(max)}` : `range ${min}–${max}`}</div>
       </div>
