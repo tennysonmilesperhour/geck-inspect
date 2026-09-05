@@ -21,7 +21,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Where: Vercel deployments dpl_CZYbdRr8 through dpl_EmFGUhLj (8 consecutive ERROR builds); build log: npm ERESOLVE on the knip dev dependency because Vercel ran npm instead of pnpm
 - Why it matters: The site kept serving the 14 August build for two weeks while main moved on. CI was green the whole time because CI uses pnpm. There is no deploy-failure notification.
 - Proposed fix: Turn on Vercel deployment failure notifications (email or Slack) and check the deployment state after every push during launch week. The pnpm lockfile fix on 29 August resolved the immediate cause.
-- Status: Confirmed (Vercel)
+- Status: Mostly fixed (late session 4 Sep): .github/workflows/deploy-watch.yml listens for the deployment status Vercel posts back to GitHub and, on a failed or errored production deployment, opens or updates a ci-failure issue that mentions Tennyson (GitHub emails a mention). This runs on GitHub's side so it works even when the Vercel build itself is broken. Vercel's own email or Slack notification is still worth switching on as a second channel, since a GitHub outage would silence this one
 
 ### F28: Leaked-password protection is off
 
@@ -29,7 +29,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Where: Supabase Auth settings (advisor auth_leaked_password_protection)
 - Why it matters: Users can sign up with passwords known to be breached.
 - Proposed fix: Toggle it on in Authentication settings.
-- Status: Probably on. The Supabase security advisor no longer reports auth_leaked_password_protection (checked 4 Sep, late session). Confirm the toggle in Authentication settings and close
+- Status: Probably on. The Supabase security advisor no longer reports auth_leaked_password_protection (checked 4 Sep, late session). Flipping or confirming it needs the Supabase management API with a personal access token, which no tool in these sessions holds, so it is a one-click confirmation in Authentication settings (Attack protection, leaked password protection)
 
 ## Partly fixed (5)
 
@@ -47,7 +47,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Where: vercel.json headers
 - Why it matters: Any injected script runs unrestricted. The blog renders HTML from markdown.
 - Proposed fix: Start with Content-Security-Policy-Report-Only listing Google, PostHog, Supabase, RevenueCat, and Stripe, then enforce.
-- Status: Partly fixed (batch C): Content-Security-Policy-Report-Only shipped with the real origin list. Promote to enforcing after a week of clean console reports
+- Status: Mostly fixed (batch C plus late session 4 Sep): Content-Security-Policy-Report-Only shipped with the real origin list. Late session: report-only mode was reporting to nobody (no report-uri), so violations only ever appeared in visitors' own consoles. A csp-report edge function now receives them (report-uri plus report-to and a Reporting-Endpoints header) and writes one row per distinct violation per page per hour to error_logs with created_by = 'csp-report', throttled by the audit batch A trigger. verify_jwt is off because browsers send these reports with no session; the function accepts only geckinspect.com documents and never returns data. Decide on enforcing from about 11 Sep with: select message, url, count(*) from error_logs where created_by = 'csp-report' and created_date > now() - interval '7 days' group by 1, 2 order by 3 desc
 
 ### F46: 208 RLS policies re-evaluate auth functions per row; 271 duplicate permissive policies
 
@@ -143,6 +143,8 @@ Every one of these has a matching file under `supabase/migrations/` so the repo 
 - `function_search_path_pins`: five trigger and helper functions.
 - `store_copy_no_em_dashes`: 23 live store product rows.
 - Earlier the same night: `audit_batch_a`, `audit_batch_d`, `free_tier_no_morph_id`, `launch_security_hardening`.
+- Late session: `owner_only_reads_valuations_alerts_loans` (collection valuations, price alerts and breeding loans were readable by visitors; now author, lender or borrower, or admin). The Breeding Loans page was also storing and filtering the lender as an email in a uuid column, which made every loan insert fail; it now uses created_by.
+- Late session: `rls_batch1_gecko_images` through `rls_batch8_collections_votes_offers` (F46).
 - Late session: `referral_keeper_month` (referral columns, reward ledger, award and expiry functions, pg_cron job) and `referral_function_grants` (explicit revokes, because Supabase default privileges had made the award function callable by any signed-in member).
 
-Edge functions redeployed from repo source: stripe-checkout, stripe-webhook, stripe-billing-portal, recognize-gecko-morph, recognize-import-data (first deployment, JWT verification on). Late session: stripe-webhook again, for the referral reward.
+Edge functions redeployed from repo source: stripe-checkout, stripe-webhook, stripe-billing-portal, recognize-gecko-morph, recognize-import-data (first deployment, JWT verification on). Late session: stripe-webhook again, for the referral reward; csp-report (new, JWT verification off by design, see F43).

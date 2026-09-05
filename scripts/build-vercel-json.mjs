@@ -208,7 +208,16 @@ function buildConfig() {
               "object-src 'none'",
               "base-uri 'self'",
               "form-action 'self' https://checkout.stripe.com",
+              // Violations post to the csp-report edge function, which
+              // writes them to error_logs (created_by = 'csp-report').
+              // Until this existed, report-only mode reported to nobody.
+              'report-uri https://mmuglfphhwlaluyfyxsp.supabase.co/functions/v1/csp-report',
+              'report-to csp-endpoint',
             ].join('; '),
+          },
+          {
+            key: 'Reporting-Endpoints',
+            value: 'csp-endpoint="https://mmuglfphhwlaluyfyxsp.supabase.co/functions/v1/csp-report"',
           },
           {
             key: 'X-Robots-Tag',

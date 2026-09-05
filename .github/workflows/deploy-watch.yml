@@ -1,0 +1,48 @@
+name: deploy-watch
+
+# Launch review F60: production builds failed for two weeks in August and
+# nobody was told, and two more went red on launch night. Vercel reports
+# every deployment back to GitHub as a deployment status, so this workflow
+# listens for the failing ones and opens (or comments on) a ci-failure
+# issue that mentions Tennyson, which triggers a GitHub email. It runs on
+# GitHub's side, so it works even when the Vercel build itself is broken.
+
+on:
+  deployment_status:
+
+permissions:
+  issues: write
+  contents: read
+
+jobs:
+  alert:
+    if: >-
+      (github.event.deployment_status.state == 'failure' || github.event.deployment_status.state == 'error')
+      && contains(github.event.deployment.environment, 'roduction')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Open or update the ci-failure issue
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+          SHA: ${{ github.event.deployment.sha }}
+          STATE: ${{ github.event.deployment_status.state }}
+          LOG_URL: ${{ github.event.deployment_status.log_url || github.event.deployment_status.target_url }}
+          ENVIRONMENT: ${{ github.event.deployment.environment }}
+        run: |
+          set -euo pipefail
+          SHORT="${SHA:0:7}"
+          COMMIT_URL="https://github.com/$GH_REPO/commit/$SHA"
+          gh label create ci-failure --color B60205 --description "A build or scheduled workflow failed" --force >/dev/null 2>&1 || true
+          BODY="@tennysonmilesperhour the $ENVIRONMENT deployment for $SHORT reported **$STATE**.
+
+          - Commit: $COMMIT_URL
+          - Vercel build log: $LOG_URL
+
+          The site keeps serving the previous successful deployment until a green build lands. The usual cause is a lint or test failure, because \`pnpm build\` runs both before Vite (launch review F54). Run \`pnpm lint && pnpm test\` locally, fix, push."
+          existing=$(gh issue list --label ci-failure --state open --search "Production deploy failed" --json number --jq '.[0].number' || true)
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --body "$BODY"
+          else
+            gh issue create --title "Production deploy failed ($SHORT)" --label ci-failure --body "$BODY"
+          fi

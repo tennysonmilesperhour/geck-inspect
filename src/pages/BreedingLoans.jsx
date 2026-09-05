@@ -70,7 +70,7 @@ function LoanCard({ loan, geckoMap, isOutgoing, onRefresh }) {
   const displayStatus = computeStatus(loan);
   const counterparty = isOutgoing
     ? (loan.borrower_name || loan.borrower_email || 'Unknown borrower')
-    : (loan.lender_user_id || 'Unknown lender');
+    : (loan.created_by || 'Unknown lender');
 
   const handleMarkReturned = async () => {
     try {
@@ -212,7 +212,7 @@ function LoanCard({ loan, geckoMap, isOutgoing, onRefresh }) {
 
 /* ─── New Loan Modal ────────────────────────────────────────────── */
 
-function NewLoanModal({ open, onClose, geckos, userEmail, onCreated }) {
+function NewLoanModal({ open, onClose, geckos, onCreated }) {
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState({
@@ -243,7 +243,6 @@ function NewLoanModal({ open, onClose, geckos, userEmail, onCreated }) {
     try {
       await BreedingLoan.create({
         animal_id: form.animal_id,
-        lender_user_id: userEmail,
         borrower_email: form.borrower_email,
         borrower_name: form.borrower_name,
         status: 'proposed',
@@ -468,7 +467,7 @@ export default function BreedingLoans() {
 
       const [userGeckos, lentLoans, borrowedLoans] = await Promise.all([
         Gecko.filter({ created_by: email }),
-        BreedingLoan.filter({ lender_user_id: email }),
+        BreedingLoan.filter({ created_by: email }),
         BreedingLoan.filter({ borrower_email: email }),
       ]);
 
@@ -498,10 +497,10 @@ export default function BreedingLoans() {
 
   const userEmail = user?.email || '';
   const loanedOut = loans
-    .filter(l => l.lender_user_id === userEmail)
+    .filter(l => l.created_by === userEmail)
     .sort((a, b) => new Date(b.created_date || 0) - new Date(a.created_date || 0));
   const borrowed = loans
-    .filter(l => l.borrower_email === userEmail && l.lender_user_id !== userEmail)
+    .filter(l => l.borrower_email === userEmail && l.created_by !== userEmail)
     .sort((a, b) => new Date(b.created_date || 0) - new Date(a.created_date || 0));
 
   const activeCount = loans.filter(l => computeStatus(l) === 'active' || computeStatus(l) === 'overdue').length;
