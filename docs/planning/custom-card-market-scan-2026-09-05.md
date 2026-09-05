@@ -15,7 +15,7 @@ Date: 5 September 2026
 1. Keep template choice small and visual.
 2. Let the buyer edit the name, stats, signature moves, and color family.
 3. Show every change in a live preview.
-4. Offer a short finish list with obvious visual differences.
+4. Keep the physical product choice simple until more finishes are operationally ready.
 5. Save the approved preview as the production reference.
 6. Explain the order flow before the form begins.
 
@@ -23,7 +23,7 @@ Date: 5 September 2026
 
 The builder uses those product patterns without copying protected card names, logos, characters, frames, or exact trade dress. The collector-card format now uses Geck Inspect terms such as affinity, power score, life stage, signature moves, and edition details. Stored values remain backward compatible with older carts and orders.
 
-The current physical choices are Clean gloss, Prism foil, and Soft matte. All three are saved with the cart line. Collector-card previews show the selected surface treatment.
+The current product ships as one glossy weatherproof sticker. Finish choices are intentionally not exposed in the builder.
 
 ## Guardrail
 

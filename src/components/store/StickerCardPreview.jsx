@@ -207,39 +207,6 @@ function PhotoSlot({ url, name, className, style }) {
   );
 }
 
-function FinishOverlay({ finish }) {
-  if (finish === 'holographic') {
-    return (
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-20"
-        style={{
-          background: 'linear-gradient(125deg, transparent 15%, rgba(117, 236, 255, 0.34) 35%, rgba(255, 142, 220, 0.3) 52%, rgba(255, 239, 135, 0.3) 68%, transparent 86%)',
-          mixBlendMode: 'screen',
-        }}
-      />
-    );
-  }
-  if (finish === 'matte') {
-    return (
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute inset-0 z-20 bg-slate-100/10"
-        style={{ mixBlendMode: 'soft-light' }}
-      />
-    );
-  }
-  return (
-    <div
-      aria-hidden="true"
-      className="pointer-events-none absolute inset-0 z-20"
-      style={{
-        background: 'linear-gradient(145deg, rgba(255,255,255,0.2) 0%, transparent 26%, transparent 74%, rgba(255,255,255,0.08) 100%)',
-      }}
-    />
-  );
-}
-
 export default function StickerCardPreview({ design, className = '' }) {
   if (!design) return null;
   const t = cardType(design.type);
@@ -474,7 +441,6 @@ export default function StickerCardPreview({ design, className = '' }) {
             </>
           )}
         </div>
-        <FinishOverlay finish={design.finish} />
       </div>
     </div>
   );

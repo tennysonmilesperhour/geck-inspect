@@ -29,7 +29,6 @@ import {
   WEAKNESS_MULTIPLIERS,
   RESISTANCE_AMOUNTS,
   STICKER_SIZES,
-  STICKER_FINISHES,
   MORPH_LINE_SUGGESTIONS,
   MAX_ATTACKS,
   FIELD_LIMITS,
@@ -48,7 +47,7 @@ const JSON_LD = [
     '@id': `${SITE_URL}/Store/stickers#product`,
     name: 'Custom pet trading card sticker',
     description:
-      'Upload a photo of your crested gecko and build an original collector-card sticker. Choose a format, affinity, power score, life stage, signature moves, finish, and morph line.',
+      'Upload a photo of your crested gecko and build an original collector-card sticker. Choose a format, affinity, power score, life stage, signature moves, and morph line.',
     url: `${SITE_URL}/Store/stickers`,
     brand: { '@type': 'Brand', name: 'Geck Inspect' },
     offers: {
@@ -322,7 +321,6 @@ export default function CustomStickerStudio() {
         sticker_layout: payload.layout,
         sticker_type: payload.type,
         sticker_theme: payload.theme,
-        sticker_finish: payload.finish,
       });
       setAdded(true);
     } catch (e) {
@@ -340,7 +338,7 @@ export default function CustomStickerStudio() {
     <StoreLayout breadcrumbs={[{ label: 'Supplies', to: '/Store' }, { label: 'Custom pet stickers' }]}>
       <Seo
         title="Custom crested gecko stickers, six themes, Geck Inspect"
-        description="Upload a photo of your gecko and build an original collector-card sticker. Pick a format, affinity, power score, signature moves, finish, and morph line. $10 each plus $5 flat shipping."
+        description="Upload a photo of your gecko and build an original collector-card sticker. Pick a format, affinity, power score, signature moves, and morph line. $10 each plus $5 flat shipping."
         path="/Store/stickers"
         keywords={[
           'custom pet sticker',
@@ -782,20 +780,12 @@ export default function CustomStickerStudio() {
             </Section>
           )}
 
-          <Section title="The physical sticker" hint="Every size and finish is the same price. All stickers use weatherproof vinyl.">
+          <Section title="The physical sticker" hint="Every size is the same price. All stickers ship glossy on weatherproof vinyl.">
             <Field label="Size">
               <ChipGroup
                 value={design.size}
                 onChange={(v) => patch({ size: v })}
                 options={STICKER_SIZES}
-                columns={3}
-              />
-            </Field>
-            <Field label="Finish">
-              <ChipGroup
-                value={design.finish}
-                onChange={(v) => patch({ finish: v })}
-                options={STICKER_FINISHES}
                 columns={3}
               />
             </Field>
@@ -816,8 +806,8 @@ export default function CustomStickerStudio() {
             <StickerPreview design={design} />
           </div>
           <p className="text-[11px] text-slate-500 text-center leading-relaxed">
-            Live preview, including the selected finish. Print colors run slightly
-            warmer than the screen, and the sticker is die-cut to the design outline.
+            Live preview. Print colors run slightly warmer than the screen, and
+            the sticker is die-cut to the design outline.
           </p>
 
           <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-4 space-y-2">
@@ -894,8 +884,8 @@ export default function CustomStickerStudio() {
           <div className="rounded-lg border border-slate-800 bg-slate-900/30 p-4 text-[11px] text-slate-400 leading-relaxed space-y-1.5">
             <p>
               <strong className="text-slate-300">Production reference.</strong> Check
-              the live preview before adding it to your cart. The saved design and
-              finish selection travel with the order.
+              the live preview before adding it to your cart. The saved design
+              travels with the order.
             </p>
             <p>
               <strong className="text-slate-300">Your artwork.</strong> Upload a

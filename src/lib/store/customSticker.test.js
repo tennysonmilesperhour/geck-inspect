@@ -3,7 +3,6 @@ import {
   CARD_LAYOUTS,
   CARD_STAGES,
   CARD_TYPES,
-  STICKER_FINISHES,
   createDefaultDesign,
   designSummary,
   serializeDesign,
@@ -24,15 +23,9 @@ describe('custom collector-card options', () => {
     expect(CARD_TYPES.find((option) => option.value === 'grass')?.label).toBe('Canopy');
   });
 
-  it('offers and persists all three finish choices', () => {
-    expect(STICKER_FINISHES.map((option) => option.value)).toEqual([
-      'glossy',
-      'holographic',
-      'matte',
-    ]);
-
-    const design = createDefaultDesign();
-    expect(serializeDesign({ ...design, finish: 'holographic' }).finish).toBe('holographic');
+  it('keeps glossy as the only customer-facing default', () => {
+    expect(createDefaultDesign().finish).toBe('glossy');
+    expect(serializeDesign(createDefaultDesign()).finish).toBe('glossy');
   });
 
   it('uses the new customer-facing vocabulary in validation and summaries', () => {

@@ -90,12 +90,6 @@ export const STICKER_SIZES = [
   { value: '4in', label: '4 inch', blurb: 'Rack panel, cooler, toolbox.' },
 ];
 
-export const STICKER_FINISHES = [
-  { value: 'glossy',      label: 'Clean gloss', blurb: 'Rich color with a smooth shine.' },
-  { value: 'holographic', label: 'Prism foil',  blurb: 'Rainbow shift across the full design.' },
-  { value: 'matte',       label: 'Soft matte',   blurb: 'Low glare with a softer surface.' },
-];
-
 /** Crested-gecko-specific starter suggestions for the morph line. */
 export const MORPH_LINE_SUGGESTIONS = [
   'Lilly White',
