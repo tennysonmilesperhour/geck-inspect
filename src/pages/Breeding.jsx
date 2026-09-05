@@ -1,4 +1,6 @@
 import React, { useState, useEffect, Suspense } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { useAuth } from '@/lib/AuthContext';
 import Seo from '@/components/seo/Seo';
 import { BreedingPlan, Egg } from '@/entities/all';
 import { api } from '@/api/appClient';
@@ -56,6 +58,25 @@ const TAB_LABELS = {
     archive: 'Archive',
 };
 
+// One round trip for everything the Breeding page needs. Returns
+// user: null for signed-out visitors so the page can show its gate.
+async function loadBreedingPage() {
+    const currentUser = await api.auth.me();
+    if (!currentUser) return { user: null, geckos: [], plans: [], eggs: [] };
+    const { getVisibleGeckos } = await import('@/lib/geckoAccess');
+    const [geckosData, plansData, eggsData] = await Promise.all([
+        getVisibleGeckos(currentUser),
+        BreedingPlan.filter({ created_by: currentUser.email }, '-created_date'),
+        Egg.filter({ created_by: currentUser.email }),
+    ]);
+    return {
+        user: currentUser,
+        geckos: geckosData.filter(g => !g.notes?.startsWith('[Manual sale]')),
+        plans: [...plansData].sort((a, b) => new Date(b.created_date) - new Date(a.created_date)),
+        eggs: eggsData,
+    };
+}
+
 export default function BreedingPage() {
     const { toast } = useToast();
     const [breedingPrefs, setBreedingPrefs] = usePageSettings('breeding_prefs', {
@@ -101,43 +122,44 @@ export default function BreedingPage() {
     // else (a December plan belongs to NEXT year's winter).
     const getCurrentSeason = () => currentSeasonLabel();
 
-    useEffect(() => {
-        loadData();
-    }, []);
-
     const [user, setUser] = useState(null);
     const [authChecked, setAuthChecked] = useState(false);
+    const { user: authUser } = useAuth();
 
-    const loadData = async () => {
-        setIsLoading(true);
-        try {
-            const currentUser = await api.auth.me();
-            setUser(currentUser);
-            setAuthChecked(true);
-            
-            if (!currentUser) {
-                // User not authenticated
-                setIsLoading(false);
-                return;
-            }
-            
-            const { getVisibleGeckos } = await import('@/lib/geckoAccess');
-            const [geckosData, plansData, eggsData] = await Promise.all([
-                getVisibleGeckos(currentUser),
-                BreedingPlan.filter({ created_by: currentUser.email }, '-created_date'),
-                Egg.filter({ created_by: currentUser.email })
-            ]);
-            const filtered = geckosData.filter(g => !g.notes?.startsWith('[Manual sale]'));
-            setAllGeckos(filtered);
-            setGeckos(filtered.filter(g => !g.archived));
-            setAllEggs(eggsData);
-            setBreedingPlans(plansData.sort((a,b) => new Date(b.created_date) - new Date(a.created_date)));
-        } catch (error) {
-            console.error("Failed to load breeding data:", error);
-            setAuthChecked(true);
+    // Geckos, plans and eggs load through react-query (launch review F47):
+    // cached for two minutes by the shared QueryClient, so coming back to
+    // this page renders from cache instead of re-running three requests.
+    // Local state mirrors the cache so the rest of the page is unchanged.
+    const breedingQuery = useQuery({
+        queryKey: ['breeding', 'page', authUser?.email || null],
+        queryFn: loadBreedingPage,
+    });
+
+    useEffect(() => {
+        const data = breedingQuery.data;
+        if (!data) return;
+        setUser(data.user);
+        setAuthChecked(true);
+        if (!data.user) {
+            setIsLoading(false);
+            return;
         }
+        setAllGeckos(data.geckos);
+        setGeckos(data.geckos.filter(g => !g.archived));
+        setAllEggs(data.eggs);
+        setBreedingPlans(data.plans);
         setIsLoading(false);
-    };
+    }, [breedingQuery.data]);
+
+    useEffect(() => {
+        if (!breedingQuery.isError) return;
+        console.error("Failed to load breeding data:", breedingQuery.error);
+        setAuthChecked(true);
+        setIsLoading(false);
+    }, [breedingQuery.isError, breedingQuery.error]);
+
+    // Existing callers (create, delete, hatch) still call loadData().
+    const loadData = () => breedingQuery.refetch();
     
     const handleCreatePlan = async () => {
         if (!newPlan.sire_id || !newPlan.dam_id) {

@@ -358,7 +358,7 @@ export default function Home() {
             sizes="100vw"
             width="2400"
             height="1598"
-            alt="Lush tropical rainforest canopy, the natural habitat of the crested gecko (Correlophus ciliatus) in New Caledonia."
+            alt="Sunlit forest of tall trees and dense green undergrowth, the kind of arboreal cover crested geckos (Correlophus ciliatus) live in."
             className="w-full h-full object-cover opacity-80"
             loading="eager"
             decoding="async"

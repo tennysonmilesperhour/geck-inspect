@@ -62,6 +62,8 @@ const TYPE_TO_EMAIL_KEY: Record<string, string> = {
   hatch_alert: "breeding_updates",
   feeding_due: "breeding_updates",
   announcement: "announcements",
+  // Sunday summary from enqueue_weekly_digest(); rides the announcements preference.
+  weekly_digest: "announcements",
 };
 
 const CORS = {

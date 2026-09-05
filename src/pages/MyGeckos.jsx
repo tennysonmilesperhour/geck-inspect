@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import Seo from '@/components/seo/Seo';
 import { Gecko, WeightRecord, FeedingGroup, CollectionMember } from '@/entities/all';
 import { getVisibleGeckos, canWriteGecko } from '@/lib/geckoAccess';
@@ -98,13 +99,16 @@ export default function MyGeckosPage() {
             .catch((err) => console.error('Failed to load feeding groups:', err));
     }, []);
 
-    // Load every gecko the current user owns, up to GECKO_FETCH_LIMIT. Reads
-    // from the rate-limited cache when possible, otherwise does a single
-    // Supabase round trip.
-    const loadGeckos = useCallback(async () => {
-        if (!user) return;
-        setIsLoading(true);
-        try {
+    // Load every gecko the current user owns, up to GECKO_FETCH_LIMIT,
+    // through react-query (launch review F47). The shared QueryClient
+    // caches the result for two minutes, so leaving the page and coming
+    // back renders instantly instead of re-downloading the collection.
+    // Local state below is kept in step with the cache so the optimistic
+    // updates elsewhere on this page (delete, archive) keep working.
+    const collectionQuery = useQuery({
+        queryKey: ['my-geckos', user?.email],
+        enabled: Boolean(user),
+        queryFn: async () => {
             const [userGeckos, userWeights, userMemberships] = await retryApiCall(async () =>
                 Promise.all([
                     // Pull every gecko visible to the user, own collection plus
@@ -117,20 +121,40 @@ export default function MyGeckosPage() {
                     CollectionMember.filter({ status: 'accepted' }).catch(() => []),
                 ])
             );
-            setGeckos(userGeckos);
-            setWeightRecords(userWeights);
-            setMemberships(Array.isArray(userMemberships) ? userMemberships : []);
-        } catch (error) {
-            console.error('Failed to load geckos:', error);
-            toast({
-                title: 'Error Loading Geckos',
-                description: 'Unable to load your gecko collection. Please try again in a moment.',
-                variant: 'destructive',
-            });
-        } finally {
-            setIsLoading(false);
-        }
-    }, [user]);
+            return {
+                geckos: userGeckos,
+                weights: userWeights,
+                memberships: Array.isArray(userMemberships) ? userMemberships : [],
+            };
+        },
+    });
+
+    useEffect(() => {
+        if (!collectionQuery.data) return;
+        setGeckos(collectionQuery.data.geckos);
+        setWeightRecords(collectionQuery.data.weights);
+        setMemberships(collectionQuery.data.memberships);
+        setIsLoading(false);
+    }, [collectionQuery.data]);
+
+    useEffect(() => {
+        if (!collectionQuery.isError) return;
+        console.error('Failed to load geckos:', collectionQuery.error);
+        toast({
+            title: 'Error Loading Geckos',
+            description: 'Unable to load your gecko collection. Please try again in a moment.',
+            variant: 'destructive',
+        });
+        setIsLoading(false);
+    }, [collectionQuery.isError, collectionQuery.error]);
+
+    // Every existing caller (save, delete, archive, cross-page events) still
+    // calls loadGeckos(); it now refetches the cached query.
+    const { refetch: refetchCollection } = collectionQuery;
+    const loadGeckos = useCallback(async () => {
+        if (!user) return;
+        await refetchCollection();
+    }, [user, refetchCollection]);
 
     // Effect to handle initial user loading
     useEffect(() => {
@@ -138,6 +162,7 @@ export default function MyGeckosPage() {
             try {
                 const currentUser = await retryApiCall(async () => api.auth.me());
                 setUser(currentUser);
+                if (!currentUser) setIsLoading(false);
             } catch (error) {
                 console.error("Failed to load initial user:", error);
                 setUser(null);
@@ -146,13 +171,6 @@ export default function MyGeckosPage() {
         };
         fetchUser();
     }, []); // Run once to fetch user
-
-    // Effect to load geckos when user is available or changes
-    useEffect(() => {
-        if (user) {
-            loadGeckos();
-        }
-    }, [user, loadGeckos]);
 
     // Listen for cross-page gecko-list changes (e.g. a new gecko auto-created
     // when hatching an egg on the Breeding page). Any page that mutates the

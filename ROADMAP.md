@@ -23,7 +23,7 @@ The full review, with every finding, its location and its status, is in `docs/pl
 - [x] F34: Non-JS crawlers see thin shells and cannot reach 134 child pages (4 Sep, late session: fuller noscript bodies and per-page JSON-LD in the prerendered shells)
 - [ ] F43: No Content-Security-Policy despite five third-party script origins (report-only shipped 4 Sep; reports now land in error_logs via csp-report; decide on enforcing from about 11 Sep)
 - [x] F46: 208 RLS policies re-evaluate auth functions per row; 271 duplicate permissive policies (4 Sep, late session: all eight merge batches applied and verified; only geck_data tables remain, owned by the geck-data repo)
-- [ ] F47: Dashboard fans out to about 40 requests with a waterfall; background polling in every tab (4 Sep, late session: all pollers visibility-aware, Dashboard on react-query with head-only counts; other hot pages still to migrate)
+- [x] F47: Dashboard fans out to about 40 requests with a waterfall; background polling in every tab (4 to 5 Sep: all pollers visibility-aware; Dashboard, My Geckos, Gallery and Breeding on react-query)
 - [ ] F55: Mobile and accessibility gaps (4 Sep, late session: contrast and touch-target pass shipped; HEIC check on a real iPhone still open)
 
 ---

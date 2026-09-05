@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import Seo from '@/components/seo/Seo';
 import { api } from '@/api/appClient';
 import { supabase } from '@/lib/supabaseClient';
@@ -55,26 +56,18 @@ export default function Gallery() {
         ? '-likes'
         : filters.sort;
 
-    const fetchBatch = useCallback(async (offset = 0, replace = false) => {
-         const query = buildQuery();
-         const results = await api.entities.GeckoImage.filter(query, sortField, BATCH_SIZE, offset);
-
-         // Client-side filter: exclude images with empty/missing data and secondary_traits
-         const filtered = results.filter(img => 
-             img.image_url && // Must have image URL
-             img.created_by && // Must have creator
-             (!filters.secondary_traits.length > 0 || filters.secondary_traits.every(t => img.secondary_traits?.includes(t)))
-         );
-
-        if (replace) {
-            setImages(filtered);
-        } else {
-            setImages(prev => [...prev, ...filtered]);
-        }
-
-        setHasMore(results.length === BATCH_SIZE);
-        offsetRef.current = offset + results.length;
-        return filtered;
+    // One page of the gallery. Pure: no state writes, so the first page
+    // can live in the react-query cache (F47) and later pages append.
+    const fetchPage = useCallback(async (offset) => {
+        const query = buildQuery();
+        const results = await api.entities.GeckoImage.filter(query, sortField, BATCH_SIZE, offset);
+        // Client-side filter: exclude images with empty/missing data and secondary_traits
+        const filtered = results.filter(img =>
+            img.image_url && // Must have image URL
+            img.created_by && // Must have creator
+            (!filters.secondary_traits.length > 0 || filters.secondary_traits.every(t => img.secondary_traits?.includes(t)))
+        );
+        return { filtered, fetched: results.length };
     }, [buildQuery, sortField, filters.secondary_traits]);
 
     // Uploader display names for the images on screen. Fetches only the
@@ -95,23 +88,42 @@ export default function Gallery() {
         setUsers((prev) => [...prev, ...data]);
     }, []);
 
-    // Initial load + reload on filter change
+    // First page per filter combination, cached for two minutes. Changing a
+    // filter is a new key, so the previous view stays warm in the cache and
+    // switching back is instant.
+    const firstPageQuery = useQuery({
+        queryKey: ['gallery', 'first-page', buildQuery(), sortField, filters.secondary_traits],
+        queryFn: () => fetchPage(0),
+    });
+
     useEffect(() => {
-        const load = async () => {
-            setIsLoading(true);
-            offsetRef.current = 0;
-            const firstBatch = await fetchBatch(0, true);
-            await ensureUsers(firstBatch);
-            setIsLoading(false);
-        };
-        load();
-    }, [filters]);  
+        const page = firstPageQuery.data;
+        if (!page) return;
+        let cancelled = false;
+        setImages(page.filtered);
+        setHasMore(page.fetched === BATCH_SIZE);
+        offsetRef.current = page.fetched;
+        ensureUsers(page.filtered).finally(() => {
+            if (!cancelled) setIsLoading(false);
+        });
+        return () => { cancelled = true; };
+    }, [firstPageQuery.data, ensureUsers]);
+
+    useEffect(() => {
+        if (firstPageQuery.isError) setIsLoading(false);
+    }, [firstPageQuery.isError]);
 
     const loadMore = async () => {
         setIsLoadingMore(true);
-        const batch = await fetchBatch(offsetRef.current, false);
-        await ensureUsers(batch);
-        setIsLoadingMore(false);
+        try {
+            const page = await fetchPage(offsetRef.current);
+            setImages(prev => [...prev, ...page.filtered]);
+            setHasMore(page.fetched === BATCH_SIZE);
+            offsetRef.current += page.fetched;
+            await ensureUsers(page.filtered);
+        } finally {
+            setIsLoadingMore(false);
+        }
     };
 
     const handleImageSelect = (image) => {

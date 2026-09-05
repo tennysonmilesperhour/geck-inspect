@@ -31,7 +31,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Proposed fix: Toggle it on in Authentication settings.
 - Status: Fixed 4 Sep: verified in Authentication, Attack protection that leaked-password protection is enabled
 
-## Partly fixed (5)
+## Partly fixed (4)
 
 ### F33: Production schema has drifted from the repo and the deploy scripts would replay stale SQL
 
@@ -57,14 +57,6 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Proposed fix: Rewrite to (select auth.uid()) and consolidate policies per table and action.
 - Status: Partly fixed 4 Sep: 213 policies rewritten to (select auth.uid()) via rls_initplan_rewrite, 0 bare calls remain in public (14 remain in geck_data, owned by the geck-data repo). Duplicate permissive groups: 274 warnings across 53 tables mapped to eight batches with the exact rewrite for each in docs/planning/rls-policy-consolidation.md (late session). Tennyson approved all eight batches one at a time and all eight are applied (rls_batch1_gecko_images through rls_batch8_collections_votes_offers), each smoke-tested as visitor, member and admin inside a rolled-back transaction before the next was applied. gecko_images: nine policies down to four and a member can no longer edit a verified image or insert one pre-verified. is_admin() and is_expert_reviewer() marked STABLE. Four duplicate animal_id indexes dropped. The dead five-minute unsend rule on direct_messages removed. A whole-schema check after batch 8 finds no (table, command) with more than one permissive policy in public. Remaining: the 14 geck_data policies and four geck_data duplicate groups belong to the geck-data repo
 
-### F47: Dashboard fans out to about 40 requests with a waterfall; background polling in every tab
-
-- Severity: medium. Area: Data layer. Effort: M.
-- Where: src/pages/Dashboard.jsx:113; src/components/dashboard/LiveFeed.jsx:9 (30 s); Layout unread polls (60 s); UpdateNotification.jsx:9 (fetches the HTML shell every 60 s)
-- Why it matters: react-query is configured but used by one file; sixty pages fetch with bare useEffect and refetch everything on every visit.
-- Proposed fix: Move hot pages to react-query with staleTime, make polling visibility-aware, and back off when idle.
-- Status: Mostly fixed (batch B plus late session 4 Sep): the 60 second HTML poll is now 10 minutes and visible tabs only. Late session: every remaining poller (Layout unread notifications and messages, LiveFeed, NotificationDropdown, HatchAlertSystem, FeedingAlertSystem, MarketIntelligenceButton, Messages fallback) goes through src/lib/pagePolling.js, which skips ticks while the tab is hidden or the member has been idle ten minutes and catches up on return. The Dashboard runs on react-query with a 5 minute staleTime (revisits render from cache) and the hatchery strip uses four head-only counts instead of downloading every egg and breeding plan. Still open: moving the other hot pages (MyGeckos, Gallery, Breeding) onto react-query
-
 ### F55: Mobile and accessibility gaps
 
 - Severity: medium. Area: Mobile. Effort: S.
@@ -73,7 +65,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Proposed fix: capture=environment on photo inputs, alt text pass, reduced-motion guard on framer animations, verify HEIC on a real iPhone.
 - Status: Mostly fixed 4 Sep (late session): global prefers-reduced-motion rule, missing alt on MarketplaceSalesStats. Late session: 41 muted text runs moved from slate-600/700 (about 3:1 on the dark ground, below WCAG AA) to slate-500 (about 4.6:1), icons and decorative marks untouched; six 9 px labels raised to 10 px; the eleven sub-36 px buttons (weight delete, egg edit, feeding group edit and delete, payment add, keep offspring) are 36 px on phones and unchanged from md up. capture=environment was deliberately not added: keepers upload existing gecko photos far more often than they shoot new ones, and capture hides the photo library on iOS. Still open: verify HEIC uploads on a real iPhone
 
-## Closed (55)
+## Closed (56)
 
 | ID | Severity | Area | Finding | Effort | Status |
 |---|---|---|---|---|---|
@@ -107,7 +99,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 | F29 | high | Performance | About 3 MB of JavaScript on the landing page; billing, charts, and PDF code load for anonymous visitors | M | Fixed (batch B): RevenueCat, PostHog, framer-motion, recharts and the PDF libraries are out of the landing bundle; manualChunks removed; no vendor modulepreloads. Entry chunk 1.0 MB raw, next: measure field Web Vitals after deploy |
 | F31 | high | Bugs | Storage quota gate looks up the profile by auth uid, which never matches profiles.id, so paying users get the free quota | S | Fixed (batch A, commit c083e67): profile looked up by email |
 | F32 | high | Ops | Nightly error-triage workflow has failed on every recent run, so errors never reach you | S | Fixed (batch C): the npm install step that crashed inside pnpm node_modules is gone from all three scheduled workflows; the SDK is a devDependency; failures now open a ci-failure issue. Confirm on the next nightly run |
-| F35 | high | Retention | No re-engagement while the app is closed | M | Fixed (batch D): pg_cron writes hatch alerts daily and weigh-in reminders weekly through the existing notification dispatcher (push and email). Sunday digest still open |
+| F35 | high | Retention | No re-engagement while the app is closed | M | Fixed (batch D plus 5 Sep): pg_cron writes hatch alerts daily, weigh-in reminders weekly, and a Sunday digest (collection size, eggs incubating and due this week, overdue weigh-ins, community activity) through the existing notification dispatcher. Dry run wrote 29 digests inside a rolled-back transaction with the dispatcher disabled |
 | F36 | high | Security | Privileged database functions callable anonymously without guards, plus a SECURITY DEFINER view | S | Fixed (batch A, migration audit_batch_a): 17 internal functions revoked from anon and authenticated, 11 member RPCs revoked from anon, estimate_food_runout scoped to the caller, promote_image_usage is security invoker. 14 functions remain anon-callable on purpose (landing, community, RLS helpers) |
 | F37 | high | Security | recognize-import-data has no auth or metering and is currently not deployed | M | Fixed 4 Sep: deployed with JWT verification, Breeder and Enterprise gate, one import_scan credit per batch (20 and 200 a month), 401/402/403 with plain reasons that ImageImport shows |
 | F38 | high | Security | Vet, feeding, ownership (with sale prices), and transfer records are world-readable | M | Fixed (batch D, migration audit_batch_d): vet, feeding, shed and ownership reads limited to author, owner, admin, or a public passport |
@@ -117,6 +109,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 | F34 | high | SEO | Non-JS crawlers see thin shells and cannot reach 134 child pages | M | Fixed (batch D plus late session 4 Sep): every child page linked from its hub; noscript bodies carry the first three paragraphs, key points and FAQ; page-level JSON-LD per route; Seo.jsx drops the static block on mount |
 | F41 | medium | Retention | Referral program was never applied to production | S | Fixed 4 Sep, late session: migration referral_keeper_month applied and verified. The unpayable 10 percent revenue share is gone; the reward is one free month of Keeper per referred member who pays a first invoice (a month credited on Stripe for subscribers, needs_manual for App Store and grandfathered accounts). Attribution moved server-side (apply_referral_code), referral columns write-protected, daily expire-referral-grants cron returns lapsed months to free, stripe-webhook redeployed |
 | F61 | medium | Ops | A newer commit on main adds three large unapplied migrations (7,900 lines, 55 tables in a geck_data schema) | S | Closed 4 Sep, late session: all three are in the live migration history and geck_data holds 81 tables, so they were applied after the review. Nothing left to apply |
+| F47 | medium | Data layer | Dashboard fans out to about 40 requests with a waterfall; background polling in every tab | M | Fixed (batch B plus 4 to 5 Sep): every poller visibility and idle aware; Dashboard, My Geckos, Gallery and Breeding on react-query with count-only hatchery queries |
 | F39 | medium | Performance | Every image first requests a paid transform that returns 403, then falls back | S | Fixed (batch A): transforms off by default, VITE_IMAGE_TRANSFORMS=1 re-enables |
 | F40 | medium | Landing page | 'Keepers signed up' counts 94 profiles while 36 accounts can log in | S | Fixed (batch A): landing_stats() counts confirmed accounts (36 today) |
 | F42 | medium | Security | Privacy policy does not disclose GA4, PostHog, or the Robauto pixel | S | Fixed (batch C): privacy policy names Supabase, Vercel, Stripe, RevenueCat, Anthropic, Resend, GA4, PostHog and Robauto with what each receives |
@@ -180,8 +173,9 @@ Every one of these has a matching file under `supabase/migrations/` so the repo 
 - `function_search_path_pins`: five trigger and helper functions.
 - `store_copy_no_em_dashes`: 23 live store product rows.
 - Earlier the same night: `audit_batch_a`, `audit_batch_d`, `free_tier_no_morph_id`, `launch_security_hardening`.
+- 5 Sep: `drop_award_referral_signup_bonus` (dead Social Media Manager bonus function), `weekly_digest` (enqueue_weekly_digest plus the weekly-digest-sunday cron, 16:00 UTC Sundays), `dispatch_titles_for_new_types` (email subjects for weigh-in reminders, referral rewards and the digest).
 - Late session: `owner_only_reads_valuations_alerts_loans` (collection valuations, price alerts and breeding loans were readable by visitors; now author, lender or borrower, or admin). The Breeding Loans page was also storing and filtering the lender as an email in a uuid column, which made every loan insert fail; it now uses created_by.
 - Late session: `rls_batch1_gecko_images` through `rls_batch8_collections_votes_offers` (F46).
 - Late session: `referral_keeper_month` (referral columns, reward ledger, award and expiry functions, pg_cron job) and `referral_function_grants` (explicit revokes, because Supabase default privileges had made the award function callable by any signed-in member).
 
-Edge functions redeployed from repo source: stripe-checkout, stripe-webhook, stripe-billing-portal, recognize-gecko-morph, recognize-import-data (first deployment, JWT verification on). Late session: stripe-webhook again, for the referral reward; csp-report (new, JWT verification off by design, see F43).
+Edge functions redeployed from repo source: stripe-checkout, stripe-webhook, stripe-billing-portal, recognize-gecko-morph, recognize-import-data (first deployment, JWT verification on). Late session: stripe-webhook again, for the referral reward; csp-report (new, JWT verification off by design, see F43). 5 Sep: send-email v19 (weekly_digest maps to the announcements preference).
