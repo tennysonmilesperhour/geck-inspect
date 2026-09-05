@@ -38,13 +38,11 @@ function urlsFor(row) {
 function describeOutcome(action, result) {
   if (action === 'reject') return 'Rejection recorded. This sample is excluded from the review queue.';
   if (result?.verified) {
-    return 'Consensus reached, sample promoted to training-grade.';
+    return 'Expert review complete. This sample is now training-grade.';
   }
   const matching = result?.matching_approve_count ?? result?.approve_count ?? 1;
-  if (result?.review_status === 'disputed') {
-    return `Review recorded. Current labels disagree, so the sample stays unverified (${matching}/2 matching).`;
-  }
-  return `Review recorded (${matching}/2 matching). Another expert must independently submit the same full label set.`;
+  const required = result?.required_approve_count ?? 1;
+  return `Review recorded (${matching}/${required} approvals).`;
 }
 
 const PAGE_SIZE = 100;
@@ -190,7 +188,7 @@ export default function AIFeedbackQueue() {
     setIdx((i) => Math.min(i, Math.max(0, next.length - 1)));
   };
 
-  // Standard reviewer vote (2-vote consensus path)
+  // Standard expert review. The database owns the current approval threshold.
   const persist = async (action) => {
     if (!current || !edits) return;
     if (reviewNotes.trim().length < 10) {

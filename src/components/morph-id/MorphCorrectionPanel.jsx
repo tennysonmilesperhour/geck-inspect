@@ -137,7 +137,7 @@ export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageS
       setIsSaved(true);
       toast({
         title: 'Sent for expert review',
-        description: 'This label is queued and will not become verified training data until expert consensus.',
+        description: 'This label is queued and will not become verified training data until an approved expert reviews it.',
       });
       onSaved?.(saved);
     } catch (err) {
@@ -400,7 +400,7 @@ export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageS
                 {isSaving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                 Send for expert review
               </Button>
-              <p className="text-xs text-slate-500">Expert labels only enter the verified corpus after two reviewers submit the same full label set.</p>
+              <p className="text-xs text-slate-500">A sample enters the verified corpus only after an approved expert reviews the full label set.</p>
             </div>
           )}
 

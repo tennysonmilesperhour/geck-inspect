@@ -170,7 +170,7 @@ export default function TrainingPage() {
                 Label every axis that matters for visual identification: primary morph, possible genetic
                 traits, descriptive modifiers, base color, pattern intensity,
                 fired state, photo quality, and optional lineage. Contributions
-                stay unverified until expert consensus.
+                stay unverified until approved expert review.
               </p>
             </div>
             <ExpertContributionForm onSaved={reload} />
@@ -180,9 +180,10 @@ export default function TrainingPage() {
             <div className="flex items-start gap-3 text-slate-400 text-sm">
               <ShieldCheck className="w-5 h-5 text-emerald-400 mt-0.5 shrink-0" />
               <p>
-                Two experts must independently submit the same full label set before a sample becomes
-                <span className="text-emerald-300"> verified</span>. Conflicting calls remain disputed,
-                and rejected photos are excluded from the review queue.
+                One approved expert currently reviews the full label set before a sample becomes
+                <span className="text-emerald-300"> verified</span>. Rejected photos are excluded from
+                the review queue. Independent vote records are retained so a second-reviewer policy can
+                be enabled when the next expert joins.
               </p>
             </div>
             <AIFeedbackQueue />

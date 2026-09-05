@@ -236,7 +236,7 @@ const LANDING_FAQS = [
   },
   {
     q: 'How accurate is the AI crested gecko morph identifier?',
-    a: 'Morph ID is an identification aid, not a substitute for lineage records or an expert assessment. It ranks visual candidates and cites visible markers instead of presenting its model score as accuracy. Ambiguous or poor-quality submissions are marked tentative or held for better photos, and user corrections stay unverified until two expert reviewers submit the same full label set.',
+    a: 'Morph ID is an identification aid, not a substitute for lineage records or an expert assessment. It ranks visual candidates and cites visible markers instead of presenting its model score as accuracy. Ambiguous or poor-quality submissions are marked tentative or held for better photos, and user corrections stay unverified until an approved expert reviews the full label set.',
   },
   {
     q: 'Does Geck Inspect sync with MorphMarket or Palm Street?',
