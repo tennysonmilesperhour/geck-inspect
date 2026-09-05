@@ -95,6 +95,21 @@ describe('evidenceAssessment', () => {
       conflict: false,
     });
   });
+
+  it('does not treat a near-tied retrieval vote as a conflict', () => {
+    const evidence = buildVisualEvidence([
+      neighbor({ id: 'd1', primary_morph: 'dalmatian', source_cluster: 'a', similarity: 0.8 }),
+      neighbor({ id: 'd2', primary_morph: 'dalmatian', source_cluster: 'b', similarity: 0.79 }),
+      neighbor({ id: 'h1', primary_morph: 'harlequin', source_cluster: 'c', similarity: 0.8 }),
+      neighbor({ id: 'h2', primary_morph: 'harlequin', source_cluster: 'd', similarity: 0.79 }),
+    ], { model: 'test-model', photoCount: 1 });
+
+    expect(evidence.consensus.margin).toBeCloseTo(0);
+    expect(evidenceAssessment('harlequin', 90, 30, usablePhoto, evidence)).toEqual({
+      status: 'tentative',
+      conflict: false,
+    });
+  });
 });
 
 describe('visual embedding utilities', () => {

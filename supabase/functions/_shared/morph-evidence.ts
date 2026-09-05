@@ -176,6 +176,7 @@ export function evidenceAssessment(
     consensus.support >= 2 &&
     consensus.source_diversity >= 2 &&
     consensus.agreement >= 0.50 &&
+    consensus.margin >= 0.15 &&
     consensus.mean_similarity >= 0.55;
   const conflict = !!(retrievalIsStrong && consensus?.primary_morph !== primaryMorph);
   const retrievalSupports = !!(retrievalIsStrong && consensus?.primary_morph === primaryMorph);
