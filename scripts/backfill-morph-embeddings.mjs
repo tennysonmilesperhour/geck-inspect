@@ -38,13 +38,19 @@ query.searchParams.set('verified', 'eq.true');
 query.searchParams.set('primary_morph', 'not.is.null');
 query.searchParams.set('embedding_attempts', `lt.${maxAttempts}`);
 query.searchParams.set('order', 'embedding_attempts.asc,created_date.asc');
-query.searchParams.set('limit', '5000');
+query.searchParams.set('limit', '1000');
 
-const response = await fetch(query, { headers });
-if (!response.ok) {
-  throw new Error(`Could not load embedding queue (${response.status}): ${(await response.text()).slice(0, 500)}`);
+const candidates = [];
+for (let offset = 0; offset < 5000; offset += 1000) {
+  query.searchParams.set('offset', String(offset));
+  const response = await fetch(query, { headers });
+  if (!response.ok) {
+    throw new Error(`Could not load embedding queue (${response.status}): ${(await response.text()).slice(0, 500)}`);
+  }
+  const page = await response.json();
+  candidates.push(...page);
+  if (page.length < 1000) break;
 }
-const candidates = await response.json();
 const hostSamples = new Map();
 for (const row of candidates) {
   try {
@@ -109,7 +115,8 @@ while (rows.length < limit && queues.some((queue) => queue.length > 0)) {
     if (row) rows.push(row);
   }
 }
-console.log(`Embedding queue: ${rows.length} row(s), concurrency ${concurrency}${dryRun ? ' [dry run]' : ''}`);
+console.log(`Embedding queue: ${rows.length} row(s) across ${groups.size} morph label(s), concurrency ${concurrency}${dryRun ? ' [dry run]' : ''}`);
+if (dryRun) console.log(`Morph labels: ${[...groups.keys()].sort().join(', ')}`);
 
 if (dryRun || rows.length === 0) process.exit(0);
 
