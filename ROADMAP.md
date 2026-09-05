@@ -12,14 +12,14 @@ This is the active priority list. Items are formatted so Claude Code can act on 
 The full review, with every finding, its location and its status, is in `docs/planning/launch-review-2026-09-04.md`. Start there when picking this work up in any Claude Code session. Items below are the ones still open the night before launch; check them off here and update the status in that file when they ship.
 
 **Open**
-- [ ] F60: Production builds failed on every push from 15 to 29 August and nobody was told (deploy-watch workflow opens a ci-failure issue on a red production deploy; Vercel's own notification still worth enabling)
-- [ ] F28: Leaked-password protection is off (advisor no longer flags it as of 4 Sep, late session; confirm the toggle and tick)
+- [x] F60: Production builds failed on every push from 15 to 29 August and nobody was told (deploy-watch workflow opens a ci-failure issue on a red production deploy; Vercel Deployment Failures email verified enabled on 4 Sep; GitHub mention-email delivery still needs account confirmation)
+- [x] F28: Leaked-password protection is enabled (verified in the Supabase dashboard on 4 Sep)
 - [x] F41: Referral program was never applied to production (4 Sep, late session: applied with the reward changed to one free month of Keeper per paid referral)
 - [x] F61: A newer commit on main adds three large unapplied migrations (7,900 lines, 55 tables in a geck_data schema) (closed 4 Sep, late session: they were already applied to production after the review)
 
 **Partly fixed (remainder described in the review file)**
 - [x] F30: Hero image is a 2,400 px external hotlink with no srcset; logo and icons are oversized (4 Sep, late session: hero self-hosted as WebP at 800, 1600 and 2400 px)
-- [ ] F33: Production schema has drifted from the repo and the deploy scripts would replay stale SQL (snapshot regenerated and baseline plan written 4 Sep, late session; the renames and db pull still need a go-ahead)
+- [ ] F33: Production schema has drifted from the repo and the deploy scripts would replay stale SQL (all 121 history rows now match local and remote; `db pull` is blocked because the eight earliest remote_snapshot files are empty and shadow replay reaches p1_animal_passport before `geckos` exists)
 - [x] F34: Non-JS crawlers see thin shells and cannot reach 134 child pages (4 Sep, late session: fuller noscript bodies and per-page JSON-LD in the prerendered shells)
 - [ ] F43: No Content-Security-Policy despite five third-party script origins (report-only shipped 4 Sep; reports now land in error_logs via csp-report; decide on enforcing from about 11 Sep)
 - [x] F46: 208 RLS policies re-evaluate auth functions per row; 271 duplicate permissive policies (4 Sep, late session: all eight merge batches applied and verified; only geck_data tables remain, owned by the geck-data repo)

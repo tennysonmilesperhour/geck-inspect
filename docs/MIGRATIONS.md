@@ -14,15 +14,19 @@ Read this before running any `supabase db ...` command against production.
   versions that were applied straight from the MCP, three data-only
   files that ran by hand moved to `_applied_by_hand/`, and the four files
   that never ran stay in `_never_applied/`.
-- One repo file has no history row even though its SQL is live:
-  `20260904000001_morph_id_launch_integrity.sql` ran through the SQL
-  editor on 4 September (its function, column and policy all exist in
-  production). It needs `supabase migration repair --status applied
-  20260904000001` the next time the CLI is linked (baselining step 6).
-- What is still missing is the runnable baseline: `supabase db pull`
-  (step 7) needs the database password on a machine with the CLI linked,
-  and has not been run yet. Until then `supabase db push` should still be
-  avoided, because the CLI has not confirmed local and remote agree.
+- On 5 September `20260904000001_morph_id_launch_integrity.sql` was
+  recorded with `supabase migration repair --status applied
+  20260904000001`, and the late-session files were aligned to their live
+  timestamps. `supabase migration list` now shows both local and remote
+  versions for all 121 rows.
+- The proposed `supabase db pull` baseline was attempted on 5 September
+  and exposed a flaw in this plan. The CLI builds a shadow database by
+  replaying local migrations. The eight earliest `remote_snapshot` files
+  are empty placeholders, so replay fails at
+  `20260413_p1_animal_passport.sql` because `public.geckos` does not yet
+  exist. A direct linked schema dump succeeds, but adding that dump as the
+  newest migration would not repair the broken replay order. Do not commit
+  it as a fake baseline and do not run `supabase db push` yet.
 
 ## How to make a schema change today
 
@@ -33,7 +37,7 @@ Read this before running any `supabase db ...` command against production.
    the SQL editor), which records it in the migration history.
 3. Commit the file in the same change so the repo keeps the full story.
 
-## Baselining: the concrete plan (proposed 4 Sep 2026, not yet executed)
+## Baselining: history aligned, runnable baseline still blocked
 
 The live history has 105 entries. Matching every repo file against it by
 name (the timestamp prefix stripped) gives four groups. The full mapping
@@ -79,13 +83,16 @@ migration folder against the live history").
    file rather than repairing the history.
 6. **Only if a row is still unmatched**, use `supabase migration repair
    --status applied <version>` for it. Expect zero of these.
-7. **Run `supabase db pull`** into `supabase/migrations/<now>_remote_schema.sql`
-   and commit it as the runnable baseline this repo has never had.
+7. **Build a real runnable baseline.** `supabase db pull` cannot do this
+   while the earliest snapshots are empty. The safe follow-up is a
+   reviewed squash/rebaseline that starts from a direct linked schema dump
+   and separately preserves required data migrations, storage setup and
+   cron configuration. This rewrites the local replay chain and must not be
+   treated as a one-file append.
 8. Regenerate `supabase/SCHEMA_SNAPSHOT.md` and commit.
 
-After step 5 passes, plain `supabase db push` (without `--include-all`)
-is safe again for new files, and the by-hand workflow above becomes
-optional rather than mandatory.
+Step 5 now passes, but `supabase db push` remains off-limits until step 7
+produces a migration chain that can recreate a clean local database.
 
 ### What not to do
 

@@ -2,7 +2,7 @@
 
 Read-only review of the whole repo and the live Supabase and Vercel setup, done the day before the 5 September launch, followed by five batches of fixes (A to E) pushed straight to main the same night. This file is the handoff copy of the interactive report so any session (desktop app, web, or the terminal CLI) can pick the work up. The interactive version, with the same data, is at https://claude.ai/code/artifact/6136b837-8feb-4df0-806b-f375095dc677.
 
-Totals: 62 findings. 55 closed (fixed, done, or decided), 5 partly fixed, 2 open.
+Totals: 62 findings. 57 closed (fixed, done, or decided), 5 partly fixed, 0 open.
 
 Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the database or an edge function, applied to production and verified. "Partly fixed" and "Mostly fixed" list what is left inside the status text. "Confirmed" means verified real and untouched.
 
@@ -13,7 +13,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 3. Database changes go through a timestamped file in `supabase/migrations/` plus a by-hand apply, as described in `docs/MIGRATIONS.md`. Edge functions are deployed from the merged repo source.
 4. When a finding closes, update its status here and in ROADMAP.md.
 
-## Open (2)
+## Recently closed (2)
 
 ### F60: Production builds failed on every push from 15 to 29 August and nobody was told
 
@@ -21,7 +21,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Where: Vercel deployments dpl_CZYbdRr8 through dpl_EmFGUhLj (8 consecutive ERROR builds); build log: npm ERESOLVE on the knip dev dependency because Vercel ran npm instead of pnpm
 - Why it matters: The site kept serving the 14 August build for two weeks while main moved on. CI was green the whole time because CI uses pnpm. There is no deploy-failure notification.
 - Proposed fix: Turn on Vercel deployment failure notifications (email or Slack) and check the deployment state after every push during launch week. The pnpm lockfile fix on 29 August resolved the immediate cause.
-- Status: Mostly fixed (late session 4 Sep): .github/workflows/deploy-watch.yml listens for the deployment status Vercel posts back to GitHub and, on a failed or errored production deployment, opens or updates a ci-failure issue that mentions Tennyson (GitHub emails a mention). This runs on GitHub's side so it works even when the Vercel build itself is broken. Vercel's own email or Slack notification is still worth switching on as a second channel, since a GitHub outage would silence this one
+- Status: Fixed 4 Sep: .github/workflows/deploy-watch.yml listens for the deployment status Vercel posts back to GitHub and, on a failed or errored production deployment, opens or updates a ci-failure issue that mentions Tennyson. Vercel's Deployment Failures email notification was verified enabled on 4 Sep as the second channel. GitHub's mention-email delivery still needs confirmation after signing in to the correct GitHub account
 
 ### F28: Leaked-password protection is off
 
@@ -29,7 +29,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Where: Supabase Auth settings (advisor auth_leaked_password_protection)
 - Why it matters: Users can sign up with passwords known to be breached.
 - Proposed fix: Toggle it on in Authentication settings.
-- Status: Probably on. The Supabase security advisor no longer reports auth_leaked_password_protection (checked 4 Sep, late session). Flipping or confirming it needs the Supabase management API with a personal access token, which no tool in these sessions holds, so it is a one-click confirmation in Authentication settings (Attack protection, leaked password protection)
+- Status: Fixed 4 Sep: verified in Authentication, Attack protection that leaked-password protection is enabled
 
 ## Partly fixed (5)
 
@@ -39,7 +39,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Where: scripts/deploy-morph-id.sh:59 and deploy-push-notifications.sh:52 (db push --include-all); supabase/SCHEMA_SNAPSHOT.md dated 2026-07-07
 - Why it matters: 26 live migrations have no repo file, 11 repo files were never applied (referral program, the email trigger). Running the scripts would overwrite the vault-based notification dispatcher and silently stop all email and push.
 - Proposed fix: Do not run the scripts this week; baseline with supabase db pull, migration repair, archive orphans, regenerate the snapshot.
-- Status: Mostly fixed 4 Sep: deploy scripts no longer run db push, four never-applied files archived under _never_applied with a README, docs/MIGRATIONS.md explains the drift and the workflow. Late session: supabase/SCHEMA_SNAPSHOT.md regenerated from the live catalog (112 tables, policies, functions, triggers, cron, buckets) and the baseline plan written into docs/MIGRATIONS.md with the exact file-to-history mapping (22 exact, 57 renamed, 8 unmatched, 26 live-only). Late session, with Tennyson's go-ahead: the git steps ran (61 renames to live version numbers, 22 placeholders, three by-hand data files archived, references in code comments updated), so every file now matches a live history entry. Only step 7, `supabase db pull` on a machine with the database password, remains
+- Status: Partly fixed 5 Sep: deploy scripts no longer run db push, unapplied files are archived, the live catalog snapshot is current, the Morph ID repair was recorded, and all 121 rows in `supabase migration list` now show matching local and remote versions. `supabase db pull` was attempted and failed while building its shadow database: the eight earliest remote_snapshot files are empty, so p1_animal_passport runs before `public.geckos` exists. A direct linked schema dump succeeds, but appending it would not repair replay. F33 now needs a reviewed squash/rebaseline that also preserves data, storage and cron setup; keep `db push` disabled until that is complete
 
 ### F43: No Content-Security-Policy despite five third-party script origins
 
@@ -135,26 +135,19 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 
 ## Tennyson's checklist (as of the 4 September late session)
 
-Everything a session could do is done. These need a human with the
-dashboard logins, in rough priority order.
+This list records the remaining launch checks and their latest state.
 
-1. **F28, Supabase.** Authentication, then Attack protection: confirm
-   "Leaked password protection" is on. The advisor no longer flags it, so
-   this is a confirmation, not a change. Then tick F28 above.
-2. **F60, Vercel.** Project settings, Notifications (or account
-   Settings, Notifications): turn on "Deployment failed" for email. The
-   deploy-watch workflow already opens a GitHub issue that mentions you
-   when a production deploy fails; Vercel's email is the second channel.
-   Also check GitHub, Settings, Notifications: "Participating and
-   @mentions" must deliver to email, or the issue mention is silent.
-3. **F33, migration baseline (needs the database password).** On this
-   machine, in the repo: `supabase login` (opens a browser), then
-   `supabase link --project-ref mmuglfphhwlaluyfyxsp` (it asks for the
-   database password; Dashboard, Project settings, Database), then
-   `supabase migration list` (every row should show local and remote),
-   `supabase migration repair --status applied 20260904000001`,
-   `supabase db pull` (writes a new remote_schema file), then commit the
-   result. Or run only `supabase login` and tell a session to do the rest.
+1. **F28, Supabase, done 4 Sep.** Leaked-password protection was verified
+   enabled in Authentication, Attack protection.
+2. **F60, Vercel, done 4 Sep.** Deployment Failures email was verified
+   enabled. The GitHub issue channel still needs the correct account to
+   confirm that Participating and @mentions deliver to email.
+3. **F33, migration baseline, blocked.** The CLI is logged in and linked,
+   the Morph ID history repair ran, and all 121 rows now match local and
+   remote. `supabase db pull` fails because the eight earliest
+   remote_snapshot files are empty and cannot recreate `public.geckos` in
+   the shadow database. See `docs/MIGRATIONS.md` before attempting the
+   required squash/rebaseline.
 4. **F43, CSP enforce, from about 11 September.** Ask a session to run
    the csp-report query (under F43 above) and, if the only rows are
    expected origins or none at all, change the header name in
