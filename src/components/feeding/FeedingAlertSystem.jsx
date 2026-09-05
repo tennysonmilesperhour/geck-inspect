@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { X, CheckCircle2, Clock } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { todayLocalISO, daysSinceLocal } from '@/lib/dateUtils';
+import { startVisiblePolling } from '@/lib/pagePolling';
 
 // Dedup window: fire at most one push/email per entity per day. The
 // 5-minute polling loop would otherwise create 288 notifications a day
@@ -200,8 +201,8 @@ export default function FeedingAlertSystem({ user, enabled, lateReminders }) {
     };
 
     loadAlerts();
-    const interval = setInterval(loadAlerts, 5 * 60 * 1000); // Refresh every 5 minutes
-    return () => clearInterval(interval);
+    // Refresh every 5 minutes while the tab is visible and the member is active.
+    return startVisiblePolling(loadAlerts, 5 * 60 * 1000);
   }, [user?.email, enabled, lateReminders]);
 
   const handleFed = async (alert) => {

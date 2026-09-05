@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { TrendingUp } from 'lucide-react';
 import { canUseFeature } from '@/components/subscription/PlanLimitChecker';
 import { MARKET_INTELLIGENCE_URL } from '@/lib/constants';
+import { startVisiblePolling } from '@/lib/pagePolling';
 
 // Topbar launcher for the standalone Market Intelligence (geck-data) app.
 // Only renders for users whose effective tier unlocks `market_intelligence`
@@ -48,11 +49,11 @@ export default function MarketIntelligenceButton({ user }) {
     };
 
     fetchCount();
-    const interval = setInterval(fetchCount, POLL_INTERVAL_MS);
+    const stop = startVisiblePolling(fetchCount, POLL_INTERVAL_MS);
     return () => {
       cancelled = true;
       controller.abort();
-      clearInterval(interval);
+      stop();
     };
   }, [canUse, user?.email]);
 

@@ -47,6 +47,7 @@ import {
   EXPERT_LEVELS,
   COMMUNITY_LEVELS,
 } from '@/lib/layoutConstants';
+import { startVisiblePolling } from '@/lib/pagePolling';
 import {
   FALLBACK_NAV_ITEMS,
   NAV_ICON_MAP,
@@ -314,7 +315,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     };
 
     fetchUnread(true); // Always fresh on mount
-    const interval = setInterval(() => fetchUnread(false), 60 * 1000);
+    const stopPolling = startVisiblePolling(() => fetchUnread(false), 60 * 1000);
     const onChange = (e) => {
       if (!e?.detail?.kind || e.detail.kind === 'notifications') {
         fetchUnread(true);
@@ -322,7 +323,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     };
     window.addEventListener('unread_counts_changed', onChange);
     return () => {
-      clearInterval(interval);
+      stopPolling();
       window.removeEventListener('unread_counts_changed', onChange);
     };
   } else {
@@ -375,7 +376,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       };
 
       fetchUnreadMessages(true);
-      const interval = setInterval(() => fetchUnreadMessages(false), 60 * 1000);
+      const stopPolling = startVisiblePolling(() => fetchUnreadMessages(false), 60 * 1000);
       const onChange = (e) => {
         if (!e?.detail?.kind || e.detail.kind === 'messages') {
           fetchUnreadMessages(true);
@@ -383,7 +384,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       };
       window.addEventListener('unread_counts_changed', onChange);
       return () => {
-        clearInterval(interval);
+        stopPolling();
         window.removeEventListener('unread_counts_changed', onChange);
       };
     } else {

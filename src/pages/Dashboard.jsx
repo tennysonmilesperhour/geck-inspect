@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import Seo from '@/components/seo/Seo';
 import usePageSettings from '@/hooks/usePageSettings';
@@ -36,6 +37,90 @@ import { Card, CardContent } from '@/components/ui/card';
 import { createPageUrl, getDisplayName } from '@/utils';
 import { format } from 'date-fns';
 
+const EMPTY_LIST = [];
+const EMPTY_STATS = { users: 0, geckos: 0, images: 0, posts: 0, verifiedImages: 0 };
+const EMPTY_PERSONAL = { geckos: 0, pairings: 0 };
+const EMPTY_HATCHERY = { hatched: 0, incubating: 0, total: 0, plans: 0 };
+
+/** Count-only query: PostgREST returns the number, never the rows. */
+async function headCount(table, refine) {
+    const query = supabase.from(table).select('id', { count: 'exact', head: true });
+    const { count, error } = await refine(query);
+    if (error) throw error;
+    return count || 0;
+}
+
+/**
+ * Community-wide dashboard data in one batch. Counts for keepers and
+ * geckos come from the landing_stats RPC so the dashboard matches the
+ * public landing page; the rest are intentionally small samples ("Recent
+ * Uploads", "Forum Buzz"). Gecko of the Day is resolved here too so the
+ * whole thing is one cache entry.
+ */
+async function loadCommunityDashboard() {
+    const today = format(new Date(), 'yyyy-MM-dd');
+    const [usersData, communityStats, posts, gotd, recentImagesData] = await Promise.all([
+        User.list('-created_date', 30).catch(() => []),
+        supabase.rpc('landing_stats').then(({ data, error }) => (error ? null : data)).catch(() => null),
+        ForumPost.list('-created_date', 10).catch(() => []),
+        GotdEntity.filter({ date: today }, '-created_date', 1).catch(() => []),
+        // Only photos uploaded by real members: the scraper inserts rows
+        // with NULL created_by, and those must not reach the community rail.
+        GeckoImage.filter({ created_by: { $ne: null } }, '-created_date', 20).catch(() => []),
+    ]);
+
+    const stats = {
+        users: Number(communityStats?.keepers ?? usersData.length) || 0,
+        geckos: Number(communityStats?.geckos ?? 0) || 0,
+        images: recentImagesData.length,
+        verifiedImages: recentImagesData.filter((img) => img.verified).length,
+        posts: posts.length,
+    };
+
+    let geckoOfTheDay = null;
+    let fallbackGecko = null;
+    if (gotd && gotd.length > 0) {
+        const [featuredGeckoImage, uploaderResult] = await Promise.all([
+            GeckoImage.get(gotd[0].gecko_image_id).catch(() => null),
+            User.filter({ email: gotd[0].uploader_email }).catch(() => []),
+        ]);
+        geckoOfTheDay = { ...gotd[0], image: featuredGeckoImage, uploader: uploaderResult[0] || null };
+    } else if (recentImagesData.length > 0) {
+        const randomImage = recentImagesData[Math.floor(Math.random() * recentImagesData.length)];
+        const uploaderResult = randomImage.created_by
+            ? await User.filter({ email: randomImage.created_by }).catch(() => [])
+            : [];
+        fallbackGecko = { image: randomImage, uploader: uploaderResult[0] || null };
+    }
+
+    return { users: usersData, recentImages: recentImagesData, stats, geckoOfTheDay, fallbackGecko };
+}
+
+/** The member's own gecko and pairing counts for the stat cards. */
+async function loadPersonalCounts(email) {
+    const own = (q) => q.eq('created_by', email).or('archived.is.null,archived.eq.false');
+    const [geckos, pairings] = await Promise.all([
+        headCount('geckos', own),
+        headCount('breeding_plans', own),
+    ]);
+    return { geckos, pairings };
+}
+
+/**
+ * Hatchery strip counts. These used to download every egg and every
+ * breeding plan the member could see and count them in the browser.
+ */
+async function loadHatcheryCounts(email) {
+    const mine = (q) => q.eq('created_by', email);
+    const [hatched, incubating, total, plans] = await Promise.all([
+        headCount('eggs', (q) => mine(q).eq('status', 'Hatched')),
+        headCount('eggs', (q) => mine(q).eq('status', 'Incubating').or('archived.is.null,archived.eq.false')),
+        headCount('eggs', mine),
+        headCount('breeding_plans', (q) => mine(q).or('archived.is.null,archived.eq.false')),
+    ]);
+    return { hatched, incubating, total, plans };
+}
+
 /**
  * Dashboard, April 2026 creative rework.
  *
@@ -72,143 +157,69 @@ export default function Dashboard() {
         showIdNeeds: true,
         showWelcomeShelf: true,
     });
-    const [stats, setStats] = useState({ users: 0, geckos: 0, images: 0, posts: 0, verifiedImages: 0 });
-    const [personalStats, setPersonalStats] = useState({ geckos: 0, pairings: 0 });
-    const [isLoading, setIsLoading] = useState(true);
-    const [user, setUser] = useState(null);
-    const [users, setUsers] = useState([]);
-    const [geckoOfTheDay, setGeckoOfTheDay] = useState(null);
-    const [fallbackGecko, setFallbackGecko] = useState(null);
-    const [recentImages, setRecentImages] = useState([]);
     const [selectedImageData, setSelectedImageData] = useState(null);
     const [showChangelog, setShowChangelog] = useState(false);
     const [changelogGlowing, setChangelogGlowing] = useState(false);
-    const [hatcheryStats, setHatcheryStats] = useState({ hatched: 0, incubating: 0, total: 0, plans: 0 });
+
+    // Data loading goes through react-query (launch review F47). Each
+    // block is cached by the shared QueryClient, so leaving the dashboard
+    // and coming back within staleTime renders from cache instead of
+    // re-running the whole fan-out on every visit.
+    const meQuery = useQuery({
+        queryKey: ['dashboard', 'me'],
+        queryFn: () => User.me().catch(() => null),
+        staleTime: 5 * 60 * 1000,
+    });
+    const user = meQuery.data ?? null;
+    const email = user?.email || null;
+
+    const communityQuery = useQuery({
+        queryKey: ['dashboard', 'community', format(new Date(), 'yyyy-MM-dd')],
+        queryFn: loadCommunityDashboard,
+        staleTime: 5 * 60 * 1000,
+    });
+    const community = communityQuery.data;
+    const users = community?.users ?? EMPTY_LIST;
+    const recentImages = community?.recentImages ?? EMPTY_LIST;
+    const geckoOfTheDay = community?.geckoOfTheDay ?? null;
+    const fallbackGecko = community?.fallbackGecko ?? null;
+    const stats = community?.stats ?? EMPTY_STATS;
+
+    const personalQuery = useQuery({
+        queryKey: ['dashboard', 'personal', email],
+        queryFn: () => loadPersonalCounts(email),
+        enabled: Boolean(email),
+    });
+    const personalStats = personalQuery.data ?? EMPTY_PERSONAL;
+
+    const hatcheryQuery = useQuery({
+        queryKey: ['dashboard', 'hatchery', email],
+        queryFn: () => loadHatcheryCounts(email),
+        enabled: Boolean(email),
+    });
+    const hatcheryStats = hatcheryQuery.data ?? EMPTY_HATCHERY;
 
     // Unread changelog indicator
+    const changelogQuery = useQuery({
+        queryKey: ['dashboard', 'changelog-latest'],
+        queryFn: () => api.entities.ChangeLog.filter({ is_published: true }, '-published_date', 1).catch(() => []),
+        staleTime: 10 * 60 * 1000,
+    });
     useEffect(() => {
-        const checkUnread = async () => {
-            try {
-                const latest = await api.entities.ChangeLog.filter({ is_published: true }, '-published_date', 1);
-                if (latest && latest.length > 0) {
-                    const lastRead = localStorage.getItem('changelog_last_read');
-                    if (!lastRead || new Date(latest[0].published_date) > new Date(lastRead)) {
-                        setChangelogGlowing(true);
-                    }
-                }
-            } catch (e) {
-                console.warn('Changelog check failed:', e);
-            }
-        };
-        checkUnread();
+        const latest = changelogQuery.data?.[0];
+        if (!latest) return;
+        const lastRead = localStorage.getItem('changelog_last_read');
+        if (!lastRead || new Date(latest.published_date) > new Date(lastRead)) {
+            setChangelogGlowing(true);
+        }
+    }, [changelogQuery.data]);
+    useEffect(() => {
         const handler = () => setChangelogGlowing(false);
         window.addEventListener('changelog_read', handler);
         return () => window.removeEventListener('changelog_read', handler);
     }, []);
 
-    // Hatchery widget, cheap egg/plan counts (used for the hero strip)
-    useEffect(() => {
-        (async () => {
-            try {
-                const [eggs, plans] = await Promise.all([
-                    api.entities.Egg.list().catch(() => []),
-                    api.entities.BreedingPlan.list().catch(() => []),
-                ]);
-                setHatcheryStats({
-                    hatched: eggs.filter((e) => e.status === 'Hatched').length,
-                    incubating: eggs.filter((e) => e.status === 'Incubating' && !e.archived).length,
-                    total: eggs.length,
-                    plans: plans.filter((p) => !p.archived).length,
-                });
-            } catch (e) {
-                console.warn('Hatchery stats failed:', e);
-            }
-        })();
-    }, []);
-
-    useEffect(() => {
-        const fetchData = async () => {
-            setIsLoading(true);
-            try {
-                const today = format(new Date(), 'yyyy-MM-dd');
-                // Batched fetch, dramatically slimmer than before.
-                // Community-wide counts (keepers, geckos) come from the
-                // landing_stats RPC so the dashboard cards match the
-                // numbers shown on the public landing page. The other
-                // values are intentionally samples (labeled "Recent
-                // Uploads" / "Forum Buzz" / recent discussions).
-                const [currentUser, usersData, communityStats, posts, gotd, recentImagesData] = await Promise.all([
-                    User.me().catch(() => null),
-                    User.list('-created_date', 30),
-                    supabase.rpc('landing_stats').then(({ data, error }) => (error ? null : data)).catch(() => null),
-                    ForumPost.list('-created_date', 10).catch(() => []),
-                    GotdEntity.filter({ date: today }, '-created_date', 1).catch(() => []),
-                    // Only show photos uploaded by real users in the
-                    // community strip. The scraper inserts gecko_images
-                    // rows with NULL created_by; this filter excludes
-                    // them so trophy / award / press shots don't leak
-                    // into the Latest Community Uploads rail.
-                    GeckoImage.filter({ created_by: { $ne: null } }, '-created_date', 20).catch(() => []),
-                ]);
-
-                setUser(currentUser);
-                setUsers(usersData);
-                setRecentImages(recentImagesData);
-
-                setStats({
-                    users: Number(communityStats?.keepers ?? usersData.length) || 0,
-                    geckos: Number(communityStats?.geckos ?? 0) || 0,
-                    images: recentImagesData.length,
-                    verifiedImages: recentImagesData.filter((img) => img.verified).length,
-                    posts: posts.length,
-                });
-
-                // Personal tally: lightweight count-only queries so the
-                // stat cards can juxtapose what's yours against what the
-                // community is doing. Both head:true so we never pull
-                // the actual rows over the wire.
-                if (currentUser?.email) {
-                    const [{ count: myGeckos }, { count: myPairings }] = await Promise.all([
-                        supabase
-                            .from('geckos')
-                            .select('id', { count: 'exact', head: true })
-                            .eq('created_by', currentUser.email)
-                            .or('archived.is.null,archived.eq.false'),
-                        supabase
-                            .from('breeding_plans')
-                            .select('id', { count: 'exact', head: true })
-                            .eq('created_by', currentUser.email)
-                            .or('archived.is.null,archived.eq.false'),
-                    ]);
-                    setPersonalStats({
-                        geckos: myGeckos || 0,
-                        pairings: myPairings || 0,
-                    });
-                }
-
-                // Gecko of the Day (official or fallback)
-                if (gotd && gotd.length > 0) {
-                    const featuredGeckoImage = await GeckoImage.get(gotd[0].gecko_image_id);
-                    const uploaderResult = await User.filter({ email: gotd[0].uploader_email });
-                    const uploader = uploaderResult.length > 0 ? uploaderResult[0] : null;
-                    setGeckoOfTheDay({ ...gotd[0], image: featuredGeckoImage, uploader });
-                    setFallbackGecko(null);
-                } else if (recentImagesData.length > 0) {
-                    const randomImage = recentImagesData[Math.floor(Math.random() * recentImagesData.length)];
-                    const uploaderResult = randomImage.created_by
-                        ? await User.filter({ email: randomImage.created_by })
-                        : [];
-                    const uploader = uploaderResult.length > 0 ? uploaderResult[0] : null;
-                    setFallbackGecko({ image: randomImage, uploader });
-                    setGeckoOfTheDay(null);
-                }
-            } catch (error) {
-                console.error('Failed to load dashboard data:', error);
-            }
-            setIsLoading(false);
-        };
-        fetchData();
-    }, []);
+    const isLoading = meQuery.isLoading || communityQuery.isLoading;
 
     const handleImageSelect = (image, uploader) => {
         setSelectedImageData({ image, uploader });

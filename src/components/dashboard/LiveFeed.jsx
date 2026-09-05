@@ -5,6 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { supabase } from '@/lib/supabaseClient';
 import { Camera, MessageSquare, GitBranch, UserPlus, Activity, Heart, Sparkles, Flame, Egg } from 'lucide-react';
 import { createPageUrl } from '@/utils';
+import { startVisiblePolling } from '@/lib/pagePolling';
 
 const POLL_MS = 30000;
 
@@ -92,8 +93,8 @@ export default function LiveFeed({ currentUserEmail }) {
             await loadFeed();
         };
         tick();
-        const id = setInterval(() => { if (!cancelled) tick(); }, POLL_MS);
-        return () => { cancelled = true; clearInterval(id); };
+        const stop = startVisiblePolling(() => { if (!cancelled) tick(); }, POLL_MS);
+        return () => { cancelled = true; stop(); };
     }, [loadFeed]);
 
     useEffect(() => {

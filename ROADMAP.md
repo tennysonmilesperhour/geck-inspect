@@ -23,7 +23,7 @@ The full review, with every finding, its location and its status, is in `docs/pl
 - [x] F34: Non-JS crawlers see thin shells and cannot reach 134 child pages (4 Sep, late session: fuller noscript bodies and per-page JSON-LD in the prerendered shells)
 - [ ] F43: No Content-Security-Policy despite five third-party script origins
 - [ ] F46: 208 RLS policies re-evaluate auth functions per row; 271 duplicate permissive policies (merge plan in docs/planning/rls-policy-consolidation.md, eight batches, awaiting go-ahead)
-- [ ] F47: Dashboard fans out to about 40 requests with a waterfall; background polling in every tab
+- [ ] F47: Dashboard fans out to about 40 requests with a waterfall; background polling in every tab (4 Sep, late session: all pollers visibility-aware, Dashboard on react-query with head-only counts; other hot pages still to migrate)
 - [ ] F55: Mobile and accessibility gaps
 
 ---

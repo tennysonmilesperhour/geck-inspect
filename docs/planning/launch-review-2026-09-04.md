@@ -71,7 +71,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Where: src/pages/Dashboard.jsx:113; src/components/dashboard/LiveFeed.jsx:9 (30 s); Layout unread polls (60 s); UpdateNotification.jsx:9 (fetches the HTML shell every 60 s)
 - Why it matters: react-query is configured but used by one file; sixty pages fetch with bare useEffect and refetch everything on every visit.
 - Proposed fix: Move hot pages to react-query with staleTime, make polling visibility-aware, and back off when idle.
-- Status: Partly fixed (batch B): the 60 second HTML poll is now 10 minutes and visible tabs only. The dashboard fan-out and react-query migration remain
+- Status: Mostly fixed (batch B plus late session 4 Sep): the 60 second HTML poll is now 10 minutes and visible tabs only. Late session: every remaining poller (Layout unread notifications and messages, LiveFeed, NotificationDropdown, HatchAlertSystem, FeedingAlertSystem, MarketIntelligenceButton, Messages fallback) goes through src/lib/pagePolling.js, which skips ticks while the tab is hidden or the member has been idle ten minutes and catches up on return. The Dashboard runs on react-query with a 5 minute staleTime (revisits render from cache) and the hatchery strip uses four head-only counts instead of downloading every egg and breeding plan. Still open: moving the other hot pages (MyGeckos, Gallery, Breeding) onto react-query
 
 ### F55: Mobile and accessibility gaps
 

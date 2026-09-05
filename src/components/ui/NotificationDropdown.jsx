@@ -5,6 +5,7 @@ import { Bell } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { formatDistanceToNow } from 'date-fns';
+import { startVisiblePolling } from '@/lib/pagePolling';
 
 const NotificationDropdown = ({ user, unreadCount, setUnreadCount }) => {
     const [notifications, setNotifications] = useState([]);
@@ -28,8 +29,7 @@ const NotificationDropdown = ({ user, unreadCount, setUnreadCount }) => {
     useEffect(() => {
         if (isOpen) {
             loadNotifications();
-            const interval = setInterval(loadNotifications, 15000);
-            return () => clearInterval(interval);
+            return startVisiblePolling(loadNotifications, 15000);
         }
     }, [isOpen, loadNotifications]);
 

@@ -32,6 +32,7 @@ import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
 import { format, isSameDay, isToday, isYesterday, differenceInMinutes } from 'date-fns';
+import { isPageActive } from '@/lib/pagePolling';
 
 const SYSTEM_EMAIL = 'system@geckinspect.com';
 
@@ -442,7 +443,7 @@ export default function MessagesPage() {
         let pollTimer = null;
         const startPolling = (intervalMs) => {
             if (pollTimer) clearInterval(pollTimer);
-            pollTimer = setInterval(() => loadData(false), intervalMs);
+            pollTimer = setInterval(() => { if (isPageActive()) loadData(false); }, intervalMs);
         };
         startPolling(POLL_FAST_MS);
 

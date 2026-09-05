@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import { Egg, Notification } from '@/entities/all';
 import { differenceInDays } from 'date-fns';
 import { parseLocalDate } from '@/lib/dateUtils';
+import { startVisiblePolling } from '@/lib/pagePolling';
 
 /**
  * HatchAlertSystem, silent producer for `hatch_alert` notifications.
@@ -129,17 +130,11 @@ export default function HatchAlertSystem({ user, enabled }) {
       }
     };
 
-    // Run once on mount, then on the polling cadence. We also re-check
-    // on window-focus so a user opening the PWA mid-day doesn't have
-    // to wait up to 15 minutes for the first check.
+    // Run once on mount, then on the polling cadence while the tab is
+    // visible. startVisiblePolling re-checks as soon as the tab comes back
+    // so a member opening the PWA mid-day does not wait for the next tick.
     checkEggs();
-    const interval = setInterval(checkEggs, POLL_INTERVAL_MS);
-    const onFocus = () => checkEggs();
-    window.addEventListener('focus', onFocus);
-    return () => {
-      clearInterval(interval);
-      window.removeEventListener('focus', onFocus);
-    };
+    return startVisiblePolling(checkEggs, POLL_INTERVAL_MS);
   }, [user?.email, user?.hatch_alert_days, enabled]);
 
   return null;
