@@ -7,7 +7,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
   AlertTriangle, BrainCircuit, Check, CheckCircle2, Eye,
-  ImagePlus, Loader2, Pencil, Save, ShieldQuestion,
+  ImagePlus, Images, Loader2, Pencil, Save, ShieldQuestion,
 } from 'lucide-react';
 import { User } from '@/entities/all';
 import { useToast } from '@/components/ui/use-toast';
@@ -19,7 +19,7 @@ import ConfidenceSlider from './ConfidenceSlider';
 import {
   BASE_COLORS, PATTERN_INTENSITIES, WHITE_AMOUNTS,
   FIRED_STATES, TAXONOMY_VERSION, VISUAL_PROFILE_AXES,
-  labelFor, visualAxisLabel,
+  labelFor, patternColorLabel, visualAxisLabel,
 } from './morphTaxonomy';
 
 const STATUS = {
@@ -52,6 +52,7 @@ function normalizeFromAI(result) {
     base_color: result.base_color || '',
     pattern_intensity: result.pattern_intensity || 'unknown',
     white_amount: result.white_amount || 'unknown',
+    pattern_color: result.pattern_color || 'unknown',
     fired_state: result.fired_state || 'unknown',
     ai_signal: Number(result.model_signal ?? result.confidence_score ?? result.confidence ?? 0),
   };
@@ -92,6 +93,7 @@ export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageS
   const StatusIcon = status.icon;
   const photo = result.photo_assessment || {};
   const visualProfile = result.visual_profile || null;
+  const photoObservations = Array.isArray(result.photo_observations) ? result.photo_observations : [];
   const withholdIdentification = result.assessment_status === 'insufficient_evidence';
 
   const saveFeedback = async () => {
@@ -198,6 +200,10 @@ export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageS
                   <dt className="text-slate-400">White</dt>
                   <dd className="text-slate-100">{labelFor(state.white_amount, 'Not assessed')}</dd>
                 </div>
+                <div className="flex justify-between gap-3">
+                  <dt className="text-slate-400">Pattern color</dt>
+                  <dd className="text-slate-100">{patternColorLabel(state.pattern_color)}</dd>
+                </div>
               </dl>
             </div>
           </div>
@@ -266,6 +272,59 @@ export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageS
                   {candidate.why && <p className="text-xs text-slate-400 mt-2 ml-8">{candidate.why}</p>}
                 </div>
               ))}
+            </div>
+          </section>
+        )}
+
+        {photoObservations.length > 0 && (
+          <section className="rounded-lg border border-slate-700 bg-slate-950/30 p-4">
+            <div className="mb-3">
+              <h3 className="font-semibold text-slate-100 flex items-center gap-2">
+                <Images className="w-4 h-4 text-emerald-400" /> Photo-by-photo evidence
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                Each image is checked separately before the evidence is combined. Signals rank evidence strength, not accuracy.
+              </p>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              {photoObservations.map((observation) => {
+                const photoUrl = imageUrls?.[observation.photo_number - 1];
+                return (
+                  <article key={observation.photo_number} className="rounded-md border border-slate-700 bg-slate-800/50 p-3">
+                    <div className="flex gap-3">
+                      {photoUrl && (
+                        <img
+                          src={photoUrl}
+                          alt={`Submitted gecko photo ${observation.photo_number}`}
+                          className="w-16 h-16 rounded-md object-cover border border-slate-700 shrink-0"
+                        />
+                      )}
+                      <div className="min-w-0 flex-1">
+                        <div className="flex flex-wrap items-center justify-between gap-2">
+                          <p className="text-sm font-medium text-slate-100">Photo {observation.photo_number}</p>
+                          <Badge
+                            variant="outline"
+                            className={observation.contributes_to_result
+                              ? 'border-emerald-700 text-emerald-200'
+                              : 'border-slate-600 text-slate-400'}
+                          >
+                            {observation.contributes_to_result ? 'Used' : 'Limited'}
+                          </Badge>
+                        </div>
+                        <p className="text-xs text-slate-400 mt-1 capitalize">
+                          {String(observation.view || 'unclear').replace(/_/g, ' ')} · {observation.quality_grade || 'poor'} · signal {Math.round(observation.evidence_signal || 0)}/100
+                        </p>
+                      </div>
+                    </div>
+                    {observation.visible_features?.length > 0 && (
+                      <p className="text-xs text-slate-300 mt-3">Seen: {observation.visible_features.join('; ')}</p>
+                    )}
+                    {observation.limitations?.length > 0 && (
+                      <p className="text-xs text-amber-200/80 mt-1">Limits: {observation.limitations.join('; ')}</p>
+                    )}
+                  </article>
+                );
+              })}
             </div>
           </section>
         )}

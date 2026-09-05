@@ -42,10 +42,13 @@ const ALIASES = {
 
   // Named genetic traits
   lily_white:    ['lily white', 'lilly white', 'lily-white', 'lilly-white', 'lily', 'lw'],
+  axanthic:      ['axanthic'],
   axanthic_vca:  ['axanthic vca', 'vca axanthic', 'axanthic (vca)', 'vca line axanthic'],
   axanthic_tsm:  ['axanthic tsm', 'tsm axanthic', 'axanthic (tsm)'],
   cappuccino:    ['cappuccino', 'cappu', 'capp'],
   frappuccino:   ['frappuccino', 'frappu', 'frapp'],
+  phantom_expression: ['phantom'],
+  cream_on_cream: ['cream on cream', 'cream-on-cream', 'c2', 'c squared', 'cream squared'],
   moonglow:      ['moonglow', 'moon glow'],
   soft_scale:    ['soft scale', 'softscale', 'soft-scale'],
   whiteout:      ['whiteout', 'white-out', 'white out'],
@@ -72,6 +75,7 @@ const ALIASES = {
 };
 
 const BASE_COLOR_ALIASES = {
+  black_base:    ['black base', 'dark base', 'black-base', 'dark-base'],
   near_black:    ['near black', 'near-black', 'almost black'],
   dark_red:      ['dark red'],
   bright_yellow: ['bright yellow'],

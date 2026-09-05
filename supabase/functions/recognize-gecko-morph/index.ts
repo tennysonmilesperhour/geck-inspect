@@ -48,8 +48,9 @@
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 import {
-  PRIMARY_MORPH_IDS, GENETIC_TRAIT_IDS, SECONDARY_TRAIT_IDS,
+  PRIMARY_MORPH_IDS, PHOTO_GENETIC_TRAIT_IDS, SECONDARY_TRAIT_IDS,
   BASE_COLOR_IDS, PATTERN_INTENSITY_IDS, WHITE_AMOUNT_IDS,
+  PATTERN_COLOR_IDS,
   FIRED_STATE_IDS, AGE_STAGE_IDS, TAXONOMY_VERSION,
   PATTERN_FAMILY_IDS, PINNING_IDS, BANDING_IDS, SPOTTING_IDS,
   WHITE_PLACEMENT_IDS,
@@ -551,6 +552,14 @@ Rules:
   Classify pattern family, pinning, banding, and spotting independently because
   these traits can co-occur. Use unknown when the relevant body region is not
   visible; use none only when the region is visible and the trait is absent.
+- pattern_color describes the visible pattern pigment separately from the base
+  color. Use mixed when two distinct pattern colors are visible (for example,
+  cream/white plus orange/yellow in a tricolor animal).
+- Return one photo_observations entry for each user photo, in the same order.
+  Inspect every photo separately before synthesizing. A poor or redundant image
+  may have contributes_to_result=false and must not dilute a strong diagnostic
+  view. Per-photo evidence_signal is a relative evidence-strength signal, not an
+  accuracy percentage.
 - Return up to three distinct candidate_morphs in descending visual-evidence order.
   Scores are relative model signals, not calibrated probabilities. Cite the visual
   feature that supports or weakens each candidate.
@@ -558,7 +567,10 @@ Rules:
   leg pattern.
 - genetic_traits is only for a trait whose visible phenotype is strongly expressed.
   A photo cannot prove genotype, carrier status, lineage, or hidden hets. Leave the
-  array empty when lineage would be required.
+  array empty when lineage would be required. Use generic axanthic for a visible
+  axanthic-like phenotype; never infer axanthic_vca or axanthic_tsm from photos.
+  Phantom and Cream-on-Cream are visual-expression suggestions, not proof of their
+  underlying genotype.
 - secondary_traits is observational modifiers. Multiple allowed.
 - evidence_markers must name concrete visible features such as dorsal coverage,
   leg coverage, pin continuity, spot count, flank pattern, and white placement.
@@ -574,11 +586,12 @@ Taxonomy version: ${TAXONOMY_VERSION}.${bankIntro}`;
 function buildTool(includeValueEstimate: boolean) {
   const properties: Record<string, unknown> = {
     primary_morph:     { type: "string", enum: PRIMARY_MORPH_IDS },
-    genetic_traits:    { type: "array", items: { type: "string", enum: GENETIC_TRAIT_IDS } },
+    genetic_traits:    { type: "array", items: { type: "string", enum: PHOTO_GENETIC_TRAIT_IDS } },
     secondary_traits:  { type: "array", items: { type: "string", enum: SECONDARY_TRAIT_IDS } },
     base_color:        { type: "string", enum: BASE_COLOR_IDS },
     pattern_intensity: { type: "string", enum: PATTERN_INTENSITY_IDS },
     white_amount:      { type: "string", enum: WHITE_AMOUNT_IDS },
+    pattern_color:     { type: "string", enum: PATTERN_COLOR_IDS },
     fired_state:       { type: "string", enum: FIRED_STATE_IDS },
     confidence_score:  { type: "integer", minimum: 0, maximum: 100 },
     visual_profile: {
@@ -606,6 +619,24 @@ function buildTool(includeValueEstimate: boolean) {
           morph: { type: "string", enum: PRIMARY_MORPH_IDS },
           score: { type: "integer", minimum: 0, maximum: 100 },
           why: { type: "string", description: "Short visual evidence for or against this candidate." },
+        },
+      },
+    },
+    photo_observations: {
+      type: "array",
+      minItems: 1,
+      maxItems: 5,
+      items: {
+        type: "object",
+        required: ["photo_number", "view", "quality_grade", "contributes_to_result", "evidence_signal", "visible_features", "limitations"],
+        properties: {
+          photo_number: { type: "integer", minimum: 1, maximum: 5 },
+          view: { type: "string", enum: ["dorsal", "left_side", "right_side", "three_quarter", "head", "underside", "tail", "unclear"] },
+          quality_grade: { type: "string", enum: ["good", "usable", "poor"] },
+          contributes_to_result: { type: "boolean" },
+          evidence_signal: { type: "integer", minimum: 0, maximum: 100 },
+          visible_features: { type: "array", maxItems: 4, items: { type: "string" } },
+          limitations: { type: "array", maxItems: 3, items: { type: "string" } },
         },
       },
     },
@@ -646,7 +677,7 @@ function buildTool(includeValueEstimate: boolean) {
       required: [
         "primary_morph", "confidence_score", "candidate_morphs",
         "visual_profile", "evidence_markers", "uncertainty_reasons",
-        "photo_assessment", "explanation",
+        "photo_observations", "photo_assessment", "explanation",
       ],
       properties,
     },
@@ -658,6 +689,7 @@ function clampToTaxonomy(
   includeValueEstimate: boolean,
   model: string,
   visualEvidence: VisualEvidence,
+  photoCount: number,
 ) {
   const pick = (v: unknown, allowed: string[]) =>
     typeof v === "string" && allowed.includes(v) ? v : null;
@@ -726,6 +758,29 @@ function clampToTaxonomy(
     spotting: pick(rawVisualProfile.spotting, SPOTTING_IDS) || "unknown",
     white_cream_traits: pickMany(rawVisualProfile.white_cream_traits, WHITE_PLACEMENT_IDS),
   };
+  const seenPhotoNumbers = new Set<number>();
+  const photoObservations = (Array.isArray(raw.photo_observations) ? raw.photo_observations : [])
+    .flatMap((observation) => {
+      if (!observation || typeof observation !== "object") return [];
+      const item = observation as Record<string, unknown>;
+      const photoNumber = Math.round(Number(item.photo_number));
+      if (!Number.isFinite(photoNumber) || photoNumber < 1 || photoNumber > photoCount || seenPhotoNumbers.has(photoNumber)) return [];
+      seenPhotoNumbers.add(photoNumber);
+      const view = ["dorsal", "left_side", "right_side", "three_quarter", "head", "underside", "tail", "unclear"]
+        .includes(String(item.view)) ? String(item.view) : "unclear";
+      const observationQuality = ["good", "usable", "poor"].includes(String(item.quality_grade))
+        ? String(item.quality_grade) : "poor";
+      return [{
+        photo_number: photoNumber,
+        view,
+        quality_grade: observationQuality,
+        contributes_to_result: item.contributes_to_result === true,
+        evidence_signal: Math.max(0, Math.min(100, Number(item.evidence_signal) || 0)),
+        visible_features: pickTextMany(item.visible_features, 4),
+        limitations: pickTextMany(item.limitations, 3),
+      }];
+    })
+    .sort((a, b) => a.photo_number - b.photo_number);
   const uncertaintyReasons = pickTextMany(raw.uncertainty_reasons, 5);
   if (assessment.conflict && visualEvidence.consensus) {
     uncertaintyReasons.unshift(
@@ -735,16 +790,18 @@ function clampToTaxonomy(
   }
   const out: Record<string, unknown> = {
     primary_morph:     primaryMorph,
-    genetic_traits:    pickMany(raw.genetic_traits, GENETIC_TRAIT_IDS),
+    genetic_traits:    pickMany(raw.genetic_traits, PHOTO_GENETIC_TRAIT_IDS),
     secondary_traits:  pickMany(raw.secondary_traits, SECONDARY_TRAIT_IDS),
     base_color:        pick(raw.base_color, BASE_COLOR_IDS),
     pattern_intensity: pick(raw.pattern_intensity, PATTERN_INTENSITY_IDS) || "unknown",
     white_amount:      pick(raw.white_amount, WHITE_AMOUNT_IDS) || "unknown",
+    pattern_color:     pick(raw.pattern_color, PATTERN_COLOR_IDS) || "unknown",
     fired_state:       pick(raw.fired_state, FIRED_STATE_IDS) || "unknown",
     confidence_score:  modelSignal,
     model_signal:      modelSignal,
     visual_profile:    visualProfile,
     candidate_morphs:  candidateMorphs,
+    photo_observations: photoObservations,
     evidence_markers:  pickTextMany(raw.evidence_markers, 6),
     uncertainty_reasons: uncertaintyReasons,
     photo_assessment:  photoAssessment,
@@ -877,7 +934,7 @@ async function callClaude(
     },
     body: JSON.stringify({
       model,
-      max_tokens: 1024,
+      max_tokens: 1536,
       tools: [tool],
       tool_choice: { type: "tool", name: tool.name },
       messages: [{
@@ -1069,6 +1126,7 @@ serve(async (req) => {
       includeValueEstimate,
       model,
       visualEvidence,
+      imageUrls.length,
     );
     analysis.age_stage = ageStage;
     analysis.user_reported_fired_state = firedState;

@@ -17,6 +17,7 @@ import { captureEvent } from '@/lib/posthog';
 
 import MorphCorrectionPanel from '../components/morph-id/MorphCorrectionPanel';
 import PhotoTipsCard from '../components/morph-id/PhotoTipsCard';
+import MorphIdCoverageCard from '../components/morph-id/MorphIdCoverageCard';
 import SimilarGeckosStrip from '../components/morph-id/SimilarGeckosStrip';
 import MultiPhotoUploader from '../components/morph-id/MultiPhotoUploader';
 import PhotoSlideshow from '../components/morph-id/PhotoSlideshow';
@@ -171,6 +172,7 @@ export default function Recognition() {
         </div>
 
         <PhotoTipsCard />
+        <MorphIdCoverageCard />
 
         {morphIdLocked && (
           <Card className="bg-amber-950/40 border-amber-800">

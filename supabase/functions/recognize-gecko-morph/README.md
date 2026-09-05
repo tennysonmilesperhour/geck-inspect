@@ -85,9 +85,21 @@ supabase functions deploy recognize-gecko-morph --no-verify-jwt
     "base_color": "dark_red",
     "pattern_intensity": "high",
     "white_amount": "high",
+    "pattern_color": "cream_white",
     "fired_state": "fired_up",
     "confidence_score": 82,
     "model_signal": 82,
+    "photo_observations": [
+      {
+        "photo_number": 1,
+        "view": "left_side",
+        "quality_grade": "good",
+        "contributes_to_result": true,
+        "evidence_signal": 88,
+        "visible_features": ["Heavy cream pattern across the flank and legs"],
+        "limitations": []
+      }
+    ],
     "evidence_markers": ["Heavy leg coverage", "Cream pattern across both flanks"],
     "uncertainty_reasons": ["Tail base is partly hidden"],
     "photo_assessment": {
@@ -110,7 +122,7 @@ supabase functions deploy recognize-gecko-morph --no-verify-jwt
       "neighbors": []
     },
     "explanation": "The visible leg and flank coverage support extreme harlequin. A top-down view would make the distinction stronger.",
-    "taxonomy_version": "2026.09.05",
+    "taxonomy_version": "2026.09.06",
     "model": "claude-sonnet-4-6"
   }
 }

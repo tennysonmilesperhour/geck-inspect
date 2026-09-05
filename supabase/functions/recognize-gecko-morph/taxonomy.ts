@@ -2,7 +2,7 @@
 // Kept as a flat list here so the edge function prompt can constrain the
 // model to return canonical ids. If you change the client taxonomy, update
 // this file and bump TAXONOMY_VERSION below.
-export const TAXONOMY_VERSION = "2026.09.05";
+export const TAXONOMY_VERSION = "2026.09.06";
 
 export const PRIMARY_MORPH_IDS = [
   "patternless", "flame", "chevron_flame", "harlequin", "extreme_harlequin",
@@ -13,9 +13,17 @@ export const PRIMARY_MORPH_IDS = [
 ];
 
 export const GENETIC_TRAIT_IDS = [
-  "lily_white", "axanthic_vca", "axanthic_tsm", "cappuccino", "frappuccino",
-  "moonglow", "soft_scale", "whiteout", "empty_back", "white_wall",
-  "hypo", "melanistic",
+  "lily_white", "axanthic", "axanthic_vca", "axanthic_tsm", "cappuccino",
+  "frappuccino", "phantom_expression", "cream_on_cream", "moonglow", "soft_scale",
+  "whiteout", "empty_back", "white_wall", "hypo", "melanistic",
+];
+
+// Deliberately narrower than the human annotation taxonomy. These are the
+// visible-expression labels the photo model may return without lineage data.
+export const PHOTO_GENETIC_TRAIT_IDS = [
+  "lily_white", "axanthic", "cappuccino", "frappuccino",
+  "phantom_expression", "cream_on_cream", "soft_scale", "whiteout",
+  "empty_back", "white_wall", "hypo",
 ];
 
 export const SECONDARY_TRAIT_IDS = [
@@ -32,7 +40,7 @@ export const SECONDARY_TRAIT_IDS = [
 ];
 
 export const BASE_COLOR_IDS = [
-  "red", "dark_red", "crimson", "orange", "burnt_orange", "yellow",
+  "black_base", "red", "dark_red", "crimson", "orange", "burnt_orange", "yellow",
   "bright_yellow", "buttery", "cream", "pink", "coral", "olive", "dark_olive",
   "green", "tan", "buckskin", "brown", "dark_brown", "chocolate", "mahogany",
   "lavender", "charcoal", "near_black",
@@ -40,6 +48,7 @@ export const BASE_COLOR_IDS = [
 
 export const PATTERN_INTENSITY_IDS = ["unknown", "none", "low", "medium", "high", "extreme"];
 export const WHITE_AMOUNT_IDS = ["unknown", "none", "trace", "low", "medium", "high", "extreme"];
+export const PATTERN_COLOR_IDS = ["unknown", "none", "cream_white", "orange_yellow", "red_pink", "mixed"];
 export const FIRED_STATE_IDS = ["fired_up", "fired_down", "transitioning", "unknown"];
 export const AGE_STAGE_IDS = ["hatchling", "juvenile", "subadult", "adult", "unknown"];
 

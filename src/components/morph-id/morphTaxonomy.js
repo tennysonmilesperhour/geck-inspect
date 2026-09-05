@@ -18,7 +18,7 @@
 // and prefer adding new entries over mutating existing ids (ids are persisted
 // in the `gecko_images` table and used for label stability across versions).
 
-export const TAXONOMY_VERSION = '2026.09.05';
+export const TAXONOMY_VERSION = '2026.09.06';
 
 export const VISUAL_PROFILE_AXES = [
   { key: 'pattern_family', label: 'Pattern coverage' },
@@ -90,6 +90,8 @@ export const PRIMARY_MORPHS = [
 export const GENETIC_TRAITS = [
   { id: 'lily_white',       label: 'Lilly White',        inheritance: 'incomplete_dominant',  canonical_trait_id: 'lilly_white',
     notes: 'Foundation Genetics: incomplete dominant. Originated by Lilly Exotics (UK). Super Lilly White is LETHAL, never pair Lilly × Lilly. Canonical spelling is "Lilly White" (two Ls).' },
+  { id: 'axanthic',         label: 'Axanthic (line unconfirmed)', inheritance: 'recessive',     canonical_trait_id: 'axanthic',
+    notes: 'Photo-level expression only. A photo can suggest axanthic coloration but cannot establish the VCA/TSM line or prove genotype; use lineage records for the specific line.' },
   { id: 'axanthic_vca',     label: 'Axanthic (VCA)',    inheritance: 'recessive',            canonical_trait_id: 'axanthic',
     notes: 'Simple recessive. Removes yellow/red pigment, retains melanin (not albinism). Proven by Altitude Exotics.' },
   { id: 'axanthic_tsm',     label: 'Axanthic (TSM)',    inheritance: 'recessive',            canonical_trait_id: 'axanthic',
@@ -98,6 +100,10 @@ export const GENETIC_TRAITS = [
     notes: 'Foundation Genetics: incomplete dominant (NOT codominant). Discovered by Reptile City Korea (Donald Hendrickson, ~2020). Super form = Super Cappuccino / Melanistic, with documented health concerns (reduced nostril size, breathing difficulty). Allelic with Sable and Highway.' },
   { id: 'frappuccino',      label: 'Frappuccino',       inheritance: 'combo phenotype',
     notes: 'Combo morph: Cappuccino + Lilly White. Not a single gene.' },
+  { id: 'phantom_expression', label: 'Phantom',          inheritance: 'lineage_required',
+    notes: 'A photo may show the dark, reduced-pattern Phantom look, but lineage is required to separate it from similar fired state and base-color phenotypes.' },
+  { id: 'cream_on_cream',   label: 'Cream-on-Cream (C2)', inheritance: 'combo phenotype',
+    notes: 'Visible near-uniform cream/white phenotype. A photo can describe the look but cannot prove the underlying Hypo/Yellow Base combination.' },
   { id: 'moonglow',         label: 'Moonglow',          inheritance: 'unconfirmed',
     notes: 'Informal / marketing term. Not a Foundation Genetics-proven trait. Use with caution and prefer listing proven traits (Lilly White, Hypo, Yellow Base, etc.) when present.' },
   { id: 'soft_scale',       label: 'Soft Scale',        inheritance: 'incomplete_dominant',  canonical_trait_id: 'softscale',
@@ -180,6 +186,7 @@ export const SECONDARY_TRAIT_GROUPS = [
 ];
 
 export const BASE_COLORS = [
+  { id: 'black_base',   label: 'Black / dark base' },
   { id: 'red',          label: 'Red' },
   { id: 'dark_red',     label: 'Dark red' },
   { id: 'crimson',      label: 'Crimson' },
@@ -222,6 +229,15 @@ export const WHITE_AMOUNTS = [
   { id: 'medium',   label: 'Medium' },
   { id: 'high',     label: 'High' },
   { id: 'extreme',  label: 'Extreme (whiteout-ish)' },
+];
+
+export const PATTERN_COLORS = [
+  { id: 'unknown',       label: 'Not enough evidence' },
+  { id: 'none',          label: 'No distinct pattern color' },
+  { id: 'cream_white',   label: 'Cream / white' },
+  { id: 'orange_yellow', label: 'Orange / yellow' },
+  { id: 'red_pink',      label: 'Red / pink' },
+  { id: 'mixed',         label: 'Mixed pattern colors' },
 ];
 
 export const FIRED_STATES = [
@@ -311,6 +327,32 @@ export const COMMONLY_CONFUSED = {
   patternless: ['bicolor'],
 };
 
+// Public capability manifest for Morph ID. Keep this deliberately narrower
+// than the full training taxonomy: these are the labels the result experience
+// is designed to assess from photos today, not every name used in the hobby.
+export const MORPH_ID_CAPABILITIES = [
+  {
+    id: 'pattern',
+    label: 'Pattern and pinning',
+    items: ['patternless', 'flame', 'harlequin', 'extreme_harlequin', 'super_harlequin', 'pinstripe', 'full_pinstripe', 'partial_pinstripe', 'phantom_pinstripe', 'reverse_pinstripe', 'quad_stripe', 'super_stripe'],
+  },
+  {
+    id: 'banding_spots',
+    label: 'Banding and spots',
+    items: ['tiger', 'super_tiger', 'brindle', 'extreme_brindle', 'dalmatian', 'super_dalmatian', 'red_dalmatian', 'ink_spot'],
+  },
+  {
+    id: 'expression',
+    label: 'Possible genetic expression',
+    items: ['lily_white', 'axanthic', 'cappuccino', 'frappuccino', 'phantom_expression', 'cream_on_cream', 'soft_scale', 'whiteout', 'empty_back', 'white_wall', 'hypo'],
+  },
+  {
+    id: 'color_scheme',
+    label: 'Color and scheme',
+    items: ['black_base', 'red', 'orange', 'yellow', 'cream', 'pink', 'olive', 'buckskin', 'lavender', 'charcoal', 'bicolor', 'tricolor'],
+  },
+];
+
 // ---------------------------------------------------------------------------
 // Lookup helpers, used by both /recognition and /training flows.
 
@@ -322,6 +364,13 @@ export const TRAIT_BY_ID = Object.fromEntries(
   SECONDARY_TRAITS.map((t) => [t.id, t]),
 );
 
+const ATTRIBUTE_BY_ID = Object.fromEntries(BASE_COLORS.map((item) => [item.id, item]));
+const PATTERN_COLOR_BY_ID = Object.fromEntries(PATTERN_COLORS.map((item) => [item.id, item]));
+
+export function patternColorLabel(id) {
+  return PATTERN_COLOR_BY_ID[id]?.label || labelFor(id, 'Not assessed');
+}
+
 export const TRAITS_BY_GROUP = SECONDARY_TRAIT_GROUPS.map((g) => ({
   ...g,
   traits: SECONDARY_TRAITS.filter((t) => t.group === g.id),
@@ -332,6 +381,7 @@ export function labelFor(id, fallback = '') {
   return (
     MORPH_BY_ID[id]?.label ||
     TRAIT_BY_ID[id]?.label ||
+    ATTRIBUTE_BY_ID[id]?.label ||
     id.replace(/_/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase())
   );
 }
