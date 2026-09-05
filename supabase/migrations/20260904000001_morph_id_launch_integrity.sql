@@ -47,6 +47,8 @@ AS $$
   );
 $$;
 
+REVOKE EXECUTE ON FUNCTION public.is_expert_reviewer()
+  FROM public, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.is_expert_reviewer() TO anon, authenticated;
 
 DROP POLICY IF EXISTS "classification_votes read" ON public.classification_votes;
@@ -217,6 +219,9 @@ BEGIN
 END;
 $$;
 
+REVOKE EXECUTE ON FUNCTION public.review_gecko_image(
+  TEXT, TEXT, TEXT, TEXT[], JSONB, TEXT, TEXT[], TEXT, TEXT, TEXT, TEXT
+) FROM public, anon, authenticated;
 GRANT EXECUTE ON FUNCTION public.review_gecko_image(
   TEXT, TEXT, TEXT, TEXT[], JSONB, TEXT, TEXT[], TEXT, TEXT, TEXT, TEXT
 ) TO authenticated;
