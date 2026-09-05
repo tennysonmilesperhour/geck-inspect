@@ -454,6 +454,9 @@ async function loadVisualEvidence(imageUrls: string[]): Promise<VisualEvidence> 
           token: REPLICATE_API_TOKEN,
           model: VISUAL_EMBEDDING_MODEL,
           timeoutMs: 52_000,
+          // Retrieval is corroborating evidence. If the provider is throttled,
+          // continue immediately with the vision model instead of delaying ID.
+          rateLimitAttempts: 1,
         })
       ),
     );

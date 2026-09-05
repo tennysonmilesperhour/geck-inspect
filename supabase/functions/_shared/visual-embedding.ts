@@ -106,7 +106,12 @@ async function createPrediction(
 
 export async function createVisualEmbedding(
   imageUrl: string,
-  options: { token: string; model?: string; timeoutMs?: number },
+  options: {
+    token: string;
+    model?: string;
+    timeoutMs?: number;
+    rateLimitAttempts?: number;
+  },
 ): Promise<{ embedding: number[]; model: string }> {
   const model = options.model || DEFAULT_VISUAL_EMBEDDING_MODEL;
   const modelPath = model.includes(":") ? model.split(":")[0] : model;
@@ -117,11 +122,12 @@ export async function createVisualEmbedding(
   };
   const input = { image: imageUrl };
 
+  const rateLimitAttempts = Math.max(1, Math.min(3, options.rateLimitAttempts || 3));
   let response = await createPrediction(`https://api.replicate.com/v1/models/${modelPath}/predictions`, {
     method: "POST",
     headers,
     body: JSON.stringify({ input }),
-  });
+  }, rateLimitAttempts);
   if (response.status === 404 || response.status === 422) {
     const version = await resolveVersion(model, options.token);
     if (!version) {
@@ -133,7 +139,7 @@ export async function createVisualEmbedding(
       method: "POST",
       headers,
       body: JSON.stringify({ version, input }),
-    });
+    }, rateLimitAttempts);
   }
   if (!response.ok) {
     throw new Error(`Replicate ${response.status}: ${(await response.text()).slice(0, 400)}`);
