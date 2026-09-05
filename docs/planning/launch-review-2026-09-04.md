@@ -2,7 +2,7 @@
 
 Read-only review of the whole repo and the live Supabase and Vercel setup, done the day before the 5 September launch, followed by five batches of fixes (A to E) pushed straight to main the same night. This file is the handoff copy of the interactive report so any session (desktop app, web, or the terminal CLI) can pick the work up. The interactive version, with the same data, is at https://claude.ai/code/artifact/6136b837-8feb-4df0-806b-f375095dc677.
 
-Totals: 62 findings. 53 closed (fixed, done, or decided), 7 partly fixed, 2 open.
+Totals: 62 findings. 54 closed (fixed, done, or decided), 6 partly fixed, 2 open.
 
 Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the database or an edge function, applied to production and verified. "Partly fixed" and "Mostly fixed" list what is left inside the status text. "Confirmed" means verified real and untouched.
 
@@ -31,7 +31,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Proposed fix: Toggle it on in Authentication settings.
 - Status: Probably on. The Supabase security advisor no longer reports auth_leaked_password_protection (checked 4 Sep, late session). Confirm the toggle in Authentication settings and close
 
-## Partly fixed (7)
+## Partly fixed (6)
 
 ### F30: Hero image is a 2,400 px external hotlink with no srcset; logo and icons are oversized
 
@@ -48,14 +48,6 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Why it matters: 26 live migrations have no repo file, 11 repo files were never applied (referral program, the email trigger). Running the scripts would overwrite the vault-based notification dispatcher and silently stop all email and push.
 - Proposed fix: Do not run the scripts this week; baseline with supabase db pull, migration repair, archive orphans, regenerate the snapshot.
 - Status: Mostly fixed 4 Sep: deploy scripts no longer run db push, four never-applied files archived under _never_applied with a README, docs/MIGRATIONS.md explains the drift and the workflow. Late session: supabase/SCHEMA_SNAPSHOT.md regenerated from the live catalog (112 tables, policies, functions, triggers, cron, buckets) and the baseline plan written into docs/MIGRATIONS.md with the exact file-to-history mapping (22 exact, 57 renamed, 8 unmatched, 26 live-only). Executing the baseline (renames, placeholders, db pull) waits for Tennyson's go-ahead
-
-### F34: Non-JS crawlers see thin shells and cannot reach 134 child pages
-
-- Severity: high. Area: SEO. Effort: M.
-- Where: scripts/prerender.mjs:444 (hub shells link only to ten hubs); noscript body about 1,400 characters
-- Why it matters: GPTBot, ClaudeBot, and CCBot do not run JavaScript. They see one sentence per morph, two care paragraphs, and no route to the topic pages.
-- Proposed fix: Add child links to hub shells; ship the first two or three real paragraphs, the FAQ block, and page JSON-LD in the static HTML.
-- Status: Mostly fixed (batch D): hub shells list every child page; prerendered orphans 155 to 24. Fuller body text and page JSON-LD in the static HTML still open
 
 ### F43: No Content-Security-Policy despite five third-party script origins
 
@@ -89,7 +81,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Proposed fix: capture=environment on photo inputs, alt text pass, reduced-motion guard on framer animations, verify HEIC on a real iPhone.
 - Status: Partly fixed 4 Sep: global prefers-reduced-motion rule, missing alt on MarketplaceSalesStats. Touch-target and contrast items still open
 
-## Closed (53)
+## Closed (54)
 
 | ID | Severity | Area | Finding | Effort | Status |
 |---|---|---|---|---|---|
@@ -129,6 +121,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 | F38 | high | Security | Vet, feeding, ownership (with sale prices), and transfer records are world-readable | M | Fixed (batch D, migration audit_batch_d): vet, feeding, shed and ownership reads limited to author, owner, admin, or a public passport |
 | F58 | high | Ops | PostHog is switched off in production: no VITE_POSTHOG_KEY in the deployed bundle | S | Fixed (deploy b53b38c): build log shows VITE_POSTHOG_KEY present |
 | F62 | high | Correctness | Tier lookup compared uuid to text, so every metered feature returned 500 | S | Fixed 4 Sep: effective_tier_uuid_fix applied and verified (keeper resolves, a health screen credit debits) |
+| F34 | high | SEO | Non-JS crawlers see thin shells and cannot reach 134 child pages | M | Fixed (batch D plus late session 4 Sep): every child page linked from its hub; noscript bodies carry the first three paragraphs, key points and FAQ; page-level JSON-LD per route; Seo.jsx drops the static block on mount |
 | F41 | medium | Retention | Referral program was never applied to production | S | Fixed 4 Sep, late session: migration referral_keeper_month applied and verified. The unpayable 10 percent revenue share is gone; the reward is one free month of Keeper per referred member who pays a first invoice (a month credited on Stripe for subscribers, needs_manual for App Store and grandfathered accounts). Attribution moved server-side (apply_referral_code), referral columns write-protected, daily expire-referral-grants cron returns lapsed months to free, stripe-webhook redeployed |
 | F61 | medium | Ops | A newer commit on main adds three large unapplied migrations (7,900 lines, 55 tables in a geck_data schema) | S | Closed 4 Sep, late session: all three are in the live migration history and geck_data holds 81 tables, so they were applied after the review. Nothing left to apply |
 | F39 | medium | Performance | Every image first requests a paid transform that returns 403, then falls back | S | Fixed (batch A): transforms off by default, VITE_IMAGE_TRANSFORMS=1 re-enables |

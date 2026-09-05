@@ -20,7 +20,7 @@ The full review, with every finding, its location and its status, is in `docs/pl
 **Partly fixed (remainder described in the review file)**
 - [ ] F30: Hero image is a 2,400 px external hotlink with no srcset; logo and icons are oversized
 - [ ] F33: Production schema has drifted from the repo and the deploy scripts would replay stale SQL (snapshot regenerated and baseline plan written 4 Sep, late session; the renames and db pull still need a go-ahead)
-- [ ] F34: Non-JS crawlers see thin shells and cannot reach 134 child pages
+- [x] F34: Non-JS crawlers see thin shells and cannot reach 134 child pages (4 Sep, late session: fuller noscript bodies and per-page JSON-LD in the prerendered shells)
 - [ ] F43: No Content-Security-Policy despite five third-party script origins
 - [ ] F46: 208 RLS policies re-evaluate auth functions per row; 271 duplicate permissive policies (merge plan in docs/planning/rls-policy-consolidation.md, eight batches, awaiting go-ahead)
 - [ ] F47: Dashboard fans out to about 40 requests with a waterfall; background polling in every tab

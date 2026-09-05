@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Helmet } from 'react-helmet-async';
 
 /**
@@ -54,6 +55,14 @@ export default function Seo({
   modifiedTime,
   jsonLd,
 }) {
+  // The prerendered shell (scripts/prerender.mjs) ships a static page-level
+  // JSON-LD block with id="ld-route" for crawlers that never run
+  // JavaScript. Once React is up, Helmet emits the live copy, so drop the
+  // static one to avoid two schema blocks for the same page.
+  useEffect(() => {
+    document.getElementById('ld-route')?.remove();
+  }, []);
+
   const fullTitle = title
     ? (title.includes(SITE_NAME) ? title : `${title} | ${SITE_NAME}`)
     : `${SITE_NAME}: Crested Gecko Collection, Breeding & Community`;

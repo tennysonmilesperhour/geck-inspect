@@ -14,27 +14,37 @@
  *      every indexable route, so Vercel's filesystem routing serves a
  *      route-specific HTML document.
  *   2. Each document carries route-specific <title>, <meta description>,
- *      <link rel="canonical">, Open Graph tags, Twitter tags, and a
- *      <noscript> body block with visible text content pulled from the
- *      canonical data sources (morph-guide.js, care-guide.js, etc.).
+ *      <link rel="canonical">, Open Graph tags, Twitter tags, a page-level
+ *      JSON-LD block, and a <noscript> body with real text pulled from the
+ *      canonical data sources (morph-guide.js, care-guide.js,
+ *      blog-posts.js).
  *
  * JS-executing crawlers (Googlebot) still hydrate the React SPA over the
- * top of this static shell; react-helmet-async replaces the `<title>` and
- * tags client-side, so nothing duplicates in the final DOM.
+ * top of this static shell; react-helmet-async replaces the <title> and
+ * meta tags client-side, and Seo.jsx removes the static JSON-LD block
+ * (id="ld-route") on mount so nothing is emitted twice in the final DOM.
  *
  * Strategy for the <noscript> body
  * --------------------------------
- * We deliberately keep the <noscript> block short. The full content is
- * also rendered via React once hydration completes, so shipping the
- * entire article twice would bloat HTML and risk duplicate-keyword
- * signals. The <noscript> block is optimized for the AI-crawler slice
- * that never runs JS: the first 400–600 characters of substantive
- * content, a canonical URL, key facts, and a link to sign up.
+ * The launch review (F34) found the shells too thin: one sentence per
+ * morph, two care paragraphs, no FAQ, no page schema. Each shell now
+ * carries the first three real paragraphs, the page's key-point list, the
+ * FAQ block the React page renders, and every child link for hub pages.
+ * That is what GPTBot, ClaudeBot and CCBot ingest, since none of them run
+ * JavaScript. The full article is still only rendered once for browsers,
+ * because <noscript> content is ignored when JS is on.
+ *
+ * Data access
+ * -----------
+ * src/data/morph-guide.js, care-guide.js and blog-posts.js are plain ES
+ * modules with no imports, so this script imports them directly. That is
+ * why they must stay dependency-free: the moment one of them imports a
+ * '@/...' alias, this script (which runs in Node without Vite) breaks.
  */
 
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from 'node:fs';
-import { resolve, join, dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { resolve, join } from 'node:path';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 import { SITE_URL, getAllRoutes } from './seo-routes.mjs';
 
 const __dirname = fileURLToPath(new URL('.', import.meta.url));
@@ -49,8 +59,51 @@ if (!existsSync(DIST)) {
 const SHELL_PATH = resolve(DIST, 'index.html');
 const SHELL_HTML = readFileSync(SHELL_PATH, 'utf8');
 
-const LOGO_URL =
-  'https://geckinspect.com/logo.png';
+// dist/index.html is both the input (the clean Vite shell) and the output
+// for "/". Running this script twice without a fresh `vite build` would
+// inject every block a second time, so refuse a shell that already
+// carries prerendered markup.
+if (SHELL_HTML.includes('geck-noscript-shell') || SHELL_HTML.includes('id="ld-route"')) {
+  console.error('[prerender] dist/index.html was already prerendered. Run `vite build` again first.');
+  process.exit(1);
+}
+
+const LOGO_URL = 'https://geckinspect.com/logo.png';
+const ORG_ID = `${SITE_URL}/#organization`;
+const WEBSITE_ID = `${SITE_URL}/#website`;
+
+// Mirrors EDITORIAL_AUTHOR in src/lib/editorial.js. Duplicated here rather
+// than imported because editorial.js uses the '@/' alias.
+const EDITORIAL_AUTHOR = {
+  '@type': 'Organization',
+  '@id': `${SITE_URL}/#editorial`,
+  name: 'Geck Inspect Editorial',
+  url: `${SITE_URL}/About`,
+  description:
+    'The Geck Inspect editorial team, breeders and long-time keepers of Correlophus ciliatus who review every care and morph guide before publication and on a rolling schedule thereafter.',
+  parentOrganization: { '@id': ORG_ID },
+  knowsAbout: [
+    'Crested gecko husbandry',
+    'Reptile breeding',
+    'Correlophus ciliatus morph genetics',
+    'Captive reptile health',
+  ],
+};
+
+// Mirrors PER_PATH in src/lib/editorial.js for the guide families. Blog
+// posts carry their own dates.
+const EDITORIAL_DATES = {
+  '/MorphGuide': { published: '2025-07-01', modified: '2026-04-17' },
+  '/CareGuide': { published: '2025-06-15', modified: '2026-04-17' },
+  '/': { published: '2025-06-01', modified: '2026-04-17' },
+};
+
+const ABOUT_CRESTED_GECKO = {
+  '@type': 'Thing',
+  name: 'Crested gecko',
+  alternateName: 'Correlophus ciliatus',
+  sameAs: 'https://en.wikipedia.org/wiki/Crested_gecko',
+};
 
 /**
  * Light-touch slug humanizer mirrored from morphUtils so the script has
@@ -65,159 +118,138 @@ function humanize(slug) {
     .replace(/\bThe\b/g, 'the');
 }
 
-/**
- * Pull a MORPHS entry out of src/data/morph-guide.js without executing
- * the file as JS. We parse the JS text with a tolerant regex that finds
- * each `{ slug: 'x', ... }` block and extracts the fields we need for
- * prerendering (name, summary, rarity, inheritance, category).
- *
- * Parsing the source file rather than importing it keeps this script
- * dependency-free (no esbuild / tsx), but it means the regex has to
- * match the current shape. If morph-guide.js's structure changes,
- * update this parser.
- */
-function loadMorphs() {
-  const src = readFileSync(resolve(REPO_ROOT, 'src/data/morph-guide.js'), 'utf8');
-  // Find `export const MORPHS = [` and take its array body.
-  const m = src.match(/export const MORPHS\s*=\s*\[([\s\S]*?)\n\];/);
-  if (!m) throw new Error('prerender: could not find MORPHS array');
-  const body = m[1];
+// ------- data ------------------------------------------------------------
 
-  // Split into per-morph objects. Each opens `  {` (two-space indent)
-  // and closes with a matching `  },`. Tolerant split, it's a data
-  // file we control.
-  const entries = body.split(/\n\s{2}\},\s*\n\s{2}\{/).map((chunk, i, arr) => {
-    let c = chunk;
-    if (i === 0) c = c.replace(/^\s*\{\s*/, '');
-    if (i === arr.length - 1) c = c.replace(/\s*\}\s*$/, '');
-    return c;
-  });
-
-  const result = {};
-  for (const chunk of entries) {
-    const getField = (field) => {
-      // Capture single-quoted strings (including multiline) and plain tokens.
-      const reStr = new RegExp(`${field}:\\s*'((?:\\\\.|[^'\\\\])*)'`, 's');
-      const hit = chunk.match(reStr);
-      return hit ? hit[1].replace(/\\'/g, "'") : null;
-    };
-    const slug = getField('slug');
-    if (!slug) continue;
-    result[slug] = {
-      slug,
-      name: getField('name') || humanize(slug),
-      summary: getField('summary'),
-      description: getField('description'),
-      rarity: getField('rarity'),
-      inheritance: getField('inheritance'),
-      category: getField('category'),
-    };
-  }
-  return result;
+async function importData(relPath) {
+  return import(pathToFileURL(resolve(REPO_ROOT, relPath)).href);
 }
 
-const MORPHS = loadMorphs();
+const morphModule = await importData('src/data/morph-guide.js');
+const careModule = await importData('src/data/care-guide.js');
+const blogModule = await importData('src/data/blog-posts.js');
+
+const MORPHS = Object.fromEntries(morphModule.MORPHS.map((m) => [m.slug, m]));
+const INHERITANCE = morphModule.INHERITANCE || {};
+const PRICE_TIERS = morphModule.PRICE_TIERS || {};
+const MORPH_CATEGORIES = morphModule.MORPH_CATEGORIES || [];
+if (Object.keys(MORPHS).length === 0) throw new Error('prerender: MORPHS is empty');
+
+// Flatten CARE_CATEGORIES into id -> section (with its category label).
+const CARE_SECTIONS = {};
+for (const category of careModule.CARE_CATEGORIES || []) {
+  for (const section of category.sections || []) {
+    CARE_SECTIONS[section.id] = { ...section, categoryLabel: category.label || category.title || null };
+  }
+}
+if (Object.keys(CARE_SECTIONS).length === 0) throw new Error('prerender: no care sections found');
+
+const BLOG_POSTS = Object.fromEntries((blogModule.BLOG_POSTS || []).map((p) => [p.slug, p]));
+if (Object.keys(BLOG_POSTS).length === 0) throw new Error('prerender: no blog posts found');
+
+// ------- content extraction ----------------------------------------------
+
+/** First N `type: 'p'` paragraphs from a body block list. */
+function paragraphsFrom(body, limit = 3) {
+  return (body || [])
+    .filter((b) => b && b.type === 'p' && typeof b.text === 'string' && b.text.trim())
+    .slice(0, limit)
+    .map((b) => b.text.trim());
+}
+
+/** First list-like block (ul, ol, callout with items) as { title, items }. */
+function firstListFrom(body) {
+  for (const b of body || []) {
+    if (!b) continue;
+    if ((b.type === 'ul' || b.type === 'ol' || b.type === 'callout') && Array.isArray(b.items) && b.items.length) {
+      return {
+        title: b.title || null,
+        items: b.items.filter((x) => typeof x === 'string').slice(0, 6),
+      };
+    }
+  }
+  return null;
+}
 
 /**
- * Parse the care-guide.js sections so per-topic prerendered HTML ships
- * with substantive noscript content. We extract each section's title
- * and the first two `type: 'p'` paragraph texts under it. Good enough
- * for AI-crawler ingestion even without running the React renderer.
+ * Per-morph FAQ. Mirrors src/lib/morphFaq.js question for question, so the
+ * static FAQ and the React FAQ say the same thing. Questions that depend on
+ * a missing field are skipped, never invented.
  */
-function loadCareSections() {
-  const src = readFileSync(resolve(REPO_ROOT, 'src/data/care-guide.js'), 'utf8');
-  // Grab blocks of `id: '...', title: '...'` plus the nearest following
-  // paragraph text. The care-guide file uses a consistent shape so a
-  // tolerant regex handles it without a full JS parser.
-  const out = {};
-  const re =
-    /id:\s*'([a-z0-9-]+)',\s*\n\s*title:\s*'([^']+)'[\s\S]*?body:\s*\[([\s\S]*?)\n\s*\],\s*\n\s*\},/g;
-  let m;
-  while ((m = re.exec(src)) !== null) {
-    const id = m[1];
-    const title = m[2];
-    const body = m[3];
-    // First paragraph texts in the body.
-    const paras = [...body.matchAll(/type:\s*'p',\s*\n\s*text:\s*'((?:\\.|[^'\\])*)'/g)]
-      .map((p) => p[1].replace(/\\'/g, "'"))
-      .slice(0, 2);
-    out[id] = { id, title, summary: paras.join(' ') };
+function morphFaq(morph) {
+  const out = [];
+  const summary = morph.summary || (morph.description ? morph.description.slice(0, 280) : null);
+  if (summary) out.push({ question: `What is a ${morph.name} crested gecko?`, answer: summary });
+
+  if (morph.visualIdentifiers?.length) {
+    out.push({
+      question: `How do I identify a ${morph.name} crested gecko?`,
+      answer: `Look for: ${morph.visualIdentifiers.slice(0, 3).join('; ')}.`,
+    });
+  } else if (morph.keyFeatures?.length) {
+    out.push({
+      question: `How do I identify a ${morph.name} crested gecko?`,
+      answer: `Key visual features: ${morph.keyFeatures.slice(0, 3).join('; ')}.`,
+    });
   }
-  if (Object.keys(out).length === 0) throw new Error('prerender: no care sections parsed; parser drifted from the data file');
+
+  const inh = INHERITANCE[morph.inheritance];
+  if (inh) {
+    const special = morph.slug === 'lilly-white'
+      ? ' Lilly White specifically has a lethal super form, pairing two Lilly Whites together produces 25% non-viable homozygous embryos, so the morph cannot be bred "true".'
+      : '';
+    out.push({
+      question: `How is ${morph.name} inherited?`,
+      answer: `${morph.name} is classified as ${inh.label.toLowerCase()}. ${inh.description}${special}`,
+    });
+  }
+
+  if (morph.priceTier) {
+    const tier = PRICE_TIERS[morph.priceTier];
+    const range = morph.priceRange ? ` Typical adult price: ${morph.priceRange}.` : '';
+    out.push({
+      question: `How much does a ${morph.name} crested gecko cost?`,
+      answer: `${morph.name} crested geckos fall into the ${tier?.label || morph.priceTier} price tier.${range} ${tier?.description || ''}`.trim(),
+    });
+  }
+
+  if (morph.combinesWith?.length) {
+    const names = morph.combinesWith.map((s) => s.replace(/-/g, ' ')).slice(0, 6);
+    out.push({
+      question: `What other morphs combine with ${morph.name}?`,
+      answer: `${morph.name} commonly combines with ${names.join(', ')}. These combinations are highly sought after in the hobby and often produce some of the most visually striking animals.`,
+    });
+  }
+
+  if (morph.history) {
+    out.push({ question: `Who discovered or first produced ${morph.name} crested geckos?`, answer: morph.history });
+  }
   return out;
 }
 
-const CARE_SECTIONS = loadCareSections();
-
-/**
- * Parse src/data/blog-posts.js into a slug → { title, description,
- * tldrFirst, faqFirst } map for prerender body content. Pulls the
- * first TL;DR bullet and the first FAQ question/answer pair so the
- * <noscript> body has substantive, factual text rather than a generic
- * stub.
- */
-function loadBlogPosts() {
-  const src = readFileSync(resolve(REPO_ROOT, 'src/data/blog-posts.js'), 'utf8');
-  const m = src.match(/export const BLOG_POSTS\s*=\s*\[([\s\S]*?)\n\];/);
-  if (!m) return {};
-  const body = m[1];
-  // Slice into per-post chunks at each `slug:` field (the first field of
-  // every post object). Robust to comment separators between posts and to
-  // both indentation and quote-style differences, unlike a `},{` split.
-  const starts = [];
-  const slugRe = /slug:\s*['"][a-z0-9-]+['"]/g;
-  let sm;
-  while ((sm = slugRe.exec(body)) !== null) starts.push(sm.index);
-  const entries = starts.map((s, i) => body.slice(s, starts[i + 1] ?? body.length));
-  const out = {};
-  for (const chunk of entries) {
-    const gs = (f) => {
-      // Quote-agnostic: posts mix single and double quotes. Match whichever
-      // quote opens the value and close on the same one via a backreference.
-      const re = new RegExp(`${f}:\\s*(['"])((?:\\\\.|(?!\\1)[^\\\\])*)\\1`, 's');
-      const hit = chunk.match(re);
-      return hit ? hit[2].replace(/\\(['"])/g, '$1') : null;
-    };
-    const slug = gs('slug');
-    if (!slug) continue;
-
-    // First tldr bullet, pull the first quoted string out of the
-    // tldr: [ ... ] array literal.
-    const tldrMatch = chunk.match(/tldr:\s*\[([\s\S]*?)\n\s*\],/);
-    let tldrFirst = null;
-    if (tldrMatch) {
-      const first = tldrMatch[1].match(/(['"])((?:\\.|(?!\1)[^\\])*)\1/);
-      if (first) tldrFirst = first[2].replace(/\\(['"])/g, '$1');
-    }
-
-    // First FAQ entry. We look for `{ question: '...', answer: '...' }`
-    // inside the faq array.
-    const faqMatch = chunk.match(/faq:\s*\[([\s\S]*?)\n\s*\],/);
-    let faqFirst = null;
-    if (faqMatch) {
-      const fq = faqMatch[1].match(/question:\s*(['"])((?:\\.|(?!\1)[^\\])*)\1/);
-      const fa = faqMatch[1].match(/answer:\s*(['"])((?:\\.|(?!\1)[^\\])*)\1/);
-      if (fq && fa) {
-        faqFirst = {
-          question: fq[2].replace(/\\(['"])/g, '$1'),
-          answer: fa[2].replace(/\\(['"])/g, '$1'),
-        };
-      }
-    }
-
-    out[slug] = {
-      slug,
-      title: gs('title'),
-      description: gs('description'),
-      tldrFirst,
-      faqFirst,
-    };
-  }
-  if (Object.keys(out).length === 0) throw new Error('prerender: no blog posts parsed; parser drifted from the data file');
-  return out;
+function faqSchema(id, faq) {
+  if (!faq?.length) return null;
+  return {
+    '@type': 'FAQPage',
+    '@id': id,
+    mainEntity: faq.map(({ question, answer }) => ({
+      '@type': 'Question',
+      name: question,
+      acceptedAnswer: { '@type': 'Answer', text: answer },
+    })),
+  };
 }
 
-const BLOG_POSTS = loadBlogPosts();
+function breadcrumbSchema(items) {
+  return {
+    '@type': 'BreadcrumbList',
+    itemListElement: items.map((c, i) => ({
+      '@type': 'ListItem',
+      position: i + 1,
+      name: c.name,
+      item: `${SITE_URL}${c.path}`,
+    })),
+  };
+}
 
 // ------- per-route metadata ------------------------------------------------
 
@@ -229,44 +261,128 @@ const RARITY_LABEL = {
 };
 
 function morphMeta(slug) {
-  const m = MORPHS[slug] || { name: humanize(slug) };
+  const m = MORPHS[slug] || { slug, name: humanize(slug) };
   const name = m.name;
   const rarity = RARITY_LABEL[m.rarity] || 'documented';
+  const url = `${SITE_URL}/MorphGuide/${slug}`;
+  const category = MORPH_CATEGORIES.find((c) => c.id === m.category);
+  const inheritance = INHERITANCE[m.inheritance];
   const desc =
     m.summary ||
-    (m.description ? m.description.slice(0, 220).trim() + (m.description.length > 220 ? '…' : '') : null) ||
+    (m.description ? m.description.slice(0, 220).trim() + (m.description.length > 220 ? '...' : '') : null) ||
     `${name} is a ${rarity} crested gecko morph. Every documented crested gecko (Correlophus ciliatus) morph has its own entry in the Geck Inspect morph guide with inheritance, visual identifiers, and breeding notes.`;
+
+  const paragraphs = [m.description, m.foundationGenetics, m.history, m.notes]
+    .filter((p) => typeof p === 'string' && p.trim())
+    .slice(0, 3);
+  const facts = [
+    inheritance ? `Inheritance: ${inheritance.label}.` : null,
+    category ? `Category: ${category.label || category.id}.` : null,
+    m.rarity ? `Rarity: ${rarity}.` : null,
+    m.priceRange ? `Typical adult price: ${m.priceRange}.` : null,
+    m.aliases?.length ? `Also called: ${m.aliases.join(', ')}.` : null,
+  ].filter(Boolean);
+  const list = m.keyFeatures?.length
+    ? { title: 'Key features', items: m.keyFeatures.slice(0, 6) }
+    : m.visualIdentifiers?.length
+      ? { title: 'How to identify it', items: m.visualIdentifiers.slice(0, 6) }
+      : null;
+  const faq = morphFaq(m);
+  const dates = EDITORIAL_DATES['/MorphGuide'];
+
+  const jsonLd = [
+    {
+      '@type': 'DefinedTerm',
+      '@id': `${url}#term`,
+      name,
+      description: m.description || desc,
+      inDefinedTermSet: {
+        '@type': 'DefinedTermSet',
+        name: 'Crested Gecko Morphs',
+        url: `${SITE_URL}/MorphGuide`,
+      },
+    },
+    faqSchema(`${url}#faq`, faq),
+    {
+      '@type': 'Article',
+      '@id': `${url}#article`,
+      headline: `${name}: Crested Gecko Morph Guide`,
+      description: (m.description || desc).slice(0, 280),
+      url,
+      image: LOGO_URL,
+      about: ABOUT_CRESTED_GECKO,
+      mentions: [{ '@id': `${url}#term` }],
+      author: EDITORIAL_AUTHOR,
+      reviewedBy: EDITORIAL_AUTHOR,
+      datePublished: dates.published,
+      dateModified: dates.modified,
+      publisher: { '@id': ORG_ID },
+    },
+    breadcrumbSchema([
+      { name: 'Home', path: '/' },
+      { name: 'Morph Guide', path: '/MorphGuide' },
+      { name, path: `/MorphGuide/${slug}` },
+    ]),
+  ].filter(Boolean);
+
   return {
     title: `${name} Morph, Crested Gecko Guide`,
     description: `${name} is a ${rarity} crested gecko morph. ${desc}`.slice(0, 320),
     bodyHeading: `${name} crested gecko morph`,
     bodyLead: desc,
-    bodyExtra: [
-      m.inheritance ? `Inheritance: ${m.inheritance}.` : null,
-      m.category ? `Category: ${m.category}.` : null,
-      'Covered in the Geck Inspect Morph Guide alongside every other documented crested gecko morph.',
-    ]
-      .filter(Boolean)
-      .join(' '),
+    bodyParagraphs: paragraphs,
+    bodyFacts: facts,
+    bodyList: list,
+    faq,
+    jsonLd,
   };
 }
 
 function careTopicMeta(id) {
   const section = CARE_SECTIONS[id];
   const title = section?.title || id;
-  const summary =
-    section?.summary ||
-    `${title}, part of the Geck Inspect crested gecko care guide.`;
-  // Clamp to the soft description limit Google actually renders.
-  const description =
-    `${title}, crested gecko care guide. ${summary}`.slice(0, 320);
+  const paragraphs = paragraphsFrom(section?.body, 3);
+  const summary = paragraphs.slice(0, 2).join(' ') || `${title}, part of the Geck Inspect crested gecko care guide.`;
+  const url = `${SITE_URL}/CareGuide/${id}`;
+  const dates = EDITORIAL_DATES['/CareGuide'];
+  const list = firstListFrom(section?.body);
+
+  const jsonLd = [
+    {
+      '@type': 'Article',
+      '@id': `${url}#article`,
+      headline: `${title}, Crested Gecko Care Guide`,
+      description: summary.slice(0, 300),
+      url,
+      articleSection: section?.categoryLabel || 'Crested Gecko Care',
+      about: ABOUT_CRESTED_GECKO,
+      isPartOf: { '@type': 'Article', '@id': `${SITE_URL}/CareGuide#article` },
+      author: EDITORIAL_AUTHOR,
+      reviewedBy: EDITORIAL_AUTHOR,
+      datePublished: dates.published,
+      dateModified: dates.modified,
+      publisher: { '@id': ORG_ID },
+    },
+    breadcrumbSchema([
+      { name: 'Home', path: '/' },
+      { name: 'Care Guide', path: '/CareGuide' },
+      { name: title, path: `/CareGuide/${id}` },
+    ]),
+  ];
+
   return {
     title: `${title}, Crested Gecko Care`,
-    description,
+    description: `${title}, crested gecko care guide. ${summary}`.slice(0, 320),
     bodyHeading: `${title}, crested gecko care`,
-    bodyLead: summary,
-    bodyExtra:
-      'Full care reference: housing, diet, humidity, handling, health, breeding, and life-stage guidance for Correlophus ciliatus. Every topic in the Geck Inspect care guide has its own URL so you can share or bookmark it.',
+    bodyLead: paragraphs[0] || summary,
+    bodyParagraphs: paragraphs.slice(1),
+    bodyFacts: [
+      section?.level ? `Level: ${section.level}.` : null,
+      section?.categoryLabel ? `Part of: ${section.categoryLabel}.` : null,
+    ].filter(Boolean),
+    bodyList: list,
+    faq: [],
+    jsonLd,
   };
 }
 
@@ -274,51 +390,114 @@ function blogPostMeta(slug, route) {
   const post = BLOG_POSTS[slug];
   const fallbackTitle = route?.meta?.title || humanize(slug);
   const fallbackDesc = route?.meta?.description || `${fallbackTitle}, long-form crested gecko article on Geck Inspect.`;
+  const url = `${SITE_URL}/blog/${slug}`;
   if (!post) {
     return {
       title: fallbackTitle,
       description: fallbackDesc.slice(0, 320),
       bodyHeading: fallbackTitle,
       bodyLead: fallbackDesc,
-      bodyExtra: null,
+      bodyParagraphs: [],
+      bodyFacts: [],
+      bodyList: null,
+      faq: [],
+      jsonLd: null,
     };
   }
-  // Compose the body extra from the first TL;DR bullet + first FAQ
-  // pair so the noscript shell ships substantive text for non-JS
-  // crawlers without duplicating the entire post.
-  const extraParts = [];
-  if (post.tldrFirst) extraParts.push(`TL;DR: ${post.tldrFirst}`);
-  if (post.faqFirst) extraParts.push(`Q: ${post.faqFirst.question} A: ${post.faqFirst.answer}`);
+  const paragraphs = paragraphsFrom(post.body, 3);
+  const faq = Array.isArray(post.faq)
+    ? post.faq.filter((f) => f?.question && f?.answer).slice(0, 6)
+    : [];
+  const list = post.tldr?.length ? { title: 'TL;DR', items: post.tldr.slice(0, 6) } : firstListFrom(post.body);
+  const published = post.datePublished || EDITORIAL_DATES['/'].published;
+  const modified = post.dateModified || published;
+
+  const jsonLd = [
+    {
+      '@type': 'BlogPosting',
+      '@id': `${url}#article`,
+      mainEntityOfPage: url,
+      url,
+      headline: post.title,
+      description: post.description || fallbackDesc,
+      datePublished: published,
+      dateModified: modified,
+      inLanguage: 'en-US',
+      isPartOf: { '@type': 'Blog', '@id': `${SITE_URL}/blog#blog`, name: 'Geck Inspect Blog', url: `${SITE_URL}/blog` },
+      author: EDITORIAL_AUTHOR,
+      publisher: { '@id': ORG_ID },
+      image: LOGO_URL,
+      about: ABOUT_CRESTED_GECKO,
+      ...(post.keyphrase ? { keywords: [post.keyphrase] } : {}),
+    },
+    faqSchema(`${url}#faq`, faq),
+    breadcrumbSchema([
+      { name: 'Home', path: '/' },
+      { name: 'Blog', path: '/blog' },
+      { name: post.title, path: `/blog/${slug}` },
+    ]),
+  ].filter(Boolean);
+
   return {
     title: post.title || fallbackTitle,
     description: (post.description || fallbackDesc).slice(0, 320),
     bodyHeading: post.title || fallbackTitle,
     bodyLead: post.description || fallbackDesc,
-    bodyExtra: extraParts.join(' '),
+    bodyParagraphs: paragraphs,
+    bodyFacts: [
+      post.datePublished ? `Published ${post.datePublished}.` : null,
+      post.dateModified && post.dateModified !== post.datePublished ? `Updated ${post.dateModified}.` : null,
+    ].filter(Boolean),
+    bodyList: list,
+    faq,
+    jsonLd,
+  };
+}
+
+function genericMeta(route) {
+  const m = route.meta || {};
+  const title = m.title || 'Geck Inspect';
+  const description =
+    m.description || 'Geck Inspect is the professional platform for crested gecko breeders and keepers.';
+  const url = `${SITE_URL}${route.path}`;
+  const jsonLd = [
+    {
+      '@type': 'WebPage',
+      '@id': `${url}#webpage`,
+      url,
+      name: title,
+      description,
+      isPartOf: { '@id': WEBSITE_ID },
+      about: ABOUT_CRESTED_GECKO,
+      publisher: { '@id': ORG_ID },
+    },
+    ...(route.path === '/'
+      ? []
+      : [breadcrumbSchema([{ name: 'Home', path: '/' }, { name: title.replace(/\s*\|\s*Geck Inspect$/, ''), path: route.path }])]),
+  ];
+  return {
+    title,
+    description,
+    bodyHeading: m.title || null,
+    bodyLead: m.description || null,
+    bodyParagraphs: [],
+    bodyFacts: [],
+    bodyList: null,
+    faq: [],
+    jsonLd,
   };
 }
 
 function routeMeta(route) {
-  // Morph detail override
   const morphMatch = route.path.match(/^\/MorphGuide\/([a-z0-9-]+)$/);
   if (morphMatch) return morphMeta(morphMatch[1]);
-  // Care topic override. /CareGuide/series is the Keeper's Guide index,
-  // not a care-guide.js section, so it keeps the meta from seo-routes.
+  // /CareGuide/series is the Keeper's Guide index, not a care-guide.js
+  // section, so it keeps the meta from seo-routes.
   const careMatch = route.path.match(/^\/CareGuide\/([a-z0-9-]+)$/);
   if (careMatch && CARE_SECTIONS[careMatch[1]]) return careTopicMeta(careMatch[1]);
-  // Blog post override
   const blogMatch = route.path.match(/^\/blog\/([a-z0-9-]+)$/);
   if (blogMatch) return blogPostMeta(blogMatch[1], route);
-  const m = route.meta || {};
-  return {
-    title: m.title || 'Geck Inspect',
-    description:
-      m.description ||
-      'Geck Inspect is the professional platform for crested gecko breeders and keepers.',
-    bodyHeading: m.title || null,
-    bodyLead: m.description || null,
-    bodyExtra: null,
-  };
+  return genericMeta(route);
 }
 
 // ------- HTML mutation -----------------------------------------------------
@@ -330,8 +509,8 @@ function routeMeta(route) {
 // LCP instead of helping it.
 //
 // Source URLs:
-//   /           → src/pages/Home.jsx BACKGROUND_IMAGE
-//   /MorphGuide → src/pages/MorphGuide.jsx MORPH_GUIDE_HERO (mirrored below)
+//   /           -> src/pages/Home.jsx BACKGROUND_IMAGE
+//   /MorphGuide -> src/pages/MorphGuide.jsx MORPH_GUIDE_HERO (mirrored below)
 const HERO_BASE = 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?auto=format&fit=crop&q=80';
 const HERO_WIDTHS = [640, 1024, 1600, 2400];
 const HERO_PRELOADS = {
@@ -344,6 +523,19 @@ const HERO_PRELOADS = {
 const HERO_PRELOAD_SRCSET = {
   '/': HERO_WIDTHS.map((w) => `${HERO_BASE}&w=${w} ${w}w`).join(', '),
 };
+
+function escapeHtml(s) {
+  return String(s)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;');
+}
+
+/** JSON for a <script type="application/ld+json">. A "</" inside a string would end the script early. */
+function jsonForScript(value) {
+  return JSON.stringify(value).replace(/<\//g, '<\\/');
+}
 
 function injectMeta(html, route) {
   const meta = routeMeta(route);
@@ -408,15 +600,20 @@ function injectMeta(html, route) {
     );
   }
 
-  return out;
-}
+  // Page-level JSON-LD. Sits next to the site-level Organization and
+  // WebSite blocks the shell already carries. Seo.jsx removes #ld-route
+  // once React mounts, so JS-capable crawlers see only the Helmet copy.
+  if (meta.jsonLd) {
+    const graph = { '@context': 'https://schema.org', '@graph': meta.jsonLd };
+    // Replacer function, not a string: JSON that contains "$1" (a price
+    // range, for instance) would otherwise be read as a capture reference.
+    out = out.replace(
+      /(<link rel="canonical" href="[^"]*"\s*\/>)/,
+      (match) => `${match}\n    <script type="application/ld+json" id="ld-route">${jsonForScript(graph)}</script>`,
+    );
+  }
 
-function escapeHtml(s) {
-  return String(s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
+  return out;
 }
 
 /**
@@ -454,7 +651,18 @@ function injectNoscriptBody(html, route) {
   const canonical = `${SITE_URL}${route.path}`;
   const heading = meta.bodyHeading || 'Geck Inspect';
   const lead = meta.bodyLead || '';
-  const extra = meta.bodyExtra || '';
+  const paragraphs = (meta.bodyParagraphs || []).map((p) => `<p>${escapeHtml(p)}</p>`).join('');
+  const facts = meta.bodyFacts?.length ? `<p>${escapeHtml(meta.bodyFacts.join(' '))}</p>` : '';
+  const list = meta.bodyList
+    ? `<section>${meta.bodyList.title ? `<h2>${escapeHtml(meta.bodyList.title)}</h2>` : ''}<ul class="geck-plain-list">${meta.bodyList.items
+        .map((i) => `<li>${escapeHtml(i)}</li>`)
+        .join('')}</ul></section>`
+    : '';
+  const faq = meta.faq?.length
+    ? `<section><h2>Frequently asked questions</h2>${meta.faq
+        .map((f) => `<h3>${escapeHtml(f.question)}</h3><p>${escapeHtml(f.answer)}</p>`)
+        .join('')}</section>`
+    : '';
   const children = childLinksFor(route);
   const childList = children.length
     ? `<section><h2>In this section</h2><ul>${children
@@ -473,7 +681,9 @@ function injectNoscriptBody(html, route) {
         .geck-noscript-shell nav{font-size:0.875rem;margin-bottom:24px;color:#94a3b8;}
         .geck-noscript-shell nav a{margin-right:12px;}
         .geck-noscript-shell h2{color:#fff;font-size:1.25rem;margin:24px 0 8px;}
+        .geck-noscript-shell h3{color:#fff;font-size:1rem;margin:16px 0 4px;}
         .geck-noscript-shell ul{columns:2;column-gap:24px;padding-left:18px;line-height:1.7;}
+        .geck-noscript-shell ul.geck-plain-list{columns:1;}
         .geck-noscript-shell footer{margin-top:40px;padding-top:20px;border-top:1px solid #1e293b;font-size:0.8125rem;color:#64748b;}
       </style>
       <div class="geck-noscript-shell">
@@ -501,7 +711,10 @@ function injectNoscriptBody(html, route) {
           </nav>
           <h1>${escapeHtml(heading)}</h1>
           ${lead ? `<p>${escapeHtml(lead)}</p>` : ''}
-          ${extra ? `<p>${escapeHtml(extra)}</p>` : ''}
+          ${paragraphs}
+          ${facts}
+          ${list}
+          ${faq}
           ${childList}
           <p>Canonical URL: <a href="${canonical}">${canonical}</a></p>
           <p>
@@ -513,8 +726,8 @@ function injectNoscriptBody(html, route) {
             <a href="/AuthPortal">create a free account</a>.
           </p>
           <footer>
-            © ${new Date().getFullYear()} Geck Inspect · geckOS ·
-            <a href="/Terms">Terms</a> · <a href="/PrivacyPolicy">Privacy</a> ·
+            &copy; ${new Date().getFullYear()} Geck Inspect. geckOS.
+            <a href="/Terms">Terms</a>, <a href="/PrivacyPolicy">Privacy</a>,
             <a href="/Contact">Contact</a>
           </footer>
         </main>
@@ -545,21 +758,10 @@ function writeRoute(route) {
 }
 
 function run() {
-  // Skip routes that are either not indexable or clearly auth-gated,
-  // we still want the SPA to handle them, but we don't need a prerendered
-  // HTML file pretending they have static content. Everything in the
-  // sitemap is eligible; noindex pages live in vercel.json X-Robots-Tag
-  // rules instead of this list.
-  //
-  // High-commercial-intent + content pages (Membership, Marketplace,
-  // MorphVisualizer, CommunityConnect) used to live in a skip list here,
-  // but the AI visibility audit caught that GPTBot/CCBot were getting the
-  // bare shell on those URLs, no canonical, no OG, no schema. The same
-  // later happened to /Gallery, /Forum, /Shipping, /Giveaways, the project
-  // line pages, and the Keeper's Guide series. Every route in the sitemap
-  // now goes through the prerender so non-JS crawlers see the full
-  // route-level meta block. /AuthPortal is no longer in the sitemap at
-  // all, so there is nothing left to skip.
+  // Every route in the sitemap is eligible; noindex pages live in
+  // vercel.json X-Robots-Tag rules instead of a skip list here. The
+  // AI-visibility audit caught that skip lists left GPTBot and CCBot with
+  // the bare shell on money pages, so there is no skip list any more.
   const routes = getAllRoutes();
 
   for (const route of routes) writeRoute(route);
