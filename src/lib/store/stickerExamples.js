@@ -12,8 +12,8 @@ export const STICKER_EXAMPLES = [
   {
     id: 'moonlight',
     image: '/store/custom-stickers/moonlight.webp',
-    caption: 'Classic frame, Psychic, two attacks.',
-    note: 'Stage 1 with an evolves-from line, HT/WT bar under the photo, weakness and retreat along the bottom.',
+    caption: 'Keeper profile, Moon affinity, two signature moves.',
+    note: 'Juvenile life stage with a lineage note, specimen details under the photo, and matchup details along the bottom.',
     design: {
       kind: 'custom_sticker',
       version: 1,
@@ -50,8 +50,8 @@ export const STICKER_EXAMPLES = [
   {
     id: 'bat-geck',
     image: '/store/custom-stickers/bat-geck.webp',
-    caption: 'Full art, silver border, no attack block.',
-    note: 'The photo runs edge to edge. Name, HP, and type sit on top; weakness, retreat, and the morph line sit along the bottom.',
+    caption: 'Full portrait, silver border, compact details.',
+    note: 'The photo runs edge to edge. Name, power score, and affinity sit on top; matchup details and the morph line sit along the bottom.',
     design: {
       kind: 'custom_sticker',
       version: 1,

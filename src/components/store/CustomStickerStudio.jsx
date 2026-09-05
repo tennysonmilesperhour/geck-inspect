@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   Sticker, Upload, Plus, Trash2, ShoppingCart, Check, RotateCcw,
-  CircleAlert, Loader2, Wand2,
+  CircleAlert, Loader2, Wand2, SlidersHorizontal, ScanEye, PackageCheck,
 } from 'lucide-react';
 import StoreLayout from '@/components/store/StoreLayout';
 import StickerCardPreview from '@/components/store/StickerCardPreview';
@@ -29,6 +29,7 @@ import {
   WEAKNESS_MULTIPLIERS,
   RESISTANCE_AMOUNTS,
   STICKER_SIZES,
+  STICKER_FINISHES,
   MORPH_LINE_SUGGESTIONS,
   MAX_ATTACKS,
   FIELD_LIMITS,
@@ -47,7 +48,7 @@ const JSON_LD = [
     '@id': `${SITE_URL}/Store/stickers#product`,
     name: 'Custom pet trading card sticker',
     description:
-      'Upload a photo of your crested gecko and build a die-cut trading card sticker around it. Choose the card type, HP, stage, attacks, weakness, resistance, retreat cost, rarity, and morph line.',
+      'Upload a photo of your crested gecko and build an original collector-card sticker. Choose a format, affinity, power score, life stage, signature moves, finish, and morph line.',
     url: `${SITE_URL}/Store/stickers`,
     brand: { '@type': 'Brand', name: 'Geck Inspect' },
     offers: {
@@ -100,7 +101,7 @@ function Field({ label, hint, children }) {
 }
 
 const inputClass =
-  'w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-1.5 text-sm text-slate-100 ' +
+  'min-h-11 w-full rounded-md border border-slate-700 bg-slate-950 px-2.5 py-2 text-sm text-slate-100 ' +
   'placeholder:text-slate-500 focus:border-emerald-600 focus:outline-none focus:ring-1 focus:ring-emerald-600/40';
 
 function TextInput(props) {
@@ -128,7 +129,8 @@ function ChipGroup({ value, onChange, options, columns = 3 }) {
             type="button"
             onClick={() => onChange(o.value)}
             title={o.blurb || o.label}
-            className={`rounded-md border px-2 py-1.5 text-xs font-semibold transition-colors text-left ${
+            aria-pressed={active}
+            className={`min-h-11 rounded-md border px-2 py-1.5 text-xs font-semibold transition-colors text-left ${
               active
                 ? 'border-emerald-500 bg-emerald-500/15 text-emerald-100'
                 : 'border-slate-700 bg-slate-950 text-slate-300 hover:border-slate-600'
@@ -193,6 +195,24 @@ function ExampleCard({ example, onUseAsStart }) {
     </figure>
   );
 }
+
+const HOW_IT_WORKS = [
+  {
+    title: 'Choose a format',
+    body: 'Start with a collector card or one of five non-card themes.',
+    Icon: SlidersHorizontal,
+  },
+  {
+    title: 'Build it live',
+    body: 'Upload your photo, write the details, and watch the preview update.',
+    Icon: ScanEye,
+  },
+  {
+    title: 'Save the print reference',
+    body: 'Check every detail, then add the exact saved design to your cart.',
+    Icon: PackageCheck,
+  },
+];
 
 // ---------------------------------------------------------------------------
 
@@ -301,6 +321,8 @@ export default function CustomStickerStudio() {
         customized: true,
         sticker_layout: payload.layout,
         sticker_type: payload.type,
+        sticker_theme: payload.theme,
+        sticker_finish: payload.finish,
       });
       setAdded(true);
     } catch (e) {
@@ -318,7 +340,7 @@ export default function CustomStickerStudio() {
     <StoreLayout breadcrumbs={[{ label: 'Supplies', to: '/Store' }, { label: 'Custom pet stickers' }]}>
       <Seo
         title="Custom crested gecko stickers, six themes, Geck Inspect"
-        description="Upload a photo of your gecko and build a die-cut trading card sticker. Pick the type, HP, stage, attacks, weakness, retreat cost, and rarity. $10 each plus $5 flat shipping."
+        description="Upload a photo of your gecko and build an original collector-card sticker. Pick a format, affinity, power score, signature moves, finish, and morph line. $10 each plus $5 flat shipping."
         path="/Store/stickers"
         keywords={[
           'custom pet sticker',
@@ -339,8 +361,8 @@ export default function CustomStickerStudio() {
           Turn your gecko into a sticker.
         </h1>
         <p className="text-slate-300 mt-3 max-w-2xl text-sm md:text-base leading-relaxed">
-          Upload a photo of your own animal and pick a look: a trading card with
-          stats and attacks, a museum field-guide plate, a gecko passport, a
+          Upload a photo of your own animal and pick a look: an original collector
+          card with stats and signature moves, a museum field-guide plate, a gecko passport, a
           park badge, an instant photo, or a show rosette. Every one prints
           die-cut on weatherproof vinyl with the morph line on it. Same price
           whichever you choose.
@@ -361,7 +383,7 @@ export default function CustomStickerStudio() {
 
       {/* ---------------------------- Examples ---------------------------- */}
       <section className="mb-10">
-        <h2 className="text-lg font-bold text-slate-100 mb-1">Two trading cards we made</h2>
+        <h2 className="text-lg font-bold text-slate-100 mb-1">Two early card references</h2>
         <p className="text-sm text-slate-400 mb-4 max-w-3xl leading-relaxed">
           Moonlight and Bat Geck are temporary examples of the layout. Pick
           either as a starting point and swap in your own photo and stats, or
@@ -375,6 +397,25 @@ export default function CustomStickerStudio() {
             <ExampleCard key={ex.id} example={ex} onUseAsStart={handleUseExample} />
           ))}
         </div>
+      </section>
+
+      <section className="mb-10" aria-labelledby="sticker-process-title">
+        <h2 id="sticker-process-title" className="text-lg font-bold text-slate-100 mb-4">From photo to print reference</h2>
+        <ol className="grid grid-cols-1 md:grid-cols-3 gap-3">
+          {HOW_IT_WORKS.map(({ title, body, Icon }, index) => (
+            <li key={title} className="rounded-lg border border-slate-800 bg-slate-900/40 p-4">
+              <div className="flex items-center gap-3">
+                <span className="inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-emerald-950 text-emerald-200">
+                  <Icon className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <div>
+                  <p className="text-sm font-semibold text-slate-100">{index + 1}. {title}</p>
+                  <p className="mt-0.5 text-xs leading-relaxed text-slate-400">{body}</p>
+                </div>
+              </div>
+            </li>
+          ))}
+        </ol>
       </section>
 
       {/* ----------------------------- Builder ---------------------------- */}
@@ -421,7 +462,7 @@ export default function CustomStickerStudio() {
             )}
           </Section>
 
-          <Section title="Sticker theme" hint="Six looks, one price. The trading card has the most to fill in; the other five need a name, a morph line and a few words.">
+          <Section title="Sticker theme" hint="Six original looks, one price. The collector card has the most to fill in; the other five need a name, a morph line and a few words.">
             <ChipGroup
               value={design.theme || 'trading_card'}
               onChange={(v) => patch({ theme: v })}
@@ -432,7 +473,7 @@ export default function CustomStickerStudio() {
 
           {isCard ? (
             <>
-            <Section title="Layout" hint="How the photo and the stats sit on the card.">
+            <Section title="Card format" hint="Choose how the photo and details share the card.">
               <ChipGroup
                 value={design.layout}
                 onChange={(v) => patch({ layout: v })}
@@ -449,9 +490,9 @@ export default function CustomStickerStudio() {
               </Field>
             </Section>
 
-            <Section title="Name plate" hint="The top of the card.">
+            <Section title="Identity" hint="The main details at the top of the card.">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Field label="Card name">
+                <Field label="Gecko name">
                   <TextInput
                     value={design.name}
                     maxLength={FIELD_LIMITS.name}
@@ -459,7 +500,7 @@ export default function CustomStickerStudio() {
                     onChange={(e) => patch({ name: e.target.value })}
                   />
                 </Field>
-                <Field label="HP" hint={`${FIELD_LIMITS.hp_min} to ${FIELD_LIMITS.hp_max}`}>
+                <Field label="Power score" hint={`${FIELD_LIMITS.hp_min} to ${FIELD_LIMITS.hp_max}`}>
                   <input
                     type="number"
                     className={inputClass}
@@ -471,7 +512,7 @@ export default function CustomStickerStudio() {
                   />
                 </Field>
               </div>
-              <Field label="Stage">
+              <Field label="Life stage">
                 <ChipGroup
                   value={design.stage}
                   onChange={(v) => patch({ stage: v })}
@@ -480,7 +521,7 @@ export default function CustomStickerStudio() {
                 />
               </Field>
               {stageEvolves(design.stage) && (
-                <Field label="Evolves from" hint="Printed under the name, the way a Stage 1 card reads.">
+                <Field label="Lineage note" hint="A parent, pairing, or collection line printed below the name.">
                   <TextInput
                     value={design.evolves_from}
                     maxLength={FIELD_LIMITS.evolves_from}
@@ -489,7 +530,7 @@ export default function CustomStickerStudio() {
                   />
                 </Field>
               )}
-              <Field label="Type" hint="Sets the card color and the energy symbol on the attacks.">
+              <Field label="Affinity" hint="Sets the color family and the symbols beside each move.">
                 <ChipGroup
                   value={design.type}
                   onChange={(v) => patch({ type: v })}
@@ -500,7 +541,7 @@ export default function CustomStickerStudio() {
             </Section>
 
             {design.layout === 'classic' && (
-              <Section title="Info bar" hint="The small strip under the photo. Leave any of these blank to drop them.">
+              <Section title="Specimen notes" hint="The small strip under the photo. Leave any item blank to hide it.">
                 <div className="grid grid-cols-3 gap-3">
                   <Field label="No.">
                     <TextInput
@@ -531,19 +572,19 @@ export default function CustomStickerStudio() {
             )}
 
             <Section
-              title="Attacks"
-              hint={`Up to ${MAX_ATTACKS}. Cost is how many energy symbols print to the left of the name. On a full art card the attack block is left off, but we keep what you wrote.`}
+              title="Signature moves"
+              hint={`Add up to ${MAX_ATTACKS}. Pips show the move's effort level. Full portrait cards save the text without printing the move block.`}
             >
               {(design.attacks || []).map((a, i) => (
                 <div key={i} className="rounded-md border border-slate-800 bg-slate-950/60 p-3 space-y-3">
                   <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-300">Attack {i + 1}</span>
+                    <span className="text-xs font-bold text-slate-300">Move {i + 1}</span>
                     {(design.attacks || []).length > 1 && (
                       <button
                         type="button"
                         className="text-rose-300 hover:text-rose-200"
                         onClick={() => { setDesign((d) => removeAttack(d, i)); setAdded(false); }}
-                        aria-label={`Remove attack ${i + 1}`}
+                        aria-label={`Remove move ${i + 1}`}
                       >
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
@@ -558,14 +599,14 @@ export default function CustomStickerStudio() {
                         onChange={(e) => { setDesign((d) => updateAttack(d, i, { name: e.target.value })); setAdded(false); }}
                       />
                     </Field>
-                    <Field label="Cost">
+                    <Field label="Pips">
                       <Select
                         value={String(a.cost ?? 0)}
                         onChange={(e) => { setDesign((d) => updateAttack(d, i, { cost: Number(e.target.value) })); setAdded(false); }}
                         options={[0, 1, 2, 3, 4].map((n) => ({ value: String(n), label: String(n) }))}
                       />
                     </Field>
-                    <Field label="Damage">
+                    <Field label="Score">
                       <TextInput
                         value={a.damage}
                         maxLength={FIELD_LIMITS.attack_damage}
@@ -574,7 +615,7 @@ export default function CustomStickerStudio() {
                       />
                     </Field>
                   </div>
-                  <Field label="Flavor text" hint={`What the attack does. Up to ${FIELD_LIMITS.attack_text} characters.`}>
+                  <Field label="Move note" hint={`Describe the move in up to ${FIELD_LIMITS.attack_text} characters.`}>
                     <textarea
                       className={`${inputClass} resize-none`}
                       rows={2}
@@ -594,21 +635,21 @@ export default function CustomStickerStudio() {
                   className="border-slate-700 text-slate-200 hover:bg-slate-800"
                   onClick={() => { setDesign(addAttack); setAdded(false); }}
                 >
-                  <Plus className="w-3.5 h-3.5 mr-1.5" /> Add a second attack
+                  <Plus className="w-3.5 h-3.5 mr-1.5" /> Add a second move
                 </Button>
               )}
             </Section>
 
-            <Section title="Bottom bar" hint="Weakness, resistance, and retreat cost.">
+            <Section title="Matchup strip" hint="Optional game details along the bottom edge.">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Field label="Weakness type">
+                <Field label="Challenge affinity">
                   <Select
                     value={design.weakness_type}
                     onChange={(e) => patch({ weakness_type: e.target.value })}
                     options={typeOptionsWithNone}
                   />
                 </Field>
-                <Field label="Weakness multiplier">
+                <Field label="Challenge multiplier">
                   <Select
                     value={design.weakness_multiplier}
                     onChange={(e) => patch({ weakness_multiplier: e.target.value })}
@@ -616,14 +657,14 @@ export default function CustomStickerStudio() {
                     disabled={!design.weakness_type}
                   />
                 </Field>
-                <Field label="Resistance type">
+                <Field label="Strength affinity">
                   <Select
                     value={design.resistance_type}
                     onChange={(e) => patch({ resistance_type: e.target.value })}
                     options={typeOptionsWithNone}
                   />
                 </Field>
-                <Field label="Resistance amount">
+                <Field label="Strength score">
                   <Select
                     value={design.resistance_amount}
                     onChange={(e) => patch({ resistance_amount: e.target.value })}
@@ -632,7 +673,7 @@ export default function CustomStickerStudio() {
                   />
                 </Field>
               </div>
-              <Field label="Retreat cost" hint="How many colorless symbols print in the retreat box.">
+              <Field label="Rest cost" hint="How many neutral pips print in the rest box.">
                 <ChipGroup
                   value={String(design.retreat_cost)}
                   onChange={(v) => patch({ retreat_cost: Number(v) })}
@@ -642,7 +683,7 @@ export default function CustomStickerStudio() {
               </Field>
             </Section>
 
-            <Section title="Set line" hint="The fine print along the bottom edge.">
+            <Section title="Edition details" hint="The small collection line along the bottom edge.">
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
                 <Field label="Set code">
                   <TextInput
@@ -677,7 +718,7 @@ export default function CustomStickerStudio() {
                 </Field>
               </div>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                <Field label="Illustrator" hint="Printed as “Illus. yourname”. Leave blank to drop it.">
+                <Field label="Artist credit" hint="Printed as “Art by yourname”. Leave blank to hide it.">
                   <TextInput
                     value={design.illustrator}
                     maxLength={FIELD_LIMITS.illustrator}
@@ -741,12 +782,20 @@ export default function CustomStickerStudio() {
             </Section>
           )}
 
-          <Section title="The physical sticker" hint="Every size is the same price. All stickers ship glossy and weatherproof.">
+          <Section title="The physical sticker" hint="Every size and finish is the same price. All stickers use weatherproof vinyl.">
             <Field label="Size">
               <ChipGroup
                 value={design.size}
                 onChange={(v) => patch({ size: v })}
                 options={STICKER_SIZES}
+                columns={3}
+              />
+            </Field>
+            <Field label="Finish">
+              <ChipGroup
+                value={design.finish}
+                onChange={(v) => patch({ finish: v })}
+                options={STICKER_FINISHES}
                 columns={3}
               />
             </Field>
@@ -767,8 +816,8 @@ export default function CustomStickerStudio() {
             <StickerPreview design={design} />
           </div>
           <p className="text-[11px] text-slate-500 text-center leading-relaxed">
-            Live preview. Print colors run slightly warmer than the screen, and
-            the sticker is die-cut to the outline of the design.
+            Live preview, including the selected finish. Print colors run slightly
+            warmer than the screen, and the sticker is die-cut to the design outline.
           </p>
 
           <div className="rounded-lg border border-slate-800 bg-slate-900/40 p-4 space-y-2">
@@ -844,9 +893,9 @@ export default function CustomStickerStudio() {
 
           <div className="rounded-lg border border-slate-800 bg-slate-900/30 p-4 text-[11px] text-slate-400 leading-relaxed space-y-1.5">
             <p>
-              <strong className="text-slate-300">Turnaround.</strong> About a week
-              from order to shipment. Each sticker is printed one at a time from
-              the design you built.
+              <strong className="text-slate-300">Production reference.</strong> Check
+              the live preview before adding it to your cart. The saved design and
+              finish selection travel with the order.
             </p>
             <p>
               <strong className="text-slate-300">Your artwork.</strong> Upload a

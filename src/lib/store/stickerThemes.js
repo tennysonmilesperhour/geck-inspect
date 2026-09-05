@@ -1,7 +1,7 @@
 /**
  * Sticker themes.
  *
- * The custom sticker started life as one look, the trading card. These are
+ * The custom sticker started life as one look, the collector card. These are
  * the other five, none of them a nod to any card game: a museum field-guide
  * plate, a passport photo page, a national-park style badge, an instant
  * photo, and a show rosette. Every theme uses the same photo upload and the
@@ -16,8 +16,8 @@
 export const STICKER_THEMES = [
   {
     value: 'trading_card',
-    label: 'Trading card',
-    blurb: 'Stats, attacks, weakness, the works.',
+    label: 'Collector card',
+    blurb: 'Power, signature moves, affinity, and edition details.',
     ratio: '2.5 / 3.5',
     fields: [],
   },

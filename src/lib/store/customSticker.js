@@ -1,11 +1,9 @@
 /**
  * Custom pet sticker: option catalog, defaults, and validation.
  *
- * The customer builds a trading-card sticker around a photo of their own
- * animal. The option set deliberately mirrors the field structure of a
- * standard collectible card (stage, HP, type, attacks, weakness,
- * resistance, retreat cost, rarity, set number) so a design maps cleanly
- * onto the card template used in production.
+ * The customer builds an original collector-card sticker around a photo of
+ * their own animal. The option set uses familiar game-card ideas, expressed
+ * through crested gecko vocabulary and Geck Inspect's own visual system.
  *
  * The finished design is stored as the `customization` jsonb blob on the
  * cart line (store_cart_items.customization), snapshotted onto the order
@@ -28,17 +26,17 @@ export const CUSTOM_STICKER_DESIGN_VERSION = 1;
  * StickerCardPreview.
  */
 export const CARD_TYPES = [
-  { value: 'grass',     label: 'Grass',     glyph: 'leaf',     color: '#7bbf5a', accent: '#4b7f36', text: '#14340d' },
-  { value: 'fire',      label: 'Fire',      glyph: 'flame',    color: '#e2593c', accent: '#a5321c', text: '#3b0d05' },
-  { value: 'water',     label: 'Water',     glyph: 'droplet',  color: '#57a5d8', accent: '#2a6d9c', text: '#06243a' },
-  { value: 'lightning', label: 'Lightning', glyph: 'zap',      color: '#e9c53f', accent: '#b08f11', text: '#3a2d02' },
-  { value: 'psychic',   label: 'Psychic',   glyph: 'eye',      color: '#b98ac6', accent: '#7d4f8c', text: '#2e1436' },
-  { value: 'fighting',  label: 'Fighting',  glyph: 'fist',     color: '#c98146', accent: '#8d5220', text: '#331904' },
-  { value: 'darkness',  label: 'Darkness',  glyph: 'moon',     color: '#5b6b78', accent: '#2f3c47', text: '#0b1116' },
-  { value: 'metal',     label: 'Metal',     glyph: 'cog',      color: '#9aa6ae', accent: '#5f6a72', text: '#141a1f' },
-  { value: 'fairy',     label: 'Fairy',     glyph: 'sparkles', color: '#e79ec4', accent: '#b25b8c', text: '#3a0f27' },
-  { value: 'dragon',    label: 'Dragon',    glyph: 'gem',      color: '#c2a656', accent: '#8a7124', text: '#2f2506' },
-  { value: 'colorless', label: 'Colorless', glyph: 'star',     color: '#d9d4c9', accent: '#928c80', text: '#26231d' },
+  { value: 'grass',     label: 'Canopy',  glyph: 'leaf',     color: '#7bbf5a', accent: '#4b7f36', text: '#14340d' },
+  { value: 'fire',      label: 'Ember',   glyph: 'flame',    color: '#e2593c', accent: '#a5321c', text: '#3b0d05' },
+  { value: 'water',     label: 'Mist',    glyph: 'droplet',  color: '#57a5d8', accent: '#2a6d9c', text: '#06243a' },
+  { value: 'lightning', label: 'Storm',   glyph: 'zap',      color: '#e9c53f', accent: '#b08f11', text: '#3a2d02' },
+  { value: 'psychic',   label: 'Moon',    glyph: 'eye',      color: '#b98ac6', accent: '#7d4f8c', text: '#2e1436' },
+  { value: 'fighting',  label: 'Terra',   glyph: 'fist',     color: '#c98146', accent: '#8d5220', text: '#331904' },
+  { value: 'darkness',  label: 'Night',   glyph: 'moon',     color: '#5b6b78', accent: '#2f3c47', text: '#0b1116' },
+  { value: 'metal',     label: 'Silver',  glyph: 'cog',      color: '#9aa6ae', accent: '#5f6a72', text: '#141a1f' },
+  { value: 'fairy',     label: 'Bloom',   glyph: 'sparkles', color: '#e79ec4', accent: '#b25b8c', text: '#3a0f27' },
+  { value: 'dragon',    label: 'Crest',   glyph: 'gem',      color: '#c2a656', accent: '#8a7124', text: '#2f2506' },
+  { value: 'colorless', label: 'Natural', glyph: 'star',     color: '#d9d4c9', accent: '#928c80', text: '#26231d' },
 ];
 
 export const CARD_TYPE_MAP = Object.fromEntries(CARD_TYPES.map((t) => [t.value, t]));
@@ -48,21 +46,21 @@ export function cardType(value) {
 }
 
 export const CARD_STAGES = [
-  { value: 'basic',   label: 'Basic',   evolves: false },
-  { value: 'stage_1', label: 'Stage 1', evolves: true },
-  { value: 'stage_2', label: 'Stage 2', evolves: true },
+  { value: 'basic',   label: 'Hatchling', evolves: false },
+  { value: 'stage_1', label: 'Juvenile',  evolves: true },
+  { value: 'stage_2', label: 'Adult',     evolves: true },
 ];
 
 export const CARD_LAYOUTS = [
   {
     value: 'classic',
-    label: 'Classic frame',
-    blurb: 'Photo in a window, attacks and stats printed below it. The Moonlight example.',
+    label: 'Keeper profile',
+    blurb: 'Framed photo with signature moves and collection details.',
   },
   {
     value: 'full_art',
-    label: 'Full art',
-    blurb: 'Photo bleeds to the edges, stats sit on top. The Bat Geck example.',
+    label: 'Full portrait',
+    blurb: 'Edge-to-edge photo with a compact identity and matchup strip.',
   },
 ];
 
@@ -75,10 +73,10 @@ export const BORDER_COLORS = [
 ];
 
 export const RARITIES = [
-  { value: 'common',    label: 'Common',    symbol: '●' },
-  { value: 'uncommon',  label: 'Uncommon',  symbol: '◆' },
-  { value: 'rare',      label: 'Rare',      symbol: '★' },
-  { value: 'holo_rare', label: 'Holo rare', symbol: '★' },
+  { value: 'common',    label: 'Core',         symbol: '●' },
+  { value: 'uncommon',  label: 'Select',       symbol: '◆' },
+  { value: 'rare',      label: 'Featured',     symbol: '★' },
+  { value: 'holo_rare', label: 'Foil feature', symbol: '✦' },
 ];
 
 export const RARITY_MAP = Object.fromEntries(RARITIES.map((r) => [r.value, r]));
@@ -92,12 +90,10 @@ export const STICKER_SIZES = [
   { value: '4in', label: '4 inch', blurb: 'Rack panel, cooler, toolbox.' },
 ];
 
-// No longer offered in the builder (every sticker ships glossy). Kept so older
-// cart and order rows that still carry a finish value stay readable.
 export const STICKER_FINISHES = [
-  { value: 'matte',        label: 'Matte',        blurb: 'No glare, softest color.' },
-  { value: 'glossy',       label: 'Glossy',       blurb: 'Deepest blacks, closest to a real card.' },
-  { value: 'holographic',  label: 'Holographic',  blurb: 'Rainbow shift in the light. Pairs well with Holo rare.' },
+  { value: 'glossy',      label: 'Clean gloss', blurb: 'Rich color with a smooth shine.' },
+  { value: 'holographic', label: 'Prism foil',  blurb: 'Rainbow shift across the full design.' },
+  { value: 'matte',       label: 'Soft matte',   blurb: 'Low glare with a softer surface.' },
 ];
 
 /** Crested-gecko-specific starter suggestions for the morph line. */
@@ -191,7 +187,7 @@ export function updateAttack(design, index, patch) {
   return { ...design, attacks };
 }
 
-/** Does this stage line need an "Evolves from" name? */
+/** Does this life stage show a lineage note? */
 export function stageEvolves(stage) {
   return Boolean(CARD_STAGES.find((s) => s.value === stage)?.evolves);
 }
@@ -209,14 +205,14 @@ export function validateDesign(design) {
   // the morph line, the photo and a few words; nothing else can be wrong.
   if (!isCardTheme(design.theme)) return problems;
   if (stageEvolves(design.stage) && !String(design.evolves_from || '').trim()) {
-    problems.push(`A ${CARD_STAGES.find((s) => s.value === design.stage)?.label} card needs an "Evolves from" name.`);
+    problems.push(`A ${CARD_STAGES.find((s) => s.value === design.stage)?.label} card needs a lineage note.`);
   }
   const hp = Number(design.hp);
   if (!Number.isFinite(hp) || hp < FIELD_LIMITS.hp_min || hp > FIELD_LIMITS.hp_max) {
-    problems.push(`HP has to be between ${FIELD_LIMITS.hp_min} and ${FIELD_LIMITS.hp_max}.`);
+    problems.push(`Power score has to be between ${FIELD_LIMITS.hp_min} and ${FIELD_LIMITS.hp_max}.`);
   }
   const named = (design.attacks || []).filter((a) => String(a.name || '').trim());
-  if (named.length === 0) problems.push('Name at least one attack.');
+  if (named.length === 0) problems.push('Name at least one signature move.');
   return problems;
 }
 
@@ -285,7 +281,7 @@ export function designSummary(design) {
     return [design.name, stickerTheme(design.theme).label, design.morph_line, size].filter(Boolean).join(' · ');
   }
   const type = cardType(design.type).label;
-  return [design.name, `${type} · ${design.hp} HP`, size]
+  return [design.name, `${type} · ${design.hp} power`, size]
     .filter(Boolean)
     .join(' · ');
 }

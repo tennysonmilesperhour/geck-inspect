@@ -115,7 +115,7 @@ function StatsBar({ design }) {
   return (
     <div className="flex items-center" style={{ gap: '1.2cqw', fontSize: '2.7cqw' }}>
       <div className="flex items-center flex-1" style={{ ...cell, gap: '1cqw' }}>
-        <span className="font-semibold">weakness</span>
+        <span className="font-semibold">challenge</span>
         {weak ? (
           <>
             <TypePip type={design.weakness_type} size={4} />
@@ -126,7 +126,7 @@ function StatsBar({ design }) {
         )}
       </div>
       <div className="flex items-center flex-1" style={{ ...cell, gap: '1cqw' }}>
-        <span className="font-semibold">resistance</span>
+        <span className="font-semibold">strength</span>
         {resist ? (
           <>
             <TypePip type={design.resistance_type} size={4} />
@@ -137,7 +137,7 @@ function StatsBar({ design }) {
         )}
       </div>
       <div className="flex items-center" style={{ ...cell, gap: '1cqw' }}>
-        <span className="font-semibold">retreat</span>
+        <span className="font-semibold">rest</span>
         <CostPips count={design.retreat_cost} type="colorless" size={4} />
       </div>
     </div>
@@ -151,7 +151,7 @@ function Footer({ design, onLight }) {
     <div className="flex items-end justify-between" style={{ fontSize: '2.6cqw', color }}>
       <div className="min-w-0">
         {design.illustrator && (
-          <div className="italic font-semibold truncate">Illus. {design.illustrator}</div>
+          <div className="italic font-semibold truncate">Art by {design.illustrator}</div>
         )}
         <div className="flex items-center" style={{ gap: '1.2cqw' }}>
           {design.set_code && (
@@ -204,6 +204,39 @@ function PhotoSlot({ url, name, className, style }) {
         Your photo goes here
       </span>
     </div>
+  );
+}
+
+function FinishOverlay({ finish }) {
+  if (finish === 'holographic') {
+    return (
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-20"
+        style={{
+          background: 'linear-gradient(125deg, transparent 15%, rgba(117, 236, 255, 0.34) 35%, rgba(255, 142, 220, 0.3) 52%, rgba(255, 239, 135, 0.3) 68%, transparent 86%)',
+          mixBlendMode: 'screen',
+        }}
+      />
+    );
+  }
+  if (finish === 'matte') {
+    return (
+      <div
+        aria-hidden="true"
+        className="pointer-events-none absolute inset-0 z-20 bg-slate-100/10"
+        style={{ mixBlendMode: 'soft-light' }}
+      />
+    );
+  }
+  return (
+    <div
+      aria-hidden="true"
+      className="pointer-events-none absolute inset-0 z-20"
+      style={{
+        background: 'linear-gradient(145deg, rgba(255,255,255,0.2) 0%, transparent 26%, transparent 74%, rgba(255,255,255,0.08) 100%)',
+      }}
+    />
   );
 }
 
@@ -296,12 +329,12 @@ export default function StickerCardPreview({ design, className = '' }) {
                         className="italic font-semibold truncate"
                         style={{ fontSize: '2.9cqw', color: 'rgba(255,255,255,0.9)' }}
                       >
-                        Evolves from {design.evolves_from}
+                        Lineage: {design.evolves_from}
                       </div>
                     )}
                   </div>
                   <div className="flex items-center shrink-0" style={{ gap: '1cqw', paddingTop: '3cqw' }}>
-                    <span style={{ fontSize: '3cqw', color: '#fff', fontWeight: 700 }}>HP</span>
+                    <span style={{ fontSize: '3cqw', color: '#fff', fontWeight: 700 }}>PWR</span>
                     <span
                       style={{
                         fontSize: '8cqw',
@@ -366,12 +399,12 @@ export default function StickerCardPreview({ design, className = '' }) {
                       className="italic font-semibold truncate"
                       style={{ fontSize: '2.9cqw', color: 'rgba(20,20,20,0.8)' }}
                     >
-                      Evolves from {design.evolves_from}
+                        Lineage: {design.evolves_from}
                     </div>
                   )}
                 </div>
                 <div className="flex items-center shrink-0" style={{ gap: '1cqw', paddingTop: '2.4cqw' }}>
-                  <span style={{ fontSize: '3cqw', color: '#14181f', fontWeight: 700 }}>HP</span>
+                  <span style={{ fontSize: '3cqw', color: '#14181f', fontWeight: 700 }}>PWR</span>
                   <span style={{ fontSize: '8cqw', color: '#14181f', fontWeight: 800, lineHeight: 1 }}>
                     {design.hp}
                   </span>
@@ -403,7 +436,7 @@ export default function StickerCardPreview({ design, className = '' }) {
                     className="text-center italic"
                     style={{ fontSize: '3cqw', color: 'rgba(20,20,20,0.55)' }}
                   >
-                    Add an attack to fill this space.
+                    Add a signature move to fill this space.
                   </div>
                 ) : (
                   attacks.map((a, i) => (
@@ -441,6 +474,7 @@ export default function StickerCardPreview({ design, className = '' }) {
             </>
           )}
         </div>
+        <FinishOverlay finish={design.finish} />
       </div>
     </div>
   );
