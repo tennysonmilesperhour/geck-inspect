@@ -77,7 +77,7 @@ silently filters the UPDATE to zero rows. In production, "Make Admin",
 "Make Expert", and "Remove Expert" do nothing (no error, no change).
 
 **Fix:** migration
-`supabase/migrations/20260707000000_profiles_admin_update_policy.sql`
+`supabase/migrations/20260708032747_profiles_admin_update_policy.sql`
 adds a permissive admin UPDATE policy using the standard email check.
 APPLIED to production 2026-07-07 (verified: `profiles_update_admin`
 now present alongside `profiles_update_own`).

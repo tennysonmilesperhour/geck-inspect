@@ -3,7 +3,7 @@ import { Notification, UserFollow, Gecko } from '@/entities/all';
 // Email + push fanout happens inside Postgres: a trigger on the
 // `notifications` table calls the send-push and send-email edge
 // functions on every insert (see
-// supabase/migrations/20260422203000_notifications_send_push_trigger.sql
+// supabase/migrations/20260507225002_notifications_send_push_trigger.sql
 // and 20260422210000_notifications_send_email_trigger.sql). The client
 // only needs to insert the row, no client-side SendEmail or per-user
 // preference lookup. The trigger reads the recipient's preferences and

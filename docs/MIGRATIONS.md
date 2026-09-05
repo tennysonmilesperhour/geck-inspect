@@ -2,25 +2,22 @@
 
 Read this before running any `supabase db ...` command against production.
 
-## The situation (as of 4 September 2026)
+## The situation (as of 5 September 2026)
 
 - Production (`mmuglfphhwlaluyfyxsp`) is the source of truth for the schema.
-- Its migration history (`supabase_migrations.schema_migrations`) contains
-  about 100 entries. Roughly a quarter were applied through the Supabase
-  API (the MCP `apply_migration` tool) and carry names and timestamps that
-  do not match the file names in `supabase/migrations/`.
-- Several repo files use 8-digit prefixes (`20260507_store_schema.sql`),
-  which the Supabase CLI treats as the version `20260507`. Ten files share
-  that version. The CLI cannot reconcile them.
-- Four repo files were never applied at all. They live in
-  `supabase/migrations/_never_applied/` with the reason for each.
-
-Because of this, `supabase db push` (and especially `--include-all`) would
-try to replay files whose content is already live under another name. At
-best it fails on "already exists"; at worst it overwrites newer objects
-such as the vault-based notification dispatcher and silently stops email
-and push. The two deploy scripts that used to do this no longer touch the
-database.
+- On 4 September the repo files and the live migration history were
+  reconciled (baselining steps 2 to 4 below, all git-only). Every file in
+  `supabase/migrations/` now carries the version number production has
+  for it: 61 files were renamed to their live version (this also retired
+  every 8-digit prefix except `20260413` and `20260414`, which are
+  8-digit in production too), 22 empty placeholder files stand in for
+  versions that were applied straight from the MCP, three data-only
+  files that ran by hand moved to `_applied_by_hand/`, and the four files
+  that never ran stay in `_never_applied/`.
+- What is still missing is the runnable baseline: `supabase db pull`
+  (step 7) needs the database password on a machine with the CLI linked,
+  and has not been run yet. Until then `supabase db push` should still be
+  avoided, because the CLI has not confirmed local and remote agree.
 
 ## How to make a schema change today
 
@@ -49,6 +46,8 @@ was produced with a script on 4 Sep 2026 and is reproducible from
 
 Everything except step 1 and step 6 is a git change with no effect on
 production, so it can be reviewed as a normal diff before anything runs.
+Steps 2 to 4 were done on 4 September 2026 (commit "Baseline the
+migration folder against the live history").
 
 1. **Backup.** Dashboard, Database, Backups. Note the time.
 2. **Rename the 57 "same name, different version" files to their live

@@ -20,7 +20,7 @@
  * not overageable. Each successful identification consumes 1 credit;
  * when a user runs out, the edge function returns 402 and the UI shows
  * an upgrade CTA. Admins bypass the limit entirely. See
- * supabase/migrations/20260516_morph_id_credits.sql for the ledger.
+ * supabase/migrations/20260516011246_morph_id_credits.sql for the ledger.
  *
  * `null` means unlimited. Always check `if (limit == null)` before
  * comparing usage, never treat null as 0.

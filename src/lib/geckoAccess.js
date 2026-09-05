@@ -2,7 +2,7 @@
  * geckoAccess, helpers for "geckos this user can see / edit."
  *
  * Background: every gecko belongs to exactly one collection (see
- * supabase/migrations/20260507_collections.sql). Ownership and
+ * supabase/migrations/20260507212705_collections.sql). Ownership and
  * collaboration both run through the `collection_members` table, a
  * user owns a collection iff they have a role='owner' member row for
  * it, and they collaborate iff they have a role='editor' or 'viewer'

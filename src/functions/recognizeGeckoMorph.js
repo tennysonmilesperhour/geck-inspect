@@ -4,7 +4,7 @@ import { supabase } from '@/lib/supabaseClient';
 // to Claude vision, clamps the output to our canonical taxonomy, and
 // debits one MorphID credit from the user's monthly allotment (admins
 // are exempt). See supabase/functions/recognize-gecko-morph/index.ts and
-// supabase/migrations/20260516_morph_id_credits.sql.
+// supabase/migrations/20260516011246_morph_id_credits.sql.
 //
 // Accepts either { imageUrl: string } or { imageUrls: string[] } (up to 5).
 // Optional ageStage (hatchling | juvenile | subadult | adult | unknown) and

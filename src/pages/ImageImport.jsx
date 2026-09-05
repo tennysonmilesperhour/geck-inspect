@@ -17,7 +17,7 @@ const LoginPortal = React.lazy(() => import('@/components/auth/LoginPortal'));
 
 // Scans per month by plan. One scan is one batch of up to 10 photos. Must
 // match feature_credit_allotments for import_scan (see
-// supabase/migrations/20260905001000_import_scan_allotments.sql); the
+// supabase/migrations/20260904220228_import_scan_allotments.sql); the
 // server enforces the limit, this only drives the copy below.
 const IMPORT_SCANS_PER_MONTH = { breeder: 20, enterprise: 200 };
 
