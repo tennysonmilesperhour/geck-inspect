@@ -47,3 +47,22 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
 }
+
+// Keep fixed web headers and dialogs inside the device's usable viewport.
+@objc(GeckBridgeViewController)
+class GeckBridgeViewController: CAPBridgeViewController {
+    override func capacitorDidLoad() {
+        guard let webView = webView else { return }
+        let container = UIView()
+        container.backgroundColor = UIColor(red: 2/255, green: 6/255, blue: 23/255, alpha: 1)
+        view = container
+        container.addSubview(webView)
+        webView.translatesAutoresizingMaskIntoConstraints = false
+        NSLayoutConstraint.activate([
+            webView.topAnchor.constraint(equalTo: container.safeAreaLayoutGuide.topAnchor),
+            webView.bottomAnchor.constraint(equalTo: container.safeAreaLayoutGuide.bottomAnchor),
+            webView.leadingAnchor.constraint(equalTo: container.safeAreaLayoutGuide.leadingAnchor),
+            webView.trailingAnchor.constraint(equalTo: container.safeAreaLayoutGuide.trailingAnchor)
+        ])
+    }
+}

@@ -50,3 +50,11 @@ Use `pnpm ios:release` or `pnpm android:release`. Apple signing and App Store Co
 Do not submit based solely on green builds. Complete confirmation/recovery, camera upload, private record isolation, purchase/restore/cancellation/refund, care logging, transfer, export and deletion on the actual release binary with ordinary accounts. Verify notification behavior described in the listing, privacy declarations, subscription terms and moderation operations. Revenue sufficiency requires a target take-home amount, real paid conversion, renewal retention and net proceeds, not membership labels.
 
 Technical references: [Capacitor native app callbacks](https://capacitorjs.com/docs/apis/app), [Capacitor browser](https://capacitorjs.com/docs/apis/browser), [Supabase native auth](https://supabase.com/docs/guides/auth/native-mobile-deep-linking), [native asset generation](https://github.com/ionic-team/capacitor-assets).
+
+## Production verification
+
+Commit `71830ff9191c0dda27bc37e37b059c2c8d77aee3` was fetched from and pushed to GitHub main. Vercel deployment `dpl_CwiSc61TJ5bTqrgqqG1TbUQg2SvF` reached READY and serves geckinspect.com. The live homepage loaded in Chromium without browser errors. Seven migration versions match the production database. Rollback-only checks confirm owner profile access and prevent other ordinary users and anonymous callers from reading private account rows.
+
+Final JavaScript checks: 648 tests across 21 files, lint with 0 errors and 15 existing warnings, and the repository's limited TypeScript check. Production prerender/SEO checks report 165 routes, 0 errors and 67 warnings. These warnings remain review items, not a claim of perfect SEO.
+
+The iOS 17.5 runtime check exposed a strong SwiftUICore dependency despite an iOS 15 deployment target. The app target now weak-links that framework, and the rebuilt app renders the homepage on iOS 17.5. A native container constrains the web viewport to the device safe area so fixed headers and dialogs avoid the status bar and home indicator. Reference: [Capacitor launch failure discussion](https://developer.apple.com/forums/thread/757397). Android debug compilation passed with JDK 21; signed release builds and physical-device verification remain open.

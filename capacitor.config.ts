@@ -11,6 +11,10 @@ const config: CapacitorConfig = {
   appId: 'com.geckinspect.app',
   appName: 'Geck Inspect',
   webDir: 'dist',
+  ios: {
+    contentInset: 'never',
+    backgroundColor: '#020617',
+  },
   server: {
     // Capacitor serves the bundled web app from inside the APK over
     // the capacitor:// scheme; androidScheme keeps cookies and
