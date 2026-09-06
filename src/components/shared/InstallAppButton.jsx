@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Capacitor } from "@capacitor/core";
 import { Download, Share, Plus, X, Bell, CheckCircle2, ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -109,6 +110,8 @@ export default function InstallAppButton() {
   const needsNotifPrompt =
     installed && notificationsSupported() && permission !== "granted";
 
+  // Store builds are already installed and do not use browser push prompts.
+  if (Capacitor.isNativePlatform()) return null;
   if (installed && !needsNotifPrompt) return null;
   if (!installed && platform === "other" && !deferredPrompt) return null;
   if (!installed && dismissed && !deferredPrompt && platform !== "ios") return null;
