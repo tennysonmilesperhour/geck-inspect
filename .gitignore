@@ -59,3 +59,12 @@ keystore.properties
 
 # Committed template, values intentionally blank
 !.env.example
+
+# iOS generated web bundle, local build state, and signing artifacts.
+ios/App/App/public/
+ios/App/App/capacitor.config.json
+ios/App/build/
+ios/**/xcuserdata/
+ios/**/.build/
+*.mobileprovision
+*.p12

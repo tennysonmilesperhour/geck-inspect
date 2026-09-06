@@ -1,3 +1,4 @@
+import { isNativePlatform } from './revenuecat';
 /**
  * Web-push subscription management (client side).
  *
@@ -48,7 +49,7 @@ function detectPlatform() {
 
 export function isPushSupported() {
   return (
-    typeof window !== 'undefined' &&
+    typeof window !== 'undefined' && !isNativePlatform() &&
     'serviceWorker' in navigator &&
     'PushManager' in window &&
     'Notification' in window

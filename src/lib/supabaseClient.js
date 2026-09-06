@@ -45,6 +45,7 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
     autoRefreshToken: true,
     persistSession: true,
     detectSessionInUrl: true,
+    flowType: typeof window !== 'undefined' && window.Capacitor?.isNativePlatform?.() ? 'pkce' : 'implicit',
   },
   global: {
     fetch: fetchWithTimeout,

@@ -191,7 +191,7 @@ const AuthenticatedApp = () => {
   // deactivation takes effect immediately instead of requiring a
   // browser reload to invalidate the in-memory disabledPages set.
   useEffect(() => {
-    if (!isAuthenticated) return;
+    if (!isAuthenticated && !isGuest) return;
     const loadDisabled = () => {
       api.entities.PageConfig.list().then((configs) => {
         if (!Array.isArray(configs)) return;
@@ -218,7 +218,7 @@ const AuthenticatedApp = () => {
     loadDisabled();
     window.addEventListener('page_configs_changed', loadDisabled);
     return () => window.removeEventListener('page_configs_changed', loadDisabled);
-  }, [isAuthenticated]);
+  }, [isAuthenticated, isGuest]);
 
   // PWA launch redirect: existing home-screen icons may have been saved
   // when start_url was "/" (or while the user was on /Messages), and iOS
@@ -359,7 +359,7 @@ const AuthenticatedApp = () => {
               path={`/${path}`}
               element={
                 disabledPages.has(path)
-                  ? <Navigate to="/" replace />
+                  ? <div className="max-w-xl mx-auto p-8 space-y-4"><h1 className="text-2xl font-semibold">This feature is currently unavailable</h1><p>We are working on this part of Geck Inspect. Your collection remains available.</p><a className="underline" href="/MyGeckos">Return to My Geckos</a></div>
                   : <Page />
               }
             />

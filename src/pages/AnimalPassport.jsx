@@ -733,21 +733,14 @@ export default function AnimalPassport() {
                   Inquire about this gecko
                 </Link>
               )}
-              <button
-                onClick={() => {
-                  if (!currentUser) {
-                    window.location.href = '/AuthPortal';
-                    return;
-                  }
-                  // In full implementation, this would open the claim flow
-                  alert('Claim flow coming soon, contact the seller to initiate a transfer.');
-                }}
-                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium transition hover:opacity-90 border"
-                style={{ borderColor: C.sage, color: C.sage, backgroundColor: 'transparent' }}
+              <Link
+                to={currentUser ? `/Messages?recipientEmail=${encodeURIComponent(gecko.created_by)}` : '/AuthPortal'}
+                className="inline-flex items-center gap-2 px-6 py-2.5 rounded-lg text-sm font-medium border"
+                style={{ borderColor: C.sage, color: C.sage }}
               >
                 <ArrowRightLeft size={16} />
-                I purchased this gecko, claim ownership
-              </button>
+                Ask the seller for a transfer invitation
+              </Link>
             </div>
           )}
 

@@ -13,9 +13,16 @@
  *   'unauthenticated'     session expired
  *   'portal_unavailable'  Stripe refused (portal not activated, etc.)
  */
+import { isNativePlatform, fetchCustomerInfo } from '@/lib/revenuecat';
 import { supabase } from '@/lib/supabaseClient';
 
 export async function openBillingPortal({ returnPath = '/Membership' } = {}) {
+  if (isNativePlatform()) {
+    const info = await fetchCustomerInfo();
+    if (!info?.managementURL) throw new Error('Open your device store subscription settings to manage billing.');
+    window.location.href = info.managementURL;
+    return info.managementURL;
+  }
   const origin = typeof window !== 'undefined' ? window.location.origin : 'https://geckinspect.com';
   const { data, error } = await supabase.functions.invoke('stripe-billing-portal', {
     body: { returnUrl: `${origin}${returnPath}` },

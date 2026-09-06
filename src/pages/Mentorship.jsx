@@ -97,8 +97,8 @@ export default function MentorshipPage() {
             ];
             if (emails.length > 0) {
                 const { data: profiles } = await supabase
-                    .from('profiles')
-                    .select('email, full_name, breeder_name, business_name, profile_image_url')
+                    .rpc('read_profiles', { p_emails: emails })
+                    .select('email, full_name, business_name, profile_image_url')
                     .in('email', emails);
                 if (profiles) {
                     setProfileMap(new Map(profiles.map((p) => [p.email, p])));

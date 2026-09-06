@@ -28,11 +28,16 @@
     "cap:sync": "pnpm build && cap sync",
     "cap:open:android": "cap open android",
     "android:debug": "pnpm cap:sync && cd android && ./gradlew assembleDebug",
-    "android:release": "pnpm cap:sync && cd android && ./gradlew bundleRelease"
+    "android:release": "GECK_RELEASE_TARGET=android pnpm cap:sync && cd android && ./gradlew bundleRelease",
+    "cap:open:ios": "cap open ios",
+    "ios:release": "GECK_RELEASE_TARGET=ios pnpm cap:sync && cap open ios"
   },
   "dependencies": {
     "@capacitor/android": "^8.3.4",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/browser": "^8.0.4",
     "@capacitor/core": "^8.3.4",
+    "@capacitor/ios": "8.3.4",
     "@hello-pangea/dnd": "^17.0.0",
     "@hookform/resolvers": "^4.1.2",
     "@radix-ui/react-accordion": "^1.2.3",

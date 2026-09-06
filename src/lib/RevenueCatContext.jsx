@@ -46,64 +46,64 @@ export function RevenueCatProvider({ children }) {
   const [isReady, setIsReady] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [mirrorProActive, setMirrorProActive] = useState(false);
+  const [mirrorOwner, setMirrorOwner] = useState(null);
 
-  // Track the last appUserId we configured for so we know when to
-  // re-fetch CustomerInfo after a sign-in / account switch.
-  const lastAppUserIdRef = useRef(null);
-
+  const appUserId = resolveAppUserId(user);
+  const generationRef = useRef(0);
+  const [infoOwner, setInfoOwner] = useState(null);
   const refresh = useCallback(async () => {
+    const generation = generationRef.current;
     setIsRefreshing(true);
-    const [ci, offs] = await Promise.all([fetchCustomerInfo(), fetchOfferings()]);
+    const [ci, offs, mirror] = await Promise.all([fetchCustomerInfo(), fetchOfferings(), fetchMirroredPro(appUserId)]);
+    if (generation !== generationRef.current) return null;
     setCustomerInfo(ci);
     setOfferings(offs);
+    setInfoOwner(appUserId);
+    setMirrorProActive(mirror);
+    setMirrorOwner(appUserId);
     setIsRefreshing(false);
     setIsReady(true);
     return ci;
-  }, []);
+  }, [appUserId]);
 
   useEffect(() => {
-    let cancelled = false;
+    const generation = ++generationRef.current;
+    setCustomerInfo(null);
+    setOfferings(null);
+    setIsReady(false);
+    setIsRefreshing(false);
     (async () => {
-      const instance = await configureRevenueCat(user);
-      if (cancelled) return;
-      if (!instance) {
-        // Signed out (or no SDK for this platform): nothing to fetch, but
-        // consumers waiting on isReady must not hang.
-        lastAppUserIdRef.current = null;
-        setCustomerInfo(null);
-        setOfferings(null);
-        setIsReady(true);
-        return;
-      }
-      const nextId = typeof instance.getAppUserId === 'function' ? instance.getAppUserId() : null;
-      if (nextId && lastAppUserIdRef.current === nextId && isReady) return;
-      lastAppUserIdRef.current = nextId;
-      refresh();
-    })();
-    return () => {
-      cancelled = true;
-    };
-  }, [user, refresh, isReady]);
+      const instance = await configureRevenueCat(appUserId ? { id: appUserId } : null);
+      if (generation !== generationRef.current) return;
+      if (!instance) { setIsReady(true); return; }
+      await refresh();
+    })().catch((err) => {
+      if (generation !== generationRef.current) return;
+      console.warn('[revenuecat] configuration failed:', err);
+      setIsReady(true);
+    });
+    return () => { generationRef.current++; };
+  }, [appUserId, refresh]);
 
   // Pull the mirrored entitlement on auth change. This is what catches
   // purchases made on mobile or via a refunded/expired event from RC
   // while the user was offline.
   useEffect(() => {
-    const appUserId = resolveAppUserId(user);
     let cancelled = false;
+    setMirrorProActive(false);
     fetchMirroredPro(appUserId).then((isPro) => {
-      if (!cancelled) setMirrorProActive(isPro);
+      if (!cancelled) { setMirrorProActive(isPro); setMirrorOwner(appUserId); }
     });
     return () => {
       cancelled = true;
     };
-  }, [user]);
+  }, [appUserId]);
 
   const liveProActive = useMemo(
-    () => hasActiveEntitlement(customerInfo, PRO_ENTITLEMENT_ID),
-    [customerInfo],
+    () => infoOwner === appUserId && hasActiveEntitlement(customerInfo, PRO_ENTITLEMENT_ID),
+    [customerInfo, infoOwner, appUserId],
   );
-  const isProMember = liveProActive || mirrorProActive;
+  const isProMember = liveProActive || (mirrorOwner === appUserId && mirrorProActive);
 
   // Push the resolved Pro state onto the user object so synchronous
   // checks like `effectiveTier(user)` in PlanLimitChecker can see it

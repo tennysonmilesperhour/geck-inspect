@@ -309,9 +309,11 @@ async function loadProfile(authToken: string): Promise<Profile | null> {
     .select("membership_tier, subscription_status, role, morph_id_show_value_estimate")
     .eq("email", user.email)
     .maybeSingle();
+  const { data: effectiveTier, error: tierError } = await userClient.rpc("effective_tier_for_current_user");
+  if (tierError) throw new Error("Could not verify membership access");
   return {
     auth_user_id: user.id,
-    membership_tier: data?.membership_tier ?? null,
+    membership_tier: effectiveTier ?? data?.membership_tier ?? null,
     subscription_status: data?.subscription_status ?? null,
     role: data?.role ?? null,
     morph_id_show_value_estimate: data?.morph_id_show_value_estimate ?? false,

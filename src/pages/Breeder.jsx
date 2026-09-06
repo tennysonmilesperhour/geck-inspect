@@ -156,7 +156,7 @@ export default function Breeder() {
                     .limit(20)
                 : Promise.resolve({ data: [] }),
               supabase
-                .from('profiles')
+                .rpc('read_profiles', { p_emails: [ownerEmail] })
                 .select('store_policy')
                 .eq('email', ownerEmail)
                 .maybeSingle(),

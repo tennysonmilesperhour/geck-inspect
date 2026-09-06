@@ -1,3 +1,4 @@
+import { installNativeAuth } from '@/lib/nativeAuth';
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 import App from '@/App.jsx'
@@ -21,6 +22,7 @@ installGlobalErrorHandlers();
 // permission from an installed PWA, so we don't defer this to the
 // moment the user flips the Settings toggle.
 registerServiceWorker();
+installNativeAuth().catch(() => console.warn('Native sign-in listener could not start.'));
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <ErrorBoundary>

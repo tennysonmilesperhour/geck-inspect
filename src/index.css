@@ -908,3 +908,7 @@ button:focus-visible {
     scroll-behavior: auto !important;
   }
 }
+
+/* Keep floating feedback out of modal forms and their focus flow. */
+body:has([role="dialog"][data-state="open"]) [data-feedback-trigger],
+body:has([role="alertdialog"][data-state="open"]) [data-feedback-trigger] { display: none; }

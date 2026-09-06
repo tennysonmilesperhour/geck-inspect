@@ -15,7 +15,9 @@
 // ─── CSV helpers ────────────────────────────────────────────────────────────
 
 function csvEscape(value) {
-  const s = value == null ? '' : String(value);
+  let s = value == null ? '' : String(value);
+  // Quoting alone does not stop spreadsheet formula execution.
+  if (/^[\s\uFEFF]*[=+@-]/.test(s) && !(typeof value === 'number' && Number.isFinite(value))) s = `'${s}`;
   if (/[",\n\r\t]/.test(s)) {
     return `"${s.replace(/"/g, '""')}"`;
   }

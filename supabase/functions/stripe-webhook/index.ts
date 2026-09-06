@@ -389,6 +389,17 @@ Deno.serve(async (req: Request) => {
         // first renewal.
         if ((inv.amount_paid || 0) > 0) {
           const profile = await findProfileFromCustomer(inv.customer);
+          if (profile?.email && event.livemode === true) {
+            const { error: receiptError } = await supabase.from("payment_events").upsert({
+              id: `stripe-invoice:${inv.id}`, user_email: profile.email,
+              stripe_event_id: event.id, stripe_invoice_id: inv.id,
+              stripe_customer_id: inv.customer, stripe_subscription_id: inv.subscription || null,
+              event_type: "invoice.paid", status: "paid", amount_cents: inv.amount_paid,
+              currency: inv.currency, membership_tier: profile.membership_tier,
+              event_timestamp: new Date(event.created * 1000).toISOString(),
+            }, { onConflict: "id" });
+            if (receiptError) throw receiptError;
+          }
           if (profile?.email) {
             const priceId = inv.lines?.data?.[0]?.price?.id || inv.lines?.data?.[0]?.pricing?.price_details?.price;
             const tier = priceIdToTier(priceId) || "keeper";

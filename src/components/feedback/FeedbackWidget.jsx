@@ -138,6 +138,7 @@ export default function FeedbackWidget() {
         type="button"
         onClick={() => setOpen(true)}
         aria-label="Send feedback"
+        data-feedback-trigger
         className="fixed right-0 top-1/2 -translate-y-1/2 z-[60] flex flex-col items-center gap-1.5 rounded-l-md bg-emerald-600 hover:bg-emerald-500 text-white shadow-lg shadow-emerald-900/50 px-1.5 py-3 text-xs font-semibold tracking-wider uppercase transition-all hover:px-2 active:scale-95 print:hidden"
       >
         <MessageSquare className="w-3.5 h-3.5" />

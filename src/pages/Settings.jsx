@@ -1,3 +1,5 @@
+import BlockedUsersCard from '@/components/settings/BlockedUsersCard';
+import AccountDeletionCard from '@/components/settings/AccountDeletionCard';
 import React, { useState, useEffect } from 'react';
 import { User } from '@/entities/User';
 import { UploadFile } from '@/integrations/Core';
@@ -20,21 +22,10 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Settings, Upload, Save, Globe, Eye, X, Camera, Mail, Calendar, Loader2, Search, Trash2, AlertTriangle, ArrowUpDown, Clock, Crown, FileText, Palette, Check, Star, Database, CreditCard
+  Settings, Upload, Save, Globe, Eye, X, Camera, Mail, Calendar, Loader2, Search, ArrowUpDown, Clock, Crown, FileText, Palette, Check, Star, Database, CreditCard
 } from 'lucide-react';
 import { useTheme } from '@/lib/ThemeContext';
 import { FALLBACK_NAV_ITEMS, NAV_ICON_MAP, FAVORITES_MAX, flattenNavItems, KEEPER_MODE_STORAGE_KEY } from '@/lib/navItems';
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
 
 const STORE_POLICY_EXAMPLE = [
     "• Shipping: Live arrival guaranteed. Ships FedEx Priority Overnight, Mon-Wed only. Shipping cost is the buyer's responsibility.",
@@ -1196,59 +1187,8 @@ export default function SettingsPage() {
                     <DataExportCard user={user} />
                 </section>
 
-                <section id="danger-zone">
-                {/* Delete Account Section */}
-                <Card className="bg-red-950/30 border-red-900/50 backdrop-blur-sm mt-8">
-                    <CardHeader>
-                        <CardTitle className="text-red-400 flex items-center gap-2">
-                            <AlertTriangle className="w-5 h-5" />
-                            Danger Zone
-                        </CardTitle>
-                    </CardHeader>
-                    <CardContent>
-                        <p className="text-slate-400 mb-4">
-                            Once you delete your account, there is no going back. All your data, geckos, breeding plans, and activity will be permanently removed.
-                        </p>
-                        <AlertDialog>
-                            <AlertDialogTrigger asChild>
-                                <Button variant="destructive" className="bg-red-600 hover:bg-red-700">
-                                    <Trash2 className="w-4 h-4 mr-2" />
-                                    Delete Account
-                                </Button>
-                            </AlertDialogTrigger>
-                            <AlertDialogContent className="bg-slate-900 border-slate-700">
-                                <AlertDialogHeader>
-                                    <AlertDialogTitle className="text-red-400">Are you absolutely sure?</AlertDialogTitle>
-                                    <AlertDialogDescription className="text-slate-400">
-                                        This action cannot be undone. This will permanently delete your account and remove all your data from our servers, including:
-                                        <ul className="list-disc list-inside mt-2 space-y-1">
-                                            <li>Your gecko collection</li>
-                                            <li>Breeding plans and records</li>
-                                            <li>Forum posts and comments</li>
-                                            <li>AI training contributions</li>
-                                            <li>Messages and notifications</li>
-                                        </ul>
-                                    </AlertDialogDescription>
-                                </AlertDialogHeader>
-                                <AlertDialogFooter>
-                                    <AlertDialogCancel className="bg-slate-700 border-slate-600 text-slate-200 hover:bg-slate-600">Cancel</AlertDialogCancel>
-                                    <AlertDialogAction 
-                                        className="bg-red-600 hover:bg-red-700"
-                                        onClick={async () => {
-                                            toast({ 
-                                                title: "Account Deletion Requested", 
-                                                description: "Please contact support to complete account deletion." 
-                                            });
-                                        }}
-                                    >
-                                        Yes, Delete My Account
-                                    </AlertDialogAction>
-                                </AlertDialogFooter>
-                            </AlertDialogContent>
-                        </AlertDialog>
-                    </CardContent>
-                </Card>
-                </section>
+                <section id="blocked-users"><BlockedUsersCard user={user} /></section>
+                <section id="danger-zone"><AccountDeletionCard user={user} /></section>
                     </div>
                 </div>
             </div>

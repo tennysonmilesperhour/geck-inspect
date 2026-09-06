@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
-import { User, Gecko, UserFollow, BreedingPlan, WeightRecord } from '@/entities/all';
+import { User, UserFollow } from '@/entities/all';
 import { notifyNewFollower } from '@/components/notifications/NotificationService';
 import { useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -161,32 +161,16 @@ export default function PublicProfile() {
                 }
                 
                 // Fetch user's public geckos and their weight records
-                const [geckos, weights] = await Promise.all([
-                    Gecko.filter({ created_by: user.email, is_public: true, archived: false }),
-                    WeightRecord.filter({ created_by: user.email }).catch(() => [])
-                ]);
+                const { data: publicContent, error: contentError } = await supabase.rpc('public_profile_content', { p_profile_id: user.id });
+                if (contentError) throw contentError;
+                const geckos = publicContent?.geckos || [];
                 setUserGeckos(geckos);
-                setWeightRecords(weights);
-                
-                // Categorize geckos - geckos can appear in multiple categories
+                setWeightRecords([]);
                 setForSaleGeckos(geckos.filter(g => g.status === 'For Sale'));
                 setBreedingGeckos(geckos.filter(g => ['Ready to Breed', 'Proven', 'Future Breeder'].includes(g.status)));
-                // Collection shows ALL geckos except sold ones
                 setCollectionGeckos(geckos.filter(g => g.status !== 'Sold'));
-                
-                // Fetch public breeding plans
-                const plans = await BreedingPlan.filter({ created_by: user.email, is_public: true }).catch(() => []);
-                setBreedingPlans(plans);
-
-                // Fetch published store page (if any) so we can surface a
-                // "Visit my store" pill next to the website link.
-                const { data: storeData } = await supabase
-                    .from('breeder_store_pages')
-                    .select('slug, is_published, title')
-                    .eq('owner_email', user.email)
-                    .eq('is_published', true)
-                    .maybeSingle();
-                setStorePage(storeData || null);
+                setBreedingPlans(publicContent?.breeding_plans || []);
+                setStorePage(publicContent?.store_page || null);
 
             } catch (err) {
                 console.error("Error fetching public profile:", err);

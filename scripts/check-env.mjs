@@ -12,12 +12,16 @@
  * on the RevenueCat sandbox key and analytics were silently off. Nothing
  * in the build had said so.
  *
- * Never fails the build. A missing key on launch night is a loud line in
- * the log, not a broken deploy.
+ * Production and store-release builds fail when required configuration is missing.
  */
 
-const IS_VERCEL = Boolean(process.env.VERCEL);
-const TARGET = process.env.VERCEL_ENV || (IS_VERCEL ? 'unknown' : 'local');
+import { loadEnv } from 'vite';
+const ENV = { ...loadEnv('production', process.cwd(), ''), ...process.env };
+const RELEASE_PLATFORM = ENV.GECK_RELEASE_TARGET || null;
+const IS_NATIVE_RELEASE = ['android', 'ios'].includes(RELEASE_PLATFORM);
+
+const IS_VERCEL = Boolean(ENV.VERCEL);
+const TARGET = ENV.VERCEL_ENV || (IS_VERCEL ? 'unknown' : 'local');
 const VERBOSE = process.argv.includes('--verbose');
 
 // [name, required-in-production, classifier]
@@ -28,7 +32,7 @@ const CHECKS = [
   ['VITE_SUPABASE_ANON_KEY', false, null],
   [
     'VITE_REVENUECAT_WEB_API_KEY',
-    true,
+    !IS_NATIVE_RELEASE,
     (v) => {
       if (v.startsWith('test_') || v.startsWith('rcb_sb_')) return 'sandbox key';
       if (v.startsWith('rcb_')) return 'production key';
@@ -37,7 +41,9 @@ const CHECKS = [
   ],
   ['VITE_POSTHOG_KEY', true, (v) => (v.startsWith('phc_') ? 'project key' : 'set, unexpected prefix')],
   ['VITE_POSTHOG_HOST', false, null],
-  ['VITE_VAPID_PUBLIC_KEY', true, (v) => (v.length >= 80 ? 'looks like a VAPID public key' : 'set, unexpectedly short')],
+  ['VITE_VAPID_PUBLIC_KEY', !IS_NATIVE_RELEASE, (v) => (v.length >= 80 ? 'looks like a VAPID public key' : 'set, unexpectedly short')],
+  ['VITE_REVENUECAT_ANDROID_API_KEY', RELEASE_PLATFORM === 'android', null],
+  ['VITE_REVENUECAT_IOS_API_KEY', RELEASE_PLATFORM === 'ios', null],
   ['VITE_GECK_DATA_SUPABASE_URL', false, null],
   ['VITE_GECK_DATA_SUPABASE_ANON_KEY', false, null],
   ['VITE_MARKET_SNAPSHOT_URL', false, null],
@@ -53,7 +59,7 @@ function describe(name, value, classify) {
 }
 
 const rows = CHECKS.map(([name, required, classify]) => {
-  const value = process.env[name] || '';
+  const value = ENV[name] || '';
   return { name, required, status: describe(name, value, classify), present: Boolean(value) };
 });
 
@@ -65,15 +71,22 @@ if (IS_VERCEL || VERBOSE) {
   }
 }
 
-if (TARGET === 'production') {
+if (TARGET === 'production' || IS_NATIVE_RELEASE) {
   const warnings = [];
   for (const r of rows) {
     if (r.required && !r.present) warnings.push(`${r.name} is not set. Add it under Vercel, Settings, Environment Variables (Production) and redeploy.`);
   }
   const rc = rows.find((r) => r.name === 'VITE_REVENUECAT_WEB_API_KEY');
-  if (rc?.present && rc.status === 'sandbox key') {
+  if (!IS_NATIVE_RELEASE && rc?.present && rc.status === 'sandbox key') {
     warnings.push('VITE_REVENUECAT_WEB_API_KEY is a sandbox key. Web purchases will not charge real cards.');
   }
-  for (const w of warnings) console.warn(`[check-env] WARNING: ${w}`);
+  if (IS_NATIVE_RELEASE && ENV.NATIVE_AUTH_REDIRECT_VERIFIED !== 'true') warnings.push('Verify the native callback allowlist and set NATIVE_AUTH_REDIRECT_VERIFIED=true for the store build.');
+  if (IS_NATIVE_RELEASE && ENV.NATIVE_BILLING_WEBHOOK_VERIFIED !== 'true') warnings.push('Verify RevenueCat webhook delivery and set NATIVE_BILLING_WEBHOOK_VERIFIED=true for the store build.');
+  if (IS_NATIVE_RELEASE) {
+    const key = ENV[`VITE_REVENUECAT_${RELEASE_PLATFORM.toUpperCase()}_API_KEY`] || '';
+    if (key.startsWith('test_') || key.startsWith('rcb_')) warnings.push('A store-specific RevenueCat key is required for a native release.');
+  }
+  for (const w of warnings) console.error(`[check-env] ERROR: ${w}`);
+  if (warnings.length > 0) { console.error('[check-env] Release configuration is incomplete.'); process.exitCode = 1; }
   if (warnings.length === 0) console.log('[check-env] all required production variables present');
 }

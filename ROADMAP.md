@@ -1,3 +1,5 @@
+> Launch priority: close the remaining release gates in [the September 6 repair ledger](docs/launch-repairs-2026-09-06.md) before adding new features.
+
 # ROADMAP.md - Geck Inspect
 
 Last updated: September 2026
@@ -31,7 +33,7 @@ The full review, with every finding, its location and its status, is in `docs/pl
 ## URGENT (next 30 days, before May 31, 2026)
 
 ### [ ] 1. Audit geckinspect.com for crested-gecko specificity
-**Why:** Breed Ledger launches May 15 as multi-species. Geck Inspect's only defensible moat is being unmistakably crested-gecko-first.
+**Why:** The earlier plan referenced a May 15 competitor launch; revalidate current competition before using that deadline. Geck Inspect's only defensible moat is being unmistakably crested-gecko-first.
 **What changes:**
 - Home page hero must mention crested geckos in the first sentence
 - All screenshots must show crested gecko interfaces, not generic reptile examples

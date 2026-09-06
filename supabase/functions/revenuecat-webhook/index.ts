@@ -155,29 +155,6 @@ Deno.serve(async (req) => {
     auth: { autoRefreshToken: false, persistSession: false },
   });
 
-  // Idempotency check. ON CONFLICT DO NOTHING returns 0 rows if we've
-  // already seen this event id, which lets us short-circuit before
-  // doing any entitlement math.
-  const insertEvent = await supabase
-    .from("revenuecat_webhook_events")
-    .insert({
-      event_id: event.id,
-      event_type: event.type,
-      app_user_id: resolveAppUserUuid(event),
-      payload: payload as unknown as Record<string, unknown>,
-    })
-    .select("event_id");
-
-  if (insertEvent.error) {
-    const code = (insertEvent.error as { code?: string }).code;
-    if (code === "23505") {
-      // Duplicate, already processed. Ack with 200 so RC stops retrying.
-      return jsonResponse({ ok: true, duplicate: true });
-    }
-    console.error("[revenuecat-webhook] insert event failed:", insertEvent.error);
-    return jsonResponse({ error: "insert_failed" }, 500);
-  }
-
   const appUserUuid = resolveAppUserUuid(event);
   if (!appUserUuid) {
     console.warn(
@@ -194,6 +171,10 @@ Deno.serve(async (req) => {
   const isPurchase = PURCHASE_EVENTS.has(event.type);
   const isCancel = CANCELLATION_EVENTS.has(event.type);
   const isBillingIssue = BILLING_ISSUE_EVENTS.has(event.type);
+  if (!isPurchase && !isCancel && !isBillingIssue) {
+    const { error } = await supabase.rpc("apply_revenuecat_event", { p_event: payload, p_rows: [] });
+    return error ? jsonResponse({ error: "event_record_failed" }, 500) : jsonResponse({ ok: true, skipped: "non_entitlement_event" });
+  }
   const eventAt = msToIso(event.event_timestamp_ms) || new Date().toISOString();
 
   const rows = ents.map((entitlementId) => {
@@ -243,9 +224,7 @@ Deno.serve(async (req) => {
     return { ...base, is_active: false, will_renew: false };
   });
 
-  const upsert = await supabase
-    .from("revenuecat_entitlements")
-    .upsert(rows, { onConflict: "app_user_id,entitlement_identifier" });
+  const upsert = await supabase.rpc("apply_revenuecat_event", { p_event: payload, p_rows: rows });
 
   if (upsert.error) {
     console.error("[revenuecat-webhook] upsert failed:", upsert.error);

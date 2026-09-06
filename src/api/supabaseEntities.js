@@ -275,7 +275,7 @@ function createEntityClient(entityName) {
       // empty arrays for anything else. This avoids making anonymous
       // calls to tables that would hit RLS and flood the console with
       // 401s while the user is just browsing.
-      if (isGuestMode()) {
+      if (isGuestMode() && entityName !== 'PageConfig') {
         if (isMockedEntity(entityName)) {
           return guestMockFilter(entityName, filterObj, sort, limit, skip);
         }
@@ -283,7 +283,11 @@ function createEntityClient(entityName) {
       }
 
       const run = () => {
-        let query = supabase.from(tableName).select('*');
+        const emailFilter = filterObj?.email;
+        const emails = typeof emailFilter === 'string' ? [emailFilter] : emailFilter?.$in || null;
+        let query = entityName === 'User'
+          ? supabase.rpc('read_profiles', { p_emails: emails }).select('*')
+          : supabase.from(tableName).select('*');
         query = applyFilter(query, filterObj);
 
         const sorts = parseSort(sort, entityName);
@@ -311,7 +315,7 @@ function createEntityClient(entityName) {
         return null;
       }
       const { data, error } = await withAuthRetry(() =>
-        supabase.from(tableName).select('*').eq('id', id).maybeSingle()
+        (entityName === 'User' ? supabase.rpc('read_profiles') : supabase.from(tableName)).select('*').eq('id', id).maybeSingle()
       );
       if (error) throw error;
       return data;

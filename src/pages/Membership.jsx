@@ -1,4 +1,6 @@
 import { useEffect, useState } from 'react';
+import NativeMembership from '@/components/subscription/NativeMembership';
+import { isNativePlatform } from '@/lib/revenuecat';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
@@ -334,7 +336,7 @@ export default function MembershipPage() {
     try {
       const params = new URLSearchParams(window.location.search);
       const checkout = params.get('checkout');
-      if (checkout === 'success') captureEvent('checkout_completed');
+      if (checkout === 'success') captureEvent('checkout_returned', { claimed_status: 'success' });
       else if (checkout === 'cancelled') captureEvent('checkout_cancelled');
     } catch {
       // URL parsing unavailable; skip
@@ -468,6 +470,8 @@ export default function MembershipPage() {
     }
     setLoadingAction(null);
   };
+
+  if (isNativePlatform()) return <NativeMembership user={user} />;
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 p-6">

@@ -1,3 +1,4 @@
+import ReportContent from '@/components/support/ReportContent';
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { ForumPost, ForumComment, User, ForumCategory, Notification, ForumLike } from '@/entities/all';
@@ -419,6 +420,7 @@ export default function ForumPostPage() {
                         <CardTitle className="text-2xl md:text-3xl text-slate-100">
                             {post.title}
                         </CardTitle>
+                        <ReportContent entity="forum_post" recordId={post.id} authorEmail={post.created_by} excerpt={post.content} />
                         <div className="text-sm text-slate-400 flex items-center gap-4 mt-2 flex-wrap">
                             <span className="flex items-center gap-1">
                                 <UserIcon className="w-4 h-4" />

@@ -1,6 +1,8 @@
-import { useState, useEffect, useCallback } from 'react';
-import { motion } from 'framer-motion';
-import { Gecko, UserActivity, WeightRecord, FeedingGroup, Collection, CollectionMember } from '@/entities/all';
+import { captureEvent } from '@/lib/posthog';
+import { useState, useEffect, useCallback, useRef } from 'react';
+import { supabase } from '@/lib/supabaseClient';
+import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
+import { Gecko, UserActivity, FeedingGroup, Collection, CollectionMember } from '@/entities/all';
 import { UploadFile } from '@/integrations/Core';
 import { notifyFollowersNewGecko, checkAndNotifyLevelUp } from '@/components/notifications/NotificationService';
 import { useToast } from '@/components/ui/use-toast';
@@ -11,7 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
+import { CardHeader, CardFooter } from '@/components/ui/card';
 import { format } from "date-fns";
 import { Upload, X, DollarSign, Loader2, Archive, GripVertical, Camera, Star } from "lucide-react";
 import { Switch } from '@/components/ui/switch';
@@ -31,6 +33,8 @@ const initialFormData = INITIAL_FORM_DATA;
 
 export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, onCancel, isHatching = false, onArchive, breedingPlan = null, feedingGroups: feedingGroupsProp = null, idSettings = null }) {
     const { toast } = useToast();
+    const saveRequestId = useRef(crypto.randomUUID());
+    const savingRef = useRef(false);
     const isArchived = gecko?.archived;
     const [formData, setFormData] = useState(initialFormData);
     const [isSaving, setIsSaving] = useState(false);
@@ -392,6 +396,8 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
 
     const handleSave = async (e) => {
         e.preventDefault();
+        if (savingRef.current) return;
+        savingRef.current = true;
         setIsSaving(true);
         
         try {
@@ -401,7 +407,9 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                 ? parseFloat(formData.weight_grams)
                 : null;
             const dataToSave = {
-                name: formData.name,
+                name: formData.name.trim(),
+                is_public: formData.is_public === true,
+                gallery_display: formData.is_public === true && formData.gallery_display === true,
                 gecko_id_code: formData.gecko_id_code,
                 hatch_date: formData.hatch_date ? format(formData.hatch_date, 'yyyy-MM-dd') : null,
                 // Mirror the latest weight onto the gecko row so cards and
@@ -448,61 +456,46 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                 growth_slideshow_enabled: !!formData.growth_slideshow_enabled,
             };
 
-            let savedGecko;
-            const isNew = !gecko?.id || isHatching; // isHatching implies new even if gecko has some data
-            if (isNew) {
-                savedGecko = await Gecko.create(dataToSave);
-                // Award points for new gecko
-                // Using currentUser prop as it's already passed to the component
-                if (currentUser) {
-                    await UserActivity.create({
-                        user_email: currentUser.email,
-                        activity_type: 'new_gecko',
-                        points: 5,
-                        related_entity_id: savedGecko.id
-                    });
-                    
-                    // Notify followers if gecko is public
-                    if (savedGecko.is_public !== false) {
-                        notifyFollowersNewGecko(savedGecko, currentUser.email, currentUser.full_name).catch(console.error);
-                    }
-                    // Check if user hit a gecko count milestone
-                    checkAndNotifyLevelUp(currentUser.email).catch(console.error);
+            const isNew = !gecko?.id || isHatching;
+            if (!dataToSave.name) throw new Error('Please enter a name.');
+            if (weightValue !== null && (!Number.isFinite(weightValue) || weightValue < 0)) {
+                throw new Error('Weight must be a valid, non-negative number.');
+            }
+            // Include automatic group assignment in the same transaction.
+            if (weightValue !== null && !dataToSave.feeding_group_id) {
+                const group = feedingGroups.find(g => g.auto_weight_min_g != null &&
+                    g.auto_weight_max_g != null && weightValue >= g.auto_weight_min_g && weightValue <= g.auto_weight_max_g);
+                if (group) dataToSave.feeding_group_id = group.id;
+            }
+            const recordWeight = weightValue !== null &&
+                (isNew || gecko.weight_grams == null || Number(gecko.weight_grams) !== weightValue);
+            const { data: savedGecko, error: saveError } = await supabase.rpc('save_gecko_record', {
+                p_record: dataToSave,
+                p_gecko_id: isNew ? null : gecko.id,
+                p_request_id: saveRequestId.current,
+                p_record_weight: recordWeight,
+                p_record_date: todayLocalISO(),
+            });
+            if (saveError) throw saveError;
+            captureEvent(isNew ? 'animal_created' : 'animal_updated', { animal_id: savedGecko.id, recorded_weight: recordWeight, published: savedGecko.is_public === true });
+            // Optional community activity must never turn a successful save into a failed form.
+            if (isNew && currentUser) {
+                UserActivity.create({ user_email: currentUser.email, activity_type: 'new_gecko',
+                    points: 5, related_entity_id: savedGecko.id }).catch(console.error);
+                if (savedGecko.is_public === true) {
+                    notifyFollowersNewGecko(savedGecko, currentUser.email, currentUser.full_name).catch(console.error);
                 }
-            } else {
-                savedGecko = await Gecko.update(gecko.id, dataToSave);
+                checkAndNotifyLevelUp(currentUser.email).catch(console.error);
             }
 
-            // If a weight was provided, always create a WeightRecord (WeightRecord is source of truth).
-            // The same value is mirrored onto gecko.weight_grams via dataToSave above.
-            if (weightValue !== null) {
-                await WeightRecord.create({
-                    gecko_id: savedGecko.id,
-                    weight_grams: weightValue,
-                    record_date: todayLocalISO(),
-                });
-            }
-
-             // Auto-assign feeding group by weight if weight exists and no group is assigned
-             if (weightValue !== null && !savedGecko.feeding_group_id && feedingGroups.length > 0) {
-                 const matchingGroup = feedingGroups.find(group => 
-                     group.auto_weight_min_g !== null && 
-                     group.auto_weight_max_g !== null &&
-                     weightValue >= group.auto_weight_min_g && 
-                     weightValue <= group.auto_weight_max_g
-                 );
-                 if (matchingGroup) {
-                     await Gecko.update(savedGecko.id, { feeding_group_id: matchingGroup.id });
-                     savedGecko = { ...savedGecko, feeding_group_id: matchingGroup.id };
-                 }
-             }
-            
             if (onSubmit) {
                 onSubmit(savedGecko, isNew);
             }
         } catch (error) {
             console.error('Failed to save gecko:', error);
+            toast({ title: 'Gecko could not be saved', description: error.message || 'Your changes are still here. Please try again.', variant: 'destructive' });
         }
+        savingRef.current = false;
         setIsSaving(false);
     };
 
@@ -517,17 +510,11 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
 
 
     return (
-        <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            transition={{ duration: 0.2 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4"
-        >
-            <div className="fixed inset-0 bg-black/70 backdrop-blur-sm z-40" onClick={onCancel}></div>
-            <Card className="fixed top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[95vw] max-w-4xl h-[90vh] z-50 bg-slate-900 border-slate-700 flex flex-col">
+        <Dialog open onOpenChange={(open) => { if (!open && !savingRef.current) onCancel(); }}>
+            <DialogContent hideCloseButton onEscapeKeyDown={(event) => { if (cropDialogOpen) { event.preventDefault(); setCropDialogOpen(false); } }} aria-describedby="gecko-form-description" className="w-[95vw] max-w-4xl h-[90svh] bg-slate-900 border-slate-700 flex flex-col gap-0 p-0 overflow-hidden">
+                <DialogDescription id="gecko-form-description" className="sr-only">Edit animal details and choose whether to publish them.</DialogDescription>
                 <CardHeader className="flex-shrink-0">
-                    <CardTitle className="text-2xl text-slate-100">{gecko ? `Edit ${gecko.name}` : (isHatching ? 'Record New Hatchling' : 'Add New Gecko')}</CardTitle>
+                    <DialogTitle className="text-2xl text-slate-100">{gecko ? `Edit ${gecko.name}` : (isHatching ? 'Record New Hatchling' : 'Add New Gecko')}</DialogTitle>
                     {isHatching && breedingPlan && (
                         <p className="text-slate-400 text-sm">
                             From pairing: {breedingPlan.sire?.name || 'N/A'} x {breedingPlan.dam?.name || 'N/A'}
@@ -535,7 +522,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     )}
                 </CardHeader>
 
-                <form onSubmit={handleSave} className="flex-grow overflow-y-auto space-y-4 p-4">
+                <form id="gecko-details-form" onSubmit={handleSave} className="flex-grow overflow-y-auto space-y-4 p-4">
                     {isArchived && (
                         <div className="space-y-4 mb-4">
                             <div className="bg-yellow-900/30 border border-yellow-700 rounded-lg p-3">
@@ -593,7 +580,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                      className="bg-slate-800 border-slate-600 text-slate-100 disabled:opacity-50 disabled:cursor-not-allowed"
                                 />
                                 <Select value={hatchMonth} onValueChange={setHatchMonth} disabled={isArchived}>
-                                    <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100">
+                                    <SelectTrigger aria-label="Hatch month" className="h-10 bg-slate-800 border-slate-600 text-slate-100">
                                         <SelectValue placeholder="Month" />
                                     </SelectTrigger>
                                     <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
@@ -616,7 +603,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         <div>
                             <Label htmlFor="sex">Sex *</Label>
                             <Select value={formData.sex} onValueChange={(v) => handleChange('sex', v)} disabled={isArchived}>
-                                <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100"><SelectValue /></SelectTrigger>
+                                <SelectTrigger aria-label="Sex" className="h-10 bg-slate-800 border-slate-600 text-slate-100"><SelectValue /></SelectTrigger>
                                 <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
                                     <SelectItem value="Unsexed" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Unsexed</SelectItem>
                                     <SelectItem value="Male" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Male</SelectItem>
@@ -629,7 +616,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     <div>
                         <Label htmlFor="species">Species</Label>
                         <Select value={formData.species || 'Crested Gecko'} onValueChange={(v) => handleChange('species', v)} disabled={isArchived}>
-                            <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100"><SelectValue /></SelectTrigger>
+                            <SelectTrigger aria-label="Species" className="h-10 bg-slate-800 border-slate-600 text-slate-100"><SelectValue /></SelectTrigger>
                             <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
                                 {GECKO_SPECIES.map(s => (
                                     <SelectItem key={s} value={s} className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">{s}</SelectItem>
@@ -692,8 +679,8 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         </div>
                         <Switch
                              id="is_public"
-                             checked={formData.is_public !== false}
-                             onCheckedChange={(checked) => handleChange('is_public', checked)}
+                             checked={formData.is_public === true}
+                             onCheckedChange={(checked) => setFormData(prev => ({ ...prev, is_public: checked, gallery_display: checked && prev.gallery_display }))}
                              disabled={isArchived}
                              className="disabled:opacity-50 disabled:cursor-not-allowed"
                          />
@@ -707,9 +694,9 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         </div>
                         <Switch
                              id="gallery_display"
-                             checked={formData.gallery_display || false}
+                             checked={formData.is_public === true && formData.gallery_display === true}
                              onCheckedChange={(checked) => handleChange('gallery_display', checked)}
-                             disabled={isArchived}
+                             disabled={isArchived || formData.is_public !== true}
                              className="disabled:opacity-50 disabled:cursor-not-allowed"
                          />
                     </div>
@@ -760,7 +747,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         <div>
                             <Label htmlFor="status">Status</Label>
                             <Select value={formData.status} onValueChange={(v) => handleChange('status', v)} disabled={isForSale || isArchived}>
-                                <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100"><SelectValue /></SelectTrigger>
+                                <SelectTrigger aria-label="Status" className="h-10 bg-slate-800 border-slate-600 text-slate-100"><SelectValue /></SelectTrigger>
                                 <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
                                     <SelectItem value="Pet" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Pet</SelectItem>
                                     <SelectItem value="Future Breeder" className="text-slate-100 focus:bg-slate-700 focus:text-white hover:bg-slate-700">Future Breeder</SelectItem>
@@ -874,7 +861,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     <div>
                         <Label>Feeding Group</Label>
                         <Select value={formData.feeding_group_id || 'none'} onValueChange={(v) => handleChange('feeding_group_id', v === 'none' ? null : v)} disabled={isArchived}>
-                            <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100">
+                            <SelectTrigger aria-label="Feeding group" className="h-10 bg-slate-800 border-slate-600 text-slate-100">
                                 <SelectValue placeholder="No group assigned" />
                             </SelectTrigger>
                             <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
@@ -903,7 +890,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                 onValueChange={(v) => handleChange('collection_id', v)}
                                 disabled={isArchived}
                             >
-                                <SelectTrigger className="h-10 bg-slate-800 border-slate-600 text-slate-100">
+                                <SelectTrigger aria-label="Collection" className="h-10 bg-slate-800 border-slate-600 text-slate-100">
                                     <SelectValue placeholder="Default collection" />
                                 </SelectTrigger>
                                 <SelectContent className="bg-slate-800 border-slate-600 text-slate-100 z-[99999]">
@@ -1114,13 +1101,13 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                             Archived
                         </div>
                     )}
-                    <Button variant="outline" onClick={onCancel} className="h-10 px-3 sm:px-4 border-slate-600 text-slate-300 hover:bg-slate-800">Cancel</Button>
-                    <Button onClick={handleSave} disabled={isSaving} className="bg-emerald-600 hover:bg-emerald-700 h-10 px-3 sm:px-4">
+                    <Button variant="outline" onClick={onCancel} disabled={isSaving} className="h-10 px-3 sm:px-4 border-slate-600 text-slate-300 hover:bg-slate-800">Cancel</Button>
+                    <Button type="submit" form="gecko-details-form" disabled={isSaving || isArchived} className="bg-emerald-600 hover:bg-emerald-700 h-10 px-3 sm:px-4">
                         {isSaving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                         {getSaveButtonText()}
                     </Button>
                 </CardFooter>
-            </Card>
+
 
             {/* Image Crop Dialog */}
             {cropDialogOpen && currentImage && (
@@ -1131,7 +1118,8 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                     onClose={() => setCropDialogOpen(false)}
                 />
             )}
-        </motion.div>
+            </DialogContent>
+        </Dialog>
     );
 }
 

@@ -1,3 +1,5 @@
+import { authRedirect } from '@/lib/nativeAuth';
+import { isNativePlatform, detectPlatform } from '@/lib/revenuecat';
 import { useEffect, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
 import { APP_LOGO_URL } from '@/lib/constants';
@@ -35,7 +37,7 @@ function GoogleIcon() {
 
 // Where email links bring people back. Confirmation lands in the app;
 // password resets land on the "choose a new password" form.
-const origin = () => (typeof window !== 'undefined' ? window.location.origin : 'https://geckinspect.com');
+
 
 export default function LoginPortal({ requiredFeature: _requiredFeature = null }) {
   // ?mode=signup opens on Create Account (landing page CTAs and the morph
@@ -57,19 +59,27 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
   useEffect(() => {
     if (initialMode === 'signup') setIsSignUp(true);
     if (initialMode === 'forgot') setIsForgot(true);
+    if (new URLSearchParams(window.location.search).get('authError') === 'callback') {
+      toast({ title: 'Sign-in link could not be completed', description: 'Request a fresh link and open it on the device where you started sign-in.', variant: 'destructive' });
+    }
   }, [initialMode]);
 
   const handleGoogleSignIn = async () => {
     setIsGoogleLoading(true);
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: 'google',
-      options: { redirectTo: origin() },
-    });
-    if (error) {
+    try {
+      const native = isNativePlatform();
+      const { data, error } = await supabase.auth.signInWithOAuth({
+        provider: 'google', options: { redirectTo: authRedirect('/MyGeckos'), skipBrowserRedirect: native },
+      });
+      if (error) throw error;
+      if (native) {
+        if (!data?.url) throw new Error('Google sign-in did not return a URL.');
+        const { Browser } = await import('@capacitor/browser');
+        await Browser.open({ url: data.url });
+      }
+    } catch (error) {
       toast({ title: 'Google sign-in failed', description: error.message, variant: 'destructive' });
-      setIsGoogleLoading(false);
-    }
-    // On success, Supabase redirects the browser, no need to reset state.
+    } finally { setIsGoogleLoading(false); }
   };
 
   const handleSubmit = async (e) => {
@@ -80,7 +90,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
         const { data, error } = await supabase.auth.signUp({
           email,
           password,
-          options: { emailRedirectTo: `${origin()}/MyGeckos` },
+          options: { emailRedirectTo: authRedirect('/MyGeckos') },
         });
         if (error) {
           toast({ title: 'Sign up failed', description: error.message, variant: 'destructive' });
@@ -121,7 +131,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
     const { error } = await supabase.auth.resend({
       type: 'signup',
       email,
-      options: { emailRedirectTo: `${origin()}/MyGeckos` },
+      options: { emailRedirectTo: authRedirect('/MyGeckos') },
     });
     if (error) {
       toast({ title: 'Could not resend the email', description: error.message, variant: 'destructive' });
@@ -140,7 +150,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
     setIsLoading(true);
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(email, {
-        redirectTo: `${origin()}/AuthPortal?mode=reset`,
+        redirectTo: authRedirect('/AuthPortal?mode=reset'),
       });
       if (error) {
         toast({ title: 'Could not send the reset email', description: error.message, variant: 'destructive' });
@@ -281,6 +291,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
                   </button>
                 </div>
 
+                {detectPlatform() !== "ios" && <>
                 {/* Google OAuth */}
                 <Button
                   type="button"
@@ -302,6 +313,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
                   <div className="flex-1 h-px bg-slate-700" />
                 </div>
 
+                </>}
                 {/* Email / password form */}
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="space-y-1">

@@ -96,7 +96,7 @@ The app itself (`/app` or wherever auth-gated routes live) is a React SPA. The m
 ### 8.2 Target architecture for the landing page
 
 - **Rendering:** Static HTML (server-rendered or fully pre-built). Not a client-side React render. Target sub-2-second load on mobile.
-- **Deployment:** Same Vercel project, either as Next.js static pages at the root or as a separate lightweight project. The SPA app moves to a subpath (`/app`) or remains at the root with the landing page at `/`. Either works, pick the one simpler to maintain.
+- **Deployment:** One Vercel project serves the Vite + React application and build-time prerendered public pages. The landing page is `/`; authenticated routes use the same application.
 - **SEO:** Full semantic HTML, meta tags, OpenGraph, structured data for the product (Schema.org `SoftwareApplication`).
 - **Assets:** All images WebP, compressed. One hero product video (WebM + H.264 fallback, autoplay muted, lazy-loaded, poster image). Real crested gecko photography sourced from Tennyson's own collection. No stock imagery.
 - **Analytics:** Plausible or PostHog (privacy-friendly, lightweight). Single primary conversion event: "started sign-up."

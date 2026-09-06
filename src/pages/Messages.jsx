@@ -1,3 +1,4 @@
+import ReportContent from '@/components/support/ReportContent';
 import { useState, useEffect, useRef } from 'react';
 import ReactMarkdown from 'react-markdown';
 import Seo from '@/components/seo/Seo';
@@ -278,7 +279,7 @@ export default function MessagesPage() {
         setIsLoadingProfiles(true);
         try {
             const { data } = await supabase
-                .from('profiles')
+                .rpc('read_profiles')
                 .select('email, full_name, profile_image_url')
                 .order('full_name', { ascending: true })
                 .limit(2000);
@@ -385,7 +386,7 @@ export default function MessagesPage() {
                     .filter((e) => e && e !== SYSTEM_EMAIL);
                 if (otherEmails.length > 0) {
                     const { data: profiles } = await supabase
-                        .from('profiles')
+                        .rpc('read_profiles', { p_emails: otherEmails })
                         .select('email, full_name, profile_image_url')
                         .in('email', otherEmails);
                     if (profiles) {
@@ -793,6 +794,7 @@ export default function MessagesPage() {
                                                 </div>
                                             </div>
                                         </CardTitle>
+                                        {!selectedConversation.isSystem && <ReportContent entity="conversation" recordId={selectedConversation.email} authorEmail={selectedConversation.email} excerpt={selectedConversation.messages.slice(-5).map(m => m.content).join("\n")} />}
                                         <DropdownMenu>
                                             <DropdownMenuTrigger asChild>
                                                 <button

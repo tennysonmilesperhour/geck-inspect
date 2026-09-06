@@ -7,8 +7,8 @@ android {
         applicationId "com.geckinspect.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
-        versionCode 1
-        versionName "1.0"
+        versionCode Integer.parseInt(System.getenv('GECK_VERSION_CODE') ?: '1')
+        versionName System.getenv('GECK_VERSION_NAME') ?: '1.0'
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
         aaptOptions {
              // Files and dirs to omit from the packaged assets dir, modified to accommodate modern web apps.
@@ -16,8 +16,20 @@ android {
             ignoreAssetsPattern = '!.svn:!.git:!.ds_store:!*.scc:.*:!CVS:!thumbs.db:!picasa.ini:!*~'
         }
     }
+    signingConfigs {
+        release {
+            def keyPath = System.getenv('GECK_ANDROID_KEYSTORE')
+            if (keyPath) {
+                storeFile file(keyPath)
+                storePassword System.getenv('GECK_ANDROID_STORE_PASSWORD')
+                keyAlias System.getenv('GECK_ANDROID_KEY_ALIAS')
+                keyPassword System.getenv('GECK_ANDROID_KEY_PASSWORD')
+            }
+        }
+    }
     buildTypes {
         release {
+            signingConfig signingConfigs.release
             minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
@@ -51,4 +63,13 @@ try {
     }
 } catch(Exception e) {
     logger.info("google-services.json not found, google-services plugin not applied. Push Notifications won't work")
+}
+
+// Fail before producing an unsigned artifact labeled as a release.
+gradle.taskGraph.whenReady { graph ->
+    if (graph.allTasks.any { it.name.toLowerCase().contains('release') }) {
+        ['GECK_ANDROID_KEYSTORE', 'GECK_ANDROID_STORE_PASSWORD', 'GECK_ANDROID_KEY_ALIAS', 'GECK_ANDROID_KEY_PASSWORD'].each { key ->
+            if (!System.getenv(key)) throw new GradleException("Missing release signing setting: " + key)
+        }
+    }
 }

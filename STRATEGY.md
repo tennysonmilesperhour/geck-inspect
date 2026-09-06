@@ -1,3 +1,5 @@
+> Current launch repairs and release blockers: [September 6 repair ledger](docs/launch-repairs-2026-09-06.md). Older market assumptions below require revalidation.
+
 # STRATEGY.md - Geck Inspect
 
 Last updated: May 2026
@@ -27,7 +29,7 @@ This is the single most important strategic fact. One founder runs three connect
 
 - **Geckistry** - his own crested gecko breeding business in Tyler, TX. Has free AI morph identifier in beta. Generates real production data.
 - **ReptiDex** - iOS+web app for reptile records, $4.99/mo, supports 137 species, 73+ users in first 20 days.
-- **Breed Ledger** - multi-species breeder website builder + genetics engine + breed registry platform. **Launches May 15, 2026.**
+- **Breed Ledger** - multi-species breeder website builder + genetics engine + breed registry platform. **Previously scheduled for May 15, 2026; current release status needs fresh verification.**
 
 He is also publicly partnered with the Gold Standard Gecko Club (GSGC), the most prestigious crested gecko institution. GSGC runs entirely on Breed Ledger.
 
@@ -41,7 +43,7 @@ His weaknesses (which Geck Inspect can exploit):
 
 - The only product positioned as crested-gecko-FIRST. Everyone else is multi-species or marketplace-broad.
 - AI morph identification as a flagship feature. Only Geckistry has parity, and theirs is a side tool.
-- Modern stack (Next.js + Supabase + Vercel) means rapid iteration is possible.
+- Modern stack (Vite + React + Supabase + Vercel) means rapid iteration is possible.
 - Verified community angle is differentiated.
 
 ## Where Geck Inspect is at parity

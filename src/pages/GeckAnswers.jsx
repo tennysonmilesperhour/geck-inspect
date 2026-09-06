@@ -1,3 +1,5 @@
+import ReportContent from '@/components/support/ReportContent';
+import { useToast } from '@/components/ui/use-toast';
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
@@ -91,6 +93,15 @@ const C = { forest: '#e2e8f0', sage: '#10b981', paleSage: 'rgba(16,185,129,0.1)'
 const TAGS = ['Nutrition', 'Health', 'Housing', 'Breeding', 'Morphs', 'Juveniles', 'Adults', 'Hatchlings', 'Equipment', 'Genetics'];
 
 export default function GeckAnswers() {
+  const { toast } = useToast();
+  const [saving, setSaving] = useState(false);
+  const runAction = async (action) => {
+    if (saving) return;
+    if (!auth.user) { toast({ title: "Sign in to participate" }); return; }
+    setSaving(true);
+    try { await action(); } catch (error) { toast({ title: "Could not save your change", description: error.message, variant: "destructive" }); }
+    finally { setSaving(false); }
+  };
   const auth = useAuth?.() || {};
   const [view, setView] = useState('list'); // list | detail | ask
   const [questions, setQuestions] = useState([]);
@@ -117,51 +128,51 @@ export default function GeckAnswers() {
     setView('detail');
     const { data } = await supabase.from('answers').select('*').eq('question_id', q.id).order('upvote_count', { ascending: false });
     setAnswers(data || []);
-    // Increment view count
-    supabase.from('questions').update({ view_count: (q.view_count || 0) + 1 }).eq('id', q.id).then(() => {});
+
   };
 
-  const submitQuestion = async () => {
+  const submitQuestion = () => runAction(async () => {
     if (!newQ.title.trim()) return;
-    await supabase.from('questions').insert({ title: newQ.title, body: newQ.body, tags: newQ.tags, author_id: auth.user?.id, created_by: auth.user?.email });
+    const { error } = await supabase.from('questions').insert({ title: newQ.title.trim(), body: newQ.body, tags: newQ.tags, author_id: auth.user.auth_user_id || auth.user.id, created_by: auth.user.email });
+    if (error) throw error;
     setNewQ({ title: '', body: '', tags: [] });
     setView('list');
-    loadQuestions();
-  };
+    await loadQuestions();
+  });
 
-  const submitAnswer = async () => {
+  const submitAnswer = () => runAction(async () => {
     if (!newAnswer.trim() || !selected) return;
-    await supabase.from('answers').insert({ question_id: selected.id, body: newAnswer, author_id: auth.user?.id, created_by: auth.user?.email });
+    const { error } = await supabase.from('answers').insert({ question_id: selected.id, body: newAnswer.trim(), author_id: auth.user.auth_user_id || auth.user.id, created_by: auth.user.email });
+    if (error) throw error;
     setNewAnswer('');
-    openQuestion(selected);
-  };
+    await openQuestion(selected);
+  });
 
-  const upvoteQuestion = async (q) => {
-    if (!auth.user) return;
-    await supabase.from('questions').update({ upvote_count: (q.upvote_count || 0) + 1 }).eq('id', q.id);
-    loadQuestions();
-  };
+  const upvoteQuestion = (q) => runAction(async () => {
+    const { data, error } = await supabase.rpc('vote_question_answer', { p_target: q.id, p_kind: 'question' });
+    if (error) throw error;
+    if (selected?.id === q.id) setSelected(prev => ({ ...prev, upvote_count: data }));
+    await loadQuestions();
+  });
 
-  const upvoteAnswer = async (a) => {
-    if (!auth.user) return;
-    await supabase.from('answers').update({ upvote_count: (a.upvote_count || 0) + 1 }).eq('id', a.id);
-    if (selected) openQuestion(selected);
-  };
+  const upvoteAnswer = (a) => runAction(async () => {
+    const { error } = await supabase.rpc('vote_question_answer', { p_target: a.id, p_kind: 'answer' });
+    if (error) throw error;
+    if (selected) await openQuestion(selected);
+  });
 
-  const markBestAnswer = async (a) => {
-    if (!auth.user || selected?.created_by !== auth.user.email) return;
-    await supabase.from('answers').update({ is_best_answer: false }).eq('question_id', selected.id);
-    await supabase.from('answers').update({ is_best_answer: true }).eq('id', a.id);
-    await supabase.from('questions').update({ best_answer_id: a.id, status: 'answered' }).eq('id', selected.id);
-    openQuestion(selected);
-    loadQuestions();
-  };
+  const markBestAnswer = (a) => runAction(async () => {
+    const { error } = await supabase.rpc('accept_question_answer', { p_question: selected.id, p_answer: a.id });
+    if (error) throw error;
+    await openQuestion({ ...selected, best_answer_id: a.id, status: 'answered' });
+    await loadQuestions();
+  });
 
   const filtered = questions.filter(q => {
     if (search && !q.title.toLowerCase().includes(search.toLowerCase())) return false;
     if (tagFilter && !(q.tags || []).some(t => t.toLowerCase() === tagFilter.toLowerCase())) return false;
     return true;
-  }).sort((a, b) => tab === 'trending' ? (b.view_count + b.upvote_count * 3) - (a.view_count + a.upvote_count * 3) : 0);
+  }).sort((a, b) => tab === 'trending' ? (b.upvote_count || 0) - (a.upvote_count || 0) : 0);
 
   const featured = filtered.filter(q => q.is_featured);
   const regular = filtered.filter(q => !q.is_featured);
@@ -201,7 +212,7 @@ export default function GeckAnswers() {
                 ))}
               </div>
             </div>
-            <button onClick={submitQuestion} className="px-6 py-2.5 rounded-lg text-sm font-medium text-white" style={{ backgroundColor: C.sage }}>Post Question</button>
+            <button disabled={saving} onClick={submitQuestion} className="px-6 py-2.5 rounded-lg text-sm font-medium text-white" style={{ backgroundColor: C.sage }}>Post Question</button>
           </div>
         </div>
       </div>
@@ -235,6 +246,7 @@ export default function GeckAnswers() {
           <div className="rounded-xl border p-6 mb-6" style={{ borderColor: C.border, backgroundColor: C.cardBg }}>
             <div className="flex gap-4">
               <div className="flex flex-col items-center gap-1 shrink-0">
+                <ReportContent entity="question" recordId={selected.id} authorEmail={selected.created_by} excerpt={selected.body} />
                 <button onClick={() => upvoteQuestion(selected)} className="p-1 rounded hover:bg-gray-100 transition"><ThumbsUp size={18} style={{ color: C.sage }} /></button>
                 <span className="text-sm font-semibold" style={{ color: C.forest }}>{selected.upvote_count || 0}</span>
               </div>
@@ -245,7 +257,7 @@ export default function GeckAnswers() {
                   {(selected.tags || []).map(t => <span key={t} className="text-xs rounded-full px-2 py-0.5" style={{ backgroundColor: C.paleSage, color: C.sage }}>{t}</span>)}
                 </div>
                 <div className="flex items-center gap-3 text-xs" style={{ color: C.muted }}>
-                  <span>{selected.view_count || 0} views</span>
+                  <span>Community question</span>
                   <span>{selected.created_date ? formatDistanceToNow(new Date(selected.created_date), { addSuffix: true }) : ''}</span>
                 </div>
               </div>
@@ -273,6 +285,7 @@ export default function GeckAnswers() {
             <div key={a.id} className="rounded-xl border p-5 mb-3" style={{ borderColor: C.border, backgroundColor: C.cardBg }}>
               <div className="prose prose-sm max-w-none" style={{ color: C.slate }}><ReactMarkdown>{a.body}</ReactMarkdown></div>
               <div className="flex items-center gap-3 mt-3">
+                <ReportContent entity="answer" recordId={a.id} authorEmail={a.created_by} excerpt={a.body} />
                 <button onClick={() => upvoteAnswer(a)} className="flex items-center gap-1 text-xs" style={{ color: C.sage }}><ThumbsUp size={13} /> {a.upvote_count || 0}</button>
                 <span className="text-xs" style={{ color: C.muted }}>{a.created_date ? formatDistanceToNow(new Date(a.created_date), { addSuffix: true }) : ''}</span>
                 {isAuthor && !a.is_best_answer && (
@@ -288,7 +301,7 @@ export default function GeckAnswers() {
               <h3 className="text-sm font-medium mb-2" style={{ color: C.forest }}>Your Answer</h3>
               <textarea value={newAnswer} onChange={e => setNewAnswer(e.target.value)} rows={4} placeholder="Share your knowledge... (markdown supported)"
                 className="w-full rounded-lg border px-3 py-2 text-sm mb-3" style={{ borderColor: C.border, color: C.slate }} />
-              <button onClick={submitAnswer} className="px-4 py-2 rounded-lg text-sm font-medium text-white" style={{ backgroundColor: C.sage }}>Post Answer</button>
+              <button disabled={saving} onClick={submitAnswer} className="px-4 py-2 rounded-lg text-sm font-medium text-white" style={{ backgroundColor: C.sage }}>Post Answer</button>
             </div>
           ) : (
             <p className="text-sm text-center py-4" style={{ color: C.muted }}>Sign in to answer this question</p>
@@ -375,7 +388,7 @@ export default function GeckAnswers() {
                     <div className="flex items-center gap-2 flex-wrap">
                       {(q.tags || []).map(t => <span key={t} className="text-xs rounded-full px-1.5 py-0.5" style={{ backgroundColor: C.paleSage, color: C.sage }}>{t}</span>)}
                       <span className="text-xs flex items-center gap-1" style={{ color: C.muted }}>
-                        <MessageSquare size={11} /> {q.view_count || 0} views
+                        <MessageSquare size={11} /> Open discussion
                       </span>
                       {q.best_answer_id && (
                         <span className="text-xs rounded-full px-2 py-0.5 flex items-center gap-1" style={{ backgroundColor: C.paleSage, color: C.sage }}>

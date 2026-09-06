@@ -90,7 +90,7 @@ export default function CommunityPulse() {
                 if (emails.length > 0) {
                     // Only the profiles on screen, display columns only.
                     const { data: userRows } = await supabase
-                        .from('profiles')
+                        .rpc('read_profiles', { p_emails: emails })
                         .select('id, email, full_name, business_name, profile_image_url')
                         .in('email', emails);
                     const map = new Map();

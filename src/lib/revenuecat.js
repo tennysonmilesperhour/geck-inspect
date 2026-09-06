@@ -43,7 +43,7 @@ function loadNativeRC() {
 // billing, real purchases won't process. Warn in dev so that's obvious.
 export const REVENUECAT_WEB_API_KEY =
   import.meta.env?.VITE_REVENUECAT_WEB_API_KEY ||
-  'test_OVdgRQzJmflBtKgGkRzhTzumbEo';
+  (import.meta.env.DEV ? 'test_OVdgRQzJmflBtKgGkRzhTzumbEo' : '');
 
 if (import.meta.env?.DEV && !import.meta.env?.VITE_REVENUECAT_WEB_API_KEY) {
   console.warn(
@@ -106,12 +106,13 @@ async function configureNative(apiKey, appUserId) {
     PurchasesNative.setLogLevel({ level: LogLevelNative.WARN });
     await PurchasesNative.configure({ apiKey, appUserID: appUserId });
     nativeConfigured = true;
-    return;
+    return PurchasesNative;
   }
   const current = await PurchasesNative.getAppUserID();
   if (current?.appUserID !== appUserId) {
     await PurchasesNative.logIn({ appUserID: appUserId });
   }
+  return PurchasesNative;
 }
 
 async function configureWeb(apiKey, appUserId) {
@@ -123,9 +124,7 @@ async function configureWeb(apiKey, appUserId) {
   }
   const instance = Purchases.getSharedInstance();
   if (instance.getAppUserId() !== appUserId) {
-    instance.identifyUser(appUserId).catch((err) => {
-      console.warn('[revenuecat] identifyUser failed:', err);
-    });
+    await instance.identifyUser(appUserId);
   }
   return instance;
 }
@@ -133,14 +132,13 @@ async function configureWeb(apiKey, appUserId) {
 /**
  * Configure the SDK for the current platform. Always returns a Promise:
  * null when there is nothing to configure (server render, no API key,
- * or no signed-in user), otherwise the shared web instance. On native
- * the plugin configures itself and the Promise resolves to undefined.
+ * or no signed-in user), otherwise the configured web instance or native plugin.
  *
  * Anonymous visitors get nothing on purpose. Loading the SDK for them
  * cost every landing-page visit two thirds of a megabyte and gave them
  * an anonymous RevenueCat identity they will never use.
  */
-export async function configureRevenueCat(user) {
+async function configureForUser(user) {
   if (typeof window === 'undefined') return null;
   if (!user) return null;
   const platform = detectPlatform();
@@ -157,6 +155,14 @@ export async function configureRevenueCat(user) {
   const appUserId =
     resolveAppUserId(user) || Purchases.generateRevenueCatAnonymousAppUserId();
   return configureWeb(apiKey, appUserId);
+}
+
+// Serialize account changes so a slow prior login cannot replace the latest user.
+let configurationQueue = Promise.resolve();
+export function configureRevenueCat(user) {
+  const next = configurationQueue.catch(() => {}).then(() => configureForUser(user));
+  configurationQueue = next;
+  return next;
 }
 
 export function getPurchasesWeb() {

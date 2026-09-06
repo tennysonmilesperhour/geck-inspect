@@ -1,3 +1,4 @@
+import { isNativePlatform } from '@/lib/revenuecat';
 import { useCallback, useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -126,7 +127,8 @@ export default function PushNotificationsCard({
           </CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          {!supported && (
+          {isNativePlatform() && <p className="text-sm text-slate-300">Device push notifications are not available in this native build. Your in-app notifications and email preferences remain available.</p>}
+          {!supported && !isNativePlatform() && (
             <div className="flex items-start gap-3 rounded-lg border border-slate-700 bg-slate-800/40 px-4 py-3 text-sm text-slate-300">
               <AlertCircle className="w-4 h-4 text-amber-400 flex-shrink-0 mt-0.5" />
               <p>

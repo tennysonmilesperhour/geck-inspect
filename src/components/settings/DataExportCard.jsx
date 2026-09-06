@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
 import { Download, FileJson, FileSpreadsheet, Loader2 } from 'lucide-react';
 import { Gecko } from '@/entities/all';
-import { exportGeckosCSV, exportFullBackupJSON } from '@/lib/exportUtils';
+import { exportGeckosCSV, exportFullBackupJSON, fetchAllEntityRecords } from '@/lib/exportUtils';
 
 /**
  * Data-ownership card for the Settings page. Two one-click exports:
@@ -23,10 +23,7 @@ export default function DataExportCard({ user }) {
   const handleExportCSV = async () => {
     setExporting('csv');
     try {
-      const geckos = await Gecko.filter(
-        { created_by: user.email, archived: { $ne: true } },
-        'name'
-      );
+      const geckos = await fetchAllEntityRecords(Gecko, { created_by: user.email, archived: { $ne: true } });
       const name = exportGeckosCSV(geckos);
       toast({
         title: 'Collection exported',
@@ -49,7 +46,8 @@ export default function DataExportCard({ user }) {
       const { filename, counts, notes } = await exportFullBackupJSON();
       const total = Object.values(counts).reduce((sum, n) => sum + n, 0);
       toast({
-        title: 'Full backup downloaded',
+        title: notes.length ? 'Partial archive downloaded' : 'Collection archive downloaded',
+        variant: notes.length ? 'destructive' : 'default',
         description:
           notes.length > 0
             ? `${total} records saved to ${filename}. Some record types could not be fetched; see the notes inside the file.`
@@ -74,9 +72,10 @@ export default function DataExportCard({ user }) {
           Your data is yours
         </CardTitle>
         <CardDescription className="text-slate-400">
-          No lock-in, ever. Export your full records any time: your collection as a
-          spreadsheet-friendly CSV, or everything (geckos, weights, breeding plans,
-          eggs, clutches, sheds, feedings) as a single JSON backup.
+          Export your roster as CSV or your collection and care records as JSON.
+          The JSON archive lists included tables and any failures. It includes records
+          authored by this account; shared or transferred records may be absent.
+          Photos are links, and automatic archive restoration is not supported.
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -104,7 +103,7 @@ export default function DataExportCard({ user }) {
             ) : (
               <FileJson className="w-4 h-4 mr-2" />
             )}
-            Download full backup (JSON)
+            Download collection archive (JSON)
           </Button>
         </div>
         <p className="text-xs text-slate-500 mt-3">

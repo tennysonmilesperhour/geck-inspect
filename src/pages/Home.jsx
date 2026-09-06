@@ -180,7 +180,7 @@ const INNOVATIVE_FEATURES = [
   {
     icon: FileSpreadsheet,
     title: 'MorphMarket &amp; CSV Sync',
-    desc: 'Import existing records from a spreadsheet, sync listings to MorphMarket and Palm Street, and export your whole roster to CSV or PDF whenever you want.',
+    desc: 'Import existing records from a spreadsheet, prepare MorphMarket listings with a CSV export, and export your whole roster to CSV or PDF whenever you want.',
   },
   {
     icon: Sparkles,
@@ -200,7 +200,7 @@ const LANDING_FAQS = [
   // FAQPage schema is derived from this same array.
   {
     q: 'Is Geck Inspect free?',
-    a: 'Yes. Creating an account and using Geck Inspect is free, including the genetics calculator, morph guide, care guide, community forum, and core collection tracking. Paid tiers (Keeper and Breeder) unlock larger collections, advanced breeding tools, marketplace sync, and white-label pedigree certificates, but you never need to pay to use the app.',
+    a: 'Yes. Creating an account and using Geck Inspect is free, including the genetics calculator, morph guide, care guide, community forum, and core collection tracking. Paid tiers (Keeper and Breeder) unlock larger collections, advanced breeding tools, MorphMarket CSV export, and white-label pedigree certificates, but you never need to pay to use the app.',
   },
   {
     q: 'Is my collection data private, and can I export it?',
@@ -240,7 +240,7 @@ const LANDING_FAQS = [
   },
   {
     q: 'Does Geck Inspect sync with MorphMarket or Palm Street?',
-    a: 'Yes. You can import an existing roster from a CSV export, and Geck Inspect can push listings with photos, weight history, and lineage to MorphMarket and Palm Street without retyping. Sold animals can be transferred with full provenance to the buyer in one click.',
+    a: 'You can import a roster from CSV and export a file for MorphMarket’s bulk importer. You upload that file to MorphMarket yourself. Automatic marketplace syncing and Palm Street publishing are not available. For a sale, create a transfer invitation so the buyer can accept the animal and its history.',
   },
   {
     q: 'Can I use Geck Inspect on my phone?',
@@ -319,7 +319,7 @@ export default function Home() {
     <>
       <Seo
         title="Crested Gecko Collection, Breeding & Community Platform"
-        description="Geck Inspect is the professional platform for crested gecko (Correlophus ciliatus) breeders and keepers. Track collections, plan breedings with lineage trees, log weights over time, identify morphs with AI, research genetics, sync with MorphMarket and Palm Street, and connect with a community of serious breeders."
+        description="Geck Inspect is the professional platform for crested gecko (Correlophus ciliatus) breeders and keepers. Track collections, plan breedings with lineage trees, log weights over time, identify morphs with AI, research genetics, prepare MorphMarket CSV listings, and connect with a community of serious breeders."
         path="/"
         imageAlt="Geck Inspect, crested gecko breeding and collection platform"
         keywords={[
@@ -495,7 +495,7 @@ export default function Home() {
               <Download className="w-5 h-5 text-sky-300 flex-shrink-0 mt-0.5" />
               <div>
                 <div className="text-sm font-semibold text-white">Yours to export</div>
-                <div className="text-xs text-slate-400 leading-snug">Full backup in one click: roster CSV plus every record as JSON. No lock-in.</div>
+                <div className="text-xs text-slate-400 leading-snug">Export your roster as CSV and your collection records as JSON. Photos are included as links.</div>
               </div>
             </div>
             <div className="flex items-start gap-3 rounded border border-sky-500/25 bg-sky-950/30 backdrop-blur px-4 py-3">
@@ -736,7 +736,7 @@ export default function Home() {
                   ['Multi-trait genetics calculator', 'Manual Punnett squares', 'Single trait at a time', 'Multi-trait + Monte Carlo simulator'],
                   ['Lineage on every animal', 'One sheet per generation', 'Limited tree depth', 'Full multi-generation tree, drag to explore'],
                   ['Pedigree transfers to buyers', 'PDF if you remember', 'Not supported', 'One-click verifiable digital passport'],
-                  ['Marketplace sync', 'Re-type each listing', 'Internal only', 'Push to MorphMarket &amp; Palm Street'],
+                  ['Marketplace export', 'Re-type each listing', 'Internal only', 'CSV for MorphMarket bulk import'],
                   ['Photo timeline per animal', 'A folder somewhere', 'Single photo', 'Auto-advancing slideshow from hatchling to adult'],
                   ['Built for the species', 'Built for nothing', 'Built for everything', 'Built for crested geckos and only crested geckos'],
                 ].map(([row, sheet, generic, gi], i) => (

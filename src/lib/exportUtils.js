@@ -6,7 +6,7 @@ import {
   Egg,
   Clutch,
   ShedRecord,
-  FeedingRecord,
+  FeedingRecord, GeckoEvent, VetRecord, OwnershipRecord, OtherReptile, ReptileEvent, Project, Task, FeedingGroup,
 } from '@/entities/all';
 
 /**
@@ -229,6 +229,10 @@ export async function exportGeckosPDF(geckos, { title, filename, userName } = {}
  *   {
  *     exported_at: ISO timestamp,
  *     app: 'geck-inspect',
+    format_version: 2,
+    scope: 'Records authored by this account in the listed tables. Media URLs are references, not embedded files. Shared or transferred history authored by another member may be absent. This is a data archive; automatic restoration is not supported.',
+    complete: notes.length === 0,
+    included_tables: sources.map(([table]) => table),
  *     notes: [...],            // only present if something failed
  *     data: { geckos: [...], weight_records: [...], ... }
  *   }
@@ -237,6 +241,17 @@ export async function exportGeckosPDF(geckos, { title, filename, userName } = {}
  * an empty array with an explanatory note instead of failing the whole
  * export. Returns { filename, counts, notes }.
  */
+export async function fetchAllEntityRecords(entity, filter = {}) {
+  const rows = [];
+  const pageSize = 500;
+  for (let offset = 0; ; offset += pageSize) {
+    const page = await entity.filter(filter, 'id', pageSize, offset);
+    if (!Array.isArray(page)) throw new Error('Export returned an invalid page');
+    rows.push(...page);
+    if (page.length < pageSize) return rows;
+  }
+}
+
 export async function exportFullBackupJSON({ filename } = {}) {
   const me = await User.me();
   if (!me?.email) {
@@ -251,6 +266,14 @@ export async function exportFullBackupJSON({ filename } = {}) {
     ['clutches', Clutch],
     ['shed_records', ShedRecord],
     ['feeding_records', FeedingRecord],
+    ['gecko_events', GeckoEvent],
+    ['vet_records', VetRecord],
+    ['ownership_records', OwnershipRecord],
+    ['other_reptiles', OtherReptile],
+    ['reptile_events', ReptileEvent],
+    ['projects', Project],
+    ['tasks', Task],
+    ['feeding_groups', FeedingGroup],
   ];
 
   const data = {};
@@ -258,7 +281,7 @@ export async function exportFullBackupJSON({ filename } = {}) {
   await Promise.all(
     sources.map(async ([key, entity]) => {
       try {
-        data[key] = (await entity.filter({ created_by: me.email })) || [];
+        data[key] = await fetchAllEntityRecords(entity, { created_by: me.email });
       } catch (err) {
         data[key] = [];
         notes.push(
@@ -271,6 +294,10 @@ export async function exportFullBackupJSON({ filename } = {}) {
   const payload = {
     exported_at: new Date().toISOString(),
     app: 'geck-inspect',
+    format_version: 2,
+    scope: 'Records authored by this account in the listed tables. Media URLs are references, not embedded files. Shared or transferred history authored by another member may be absent. This is a data archive; automatic restoration is not supported.',
+    complete: notes.length === 0,
+    included_tables: sources.map(([table]) => table),
     ...(notes.length > 0 ? { notes } : {}),
     data,
   };

@@ -171,8 +171,10 @@ export default function Recognition() {
           </p>
         </div>
 
-        <PhotoTipsCard />
-        <MorphIdCoverageCard />
+        <details className="rounded-xl border border-slate-700 p-4">
+          <summary className="cursor-pointer font-medium text-slate-200">Photo tips and supported morphs</summary>
+          <div className="mt-4 space-y-4"><PhotoTipsCard /><MorphIdCoverageCard /></div>
+        </details>
 
         {morphIdLocked && (
           <Card className="bg-amber-950/40 border-amber-800">

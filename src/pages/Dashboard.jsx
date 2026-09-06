@@ -472,6 +472,8 @@ export default function Dashboard() {
                         </div>
                     )}
 
+                    <NextActions currentUserEmail={user?.email} />
+
                     {dashPrefs.showWelcomeShelf && <WelcomeShelf currentUser={user} />}
 
 
@@ -479,7 +481,6 @@ export default function Dashboard() {
                     <div className="grid grid-cols-1 xl:grid-cols-12 gap-6 items-start">
                         {/* Left column, Next Actions + Community Pulse */}
                         <div className="xl:col-span-4 space-y-6">
-                            <NextActions currentUserEmail={user?.email} />
                             {/* Govee enclosure readings; renders nothing without a connection */}
                             {user && <EnclosureClimate user={user} />}
                             {dashPrefs.showCommunityPulse && <CommunityPulse />}

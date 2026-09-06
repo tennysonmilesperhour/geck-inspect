@@ -49,6 +49,8 @@ export const LIFE_STAGES = [
 
 export const INITIAL_FORM_DATA = {
   name: '',
+  is_public: false,
+  gallery_display: false,
   gecko_id_code: '',
   hatch_date: null,
   sex: 'Unsexed',

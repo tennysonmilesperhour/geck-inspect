@@ -326,8 +326,8 @@ export default function StorePage() {
                 }
 
                 const profilesRes = await supabase
-                    .from('profiles')
-                    .select('id, full_name, breeder_name, profile_image_url, email, bio, location, instagram_handle')
+                    .rpc('read_profiles', { p_emails: [data.owner_email] })
+                    .select('id, full_name, profile_image_url, email, bio, location, instagram_handle')
                     .eq('email', data.owner_email)
                     .maybeSingle();
                 if (!cancelled && profilesRes.data) setOwner(profilesRes.data);

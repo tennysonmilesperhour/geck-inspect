@@ -38,11 +38,13 @@ export const User = new Proxy({}, {
         const { data: { user }, error } = await supabase.auth.updateUser({ data });
         if (error) throw error;
         try {
-          await supabase.from('profiles')
+          const { error: profileError } = await supabase.from('profiles')
             .upsert({ email: user.email, ...data, updated_date: new Date().toISOString() }, { onConflict: 'email' });
+          if (profileError) throw profileError;
         } catch (err) {
           console.error('updateMyUserData profile upsert failed:', err);
           reportError(err, { component: 'entities/all', extra: { op: 'updateMyUserData' } });
+          throw err;
         }
         return normalizeSupabaseUser(user);
       };
