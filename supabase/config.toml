@@ -1,0 +1,11 @@
+project_id = "geck-inspect"
+
+# RevenueCat authenticates using its configured shared Authorization header.
+# The Supabase JWT gateway must let that header reach our handler.
+[functions.revenuecat-webhook]
+verify_jwt = false
+
+# Purchase/restore sync authenticates the user again in the handler and derives
+# the customer UUID from that session, never from a request body.
+[functions.revenuecat-sync]
+verify_jwt = true

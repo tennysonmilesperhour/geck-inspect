@@ -87,7 +87,6 @@ export default function ProjectManager() {
             // unscoped, so the Future Breeding planner could pick other
             // breeders' geckos as parents, a real bug.
             const currentUser = await User.me().catch(() => null);
-            const userEmail = currentUser?.email || null;
             const { getVisibleGeckos } = await import('@/lib/geckoAccess');
             const geckoQuery = currentUser
                 ? getVisibleGeckos(currentUser)

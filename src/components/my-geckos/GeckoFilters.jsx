@@ -180,7 +180,7 @@ export default function GeckoFilters({ filters, onFiltersChange, onClearFilters,
                             </div>
                         )}
                         <div className="max-h-48 overflow-y-auto space-y-3 border border-slate-700 rounded-lg p-3 bg-slate-800/50">
-                            {Object.entries(MORPH_CATEGORIES).map(([cat, { color, morphs }]) => (
+                            {Object.entries(MORPH_CATEGORIES).map(([cat, { morphs }]) => (
                                 <div key={cat}>
                                     <div className={`text-xs font-semibold text-slate-400 mb-1`}>{cat}</div>
                                     <div className="flex flex-wrap gap-1">

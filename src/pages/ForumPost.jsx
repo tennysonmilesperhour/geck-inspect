@@ -1,3 +1,4 @@
+import { useBlockedAuthors } from '@/hooks/useBlockedAuthors';
 import ReportContent from '@/components/support/ReportContent';
 import { useEffect, useRef, useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
@@ -50,6 +51,7 @@ import {
  *    land on a blank page.
  */
 export default function ForumPostPage() {
+    const blockedAuthors = useBlockedAuthors();
     const location = useLocation();
     const navigate = useNavigate();
     const { toast } = useToast();
@@ -163,51 +165,18 @@ export default function ForumPostPage() {
             };
             const createdComment = await ForumComment.create(commentData);
 
-            // Non-fatal notifications. If they fail we still keep the comment.
+            // The database dispatcher reads recipient preferences and handles
+            // email/push. Clients cannot read another member's private settings.
             try {
-                if (!replyingTo && post?.created_by && post.created_by !== currentUser.email) {
-                    // Check recipient's notification preferences
-                    const [postAuthor] = await User.filter({ email: post.created_by });
-                    if (postAuthor?.notifications_forum !== false) {
-                        await Notification.create({
-                            user_email: post.created_by,
-                            type: 'new_comment',
-                            content: `${commentData.author_name} commented on your post "${post.title}": "${commentData.content.substring(0, 50)}${commentData.content.length > 50 ? '...' : ''}"`,
-                            link: `/ForumPost?id=${postId}`,
-                            metadata: { comment_id: createdComment.id, post_id: postId },
-                        });
-                        // Send email if enabled
-                        if (postAuthor?.email_on_forum_replies && postAuthor?.notifications_email) {
-                            import('@/integrations/Core').then(({ SendEmail }) => {
-                                SendEmail({
-                                    to: post.created_by,
-                                    subject: `${commentData.author_name} commented on your post`,
-                                    body: `Someone commented on your forum post "${post.title}":\n\n"${commentData.content.substring(0, 200)}"\n\nView the full discussion on Geck Inspect!`
-                                }).catch(e => console.log('Email send failed:', e));
-                            });
-                        }
-                    }
-                }
-                if (replyingTo && replyingTo.created_by && replyingTo.created_by !== currentUser.email) {
-                    const [commentAuthor] = await User.filter({ email: replyingTo.created_by });
-                    if (commentAuthor?.notifications_forum !== false) {
-                        await Notification.create({
-                            user_email: replyingTo.created_by,
-                            type: 'new_reply',
-                            content: `${commentData.author_name} replied to your comment: "${commentData.content.substring(0, 50)}${commentData.content.length > 50 ? '...' : ''}"`,
-                            link: `/ForumPost?id=${postId}`,
-                            metadata: { comment_id: createdComment.id, post_id: postId },
-                        });
-                        if (commentAuthor?.email_on_forum_replies && commentAuthor?.notifications_email) {
-                            import('@/integrations/Core').then(({ SendEmail }) => {
-                                SendEmail({
-                                    to: replyingTo.created_by,
-                                    subject: `${commentData.author_name} replied to your comment`,
-                                    body: `Someone replied to your comment on Geck Inspect:\n\n"${commentData.content.substring(0, 200)}"\n\nView the full discussion!`
-                                }).catch(e => console.log('Email send failed:', e));
-                            });
-                        }
-                    }
+                const recipient = replyingTo?.created_by || post?.created_by;
+                if (recipient && recipient !== currentUser.email) {
+                    await Notification.create({
+                        user_email: recipient,
+                        type: replyingTo ? 'new_reply' : 'new_comment',
+                        content: `${commentData.author_name} ${replyingTo ? 'replied to your comment' : 'commented on your post'}: "${commentData.content.substring(0, 50)}${commentData.content.length > 50 ? '...' : ''}"`,
+                        link: `/ForumPost?id=${postId}`,
+                        metadata: { comment_id: createdComment.id, post_id: postId },
+                    });
                 }
             } catch (notifErr) {
                 console.warn('Notification failed but comment saved:', notifErr);
@@ -316,6 +285,8 @@ export default function ForumPostPage() {
 
     const isPostLiked = likesData[post.id]?.userLiked || false;
     const postLikeCount = likesData[post.id]?.count ?? 0;
+    if (post && blockedAuthors.has(post.created_by)) return <div className="p-6 space-y-3"><h1 className="text-xl font-semibold">Post hidden</h1><p>You blocked this author. Manage blocked accounts in Settings.</p><Link className="underline" to="/Forum">Return to the forum</Link></div>;
+
     const isPostOwner = currentUser?.email && post?.created_by === currentUser.email;
     const isAdmin = currentUser?.role === 'admin';
     const canDeletePost = isPostOwner || isAdmin;
@@ -329,6 +300,7 @@ export default function ForumPostPage() {
     });
 
     const renderComment = (comment, isReply = false) => {
+        if (blockedAuthors.has(comment.created_by)) return null;
         const isCommentLiked = likesData[comment.id]?.userLiked || false;
         const commentLikeCount = likesData[comment.id]?.count ?? 0;
         const isCommentOwner = currentUser?.email && comment?.created_by === currentUser.email;
@@ -374,6 +346,7 @@ export default function ForumPostPage() {
                                     Reply
                                 </Button>
                             )}
+                            <ReportContent entity="forum_comment" recordId={comment.id} authorEmail={comment.created_by} excerpt={comment.content} />
                             {canDeleteComment && (
                                 <Button
                                     variant="ghost"

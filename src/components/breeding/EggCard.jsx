@@ -92,7 +92,7 @@ export default function EggCard({ egg, breedingPlan: _breedingPlan, onUpdate }) 
               try {
                 await EggEntity.update(egg.id, { grade: v });
                 if (onUpdate) onUpdate();
-              } catch (e) {
+              } catch {
                 toast({ title: 'Error', description: 'Failed to update grade', variant: 'destructive' });
               }
             }}

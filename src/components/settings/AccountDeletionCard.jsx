@@ -34,7 +34,7 @@ export default function AccountDeletionCard({ user }) {
   return <Card className="border-red-900 bg-slate-900">
     <CardHeader><CardTitle>Delete account</CardTitle></CardHeader>
     <CardContent className="space-y-4">
-      <p className="text-slate-300">Request deletion of your account and personal data. This creates a tracked request in our support inbox. Support must complete the deletion; submitting this form does not immediately erase your account.</p>
+      <p className="text-slate-300">Request deletion of your account and personal data. This creates a tracked request in our support inbox. Support completes deletion or anonymization within 30 days under our privacy policy. Submitting this form does not immediately erase your account.</p>
       <p className="text-sm text-slate-400">Export your records first. Cancel any recurring subscription through its billing provider to stop future renewal charges.</p>
       {request && <p role="status" className="text-sm">Request {request.id}: {request.status.replaceAll('_', ' ')}. For an update, include this reference in the support form.</p>}
       <AlertDialog><AlertDialogTrigger asChild><Button variant="destructive" disabled={busy || ['new','in_progress'].includes(request?.status)}>Request account deletion</Button></AlertDialogTrigger>

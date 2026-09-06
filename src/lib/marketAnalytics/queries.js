@@ -4,10 +4,9 @@
  * The ONLY interface visualization components use to fetch analytics
  * data. Every exported query is async; data is loaded lazily from the
  * remote snapshot (geck-data's /data/market.json) on first call, cached
- * in memory, and transparently falls back to deterministic mock
- * fixtures if the fetch fails (network error, CORS, 404, bad JSON,
- * timeout). Views never need to know whether they're in live or
- * preview mode; the shape is identical.
+ * in memory. Production fetch failures return an explicit error state;
+ * development can fall back to labeled fixtures. Shapes stay consistent,
+ * and views use getDataSource() to label the evidence accurately.
  *
  * Every returned aggregate includes:
  *   - the underlying `sample_size` (how many observations)
@@ -48,7 +47,7 @@ import { MARKET_SNAPSHOT_URL } from '@/lib/constants';
 
 // ---------- Snapshot loader -------------------------------------------
 // Lazy, cached, timeout-bounded fetch of geck-data's market snapshot
-// with graceful fallback to mockFixtures on any failure. `_data` is
+// with labeled fixtures only when development fallback is enabled. `_data` is
 // populated by ensureLoaded() before any query runs, then accessors
 // (tx, breeders, supply, demand, events) read from it synchronously.
 const SNAPSHOT_TIMEOUT_MS = 10_000;

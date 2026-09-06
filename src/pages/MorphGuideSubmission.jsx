@@ -42,7 +42,7 @@ export default function MorphGuideSubmissionPage() {
         setUser(currentUser);
         const guides = await MorphGuide.list();
         setMorphGuides(guides.sort((a, b) => a.morph_name.localeCompare(b.morph_name)));
-      } catch (_err) {
+      } catch {
         setUser(null); // Not logged in
       }
     };

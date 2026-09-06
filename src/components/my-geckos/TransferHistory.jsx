@@ -39,7 +39,7 @@ function StatusBadge({ status, expiresAt }) {
   );
 }
 
-function TransferRow({ transfer, animal, direction, myEmail }) {
+function TransferRow({ transfer, animal, direction }) {
   const isOutgoing = direction === 'outgoing';
   const counterparty = isOutgoing
     ? transfer.to_email
@@ -204,7 +204,7 @@ export default function TransferHistory({ user }) {
           </p>
           <div className="space-y-2">
             {outgoing.map((t) => (
-              <TransferRow key={t.id} transfer={t} animal={animalsById[t.animal_id]} direction="outgoing" myEmail={user?.email} />
+              <TransferRow key={t.id} transfer={t} animal={animalsById[t.animal_id]} direction="outgoing" />
             ))}
           </div>
         </section>
@@ -218,7 +218,7 @@ export default function TransferHistory({ user }) {
           </h2>
           <div className="space-y-2">
             {incoming.map((t) => (
-              <TransferRow key={t.id} transfer={t} animal={animalsById[t.animal_id]} direction="incoming" myEmail={user?.email} />
+              <TransferRow key={t.id} transfer={t} animal={animalsById[t.animal_id]} direction="incoming" />
             ))}
           </div>
         </section>

@@ -279,7 +279,6 @@ export default function BreedingPairsPage() {
                                     onEdit={handleEditPlan}
                                     onDelete={handleDeletePlan}
                                     showEstimatedDates={pairsPrefs.showEstimatedDates}
-                                    compact={pairsPrefs.compactCards}
                                 />
                             );
                         })}
@@ -468,7 +467,7 @@ function EditBreedingPlanModal({ plan, males, females, onSave, onClose }) {
     );
 }
 
-function BreedingPlanCard({ plan, sire, dam, eggs, onDataRefresh, onHatch, onEdit, onDelete, showEstimatedDates = true, compact = false }) {
+function BreedingPlanCard({ plan, sire, dam, eggs, onDataRefresh, onHatch, onEdit, onDelete, showEstimatedDates = true }) {
      const [planToDelete, setPlanToDelete] = useState(null);
 
      const handleConfirmDelete = async () => {

@@ -4,6 +4,7 @@
 import * as sb from '@/api/supabaseEntities';
 import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
 import { reportError } from '@/lib/telemetry';
+import { loadUserProfile } from '@/lib/userProfile';
 
 // User: auth + profile from Supabase
 export const User = new Proxy({}, {
@@ -12,19 +13,7 @@ export const User = new Proxy({}, {
       return async () => {
         const { data: { user } } = await supabase.auth.getUser();
         if (!user) return null;
-        // Enrich with Supabase profiles table
-        try {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('*')
-            .eq('email', user.email)
-            .maybeSingle();
-          if (profile) return { ...normalizeSupabaseUser(user), ...profile };
-        } catch (err) {
-          console.error('User.me profile enrichment failed:', err);
-          reportError(err, { component: 'entities/all', extra: { op: 'User.me enrichment' } });
-        }
-        return normalizeSupabaseUser(user);
+        return loadUserProfile(user);
       };
     }
     if (prop === 'loginWithRedirect' || prop === 'login') {

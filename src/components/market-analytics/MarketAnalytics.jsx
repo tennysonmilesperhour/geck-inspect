@@ -596,37 +596,6 @@ function MultiPillSelect({ label, values, options, onChange }) {
   );
 }
 
-function PillSelect({ label, value, options, onChange }) {
-  const current = options.find(([c]) => c === value);
-  return (
-    <Popover>
-      <PopoverTrigger asChild>
-        <button className="inline-flex items-center gap-1.5 text-xs text-slate-200 hover:bg-slate-800 rounded px-2 py-1 border border-slate-700">
-          <span className="text-slate-500">{label}:</span>
-          <span className="truncate max-w-[120px]">{current ? current[1] : 'Any'}</span>
-        </button>
-      </PopoverTrigger>
-      <PopoverContent className="bg-slate-900 border-slate-700 text-slate-200 w-60 p-1">
-        <button
-          onClick={() => onChange(undefined)}
-          className={`w-full text-left text-xs px-2 py-1 rounded ${!value ? 'bg-emerald-500/15 text-emerald-200' : 'hover:bg-slate-800'}`}
-        >
-          Any
-        </button>
-        {options.map(([code, lbl]) => (
-          <button
-            key={code}
-            onClick={() => onChange(code)}
-            className={`w-full text-left text-xs px-2 py-1 rounded ${value === code ? 'bg-emerald-500/15 text-emerald-200' : 'hover:bg-slate-800'}`}
-          >
-            {lbl}
-          </button>
-        ))}
-      </PopoverContent>
-    </Popover>
-  );
-}
-
 function SourceGroup({ title, kind, selected, toggle }) {
   const items = DATA_SOURCES.filter((s) => s.kind === kind);
   if (!items.length) return null;

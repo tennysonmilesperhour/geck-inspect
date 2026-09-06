@@ -39,6 +39,10 @@ Source: fresh clone of GitHub main at d1b517c22a64036c2c1bce417ddfab5ed091fe28. 
 
 ## Native release setup
 
+Follow-up: the webhook, Keeper/Breeder mapping and callback allowlist were repaired
+later on September 6. [BILLING.md](BILLING.md) is the current setup contract; the
+paragraphs below describe the state at this earlier repair batch.
+
 `com.geckinspect.app://auth/callback` and `com.geckinspect.app://auth/callback?mode=reset` must be allowed redirects for the production Supabase project. Set `NATIVE_AUTH_REDIRECT_VERIFIED=true` only after verifying these flows on a device. Use `VITE_REVENUECAT_IOS_API_KEY` or `VITE_REVENUECAT_ANDROID_API_KEY` for the target platform. An unauthenticated probe of the live RevenueCat webhook returned `server_misconfigured`: `REVENUECAT_WEBHOOK_AUTHORIZATION` is absent. Configure the same authorization secret in Supabase and the RevenueCat webhook, then validate a signed sandbox event before setting `NATIVE_BILLING_WEBHOOK_VERIFIED=true`. Never place that secret in a VITE variable or source control.
 
 Native iOS uses email/password sign-in for this release. Google remains on web and Android; Apple social sign-in is not configured.

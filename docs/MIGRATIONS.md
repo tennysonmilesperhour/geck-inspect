@@ -25,12 +25,14 @@ Read this before running any `supabase db ...` command against production.
 
 ## How to make a schema change today
 
-1. Write the SQL as a new file `supabase/migrations/<YYYYMMDDHHMMSS>_<slug>.sql`
-   with a full 14-digit timestamp. Make it idempotent (`create or replace`,
+1. Generate the next file with `supabase migration new <slug>`, then write the
+   SQL into that file with its full 14-digit timestamp. Make it idempotent (`create or replace`,
    `if not exists`, `drop policy if exists` before `create policy`).
 2. Apply it to production with the Supabase MCP `apply_migration` tool (or
    the SQL editor), which records it in the migration history.
-3. Commit the file in the same change so the repo keeps the full story.
+3. Verify the recorded version, align the new filename if the apply tool chose
+   a different timestamp, and commit the file in the same change. Do not rename
+   previously committed applied history.
 
 ## Baseline layout
 

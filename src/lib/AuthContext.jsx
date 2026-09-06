@@ -4,127 +4,68 @@ import { identifyUser, resetUser, captureEvent } from '@/lib/posthog';
 import { isGuestMode, setGuestMode, GUEST_USER } from '@/lib/guestMode';
 import { applyPendingReferral } from '@/lib/referral';
 import { applyPendingSignupGrant } from '@/lib/store/signupGrant';
+import { loadUserProfile } from '@/lib/userProfile';
+import { queryClientInstance } from '@/lib/query-client';
+import { dataCache } from '@/lib/layoutCache';
 
 const AuthContext = createContext();
-
-async function buildUser(supabaseUser) {
-  const base = normalizeSupabaseUser(supabaseUser);
-  try {
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('*')
-      .eq('email', supabaseUser.email)
-      .maybeSingle();
-    // profiles.id is a legacy text id that does NOT match auth.users.id
-    // for any existing profile. Legacy tables (gecko_images.user_id, etc)
-    // expect that legacy id, so `user.id` stays as the profile id after
-    // the spread. But anything that needs the actual auth uid for RLS or
-    // for uuid-typed columns (the social_* tables, anything new that
-    // joins to auth.users) must use `user.auth_user_id` instead.
-    if (profile) return { ...base, ...profile, auth_user_id: base.id };
-  } catch (e) {
-    console.warn('Profile enrichment failed:', e);
-  }
-  return { ...base, auth_user_id: base.id };
-}
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isGuest, setIsGuest] = useState(() => isGuestMode());
   const [isLoadingAuth, setIsLoadingAuth] = useState(true);
-  // Guards against the double profile fetch on boot: both getSession()
-  // below and onAuthStateChange's INITIAL_SESSION event fire for the same
-  // session on first load. Whichever runs first enriches; the other skips.
-  const bootEnrichedRef = useRef(false);
+  // Invalidates pending profile reads on account changes, sign-out and unmount.
+  const revisionRef = useRef(0);
+  const sessionOwnerRef = useRef(null);
 
   useEffect(() => {
-    // Hydrate from any existing session on mount
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session?.user) {
-        // A real session always wins over a stale guest flag.
-        setGuestMode(false);
-        setIsGuest(false);
-        // Set basic user immediately so loading clears, then enrich with profile
-        const basic = normalizeSupabaseUser(session.user);
-        setUser(basic);
-        setIsAuthenticated(true);
-        identifyUser(basic);
-        if (!bootEnrichedRef.current) {
-          bootEnrichedRef.current = true;
-          buildUser(session.user).then((enriched) => {
-            setUser(enriched);
-            identifyUser(enriched);
-          });
-        }
-      } else if (isGuestMode()) {
-        // Keep guest mode alive across refreshes within the tab.
-        setUser(GUEST_USER);
-        setIsGuest(true);
+    let initialHandled = false;
+    let mounted = true;
+    const reconcile = (event, session) => {
+      if (!mounted || (event === 'INITIAL_SESSION' && initialHandled)) return;
+      initialHandled = true;
+      const owner = session?.user?.id || null;
+      if (owner !== sessionOwnerRef.current) {
+        queryClientInstance.clear();
+        dataCache.clearAll();
+        sessionOwnerRef.current = owner;
       }
+      const revision = ++revisionRef.current;
       setIsLoadingAuth(false);
-    });
-
-    // Keep auth state in sync with Supabase
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setGuestMode(false);
-        setIsGuest(false);
-        const basic = normalizeSupabaseUser(session.user);
-        // Only flash the basic (un-enriched) user when we have nothing to
-        // preserve or the account changed. Token-refresh / visibility-change
-        // events fire onAuthStateChange for the SAME user we already have
-        // enriched; resetting to `basic` there strips `role` and other
-        // profile fields for the few ms until `buildUser` resolves, which
-        // is long enough for role-gated routes (AdminPanel) to evaluate
-        // `user.role !== 'admin'` and bounce to "/". Preserve the existing
-        // enriched fields and let buildUser refresh them in the background.
-        setUser((prev) => {
-          if (prev && prev.email === basic.email) {
-            return { ...prev, ...basic, role: prev.role };
-          }
-          return basic;
-        });
-        setIsAuthenticated(true);
-        identifyUser(basic);
-        // On boot, INITIAL_SESSION and getSession() both fire for the same
-        // session; skip this enrichment if getSession() already claimed it.
-        // Real sign-ins and token refreshes (other events) always enrich.
-        // Fire the funnel completion event on an actual sign-in (not on
-        // boot hydration or token refresh).
-        if (_event === 'SIGNED_IN') {
-          captureEvent('login_completed');
-        }
-        if (_event === 'INITIAL_SESSION' && bootEnrichedRef.current) {
-          return;
-        }
-        bootEnrichedRef.current = true;
-        buildUser(session.user).then((enriched) => {
-          setUser(enriched);
-          identifyUser(enriched);
-          // Best-effort: link this account to whoever referred them, if a
-          // ?ref=<code> was captured before signup. Fire-and-forget; any
-          // failure is logged but never blocks the auth flow.
-          applyPendingReferral(enriched);
-          // Redeem any pending store signup-grant token (3-month Keeper
-          // trial from a guest checkout). Same fire-and-forget posture ,
-          // soft failures clear the token, hard failures retry next sign-in.
-          applyPendingSignupGrant();
-        });
-      } else {
+      if (!session?.user) {
         setIsAuthenticated(false);
         resetUser();
-        if (isGuestMode()) {
-          setUser(GUEST_USER);
-          setIsGuest(true);
-        } else {
-          setUser(null);
-          setIsGuest(false);
-        }
+        const guest = isGuestMode();
+        setUser(guest ? GUEST_USER : null);
+        setIsGuest(guest);
+        return;
       }
-    });
-
-    return () => subscription.unsubscribe();
+      setGuestMode(false);
+      setIsGuest(false);
+      const basic = normalizeSupabaseUser(session.user);
+      setUser((prev) => (prev?.auth_user_id || prev?.id) === basic.id
+        ? { ...basic, ...prev, auth_user_id: basic.id, email: basic.email }
+        : { ...basic, auth_user_id: basic.id });
+      setIsAuthenticated(true);
+      identifyUser(basic);
+      if (event === 'SIGNED_IN') captureEvent('login_completed');
+      // Defer I/O outside Supabase's synchronous auth callback. A completed
+      // profile read must still belong to the current session before applying.
+      Promise.resolve().then(() => loadUserProfile(session.user)).then((enriched) => {
+        if (revision !== revisionRef.current) return;
+        setUser((prev) => ({ ...prev, ...enriched }));
+        identifyUser(enriched);
+        applyPendingReferral(enriched);
+        applyPendingSignupGrant();
+      });
+    };
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(reconcile);
+    // Fallback for SDKs that have not emitted INITIAL_SESSION yet. A newer auth
+    // event takes precedence over a slow initial getSession response.
+    supabase.auth.getSession().then(({ data: { session } }) => reconcile('INITIAL_SESSION', session))
+      .catch(() => { if (!initialHandled) reconcile('INITIAL_SESSION', null); });
+    return () => { mounted = false; revisionRef.current++; subscription.unsubscribe(); };
   }, []);
 
   // Ephemeral session: if the user chose not to stay signed in, clear
@@ -160,27 +101,24 @@ export const AuthProvider = ({ children }) => {
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
   }, []);
 
-  // Proactively refresh the session when the tab regains visibility.
-  // Without this, a tab left in the background can accumulate an expired
-  // JWT, and every API call fails with 401 until the user hard-refreshes.
+  // Supabase refreshes tokens on foregrounding; reload profile changes as well.
   useEffect(() => {
-    const handleVisibilityChange = () => {
-      if (document.visibilityState === 'visible') {
-        supabase.auth.getSession().then(({ data: { session } }) => {
-          if (session?.user) {
-            buildUser(session.user).then((enriched) => {
-              setUser(enriched);
-              identifyUser(enriched);
-            });
-          }
-        });
-      }
+    const handleVisibilityChange = async () => {
+      if (document.visibilityState !== 'visible') return;
+      const revision = revisionRef.current;
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session?.user || revision !== revisionRef.current) return;
+      const enriched = await loadUserProfile(session.user);
+      if (revision !== revisionRef.current) return;
+      setUser((prev) => (prev?.auth_user_id || prev?.id) === session.user.id ? { ...prev, ...enriched } : prev);
     };
-    document.addEventListener('visibilitychange', handleVisibilityChange);
-    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+    const onVisible = () => { void handleVisibilityChange().catch(err => console.warn('Session refresh failed:', err.message)); };
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
   }, []);
 
   const logout = async (shouldRedirect = true) => {
+    revisionRef.current++;
     await supabase.auth.signOut();
     setGuestMode(false);
     setIsGuest(false);
@@ -197,6 +135,9 @@ export const AuthProvider = ({ children }) => {
   };
 
   const enterGuestMode = () => {
+    revisionRef.current++;
+    queryClientInstance.clear();
+    dataCache.clearAll();
     captureEvent('guest_mode_entered');
     setGuestMode(true);
     setUser(GUEST_USER);
@@ -214,9 +155,12 @@ export const AuthProvider = ({ children }) => {
   // current user without overwriting profile state. Used to surface
   // `revenuecat_pro_active` so the synchronous `effectiveTier(user)`
   // check in PlanLimitChecker can see it.
-  const mergeUserExtras = (extras) => {
+  const mergeUserExtras = (extras, expectedAuthUserId) => {
     if (!extras || typeof extras !== 'object') return;
-    setUser((prev) => (prev ? { ...prev, ...extras } : prev));
+    setUser((prev) => {
+      if (!prev || (expectedAuthUserId && (prev.auth_user_id || prev.id) !== expectedAuthUserId)) return prev;
+      return { ...prev, ...extras };
+    });
   };
 
   return (
@@ -236,7 +180,9 @@ export const AuthProvider = ({ children }) => {
       mergeUserExtras,
       checkAppState: () => {},
     }}>
-      {children}
+      <React.Fragment key={user?.auth_user_id || (user?.is_guest ? 'guest' : 'signed-out')}>
+        {children}
+      </React.Fragment>
     </AuthContext.Provider>
   );
 };

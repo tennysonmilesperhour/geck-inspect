@@ -11,7 +11,7 @@ import { GUEST_WRITE_BLOCKED_EVENT } from '@/lib/guestMode';
  *
  * Requirements (from the product ask):
  *   - Semi-transparent yellow, demo-y and distinct from the green app
- *   - Explains that everything on screen is mock data
+ *   - Distinguishes sample collection records from public community activity
  *   - Notes the images are fair-use demos and may not actually match
  *     the traits they're being paired with
  *   - Login / Create-account buttons adjacent, but not obtrusive
@@ -77,10 +77,9 @@ export default function GuestMockDisclaimer() {
               Guest demo
             </p>
             <p className="text-xs leading-snug text-yellow-50/95">
-              Everything shown here is mock data. Photos are fair-use demo
-              images and don&rsquo;t necessarily reflect the traits they&rsquo;re
-              paired with, they&rsquo;re here only to show what the UI looks
-              like populated.
+              Demo collection records are samples; public community activity may
+              be live. Sample photos illustrate the layout and may not match
+              their listed traits. Create an account to save your own records.
             </p>
             <div className="mt-2.5 flex items-center gap-2">
               <Link

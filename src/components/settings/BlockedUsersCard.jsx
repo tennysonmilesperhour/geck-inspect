@@ -16,7 +16,7 @@ export default function BlockedUsersCard({ user }) {
   }, [user?.email]);
   useEffect(() => { load(); window.addEventListener('user_blocks_changed', load); return () => window.removeEventListener('user_blocks_changed', load); }, [load]);
   return <Card className="bg-slate-900 border-slate-700"><CardHeader><CardTitle>Blocked messages</CardTitle></CardHeader><CardContent className="space-y-3">
-    <p className="text-sm text-slate-400">Blocking prevents new messages between your account and the blocked account. Reports remain in the moderation inbox if you unblock someone.</p>
+    <p className="text-sm text-slate-400">Blocking prevents new messages and hides this author in forum and Q&A views. Reports remain in the moderation inbox if you unblock someone.</p>
     {error && <p role="alert">Could not load your block list. <button className="underline" onClick={load}>Retry</button></p>}
     {!error && !rows.length && <p>No blocked accounts.</p>}
     {rows.map(row => <div className="flex items-center justify-between gap-3" key={row.blocked_email}><span className="truncate">{row.blocked_email}</span><Button variant="outline" onClick={async () => {

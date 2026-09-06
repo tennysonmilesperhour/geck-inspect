@@ -31,7 +31,7 @@ export default function ReportContent({ entity, recordId, authorEmail, excerpt =
         }
         window.dispatchEvent(new Event('user_blocks_changed'));
       }
-      toast({ title: block ? 'Report saved and user blocked' : 'Report sent to moderation', description: `Reference ${report.id}. ${block ? 'New messages between these accounts are blocked.' : 'Our support team can review this record.'}` });
+      toast({ title: block ? 'Report saved and user blocked' : 'Report sent to moderation', description: `Reference ${report.id}. ${block ? 'New messages are blocked, and their forum and Q&A content is hidden.' : 'Our support team can review this record.'}` });
       setOpen(false); setReason('');
     } catch (error) { toast({ title: 'Report was not saved', description: error.message, variant: 'destructive' }); }
     finally { setBusy(false); }
@@ -39,7 +39,7 @@ export default function ReportContent({ entity, recordId, authorEmail, excerpt =
   return <Dialog open={open} onOpenChange={setOpen}><DialogTrigger asChild><Button variant="ghost" size="sm">Report{authorEmail ? ' or block' : ''}</Button></DialogTrigger>
     <DialogContent><DialogTitle>Report a problem</DialogTitle><DialogDescription>Tell us about harassment, misleading listings, unsafe content, or another concern. Reports go to the moderation inbox.</DialogDescription>
       <Label htmlFor="content-report-reason">What happened?</Label><Textarea id="content-report-reason" value={reason} onChange={e => setReason(e.target.value)} maxLength={3000} />
-      <div className="flex flex-wrap gap-2"><Button disabled={busy} onClick={() => submit(false)}>Submit report</Button>{authorEmail && <Button variant="destructive" disabled={busy} onClick={() => submit(true)}>Report and block messages</Button>}</div>
+      <div className="flex flex-wrap gap-2"><Button disabled={busy} onClick={() => submit(false)}>Submit report</Button>{authorEmail && <Button variant="destructive" disabled={busy} onClick={() => submit(true)}>Report and block user</Button>}</div>
     </DialogContent>
   </Dialog>;
 }

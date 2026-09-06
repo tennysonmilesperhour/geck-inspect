@@ -571,7 +571,7 @@ export default function CommunityConnectPage() {
                         const userFollows = await UserFollow.filter({ follower_email: user.email });
                         const followingEmails = (userFollows || []).map(f => f.following_email);
                         setFollowing(followingEmails);
-                    } catch (_err) {
+                    } catch {
                         console.log("Could not load follows");
                     }
                 }

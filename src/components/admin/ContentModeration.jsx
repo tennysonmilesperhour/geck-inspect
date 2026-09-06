@@ -47,6 +47,9 @@ function ModerationList({
   emptyText,
   searchKeys,
   onDeleted,
+  removeItem,
+  actionLabel = 'Delete',
+  actionDescription = 'This permanently removes the item. Replies, likes, or attached records may be orphaned.',
 }) {
   const [items, setItems] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -82,8 +85,9 @@ function ModerationList({
     if (!deleteTarget?.id) return;
     setIsDeleting(true);
     try {
-      await entity.delete(deleteTarget.id);
-      toast({ title: 'Deleted', description: 'Content removed.' });
+      if (removeItem) await removeItem(deleteTarget);
+      else await entity.delete(deleteTarget.id);
+      toast({ title: actionLabel === 'Unpublish' ? 'Listing unpublished' : 'Content deleted' });
       setDeleteTarget(null);
       onDeleted?.();
       await load();
@@ -121,6 +125,7 @@ function ModerationList({
               <div className="flex-1 min-w-0">{renderItem(item)}</div>
               <Button
                 size="sm"
+                aria-label={`${actionLabel} item`}
                 variant="outline"
                 onClick={() => setDeleteTarget(item)}
                 className="border-rose-900/50 bg-rose-950/30 hover:bg-rose-950/50 text-rose-300 shrink-0"
@@ -135,10 +140,9 @@ function ModerationList({
       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
         <AlertDialogContent className="bg-slate-900 border-slate-700 text-slate-100">
           <AlertDialogHeader>
-            <AlertDialogTitle>Delete content?</AlertDialogTitle>
+            <AlertDialogTitle>{actionLabel} content?</AlertDialogTitle>
             <AlertDialogDescription className="text-slate-400">
-              This permanently removes the item. Replies, likes, or attached records may be
-              orphaned.
+              {actionDescription}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -154,7 +158,7 @@ function ModerationList({
               className="bg-rose-600 hover:bg-rose-500 text-white"
             >
               {isDeleting && <Loader2 className="w-4 h-4 mr-1.5 animate-spin" />}
-              Delete
+              {actionLabel}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
@@ -233,10 +237,11 @@ export default function ContentModeration() {
           <TabsContent value="marketplace" className="mt-5">
             <ModerationList
               entity={Gecko}
-              loadFn={() =>
-                Gecko.filter({ for_sale: true }, '-created_date').catch(() => Gecko.list('-created_date'))
-              }
-              searchKeys={['name', 'gecko_id_code', 'created_by', 'sale_description']}
+              loadFn={() => Gecko.filter({ status: 'For Sale', is_public: true }, '-created_date')}
+              removeItem={gecko => Gecko.update(gecko.id, { is_public: false })}
+              actionLabel="Unpublish"
+              actionDescription="Hide this animal's public listing and passport. Its owner's private animal, care and breeding records remain available."
+              searchKeys={['name', 'gecko_id_code', 'created_by', 'marketplace_description']}
               emptyText="No marketplace listings."
               renderItem={(g) => (
                 <>
@@ -244,16 +249,13 @@ export default function ContentModeration() {
                     <p className="text-sm font-semibold text-slate-100">
                       {g.name || g.gecko_id_code || '(unnamed)'}
                     </p>
-                    {g.sale_price != null && (
-                      <span className="text-xs text-emerald-400 font-medium">${g.sale_price}</span>
-                    )}
-                    {g.for_sale === false && (
-                      <span className="text-[10px] text-slate-500 uppercase">not listed</span>
+                    {g.asking_price != null && (
+                      <span className="text-xs text-emerald-400 font-medium">${g.asking_price}</span>
                     )}
                   </div>
-                  {g.sale_description && (
+                  {g.marketplace_description && (
                     <p className="text-xs text-slate-400 line-clamp-2 mt-0.5">
-                      {g.sale_description}
+                      {g.marketplace_description}
                     </p>
                   )}
                   <div className="flex items-center gap-3 mt-1.5">

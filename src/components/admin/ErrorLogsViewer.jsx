@@ -115,19 +115,6 @@ export default function ErrorLogsViewer() {
         return list;
     }, [logs, period, level, showResolved, search]);
 
-    // Mini sparkline-friendly daily counts.
-    const dailyCounts = useMemo(() => {
-        const buckets = new Map();
-        const cutoff = subDays(new Date(), period).getTime();
-        for (const l of logs) {
-            const t = l.created_date ? new Date(l.created_date).getTime() : 0;
-            if (t < cutoff) continue;
-            const key = format(new Date(t), 'yyyy-MM-dd');
-            buckets.set(key, (buckets.get(key) || 0) + 1);
-        }
-        return Array.from(buckets.entries()).sort();
-    }, [logs, period]);
-
     const totals = useMemo(() => {
         const cutoff = subDays(new Date(), period).getTime();
         const inWindow = logs.filter(

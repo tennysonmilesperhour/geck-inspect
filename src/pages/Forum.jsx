@@ -1,3 +1,4 @@
+import { useBlockedAuthors } from '@/hooks/useBlockedAuthors';
 import { useEffect, useMemo, useState } from 'react';
 import Seo from '@/components/seo/Seo';
 import { ForumCategory, ForumPost, User } from '@/entities/all';
@@ -41,6 +42,7 @@ import { Skeleton } from '@/components/ui/skeleton';
  * every mount.
  */
 export default function ForumPage() {
+    const blockedAuthors = useBlockedAuthors();
     const [forumPrefs, setForumPrefs] = usePageSettings('forum_prefs', {
         sortOrder: 'newest',
         collapseCategories: false,
@@ -110,7 +112,7 @@ export default function ForumPage() {
     };
 
     const filteredPosts = useMemo(() => {
-        let list = posts;
+        let list = posts.filter(post => !blockedAuthors.has(post.created_by));
         if (search.trim()) {
             const q = search.toLowerCase();
             list = list.filter(
@@ -130,7 +132,7 @@ export default function ForumPage() {
             return new Date(b.created_date) - new Date(a.created_date);
         });
         return list;
-    }, [posts, search, forumPrefs.sortOrder, forumPrefs.showPinnedFirst]);
+    }, [posts, blockedAuthors, search, forumPrefs.sortOrder, forumPrefs.showPinnedFirst]);
 
     if (isLoading) {
         return (

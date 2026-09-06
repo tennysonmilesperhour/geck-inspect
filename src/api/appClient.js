@@ -16,6 +16,7 @@
  */
 import { supabase, normalizeSupabaseUser } from '@/lib/supabaseClient';
 import * as sbEntities from '@/api/supabaseEntities';
+import { loadUserProfile } from '@/lib/userProfile';
 import { isGuestMode, GUEST_USER, blockIfGuest } from '@/lib/guestMode';
 
 const authFacade = {
@@ -23,7 +24,7 @@ const authFacade = {
     if (isGuestMode()) return { ...GUEST_USER };
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) throw new Error('Not authenticated');
-    return normalizeSupabaseUser(user);
+    return loadUserProfile(user);
   },
   async logout() {
     return supabase.auth.signOut();

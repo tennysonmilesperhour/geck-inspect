@@ -326,11 +326,8 @@ serve(async (req) => {
       .eq("email", user.email)
       .maybeSingle();
     const isAdmin = prof?.role === "admin";
-    const tier = isAdmin
-      ? "enterprise"
-      : prof?.subscription_status === "grandfathered"
-        ? "breeder"
-        : (typeof prof?.membership_tier === "string" ? prof.membership_tier : "free");
+    const { data: tier, error: tierError } = await userClient.rpc("effective_tier_for_current_user");
+    if (tierError) return json({ error: "Could not verify membership access." }, 503);
 
     if (!isAdmin && !IMPORT_TIERS.has(tier)) {
       return json({

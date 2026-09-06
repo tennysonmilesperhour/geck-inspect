@@ -160,7 +160,7 @@ const INNOVATIVE_FEATURES = [
   {
     icon: LineChartIcon,
     title: 'Market Analytics',
-    desc: 'See which morph combos are actually moving, at what price, across regions. Real sales data from the hobby, not guesswork, not last year&rsquo;s wiki.',
+    desc: 'Compare observed asking prices and listing activity across morphs and regions, with sources and sample sizes that help you judge the evidence.',
   },
   {
     icon: Images,

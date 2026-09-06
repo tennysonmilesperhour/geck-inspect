@@ -583,6 +583,7 @@ export default function MyGeckosPage() {
                                     Weigh-in
                                 </Button>
                                 <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={() => {
+                                    if (user?.is_guest) { window.location.href = '/AuthPortal?mode=signup'; return; }
                                     const limit = getGeckoLimit(user);
                                     if (geckos.filter(g => !g.archived).length >= limit) {
                                         setShowUpgradeModal(true);

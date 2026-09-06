@@ -5,7 +5,7 @@
 
 import { FLANKS_PATH, mulberry32 } from '../svgShapes';
 
-export default function Tiger({ intensity, brindleIntensity, palette }) {
+export default function Tiger({ intensity, brindleIntensity }) {
   const tigerLevel   = intensity || 0;
   const brindleLevel = brindleIntensity || 0;
   if (!tigerLevel && !brindleLevel) return null;

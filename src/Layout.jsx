@@ -65,8 +65,6 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   const { user, logout, isGuest } = useAuth();
   const sidebarRef = useRef(null);
   const [imageCount, setImageCount] = useState(0);
-  const [isLoading, setIsLoading] = useState(true);
-  const [currentMilestone, setCurrentMilestone] = useState(null);
   const [userLevel, setUserLevel] = useState(null);
   const [imageLevel, setImageLevel] = useState(null);
   const [communityLevel, setCommunityLevel] = useState(null);
@@ -397,7 +395,6 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        setIsLoading(true);
 
         // Load page configs
         let configs = dataCache.get('page_configs');
@@ -484,8 +481,6 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
         if (imageTotal > 0) {
           setImageCount(imageTotal);
-          const milestone = [...MILESTONES].reverse().find((m) => imageTotal >= m.count);
-          setCurrentMilestone(milestone);
         } else {
           setImageCount(0);
         }
@@ -495,8 +490,6 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
       } catch (error) {
         console.error("Failed to fetch data:", error);
-      } finally {
-        setIsLoading(false);
       }
     };
 

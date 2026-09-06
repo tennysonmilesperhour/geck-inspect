@@ -37,10 +37,8 @@ function loadNativeRC() {
   return _nativeModulePromise;
 }
 
-// Public (sandbox by default) Web Billing key. Override with
-// VITE_REVENUECAT_WEB_API_KEY in production. The `test_` fallback is the
-// RevenueCat sandbox, so a build without the env var runs against sandbox
-// billing, real purchases won't process. Warn in dev so that's obvious.
+// Public SDK key. The sandbox fallback exists only in development; production
+// configuration is checked at build time. Never put a secret key in VITE_.
 export const REVENUECAT_WEB_API_KEY =
   import.meta.env?.VITE_REVENUECAT_WEB_API_KEY ||
   (import.meta.env.DEV ? 'test_OVdgRQzJmflBtKgGkRzhTzumbEo' : '');
@@ -56,19 +54,6 @@ export const REVENUECAT_IOS_API_KEY =
   import.meta.env?.VITE_REVENUECAT_IOS_API_KEY || '';
 export const REVENUECAT_ANDROID_API_KEY =
   import.meta.env?.VITE_REVENUECAT_ANDROID_API_KEY || '';
-
-export const PRO_ENTITLEMENT_ID = 'Geck Inspect Pro';
-
-// Product identifiers configured for Geck Inspect Pro on Web. iOS /
-// Android use store-native product ids (`com.geckinspect.pro.monthly`,
-// etc) configured separately in the RC dashboard. They all attach to
-// the same entitlement so the `hasActiveEntitlement` check works the
-// same on every platform.
-export const PRODUCT_IDS = {
-  lifetime: 'lifetime',
-  yearly: 'yearly',
-  monthly: 'monthly',
-};
 
 export function detectPlatform() {
   if (typeof window === 'undefined') return 'ssr';
@@ -92,8 +77,9 @@ export function getApiKeyForPlatform(platform = detectPlatform()) {
 }
 
 export function resolveAppUserId(user) {
-  if (!user) return null;
-  return user.auth_user_id || user.id || null;
+  if (!user || user.is_guest) return null;
+  const id = user.auth_user_id || user.id;
+  return typeof id === 'string' && /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(id) ? id : null;
 }
 
 // Cache the native-configured flag locally because the native plugin's
@@ -140,7 +126,8 @@ async function configureWeb(apiKey, appUserId) {
  */
 async function configureForUser(user) {
   if (typeof window === 'undefined') return null;
-  if (!user) return null;
+  const appUserId = resolveAppUserId(user);
+  if (!appUserId) return null;
   const platform = detectPlatform();
   const apiKey = getApiKeyForPlatform(platform);
   if (!apiKey) {
@@ -148,12 +135,8 @@ async function configureForUser(user) {
     return null;
   }
   if (isNativePlatform()) {
-    const appUserId = resolveAppUserId(user) || `anon-${crypto.randomUUID()}`;
     return configureNative(apiKey, appUserId);
   }
-  const { Purchases } = await loadWebRC();
-  const appUserId =
-    resolveAppUserId(user) || Purchases.generateRevenueCatAnonymousAppUserId();
   return configureWeb(apiKey, appUserId);
 }
 
@@ -171,16 +154,7 @@ export function getPurchasesWeb() {
   return _web.Purchases.getSharedInstance();
 }
 
-/**
- * Normalize the entitlement bag from both SDKs into the same shape so
- * `hasActiveEntitlement` works regardless of platform.
- *
- * Web SDK CustomerInfo.entitlements.active is keyed by entitlement id.
- * Native CustomerInfo uses the same shape. Both return an
- * EntitlementInfo with an `isActive` boolean. The only meaningful
- * difference is the wrapping: the native plugin returns
- * `{ customerInfo: CustomerInfo }`, the web SDK returns CustomerInfo.
- */
+/** SDK metadata for store management. Verified feature access uses the DB mirror. */
 export async function fetchCustomerInfo() {
   if (typeof window === 'undefined') return null;
   try {
@@ -196,17 +170,6 @@ export async function fetchCustomerInfo() {
     console.warn('[revenuecat] getCustomerInfo failed:', err);
     return null;
   }
-}
-
-export function hasActiveEntitlement(customerInfo, entitlementId = PRO_ENTITLEMENT_ID) {
-  if (!customerInfo) return false;
-  const ent = customerInfo.entitlements?.active?.[entitlementId];
-  return Boolean(ent?.isActive);
-}
-
-export async function isEntitledToPro() {
-  const info = await fetchCustomerInfo();
-  return hasActiveEntitlement(info);
 }
 
 export async function fetchOfferings() {

@@ -25,8 +25,8 @@ export const MARKET_INTELLIGENCE_URL =
 // Market Analytics module. Defaults to /data/market.json on the
 // MARKET_INTELLIGENCE_URL domain. Override with VITE_MARKET_SNAPSHOT_URL
 // if the snapshot lives at a different path (e.g. a CDN).
-// If the fetch fails (network error, 404, CORS, bad JSON), the facade
-// transparently falls back to deterministic mock fixtures.
+// Production failures show an explicit unavailable state. Development can
+// use labeled fixtures; never enable mock fallback for a release.
 export const MARKET_SNAPSHOT_URL =
   import.meta.env.VITE_MARKET_SNAPSHOT_URL || `${MARKET_INTELLIGENCE_URL}/data/market.json`;
 

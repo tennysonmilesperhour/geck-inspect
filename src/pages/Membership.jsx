@@ -144,12 +144,6 @@ const CYCLE_OPTIONS = [
 // "Custom" enterprise rows are intentionally omitted because schema.org
 // Offer.price requires a number.
 const PRICED_TIERS = ['keeper', 'breeder'];
-const TIER_DESCRIPTIONS = {
-  keeper:
-    'For dedicated collectors. Up to 50 geckos, 5 active breeding pairs, full lineage tree, feeding groups, and AI morph ID.',
-  breeder:
-    'For serious breeders. Unlimited geckos and breeding pairs, marketplace sync, certificates, and a featured spot on the home dashboard.',
-};
 function priceToNumber(p) {
   // "$4" → 4, "$38.40" → 38.4, "$0" → 0
   return Number(String(p).replace(/[^0-9.]/g, ''));

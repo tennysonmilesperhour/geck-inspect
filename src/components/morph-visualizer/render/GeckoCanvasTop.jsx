@@ -32,7 +32,7 @@ import { ZYGOSITY as Z } from '../data/traits';
 const BODY_TOP_CLIP = 'gecko-body-top-clip';
 
 export default function GeckoCanvasTop({ phenotype, selections }) {
-  const { palette, structural, accents, patternIntensity, expressed, suppressed, fireFactor } = phenotype;
+  const { palette, structural, patternIntensity, expressed, suppressed, fireFactor } = phenotype;
   const mend = selections.mendelian || {};
   const lwSuper   = mend.lilly_white === Z.SUPER;
   const cappSuper = mend.cappuccino  === Z.SUPER;

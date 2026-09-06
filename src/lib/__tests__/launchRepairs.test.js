@@ -24,11 +24,11 @@ describe('launch repair regressions', () => {
     vi.stubGlobal('window', { Capacitor: { isNativePlatform: () => true, getPlatform: () => 'android' } });
     vi.stubEnv('VITE_REVENUECAT_ANDROID_API_KEY', 'fixture-key');
     const { configureRevenueCat } = await import('../revenuecat');
-    expect(await configureRevenueCat({ id: 'member-one' })).toBe(native);
-    expect(native.configure).toHaveBeenCalledWith({ apiKey: 'fixture-key', appUserID: 'member-one' });
-    native.getAppUserID.mockResolvedValue({ appUserID: 'member-one' });
-    expect(await configureRevenueCat({ id: 'member-two' })).toBe(native);
-    expect(native.logIn).toHaveBeenCalledWith({ appUserID: 'member-two' });
+    expect(await configureRevenueCat({ id: '11111111-1111-4111-8111-111111111111' })).toBe(native);
+    expect(native.configure).toHaveBeenCalledWith({ apiKey: 'fixture-key', appUserID: '11111111-1111-4111-8111-111111111111' });
+    native.getAppUserID.mockResolvedValue({ appUserID: '11111111-1111-4111-8111-111111111111' });
+    expect(await configureRevenueCat({ id: '22222222-2222-4222-8222-222222222222' })).toBe(native);
+    expect(native.logIn).toHaveBeenCalledWith({ appUserID: '22222222-2222-4222-8222-222222222222' });
   });
 });
 

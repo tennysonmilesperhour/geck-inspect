@@ -120,28 +120,24 @@ export const SOCIAL_POST_OVERAGE_CENTS = 50;
  * delegates here, and every metered gate (usage meters, storage caps,
  * health screens, IoT, consultant, Promote) flows through tierOf().
  *
- * Priority order:
- *   1. admin role            -> enterprise (admins bypass every limit)
- *   2. grandfathered status  -> breeder (legacy accounts never paywalled)
- *   3. revenuecat_pro_active -> breeder ("Geck Inspect Pro" entitlement,
- *      hydrated by RevenueCatContext from the CustomerInfo cache and the
- *      revenuecat_entitlements mirror written by the revenuecat-webhook
- *      edge function, so purchases on any platform unlock everywhere)
- *   4. membership_tier       -> as stored (Stripe-direct subscribers)
- *   5. anything else         -> free
+ * Admins receive Enterprise. Otherwise use the highest of the Stripe profile,
+ * verified store tier, and a grandfathered Breeder grant. The legacy Pro flag
+ * remains compatible with older callers; CustomerInfo alone never grants access.
+ * This contract is mirrored by SQL effective_tier_for_current_user().
  *
  * Tolerant of both user shapes in circulation: the enriched auth user
- * (profile fields spread onto the top level by AuthContext.buildUser)
+ * (profile fields spread onto the top level by loadUserProfile)
  * and a wrapper object carrying the raw row under `.profile`.
  */
 export function resolveTier(user) {
   if (!user) return 'free';
   const u = { ...(user.profile || {}), ...user };
   if (u.role === 'admin') return 'enterprise';
-  if (u.subscription_status === 'grandfathered') return 'breeder';
-  if (u.revenuecat_pro_active) return 'breeder';
-  const t = u.membership_tier;
-  return TIER_LIMITS[t] ? t : 'free';
+  const tiers = ['free', 'keeper', 'breeder', 'enterprise'];
+  const rank = Math.max(0, tiers.indexOf(u.membership_tier),
+    ['keeper', 'breeder'].includes(u.revenuecat_tier) ? tiers.indexOf(u.revenuecat_tier) : 0,
+    u.subscription_status === 'grandfathered' || u.revenuecat_pro_active ? 2 : 0);
+  return tiers[rank];
 }
 
 export function tierOf(user) {

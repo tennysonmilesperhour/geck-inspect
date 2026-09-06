@@ -47,9 +47,8 @@ Deno.serve(async (req) => {
     const { data: prof } = await admin.from("profiles")
       .select("membership_tier, subscription_status, role")
       .eq("email", user.email).maybeSingle();
-    const tier = prof?.subscription_status === "grandfathered"
-      ? "breeder"
-      : (prof?.membership_tier && TIER_POLLS[prof.membership_tier] != null ? prof.membership_tier : "free");
+    const { data: tier, error: tierError } = await userClient.rpc("effective_tier_for_current_user");
+    if (tierError) return json({ error: "Could not verify membership access." }, 503);
     const isAdmin = prof?.role === "admin";
 
     if (!isAdmin && TIER_POLLS[tier] === 0) {

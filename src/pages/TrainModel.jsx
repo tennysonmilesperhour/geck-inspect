@@ -95,7 +95,7 @@ export default function TrainModelPage() {
                         if (error) setGeckDataError(error);
                     });
                 }
-            } catch (_err) {
+            } catch {
                 setUser(null);
             }
             setIsLoading(false);
@@ -247,10 +247,11 @@ Please be specific about crested gecko morphs and use standard morph terminology
                     <CardHeader>
                         <CardTitle className="flex items-center gap-2">
                             <Globe className="w-5 h-5" />
-                            geck-data inventory (extension + external sources)
+                            Shared ingestion inventory (all species)
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
+                        <p className="text-sm text-sage-600 mb-4">Collected listings and reference material from Eye in the Sky and external importers. Counts include other species and unreviewed data; they are not the verified Morph ID training set.</p>
                         {geckDataError && !geckDataStats ? (
                             <p className="text-sm text-red-600">
                                 Unable to read geck-data: {geckDataError}

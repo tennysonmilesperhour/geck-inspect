@@ -41,14 +41,7 @@ function json(body: unknown, status = 200) {
   });
 }
 
-function tierOf(profile: { membership_tier?: string | null; subscription_status?: string | null } | null): string {
-  if (!profile) return "free";
-  if (profile.subscription_status === "grandfathered") return "breeder";
-  const t = profile.membership_tier || "";
-  return ["free", "keeper", "breeder", "enterprise"].includes(t) ? t : "free";
-}
-
-function b64decode(s: string): Uint8Array {
+function b64decode(s: string): Uint8Array<ArrayBuffer> {
   const bin = atob(s);
   const out = new Uint8Array(bin.length);
   for (let i = 0; i < bin.length; i++) out[i] = bin.charCodeAt(i);
@@ -333,8 +326,8 @@ serve(async (req) => {
     .eq("id", user.id)
     .maybeSingle();
 
-  // Profiles use string id keyed off the auth user id. If the lookup above
-  // missed (some legacy profiles key by email), retry by email.
+  // profiles.id is a legacy text identity. Resolve by email when the auth
+  // UUID lookup misses; billing permission comes from the tier RPC below.
   let resolvedProfile = profile;
   if (!resolvedProfile) {
     const { data: byEmail } = await supabase
@@ -345,7 +338,11 @@ serve(async (req) => {
     resolvedProfile = byEmail || null;
   }
 
-  const tier = tierOf(resolvedProfile as Record<string, unknown> | null);
+  const userClient = createClient(SUPABASE_URL, Deno.env.get("SUPABASE_ANON_KEY")!, {
+    global: { headers: { Authorization: `Bearer ${jwt}` } },
+  });
+  const { data: tier, error: tierError } = await userClient.rpc("effective_tier_for_current_user");
+  if (tierError) return json({ error: "Could not verify membership access." }, 503);
   const includedPosts = TIER_INCLUDED[tier] ?? 1;
   const credits = Number(resolvedProfile?.social_post_credits || 0);
   // Admins bypass all billing gates (payment-method requirement, monthly
@@ -354,7 +351,7 @@ serve(async (req) => {
   const isAdmin = (resolvedProfile as { role?: string } | null)?.role === "admin";
 
   // Compose the text we'll actually post (body + hashtags).
-  const text = [variant.content, ...(variant.hashtags || []).map((h) => (h.startsWith("#") ? h : `#${h}`))]
+  const text = [variant.content, ...(variant.hashtags || []).map((h: string) => (h.startsWith("#") ? h : `#${h}`))]
     .filter(Boolean).join(variant.platform === "instagram" ? "\n\n" : " ");
 
   // Free-tier payment-method gate: if free, no credits, and would tip into
@@ -386,7 +383,7 @@ serve(async (req) => {
   if (DIRECT_POST_PLATFORMS.has(variant.platform)) {
     const { data: conn } = await supabase
       .from("social_platform_connections")
-      .select("id, platform, account_handle, account_id, access_token, access_token_ciphertext, access_token_iv, metadata, is_active")
+      .select("id, platform, account_handle, account_id, access_token, access_token_ciphertext, access_token_iv, refresh_token_ciphertext, refresh_token_iv, metadata, is_active")
       .eq("user_id", user.id)
       .eq("platform", variant.platform)
       .eq("is_active", true)

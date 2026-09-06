@@ -1,3 +1,4 @@
+import { useBlockedAuthors } from '@/hooks/useBlockedAuthors';
 import ReportContent from '@/components/support/ReportContent';
 import { useToast } from '@/components/ui/use-toast';
 import { useState, useEffect } from 'react';
@@ -93,6 +94,7 @@ const C = { forest: '#e2e8f0', sage: '#10b981', paleSage: 'rgba(16,185,129,0.1)'
 const TAGS = ['Nutrition', 'Health', 'Housing', 'Breeding', 'Morphs', 'Juveniles', 'Adults', 'Hatchlings', 'Equipment', 'Genetics'];
 
 export default function GeckAnswers() {
+  const blockedAuthors = useBlockedAuthors();
   const { toast } = useToast();
   const [saving, setSaving] = useState(false);
   const runAction = async (action) => {
@@ -169,6 +171,7 @@ export default function GeckAnswers() {
   });
 
   const filtered = questions.filter(q => {
+    if (blockedAuthors.has(q.created_by)) return false;
     if (search && !q.title.toLowerCase().includes(search.toLowerCase())) return false;
     if (tagFilter && !(q.tags || []).some(t => t.toLowerCase() === tagFilter.toLowerCase())) return false;
     return true;
@@ -219,10 +222,12 @@ export default function GeckAnswers() {
     );
   }
 
+  if (view === 'detail' && selected && blockedAuthors.has(selected.created_by)) return <div className="p-6 space-y-3"><h1 className="text-xl font-semibold">Question hidden</h1><p>You blocked this author. Manage blocked accounts in Settings.</p><button className="underline" onClick={() => setView('list')}>Return to questions</button></div>;
+
   // ─── DETAIL VIEW ───
   if (view === 'detail' && selected) {
-    const bestAnswer = answers.find(a => a.is_best_answer);
-    const otherAnswers = answers.filter(a => !a.is_best_answer);
+    const bestAnswer = answers.find(a => a.is_best_answer && !blockedAuthors.has(a.created_by));
+    const otherAnswers = answers.filter(a => !a.is_best_answer && !blockedAuthors.has(a.created_by));
     const isAuthor = auth.user?.email === selected.created_by;
 
     return (

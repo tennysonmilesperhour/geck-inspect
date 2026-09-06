@@ -84,8 +84,8 @@ export default function CollectionInvite() {
                   </p>
                   <p className="text-xs text-emerald-200/80 mt-1">
                     You&rsquo;re now a {state.row?.role || 'collaborator'} on this
-                    collection. The shared geckos will appear in your dashboard
-                    once the data-model integration is enabled (coming soon).
+                    collection. Open My Geckos and select this shared collection
+                    to see its animals and the actions available to your role.
                   </p>
                 </div>
               </div>
