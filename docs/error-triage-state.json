@@ -1,4 +1,25 @@
 {
-  "lastRun": "2026-09-06T14:01:59.431Z",
-  "signatures": {}
+  "lastRun": "2026-09-07T16:22:28.633Z",
+  "signatures": {
+    "5a866ee3a287": {
+      "status": "skipped",
+      "reason": "This error affects 0 distinct real users (only HeadlessChrome, port 4173 = vite preview, likely a CI E2E test run). The root cause is \"Cannot read properties of null (reading 'useRef')\" from React's internal dispatcher — this is a classic dual React instance problem where two separate copies of React are loaded (the renderer and the hooks share different ReactCurrentDispatcher objects). The application code in useAnchoredPosition.js and NotificationPopover.jsx correctly follows all React rules of hooks. Fixing this requires build/bundling configuration changes (deduplicating React in the Vite config or pnpm overrides), which are off-limits per the hard rules. No surgical, low-risk source-code-only fix is available.",
+      "prUrl": null,
+      "branch": null,
+      "title": null,
+      "lastMessage": "Cannot read properties of null (reading 'useRef')",
+      "lastCount": 2,
+      "updatedAt": "2026-09-07T16:21:45.438Z"
+    },
+    "8f34801e006a": {
+      "status": "skipped",
+      "reason": "This is the same dual-React-instance issue previously documented in error-triage-state.json (skipped for \"useRef\", now manifesting as \"useState\"). Evidence: (1) 0 distinct real users affected, (2) HeadlessChrome user agent = CI/E2E test runner, (3) port 4173 = vite preview build, (4) the React internal dispatcher (chunk-EGKDWVYF.js) is null when usePageSettings calls useState — this only happens when two separate React copies are bundled and the hooks resolver uses a different ReactCurrentDispatcher than the renderer. The application code in usePageSettings.js and Dashboard.jsx is correct and follows all Rules of Hooks. The fix requires deduplicating React in the Vite/bundler config or package manager overrides, both of which are off-limits per hard rules.",
+      "prUrl": null,
+      "branch": null,
+      "title": null,
+      "lastMessage": "Cannot read properties of null (reading 'useState')",
+      "lastCount": 2,
+      "updatedAt": "2026-09-07T16:22:28.633Z"
+    }
+  }
 }
