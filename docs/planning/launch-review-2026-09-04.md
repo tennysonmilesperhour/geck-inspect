@@ -162,7 +162,7 @@ This list records the remaining launch checks and their latest state.
    Home/LiveCollection files were an unshipped landing-page prototype. Those
    obsolete stashes were discarded after the baseline and HEIC work was
    committed.
-8. **Repo secret for the weekly What's New (five minutes).** GitHub, repo
+8. **Repo secret for the weekly What's New, done 6 Sep.** Tennyson set the secret; the first by-hand run then failed on a missing install step, fixed in 2e83594; the re-run was green and correctly skipped because the Launch week row is under six days old. The next Monday cron that finds no entry in the past six days will publish. Original notes: GitHub, repo
    Settings, Secrets and variables, Actions: add
    `SUPABASE_SERVICE_ROLE_KEY` (Supabase, Project settings, API, service
    role). Every Monday run since May failed for want of it; SUPABASE_URL
