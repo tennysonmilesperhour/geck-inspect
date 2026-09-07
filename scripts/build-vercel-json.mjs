@@ -155,7 +155,11 @@ function buildConfig() {
   // though the rewrite was emitted correctly. Without cleanUrls,
   // /About still serves the prerendered /About/index.html via the
   // filesystem step, so we lose nothing by removing it.
-  const rewrites = [{ source: '/(.*)', destination: '/index.html' }];
+  // Destination is the untouched Vite shell that scripts/prerender.mjs
+  // copies to dist/app.html. It used to be /index.html, which after
+  // prerendering is the landing page, so every app route (AuthPortal,
+  // Dashboard, My Geckos) preloaded a 427 KB hero image it never renders.
+  const rewrites = [{ source: '/(.*)', destination: '/app.html' }];
 
   // NOTE: Do NOT add `_comment` (or any unknown top-level key) to the
   // returned object. Vercel's schema validator now rejects unknown
@@ -186,9 +190,15 @@ function buildConfig() {
               'accelerometer=(), autoplay=(self), camera=(self), geolocation=(), gyroscope=(), magnetometer=(), microphone=(), payment=(self), usb=(), interest-cohort=()',
           },
           { key: 'Cross-Origin-Opener-Policy', value: 'same-origin' },
-          // Report-only for now: violations show in the browser console
-          // without blocking anything. Promote to Content-Security-Policy
-          // once a week of real traffic shows no unexpected origins.
+          // Report-only for now: violations post to the csp-report edge
+          // function (see below) without blocking anything. Promote to
+          // Content-Security-Policy once a week of real traffic shows no
+          // unexpected origins in error_logs. A 6 Sep source audit added
+          // the origins report-only traffic had not yet exercised: Stripe.js
+          // fraud-signal frames (m.stripe.network, hooks.stripe.com) and
+          // telemetry (r.stripe.com), GA4 signals (stats.g.doubleclick.net),
+          // the PostHog embedded dashboards on the admin analytics page,
+          // and the Amazon affiliate widget frames on store product pages.
           // Sources: Vite chunks (self), GA4, PostHog, Stripe.js, Google
           // Fonts, Supabase (API, storage, the Robauto pixel project),
           // RevenueCat, Unsplash and Supabase images, inline theme scripts
@@ -202,8 +212,8 @@ function buildConfig() {
               "font-src 'self' https://fonts.gstatic.com data:",
               "img-src 'self' data: blob: https:",
               "media-src 'self' blob: https:",
-              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://api.revenuecat.com https://api.stripe.com https://images.unsplash.com",
-              "frame-src https://js.stripe.com https://checkout.stripe.com https://billing.stripe.com",
+              "connect-src 'self' https://*.supabase.co wss://*.supabase.co https://us.i.posthog.com https://us-assets.i.posthog.com https://www.google-analytics.com https://analytics.google.com https://region1.google-analytics.com https://api.revenuecat.com https://api.stripe.com https://m.stripe.network https://r.stripe.com https://stats.g.doubleclick.net https://images.unsplash.com",
+              "frame-src https://js.stripe.com https://checkout.stripe.com https://billing.stripe.com https://hooks.stripe.com https://m.stripe.network https://us.posthog.com https://rcm-na.amazon-adsystem.com https://ws-na.amazon-adsystem.com https://z-na.amazon-adsystem.com",
               "worker-src 'self' blob:",
               "object-src 'none'",
               "base-uri 'self'",

@@ -65,6 +65,9 @@ function* walkHtml(dir) {
     if (st.isDirectory()) {
       yield* walkHtml(full);
     } else if (name.endsWith('.html')) {
+      // dist/app.html is the bare SPA shell for the catch-all rewrite,
+      // not a page: no route title, canonical or noscript body.
+      if (dir === DIST && name === 'app.html') continue;
       yield full;
     }
   }

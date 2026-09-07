@@ -68,6 +68,13 @@ if (SHELL_HTML.includes('geck-noscript-shell') || SHELL_HTML.includes('id="ld-ro
   process.exit(1);
 }
 
+// The SPA catch-all (vercel.json rewrites every unknown route to /app.html)
+// serves this untouched shell. It used to serve dist/index.html, which
+// after this script runs is the prerendered landing page, so every app
+// route (AuthPortal, Dashboard, My Geckos) preloaded a 427 KB hero image
+// it never renders. seo-audit.mjs skips this file on purpose.
+writeFileSync(resolve(DIST, 'app.html'), SHELL_HTML, 'utf8');
+
 const LOGO_URL = 'https://geckinspect.com/logo.png';
 const ORG_ID = `${SITE_URL}/#organization`;
 const WEBSITE_ID = `${SITE_URL}/#website`;

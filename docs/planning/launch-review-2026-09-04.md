@@ -52,7 +52,7 @@ Status vocabulary: "Fixed 4 Sep" means shipped to main and, where it touches the
 - Where: vercel.json headers
 - Why it matters: Any injected script runs unrestricted. The blog renders HTML from markdown.
 - Proposed fix: Start with Content-Security-Policy-Report-Only listing Google, PostHog, Supabase, RevenueCat, and Stripe, then enforce.
-- Status: Mostly fixed (batch C plus late session 4 Sep): Content-Security-Policy-Report-Only shipped with the real origin list. Late session: report-only mode was reporting to nobody (no report-uri), so violations only ever appeared in visitors' own consoles. A csp-report edge function now receives them (report-uri plus report-to and a Reporting-Endpoints header) and writes one row per distinct violation per page per hour to error_logs with created_by = 'csp-report', throttled by the audit batch A trigger. verify_jwt is off because browsers send these reports with no session; the function accepts only geckinspect.com documents and never returns data. Decide on enforcing from about 11 Sep with: select message, url, count(*) from error_logs where created_by = 'csp-report' and created_date > now() - interval '7 days' group by 1, 2 order by 3 desc
+- Status: Mostly fixed (batch C plus late session 4 Sep): Content-Security-Policy-Report-Only shipped with the real origin list. Late session: report-only mode was reporting to nobody (no report-uri), so violations only ever appeared in visitors' own consoles. A csp-report edge function now receives them (report-uri plus report-to and a Reporting-Endpoints header) and writes one row per distinct violation per page per hour to error_logs with created_by = 'csp-report', throttled by the audit batch A trigger. verify_jwt is off because browsers send these reports with no session; the function accepts only geckinspect.com documents and never returns data. Decide on enforcing from about 11 Sep with: select message, url, count(*) from error_logs where created_by = 'csp-report' and created_date > now() - interval '7 days' group by 1, 2 order by 3 desc. 6 Sep: the pipeline was proven end to end (a synthetic report to csp-report landed in error_logs and was removed) and the landing, sign-in, blog index, a blog post and pricing were walked in a browser with no violations. But only one account had signed in during the report-only window, and a source audit found origins that traffic had not exercised and enforcing would have blocked: the Amazon affiliate widget frames on store product pages, the PostHog embedded dashboards on the admin analytics page, and the Stripe.js fraud-signal frames and telemetry. Those origins, plus GA4 signals, are now in the report-only policy. Enforcing stayed deferred on purpose: a blind flip on launch day risks checkout more than report-only risks anything, and the flip is still one header name once a week of real sign-ins shows an empty csp-report query
 
 ### F55: Mobile and accessibility gaps
 
@@ -142,7 +142,10 @@ This list records the remaining launch checks and their latest state.
    the csp-report query (under F43 above) and, if the only rows are
    expected origins or none at all, change the header name in
    scripts/build-vercel-json.mjs from Content-Security-Policy-Report-Only
-   to Content-Security-Policy. One line.
+   to Content-Security-Policy. One line. The policy itself was corrected
+   on 6 Sep (Stripe.js frames, PostHog embeds, Amazon widget frames, GA4
+   signals), so the query now measures a policy that would not break
+   checkout, admin analytics or affiliate products when it is enforced.
 5. **Referral and billing, live check.** Sign up a second account through
    your own referral link (sidebar card, Copy referral link), pay a first
    invoice with a Stripe test card, then confirm: the referrer got the
@@ -166,6 +169,9 @@ This list records the remaining launch checks and their latest state.
    is already set. The same secret is what error-triage needs when it
    writes back to the database. Then run the weekly-changelog workflow
    once by hand (Actions, weekly-changelog, Run workflow) to confirm.
+   6 Sep: a session can do this in one line from a terminal where the
+   Supabase CLI is linked, but Claude Code's permission guard blocks it:
+   `supabase projects api-keys --project-ref mmuglfphhwlaluyfyxsp -o json | jq -r '.[] | select(.name=="service_role") | .api_key' | gh secret set SUPABASE_SERVICE_ROLE_KEY --repo tennysonmilesperhour/geck-inspect`
 9. **Store decisions, decided 5 Sep.** Keep the custom tee at $28 with
    standard shipping. Keep the two printed sticker references intact for
    now, but present them on a green field and label them clearly as temporary
@@ -191,5 +197,7 @@ Every one of these has a matching file under `supabase/migrations/` so the repo 
 - Late session: `owner_only_reads_valuations_alerts_loans` (collection valuations, price alerts and breeding loans were readable by visitors; now author, lender or borrower, or admin). The Breeding Loans page was also storing and filtering the lender as an email in a uuid column, which made every loan insert fail; it now uses created_by.
 - Late session: `rls_batch1_gecko_images` through `rls_batch8_collections_votes_offers` (F46).
 - Late session: `referral_keeper_month` (referral columns, reward ledger, award and expiry functions, pg_cron job) and `referral_function_grants` (explicit revokes, because Supabase default privileges had made the award function callable by any signed-in member).
+
+6 Sep, outside the findings list: the SPA catch-all rewrite now serves dist/app.html (the untouched Vite shell) instead of the prerendered landing page, so app routes such as AuthPortal, Dashboard and My Geckos no longer preload the 427 KB hero image on every load. F32 confirmed: the nightly error-triage run on 6 Sep succeeded.
 
 Edge functions redeployed from repo source: stripe-checkout, stripe-webhook, stripe-billing-portal, recognize-gecko-morph, recognize-import-data (first deployment, JWT verification on). Late session: stripe-webhook again, for the referral reward; csp-report (new, JWT verification off by design, see F43). 5 Sep: send-email v19 (weekly_digest maps to the announcements preference).
