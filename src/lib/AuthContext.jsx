@@ -119,6 +119,11 @@ export const AuthProvider = ({ children }) => {
 
   const logout = async (shouldRedirect = true) => {
     revisionRef.current++;
+    // Drop cached collection data before the session goes away, so a
+    // second account signing in on this device never sees the previous
+    // one's geckos while the fresh fetch is in flight.
+    queryClientInstance.clear();
+    dataCache.clearAll();
     await supabase.auth.signOut();
     setGuestMode(false);
     setIsGuest(false);

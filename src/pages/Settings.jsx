@@ -22,9 +22,10 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import {
-  Settings, Upload, Save, Globe, Eye, X, Camera, Mail, Calendar, Loader2, Search, ArrowUpDown, Clock, Crown, FileText, Palette, Check, Star, Database, CreditCard
+  Settings, Upload, Save, Globe, Eye, X, Camera, Mail, Calendar, Loader2, Search, ArrowUpDown, Clock, Crown, FileText, Palette, Check, Star, Database, CreditCard, LogOut
 } from 'lucide-react';
 import { useTheme } from '@/lib/ThemeContext';
+import { useAuth } from '@/lib/AuthContext';
 import { FALLBACK_NAV_ITEMS, NAV_ICON_MAP, FAVORITES_MAX, flattenNavItems, KEEPER_MODE_STORAGE_KEY } from '@/lib/navItems';
 
 const STORE_POLICY_EXAMPLE = [
@@ -328,7 +329,27 @@ export default function SettingsPage() {
     const [portalBusy, setPortalBusy] = useState(false);
     const [newSpecialty, setNewSpecialty] = useState('');
     const [idSettings, updateIdSettings] = usePageSettings('gecko_id_settings', DEFAULT_ID_SETTINGS);
+    const [isLoggingOut, setIsLoggingOut] = useState(false);
     const { toast } = useToast();
+    const { logout } = useAuth();
+
+    // Logout lives here rather than in the sidebar. The rail was too
+    // crowded to scroll on a phone, and signing out is an account action,
+    // so it belongs on the account page.
+    const handleLogout = async () => {
+        setIsLoggingOut(true);
+        try {
+            await logout();
+        } catch (error) {
+            console.error('Logout failed:', error);
+            setIsLoggingOut(false);
+            toast({
+                title: 'Could not sign out',
+                description: 'Something went wrong. Please try again.',
+                variant: 'destructive',
+            });
+        }
+    };
 
     useEffect(() => {
         const loadData = async () => {
@@ -558,16 +579,30 @@ export default function SettingsPage() {
         <div className="bg-slate-950 min-h-screen text-slate-100">
             <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
                 <div className="mb-8">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="w-12 h-12 bg-emerald-600/20 rounded-xl flex items-center justify-center border border-emerald-500/30">
-                            <Settings className="w-6 h-6 text-emerald-400" />
+                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2">
+                        <div className="flex items-center gap-3">
+                            <div className="w-12 h-12 bg-emerald-600/20 rounded-xl flex items-center justify-center border border-emerald-500/30">
+                                <Settings className="w-6 h-6 text-emerald-400" />
+                            </div>
+                            <div>
+                                <h1 className="text-3xl md:text-4xl font-bold text-slate-100">Account Settings</h1>
+                                <p className="text-sm text-slate-400">
+                                    Manage your profile, privacy, notifications, and account preferences.
+                                </p>
+                            </div>
                         </div>
-                        <div>
-                            <h1 className="text-3xl md:text-4xl font-bold text-slate-100">Account Settings</h1>
-                            <p className="text-sm text-slate-400">
-                                Manage your profile, privacy, notifications, and account preferences.
-                            </p>
-                        </div>
+                        <Button
+                            variant="outline"
+                            onClick={handleLogout}
+                            disabled={isLoggingOut}
+                            className="w-full sm:w-auto shrink-0 justify-center border-slate-700 bg-slate-900/60 text-slate-200 hover:bg-slate-800 hover:text-white"
+                        >
+                            {isLoggingOut ? (
+                                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Signing out</>
+                            ) : (
+                                <><LogOut className="w-4 h-4 mr-2" />Log out</>
+                            )}
+                        </Button>
                     </div>
                 </div>
 

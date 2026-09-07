@@ -9,6 +9,7 @@ import { Check, Sparkles, Zap, Crown, Star, Loader2, Flame, Infinity as Infinity
 import { User } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
 import SupportContactCard from '@/components/support/SupportContactCard';
+import ReferralLinkCard from '@/components/shared/ReferralLinkCard';
 import {
   getTierPricing,
   TIER_PRICING,
@@ -821,6 +822,12 @@ export default function MembershipPage() {
               </div>
             );
           })}
+        </div>
+
+        {/* Referral offer. Sits next to the plans so the reward and the
+            price it applies to are read together. */}
+        <div className="max-w-3xl mx-auto w-full">
+          <ReferralLinkCard />
         </div>
 
         {/* Support contact, in-app ticket instead of mailto */}

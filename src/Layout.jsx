@@ -9,7 +9,7 @@ import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
 import { APP_LOGO_URL } from '@/lib/constants';
 import {
-  Database, Users, LogOut, Search, Settings, UserPlus, Shield, Mail, Menu, Star, GraduationCap, ChevronDown, Pin, PinOff, Home
+  Database, Users, Search, Settings, UserPlus, Shield, Mail, Menu, Star, GraduationCap, ChevronDown, Pin, PinOff, Home
 } from "lucide-react";
 import TutorialModal from "@/components/tutorial/TutorialModal";
 import OnboardingRolePrompt from "@/components/tutorial/OnboardingRolePrompt";
@@ -34,7 +34,6 @@ import {
 import { Button } from "@/components/ui/button";
 import UserBadge from "@/components/ui/UserBadge";
 import TierBadge, { tierRingClass, tierKeyFor } from "@/components/ui/TierBadge";
-import ReferralLinkCard from "@/components/shared/ReferralLinkCard";
 
 
 // Non-React concerns extracted from this file as part of the hairball
@@ -62,7 +61,7 @@ import {
 
 function LayoutContent({ children, currentPageName: _currentPageName }) {
   const location = useLocation();
-  const { user, logout, isGuest } = useAuth();
+  const { user, isGuest } = useAuth();
   const sidebarRef = useRef(null);
   const [imageCount, setImageCount] = useState(0);
   const [userLevel, setUserLevel] = useState(null);
@@ -532,20 +531,6 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
   const handleLogin = () => {
     window.location.href = '/AuthPortal';
-  };
-
-  const handleLogout = async () => {
-    try {
-      dataCache.clearAll();
-      setUserLevel(null);
-      setImageLevel(null);
-      setCommunityLevel(null);
-      setUnreadNotificationsCount(0);
-      setUnreadMessages(0);
-      await logout();
-    } catch (error) {
-      console.error("Logout failed:", error);
-    }
   };
 
   // IDs of notifications the user dismissed this session, prevents
@@ -1041,7 +1026,6 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           <SidebarFooter className="px-4 pt-4 pb-[calc(1rem+env(safe-area-inset-bottom))] border-t border-emerald-900/40">
             <div className="space-y-3">
               <Link to="/PrivacyPolicy" className="block text-xs text-slate-500 hover:text-slate-300 px-3 transition-colors">Privacy Policy</Link>
-              <ReferralLinkCard />
               <Link to={createPageUrl("Membership")} className="block">
                 <Button variant="outline" size="sm" className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm">
                   <Star className="w-4 h-4 mr-2 flex-shrink-0" />
@@ -1080,20 +1064,6 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                       Settings
                     </Button>
                   </Link>
-
-                  <div className="text-xs text-emerald-200/50 px-3">
-                    Logged in as {getDisplayName(user)}
-                    {user.is_expert && <span className="ml-2 text-green-600">✓ Expert</span>}
-                    {user.role === 'admin' && <span className="ml-2 text-purple-600">⚡ Admin</span>}
-                  </div>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={handleLogout}
-                    className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm">
-                    <LogOut className="w-4 h-4 mr-2" />
-                    Logout
-                  </Button>
                 </div> :
                 null}
             </div>
@@ -1206,7 +1176,6 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
               <div className="p-4 border-t border-emerald-900/40 mt-auto">
                 <div className="space-y-3">
                   <Link to="/PrivacyPolicy" className="block text-xs text-slate-500 hover:text-slate-300 px-3 transition-colors sidebar-collapse-hide">Privacy Policy</Link>
-                  <ReferralLinkCard />
                   <Link to={createPageUrl("Membership")} className="block">
                     <Button variant="outline" size="sm" className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm">
                       <Star className="w-4 h-4 mr-2 flex-shrink-0" />
@@ -1247,20 +1216,6 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
                           <span className="sidebar-collapse-hide">Settings</span>
                         </Button>
                       </Link>
-
-                      <div className="text-xs text-emerald-200/50 px-3 sidebar-collapse-hide">
-                        Logged in as {getDisplayName(user)}
-                        {user.is_expert && <span className="ml-2 text-green-600">✓ Expert</span>}
-                        {user.role === 'admin' && <span className="ml-2 text-purple-600">⚡ Admin</span>}
-                      </div>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={handleLogout}
-                        className="w-full justify-start text-emerald-100/80 hover:text-white border-emerald-900/60 hover:border-emerald-700/60 text-sm">
-                        <LogOut className="w-4 h-4 mr-2" />
-                        <span className="sidebar-collapse-hide">Logout</span>
-                      </Button>
                     </div> :
                     null}
 

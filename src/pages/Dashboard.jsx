@@ -34,6 +34,7 @@ import ImageDetailModal from '../components/gallery/ImageDetailModal';
 import ChangeLogModal from '../components/changelog/ChangeLogModal';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
+import ReferralLinkCard from '@/components/shared/ReferralLinkCard';
 import { createPageUrl, getDisplayName } from '@/utils';
 import { format } from 'date-fns';
 
@@ -473,6 +474,10 @@ export default function Dashboard() {
                     )}
 
                     <NextActions currentUserEmail={user?.email} />
+
+                    {/* Referral offer, moved off the sidebar so it has room to
+                        be read. Renders nothing for guests and signed-out visitors. */}
+                    <ReferralLinkCard />
 
                     {dashPrefs.showWelcomeShelf && <WelcomeShelf currentUser={user} />}
 
