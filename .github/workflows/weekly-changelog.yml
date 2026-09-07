@@ -54,6 +54,14 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10.33.0
+      # generate-weekly.mjs imports @anthropic-ai/sdk and @supabase/supabase-js
+      # from the repo's node_modules. Without this step every run since May
+      # died with ERR_MODULE_NOT_FOUND once the secrets were in place.
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
       - name: Generate and publish weekly update
         env:
           ANTHROPIC_API_KEY:         ${{ secrets.ANTHROPIC_API_KEY }}
