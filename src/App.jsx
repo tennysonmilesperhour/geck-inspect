@@ -393,6 +393,10 @@ const AuthenticatedApp = () => {
           from swallowing single-segment /Store/* supplies routes. */}
       <Route path="/store/:slug" caseSensitive element={<StorePage />} />
 
+      {/* Support and purchase terms remain reachable after sign-in and in guest mode. */}
+      <Route path="/Contact" element={<Contact />} />
+      <Route path="/Terms" element={<Terms />} />
+
       {/* Editorial blog, accessible to authenticated users too */}
       <Route path="/blog" element={<BlogIndex />} />
       <Route path="/blog/category/:slug" element={<BlogCategoryPage />} />
