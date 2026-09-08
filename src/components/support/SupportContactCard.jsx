@@ -6,13 +6,14 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { useToast } from '@/components/ui/use-toast';
 import { LifeBuoy, Send, CheckCircle2, Loader2 } from 'lucide-react';
+import { SUPPORT_EMAIL, SUPPORT_EMAIL_URL } from '@/lib/supportContact';
 
 /**
  * Reusable "Contact support" surface.
  *
  * Writes a new row into `support_messages` which admins triage from
- * the Admin Panel's Support Inbox. Replaces the old mailto link that
- * pointed at a personal Gmail address.
+ * the Admin Panel's Support Inbox. Email remains available as an
+ * alternative for account access and privacy requests.
  *
  * Works for both authenticated and anonymous users, the RLS insert
  * policy allows anyone to file a ticket. If the caller is signed in,
@@ -82,6 +83,7 @@ export default function SupportContactCard({ title = 'Need help?' }) {
                     <p className="text-slate-400">
                         Thanks for reaching out. An admin will review your message and reply soon.
                     </p>
+                    <p className="text-sm text-slate-400">You can also email <a href={SUPPORT_EMAIL_URL} className="text-emerald-300 underline break-all">{SUPPORT_EMAIL}</a>.</p>
                     <Button
                         variant="outline"
                         size="sm"
@@ -106,6 +108,7 @@ export default function SupportContactCard({ title = 'Need help?' }) {
                     Send a message directly to the Geck Inspect team. We'll get back to you in the
                     app.
                 </p>
+                <p className="text-sm text-slate-400">Or email <a href={SUPPORT_EMAIL_URL} className="text-emerald-300 underline break-all">{SUPPORT_EMAIL}</a> for support, privacy, or deletion questions.</p>
             </CardHeader>
             <CardContent className="space-y-3">
                 {!user && (

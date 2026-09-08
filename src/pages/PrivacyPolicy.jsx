@@ -3,6 +3,9 @@ import { ArrowLeft, Shield } from 'lucide-react';
 import { createPageUrl } from '@/utils';
 import Seo from '@/components/seo/Seo';
 import { breadcrumbSchema } from '@/lib/organization-schema';
+import { SUPPORT_EMAIL, SUPPORT_EMAIL_URL } from '@/lib/supportContact';
+
+const LAST_UPDATED = '2026-09-08';
 
 const Section = ({ title, children }) => (
     <div className="space-y-3">
@@ -20,7 +23,7 @@ export default function PrivacyPolicy() {
         name: 'Geck Inspect Privacy Policy',
         url: 'https://geckinspect.com/PrivacyPolicy',
         description: 'Privacy policy for Geck Inspect describing what personal data we collect, how it is used, and your rights.',
-        dateModified: '2026-04-05',
+        dateModified: LAST_UPDATED,
         isPartOf: { '@id': 'https://geckinspect.com/#website' },
       },
       breadcrumbSchema([
@@ -35,7 +38,7 @@ export default function PrivacyPolicy() {
               description="How Geck Inspect collects, uses, and protects your personal information when you use the crested gecko tracking and breeding platform."
               path="/PrivacyPolicy"
               type="article"
-              modifiedTime="2026-04-05"
+              modifiedTime={LAST_UPDATED}
               jsonLd={jsonLd}
             />
             <div className="max-w-3xl mx-auto">
@@ -48,7 +51,7 @@ export default function PrivacyPolicy() {
                         <Shield className="w-8 h-8 text-emerald-400 flex-shrink-0" />
                         <div>
                             <h1 className="text-2xl font-bold text-slate-100">Privacy Policy</h1>
-                            <p className="text-slate-500 text-sm">Last updated: September 4, 2026</p>
+                            <p className="text-slate-500 text-sm">Last updated: September 8, 2026</p>
                         </div>
                     </div>
 
@@ -100,6 +103,8 @@ export default function PrivacyPolicy() {
                             <li><strong className="text-slate-300">Stripe</strong> (payments): your email and payment details when you buy a membership. Card numbers never touch our servers.</li>
                             <li><strong className="text-slate-300">RevenueCat</strong> (subscription management): a subscriber identifier and your subscription status.</li>
                             <li><strong className="text-slate-300">Anthropic</strong> (AI): the gecko photos and text you submit to the morph identifier, health screen, breeder consultant, and social post generator.</li>
+                            <li><strong className="text-slate-300">Replicate</strong> (visual comparison): when enabled, the gecko image or image URL used to generate visual embeddings for similarity search and morph reference retrieval.</li>
+                            <li><strong className="text-slate-300">Govee</strong> (optional enclosure sensors): when you connect this integration, server-side requests use your Govee API credentials and device identifiers to retrieve sensor readings.</li>
                             <li><strong className="text-slate-300">Resend</strong> (email delivery): your email address and the content of emails we send you.</li>
                             <li><strong className="text-slate-300">Google Analytics</strong> and <strong className="text-slate-300">PostHog</strong> (analytics): pages visited, features used, and general device information. PostHog is configured to mask the text on the page and does not record sessions. Both honour the browser Do Not Track setting.</li>
                             <li><strong className="text-slate-300">Robauto</strong> (AI referral attribution): the path of the page you visit and the referring site, so we can tell when a visit came from an AI assistant. No account data is sent.</li>
@@ -137,6 +142,8 @@ export default function PrivacyPolicy() {
                         <p>If you have questions, requests, or concerns about this Privacy Policy or how we handle your data, please contact us at:</p>
                         <div className="bg-slate-800 rounded-lg p-4 mt-2">
                             <p className="text-slate-300 font-medium">Geck Inspect</p>
+                            <a href={SUPPORT_EMAIL_URL} className="text-emerald-300 underline break-all">{SUPPORT_EMAIL}</a>
+                            <p className="mt-2">You can email us without an account. Signed-in users can also initiate account deletion in Settings.</p>
                         </div>
                     </Section>
                 </div>

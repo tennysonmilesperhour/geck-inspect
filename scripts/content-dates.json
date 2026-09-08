@@ -1,11 +1,11 @@
 {
-  "generatedAt": "2026-09-04",
+  "generatedAt": "2026-09-08",
   "files": {
     "src/pages/Home.jsx": "2026-09-04",
     "src/pages/About.jsx": "2026-07-10",
-    "src/pages/Contact.jsx": "2026-07-10",
-    "src/pages/Terms.jsx": "2026-07-10",
-    "src/pages/PrivacyPolicy.jsx": "2026-07-10",
+    "src/pages/Contact.jsx": "2026-09-08",
+    "src/pages/Terms.jsx": "2026-09-08",
+    "src/pages/PrivacyPolicy.jsx": "2026-09-08",
     "src/pages/MarketplaceVerification.jsx": "2026-07-10",
     "src/pages/CareGuide.jsx": "2026-07-10",
     "src/pages/CareGuideSeries.jsx": "2026-07-10",

@@ -20,6 +20,8 @@
  * single most impactful fix after SSR.
  */
 
+import { SUPPORT_EMAIL } from './supportContact.js';
+
 export const SITE_URL = 'https://geckinspect.com';
 export const SITE_NAME = 'Geck Inspect';
 export const SITE_DESCRIPTION =
@@ -72,6 +74,12 @@ export const ORGANIZATION_SCHEMA = {
     'Lineage tracking',
   ],
   sameAs: SAME_AS,
+  contactPoint: {
+    '@type': 'ContactPoint',
+    contactType: 'customer support',
+    email: SUPPORT_EMAIL,
+    url: `${SITE_URL}/Contact`,
+  },
 };
 
 export const WEBSITE_SCHEMA = {

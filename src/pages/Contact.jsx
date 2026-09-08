@@ -5,6 +5,7 @@ import Seo from '@/components/seo/Seo';
 import PublicPageShell from '@/components/public/PublicPageShell';
 import { breadcrumbSchema, ORG_ID, SITE_URL } from '@/lib/organization-schema';
 import { createPageUrl } from '@/utils';
+import { SUPPORT_EMAIL, SUPPORT_EMAIL_URL } from '@/lib/supportContact';
 
 const CONTACT_JSON_LD = [
   {
@@ -28,7 +29,7 @@ const CHANNELS = [
   {
     icon: MessageSquare,
     title: 'Support',
-    body: 'The fastest way to reach us is from inside the app, any account can send a direct message from the inbox. Every support conversation is tied to your account so we can look at the exact gecko record, breeding pair, or import file you\'re asking about.',
+    body: 'Email us for account access, collection records, billing, privacy, or deletion questions. You can also use the in-app support form and include the record or request reference you need help with.',
     cta: { label: 'Sign in to send a message', path: '/AuthPortal' },
   },
   {
@@ -78,7 +79,9 @@ export default function Contact() {
           Get in touch
         </h1>
         <p className="text-lg text-slate-300 leading-relaxed max-w-3xl">
-          Geck Inspect is operated from the United States. The quickest way to reach us is through the in-app messaging system after creating a free account, we can then see the data you're asking about and reply with specifics.
+          Geck Inspect is operated from the United States. For support, privacy, or account deletion questions, email{' '}
+          <a href={SUPPORT_EMAIL_URL} className="text-emerald-300 underline break-all">{SUPPORT_EMAIL}</a>.
+          {' '}You can contact us without creating an account.
         </p>
 
         <div className="mt-10 space-y-5">

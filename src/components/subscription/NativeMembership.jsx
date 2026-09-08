@@ -5,6 +5,7 @@ import { nativePackagePlan } from '@/lib/nativeMembership';
 import { resolveTier, TIER_LIMITS } from '@/lib/tierLimits';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/use-toast';
+import { SUPPORT_EMAIL, SUPPORT_EMAIL_URL } from '@/lib/supportContact';
 
 // Product identity is configured in RevenueCat; localized prices come from Apple.
 export default function NativeMembership({ user }) {
@@ -66,5 +67,6 @@ export default function NativeMembership({ user }) {
     </div>
     <p className="text-sm text-slate-400">Plans renew through your store unless canceled in its subscription settings. Changing or canceling a plan is handled by the store.</p>
     <p className="flex gap-4 text-sm"><a className="underline" href="https://geckinspect.com/Terms">Terms</a><a className="underline" href="https://geckinspect.com/PrivacyPolicy">Privacy</a></p>
+    <p className="text-sm">Need help? <a className="underline break-all" href={SUPPORT_EMAIL_URL}>{SUPPORT_EMAIL}</a></p>
   </section>;
 }

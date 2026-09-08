@@ -3,8 +3,9 @@ import { ScrollText } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
 import PublicPageShell from '@/components/public/PublicPageShell';
 import { breadcrumbSchema, SITE_URL } from '@/lib/organization-schema';
+import { SUPPORT_EMAIL, SUPPORT_EMAIL_URL } from '@/lib/supportContact';
 
-const LAST_UPDATED = '2026-04-17';
+const LAST_UPDATED = '2026-09-08';
 
 const TERMS_JSON_LD = [
   {
@@ -115,7 +116,7 @@ export default function Terms() {
           </Section>
 
           <Section n="11" title="Contact">
-            <p>Questions about these Terms? Reach us via the in-app messaging system after signing in, or see the <Link to="/Contact" className="text-emerald-300 hover:underline">Contact page</Link>.</p>
+            <p>Questions about these Terms? Email <a href={SUPPORT_EMAIL_URL} className="text-emerald-300 underline break-all">{SUPPORT_EMAIL}</a>, use the in-app support form, or see the <Link to="/Contact" className="text-emerald-300 hover:underline">Contact page</Link>.</p>
           </Section>
         </div>
       </section>
