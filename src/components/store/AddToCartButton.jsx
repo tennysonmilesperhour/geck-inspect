@@ -8,6 +8,7 @@ import { CUSTOM_STICKER_SLUG } from '@/lib/store/customSticker';
 import { CUSTOM_SHIRT_SLUG } from '@/lib/store/customShirt';
 import { captureEvent } from '@/lib/posthog';
 import { supabase } from '@/lib/supabaseClient';
+import { safeExternalUrl, openExternalUrl } from '@/lib/safeExternalUrl';
 
 /**
  * AddToCartButton handles all four fulfillment modes.
@@ -28,6 +29,7 @@ export default function AddToCartButton({ product, compact = false, quantity = 1
 
   if (!product) return null;
   const cartEligible = isCartEligible(product.fulfillment_mode);
+  const vendorUrl = safeExternalUrl(product.vendor_product_url);
 
   if (product.slug === CUSTOM_SHIRT_SLUG) {
     return (
@@ -78,7 +80,7 @@ export default function AddToCartButton({ product, compact = false, quantity = 1
   }
 
   async function handleAffiliate() {
-    if (!product.vendor_product_url) return;
+    if (!vendorUrl) return;
     setBusy(true);
     try {
       // Best-effort log, never block the click.
@@ -99,7 +101,7 @@ export default function AddToCartButton({ product, compact = false, quantity = 1
         vendor_id: product.vendor_id,
         destination_url: product.vendor_product_url,
       });
-      window.open(product.vendor_product_url, '_blank', 'noopener,noreferrer,sponsored');
+      openExternalUrl(vendorUrl, 'noopener,noreferrer,sponsored');
     } finally {
       setBusy(false);
     }
@@ -136,7 +138,7 @@ export default function AddToCartButton({ product, compact = false, quantity = 1
     <Button
       size={compact ? 'sm' : 'default'}
       variant="outline"
-      disabled={busy || !product.vendor_product_url}
+      disabled={busy || !vendorUrl}
       onClick={handleAffiliate}
       className="w-full border-amber-700/50 text-amber-200 hover:bg-amber-500/10"
     >

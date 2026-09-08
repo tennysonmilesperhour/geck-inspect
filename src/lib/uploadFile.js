@@ -20,6 +20,7 @@
 import { supabase } from '@/lib/supabaseClient';
 import { getTierLimits, formatBytes } from '@/lib/tierLimits';
 import { convertHeicForUpload, downscaleImage, isHeicFile } from '@/lib/imageResize';
+import { imageStoragePath } from '@/lib/imageStoragePath';
 
 const BUCKET = 'geck-inspect-media';
 
@@ -69,24 +70,6 @@ const ALLOWED_MIME_TYPES = new Set([
 
 const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10 MB
 
-// Turn a filename into a safe storage key fragment.
-function safeFileName(name) {
-  return (name || 'upload')
-    .replace(/[^a-zA-Z0-9._-]+/g, '-')
-    .replace(/^-+|-+$/g, '')
-    .slice(0, 80) || 'upload';
-}
-
-function extensionFor(file) {
-  const name = file?.name || '';
-  const match = name.match(/\.([a-zA-Z0-9]+)$/);
-  if (match) return match[1].toLowerCase();
-  if (file?.type?.startsWith('image/')) {
-    return file.type.slice(6).split('+')[0].toLowerCase() || 'jpg';
-  }
-  return 'bin';
-}
-
 /**
  * Upload a File/Blob to the geck-inspect-media bucket and return a
  * public URL.
@@ -132,7 +115,7 @@ export async function uploadFile({ file, folder = 'uploads' } = {}) {
 
   // Namespace by user ID (UUID) so public URLs don't leak emails.
   const { data: { user } } = await supabase.auth.getUser();
-  const ownerSlug = user?.id || 'public';
+  const path = imageStoragePath(user?.id, upload.type, folder);
 
   // Tier-based storage quota. Best effort, if either query fails we
   // fall through to the upload rather than block the user (the
@@ -150,11 +133,6 @@ export async function uploadFile({ file, folder = 'uploads' } = {}) {
       );
     }
   }
-
-  const ext = extensionFor(upload);
-  const baseName = safeFileName((upload.name || 'upload').replace(/\.[a-zA-Z0-9]+$/, ''));
-  const stamp = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}`;
-  const path = `${folder}/${ownerSlug}/${stamp}-${baseName}.${ext}`;
 
   const { error: uploadError } = await supabase.storage
     .from(BUCKET)

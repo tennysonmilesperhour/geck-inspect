@@ -5,6 +5,7 @@ import Capacitor
 class AppDelegate: UIResponder, UIApplicationDelegate {
 
     var window: UIWindow?
+    private var privacyCover: UIView?
 
     func application(_ application: UIApplication, didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?) -> Bool {
         // Override point for customization after application launch.
@@ -12,8 +13,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationWillResignActive(_ application: UIApplication) {
-        // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
-        // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
+        guard privacyCover == nil, let window = window else { return }
+        // Cover account and collection data before iOS captures the app switcher.
+        let cover = UIView(frame: window.bounds)
+        cover.backgroundColor = UIColor(red: 2/255, green: 6/255, blue: 23/255, alpha: 1)
+        cover.autoresizingMask = [.flexibleWidth, .flexibleHeight]
+        window.addSubview(cover)
+        privacyCover = cover
     }
 
     func applicationDidEnterBackground(_ application: UIApplication) {
@@ -26,7 +32,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
     }
 
     func applicationDidBecomeActive(_ application: UIApplication) {
-        // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+        privacyCover?.removeFromSuperview()
+        privacyCover = nil
     }
 
     func applicationWillTerminate(_ application: UIApplication) {

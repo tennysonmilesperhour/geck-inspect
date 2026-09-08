@@ -41,8 +41,7 @@ on:
         default: 'false'
 
 permissions:
-  contents: write
-  pull-requests: write
+  contents: read
 
 concurrency:
   group: error-triage
@@ -50,20 +49,25 @@ concurrency:
 
 jobs:
   triage:
+    permissions:
+      contents: write
+      pull-requests: write
+      issues: write
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
+          persist-credentials: false
           # The agent branches off main and the commit-state step writes
           # back. Full history isn't needed but we want the merge base.
           fetch-depth: 0
           ref: main
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
 
-      - uses: pnpm/action-setup@v4
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
         with:
           version: 10.33.0
 
@@ -79,6 +83,9 @@ jobs:
           SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           GH_TOKEN:                  ${{ secrets.GITHUB_TOKEN }}
+          GIT_CONFIG_COUNT: '1'
+          GIT_CONFIG_KEY_0: credential.helper
+          GIT_CONFIG_VALUE_0: '!gh auth git-credential'
           ERROR_TRIAGE_BASE_BRANCH:  main
           ERROR_TRIAGE_PLACEHOLDER:  ${{ inputs.placeholder == 'true' && '1' || '' }}
         run: node scripts/error-triage/triage.mjs
@@ -102,6 +109,11 @@ jobs:
           fi
 
       - name: Commit state file
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GIT_CONFIG_COUNT: '1'
+          GIT_CONFIG_KEY_0: credential.helper
+          GIT_CONFIG_VALUE_0: '!gh auth git-credential'
         run: |
           git config user.name  "geckinspect-triage-bot"
           git config user.email "triage-bot@users.noreply.github.com"

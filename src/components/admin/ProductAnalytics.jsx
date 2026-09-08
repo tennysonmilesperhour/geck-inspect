@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { supabase } from '@/lib/supabaseClient';
+import { safeExternalUrl, openExternalUrl } from '@/lib/safeExternalUrl';
 import { User, UserEvent } from '@/entities/all';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -849,7 +850,7 @@ function PostHogEmbeds() {
               variant="outline"
               size="sm"
               className="text-slate-300 border-slate-700 hover:bg-slate-800"
-              onClick={() => window.open(projectHomeUrl, '_blank', 'noopener,noreferrer')}
+              onClick={() => openExternalUrl(projectHomeUrl)}
             >
               Open in PostHog <ArrowUpRight className="w-3.5 h-3.5 ml-1" />
             </Button>
@@ -1017,23 +1018,23 @@ function PostHogEmbeds() {
                   </p>
                 )}
               </div>
-              {d.url && (
+              {safeExternalUrl(d.url) && (
                 <Button
                   size="sm"
                   variant="ghost"
                   className="text-slate-300 hover:bg-slate-800"
-                  onClick={() => window.open(d.url, '_blank', 'noopener,noreferrer')}
+                  onClick={() => openExternalUrl(d.url)}
                 >
                   <ExternalLink className="w-3.5 h-3.5 mr-1" /> Open
                 </Button>
               )}
             </CardHeader>
             <CardContent className="p-0">
-              {d.url ? (
+              {safeExternalUrl(d.url) ? (
                 <div className="aspect-[16/10] w-full bg-slate-950 border-t border-slate-800">
                   <iframe
                     title={d.name || 'PostHog dashboard'}
-                    src={d.url}
+                    src={safeExternalUrl(d.url)}
                     className="w-full h-full"
                     referrerPolicy="no-referrer"
                     sandbox="allow-scripts allow-same-origin allow-popups allow-forms"

@@ -49,8 +49,7 @@ on:
           - weekly-report
 
 permissions:
-  contents: write
-  issues: write
+  contents: read
 
 concurrency:
   # Never run the same stage twice in parallel: they write the same files.
@@ -59,13 +58,17 @@ concurrency:
 
 jobs:
   research:
+    permissions:
+      contents: write
     if: |
       (github.event_name == 'schedule' && github.event.schedule == '0 6 * * 1,3,5') ||
       (github.event_name == 'workflow_dispatch' && inputs.stage == 'research')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
       - name: Run research agent
@@ -73,6 +76,11 @@ jobs:
           ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: node scripts/blog/research.mjs
       - name: Commit queue updates
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GIT_CONFIG_COUNT: '1'
+          GIT_CONFIG_KEY_0: credential.helper
+          GIT_CONFIG_VALUE_0: '!gh auth git-credential'
         run: |
           git config user.name  "geckinspect-blog-bot"
           git config user.email "blog-bot@users.noreply.github.com"
@@ -96,13 +104,17 @@ jobs:
         run: node scripts/blog/notify-failure.mjs research
 
   draft-publish:
+    permissions:
+      contents: write
     if: |
       (github.event_name == 'schedule' && github.event.schedule == '0 7 * * 1,3,5') ||
       (github.event_name == 'workflow_dispatch' && inputs.stage == 'draft-publish')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
       - name: Run draft agent
@@ -124,7 +136,9 @@ jobs:
           fi
       - name: Publish into blog-posts.js
         if: steps.detect.outputs.drafted == '1'
-        run: node scripts/blog/publish.mjs "${{ steps.detect.outputs.slug }}"
+        env:
+          SLUG: ${{ steps.detect.outputs.slug }}
+        run: node scripts/blog/publish.mjs "$SLUG"
       - name: Verify build still passes
         if: steps.detect.outputs.drafted == '1'
         run: |
@@ -133,6 +147,12 @@ jobs:
           node --check src/data/blog-posts.js
       - name: Commit + push
         if: steps.detect.outputs.drafted == '1'
+        env:
+          SLUG: ${{ steps.detect.outputs.slug }}
+          GH_TOKEN: ${{ github.token }}
+          GIT_CONFIG_COUNT: '1'
+          GIT_CONFIG_KEY_0: credential.helper
+          GIT_CONFIG_VALUE_0: '!gh auth git-credential'
         run: |
           git config user.name  "geckinspect-blog-bot"
           git config user.email "blog-bot@users.noreply.github.com"
@@ -141,7 +161,7 @@ jobs:
             echo "Nothing to commit (publish was a no-op)."
             exit 0
           fi
-          git commit -m "blog: publish ${{ steps.detect.outputs.slug }}"
+          git commit -m "blog: publish $SLUG"
           for i in 1 2 3 4; do
             git pull --rebase origin main && git push origin main && break
             sleep $((2 ** i))
@@ -164,18 +184,28 @@ jobs:
         run: node scripts/blog/notify-failure.mjs draft-publish
 
   weekly-report:
+    permissions:
+      contents: write
+      issues: write
     if: |
       (github.event_name == 'schedule' && github.event.schedule == '0 12 * * 1') ||
       (github.event_name == 'workflow_dispatch' && inputs.stage == 'weekly-report')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
       - name: Generate weekly report
         run: node scripts/blog/weekly-report.mjs
       - name: Commit report
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GIT_CONFIG_COUNT: '1'
+          GIT_CONFIG_KEY_0: credential.helper
+          GIT_CONFIG_VALUE_0: '!gh auth git-credential'
         run: |
           git config user.name  "geckinspect-blog-bot"
           git config user.email "blog-bot@users.noreply.github.com"

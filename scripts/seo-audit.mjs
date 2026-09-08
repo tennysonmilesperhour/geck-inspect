@@ -38,7 +38,7 @@
  * error-level finding.
  */
 
-import { readFileSync, writeFileSync, readdirSync, statSync, mkdirSync, existsSync } from 'node:fs';
+import { readFileSync, writeFileSync, readdirSync, lstatSync, mkdirSync, existsSync } from 'node:fs';
 import { resolve, join, dirname, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { execSync } from 'node:child_process';
@@ -61,10 +61,12 @@ if (!existsSync(DIST)) {
 function* walkHtml(dir) {
   for (const name of readdirSync(dir)) {
     const full = join(dir, name);
-    const st = statSync(full);
+    // Build output must not follow a symlink outside dist/ into local files.
+    const st = lstatSync(full);
+    if (st.isSymbolicLink()) continue;
     if (st.isDirectory()) {
       yield* walkHtml(full);
-    } else if (name.endsWith('.html')) {
+    } else if (st.isFile() && name.endsWith('.html')) {
       // dist/app.html is the bare SPA shell for the catch-all rewrite,
       // not a page: no route title, canonical or noscript body.
       if (dir === DIST && name === 'app.html') continue;

@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { Upload, Trash2, Tag, Loader2, Check, Image as ImageIcon } from 'lucide-react';
 import { PromoteImage } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
+import { imageStoragePath } from '@/lib/imageStoragePath';
 import { toast } from '@/components/ui/use-toast';
 import { getTierLimits, formatBytes, bytesUsedPercent } from '@/lib/tierLimits';
 
@@ -121,8 +122,7 @@ export default function PromoteImageGallery({
         // owner. Use a random suffix to avoid name collisions across
         // many uploads of the same filename (common on iPhone where
         // every photo is "IMG_1234.jpg").
-        const ext = (file.name.split('.').pop() || 'jpg').toLowerCase();
-        const path = `${user.auth_user_id}/${Date.now()}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+        const path = imageStoragePath(user.auth_user_id, file.type);
         const { error: uploadErr } = await supabase
           .storage
           .from('promote-images')

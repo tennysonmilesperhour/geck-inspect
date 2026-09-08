@@ -11,11 +11,12 @@ on:
   deployment_status:
 
 permissions:
-  issues: write
   contents: read
 
 jobs:
   alert:
+    permissions:
+      issues: write
     if: >-
       (github.event.deployment_status.state == 'failure' || github.event.deployment_status.state == 'error')
       && contains(github.event.deployment.environment, 'roduction')

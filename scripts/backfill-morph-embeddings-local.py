@@ -17,6 +17,7 @@ import torch
 import torch.nn.functional as F
 from PIL import Image, ImageFile
 from transformers import AutoProcessor, CLIPModel
+from safe_image_download import download_image_bytes
 
 MODEL_ID = "openai/clip-vit-large-patch14"
 ImageFile.LOAD_TRUNCATED_IMAGES = True
@@ -150,12 +151,13 @@ def reachable_candidates(candidates):
     def check(item):
         host, url = item
         try:
-            response = requests.get(url, headers={"Range": "bytes=0-0"}, timeout=8, stream=True)
-            response.close()
-            return host, response.ok
+            download_image_bytes(url, probe=True)
+            return host, True
         except Exception:
             return host, False
 
+    if not samples:
+        return []
     with ThreadPoolExecutor(max_workers=min(8, len(samples))) as pool:
         checks = dict(pool.map(check, samples.items()))
     unavailable = sorted(host for host, ok in checks.items() if not ok)
@@ -165,9 +167,7 @@ def reachable_candidates(candidates):
 
 
 def download(row):
-    response = requests.get(row["image_url"], timeout=20)
-    response.raise_for_status()
-    image = Image.open(io.BytesIO(response.content)).convert("RGB")
+    image = Image.open(io.BytesIO(download_image_bytes(row["image_url"]))).convert("RGB")
     return row, image
 
 
