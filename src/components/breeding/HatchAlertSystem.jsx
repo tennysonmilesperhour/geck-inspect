@@ -3,6 +3,7 @@ import { Egg, Notification } from '@/entities/all';
 import { differenceInDays } from 'date-fns';
 import { parseLocalDate } from '@/lib/dateUtils';
 import { startVisiblePolling } from '@/lib/pagePolling';
+import { getEstimatedHatchDates, getIncubationProfile } from '@/lib/incubationProfiles';
 
 /**
  * HatchAlertSystem, silent producer for `hatch_alert` notifications.
@@ -53,9 +54,11 @@ export default function HatchAlertSystem({ user, enabled }) {
   useEffect(() => {
     if (!user?.email || enabled === false) return undefined;
 
-    const threshold = Number.isFinite(user?.hatch_alert_days)
-      ? user.hatch_alert_days
-      : DEFAULT_HATCH_ALERT_DAYS;
+    const incubationProfile = user?.incubation_temperature_range
+      ? getIncubationProfile(user.incubation_temperature_range)
+      : null;
+    const threshold = incubationProfile?.alertDay
+      ?? (Number.isFinite(user?.hatch_alert_days) ? user.hatch_alert_days : DEFAULT_HATCH_ALERT_DAYS);
 
     const checkEggs = async () => {
       if (loadingRef.current) return;
@@ -86,12 +89,13 @@ export default function HatchAlertSystem({ user, enabled }) {
           if (alertedEggIds.has(egg.id)) continue;
           if (!shouldNotify(egg.id)) continue;
 
-          // Build a friendly description. Prefer the explicit
-          // hatch_date_expected if set; otherwise just say "now in
-          // hatch window" with the day count.
-          const expected = egg.hatch_date_expected
-            ? parseLocalDate(egg.hatch_date_expected)
-            : null;
+          // Build a friendly description from the temperature profile when
+          // available. Older profiles continue to use the egg's saved date.
+          const expected = incubationProfile
+            ? getEstimatedHatchDates(egg.lay_date, incubationProfile.id)?.estimated
+            : egg.hatch_date_expected
+              ? parseLocalDate(egg.hatch_date_expected)
+              : null;
           const daysToExpected = expected
             ? differenceInDays(expected, today)
             : null;
@@ -135,7 +139,7 @@ export default function HatchAlertSystem({ user, enabled }) {
     // so a member opening the PWA mid-day does not wait for the next tick.
     checkEggs();
     return startVisiblePolling(checkEggs, POLL_INTERVAL_MS);
-  }, [user?.email, user?.hatch_alert_days, enabled]);
+  }, [user?.email, user?.hatch_alert_days, user?.incubation_temperature_range, enabled]);
 
   return null;
 }

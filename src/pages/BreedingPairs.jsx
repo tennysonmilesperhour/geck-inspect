@@ -20,6 +20,7 @@ import { parseLocalDate } from '@/lib/dateUtils';
 import { Calendar as CalendarIcon } from "lucide-react";
 import { generateHatchedGeckoIdFromEgg } from '@/components/shared/geckoIdUtils';
 import SmartImage from '@/components/shared/SmartImage';
+import { DEFAULT_INCUBATION_PROFILE_ID, getEstimatedHatchDates } from '@/lib/incubationProfiles';
 
 // Helper to generate Google Calendar link
 const createGoogleCalendarLink = (title, start, end, description, location) => {
@@ -604,7 +605,12 @@ function AddEggForm({ planId, onEggAdded, sire: _sire, dam: _dam }) {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        const expectedHatch = addDays(layDate, 75);
+        const currentUser = await User.me();
+        const incubationProfileId = currentUser?.incubation_temperature_range || DEFAULT_INCUBATION_PROFILE_ID;
+        const expectedHatch = getEstimatedHatchDates(
+            format(layDate, 'yyyy-MM-dd'),
+            incubationProfileId,
+        ).estimated;
         const eggData = {
             breeding_plan_id: planId,
             lay_date: format(layDate, 'yyyy-MM-dd'),

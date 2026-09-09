@@ -41,11 +41,12 @@ import {
   Leaf,
   Moon,
 } from 'lucide-react';
-import { format, addDays } from 'date-fns';
+import { format } from 'date-fns';
 import { todayLocalISO, parseLocalDate, daysSinceLocal } from '@/lib/dateUtils';
 import { generateCalendarEvent } from '@/functions/generateCalendarEvent';
 import GeneticsModal from './GeneticsModal';
 import PlanDetails from './PlanDetails';
+import { DEFAULT_INCUBATION_PROFILE_ID, getEstimatedHatchDates } from '@/lib/incubationProfiles';
 
 /**
  * A single breeding plan card, collapsed view shows sire/dam thumbnails,
@@ -94,13 +95,16 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
     };
 
     const handleQuickAddEggs = async (count) => {
-        const today = new Date();
         const newLayDate = todayLocalISO();
 
-        // Load user preferences for hatch alert days
+        // Load the user's incubation profile so the expected hatch date
+        // represents the middle of that temperature range's typical window.
         const currentUser = await User.me();
-        const hatchAlertDays = currentUser?.hatch_alert_days || 60;
-        const expectedHatch = format(addDays(today, hatchAlertDays), 'yyyy-MM-dd');
+        const incubationProfileId = currentUser?.incubation_temperature_range || DEFAULT_INCUBATION_PROFILE_ID;
+        const expectedHatch = format(
+            getEstimatedHatchDates(newLayDate, incubationProfileId).estimated,
+            'yyyy-MM-dd',
+        );
 
         try {
             for (let i = 0; i < count; i++) {

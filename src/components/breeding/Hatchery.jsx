@@ -5,21 +5,33 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Badge } from '@/components/ui/badge';
-import { Egg as EggIcon, Search, Timer, Archive, ArchiveRestore, Sparkles, XCircle } from 'lucide-react';
+import { Egg as EggIcon, Search, Timer, Archive, ArchiveRestore, Sparkles, XCircle, Thermometer, ChevronDown } from 'lucide-react';
 import LoadingSpinner from '../shared/LoadingSpinner';
 import { format, differenceInDays } from 'date-fns';
 import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
 import EggDetailModal from './EggDetailModal';
 import { generateHatchedGeckoIdFromEgg } from '../shared/geckoIdUtils';
 import { currentSeasonLabel, inferSeasonLabel } from '@/lib/seasons';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { useToast } from '@/components/ui/use-toast';
+import {
+    DEFAULT_INCUBATION_PROFILE_ID,
+    INCUBATION_PROFILES,
+    getEstimatedHatchDates,
+    getIncubationProfile,
+} from '@/lib/incubationProfiles';
 
 export default function Hatchery() {
+    const { toast } = useToast();
     const [eggs, setEggs] = useState([]);
     const [filteredEggs, setFilteredEggs] = useState([]);
     const [breedingPlans, setBreedingPlans] = useState([]);
     const [geckos, setGeckos] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [hatchAlertDays, setHatchAlertDays] = useState(60);
+    const [incubationProfileId, setIncubationProfileId] = useState(DEFAULT_INCUBATION_PROFILE_ID);
+    const [savedIncubationProfileId, setSavedIncubationProfileId] = useState(DEFAULT_INCUBATION_PROFILE_ID);
+    const [isSavingIncubation, setIsSavingIncubation] = useState(false);
+    const [isTemperatureGuideOpen, setIsTemperatureGuideOpen] = useState(false);
     const [selectedEgg, setSelectedEgg] = useState(null);
     
     const [filters, setFilters] = useState({
@@ -43,8 +55,9 @@ export default function Hatchery() {
                 if (currentUser?.default_breeding_sort) {
                     setSortBy(currentUser.default_breeding_sort);
                 }
-                if (currentUser?.hatch_alert_days) {
-                    setHatchAlertDays(currentUser.hatch_alert_days);
+                if (currentUser?.incubation_temperature_range) {
+                    setIncubationProfileId(currentUser.incubation_temperature_range);
+                    setSavedIncubationProfileId(currentUser.incubation_temperature_range);
                 }
             } catch (error) {
                 console.error("Failed to load user preferences:", error);
@@ -142,17 +155,23 @@ export default function Hatchery() {
                     return new Date(b.lay_date) - new Date(a.lay_date);
                 case 'lay_date_asc':
                     return new Date(a.lay_date) - new Date(b.lay_date);
-                case 'hatch_date_desc':
-                    return new Date(b.hatch_date_expected) - new Date(a.hatch_date_expected);
-                case 'hatch_date_asc':
-                    return new Date(a.hatch_date_expected) - new Date(b.hatch_date_expected);
+                case 'hatch_date_desc': {
+                    const estimateA = getEstimatedHatchDates(a.lay_date, incubationProfileId)?.estimated;
+                    const estimateB = getEstimatedHatchDates(b.lay_date, incubationProfileId)?.estimated;
+                    return (estimateB?.getTime() || 0) - (estimateA?.getTime() || 0);
+                }
+                case 'hatch_date_asc': {
+                    const estimateA = getEstimatedHatchDates(a.lay_date, incubationProfileId)?.estimated;
+                    const estimateB = getEstimatedHatchDates(b.lay_date, incubationProfileId)?.estimated;
+                    return (estimateA?.getTime() || 0) - (estimateB?.getTime() || 0);
+                }
                 default:
                     return daysIncubatingB - daysIncubatingA;
             }
         });
 
         setFilteredEggs(result);
-    }, [eggs, filters, sortBy, breedingPlans, geckos]);
+    }, [eggs, filters, sortBy, breedingPlans, geckos, incubationProfileId]);
 
     const uniqueSeasons = [...new Set(breedingPlans.map(p => p.breeding_season).filter(Boolean))];
 
@@ -169,6 +188,47 @@ export default function Hatchery() {
 
     const handleEggClick = (egg) => {
         setSelectedEgg(egg);
+    };
+
+    const incubationProfile = getIncubationProfile(incubationProfileId);
+    const newEggEstimate = getEstimatedHatchDates(todayLocalISO(), incubationProfileId);
+    const incubationSettingChanged = incubationProfileId !== savedIncubationProfileId;
+
+    const handleSaveIncubationProfile = async () => {
+        setIsSavingIncubation(true);
+        try {
+            await User.updateMyUserData({
+                incubation_temperature_range: incubationProfile.id,
+                hatch_alert_days: incubationProfile.alertDay,
+            });
+
+            const incubatingEggs = eggs.filter((egg) => egg.status === 'Incubating' && !egg.archived && egg.lay_date);
+            const eggUpdates = await Promise.allSettled(incubatingEggs.map((egg) => {
+                const estimate = getEstimatedHatchDates(egg.lay_date, incubationProfile.id);
+                return Egg.update(egg.id, {
+                    hatch_date_expected: format(estimate.estimated, 'yyyy-MM-dd'),
+                });
+            }));
+            eggUpdates
+                .filter((result) => result.status === 'rejected')
+                .forEach((result) => console.warn('Failed to update an active egg estimate:', result.reason));
+
+            setSavedIncubationProfileId(incubationProfile.id);
+            await loadData();
+            toast({
+                title: 'Incubation timing updated',
+                description: `Active egg estimates now use ${incubationProfile.fahrenheit}. Hatch alerts begin on day ${incubationProfile.alertDay}.`,
+            });
+        } catch (error) {
+            console.error('Failed to save incubation profile:', error);
+            toast({
+                title: 'Could not update incubation timing',
+                description: 'Your previous setting is still in place. Please try again.',
+                variant: 'destructive',
+            });
+        } finally {
+            setIsSavingIncubation(false);
+        }
     };
     
     const handleArchiveEgg = async (eggId, shouldArchive, e) => {
@@ -297,6 +357,89 @@ export default function Hatchery() {
                 </div>
             </div>
 
+            <Card className="bg-slate-900 border-slate-700 overflow-hidden">
+                <CardContent className="p-5 sm:p-6 space-y-5">
+                    <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-4">
+                        <div className="flex items-start gap-3">
+                            <div className="rounded-lg bg-emerald-500/10 border border-emerald-500/30 p-2.5">
+                                <Thermometer className="w-5 h-5 text-emerald-400" />
+                            </div>
+                            <div>
+                                <h3 className="text-lg font-semibold text-slate-100">Incubation temperature</h3>
+                                <p className="text-sm text-slate-400 mt-1 max-w-2xl">
+                                    Choose the range your incubator usually holds. Geck Inspect will adjust hatch estimates and the default alert day for your active eggs.
+                                </p>
+                            </div>
+                        </div>
+
+                        <div className="flex flex-col sm:flex-row gap-2 lg:min-w-[360px]">
+                            <Select value={incubationProfileId} onValueChange={setIncubationProfileId}>
+                                <SelectTrigger className="bg-slate-800 border-slate-600 min-w-[250px]">
+                                    <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent className="bg-slate-800 border-slate-600">
+                                    {INCUBATION_PROFILES.map((profile) => (
+                                        <SelectItem key={profile.id} value={profile.id}>
+                                            {profile.label}: {profile.fahrenheit}
+                                        </SelectItem>
+                                    ))}
+                                </SelectContent>
+                            </Select>
+                            <Button
+                                onClick={handleSaveIncubationProfile}
+                                disabled={!incubationSettingChanged || isSavingIncubation}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white"
+                            >
+                                {isSavingIncubation ? 'Saving...' : 'Save range'}
+                            </Button>
+                        </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        <div className="rounded-lg bg-slate-800/70 border border-slate-700 p-4">
+                            <p className="text-xs uppercase tracking-wide text-slate-500">Typical hatch window</p>
+                            <p className="text-lg font-semibold text-slate-100 mt-1">Day {incubationProfile.minDays} to {incubationProfile.maxDays}</p>
+                            <p className="text-xs text-slate-400 mt-1">Around day {incubationProfile.estimatedDays}</p>
+                        </div>
+                        <div className="rounded-lg bg-slate-800/70 border border-slate-700 p-4">
+                            <p className="text-xs uppercase tracking-wide text-slate-500">Estimated hatch date</p>
+                            <p className="text-lg font-semibold text-emerald-400 mt-1">{format(newEggEstimate.estimated, 'MMM d, yyyy')}</p>
+                            <p className="text-xs text-slate-400 mt-1">For an egg laid today</p>
+                        </div>
+                        <div className="rounded-lg bg-slate-800/70 border border-slate-700 p-4">
+                            <p className="text-xs uppercase tracking-wide text-slate-500">Hatch alert begins</p>
+                            <p className="text-lg font-semibold text-amber-400 mt-1">Day {incubationProfile.alertDay}</p>
+                            <p className="text-xs text-slate-400 mt-1">Before the typical window opens</p>
+                        </div>
+                    </div>
+
+                    <p className="text-sm text-slate-300">{incubationProfile.summary}</p>
+
+                    <Collapsible open={isTemperatureGuideOpen} onOpenChange={setIsTemperatureGuideOpen}>
+                        <CollapsibleTrigger asChild>
+                            <Button variant="ghost" className="w-full justify-between px-0 text-slate-300 hover:text-white hover:bg-transparent">
+                                Why breeders choose different temperature ranges
+                                <ChevronDown className={`w-4 h-4 transition-transform ${isTemperatureGuideOpen ? 'rotate-180' : ''}`} />
+                            </Button>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="pt-3">
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                                {INCUBATION_PROFILES.map((profile) => (
+                                    <div key={profile.id} className={`rounded-lg border p-4 ${profile.id === incubationProfileId ? 'border-emerald-500/50 bg-emerald-500/5' : 'border-slate-700 bg-slate-800/50'}`}>
+                                        <p className="font-semibold text-slate-100">{profile.label}</p>
+                                        <p className="text-sm text-emerald-400 mt-1">{profile.fahrenheit} ({profile.celsius})</p>
+                                        <p className="text-sm text-slate-400 mt-2">{profile.breederNote}</p>
+                                    </div>
+                                ))}
+                            </div>
+                            <p className="text-xs text-slate-500 mt-3">
+                                These dates are planning estimates, not guarantees. Genetics, temperature swings, egg health, and incubation conditions can all change the actual hatch date. Avoid sustained temperatures above 80°F.
+                            </p>
+                        </CollapsibleContent>
+                    </Collapsible>
+                </CardContent>
+            </Card>
+
             <Card className="bg-slate-900 border-slate-700">
                 <CardContent className="p-6">
                     <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
@@ -378,7 +521,8 @@ export default function Hatchery() {
                     
                     const today = new Date();
                     const daysIncubating = differenceInDays(today, parseLocalDate(egg.lay_date));
-                    const isNearHatching = daysIncubating >= hatchAlertDays && egg.status === 'Incubating';
+                    const isNearHatching = daysIncubating >= incubationProfile.alertDay && egg.status === 'Incubating';
+                    const hatchEstimate = getEstimatedHatchDates(egg.lay_date, incubationProfile.id);
 
                     // Calculate incubation days for hatched eggs
                     const incubationDays = egg.status === 'Hatched' && egg.hatch_date_actual
@@ -437,7 +581,12 @@ export default function Hatchery() {
 
                                 <div className="text-sm text-slate-400 space-y-1">
                                     <p>Laid: {format(parseLocalDate(egg.lay_date), 'MMM dd, yyyy')}</p>
-                                    <p>Expected: {format(parseLocalDate(egg.hatch_date_expected), 'MMM dd, yyyy')}</p>
+                                    {hatchEstimate && (
+                                        <>
+                                            <p className="text-emerald-400">Estimated hatch: {format(hatchEstimate.estimated, 'MMM dd, yyyy')}</p>
+                                            <p className="text-xs">Typical window: {format(hatchEstimate.earliest, 'MMM d')} to {format(hatchEstimate.latest, 'MMM d, yyyy')}</p>
+                                        </>
+                                    )}
                                     {egg.hatch_date_actual && (
                                         <p className="text-green-400">
                                             Hatched: {format(parseLocalDate(egg.hatch_date_actual), 'MMM dd, yyyy')}
