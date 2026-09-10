@@ -156,7 +156,7 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
     // ================================================================= RENDER
     return (
         <Dialog open={isOpen} onOpenChange={onClose}>
-            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto bg-[var(--gi-forest-deep)] border border-emerald-900/60 text-slate-100 shadow-2xl shadow-black/40">
+            <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
                 <DialogHeader>
                     <DialogTitle className="flex items-center gap-2.5 text-lg">
                         <FileSpreadsheet className="w-5 h-5 text-emerald-400" />

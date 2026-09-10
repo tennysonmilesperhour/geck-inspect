@@ -969,6 +969,9 @@ button:focus-visible {
   }
 }
 
-/* Keep floating feedback out of modal forms and their focus flow. */
+/* Keep floating UI (feedback tab, guest notice, feeding alerts) out of
+   modal forms, the mobile drawer, and their focus flow. */
 body:has([role="dialog"][data-state="open"]) [data-feedback-trigger],
-body:has([role="alertdialog"][data-state="open"]) [data-feedback-trigger] { display: none; }
+body:has([role="alertdialog"][data-state="open"]) [data-feedback-trigger],
+body:has([role="dialog"][data-state="open"]) [data-floating-notice],
+body:has([role="alertdialog"][data-state="open"]) [data-floating-notice] { display: none; }

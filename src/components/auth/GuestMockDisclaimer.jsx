@@ -64,6 +64,7 @@ export default function GuestMockDisclaimer() {
     <div
       role="status"
       aria-live="polite"
+      data-floating-notice
       className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-4 right-4 z-[60] w-[min(22rem,calc(100vw-2rem))] pointer-events-auto"
     >
       <div

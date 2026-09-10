@@ -71,6 +71,10 @@ export function Sidebar({ children, className }) {
 
             {/* Mobile Sidebar (overlay) */}
             <div
+                role="dialog"
+                aria-modal="true"
+                aria-label="Menu"
+                data-state={isMobileOpen ? 'open' : 'closed'}
                 className={`fixed inset-0 z-50 flex md:hidden transition-transform duration-300 ease-in-out ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}
                 style={{ overscrollBehavior: 'none', touchAction: isMobileOpen ? 'pan-y' : 'none' }}
             >
