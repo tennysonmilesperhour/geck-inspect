@@ -318,6 +318,7 @@ export default function OtherReptilesPage() {
                                                     onView={handleView}
                                                     onEdit={handleEdit}
                                                     onFeedingComplete={handleFeedingComplete}
+                                                    onArchive={handleArchive}
                                                 />
                                             </motion.div>
                                         ))}

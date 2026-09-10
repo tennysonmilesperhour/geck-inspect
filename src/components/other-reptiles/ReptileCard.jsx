@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Eye, Edit, Calendar, Utensils } from 'lucide-react';
+import { Eye, Edit, Calendar, Utensils, ArchiveRestore } from 'lucide-react';
 import { format } from 'date-fns';
 import { todayLocalISO, parseLocalDate, daysSinceLocal } from '@/lib/dateUtils';
 import EventTracker from '../my-geckos/EventTracker';
@@ -19,7 +19,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { getSexIcon, getSexColor } from '@/lib/utils';
 import { DEFAULT_GECKO_IMAGE as DEFAULT_IMAGE } from '@/lib/constants';
 
-export default function ReptileCard({ reptile, onView, onEdit, onFeedingComplete }) {
+export default function ReptileCard({ reptile, onView, onEdit, onFeedingComplete, onArchive }) {
     const [showFedModal, setShowFedModal] = useState(false);
     const [preyType, setPreyType] = useState('');
     const [preyWeight, setPreyWeight] = useState('');
@@ -162,8 +162,16 @@ export default function ReptileCard({ reptile, onView, onEdit, onFeedingComplete
                         </span>
                     </div>
 
+                    {reptile.archived && (
+                        <div className="absolute top-2 right-2">
+                            <span className="bg-slate-900/70 text-slate-300 border border-slate-500/50 backdrop-blur-sm px-2 py-1 rounded-full text-xs font-bold">
+                                Archived
+                            </span>
+                        </div>
+                    )}
+
                     {/* Status badge and Fed button stacked */}
-                    {reptile.feeding_reminder_enabled && feedingStatus.status !== 'none' && (
+                    {!reptile.archived && reptile.feeding_reminder_enabled && feedingStatus.status !== 'none' && (
                         <div className="absolute top-2 right-2 flex flex-col items-end gap-1">
                             <div className={`${
                                 feedingStatus.status === 'ok' ? 'bg-emerald-900/50 text-emerald-400' :
@@ -185,6 +193,21 @@ export default function ReptileCard({ reptile, onView, onEdit, onFeedingComplete
                                     Fed
                                 </Button>
                             )}
+                        </div>
+                    )}
+
+                    {/* Unarchive: always visible on archived cards so it does
+                        not require hovering to reach the detail modal. */}
+                    {reptile.archived && onArchive && (
+                        <div className="absolute bottom-2 left-2">
+                            <Button
+                                size="sm"
+                                onClick={(e) => { e.stopPropagation(); onArchive(reptile.id, false); }}
+                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold shadow-lg text-xs h-8 px-3"
+                            >
+                                <ArchiveRestore className="w-4 h-4 sm:mr-1" />
+                                <span className="hidden sm:inline">Unarchive</span>
+                            </Button>
                         </div>
                     )}
 
