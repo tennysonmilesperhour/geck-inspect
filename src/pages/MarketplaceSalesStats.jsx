@@ -1038,7 +1038,7 @@ export default function MarketplaceSalesStats() {
     return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
   }, [soldGeckos, geckoCategories, priceOverrides, manualSales]);
 
-  const tabTriggerClass = "flex-shrink-0 md:flex-1 whitespace-nowrap data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-3 rounded-sm transition-colors";
+  const tabTriggerClass = "w-full min-w-0 whitespace-normal text-center leading-tight py-1.5 data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-2 rounded-sm transition-colors";
 
   if (isLoading) {
     return (
@@ -1132,7 +1132,7 @@ export default function MarketplaceSalesStats() {
 
         <div className="bg-emerald-950/30 border border-emerald-900/40 rounded-xl p-4 md:p-6">
           <Tabs defaultValue={statsPrefs.defaultTab}>
-            <TabsList className="flex w-full max-w-xl mx-auto bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1 mb-6 overflow-x-auto [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
+            <TabsList className="grid grid-cols-2 md:grid-cols-4 h-auto w-full max-w-xl mx-auto bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1 mb-6">
               <TabsTrigger value="revenue" className={tabTriggerClass}>Revenue</TabsTrigger>
               <TabsTrigger value="pending" className={tabTriggerClass}>
                 <Clock className="w-3.5 h-3.5 mr-1" />
