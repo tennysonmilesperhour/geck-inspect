@@ -109,7 +109,7 @@ const CARE_GUIDE_JSON_LD = {
           name: 'What do crested geckos eat?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'The primary diet is commercial Crested Gecko Diet (CGD), a complete powdered food mixed with water. Popular brands include Pangea, Repashy, and Black Panther Zoological. Insects like dubia roaches or black soldier fly larvae can be offered 1–2 times per week as enrichment.',
+            text: 'The primary diet is commercial Crested Gecko Diet (CGD), a complete powdered food mixed with water. Popular brands include Pangea, Repashy, and Black Panther Zoological. Insects like dubia roaches or black soldier fly larvae can be offered 1-2 times per week as enrichment.',
           },
         },
         {
@@ -133,7 +133,7 @@ const CARE_GUIDE_JSON_LD = {
           name: 'When can crested geckos be bred?',
           acceptedAnswer: {
             '@type': 'Answer',
-            text: 'Females should not be bred until they reach 40 grams and at least 18 months of age to avoid calcium depletion and egg-binding. Males can breed earlier once they reach 25–30 grams at 12+ months.',
+            text: 'Females should not be bred until they reach 40 grams and at least 18 months of age to avoid calcium depletion and egg-binding. Males can breed earlier once they reach 25-30 grams at 12+ months.',
           },
         },
       ],

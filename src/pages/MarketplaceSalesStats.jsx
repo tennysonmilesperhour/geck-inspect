@@ -23,7 +23,7 @@ import { todayLocalISO } from '@/lib/dateUtils';
 import GeckoSelectionModal from '../components/marketplace/GeckoSelectionModal';
 import MarketAnalytics from '@/components/market-analytics/MarketAnalytics';
 
-const QUARTER_LABELS = { 1: 'Q1 (Jan–Mar)', 2: 'Q2 (Apr–Jun)', 3: 'Q3 (Jul–Sep)', 4: 'Q4 (Oct–Dec)' };
+const QUARTER_LABELS = { 1: 'Q1 (Jan-Mar)', 2: 'Q2 (Apr-Jun)', 3: 'Q3 (Jul-Sep)', 4: 'Q4 (Oct-Dec)' };
 
 const COST_CATEGORIES = [
   { value: 'food', label: 'Food' },

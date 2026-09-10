@@ -986,8 +986,8 @@ export default function MorphGuidePage() {
                     <SelectItem value="rarity_common_first">Common first</SelectItem>
                     <SelectItem value="price_high_first">Price high to low</SelectItem>
                     <SelectItem value="price_low_first">Price low to high</SelectItem>
-                    <SelectItem value="alphabetical">A–Z</SelectItem>
-                    <SelectItem value="alphabetical_desc">Z–A</SelectItem>
+                    <SelectItem value="alphabetical">A-Z</SelectItem>
+                    <SelectItem value="alphabetical_desc">Z-A</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
