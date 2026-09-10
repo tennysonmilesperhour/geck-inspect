@@ -64,7 +64,7 @@ export default function GuestMockDisclaimer() {
     <div
       role="status"
       aria-live="polite"
-      className="fixed bottom-4 right-4 z-[60] w-[min(22rem,calc(100vw-2rem))] pointer-events-auto"
+      className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-4 right-4 z-[60] w-[min(22rem,calc(100vw-2rem))] pointer-events-auto"
     >
       <div
         className="rounded-xl border border-yellow-300/50 bg-yellow-400/20 text-yellow-50 shadow-lg shadow-black/30 backdrop-blur-md"

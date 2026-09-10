@@ -925,7 +925,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       >
         Skip to content
       </a>
-      <div className="flex h-screen bg-background font-sans app-container-outline">
+      <div className="flex h-screen h-dvh bg-background font-sans app-container-outline">
         {/* Mobile Sidebar */}
         <Sidebar className="mobile-sidebar-glass border-r border-emerald-800/40 bg-emerald-950/25 backdrop-blur-sm md:hidden z-50">
           <SidebarHeader className="border-b border-emerald-800/40 px-6 pb-6 pt-[calc(1.5rem+env(safe-area-inset-top))]">
@@ -1356,7 +1356,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
             </div>
           </header>
 
-          <div className="flex-1 overflow-auto overflow-x-hidden pb-20 md:pb-0">
+          <div className="app-main-scroll flex-1 overflow-auto overflow-x-hidden overscroll-none pb-20 md:pb-0">
             <PushEnableBanner user={user} />
             {children}
           </div>

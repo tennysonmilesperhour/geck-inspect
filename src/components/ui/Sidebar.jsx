@@ -20,7 +20,7 @@ export function SidebarProvider({ children }) {
     const prevOverflow = body.style.overflow;
     const prevOverscroll = body.style.overscrollBehavior;
     body.style.overflow = 'hidden';
-    body.style.overscrollBehavior = 'contain';
+    body.style.overscrollBehavior = 'none';
     return () => {
       body.style.overflow = prevOverflow;
       body.style.overscrollBehavior = prevOverscroll;
@@ -72,9 +72,9 @@ export function Sidebar({ children, className }) {
             {/* Mobile Sidebar (overlay) */}
             <div
                 className={`fixed inset-0 z-40 flex md:hidden transition-transform duration-300 ease-in-out ${isMobileOpen ? 'translate-x-0' : '-translate-x-full'}`}
-                style={{ overscrollBehavior: 'contain', touchAction: isMobileOpen ? 'pan-y' : 'none' }}
+                style={{ overscrollBehavior: 'none', touchAction: isMobileOpen ? 'pan-y' : 'none' }}
             >
-                <aside className={`flex flex-col h-full w-72 shadow-lg ${className}`} style={{ overscrollBehavior: 'contain' }}>
+                <aside className={`flex flex-col h-full w-72 shadow-lg ${className}`} style={{ overscrollBehavior: 'none' }}>
                     {children}
                 </aside>
                 <div className="flex-1 bg-black/20 backdrop-blur-sm" onClick={toggleSidebar}></div>

@@ -16,7 +16,8 @@ html, body, #root {
 
           .app-container-outline {
             width: 100%;
-            min-height: 100vh; /* Changed from height to min-height for better compatibility */
+            min-height: 100vh;
+            min-height: 100dvh; /* visible height on phones; 100vh falls back on older engines */
             display: flex;
             background: linear-gradient(135deg, #0a0f0a 0%, #1a2920 100%);
             font-family: 'Inter', system-ui, sans-serif;
@@ -995,7 +996,7 @@ html, body, #root {
           }
 
           .custom-scrollbar {
-            overscroll-behavior: contain;
+            overscroll-behavior: none;
           }
 
           .custom-scrollbar::-webkit-scrollbar {

@@ -61,7 +61,7 @@ export default function UpdateNotification() {
   if (!showBanner) return null;
 
   return (
-    <div className="fixed bottom-4 left-4 z-[99999] flex items-center gap-3 max-w-md bg-slate-800 border border-emerald-500/50 text-slate-100 px-4 py-3 rounded-xl shadow-2xl shadow-black/50 animate-in slide-in-from-bottom-4 duration-300">
+    <div className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-4 left-4 z-[99999] flex items-center gap-3 max-w-md bg-slate-800 border border-emerald-500/50 text-slate-100 px-4 py-3 rounded-xl shadow-2xl shadow-black/50 animate-in slide-in-from-bottom-4 duration-300">
       <p className="text-sm text-slate-100 leading-snug">
         The app is shedding its old skin. Click Chomp to refresh and update to the new version.
       </p>

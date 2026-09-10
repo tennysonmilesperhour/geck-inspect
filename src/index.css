@@ -7,6 +7,66 @@
 html, body {
   overflow-x: hidden;
   max-width: 100vw;
+  /* No rubber-band bounce on the document itself. The app shell is a
+     fixed-height frame whose content scrolls in an inner div, so any
+     bounce on html/body only drags the header and bottom nav out of
+     the phone frame. iOS 16+ and Chrome honor this on the root. */
+  overscroll-behavior: none;
+}
+
+/* Scroll containment for every scroll surface in the app.
+   Tailwind's overflow utilities create the scroll containers, but by
+   default reaching the end of one lets the gesture chain to the page
+   behind it (a dialog scrolls to its end, then the whole page bounces).
+   Match the utilities by exact class token so the rule follows the
+   markup without touching hundreds of files. Vertical surfaces get
+   `none` (no bounce, no chaining); horizontal strips only contain the
+   x axis so a vertical swipe that starts on a tab strip still scrolls
+   the page underneath. */
+[class~="overflow-auto"],
+[class~="overflow-y-auto"],
+[class~="overflow-scroll"],
+[class~="overflow-y-scroll"],
+[data-radix-scroll-area-viewport],
+[data-radix-select-viewport],
+[data-radix-menu-content],
+[data-radix-dropdown-menu-content],
+[data-radix-popover-content],
+[cmdk-list],
+[role="dialog"],
+[role="listbox"],
+[role="menu"] {
+  overscroll-behavior-y: none;
+}
+[class~="overflow-x-auto"],
+[class~="overflow-x-scroll"] {
+  overscroll-behavior-x: none;
+}
+
+/* Card padding. shadcn ships p-6 on CardHeader / CardContent /
+   CardFooter, which is 48px of gutters on a 390px phone. The defaults
+   live here at zero specificity (:where) instead of as utility classes
+   on the primitive so that any p-* / pt-* override a page passes still
+   wins, on every breakpoint, without tailwind-merge having to reconcile
+   responsive variants. */
+:where([data-card-part="header"]) { padding: 1.5rem; }
+:where([data-card-part="content"]),
+:where([data-card-part="footer"]) { padding: 0 1.5rem 1.5rem; }
+@media (max-width: 767px) {
+  :where([data-card-part="header"]) { padding: 1rem; }
+  :where([data-card-part="content"]),
+  :where([data-card-part="footer"]) { padding: 0 1rem 1rem; }
+}
+
+/* Inside the app shell "a screen" means the scroll area between the
+   top bar and the bottom nav, not the full 100vh. Pages set
+   min-h-screen for their background fill; resolving it against the
+   scroller instead removes the ~120px of empty scroll that every short
+   page had on phones (100vh is taller than the visible area under
+   Safari's toolbar). Percent min-height resolves against the flexed
+   scroller because the shell has a definite height. */
+.app-main-scroll > .min-h-screen {
+  min-height: 100%;
 }
 
 

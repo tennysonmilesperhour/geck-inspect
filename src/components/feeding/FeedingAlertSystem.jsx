@@ -230,7 +230,7 @@ export default function FeedingAlertSystem({ user, enabled, lateReminders }) {
   if (!enabled || visibleAlerts.length === 0) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 max-w-sm z-40">
+    <div className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-4 right-4 max-w-sm z-40">
       <style>{`
         @keyframes feeding-glow-yellow {
           0%, 100% { box-shadow: 0 0 15px rgba(234, 179, 8, 0.3), inset 0 0 10px rgba(234, 179, 8, 0.1); }

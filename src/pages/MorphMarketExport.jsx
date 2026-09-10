@@ -1245,7 +1245,7 @@ export default function MorphMarketExport() {
       />
 
       {batchGeckos.length > 0 && (
-        <div className="fixed bottom-0 left-0 right-0 z-40 border-t border-slate-800 bg-slate-950/95 backdrop-blur-sm">
+        <div className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-0 left-0 right-0 z-40 border-t border-slate-800 bg-slate-950/95 backdrop-blur-sm">
           <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
             <div className="text-sm text-slate-200">
               <span className="font-semibold">{batchGeckos.length}</span>
