@@ -80,10 +80,11 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
           fallback={DEFAULT_GECKO_IMAGE}
         />
 
-        {/* Top-left: sex pill + feeding group pill (matched heights) */}
+        {/* Top-left: bare sex symbol + feeding group pill (aligned heights) */}
         <div className="absolute top-2 left-2 flex items-center gap-1.5">
           <span
-            className={`inline-flex items-center justify-center h-6 min-w-[26px] px-1.5 rounded-full border border-white/15 bg-slate-900/60 backdrop-blur-sm text-sm font-bold leading-none drop-shadow ${getSexColor(gecko.sex)}`}
+            className={`inline-flex items-center justify-center h-6 text-lg font-bold leading-none ${getSexColor(gecko.sex)}`}
+            style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9), 0 0 2px rgba(0,0,0,0.7)' }}
             aria-label={gecko.sex || 'Unknown sex'}
           >
             {getSexIcon(gecko.sex)}
