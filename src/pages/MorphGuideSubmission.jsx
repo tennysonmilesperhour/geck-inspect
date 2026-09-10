@@ -100,7 +100,7 @@ export default function MorphGuideSubmissionPage() {
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-sage-50 to-earth-50 p-8">
+      <div className="flex items-center justify-center min-h-screen bg-slate-950 p-8">
         <Card className="max-w-md w-full text-center">
           <CardHeader>
             <CardTitle>Login Required</CardTitle>
@@ -115,7 +115,7 @@ export default function MorphGuideSubmissionPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-sage-50 to-earth-50 p-4 md:p-8">
+    <div className="min-h-screen bg-slate-950 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
         <div className="flex items-center gap-4 mb-8">
           <Button
@@ -149,7 +149,7 @@ export default function MorphGuideSubmissionPage() {
           </Alert>
         )}
 
-        <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
+        <Card className="bg-slate-900 border-slate-700">
           <form onSubmit={handleSubmit}>
             <CardHeader>
               <CardTitle>Your Submission</CardTitle>

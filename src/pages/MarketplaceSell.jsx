@@ -78,7 +78,7 @@ const SELLABLE_STATUSES = [
 
 function SectionHeader({ title, count, description, right }) {
   return (
-    <div className="flex items-end justify-between gap-3 mb-3">
+    <div className="flex flex-wrap items-end justify-between gap-3 mb-3">
       <div>
         <h2 className="text-xl md:text-2xl font-bold text-slate-100 flex items-center gap-2">
           {title}

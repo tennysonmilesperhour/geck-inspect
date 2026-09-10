@@ -683,7 +683,7 @@ export default function MorphGuidePage() {
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <div className="absolute top-0 right-0 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl" />
           </div>
-          <div className="relative max-w-6xl mx-auto px-6 py-14 md:py-20">
+          <div className="relative max-w-6xl mx-auto px-4 md:px-6 py-14 md:py-20">
             <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300 mb-5">
               <BookOpen className="w-3.5 h-3.5" />
               Morph Reference

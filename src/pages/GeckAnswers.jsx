@@ -183,7 +183,7 @@ export default function GeckAnswers() {
   // ─── ASK VIEW ───
   if (view === 'ask') {
     return (
-      <div className="min-h-screen p-6" style={{ backgroundColor: C.warmWhite, fontFamily: "'DM Sans', sans-serif" }}>
+      <div className="min-h-screen p-4 md:p-6" style={{ backgroundColor: C.warmWhite, fontFamily: "'DM Sans', sans-serif" }}>
         <Seo
           title="Ask a Crested Gecko Question"
           description="Post a new crested gecko question to the Geck Answers community."

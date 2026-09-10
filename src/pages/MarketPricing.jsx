@@ -125,7 +125,7 @@ export default function MarketPricing() {
 
   if (loading) {
     return (
-      <div className="min-h-screen p-6" style={{ backgroundColor: C.warmWhite }}>
+      <div className="min-h-screen p-4 md:p-6" style={{ backgroundColor: C.warmWhite }}>
         <div className="max-w-6xl mx-auto space-y-4">
           {[80, 120, 400].map((h, i) => <div key={i} className="animate-pulse rounded-xl" style={{ height: h, backgroundColor: C.paleSage }} />)}
         </div>

@@ -135,7 +135,7 @@ export default function ProfileSettings({ user, onUserUpdate }) {
     return (
         <div className="space-y-6">
             {/* Profile Images */}
-            <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
+            <Card className="bg-slate-900 border-slate-700">
                 <CardHeader>
                     <CardTitle>Profile Photos</CardTitle>
                 </CardHeader>
@@ -187,7 +187,7 @@ export default function ProfileSettings({ user, onUserUpdate }) {
             </Card>
 
             {/* Basic Profile Information */}
-            <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
+            <Card className="bg-slate-900 border-slate-700">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Settings className="w-5 h-5" />
@@ -303,7 +303,7 @@ export default function ProfileSettings({ user, onUserUpdate }) {
             </Card>
 
             {/* Social Media & Website */}
-            <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
+            <Card className="bg-slate-900 border-slate-700">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Globe className="w-5 h-5" />
@@ -380,7 +380,7 @@ export default function ProfileSettings({ user, onUserUpdate }) {
             </Card>
 
             {/* Privacy Settings */}
-            <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
+            <Card className="bg-slate-900 border-slate-700">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Shield className="w-5 h-5" />
@@ -422,7 +422,7 @@ export default function ProfileSettings({ user, onUserUpdate }) {
             </Card>
 
             {/* Email Notification Settings */}
-            <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
+            <Card className="bg-slate-900 border-slate-700">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Mail className="w-5 h-5" />
@@ -478,7 +478,7 @@ export default function ProfileSettings({ user, onUserUpdate }) {
             </Card>
 
             {/* Calendar Alert Settings */}
-            <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
+            <Card className="bg-slate-900 border-slate-700">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Mail className="w-5 h-5" /> {/* Reusing Mail icon for calendar alerts, or change to Calendar icon if available */}

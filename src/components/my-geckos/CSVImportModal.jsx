@@ -168,11 +168,11 @@ export default function CSVImportModal({ isOpen, onClose, onImportComplete }) {
                 </DialogHeader>
 
                 <Tabs defaultValue="import" className="w-full">
-                    <TabsList className="grid w-full grid-cols-2 bg-slate-800/60 border border-slate-700/40">
-                        <TabsTrigger value="import" className="data-[state=active]:bg-emerald-900/50 data-[state=active]:text-emerald-300">
+                    <TabsList>
+                        <TabsTrigger value="import">
                             Import Data
                         </TabsTrigger>
-                        <TabsTrigger value="template" className="data-[state=active]:bg-emerald-900/50 data-[state=active]:text-emerald-300">
+                        <TabsTrigger value="template">
                             Download Template
                         </TabsTrigger>
                     </TabsList>

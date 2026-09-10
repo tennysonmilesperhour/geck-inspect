@@ -215,7 +215,7 @@ export default function BreedingPairsPage() {
                             <div className="w-12 h-12 bg-gradient-to-br from-pink-600 to-rose-600 rounded-xl flex items-center justify-center shadow-lg">
                                 <HeartHandshake className="w-6 h-6 text-white" />
                             </div>
-                            <h1 className="text-4xl font-bold text-slate-100">Breeding Pairs</h1>
+                            <h1 className="text-2xl md:text-4xl font-bold text-slate-100">Breeding Pairs</h1>
                         </div>
                         <p className="text-lg text-slate-400">Manage your gecko breeding programs and track offspring.</p>
                     </div>

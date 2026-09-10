@@ -133,7 +133,7 @@ export default function MyListingsPage() {
         const primaryImage = gecko.image_urls && gecko.image_urls.length > 0 ? gecko.image_urls[0] : null;
 
         return (
-            <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
+            <Card className="bg-slate-900 border-slate-700">
                 <div className="relative">
                     {primaryImage ? (
                         <img 
@@ -234,7 +234,7 @@ export default function MyListingsPage() {
     };
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-sage-50 to-earth-50 p-4 md:p-8">
+        <div className="min-h-screen bg-slate-950 p-4 md:p-8">
             <div className="max-w-7xl mx-auto">
                 <div className="mb-8">
                     <h1 className="text-3xl font-bold text-sage-900 mb-2">My Listings</h1>
@@ -243,7 +243,7 @@ export default function MyListingsPage() {
 
                 {/* Analytics Overview */}
                 <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
-                    <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
+                    <Card className="bg-slate-900 border-slate-700">
                         <CardContent className="p-4 text-center">
                             <ShoppingCart className="w-6 h-6 text-blue-600 mx-auto mb-2" />
                             <div className="text-2xl font-bold text-sage-900">{analytics.totalListings}</div>
@@ -251,7 +251,7 @@ export default function MyListingsPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
+                    <Card className="bg-slate-900 border-slate-700">
                         <CardContent className="p-4 text-center">
                             <DollarSign className="w-6 h-6 text-green-600 mx-auto mb-2" />
                             <div className="text-2xl font-bold text-sage-900">${analytics.totalValue}</div>
@@ -259,7 +259,7 @@ export default function MyListingsPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
+                    <Card className="bg-slate-900 border-slate-700">
                         <CardContent className="p-4 text-center">
                             <TrendingUp className="w-6 h-6 text-green-600 mx-auto mb-2" />
                             <div className="text-2xl font-bold text-sage-900">{analytics.sold}</div>
@@ -267,7 +267,7 @@ export default function MyListingsPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
+                    <Card className="bg-slate-900 border-slate-700">
                         <CardContent className="p-4 text-center">
                             <Calendar className="w-6 h-6 text-blue-600 mx-auto mb-2" />
                             <div className="text-2xl font-bold text-sage-900">{analytics.active}</div>
@@ -275,7 +275,7 @@ export default function MyListingsPage() {
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
+                    <Card className="bg-slate-900 border-slate-700">
                         <CardContent className="p-4 text-center">
                             <MessageCircle className="w-6 h-6 text-orange-600 mx-auto mb-2" />
                             <div className="text-2xl font-bold text-sage-900">{analytics.inquiries}</div>
@@ -285,8 +285,8 @@ export default function MyListingsPage() {
                 </div>
 
                 <Tabs defaultValue="active" className="space-y-8">
-                    <TabsList className="grid w-full grid-cols-3">
-                        <TabsTrigger value="active">Active Listings ({activeListings.length})</TabsTrigger>
+                    <TabsList className="mb-4">
+                        <TabsTrigger value="active"><span className="hidden sm:inline">Active Listings</span><span className="sm:hidden">Active</span> ({activeListings.length})</TabsTrigger>
                         <TabsTrigger value="sold">Sold ({soldGeckos.length})</TabsTrigger>
                         <TabsTrigger value="analytics">Analytics</TabsTrigger>
                     </TabsList>
@@ -294,7 +294,7 @@ export default function MyListingsPage() {
                     {/* Active Listings */}
                     <TabsContent value="active">
                         {activeListings.length === 0 ? (
-                            <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
+                            <Card className="bg-slate-900 border-slate-700">
                                 <CardContent className="p-8 text-center">
                                     <ShoppingCart className="w-12 h-12 text-sage-400 mx-auto mb-4" />
                                     <h3 className="text-lg font-semibold text-sage-900 mb-2">No active listings</h3>
@@ -318,7 +318,7 @@ export default function MyListingsPage() {
                     {/* Sold Listings */}
                     <TabsContent value="sold">
                         {soldGeckos.length === 0 ? (
-                            <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
+                            <Card className="bg-slate-900 border-slate-700">
                                 <CardContent className="p-8 text-center">
                                     <TrendingUp className="w-12 h-12 text-sage-400 mx-auto mb-4" />
                                     <h3 className="text-lg font-semibold text-sage-900 mb-2">No sales yet</h3>
@@ -337,7 +337,7 @@ export default function MyListingsPage() {
                     {/* Analytics */}
                     <TabsContent value="analytics">
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-                            <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
+                            <Card className="bg-slate-900 border-slate-700">
                                 <CardHeader>
                                     <CardTitle>Sales Over Time (Last 6 Months)</CardTitle>
                                 </CardHeader>
@@ -356,7 +356,7 @@ export default function MyListingsPage() {
                                 </CardContent>
                             </Card>
 
-                            <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
+                            <Card className="bg-slate-900 border-slate-700">
                                 <CardHeader>
                                     <CardTitle>Morph Distribution</CardTitle>
                                 </CardHeader>

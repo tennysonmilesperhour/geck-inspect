@@ -189,7 +189,7 @@ export default function OtherReptilesPage() {
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
                     <div>
-                        <h1 className="text-4xl font-bold text-slate-100">
+                        <h1 className="text-2xl md:text-4xl font-bold text-slate-100">
                             {showArchived ? 'Archived Reptiles' : 'Other Reptiles'}
                         </h1>
                         <p className="text-slate-400 mt-1">Track your non-gecko reptile collection with feeding reminders.</p>

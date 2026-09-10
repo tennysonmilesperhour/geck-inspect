@@ -741,16 +741,16 @@ export default function MyProfile() {
 
                             {/* Gecko Collections Tabs */}
                             <Tabs defaultValue="collection" className="w-full">
-                                <TabsList className="grid w-full grid-cols-3 mb-6 bg-slate-800">
-                                    <TabsTrigger value="for-sale" className="data-[state=active]:bg-orange-600">
+                                <TabsList className="mb-6">
+                                    <TabsTrigger value="for-sale">
                                         <ShoppingCart className="w-4 h-4 mr-2" />
                                         For Sale ({forSaleGeckos.length})
                                     </TabsTrigger>
-                                    <TabsTrigger value="breeders" className="data-[state=active]:bg-pink-600">
+                                    <TabsTrigger value="breeders">
                                         <GitBranch className="w-4 h-4 mr-2" />
                                         Breeders ({breedingGeckos.length})
                                     </TabsTrigger>
-                                    <TabsTrigger value="collection" className="data-[state=active]:bg-blue-600">
+                                    <TabsTrigger value="collection">
                                         <Heart className="w-4 h-4 mr-2" />
                                         Collection ({collectionGeckos.length})
                                     </TabsTrigger>

@@ -614,12 +614,12 @@ export default function MessagesPage() {
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
             <Seo title="Messages" description="Direct messages with fellow gecko breeders." path="/Messages" noIndex />
             <div className="max-w-6xl mx-auto">
-                <div className="flex items-center justify-between mb-8">
+                <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
                     <div className="flex items-center gap-3">
                         <div className="w-12 h-12 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
                             <Mail className="w-6 h-6 text-white" />
                         </div>
-                        <h1 className="text-4xl font-bold text-slate-100">Messages</h1>
+                        <h1 className="text-2xl md:text-4xl font-bold text-slate-100">Messages</h1>
                     </div>
                     <PageSettingsPanel title="Message Settings">
                         <div>

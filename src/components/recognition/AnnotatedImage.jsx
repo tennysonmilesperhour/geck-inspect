@@ -161,7 +161,7 @@ export default function AnnotatedImage({ imageUrl, annotations = [], className }
 
   return (
     <div className={className}>
-      <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
+      <Card className="bg-slate-900 border-slate-700">
         <CardContent className="p-4">
           <div className="relative">
             <img

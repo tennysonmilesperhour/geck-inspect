@@ -96,7 +96,7 @@ export default function AnnotationEditor({ imageUrl, annotations, onSave, classN
 
   return (
     <div className={className}>
-      <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
+      <Card className="bg-slate-900 border-slate-700">
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Pencil className="w-5 h-5" />

@@ -92,7 +92,7 @@ export default function LikedGeckosPage() {
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
             <div className="max-w-7xl mx-auto">
                 <header className="text-center mb-8">
-                    <h1 className="text-4xl font-bold text-slate-100 flex items-center justify-center gap-3">
+                    <h1 className="text-2xl md:text-4xl font-bold text-slate-100 flex items-center justify-center gap-3">
                         <Heart className="w-10 h-10 text-pink-500 fill-pink-500" />
                         Liked Geckos
                     </h1>

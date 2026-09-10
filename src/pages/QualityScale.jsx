@@ -348,7 +348,7 @@ export default function QualityScale() {
         jsonLd={QUALITY_SCALE_JSON_LD}
       />
 
-      <section className="max-w-4xl mx-auto px-6 pt-4 pb-16">
+      <section className="max-w-4xl mx-auto px-4 md:px-6 pt-4 pb-16">
         <div className="flex items-center gap-2 text-xs text-slate-500 mb-4">
           <Link to="/" className="hover:text-slate-300">Home</Link>
           <span>/</span>

@@ -70,7 +70,7 @@ export default function ShareProfile({ user, geckos }) {
 
     return (
         <div className="space-y-6">
-            <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
+            <Card className="bg-slate-900 border-slate-700">
                 <CardHeader>
                     <CardTitle className="flex items-center gap-2">
                         <Share2 className="w-5 h-5" />

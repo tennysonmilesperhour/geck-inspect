@@ -138,7 +138,7 @@ export default function TrainingPage() {
               <Brain className="w-6 h-6 text-white" />
             </div>
             <div>
-              <h1 className="text-4xl font-bold text-slate-100">Morph ID Evidence Lab</h1>
+              <h1 className="text-2xl md:text-4xl font-bold text-slate-100">Morph ID Evidence Lab</h1>
               <p className="text-slate-400">
                 Build an auditable crested gecko reference set for review and benchmarking.
                 Taxonomy v{TAXONOMY_VERSION}.
@@ -151,14 +151,14 @@ export default function TrainingPage() {
         </div>
 
         <Tabs defaultValue="contribute" className="w-full">
-          <TabsList className="grid w-full grid-cols-3 bg-slate-800">
-            <TabsTrigger value="contribute" className="data-[state=active]:bg-slate-700">
+          <TabsList className="mb-4">
+            <TabsTrigger value="contribute">
               <UploadIcon className="w-4 h-4 mr-2" /> Contribute
             </TabsTrigger>
-            <TabsTrigger value="review" className="data-[state=active]:bg-slate-700">
+            <TabsTrigger value="review">
               <Scale className="w-4 h-4 mr-2" /> Review queue
             </TabsTrigger>
-            <TabsTrigger value="stats" className="data-[state=active]:bg-slate-700">
+            <TabsTrigger value="stats">
               <BarChart3 className="w-4 h-4 mr-2" /> Dataset stats
             </TabsTrigger>
           </TabsList>

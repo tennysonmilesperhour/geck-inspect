@@ -202,7 +202,7 @@ export default function ProjectLineDetailPage() {
           <div className="absolute inset-0 pointer-events-none overflow-hidden">
             <div className="absolute top-0 right-0 w-96 h-96 bg-violet-500/10 rounded-full blur-3xl" />
           </div>
-          <div className="relative max-w-5xl mx-auto px-6 py-10 md:py-14">
+          <div className="relative max-w-5xl mx-auto px-4 md:px-6 py-10 md:py-14">
             <Link
               to="/MorphGuide?tab=lines"
               className="inline-flex items-center gap-1.5 text-sm text-slate-400 hover:text-emerald-300 mb-6"

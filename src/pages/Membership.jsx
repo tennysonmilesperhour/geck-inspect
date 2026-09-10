@@ -469,7 +469,7 @@ export default function MembershipPage() {
   if (isNativePlatform()) return <NativeMembership user={user} />;
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-emerald-950 p-4 md:p-6">
       <Seo
         title="Pricing & Plans"
         description={`Geck Inspect plans for crested gecko keepers and breeders. Free (10 geckos), Keeper ($2.99/mo or $30/yr), Breeder ($5.99/mo or $60/yr), and Enterprise. Optional ${TRIAL_DAYS}-day free trial on paid plans. Cancel anytime.`}

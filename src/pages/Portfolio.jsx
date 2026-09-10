@@ -295,7 +295,7 @@ export default function Portfolio() {
 
   if (loading || isLoadingAuth) {
     return (
-      <div className="min-h-screen bg-slate-950 p-6">
+      <div className="min-h-screen bg-slate-950 p-4 md:p-8">
         {seo}
         <div className="max-w-6xl mx-auto space-y-4">
           {[90, 140, 320].map((h, i) => (

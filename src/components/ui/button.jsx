@@ -9,23 +9,20 @@ const buttonVariants = cva(
   {
     variants: {
       variant: {
+        // Flat themed emerald. The old emerald-500 -> green-600 gradient
+        // mixed the user's chosen accent (emerald-* re-tints via
+        // data-secondary) with stock green-* (deliberately NOT themed),
+        // so on every non-emerald accent the primary button rendered as
+        // a two-color smear. Flat emerald-600 is also what ~130 call
+        // sites were already overriding to by hand.
         default:
-          "bg-gradient-to-r from-emerald-500 to-green-600 hover:from-emerald-600 hover:to-green-700 text-white font-semibold shadow-lg",
+          "bg-emerald-600 hover:bg-emerald-500 text-white font-semibold shadow-md shadow-black/20",
         destructive:
           "bg-destructive text-destructive-foreground shadow-sm hover:bg-destructive/90",
-        // Themed to match the rest of the app's dark-emerald shell. The
-        // previous `bg-background` fell back to near-black in dark mode,
-        // and any outline button wrapped in a Radix trigger
-        // (DialogTrigger, DropdownMenuTrigger, etc.) escaped the global
-        // `button:not([data-state])` emerald override in Layout.jsx,
-        // rendering as a pure-black button against the green theme.
-        //
-        // NOTE: we deliberately use arbitrary `bg-[rgba(...)]` values
-        // instead of `bg-emerald-*` here. Layout.jsx has a selector
-        // `.dark button[class*="bg-emerald"]` that force-promotes any
-        // button with `bg-emerald` in its class list to a full primary
-        // gradient, which would make outline buttons look like solid
-        // CTAs. Arbitrary values don't trigger that substring match.
+        // Themed to match the dark-emerald shell (shadcn's stock
+        // `bg-background` fell back to near-black). The global button
+        // overrides that once lived in Layout.jsx are gone (see
+        // layout-theme.css), so plain emerald utilities are safe here.
         outline:
           "border border-emerald-900/60 bg-emerald-950/30 text-emerald-100/80 shadow-sm hover:bg-emerald-900/40 hover:text-white hover:border-emerald-700/60",
         secondary:

@@ -707,7 +707,7 @@ export default function CommunityConnectPage() {
             />
             <div className="max-w-6xl mx-auto">
                 <div className="text-center mb-8">
-                    <h1 className="text-4xl font-bold text-slate-100 mb-2">Community Connect</h1>
+                    <h1 className="text-2xl md:text-4xl font-bold text-slate-100 mb-2">Community Connect</h1>
                     <p className="text-slate-400">Find breeders, connect with enthusiasts, and join the discussion.</p>
                 </div>
 

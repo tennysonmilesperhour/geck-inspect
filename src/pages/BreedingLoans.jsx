@@ -524,7 +524,7 @@ export default function BreedingLoans() {
     >
       {/* Header */}
       <div className="max-w-4xl mx-auto px-4 pt-8 pb-6">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <div>
             <h1
               className="text-2xl mb-1"
@@ -577,10 +577,7 @@ export default function BreedingLoans() {
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList
-            className="grid grid-cols-2 w-full max-w-xs mx-auto mb-6 p-1 h-10"
-            style={{ backgroundColor: C.paleSage }}
-          >
+          <TabsList className="max-w-xs mx-auto mb-6">
             <TabsTrigger
               value="out"
               className="text-sm data-[state=active]:shadow-sm transition-colors"

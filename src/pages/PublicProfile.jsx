@@ -391,22 +391,20 @@ export default function PublicProfile() {
                 <div className="md:col-span-2">
                     {(() => {
                         const showBreeders = profileUser.show_breeders_publicly !== false;
-                        const tabCount = showBreeders ? 3 : 2;
-                        const gridClass = tabCount === 3 ? 'grid-cols-3' : 'grid-cols-2';
                         return (
                     <Tabs defaultValue="for-sale" className="w-full">
-                        <TabsList className={`grid w-full ${gridClass} mb-6 bg-slate-800`}>
-                            <TabsTrigger value="for-sale" className="data-[state=active]:bg-orange-600">
+                        <TabsList className="mb-6">
+                            <TabsTrigger value="for-sale">
                                 <ShoppingCart className="w-4 h-4 mr-2" />
                                 For Sale ({forSaleGeckos.length})
                             </TabsTrigger>
                             {showBreeders && (
-                                <TabsTrigger value="breeders" className="data-[state=active]:bg-pink-600">
+                                <TabsTrigger value="breeders">
                                     <GitBranch className="w-4 h-4 mr-2" />
                                     Breeders ({breedingGeckos.length})
                                 </TabsTrigger>
                             )}
-                            <TabsTrigger value="collection" className="data-[state=active]:bg-blue-600">
+                            <TabsTrigger value="collection">
                                 <Heart className="w-4 h-4 mr-2" />
                                 Collection ({collectionGeckos.length})
                             </TabsTrigger>

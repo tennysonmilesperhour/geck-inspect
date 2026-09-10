@@ -105,7 +105,7 @@ export default function ClassificationForm({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
         {/* Image Viewer */}
-        <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg sticky top-24">
+        <Card className="bg-slate-900 border-slate-700 sticky top-24">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-sage-900">
                     <ImageIcon className="w-5 h-5" />
@@ -155,7 +155,7 @@ export default function ClassificationForm({
         </Card>
 
         {/* Classification Form */}
-        <Card className="bg-white/80 backdrop-blur-sm border-sage-200 shadow-lg">
+        <Card className="bg-slate-900 border-slate-700">
             <CardHeader>
                 <CardTitle className="flex items-center gap-2 text-sage-900">
                     <BrainCircuit className="w-5 h-5" />

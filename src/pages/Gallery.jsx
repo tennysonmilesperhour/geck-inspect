@@ -144,7 +144,7 @@ export default function Gallery() {
             <div className="max-w-7xl mx-auto">
                 <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
                     <div>
-                        <h1 className="text-4xl font-bold text-slate-100 mb-2">Image Gallery</h1>
+                        <h1 className="text-2xl md:text-4xl font-bold text-slate-100 mb-2">Image Gallery</h1>
                         <p className="text-slate-400">Explore user-submitted gecko images. Use the filters to find specific morphs and traits.</p>
                     </div>
                     <PageSettingsPanel title="Gallery Settings">

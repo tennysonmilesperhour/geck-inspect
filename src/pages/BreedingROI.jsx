@@ -78,7 +78,7 @@ export default function BreedingROI() {
   // ─── WIZARD ───
   if (view === 'wizard') {
     return (
-      <div className="min-h-screen p-6" style={{ backgroundColor: C.warmWhite, fontFamily: "'DM Sans', sans-serif" }}>
+      <div className="min-h-screen p-4 md:p-6" style={{ backgroundColor: C.warmWhite, fontFamily: "'DM Sans', sans-serif" }}>
         <div className="max-w-2xl mx-auto">
           <button onClick={() => setView('list')} className="flex items-center gap-1 text-sm mb-4" style={{ color: C.sage }}><ChevronLeft size={16} /> Back</button>
           <h1 className="text-3xl mb-2" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>New Breeding Project</h1>
@@ -277,7 +277,7 @@ export default function BreedingROI() {
   return (
     <div className="min-h-screen p-6" style={{ backgroundColor: C.warmWhite, fontFamily: "'DM Sans', sans-serif" }}>
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center justify-between mb-6">
+        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <h1 className="text-3xl" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>Breeding ROI</h1>
           <button onClick={() => setView('wizard')} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white" style={{ backgroundColor: C.sage }}><Plus size={16} /> New Project</button>
         </div>

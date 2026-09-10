@@ -271,7 +271,7 @@ export default function BreederConsultantPage() {
     return (
         <div className="flex flex-col h-full bg-slate-950 p-4">
             <Card className="flex-1 flex flex-col bg-slate-900 border-slate-700">
-                <CardHeader className="flex flex-row items-center justify-between border-b border-slate-700">
+                <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 border-b border-slate-700">
                     <CardTitle className="text-slate-100 flex items-center gap-2"><Sparkles className="text-emerald-400"/> AI Breeder Consultant</CardTitle>
                 </CardHeader>
                 <CardContent className="flex-1 overflow-y-auto p-6 space-y-6">
