@@ -914,54 +914,73 @@ html, body, #root {
             height: 18px;
           }
 
-          /* Bottom nav (mobile): mirror the sidebar's glass treatment,
-             semi-transparent emerald backdrop, soft inner top highlight,
-             and an accent bar above the active tab. */
+          /* Bottom nav (mobile): the bar itself is invisible. Only the
+             two section buttons paint, each as its own glass pill that
+             matches the slide-out mobile sidebar (emerald-950 at 25%
+             with a light blur and an emerald-800 hairline). Buttons are
+             taller than wide-and-flat so they read as tap targets while
+             covering less of the page. Clicks pass through the empty
+             space between and beside the buttons. */
           .gecko-bottom-nav {
-            background: linear-gradient(180deg,
-              rgba(4, 47, 35, 0.55) 0%,
-              rgba(6, 78, 59, 0.55) 100%);
-            backdrop-filter: blur(18px) saturate(160%);
-            -webkit-backdrop-filter: blur(18px) saturate(160%);
-            border-top: 1px solid rgba(134, 239, 172, 0.18);
-            box-shadow:
-              0 -8px 32px rgba(0, 0, 0, 0.35),
-              inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            background: transparent;
+            border: 0;
+            box-shadow: none;
+            pointer-events: none;
+            justify-content: center;
+            align-items: flex-end;
+            gap: 12px;
+            padding: 0 16px calc(10px + env(safe-area-inset-bottom));
           }
 
           .gecko-bottom-nav__item {
             position: relative;
-            flex: 1 1 0%;
+            pointer-events: auto;
+            flex: 0 0 auto;
+            width: 112px;
+            min-height: 56px;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            gap: 1px;
-            padding: 2px 4px;
+            gap: 3px;
+            padding: 8px 10px;
+            border-radius: 14px;
             font-size: 9px;
             font-weight: 600;
             letter-spacing: 0.08em;
             text-transform: uppercase;
-            color: rgb(167 243 208 / 0.65);
-            transition: color 0.2s ease, background 0.2s ease;
+            color: rgb(167 243 208 / 0.75);
+            background: rgb(2 44 34 / 0.25);
+            backdrop-filter: blur(4px);
+            -webkit-backdrop-filter: blur(4px);
+            border: 1px solid rgb(6 95 70 / 0.4);
+            box-shadow:
+              0 6px 20px rgba(0, 0, 0, 0.3),
+              inset 0 1px 0 rgba(255, 255, 255, 0.06);
+            transition: color 0.2s ease, background 0.2s ease, border-color 0.2s ease;
           }
 
           .gecko-bottom-nav__item:hover {
             color: rgb(209 250 229 / 0.95);
-            background: rgba(16, 185, 129, 0.08);
+            background: rgb(2 44 34 / 0.4);
           }
 
           .gecko-bottom-nav__item.is-active {
             color: var(--gecko-primary);
-            background: rgba(16, 185, 129, 0.15);
+            background: rgb(2 44 34 / 0.45);
+            border-color: rgba(134, 239, 172, 0.45);
+            box-shadow:
+              0 6px 20px rgba(0, 0, 0, 0.3),
+              0 0 14px rgba(134, 239, 172, 0.2),
+              inset 0 1px 0 rgba(255, 255, 255, 0.08);
           }
 
           .gecko-bottom-nav__item.is-active::before {
             content: '';
             position: absolute;
             top: 0;
-            left: 20%;
-            right: 20%;
+            left: 28%;
+            right: 28%;
             height: 2px;
             background: var(--gecko-accent);
             border-radius: 0 0 2px 2px;
