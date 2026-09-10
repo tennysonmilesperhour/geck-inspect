@@ -41,7 +41,7 @@ import {
   Leaf,
   Moon,
 } from 'lucide-react';
-import { format } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import { todayLocalISO, parseLocalDate, daysSinceLocal } from '@/lib/dateUtils';
 import { generateCalendarEvent } from '@/functions/generateCalendarEvent';
 import GeneticsModal from './GeneticsModal';
