@@ -921,7 +921,9 @@ html, body, #root {
              with a light blur and an emerald-800 hairline). Buttons are
              taller than wide-and-flat so they read as tap targets while
              covering less of the page. Clicks pass through the empty
-             space between and beside the buttons. */
+             space between and beside the buttons. The bar hugs the
+             bottom edge: only the home-indicator inset (or 6px where
+             there is none) separates the pills from the screen edge. */
           .gecko-bottom-nav {
             background: transparent;
             border: 0;
@@ -930,7 +932,7 @@ html, body, #root {
             justify-content: center;
             align-items: flex-end;
             gap: 12px;
-            padding: 0 16px calc(10px + env(safe-area-inset-bottom));
+            padding: 0 16px max(6px, env(safe-area-inset-bottom));
           }
 
           .gecko-bottom-nav__item {

@@ -81,7 +81,7 @@ export function Sidebar({ children, className }) {
                 <aside className={`flex flex-col h-full w-72 shadow-lg ${className}`} style={{ overscrollBehavior: 'none' }}>
                     {children}
                 </aside>
-                <div className="flex-1 bg-black/50 backdrop-blur-sm" onClick={toggleSidebar} aria-hidden="true"></div>
+                <div className="flex-1 bg-black/20 backdrop-blur-sm" onClick={toggleSidebar} aria-hidden="true"></div>
             </div>
         </>
     );
