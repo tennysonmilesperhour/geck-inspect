@@ -69,7 +69,9 @@ export default function PushEnableBanner({ user }) {
   };
 
   const onSettings = location.pathname.toLowerCase().startsWith('/settings');
-  if (!visible || onSettings) return null;
+  // Guests cannot subscribe (no account to attach the subscription to),
+  // so the prompt would only take up the top of every page for them.
+  if (!visible || onSettings || user?.is_guest) return null;
 
   const copy = needsInstall
     ? 'Get push alerts on this iPhone. Tap Share, then Add to Home Screen, then open Geck Inspect from the icon.'

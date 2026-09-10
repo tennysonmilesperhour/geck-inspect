@@ -25,6 +25,7 @@ import EmptyState from '../components/shared/EmptyState';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useToast } from '@/components/ui/use-toast';
+import SignInRequired from '@/components/shared/SignInRequired';
 
 /**
  * Notifications page, dark slate theme, matches the rest of the app.
@@ -195,17 +196,7 @@ export default function NotificationsPage() {
 
     if (!user) {
         return (
-            <div className="min-h-screen bg-slate-950 p-4 md:p-8">
-                <div className="max-w-4xl mx-auto">
-                    <Card className="text-center py-12 bg-slate-900 border-slate-800">
-                        <CardContent>
-                            <p className="text-lg text-slate-400">
-                                Please log in to view your notifications.
-                            </p>
-                        </CardContent>
-                    </Card>
-                </div>
-            </div>
+            <SignInRequired title="Sign in to see notifications" description="Hatch alerts, messages, and inquiries are delivered to your account." />
         );
     }
 

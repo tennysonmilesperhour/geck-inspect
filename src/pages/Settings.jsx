@@ -27,6 +27,7 @@ import {
 import { useTheme } from '@/lib/ThemeContext';
 import { useAuth } from '@/lib/AuthContext';
 import { FALLBACK_NAV_ITEMS, NAV_ICON_MAP, FAVORITES_MAX, flattenNavItems, KEEPER_MODE_STORAGE_KEY } from '@/lib/navItems';
+import SignInRequired from '@/components/shared/SignInRequired';
 
 const STORE_POLICY_EXAMPLE = [
     "• Shipping: Live arrival guaranteed. Ships FedEx Priority Overnight, Mon-Wed only. Shipping cost is the buyer's responsibility.",
@@ -541,12 +542,7 @@ export default function SettingsPage() {
     
     if (!user) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center text-center text-slate-100">
-                <div>
-                    <h2 className="text-2xl font-bold">Access Denied</h2>
-                    <p className="text-slate-400 mt-2">You must be logged in to manage your settings.</p>
-                </div>
-            </div>
+            <SignInRequired title="Sign in to manage settings" description="Notification, privacy, and appearance settings are saved to your account." />
         );
     }
 

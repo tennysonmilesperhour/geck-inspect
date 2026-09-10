@@ -8,6 +8,7 @@ import { Heart, Loader2, DollarSign, MapPin, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import SmartImage from '@/components/shared/SmartImage';
+import SignInRequired from '@/components/shared/SignInRequired';
 
 export default function LikedGeckosPage() {
     const [likedGeckos, setLikedGeckos] = useState([]);
@@ -78,13 +79,7 @@ export default function LikedGeckosPage() {
 
     if (!currentUser) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center text-center p-4">
-                <div>
-                    <Heart className="w-16 h-16 mx-auto text-slate-600 mb-4" />
-                    <h2 className="text-2xl font-bold text-slate-100">Sign in to view your likes</h2>
-                    <p className="text-slate-400 mt-2">You need to be logged in to save and view liked geckos.</p>
-                </div>
-            </div>
+            <SignInRequired icon={Heart} title="Sign in to see your likes" description="Liked geckos are saved to your account so you can find them again." />
         );
     }
 

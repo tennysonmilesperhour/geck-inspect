@@ -927,7 +927,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
       </a>
       <div className="flex h-screen h-dvh bg-background font-sans app-container-outline">
         {/* Mobile Sidebar */}
-        <Sidebar className="mobile-sidebar-glass border-r border-emerald-800/40 bg-emerald-950/25 backdrop-blur-sm md:hidden z-50">
+        <Sidebar className="mobile-sidebar-glass border-r border-emerald-800/40 bg-emerald-950/90 backdrop-blur-md md:hidden z-50">
           <SidebarHeader className="border-b border-emerald-800/40 px-6 pb-6 pt-[calc(1.5rem+env(safe-area-inset-top))]">
           <Link to={createPageUrl("Dashboard")} className="flex items-center gap-2 px-3 py-2 rounded-lg border border-emerald-700/40 hover:bg-emerald-800/30 transition-colors duration-200">
           {appLogo && (
@@ -1356,7 +1356,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
             </div>
           </header>
 
-          <div className="app-main-scroll flex-1 overflow-auto overflow-x-hidden overscroll-none pb-20 md:pb-0">
+          <div className="app-main-scroll flex-1 overflow-auto overflow-x-hidden overscroll-none bg-slate-950 pb-20 md:pb-0">
             <PushEnableBanner user={user} />
             {children}
           </div>

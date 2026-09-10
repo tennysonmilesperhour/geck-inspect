@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import GeckoCard from '../components/my-geckos/GeckoCard';
 import { createPageUrl, getDisplayName } from '@/utils';
+import SignInRequired from '@/components/shared/SignInRequired';
 
 const USER_LEVELS = [
   { geckos: 1, title: "New Collector", badge: "🥚" }, { geckos: 2, title: "Gecko Keeper", badge: "🦎" },
@@ -395,12 +396,7 @@ export default function MyProfile() {
 
     if (!user) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-                <div className="text-center">
-                    <h2 className="text-2xl font-bold text-slate-100 mb-4">Access Denied</h2>
-                    <p className="text-slate-400">You need to be logged in to view this page.</p>
-                </div>
-            </div>
+            <SignInRequired title="Sign in to see your profile" description="Your profile, collection stats, and public page live on your account." />
         );
     }
 

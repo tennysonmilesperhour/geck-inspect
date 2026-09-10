@@ -8,6 +8,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Upload, X, CheckCircle, AlertCircle, ArrowLeft, Send } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
+import SignInRequired from '@/components/shared/SignInRequired';
 
 const ImagePreview = ({ file, onRemove }) => (
   <div className="relative group w-full h-32">
@@ -100,17 +101,7 @@ export default function MorphGuideSubmissionPage() {
 
   if (!user) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-slate-950 p-8">
-        <Card className="max-w-md w-full text-center">
-          <CardHeader>
-            <CardTitle>Login Required</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-sage-600 mb-4">You need to be logged in to submit photos.</p>
-            <Button onClick={() => User.login()}>Login</Button>
-          </CardContent>
-        </Card>
-      </div>
+      <SignInRequired title="Sign in to submit photos" description="Morph guide submissions are credited to your account." />
     );
   }
 
