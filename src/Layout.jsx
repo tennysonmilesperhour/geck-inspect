@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useMemo, Suspense } from "react";
 import { lazy } from "@/lib/lazyWithRetry";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import "@/styles/layout-theme.css";
 import { initialsAvatarUrl } from "@/components/shared/InitialsAvatar";
 import { createPageUrl, getDisplayName } from "@/utils";
@@ -61,6 +61,7 @@ import {
 
 function LayoutContent({ children, currentPageName: _currentPageName }) {
   const location = useLocation();
+  const navigate = useNavigate();
   const { user, isGuest } = useAuth();
   const sidebarRef = useRef(null);
   const [imageCount, setImageCount] = useState(0);
@@ -197,15 +198,22 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
     setShowRolePrompt(false);
   };
 
-  // After the first-run role prompt, persist the choice and roll straight
-  // into the (now mode-appropriate) tour.
-  const handleRoleChosen = () => {
+  // After the first-run role prompt, persist the choice. Keepers go
+  // straight to adding their first gecko (My Geckos opens the photo-first
+  // quick add when the collection is empty); the tour stays one click away
+  // in the sidebar. Breeders get the tour, which covers far more ground.
+  // (VIP audit P1.3: two of three new accounts never added a gecko.)
+  const handleRoleChosen = (role) => {
     try {
       localStorage.setItem('geck_inspect_role_chosen', '1');
       localStorage.setItem('geck_inspect_tutorial_seen', '1');
     } catch { /* ignore */ }
     setShowRolePrompt(false);
-    setShowTutorial(true);
+    if (role === 'keeper') {
+      navigate('/MyGeckos?add=1');
+    } else {
+      setShowTutorial(true);
+    }
   };
 
   const getUserLevel = (geckoCount) => {

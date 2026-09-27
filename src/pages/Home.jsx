@@ -401,7 +401,7 @@ export default function Home() {
         <section className="relative z-10 max-w-5xl mx-auto px-6 pt-16 pb-24 text-center">
           <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-4 py-1.5 text-sm font-semibold text-emerald-300 mb-8">
             <Sparkles className="w-3.5 h-3.5" />
-            Welcome To The <span className="font-bold">Geck OS</span>
+            Free AI Morph ID on your first gecko
           </div>
           <h1 className="text-5xl md:text-7xl font-bold tracking-tight leading-[1.05] mb-6 bg-gradient-to-b from-white via-white to-emerald-200 bg-clip-text text-transparent">
             Track, breed, and verify
@@ -453,7 +453,7 @@ export default function Home() {
             )}
           </div>
           <p className="text-xs text-slate-500 mt-6">
-            No credit card required. Your collection stays yours.
+            No credit card required. Your records stay yours: export them to CSV or PDF any time, on every plan.
             {showGuestCta && (
               <>
                 {' '}Already have an account?{' '}

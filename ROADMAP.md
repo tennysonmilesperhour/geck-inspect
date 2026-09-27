@@ -30,12 +30,14 @@ The full review, with every finding, its location and its status, is in `docs/pl
 
 ## VIP AUDIT FOLLOW-UPS (from the 27 September 2026 audit)
 
-The full audit, usage data, competitor research and phased plan are in `docs/planning/vip-audit-2026-09-27.md`. Headline: 2 of 3 new accounts never add a gecko, and 19 of 24 do not return on a second day. Phase 0 shipped with the audit. Next up is Phase 1 (activation and the daily loop).
+The full audit, usage data, competitor research and phased plan are in `docs/planning/vip-audit-2026-09-27.md`. Headline: 2 of 3 new accounts never add a gecko, and 19 of 24 do not return on a second day.
 
-**Decisions needed before Phase 1 can finish**
-- [ ] Free Morph ID taste for free accounts (recommended: one free identification per account)
-- [ ] Server-side feeding reminders (recommended: on for keepers with a feeding schedule, one batched message a day)
-- [ ] Hide eight low-traffic pages from navigation (list in the audit, section P7)
+**Decisions (made 27 Sep, all live)**
+- [x] One free Morph ID per free account, ever
+- [x] Server-side feeding reminders, one combined message a day
+- [x] Low-traffic pages hidden from navigation (URLs still work)
+
+**Phase 1 shipped 27 Sep**, plus five bugs from the functional audit (Settings never saving, card weights, Batch Husbandry weigh-ins, endless hatch alerts, CSP reports). Next: Phase 2, starting with a Morph ID holdout evaluation, which needs to be run outside the sandbox.
 
 ---
 

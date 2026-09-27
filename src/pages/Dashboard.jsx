@@ -420,9 +420,10 @@ export default function Dashboard() {
                             ))}
                         </div>
                     ) : user ? (
-                        // Signed-in keepers see their own numbers next to the
-                        // community totals so the stats feel personal, not
-                        // abstract. Two cards yours, two cards the community.
+                        // Signed-in keepers see only their own numbers. The two
+                        // community cards were dropped (VIP audit P4.3): with a
+                        // small community they advertised an empty room, and
+                        // "Forum Threads" was a sample capped at 10, not a count.
                         <div className={`grid grid-cols-2 md:grid-cols-4 gap-4 ${dashPrefs.compactStats ? 'max-w-3xl' : ''}`}>
                             <StatsCard
                                 title="Your Geckos"
@@ -439,18 +440,18 @@ export default function Dashboard() {
                                 description={dashPrefs.compactStats ? '' : 'Active breeding plans'}
                             />
                             <StatsCard
-                                title="Community Geckos"
-                                value={stats.geckos.toLocaleString()}
-                                icon={Users}
-                                gradient="from-cyan-500 to-blue-600"
-                                description={dashPrefs.compactStats ? '' : `Across ${stats.users.toLocaleString()} keepers`}
+                                title="Eggs Incubating"
+                                value={hatcheryStats.incubating.toLocaleString()}
+                                icon={Egg}
+                                gradient="from-amber-500 to-orange-600"
+                                description={dashPrefs.compactStats ? '' : 'In your incubator'}
                             />
                             <StatsCard
-                                title="Forum Threads"
-                                value={stats.posts.toLocaleString()}
-                                icon={MessageSquare}
-                                gradient="from-violet-500 to-purple-600"
-                                description={dashPrefs.compactStats ? '' : 'Buzzing now'}
+                                title="Hatched"
+                                value={hatcheryStats.hatched.toLocaleString()}
+                                icon={GitBranch}
+                                gradient="from-cyan-500 to-blue-600"
+                                description={dashPrefs.compactStats ? '' : 'Eggs you have hatched'}
                             />
                         </div>
                     ) : (

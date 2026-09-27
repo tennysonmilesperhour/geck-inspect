@@ -514,7 +514,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
             <DialogContent hideCloseButton onEscapeKeyDown={(event) => { if (cropDialogOpen) { event.preventDefault(); setCropDialogOpen(false); } }} aria-describedby="gecko-form-description" className="w-[95vw] max-w-4xl h-[90svh] bg-slate-900 border-slate-700 flex flex-col gap-0 p-0 overflow-hidden">
                 <DialogDescription id="gecko-form-description" className="sr-only">Edit animal details and choose whether to publish them.</DialogDescription>
                 <CardHeader className="flex-shrink-0">
-                    <DialogTitle className="text-2xl text-slate-100">{gecko ? `Edit ${gecko.name}` : (isHatching ? 'Record New Hatchling' : 'Add New Gecko')}</DialogTitle>
+                    <DialogTitle className="text-2xl text-slate-100">{gecko?.id && !isHatching ? `Edit ${gecko.name}` : (isHatching ? 'Record New Hatchling' : 'Add New Gecko')}</DialogTitle>
                     {isHatching && breedingPlan && (
                         <p className="text-slate-400 text-sm">
                             From pairing: {breedingPlan.sire?.name || 'N/A'} x {breedingPlan.dam?.name || 'N/A'}

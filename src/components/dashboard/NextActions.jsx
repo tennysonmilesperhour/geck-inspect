@@ -1,10 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Egg, BreedingPlan, WeightRecord, FutureBreedingPlan } from '@/entities/all';
+import { Egg, BreedingPlan, WeightRecord, FutureBreedingPlan, FeedingGroup, OtherReptile } from '@/entities/all';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Scale, EggIcon, Calendar, Target, ChevronRight, CheckCircle2, Sparkles } from 'lucide-react';
+import { Scale, EggIcon, Calendar, Target, ChevronRight, CheckCircle2, Sparkles, Utensils, Loader2 } from 'lucide-react';
 import { differenceInDays, format } from 'date-fns';
-import { parseLocalDate } from '@/lib/dateUtils';
+import { parseLocalDate, todayLocalISO } from '@/lib/dateUtils';
 import { SEASON_LABELS, seasonStatus } from '@/lib/seasons';
 
 /**
@@ -24,9 +24,36 @@ import { SEASON_LABELS, seasonStatus } from '@/lib/seasons';
 
 const Scale2 = Scale; // kept for tree-shaking clarity
 
-function buildActions({ geckos, eggs, plans, weights, futurePlans }) {
+export function buildActions({ geckos, eggs, plans, weights, futurePlans, feedingGroups, reptiles }) {
     const actions = [];
     const now = new Date();
+
+    // 0. Feeding day. Same rule as the server reminder
+    // (enqueue_feeding_reminders): due once interval_days have passed since
+    // last_fed_date. One tap marks it fed right here.
+    const feedTargets = [
+        ...(feedingGroups || [])
+            .filter((g) => g.feeding_reminder_enabled !== false && g.last_fed_date)
+            .map((g) => ({ kind: 'group', id: g.id, name: g.name || g.label || 'Feeding group', last: g.last_fed_date, interval: Number(g.interval_days) || 3 })),
+        ...(reptiles || [])
+            .filter((r) => r.feeding_reminder_enabled && !r.archived && r.last_fed_date)
+            .map((r) => ({ kind: 'reptile', id: r.id, name: r.name || 'Reptile', last: r.last_fed_date, interval: Number(r.feeding_interval_days) || 7 })),
+    ];
+    for (const t of feedTargets) {
+        const overdue = differenceInDays(now, parseLocalDate(t.last)) - t.interval;
+        if (overdue < 0) continue;
+        actions.push({
+            id: `feed-${t.kind}-${t.id}`,
+            type: 'feed',
+            target: t,
+            icon: Utensils,
+            iconTint: 'text-emerald-400',
+            label: `Feed ${t.name}`,
+            detail: overdue === 0 ? 'Due today' : `${overdue} day${overdue === 1 ? '' : 's'} overdue`,
+            href: t.kind === 'group' ? '/BatchHusbandry' : '/OtherReptiles',
+            priority: 0,
+        });
+    }
 
     // 1. Eggs in the hatch window
     const incubating = (eggs || []).filter((e) => e.status === 'Incubating' && !e.archived && e.lay_date);
@@ -131,14 +158,16 @@ export default function NextActions({ currentUserEmail }) {
             setIsLoading(true);
             try {
                 const { getVisibleGeckos } = await import('@/lib/geckoAccess');
-                const [geckos, eggs, plans, weights, futurePlans] = await Promise.all([
+                const [geckos, eggs, plans, weights, futurePlans, feedingGroups, reptiles] = await Promise.all([
                     getVisibleGeckos({ email: currentUserEmail }).catch(() => []),
                     Egg.filter({ created_by: currentUserEmail }).catch(() => []),
                     BreedingPlan.filter({ created_by: currentUserEmail }).catch(() => []),
                     WeightRecord.filter({ created_by: currentUserEmail }).catch(() => []),
                     FutureBreedingPlan.filter({ created_by: currentUserEmail }).catch(() => []),
+                    FeedingGroup.filter({ created_by: currentUserEmail }).catch(() => []),
+                    OtherReptile.filter({ created_by: currentUserEmail, archived: false }).catch(() => []),
                 ]);
-                setData({ geckos, eggs, plans, weights, futurePlans });
+                setData({ geckos, eggs, plans, weights, futurePlans, feedingGroups, reptiles });
             } catch (err) {
                 console.error('NextActions load failed:', err);
             }
@@ -147,6 +176,25 @@ export default function NextActions({ currentUserEmail }) {
     }, [currentUserEmail]);
 
     const actions = useMemo(() => (data ? buildActions(data) : []), [data]);
+    const [markingId, setMarkingId] = useState(null);
+
+    const markFed = async (action) => {
+        const { target } = action;
+        const today = todayLocalISO();
+        setMarkingId(action.id);
+        try {
+            if (target.kind === 'group') {
+                await FeedingGroup.update(target.id, { last_fed_date: today });
+                setData((d) => ({ ...d, feedingGroups: d.feedingGroups.map((g) => (g.id === target.id ? { ...g, last_fed_date: today } : g)) }));
+            } else {
+                await OtherReptile.update(target.id, { last_fed_date: today });
+                setData((d) => ({ ...d, reptiles: d.reptiles.map((r) => (r.id === target.id ? { ...r, last_fed_date: today } : r)) }));
+            }
+        } catch (err) {
+            console.error('Mark fed failed:', err);
+        }
+        setMarkingId(null);
+    };
 
     if (!currentUserEmail) return null;
 
@@ -155,7 +203,7 @@ export default function NextActions({ currentUserEmail }) {
             <CardHeader>
                 <CardTitle className="text-gecko-text text-glow flex items-center gap-2">
                     <Target className="w-5 h-5 text-gecko-accent" />
-                    Your Next Actions
+                    Today
                 </CardTitle>
             </CardHeader>
             <CardContent>
@@ -182,6 +230,31 @@ export default function NextActions({ currentUserEmail }) {
                     <div className="space-y-2">
                         {actions.map((a) => {
                             const Icon = a.icon;
+                            if (a.type === 'feed') {
+                                return (
+                                    <div
+                                        key={a.id}
+                                        className="flex items-center gap-3 rounded-lg border border-slate-800 bg-slate-800/40 px-3 py-2"
+                                    >
+                                        <Icon className={`w-4 h-4 shrink-0 ${a.iconTint}`} />
+                                        <Link to={a.href} className="flex-1 min-w-0 hover:underline">
+                                            <p className="text-sm font-medium text-slate-100 truncate">{a.label}</p>
+                                            <p className="text-[11px] text-slate-500 truncate">{a.detail}</p>
+                                        </Link>
+                                        <button
+                                            type="button"
+                                            onClick={() => markFed(a)}
+                                            disabled={markingId === a.id}
+                                            className="shrink-0 inline-flex items-center gap-1.5 min-h-9 rounded-md bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 px-3 text-xs font-semibold text-white"
+                                        >
+                                            {markingId === a.id
+                                                ? <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                                : <CheckCircle2 className="w-3.5 h-3.5" />}
+                                            Mark fed
+                                        </button>
+                                    </div>
+                                );
+                            }
                             return (
                                 <Link
                                     key={a.id}
@@ -204,7 +277,7 @@ export default function NextActions({ currentUserEmail }) {
                 {actions.length > 0 && (
                     <p className="text-[10px] text-slate-500 mt-3 flex items-center gap-1">
                         <Sparkles className="w-3 h-3" />
-                        Calculated from your collection, eggs, weights, and breeding plans.
+                        Calculated from your feeding schedules, collection, eggs, weights, and breeding plans.
                     </p>
                 )}
             </CardContent>

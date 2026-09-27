@@ -24,6 +24,7 @@ import { Label } from '@/components/ui/label';
 import GeckoCard from '../components/my-geckos/GeckoCard';
 import GeckoForm from '../components/my-geckos/GeckoForm';
 import WeighInMode from '../components/my-geckos/WeighInMode';
+import QuickAddGecko from '../components/my-geckos/QuickAddGecko';
 import CSVImportModal from '../components/my-geckos/CSVImportModal';
 import GeckoDetailModal from '../components/my-geckos/GeckoDetailModal';
 import TransferHistory from '../components/my-geckos/TransferHistory';
@@ -58,6 +59,8 @@ export default function MyGeckosPage() {
     // Guards the one-time consumption of an incoming AI Morph ID draft.
     const morphDraftConsumedRef = React.useRef(false);
     const [isFormOpen, setIsFormOpen] = useState(false);
+    // Photo-first quick add, used for a keeper's first gecko (VIP audit P1.2).
+    const [isQuickAddOpen, setIsQuickAddOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState('');
     const [isImportModalOpen, setIsImportModalOpen] = useState(false);
     const [selectedGecko, setSelectedGecko] = useState(null);
@@ -336,19 +339,25 @@ export default function MyGeckosPage() {
         const rest = params.toString();
         window.history.replaceState(window.history.state, '', `${location.pathname}${rest ? `?${rest}` : ''}`);
 
-        if (geckos.filter((g) => !g.archived).length >= getGeckoLimit(user)) {
+        openAddFlow();
+    }, [isLoading, user, geckos, location.search, location.pathname]);
+
+    // One entry point for "add a gecko": respects the plan limit, and gives
+    // an empty collection the short photo-first quick add instead of the
+    // full 20-field form. Existing collections keep the full form.
+    function openAddFlow() {
+        const live = geckos.filter((g) => !g.archived).length;
+        if (live >= getGeckoLimit(user)) {
             setShowUpgradeModal(true);
             return;
         }
         setSelectedGecko(null);
-        setIsFormOpen(true);
-    }, [isLoading, user, geckos, location.search, location.pathname]);
+        setIsDetailModalOpen(false);
+        if (live === 0) setIsQuickAddOpen(true);
+        else setIsFormOpen(true);
+    }
 
-    const handleFormSubmit = async (geckoData, isNew) => {
-        const savedScroll = scrollPositionRef.current;
-        setIsFormOpen(false);
-        setSelectedGecko(null);
-
+    const announceSavedGecko = (geckoData, isNew) => {
         // Analytics: distinguish new-gecko creation from edits so the funnel
         // can see "first gecko" vs "updated a gecko".
         captureEvent(isNew ? 'gecko_added' : 'gecko_updated', {
@@ -368,6 +377,13 @@ export default function MyGeckosPage() {
         window.dispatchEvent(new CustomEvent('geckos_changed', {
             detail: { action: isNew ? 'created' : 'updated' }
         }));
+    };
+
+    const handleFormSubmit = async (geckoData, isNew) => {
+        const savedScroll = scrollPositionRef.current;
+        setIsFormOpen(false);
+        setSelectedGecko(null);
+        announceSavedGecko(geckoData, isNew);
 
         if (user) {
             window.scrollTo({ top: savedScroll, behavior: 'instant' });
@@ -608,14 +624,7 @@ export default function MyGeckosPage() {
                                     the secondary tools, instead of wrapping to last. */}
                                 <Button className="bg-emerald-600 hover:bg-emerald-700 order-first w-full sm:w-auto md:order-none" onClick={() => {
                                     if (user?.is_guest) { window.location.href = '/AuthPortal?mode=signup'; return; }
-                                    const limit = getGeckoLimit(user);
-                                    if (geckos.filter(g => !g.archived).length >= limit) {
-                                        setShowUpgradeModal(true);
-                                        return;
-                                    }
-                                    setSelectedGecko(null);
-                                    setIsFormOpen(true);
-                                    setIsDetailModalOpen(false);
+                                    openAddFlow();
                                 }}>
                                     <PlusCircle className="w-5 h-5 mr-2" />
                                     Add Gecko
@@ -995,7 +1004,7 @@ export default function MyGeckosPage() {
                                 }
                                 action={{
                                     label: geckos.length === 0 ? 'Add your first gecko' : 'Add a gecko',
-                                    onClick: () => setIsFormOpen(true),
+                                    onClick: () => openAddFlow(),
                                 }}
                             />
                         )}
@@ -1030,6 +1039,28 @@ export default function MyGeckosPage() {
                     </>
                 )}
                 </>
+                )}
+
+                {isQuickAddOpen && (
+                    <QuickAddGecko
+                        open={isQuickAddOpen}
+                        user={user}
+                        onClose={() => setIsQuickAddOpen(false)}
+                        onSaved={(gecko) => {
+                            announceSavedGecko(gecko, true);
+                            loadGeckos();
+                        }}
+                        onMoreDetails={(draft) => {
+                            setIsQuickAddOpen(false);
+                            setSelectedGecko(draft);
+                            setIsFormOpen(true);
+                        }}
+                        onLogWeight={(gecko) => {
+                            setIsQuickAddOpen(false);
+                            setSelectedGecko(gecko);
+                            setIsDetailModalOpen(true);
+                        }}
+                    />
                 )}
 
                 <CSVImportModal
