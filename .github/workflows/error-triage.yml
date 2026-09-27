@@ -63,9 +63,12 @@ jobs:
           fetch-depth: 0
           ref: main
 
+      # Node 22, not 20: supabase-js 2.116 needs Node's built-in WebSocket
+      # (22+). On 20 the triage script crashed in createClient before doing
+      # any work, every night from at least 25 Sep 2026 (issue #86).
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
-          node-version: '20'
+          node-version: '22'
 
       - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
         with:
