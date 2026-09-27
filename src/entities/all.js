@@ -27,9 +27,22 @@ export const User = new Proxy({}, {
         const { data: { user }, error } = await supabase.auth.updateUser({ data });
         if (error) throw error;
         try {
-          const { error: profileError } = await supabase.from('profiles')
-            .upsert({ email: user.email, ...data, updated_date: new Date().toISOString() }, { onConflict: 'email' });
-          if (profileError) throw profileError;
+          // A form field with no matching profiles column makes PostgREST
+          // reject the whole upsert (PGRST204). That silently broke every
+          // Settings save from April to September 2026. Drop the unknown
+          // field, report it so the column gets added, and save the rest.
+          const row = { email: user.email, ...data, updated_date: new Date().toISOString() };
+          for (let attempt = 0; ; attempt += 1) {
+            const { error: profileError } = await supabase.from('profiles')
+              .upsert(row, { onConflict: 'email' });
+            if (!profileError) break;
+            const missing = profileError.code === 'PGRST204'
+              ? /'([^']+)' column/.exec(profileError.message || '')?.[1]
+              : null;
+            if (attempt >= 10 || !missing || !(missing in row) || missing === 'email') throw profileError;
+            delete row[missing];
+            reportError(profileError, { component: 'entities/all', extra: { op: 'updateMyUserData', dropped_column: missing } });
+          }
         } catch (err) {
           console.error('updateMyUserData profile upsert failed:', err);
           reportError(err, { component: 'entities/all', extra: { op: 'updateMyUserData' } });

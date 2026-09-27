@@ -1395,7 +1395,6 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
         <FeedingAlertSystem
           user={user}
           enabled={user?.feeding_alerts_enabled !== false}
-          lateReminders={user?.feeding_late_reminders_enabled === true}
         />
       </Suspense>
       {/* Always run the hatch producer for signed-in users; per-channel

@@ -37,16 +37,38 @@ function pick(report: Record<string, unknown>, ...keys: string[]): string {
   return "";
 }
 
+// Chromium delivers report-to (Reporting API) reports as a cross-origin
+// POST with Content-Type application/reports+json, which needs a CORS
+// preflight. Until 27 Sep 2026 this function answered that OPTIONS with a
+// 405, so Chrome never sent a single report and error_logs stayed empty
+// (an empty csp-report query meant "not delivered", not "no violations").
+const ALLOWED_ORIGIN = /^https:\/\/(www\.)?geckinspect\.com$/;
+
+function corsHeaders(req: Request): Record<string, string> {
+  const origin = req.headers.get("origin") || "";
+  return {
+    "Access-Control-Allow-Origin": ALLOWED_ORIGIN.test(origin) ? origin : "https://geckinspect.com",
+    "Access-Control-Allow-Methods": "POST, OPTIONS",
+    "Access-Control-Allow-Headers": "content-type",
+    "Access-Control-Max-Age": "86400",
+    "Vary": "Origin",
+  };
+}
+
 Deno.serve(async (req: Request) => {
+  const cors = corsHeaders(req);
+  if (req.method === "OPTIONS") {
+    return new Response(null, { status: 204, headers: cors });
+  }
   if (req.method !== "POST") {
-    return new Response(null, { status: 405 });
+    return new Response(null, { status: 405, headers: cors });
   }
 
   let body: unknown;
   try {
     body = await req.json();
   } catch {
-    return new Response(null, { status: 400 });
+    return new Response(null, { status: 400, headers: cors });
   }
 
   const raw: unknown[] = Array.isArray(body)
@@ -54,7 +76,7 @@ Deno.serve(async (req: Request) => {
     : [body && typeof body === "object" ? ((body as Record<string, unknown>)["csp-report"] ?? body) : null];
   const reports = raw.filter((r): r is Record<string, unknown> => Boolean(r) && typeof r === "object").slice(0, MAX_REPORTS_PER_REQUEST);
   if (reports.length === 0) {
-    return new Response(null, { status: 204 });
+    return new Response(null, { status: 204, headers: cors });
   }
 
   // Two clients on purpose. The service role reads error_logs for the
@@ -109,5 +131,5 @@ Deno.serve(async (req: Request) => {
     });
   }
 
-  return new Response(null, { status: 204 });
+  return new Response(null, { status: 204, headers: cors });
 });

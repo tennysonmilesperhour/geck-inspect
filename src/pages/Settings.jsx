@@ -975,7 +975,7 @@ export default function SettingsPage() {
                  <Card className="bg-slate-900/50 border-slate-700 backdrop-blur-sm">
                      <CardHeader><CardTitle className="text-slate-100 flex items-center gap-2"><Clock className="w-5 h-5"/>Feeding Alerts</CardTitle></CardHeader>
                      <CardContent className="space-y-6">
-                          {renderSwitch('feeding-alerts-enabled', 'Enable Feeding Alerts', 'Send a notification on the day each feeding group or reptile is due', formData.feeding_alerts_enabled, (checked) => handleChange('feeding_alerts_enabled', checked))}
+                          {renderSwitch('feeding-alerts-enabled', 'Enable Feeding Alerts', 'One reminder a day by push and email when any feeding group or reptile is due, even with the app closed', formData.feeding_alerts_enabled, (checked) => handleChange('feeding_alerts_enabled', checked))}
                          {formData.feeding_alerts_enabled && (
                              <>
                                  {renderSwitch('feeding-late-reminders-enabled', 'Late Reminders', 'Keep sending daily reminders while a feeding remains overdue. Off by default, you only get one notification on the day feeding is due.', formData.feeding_late_reminders_enabled, (checked) => handleChange('feeding_late_reminders_enabled', checked))}

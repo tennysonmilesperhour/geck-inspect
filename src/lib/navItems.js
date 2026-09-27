@@ -165,7 +165,6 @@ export const NAV_REGISTRY = [
   },
   {
     page: 'GeneticCalculatorTool', section: 'discover',
-    palette: { group: 'Breeding', label: 'Genetic Calculator', icon: 'FlaskConical', keywords: ['punnett', 'offspring', 'traits'] },
   },
 
   // ----- Community (palette) -----
@@ -185,7 +184,6 @@ export const NAV_REGISTRY = [
   },
   {
     page: 'CommunityConnect',
-    palette: { group: 'Community', label: 'Community Connect', icon: 'Users', keywords: ['social', 'directory'] },
   },
   {
     page: 'Messages',
@@ -243,11 +241,9 @@ export const NAV_REGISTRY = [
   },
   {
     page: 'Training', section: 'discover',
-    palette: { group: 'Reference', label: 'Train the AI Model', icon: 'GraduationCap', keywords: ['label', 'tag', 'annotate'] },
   },
   {
     page: 'GeckAnswers', section: 'discover',
-    palette: { group: 'Reference', label: 'Geck Answers', icon: 'MessageSquare', keywords: ['q&a', 'questions', 'answers', 'ask'] },
   },
   {
     page: 'MorphGuideSubmission', section: 'discover',
@@ -275,8 +271,9 @@ export const NAV_REGISTRY = [
     sidebar: { category: 'collection', order: 4.5, label: 'Portfolio', icon: 'BarChart3', requiresAuth: true } },
   { page: 'Promote', section: 'manage', breederOnly: true,
     sidebar: { category: 'collection', order: 5, label: 'Promote', icon: 'Sparkles', requiresAuth: true } },
-  { page: 'Store', section: 'manage',
-    sidebar: { category: 'collection', order: 6, label: 'Supplies', icon: 'Store', requiresAuth: false } },
+  // Supplies is off the sidebar (27 Sep 2026 focus pass: 3 signed-in
+  // visitors in 90 days, checkout unavailable). The route still works.
+  { page: 'Store', section: 'manage' },
   { page: 'BreederConsultant', section: 'discover',
     sidebar: { category: 'tools', order: 6, label: 'AI Consultant', icon: 'FlaskConical', requiresAuth: false } },
   { page: 'MarketplaceSalesStats', section: 'manage', breederOnly: true,
@@ -294,6 +291,12 @@ export const NAV_REGISTRY = [
   { page: 'MarketPricing', section: 'discover' },
   { page: 'Breeder', section: 'discover' },
 ];
+
+// Focus pass (27 Sep 2026, docs/planning/vip-audit-2026-09-27.md P7):
+// Genetic Calculator Tool, Community Connect, Train the AI Model and Geck
+// Answers no longer appear in the command palette. They had zero or one
+// signed-in visitor in 90 days; the palette already links /calculator
+// directly. Their URLs keep working.
 
 // ---- Derived: SECTION_FOR_PAGE ----------------------------------------
 // Fallback section assignment for every known page. Used when the DB has

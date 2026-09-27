@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { User, FeedingGroup, FeedingRecord, WeightRecord } from '@/entities/all';
+import { User, FeedingGroup, FeedingRecord, WeightRecord, Gecko } from '@/entities/all';
 import { format, differenceInDays } from 'date-fns';
 import { todayLocalISO } from '@/lib/dateUtils';
 import {
@@ -374,10 +374,12 @@ function BatchWeighView({ group, groupGeckos, weightRecords, onBack, onSaved }) 
 
   // Build rows with last weight
   const rows = groupGeckos.map(gecko => {
+    // weight_records uses gecko_id / record_date / weight_grams (feeding_records
+    // is the table with animal_id / date, which this used to copy by mistake).
     const lastWeightRec = weightRecords
-      .filter(r => r.animal_id === gecko.id)
-      .sort((a, b) => new Date(b.date || b.created_date) - new Date(a.date || a.created_date))[0];
-    const lastWeight = lastWeightRec ? parseFloat(lastWeightRec.weight) : null;
+      .filter(r => r.gecko_id === gecko.id)
+      .sort((a, b) => new Date(b.record_date || b.created_date) - new Date(a.record_date || a.created_date))[0];
+    const lastWeight = lastWeightRec ? parseFloat(lastWeightRec.weight_grams) : null;
     return { gecko, lastWeight };
   });
 
@@ -411,11 +413,13 @@ function BatchWeighView({ group, groupGeckos, weightRecords, onBack, onSaved }) 
         }
 
         await WeightRecord.create({
-          animal_id: row.gecko.id,
-          date: today,
-          weight: newWeight,
+          gecko_id: row.gecko.id,
+          record_date: today,
+          weight_grams: newWeight,
           notes: `Batch weigh, ${group.name || group.label}`,
         });
+        // Keep the card weight in step with the newest weigh-in.
+        await Gecko.update(row.gecko.id, { weight_grams: newWeight });
       }
 
       setSummaryData({ recorded, flagged });
@@ -617,7 +621,7 @@ export default function BatchHusbandry() {
         FeedingGroup.filter({ created_by: email }),
         getVisibleGeckos(currentUser),
         FeedingRecord.filter({ created_by: email }, '-date'),
-        WeightRecord.filter({ created_by: email }, '-date'),
+        WeightRecord.filter({ created_by: email }, '-record_date'),
       ]);
 
       setGroups(userGroups);

@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useQuery } from '@tanstack/react-query';
+import { supabase } from '@/lib/supabaseClient';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
@@ -77,10 +79,31 @@ export default function Recognition() {
 
   const primaryUrl = imageUrls[0] || null;
 
-  // Free accounts have no MorphID credits. Show the upgrade card up front
-  // instead of an uploader that ends in a 402 after the photo is chosen.
-  const morphIdLocked =
+  // Free accounts have no monthly allowance but get one identification ever
+  // (lifetimeFreeMorphIDs, enforced by consume_morph_id_credit). Read the
+  // ledger so the page offers the free try, and shows the upgrade card up
+  // front once it is used instead of an uploader that ends in a 402.
+  const isFreeTier =
     Boolean(user) && !isGuest && !isAdmin && getTierLimits(user).monthlyMorphIDCredits === 0;
+  const freeUsageQuery = useQuery({
+    queryKey: ['morph-id-lifetime-usage', user?.id],
+    enabled: isFreeTier && Boolean(user?.id),
+    staleTime: 60 * 1000,
+    queryFn: async () => {
+      const { data, error: usageError } = await supabase
+        .from('morph_id_usage')
+        .select('credits_consumed')
+        .eq('user_id', user.id);
+      if (usageError) throw usageError;
+      return (data || []).reduce((sum, row) => sum + (Number(row.credits_consumed) || 0), 0);
+    },
+  });
+  const freeTriesLeft = isFreeTier
+    ? Math.max(0, (TIER_LIMITS.free.lifetimeFreeMorphIDs || 0) - (freeUsageQuery.data ?? 0))
+    : null;
+  // Lock only once the ledger confirms the free try is spent. If the read
+  // fails, the server still enforces the limit and returns a clear error.
+  const morphIdLocked = isFreeTier && freeUsageQuery.isSuccess && freeTriesLeft === 0;
 
   const reset = () => {
     setImageUrls([]);
@@ -187,10 +210,10 @@ export default function Recognition() {
           <Card className="bg-amber-950/40 border-amber-800">
             <CardContent className="p-6 flex flex-col items-center text-center gap-3">
               <Lock className="w-6 h-6 text-amber-300" />
-              <p className="font-semibold text-amber-100">AI Morph ID is included with Keeper and up</p>
+              <p className="font-semibold text-amber-100">You have used your free Morph ID</p>
               <p className="text-sm text-amber-200/80 max-w-md">
                 Keeper is {TIER_PRICING.keeper.monthly.price} a month and includes {TIER_LIMITS.keeper.monthlyMorphIDCredits} identifications
-                a month. Free accounts can browse the Morph Guide, use the genetics calculator, and track their collection.
+                a month. Free accounts can keep using the Morph Guide, the genetics calculator, and collection tracking.
               </p>
               <div className="flex flex-wrap gap-3 justify-center">
                 <Button className="bg-emerald-600 hover:bg-emerald-500 text-white" onClick={() => navigate('/Membership')}>
@@ -212,6 +235,15 @@ export default function Recognition() {
                 <Loader2 className="w-5 h-5 animate-spin inline mr-2" /> Checking your account...
               </div>
             ) : user && !isGuest ? (
+              <>
+              {isFreeTier && freeTriesLeft > 0 && (
+                <div className="rounded-lg border border-emerald-700/60 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-100">
+                  <p className="font-semibold">Your first identification is free.</p>
+                  <p className="text-emerald-200/80 mt-1">
+                    Make it count: a sharp top-down photo in daylight, plus one fired up and one fired down if you can.
+                  </p>
+                </div>
+              )}
               <MultiPhotoUploader
                 value={imageUrls}
                 onBusyChange={setIsUploadingPhotos}
@@ -223,16 +255,23 @@ export default function Recognition() {
                 }}
                 label="Gecko photos"
               />
+              </>
             ) : (
               <div className="py-8 text-center max-w-lg mx-auto">
                 <Lock className="w-7 h-7 text-emerald-400 mx-auto" />
-                <h2 className="text-lg font-semibold text-slate-100 mt-3">Sign in before uploading</h2>
+                <h2 className="text-lg font-semibold text-slate-100 mt-3">Your first identification is free</h2>
                 <p className="text-sm text-slate-400 mt-2">
-                  This prevents abandoned public uploads and lets us keep your result and monthly credit count together.
+                  Create a free account to try Morph ID once on your own crested gecko. An account keeps your photos
+                  and result together, and lets you save the gecko to your collection afterwards.
                 </p>
-                <Button onClick={() => navigate('/AuthPortal')} className="bg-emerald-600 hover:bg-emerald-700 mt-4">
-                  Sign in to use Morph ID
-                </Button>
+                <div className="flex flex-wrap gap-3 justify-center mt-4">
+                  <Button onClick={() => navigate('/AuthPortal?mode=signup')} className="bg-emerald-600 hover:bg-emerald-700">
+                    Create free account
+                  </Button>
+                  <Button variant="outline" onClick={() => navigate('/AuthPortal')} className="border-slate-600 text-slate-200">
+                    Sign in
+                  </Button>
+                </div>
               </div>
             )}
 
@@ -318,7 +357,13 @@ export default function Recognition() {
               </Card>
             );
           }
-          const friendly = FRIENDLY_ERROR[error.code] || {
+          const friendly = (error.code === 'morph_id_credits_exhausted' && isFreeTier)
+            ? {
+                title: 'You have used your free Morph ID',
+                body: `Keeper includes ${TIER_LIMITS.keeper.monthlyMorphIDCredits} identifications a month.`,
+                cta: { label: 'See plans', href: '/Membership' },
+              }
+            : FRIENDLY_ERROR[error.code] || {
             title: "We couldn't analyze that photo",
             body: 'Try a different photo, or check your connection and try again.',
           };
@@ -354,7 +399,12 @@ export default function Recognition() {
           );
         })()}
 
-        {meta && !meta.is_admin && typeof meta.credits_remaining === 'number' && (
+        {meta && !meta.is_admin && isFreeTier && (
+          <p className="text-xs text-slate-500 text-center">
+            That was your free identification. Keeper includes {TIER_LIMITS.keeper.monthlyMorphIDCredits} a month.
+          </p>
+        )}
+        {meta && !meta.is_admin && !isFreeTier && typeof meta.credits_remaining === 'number' && (
           <p className="text-xs text-slate-500 text-center">
             {meta.credits_remaining} of {meta.credits_included} MorphID credits left this month.
           </p>

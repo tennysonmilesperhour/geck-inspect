@@ -1,37 +1,17 @@
 import { useState, useEffect, useRef } from 'react';
-import { FeedingGroup, OtherReptile, Notification } from '@/entities/all';
+import { FeedingGroup, OtherReptile } from '@/entities/all';
 import { Button } from '@/components/ui/button';
 import { X, CheckCircle2, Clock } from 'lucide-react';
 import { AnimatePresence, motion } from 'framer-motion';
 import { todayLocalISO, daysSinceLocal } from '@/lib/dateUtils';
 import { startVisiblePolling } from '@/lib/pagePolling';
 
-// Dedup window: fire at most one push/email per entity per day. The
-// 5-minute polling loop would otherwise create 288 notifications a day
-// for a single overdue reptile. The dedup key is scoped by the
-// entity's current `last_fed_date` so that each new feeding cycle
-// gets a fresh slot, without this, a user on a 1-day interval would
-// only get notified every other day.
-// Key: geck_fed_notified_<alertId>__<lastFedDate> → ISO timestamp of last firing.
-const NOTIFY_DEDUP_HOURS = 24;
-function dedupKey(alertId, lastFedDate) {
-  return `geck_fed_notified_${alertId}__${lastFedDate || 'never'}`;
-}
-function shouldNotify(alertId, lastFedDate) {
-  try {
-    const last = localStorage.getItem(dedupKey(alertId, lastFedDate));
-    if (!last) return true;
-    const elapsedHours = (Date.now() - new Date(last).getTime()) / 36e5;
-    return elapsedHours >= NOTIFY_DEDUP_HOURS;
-  } catch { return true; }
-}
-function markNotified(alertId, lastFedDate) {
-  try {
-    localStorage.setItem(dedupKey(alertId, lastFedDate), new Date().toISOString());
-  } catch {}
-}
+// This component only drives the in-app banner. The feeding_due push and
+// email notifications come from the server (enqueue_feeding_reminders, a
+// daily pg_cron job since 27 Sep 2026) so they arrive with the app closed,
+// as one combined message a day. Creating them here too would duplicate them.
 
-export default function FeedingAlertSystem({ user, enabled, lateReminders }) {
+export default function FeedingAlertSystem({ user, enabled }) {
   const [alerts, setAlerts] = useState([]);
   const [dismissedAlerts, setDismissedAlerts] = useState(new Set());
   // In-flight guard. AuthContext's setUser fires on profile-enrich, every
@@ -81,27 +61,10 @@ export default function FeedingAlertSystem({ user, enabled, lateReminders }) {
       if (loadingRef.current) return;
       loadingRef.current = true;
       try {
-        const [feedingGroups, otherReptiles, recentNotifs] = await Promise.all([
+        const [feedingGroups, otherReptiles] = await Promise.all([
           FeedingGroup.filter({ created_by: user.email }),
           OtherReptile.filter({ created_by: user.email, archived: false }),
-          // Pull this user's recent feeding_due notifications so we
-          // can dedup across devices/tabs/sessions where localStorage
-          // can't see the other side's firings. 50 is far more than a
-          // single user could rack up in a day across all their
-          // groups + reptiles.
-          Notification.filter({ user_email: user.email, type: 'feeding_due' }, '-created_date', 50).catch(() => []),
         ]);
-
-        const todayStr = new Date().toISOString().split('T')[0];
-        const firedTodayEntityIds = new Set(
-          (recentNotifs || [])
-            .filter(n => {
-              const created = n.created_date || n.created_at;
-              return created && String(created).startsWith(todayStr);
-            })
-            .map(n => n.metadata?.entity_id)
-            .filter(Boolean)
-        );
 
         const newAlerts = [];
 
@@ -148,51 +111,6 @@ export default function FeedingAlertSystem({ user, enabled, lateReminders }) {
         });
 
         setAlerts(newAlerts);
-
-        // Fire one `feeding_due` notification per entity per 24h. By
-        // default we only ping on the day feeding becomes due
-        // (daysOverdue === 0); the user has to opt into late reminders
-        // in Settings to keep getting daily re-pings while overdue.
-        // The DB trigger fans out to push + email subject to the
-        // user's per-type preferences in Settings → Notifications.
-        for (const a of newAlerts) {
-          if (a.daysOverdue > 0 && !lateReminders) continue;
-          if (!shouldNotify(a.id, a.lastFedDate)) continue;
-          // Cross-device dedup: another browser/tab may have already
-          // inserted a feeding_due row for this entity earlier today.
-          if (firedTodayEntityIds.has(a.entityId)) {
-            markNotified(a.id, a.lastFedDate);
-            continue;
-          }
-          const linkPath = a.type === 'feedingGroup'
-            ? '/BatchHusbandry'
-            : '/OtherReptiles';
-          const content = a.daysOverdue === 0
-            ? `${a.name} is due for feeding today`
-            : `${a.name} is ${a.daysOverdue} day${a.daysOverdue !== 1 ? 's' : ''} overdue for feeding`;
-          // Claim the dedup slot BEFORE the network call so a concurrent
-          // poll can't race past shouldNotify() while we're awaiting the
-          // insert. We roll it back on failure so the next poll can retry.
-          markNotified(a.id, a.lastFedDate);
-          try {
-            await Notification.create({
-              user_email: user.email,
-              type: 'feeding_due',
-              content,
-              link: linkPath,
-              metadata: {
-                entity_type: a.type,
-                entity_id: a.entityId,
-                days_overdue: a.daysOverdue,
-              },
-              is_read: false,
-            });
-          } catch (err) {
-            // Don't break the toast UI if notification creation fails.
-            console.warn('feeding_due notification failed:', err);
-            try { localStorage.removeItem(dedupKey(a.id, a.lastFedDate)); } catch {}
-          }
-        }
       } catch (error) {
         console.error('Failed to load feeding alerts:', error);
       } finally {
@@ -203,7 +121,7 @@ export default function FeedingAlertSystem({ user, enabled, lateReminders }) {
     loadAlerts();
     // Refresh every 5 minutes while the tab is visible and the member is active.
     return startVisiblePolling(loadAlerts, 5 * 60 * 1000);
-  }, [user?.email, enabled, lateReminders]);
+  }, [user?.email, enabled]);
 
   const handleFed = async (alert) => {
     try {

@@ -159,7 +159,11 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
       };
 
       const createdRecord = await WeightRecord.create(newRecord);
-      
+      // Mirror today's weigh-in onto the gecko row, like every other weigh
+      // path does. Without this the card kept showing an older weight while
+      // the chart showed the new one (18 geckos had drifted by Sep 2026).
+      await Gecko.update(gecko.id, { weight_grams: weightValue });
+
       setWeightRecords([createdRecord, ...weightRecords]);
       setNewWeight('');
       setShowAddWeight(false);
