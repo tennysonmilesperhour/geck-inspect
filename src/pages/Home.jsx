@@ -256,7 +256,7 @@ const LANDING_FAQS = [
   },
   {
     q: 'Does Geck Inspect support other reptiles besides crested geckos?',
-    a: 'Geck Inspect is purpose-built for crested geckos (Correlophus ciliatus) right now. The AI morph ID, genetics calculator, and morph guide are all tuned for the species. Support for gargoyle geckos (Rhacodactylus auriculatus) and Leachianus is on the roadmap; other reptiles are not currently planned.',
+    a: 'Geck Inspect is built for crested geckos (Correlophus ciliatus). The AI morph ID, genetics calculator, and morph guide are all tuned for the species. If you keep a few other reptiles, you can log basic records for them alongside your crested geckos, but every tool is designed around cresties first.',
   },
 ];
 
@@ -866,30 +866,6 @@ export default function Home() {
                   Pricing
                 </Button>
               </Link>
-            </div>
-          </div>
-
-          {/* Multi-species roadmap callout, sets expectations for visitors
-              who arrive looking for gargoyle / leachianus support, and
-              keeps them in the funnel by making clear the upgrade path
-              is included with their existing account. */}
-          <div className="mt-6 rounded-md border border-amber-500/25 bg-amber-950/20 backdrop-blur p-6 md:p-8">
-            <div className="flex items-start gap-4">
-              <div className="w-10 h-10 rounded bg-amber-500/15 border border-amber-400/25 flex items-center justify-center flex-shrink-0">
-                <Sparkles className="w-5 h-5 text-amber-300" />
-              </div>
-              <div>
-                <h3 className="text-lg font-semibold text-white mb-1">
-                  Crested-only today. Gargoyle &amp; Leachianus next.
-                </h3>
-                <p className="text-sm text-slate-400 leading-relaxed">
-                  Geck Inspect is purpose-built for crested geckos right now. The AI morph ID,
-                  genetics calculator, and morph guide are all tuned for <em>Correlophus ciliatus</em>.
-                  Support for gargoyle geckos (<em>Rhacodactylus auriculatus</em>) and Leachianus
-                  (<em>Rhacodactylus leachianus</em>) is on the roadmap. Sign up now and you&rsquo;ll
-                  get the species upgrade for free when it ships.
-                </p>
-              </div>
             </div>
           </div>
         </section>

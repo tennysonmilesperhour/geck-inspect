@@ -28,6 +28,15 @@ The full review, with every finding, its location and its status, is in `docs/pl
 - [x] F47: Dashboard fans out to about 40 requests with a waterfall; background polling in every tab (4 to 5 Sep: all pollers visibility-aware; Dashboard, My Geckos, Gallery and Breeding on react-query)
 - [ ] F55: Mobile and accessibility gaps (4 to 5 Sep: contrast and touch-target pass shipped; shared uploads now convert HEIC/HEIF to JPEG in-browser and a standard HEIC passed browser verification; Add Gecko and Morph ID still need a real-iPhone check)
 
+## VIP AUDIT FOLLOW-UPS (from the 27 September 2026 audit)
+
+The full audit, usage data, competitor research and phased plan are in `docs/planning/vip-audit-2026-09-27.md`. Headline: 2 of 3 new accounts never add a gecko, and 19 of 24 do not return on a second day. Phase 0 shipped with the audit. Next up is Phase 1 (activation and the daily loop).
+
+**Decisions needed before Phase 1 can finish**
+- [ ] Free Morph ID taste for free accounts (recommended: one free identification per account)
+- [ ] Server-side feeding reminders (recommended: on for keepers with a feeding schedule, one batched message a day)
+- [ ] Hide eight low-traffic pages from navigation (list in the audit, section P7)
+
 ---
 
 ## URGENT (next 30 days, before May 31, 2026)

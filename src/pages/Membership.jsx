@@ -489,9 +489,16 @@ export default function MembershipPage() {
       <div className="max-w-7xl mx-auto space-y-12">
         {/* Header */}
         <div className="text-center space-y-4">
-          <p className="text-xl text-slate-300 max-w-2xl mx-auto">
+          <h1 className="text-2xl md:text-4xl font-bold text-slate-100">
+            Plans for every crested gecko collection
+          </h1>
+          <p className="text-lg md:text-xl text-slate-300 max-w-2xl mx-auto">
             Choose the tier that fits your collection. Subscribe and it starts
             today, or take the {TRIAL_DAYS}-day free trial first. Cancel anytime.
+          </p>
+          <p className="text-sm text-slate-400 max-w-xl mx-auto">
+            Your records are yours. Export your whole collection to CSV or PDF
+            from My Geckos at any time, on every plan.
           </p>
 
           <div className="flex justify-center pt-2">

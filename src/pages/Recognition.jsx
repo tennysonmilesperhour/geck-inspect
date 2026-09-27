@@ -10,6 +10,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { recognizeGeckoMorph } from '../functions/recognizeGeckoMorph';
 import { useAuth } from '@/lib/AuthContext';
+import Seo from '@/components/seo/Seo';
 import { getTierLimits, TIER_LIMITS } from '@/lib/tierLimits';
 import { TIER_PRICING } from '@/lib/stripe-config';
 import { buildGeckoDraftFromAnalysis } from '@/lib/morphIdDraft';
@@ -151,12 +152,18 @@ export default function Recognition() {
 
   return (
     <div className="p-4 md:p-8 bg-slate-950 min-h-screen">
+      <Seo
+        title="Crested Gecko Morph ID"
+        description="Upload photos of your crested gecko and get a ranked, evidence-first morph shortlist: the visible traits behind it, what the photos cannot confirm, and which photo would help next."
+        path="/Recognition"
+        keywords={['crested gecko morph identifier', 'crested gecko morph ID', 'identify crested gecko morph']}
+      />
       <div className="max-w-5xl mx-auto space-y-8">
         <div className="pt-2">
           <div className="flex items-center gap-2 text-emerald-300 text-sm font-medium">
             <ShieldCheck className="w-4 h-4" /> Evidence-first visual identification
           </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-100 mt-3">Crested gecko Morph ID</h1>
+          <h1 className="text-3xl md:text-4xl font-bold text-slate-100 mt-3">Crested Gecko Morph ID</h1>
           <p className="text-slate-400 max-w-2xl mt-3">
             Add clear photos of one crested gecko. You will get a ranked visual shortlist,
             the traits behind it, and an honest prompt for better evidence when the photos are not enough.

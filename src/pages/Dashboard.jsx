@@ -235,7 +235,14 @@ export default function Dashboard() {
         if (h < 22) return 'Good evening';
         return 'Night owl';
     })();
-    const firstName = getDisplayName(user).split(' ')[0];
+    // Guests and accounts with no usable name get the greeting on its own.
+    // getDisplayName falls back to "Geck Inspect User", which used to render
+    // as "Good evening, Geck".
+    const displayName = user && !isGuestMode() ? getDisplayName(user) : '';
+    const firstName = displayName && displayName !== 'Geck Inspect User'
+        ? displayName.split(' ')[0]
+        : '';
+    const hasGeckos = personalStats.geckos > 0;
     const todayLabel = format(now, 'EEEE, MMM d');
 
     // Seasonal flavor: rotates the hero kicker by month so the page
@@ -272,15 +279,15 @@ export default function Dashboard() {
                         <div className="absolute -top-20 -right-20 w-80 h-80 bg-emerald-500/15 rounded-full blur-3xl pointer-events-none" />
                         <div className="absolute -bottom-16 -left-16 w-72 h-72 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
 
-                        <div className="relative z-10 p-6 md:p-10">
-                            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-6">
-                                <div className="space-y-3">
+                        <div className="relative z-10 p-5 md:p-10">
+                            <div className="flex flex-col lg:flex-row lg:items-end lg:justify-between gap-5 md:gap-6">
+                                <div className="space-y-2 md:space-y-3">
                                     <div className="inline-flex items-center gap-2 rounded-full bg-emerald-500/10 border border-emerald-500/30 px-3 py-1 text-xs font-semibold text-emerald-300">
                                         <Flame className="w-3.5 h-3.5" />
                                         {todayLabel}
                                     </div>
-                                    <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-[1.05] bg-gradient-to-b from-white via-emerald-100 to-emerald-300 bg-clip-text text-transparent">
-                                        {greeting}, {firstName}
+                                    <h1 className="text-3xl md:text-6xl font-bold tracking-tight leading-[1.05] bg-gradient-to-b from-white via-emerald-100 to-emerald-300 bg-clip-text text-transparent">
+                                        {greeting}{firstName ? `, ${firstName}` : ''}
                                     </h1>
                                     <p className="text-slate-300 text-base md:text-lg max-w-2xl leading-relaxed">
                                         {(personalStats.geckos > 0 || !user || isGuestMode()) ? (
@@ -375,7 +382,9 @@ export default function Dashboard() {
                                     </p>
                                 </div>
                                 <div className="flex flex-wrap gap-2">
-                                    <Link to={createPageUrl('MyGeckos')}>
+                                    {/* ?add=1 opens the add form on arrival, so the
+                                        first gecko is one tap away, not two. */}
+                                    <Link to={`${createPageUrl('MyGeckos')}?add=1`}>
                                         <Button className="bg-emerald-600 hover:bg-emerald-500 text-white font-semibold">
                                             Add your first gecko
                                         </Button>
@@ -394,6 +403,11 @@ export default function Dashboard() {
                             </CardContent>
                         </Card>
                     )}
+
+                    {/* What needs doing today comes before any totals. Only
+                        shown once there are geckos, otherwise its "All caught
+                        up" state would sit next to the add-your-first card. */}
+                    {hasGeckos && <NextActions currentUserEmail={user?.email} />}
 
                     {/* STATS STRIP */}
                     {isLoading ? (
@@ -472,8 +486,6 @@ export default function Dashboard() {
                             />
                         </div>
                     )}
-
-                    <NextActions currentUserEmail={user?.email} />
 
                     {/* Referral offer, moved off the sidebar so it has room to
                         be read. Renders nothing for guests and signed-out visitors. */}

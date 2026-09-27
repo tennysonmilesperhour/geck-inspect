@@ -322,6 +322,28 @@ export default function MyGeckosPage() {
         });
     }, [isLoading, user, geckos, location.state]);
 
+    // ?add=1 (from the Dashboard's first-gecko card and other "add your
+    // first gecko" links) opens the add form on arrival. Runs once, after
+    // the collection loads so the plan limit still applies, then strips
+    // the param so a refresh doesn't reopen the form.
+    const addParamConsumedRef = React.useRef(false);
+    useEffect(() => {
+        if (isLoading || !user || user.is_guest || addParamConsumedRef.current) return;
+        const params = new URLSearchParams(location.search);
+        if (params.get('add') !== '1') return;
+        addParamConsumedRef.current = true;
+        params.delete('add');
+        const rest = params.toString();
+        window.history.replaceState(window.history.state, '', `${location.pathname}${rest ? `?${rest}` : ''}`);
+
+        if (geckos.filter((g) => !g.archived).length >= getGeckoLimit(user)) {
+            setShowUpgradeModal(true);
+            return;
+        }
+        setSelectedGecko(null);
+        setIsFormOpen(true);
+    }, [isLoading, user, geckos, location.search, location.pathname]);
+
     const handleFormSubmit = async (geckoData, isNew) => {
         const savedScroll = scrollPositionRef.current;
         setIsFormOpen(false);
@@ -582,7 +604,9 @@ export default function MyGeckosPage() {
                                     <Scale className="w-4 h-4 mr-2 text-emerald-400" />
                                     Weigh-in
                                 </Button>
-                                <Button className="bg-emerald-600 hover:bg-emerald-700" onClick={() => {
+                                {/* Primary action leads on phones: full width, above
+                                    the secondary tools, instead of wrapping to last. */}
+                                <Button className="bg-emerald-600 hover:bg-emerald-700 order-first w-full sm:w-auto md:order-none" onClick={() => {
                                     if (user?.is_guest) { window.location.href = '/AuthPortal?mode=signup'; return; }
                                     const limit = getGeckoLimit(user);
                                     if (geckos.filter(g => !g.archived).length >= limit) {
