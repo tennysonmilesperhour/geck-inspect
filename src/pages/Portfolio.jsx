@@ -4,13 +4,21 @@
  * Treats a breeder's collection as the asset it is: "your collection is
  * worth $X and here's the trend."
  *
- * Valuation model (heuristics v1)
- * -------------------------------
+ * Valuation model
+ * ---------------
  * Per non-archived gecko, value = first available of:
  *   1. listing_price                       basis: 'listing'
  *   2. asking_price                        basis: 'asking'
  *   3. market_price_estimate.average       basis: 'ai_estimate'
- *   4. Morph comp: the highest community average price from
+ *   4. Geck Data trait value table: the gecko's selected morph traits
+ *      (morph_tags, or the free-text morphs_traits field) are matched
+ *      against public.trait_value_table(), which holds asking-price
+ *      bands per crested trait from Geck Data listings, split by age
+ *      and sex. The most valuable matched trait sets the price, and the
+ *      quality tier picks a point in its band (pet p25, breeder median,
+ *      high-end halfway to p75, investment p75). See
+ *      src/lib/traitValuation.js.           basis: 'geck_data'
+ *   5. Morph comp (legacy fallback): the highest community average price from
  *      morph_price_cache among the gecko's canonicalized, visual
  *      (non-het) morph_tags. A Lilly White Dalmatian is priced off the
  *      Lilly White comp because the premium trait drives the sale price.
@@ -22,7 +30,7 @@
  *      data (an investment-grade Axanthic sells well above the morph
  *      average), not fitted constants. Revisit once morph_price_entries
  *      has enough per-grade volume.   basis: 'morph_comp'
- *   5. Nothing matched: value 0.       basis: 'unpriced'
+ *   6. Nothing matched: value 0.       basis: 'unpriced'
  *
  * Every animal carries { value, basis } so the UI can say where each
  * number came from. Estimates are market comps, not appraisals.
@@ -41,7 +49,9 @@ import {
   Wallet, TrendingUp, TrendingDown, Minus, PiggyBank, Hash, Scale, Info, PlusCircle,
 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
+import { supabase } from '@/lib/supabaseClient';
 import { getVisibleGeckos } from '@/lib/geckoAccess';
+import { buildTraitValueIndex, valueFromTraitTable } from '@/lib/traitValuation';
 import { CollectionValuation, MorphPriceCache } from '@/api/supabaseEntities';
 import { canonicalizeMorphTag } from '@/lib/genetics';
 import { patternGradeForScore } from '@/lib/quality';
@@ -65,6 +75,7 @@ const BASIS_META = {
   listing: { label: 'Listing price', className: 'bg-emerald-900/40 border-emerald-700 text-emerald-200' },
   asking: { label: 'Asking price', className: 'bg-sky-900/40 border-sky-700 text-sky-200' },
   ai_estimate: { label: 'AI estimate', className: 'bg-amber-900/40 border-amber-700 text-amber-200' },
+  geck_data: { label: 'Geck Data', className: 'bg-teal-900/40 border-teal-700 text-teal-200' },
   morph_comp: { label: 'Morph comp', className: 'bg-slate-800/60 border-slate-600 text-slate-200' },
   unpriced: { label: 'No data', className: 'bg-slate-900/60 border-slate-700 text-slate-500' },
 };
@@ -111,6 +122,30 @@ function buildMorphAverages(cacheRows) {
   return out;
 }
 
+// The trait table is one ~1s scan of Geck Data listings server-side and
+// only moves when a scrape lands, so fetch it once per session.
+const TRAIT_TABLE_TTL_MS = 30 * 60_000;
+const TRAIT_TABLE_PAGE = 1000;
+let traitTableCache = null;
+
+async function fetchTraitValueTable() {
+  if (traitTableCache && Date.now() - traitTableCache.at < TRAIT_TABLE_TTL_MS) {
+    return traitTableCache.rows;
+  }
+  // PostgREST caps a response at 1000 rows, so page until a short page.
+  const rows = [];
+  for (let from = 0; ; from += TRAIT_TABLE_PAGE) {
+    const { data, error } = await supabase
+      .rpc('trait_value_table')
+      .range(from, from + TRAIT_TABLE_PAGE - 1);
+    if (error) throw error;
+    rows.push(...(data || []));
+    if (!data || data.length < TRAIT_TABLE_PAGE) break;
+  }
+  traitTableCache = { rows, at: Date.now() };
+  return rows;
+}
+
 function qualityTier(gecko) {
   if (gecko.pattern_grade && TIER_MULTIPLIERS[gecko.pattern_grade] != null) {
     return gecko.pattern_grade;
@@ -128,7 +163,7 @@ function visualMorphs(gecko) {
 }
 
 /** Value one gecko per the model documented at the top of this file. */
-function valueGecko(gecko, morphAverages) {
+function valueGecko(gecko, morphAverages, traitIndex) {
   const listing = toNumber(gecko.listing_price);
   if (listing) return { value: listing, basis: 'listing', drivingMorph: visualMorphs(gecko)[0] || null };
 
@@ -137,6 +172,12 @@ function valueGecko(gecko, morphAverages) {
 
   const aiAvg = estimateAverage(gecko);
   if (aiAvg) return { value: aiAvg, basis: 'ai_estimate', drivingMorph: visualMorphs(gecko)[0] || null };
+
+  // Geck Data trait value table: cross-reference the selected traits.
+  const fromTraits = valueFromTraitTable(gecko, traitIndex, qualityTier(gecko));
+  if (fromTraits) {
+    return { ...fromTraits, basis: 'geck_data', drivingMorph: fromTraits.trait };
+  }
 
   // Morph comp: best matching community average among visual morphs.
   let best = null;
@@ -163,9 +204,19 @@ function valueGecko(gecko, morphAverages) {
 
 function BasisChip({ valuation }) {
   const meta = BASIS_META[valuation.basis] || BASIS_META.unpriced;
-  const title = valuation.basis === 'morph_comp'
-    ? `${valuation.compMorph} community average ${formatCurrency(valuation.compAverage)} x ${valuation.multiplier} (${valuation.tier.replace('_', ' ')} tier)`
-    : meta.label;
+  let title = meta.label;
+  if (valuation.basis === 'morph_comp') {
+    title = `${valuation.compMorph} community average ${formatCurrency(valuation.compAverage)} x ${valuation.multiplier} (${valuation.tier.replace('_', ' ')} tier)`;
+  } else if (valuation.basis === 'geck_data') {
+    const { band } = valuation;
+    title = `${valuation.trait}, ${valuation.levelLabel}: median ${formatCurrency(band.p50)}, typical ${formatCurrency(band.p25)} to ${formatCurrency(band.p75)} across ${band.n} Geck Data listings. `
+      + `${valuation.tier.replace('_', ' ')} grade priced at ${valuation.positionLabel}.`;
+    if (valuation.matchedTraits.length > 1) {
+      title += ` Matched traits: ${valuation.matchedTraits.join(', ')}.`;
+    }
+  } else if (valuation.basis === 'unpriced') {
+    title = 'None of this gecko\'s traits matched the Geck Data value table. Add traits like Lilly White or Harlequin to get an estimate.';
+  }
   return (
     <Badge variant="outline" className={`text-xs whitespace-nowrap ${meta.className}`} title={title}>
       {meta.label}
@@ -192,6 +243,7 @@ export default function Portfolio() {
   const { user, isLoadingAuth } = useAuth();
   const [geckos, setGeckos] = useState([]);
   const [morphAverages, setMorphAverages] = useState(new Map());
+  const [traitIndex, setTraitIndex] = useState(null);
   const [snapshots, setSnapshots] = useState([]);
   const [loading, setLoading] = useState(true);
   const snapshotAttempted = useRef(false);
@@ -202,15 +254,19 @@ export default function Portfolio() {
     let cancelled = false;
     (async () => {
       setLoading(true);
-      const [geckoRes, cacheRes, snapRes] = await Promise.allSettled([
+      const [geckoRes, cacheRes, snapRes, traitRes] = await Promise.allSettled([
         getVisibleGeckos(user, {}, '-created_date', 1000),
         MorphPriceCache.filter({}, '-created_date', 1000),
         CollectionValuation.filter({ created_by: user.email }, 'snapshot_date', 365),
+        fetchTraitValueTable(),
       ]);
       if (cancelled) return;
       const all = geckoRes.status === 'fulfilled' ? geckoRes.value : [];
       setGeckos(all.filter((g) => !g.archived));
       setMorphAverages(buildMorphAverages(cacheRes.status === 'fulfilled' ? cacheRes.value : []));
+      // null marks a failed load so the snapshot below does not record a
+      // collection value that is missing its market estimates.
+      setTraitIndex(traitRes.status === 'fulfilled' ? buildTraitValueIndex(traitRes.value) : null);
       setSnapshots(snapRes.status === 'fulfilled' ? snapRes.value : []);
       setLoading(false);
     })();
@@ -218,17 +274,19 @@ export default function Portfolio() {
   }, [user, isLoadingAuth]);
 
   const portfolio = useMemo(() => {
-    const animals = geckos.map((g) => ({ gecko: g, valuation: valueGecko(g, morphAverages) }));
+    const animals = geckos.map((g) => ({ gecko: g, valuation: valueGecko(g, morphAverages, traitIndex) }));
     animals.sort((a, b) => b.valuation.value - a.valuation.value);
     const total = animals.reduce((s, a) => s + a.valuation.value, 0);
     const pricedCount = animals.filter((a) => a.valuation.basis !== 'unpriced').length;
     return { animals, total, pricedCount, avg: animals.length > 0 ? total / animals.length : 0 };
-  }, [geckos, morphAverages]);
+  }, [geckos, morphAverages, traitIndex]);
 
   // Write today's snapshot once per visit if one doesn't already exist.
   // Silent on purpose: a failed snapshot should never break the page.
+  // Skipped when the trait table failed to load, so an outage does not
+  // show up in the trend line as a crash in collection value.
   useEffect(() => {
-    if (loading || snapshotAttempted.current || !user?.email || geckos.length === 0) return;
+    if (loading || snapshotAttempted.current || !user?.email || geckos.length === 0 || !traitIndex) return;
     snapshotAttempted.current = true;
     const today = format(new Date(), 'yyyy-MM-dd');
     const hasToday = snapshots.some((s) => (s.snapshot_date || '').slice(0, 10) === today);
@@ -250,7 +308,7 @@ export default function Portfolio() {
         // Ignore: snapshots are a nice-to-have, never a blocker.
       }
     })();
-  }, [loading, user, geckos, snapshots, portfolio]);
+  }, [loading, user, geckos, snapshots, portfolio, traitIndex]);
 
   const trend = useMemo(() => {
     const byDate = new Map();
@@ -355,7 +413,7 @@ export default function Portfolio() {
           </h1>
           <p className="text-sm text-slate-500 mt-2 flex items-center gap-1.5">
             <Info className="w-3.5 h-3.5 shrink-0" />
-            Values are estimates from market comps and your own listed prices, not formal appraisals.
+            Values are estimates from Geck Data market listings and your own listed prices, not formal appraisals.
           </p>
         </div>
 
@@ -461,7 +519,7 @@ export default function Portfolio() {
               </div>
             ) : (
               <p className="text-sm text-slate-500 py-4 text-center">
-                No valued animals yet. Tag morphs like Lilly White or Axanthic on your geckos and the market comps will fill this in.
+                No valued animals yet. Add morph traits like Lilly White or Axanthic to your geckos and the Geck Data estimates will fill this in.
               </p>
             )}
           </CardContent>
@@ -504,6 +562,11 @@ export default function Portfolio() {
                       </td>
                       <td className="py-2.5 px-3 font-semibold text-slate-100">
                         {valuation.value > 0 ? formatCurrency(valuation.value) : <span className="text-slate-500">$0</span>}
+                        {valuation.basis === 'geck_data' && (
+                          <span className="block text-xs font-normal text-slate-500 whitespace-nowrap">
+                            {valuation.trait}: {formatCurrency(valuation.band.p25)} to {formatCurrency(valuation.band.p75)}
+                          </span>
+                        )}
                       </td>
                       <td className="py-2.5 px-3"><BasisChip valuation={valuation} /></td>
                     </tr>
@@ -512,9 +575,16 @@ export default function Portfolio() {
               </tbody>
             </table>
             <p className="text-xs text-slate-500 mt-3">
-              Morph comps use community average prices and a quality tier multiplier (investment 1.5x, high-end 1.25x, breeder 1.0x, pet 0.6x).
+              Geck Data estimates match each gecko&apos;s morph traits against asking prices on crested gecko listings,
+              narrowed to the same age and sex when there are enough listings. The most valuable trait sets the price:
+              pet grade at the low end of the typical range, breeder grade at the median, high-end and investment grade toward the top.
               Set a listing or asking price on a gecko to override the estimate.
             </p>
+            {!traitIndex && (
+              <p className="text-xs text-amber-400/80 mt-2">
+                The Geck Data value table did not load, so trait-based estimates are missing. Refresh to try again.
+              </p>
+            )}
           </CardContent>
         </Card>
       </div>
