@@ -73,13 +73,13 @@ export default function StoreProduct() {
 
   const jsonLd = useMemo(() => {
     if (!product) return null;
-    const offer = {
+    const offer = !isAffiliate && product.our_price_cents != null ? {
       '@type': 'Offer',
       price: ((product.our_price_cents || 0) / 100).toFixed(2),
       priceCurrency: 'USD',
       availability: 'https://schema.org/InStock',
       url: `${SITE_URL}/Store/p/${product.slug}`,
-    };
+    } : undefined;
     return [
       {
         '@type': 'Product',
@@ -100,7 +100,7 @@ export default function StoreProduct() {
         })),
       },
     ];
-  }, [product, vendor, images, breadcrumbs]);
+  }, [product, vendor, images, breadcrumbs, isAffiliate]);
 
   if (loading) {
     return (
@@ -190,7 +190,9 @@ export default function StoreProduct() {
 
           <div className="flex items-baseline gap-3">
             <span className="text-3xl font-bold text-emerald-200">
-              {formatCents(product.our_price_cents)}
+              {product.our_price_cents == null
+                ? 'See vendor for price'
+                : `${isAffiliate ? 'Est. ' : ''}${formatCents(product.our_price_cents)}`}
             </span>
             {product.compare_at_price_cents && product.compare_at_price_cents > product.our_price_cents && (
               <span className="text-sm text-slate-500 line-through">

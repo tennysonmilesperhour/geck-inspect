@@ -8,14 +8,13 @@ import { CUSTOM_STICKER_SLUG } from '@/lib/store/customSticker';
 import { CUSTOM_SHIRT_SLUG } from '@/lib/store/customShirt';
 import { captureEvent } from '@/lib/posthog';
 import { supabase } from '@/lib/supabaseClient';
-import { safeExternalUrl, openExternalUrl } from '@/lib/safeExternalUrl';
+import { safeExternalUrl } from '@/lib/safeExternalUrl';
 
 /**
  * AddToCartButton handles all four fulfillment modes.
  *
  *   direct_self / direct_pod / dropship_wholesale → adds to cart
- *   affiliate_redirect → POSTs an affiliate-click row, then opens the
- *                        vendor URL in a new tab with our partner tag
+ *   affiliate_redirect → native vendor link with best-effort click logging
  *
  * Compact variant (used on cards) shows just the icon + short label;
  * default variant shows full button text on the PDP.
@@ -81,7 +80,6 @@ export default function AddToCartButton({ product, compact = false, quantity = 1
 
   async function handleAffiliate() {
     if (!vendorUrl) return;
-    setBusy(true);
     try {
       // Best-effort log, never block the click.
       try {
@@ -101,9 +99,8 @@ export default function AddToCartButton({ product, compact = false, quantity = 1
         vendor_id: product.vendor_id,
         destination_url: product.vendor_product_url,
       });
-      openExternalUrl(vendorUrl, 'noopener,noreferrer,sponsored');
-    } finally {
-      setBusy(false);
+    } catch (e) {
+      console.warn('affiliate click tracking failed', e);
     }
   }
 
@@ -133,17 +130,21 @@ export default function AddToCartButton({ product, compact = false, quantity = 1
     );
   }
 
-  // Affiliate redirect
+  // Keep navigation independent of async logging and popup blockers.
+  if (!vendorUrl) {
+    return <Button variant="outline" className="w-full" disabled>Link unavailable</Button>;
+  }
   return (
     <Button
+      asChild
       size={compact ? 'sm' : 'default'}
       variant="outline"
-      disabled={busy || !vendorUrl}
-      onClick={handleAffiliate}
       className="w-full border-amber-700/50 text-amber-200 hover:bg-amber-500/10"
     >
-      <ExternalLink className={`${compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} mr-1`} />
-      {compact ? 'Buy at vendor' : 'Buy at vendor'}
+      <a href={vendorUrl} target="_blank" rel="noopener noreferrer sponsored" onClick={handleAffiliate}>
+        <ExternalLink className={`${compact ? 'w-3.5 h-3.5' : 'w-4 h-4'} mr-1`} />
+        {product.vendor_extra?.link_type === 'search' ? 'Find on Amazon' : 'Buy at vendor'}
+      </a>
     </Button>
   );
 }

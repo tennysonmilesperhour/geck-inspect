@@ -62,7 +62,8 @@ export default function StoreCategory() {
             .select(`
               id, slug, name, short_description, our_price_cents,
               compare_at_price_cents, images, fulfillment_mode, vendor_id,
-              free_shipping_eligible, is_featured, status, gift_friendly, price_tier
+              free_shipping_eligible, is_featured, status, gift_friendly, price_tier,
+              vendor_product_url, vendor_extra
             `)
             .eq('status', 'active')
             .eq('category_id', cat.id)

@@ -14,7 +14,7 @@ const HERO_TILES = [
   { to: '/Store/tees',            label: 'Custom tee',        Icon: Shirt,    blurb: 'Your gecko on a shirt. Pick colour, size and print.' },
   { to: '/Store/c/apparel',       label: 'Apparel',           Icon: Shirt,    blurb: 'Original Geck Inspect tees, hoodies, hats.' },
   { to: '/Store/c/gifts',         label: 'Gift ideas',        Icon: Gift,     blurb: 'For keepers, breeders, and the people who love them.' },
-  { to: '/Store/c/diet',          label: 'Diet (CGD)',        Icon: Sparkles, blurb: 'The brands we feed our own animals.' },
+  { to: '/Store/c/diet',          label: 'Diet',              Icon: Sparkles, blurb: 'CGD staples and species-specific food.' },
   { to: '/Store/c/enclosures',    label: 'Enclosures',        Icon: Wrench,   blurb: 'Tubs, glass, PVC, every life stage.' },
 ];
 
@@ -25,7 +25,7 @@ const LANDING_JSON_LD = [
     name: 'Geck Inspect Supplies',
     url: `${SITE_URL}/Store`,
     description:
-      'Crested gecko supplies, original apparel, curated gift ideas, and the tools real breeders use day to day. Sold by Geck Inspect, with select partner items.',
+      'Reptile supplies, habitat equipment, original apparel and gift ideas. Sold by Geck Inspect, with select partner items.',
     isPartOf: { '@id': `${SITE_URL}/#website` },
   },
   {
@@ -39,24 +39,32 @@ const LANDING_JSON_LD = [
 
 export default function StoreLanding() {
   const [featured, setFeatured] = useState([]);
+  const [categories, setCategories] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     let cancelled = false;
     async function load() {
       try {
-        const { data } = await supabase
+        const [productsResult, categoriesResult] = await Promise.all([supabase
           .from('store_products')
           .select(`
             id, slug, name, short_description, our_price_cents,
             compare_at_price_cents, images, fulfillment_mode, vendor_id,
-            free_shipping_eligible, is_featured, status
+            free_shipping_eligible, is_featured, status, vendor_product_url, vendor_extra
           `)
           .eq('status', 'active')
           .eq('is_featured', true)
           .order('updated_date', { ascending: false })
-          .limit(24);
-        if (!cancelled) setFeatured(data || []);
+          .limit(24),
+          supabase.from('store_categories').select('id, slug, name')
+            .eq('is_active', true).is('parent_id', null)
+            .order('display_order', { ascending: true }),
+        ]);
+        if (!cancelled) {
+          setFeatured(productsResult.data || []);
+          setCategories(categoriesResult.data || []);
+        }
       } catch (e) {
         console.warn('store landing featured load failed', e);
       } finally {
@@ -70,8 +78,8 @@ export default function StoreLanding() {
   return (
     <StoreLayout>
       <Seo
-        title="Crested gecko supplies, gifts, and apparel, Geck Inspect"
-        description="Crested gecko supplies hand-picked by breeders. Original Geck Inspect apparel, the diet brands we use ourselves, and gift ideas for the gecko person in your life."
+        title="Reptile supplies, gifts, and apparel, Geck Inspect"
+        description="Shop reptile enclosures, lighting, heating, misting, substrate and feeding supplies, plus original Geck Inspect apparel and gifts."
         path="/Store"
         keywords={[
           'crested gecko supplies',
@@ -85,12 +93,12 @@ export default function StoreLanding() {
 
       <section className="relative rounded-2xl border border-emerald-700/30 bg-gradient-to-br from-emerald-950/60 via-slate-950 to-slate-950 p-6 md:p-10 mb-8 overflow-hidden">
         <h1 className="text-2xl md:text-4xl font-bold text-emerald-100 max-w-2xl">
-          Supplies for crested gecko keepers and breeders.
+          Supplies for reptile keepers and breeders.
         </h1>
         <p className="text-slate-300 mt-3 max-w-2xl text-sm md:text-base leading-relaxed">
-          Hand-picked by people who actually keep these animals. Original Geck
-          Inspect apparel, the diet and gear we use ourselves, and a curated
-          set of partner products we trust enough to recommend.
+          Browse enclosures, lighting, feeding supplies and habitat equipment,
+          alongside original Geck Inspect apparel. Check each product against
+          your animal’s species, size and care requirements.
         </p>
         <div className="mt-5 flex gap-2 flex-wrap">
           <Link
@@ -121,6 +129,22 @@ export default function StoreLanding() {
       <div className="mb-6">
         <FoodRunoutWidget />
       </div>
+
+      {categories.length > 0 && (
+        <section className="mb-8" aria-labelledby="store-categories-heading">
+          <h2 id="store-categories-heading" className="text-lg font-bold text-slate-100 mb-3">
+            Shop by category
+          </h2>
+          <nav aria-label="Supply categories" className="flex flex-wrap gap-2">
+            {categories.map((category) => (
+              <Link key={category.id} to={`/Store/c/${category.slug}`}
+                className="rounded-md border border-slate-700 px-3 py-2 text-sm text-emerald-200 hover:bg-slate-800">
+                {category.name}
+              </Link>
+            ))}
+          </nav>
+        </section>
+      )}
 
       <section className="grid grid-cols-2 md:grid-cols-6 gap-3 mb-10">
         {HERO_TILES.map(({ to, label, blurb, Icon }) => (
@@ -205,10 +229,10 @@ export default function StoreLanding() {
         </h2>
         <p className="text-sm text-slate-400 leading-relaxed max-w-3xl">
           We're the breeders behind Geck Inspect: pedigree tracking, husbandry
-          tools, and a working roster of crested geckos. Everything in this
-          store is here because we use it ourselves, our friends use it, or
-          we'd give it to someone we know just got their first crestie. If we
-          can't sell it directly, we link to the place we'd buy it from.
+          tools, and a working roster of crested geckos. The store brings
+          reptile supplies and habitat equipment together by category. Partner
+          listings link to the seller for current specifications, pricing and
+          availability; inclusion is not a claim that an item suits every reptile.
         </p>
       </section>
     </StoreLayout>

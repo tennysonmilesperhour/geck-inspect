@@ -24,10 +24,10 @@ export function FtcDisclosureBlock() {
       <Info className="w-3.5 h-3.5 shrink-0 mt-0.5 text-slate-500" />
       <div className="space-y-1.5">
         <p>
-          Some products on this page are sold by partners we receive a commission
-          from. That doesn't change the price you pay or whether we recommend
-          something, every item is here because it's a real pick by the breeders
-          running this site.
+          As an Amazon Associate, Geck Inspect earns from qualifying purchases.
+          We may also earn commissions from other affiliate links, at no extra
+          cost to you. Check the seller’s listing for current details and whether
+          an item suits your animal.
         </p>
         <p>
           <span className="font-medium text-slate-300">Temporary image note:</span>{' '}
