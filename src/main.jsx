@@ -7,6 +7,7 @@ import ErrorBoundary from '@/components/ErrorBoundary'
 import { initPostHog } from '@/lib/posthog'
 import { installGlobalErrorHandlers } from '@/lib/telemetry'
 import { registerServiceWorker } from '@/lib/serviceWorker'
+import { installTranslationGuard } from '@/lib/translationGuard'
 
 // Initialize PostHog as early as possible so autocapture picks up the
 // very first click. No-op if VITE_POSTHOG_KEY isn't set.
@@ -23,6 +24,10 @@ installGlobalErrorHandlers();
 // moment the user flips the Settings toggle.
 registerServiceWorker();
 installNativeAuth().catch(() => console.warn('Native sign-in listener could not start.'));
+
+// Keep the app alive when a visitor uses the browser's page translation.
+// See translationGuard.js for why this crashed sign-up and the dashboard.
+installTranslationGuard();
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <ErrorBoundary>

@@ -78,14 +78,16 @@ const RETRIEVAL_MAX_PHOTOS = Math.min(3, Math.max(1,
 const RETRIEVAL_MIN_SIMILARITY = Math.min(0.95, Math.max(0,
   Number(Deno.env.get("MORPH_RETRIEVAL_MIN_SIMILARITY") || "0.50") || 0.50));
 
-// Cross-project sink for the per-call spend log. Lives in geck-data's
-// Supabase project (separate from this function's own SUPABASE_URL) so
-// the /data-admin/control panel has a single source of truth for
-// Anthropic spend across production and eval. Logging fails open: a
-// missing env var or a write error never prevents a successful
-// recognition from returning to the caller.
-const GECK_DATA_SUPABASE_URL = Deno.env.get("GECK_DATA_SUPABASE_URL");
-const GECK_DATA_SUPABASE_SERVICE_KEY = Deno.env.get("GECK_DATA_SUPABASE_SERVICE_KEY");
+// Sink for the per-call spend log and the runtime_config caps: the
+// geck_data schema in this project. It used to be a separate geck-data
+// project reached through its own URL secret; that project was folded in on
+// 4 Sep 2026 and deleted, the secret kept pointing at it, and the spend log
+// and the per-IP cap failed silently until 28 Sep. Logging fails open: a
+// write error never prevents a successful recognition from returning to
+// the caller.
+function geckDataSink() {
+  return createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY, { db: { schema: "geck_data" } });
+}
 
 // Shared secret that lets the eval script (scripts/eval-morph-id.mjs)
 // tag its calls as surface='morph_id_eval' regardless of auth state.
@@ -123,15 +125,13 @@ function extractClientIp(req: Request): string | null {
   return null;
 }
 
-// Returns the morph_id_per_ip_daily cap from runtime_config (or null
-// if missing/zero). Pulled from the geck-data sink because that's where
-// runtime_config lives. Failure modes (missing env var, unreachable DB,
-// row absent) all silently disable enforcement so a config-tier outage
-// can't take down recognition.
+// Returns the morph_id_per_ip_daily cap from geck_data.runtime_config (or
+// null if missing/zero). Failure modes (unreachable DB, row absent) all
+// silently disable enforcement so a config-tier outage can't take down
+// recognition.
 async function fetchPerIpDailyCap(): Promise<number | null> {
-  if (!GECK_DATA_SUPABASE_URL || !GECK_DATA_SUPABASE_SERVICE_KEY) return null;
   try {
-    const sink = createClient(GECK_DATA_SUPABASE_URL, GECK_DATA_SUPABASE_SERVICE_KEY);
+    const sink = geckDataSink();
     const { data } = await sink
       .from("runtime_config")
       .select("value")
@@ -146,9 +146,8 @@ async function fetchPerIpDailyCap(): Promise<number | null> {
 }
 
 async function countTodaysCallsForIp(ipHash: string): Promise<number> {
-  if (!GECK_DATA_SUPABASE_URL || !GECK_DATA_SUPABASE_SERVICE_KEY) return 0;
   try {
-    const sink = createClient(GECK_DATA_SUPABASE_URL, GECK_DATA_SUPABASE_SERVICE_KEY);
+    const sink = geckDataSink();
     const startOfDay = new Date();
     startOfDay.setUTCHours(0, 0, 0, 0);
     const { count } = await sink
@@ -224,9 +223,8 @@ type InvocationLog = {
 };
 
 async function logInvocation(row: InvocationLog): Promise<void> {
-  if (!GECK_DATA_SUPABASE_URL || !GECK_DATA_SUPABASE_SERVICE_KEY) return;
   try {
-    const sink = createClient(GECK_DATA_SUPABASE_URL, GECK_DATA_SUPABASE_SERVICE_KEY);
+    const sink = geckDataSink();
     const { error } = await sink.from("model_invocations").insert(row);
     if (error) console.error("model_invocations insert failed:", error.message);
   } catch (err) {
@@ -477,6 +475,7 @@ async function loadVisualEvidence(imageUrls: string[]): Promise<VisualEvidence> 
       const detail = firstError?.status === "rejected"
         ? String(firstError.reason instanceof Error ? firstError.reason.message : firstError.reason)
         : "No query embedding was produced.";
+      console.error("visual evidence unavailable:", detail.slice(0, 300));
       return {
         status: "unavailable",
         model: VISUAL_EMBEDDING_MODEL,

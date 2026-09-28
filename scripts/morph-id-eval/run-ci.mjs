@@ -127,6 +127,7 @@ async function main() {
         failures: report.failures,
         status_counts: report.status_counts,
         retrieval_status_counts: report.retrieval_status_counts,
+        retrieval_notes: report.retrieval_notes,
         per_class: report.per_class,
       },
       top_confusions: Object.entries(report.confusion || {})
@@ -153,6 +154,7 @@ async function main() {
     `| Gave an answer (not "insufficient evidence") | ${pct(report.coverage)} |`,
     '',
     `Photo lookup status: ${JSON.stringify(report.retrieval_status_counts)}`,
+    Object.keys(report.retrieval_notes || {}).length ? `Photo lookup notes: ${JSON.stringify(report.retrieval_notes)}` : '',
     runId ? `Recorded as geck_data.morph_eval_runs id ${runId}.` : '',
   ].join('\n');
   console.log(summary);
