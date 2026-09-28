@@ -25,6 +25,8 @@ Optional environment:
   MORPH_ID_MODEL         Defaults to claude-sonnet-4-6
 
 Each JSONL row needs image_url or image_urls plus expected_primary_morph.
+Optional accepted_morphs lists every pattern the breeder tagged; a prediction
+that matches any of them counts toward the breeder-tag accuracy lines.
 Use a holdout set that was never included in prompts or the training corpus.`);
   process.exit(1);
 }
@@ -75,6 +77,7 @@ for (const [index, row] of rows.entries()) {
     continue;
   }
 
+  const accepted = new Set([row.expected_primary_morph, ...(Array.isArray(row.accepted_morphs) ? row.accepted_morphs : [])]);
   const analysis = payload.analysis || payload;
   const candidates = (analysis.candidate_morphs || []).map((candidate) => candidate.morph);
   if (analysis.primary_morph && !candidates.includes(analysis.primary_morph)) {
@@ -89,6 +92,9 @@ for (const [index, row] of rows.entries()) {
     model_signal: analysis.model_signal,
     top1_correct: analysis.primary_morph === row.expected_primary_morph,
     top3_correct: candidates.slice(0, 3).includes(row.expected_primary_morph),
+    accepted: [...accepted],
+    top1_breeder_tag: accepted.has(analysis.primary_morph),
+    top3_breeder_tag: candidates.slice(0, 3).some((morph) => accepted.has(morph)),
   });
   console.error(`[${index + 1}/${rows.length}] ${row.expected_primary_morph} -> ${analysis.primary_morph} (${analysis.assessment_status})`);
 }
@@ -118,6 +124,11 @@ const report = {
   overall_top1_accuracy: ratio(completed.filter((row) => row.top1_correct).length, completed.length),
   answered_top1_accuracy: ratio(answered.filter((row) => row.top1_correct).length, answered.length),
   overall_top3_accuracy: ratio(completed.filter((row) => row.top3_correct).length, completed.length),
+  // Breeders often tag more than one pattern on one animal. These count a
+  // prediction as right when it matches any pattern the breeder tagged.
+  overall_top1_breeder_tag: ratio(completed.filter((row) => row.top1_breeder_tag).length, completed.length),
+  answered_top1_breeder_tag: ratio(answered.filter((row) => row.top1_breeder_tag).length, answered.length),
+  overall_top3_breeder_tag: ratio(completed.filter((row) => row.top3_breeder_tag).length, completed.length),
   status_counts: statusCounts,
   confusion,
   results,
