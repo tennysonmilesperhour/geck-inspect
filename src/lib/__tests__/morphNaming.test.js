@@ -27,6 +27,15 @@ describe('leadingPattern', () => {
     expect(leadingPattern('harlequin', 'unknown', [])).toEqual({ morph: 'harlequin', reason: null });
   });
 
+  it('reads partial pinning as Pinstripe when the breeder photo vote leads with Pinstripe', () => {
+    const vote = (leader) => ({ status: 'available', neighbors: [], consensus: { primary_morph: leader }, ranking: [] });
+    expect(leadingPattern('harlequin', 'partial', [], vote('pinstripe'))).toMatchObject({ morph: 'pinstripe', replaced: 'partial_pinstripe' });
+    expect(leadingPattern('partial_pinstripe', 'partial', [], vote('pinstripe')).morph).toBe('pinstripe');
+    expect(leadingPattern('harlequin', 'partial', [], vote('harlequin')).morph).toBe('partial_pinstripe');
+    expect(leadingPattern('harlequin', 'partial', [], noLookup).morph).toBe('partial_pinstripe');
+    expect(leadingPattern('harlequin', 'none', [], vote('pinstripe')).morph).toBe('harlequin');
+  });
+
   it('never replaces Extreme Harlequin or any other pattern', () => {
     expect(leadingPattern('extreme_harlequin', 'full', ['tricolor']).morph).toBe('extreme_harlequin');
     expect(leadingPattern('dalmatian', 'full', []).morph).toBe('dalmatian');
@@ -65,6 +74,36 @@ describe('buildShortlist', () => {
     const list = buildShortlist(leadingPattern('harlequin', 'none', []), 'harlequin', model, evidence, PRIMARY_MORPH_IDS);
     expect(list[1]).toMatchObject({ morph: 'extreme_harlequin', why: 'Heavy leg coverage.', source: 'both' });
     expect(list[2].morph).toBe('flame');
+  });
+
+  it('keeps the same three patterns when the breeder check moves Pinstripe first', () => {
+    const evidence = {
+      ...lookup([
+        { primary_morph: 'pinstripe', share: 0.4, support: 6, mean_similarity: 0.9 },
+        { primary_morph: 'tricolor', share: 0.2, support: 3, mean_similarity: 0.9 },
+      ]),
+      consensus: { primary_morph: 'pinstripe' },
+    };
+    const before = buildShortlist(leadingPattern('harlequin', 'partial', []), 'harlequin', model, evidence, PRIMARY_MORPH_IDS);
+    const after = buildShortlist(leadingPattern('harlequin', 'partial', [], evidence), 'harlequin', model, evidence, PRIMARY_MORPH_IDS);
+    expect(before.map((c) => c.morph)).toEqual(['partial_pinstripe', 'harlequin', 'pinstripe']);
+    expect(after.map((c) => c.morph)).toEqual(['pinstripe', 'partial_pinstripe', 'harlequin']);
+    expect(after[0].why).toContain('listed as Pinstripe');
+    expect(after[2].why).toMatch(/^Base pattern\./);
+  });
+
+  it('keeps the model reasoning when the model itself named partial pinstripe', () => {
+    const own = [{ morph: 'partial_pinstripe', score: 70, why: 'Pinning on the rear half.' }, ...model];
+    const evidence = {
+      ...lookup([
+        { primary_morph: 'pinstripe', share: 0.4, support: 6, mean_similarity: 0.9 },
+        { primary_morph: 'tricolor', share: 0.2, support: 3, mean_similarity: 0.9 },
+      ]),
+      consensus: { primary_morph: 'pinstripe' },
+    };
+    const list = buildShortlist(leadingPattern('partial_pinstripe', 'partial', [], evidence), 'partial_pinstripe', own, evidence, PRIMARY_MORPH_IDS);
+    expect(list.map((c) => c.morph)).toEqual(['pinstripe', 'partial_pinstripe', 'tricolor']);
+    expect(list[1].why).toBe('Pinning on the rear half.');
   });
 
   it('skips lookup labels outside the taxonomy', () => {

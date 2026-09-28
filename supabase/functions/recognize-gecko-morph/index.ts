@@ -53,6 +53,10 @@
 // Harlequin was the answer 148 times; Pinstripe and Tricolor never. v60
 // makes Harlequin the base (pinning or tricolor leads over it) and fills the
 // shortlist from the photo lookup's vote.
+//   #19 v60 Harlequin base         195/220  37.4% / 72.8% breeder tag
+//                                           (last 25 lost to API credit)
+// v61 reads partial pinning as Pinstripe when the breeder photo vote leads
+// with Pinstripe (same three on the shortlist, new order).
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -765,8 +769,9 @@ function clampToTaxonomy(
     white_cream_traits: pickMany(rawVisualProfile.white_cream_traits, WHITE_PLACEMENT_IDS),
   };
   // Harlequin is the base: pinning or the tricolor look takes the lead over
-  // it, and the photo lookup fills the rest of the shortlist.
-  const leading = leadingPattern(modelPrimary, visualProfile.pinning, secondaryTraits);
+  // it; partial pinning reads as Pinstripe when the breeder photos say so;
+  // the photo lookup fills the rest of the shortlist.
+  const leading = leadingPattern(modelPrimary, visualProfile.pinning, secondaryTraits, visualEvidence);
   const primaryMorph = leading.morph;
   const shortlist = buildShortlist(leading, modelPrimary, candidateMorphs, visualEvidence, PRIMARY_MORPH_IDS);
 

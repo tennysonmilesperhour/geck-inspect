@@ -36,13 +36,48 @@ const PINNING_REASON: Record<string, string> = {
   super_stripe: "super stripe",
 };
 
+export type Leading = {
+  morph: string | null;
+  reason: string | null;
+  // Set when the breeder photo vote moved the lead: the explanation, and the
+  // pattern the model's own read would have led with.
+  why?: string;
+  replaced?: string;
+};
+
+// Partial or full pinning is a judgment call on a single photo. When the
+// model reads partial pinning but the closest breeder-tagged photos are
+// listed as Pinstripe more than anything else, follow the breeders
+// (28 Sep 2026: breeder labels are ground truth). On run 19 this would have
+// fixed 6 first answers and broken none.
+function followBreederPinstripe(base: Leading, evidence?: VisualEvidence): Leading {
+  if (base.morph !== "partial_pinstripe") return base;
+  if (evidence?.status !== "available" || evidence.consensus?.primary_morph !== "pinstripe") return base;
+  return {
+    morph: "pinstripe",
+    reason: "pinning",
+    why: "The model read partial pinning, and the closest breeder-tagged reference photos of this look are listed as Pinstripe more than anything else.",
+    replaced: "partial_pinstripe",
+  };
+}
+
 // The pattern that leads when the model named plain Harlequin but also saw
-// pinning or the tricolor look. Anything else passes through unchanged.
+// pinning or the tricolor look, then the breeder-photo Pinstripe check above.
+// Anything else passes through unchanged.
 export function leadingPattern(
   modelPrimary: string | null,
   pinning: string | null | undefined,
   secondaryTraits: string[],
-): { morph: string | null; reason: string | null } {
+  evidence?: VisualEvidence,
+): Leading {
+  return followBreederPinstripe(harlequinBase(modelPrimary, pinning, secondaryTraits), evidence);
+}
+
+function harlequinBase(
+  modelPrimary: string | null,
+  pinning: string | null | undefined,
+  secondaryTraits: string[],
+): Leading {
   if (modelPrimary !== "harlequin") return { morph: modelPrimary, reason: null };
   const options: Array<{ morph: string; reason: string }> = [];
   if (pinning && PINNING_PATTERN[pinning]) {
@@ -62,7 +97,7 @@ export function leadingPattern(
 // filling the rest from the lookup put a breeder-tagged pattern in the top
 // three 77% of the time, against 69% for the model's own three.
 export function buildShortlist(
-  leading: { morph: string | null; reason: string | null },
+  leading: Leading,
   modelPrimary: string | null,
   modelCandidates: Candidate[],
   evidence: VisualEvidence,
@@ -83,10 +118,24 @@ export function buildShortlist(
     add({
       morph: leading.morph,
       score: modelTop?.score ?? 0,
-      why: `Harlequin base with ${leading.reason}. Breeders list this as the leading pattern.`,
+      why: leading.why ?? `Harlequin base with ${leading.reason}. Breeders list this as the leading pattern.`,
+      source: leading.replaced ? "both" : "model",
+    });
+    // Keep the model's own read right behind, so the breeder check only
+    // changes the order of the shortlist, not what is on it.
+    if (leading.replaced && leading.replaced !== modelPrimary) {
+      add({
+        morph: leading.replaced,
+        score: modelTop?.score ?? 0,
+        why: "Harlequin base with partial pinstripe, as the model read it.",
+        source: "model",
+      });
+    }
+    add(modelTop && {
+      ...modelTop,
+      why: modelPrimary === "harlequin" ? `Base pattern. ${modelTop.why}`.trim() : modelTop.why,
       source: "model",
     });
-    add(modelTop && { ...modelTop, why: `Base pattern. ${modelTop.why}`.trim(), source: "model" });
   } else if (leading.morph) {
     add(modelTop ? { ...modelTop, source: "model" } : { morph: leading.morph, score: 0, why: "", source: "model" });
   }
