@@ -5,8 +5,11 @@
 # the breeders who listed them) and posts the results on the run page. The
 # headline numbers are also saved in geck_data.morph_eval_runs.
 #
-# A full run costs roughly $5 in model calls (about 2 cents per gecko) and
-# takes 15 to 25 minutes. Set "limit" to 20 for a quick, cheap smoke test.
+# A full run costs roughly $5 in model calls (about 2 cents per gecko).
+# Set "limit" to 20 for a quick, cheap smoke test. While the Replicate
+# account holds under $5 of credit, Replicate allows one photo lookup at a
+# time, so keep concurrency at 1 (a full run then takes about 50 minutes);
+# with more credit, 3 runs in about 20.
 #
 # Secrets used (both already set for error-triage):
 #   SUPABASE_URL
@@ -30,9 +33,9 @@ on:
         required: false
         default: ''
       concurrency:
-        description: Identifications in flight at once
+        description: Identifications in flight at once (1 while Replicate credit is under $5)
         required: false
-        default: '3'
+        default: '1'
       notes:
         description: Note saved with the run (what changed since last time)
         required: false
@@ -48,7 +51,7 @@ concurrency:
 jobs:
   eval:
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:

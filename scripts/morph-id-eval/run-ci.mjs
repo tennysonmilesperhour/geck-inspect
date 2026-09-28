@@ -13,7 +13,9 @@
 //    runs from May, so results can be compared without downloading anything.
 
 import { spawn } from 'node:child_process';
-import { writeFile, appendFile } from 'node:fs/promises';
+import { writeFile, appendFile, mkdtemp } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 
 const env = process.env;
@@ -80,10 +82,10 @@ async function signIn() {
   return data.session.access_token;
 }
 
-function runEval(accessToken) {
+function runEval(tokenFile) {
   return new Promise((resolve, reject) => {
     const child = spawn(process.execPath, ['scripts/eval-morph-id.mjs', MANIFEST], {
-      env: { ...env, MORPH_ID_ACCESS_TOKEN: accessToken },
+      env: { ...env, MORPH_ID_TOKEN_FILE: tokenFile },
       stdio: ['ignore', 'pipe', 'inherit'],
     });
     let stdout = '';
@@ -104,8 +106,21 @@ const pct = (value) => (value == null ? 'n/a' : `${(value * 100).toFixed(1)}%`);
 
 async function main() {
   await ensureEvalAccount();
-  const token = await signIn();
-  const report = await runEval(token);
+  // Sessions last an hour and a full sequential run can take longer, so the
+  // token lives in a file the eval re-reads, refreshed every 40 minutes.
+  const tokenFile = join(await mkdtemp(join(tmpdir(), 'morph-eval-')), 'token');
+  await writeFile(tokenFile, await signIn(), { mode: 0o600 });
+  const refresher = setInterval(() => {
+    signIn()
+      .then((token) => writeFile(tokenFile, token, { mode: 0o600 }))
+      .catch((error) => console.error(`Token refresh failed: ${error.message}`));
+  }, 40 * 60 * 1000);
+  let report;
+  try {
+    report = await runEval(tokenFile);
+  } finally {
+    clearInterval(refresher);
+  }
   await writeFile(REPORT_PATH, JSON.stringify(report, null, 2));
 
   const taxonomyVersion = Object.keys(report.taxonomy_versions || {})[0] || null;

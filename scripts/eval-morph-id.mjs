@@ -8,13 +8,16 @@ const baseUrl = process.env.MORPH_ID_FUNCTION_URL
     ? `${process.env.SUPABASE_URL.replace(/\/$/, '')}/functions/v1/recognize-gecko-morph`
     : '');
 const accessToken = process.env.MORPH_ID_ACCESS_TOKEN || '';
+// A long run can outlast a one-hour session. When set, the token is re-read
+// from this file before every call so the caller can refresh it mid-run.
+const tokenFile = process.env.MORPH_ID_TOKEN_FILE || '';
 const anonKey = process.env.SUPABASE_ANON_KEY || '';
 const evalSecret = process.env.EVAL_SHARED_SECRET || '';
 const model = process.env.MORPH_ID_MODEL || 'claude-sonnet-4-6';
 const limit = Math.max(0, Number(process.env.EVAL_LIMIT) || 0);
 const concurrency = Math.min(8, Math.max(1, Number(process.env.EVAL_CONCURRENCY) || 1));
 
-if (!manifestPath || !baseUrl || !accessToken || !anonKey) {
+if (!manifestPath || !baseUrl || !(accessToken || tokenFile) || !anonKey) {
   console.error(`Usage: pnpm eval:morph-id path/to/holdout.jsonl
 
 Required environment:
@@ -27,6 +30,7 @@ Optional environment:
   MORPH_ID_MODEL         Defaults to claude-sonnet-4-6
   EVAL_LIMIT             Grade an evenly spaced sample of this many rows
   EVAL_CONCURRENCY       Calls in flight at once (1 to 8, default 1)
+  MORPH_ID_TOKEN_FILE    File holding the current token, re-read before each call
 
 Each JSONL row needs image_url or image_urls plus expected_primary_morph.
 Optional accepted_morphs lists every pattern the breeder tagged; a prediction
@@ -52,6 +56,15 @@ const rows = limit && limit < allRows.length
   ? allRows.filter((_, index) => index % (allRows.length / limit) < 1).slice(0, limit)
   : allRows;
 
+async function currentToken() {
+  if (!tokenFile) return accessToken;
+  try {
+    return (await readFile(tokenFile, 'utf8')).trim() || accessToken;
+  } catch {
+    return accessToken;
+  }
+}
+
 async function identify(imageUrls, row) {
   let lastError = '';
   for (let attempt = 1; attempt <= 2; attempt += 1) {
@@ -64,7 +77,7 @@ async function identify(imageUrls, row) {
         headers: {
           'Content-Type': 'application/json',
           apikey: anonKey,
-          Authorization: `Bearer ${accessToken}`,
+          Authorization: `Bearer ${await currentToken()}`,
           ...(evalSecret ? { 'x-eval-secret': evalSecret } : {}),
         },
         body: JSON.stringify({
