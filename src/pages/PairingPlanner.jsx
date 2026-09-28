@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import Seo from '@/components/seo/Seo';
 import { api } from '@/api/appClient';
-import { MorphPriceCache } from '@/api/supabaseEntities';
+import { loadTraitValueIndex } from '@/lib/traitValueTable';
+import { basicHatchlingValue, hatchlingValue } from '@/lib/traitValuation';
 import useFemaleReadiness from '@/hooks/useFemaleReadiness';
 import { ReadinessBadge } from '@/components/breeding/BreedingReadiness';
 import {
@@ -52,10 +53,12 @@ const GOALS = {
   safe: { label: 'Safest pairings', icon: ShieldCheck },
 };
 
-// Static fallback tier weights, used only when the community price cache
-// is empty. These are rough relative desirability scores for crested
+// Static fallback tier weights, used only when the listing price table
+// cannot load. These are rough relative desirability scores for crested
 // gecko traits, not dollar values. The UI says so plainly when they kick
-// in so nobody mistakes them for real market data.
+// in so nobody mistakes them for real market data. They never mix with
+// dollar prices (until 28 Sep they did: the old one-row price cache priced
+// Tiger at $420 and everything else at these 1 to 5 scores).
 const STATIC_TIER_WEIGHTS = {
   'lilly white': 5,
   cappuccino: 5,
@@ -78,7 +81,6 @@ const STATIC_COMBO_WEIGHTS = {
   tricolor: 4,
   halloween: 4,
   'extreme harlequin': 4,
-  xxx: 5,
   brindlequin: 4,
   frappuccino: 5,
   'phantom frappuccino': 5,
@@ -136,7 +138,7 @@ export default function PairingPlannerPage() {
   const [authChecked, setAuthChecked] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [geckos, setGeckos] = useState([]);
-  const [priceMap, setPriceMap] = useState(null); // morph_name(lower) -> avg price
+  const [priceIndex, setPriceIndex] = useState(null); // listing price table, see traitValuation.js
   const [priceLoaded, setPriceLoaded] = useState(false);
 
   const [goal, setGoal] = useState('morph');
@@ -169,37 +171,21 @@ export default function PairingPlannerPage() {
     })();
   }, []);
 
-  // Pull community price data once. Keyed by morph_name so the value goal
-  // can look up an average for each trait an offspring carries.
+  // Asking-price bands per trait from the scraped MorphMarket listings, the
+  // same table the Portfolio and gecko value estimates use.
   useEffect(() => {
     let cancelled = false;
-    (async () => {
-      try {
-        const rows = await MorphPriceCache.list('-created_date');
-        if (cancelled) return;
-        const buckets = new Map();
-        for (const r of rows || []) {
-          const key = (r.morph_name || '').toLowerCase().trim();
-          const price = r.average_price || r.price || r.median_price || r.min_price;
-          if (!key || !price || price <= 0) continue;
-          if (!buckets.has(key)) buckets.set(key, []);
-          buckets.get(key).push(price);
-        }
-        const map = new Map();
-        for (const [key, prices] of buckets) {
-          map.set(key, prices.reduce((s, p) => s + p, 0) / prices.length);
-        }
-        setPriceMap(map);
-      } catch (e) {
-        console.warn('PairingPlanner price fetch failed:', e);
-        if (!cancelled) setPriceMap(new Map());
-      }
-      if (!cancelled) setPriceLoaded(true);
-    })();
+    loadTraitValueIndex()
+      .then((index) => { if (!cancelled) setPriceIndex(index.traits.size > 0 ? index : null); })
+      .catch((e) => console.warn('PairingPlanner price table failed to load:', e))
+      .finally(() => { if (!cancelled) setPriceLoaded(true); });
     return () => {
       cancelled = true;
     };
   }, []);
+  // An offspring whose traits match nothing in the table (Wild-type) counts
+  // at the low end of the cheapest common hatchling.
+  const floorPrice = useMemo(() => (priceIndex ? basicHatchlingValue(priceIndex) || 0 : 0), [priceIndex]);
 
   const males = useMemo(() => geckos.filter((g) => g.sex === 'Male'), [geckos]);
   const females = useMemo(() => geckos.filter((g) => g.sex === 'Female'), [geckos]);
@@ -209,7 +195,7 @@ export default function PairingPlannerPage() {
     [geckos]
   );
 
-  const usingStaticWeights = priceLoaded && (!priceMap || priceMap.size === 0);
+  const usingStaticWeights = priceLoaded && !priceIndex;
 
   // Score one offspring distribution against the active goal. Returns a
   // number where higher is better (0 for "no contribution").
@@ -226,27 +212,31 @@ export default function PairingPlannerPage() {
         return Math.round(p * 1000) / 10;
       }
       if (goal === 'value') {
-        // Expected per-egg value: sum over phenotypes of
-        // probability * (best per-trait/combo price the egg carries).
-        // With live cache we use dollar averages; otherwise the static
-        // tier weights stand in as a relative desirability score.
+        // Expected per-egg value: sum over outcomes of probability times
+        // the median hatchling asking price for that outcome's traits.
+        // Lethal outcomes (Super Lilly White) never hatch and count as 0.
         let expected = 0;
+        if (priceIndex) {
+          for (const ph of phenotypes) {
+            if (ph.health_risk === 'lethal') continue;
+            const text = [outcomeTraits(ph), ...outcomeCombos(ph)].join(', ');
+            expected += ph.probability * (hatchlingValue(text, priceIndex) ?? floorPrice);
+          }
+          return Math.round(expected);
+        }
+        // Fallback: relative desirability scores only, labeled as such.
         for (const ph of phenotypes) {
-          const desc = (ph.phenotype_description || '').toLowerCase();
+          if (ph.health_risk === 'lethal') continue;
+          const desc = outcomeTraits(ph).toLowerCase();
           let best = 0;
-          // Combo premium first.
           for (const combo of ph.matching_combo_morphs || []) {
-            const key = combo.toLowerCase();
-            const live = priceMap && priceMap.get(key);
-            const val = live != null ? live : (STATIC_COMBO_WEIGHTS[key] || 0);
+            const val = STATIC_COMBO_WEIGHTS[combo.toLowerCase().replace(/_/g, ' ')] || 0;
             if (val > best) best = val;
           }
-          // Then individual traits present in the description.
           for (const trait of TRAITS) {
             const key = trait.name.toLowerCase();
             if (!desc.includes(key)) continue;
-            const live = priceMap && priceMap.get(key);
-            const val = live != null ? live : (STATIC_TIER_WEIGHTS[key] || 0);
+            const val = STATIC_TIER_WEIGHTS[key] || 0;
             if (val > best) best = val;
           }
           expected += ph.probability * best;
@@ -257,7 +247,7 @@ export default function PairingPlannerPage() {
       // diversity (number of distinct outcomes) as a mild tiebreaker.
       return phenotypes.length;
     };
-  }, [goal, targetMorph, priceMap]);
+  }, [goal, targetMorph, priceIndex, floorPrice]);
 
   // The heavy lifting: build every candidate pairing, predict, score, and
   // attach risk warnings. Capped so we never grind the browser to a halt.
@@ -434,11 +424,21 @@ export default function PairingPlannerPage() {
                 <div className="flex items-start gap-2 rounded-lg bg-amber-900/30 border border-amber-600/30 text-amber-300 p-3 text-sm">
                   <AlertTriangle className="w-4 h-4 shrink-0 mt-0.5" />
                   <span>
-                    No community price data is available yet, so value scores use a static tier
-                    weighting (relative desirability, not dollar amounts). Scores are directional,
-                    not market quotes.
+                    Listing prices could not load, so value scores use a static tier weighting
+                    (relative desirability, not dollar amounts). Scores are directional, not
+                    market quotes.
                   </span>
                 </div>
+              )}
+
+              {goal === 'value' && priceIndex && (
+                <p className="text-xs text-slate-400">
+                  Expected value per egg: each predicted outcome at the median asking price for
+                  hatchlings with those traits on MorphMarket listings, weighted by its odds. An
+                  outcome with no priced trait counts at ${Math.round(floorPrice)}, the low end
+                  for a common hatchling. Asking prices run above what animals sell for, and
+                  pattern quality moves price more than any single gene.
+                </p>
               )}
 
               {results.capped && (

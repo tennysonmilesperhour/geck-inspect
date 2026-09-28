@@ -313,3 +313,29 @@ export function valueFromTraitTable(gecko, index, tier = 'breeder', now = new Da
     matchedTraits: keys.map((k) => index.traits.get(k).name),
   };
 }
+
+/**
+ * Median asking price for an unsexed hatchling with the traits named in
+ * `text` (for example a genetics-calculator outcome, "Lilly White,
+ * Harlequin"). This is what a clutch from a pairing sells as, so the
+ * Pairing Planner prices each predicted outcome with it. Null when no
+ * trait matched.
+ */
+export function hatchlingValue(text, index) {
+  const priced = valueFromTraitTable({ morphs_traits: text, weight_grams: 5 }, index, 'breeder');
+  return priced ? priced.value : null;
+}
+
+/**
+ * Price for a hatchling with no priced trait (the calculator's Wild-type):
+ * the low end of the cheapest trait that has at least `minListings`
+ * unsexed hatchling listings. About $65 in September 2026 (Dalmatian).
+ */
+export function basicHatchlingValue(index, minListings = 20) {
+  let low = null;
+  for (const trait of index?.traits?.values() || []) {
+    const band = trait.bands.get('hatchling|unsexed');
+    if (band && band.n >= minListings && (low == null || band.p25 < low)) low = band.p25;
+  }
+  return low;
+}

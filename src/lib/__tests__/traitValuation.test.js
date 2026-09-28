@@ -10,6 +10,8 @@ import {
   valueFromTraitTable,
   qualityTierFor,
   isCrestedGecko,
+  hatchlingValue,
+  basicHatchlingValue,
 } from '../traitValuation';
 
 // A slice of real public.trait_value_table() output (27 Sep 2026).
@@ -181,5 +183,26 @@ describe('qualityTierFor and isCrestedGecko', () => {
     expect(isCrestedGecko({})).toBe(true);
     expect(isCrestedGecko({ species: 'Crested Gecko' })).toBe(true);
     expect(isCrestedGecko({ species: 'Leopard Gecko' })).toBe(false);
+  });
+});
+
+describe('hatchlingValue', () => {
+  it('prices a calculator outcome as an unsexed hatchling', () => {
+    // Harlequin has its own hatchling band; the leading trait sets the price.
+    expect(hatchlingValue('Harlequin', index)).toBe(120);
+    expect(hatchlingValue('Lilly White, Harlequin', index)).toBe(375);
+  });
+
+  it('prices a het that has its own band, and returns null when nothing matches', () => {
+    expect(hatchlingValue('Het Axanthic, Harlequin', index)).toBe(398);
+    expect(hatchlingValue('Wild-type', index)).toBeNull();
+  });
+});
+
+describe('basicHatchlingValue', () => {
+  it('takes the low end of the cheapest well-listed hatchling band', () => {
+    // Only Harlequin has a hatchling band in the fixture (n 190, p25 80).
+    expect(basicHatchlingValue(index)).toBe(80);
+    expect(basicHatchlingValue(index, 500)).toBeNull();
   });
 });
