@@ -84,7 +84,7 @@ describe('buildBuyerPacket', () => {
 
 describe('text helpers', () => {
   it('scrubs characters helvetica cannot draw and builds a safe filename', () => {
-    expect(safeText('Zeus × Mango — 2026')).toBe('Zeus x Mango - 2026');
+    expect(safeText('Zeus \u00D7 Mango \u2014 2026')).toBe('Zeus x Mango - 2026');
     expect(packetFilename({ gecko_id_code: 'TT 26/014' })).toBe('buyer-packet-TT-26-014.pdf');
   });
 });
