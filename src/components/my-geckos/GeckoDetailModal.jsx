@@ -2,11 +2,13 @@ import { useState, useEffect, useMemo } from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { WeightRecord, BreedingPlan, Egg, Gecko, GeckoEvent, GeckoImage } from '@/entities/all';
+import { WeightRecord, BreedingPlan, Egg, Gecko, GeckoEvent, GeckoImage, FeedingRecord, FeedingGroup } from '@/entities/all';
+import { buildBuyerPacket, renderBuyerPacketPDF, packetFilename } from '@/lib/buyerPacket';
+import { photoDataUrl, qrDataUrl, downloadPdf } from '@/lib/buyerPacketAssets';
 import { readinessFor } from '@/lib/breedingReadiness';
 import { ReadinessNote } from '@/components/breeding/BreedingReadiness';
 import { format } from 'date-fns';
-import { X, Plus, Trash2, LineChart, Loader2, Award, GitBranch, Calendar, Baby, Users, Edit, Eye, EyeOff, History, Archive, ArchiveRestore, ChevronLeft, ChevronRight, Camera, QrCode, ArrowRightLeft, ExternalLink } from 'lucide-react';
+import { X, Plus, Trash2, LineChart, Loader2, Award, GitBranch, Calendar, Baby, Users, Edit, Eye, EyeOff, History, Archive, ArchiveRestore, ChevronLeft, ChevronRight, Camera, QrCode, ArrowRightLeft, ExternalLink, FileText } from 'lucide-react';
 import LoadingSpinner from '../shared/LoadingSpinner';
 import SmartImage from '../shared/SmartImage';
 import EventTracker from './EventTracker';
@@ -73,6 +75,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
   const [newWeight, setNewWeight] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [isGeneratingCert, setIsGeneratingCert] = useState(false);
+  const [isMakingPacket, setIsMakingPacket] = useState(false);
   const [isPublic, setIsPublic] = useState(gecko?.is_public ?? true);
   const [slideshowIndex, setSlideshowIndex] = useState(0);
   const [showSlideshow, setShowSlideshow] = useState(false);
@@ -267,6 +270,49 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
           });
       } finally {
           setIsGeneratingCert(false);
+      }
+  };
+
+  // Buyer packet: one PDF to hand over with a sold gecko (photo, traits,
+  // lineage, weights, feeding, passport QR). Private notes stay out.
+  const handleBuyerPacket = async () => {
+      if (!gecko?.id) return;
+      setIsMakingPacket(true);
+      try {
+          const getById = (id) => (id ? allGeckos.find((g) => g.id === id) : null);
+          const sireG = getById(gecko.sire_id);
+          const damG = getById(gecko.dam_id);
+          const grandparents = {
+              gsS: sireG ? getById(sireG.sire_id) : null,
+              gdS: sireG ? getById(sireG.dam_id) : null,
+              gsD: damG ? getById(damG.sire_id) : null,
+              gdD: damG ? getById(damG.dam_id) : null,
+          };
+          let feedings = [];
+          try { feedings = await FeedingRecord.filter({ animal_id: gecko.id }, '-date', 8); } catch { feedings = []; }
+          let feedingGroup = null;
+          if (gecko.feeding_group_id) {
+              try { feedingGroup = (await FeedingGroup.filter({ id: gecko.feeding_group_id }))?.[0] || null; } catch { feedingGroup = null; }
+          }
+          const passportUrl = gecko.passport_code ? `${window.location.origin}/passport/${gecko.passport_code}` : null;
+          const [photo, qr] = await Promise.all([photoDataUrl(gecko.image_urls?.[0]), qrDataUrl(passportUrl)]);
+          const packet = buildBuyerPacket({
+              gecko, sire: sireG, dam: damG, grandparents,
+              weights: weightRecords, feedings, feedingGroup,
+              seller: currentUser, passportUrl,
+          });
+          downloadPdf(renderBuyerPacketPDF(packet, { photo, qr }), packetFilename(gecko));
+          toast({
+              title: 'Buyer packet downloaded',
+              description: passportUrl
+                  ? `Send it to the buyer of ${gecko.name || 'this gecko'}.`
+                  : 'Create a passport first if you want a scannable QR code on it.',
+          });
+      } catch (error) {
+          console.error('Failed to build buyer packet:', error);
+          toast({ title: 'Could not build the buyer packet', description: error?.message || 'Unknown error.', variant: 'destructive' });
+      } finally {
+          setIsMakingPacket(false);
       }
   };
 
@@ -908,6 +954,19 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                   <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Generating...</>
                 ) : (
                   <><GitBranch className="w-4 h-4 mr-2" /> Lineage Certificate</>
+                )}
+              </Button>
+              <Button
+                onClick={handleBuyerPacket}
+                disabled={isMakingPacket}
+                variant="outline"
+                title="One PDF for the buyer: photo, traits, lineage, weights, feeding and the passport QR"
+                className="w-full border-emerald-700 text-emerald-300 hover:bg-emerald-900/20"
+              >
+                {isMakingPacket ? (
+                  <><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Building packet...</>
+                ) : (
+                  <><FileText className="w-4 h-4 mr-2" /> Buyer Packet</>
                 )}
               </Button>
 
