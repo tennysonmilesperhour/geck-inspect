@@ -13,6 +13,16 @@ split, so Morph ID cannot look up the same gecko while being graded.
 
 ## Run it
 
+From GitHub: Actions > morph-id-eval > Run workflow. Leave "limit" blank to
+grade all 220 geckos (about $5 and 15 to 25 minutes), or set it to 20 for a
+quick check. Results appear on the run page, the full report is attached to
+the run, and the headline numbers are saved in `geck_data.morph_eval_runs`.
+The workflow signs in as a dedicated evaluation account
+(`morph-eval@geckinspect.com`) that Morph ID lets run without credits; that
+account has no other special access. See `run-ci.mjs`.
+
+From a terminal, with your own signed-in token:
+
 ```
 pnpm eval:morph-id scripts/morph-id-eval/test-split-breeder-tags.jsonl > morph-id-report.json
 ```

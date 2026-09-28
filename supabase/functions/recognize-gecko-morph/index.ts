@@ -293,6 +293,7 @@ type Profile = {
   subscription_status: string | null;
   role: string | null;
   morph_id_show_value_estimate: boolean | null;
+  is_eval_account: boolean;
 };
 
 async function loadProfile(authToken: string): Promise<Profile | null> {
@@ -317,6 +318,10 @@ async function loadProfile(authToken: string): Promise<Profile | null> {
     subscription_status: data?.subscription_status ?? null,
     role: data?.role ?? null,
     morph_id_show_value_estimate: data?.morph_id_show_value_estimate ?? false,
+    // Set only by the morph-id-eval workflow (scripts/morph-id-eval/run-ci.mjs).
+    // app_metadata can be written by the service role alone, so a user cannot
+    // grant it to themselves.
+    is_eval_account: user.app_metadata?.morph_eval === true,
   };
 }
 
@@ -1002,6 +1007,9 @@ serve(async (req) => {
   if (!ANTHROPIC_API_KEY) return json({ error: "Morph ID is not configured", code: "config_error" }, 500);
 
   const isAdmin = profile.role === "admin";
+  // The evaluation account grades the held-out test set without spending
+  // credits and may tag its calls as morph_id_eval. It gets nothing else.
+  const isEvalAccount = profile.is_eval_account;
   const tier = resolveTier(profile);
   const creditsIncluded = TIER_MORPH_ID_CREDITS[tier] ?? TIER_MORPH_ID_CREDITS.free;
 
@@ -1060,7 +1068,7 @@ serve(async (req) => {
     // can tag themselves freely; everyone else gets 'morph_id_production'.
     surface = resolveSurface(
       body?.surface,
-      isAdmin,
+      isAdmin || isEvalAccount,
       req.headers.get("x-eval-secret"),
     );
 
@@ -1096,7 +1104,7 @@ serve(async (req) => {
 
     let creditsConsumed = 0;
     let creditsRemaining: number | null = null;
-    if (!isAdmin) {
+    if (!isAdmin && !isEvalAccount) {
       const admin = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
       const { data: usage, error: rpcErr } = await admin.rpc("consume_morph_id_credit", {
         p_user_id: profile.auth_user_id,

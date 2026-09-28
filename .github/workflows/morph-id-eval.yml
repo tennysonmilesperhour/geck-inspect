@@ -1,0 +1,88 @@
+# Morph ID evaluation on the held-out test set.
+#
+# Run it by hand: Actions > morph-id-eval > Run workflow. It grades Morph ID
+# on scripts/morph-id-eval/test-split-breeder-tags.jsonl (220 geckos tagged by
+# the breeders who listed them) and posts the results on the run page. The
+# headline numbers are also saved in geck_data.morph_eval_runs.
+#
+# A full run costs roughly $5 in model calls (about 2 cents per gecko) and
+# takes 15 to 25 minutes. Set "limit" to 20 for a quick, cheap smoke test.
+#
+# Secrets used (both already set for error-triage):
+#   SUPABASE_URL
+#   SUPABASE_SERVICE_ROLE_KEY: creates and signs in the evaluation account,
+#                              and records the run. See run-ci.mjs.
+
+name: morph-id-eval
+
+on:
+  workflow_dispatch:
+    inputs:
+      model:
+        description: Model to grade
+        type: choice
+        options:
+          - claude-sonnet-4-6
+          - claude-haiku-4-5
+        default: claude-sonnet-4-6
+      limit:
+        description: Grade only this many geckos (blank for all 220)
+        required: false
+        default: ''
+      concurrency:
+        description: Identifications in flight at once
+        required: false
+        default: '3'
+      notes:
+        description: Note saved with the run (what changed since last time)
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: morph-id-eval
+  cancel-in-progress: false
+
+jobs:
+  eval:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+
+      # Node 22: supabase-js 2.116 needs its built-in WebSocket.
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: '22'
+
+      - uses: pnpm/action-setup@f40ffcd9367d9f12939873eb1018b921a783ffaa # v4
+        with:
+          version: 10.33.0
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Run evaluation
+        env:
+          SUPABASE_URL:              ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+          # The public key the app itself ships with (src/lib/supabaseClient.js).
+          SUPABASE_ANON_KEY: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tdWdsZnBoaHdsYWx1eWZ5eHNwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzU1MjA5MTksImV4cCI6MjA5MTA5NjkxOX0.mbjrSDZoEvQwPBiZbRtzjC04viNmSJ7sABDJQK9TmIM
+          MORPH_ID_MODEL:   ${{ inputs.model }}
+          EVAL_LIMIT:       ${{ inputs.limit }}
+          EVAL_CONCURRENCY: ${{ inputs.concurrency }}
+          EVAL_NOTES:       ${{ inputs.notes }}
+        run: node scripts/morph-id-eval/run-ci.mjs
+
+      - name: Save full report
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: morph-id-report
+          path: morph-id-report.json
+          if-no-files-found: ignore
+          retention-days: 90
