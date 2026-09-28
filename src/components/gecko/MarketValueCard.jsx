@@ -6,6 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { createPageUrl } from '@/utils';
 import { loadTraitValueIndex } from '@/lib/traitValueTable';
 import { valueFromTraitTable, qualityTierFor, isCrestedGecko } from '@/lib/traitValuation';
+import { KEEPER_MODE_STORAGE_KEY } from '@/lib/navItems';
 
 /**
  * "Estimated value" card for the gecko detail page.
@@ -23,6 +24,9 @@ import { valueFromTraitTable, qualityTierFor, isCrestedGecko } from '@/lib/trait
  * Props:
  *   gecko, the gecko row, with weight_grams set to the latest weight
  *
+ * The Portfolio is a Breeder-mode page (breederOnly in navItems.js), so
+ * the link to it is left out when the viewer has Keeper mode on.
+ *
  * Renders nothing for other species or when the table fails to load.
  * With no matching traits it shows a prompt to add them instead.
  */
@@ -37,6 +41,11 @@ const TIER_LABELS = {
   high_end: 'High-end grade',
   investment: 'Investment grade',
 };
+
+function isKeeperMode() {
+  try { return localStorage.getItem(KEEPER_MODE_STORAGE_KEY) === '1'; }
+  catch { return false; }
+}
 
 function askingNote(asking, band) {
   if (!asking) return null;
@@ -113,6 +122,7 @@ export default function MarketValueCard({ gecko }) {
   const pct = (v) => `${Math.min(100, Math.max(0, ((v - band.p25) / span) * 100))}%`;
   const asking = Number(gecko.asking_price) > 0 ? Number(gecko.asking_price) : null;
   const hasGrade = Boolean(gecko.pattern_grade) || Number(gecko.quality_score) > 0;
+  const showPortfolioLink = !isKeeperMode();
 
   return (
     <Card className="bg-slate-900 border-slate-700">
@@ -156,16 +166,20 @@ export default function MarketValueCard({ gecko }) {
           </p>
         )}
 
-        <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
-          {!hasGrade && (
-            <Link to={`/QualityScale?geckoId=${gecko.id}`} className="text-emerald-400 hover:text-emerald-300">
-              Grade this gecko to refine the estimate
-            </Link>
-          )}
-          <Link to={createPageUrl('Portfolio')} className="text-emerald-400 hover:text-emerald-300">
-            See your whole collection&apos;s value
-          </Link>
-        </div>
+        {(!hasGrade || showPortfolioLink) && (
+          <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs">
+            {!hasGrade && (
+              <Link to={`/QualityScale?geckoId=${gecko.id}`} className="text-emerald-400 hover:text-emerald-300">
+                Grade this gecko to refine the estimate
+              </Link>
+            )}
+            {showPortfolioLink && (
+              <Link to={createPageUrl('Portfolio')} className="text-emerald-400 hover:text-emerald-300">
+                See your whole collection&apos;s value
+              </Link>
+            )}
+          </div>
+        )}
 
         <p className="text-[11px] text-slate-500">
           Based on asking prices from crested gecko listings tracked by Geck Data. An estimate, not an appraisal.
