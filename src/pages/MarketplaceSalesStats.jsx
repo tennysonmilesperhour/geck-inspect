@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { api } from '@/api/appClient';
 import { Gecko, MarketplaceCost, PendingSale, BreedingPlan, Egg } from '@/entities/all';
@@ -831,6 +831,44 @@ function PendingSalesTab({ user, pendingSales, setPendingSales, onCompleteSale, 
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
+// Business Tools tabs. Older saved preferences name the five tabs this page
+// had before 28 Sep 2026; map them onto Money, Sales and Pricing.
+// ---------------------------------------------------------------------------
+
+const LEGACY_TABS = { revenue: 'sales', pending: 'sales', costs: 'money', profit: 'money', analytics: 'pricing' };
+function businessTabFor(pref) {
+  if (['money', 'sales', 'pricing'].includes(pref)) return pref;
+  return LEGACY_TABS[pref] || 'money';
+}
+
+const PRICING_LINKS = [
+  { page: 'Portfolio', title: 'What your collection is worth', Icon: TrendingUp,
+    body: 'Each gecko valued from listings with the same traits, age and sex, and the total over time.' },
+  { page: 'MarketPricing', title: 'Asking prices by trait', Icon: DollarSign,
+    body: 'Low, median and high asking prices for each trait, by age and sex, from thousands of crested gecko listings.' },
+  { page: 'MarketplaceSell', title: 'Price a listing', Icon: Tag,
+    body: 'Edit a gecko on Sell Geckos to see where your price sits in the range for geckos like it.' },
+  { page: 'MorphMarketExport', title: 'Export to MorphMarket', Icon: Package,
+    body: 'Pick the geckos to list and download a file for MorphMarket bulk import, so you do not retype each listing.' },
+];
+
+function PricingTab() {
+  return (
+    <div className="grid gap-3 sm:grid-cols-2">
+      {PRICING_LINKS.map(({ page, title, body, Icon }) => (
+        <Link key={page} to={createPageUrl(page)}
+          className="group rounded-lg border border-slate-800 bg-slate-900/60 p-4 hover:border-emerald-700/60 hover:bg-slate-900 transition-colors">
+          <p className="font-medium text-slate-100 text-sm flex items-center gap-2">
+            <Icon className="w-4 h-4 text-emerald-400" />{title}
+          </p>
+          <p className="text-xs text-slate-400 mt-1 leading-relaxed">{body}</p>
+        </Link>
+      ))}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------------
 // Profit: by season (calendar year) and by pairing
 // ---------------------------------------------------------------------------
 
@@ -917,7 +955,7 @@ function ProfitTab({ seasons, pairings, currency, hasPlans }) {
 
 export default function MarketplaceSalesStats() {
   const [statsPrefs, setStatsPrefs] = usePageSettings('sales_stats_prefs', {
-    defaultTab: 'revenue',
+    defaultTab: 'money',
     expandQuarters: true,
     currency: '$',
   });
@@ -1222,11 +1260,11 @@ export default function MarketplaceSalesStats() {
               <div>
                 <Label className="text-slate-300 text-sm mb-1 block">Default Tab</Label>
                 <div className="flex gap-1">
-                  {[['revenue', 'Revenue'], ['pending', 'Pending'], ['costs', 'Costs'], ['profit', 'Profit']].map(([val, lbl]) => (
+                  {[['money', 'Money'], ['sales', 'Sales'], ['pricing', 'Pricing']].map(([val, lbl]) => (
                     <button
                       key={val}
                       onClick={() => setStatsPrefs({ defaultTab: val })}
-                      className={`px-3 py-1 text-xs rounded ${statsPrefs.defaultTab === val ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+                      className={`px-3 py-1 text-xs rounded ${businessTabFor(statsPrefs.defaultTab) === val ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
                     >
                       {lbl}
                     </button>
@@ -1281,298 +1319,308 @@ export default function MarketplaceSalesStats() {
         </div>
 
         <div className="bg-emerald-950/30 border border-emerald-900/40 rounded-xl p-4 md:p-6">
-          <Tabs defaultValue={statsPrefs.defaultTab}>
-            <TabsList className="grid grid-cols-3 md:grid-cols-5 h-auto w-full max-w-2xl mx-auto bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1 mb-6">
-              <TabsTrigger value="revenue" className={tabTriggerClass}>Revenue</TabsTrigger>
-              <TabsTrigger value="pending" className={tabTriggerClass}>
-                <Clock className="w-3.5 h-3.5 mr-1" />
-                Pending{pendingSales.length > 0 && ` (${pendingSales.length})`}
-              </TabsTrigger>
-              <TabsTrigger value="costs" className={tabTriggerClass}>Costs</TabsTrigger>
-              <TabsTrigger value="profit" className={tabTriggerClass}>
+          <Tabs defaultValue={businessTabFor(statsPrefs.defaultTab)}>
+            <TabsList className="grid grid-cols-3 h-auto w-full max-w-md mx-auto bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1 mb-6">
+              <TabsTrigger value="money" className={tabTriggerClass}>
                 <PieChart className="w-3.5 h-3.5 mr-1" />
-                Profit
+                Money
               </TabsTrigger>
-              <TabsTrigger value="analytics" className={tabTriggerClass}>
-                <Globe className="w-3.5 h-3.5 mr-1" />
-                Market Analytics
+              <TabsTrigger value="sales" className={tabTriggerClass}>
+                <DollarSign className="w-3.5 h-3.5 mr-1" />
+                Sales{pendingSales.length > 0 && ` (${pendingSales.length} reserved)`}
+              </TabsTrigger>
+              <TabsTrigger value="pricing" className={tabTriggerClass}>
+                <Tag className="w-3.5 h-3.5 mr-1" />
+                Pricing
               </TabsTrigger>
             </TabsList>
 
-            <TabsContent value="revenue" className="space-y-4">
-              <Button onClick={() => setAddSaleModalOpen(true)} className="bg-emerald-600 hover:bg-emerald-500 text-white h-9">
-                <Plus className="w-4 h-4 mr-2" />Add Sale
-              </Button>
-
-              {addSaleModalOpen && (
-                <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4"
-                     onClick={(e) => { if (e.target === e.currentTarget) setAddSaleModalOpen(false); }}>
-                  <div className="bg-slate-900 border border-slate-700 rounded-xl p-8 max-w-lg w-full"
-                       onClick={(e) => e.stopPropagation()}>
-                    <h2 className="text-2xl font-bold text-slate-100 mb-2">Add Gecko Sale</h2>
-                    <p className="text-slate-400 text-sm mb-6">Choose how you'd like to add a sale to your records</p>
-                    <div className="grid grid-cols-2 gap-4 mb-4">
-                      <button onClick={() => { setSelectionModalOpen(true); setAddSaleModalOpen(false); setSaleMode('collection'); }}
-                        className="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-5 text-center transition-colors flex flex-col justify-center">
-                        <p className="font-bold text-slate-100 text-base mb-2">From Collection</p>
-                        <p className="text-xs text-slate-400">Select an existing gecko</p>
-                      </button>
-                      <button onClick={() => { setSelectionModalOpen(true); setAddSaleModalOpen(false); setSaleMode('listings'); }}
-                        className="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-5 text-center transition-colors flex flex-col justify-center">
-                        <p className="font-bold text-slate-100 text-base mb-2">From Listings</p>
-                        <p className="text-xs text-slate-400">Active marketplace listings</p>
-                      </button>
-                      <button onClick={() => { setSaleMode('manual'); setAddSaleModalOpen(false); }}
-                        className="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-5 text-center transition-colors flex flex-col justify-center">
-                        <p className="font-bold text-slate-100 text-base mb-2">Manual Entry</p>
-                        <p className="text-xs text-slate-400">Enter details directly</p>
-                      </button>
-                      <button onClick={() => setAddSaleModalOpen(false)}
-                        className="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-5 text-center transition-colors flex flex-col justify-center">
-                        <p className="font-bold text-slate-100 text-base mb-2">Cancel</p>
-                        <p className="text-xs text-slate-400">Close this menu</p>
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {selectionModalOpen && saleMode && (
-                <GeckoSelectionModal
-                  mode={saleMode}
-                  onClose={() => { setSelectionModalOpen(false); setSaleMode(null); }}
-                  onAddGeckos={handleAddGeckosFromSelection}
-                  userEmail={user.email}
-                />
-              )}
-
-              {saleMode === 'manual' && (
+            {/* Money: profit per season and pairing, then costs */}
+            <TabsContent value="money" className="space-y-8">
+              <ProfitTab seasons={seasons} pairings={pairings} currency={statsPrefs.currency} hasPlans={plans.length > 0} />
+              <section className="space-y-5">
+                <h3 className="text-base font-semibold text-slate-100">Costs</h3>
                 <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 space-y-3">
-                  <div className="flex justify-between items-center">
-                    <h3 className="text-sm font-semibold text-slate-200">Add Gecko Sale</h3>
-                    <button onClick={() => setSaleMode(null)} className="text-slate-400 hover:text-slate-200">
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
+                  <h3 className="text-sm font-semibold text-slate-200">Add New Cost</h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div>
-                      <Label className="text-xs text-slate-400">Gecko Name</Label>
-                      <Input value={newRevenue.name} onChange={e => setNewRevenue(f => ({ ...f, name: e.target.value }))}
-                        placeholder="e.g., Flame Morph #1" className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1" />
+                      <Label className="text-xs text-slate-400">Description</Label>
+                      <Input value={newCost.description} onChange={e => setNewCost(f => ({ ...f, description: e.target.value }))}
+                        placeholder="e.g., Food, Supplies, Vet Care"
+                        className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1" />
                     </div>
                     <div>
-                      <Label className="text-xs text-slate-400">Sale Price ($)</Label>
-                      <Input type="number" step="0.01" value={newRevenue.amount} onChange={e => setNewRevenue(f => ({ ...f, amount: e.target.value }))}
-                        placeholder="0.00" className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                      <Label className="text-xs text-slate-400">Amount ($)</Label>
+                      <Input type="number" step="0.01" value={newCost.amount} onChange={e => setNewCost(f => ({ ...f, amount: e.target.value }))}
+                        placeholder="0.00"
+                        className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                     </div>
                     <div>
-                      <Label className="text-xs text-slate-400">Sale Date</Label>
-                      <Input type="date" value={newRevenue.date} onChange={e => setNewRevenue(f => ({ ...f, date: e.target.value }))}
+                      <Label className="text-xs text-slate-400">Date</Label>
+                      <Input type="date" value={newCost.date} onChange={e => setNewCost(f => ({ ...f, date: e.target.value }))}
                         className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1" />
                     </div>
                     <div>
                       <Label className="text-xs text-slate-400">Category</Label>
-                      <select value={newRevenue.category} onChange={e => setNewRevenue(f => ({ ...f, category: e.target.value }))}
+                      <select value={newCost.category} onChange={e => setNewCost(f => ({ ...f, category: e.target.value }))}
                         className="w-full h-9 mt-1 rounded-md bg-slate-700 border border-slate-600 text-slate-100 text-sm px-2">
-                        {REVENUE_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                        {COST_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                       </select>
                     </div>
+                    <div className="sm:col-span-2">
+                      <Label className="text-xs text-slate-400">Tied to (optional)</Label>
+                      <CostLinkSelect value={newCost.link} onChange={link => setNewCost(f => ({ ...f, link }))} linkOptions={linkOptions}
+                        className="w-full h-9 mt-1 rounded-md bg-slate-700 border border-slate-600 text-slate-100 text-sm px-2" />
+                      <p className="text-[11px] text-slate-500 mt-1">Tie a cost to a pairing (incubation, the female&apos;s extra food) or to one gecko (a vet visit) to see profit per pairing.</p>
+                    </div>
                   </div>
-                  <div className="pt-2 flex gap-2">
-                    <Button onClick={() => setSaleMode(null)} variant="outline" className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-800">
-                      Cancel
-                    </Button>
-                    <Button
-                      onClick={handleAddManualRevenue}
-                      disabled={!newRevenue.name.trim() || !newRevenue.amount || isAddingSale}
-                      className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white h-9 disabled:opacity-50"
-                    >
-                      {isAddingSale ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
-                      {isAddingSale ? 'Adding...' : 'Add Sale'}
+                  <div className="pt-2">
+                    <Button onClick={handleAddCost} className="bg-emerald-600 hover:bg-emerald-500 text-white h-9">
+                      <Plus className="w-4 h-4 mr-2" />Add Cost
                     </Button>
                   </div>
                 </div>
-              )}
 
-              <div className="flex items-center justify-between">
-                <h3 className="text-base font-semibold text-slate-100">Sales by Quarter</h3>
-                {Object.keys(priceOverrides).length > 0 && (
-                  <Button onClick={handleSaveAllPrices} disabled={isSaving} size="sm" className="gap-1.5 h-8 bg-emerald-600 hover:bg-emerald-500 text-white">
-                    <Save className="w-3.5 h-3.5" />{isSaving ? 'Saving...' : 'Save Prices'}
-                  </Button>
+                {costs.length === 0 ? (
+                  <div className="text-center py-10">
+                    <AlertCircle className="w-8 h-8 text-slate-500 mx-auto mb-2" />
+                    <p className="text-slate-400">No costs tracked yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {costsByQuarter.map(([key, quarterCosts]) => (
+                      <QuarterSection key={key} quarterKey={key} items={quarterCosts}
+                        renderItem={(cost) => (
+                          <CostRow key={cost.id} cost={cost} linkOptions={linkOptions}
+                            onDelete={handleDeleteCost} onUpdate={handleUpdateCost} />
+                        )} />
+                    ))}
+                  </div>
                 )}
-              </div>
-              {totals.unconfirmed > 0 && (
-                <div className="rounded-lg border border-amber-700/40 bg-amber-900/20 px-3 py-2 text-xs text-amber-200">
-                  No sold price entered for {totals.unconfirmed} {totals.unconfirmed === 1 ? 'sale' : 'sales'}, so the asking price stands in.
-                  Type what each one actually sold for and press Save Prices, so your profit is real.
+
+                {costs.length > 0 && (
+                  <div className="bg-emerald-950/40 border border-emerald-900/40 rounded-xl p-4 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-400">Total Revenue:</span>
+                      <span className="text-emerald-400 font-semibold">{money(totals.revenue)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-slate-400">Total Costs:</span>
+                      <span className="text-orange-400 font-semibold">{money(totals.costs)}</span>
+                    </div>
+                    <div className="border-t border-emerald-900/50 pt-2 flex justify-between font-bold">
+                      <span className="text-slate-200">Net Profit:</span>
+                      <span className={totals.profit >= 0 ? 'text-emerald-400' : 'text-red-400'}>{money(totals.profit)}</span>
+                    </div>
+                  </div>
+                )}
+              </section>
+            </TabsContent>
+
+            {/* Sales: every sale, then reserves and payment plans */}
+            <TabsContent value="sales" className="space-y-8">
+              <section className="space-y-4">
+                <Button onClick={() => setAddSaleModalOpen(true)} className="bg-emerald-600 hover:bg-emerald-500 text-white h-9">
+                  <Plus className="w-4 h-4 mr-2" />Add Sale
+                </Button>
+
+                {addSaleModalOpen && (
+                  <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[9999] p-4"
+                       onClick={(e) => { if (e.target === e.currentTarget) setAddSaleModalOpen(false); }}>
+                    <div className="bg-slate-900 border border-slate-700 rounded-xl p-8 max-w-lg w-full"
+                         onClick={(e) => e.stopPropagation()}>
+                      <h2 className="text-2xl font-bold text-slate-100 mb-2">Add Gecko Sale</h2>
+                      <p className="text-slate-400 text-sm mb-6">Choose how you'd like to add a sale to your records</p>
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        <button onClick={() => { setSelectionModalOpen(true); setAddSaleModalOpen(false); setSaleMode('collection'); }}
+                          className="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-5 text-center transition-colors flex flex-col justify-center">
+                          <p className="font-bold text-slate-100 text-base mb-2">From Collection</p>
+                          <p className="text-xs text-slate-400">Select an existing gecko</p>
+                        </button>
+                        <button onClick={() => { setSelectionModalOpen(true); setAddSaleModalOpen(false); setSaleMode('listings'); }}
+                          className="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-5 text-center transition-colors flex flex-col justify-center">
+                          <p className="font-bold text-slate-100 text-base mb-2">From Listings</p>
+                          <p className="text-xs text-slate-400">Active marketplace listings</p>
+                        </button>
+                        <button onClick={() => { setSaleMode('manual'); setAddSaleModalOpen(false); }}
+                          className="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-5 text-center transition-colors flex flex-col justify-center">
+                          <p className="font-bold text-slate-100 text-base mb-2">Manual Entry</p>
+                          <p className="text-xs text-slate-400">Enter details directly</p>
+                        </button>
+                        <button onClick={() => setAddSaleModalOpen(false)}
+                          className="bg-slate-800 hover:bg-slate-700 border border-slate-600 rounded-lg p-5 text-center transition-colors flex flex-col justify-center">
+                          <p className="font-bold text-slate-100 text-base mb-2">Cancel</p>
+                          <p className="text-xs text-slate-400">Close this menu</p>
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {selectionModalOpen && saleMode && (
+                  <GeckoSelectionModal
+                    mode={saleMode}
+                    onClose={() => { setSelectionModalOpen(false); setSaleMode(null); }}
+                    onAddGeckos={handleAddGeckosFromSelection}
+                    userEmail={user.email}
+                  />
+                )}
+
+                {saleMode === 'manual' && (
+                  <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 space-y-3">
+                    <div className="flex justify-between items-center">
+                      <h3 className="text-sm font-semibold text-slate-200">Add Gecko Sale</h3>
+                      <button onClick={() => setSaleMode(null)} className="text-slate-400 hover:text-slate-200">
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                      <div>
+                        <Label className="text-xs text-slate-400">Gecko Name</Label>
+                        <Input value={newRevenue.name} onChange={e => setNewRevenue(f => ({ ...f, name: e.target.value }))}
+                          placeholder="e.g., Flame Morph #1" className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-slate-400">Sale Price ($)</Label>
+                        <Input type="number" step="0.01" value={newRevenue.amount} onChange={e => setNewRevenue(f => ({ ...f, amount: e.target.value }))}
+                          placeholder="0.00" className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-slate-400">Sale Date</Label>
+                        <Input type="date" value={newRevenue.date} onChange={e => setNewRevenue(f => ({ ...f, date: e.target.value }))}
+                          className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1" />
+                      </div>
+                      <div>
+                        <Label className="text-xs text-slate-400">Category</Label>
+                        <select value={newRevenue.category} onChange={e => setNewRevenue(f => ({ ...f, category: e.target.value }))}
+                          className="w-full h-9 mt-1 rounded-md bg-slate-700 border border-slate-600 text-slate-100 text-sm px-2">
+                          {REVENUE_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                        </select>
+                      </div>
+                    </div>
+                    <div className="pt-2 flex gap-2">
+                      <Button onClick={() => setSaleMode(null)} variant="outline" className="flex-1 border-slate-600 text-slate-300 hover:bg-slate-800">
+                        Cancel
+                      </Button>
+                      <Button
+                        onClick={handleAddManualRevenue}
+                        disabled={!newRevenue.name.trim() || !newRevenue.amount || isAddingSale}
+                        className="flex-1 bg-emerald-600 hover:bg-emerald-500 text-white h-9 disabled:opacity-50"
+                      >
+                        {isAddingSale ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Plus className="w-4 h-4 mr-2" />}
+                        {isAddingSale ? 'Adding...' : 'Add Sale'}
+                      </Button>
+                    </div>
+                  </div>
+                )}
+
+                <div className="flex items-center justify-between">
+                  <h3 className="text-base font-semibold text-slate-100">Sales by Quarter</h3>
+                  {Object.keys(priceOverrides).length > 0 && (
+                    <Button onClick={handleSaveAllPrices} disabled={isSaving} size="sm" className="gap-1.5 h-8 bg-emerald-600 hover:bg-emerald-500 text-white">
+                      <Save className="w-3.5 h-3.5" />{isSaving ? 'Saving...' : 'Save Prices'}
+                    </Button>
+                  )}
                 </div>
-              )}
-              {entries.length === 0 ? (
-                <div className="text-center py-10">
-                  <AlertCircle className="w-8 h-8 text-slate-500 mx-auto mb-2" />
-                  <p className="text-slate-400">No sales yet.</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {revenueByQuarter.map(([key, items]) => (
-                    <QuarterSection key={key} quarterKey={key} items={items} labelFor={revenueCategoryLabel}
-                      renderItem={(item) => (
-                        <div key={item.id} className="bg-slate-800/60 border border-slate-700/50 p-3 rounded-lg">
-                          <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
-                            {item.kind === 'gecko' ? (
-                              <img src={item.image || 'https://i.imgur.com/sw9gnDp.png'} alt={item.name}
-                                className="w-9 h-9 rounded object-cover flex-shrink-0" />
-                            ) : (
-                              <div className="w-9 h-9 rounded bg-emerald-900/40 border border-emerald-700/30 flex items-center justify-center flex-shrink-0">
-                                {item.kind === 'transfer'
-                                  ? <ArrowRightLeft className="w-4 h-4 text-emerald-400" />
-                                  : <DollarSign className="w-4 h-4 text-emerald-400" />}
-                              </div>
-                            )}
-                            <div className="flex-1 min-w-[8rem]">
-                              <p className="font-medium text-slate-100 text-sm truncate">{item.name}</p>
-                              <p className="text-xs text-slate-500">
-                                {item.date ? format(new Date(item.date), 'MMM d, yyyy') : '-'}
-                                {item.kind === 'manual' && <span className="ml-1 text-emerald-500/70">(manual)</span>}
-                                {item.kind === 'transfer' && <span className="ml-1 text-emerald-500/70">(transferred with passport)</span>}
-                              </p>
-                            </div>
-                            <div className="flex items-center gap-2 ml-auto sm:ml-0 flex-shrink-0">
+                {totals.unconfirmed > 0 && (
+                  <div className="rounded-lg border border-amber-700/40 bg-amber-900/20 px-3 py-2 text-xs text-amber-200">
+                    No sold price entered for {totals.unconfirmed} {totals.unconfirmed === 1 ? 'sale' : 'sales'}, so the asking price stands in.
+                    Type what each one actually sold for and press Save Prices, so your profit is real.
+                  </div>
+                )}
+                {entries.length === 0 ? (
+                  <div className="text-center py-10">
+                    <AlertCircle className="w-8 h-8 text-slate-500 mx-auto mb-2" />
+                    <p className="text-slate-400">No sales yet.</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {revenueByQuarter.map(([key, items]) => (
+                      <QuarterSection key={key} quarterKey={key} items={items} labelFor={revenueCategoryLabel}
+                        renderItem={(item) => (
+                          <div key={item.id} className="bg-slate-800/60 border border-slate-700/50 p-3 rounded-lg">
+                            <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
                               {item.kind === 'gecko' ? (
-                                <select value={item.category || ''}
-                                  onChange={e => handleSaleCategoryChange(item.id, e.target.value)}
-                                  aria-label="Sale type"
-                                  className="h-7 text-xs rounded bg-slate-700 border border-slate-600 text-slate-300 px-1.5">
-                                  <option value="">Sale type</option>
-                                  {REVENUE_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                                </select>
+                                <img src={item.image || 'https://i.imgur.com/sw9gnDp.png'} alt={item.name}
+                                  className="w-9 h-9 rounded object-cover flex-shrink-0" />
                               ) : (
-                                <span className="text-xs text-slate-400 px-1.5 whitespace-nowrap">{revenueCategoryLabel(item.category)}</span>
-                              )}
-                              {item.kind === 'gecko' && (
-                                <div className="flex items-center gap-1.5">
-                                  <span className="text-slate-400 text-xs">$</span>
-                                  <Input type="number" step="0.01"
-                                    aria-label="Sold for"
-                                    value={priceOverrides[item.id] !== undefined ? priceOverrides[item.id] : (item.gecko.sold_price ?? '')}
-                                    onChange={e => setPriceOverrides(prev => ({ ...prev, [item.id]: e.target.value }))}
-                                    placeholder={item.gecko.asking_price ? String(item.gecko.asking_price) : 'Sold for'}
-                                    className="bg-slate-700 border-slate-600 text-slate-100 h-7 text-xs w-20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                <div className="w-9 h-9 rounded bg-emerald-900/40 border border-emerald-700/30 flex items-center justify-center flex-shrink-0">
+                                  {item.kind === 'transfer'
+                                    ? <ArrowRightLeft className="w-4 h-4 text-emerald-400" />
+                                    : <DollarSign className="w-4 h-4 text-emerald-400" />}
                                 </div>
                               )}
-                              <div className="min-w-[4rem] text-right">
-                                <p className="text-emerald-400 font-semibold text-sm tabular-nums">${(item.amount || 0).toFixed(2)}</p>
-                                {!item.confirmed && (
-                                  <p className="text-[10px] text-amber-300/80">{item.kind === 'transfer' ? 'no price entered' : 'asking price'}</p>
+                              <div className="flex-1 min-w-[8rem]">
+                                <p className="font-medium text-slate-100 text-sm truncate">{item.name}</p>
+                                <p className="text-xs text-slate-500">
+                                  {item.date ? format(new Date(item.date), 'MMM d, yyyy') : '-'}
+                                  {item.kind === 'manual' && <span className="ml-1 text-emerald-500/70">(manual)</span>}
+                                  {item.kind === 'transfer' && <span className="ml-1 text-emerald-500/70">(transferred with passport)</span>}
+                                </p>
+                              </div>
+                              <div className="flex items-center gap-2 ml-auto sm:ml-0 flex-shrink-0">
+                                {item.kind === 'gecko' ? (
+                                  <select value={item.category || ''}
+                                    onChange={e => handleSaleCategoryChange(item.id, e.target.value)}
+                                    aria-label="Sale type"
+                                    className="h-7 text-xs rounded bg-slate-700 border border-slate-600 text-slate-300 px-1.5">
+                                    <option value="">Sale type</option>
+                                    {REVENUE_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                                  </select>
+                                ) : (
+                                  <span className="text-xs text-slate-400 px-1.5 whitespace-nowrap">{revenueCategoryLabel(item.category)}</span>
                                 )}
+                                {item.kind === 'gecko' && (
+                                  <div className="flex items-center gap-1.5">
+                                    <span className="text-slate-400 text-xs">$</span>
+                                    <Input type="number" step="0.01"
+                                      aria-label="Sold for"
+                                      value={priceOverrides[item.id] !== undefined ? priceOverrides[item.id] : (item.gecko.sold_price ?? '')}
+                                      onChange={e => setPriceOverrides(prev => ({ ...prev, [item.id]: e.target.value }))}
+                                      placeholder={item.gecko.asking_price ? String(item.gecko.asking_price) : 'Sold for'}
+                                      className="bg-slate-700 border-slate-600 text-slate-100 h-7 text-xs w-20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
+                                  </div>
+                                )}
+                                <div className="min-w-[4rem] text-right">
+                                  <p className="text-emerald-400 font-semibold text-sm tabular-nums">${(item.amount || 0).toFixed(2)}</p>
+                                  {!item.confirmed && (
+                                    <p className="text-[10px] text-amber-300/80">{item.kind === 'transfer' ? 'no price entered' : 'asking price'}</p>
+                                  )}
+                                </div>
                               </div>
                             </div>
                           </div>
-                        </div>
-                      )} />
-                  ))}
-                </div>
-              )}
+                        )} />
+                    ))}
+                  </div>
+                )}
+              </section>
+              <section className="space-y-4">
+                <h3 className="text-base font-semibold text-slate-100 flex items-center gap-1.5">
+                  <Clock className="w-4 h-4 text-amber-400" /> Reserves and payment plans
+                </h3>
+                <PendingSalesTab
+                  user={user}
+                  pendingSales={pendingSales}
+                  setPendingSales={setPendingSales}
+                  allGeckos={userGeckos}
+                  onCompleteSale={(sale, { created, geckoPatch }) => {
+                    if (created) setManualSales(prev => [created, ...prev]);
+                    if (sale.gecko_id && geckoPatch) patchGecko(sale.gecko_id, geckoPatch);
+                  }}
+                />
+              </section>
             </TabsContent>
 
-            <TabsContent value="pending" className="space-y-4">
-              <PendingSalesTab
-                user={user}
-                pendingSales={pendingSales}
-                setPendingSales={setPendingSales}
-                allGeckos={userGeckos}
-                onCompleteSale={(sale, { created, geckoPatch }) => {
-                  if (created) setManualSales(prev => [created, ...prev]);
-                  if (sale.gecko_id && geckoPatch) patchGecko(sale.gecko_id, geckoPatch);
-                }}
-              />
-            </TabsContent>
-
-            <TabsContent value="costs" className="space-y-5">
-              <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 space-y-3">
-                <h3 className="text-sm font-semibold text-slate-200">Add New Cost</h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <Label className="text-xs text-slate-400">Description</Label>
-                    <Input value={newCost.description} onChange={e => setNewCost(f => ({ ...f, description: e.target.value }))}
-                      placeholder="e.g., Food, Supplies, Vet Care"
-                      className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1" />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-slate-400">Amount ($)</Label>
-                    <Input type="number" step="0.01" value={newCost.amount} onChange={e => setNewCost(f => ({ ...f, amount: e.target.value }))}
-                      placeholder="0.00"
-                      className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-slate-400">Date</Label>
-                    <Input type="date" value={newCost.date} onChange={e => setNewCost(f => ({ ...f, date: e.target.value }))}
-                      className="bg-slate-700 border-slate-600 text-slate-100 h-9 text-sm mt-1" />
-                  </div>
-                  <div>
-                    <Label className="text-xs text-slate-400">Category</Label>
-                    <select value={newCost.category} onChange={e => setNewCost(f => ({ ...f, category: e.target.value }))}
-                      className="w-full h-9 mt-1 rounded-md bg-slate-700 border border-slate-600 text-slate-100 text-sm px-2">
-                      {COST_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
-                    </select>
-                  </div>
-                  <div className="sm:col-span-2">
-                    <Label className="text-xs text-slate-400">Tied to (optional)</Label>
-                    <CostLinkSelect value={newCost.link} onChange={link => setNewCost(f => ({ ...f, link }))} linkOptions={linkOptions}
-                      className="w-full h-9 mt-1 rounded-md bg-slate-700 border border-slate-600 text-slate-100 text-sm px-2" />
-                    <p className="text-[11px] text-slate-500 mt-1">Tie a cost to a pairing (incubation, the female&apos;s extra food) or to one gecko (a vet visit) to see profit per pairing.</p>
-                  </div>
-                </div>
-                <div className="pt-2">
-                  <Button onClick={handleAddCost} className="bg-emerald-600 hover:bg-emerald-500 text-white h-9">
-                    <Plus className="w-4 h-4 mr-2" />Add Cost
-                  </Button>
-                </div>
-              </div>
-
-              {costs.length === 0 ? (
-                <div className="text-center py-10">
-                  <AlertCircle className="w-8 h-8 text-slate-500 mx-auto mb-2" />
-                  <p className="text-slate-400">No costs tracked yet.</p>
-                </div>
-              ) : (
-                <div className="space-y-3">
-                  {costsByQuarter.map(([key, quarterCosts]) => (
-                    <QuarterSection key={key} quarterKey={key} items={quarterCosts}
-                      renderItem={(cost) => (
-                        <CostRow key={cost.id} cost={cost} linkOptions={linkOptions}
-                          onDelete={handleDeleteCost} onUpdate={handleUpdateCost} />
-                      )} />
-                  ))}
-                </div>
-              )}
-
-              {costs.length > 0 && (
-                <div className="bg-emerald-950/40 border border-emerald-900/40 rounded-xl p-4 space-y-2">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">Total Revenue:</span>
-                    <span className="text-emerald-400 font-semibold">{money(totals.revenue)}</span>
-                  </div>
-                  <div className="flex justify-between text-sm">
-                    <span className="text-slate-400">Total Costs:</span>
-                    <span className="text-orange-400 font-semibold">{money(totals.costs)}</span>
-                  </div>
-                  <div className="border-t border-emerald-900/50 pt-2 flex justify-between font-bold">
-                    <span className="text-slate-200">Net Profit:</span>
-                    <span className={totals.profit >= 0 ? 'text-emerald-400' : 'text-red-400'}>{money(totals.profit)}</span>
-                  </div>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="profit" className="space-y-6">
-              <ProfitTab seasons={seasons} pairings={pairings} currency={statsPrefs.currency} hasPlans={plans.length > 0} />
-            </TabsContent>
-
-            {/* Market Analytics, Enterprise tier only */}
-            <TabsContent value="analytics" className="space-y-6">
+            {/* Pricing: what things are worth and where to list them */}
+            <TabsContent value="pricing" className="space-y-8">
+              <PricingTab />
+              <section className="space-y-4">
+                <h3 className="text-base font-semibold text-slate-100 flex items-center gap-1.5">
+                  <Globe className="w-4 h-4 text-emerald-400" /> Market analytics
+                </h3>
               <MarketAnalytics user={user} />
+              </section>
             </TabsContent>
           </Tabs>
         </div>

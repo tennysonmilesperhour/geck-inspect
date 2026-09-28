@@ -158,10 +158,9 @@ export const NAV_REGISTRY = [
     sidebar: { category: 'public', order: 3, label: 'Business Tools', icon: 'BarChart3', requiresAuth: true },
     palette: { group: 'Breeding', label: 'Business Tools', icon: 'BarChart3', keywords: ['roi', 'profit', 'cost', 'revenue', 'money', 'sales', 'expenses', 'business'] },
   },
-  {
-    page: 'BreedingLoans', section: 'discover', breederOnly: true,
-    palette: { group: 'Breeding', label: 'Breeding Loans', icon: 'GitBranch', keywords: ['loan', 'co-own', 'lease', 'collab'] },
-  },
+  // Breeding Loans left the menus on 28 Sep 2026 (no loan was ever
+  // recorded). The page still routes for old links.
+  { page: 'BreedingLoans', section: 'discover', breederOnly: true },
   {
     page: 'ProjectManager', section: 'manage', breederOnly: true,
     sidebar: { category: 'tools', order: 7, label: 'Season Planner', icon: 'CalendarDays', requiresAuth: true },

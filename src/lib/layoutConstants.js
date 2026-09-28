@@ -21,8 +21,6 @@ import {
   Upload,
   Shield,
   DollarSign,
-  TrendingUp,
-  Handshake,
   HelpCircle,
   Utensils,
   Printer,
@@ -48,7 +46,6 @@ export const publicNavItems = [
 export const userSpecificNavItems = [
   { title: 'My Geckos',       url: createPageUrl('MyGeckos'),              icon: Users,       requiresAuth: true },
   { title: 'Breeding',        url: createPageUrl('Breeding'),              icon: GitBranch,   requiresAuth: true },
-  { title: 'Breeding Loans',  url: createPageUrl('BreedingLoans'),         icon: Handshake,   requiresAuth: true },
   { title: 'Lineage',         url: createPageUrl('Lineage'),               icon: GitBranch,   requiresAuth: true },
   { title: 'Market Pricing',  url: createPageUrl('MarketPricing'),         icon: DollarSign,  requiresAuth: true },
   { title: 'Sales Stats',     url: createPageUrl('MarketplaceSalesStats'), icon: BarChart3,   requiresAuth: true },
