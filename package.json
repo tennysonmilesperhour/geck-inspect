@@ -36,6 +36,7 @@
     "build:vercel-json": "node scripts/build-vercel-json.mjs",
     "submit:indexnow": "node scripts/submit-indexnow.mjs",
     "build:pdfs": "node scripts/generate-pdfs.mjs",
+    "build:analytics-demo": "node scripts/build-analytics-demo.mjs",
     "build:prerender": "node scripts/prerender.mjs",
     "audit": "node scripts/seo-audit.mjs",
     "check:genetics": "node scripts/check-genetics-consistency.mjs",
