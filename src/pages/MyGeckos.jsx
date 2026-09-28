@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import Seo from '@/components/seo/Seo';
 import { Gecko, WeightRecord, FeedingGroup, CollectionMember } from '@/entities/all';
 import { getVisibleGeckos, canWriteGecko } from '@/lib/geckoAccess';
+import { bredInHouseIds, saleCategoryFor } from '@/lib/businessLedger';
 import { api } from '@/api/appClient';
 import { PlusCircle, Search, Users, Grid3x3, List, ArrowUpDown, Archive, ArchiveRestore, Download, FileText, FileSpreadsheet, Scale } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
@@ -247,7 +248,7 @@ export default function MyGeckosPage() {
         }
     };
 
-    const handleArchiveGecko = async (geckoId, shouldArchive, reason) => {
+    const handleArchiveGecko = async (geckoId, shouldArchive, reason, saleFields = {}) => {
         // If archiving and no reason given yet, show dialog
         if (shouldArchive && !reason) {
             setArchiveDialogGeckoId(geckoId);
@@ -255,9 +256,12 @@ export default function MyGeckosPage() {
         }
 
         try {
+            // Archiving as sold also saves the sold price and sale type
+            // (see ArchiveReasonDialog). Unarchiving clears them, since the
+            // gecko is back in the collection and no longer counts as a sale.
             const updateData = shouldArchive
-                ? { archived: true, archived_date: todayLocalISO(), archive_reason: reason || null }
-                : { archived: false, archived_date: null, archive_reason: null };
+                ? { archived: true, archived_date: todayLocalISO(), archive_reason: reason || null, ...(reason === 'sold' ? saleFields : {}) }
+                : { archived: false, archived_date: null, archive_reason: null, sold_price: null, sale_category: null };
 
             await retryApiCall(async () => Gecko.update(geckoId, updateData));
 
@@ -286,9 +290,10 @@ export default function MyGeckosPage() {
         }
     };
 
-    const handleArchiveReasonConfirm = (reason) => {
-        handleArchiveGecko(archiveDialogGeckoId, true, reason);
+    const handleArchiveReasonConfirm = (reason, saleFields) => {
+        handleArchiveGecko(archiveDialogGeckoId, true, reason, saleFields);
     };
+    const archiveDialogGecko = geckos.find(g => g.id === archiveDialogGeckoId) || null;
 
     // Consume an AI Morph ID draft handed off from the Recognition page
     // (via router state for signed-in users, or sessionStorage for users
@@ -1097,7 +1102,9 @@ export default function MyGeckosPage() {
                 {/* Archive Reason Dialog */}
                 <ArchiveReasonDialog
                     open={!!archiveDialogGeckoId}
-                    geckoName={geckos.find(g => g.id === archiveDialogGeckoId)?.name || 'Gecko'}
+                    gecko={archiveDialogGecko}
+                    defaultSaleCategory={archiveDialogGecko ? (saleCategoryFor(archiveDialogGecko, bredInHouseIds({ geckos })) || '') : ''}
+                    geckoName={archiveDialogGecko?.name || 'Gecko'}
                     onConfirm={handleArchiveReasonConfirm}
                     onCancel={() => setArchiveDialogGeckoId(null)}
                 />

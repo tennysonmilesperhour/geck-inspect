@@ -20,7 +20,8 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-import { todayLocalISO } from '@/lib/dateUtils';
+import SaleDetailsFields, { initialSaleDetails, saleDetailsPatch } from '@/components/business/SaleDetailsFields';
+import { bredInHouseIds, saleCategoryFor } from '@/lib/businessLedger';
 import {
   Plus,
   Edit,
@@ -474,25 +475,37 @@ export default function MarketplaceSellPage() {
     }
   };
 
-  const handleMarkSold = async (gecko) => {
-    if (!confirm(`Mark "${gecko.name}" as sold? It will be archived.`)) return;
+  // Mark sold asks what it sold for, so Business Tools counts the real
+  // price instead of the asking price.
+  const [soldTarget, setSoldTarget] = useState(null);
+  const [soldDetails, setSoldDetails] = useState(() => initialSaleDetails(null));
+  const [isMarkingSold, setIsMarkingSold] = useState(false);
+
+  const handleMarkSold = (gecko) => {
+    setSoldDetails(initialSaleDetails(gecko, saleCategoryFor(gecko, bredInHouseIds({ geckos: allGeckos })) || ''));
+    setSoldTarget(gecko);
+  };
+
+  const confirmMarkSold = async () => {
+    const gecko = soldTarget;
+    if (!gecko || isMarkingSold) return;
+    setIsMarkingSold(true);
+    const patch = {
+      status: 'Sold',
+      is_public: false,
+      archived: true,
+      archive_reason: 'sold',
+      ...saleDetailsPatch(soldDetails),
+    };
     try {
-      await Gecko.update(gecko.id, {
-        status: 'Sold',
-        is_public: false,
-        archived: true,
-        archived_date: todayLocalISO(),
-      });
-      setAllGeckos((prev) =>
-        prev.map((g) =>
-          g.id === gecko.id
-            ? { ...g, status: 'Sold', is_public: false, archived: true }
-            : g
-        )
-      );
+      await Gecko.update(gecko.id, patch);
+      setAllGeckos((prev) => prev.map((g) => (g.id === gecko.id ? { ...g, ...patch } : g)));
+      setSoldTarget(null);
       toast({ title: 'Marked as sold' });
     } catch (err) {
       toast({ title: 'Failed', description: err.message, variant: 'destructive' });
+    } finally {
+      setIsMarkingSold(false);
     }
   };
 
@@ -978,6 +991,36 @@ export default function MarketplaceSellPage() {
                 <Save className="w-4 h-4 mr-2" />
               )}
               Save changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Mark sold */}
+      <Dialog open={!!soldTarget} onOpenChange={(open) => !open && setSoldTarget(null)}>
+        <DialogContent className="bg-slate-900 border-slate-700 text-slate-100 max-w-sm">
+          <DialogHeader>
+            <DialogTitle>Mark {soldTarget?.name} as sold</DialogTitle>
+            <DialogDescription className="text-slate-400">
+              It leaves your listings and moves to the archive.
+            </DialogDescription>
+          </DialogHeader>
+          <SaleDetailsFields value={soldDetails} onChange={setSoldDetails} />
+          <DialogFooter>
+            <Button
+              variant="outline"
+              onClick={() => setSoldTarget(null)}
+              className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={confirmMarkSold}
+              disabled={isMarkingSold}
+              className="bg-emerald-600 hover:bg-emerald-500 text-white"
+            >
+              {isMarkingSold && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Mark sold
             </Button>
           </DialogFooter>
         </DialogContent>

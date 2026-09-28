@@ -64,6 +64,34 @@ export async function getVisibleGeckos(user, extraFilter = {}, sort = '-created_
 }
 
 /**
+ * Geckos that belong to the user's business, for Business Tools: every
+ * gecko in a collection they own (including ones a collaborator added)
+ * plus every gecko they created. Collections shared with them by someone
+ * else are left out, so an editor or viewer does not see the owner's
+ * sales as their own revenue.
+ */
+export async function getBusinessGeckos(user) {
+  if (!user?.email) return [];
+  const email = user.email.toLowerCase();
+  let ownedIds = [];
+  try {
+    const rows = await CollectionMember.filter({ status: 'accepted', role: 'owner' });
+    ownedIds = (rows || [])
+      .filter((r) => String(r.member_email || '').toLowerCase() === email)
+      .map((r) => r.collection_id);
+  } catch {
+    ownedIds = [];
+  }
+  const [mine, inOwned] = await Promise.all([
+    Gecko.filter({ created_by: user.email }),
+    ownedIds.length ? Gecko.filter({ collection_id: { $in: ownedIds } }) : Promise.resolve([]),
+  ]);
+  const byId = new Map();
+  for (const g of [...(mine || []), ...(inOwned || [])]) byId.set(g.id, g);
+  return [...byId.values()];
+}
+
+/**
  * Boolean: can this user write to (edit / delete) the given gecko?
  * Mirrors the geckos UPDATE/DELETE RLS policy on the server. UI
  * affordances should call this to gray out edit buttons rather than

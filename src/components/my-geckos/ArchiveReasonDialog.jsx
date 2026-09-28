@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { Skull, DollarSign, HelpCircle } from 'lucide-react';
+import SaleDetailsFields, { initialSaleDetails, saleDetailsPatch } from '@/components/business/SaleDetailsFields';
 
 const REASONS = [
   { value: 'death', label: 'Passed Away', icon: Skull, color: 'border-red-500 text-red-400 bg-red-900/20 hover:bg-red-900/40' },
@@ -9,26 +10,41 @@ const REASONS = [
   { value: 'other', label: 'Other', icon: HelpCircle, color: 'border-slate-500 text-slate-300 bg-slate-800 hover:bg-slate-700' },
 ];
 
-export default function ArchiveReasonDialog({ open, onConfirm, onCancel, geckoName }) {
+/**
+ * Asks why a gecko is being archived. "Passed Away" and "Other" confirm
+ * straight away; "Sold" first asks what it sold for, so Business Tools
+ * has the real price. onConfirm(reason, extraFields).
+ */
+export default function ArchiveReasonDialog({ open, onConfirm, onCancel, geckoName, gecko, defaultSaleCategory = '' }) {
   const [selected, setSelected] = useState(null);
+  const [sale, setSale] = useState(() => initialSaleDetails(gecko, defaultSaleCategory));
 
-  const handleConfirm = () => {
-    if (!selected) return;
-    onConfirm(selected);
+  const reset = () => {
     setSelected(null);
   };
 
+  const handleConfirm = () => {
+    if (!selected) return;
+    onConfirm(selected, selected === 'sold' ? saleDetailsPatch(sale) : {});
+    reset();
+  };
+
   const handleSelectReason = (reason) => {
+    if (reason === 'sold') {
+      setSelected('sold');
+      setSale(initialSaleDetails(gecko, defaultSaleCategory));
+      return;
+    }
     setSelected(reason);
-    // Auto-confirm immediately when a reason is selected
+    // Other reasons confirm immediately
     setTimeout(() => {
-      onConfirm(reason);
-      setSelected(null);
+      onConfirm(reason, {});
+      reset();
     }, 0);
   };
 
   const handleCancel = () => {
-    setSelected(null);
+    reset();
     onCancel();
   };
 
@@ -55,6 +71,8 @@ export default function ArchiveReasonDialog({ open, onConfirm, onCancel, geckoNa
           ))}
         </div>
 
+        {selected === 'sold' && <SaleDetailsFields value={sale} onChange={setSale} />}
+
         <DialogFooter className="gap-2">
           <Button variant="outline" onClick={handleCancel} className="border-slate-600">Cancel</Button>
           <Button
@@ -62,7 +80,7 @@ export default function ArchiveReasonDialog({ open, onConfirm, onCancel, geckoNa
             disabled={!selected}
             className="bg-yellow-700 hover:bg-yellow-800 text-white"
           >
-            Archive
+            {selected === 'sold' ? 'Archive as sold' : 'Archive'}
           </Button>
         </DialogFooter>
       </DialogContent>

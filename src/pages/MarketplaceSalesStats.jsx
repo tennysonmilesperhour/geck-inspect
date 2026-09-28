@@ -2,7 +2,13 @@ import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { api } from '@/api/appClient';
-import { Gecko, MarketplaceCost, PendingSale } from '@/entities/all';
+import { Gecko, MarketplaceCost, PendingSale, BreedingPlan, Egg } from '@/entities/all';
+import { supabase } from '@/lib/supabaseClient';
+import { getBusinessGeckos } from '@/lib/geckoAccess';
+import {
+  REVENUE_CATEGORIES, revenueCategoryLabel, bredInHouseIds, revenueEntries, ledgerTotals,
+  profitBySeason, profitByPairing, costLinkOptions, costLinkValue, parseCostLink,
+} from '@/lib/businessLedger';
 import { toast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
@@ -16,7 +22,7 @@ import { Badge } from '@/components/ui/badge';
 import {
   DollarSign, TrendingUp, AlertCircle, Trash2, Plus, Save, Loader2,
   ChevronDown, ChevronUp, Tag, Calendar, Edit2, X, Check, Globe,
-  Clock, Weight, Thermometer, Package, CheckCircle2,
+  Clock, Weight, Thermometer, Package, CheckCircle2, ArrowRightLeft, PieChart,
 } from 'lucide-react';
 import { format, getQuarter, getYear } from 'date-fns';
 import { todayLocalISO } from '@/lib/dateUtils';
@@ -38,16 +44,34 @@ const COST_CATEGORIES = [
   { value: 'other', label: 'Other' },
 ];
 
-const REVENUE_CATEGORIES = [
-  { value: 'resale', label: 'Resale' },
-  { value: 'produced_in_house', label: 'Produced In House' },
-  { value: 'holdback_release', label: 'Holdback Release' },
-  { value: 'retired_breeder', label: 'Retired Breeder' },
-  { value: 'other', label: 'Other' },
-];
-
 const getCategoryLabel = (value) => COST_CATEGORIES.find(c => c.value === value)?.label || value || 'Other';
-const _getRevenueCategory = (value) => REVENUE_CATEGORIES.find(c => c.value === value)?.label || value || 'Animal';
+const money = (n, currency = '$') => `${n < 0 ? '-' : ''}${currency}${Math.abs(Number(n) || 0).toFixed(2)}`;
+
+// A select for tying a cost to a pairing or a gecko (optional).
+function CostLinkSelect({ value, onChange, linkOptions, className }) {
+  return (
+    <select value={value} onChange={e => onChange(e.target.value)} className={className}>
+      <option value="">Not tied to anything</option>
+      {linkOptions.pairings.length > 0 && (
+        <optgroup label="Pairings">
+          {linkOptions.pairings.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </optgroup>
+      )}
+      {linkOptions.animals.length > 0 && (
+        <optgroup label="Geckos">
+          {linkOptions.animals.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
+        </optgroup>
+      )}
+    </select>
+  );
+}
+
+function costLinkLabel(cost, linkOptions) {
+  const value = costLinkValue(cost);
+  if (!value) return null;
+  const found = [...linkOptions.pairings, ...linkOptions.animals].find(o => o.value === value);
+  return found ? found.label : null;
+}
 
 function getQuarterKey(dateStr) {
   const d = new Date(dateStr);
@@ -58,19 +82,22 @@ function parseQuarterKey(key) {
   return { year: parseInt(year), quarter: parseInt(q) };
 }
 
-function CostRow({ cost, onDelete, onUpdate }) {
+function CostRow({ cost, onDelete, onUpdate, linkOptions }) {
   const [editing, setEditing] = useState(false);
   const [form, setForm] = useState({
     description: cost.description,
     amount: cost.amount,
     date: cost.date,
-    category: cost.category || 'other'
+    category: cost.category || 'other',
+    link: costLinkValue(cost),
   });
 
   const handleSave = async () => {
-    await onUpdate(cost.id, { ...form, amount: parseFloat(form.amount) });
+    const { link, ...fields } = form;
+    await onUpdate(cost.id, { ...fields, amount: parseFloat(form.amount), ...parseCostLink(link) });
     setEditing(false);
   };
+  const tiedTo = costLinkLabel(cost, linkOptions);
 
   if (editing) {
     return (
@@ -98,6 +125,11 @@ function CostRow({ cost, onDelete, onUpdate }) {
               {COST_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
             </select>
           </div>
+          <div className="col-span-2">
+            <Label className="text-xs text-slate-400">Tied to (optional)</Label>
+            <CostLinkSelect value={form.link} onChange={link => setForm(f => ({ ...f, link }))} linkOptions={linkOptions}
+              className="w-full h-8 mt-1 rounded-md bg-slate-800 border border-slate-600 text-slate-100 text-sm px-2" />
+          </div>
         </div>
         <div className="flex gap-2 justify-end">
           <Button size="sm" variant="ghost" onClick={() => setEditing(false)} className="h-7 text-slate-400"><X className="w-3 h-3" /></Button>
@@ -114,6 +146,7 @@ function CostRow({ cost, onDelete, onUpdate }) {
         <div className="flex items-center gap-2 mt-0.5">
           <span className="text-xs text-slate-500">{cost.date ? format(new Date(cost.date), 'MMM d, yyyy') : '-'}</span>
           <Badge className="text-[10px] px-1.5 py-0 bg-emerald-900/50 text-emerald-300 border-emerald-800/50">{getCategoryLabel(cost.category)}</Badge>
+          {tiedTo && <span className="text-[11px] text-slate-400 truncate">for {tiedTo}</span>}
         </div>
       </div>
       <p className="text-orange-400 font-semibold text-sm flex-shrink-0">${Number(cost.amount).toFixed(2)}</p>
@@ -123,12 +156,12 @@ function CostRow({ cost, onDelete, onUpdate }) {
   );
 }
 
-function QuarterSection({ quarterKey, items, onDelete: _onDelete, onUpdate: _onUpdate, renderItem }) {
+function QuarterSection({ quarterKey, items, renderItem, labelFor = getCategoryLabel }) {
   const [open, setOpen] = useState(true);
   const { year, quarter } = parseQuarterKey(quarterKey);
   const total = items.reduce((s, i) => s + Number(i.amount || 0), 0);
   const grouped = items.reduce((acc, item) => {
-    const cat = item.category || 'other';
+    const cat = item.category || 'none';
     if (!acc[cat]) acc[cat] = [];
     acc[cat].push(item);
     return acc;
@@ -141,7 +174,7 @@ function QuarterSection({ quarterKey, items, onDelete: _onDelete, onUpdate: _onU
         <div className="flex items-center gap-2 flex-wrap min-w-0 flex-1">
           <Calendar className="w-4 h-4 text-emerald-500 flex-shrink-0" />
           <span className="font-semibold text-slate-100 whitespace-nowrap">{year}, {QUARTER_LABELS[quarter]}</span>
-          <Badge className="bg-emerald-900/50 text-emerald-300 border-emerald-800/40 text-xs flex-shrink-0">{items.length} entries</Badge>
+          <Badge className="bg-emerald-900/50 text-emerald-300 border-emerald-800/40 text-xs flex-shrink-0">{items.length} {items.length === 1 ? 'entry' : 'entries'}</Badge>
         </div>
         <div className="flex items-center gap-2 flex-shrink-0">
           <span className="text-emerald-400 font-bold tabular-nums">${total.toFixed(2)}</span>
@@ -155,8 +188,8 @@ function QuarterSection({ quarterKey, items, onDelete: _onDelete, onUpdate: _onU
             <div key={cat}>
               <div className="flex items-center gap-2 mb-2">
                 <Tag className="w-3 h-3 text-emerald-600" />
-                <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">{getCategoryLabel(cat)}</span>
-                <span className="text-xs text-slate-500">,  ${catItems.reduce((s, i) => s + Number(i.amount || 0), 0).toFixed(2)}</span>
+                <span className="text-xs font-semibold text-emerald-400 uppercase tracking-wide">{cat === 'none' ? 'Not set' : labelFor(cat)}</span>
+                <span className="text-xs text-slate-500">${catItems.reduce((s, i) => s + Number(i.amount || 0), 0).toFixed(2)}</span>
               </div>
               <div className="space-y-2">
                 {catItems.map(item => renderItem(item))}
@@ -506,24 +539,31 @@ function PendingSalesTab({ user, pendingSales, setPendingSales, onCompleteSale, 
     if (!confirm(`Complete sale for "${sale.gecko_name}"? This will move it to revenue and archive the gecko.`)) return;
     try {
       await PendingSale.update(sale.id, { status: 'completed', completed_date: new Date().toISOString() });
+      // A reserve on a gecko in the collection becomes that gecko's sale
+      // (its sold price is the reserve price). Only a reserve with no gecko
+      // attached is recorded as a typed-in sale. Doing both counted the
+      // same money twice.
+      const price = parseFloat(sale.reserve_price) || 0;
+      let geckoPatch = null;
+      let created = null;
       if (sale.gecko_id) {
-        try {
-          await Gecko.update(sale.gecko_id, {
-            status: 'Sold', archived: true, archive_reason: 'sold',
-            archived_date: todayLocalISO(),
-            asking_price: parseFloat(sale.reserve_price) || 0,
-          });
-        } catch (e) { console.warn('Could not archive gecko:', e); }
+        geckoPatch = {
+          status: 'Sold', archived: true, archive_reason: 'sold',
+          archived_date: todayLocalISO(),
+          sold_price: price,
+        };
+        await Gecko.update(sale.gecko_id, geckoPatch);
+      } else {
+        created = await MarketplaceCost.create({
+          user_email: user.email,
+          description: sale.gecko_name,
+          amount: price,
+          date: todayLocalISO(),
+          category: 'sale:produced_in_house',
+        });
       }
-      const created = await MarketplaceCost.create({
-        user_email: user.email,
-        description: sale.gecko_name,
-        amount: parseFloat(sale.reserve_price) || 0,
-        date: todayLocalISO(),
-        category: 'sale:produced_in_house',
-      });
       setPendingSales(prev => prev.filter(s => s.id !== sale.id));
-      if (onCompleteSale) onCompleteSale(sale, created);
+      if (onCompleteSale) onCompleteSale(sale, { created, geckoPatch });
       toast({ title: 'Sale completed', description: `${sale.gecko_name} added to revenue.` });
     } catch (err) {
       toast({ title: 'Error', description: err.message, variant: 'destructive' });
@@ -790,6 +830,91 @@ function PendingSalesTab({ user, pendingSales, setPendingSales, onCompleteSale, 
 // without changes to the Business Tools page.
 // ---------------------------------------------------------------------------
 
+// ---------------------------------------------------------------------------
+// Profit: by season (calendar year) and by pairing
+// ---------------------------------------------------------------------------
+
+function ProfitTab({ seasons, pairings, currency, hasPlans }) {
+  const profitClass = (n) => (n >= 0 ? 'text-emerald-400' : 'text-red-400');
+  return (
+    <>
+      <section className="space-y-2">
+        <h3 className="text-base font-semibold text-slate-100">By season</h3>
+        <p className="text-xs text-slate-500">Each calendar year: what came in from sales and what went out in logged costs.</p>
+        {seasons.length === 0 ? (
+          <p className="text-sm text-slate-400 py-4">No sales or costs logged yet.</p>
+        ) : (
+          <div className="overflow-x-auto rounded-lg border border-slate-800">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="text-left text-xs uppercase tracking-wide text-slate-500 border-b border-slate-800">
+                  <th className="py-2 px-2 sm:px-3 font-medium">Year</th>
+                  <th className="py-2 px-2 sm:px-3 font-medium text-right hidden sm:table-cell">Sales</th>
+                  <th className="py-2 px-2 sm:px-3 font-medium text-right">Revenue</th>
+                  <th className="py-2 px-2 sm:px-3 font-medium text-right">Costs</th>
+                  <th className="py-2 px-2 sm:px-3 font-medium text-right">Profit</th>
+                </tr>
+              </thead>
+              <tbody>
+                {seasons.map((r) => (
+                  <tr key={r.year ?? 'undated'} className="border-b border-slate-800/60 last:border-0">
+                    <td className="py-2 px-2 sm:px-3 text-slate-100 font-medium">{r.year ?? 'No date'}</td>
+                    <td className="py-2 px-2 sm:px-3 text-right text-slate-300 tabular-nums hidden sm:table-cell">{r.sales}</td>
+                    <td className="py-2 px-2 sm:px-3 text-right text-emerald-300 tabular-nums">
+                      {money(r.revenue, currency)}
+                      {r.unconfirmed > 0 && <span className="block text-[10px] text-amber-300/80">{r.unconfirmed} at asking price</span>}
+                    </td>
+                    <td className="py-2 px-2 sm:px-3 text-right text-orange-300 tabular-nums">{money(r.costs, currency)}</td>
+                    <td className={`py-2 px-2 sm:px-3 text-right font-semibold tabular-nums ${profitClass(r.profit)}`}>{money(r.profit, currency)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </section>
+
+      <section className="space-y-2">
+        <h3 className="text-base font-semibold text-slate-100">By pairing</h3>
+        <p className="text-xs text-slate-500">
+          Sales of each pairing&apos;s babies (hatched from its eggs, or with the same sire and dam) minus the costs
+          tied to the pairing or to those babies. Tie costs in the Costs tab.
+        </p>
+        {pairings.length === 0 ? (
+          <p className="text-sm text-slate-400 py-4">
+            {hasPlans
+              ? 'None of your pairings has hatched, sold or logged a cost yet.'
+              : 'Add a pairing in Breeding to see its profit here.'}
+          </p>
+        ) : (
+          <div className="grid gap-2 sm:grid-cols-2">
+            {pairings.map((row) => (
+              <div key={row.plan.id} className="rounded-lg border border-slate-800 bg-slate-900/60 p-3 space-y-2">
+                <div className="flex items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="font-medium text-slate-100 text-sm truncate">{row.label}</p>
+                    <p className="text-xs text-slate-500">
+                      {[row.season, `${row.eggs} egg${row.eggs === 1 ? '' : 's'}`, `${row.hatched} hatched`, `${row.sold} sold`].filter(Boolean).join(', ')}
+                    </p>
+                  </div>
+                  <p className={`text-sm font-bold tabular-nums ${profitClass(row.profit)}`}>{money(row.profit, currency)}</p>
+                </div>
+                <div className="flex justify-between text-xs text-slate-400">
+                  <span>Revenue <span className="text-emerald-300 tabular-nums">{money(row.revenue, currency)}</span></span>
+                  <span>Costs <span className="text-orange-300 tabular-nums">{money(row.costs, currency)}</span></span>
+                </div>
+                {row.unconfirmed > 0 && (
+                  <p className="text-[11px] text-amber-300/80">{row.unconfirmed} sale{row.unconfirmed === 1 ? '' : 's'} counted at the asking price</p>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
+    </>
+  );
+}
+
 export default function MarketplaceSalesStats() {
   const [statsPrefs, setStatsPrefs] = usePageSettings('sales_stats_prefs', {
     defaultTab: 'revenue',
@@ -798,30 +923,27 @@ export default function MarketplaceSalesStats() {
   });
   const navigate = useNavigate();
   const [user, setUser] = useState(null);
-  const [soldGeckos, setSoldGeckos] = useState([]);
   const [userGeckos, setUserGeckos] = useState([]);
   const [manualSales, setManualSales] = useState([]);
   const [priceOverrides, setPriceOverrides] = useState({});
   const [costs, setCosts] = useState([]);
   const [pendingSales, setPendingSales] = useState([]);
+  const [plans, setPlans] = useState([]);
+  const [eggs, setEggs] = useState([]);
+  const [transfers, setTransfers] = useState([]);
+  const [transferNames, setTransferNames] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
 
   const [newCost, setNewCost] = useState({
-    description: '', amount: '', date: todayLocalISO(), category: 'other'
+    description: '', amount: '', date: todayLocalISO(), category: 'other', link: '',
   });
   const [newRevenue, setNewRevenue] = useState({
     name: '', amount: '', date: todayLocalISO(), category: 'produced_in_house'
   });
-  const [geckoCategories, setGeckoCategories] = useState({});
   const [addSaleModalOpen, setAddSaleModalOpen] = useState(false);
   const [saleMode, setSaleMode] = useState(null);
   const [selectionModalOpen, setSelectionModalOpen] = useState(false);
-
-  useEffect(() => {
-    const savedGeckoCats = localStorage.getItem('marketplace_gecko_categories');
-    if (savedGeckoCats) setGeckoCategories(JSON.parse(savedGeckoCats));
-  }, []);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -830,13 +952,9 @@ export default function MarketplaceSalesStats() {
         if (!currentUser) { navigate(createPageUrl('Home')); return; }
         setUser(currentUser);
 
-        const allGeckos = await Gecko.filter({ created_by: currentUser.email });
-        setUserGeckos(allGeckos);
-        // Only real sold geckos, exclude fake records created by old manual-sale flow
-        setSoldGeckos(allGeckos.filter(g =>
-          ((g.archived && g.archive_reason === 'sold') || g.status === 'Sold') &&
-          !g.notes?.startsWith('[Manual sale]')
-        ));
+        // Geckos in collections you own (including ones a collaborator
+        // added) plus geckos you created.
+        setUserGeckos(await getBusinessGeckos(currentUser));
 
         let dbCosts = [];
         try {
@@ -868,11 +986,38 @@ export default function MarketplaceSalesStats() {
         setManualSales(dbCosts.filter(c => c.category?.startsWith('sale:')));
         setCosts(dbCosts.filter(c => !c.category?.startsWith('sale:')));
 
-        // Load pending sales
         try {
           const ps = await PendingSale.filter({ user_email: currentUser.email, status: 'pending' }, '-created_date');
           setPendingSales(ps);
         } catch (e) { console.error('Failed to load pending sales:', e); }
+
+        // Pairings and their eggs, for profit per pairing
+        try {
+          const myPlans = await BreedingPlan.filter({ created_by: currentUser.email }, '-created_date');
+          setPlans(myPlans);
+          const planIds = myPlans.map(p => p.id);
+          if (planIds.length) setEggs(await Egg.filter({ breeding_plan_id: { $in: planIds } }));
+        } catch (e) { console.error('Failed to load pairings:', e); }
+
+        // Transfers you sent that the buyer claimed. The gecko now belongs
+        // to the buyer, so this is the only record of the sale on your side.
+        try {
+          const { data: authData } = await supabase.auth.getUser();
+          const uid = authData?.user?.id;
+          if (uid) {
+            const { data: sent } = await supabase
+              .from('transfer_requests').select('*')
+              .eq('from_user_id', uid).eq('status', 'claimed');
+            setTransfers(sent || []);
+            const geckoIds = (sent || []).filter(t => t.animal_type !== 'other_reptile').map(t => t.animal_id).filter(Boolean);
+            const reptileIds = (sent || []).filter(t => t.animal_type === 'other_reptile').map(t => t.animal_id).filter(Boolean);
+            const [g, r] = await Promise.all([
+              geckoIds.length ? supabase.from('geckos').select('id, name').in('id', geckoIds) : Promise.resolve({ data: [] }),
+              reptileIds.length ? supabase.from('other_reptiles').select('id, name').in('id', reptileIds) : Promise.resolve({ data: [] }),
+            ]);
+            setTransferNames(Object.fromEntries([...(g.data || []), ...(r.data || [])].map(a => [a.id, a.name])));
+          }
+        } catch (e) { console.error('Failed to load transfers:', e); }
       } catch (error) {
         console.error('Failed to load stats:', error);
       } finally {
@@ -882,30 +1027,60 @@ export default function MarketplaceSalesStats() {
     fetchData();
   }, []);
 
-  const getPrice = (gecko) => {
-    if (priceOverrides[gecko.id] !== undefined) return parseFloat(priceOverrides[gecko.id]) || 0;
-    return gecko.asking_price ? parseFloat(gecko.asking_price) : 0;
-  };
+  // Unsaved edits to sold prices count straight away, before "Save prices".
+  const geckosWithEdits = useMemo(() => userGeckos.map(g => (
+    priceOverrides[g.id] !== undefined ? { ...g, sold_price: priceOverrides[g.id] } : g
+  )), [userGeckos, priceOverrides]);
+  const bredIds = useMemo(() => bredInHouseIds({ geckos: userGeckos, eggs }), [userGeckos, eggs]);
+  const namesById = useMemo(() => ({
+    ...transferNames,
+    ...Object.fromEntries(userGeckos.map(g => [g.id, g.name])),
+  }), [userGeckos, transferNames]);
+  const entries = useMemo(
+    () => revenueEntries({ geckos: geckosWithEdits, manualSales, transfers, transferNames, bredIds }),
+    [geckosWithEdits, manualSales, transfers, transferNames, bredIds],
+  );
+  const totals = useMemo(() => ledgerTotals(entries, costs), [entries, costs]);
+  const seasons = useMemo(() => profitBySeason(entries, costs), [entries, costs]);
+  const pairings = useMemo(
+    () => profitByPairing({ plans, eggs, geckos: userGeckos, entries, costs, namesById }),
+    [plans, eggs, userGeckos, entries, costs, namesById],
+  );
+  const linkOptions = useMemo(
+    () => costLinkOptions({ plans, geckos: userGeckos.filter(g => !g.notes?.startsWith('[Manual sale]')), namesById }),
+    [plans, userGeckos, namesById],
+  );
+  const soldCount = entries.filter(e => e.kind === 'gecko').length;
+  const transferCount = entries.filter(e => e.kind === 'transfer').length;
 
-  const manualSalesTotal = manualSales.reduce((sum, s) => sum + Number(s.amount), 0);
-  const totalRevenue = soldGeckos.reduce((sum, g) => sum + getPrice(g), 0) + manualSalesTotal;
-  const totalCosts = costs.reduce((sum, c) => sum + Number(c.amount), 0);
-  const netProfit = totalRevenue - totalCosts;
-  const currentYear = new Date().getFullYear();
-  const ytdRevenue = soldGeckos.reduce((sum, g) => {
-    const yr = g.archived_date ? new Date(g.archived_date).getFullYear() : new Date(g.updated_date).getFullYear();
-    return yr === currentYear ? sum + getPrice(g) : sum;
-  }, 0) + manualSales.reduce((sum, s) => {
-    return s.date && new Date(s.date).getFullYear() === currentYear ? sum + Number(s.amount) : sum;
-  }, 0);
+  const patchGecko = (id, patch) => setUserGeckos(prev => prev.map(g => (g.id === id ? { ...g, ...patch } : g)));
 
   const handleSaveAllPrices = async () => {
     setIsSaving(true);
-    for (const [geckoId, value] of Object.entries(priceOverrides)) {
-      const parsed = parseFloat(value);
-      if (!isNaN(parsed)) await Gecko.update(geckoId, { asking_price: parsed });
+    try {
+      for (const [geckoId, value] of Object.entries(priceOverrides)) {
+        const parsed = value === '' ? null : parseFloat(value);
+        if (parsed !== null && isNaN(parsed)) continue;
+        await Gecko.update(geckoId, { sold_price: parsed });
+        patchGecko(geckoId, { sold_price: parsed });
+      }
+      setPriceOverrides({});
+      toast({ title: 'Sold prices saved' });
+    } catch (error) {
+      toast({ title: 'Error', description: error?.message || 'Could not save prices.', variant: 'destructive' });
+    } finally {
+      setIsSaving(false);
     }
-    setIsSaving(false);
+  };
+
+  const handleSaleCategoryChange = async (geckoId, value) => {
+    const sale_category = value || null;
+    patchGecko(geckoId, { sale_category });
+    try {
+      await Gecko.update(geckoId, { sale_category });
+    } catch (error) {
+      toast({ title: 'Error', description: error?.message || 'Could not save the sale type.', variant: 'destructive' });
+    }
   };
 
   const handleAddCost = async () => {
@@ -917,9 +1092,10 @@ export default function MarketplaceSalesStats() {
         amount: parseFloat(newCost.amount),
         date: newCost.date,
         category: newCost.category || 'General',
+        ...parseCostLink(newCost.link),
       });
       setCosts(prev => [created, ...prev]);
-      setNewCost({ description: '', amount: '', date: todayLocalISO(), category: 'other' });
+      setNewCost({ description: '', amount: '', date: todayLocalISO(), category: 'other', link: '' });
       toast({ title: "Cost Added", description: `${newCost.description}, $${parseFloat(newCost.amount).toFixed(2)}` });
     } catch (error) {
       console.error('Failed to add cost:', error);
@@ -937,29 +1113,18 @@ export default function MarketplaceSalesStats() {
     setCosts(prev => prev.map(c => c.id === id ? { ...c, ...data } : c));
   };
 
-  const handleGeckoCategoryChange = (geckoId, cat) => {
-    const updated = { ...geckoCategories, [geckoId]: cat };
-    setGeckoCategories(updated);
-    localStorage.setItem('marketplace_gecko_categories', JSON.stringify(updated));
-  };
-
   const handleAddGeckosFromSelection = async (selectedGeckos) => {
     try {
-      // Archive selected geckos as sold
+      // Archive selected geckos as sold. The sold price is left for the
+      // breeder to enter below; until then the asking price stands in.
       for (const gecko of selectedGeckos) {
-        const price = parseFloat(gecko.asking_price) || 0;
         await Gecko.update(gecko.id, {
           archived: true,
           archive_reason: 'sold',
           archived_date: todayLocalISO(),
-          asking_price: price
         });
       }
-
-      // Refresh geckos lists
-      const allGeckos = await Gecko.filter({ created_by: user.email });
-      setUserGeckos(allGeckos);
-      setSoldGeckos(allGeckos.filter(g => (g.archived && g.archive_reason === 'sold') || g.status === 'Sold'));
+      setUserGeckos(await getBusinessGeckos(user));
     } catch (error) {
       console.error('Failed to add geckos:', error);
     }
@@ -968,7 +1133,7 @@ export default function MarketplaceSalesStats() {
   // Manual "Add Sale", for sales of animals that were never added to
   // the collection (e.g. rehoming a gecko you helped a friend list, or
   // an "Other" category item). Stored as a MarketplaceCost record with
-  // type='sale' so it doesn't pollute the gecko collection / archive.
+  // a 'sale:' category so it doesn't pollute the gecko collection.
   const [isAddingSale, setIsAddingSale] = useState(false);
   const handleAddManualRevenue = async () => {
     if (!newRevenue.name.trim() || !newRevenue.amount || isAddingSale) {
@@ -1015,28 +1180,13 @@ export default function MarketplaceSalesStats() {
 
   const revenueByQuarter = useMemo(() => {
     const groups = {};
-    soldGeckos.forEach(gecko => {
-      const dateStr = gecko.archived_date || gecko.updated_date;
-      const key = getQuarterKey(dateStr);
+    entries.forEach(entry => {
+      const key = getQuarterKey(entry.date || new Date().toISOString());
       if (!groups[key]) groups[key] = [];
-      groups[key].push({ ...gecko, category: geckoCategories[gecko.id] || 'General', amount: getPrice(gecko) });
-    });
-    // Merge manual sales into the same quarter groups
-    manualSales.forEach(sale => {
-      const key = getQuarterKey(sale.date);
-      if (!groups[key]) groups[key] = [];
-      groups[key].push({
-        id: sale.id,
-        name: sale.description,
-        archived_date: sale.date,
-        asking_price: sale.amount,
-        category: (sale.category || '').replace(/^sale:/, '') || 'General',
-        amount: Number(sale.amount),
-        isManualSale: true,
-      });
+      groups[key].push(entry);
     });
     return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
-  }, [soldGeckos, geckoCategories, priceOverrides, manualSales]);
+  }, [entries]);
 
   const tabTriggerClass = "w-full min-w-0 whitespace-normal text-center leading-tight py-1.5 data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-2 rounded-sm transition-colors";
 
@@ -1072,7 +1222,7 @@ export default function MarketplaceSalesStats() {
               <div>
                 <Label className="text-slate-300 text-sm mb-1 block">Default Tab</Label>
                 <div className="flex gap-1">
-                  {[['revenue', 'Revenue'], ['pending', 'Pending'], ['costs', 'Costs']].map(([val, lbl]) => (
+                  {[['revenue', 'Revenue'], ['pending', 'Pending'], ['costs', 'Costs'], ['profit', 'Profit']].map(([val, lbl]) => (
                     <button
                       key={val}
                       onClick={() => setStatsPrefs({ defaultTab: val })}
@@ -1110,11 +1260,11 @@ export default function MarketplaceSalesStats() {
 
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           {[
-            { label: 'Total Revenue', value: `${statsPrefs.currency}${totalRevenue.toFixed(2)}`, sub: `${soldGeckos.length} sold${manualSales.length ? ` + ${manualSales.length} manual` : ''}`, color: 'text-emerald-400', Icon: DollarSign },
-            { label: 'Pending', value: `${statsPrefs.currency}${pendingSales.reduce((s, p) => s + Number(p.reserve_price || 0), 0).toFixed(2)}`, sub: `${pendingSales.length} reserve${pendingSales.length !== 1 ? 's' : ''}`, color: 'text-amber-400', Icon: Clock },
-            { label: 'YTD Revenue', value: `${statsPrefs.currency}${ytdRevenue.toFixed(2)}`, sub: 'Year to date', color: 'text-blue-400', Icon: TrendingUp },
-            { label: 'Total Costs', value: `${statsPrefs.currency}${totalCosts.toFixed(2)}`, sub: `${costs.length} entries`, color: 'text-orange-400', Icon: DollarSign },
-            { label: 'Net Profit', value: `${statsPrefs.currency}${netProfit.toFixed(2)}`, sub: 'All time', color: netProfit >= 0 ? 'text-emerald-400' : 'text-red-400', Icon: TrendingUp },
+            { label: 'Total Revenue', value: money(totals.revenue, statsPrefs.currency), sub: [`${soldCount} sold`, manualSales.length && `${manualSales.length} manual`, transferCount && `${transferCount} transferred`].filter(Boolean).join(' + '), color: 'text-emerald-400', Icon: DollarSign },
+            { label: 'Pending', value: money(pendingSales.reduce((s, p) => s + Number(p.reserve_price || 0), 0), statsPrefs.currency), sub: `${pendingSales.length} reserve${pendingSales.length !== 1 ? 's' : ''}`, color: 'text-amber-400', Icon: Clock },
+            { label: 'YTD Revenue', value: money(totals.ytdRevenue, statsPrefs.currency), sub: 'Year to date', color: 'text-blue-400', Icon: TrendingUp },
+            { label: 'Total Costs', value: money(totals.costs, statsPrefs.currency), sub: `${costs.length} entries`, color: 'text-orange-400', Icon: DollarSign },
+            { label: 'Net Profit', value: money(totals.profit, statsPrefs.currency), sub: 'All time', color: totals.profit >= 0 ? 'text-emerald-400' : 'text-red-400', Icon: TrendingUp },
           ].map(({ label, value, sub, color, Icon }) => (
             <Card key={label} className="bg-emerald-950/40 border-emerald-900/50">
               <CardHeader className="pb-2 pt-4 px-4">
@@ -1132,13 +1282,17 @@ export default function MarketplaceSalesStats() {
 
         <div className="bg-emerald-950/30 border border-emerald-900/40 rounded-xl p-4 md:p-6">
           <Tabs defaultValue={statsPrefs.defaultTab}>
-            <TabsList className="grid grid-cols-2 md:grid-cols-4 h-auto w-full max-w-xl mx-auto bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1 mb-6">
+            <TabsList className="grid grid-cols-3 md:grid-cols-5 h-auto w-full max-w-2xl mx-auto bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1 mb-6">
               <TabsTrigger value="revenue" className={tabTriggerClass}>Revenue</TabsTrigger>
               <TabsTrigger value="pending" className={tabTriggerClass}>
                 <Clock className="w-3.5 h-3.5 mr-1" />
                 Pending{pendingSales.length > 0 && ` (${pendingSales.length})`}
               </TabsTrigger>
               <TabsTrigger value="costs" className={tabTriggerClass}>Costs</TabsTrigger>
+              <TabsTrigger value="profit" className={tabTriggerClass}>
+                <PieChart className="w-3.5 h-3.5 mr-1" />
+                Profit
+              </TabsTrigger>
               <TabsTrigger value="analytics" className={tabTriggerClass}>
                 <Globe className="w-3.5 h-3.5 mr-1" />
                 Market Analytics
@@ -1241,61 +1395,78 @@ export default function MarketplaceSalesStats() {
               )}
 
               <div className="flex items-center justify-between">
-                <h3 className="text-base font-semibold text-slate-100">Sold Geckos by Quarter</h3>
+                <h3 className="text-base font-semibold text-slate-100">Sales by Quarter</h3>
                 {Object.keys(priceOverrides).length > 0 && (
                   <Button onClick={handleSaveAllPrices} disabled={isSaving} size="sm" className="gap-1.5 h-8 bg-emerald-600 hover:bg-emerald-500 text-white">
                     <Save className="w-3.5 h-3.5" />{isSaving ? 'Saving...' : 'Save Prices'}
                   </Button>
                 )}
               </div>
-              {soldGeckos.length === 0 && manualSales.length === 0 ? (
+              {totals.unconfirmed > 0 && (
+                <div className="rounded-lg border border-amber-700/40 bg-amber-900/20 px-3 py-2 text-xs text-amber-200">
+                  No sold price entered for {totals.unconfirmed} {totals.unconfirmed === 1 ? 'sale' : 'sales'}, so the asking price stands in.
+                  Type what each one actually sold for and press Save Prices, so your profit is real.
+                </div>
+              )}
+              {entries.length === 0 ? (
                 <div className="text-center py-10">
                   <AlertCircle className="w-8 h-8 text-slate-500 mx-auto mb-2" />
-                  <p className="text-slate-400">No sold geckos found.</p>
+                  <p className="text-slate-400">No sales yet.</p>
                 </div>
               ) : (
                 <div className="space-y-3">
-                  {revenueByQuarter.map(([key, geckos]) => (
-                    <QuarterSection key={key} quarterKey={key} items={geckos}
+                  {revenueByQuarter.map(([key, items]) => (
+                    <QuarterSection key={key} quarterKey={key} items={items} labelFor={revenueCategoryLabel}
                       renderItem={(item) => (
                         <div key={item.id} className="bg-slate-800/60 border border-slate-700/50 p-3 rounded-lg">
                           <div className="flex items-center gap-3 flex-wrap sm:flex-nowrap">
-                            {item.isManualSale ? (
-                              <div className="w-9 h-9 rounded bg-emerald-900/40 border border-emerald-700/30 flex items-center justify-center flex-shrink-0">
-                                <DollarSign className="w-4 h-4 text-emerald-400" />
-                              </div>
-                            ) : (
-                              <img src={item.image_urls?.[0] || 'https://i.imgur.com/sw9gnDp.png'} alt={item.name}
+                            {item.kind === 'gecko' ? (
+                              <img src={item.image || 'https://i.imgur.com/sw9gnDp.png'} alt={item.name}
                                 className="w-9 h-9 rounded object-cover flex-shrink-0" />
+                            ) : (
+                              <div className="w-9 h-9 rounded bg-emerald-900/40 border border-emerald-700/30 flex items-center justify-center flex-shrink-0">
+                                {item.kind === 'transfer'
+                                  ? <ArrowRightLeft className="w-4 h-4 text-emerald-400" />
+                                  : <DollarSign className="w-4 h-4 text-emerald-400" />}
+                              </div>
                             )}
                             <div className="flex-1 min-w-[8rem]">
                               <p className="font-medium text-slate-100 text-sm truncate">{item.name}</p>
                               <p className="text-xs text-slate-500">
-                                {item.archived_date ? format(new Date(item.archived_date), 'MMM d, yyyy') : '-'}
-                                {item.isManualSale && <span className="ml-1 text-emerald-500/70">(manual)</span>}
+                                {item.date ? format(new Date(item.date), 'MMM d, yyyy') : '-'}
+                                {item.kind === 'manual' && <span className="ml-1 text-emerald-500/70">(manual)</span>}
+                                {item.kind === 'transfer' && <span className="ml-1 text-emerald-500/70">(transferred with passport)</span>}
                               </p>
                             </div>
                             <div className="flex items-center gap-2 ml-auto sm:ml-0 flex-shrink-0">
-                              {!item.isManualSale && (
-                                <select value={geckoCategories[item.id] || 'other'}
-                                  onChange={e => handleGeckoCategoryChange(item.id, e.target.value)}
+                              {item.kind === 'gecko' ? (
+                                <select value={item.category || ''}
+                                  onChange={e => handleSaleCategoryChange(item.id, e.target.value)}
+                                  aria-label="Sale type"
                                   className="h-7 text-xs rounded bg-slate-700 border border-slate-600 text-slate-300 px-1.5">
-                                  {COST_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
+                                  <option value="">Sale type</option>
+                                  {REVENUE_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                                 </select>
-                              )}
-                              {item.isManualSale ? (
-                                <span className="text-xs text-slate-400 px-1.5 whitespace-nowrap">{_getRevenueCategory(item.category)}</span>
                               ) : (
+                                <span className="text-xs text-slate-400 px-1.5 whitespace-nowrap">{revenueCategoryLabel(item.category)}</span>
+                              )}
+                              {item.kind === 'gecko' && (
                                 <div className="flex items-center gap-1.5">
                                   <span className="text-slate-400 text-xs">$</span>
                                   <Input type="number" step="0.01"
-                                    value={priceOverrides[item.id] !== undefined ? priceOverrides[item.id] : (item.asking_price || '')}
+                                    aria-label="Sold for"
+                                    value={priceOverrides[item.id] !== undefined ? priceOverrides[item.id] : (item.gecko.sold_price ?? '')}
                                     onChange={e => setPriceOverrides(prev => ({ ...prev, [item.id]: e.target.value }))}
-                                    placeholder="0.00"
+                                    placeholder={item.gecko.asking_price ? String(item.gecko.asking_price) : 'Sold for'}
                                     className="bg-slate-700 border-slate-600 text-slate-100 h-7 text-xs w-20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none" />
                                 </div>
                               )}
-                              <p className="text-emerald-400 font-semibold text-sm min-w-[4rem] text-right tabular-nums">${(item.amount || 0).toFixed(2)}</p>
+                              <div className="min-w-[4rem] text-right">
+                                <p className="text-emerald-400 font-semibold text-sm tabular-nums">${(item.amount || 0).toFixed(2)}</p>
+                                {!item.confirmed && (
+                                  <p className="text-[10px] text-amber-300/80">{item.kind === 'transfer' ? 'no price entered' : 'asking price'}</p>
+                                )}
+                              </div>
                             </div>
                           </div>
                         </div>
@@ -1311,18 +1482,9 @@ export default function MarketplaceSalesStats() {
                 pendingSales={pendingSales}
                 setPendingSales={setPendingSales}
                 allGeckos={userGeckos}
-                onCompleteSale={(sale, costRecord) => {
-                  setManualSales(prev => [costRecord, ...prev]);
-                  if (sale.gecko_id) {
-                    setSoldGeckos(prev => [...prev, {
-                      id: sale.gecko_id,
-                      name: sale.gecko_name,
-                      asking_price: sale.reserve_price,
-                      archived: true,
-                      archive_reason: 'sold',
-                      archived_date: todayLocalISO(),
-                    }]);
-                  }
+                onCompleteSale={(sale, { created, geckoPatch }) => {
+                  if (created) setManualSales(prev => [created, ...prev]);
+                  if (sale.gecko_id && geckoPatch) patchGecko(sale.gecko_id, geckoPatch);
                 }}
               />
             </TabsContent>
@@ -1355,6 +1517,12 @@ export default function MarketplaceSalesStats() {
                       {COST_CATEGORIES.map(c => <option key={c.value} value={c.value}>{c.label}</option>)}
                     </select>
                   </div>
+                  <div className="sm:col-span-2">
+                    <Label className="text-xs text-slate-400">Tied to (optional)</Label>
+                    <CostLinkSelect value={newCost.link} onChange={link => setNewCost(f => ({ ...f, link }))} linkOptions={linkOptions}
+                      className="w-full h-9 mt-1 rounded-md bg-slate-700 border border-slate-600 text-slate-100 text-sm px-2" />
+                    <p className="text-[11px] text-slate-500 mt-1">Tie a cost to a pairing (incubation, the female&apos;s extra food) or to one gecko (a vet visit) to see profit per pairing.</p>
+                  </div>
                 </div>
                 <div className="pt-2">
                   <Button onClick={handleAddCost} className="bg-emerald-600 hover:bg-emerald-500 text-white h-9">
@@ -1372,9 +1540,8 @@ export default function MarketplaceSalesStats() {
                 <div className="space-y-3">
                   {costsByQuarter.map(([key, quarterCosts]) => (
                     <QuarterSection key={key} quarterKey={key} items={quarterCosts}
-                      onDelete={handleDeleteCost} onUpdate={handleUpdateCost}
                       renderItem={(cost) => (
-                        <CostRow key={cost.id} cost={cost}
+                        <CostRow key={cost.id} cost={cost} linkOptions={linkOptions}
                           onDelete={handleDeleteCost} onUpdate={handleUpdateCost} />
                       )} />
                   ))}
@@ -1385,18 +1552,22 @@ export default function MarketplaceSalesStats() {
                 <div className="bg-emerald-950/40 border border-emerald-900/40 rounded-xl p-4 space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-400">Total Revenue:</span>
-                    <span className="text-emerald-400 font-semibold">${totalRevenue.toFixed(2)}</span>
+                    <span className="text-emerald-400 font-semibold">{money(totals.revenue)}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-slate-400">Total Costs:</span>
-                    <span className="text-orange-400 font-semibold">${totalCosts.toFixed(2)}</span>
+                    <span className="text-orange-400 font-semibold">{money(totals.costs)}</span>
                   </div>
                   <div className="border-t border-emerald-900/50 pt-2 flex justify-between font-bold">
                     <span className="text-slate-200">Net Profit:</span>
-                    <span className={netProfit >= 0 ? 'text-emerald-400' : 'text-red-400'}>${netProfit.toFixed(2)}</span>
+                    <span className={totals.profit >= 0 ? 'text-emerald-400' : 'text-red-400'}>{money(totals.profit)}</span>
                   </div>
                 </div>
               )}
+            </TabsContent>
+
+            <TabsContent value="profit" className="space-y-6">
+              <ProfitTab seasons={seasons} pairings={pairings} currency={statsPrefs.currency} hasPlans={plans.length > 0} />
             </TabsContent>
 
             {/* Market Analytics, Enterprise tier only */}
