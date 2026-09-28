@@ -1,7 +1,9 @@
 # Morph ID test set
 
-`test-split-breeder-tags.jsonl` holds the 220 MorphMarket listings in the
-held-out test split (431 photos). Each row is one gecko:
+`test-split-breeder-tags.jsonl` holds 195 of the 220 MorphMarket listings in
+the held-out test split (381 photos). The other 25 were tagged only Tricolor,
+which is a color description rather than a pattern, so they have no pattern to
+grade against. Each row is one gecko:
 
 - `image_urls`: every photo of that listing
 - `expected_primary_morph`: the pattern our import picks from the breeder's tags
@@ -23,9 +25,9 @@ script's usage text). The report has two kinds of accuracy:
 - `overall_top1_accuracy`: first answer equals the single picked pattern
 - `overall_top1_breeder_tag`: first answer is any pattern the breeder tagged
 
-The second is the fair headline number. 74 of the 220 geckos carry more than
-one pattern tag (most often Harlequin plus Tricolor, or Harlequin plus Partial Pinstripe), and naming
-either one agrees with the breeder.
+The second is the fair headline number. 58 of the 195 geckos carry more than
+one pattern tag (most often Dalmatian plus Super Dalmatian, or Harlequin plus
+a Pinstripe), and naming either one agrees with the breeder.
 
 ## Rebuild the file
 

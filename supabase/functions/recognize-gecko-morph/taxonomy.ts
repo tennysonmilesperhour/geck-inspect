@@ -2,14 +2,14 @@
 // Kept as a flat list here so the edge function prompt can constrain the
 // model to return canonical ids. If you change the client taxonomy, update
 // this file and bump TAXONOMY_VERSION below.
-export const TAXONOMY_VERSION = "2026.09.06";
+export const TAXONOMY_VERSION = "2026.09.28";
 
 export const PRIMARY_MORPH_IDS = [
   "patternless", "flame", "chevron_flame", "harlequin", "extreme_harlequin",
   "super_harlequin", "pinstripe", "full_pinstripe", "partial_pinstripe",
   "phantom_pinstripe", "reverse_pinstripe", "quad_stripe", "super_stripe",
   "tiger", "super_tiger", "brindle", "extreme_brindle", "dalmatian",
-  "super_dalmatian", "red_dalmatian", "ink_spot", "bicolor", "tricolor",
+  "super_dalmatian", "red_dalmatian", "ink_spot", "bicolor",
 ];
 
 export const GENETIC_TRAIT_IDS = [
@@ -34,7 +34,7 @@ export const SECONDARY_TRAIT_IDS = [
   "ink_spots", "oil_spots", "red_spots", "spots_on_head", "dalmatian_tail",
   "white_fringe", "white_belly", "white_tipped_crests", "portholes",
   "kneecaps", "side_stripe", "high_white",
-  "high_contrast", "phantom", "colored_crests",
+  "high_contrast", "phantom", "colored_crests", "tricolor",
   "crowned", "furred", "tailless",
   "fired_up_look", "fired_down_look",
 ];

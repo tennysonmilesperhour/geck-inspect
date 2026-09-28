@@ -949,12 +949,12 @@ export const MORPHS = [
     priceTier: '$$$',
     priceRange: '$300–$800',
     summary:
-      'Three-color combination: dark base + cream pattern + a third distinct color (usually red or orange).',
+      'A color description, not a pattern: three distinct colors in roughly equal amounts, usually on a Harlequin.',
     description:
-      'Tricolor is a combination look: a dark base, bright cream harlequin or pinstripe pattern, and a third contrasting color (typically red, orange, or pink) concentrated in the dorsal pattern. The three-color contrast is what distinguishes a tricolor from a high-quality cream harlequin. When all three colors are saturated and cleanly separated, the animal is spectacular and valued accordingly.',
+      'Tricolor describes color, not pattern. A tricolor shows three distinct colors in roughly equal amounts: the base color plus two pattern colors. Common sets are red, orange or yellow, and cream or white, or a dark base (black, brown or lavender) with orange or yellow and cream or white. Most tricolors are Harlequins or Extreme Harlequins; some are Pinstripes. So a breeder lists the pattern and the color together, as in "Tricolor Harlequin". When one color dominates, the animal reads as a cream or red Harlequin instead. When all three colors are saturated and evenly balanced, the animal is spectacular and valued accordingly. It is polygenic, so there is no single gene to test for.',
     keyFeatures: [
-      'Three distinct color zones: dark base, bright cream pattern, and a third accent color',
-      'Third color (red, orange, pink) concentrated in the dorsal pattern area',
+      'Three distinct colors, each covering roughly a third of the animal',
+      'Rides on a pattern, most often Harlequin, sometimes Pinstripe',
       'Most striking in fully fired-up state',
     ],
     combinesWith: ['harlequin', 'extreme-harlequin', 'lilly-white', 'dalmatian', 'pinstripe'],

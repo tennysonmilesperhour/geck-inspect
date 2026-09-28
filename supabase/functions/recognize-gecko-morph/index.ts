@@ -574,6 +574,11 @@ Rules:
   Phantom and Cream-on-Cream are visual-expression suggestions, not proof of their
   underlying genotype.
 - secondary_traits is observational modifiers. Multiple allowed.
+- tricolor is a color description, not a pattern class. Add it to secondary_traits
+  when three distinct colors (the base plus two pattern colors, such as cream/white
+  and orange/yellow) are roughly equally represented, and set primary_morph to the
+  underlying pattern, most often harlequin or extreme_harlequin, sometimes a
+  pinstripe class.
 - evidence_markers must name concrete visible features such as dorsal coverage,
   leg coverage, pin continuity, spot count, flank pattern, and white placement.
 - uncertainty_reasons must name missing views, ambiguous lookalikes, age effects,

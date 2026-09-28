@@ -30,5 +30,5 @@ chocolate,Chocolate,base,polygenic,uncommon,$$,$150–$400,"Polygenic base color
 lavender,Lavender,base,polygenic,rare,$$$,"$400–$1,000","Polygenic base color showing an unusual purple-gray tone, rare and sought-after.",https://geckinspect.com/MorphGuide/lavender
 buckskin,Buckskin,base,polygenic,common,$,$60–$180,"Warm tan or leather-colored base, a classic ""starter"" color with pleasant earthy tones.",https://geckinspect.com/MorphGuide/buckskin
 cream,Cream,combo,polygenic,uncommon,$$,$150–$450,"Cream color applied to harlequin or pinstripe pattern, bright, clean, and highly sought after.",https://geckinspect.com/MorphGuide/cream
-tricolor,Tricolor,combo,polygenic,uncommon,$$$,$300–$800,Three-color combination: dark base + cream pattern + a third distinct color (usually red or orange).,https://geckinspect.com/MorphGuide/tricolor
+tricolor,Tricolor,combo,polygenic,uncommon,$$$,$300–$800,"A color description, not a pattern: three distinct colors in roughly equal amounts, usually on a Harlequin.",https://geckinspect.com/MorphGuide/tricolor
 bicolor,Bicolor,combo,polygenic,common,$,$80–$200,"Animal with two clear contrasting colors, typically a base plus one pattern color.",https://geckinspect.com/MorphGuide/bicolor

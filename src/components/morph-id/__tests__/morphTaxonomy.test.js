@@ -4,6 +4,8 @@ import {
   GENETIC_TRAITS,
   MORPH_ID_CAPABILITIES,
   PATTERN_COLORS,
+  PRIMARY_MORPHS,
+  SECONDARY_TRAITS,
 } from '../morphTaxonomy';
 import { normalizeMorphText } from '../normalizeMorphText';
 
@@ -42,5 +44,14 @@ describe('Morph ID competitive coverage', () => {
     expect(PATTERN_COLORS.map((color) => color.id)).toEqual(
       expect.arrayContaining(['cream_white', 'orange_yellow', 'red_pink', 'mixed']),
     );
+  });
+
+  it('treats Tricolor as a color description on top of a pattern', () => {
+    expect(PRIMARY_MORPHS.some((morph) => morph.id === 'tricolor')).toBe(false);
+    expect(SECONDARY_TRAITS.some((trait) => trait.id === 'tricolor')).toBe(true);
+    const result = normalizeMorphText('Tricolor Harlequin');
+    expect(result.primary_morph).toBe('harlequin');
+    expect(result.secondary_traits).toContain('tricolor');
+    expect(normalizeMorphText('Tri-color').primary_morph).toBeNull();
   });
 });
