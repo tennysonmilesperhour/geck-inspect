@@ -47,15 +47,21 @@ function extractEmbedding(output: unknown): number[] | null {
   return null;
 }
 
+const versionCache = new Map<string, string>();
+
 async function resolveVersion(model: string, token: string): Promise<string | null> {
   const colon = model.indexOf(":");
   if (colon !== -1) return model.slice(colon + 1);
+  const cached = versionCache.get(model);
+  if (cached) return cached;
   const response = await fetch(`https://api.replicate.com/v1/models/${model}`, {
     headers: { Authorization: `Token ${token}` },
   });
   if (!response.ok) return null;
   const body = await response.json();
-  return body?.latest_version?.id || null;
+  const version = body?.latest_version?.id || null;
+  if (version) versionCache.set(model, version);
+  return version;
 }
 
 async function waitForPrediction(
@@ -123,23 +129,26 @@ export async function createVisualEmbedding(
   const input = { image: imageUrl };
 
   const rateLimitAttempts = Math.max(1, Math.min(3, options.rateLimitAttempts || 3));
-  let response = await createPrediction(`https://api.replicate.com/v1/models/${modelPath}/predictions`, {
-    method: "POST",
-    headers,
-    body: JSON.stringify({ input }),
-  }, rateLimitAttempts);
-  if (response.status === 404 || response.status === 422) {
-    const version = await resolveVersion(model, options.token);
-    if (!version) {
-      throw new Error(
-        `Replicate ${response.status}: model "${model}" has no resolvable version`,
-      );
-    }
-    response = await createPrediction("https://api.replicate.com/v1/predictions", {
+  // Community models (the default is one) have no model-level predictions
+  // endpoint, so posting there first cost a second prediction request per
+  // photo. Under Replicate's low-credit limit (one request at a time) that
+  // second request was always throttled and the photo lookup never ran.
+  // Look the version up once (a read, cached per instance) and post one
+  // prediction. The model-level endpoint stays as the fallback.
+  const knownVersion = await resolveVersion(model, options.token);
+  const response = knownVersion
+    ? await createPrediction("https://api.replicate.com/v1/predictions", {
       method: "POST",
       headers,
-      body: JSON.stringify({ version, input }),
+      body: JSON.stringify({ version: knownVersion, input }),
+    }, rateLimitAttempts)
+    : await createPrediction(`https://api.replicate.com/v1/models/${modelPath}/predictions`, {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ input }),
     }, rateLimitAttempts);
+  if (!knownVersion && (response.status === 404 || response.status === 422)) {
+    throw new Error(`Replicate ${response.status}: model "${model}" has no resolvable version`);
   }
   if (!response.ok) {
     throw new Error(`Replicate ${response.status}: ${(await response.text()).slice(0, 400)}`);
