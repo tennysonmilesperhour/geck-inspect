@@ -127,13 +127,21 @@ async function gradeRow(row, index) {
   if (analysis.primary_morph && !candidates.includes(analysis.primary_morph)) {
     candidates.unshift(analysis.primary_morph);
   }
-  console.error(`[${index + 1}/${rows.length}] ${row.expected_primary_morph} -> ${analysis.primary_morph} (${analysis.assessment_status})`);
+  const pinning = analysis.visual_profile?.pinning || null;
+  const retrievalLeader = analysis.visual_evidence?.consensus?.primary_morph || null;
+  const tags = (analysis.secondary_traits || []).join(',');
+  console.error(`[${index + 1}/${rows.length}] ${row.expected_primary_morph} -> ${analysis.primary_morph} (${analysis.assessment_status}) top3=${candidates.slice(0, 3).join(',')} pinning=${pinning} tags=${tags} lookup=${retrievalLeader}`);
   return {
     id: row.id || index + 1,
     expected: row.expected_primary_morph,
     predicted: analysis.primary_morph,
     candidates: candidates.slice(0, 3),
     secondary_traits: analysis.secondary_traits || [],
+    // Breeders often name an animal by its pinning (Pinstripe, Quad Stripe)
+    // where the model names the base pattern, so keep what it saw.
+    pattern_family: analysis.visual_profile?.pattern_family || null,
+    pinning,
+    retrieval_leader: retrievalLeader,
     assessment_status: analysis.assessment_status,
     retrieval_status: analysis.visual_evidence?.status || 'missing',
     retrieval_note: analysis.visual_evidence?.note || null,

@@ -144,6 +144,21 @@ async function main() {
         retrieval_status_counts: report.retrieval_status_counts,
         retrieval_notes: report.retrieval_notes,
         per_class: report.per_class,
+        // One compact line per gecko, so a run can be picked apart with SQL
+        // without downloading the artifact.
+        rows: (report.results || []).map((row) => ({
+          id: row.id,
+          expected: row.expected,
+          accepted: row.accepted,
+          predicted: row.predicted,
+          top3: row.candidates,
+          tags: row.secondary_traits,
+          pattern_family: row.pattern_family,
+          pinning: row.pinning,
+          lookup: row.retrieval_leader,
+          status: row.assessment_status,
+          error: row.error,
+        })),
       },
       top_confusions: Object.entries(report.confusion || {})
         .sort((a, b) => b[1] - a[1])
