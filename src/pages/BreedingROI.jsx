@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
+import { Link } from 'react-router-dom';
+import { createPageUrl } from '@/utils';
 import { format } from 'date-fns';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Plus, ChevronLeft, AlertTriangle, TrendingUp, DollarSign, Percent, Target, Egg } from 'lucide-react';
@@ -280,6 +282,13 @@ export default function BreedingROI() {
         <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
           <h1 className="text-3xl" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>Breeding ROI</h1>
           <button onClick={() => setView('wizard')} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white" style={{ backgroundColor: C.sage }}><Plus size={16} /> New Project</button>
+        </div>
+        {/* Retired from the menus 28 Sep 2026; kept for old links. */}
+        <div className="rounded-xl border p-4 mb-6 text-sm" style={{ borderColor: C.border, backgroundColor: C.paleSage, color: C.forest }}>
+          This page has been replaced. Each plan in <Link to={createPageUrl('Breeding')} className="underline font-medium">Breeding</Link> now
+          shows its pairing value from your geckos&apos; real odds and hatchling prices, and{' '}
+          <Link to={createPageUrl('MarketplaceSalesStats')} className="underline font-medium">Business Tools</Link> shows
+          profit per pairing from your actual sales and costs.
         </div>
         {loading ? <div className="space-y-3">{[1,2].map(i => <div key={i} className="animate-pulse rounded-xl h-20" style={{ backgroundColor: C.paleSage }} />)}</div> : (
           <div className="rounded-xl border overflow-hidden" style={{ borderColor: C.border, backgroundColor: C.cardBg }}>

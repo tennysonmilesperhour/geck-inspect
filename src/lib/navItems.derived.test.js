@@ -80,7 +80,7 @@ const EXPECTED_PALETTE = [
   ['BreedingPairs', 'Breeding Pairs', 'Breeding'],
   ['Lineage', 'Lineage Tree', 'Breeding'],
   ['Pedigree', 'Pedigree', 'Breeding'],
-  ['BreedingROI', 'Breeding ROI', 'Breeding'],
+  ['MarketplaceSalesStats', 'Business Tools', 'Breeding'],
   ['BreedingLoans', 'Breeding Loans', 'Breeding'],
   ['ProjectManager', 'Project Manager', 'Breeding'],
   ['Gallery', 'Community Gallery', 'Community'],

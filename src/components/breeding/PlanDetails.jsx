@@ -38,6 +38,7 @@ import { Edit, Trash2, Egg as EggIcon, Calendar as CalendarIcon } from 'lucide-r
 import { format, addDays, differenceInDays } from 'date-fns';
 import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
 import { generateHatchedGeckoIdFromEgg } from '@/components/shared/geckoIdUtils';
+import PairingValuePanel from './PairingValuePanel';
 
 /**
  * Expanded-state view of a single breeding plan, shows all eggs with
@@ -283,6 +284,12 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
 
     return (
         <CardContent className="border-t border-slate-700 p-4 md:p-6">
+            <PairingValuePanel
+                plan={plan}
+                sire={geckos.find(g => g.id === plan.sire_id)}
+                dam={geckos.find(g => g.id === plan.dam_id)}
+                eggs={planEggs}
+            />
             <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-3">
                 <div className="flex flex-wrap gap-2 w-full sm:w-auto items-center justify-end ml-auto">
                    <Button variant="outline" size="sm" className="border-slate-600 hover:bg-slate-800 h-9" onClick={onOpenCopulationModal}>

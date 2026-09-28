@@ -48,7 +48,6 @@ export const publicNavItems = [
 export const userSpecificNavItems = [
   { title: 'My Geckos',       url: createPageUrl('MyGeckos'),              icon: Users,       requiresAuth: true },
   { title: 'Breeding',        url: createPageUrl('Breeding'),              icon: GitBranch,   requiresAuth: true },
-  { title: 'Breeding ROI',    url: createPageUrl('BreedingROI'),           icon: TrendingUp,  requiresAuth: true },
   { title: 'Breeding Loans',  url: createPageUrl('BreedingLoans'),         icon: Handshake,   requiresAuth: true },
   { title: 'Lineage',         url: createPageUrl('Lineage'),               icon: GitBranch,   requiresAuth: true },
   { title: 'Market Pricing',  url: createPageUrl('MarketPricing'),         icon: DollarSign,  requiresAuth: true },

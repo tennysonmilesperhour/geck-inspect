@@ -150,9 +150,13 @@ export const NAV_REGISTRY = [
     page: 'Pedigree', section: 'manage', breederOnly: true,
     palette: { group: 'Breeding', label: 'Pedigree', icon: 'GitBranch', keywords: ['pedigree', 'certificate', 'lineage record'] },
   },
-  {
-    page: 'BreedingROI', section: 'discover', breederOnly: true,
-    palette: { group: 'Breeding', label: 'Breeding ROI', icon: 'FolderKanban', keywords: ['roi', 'profit', 'cost', 'revenue', 'money'] },
+  // Breeding ROI left the menus on 28 Sep 2026: each breeding plan now shows
+  // its pairing value, and Business Tools shows profit per pairing. The
+  // page still routes for old links.
+  { page: 'BreedingROI', section: 'discover', breederOnly: true },
+  { page: 'MarketplaceSalesStats', section: 'manage', breederOnly: true,
+    sidebar: { category: 'public', order: 3, label: 'Business Tools', icon: 'BarChart3', requiresAuth: true },
+    palette: { group: 'Breeding', label: 'Business Tools', icon: 'BarChart3', keywords: ['roi', 'profit', 'cost', 'revenue', 'money', 'sales', 'expenses', 'business'] },
   },
   {
     page: 'BreedingLoans', section: 'discover', breederOnly: true,
@@ -276,8 +280,6 @@ export const NAV_REGISTRY = [
   { page: 'Store', section: 'manage' },
   { page: 'BreederConsultant', section: 'discover',
     sidebar: { category: 'tools', order: 6, label: 'AI Consultant', icon: 'FlaskConical', requiresAuth: false } },
-  { page: 'MarketplaceSalesStats', section: 'manage', breederOnly: true,
-    sidebar: { category: 'public', order: 3, label: 'Business Tools', icon: 'BarChart3', requiresAuth: true } },
 
   // ----- Section-only pages (routed, section-assigned, no sidebar/palette) -----
   { page: 'GeckoDetail', section: 'manage' },

@@ -2,12 +2,12 @@ import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import Seo from '@/components/seo/Seo';
 import { api } from '@/api/appClient';
 import { loadTraitValueIndex } from '@/lib/traitValueTable';
-import { basicHatchlingValue, hatchlingValue } from '@/lib/traitValuation';
+import { basicHatchlingValue } from '@/lib/traitValuation';
+import { buildAnimal, eggValue } from '@/lib/pairingValue';
 import useFemaleReadiness from '@/hooks/useFemaleReadiness';
 import { ReadinessBadge } from '@/components/breeding/BreedingReadiness';
 import {
   predict,
-  tagToGenotype,
   detectRisks,
   displayText,
   outcomeCombos,
@@ -88,20 +88,6 @@ const STATIC_COMBO_WEIGHTS = {
   lavender: 3,
   lucy: 4,
 };
-
-function buildAnimal(gecko) {
-  const result = tagToGenotype(gecko.morph_tags || []);
-  return {
-    id: gecko.id,
-    species: 'correlophus_ciliatus',
-    genotype: result.genotype,
-    status: 'active',
-    is_breeder: true,
-    owner_id: gecko.id,
-    created_at: '',
-    updated_at: '',
-  };
-}
 
 // Build the goal dropdown: engine trait names first, then known combo
 // morphs. All crested-gecko-specific, all sourced from the engine so the
@@ -215,15 +201,9 @@ export default function PairingPlannerPage() {
         // Expected per-egg value: sum over outcomes of probability times
         // the median hatchling asking price for that outcome's traits.
         // Lethal outcomes (Super Lilly White) never hatch and count as 0.
+        // Same math as the pairing value panel on each breeding plan.
+        if (priceIndex) return eggValue(phenotypes, priceIndex, floorPrice).perEgg;
         let expected = 0;
-        if (priceIndex) {
-          for (const ph of phenotypes) {
-            if (ph.health_risk === 'lethal') continue;
-            const text = [outcomeTraits(ph), ...outcomeCombos(ph)].join(', ');
-            expected += ph.probability * (hatchlingValue(text, priceIndex) ?? floorPrice);
-          }
-          return Math.round(expected);
-        }
         // Fallback: relative desirability scores only, labeled as such.
         for (const ph of phenotypes) {
           if (ph.health_risk === 'lethal') continue;
