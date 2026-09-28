@@ -366,3 +366,14 @@ These entries capture the strategic decisions made during the initial landing pa
 **Consequences:** `referral_rewards` is the ledger; rows with `applied_at` null need attention (Stripe credit failed or needs_manual). The webhook needs `STRIPE_SECRET_KEY`, which the project's edge functions already share. If the reward changes again, the copy lives in ReferralLinkCard.jsx and the rules in `award_referral_reward()`.
 
 ---
+
+### 31. Automatic value estimates from listing asking prices, free, owner-only on gecko pages
+
+**Date:** 2026-09-27
+**Status:** Accepted
+**Context:** The Collection Portfolio priced animals off `morph_price_cache`, which held one row, so almost every gecko showed no value. The Geck Data market schema already tracks roughly 9,900 crested gecko listings with traits, maturity, and sex. Tennyson asked for the Portfolio to estimate value automatically from a gecko's selected traits, for the estimate to appear on the gecko detail page, and for the feature to be advertised.
+**Decision:** `public.trait_value_table()` serves p25, median, and p75 asking prices per crested trait, split by age class and sex, with the same filters as `geck_data.v_listing_value`. The app matches a gecko's traits against it, prices off the most valuable matched trait, and uses the quality tier to pick a point in the band (pet p25, breeder median, high-end halfway to p75, investment p75). It is free on every plan. On the gecko detail page the estimate is shown only to the owner. Other species are never priced from crested listings. Marketing copy calls it "real crested gecko listings" rather than the internal "Geck Data" name.
+**Reasoning:** Listing asks are the largest honest price signal available; sold prices are too sparse to split by trait, age, and sex. Pricing off the top trait mirrors how the market sells a Lilly White Dalmatian (as a Lilly White) and matches Geck Data's own per-listing comparison. A free estimate is a strong activation hook for the free tier. Showing a buyer an estimate beside a seller's asking price would undercut sellers, so it stays private.
+**Consequences:** Estimates are asks, not sale prices, and every surface says "estimate, not an appraisal". Trait combinations (Axanthic Lilly White) price off the single best trait, which undervalues stacked morphs; a combo-aware band is the next step if breeders ask for it. The RPC costs about 1s per call and is cached per session; move it to a materialized view with its own refresh job if it gets hot, and do not add it to `geck_data.refresh_market_matviews`, which the geck-data repo also edits.
+
+---

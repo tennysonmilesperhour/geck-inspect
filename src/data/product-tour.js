@@ -75,6 +75,13 @@ export const PRODUCT_TOUR_SLIDES = [
     caption: 'Plan pairings, track copulation events, log eggs through incubation, and watch hatchlings appear automatically.',
     captureUrl: 'https://geckinspect.com/Breeding',
   },
+  {
+    id: 'portfolio',
+    file: 'portfolio.png',
+    title: 'Collection value portfolio',
+    caption: 'Automatic value estimates for every gecko from real crested gecko listings, matched on traits, age, and sex, with your collection total tracked over time.',
+    captureUrl: 'https://geckinspect.com/Portfolio',
+  },
 ];
 
 // File-system base path the React component pulls images from.

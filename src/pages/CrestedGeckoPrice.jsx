@@ -12,7 +12,7 @@ import Seo from '@/components/seo/Seo';
 import PublicPageShell from '@/components/public/PublicPageShell';
 import { breadcrumbSchema, faqPageSchema, SITE_URL } from '@/lib/organization-schema';
 
-const LAST_UPDATED = '2026-08-18';
+const LAST_UPDATED = '2026-09-27';
 
 // Market ranges are for healthy, captive-bred crested geckos sold directly
 // by breeders (not chain-store animals), in USD, reflecting 2026 hobby
@@ -98,6 +98,11 @@ const FAQ = [
     answer:
       'Grade it on the free Geck Inspect Quality Scale (a 10-point rubric for structure, head, pattern, and color), which places the animal in a Pet, Breeder, High-end, or Investment tier. Combine that tier with its morph using the ranges on this page. For a trait-by-trait estimate you can also run the animal through the Morph Visualizer, which produces a rarity tier and an estimated retail range.',
   },
+  {
+    question: 'Can Geck Inspect estimate my gecko\'s value automatically?',
+    answer:
+      'Yes, free on every plan. Add your gecko to a Geck Inspect collection with its morph traits, sex, and weight or hatch date. Geck Inspect matches those traits against asking prices on real crested gecko listings, narrowed to animals of the same age and sex when there are enough of them, and shows an estimate with its typical range on the gecko\'s page. The Portfolio adds up your whole collection and tracks its value over time. Estimates are market comparisons, not formal appraisals.',
+  },
 ];
 
 const JSON_LD = [
@@ -177,6 +182,13 @@ export default function CrestedGeckoPrice() {
               Grade your gecko on the Quality Scale
               <ArrowRight className="w-4 h-4" />
             </Link>
+            <Link
+              to="/AuthPortal?mode=signup"
+              className="inline-flex items-center gap-2 border border-slate-600 hover:bg-slate-800 text-slate-200 text-sm font-medium rounded-lg px-4 py-2.5 transition-colors"
+            >
+              Get a free automatic estimate
+              <ArrowRight className="w-4 h-4" />
+            </Link>
           </div>
         </div>
 
@@ -229,6 +241,10 @@ export default function CrestedGeckoPrice() {
             <li className="flex gap-3">
               <span className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-xs font-mono flex items-center justify-center mt-0.5">3</span>
               <p className="text-slate-400 leading-relaxed">Match morph plus quality tier to the ranges above, then adjust for sex and age.</p>
+            </li>
+            <li className="flex gap-3">
+              <span className="flex-shrink-0 w-6 h-6 rounded-full bg-slate-800 border border-slate-700 text-slate-300 text-xs font-mono flex items-center justify-center mt-0.5">4</span>
+              <p className="text-slate-400 leading-relaxed">Or skip the math: <Link to="/AuthPortal?mode=signup" className="text-emerald-400 hover:text-emerald-300">add your gecko to a free Geck Inspect account</Link> with its traits, and it estimates the value for you from real crested gecko listings, matched on age and sex.</p>
             </li>
           </ol>
         </div>

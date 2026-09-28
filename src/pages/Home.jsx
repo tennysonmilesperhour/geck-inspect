@@ -20,6 +20,7 @@ import {
   Shield,
   ShieldCheck,
   Scale,
+  Wallet,
   FileSpreadsheet,
   BadgeCheck,
   QrCode,
@@ -187,6 +188,11 @@ const INNOVATIVE_FEATURES = [
     title: 'Genetics &amp; Trait Projections',
     desc: 'Project punnett outcomes across co-dominant, recessive, and polygenic traits before you pair. Stop breeding blind. See the range of possible offspring first.',
   },
+  {
+    icon: Wallet,
+    title: 'Automatic Value Estimates',
+    desc: 'Tag a gecko&rsquo;s traits and get a value estimate from real crested gecko listings, matched on age and sex. The Portfolio totals your collection and tracks what it is worth over time. Free on every plan.',
+  },
 ];
 
 // Single source of truth for the landing FAQ. Both the visible section
@@ -217,6 +223,10 @@ const LANDING_FAQS = [
   {
     q: 'How do I track my crested gecko collection?',
     a: "Create a free account, then add each gecko with name, ID code, sex, hatch date, weight, morph tags, photos, and optionally the sire/dam lineage. Geck Inspect tracks weight history, photos over time, feeding group, and breeding history automatically. You can export your roster as CSV or PDF at any time.",
+  },
+  {
+    q: 'Can Geck Inspect tell me what my crested gecko is worth?',
+    a: 'Yes, and it is free on every plan. Add a gecko with its morph traits (Lilly White, Harlequin, Axanthic, and so on) and Geck Inspect estimates its value from asking prices on real crested gecko listings, narrowed to animals of the same age and sex when there are enough of them. The most valuable trait sets the price, and a Quality Scale grade moves the estimate within the typical range. Each gecko page shows its estimate and range, and the Portfolio totals your collection and tracks its value over time. Estimates are market comparisons, not formal appraisals.',
   },
   {
     q: 'Does Geck Inspect help with crested gecko breeding planning?',

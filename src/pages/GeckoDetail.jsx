@@ -13,6 +13,7 @@ import GrowthReel from '@/components/gecko/GrowthReel';
 import HiddenHetPanel from '@/components/gecko/HiddenHetPanel';
 import VisualSiblings from '@/components/gecko/VisualSiblings';
 import HealthScreenCard from '@/components/health/HealthScreenCard';
+import MarketValueCard from '@/components/gecko/MarketValueCard';
 import {
     Loader2, ArrowLeft, Calendar, GitBranch, StickyNote,
     DollarSign, LineChart as LineChartIcon, MapPin, Tag, User as UserIcon,
@@ -328,6 +329,10 @@ export default function GeckoDetail() {
                                 </CardContent>
                             </Card>
                         )}
+
+                        {/* Estimated value from Geck Data listings, owner only
+                            (see MarketValueCard for why buyers do not see it). */}
+                        {isOwner && <MarketValueCard gecko={{ ...gecko, weight_grams: latestWeight }} />}
 
                         {/* Notes */}
                         {gecko.notes && (

@@ -49,12 +49,11 @@ import {
   Wallet, TrendingUp, TrendingDown, Minus, PiggyBank, Hash, Scale, Info, PlusCircle,
 } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
-import { supabase } from '@/lib/supabaseClient';
 import { getVisibleGeckos } from '@/lib/geckoAccess';
-import { buildTraitValueIndex, valueFromTraitTable } from '@/lib/traitValuation';
+import { valueFromTraitTable, qualityTierFor } from '@/lib/traitValuation';
+import { loadTraitValueIndex } from '@/lib/traitValueTable';
 import { CollectionValuation, MorphPriceCache } from '@/api/supabaseEntities';
 import { canonicalizeMorphTag } from '@/lib/genetics';
-import { patternGradeForScore } from '@/lib/quality';
 import { createPageUrl } from '@/utils';
 import Seo from '@/components/seo/Seo';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -122,37 +121,6 @@ function buildMorphAverages(cacheRows) {
   return out;
 }
 
-// The trait table is one ~1s scan of Geck Data listings server-side and
-// only moves when a scrape lands, so fetch it once per session.
-const TRAIT_TABLE_TTL_MS = 30 * 60_000;
-const TRAIT_TABLE_PAGE = 1000;
-let traitTableCache = null;
-
-async function fetchTraitValueTable() {
-  if (traitTableCache && Date.now() - traitTableCache.at < TRAIT_TABLE_TTL_MS) {
-    return traitTableCache.rows;
-  }
-  // PostgREST caps a response at 1000 rows, so page until a short page.
-  const rows = [];
-  for (let from = 0; ; from += TRAIT_TABLE_PAGE) {
-    const { data, error } = await supabase
-      .rpc('trait_value_table')
-      .range(from, from + TRAIT_TABLE_PAGE - 1);
-    if (error) throw error;
-    rows.push(...(data || []));
-    if (!data || data.length < TRAIT_TABLE_PAGE) break;
-  }
-  traitTableCache = { rows, at: Date.now() };
-  return rows;
-}
-
-function qualityTier(gecko) {
-  if (gecko.pattern_grade && TIER_MULTIPLIERS[gecko.pattern_grade] != null) {
-    return gecko.pattern_grade;
-  }
-  return patternGradeForScore(gecko.quality_score) || 'breeder';
-}
-
 /** Visual (non-het) canonical morph tags for a gecko. */
 function visualMorphs(gecko) {
   const tags = Array.isArray(gecko.morph_tags) ? gecko.morph_tags : [];
@@ -174,7 +142,7 @@ function valueGecko(gecko, morphAverages, traitIndex) {
   if (aiAvg) return { value: aiAvg, basis: 'ai_estimate', drivingMorph: visualMorphs(gecko)[0] || null };
 
   // Geck Data trait value table: cross-reference the selected traits.
-  const fromTraits = valueFromTraitTable(gecko, traitIndex, qualityTier(gecko));
+  const fromTraits = valueFromTraitTable(gecko, traitIndex, qualityTierFor(gecko));
   if (fromTraits) {
     return { ...fromTraits, basis: 'geck_data', drivingMorph: fromTraits.trait };
   }
@@ -186,7 +154,7 @@ function valueGecko(gecko, morphAverages, traitIndex) {
     if (hit && (!best || hit.average > best.average)) best = hit;
   }
   if (best) {
-    const tier = qualityTier(gecko);
+    const tier = qualityTierFor(gecko);
     const multiplier = TIER_MULTIPLIERS[tier] ?? 1.0;
     return {
       value: best.average * multiplier,
@@ -258,7 +226,7 @@ export default function Portfolio() {
         getVisibleGeckos(user, {}, '-created_date', 1000),
         MorphPriceCache.filter({}, '-created_date', 1000),
         CollectionValuation.filter({ created_by: user.email }, 'snapshot_date', 365),
-        fetchTraitValueTable(),
+        loadTraitValueIndex(),
       ]);
       if (cancelled) return;
       const all = geckoRes.status === 'fulfilled' ? geckoRes.value : [];
@@ -266,7 +234,7 @@ export default function Portfolio() {
       setMorphAverages(buildMorphAverages(cacheRes.status === 'fulfilled' ? cacheRes.value : []));
       // null marks a failed load so the snapshot below does not record a
       // collection value that is missing its market estimates.
-      setTraitIndex(traitRes.status === 'fulfilled' ? buildTraitValueIndex(traitRes.value) : null);
+      setTraitIndex(traitRes.status === 'fulfilled' ? traitRes.value : null);
       setSnapshots(snapRes.status === 'fulfilled' ? snapRes.value : []);
       setLoading(false);
     })();

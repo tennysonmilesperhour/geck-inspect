@@ -27,7 +27,12 @@
  * uses: a Lilly White Dalmatian sells as a Lilly White). The quality tier
  * picks a point in that band: pet at p25, breeder at the median, high-end
  * halfway to p75, investment at p75.
+ *
+ * The table is built from crested gecko listings only, so animals logged
+ * as another species (gargoyle, leopard) are never priced from it.
  */
+
+import { patternGradeForScore } from './quality';
 
 const WORD_FIXES = new Map([
   ['dalmation', 'dalmatian'],
@@ -230,6 +235,21 @@ export function ageClassFor(gecko, now = new Date()) {
   return 'adult';
 }
 
+/**
+ * Quality tier for pricing: the stored pattern_grade, else the tier the
+ * Quality Scale score falls in, else breeder (priced at the median).
+ */
+export function qualityTierFor(gecko) {
+  if (gecko?.pattern_grade && TIER_POSITIONS[gecko.pattern_grade]) return gecko.pattern_grade;
+  return patternGradeForScore(gecko?.quality_score) || 'breeder';
+}
+
+/** True when the gecko is a crested gecko (blank species means crested). */
+export function isCrestedGecko(gecko) {
+  const species = String(gecko?.species || '').trim();
+  return species === '' || /crested/i.test(species);
+}
+
 /** Sex class matching geck_data._sex_class. */
 export function sexClassFor(gecko) {
   const s = String(gecko?.sex || '').toLowerCase();
@@ -266,7 +286,7 @@ export function bandLevelLabel(level, ageClass, sexClass) {
  * investment); unknown tiers price at the median.
  */
 export function valueFromTraitTable(gecko, index, tier = 'breeder', now = new Date()) {
-  if (!index || index.traits.size === 0) return null;
+  if (!index || index.traits.size === 0 || !isCrestedGecko(gecko)) return null;
   const keys = matchGeckoTraits(gecko, index);
   if (keys.length === 0) return null;
   const ageClass = ageClassFor(gecko, now);

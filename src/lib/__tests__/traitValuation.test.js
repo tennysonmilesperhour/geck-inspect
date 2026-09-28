@@ -8,6 +8,8 @@ import {
   sexClassFor,
   bandFor,
   valueFromTraitTable,
+  qualityTierFor,
+  isCrestedGecko,
 } from '../traitValuation';
 
 // A slice of real public.trait_value_table() output (27 Sep 2026).
@@ -153,9 +155,31 @@ describe('valueFromTraitTable', () => {
     expect(valueFromTraitTable(gecko, index, 'unknown_tier', now).value).toBe(600);
   });
 
+  it('never prices other species off crested listings', () => {
+    expect(valueFromTraitTable({ morph_tags: ['Harlequin'], species: 'Gargoyle Gecko' }, index, 'breeder', now)).toBeNull();
+    expect(valueFromTraitTable({ morph_tags: ['Harlequin'], species: 'Crested Gecko' }, index, 'breeder', now).value).toBe(175);
+    expect(valueFromTraitTable({ morph_tags: ['Harlequin'], species: null }, index, 'breeder', now).value).toBe(175);
+  });
+
   it('returns null when nothing matches or the table is empty', () => {
     expect(valueFromTraitTable({ morph_tags: ['Full Tail'] }, index, 'breeder', now)).toBeNull();
     expect(valueFromTraitTable({ morph_tags: ['Lilly White'] }, buildTraitValueIndex([]), 'breeder', now)).toBeNull();
     expect(valueFromTraitTable({ morph_tags: ['Lilly White'] }, null, 'breeder', now)).toBeNull();
+  });
+});
+
+describe('qualityTierFor and isCrestedGecko', () => {
+  it('prefers the stored grade, then the Quality Scale score, then breeder', () => {
+    expect(qualityTierFor({ pattern_grade: 'investment', quality_score: 3 })).toBe('investment');
+    expect(qualityTierFor({ quality_score: 9 })).toBe('investment');
+    expect(qualityTierFor({ quality_score: 2 })).toBe('pet');
+    expect(qualityTierFor({ pattern_grade: 'not_a_tier' })).toBe('breeder');
+    expect(qualityTierFor({})).toBe('breeder');
+  });
+
+  it('treats a blank species as crested', () => {
+    expect(isCrestedGecko({})).toBe(true);
+    expect(isCrestedGecko({ species: 'Crested Gecko' })).toBe(true);
+    expect(isCrestedGecko({ species: 'Leopard Gecko' })).toBe(false);
   });
 });
