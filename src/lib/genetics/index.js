@@ -52,6 +52,24 @@ export function displayText(text) {
     .replace(/\s*–\s*/g, ', ');
 }
 
+// ---------- outcome labels ---------------------------------------------
+// The engine appends "[combos: ...]" to every offspring description, and
+// counts XXX (Pangea Reptile's marketing term for extreme pattern) as a
+// combo for any Harlequin at all, so plain Harlequin outcomes read "XXX".
+// The engine's own note says to use Extreme Harlequin instead. Screens show
+// the traits without the suffix and name only real combos.
+export function outcomeTraits(outcome) {
+  const description = String(outcome?.phenotype_description || 'Wild-type');
+  return displayText(description.replace(/\s*\[combos:[^\]]*\]\s*$/, '')) || 'Wild-type';
+}
+
+export function outcomeCombos(outcome) {
+  return (outcome?.matching_combo_morphs || [])
+    .map((id) => getComboMorph(id))
+    .filter((combo) => combo && !combo.is_marketing_term)
+    .map((combo) => combo.name);
+}
+
 // ---------- tag canonicalization ---------------------------------------
 // geckos.morph_tags is a free-string array written by several forms over
 // the years, so spelling variants exist ('Lily White' vs 'Lilly White').

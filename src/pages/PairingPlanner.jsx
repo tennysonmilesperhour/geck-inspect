@@ -2,11 +2,15 @@ import React, { useState, useEffect, useMemo, Suspense } from 'react';
 import Seo from '@/components/seo/Seo';
 import { api } from '@/api/appClient';
 import { MorphPriceCache } from '@/api/supabaseEntities';
+import useFemaleReadiness from '@/hooks/useFemaleReadiness';
+import { ReadinessBadge } from '@/components/breeding/BreedingReadiness';
 import {
   predict,
   tagToGenotype,
   detectRisks,
   displayText,
+  outcomeCombos,
+  outcomeTraits,
   TRAITS,
   COMBO_MORPHS,
 } from '@/lib/genetics';
@@ -199,6 +203,7 @@ export default function PairingPlannerPage() {
 
   const males = useMemo(() => geckos.filter((g) => g.sex === 'Male'), [geckos]);
   const females = useMemo(() => geckos.filter((g) => g.sex === 'Female'), [geckos]);
+  const damReadiness = useFemaleReadiness(females);
   const excludedUnsexed = useMemo(
     () => geckos.filter((g) => g.sex !== 'Male' && g.sex !== 'Female').length,
     [geckos]
@@ -292,7 +297,7 @@ export default function PairingPlannerPage() {
           .sort((a, b) => b.probability - a.probability)
           .slice(0, 3)
           .map((p) => ({
-            label: displayText(p.phenotype_description) || 'Wild-type',
+            label: [outcomeTraits(p), ...outcomeCombos(p).map((name) => `(${name})`)].join(' '),
             percent: Math.round(p.probability * 1000) / 10,
             risk: p.health_risk,
           }));
@@ -504,7 +509,7 @@ export default function PairingPlannerPage() {
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                 {visibleRows.map((row, i) => (
-                  <PairingCard key={`${row.sire.id}-${row.dam.id}`} row={row} rank={i + 1} goal={goal} usingStaticWeights={usingStaticWeights} />
+                  <PairingCard key={`${row.sire.id}-${row.dam.id}`} row={row} rank={i + 1} goal={goal} usingStaticWeights={usingStaticWeights} readiness={damReadiness(row.dam)} />
                 ))}
               </div>
             )}
@@ -528,7 +533,8 @@ function Thumb({ gecko, ring }) {
   );
 }
 
-function PairingCard({ row, rank, goal, usingStaticWeights }) {
+function PairingCard({ row, rank, goal, usingStaticWeights, readiness }) {
+  const damNotReady = readiness && (readiness.level === 'not_yet' || readiness.level === 'nearly');
   const { sire, dam, top, warnings, blocked, score } = row;
 
   let scoreLabel = null;
@@ -553,9 +559,19 @@ function PairingCard({ row, rank, goal, usingStaticWeights }) {
         <Thumb gecko={dam} ring="border-pink-700" />
         <div className="min-w-0 flex-1">
           <div className="text-sm text-slate-100 truncate font-medium">{dam.name}</div>
-          <div className="text-[11px] text-pink-400">Dam</div>
+          <div className="text-[11px] text-pink-400 flex items-center gap-1.5 flex-wrap">
+            Dam
+            {readiness && readiness.level !== 'unknown' && <ReadinessBadge readiness={readiness} />}
+          </div>
         </div>
       </div>
+
+      {damNotReady && (
+        <p className="text-xs text-amber-200/90 mb-3 flex gap-1.5">
+          <AlertTriangle className="w-3.5 h-3.5 text-amber-400 shrink-0 mt-0.5" />
+          <span>{dam.name}: {readiness.reason}</span>
+        </p>
+      )}
 
       {/* Risk badges */}
       {warnings.length > 0 && (

@@ -3,6 +3,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/lib/AuthContext';
 import Seo from '@/components/seo/Seo';
 import { BreedingPlan, Egg } from '@/entities/all';
+import useFemaleReadiness from '@/hooks/useFemaleReadiness';
+import { ReadinessNote } from '@/components/breeding/BreedingReadiness';
 import { api } from '@/api/appClient';
 import { currentSeasonLabel } from '@/lib/seasons';
 import { notifyFollowersNewBreedingPlan } from '@/components/notifications/NotificationService';
@@ -433,6 +435,11 @@ export default function BreedingPage() {
     const males = geckos.filter(g => g.sex === 'Male');
     const females = geckos.filter(g => g.sex === 'Female');
 
+    // Loaded when the pairing dialog opens, so it can say whether the
+    // chosen dam is ready to breed.
+    const damReadiness = useFemaleReadiness(females, isModalOpen);
+    const selectedDam = females.find(g => g.id === newPlan.dam_id) || null;
+
     const isPlanExpanded = (planId) => {
         if (activeTab === 'active' && expandAllActive) return true;
         if (activeTab === 'archive' && expandAllArchive) return true;
@@ -784,13 +791,21 @@ export default function BreedingPage() {
                                             <SelectValue placeholder="Select female" />
                                         </SelectTrigger>
                                         <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
-                                            {females.map(female => (
-                                                <SelectItem key={female.id} value={female.id}>{female.name} ({female.gecko_id_code})</SelectItem>
-                                            ))}
+                                            {females.map(female => {
+                                                const readiness = damReadiness(female);
+                                                const hint = readiness && readiness.level !== 'unknown' ? ` · ${readiness.label}` : '';
+                                                return (
+                                                    <SelectItem key={female.id} value={female.id}>{female.name} ({female.gecko_id_code}){hint}</SelectItem>
+                                                );
+                                            })}
                                         </SelectContent>
                                     </Select>
                                 </div>
                             </div>
+
+                            {selectedDam && damReadiness(selectedDam) && (
+                                <ReadinessNote gecko={selectedDam} readiness={damReadiness(selectedDam)} />
+                            )}
 
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                 <div>

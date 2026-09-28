@@ -20,6 +20,8 @@ import { parseLocalDate } from '@/lib/dateUtils';
 import { Calendar as CalendarIcon } from "lucide-react";
 import { generateHatchedGeckoIdFromEgg } from '@/components/shared/geckoIdUtils';
 import SmartImage from '@/components/shared/SmartImage';
+import useFemaleReadiness from '@/hooks/useFemaleReadiness';
+import { ReadinessNote } from '@/components/breeding/BreedingReadiness';
 import { DEFAULT_INCUBATION_PROFILE_ID, getEstimatedHatchDates } from '@/lib/incubationProfiles';
 
 // Helper to generate Google Calendar link
@@ -304,6 +306,9 @@ export default function BreedingPairsPage() {
 function PlanPairingForm({ males, females, onPlanCreated }) {
     const [isOpen, setIsOpen] = useState(false);
     const [formData, setFormData] = useState({ sire_id: '', dam_id: '', pairing_date: new Date(), notes: '' });
+    const damReadiness = useFemaleReadiness(females, isOpen);
+    const selectedDam = females.find(g => g.id === formData.dam_id) || null;
+    const selectedReadiness = selectedDam ? damReadiness(selectedDam) : null;
 
     const handleSubmit = async (e) => {
         e.preventDefault();
@@ -343,10 +348,15 @@ function PlanPairingForm({ males, females, onPlanCreated }) {
                             <Label>Dam (Female)</Label>
                             <Select onValueChange={v => setFormData({...formData, dam_id: v})} required>
                                 <SelectTrigger><SelectValue placeholder="Choose a female" /></SelectTrigger>
-                                <SelectContent>{females.map(g => <SelectItem key={g.id} value={g.id}>{g.name}</SelectItem>)}</SelectContent>
+                                <SelectContent>{females.map(g => {
+                                    const readiness = damReadiness(g);
+                                    const hint = readiness && readiness.level !== 'unknown' ? ` · ${readiness.label}` : '';
+                                    return <SelectItem key={g.id} value={g.id}>{g.name}{hint}</SelectItem>;
+                                })}</SelectContent>
                             </Select>
                         </div>
                     </div>
+                    {selectedReadiness && <ReadinessNote gecko={selectedDam} readiness={selectedReadiness} />}
                      <div>
                         <Label>Pairing Date</Label>
                         <EnhancedDatePicker

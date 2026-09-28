@@ -197,7 +197,7 @@ export const BLOG_POSTS = [
     dateModified: '2026-07-08',
     heroEyebrow: 'Breeding basics',
     tldr: [
-      'Only breed a female that is at least 18 months old and holding a stable 35 grams or more. Age and weight matter more than the calendar.',
+      'Only breed a female that is at least 18 months old and holding a stable 40 grams or more. Age and weight matter more than the calendar.',
       'Crested geckos breed through the warm months and rest over winter. A cooldown from roughly November to January resets the cycle.',
       'A proven female can lay two eggs about every four to five weeks across the season, so plan for many clutches, not one.',
       'Incubate at cool room temperature (about 70 to 74 F). Eggs hatch in roughly 60 to 90 days. Never chase heat to speed it up.',
@@ -213,7 +213,7 @@ export const BLOG_POSTS = [
         tone: 'danger',
         title: 'Readiness comes first, always',
         items: [
-          'Female readiness is the single most important rule. She should be at least 18 months old and holding a stable weight of 35 grams or more before her first season. Many experienced breeders wait for 40 grams.',
+          'Female readiness is the single most important rule. She should be at least 18 months old and holding a stable weight of 40 grams or more before her first season. Many experienced breeders wait for 45 grams.',
           'Breeding an underweight or too-young female risks calcium crashes and egg binding, both of which can be fatal. When in doubt, wait a season. She loses nothing by waiting.',
           'Males can breed younger and lighter, but a male under about 30 grams is better given another few months too.',
         ],
@@ -279,7 +279,7 @@ export const BLOG_POSTS = [
       {
         question: 'What age and weight should a female crested gecko be before breeding?',
         answer:
-          'A female should be at least 18 months old and holding a stable weight of 35 grams or more, and many breeders wait for 40 grams. Age and weight both matter, a heavy but young female is still not ready. Breeding too early risks calcium depletion and egg binding.',
+          'A female should be at least 18 months old and holding a stable weight of 40 grams or more, and many breeders wait for 45 grams. Age and weight both matter, a heavy but young female is still not ready. Breeding too early risks calcium depletion and egg binding.',
       },
       {
         question: 'When is crested gecko breeding season?',

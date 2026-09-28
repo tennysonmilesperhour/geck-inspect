@@ -3,6 +3,8 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { WeightRecord, BreedingPlan, Egg, Gecko, GeckoEvent, GeckoImage } from '@/entities/all';
+import { readinessFor } from '@/lib/breedingReadiness';
+import { ReadinessNote } from '@/components/breeding/BreedingReadiness';
 import { format } from 'date-fns';
 import { X, Plus, Trash2, LineChart, Loader2, Award, GitBranch, Calendar, Baby, Users, Edit, Eye, EyeOff, History, Archive, ArchiveRestore, ChevronLeft, ChevronRight, Camera, QrCode, ArrowRightLeft, ExternalLink } from 'lucide-react';
 import LoadingSpinner from '../shared/LoadingSpinner';
@@ -272,6 +274,8 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
   const sire = allGeckos.find(g => g.id === gecko.sire_id);
   const dam = allGeckos.find(g => g.id === gecko.dam_id);
 
+  const readiness = readinessFor(gecko, weightRecords);
+
   const chartData = [...weightRecords].reverse().map(r => ({
     date: format(parseLocalDate(r.record_date), 'MMM d'),
     weight: r.weight_grams,
@@ -482,7 +486,16 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                     </div>
                   )}
                 </div>
-                
+
+                {canEdit && !gecko.archived && readiness && (
+                  <div>
+                    <span className="text-slate-400 text-sm">Breeding readiness:</span>
+                    <div className="mt-1">
+                      <ReadinessNote gecko={gecko} readiness={readiness} />
+                    </div>
+                  </div>
+                )}
+
                 {gecko.morphs_traits && (
                   <div>
                     <span className="text-slate-400 text-sm">Morphs & Traits:</span>

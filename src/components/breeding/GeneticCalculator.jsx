@@ -2,7 +2,7 @@ import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { Dna, AlertTriangle, ChevronDown, ChevronRight, Shuffle, ExternalLink, ImageDown, Share2, Check } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { getTrait, getComboMorph, displayText } from '@/lib/genetics';
+import { getTrait, getComboMorph, displayText, outcomeCombos, outcomeTraits } from '@/lib/genetics';
 import { predictWeighted, tagsToSpec } from '@/lib/genetics/predictWeighted';
 import {
   MORPH_GUIDE_SLUGS,
@@ -68,11 +68,9 @@ function animalToSpec(animal) {
 }
 
 function outcomeLabel(outcome) {
-  const combos = (outcome.matching_combo_morphs || [])
-    .map((id) => getComboMorph(id)?.name)
-    .filter(Boolean);
+  const combos = outcomeCombos(outcome);
   if (combos.length > 0) return combos.join(' + ');
-  return outcome.phenotype_description || 'Wild-type';
+  return outcomeTraits(outcome);
 }
 
 function guideLinksFor(outcome) {
@@ -400,8 +398,8 @@ export default function GeneticCalculator({ sire, dam }) {
                     {frac && <span className="text-slate-500 ml-1.5">{frac}</span>}
                   </span>
                 </div>
-                {label !== o.phenotype_description && (
-                  <p className="text-xs text-slate-500 mt-0.5">{o.phenotype_description}</p>
+                {label !== outcomeTraits(o) && (
+                  <p className="text-xs text-slate-500 mt-0.5">{outcomeTraits(o)}</p>
                 )}
                 <div className="flex items-center justify-between gap-3 mt-1">
                   <div className="flex-1 h-1.5 bg-slate-700 rounded-full overflow-hidden">

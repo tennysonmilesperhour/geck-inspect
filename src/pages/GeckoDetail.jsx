@@ -1,6 +1,8 @@
 import { useState, useEffect } from 'react';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
 import { Gecko, User, WeightRecord, ShedRecord } from '@/entities/all';
+import { readinessFor } from '@/lib/breedingReadiness';
+import { ReadinessCard } from '@/components/breeding/BreedingReadiness';
 import { api } from '@/api/appClient';
 import { useNavigate, Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -332,6 +334,10 @@ export default function GeckoDetail() {
 
                         {/* Estimated value from Geck Data listings, owner only
                             (see MarketValueCard for why buyers do not see it). */}
+                        {/* Breeding readiness for females, owner only like the value
+                            estimate: it is the keeper's planning information. */}
+                        {isOwner && !gecko.archived && <ReadinessCard gecko={gecko} readiness={readinessFor(gecko, weightRecords)} />}
+
                         {isOwner && <MarketValueCard gecko={{ ...gecko, weight_grams: latestWeight }} />}
 
                         {/* Notes */}

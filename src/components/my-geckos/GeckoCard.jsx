@@ -10,6 +10,8 @@ import SmartImage from '@/components/shared/SmartImage';
 import { getSexIcon, getSexColor } from '@/lib/utils';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
 import { parseLocalDate, formatAge } from '@/lib/dateUtils';
+import { readinessFor, showReadinessOnCard } from '@/lib/breedingReadiness';
+import { ReadinessBadge } from '@/components/breeding/BreedingReadiness';
 
 const ARCHIVE_ICONS = {
   death: '💀',
@@ -63,6 +65,8 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
   // the deviations from it on the card. NULL stays silent.
   const showTailBadge = gecko.tail_status === 'dropped' || gecko.tail_status === 'regenerating';
   const tailBadgeLabel = gecko.tail_status === 'dropped' ? 'Tail dropped' : 'Regen tail';
+  const readiness = React.useMemo(() => readinessFor(gecko, weightRecords), [gecko, weightRecords]);
+  const showReadiness = showReadinessOnCard(gecko, readiness);
 
   return (
     <Card className="gecko-card group flex flex-col h-full">
@@ -180,8 +184,9 @@ export default function GeckoCard({ gecko, weightRecords = [], feedingGroups = [
         </div>
 
         {/* Status badges, inline so they don't stack as detached chunks */}
-        {(showGravidBadge || showSpeciesBadge || showTailBadge) && (
+        {(showGravidBadge || showSpeciesBadge || showTailBadge || showReadiness) && (
           <div className="flex flex-wrap gap-1.5">
+            {showReadiness && <ReadinessBadge readiness={readiness} />}
             {showGravidBadge && (
               <Badge className="bg-pink-700 text-pink-100 text-[10px] h-5 px-1.5 py-0 font-medium flex items-center gap-1">
                 <Heart className="w-2.5 h-2.5" /> Gravid
