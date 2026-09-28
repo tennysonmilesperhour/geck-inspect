@@ -46,12 +46,12 @@ describe('Morph ID competitive coverage', () => {
     );
   });
 
-  it('treats Tricolor as a color description on top of a pattern', () => {
-    expect(PRIMARY_MORPHS.some((morph) => morph.id === 'tricolor')).toBe(false);
+  it('counts Tricolor as a morph and as a tag next to a pattern', () => {
+    expect(PRIMARY_MORPHS.some((morph) => morph.id === 'tricolor')).toBe(true);
     expect(SECONDARY_TRAITS.some((trait) => trait.id === 'tricolor')).toBe(true);
     const result = normalizeMorphText('Tricolor Harlequin');
     expect(result.primary_morph).toBe('harlequin');
     expect(result.secondary_traits).toContain('tricolor');
-    expect(normalizeMorphText('Tri-color').primary_morph).toBeNull();
+    expect(normalizeMorphText('Tricolor').primary_morph).toBe('tricolor');
   });
 });

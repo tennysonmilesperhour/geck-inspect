@@ -18,7 +18,7 @@
 // and prefer adding new entries over mutating existing ids (ids are persisted
 // in the `gecko_images` table and used for label stability across versions).
 
-export const TAXONOMY_VERSION = '2026.09.28';
+export const TAXONOMY_VERSION = '2026.09.28.2';
 
 export const VISUAL_PROFILE_AXES = [
   { key: 'pattern_family', label: 'Pattern coverage' },
@@ -76,6 +76,7 @@ export const PRIMARY_MORPHS = [
   { id: 'red_dalmatian',      label: 'Red Dalmatian',          inheritance: 'polygenic',   notes: 'Red-colored spots instead of black.' },
   { id: 'ink_spot',           label: 'Ink Spot',               inheritance: 'polygenic',   notes: 'Saturated black dalmatian-like spots with ink-dropped look.' },
   { id: 'bicolor',            label: 'Bicolor',                inheritance: 'polygenic',   notes: 'Dorsum one color, flanks a distinct second color; minimal pattern.' },
+  { id: 'tricolor',           label: 'Tricolor',               inheritance: 'polygenic',   notes: 'Three distinct colors in roughly equal amounts, usually on a harlequin, sometimes a pinstripe.' },
 ];
 
 /**
@@ -162,9 +163,8 @@ export const SECONDARY_TRAITS = [
   { id: 'high_contrast',          label: 'High contrast',          group: 'contrast' },
   { id: 'phantom',                label: 'Phantom (no warm tones)',group: 'contrast' },
   { id: 'colored_crests',         label: 'Colored crests',         group: 'contrast' },
-  // Tricolor is a color description, not a pattern: three distinct colors in
-  // roughly equal amounts, most often on a Harlequin, sometimes a Pinstripe.
-  // It sits alongside the pattern the way MorphMarket and breeders tag it.
+  // Tricolor is also a primary morph (breeders sell it as one). Listing it
+  // here too lets a result read "Harlequin + Tricolor", the way breeders tag.
   { id: 'tricolor',               label: 'Tricolor',               group: 'contrast' },
 
   // Structural / cosmetic
@@ -319,7 +319,7 @@ export const PROVENANCE = [
 ];
 
 export const COMMONLY_CONFUSED = {
-  harlequin: ['extreme_harlequin', 'super_harlequin'],
+  harlequin: ['extreme_harlequin', 'super_harlequin', 'tricolor'],
   extreme_harlequin: ['super_harlequin', 'harlequin'],
   pinstripe: ['partial_pinstripe', 'phantom_pinstripe', 'full_pinstripe'],
   tiger: ['brindle', 'super_tiger'],

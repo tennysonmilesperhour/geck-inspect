@@ -949,9 +949,9 @@ export const MORPHS = [
     priceTier: '$$$',
     priceRange: '$300–$800',
     summary:
-      'A color description, not a pattern: three distinct colors in roughly equal amounts, usually on a Harlequin.',
+      'Three distinct colors in roughly equal amounts, usually on a Harlequin. Common enough to be sold as its own morph.',
     description:
-      'Tricolor describes color, not pattern. A tricolor shows three distinct colors in roughly equal amounts: the base color plus two pattern colors. Common sets are red, orange or yellow, and cream or white, or a dark base (black, brown or lavender) with orange or yellow and cream or white. Most tricolors are Harlequins or Extreme Harlequins; some are Pinstripes. So a breeder lists the pattern and the color together, as in "Tricolor Harlequin". When one color dominates, the animal reads as a cream or red Harlequin instead. When all three colors are saturated and evenly balanced, the animal is spectacular and valued accordingly. It is polygenic, so there is no single gene to test for.',
+      'Tricolor is named for its colors. A tricolor shows three distinct colors in roughly equal amounts: the base color plus two pattern colors. Common sets are red, orange or yellow, and cream or white, or a dark base (black, brown or lavender) with orange or yellow and cream or white. Most tricolors are Harlequins or Extreme Harlequins; some are Pinstripes, and breeders often list both, as in "Tricolor Harlequin". It is one of the most common morphs on the market and is sold as a morph in its own right. When one color dominates, the animal reads as a cream or red Harlequin instead. When all three colors are saturated and evenly balanced, the animal is spectacular and valued accordingly. It is polygenic, so there is no single gene to test for.',
     keyFeatures: [
       'Three distinct colors, each covering roughly a third of the animal',
       'Rides on a pattern, most often Harlequin, sometimes Pinstripe',
