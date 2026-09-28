@@ -450,14 +450,17 @@ export default function Recognition() {
           <Card className="bg-emerald-950/30 border-emerald-800">
             <CardContent className="p-4 text-emerald-200 flex items-center justify-between">
               <span>Thanks. Your feedback is pending independent expert review.</span>
-              <Button
-                variant="outline"
-                size="sm"
-                className="border-emerald-600 text-emerald-200 hover:bg-emerald-900/50"
-                onClick={() => { window.location.href = '/training'; }}
-              >
-                Open review queue <ArrowRight className="w-4 h-4 ml-1" />
-              </Button>
+              {/* Only reviewers can use the queue; everyone else just gets the thanks. */}
+              {isAdmin && (
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="border-emerald-600 text-emerald-200 hover:bg-emerald-900/50"
+                  onClick={() => { window.location.href = '/AdminPanel?section=morph_id_review'; }}
+                >
+                  Open review queue <ArrowRight className="w-4 h-4 ml-1" />
+                </Button>
+              )}
             </CardContent>
           </Card>
         )}

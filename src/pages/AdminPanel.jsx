@@ -23,7 +23,9 @@ import {
   LineChart,
   Package,
   ListChecks,
+  Scale,
 } from 'lucide-react';
+import { supabase } from '@/lib/supabaseClient';
 
 import AdminOverview from '@/components/admin/AdminOverview';
 import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
@@ -43,6 +45,7 @@ import SupportInbox from '@/components/admin/SupportInbox';
 import ErrorLogsViewer from '@/components/admin/ErrorLogsViewer';
 import BlogManager from '@/components/admin/blog/BlogManager';
 import TestimonialsAdmin from '@/components/admin/TestimonialsAdmin';
+import AIFeedbackQueue from '@/components/morph-id/AIFeedbackQueue';
 
 /**
  * Admin Panel, sidebar layout grouped by responsibility.
@@ -54,6 +57,8 @@ import TestimonialsAdmin from '@/components/admin/TestimonialsAdmin';
  *   Morph Guides       , full CRUD on the morph_guides table
  *   Pages              , toggle visibility / page settings
  *   Morph Submissions  , review user-submitted reference photos
+ *   Morph ID review    , corrections and "send for expert review" requests
+ *                        from Morph ID results (same queue as /Training)
  *   Scraped Data       , review training-data candidates
  *   Analytics          , charts + cohort breakdowns
  *   Messaging          , broadcast messages to users
@@ -89,6 +94,7 @@ const NAV_GROUPS = [
       { id: 'morph_guides', label: 'Morph guides', icon: Sparkles },
       { id: 'blog', label: 'Blog', icon: BookOpen },
       { id: 'pages', label: 'Pages', icon: Layout },
+      { id: 'morph_id_review', label: 'Morph ID review', icon: Scale },
       { id: 'morph_submissions', label: 'Morph submissions', icon: CheckSquare },
       { id: 'testimonials', label: 'Testimonials', icon: Megaphone },
     ],
@@ -129,6 +135,7 @@ const SECTION_TITLES = {
   morph_guides: 'Morph guide editor',
   blog: 'Blog',
   pages: 'Page management',
+  morph_id_review: 'Morph ID review queue',
   morph_submissions: 'Morph submissions',
   testimonials: 'Landing-page testimonials',
   product_analytics: 'Product analytics',
@@ -158,7 +165,15 @@ function AdminPlaceholder({ title, description, icon: Icon }) {
 
 export default function AdminPanel() {
   const { user, isLoadingAuth } = useAuth();
-  const [section, setSection] = useState('overview');
+  // ?section=morph_id_review (or any section id) opens that section directly.
+  const [section, setSection] = useState(() => {
+    try {
+      const wanted = new URLSearchParams(window.location.search).get('section');
+      return wanted && SECTION_TITLES[wanted] ? wanted : 'overview';
+    } catch {
+      return 'overview';
+    }
+  });
   // Prefill payload passed into MassMessaging when the Changelog manager
   // clicks "Broadcast". Consumed on mount by the target component.
   const [messagingPrefill, setMessagingPrefill] = useState(null);
@@ -167,6 +182,8 @@ export default function AdminPanel() {
   // section content height changes.
   const mainRef = useRef(null);
   const sidebarRef = useRef(null);
+  // Unverified Morph ID samples waiting for an expert, shown as a badge.
+  const [reviewCount, setReviewCount] = useState(null);
 
   useEffect(() => {
     const onPrefill = (e) => {
@@ -177,6 +194,18 @@ export default function AdminPanel() {
     window.addEventListener('admin:prefill-message', onPrefill);
     return () => window.removeEventListener('admin:prefill-message', onPrefill);
   }, []);
+
+  useEffect(() => {
+    if (user?.role !== 'admin') return undefined;
+    let cancelled = false;
+    supabase
+      .from('gecko_images')
+      .select('id', { count: 'exact', head: true })
+      .eq('verified', false)
+      .then(({ count }) => { if (!cancelled) setReviewCount(count ?? null); })
+      .catch(() => {});
+    return () => { cancelled = true; };
+  }, [user?.role, section]);
 
   // Gate: only admins may access this page.
   // Placed after all hooks to satisfy React's rules-of-hooks.
@@ -218,6 +247,17 @@ export default function AdminPanel() {
         return <BlogManager />;
       case 'pages':
         return <PageManagement />;
+      case 'morph_id_review':
+        return (
+          <div className="space-y-4">
+            <p className="text-sm text-slate-400 max-w-3xl">
+              Corrections and &quot;Send for expert review&quot; requests from Morph ID results land here, along with
+              photos contributed on the Training page. Approving one makes it verified reference data. Experts who
+              are not admins review the same queue at /Training, on the Review queue tab.
+            </p>
+            <AIFeedbackQueue />
+          </div>
+        );
       case 'morph_submissions':
         return <MorphSubmissionReview />;
       case 'testimonials':
@@ -289,6 +329,11 @@ export default function AdminPanel() {
                           >
                             <Icon className="w-4 h-4 shrink-0" />
                             <span className="flex-1 text-left">{item.label}</span>
+                            {item.id === 'morph_id_review' && reviewCount > 0 && (
+                              <span className="rounded-full bg-amber-500/20 border border-amber-500/40 px-1.5 text-[10px] font-semibold text-amber-300">
+                                {reviewCount}
+                              </span>
+                            )}
                             {isActive && <ChevronRight className="w-3.5 h-3.5" />}
                           </button>
                         </li>
