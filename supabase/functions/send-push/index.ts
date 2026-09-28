@@ -160,7 +160,11 @@ serve(async (req) => {
   const allowed: string[] = Array.isArray(profile.push_notification_types)
     ? profile.push_notification_types
     : [];
-  if (!allowed.includes(type)) {
+  // Types with no toggle of their own ride a related one. The weekly
+  // weigh-in reminder had no push key at all, so it never reached a phone;
+  // it now follows the "Feeding & weigh-in reminders" toggle.
+  const PREF_ALIAS: Record<string, string> = { weighin_reminder: "feeding_due" };
+  if (!allowed.includes(PREF_ALIAS[type] || type)) {
     return json({ delivered: 0, pruned: 0, skipped: "type-not-allowed" });
   }
 

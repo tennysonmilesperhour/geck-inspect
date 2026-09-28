@@ -23,8 +23,10 @@ export default function DataExportCard({ user }) {
   const handleExportCSV = async () => {
     setExporting('csv');
     try {
-      const geckos = await fetchAllEntityRecords(Gecko, { created_by: user.email, archived: { $ne: true } });
-      const name = exportGeckosCSV(geckos);
+      // Archived geckos stay out of the roster but still name their offspring's parents.
+      const collection = await fetchAllEntityRecords(Gecko, { created_by: user.email });
+      const geckos = collection.filter((g) => !g.archived);
+      const name = exportGeckosCSV(geckos, { collection });
       toast({
         title: 'Collection exported',
         description: `${geckos.length} gecko${geckos.length === 1 ? '' : 's'} saved to ${name}.`,

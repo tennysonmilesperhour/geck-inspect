@@ -28,8 +28,11 @@ const COLUMNS = [
   { key: 'gecko_id_code',header: 'ID Code',   width: 24 },
   { key: 'sex',          header: 'Sex',       width: 14 },
   { key: 'status',       header: 'Status',    width: 26 },
+  // Stored as a calendar date. new Date('2025-03-04') reads it as UTC
+  // midnight, which prints as the day before anywhere west of Greenwich,
+  // so write the date itself.
   { key: 'hatch_date',   header: 'Hatched',   width: 24,
-    format: (v) => (v ? new Date(v).toLocaleDateString() : '') },
+    format: (v) => (v ? String(v).slice(0, 10) : '') },
   { key: 'weight_grams', header: 'Weight (g)',width: 20,
     format: (v) => (v != null ? String(v) : '') },
   { key: 'morph_tags',   header: 'Morphs',    width: 50,
@@ -41,6 +44,26 @@ const COLUMNS = [
   { key: 'notes',        header: 'Notes',     width: 60,
     format: (v) => (v || '').replace(/\s+/g, ' ').slice(0, 300) },
 ];
+
+/**
+ * Parents are usually linked by record (sire_id, dam_id). sire_name and
+ * dam_name only hold a name typed in for a parent outside the collection,
+ * so without this the Sire and Dam columns came out blank for every linked
+ * parent. Pass the whole collection (archived geckos included) as the
+ * lookup so a retired breeder still resolves.
+ */
+export function withParentNames(rows, collection = rows) {
+  const byId = new Map((collection || []).map((g) => [g.id, g]));
+  const label = (id) => {
+    const parent = id ? byId.get(id) : null;
+    return parent ? parent.name || parent.gecko_id_code || '' : '';
+  };
+  return rows.map((g) => ({
+    ...g,
+    sire_name: label(g.sire_id) || g.sire_name || '',
+    dam_name: label(g.dam_id) || g.dam_name || '',
+  }));
+}
 
 function renderCell(gecko, col) {
   const raw = gecko?.[col.key];
@@ -82,17 +105,21 @@ function timestampSlug() {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
 }
 
-/**
- * Generate a CSV string from an array of gecko rows and trigger a download.
- * Returns the filename that was used.
- */
-export function exportGeckosCSV(geckos, { filename } = {}) {
+/** The roster as CSV text, with a leading BOM so Excel detects UTF-8. */
+export function rosterCSV(geckos, { collection } = {}) {
   const header = COLUMNS.map((c) => csvEscape(c.header)).join(',');
-  const rows = geckos.map((g) =>
+  const rows = withParentNames(geckos, collection || geckos).map((g) =>
     COLUMNS.map((c) => csvEscape(renderCell(g, c))).join(',')
   );
-  // Leading BOM so Excel auto-detects UTF-8
-  const csv = '\uFEFF' + [header, ...rows].join('\r\n');
+  return '\uFEFF' + [header, ...rows].join('\r\n');
+}
+
+/**
+ * Generate a CSV of the gecko rows and trigger a download. `collection` is
+ * the full set used to name linked parents. Returns the filename used.
+ */
+export function exportGeckosCSV(geckos, { filename, collection } = {}) {
+  const csv = rosterCSV(geckos, { collection });
   const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
   const name = filename || `geck-inspect-roster-${timestampSlug()}.csv`;
   downloadBlob(blob, name);
@@ -110,7 +137,8 @@ export function exportGeckosCSV(geckos, { filename } = {}) {
  * The function is therefore async; callers must await the returned
  * filename.
  */
-export async function exportGeckosPDF(geckos, { title, filename, userName } = {}) {
+export async function exportGeckosPDF(rosterGeckos, { title, filename, userName, collection } = {}) {
+  const geckos = withParentNames(rosterGeckos, collection || rosterGeckos);
   const { default: jsPDF } = await import('jspdf');
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'letter' });
   const pageWidth = doc.internal.pageSize.getWidth();

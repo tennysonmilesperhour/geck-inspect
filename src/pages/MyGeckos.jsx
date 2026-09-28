@@ -557,7 +557,7 @@ export default function MyGeckosPage() {
                                             className="focus:bg-slate-800 focus:text-white cursor-pointer"
                                             onClick={() => {
                                                 try {
-                                                    const name = exportGeckosCSV(filteredAndSortedGeckos);
+                                                    const name = exportGeckosCSV(filteredAndSortedGeckos, { collection: geckos });
                                                     captureEvent('roster_exported', {
                                                         format: 'csv',
                                                         count: filteredAndSortedGeckos.length,
@@ -584,6 +584,7 @@ export default function MyGeckosPage() {
                                             onClick={async () => {
                                                 try {
                                                     const name = await exportGeckosPDF(filteredAndSortedGeckos, {
+                                                        collection: geckos,
                                                         title: `${user?.full_name || user?.email || 'My'} Gecko Roster`,
                                                         userName: user?.full_name || user?.email,
                                                     });

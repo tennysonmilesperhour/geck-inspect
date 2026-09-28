@@ -61,6 +61,7 @@ const TYPE_TO_EMAIL_KEY: Record<string, string> = {
   future_breeding_ready: "breeding_updates",
   hatch_alert: "breeding_updates",
   feeding_due: "breeding_updates",
+  weighin_reminder: "breeding_updates",
   announcement: "announcements",
   // Sunday summary from enqueue_weekly_digest(); rides the announcements preference.
   weekly_digest: "announcements",
@@ -151,6 +152,14 @@ function renderHtml(title: string, body: string, linkUrl: string): string {
 </body></html>`;
 }
 
+class RateLimited extends Error {
+  retryAfterMs: number;
+  constructor(message: string, retryAfterMs: number) {
+    super(message);
+    this.retryAfterMs = retryAfterMs;
+  }
+}
+
 async function sendEmail(to: string, subject: string, text: string, html: string) {
   if (!RESEND_API_KEY) throw new Error("RESEND_API_KEY not configured");
   const res = await fetch("https://api.resend.com/emails", {
@@ -163,10 +172,38 @@ async function sendEmail(to: string, subject: string, text: string, html: string
   });
   if (!res.ok) {
     const msg = await res.text();
+    if (res.status === 429) {
+      const retryAfter = Number(res.headers.get("retry-after")) || 1;
+      throw new RateLimited(`Resend 429: ${msg}`, retryAfter * 1000);
+    }
     throw new Error(`Resend ${res.status}: ${msg}`);
   }
   return await res.json();
 }
+
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+
+// Resend accepts about two requests per second per account. The Sunday
+// digest and the reminder jobs insert dozens of notifications in one go, and
+// each one calls this function at the same moment, so on 27 Sep 21 of the
+// digest emails failed with 429 and were dropped. Spread each burst over a
+// few seconds, then retry on 429 with growing, jittered waits.
+async function sendWithRetry(to: string, subject: string, text: string, html: string) {
+  await sleep(Math.random() * 8_000);
+  for (let attempt = 1; ; attempt += 1) {
+    try {
+      return await sendEmail(to, subject, text, html);
+    } catch (err) {
+      if (!(err instanceof RateLimited) || attempt >= 6) throw err;
+      await sleep(Math.max(err.retryAfterMs, 1_000 * 2 ** attempt) + Math.random() * 2_000);
+    }
+  }
+}
+
+// Supabase keeps a function running for work handed to waitUntil after the
+// response is sent, so the database trigger that calls this is not held open
+// while a burst drains.
+declare const EdgeRuntime: { waitUntil(promise: Promise<unknown>): void } | undefined;
 
 serve(async (req) => {
   if (req.method === "OPTIONS") return new Response("ok", { headers: CORS });
@@ -224,12 +261,18 @@ serve(async (req) => {
     return json({ delivered: 0, skipped: "type-not-allowed" });
   }
 
-  try {
-    const html = renderHtml(title, body, url);
-    const result = await sendEmail(userEmail, title, `${body}\n\n${url.startsWith("http") ? url : `${SITE_URL}${url}`}`, html);
-    return json({ delivered: 1, id: result?.id });
-  } catch (err) {
-    console.warn("send-email: delivery failed", err);
-    return json({ delivered: 0, skipped: "delivery-failed", error: String(err) });
+  const html = renderHtml(title, body, url);
+  const text = `${body}\n\n${url.startsWith("http") ? url : `${SITE_URL}${url}`}`;
+  const delivery = sendWithRetry(userEmail, title, text, html)
+    .then((result) => ({ delivered: 1, id: result?.id }))
+    .catch((err) => {
+      console.warn("send-email: delivery failed", err);
+      return { delivered: 0, skipped: "delivery-failed", error: String(err) };
+    });
+
+  if (typeof EdgeRuntime !== "undefined" && EdgeRuntime?.waitUntil) {
+    EdgeRuntime.waitUntil(delivery);
+    return json({ queued: 1 }, 202);
   }
+  return json(await delivery);
 });

@@ -287,7 +287,7 @@ const notificationTypes = [
     { key: 'following_activity', label: 'Following Activity', description: 'When breeders you follow list new geckos or breeding plans' },
     { key: 'gecko_of_day', label: 'Gecko of the Day', description: 'When your gecko photo is selected as featured' },
     { key: 'forum_replies', label: 'Forum Activity', description: 'Replies to your forum posts and comments' },
-    { key: 'breeding_updates', label: 'Breeding Updates', description: 'Updates about your breeding plans and outcomes' },
+    { key: 'breeding_updates', label: 'Breeding & Care Updates', description: 'Hatch alerts, breeding plan updates, and feeding and weigh-in reminders' },
     { key: 'announcements', label: 'Platform Announcements', description: 'Important news and feature updates' }
 ];
 
@@ -301,7 +301,7 @@ const pushNotificationTypes = [
     { key: 'new_message', label: 'New Messages', description: 'Direct messages from other users' },
     { key: 'marketplace_inquiry', label: 'Marketplace Inquiries', description: 'When someone asks about one of your listings' },
     { key: 'hatch_alert', label: 'Hatch Alerts', description: 'When eggs in your incubator reach their hatch window' },
-    { key: 'feeding_due', label: 'Feeding Reminders', description: 'When a feeding group or reptile is overdue for feeding' },
+    { key: 'feeding_due', label: 'Feeding & Weigh-in Reminders', description: 'When a feeding group is due, and the weekly weigh-in nudge' },
     { key: 'new_comment', label: 'Comments on Your Posts', description: 'Comments on your forum posts' },
     { key: 'new_reply', label: 'Replies to You', description: 'Replies to your comments' },
     { key: 'new_follower', label: 'New Followers', description: 'When someone starts following you' },
