@@ -14,7 +14,7 @@ split, so Morph ID cannot look up the same gecko while being graded.
 ## Run it
 
 From GitHub: Actions > morph-id-eval > Run workflow. Leave "limit" blank to
-grade all 220 geckos (about $5 and 15 to 25 minutes), or set it to 20 for a
+grade all 220 geckos (about $6 and 2 hours one at a time), or set it to 20 for a
 quick check. Results appear on the run page, the full report is attached to
 the run, and the headline numbers are saved in `geck_data.morph_eval_runs`.
 The workflow signs in as a dedicated evaluation account

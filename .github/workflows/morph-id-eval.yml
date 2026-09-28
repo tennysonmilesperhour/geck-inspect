@@ -5,11 +5,13 @@
 # the breeders who listed them) and posts the results on the run page. The
 # headline numbers are also saved in geck_data.morph_eval_runs.
 #
-# A full run costs roughly $5 in model calls (about 2 cents per gecko).
-# Set "limit" to 20 for a quick, cheap smoke test. While the Replicate
-# account holds under $5 of credit, Replicate allows one photo lookup at a
-# time, so keep concurrency at 1 (a full run then takes about 50 minutes);
-# with more credit, 3 runs in about 20.
+# A full run costs about $6 in model calls (about 3 cents per gecko). Each
+# identification takes about 30 seconds, so a full run at concurrency 1
+# takes about 2 hours. Set "limit" to 20 for a quick, cheap smoke test.
+# While the Replicate account holds under $5 of credit, Replicate allows one
+# photo lookup at a time, so keep concurrency at 1; with more credit, 3 cuts
+# the run to about 40 minutes. Results are saved as each gecko finishes, so
+# a run that is cut off still leaves morph-id-results.jsonl behind.
 #
 # Secrets used (both already set for error-triage):
 #   SUPABASE_URL
@@ -51,7 +53,7 @@ concurrency:
 jobs:
   eval:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 180
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
@@ -79,6 +81,7 @@ jobs:
           EVAL_LIMIT:       ${{ inputs.limit }}
           EVAL_CONCURRENCY: ${{ inputs.concurrency }}
           EVAL_NOTES:       ${{ inputs.notes }}
+          EVAL_RESULTS_PATH: morph-id-results.jsonl
         run: node scripts/morph-id-eval/run-ci.mjs
 
       - name: Save full report
@@ -86,6 +89,8 @@ jobs:
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: morph-id-report
-          path: morph-id-report.json
+          path: |
+            morph-id-report.json
+            morph-id-results.jsonl
           if-no-files-found: ignore
           retention-days: 90

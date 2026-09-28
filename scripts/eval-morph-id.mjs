@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 
-import { readFile } from 'node:fs/promises';
+import { appendFile, readFile } from 'node:fs/promises';
 
 const manifestPath = process.argv[2];
 const baseUrl = process.env.MORPH_ID_FUNCTION_URL
@@ -16,6 +16,9 @@ const evalSecret = process.env.EVAL_SHARED_SECRET || '';
 const model = process.env.MORPH_ID_MODEL || 'claude-sonnet-4-6';
 const limit = Math.max(0, Number(process.env.EVAL_LIMIT) || 0);
 const concurrency = Math.min(8, Math.max(1, Number(process.env.EVAL_CONCURRENCY) || 1));
+// Each graded row is appended here as soon as it finishes, so a run that is
+// cut off still leaves its results behind.
+const resultsPath = process.env.EVAL_RESULTS_PATH || '';
 
 if (!manifestPath || !baseUrl || !(accessToken || tokenFile) || !anonKey) {
   console.error(`Usage: pnpm eval:morph-id path/to/holdout.jsonl
@@ -30,6 +33,7 @@ Optional environment:
   MORPH_ID_MODEL         Defaults to claude-sonnet-4-6
   EVAL_LIMIT             Grade an evenly spaced sample of this many rows
   EVAL_CONCURRENCY       Calls in flight at once (1 to 8, default 1)
+  EVAL_RESULTS_PATH      Append each graded row here as JSONL while running
   MORPH_ID_TOKEN_FILE    File holding the current token, re-read before each call
 
 Each JSONL row needs image_url or image_urls plus expected_primary_morph.
@@ -151,6 +155,7 @@ await Promise.all(Array.from({ length: Math.min(concurrency, rows.length) }, asy
     const index = next;
     next += 1;
     results[index] = await gradeRow(rows[index], index);
+    if (resultsPath) await appendFile(resultsPath, `${JSON.stringify(results[index])}\n`);
   }
 }));
 
