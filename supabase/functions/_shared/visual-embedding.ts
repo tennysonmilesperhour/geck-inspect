@@ -162,6 +162,11 @@ export async function createVisualEmbedding(
   if (prediction.status === "failed" || prediction.status === "canceled") {
     throw new Error(`Replicate prediction ${prediction.status}: ${String(prediction.error || "unknown error")}`);
   }
+  // Replicate boots the model on the first request after it goes idle, which
+  // can outlast the wait (2 of 220 on run 17).
+  if (prediction.status === "starting" || prediction.status === "processing") {
+    throw new Error(`Replicate timed out while the embedding model was ${prediction.status === "starting" ? "starting up" : "running"}`);
+  }
   const raw = extractEmbedding(prediction.output);
   if (!raw) throw new Error("Unrecognized Replicate embedding output shape");
   const embedding = normalizeEmbedding(raw);

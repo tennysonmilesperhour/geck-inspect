@@ -18,7 +18,7 @@
 // and prefer adding new entries over mutating existing ids (ids are persisted
 // in the `gecko_images` table and used for label stability across versions).
 
-export const TAXONOMY_VERSION = '2026.09.28.2';
+export const TAXONOMY_VERSION = '2026.09.28.3';
 
 export const VISUAL_PROFILE_AXES = [
   { key: 'pattern_family', label: 'Pattern coverage' },
@@ -57,7 +57,7 @@ export const PRIMARY_MORPHS = [
   { id: 'patternless',        label: 'Patternless',            inheritance: 'polygenic',   notes: 'Solid dorsal, no flame/pinstripe/harlequin. Can still have fringe / crests.' },
   { id: 'flame',              label: 'Flame',                  inheritance: 'polygenic',   notes: 'Dorsal pattern contrasts with flank base color. No pattern extending down legs.' },
   { id: 'chevron_flame',      label: 'Chevron Flame',          inheritance: 'polygenic',   notes: 'Flame with chevron-shaped dorsal markings.' },
-  { id: 'harlequin',          label: 'Harlequin',              inheritance: 'polygenic',   notes: 'Pattern extends from dorsum onto legs/flanks.' },
+  { id: 'harlequin',          label: 'Harlequin',              inheritance: 'polygenic',   notes: 'Pattern extends from dorsum onto legs/flanks. The base most patterns sit on: when another pattern is present (pinstripe, tricolor), that pattern leads.' },
   { id: 'extreme_harlequin',  label: 'Extreme Harlequin',      inheritance: 'polygenic',   notes: '60%+ pattern coverage on legs and body, high contrast.' },
   { id: 'super_harlequin',    label: 'Super Harlequin',        inheritance: 'polygenic',   notes: 'Pattern extends onto the belly and face, not just legs.' },
   { id: 'pinstripe',          label: 'Pinstripe',              inheritance: 'polygenic',   notes: 'Raised cream scales along dorsolateral ridges.' },
@@ -319,7 +319,7 @@ export const PROVENANCE = [
 ];
 
 export const COMMONLY_CONFUSED = {
-  harlequin: ['extreme_harlequin', 'super_harlequin', 'tricolor'],
+  harlequin: ['extreme_harlequin', 'super_harlequin', 'tricolor', 'pinstripe', 'partial_pinstripe'],
   extreme_harlequin: ['super_harlequin', 'harlequin'],
   pinstripe: ['partial_pinstripe', 'phantom_pinstripe', 'full_pinstripe'],
   tiger: ['brindle', 'super_tiger'],

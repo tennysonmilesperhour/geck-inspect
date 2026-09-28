@@ -35,12 +35,24 @@ export type VisualConsensus = {
   margin: number;
 };
 
+export type VisualRank = {
+  primary_morph: string;
+  share: number;
+  support: number;
+  mean_similarity: number;
+};
+
 export type VisualEvidence = {
   status: "available" | "no_matches" | "unavailable";
   model: string | null;
   photo_count: number;
   neighbors: VisualNeighbor[];
   consensus: VisualConsensus | null;
+  // Patterns ranked by a vote among the closest reference photos, one per
+  // breeder. The neighbors above are a varied sample to show the model; this
+  // is the vote.
+  ranking?: VisualRank[];
+  ranking_depth?: number;
   note?: string;
 };
 
@@ -63,11 +75,13 @@ export function buildVisualEvidence(
     minSimilarity?: number;
     maxNeighbors?: number;
     maxPerMorph?: number;
+    rankingDepth?: number;
   },
 ): VisualEvidence {
   const minSimilarity = options.minSimilarity ?? 0.50;
   const maxNeighbors = options.maxNeighbors ?? 8;
   const maxPerMorph = options.maxPerMorph ?? 2;
+  const rankingDepth = options.rankingDepth ?? 16;
   const seenClusters = new Set<string>();
   const countsByMorph = new Map<string, number>();
   const neighbors: VisualNeighbor[] = [];
@@ -110,10 +124,25 @@ export function buildVisualEvidence(
     };
   }
 
+  // The vote runs over the closest photos, one per breeder, without the
+  // per-pattern cap used for the sample above. With that cap (at most 2 per
+  // pattern out of 8) no pattern could ever reach half the vote, so the
+  // lookup never counted as agreeing (run 17: 0 of 220 "best match"). On the
+  // 220-gecko test set, this vote's top three held a breeder-tagged pattern
+  // 74% of the time.
+  const pool: VisualNeighbor[] = [];
+  const poolClusters = new Set<string>();
+  for (const row of normalized) {
+    if (pool.length >= rankingDepth) break;
+    if (poolClusters.has(row.source_cluster)) continue;
+    poolClusters.add(row.source_cluster);
+    pool.push(row);
+  }
+
   const votes = new Map<string, { score: number; support: number; similarity: number; clusters: Set<string> }>();
   let totalScore = 0;
-  for (const row of neighbors) {
-    const score = Math.max(0, row.similarity - minSimilarity + 0.1) ** 2 * row.label_weight;
+  for (const row of pool) {
+    const score = row.similarity * row.label_weight;
     totalScore += score;
     const current = votes.get(row.primary_morph) || {
       score: 0,
@@ -148,6 +177,13 @@ export function buildVisualEvidence(
       runner_up: runnerUp?.[0] || null,
       margin: agreement - runnerAgreement,
     },
+    ranking: ranked.map(([morph, vote]) => ({
+      primary_morph: morph,
+      share: totalScore > 0 ? vote.score / totalScore : 0,
+      support: vote.support,
+      mean_similarity: vote.similarity / vote.support,
+    })),
+    ranking_depth: pool.length,
   };
 }
 

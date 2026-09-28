@@ -13,6 +13,7 @@
  * before saving.
  */
 import { labelFor } from '@/components/morph-id/morphTaxonomy';
+import { morphHeadline } from '@/components/morph-id/morphHeadline';
 import { ALL_MORPHS } from '@/components/my-geckos/morphTagCatalog';
 
 // Case-insensitive lookup from a display label to the canonical tag string.
@@ -68,7 +69,9 @@ export function buildGeckoDraftFromAnalysis(analysis, imageUrls = []) {
 
   const conf = Number(analysis.model_signal ?? analysis.confidence_score ?? analysis.confidence ?? 0);
   const labels = ids.map((id) => labelFor(id, null)).filter(Boolean);
-  const summary = labels.length ? labels.join(', ') : 'see the analysis';
+  const { name } = morphHeadline(analysis.primary_morph, analysis.genetic_traits || analysis.genetics || []);
+  const listed = labels.length ? labels.join(', ') : 'see the analysis';
+  const summary = name && labels.length ? `${name} (${listed})` : listed;
   const confText = conf ? ` (model signal ${Math.round(conf)}/100)` : '';
   const notes =
     `Unverified Morph ID suggestion from Geck Inspect${confText}: ${summary}. ` +

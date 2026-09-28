@@ -2,7 +2,7 @@
 // Kept as a flat list here so the edge function prompt can constrain the
 // model to return canonical ids. If you change the client taxonomy, update
 // this file and bump TAXONOMY_VERSION below.
-export const TAXONOMY_VERSION = "2026.09.28.2";
+export const TAXONOMY_VERSION = "2026.09.28.3";
 
 export const PRIMARY_MORPH_IDS = [
   "patternless", "flame", "chevron_flame", "harlequin", "extreme_harlequin",

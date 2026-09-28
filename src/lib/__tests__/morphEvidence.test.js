@@ -54,6 +54,20 @@ describe('buildVisualEvidence', () => {
     expect(evidence.consensus.source_diversity).toBe(1);
   });
 
+  it('votes over the closest photos without the per-pattern cap', () => {
+    const rows = [
+      ...['a', 'b', 'c', 'd', 'e'].map((cluster, i) => neighbor({ id: `h${i}`, source_cluster: cluster, similarity: 0.9 - i * 0.01 })),
+      neighbor({ id: 'd1', primary_morph: 'dalmatian', source_cluster: 'f', similarity: 0.84 }),
+    ];
+    const evidence = buildVisualEvidence(rows, { model: 'test-model', photoCount: 1, maxPerMorph: 2 });
+
+    expect(evidence.neighbors.filter((item) => item.primary_morph === 'harlequin')).toHaveLength(2);
+    expect(evidence.ranking.map((rank) => rank.primary_morph)).toEqual(['harlequin', 'dalmatian']);
+    expect(evidence.ranking[0].support).toBe(5);
+    expect(evidence.ranking_depth).toBe(6);
+    expect(evidence.consensus.agreement).toBeGreaterThan(0.8);
+  });
+
   it('returns no_matches below the similarity floor', () => {
     const evidence = buildVisualEvidence([
       neighbor({ similarity: 0.2 }),
@@ -89,6 +103,19 @@ describe('evidenceAssessment', () => {
       neighbor({ id: 'h1', label_weight: 0.95, source_cluster: 'a' }),
       neighbor({ id: 'h2', label_weight: 0.85, source_cluster: 'b', similarity: 0.79 }),
     ], { model: 'test-model', photoCount: 2 });
+
+    expect(evidenceAssessment('harlequin', 86, 18, usablePhoto, evidence)).toEqual({
+      status: 'best_match',
+      conflict: false,
+    });
+  });
+
+  it('can reach a best match when most close breeder photos agree (run 17 never could)', () => {
+    const rows = ['a', 'b', 'c', 'd', 'e', 'f'].map((cluster, i) => neighbor({
+      id: `h${i}`, source_cluster: cluster, similarity: 0.9 - i * 0.01, label_weight: 0.9,
+    }));
+    rows.push(neighbor({ id: 'd1', primary_morph: 'dalmatian', source_cluster: 'g', similarity: 0.83, label_weight: 0.9 }));
+    const evidence = buildVisualEvidence(rows, { model: 'test-model', photoCount: 1, maxPerMorph: 2 });
 
     expect(evidenceAssessment('harlequin', 86, 18, usablePhoto, evidence)).toEqual({
       status: 'best_match',

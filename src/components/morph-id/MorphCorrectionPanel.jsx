@@ -12,6 +12,7 @@ import {
 import { User } from '@/entities/all';
 import { useToast } from '@/components/ui/use-toast';
 import { saveGeckoImageWithMeta } from './persistence';
+import { morphHeadline } from './morphHeadline';
 
 import MorphPicker from './MorphPicker';
 import TraitPicker from './TraitPicker';
@@ -95,6 +96,7 @@ export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageS
   const visualProfile = result.visual_profile || null;
   const photoObservations = Array.isArray(result.photo_observations) ? result.photo_observations : [];
   const withholdIdentification = result.assessment_status === 'insufficient_evidence';
+  const headline = morphHeadline(state.primary_morph, state.genetics);
 
   const saveFeedback = async () => {
     if (!imageUrl || !state.primary_morph) {
@@ -181,8 +183,13 @@ export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageS
             <div className="rounded-lg bg-slate-800/60 border border-slate-700 p-4">
               <p className="text-xs uppercase tracking-wide text-slate-400">Leading candidate</p>
               <p className="text-2xl font-bold text-slate-100 mt-1">
-                {labelFor(state.primary_morph, 'Uncertain')}
+                {headline.name || labelFor(state.primary_morph, 'Uncertain')}
               </p>
+              {headline.genes.length > 0 && headline.pattern && (
+                <p className="text-sm text-slate-300 mt-1">
+                  {headline.patternInName ? 'Pattern' : 'Pattern underneath'}: {headline.pattern}
+                </p>
+              )}
               <p className="text-sm text-slate-400 mt-2">{result.explanation}</p>
             </div>
             <div className="rounded-lg bg-slate-800/60 border border-slate-700 p-4">
@@ -267,7 +274,9 @@ export default function MorphCorrectionPanel({ result, imageUrl, imageUrls, ageS
                       </span>
                       <p className="font-medium text-slate-100 truncate">{labelFor(candidate.morph)}</p>
                     </div>
-                    <span className="text-xs text-slate-400 shrink-0">signal {Math.round(candidate.score || 0)}/100</span>
+                    <span className="text-xs text-slate-400 shrink-0">
+                      {candidate.source === 'photo_lookup' ? 'reference photos' : `signal ${Math.round(candidate.score || 0)}/100`}
+                    </span>
                   </div>
                   {candidate.why && <p className="text-xs text-slate-400 mt-2 ml-8">{candidate.why}</p>}
                 </div>

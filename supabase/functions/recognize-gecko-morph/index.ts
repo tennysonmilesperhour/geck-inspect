@@ -44,6 +44,15 @@
 //   #10 v6 self-hosted bank           6/100   0.0%  (credit balance)
 //   #11 v7 smoke (cached)            10/10  20.0%  (n too small)
 //   #12 v7 cached bank n=50          50/50  22.0%  (decision point: REGRESSION)
+//
+// Since 28 Sep 2026 the test set is 220 held-out listings graded against the
+// patterns their breeders tagged (scripts/morph-id-eval/, Actions >
+// morph-id-eval). Numbers are first answer / top three:
+//   #17 v59 photo lookup working   220/220  43.6% / 68.6% breeder tag
+//                                           (37.7% / 64.1% single picked pattern)
+// Harlequin was the answer 148 times; Pinstripe and Tricolor never. v60
+// makes Harlequin the base (pinning or tricolor leads over it) and fills the
+// shortlist from the photo lookup's vote.
 
 import { serve } from "https://deno.land/std@0.203.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
@@ -61,6 +70,7 @@ import {
   type RawVisualNeighbor,
   type VisualEvidence,
 } from "../_shared/morph-evidence.ts";
+import { buildShortlist, leadingPattern } from "../_shared/morph-naming.ts";
 import {
   createVisualEmbedding,
   DEFAULT_VISUAL_EMBEDDING_MODEL,
@@ -498,6 +508,7 @@ async function loadVisualEvidence(imageUrls: string[]): Promise<VisualEvidence> 
       minSimilarity: RETRIEVAL_MIN_SIMILARITY,
       maxNeighbors: 8,
       maxPerMorph: 2,
+      rankingDepth: 16,
     });
   } catch (err) {
     const message = err instanceof Error ? err.message : String(err);
@@ -521,13 +532,15 @@ function buildRetrievalContext(evidence: VisualEvidence): string {
       ...neighbor.secondary_traits,
       neighbor.base_color,
     ].filter(Boolean).slice(0, 6).join(", ");
-    const detail = traits ? `; observed tags=${traits}` : "";
-    return `  ${index + 1}. weak primary tag=${neighbor.primary_morph}${detail}; similarity=${neighbor.similarity.toFixed(3)}; label weight=${neighbor.label_weight.toFixed(2)}`;
+    const detail = traits ? `; other breeder tags=${traits}` : "";
+    return `  ${index + 1}. breeder's main pattern=${neighbor.primary_morph}${detail}; similarity=${neighbor.similarity.toFixed(3)}`;
   }).join("\n");
-  const consensus = evidence.consensus
-    ? `Weighted retrieval leader=${evidence.consensus.primary_morph}; agreement=${evidence.consensus.agreement.toFixed(2)} across ${evidence.consensus.source_diversity} independent source cluster(s).`
-    : "No retrieval consensus.";
-  return `The ${evidence.neighbors.length} image(s) immediately before this note are query-specific visual neighbors from raw listing data. Their tags are WEAK POSITIVE OBSERVATIONS, not verified biological truth. A missing tag is unknown, not negative. Use the images as comparison evidence and override their labels when the user's visible anatomy disagrees.\n${mapping}\n${consensus}`;
+  const vote = (evidence.ranking || []).slice(0, 3)
+    .map((rank) => `${rank.primary_morph} ${Math.round(rank.share * 100)}%`).join(", ");
+  const consensus = vote
+    ? `Vote among the ${evidence.ranking_depth} closest reference photos (one per breeder): ${vote}.`
+    : "No reference vote.";
+  return `The ${evidence.neighbors.length} image(s) immediately before this note are the closest reference photos to the user's gecko, each tagged by the breeder who listed that animal. Breeder tags are reliable for those animals. A missing tag is unknown, not negative. Compare the user's gecko with them: a close reference can still differ in pattern, and the user's photos decide.\n${mapping}\n${consensus}`;
 }
 
 function buildInstructions(fewShotBank: FewShotExample[], includeValueEstimate: boolean) {
@@ -578,20 +591,25 @@ Rules:
   Phantom and Cream-on-Cream are visual-expression suggestions, not proof of their
   underlying genotype.
 - secondary_traits is observational modifiers. Multiple allowed.
+- Harlequin is the base pattern most other crested gecko patterns sit on. When a
+  harlequin also shows another pattern, that pattern is primary_morph, the way
+  breeders list the animal: full pinning is pinstripe, partial pinning is
+  partial_pinstripe, four stripes are quad_stripe, and three distinct colors is
+  tricolor. List harlequin as another candidate_morph. Extreme harlequin and super
+  harlequin are morphs in their own right: keep them as primary_morph and list the
+  other pattern as a candidate.
 - tricolor means three distinct colors (the base plus two pattern colors, such as
   cream/white and orange/yellow) in roughly equal amounts, usually on a harlequin,
-  sometimes a pinstripe. Breeders sell it as its own morph, so primary_morph may be
-  tricolor when the three-color look defines the animal; then list the underlying
-  pattern as another candidate_morph. When the pattern defines the animal, use the
-  pattern as primary_morph. Either way, add tricolor to secondary_traits whenever
-  the three colors are present.
+  sometimes a pinstripe. Add tricolor to secondary_traits whenever the three colors
+  are present.
 - evidence_markers must name concrete visible features such as dorsal coverage,
   leg coverage, pin continuity, spot count, flank pattern, and white placement.
 - uncertainty_reasons must name missing views, ambiguous lookalikes, age effects,
   fired state, blur, glare, or color cast when relevant.
 - confidence_score is a model signal about the top visual candidate, not the
-  probability that the identification is correct. Retrieved seller labels are
-  weak evidence and must never outweigh contradictory visible anatomy.${valueLine}
+  probability that the identification is correct. Reference photos carry the tags
+  of the breeders who listed them; use them to see how breeders name a look, but
+  the user's own photos decide.${valueLine}
 
 Taxonomy version: ${TAXONOMY_VERSION}.${bankIntro}`;
 }
@@ -733,8 +751,24 @@ function clampToTaxonomy(
     candidateMorphs.splice(3);
   }
   candidateMorphs.sort((a, b) => b.score - a.score);
-  const primaryMorph = candidateMorphs[0]?.morph ?? rawPrimaryMorph;
+  const modelPrimary = candidateMorphs[0]?.morph ?? rawPrimaryMorph;
   const modelSignal = candidateMorphs[0]?.score ?? signal;
+  const secondaryTraits = pickMany(raw.secondary_traits, SECONDARY_TRAIT_IDS);
+  const rawVisualProfile = raw.visual_profile && typeof raw.visual_profile === "object"
+    ? raw.visual_profile as Record<string, unknown>
+    : {};
+  const visualProfile = {
+    pattern_family: pick(rawVisualProfile.pattern_family, PATTERN_FAMILY_IDS) || "unknown",
+    pinning: pick(rawVisualProfile.pinning, PINNING_IDS) || "unknown",
+    banding: pick(rawVisualProfile.banding, BANDING_IDS) || "unknown",
+    spotting: pick(rawVisualProfile.spotting, SPOTTING_IDS) || "unknown",
+    white_cream_traits: pickMany(rawVisualProfile.white_cream_traits, WHITE_PLACEMENT_IDS),
+  };
+  // Harlequin is the base: pinning or the tricolor look takes the lead over
+  // it, and the photo lookup fills the rest of the shortlist.
+  const leading = leadingPattern(modelPrimary, visualProfile.pinning, secondaryTraits);
+  const primaryMorph = leading.morph;
+  const shortlist = buildShortlist(leading, modelPrimary, candidateMorphs, visualEvidence, PRIMARY_MORPH_IDS);
 
   const rawPhoto = raw.photo_assessment && typeof raw.photo_assessment === "object"
     ? raw.photo_assessment as Record<string, unknown>
@@ -761,16 +795,6 @@ function clampToTaxonomy(
     photoAssessment,
     visualEvidence,
   );
-  const rawVisualProfile = raw.visual_profile && typeof raw.visual_profile === "object"
-    ? raw.visual_profile as Record<string, unknown>
-    : {};
-  const visualProfile = {
-    pattern_family: pick(rawVisualProfile.pattern_family, PATTERN_FAMILY_IDS) || "unknown",
-    pinning: pick(rawVisualProfile.pinning, PINNING_IDS) || "unknown",
-    banding: pick(rawVisualProfile.banding, BANDING_IDS) || "unknown",
-    spotting: pick(rawVisualProfile.spotting, SPOTTING_IDS) || "unknown",
-    white_cream_traits: pickMany(rawVisualProfile.white_cream_traits, WHITE_PLACEMENT_IDS),
-  };
   const seenPhotoNumbers = new Set<number>();
   const photoObservations = (Array.isArray(raw.photo_observations) ? raw.photo_observations : [])
     .flatMap((observation) => {
@@ -797,14 +821,14 @@ function clampToTaxonomy(
   const uncertaintyReasons = pickTextMany(raw.uncertainty_reasons, 5);
   if (assessment.conflict && visualEvidence.consensus) {
     uncertaintyReasons.unshift(
-      `The visual model and raw-data neighbors disagree (${primaryMorph} vs ${visualEvidence.consensus.primary_morph}).`,
+      `The photo reading and the closest breeder-tagged reference photos disagree (${String(primaryMorph).replace(/_/g, " ")} vs ${visualEvidence.consensus.primary_morph.replace(/_/g, " ")}).`,
     );
     uncertaintyReasons.splice(5);
   }
   const out: Record<string, unknown> = {
     primary_morph:     primaryMorph,
     genetic_traits:    pickMany(raw.genetic_traits, PHOTO_GENETIC_TRAIT_IDS),
-    secondary_traits:  pickMany(raw.secondary_traits, SECONDARY_TRAIT_IDS),
+    secondary_traits:  secondaryTraits,
     base_color:        pick(raw.base_color, BASE_COLOR_IDS),
     pattern_intensity: pick(raw.pattern_intensity, PATTERN_INTENSITY_IDS) || "unknown",
     white_amount:      pick(raw.white_amount, WHITE_AMOUNT_IDS) || "unknown",
@@ -813,7 +837,7 @@ function clampToTaxonomy(
     confidence_score:  modelSignal,
     model_signal:      modelSignal,
     visual_profile:    visualProfile,
-    candidate_morphs:  candidateMorphs,
+    candidate_morphs:  shortlist,
     photo_observations: photoObservations,
     evidence_markers:  pickTextMany(raw.evidence_markers, 6),
     uncertainty_reasons: uncertaintyReasons,

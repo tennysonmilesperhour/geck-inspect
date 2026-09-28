@@ -33,6 +33,16 @@ describe('createVisualEmbedding', () => {
     expect(first.embedding).toHaveLength(768);
   });
 
+  it('reports a time-out, not a bad output, when Replicate is still starting the model', async () => {
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(
+      JSON.stringify({ status: 'starting', urls: { get: 'https://api.replicate.com/v1/predictions/p1' } }),
+      { status: 201 },
+    )));
+    await expect(createVisualEmbedding('https://example.com/d.webp', {
+      token: 't', model: 'someone/clip-test:pinned', timeoutMs: 0,
+    })).rejects.toThrow('Replicate timed out while the embedding model was starting up');
+  });
+
   it('uses a pinned version without looking it up', async () => {
     const calls = stubReplicate();
     await createVisualEmbedding('https://example.com/c.webp', { token: 't', model: 'someone/clip-test:pinned' });
