@@ -1,7 +1,7 @@
 {
   "generatedAt": "2026-09-08",
   "files": {
-    "src/pages/Home.jsx": "2026-09-04",
+    "src/pages/Home.jsx": "2026-09-28",
     "src/pages/About.jsx": "2026-07-10",
     "src/pages/Contact.jsx": "2026-09-08",
     "src/pages/Terms.jsx": "2026-09-08",
@@ -22,7 +22,7 @@
     "src/pages/CalculatorPairing.jsx": "2026-08-18",
     "src/pages/PedigreeTracker.jsx": "2026-08-18",
     "src/pages/BreedingRecords.jsx": "2026-08-18",
-    "src/pages/CrestedGeckoPrice.jsx": "2026-08-18",
+    "src/pages/CrestedGeckoPrice.jsx": "2026-09-28",
     "src/pages/Mentorship.jsx": "2026-07-10",
     "src/pages/MorphVisualizer.jsx": "2026-07-10",
     "src/pages/Gallery.jsx": "2026-09-04",
@@ -32,7 +32,7 @@
     "src/pages/MarketplaceBuy.jsx": "2026-08-18",
     "src/pages/Shipping.jsx": "2026-07-10",
     "src/pages/Giveaways.jsx": "2026-07-10",
-    "src/pages/Membership.jsx": "2026-09-04",
+    "src/pages/Membership.jsx": "2026-09-28",
     "src/data/morph-guide.js": "2026-07-10",
     "src/data/care-guide.js": "2026-07-10",
     "src/data/project-lines.js": "2026-07-10",

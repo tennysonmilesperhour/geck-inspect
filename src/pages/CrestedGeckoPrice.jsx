@@ -12,7 +12,7 @@ import Seo from '@/components/seo/Seo';
 import PublicPageShell from '@/components/public/PublicPageShell';
 import { breadcrumbSchema, faqPageSchema, SITE_URL } from '@/lib/organization-schema';
 
-const LAST_UPDATED = '2026-09-27';
+const LAST_UPDATED = '2026-09-28';
 
 // Market ranges are for healthy, captive-bred crested geckos sold directly
 // by breeders (not chain-store animals), in USD, reflecting 2026 hobby
