@@ -1,292 +1,325 @@
-import React, { useState, useEffect, useMemo } from 'react';
+/**
+ * Market Pricing: what crested geckos are listed for, by trait.
+ *
+ * The main table is the Geck Data trait value table (public.trait_value_table,
+ * via lib/traitValueTable.js): asking-price bands from the scraped MorphMarket
+ * listings, split by age and sex. The same numbers drive the Portfolio, the
+ * gecko value estimate and the Pairing Planner, so this page cannot disagree
+ * with them. They are asking prices and the page says so.
+ *
+ * Below it, sales that Geck Inspect breeders log themselves
+ * (public.morph_price_entries). Until 28 Sep 2026 that table held 24 seeded
+ * rows shown as recent sales, and each row showed a random trend arrow; both
+ * are gone (supabase/migrations/_applied_by_hand/20260928200000_delete_seeded_price_entries.sql).
+ */
+import { useEffect, useMemo, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { format } from 'date-fns';
+import { DollarSign, Plus, Search } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { useAuth } from '@/lib/AuthContext';
-import { format } from 'date-fns';
-import { TrendingUp, TrendingDown, Minus, DollarSign, BarChart3, Activity, Plus, X } from 'lucide-react';
+import { loadTraitValueIndex } from '@/lib/traitValueTable';
+import { createPageUrl } from '@/utils';
+import Seo from '@/components/seo/Seo';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
-const C = {
-  forest: '#e2e8f0', moss: '#94a3b8', sage: '#10b981', paleSage: 'rgba(16,185,129,0.1)',
-  warmWhite: '#020617', gold: '#f59e0b', goldLight: 'rgba(245,158,11,0.15)', red: '#ef4444',
-  slate: '#cbd5e1', muted: '#64748b', cardBg: '#0f172a', border: 'rgba(51,65,85,0.5)',
+const AGES = [
+  ['any', 'All ages'], ['hatchling', 'Hatchlings'], ['juvenile', 'Juveniles'], ['subadult', 'Subadults'], ['adult', 'Adults'],
+];
+const SEXES = [['any', 'All sexes'], ['female', 'Females'], ['male', 'Males'], ['unsexed', 'Unsexed']];
+const GRADES = ['pet', 'breeder', 'high_end', 'investment'];
+// A band from fewer listings than this is too thin to show.
+const MIN_LISTINGS = 5;
+
+const money = (v) => `$${Math.round(Number(v) || 0).toLocaleString('en-US')}`;
+const label = (v) => String(v || '').replace(/_/g, ' ');
+
+function median(values) {
+  const sorted = [...values].sort((a, b) => a - b);
+  const mid = Math.floor(sorted.length / 2);
+  return sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+
+const EMPTY_SALE = {
+  base_morph: '', pattern_grade: 'breeder', sex: 'female', age_category: 'adult',
+  sale_price: '', sale_date: format(new Date(), 'yyyy-MM-dd'), is_anonymous: true,
 };
-const fmt = (v) => '$' + Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export default function MarketPricing() {
-  const auth = useAuth?.() || {};
-  const [entries, setEntries] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [filters, setFilters] = useState({ sex: 'all', age: 'all', grade: 'all' });
-  const [expandedRow, setExpandedRow] = useState(null);
-  const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({ base_morph: '', pattern_grade: 'breeder', sex: 'female', age_category: 'adult', sale_price: '', sale_date: format(new Date(), 'yyyy-MM-dd'), is_anonymous: true });
+  const { user } = useAuth() || {};
+  // Guest demo mode has a stand-in user, but the price table and sale log
+  // need a real account, so guests see the sign-up card.
+  const signedIn = !!user && !user.is_guest;
+  const [index, setIndex] = useState(null);
+  const [indexState, setIndexState] = useState('loading'); // loading | ready | error
+  const [age, setAge] = useState('any');
+  const [sex, setSex] = useState('any');
+  const [query, setQuery] = useState('');
+  const [sales, setSales] = useState([]);
+  const [saleOpen, setSaleOpen] = useState(false);
+  const [sale, setSale] = useState(EMPTY_SALE);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
-    (async () => {
-      const { data } = await supabase.from('morph_price_entries').select('*').order('sale_date', { ascending: false });
-      setEntries(data || []);
-      setLoading(false);
-    })();
-  }, []);
+    if (!signedIn) return undefined;
+    let cancelled = false;
+    loadTraitValueIndex()
+      .then((idx) => { if (!cancelled) { setIndex(idx); setIndexState('ready'); } })
+      .catch(() => { if (!cancelled) setIndexState('error'); });
+    return () => { cancelled = true; };
+  }, [signedIn]);
 
-  const filtered = useMemo(() => {
-    return entries.filter(e => {
-      if (filters.sex !== 'all' && e.sex !== filters.sex) return false;
-      if (filters.age !== 'all' && e.age_category !== filters.age) return false;
-      if (filters.grade !== 'all' && e.pattern_grade !== filters.grade) return false;
-      return true;
-    });
-  }, [entries, filters]);
+  const loadSales = async () => {
+    const { data } = await supabase.from('morph_price_entries').select('*').order('sale_date', { ascending: false });
+    setSales(data || []);
+  };
+  useEffect(() => { loadSales(); }, []);
 
-  const aggregated = useMemo(() => {
-    const map = {};
-    filtered.forEach(e => {
-      const key = `${e.base_morph}|${e.pattern_grade}`;
-      if (!map[key]) map[key] = { morph: e.base_morph, grade: e.pattern_grade, prices: [], entries: [] };
-      map[key].prices.push(Number(e.sale_price));
-      map[key].entries.push(e);
-    });
-    return Object.values(map).map(g => {
-      const sorted = [...g.prices].sort((a, b) => a - b);
-      const mid = sorted.length % 2 === 0 ? (sorted[sorted.length / 2 - 1] + sorted[sorted.length / 2]) / 2 : sorted[Math.floor(sorted.length / 2)];
-      return { ...g, low: sorted[0], median: mid, high: sorted[sorted.length - 1], count: sorted.length };
-    }).sort((a, b) => b.count - a.count);
-  }, [filtered]);
-
-  const stats = useMemo(() => {
-    if (filtered.length === 0) return { median: 0, activeMorph: '-', highestAvg: 0, trend: null };
-    const allPrices = filtered.map(e => Number(e.sale_price)).sort((a, b) => a - b);
-    const median = allPrices[Math.floor(allPrices.length / 2)];
-    const morphCounts = {};
-    filtered.forEach(e => { morphCounts[e.base_morph] = (morphCounts[e.base_morph] || 0) + 1; });
-    const activeMorph = Object.entries(morphCounts).sort((a, b) => b[1] - a[1])[0]?.[0] || '-';
-    const morphAvgs = {};
-    filtered.forEach(e => {
-      if (!morphAvgs[e.base_morph]) morphAvgs[e.base_morph] = { sum: 0, count: 0 };
-      morphAvgs[e.base_morph].sum += Number(e.sale_price);
-      morphAvgs[e.base_morph].count++;
-    });
-    const highestAvg = Math.max(...Object.values(morphAvgs).map(m => m.sum / m.count));
-
-    // Real 90-day trend: median sale price of the last 90 days vs the 90
-    // days before that. Needs at least 3 sales in each window to say
-    // anything; otherwise trend stays null and the tile shows "Not enough
-    // data" instead of inventing a number.
-    const now = Date.now();
-    const DAY = 24 * 60 * 60 * 1000;
-    const priceMedian = (arr) => {
-      if (arr.length === 0) return null;
-      const sorted = [...arr].sort((a, b) => a - b);
-      const mid = Math.floor(sorted.length / 2);
-      return sorted.length % 2 === 0 ? (sorted[mid - 1] + sorted[mid]) / 2 : sorted[mid];
-    };
-    const inWindow = (e, from, to) => {
-      const t = new Date(e.sale_date).getTime();
-      return !isNaN(t) && t >= from && t < to;
-    };
-    const recent = filtered.filter(e => inWindow(e, now - 90 * DAY, now + DAY)).map(e => Number(e.sale_price));
-    const prior = filtered.filter(e => inWindow(e, now - 180 * DAY, now - 90 * DAY)).map(e => Number(e.sale_price));
-    let trend = null;
-    if (recent.length >= 3 && prior.length >= 3) {
-      const recentMed = priceMedian(recent);
-      const priorMed = priceMedian(prior);
-      if (priorMed > 0) trend = Math.round(((recentMed - priorMed) / priorMed) * 1000) / 10;
+  const rows = useMemo(() => {
+    if (!index) return [];
+    const needle = query.trim().toLowerCase();
+    const out = [];
+    for (const trait of index.traits.values()) {
+      if (needle && !trait.name.toLowerCase().includes(needle)) continue;
+      const band = trait.bands.get(`${age}|${sex}`);
+      if (!band || band.n < MIN_LISTINGS) continue;
+      out.push({ name: trait.name, ...band });
     }
-    return { median, activeMorph, highestAvg, trend };
-  }, [filtered]);
+    return out.sort((a, b) => b.n - a.n);
+  }, [index, age, sex, query]);
 
-  const handleSubmit = async () => {
-    if (!form.base_morph || !form.sale_price) return;
+  const loggedSales = useMemo(() => {
+    const groups = new Map();
+    for (const entry of sales) {
+      const key = String(entry.base_morph || '').trim();
+      if (!key) continue;
+      if (!groups.has(key)) groups.set(key, []);
+      groups.get(key).push(entry);
+    }
+    return [...groups.entries()]
+      .map(([morph, entries]) => {
+        const prices = entries.map((e) => Number(e.sale_price)).filter((p) => p > 0);
+        return { morph, entries, count: prices.length, median: prices.length ? median(prices) : 0 };
+      })
+      .sort((a, b) => b.count - a.count);
+  }, [sales]);
+
+  const submitSale = async () => {
+    if (!sale.base_morph.trim() || !(Number(sale.sale_price) > 0) || saving) return;
+    setSaving(true);
     const { error } = await supabase.from('morph_price_entries').insert({
-      ...form, sale_price: Number(form.sale_price), source: 'user_submitted',
-      submitted_by: auth.user?.id, created_by: auth.user?.email,
+      ...sale,
+      base_morph: sale.base_morph.trim(),
+      sale_price: Number(sale.sale_price),
+      source: 'user_submitted',
+      submitted_by: user?.id,
+      created_by: user?.email,
     });
+    setSaving(false);
     if (!error) {
-      const { data } = await supabase.from('morph_price_entries').select('*').order('sale_date', { ascending: false });
-      setEntries(data || []);
-      setShowModal(false);
-      setForm({ base_morph: '', pattern_grade: 'breeder', sex: 'female', age_category: 'adult', sale_price: '', sale_date: format(new Date(), 'yyyy-MM-dd'), is_anonymous: true });
+      setSaleOpen(false);
+      setSale(EMPTY_SALE);
+      loadSales();
     }
   };
-
-  const TrendIcon = ({ value }) => {
-    if (value > 5) return <TrendingUp size={14} style={{ color: C.sage }} />;
-    if (value < -5) return <TrendingDown size={14} style={{ color: C.red }} />;
-    return <Minus size={14} style={{ color: C.muted }} />;
-  };
-
-  const GradeBadge = ({ grade }) => {
-    const styles = {
-      pet: { bg: C.paleSage, color: C.forest }, breeder: { bg: C.paleSage, color: C.sage },
-      high_end: { bg: C.goldLight, color: '#633806' }, investment: { bg: C.goldLight, color: '#633806' },
-    };
-    const s = styles[grade] || styles.pet;
-    return <span className="text-xs rounded-full px-2 py-0.5 font-medium" style={{ backgroundColor: s.bg, color: s.color }}>{(grade || '').replace('_', ' ')}</span>;
-  };
-
-  if (loading) {
-    return (
-      <div className="min-h-screen p-4 md:p-6" style={{ backgroundColor: C.warmWhite }}>
-        <div className="max-w-6xl mx-auto space-y-4">
-          {[80, 120, 400].map((h, i) => <div key={i} className="animate-pulse rounded-xl" style={{ height: h, backgroundColor: C.paleSage }} />)}
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="min-h-screen p-6" style={{ backgroundColor: C.warmWhite, fontFamily: "'DM Sans', sans-serif" }}>
-      <div className="max-w-6xl mx-auto">
-        <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-          <h1 className="text-3xl" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>Market Pricing</h1>
-          {auth.user && (
-            <button onClick={() => setShowModal(true)} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white" style={{ backgroundColor: C.sage }}>
-              <Plus size={16} /> Log a Sale
-            </button>
+    <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+      <Seo
+        title="Crested Gecko Market Pricing"
+        description="Asking-price ranges for crested gecko traits from MorphMarket listings, by age and sex."
+        path="/MarketPricing"
+        noIndex
+      />
+      <div className="max-w-5xl mx-auto space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
+          <div>
+            <h1 className="text-3xl font-bold text-slate-100 flex items-center gap-2">
+              <DollarSign className="w-7 h-7 text-emerald-400" /> Market Pricing
+            </h1>
+            <p className="text-sm text-slate-400 mt-1 max-w-2xl">
+              What crested geckos are listed for on MorphMarket, by trait. These are asking prices:
+              animals often sell for less, and pattern quality moves the price more than any single trait.
+            </p>
+          </div>
+          {signedIn && (
+            <Button onClick={() => setSaleOpen(true)} className="bg-emerald-600 hover:bg-emerald-700 self-start sm:self-auto">
+              <Plus className="w-4 h-4 mr-1.5" /> Log a sale
+            </Button>
           )}
         </div>
 
-        {/* Stat cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          {[
-            { label: 'Median Price', value: fmt(stats.median), icon: DollarSign },
-            { label: 'Most Active Morph', value: stats.activeMorph, icon: Activity },
-            { label: 'Highest Avg Sale', value: fmt(stats.highestAvg), icon: BarChart3 },
-            stats.trend == null
-              ? { label: '90-Day Trend', value: 'Not enough data', icon: TrendingUp, small: true }
-              : { label: '90-Day Trend', value: `${stats.trend > 0 ? '+' : ''}${stats.trend}%`, icon: TrendingUp, trend: stats.trend },
-          ].map((s, i) => (
-            <div key={i} className="rounded-xl border p-5" style={{ borderColor: C.border, backgroundColor: C.cardBg }}>
-              <div className="flex items-center gap-2 mb-2">
-                <s.icon size={16} style={{ color: C.sage }} />
-                <span className="text-xs uppercase tracking-wider" style={{ color: C.muted }}>{s.label}</span>
+        {!signedIn ? (
+          <Card className="bg-slate-900 border-slate-700">
+            <CardContent className="p-6 space-y-3">
+              <p className="text-slate-200 font-medium">Sign in to see asking-price ranges by trait, age and sex.</p>
+              <p className="text-sm text-slate-400">
+                The ranges come from thousands of crested gecko listings and are free with any account.
+              </p>
+              <Button asChild className="bg-emerald-600 hover:bg-emerald-700">
+                <Link to="/AuthPortal?mode=signup">Start free</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        ) : (
+          <Card className="bg-slate-900 border-slate-700">
+            <CardHeader className="pb-3">
+              <CardTitle className="text-slate-100 text-lg">Asking prices by trait</CardTitle>
+              <div className="flex flex-wrap gap-2 pt-2">
+                <div className="relative">
+                  <Search className="w-4 h-4 text-slate-500 absolute left-2.5 top-2.5" />
+                  <Input
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    placeholder="Find a trait"
+                    className="pl-8 w-44 bg-slate-800 border-slate-600 text-slate-100"
+                  />
+                </div>
+                <Select value={age} onValueChange={setAge}>
+                  <SelectTrigger className="w-36 bg-slate-800 border-slate-600 text-slate-100"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-slate-800 border-slate-600 text-slate-100">
+                    {AGES.map(([value, text]) => <SelectItem key={value} value={value}>{text}</SelectItem>)}
+                  </SelectContent>
+                </Select>
+                <Select value={sex} onValueChange={setSex}>
+                  <SelectTrigger className="w-36 bg-slate-800 border-slate-600 text-slate-100"><SelectValue /></SelectTrigger>
+                  <SelectContent className="bg-slate-800 border-slate-600 text-slate-100">
+                    {SEXES.map(([value, text]) => <SelectItem key={value} value={value}>{text}</SelectItem>)}
+                  </SelectContent>
+                </Select>
               </div>
-              <div className={s.small ? 'text-sm font-medium' : 'text-2xl font-semibold'} style={{ color: s.small ? C.muted : C.slate, fontFamily: "'DM Sans', sans-serif" }}>
-                {s.value}
-                {s.trend !== undefined && <TrendIcon value={s.trend} />}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Filters */}
-        <div className="flex gap-2 mb-4 flex-wrap">
-          {[
-            { key: 'sex', options: ['all', 'male', 'female'] },
-            { key: 'age', options: ['all', 'hatchling', 'juvenile', 'subadult', 'adult'] },
-            { key: 'grade', options: ['all', 'pet', 'breeder', 'high_end', 'investment'] },
-          ].map(f => (
-            <select key={f.key} value={filters[f.key]} onChange={e => setFilters(p => ({ ...p, [f.key]: e.target.value }))}
-              className="rounded-lg px-3 py-1.5 text-sm border" style={{ borderColor: C.border, backgroundColor: C.cardBg, color: C.slate }}>
-              {f.options.map(o => <option key={o} value={o}>{o === 'all' ? `All ${f.key}s` : o.replace('_', ' ')}</option>)}
-            </select>
-          ))}
-          <span className="text-xs self-center" style={{ color: C.muted }}>{filtered.length} sales · {aggregated.length} morphs</span>
-        </div>
-
-        {/* Price table */}
-        <div className="rounded-xl border overflow-hidden" style={{ borderColor: C.border, backgroundColor: C.cardBg }}>
-          <table className="w-full text-sm">
-            <thead>
-              <tr style={{ backgroundColor: C.paleSage }}>
-                {['Morph', 'Grade', 'Low', 'Median', 'High', 'Sales', 'Trend'].map(h => (
-                  <th key={h} className="text-left py-3 px-4 text-xs uppercase tracking-wider font-medium" style={{ color: C.muted }}>{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {aggregated.map((row, i) => (
-                <React.Fragment key={`${row.morph}-${row.grade}`}>
-                  <tr
-                    className="cursor-pointer transition hover:bg-opacity-50"
-                    style={{ backgroundColor: i % 2 === 0 ? 'transparent' : C.paleSage + '44' }}
-                    onClick={() => setExpandedRow(expandedRow === i ? null : i)}
-                  >
-                    <td className="py-3 px-4 font-medium" style={{ color: C.forest }}>{row.morph}</td>
-                    <td className="py-3 px-4"><GradeBadge grade={row.grade} /></td>
-                    <td className="py-3 px-4" style={{ color: C.slate }}>{fmt(row.low)}</td>
-                    <td className="py-3 px-4 font-semibold" style={{ color: C.forest }}>{fmt(row.median)}</td>
-                    <td className="py-3 px-4" style={{ color: C.slate }}>{fmt(row.high)}</td>
-                    <td className="py-3 px-4" style={{ color: C.muted }}>{row.count}</td>
-                    <td className="py-3 px-4"><TrendIcon value={Math.random() * 20 - 10} /></td>
-                  </tr>
-                  {expandedRow === i && (
-                    <tr>
-                      <td colSpan={7} className="px-4 py-3" style={{ backgroundColor: C.paleSage + '66' }}>
-                        <p className="text-xs font-medium mb-2" style={{ color: C.muted }}>Recent sales (anonymized)</p>
-                        <div className="space-y-1">
-                          {row.entries.slice(0, 5).map(e => (
-                            <div key={e.id} className="flex gap-4 text-xs" style={{ color: C.slate }}>
-                              <span>{e.sale_date ? format(new Date(e.sale_date), 'MMM d, yyyy') : '-'}</span>
-                              <span className="font-medium">{fmt(e.sale_price)}</span>
-                              <span style={{ color: C.muted }}>{e.sex} · {e.age_category}</span>
-                              {e.verified && <span className="text-xs px-1.5 rounded" style={{ backgroundColor: C.paleSage, color: C.sage }}>verified</span>}
-                            </div>
-                          ))}
-                        </div>
-                      </td>
-                    </tr>
-                  )}
-                </React.Fragment>
-              ))}
-              {aggregated.length === 0 && (
-                <tr><td colSpan={7} className="text-center py-12 text-sm" style={{ color: C.muted }}>No pricing data matches your filters</td></tr>
+            </CardHeader>
+            <CardContent className="p-0">
+              {indexState === 'loading' && <p className="text-sm text-slate-400 px-6 pb-6">Loading listing prices...</p>}
+              {indexState === 'error' && (
+                <p className="text-sm text-amber-300 px-6 pb-6">Listing prices could not load. Try again in a minute.</p>
               )}
-            </tbody>
-          </table>
-        </div>
+              {indexState === 'ready' && (
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="text-left text-xs uppercase tracking-wide text-slate-500 border-b border-slate-800">
+                        <th className="py-2.5 px-4 font-medium">Trait</th>
+                        <th className="py-2.5 px-4 font-medium text-right">Low</th>
+                        <th className="py-2.5 px-4 font-medium text-right">Median</th>
+                        <th className="py-2.5 px-4 font-medium text-right">High</th>
+                        <th className="py-2.5 px-4 font-medium text-right">Listings</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {rows.map((row) => (
+                        <tr key={row.name} className="border-b border-slate-800/60 last:border-0">
+                          <td className="py-2.5 px-4 text-slate-100 font-medium">{row.name}</td>
+                          <td className="py-2.5 px-4 text-right text-slate-300">{money(row.p25)}</td>
+                          <td className="py-2.5 px-4 text-right text-emerald-300 font-semibold">{money(row.p50)}</td>
+                          <td className="py-2.5 px-4 text-right text-slate-300">{money(row.p75)}</td>
+                          <td className="py-2.5 px-4 text-right text-slate-500">{row.n.toLocaleString('en-US')}</td>
+                        </tr>
+                      ))}
+                      {rows.length === 0 && (
+                        <tr><td colSpan={5} className="text-center py-10 text-slate-500">No trait has {MIN_LISTINGS} or more listings for this filter.</td></tr>
+                      )}
+                    </tbody>
+                  </table>
+                  <p className="text-xs text-slate-500 px-4 py-3 border-t border-slate-800">
+                    Low and high are the middle half of listings (25th to 75th percentile). A gecko with
+                    several traits usually lists near its most valuable one. The same numbers price your{' '}
+                    <Link to={createPageUrl('Portfolio')} className="text-emerald-400 hover:text-emerald-300">Portfolio</Link>{' '}
+                    and the Pairing Planner.
+                  </p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        )}
 
-        {/* Log a Sale Modal */}
-        {showModal && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40" onClick={() => setShowModal(false)}>
-            <div className="rounded-xl border p-6 w-full max-w-md mx-4" style={{ backgroundColor: C.cardBg, borderColor: C.border }} onClick={e => e.stopPropagation()}>
-              <div className="flex items-center justify-between mb-4">
-                <h2 className="text-xl" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>Log a Sale</h2>
-                <button onClick={() => setShowModal(false)}><X size={20} style={{ color: C.muted }} /></button>
-              </div>
-              <div className="space-y-3">
-                <div>
-                  <label className="text-xs uppercase tracking-wider block mb-1" style={{ color: C.muted }}>Morph</label>
-                  <input value={form.base_morph} onChange={e => setForm(p => ({ ...p, base_morph: e.target.value }))}
-                    className="w-full rounded-lg border px-3 py-2 text-sm" style={{ borderColor: C.border, color: C.slate }}
-                    placeholder="e.g. Harlequin, Lilly White..." />
-                </div>
-                <div className="grid grid-cols-2 gap-3">
-                  {[
-                    { key: 'pattern_grade', label: 'Grade', options: ['pet', 'breeder', 'high_end', 'investment'] },
-                    { key: 'sex', label: 'Sex', options: ['male', 'female'] },
-                    { key: 'age_category', label: 'Age', options: ['hatchling', 'juvenile', 'subadult', 'adult'] },
-                  ].map(f => (
-                    <div key={f.key}>
-                      <label className="text-xs uppercase tracking-wider block mb-1" style={{ color: C.muted }}>{f.label}</label>
-                      <select value={form[f.key]} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
-                        className="w-full rounded-lg border px-3 py-2 text-sm" style={{ borderColor: C.border, color: C.slate }}>
-                        {f.options.map(o => <option key={o} value={o}>{o.replace('_', ' ')}</option>)}
-                      </select>
-                    </div>
-                  ))}
-                  <div>
-                    <label className="text-xs uppercase tracking-wider block mb-1" style={{ color: C.muted }}>Sale Price ($)</label>
-                    <input type="number" value={form.sale_price} onChange={e => setForm(p => ({ ...p, sale_price: e.target.value }))}
-                      className="w-full rounded-lg border px-3 py-2 text-sm" style={{ borderColor: C.border, color: C.slate }} placeholder="0.00" />
+        <Card className="bg-slate-900 border-slate-700">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-slate-100 text-lg">Sales logged by Geck Inspect breeders</CardTitle>
+            <p className="text-sm text-slate-400">What animals actually sold for, shared without names.</p>
+          </CardHeader>
+          <CardContent>
+            {loggedSales.length === 0 ? (
+              <p className="text-sm text-slate-400">
+                No sales logged yet. {signedIn ? 'Log one of yours to help other breeders price theirs.' : 'Sign in to log yours.'}
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {loggedSales.map((group) => (
+                  <div key={group.morph} className="flex items-center justify-between gap-3 rounded-lg border border-slate-800 bg-slate-800/40 px-3 py-2 text-sm">
+                    <span className="text-slate-100 font-medium">{group.morph}</span>
+                    <span className="text-slate-400">
+                      {group.count} sale{group.count === 1 ? '' : 's'} · median <span className="text-emerald-300 font-semibold">{money(group.median)}</span>
+                    </span>
                   </div>
+                ))}
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      </div>
+
+      <Dialog open={saleOpen} onOpenChange={setSaleOpen}>
+        <DialogContent className="bg-slate-900 border-slate-700 text-slate-200">
+          <DialogHeader><DialogTitle className="text-slate-100">Log a sale</DialogTitle></DialogHeader>
+          <div className="space-y-3">
+            <div>
+              <Label className="text-slate-300">Morph</Label>
+              <Input
+                value={sale.base_morph}
+                onChange={(e) => setSale((s) => ({ ...s, base_morph: e.target.value }))}
+                placeholder="e.g. Lilly White, Extreme Harlequin"
+                className="bg-slate-800 border-slate-600"
+              />
+            </div>
+            <div className="grid grid-cols-2 gap-3">
+              {[
+                ['pattern_grade', 'Grade', GRADES],
+                ['sex', 'Sex', ['male', 'female', 'unsexed']],
+                ['age_category', 'Age', ['hatchling', 'juvenile', 'subadult', 'adult']],
+              ].map(([key, text, options]) => (
+                <div key={key}>
+                  <Label className="text-slate-300">{text}</Label>
+                  <Select value={sale[key]} onValueChange={(v) => setSale((s) => ({ ...s, [key]: v }))}>
+                    <SelectTrigger className="bg-slate-800 border-slate-600 capitalize"><SelectValue /></SelectTrigger>
+                    <SelectContent className="bg-slate-800 border-slate-600 text-slate-100">
+                      {options.map((o) => <SelectItem key={o} value={o} className="capitalize">{label(o)}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
                 </div>
-                <div>
-                  <label className="text-xs uppercase tracking-wider block mb-1" style={{ color: C.muted }}>Sale Date</label>
-                  <input type="date" value={form.sale_date} onChange={e => setForm(p => ({ ...p, sale_date: e.target.value }))}
-                    className="w-full rounded-lg border px-3 py-2 text-sm" style={{ borderColor: C.border, color: C.slate }} />
-                </div>
-                <label className="flex items-center gap-2 cursor-pointer">
-                  <input type="checkbox" checked={form.is_anonymous} onChange={e => setForm(p => ({ ...p, is_anonymous: e.target.checked }))} style={{ accentColor: C.sage }} />
-                  <span className="text-sm" style={{ color: C.slate }}>Contribute anonymously</span>
-                </label>
-                <button onClick={handleSubmit} className="w-full py-2.5 rounded-lg text-sm font-medium text-white" style={{ backgroundColor: C.sage }}>
-                  Submit Sale
-                </button>
+              ))}
+              <div>
+                <Label className="text-slate-300">Sold for ($)</Label>
+                <Input
+                  type="number"
+                  min="0"
+                  value={sale.sale_price}
+                  onChange={(e) => setSale((s) => ({ ...s, sale_price: e.target.value }))}
+                  className="bg-slate-800 border-slate-600"
+                />
               </div>
             </div>
+            <div>
+              <Label className="text-slate-300">Sale date</Label>
+              <Input
+                type="date"
+                value={sale.sale_date}
+                onChange={(e) => setSale((s) => ({ ...s, sale_date: e.target.value }))}
+                className="bg-slate-800 border-slate-600"
+              />
+            </div>
+            <p className="text-xs text-slate-500">Shown without your name. Only the morph, grade, sex, age, price and date are shared.</p>
+            <Button onClick={submitSale} disabled={saving} className="w-full bg-emerald-600 hover:bg-emerald-700">
+              {saving ? 'Saving...' : 'Save sale'}
+            </Button>
           </div>
-        )}
-      </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

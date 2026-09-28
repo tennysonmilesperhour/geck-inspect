@@ -174,7 +174,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'How much is my crested gecko worth?',
-    a: 'Value is driven by morph, sex, age, and quality grade. Pet-grade hatchlings typically sell for $50 to $150, breeder juveniles $150 to $400, high-end Harlequin adult females $400 to $1,200, and investment-grade Extreme Harlequins or proven Lilly Whites can reach $800 to $3,000. Match your scored grade against recent sales data on the Geck Inspect Market Pricing page for live price bands by morph and tier.',
+    a: 'Value is driven by morph, sex, age, and quality grade. Pet-grade hatchlings typically sell for $50 to $150, breeder juveniles $150 to $400, high-end Harlequin adult females $400 to $1,200, and investment-grade Extreme Harlequins or proven Lilly Whites can reach $800 to $3,000. Check the Geck Inspect Market Pricing page for the asking-price range of your gecko’s traits by age and sex, then place it in that range by grade.',
   },
   {
     q: 'Is the Geck Inspect Standard related to the Gold Standard Gecko Club?',
@@ -186,7 +186,7 @@ const FAQ_ITEMS = [
   },
   {
     q: 'Does a higher score guarantee my gecko will sell for more?',
-    a: 'No. Score correlates with price, but price is also affected by morph rarity, lineage, breeder reputation, sex (proven females typically command a premium), and current market demand. The rubric tells you which tier your gecko fits into. Market Pricing data on Geck Inspect tells you what that tier is selling for right now.',
+    a: 'No. Score correlates with price, but price is also affected by morph rarity, lineage, breeder reputation, sex (proven females typically command a premium), and current market demand. The rubric tells you which tier your gecko fits into. Market Pricing on Geck Inspect tells you what geckos with the same traits are listed for right now.',
   },
   {
     q: 'How is a crested gecko’s quality grade different from its morph?',
@@ -213,7 +213,7 @@ const HOWTO_STEPS = [
   },
   {
     name: 'Cross-check against market data',
-    text: 'Compare the resulting tier against recent sales for your morph on the Geck Inspect Market Pricing page to land on a fair asking price.',
+    text: 'Place the resulting tier within the asking-price range for your morph on the Geck Inspect Market Pricing page to land on a fair asking price.',
   },
 ];
 
@@ -441,7 +441,7 @@ export default function QualityScale() {
             <h2 className="text-lg font-semibold text-slate-100">What grade tier does my score correspond to?</h2>
           </div>
           <p className="text-slate-400 text-sm mb-4">
-            Once you have a total score, this is the tier your gecko sits in. The tier feeds directly into the Market Pricing data on Geck Inspect, so you get a price band based on actual sales of geckos in the same tier.
+            Once you have a total score, this is the tier your gecko sits in. Geck Inspect&apos;s value estimates use the tier to place your gecko within the asking-price range for its traits: pet grade near the low end, breeder grade at the median, high-end in the upper half, and investment grade at the top.
           </p>
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
             {GRADE_BANDS.map((b) => (
@@ -452,7 +452,7 @@ export default function QualityScale() {
             ))}
           </div>
           <p className="text-slate-500 text-xs mt-4">
-            See aggregated price bands per morph and grade on the{' '}
+            See asking-price ranges per trait, by age and sex, on the{' '}
             <Link to="/MarketPricing" className="text-emerald-400 hover:text-emerald-300 underline">
               Market Pricing
             </Link>{' '}
@@ -527,7 +527,7 @@ export default function QualityScale() {
             <li>Walk the 10 criteria. Score each one 0 to 1 in 0.5 increments. Be honest. Optimistic scoring of your own animal is the most common source of mispriced listings.</li>
             <li>Add up the score and read the grade tier from the table above.</li>
             <li>
-              Cross-check your tier against recent sales for your morph on the{' '}
+              Cross-check your tier against the asking-price range for your morph on the{' '}
               <Link to="/MarketPricing" className="text-emerald-400 underline">Market Pricing</Link> page.
             </li>
           </ol>

@@ -951,10 +951,10 @@ export default function MarketplaceSellPage() {
               />
             </div>
 
-            {/* Price intelligence, shows comparable sale prices */}
-            {editingGecko?.morphs_traits && (
+            {/* Asking-price range for geckos like this one (trait, age, sex) */}
+            {editingGecko && (
               <MorphPriceIndex
-                morph={editingGecko.morphs_traits.split(',')[0]?.trim() || editingGecko.morph_tags?.[0]}
+                gecko={editingGecko}
                 sellerPrice={formData.asking_price ? parseFloat(formData.asking_price) : null}
               />
             )}

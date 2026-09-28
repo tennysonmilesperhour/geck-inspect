@@ -42,7 +42,7 @@ export default function ChangeLogModal({ isOpen, onClose }) {
             week_label: 'April 2026, Week 2',
             published_date: '2026-04-08T00:00:00Z',
             bullet_points: [
-                'Shipping integration with Zero\'s Geckos, get quotes, book shipments, and track packages (Breeder tier)',
+                'Shipping preview with Zero\'s Geckos (simulated quotes and bookings). Later hidden until a live booking hookup exists; book directly at zerosgeckos.com',
                 'MorphMarket CSV export, download your listings in a format you can upload directly to MorphMarket',
                 'MorphMarket CSV import, bring your MorphMarket listings into Geck Inspect',
                 'Admin users now have full access to all features regardless of membership tier',
