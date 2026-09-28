@@ -172,7 +172,7 @@ export const MORPHS = [
       'High-contrast cream or yellow markings that climb the flanks and legs',
       'Pattern typically extends above the lateral line onto the dorsum',
       'Selectively bred for saturation and coverage, better pattern each generation',
-      'Stacks with virtually every other trait: cream harlequin, tricolor harlequin, dalmatian harlequin, etc.',
+      'The base most other morphs sit on. When another morph is present, that name leads: a harlequin with full pinstripe is sold as a Pinstripe, a three-color one as a Tricolor, and a Lilly White with harlequin patterning as a Lilly White',
     ],
     visualIdentifiers: [
       'Look at the flanks and legs: harlequin must show bright pattern that climbs up the sides, not just along the belly line',
