@@ -22,7 +22,7 @@ import MorphCorrectionPanel from '../components/morph-id/MorphCorrectionPanel';
 import PhotoTipsCard from '../components/morph-id/PhotoTipsCard';
 import MorphIdCoverageCard from '../components/morph-id/MorphIdCoverageCard';
 import SimilarGeckosStrip from '../components/morph-id/SimilarGeckosStrip';
-import MultiPhotoUploader from '../components/morph-id/MultiPhotoUploader';
+import ViewPhotoUploader from '../components/morph-id/ViewPhotoUploader';
 import PhotoSlideshow from '../components/morph-id/PhotoSlideshow';
 import { AGE_STAGES, FIRED_STATES } from '../components/morph-id/morphTaxonomy';
 
@@ -74,6 +74,9 @@ export default function Recognition() {
   const [meta, setMeta] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isUploadingPhotos, setIsUploadingPhotos] = useState(false);
+  // True once the required top and side views are both uploaded.
+  const [viewsComplete, setViewsComplete] = useState(false);
+  const [uploaderKey, setUploaderKey] = useState(0);
   const [error, setError] = useState(null);
   const [savedOnce, setSavedOnce] = useState(false);
 
@@ -107,6 +110,9 @@ export default function Recognition() {
 
   const reset = () => {
     setImageUrls([]);
+    setViewsComplete(false);
+    // Remount the uploader so its photo slots empty too.
+    setUploaderKey((k) => k + 1);
     setAgeStage('unknown');
     setFiredState('unknown');
     setAnalysis(null);
@@ -145,8 +151,8 @@ export default function Recognition() {
       setError({ code: 'auth_required', message: 'Please sign in before uploading or analyzing photos.' });
       return;
     }
-    if (imageUrls.length === 0) {
-      setError({ code: 'bad_request', message: 'Upload at least one photo before analyzing.' });
+    if (!viewsComplete) {
+      setError({ code: 'bad_request', message: 'Add a top view and a side view before analyzing.' });
       return;
     }
     setIsAnalyzing(true);
@@ -240,20 +246,20 @@ export default function Recognition() {
                 <div className="rounded-lg border border-emerald-700/60 bg-emerald-950/40 px-4 py-3 text-sm text-emerald-100">
                   <p className="font-semibold">Your first identification is free.</p>
                   <p className="text-emerald-200/80 mt-1">
-                    Make it count: a sharp top-down photo in daylight, plus one fired up and one fired down if you can.
+                    Make it count: a sharp top view and side view in daylight, plus a third photo if you can.
                   </p>
                 </div>
               )}
-              <MultiPhotoUploader
-                value={imageUrls}
+              <ViewPhotoUploader
+                key={uploaderKey}
                 onBusyChange={setIsUploadingPhotos}
-                onChange={(urls) => {
+                onChange={({ urls, ready }) => {
                   setImageUrls(urls);
+                  setViewsComplete(ready);
                   setAnalysis(null);
                   setError(null);
                   setSavedOnce(false);
                 }}
-                label="Gecko photos"
               />
               </>
             ) : (
@@ -286,8 +292,14 @@ export default function Recognition() {
                       Ready to analyze
                     </p>
                     <p className="text-slate-200 text-sm">
-                      {imageUrls.length} photo{imageUrls.length !== 1 ? 's' : ''} · primary is the one used as cover.
+                      {imageUrls.length} photo{imageUrls.length !== 1 ? 's' : ''}
+                      {viewsComplete ? ', top and side views in.' : '. Still needed: a top view and a side view.'}
                     </p>
+                    {viewsComplete && imageUrls.length === 2 && (
+                      <p className="text-xs text-slate-400 mt-1">
+                        A third photo (the other side, fired up or down, or a pattern close-up) usually helps, but it is optional.
+                      </p>
+                    )}
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-xl">
                     <div>
@@ -316,7 +328,7 @@ export default function Recognition() {
                     <Button
                       size="lg"
                       onClick={analyze}
-                      disabled={isAnalyzing || isUploadingPhotos || !user || isGuest}
+                      disabled={isAnalyzing || isUploadingPhotos || !viewsComplete || !user || isGuest}
                       className="bg-emerald-600 hover:bg-emerald-700"
                     >
                       {isAnalyzing ? (

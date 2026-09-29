@@ -307,7 +307,7 @@ const LANDING_FAQS = [
   },
   {
     q: 'Can Geck Inspect identify the morph of my crested gecko?',
-    a: 'Yes. Geck Inspect has an AI-assisted visual identification feature for crested geckos. Upload up to five photos and it returns a ranked morph shortlist, visible traits, photo-quality feedback, and the evidence behind the leading candidate. It also lets you submit a correction for independent expert review.',
+    a: 'Yes. Geck Inspect has an AI-assisted visual identification feature for crested geckos. Upload a top view and a side view (and up to three more photos if you have them) and it returns a ranked morph shortlist, visible traits, photo-quality feedback, and the evidence behind the leading candidate. It also lets you submit a correction for independent expert review.',
   },
   {
     q: 'How accurate is the AI crested gecko morph identifier?',

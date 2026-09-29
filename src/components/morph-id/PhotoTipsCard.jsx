@@ -4,7 +4,7 @@ import { Camera, Sun, Focus, Hand, Layers } from 'lucide-react';
 const TIPS = [
   { icon: Sun,    title: 'Bright, neutral light',     body: 'Indirect daylight beats flash. Avoid red basking bulbs, they lie about color.' },
   { icon: Focus,  title: 'Sharp focus on the back',   body: 'Tap the dorsum in your camera app before shooting. Blurry patterns read as "flame" when they’re not.' },
-  { icon: Camera, title: 'Three-quarter angle',       body: 'Shoot slightly above and to the side so flanks, dorsum, and crests are all visible.' },
+  { icon: Camera, title: 'A top view and a side view', body: 'Both are required. The top shows pinning and the dorsal pattern; the side shows the flanks and how far pattern climbs the legs.' },
   { icon: Layers, title: 'Capture both fire states',  body: 'Fired-up and fired-down colors can differ dramatically. A photo of each helps a lot.' },
   { icon: Hand,   title: 'Scale the shot',            body: 'Include a finger or coin nearby for size context, but keep it behind the gecko.' },
 ];
