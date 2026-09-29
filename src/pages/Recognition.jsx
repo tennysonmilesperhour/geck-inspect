@@ -215,7 +215,7 @@ export default function Recognition() {
         </div>
 
         <details className="rounded-xl border border-slate-700 p-4">
-          <summary className="cursor-pointer font-medium text-slate-200">Photo tips and supported morphs</summary>
+          <summary className="cursor-pointer font-medium text-slate-200 touch:py-2.5">Photo tips and supported morphs</summary>
           <div className="mt-4 space-y-4"><PhotoTipsCard /><MorphIdCoverageCard /></div>
         </details>
 

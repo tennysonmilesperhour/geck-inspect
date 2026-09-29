@@ -1252,7 +1252,7 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
             <div className="flex items-center justify-between gap-3">
               <button
                 onClick={toggleSidebar}
-                className="hover:bg-emerald-500/20 rounded-lg transition-colors duration-200 inline-flex items-center justify-center w-9 h-9 text-emerald-200 hover:text-emerald-50"
+                className="hover:bg-emerald-500/20 rounded-lg transition-colors duration-200 inline-flex items-center justify-center w-9 h-9 touch:w-11 touch:h-11 text-emerald-200 hover:text-emerald-50"
                 aria-label="Toggle Sidebar"
               >
                 <Menu className="w-5 h-5" />

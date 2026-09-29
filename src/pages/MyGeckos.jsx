@@ -633,14 +633,14 @@ export default function MyGeckosPage() {
                     <button
                         type="button"
                         onClick={() => setActiveTab('collection')}
-                        className={`px-4 py-2 text-sm font-medium -mb-px border-b-2 transition-colors ${activeTab === 'collection' ? 'border-emerald-500 text-emerald-300' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+                        className={`px-4 py-2 touch:min-h-11 text-sm font-medium -mb-px border-b-2 transition-colors ${activeTab === 'collection' ? 'border-emerald-500 text-emerald-300' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
                     >
                         Collection
                     </button>
                     <button
                         type="button"
                         onClick={() => setActiveTab('transfers')}
-                        className={`px-4 py-2 text-sm font-medium -mb-px border-b-2 transition-colors inline-flex items-center gap-1.5 ${activeTab === 'transfers' ? 'border-emerald-500 text-emerald-300' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
+                        className={`px-4 py-2 touch:min-h-11 text-sm font-medium -mb-px border-b-2 transition-colors inline-flex items-center gap-1.5 ${activeTab === 'transfers' ? 'border-emerald-500 text-emerald-300' : 'border-transparent text-slate-400 hover:text-slate-200'}`}
                     >
                         <ArrowUpDown className="w-3.5 h-3.5" />
                         Transfers
@@ -666,7 +666,7 @@ export default function MyGeckosPage() {
                         </div>
                         <div className="flex items-center gap-2 shrink-0">
                             <Select value={sortBy} onValueChange={setSortBy}>
-                                <SelectTrigger className="w-44 !h-8 !min-h-0 bg-slate-950 border-slate-700 text-slate-100 !text-xs py-1">
+                                <SelectTrigger className="w-44 !h-8 bg-slate-950 border-slate-700 text-slate-100 !text-xs py-1">
                                     <div className="flex items-center gap-1.5 min-w-0">
                                         <ArrowUpDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
                                         <SelectValue placeholder="Sort" />
@@ -690,7 +690,7 @@ export default function MyGeckosPage() {
                                 <button
                                     type="button"
                                     onClick={() => setViewMode('card')}
-                                    className={`h-8 w-8 rounded flex items-center justify-center transition-colors ${viewMode === 'card' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+                                    className={`h-8 w-8 touch:h-11 touch:w-11 rounded flex items-center justify-center transition-colors ${viewMode === 'card' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
                                     aria-label="Card view"
                                 >
                                     <Grid3x3 className="w-4 h-4" />
@@ -698,7 +698,7 @@ export default function MyGeckosPage() {
                                 <button
                                     type="button"
                                     onClick={() => setViewMode('list')}
-                                    className={`h-8 w-8 rounded flex items-center justify-center transition-colors ${viewMode === 'list' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
+                                    className={`h-8 w-8 touch:h-11 touch:w-11 rounded flex items-center justify-center transition-colors ${viewMode === 'list' ? 'bg-emerald-600 text-white' : 'text-slate-400 hover:text-slate-200'}`}
                                     aria-label="List view"
                                 >
                                     <List className="w-4 h-4" />

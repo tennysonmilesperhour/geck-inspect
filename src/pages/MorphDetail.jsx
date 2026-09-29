@@ -342,7 +342,7 @@ export default function MorphDetail() {
               // get one more path into the programmatic SEO graph.
               <Link
                 to={`/MorphGuide/category/${category.id}`}
-                className="inline-flex items-center gap-1.5 rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs font-semibold text-slate-300 hover:border-emerald-500/50 hover:text-emerald-200 transition-colors"
+                className="inline-flex items-center gap-1.5 touch:min-h-11 rounded-full border border-slate-700 bg-slate-900 px-3 py-1 text-xs font-semibold text-slate-300 hover:border-emerald-500/50 hover:text-emerald-200 transition-colors"
               >
                 {category.label}
               </Link>
@@ -350,7 +350,7 @@ export default function MorphDetail() {
             {inheritance && (
               <Link
                 to={`/MorphGuide/inheritance/${inheritance.id}`}
-                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold hover:brightness-125 transition ${inheritance.color}`}
+                className={`inline-flex items-center gap-1.5 touch:min-h-11 rounded-full border px-3 py-1 text-xs font-semibold hover:brightness-125 transition ${inheritance.color}`}
               >
                 <Dna className="w-3 h-3" />
                 {inheritance.label}
@@ -522,7 +522,7 @@ export default function MorphDetail() {
                     <Link
                       key={s}
                       to={`/MorphGuide/${s}`}
-                      className="rounded-full border border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500/50 hover:bg-emerald-500/10 px-3 py-1.5 text-sm text-emerald-200 hover:text-emerald-100 transition-colors"
+                      className="inline-flex items-center touch:min-h-11 rounded-full border border-emerald-500/20 bg-emerald-500/5 hover:border-emerald-500/50 hover:bg-emerald-500/10 px-3 py-1.5 text-sm text-emerald-200 hover:text-emerald-100 transition-colors"
                     >
                       {name}
                     </Link>
@@ -650,7 +650,7 @@ export default function MorphDetail() {
                   <Link
                     key={m.slug}
                     to={`/MorphGuide/${m.slug}`}
-                    className="rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 hover:bg-slate-800 px-3 py-1.5 text-sm text-slate-300 hover:text-emerald-200 transition-colors"
+                    className="inline-flex items-center touch:min-h-11 rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 hover:bg-slate-800 px-3 py-1.5 text-sm text-slate-300 hover:text-emerald-200 transition-colors"
                   >
                     {m.name}
                   </Link>
@@ -678,7 +678,7 @@ export default function MorphDetail() {
                       key={question}
                       className="group rounded-xl border border-slate-800 bg-slate-900/50 hover:border-slate-700 open:border-emerald-500/30 p-5 transition-colors"
                     >
-                      <summary className="cursor-pointer list-none flex items-start justify-between gap-4">
+                      <summary className="cursor-pointer list-none flex items-start touch:items-center touch:min-h-11 justify-between gap-4">
                         <h3 className="text-base md:text-lg font-semibold text-slate-100 leading-snug">
                           {question}
                         </h3>

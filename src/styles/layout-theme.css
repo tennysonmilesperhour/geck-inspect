@@ -901,13 +901,13 @@ html, body, #root {
             height: 38px;
             border-radius: 9px;
           }
-          /* Beat the generic coarse-pointer 44x44 bump above, scoped to
-             the compact header only so desktop/tablet still get the
-             comfier tap target. */
+          /* On touch screens the compact header keeps the full 44x44
+             tap target (the 38 px pills were below the minimum finger
+             size, and these are the most-tapped buttons in the app). */
           @media (hover: none) and (pointer: coarse) {
             .gecko-header--compact .gecko-header-action {
-              width: 38px;
-              height: 38px;
+              width: 44px;
+              height: 44px;
             }
           }
           .gecko-header--compact .gecko-header-action svg {

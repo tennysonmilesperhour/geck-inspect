@@ -70,7 +70,7 @@ function ConfidenceBadge({ confidence, traitId }) {
   return (
     <Popover>
       <PopoverTrigger asChild>
-        <button type="button" aria-label={`${badge.label}: show sources`}>{chip}</button>
+        <button type="button" aria-label={`${badge.label}: show sources`} className="inline-flex items-center touch:min-h-11 touch:px-1">{chip}</button>
       </PopoverTrigger>
       <PopoverContent className="w-72 bg-slate-800 border-slate-600 text-slate-200 text-xs p-3" align="start">
         <p className="mb-2 text-slate-300">{badge.title}</p>

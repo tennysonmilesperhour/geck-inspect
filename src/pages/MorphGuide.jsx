@@ -712,7 +712,7 @@ export default function MorphGuidePage() {
               aria-selected={view === 'morphs'}
               type="button"
               onClick={() => setViewAndUrl('morphs')}
-              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
+              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 touch:min-h-11 text-sm font-semibold transition-colors ${
                 view === 'morphs'
                   ? 'bg-emerald-600/20 text-emerald-200 border border-emerald-500/40'
                   : 'text-slate-400 hover:text-slate-200 border border-transparent'
@@ -727,7 +727,7 @@ export default function MorphGuidePage() {
               aria-selected={view === 'lines'}
               type="button"
               onClick={() => setViewAndUrl('lines')}
-              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 text-sm font-semibold transition-colors ${
+              className={`inline-flex items-center gap-2 rounded-xl px-4 py-2 touch:min-h-11 text-sm font-semibold transition-colors ${
                 view === 'lines'
                   ? 'bg-violet-600/20 text-violet-200 border border-violet-500/40'
                   : 'text-slate-400 hover:text-slate-200 border border-transparent'
@@ -874,7 +874,7 @@ export default function MorphGuidePage() {
                     <Link
                       key={c.id}
                       to={`/MorphGuide/category/${c.id}`}
-                      className="rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 hover:bg-slate-800 px-3 py-1 text-xs text-slate-300 hover:text-emerald-200 transition-colors"
+                      className="inline-flex items-center touch:min-h-11 rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 hover:bg-slate-800 px-3 py-1 text-xs text-slate-300 hover:text-emerald-200 transition-colors"
                     >
                       {c.label}
                     </Link>
@@ -888,7 +888,7 @@ export default function MorphGuidePage() {
                     <Link
                       key={i.id}
                       to={`/MorphGuide/inheritance/${i.id}`}
-                      className="rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 hover:bg-slate-800 px-3 py-1 text-xs text-slate-300 hover:text-emerald-200 transition-colors"
+                      className="inline-flex items-center touch:min-h-11 rounded-full border border-slate-700 bg-slate-900 hover:border-emerald-500/40 hover:bg-slate-800 px-3 py-1 text-xs text-slate-300 hover:text-emerald-200 transition-colors"
                     >
                       {i.label}
                     </Link>
@@ -903,7 +903,7 @@ export default function MorphGuidePage() {
             <button
               type="button"
               onClick={() => setCategory('all')}
-              className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ${
+              className={`inline-flex items-center gap-1.5 touch:min-h-11 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ${
                 category === 'all'
                   ? 'border-emerald-500/50 bg-emerald-600/20 text-emerald-200'
                   : 'border-slate-700 bg-slate-900 text-slate-300 hover:border-emerald-500/30'
@@ -917,7 +917,7 @@ export default function MorphGuidePage() {
                 key={cat.id}
                 type="button"
                 onClick={() => setCategory(cat.id)}
-                className={`inline-flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ${
+                className={`inline-flex items-center gap-1.5 touch:min-h-11 rounded-full border px-3 py-1.5 text-sm font-semibold transition-colors ${
                   category === cat.id
                     ? 'border-emerald-500/50 bg-emerald-600/20 text-emerald-200'
                     : 'border-slate-700 bg-slate-900 text-slate-300 hover:border-emerald-500/30'
@@ -1004,7 +1004,7 @@ export default function MorphGuidePage() {
               <button
                 type="button"
                 onClick={() => setShowLegend((x) => !x)}
-                className="ml-auto inline-flex items-center gap-1 text-emerald-400 hover:text-emerald-300 text-xs font-semibold"
+                className="ml-auto inline-flex items-center gap-1 touch:min-h-11 text-emerald-400 hover:text-emerald-300 text-xs font-semibold"
               >
                 <Info className="w-3.5 h-3.5" />
                 {showLegend ? 'Hide' : 'Show'} genetics key

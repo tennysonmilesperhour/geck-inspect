@@ -70,7 +70,7 @@ export default function GeckoFilters({ filters, onFiltersChange, onClearFilters,
             <button
                 type="button"
                 onClick={() => setIsExpanded(!isExpanded)}
-                className="w-full flex items-center justify-between px-3 py-2 hover:bg-slate-900/80 transition-colors"
+                className="w-full flex items-center justify-between px-3 py-2 touch:min-h-11 hover:bg-slate-900/80 transition-colors"
             >
                 <span className="flex items-center gap-2 text-sm font-semibold text-slate-200">
                     <Filter className="w-4 h-4 text-slate-400" />

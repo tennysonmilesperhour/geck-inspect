@@ -383,7 +383,7 @@ export default function GeneticCalculatorTool({
                               value={omniboxText}
                               onChange={(e) => setOmniboxText(e.target.value)}
                               placeholder='Type a pairing: "lilly white het axanthic x sable"'
-                              className="flex-1 h-10 rounded-md bg-slate-800 border border-slate-600 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/40"
+                              className="flex-1 h-10 touch:h-11 rounded-md bg-slate-800 border border-slate-600 px-3 text-sm text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-purple-500/40"
                               aria-label="Type a pairing in breeder shorthand"
                             />
                             <Button type="submit" className="bg-purple-600 hover:bg-purple-700 text-white text-sm h-10">
@@ -466,8 +466,8 @@ export default function GeneticCalculatorTool({
                                 <p className="text-xs text-slate-500">
                                   Want to save these parents and run this against your real collection?
                                 </p>
-                                <Link to={createPageUrl('AuthPortal')}>
-                                  <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white text-xs">
+                                <Link to={`${createPageUrl('AuthPortal')}?mode=signup`}>
+                                  <Button size="sm" className="bg-purple-600 hover:bg-purple-700 text-white text-xs touch:min-h-11">
                                     Create a free account
                                     <ArrowRight className="w-3 h-3 ml-1.5" />
                                   </Button>

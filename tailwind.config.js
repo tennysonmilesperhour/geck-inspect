@@ -190,5 +190,13 @@ module.exports = {
   		}
   	}
   },
-  plugins: [require("tailwindcss-animate")],
+  plugins: [
+    require("tailwindcss-animate"),
+    // `touch:` applies only on touch screens (a finger, not a mouse), so
+    // controls can grow to the 44 px minimum tap size on phones and
+    // tablets while desktop keeps its compact sizes.
+    require("tailwindcss/plugin")(({ addVariant }) => {
+      addVariant("touch", "@media (pointer: coarse)");
+    }),
+  ],
 }
