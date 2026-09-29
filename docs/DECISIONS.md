@@ -99,7 +99,7 @@ These entries capture the strategic decisions made during the initial landing pa
 **Date:** 2026-04-21
 **Status:** Accepted
 **Context:** Options considered for the hero visual: (a) static screenshot, (b) custom illustration, (c) stock 3D art, (d) animated product video, (e) interactive live demo.
-**Decision:** Hero uses a looping 6–10 second animated product video (autoplay muted, lazy-loaded). Feature sections each have real product visuals, not illustrations. No stock imagery anywhere.
+**Decision:** Hero uses a looping 6 to 10 second animated product video (autoplay muted, lazy-loaded). Feature sections each have real product visuals, not illustrations. No stock imagery anywhere.
 **Reasoning:** For UI-heavy SaaS products, animated visuals outperform screenshots, which outperform illustrations, which outperform text. This is documented across multiple 2026 conversion analyses. Interactive live demos would convert even better but are significantly more expensive to build. Animated videos are 80% of the value at 10% of the effort.
 **Consequences:** Need to produce a looping product video showing collection grid → gecko profile → pedigree tree → genetics calculator → predicted clutch. This is an asset gap that must be filled before launch. Rules out static screenshot shortcuts.
 
@@ -164,7 +164,7 @@ These entries capture the strategic decisions made during the initial landing pa
 
 **Date:** 2026-04-21
 **Status:** Accepted
-**Context:** Geck Inspect has many features: collection management, AI morph ID, genetics calculator, pedigrees, QR codes, weight tracking, feeding logs, shed tracking, market analytics, team collaboration, etc. The standard SaaS pattern is a grid of 6–9 small feature cards.
+**Context:** Geck Inspect has many features: collection management, AI morph ID, genetics calculator, pedigrees, QR codes, weight tracking, feeding logs, shed tracking, market analytics, team collaboration, etc. The standard SaaS pattern is a grid of 6 to 9 small feature cards.
 **Decision:** Only three features get their own substantial on-page section: AI Morph ID, Genetics Calculator, and Pedigrees with QR Codes. Each gets generous whitespace, a real product visual, and room to breathe. Other features are listed briefly in pricing tiers but don't get showcase space.
 **Reasoning:** Research is clear that dense feature grids underperform deep single-feature showcases. Three features is the maximum before cognitive overload sets in. The three chosen are the most differentiated from competitors, the strongest proof of the crestie-specific positioning.
 **Consequences:** Many real features go unmentioned on the landing page. That's fine. They get discovered in the app. The page's job is to get the sign-up, not to be a feature catalog.
@@ -175,7 +175,7 @@ These entries capture the strategic decisions made during the initial landing pa
 
 **Date:** 2026-04-21
 **Status:** Accepted
-**Context:** 62–83% of landing page traffic is mobile. Mobile conversion rates are typically 40–50% lower than desktop, largely due to friction that's invisible on desktop.
+**Context:** 62 to 83% of landing page traffic is mobile. Mobile conversion rates are typically 40 to 50% lower than desktop, largely due to friction that's invisible on desktop.
 **Decision:** Design mobile-first, not desktop-adapted-to-mobile. All tap targets ≥48×48px, thumb-zone CTAs, vertical-first media. Total page load under 2 seconds on mobile (measured via PageSpeed Insights, target 90+ score).
 **Reasoning:** Treating mobile as the starting point (rather than an adaptation) is the only way to avoid the mobile conversion gap that plagues most SaaS landing pages.
 **Consequences:** Hero video must be lightweight (WebM preferred, H.264 fallback, poster image, lazy-loaded). Images are WebP, compressed. No heavy JavaScript libraries for the marketing page. This rules out some visually ambitious effects.
@@ -268,7 +268,7 @@ These entries capture the strategic decisions made during the initial landing pa
 **Date:** 2026-04-21
 **Status:** Pending
 **Context:** The landing page strategy requires specific assets that don't currently exist: named testimonials with photos from existing users, original gecko photography for hero and feature sections, a looping hero product video, a founder story with headshot, and possibly a video testimonial from a power user.
-**Decision:** Treat asset gathering as a blocking prerequisite for the landing page build, not something to paper over with stock photography or placeholder copy. Specific assets needed: (1) 5–10 testimonials with names, photos, specific outcomes, (2) 5–10 crested gecko photos shot against clean backgrounds from Tennyson's own collection, (3) one 6–10 second looping hero product video showing the app in use, (4) one 30–60 second video testimonial from an existing power user (stretch goal), (5) a 200-word founder story with headshot.
+**Decision:** Treat asset gathering as a blocking prerequisite for the landing page build, not something to paper over with stock photography or placeholder copy. Specific assets needed: (1) 5 to 10 testimonials with names, photos, specific outcomes, (2) 5 to 10 crested gecko photos shot against clean backgrounds from Tennyson's own collection, (3) one 6 to 10 second looping hero product video showing the app in use, (4) one 30 to 60 second video testimonial from an existing power user (stretch goal), (5) a 200-word founder story with headshot.
 **Reasoning:** The positioning ("by a breeder, for breeders") and the testimonial principles (real names, real faces, specific outcomes) only work if the assets are real. Launching without them would undercut the entire strategy. Asset gathering is also high-leverage: an hour of email outreach to existing users produces content that improves conversion more than an hour of design polish.
 **Consequences:** Adds a pre-build phase to the landing page timeline. Commits to not shipping the landing page with stock imagery or fake testimonials even under pressure. Requires outreach to existing ~88 users, likely with a small incentive (free month) in exchange for testimonials.
 
@@ -386,3 +386,14 @@ These entries capture the strategic decisions made during the initial landing pa
 **Decision:** Lead with the business side. The landing page opens with "Price right. Pair smart. Sell with proof." and gives its three showcase sections (decision 13) to: know what it's worth (value estimates and asking-price ranges from real listings), pair for profit (offspring odds times hatchling prices, per egg), and sell with proof (passport, transfer, buyer packet, profit tracking). Everything else is one line under "Also in every account". Crested-gecko-first stays the identity: every number comes from crested gecko listings and the genetics engine is crested-only.
 **Reasoning:** Competitors are multi-species or marketplace-first (STRATEGY.md). A new breeder's hardest questions are money questions (what to charge, which pairing is worth the eggs, did the season pay), and Geck Inspect can answer them from real crested gecko data. The three sections replace the showcase picks in decision 13 (Morph ID, calculator, pedigrees): the calculator and pedigrees now appear inside "pair for profit" and "sell with proof", and Morph ID moves to the "also included" line with its free first identification.
 **Consequences:** Landing copy, SEO titles and social previews say "crested gecko breeding app for pricing, pairings and sales". Business Tools, the Portfolio, the pairing value panel and the buyer packet are the product's front door and must keep showing honest numbers: asking prices labeled as asking prices, unconfirmed sales flagged. Morph ID accuracy work continues but is no longer the headline.
+
+---
+
+### 33. Waitlist deposits are records, not payments; waitlists are a Breeder feature
+
+**Date:** 2026-09-29
+**Status:** Accepted (confirmed by Tennyson)
+**Context:** Waitlists with deposits shipped on 29 Sep (P9.2): a breeder opens a waitlist for a pairing, buyers join and pick the outcome they hope for, and the breeder records deposits and matches buyers to hatchlings. The open question was whether Geck Inspect should take the deposits itself through Stripe, and what to charge for it.
+**Decision:** Geck Inspect records deposits and never handles the money; buyers pay the breeder directly. Each waitlist carries written deposit terms, starting from an editable default (the deposit holds a place and counts toward the price; refundable until the buyer accepts a match; if the pairing misses, the buyer chooses a refund, next season or another gecko; transferable after a match; full refund if the breeder cancels). Buyers must agree to the terms to join, and the database keeps each buyer's exact wording and time. Signups can be marked Refunded. No fee on deposits or sales: waitlists earn money through the Breeder plan, which is required to create one.
+**Reasoning:** Holding buyers' money makes the platform liable for identity checks on breeders, tax forms and chargebacks, and waitlist deposits sit for months, which is the worst case for disputes. INTENT.md says Geck Inspect is not a marketplace, and a cut of animal sales would make it one. There was no demand yet (no waitlist existed). Most deposit fights in the hobby come from unwritten terms, which the terms and agreement record address directly.
+**Consequences:** Revisit card payments when about ten breeders are actively using waitlists and asking for them. If built, use Stripe Connect Standard accounts with direct charges, so each breeder is the seller of record, pays the card fees, handles refunds from their own Stripe dashboard and owns disputes, and Geck Inspect never holds funds. Check Stripe's restricted business list for live animal sales before starting.
