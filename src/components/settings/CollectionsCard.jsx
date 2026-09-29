@@ -22,12 +22,15 @@ import {
   Crown,
   ArrowRight,
   Send,
+  History,
+  LogOut,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { Collection, CollectionMember } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
 import { getTierLimits } from '@/lib/tierLimits';
+import CollectionActivity from './CollectionActivity';
 
 /**
  * Best-effort transactional email via the send-collection-invite edge
@@ -94,8 +97,15 @@ export default function CollectionsCard({ user }) {
 
   const limits = getTierLimits(user);
   const collabCap = limits.maxCollaborators;
+  // Count collaborators on collections this user owns; their own seat in
+  // someone else's shared collection does not use up their plan.
+  const ownedIds = new Set(
+    collections
+      .filter((c) => String(c.owner_email || '').toLowerCase() === String(user?.email || '').toLowerCase())
+      .map((c) => c.id),
+  );
   const totalActiveCollabs = memberships.filter(
-    (m) => m.role !== 'owner' && (m.status === 'pending' || m.status === 'accepted'),
+    (m) => ownedIds.has(m.collection_id) && m.role !== 'owner' && (m.status === 'pending' || m.status === 'accepted'),
   ).length;
   const atCap = collabCap != null && totalActiveCollabs >= collabCap;
 
@@ -267,7 +277,7 @@ export default function CollectionsCard({ user }) {
                     Want to share your collection?
                   </p>
                   <p className="text-xs text-emerald-200/70 mt-1">
-                    Upgrade to Keeper to add up to 2 collaborators, or Breeder
+                    Upgrade to Keeper to add up to 5 collaborators, or Breeder
                     for unlimited.
                   </p>
                 </div>
@@ -305,9 +315,34 @@ function CollectionRow({
   const [inviting, setInviting] = useState(false);
   const [copiedToken, setCopiedToken] = useState(null);
   const [resendingId, setResendingId] = useState(null);
+  const [showActivity, setShowActivity] = useState(false);
+  const [leaving, setLeaving] = useState(false);
 
   const owner = memberships.find((m) => m.role === 'owner');
   const others = memberships.filter((m) => m.role !== 'owner');
+  // Collections shared with this user come back from the same query. They
+  // only see their own membership row there, so they get the owner's name,
+  // their role, the activity log and a Leave button instead of the
+  // owner's controls.
+  const myEmail = String(user?.email || '').toLowerCase();
+  const isOwner = String(collection.owner_email || '').toLowerCase() === myEmail;
+  const mySeat = memberships.find((m) => String(m.member_email || '').toLowerCase() === myEmail);
+  const isShared = isOwner
+    ? others.some((m) => m.status === 'pending' || m.status === 'accepted')
+    : mySeat?.status === 'accepted';
+
+  const leaveCollection = async () => {
+    if (!mySeat) return;
+    if (!confirm(`Leave "${collection.name}"? You will stop seeing its geckos until the owner invites you again.`)) return;
+    setLeaving(true);
+    try {
+      await CollectionMember.update(mySeat.id, { status: 'declined', declined_at: new Date().toISOString() });
+      onChange?.();
+    } catch (e) {
+      toast({ title: 'Could not leave the collection', description: e.message, variant: 'destructive' });
+    }
+    setLeaving(false);
+  };
 
   const sendInvite = async () => {
     const email = inviteEmail.trim().toLowerCase();
@@ -427,23 +462,45 @@ function CollectionRow({
         <div className="min-w-0">
           <div className="flex items-center gap-2 flex-wrap">
             <span className="text-base font-semibold text-white">{collection.name}</span>
-            {collection.is_default && (
+            {isOwner && collection.is_default && (
               <Badge className="bg-emerald-700 text-emerald-100 text-[10px]">
                 Default
               </Badge>
             )}
-            <span className="text-xs text-slate-500">
-              {others.length} collaborator{others.length === 1 ? '' : 's'}
-            </span>
+            {isOwner ? (
+              <span className="text-xs text-slate-500">
+                {others.length} collaborator{others.length === 1 ? '' : 's'}
+              </span>
+            ) : (
+              <Badge className="bg-sky-800 text-sky-100 text-[10px] capitalize">
+                {mySeat?.role || 'Shared'}
+              </Badge>
+            )}
           </div>
-          {owner && (
+          {isOwner ? owner && (
             <div className="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5">
               <Crown className="w-3 h-3 text-amber-300" />
               Owner: {owner.member_email}
             </div>
+          ) : (
+            <div className="text-xs text-slate-500 mt-0.5 flex items-center gap-1.5">
+              <Crown className="w-3 h-3 text-amber-300" />
+              Shared with you by {collection.owner_email}
+            </div>
           )}
         </div>
-        {!collection.is_default && (
+        {!isOwner && mySeat?.status === 'accepted' && (
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={leaveCollection}
+            disabled={leaving}
+            className="text-slate-400 hover:text-red-300"
+          >
+            {leaving ? <Loader2 className="w-4 h-4 animate-spin" /> : <><LogOut className="w-4 h-4 mr-1.5" />Leave</>}
+          </Button>
+        )}
+        {isOwner && !collection.is_default && (
           <Button
             variant="ghost"
             size="sm"
@@ -455,7 +512,7 @@ function CollectionRow({
         )}
       </div>
 
-      {others.length > 0 && (
+      {isOwner && others.length > 0 && (
         <ul className="space-y-1.5">
           {others.map((m) => (
             <li
@@ -535,7 +592,34 @@ function CollectionRow({
         </ul>
       )}
 
-      {collabCap !== 0 && (
+      {!isOwner && mySeat?.status === 'pending' && (
+        <p className="text-xs text-slate-400">
+          Invitation waiting. Open the invite link from {collection.owner_email} to join.
+        </p>
+      )}
+
+      {isShared && (
+        <div>
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowActivity((v) => !v)}
+            aria-expanded={showActivity}
+            className="text-slate-300 hover:text-emerald-300 px-2"
+          >
+            <History className="w-4 h-4 mr-1.5" />
+            {showActivity ? 'Hide activity' : 'Activity'}
+          </Button>
+          {showActivity && (
+            <div className="mt-2 rounded-md border border-slate-700/60 bg-slate-900/40 p-3">
+              <CollectionActivity collectionId={collection.id} currentEmail={user?.email} />
+            </div>
+          )}
+        </div>
+      )}
+
+      {isOwner && collabCap !== 0 && (
         <div className="grid grid-cols-1 sm:grid-cols-[1fr_120px_auto] gap-2 pt-1">
           <Input
             value={inviteEmail}

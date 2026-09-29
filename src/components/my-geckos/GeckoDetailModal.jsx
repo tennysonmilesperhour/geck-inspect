@@ -17,6 +17,8 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import WeightChart from '@/components/shared/WeightChart';
 import FireStatePair from '@/components/shared/FireStatePair';
+import CollectionActivity from '@/components/settings/CollectionActivity';
+import { isGuestMode } from '@/lib/guestMode';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -841,6 +843,17 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                   <p className="text-slate-400 text-center py-4 text-sm">No events recorded yet.</p>
                 )}
               </div>
+
+              {/* Who did what, when this gecko sits in a shared collection.
+                  Renders nothing for geckos that were never shared. */}
+              {!isGuestMode() && (
+                <CollectionActivity
+                  geckoId={gecko.id}
+                  currentEmail={currentUser?.email}
+                  hideWhenEmpty
+                  title="Shared activity"
+                />
+              )}
 
               {/* Offspring */}
               {offspring.length > 0 && (
