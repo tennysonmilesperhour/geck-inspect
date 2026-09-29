@@ -11,8 +11,9 @@ import { supabase } from '@/lib/supabaseClient';
  * Props:
  *   - open: boolean
  *   - onClose: () => void
- *   - breederEmail: string (required, recipient)
- *   - breederSlug?: string (used in the email link back)
+ *   - breederEmail: string (display only in the thank-you note)
+ *   - breederSlug: string (required: the function finds the recipient
+ *     from the storefront slug; it never takes an address from here)
  *   - breederName?: string (display only)
  *   - gecko?: { id, name, passport_code } (optional, populated when
  *             inquiring about a specific listing)
@@ -65,7 +66,6 @@ export default function BuyerInquiryModal({
     try {
       const { data, error: fnErr } = await supabase.functions.invoke('send-breeder-inquiry', {
         body: {
-          breeder_email: breederEmail,
           breeder_slug: breederSlug || '',
           buyer_email: buyerEmail.trim(),
           buyer_name: buyerName.trim(),
@@ -77,7 +77,17 @@ export default function BuyerInquiryModal({
           website, // honeypot, should be empty
         },
       });
-      if (fnErr) throw fnErr;
+      if (fnErr) {
+        // Non-2xx replies (too many inquiries, inquiries switched off)
+        // carry their reason in the body, which invoke() doesn't parse.
+        let reason = '';
+        try {
+          if (typeof fnErr.context?.json === 'function') reason = (await fnErr.context.json())?.error || '';
+        } catch {
+          reason = '';
+        }
+        throw new Error(reason || fnErr.message);
+      }
       if (data?.error) throw new Error(data.error);
       setSubmitted(true);
     } catch (err) {
