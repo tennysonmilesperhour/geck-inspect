@@ -9,6 +9,7 @@ import { useToast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
+import PageHeader from '@/components/shared/PageHeader';
 import usePageSettings from '@/hooks/usePageSettings';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -613,7 +614,7 @@ export default function MessagesPage() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+            <div className="min-h-screen bg-slate-950 p-4 md:p-8 flex items-center justify-center">
                 <LoadingSpinner message="Loading messages..." />
             </div>
         );
@@ -623,37 +624,35 @@ export default function MessagesPage() {
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
             <Seo title="Messages" description="Direct messages with fellow gecko breeders." path="/Messages" noIndex />
             <div className="max-w-6xl mx-auto">
-                <div className="flex flex-wrap items-center justify-between gap-3 mb-8">
-                    <div className="flex items-center gap-3">
-                        <div className="w-12 h-12 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-xl flex items-center justify-center shadow-lg">
-                            <Mail className="w-6 h-6 text-white" />
-                        </div>
-                        <h1 className="text-2xl md:text-4xl font-bold text-slate-100">Messages</h1>
-                    </div>
-                    <PageSettingsPanel title="Message Settings">
-                        <div>
-                            <Label className="text-slate-300 text-sm mb-1 block">Preview Lines</Label>
-                            <div className="flex gap-1">
-                                {['1', '2', '3'].map(n => (
-                                    <button
-                                        key={n}
-                                        onClick={() => setMsgPrefs({ previewLines: n })}
-                                        className={`px-3 py-1 text-xs rounded ${msgPrefs.previewLines === n ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
-                                    >
-                                        {n}
-                                    </button>
-                                ))}
+                <PageHeader
+                    icon={Mail}
+                    title="Messages"
+                    settings={
+                        <PageSettingsPanel title="Message Settings">
+                            <div>
+                                <Label className="text-slate-300 text-sm mb-1 block">Preview Lines</Label>
+                                <div className="flex gap-1">
+                                    {['1', '2', '3'].map(n => (
+                                        <button
+                                            key={n}
+                                            onClick={() => setMsgPrefs({ previewLines: n })}
+                                            className={`px-3 py-1 text-xs rounded ${msgPrefs.previewLines === n ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+                                        >
+                                            {n}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                        <div className="flex items-center justify-between">
-                            <Label className="text-slate-300 text-sm">Enter to Send</Label>
-                            <Switch checked={msgPrefs.enterToSend} onCheckedChange={v => setMsgPrefs({ enterToSend: v })} />
-                        </div>
-                        <p className="text-[10px] text-slate-500">
-                            {msgPrefs.enterToSend ? 'Press Enter to send, Shift+Enter for new line' : 'Press Shift+Enter to send'}
-                        </p>
-                    </PageSettingsPanel>
-                </div>
+                            <div className="flex items-center justify-between">
+                                <Label className="text-slate-300 text-sm">Enter to Send</Label>
+                                <Switch checked={msgPrefs.enterToSend} onCheckedChange={v => setMsgPrefs({ enterToSend: v })} />
+                            </div>
+                            <p className="text-[10px] text-slate-500">
+                                {msgPrefs.enterToSend ? 'Press Enter to send, Shift+Enter for new line' : 'Press Shift+Enter to send'}
+                            </p>
+                        </PageSettingsPanel>
+                    }
+                />
 
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
                     {/* Conversation list, hidden on mobile when a conversation is open */}

@@ -201,9 +201,11 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
                                     </div>
                                 </CardHeader>
                                 <CardContent className="px-3 pb-3 space-y-2">
-                                    <div className="text-xs text-slate-400">
-                                        Every <span className="text-slate-200 font-semibold">{group.interval_days}</span> days
-                                    </div>
+                                    {group.interval_days ? (
+                                        <div className="text-xs text-slate-400">
+                                            Every <span className="text-slate-200 font-semibold">{group.interval_days}</span> days
+                                        </div>
+                                    ) : null}
                                     {group.last_fed_date && (
                                         <div className="text-xs text-slate-400">
                                             Last fed: <span className="text-slate-300">{format(parseLocalDate(group.last_fed_date), 'MMM d')}</span>
@@ -220,7 +222,7 @@ export default function FeedingGroupManager({ feedingGroups, geckos, onUpdate })
                                                         : `Next: ${format(nextFeed, 'MMM d')} (${daysUntil}d)`}
                                         </div>
                                     )}
-                                    <div className="text-xs text-slate-500">{assignedGeckos.length} gecko(s){group.auto_weight_min_g != null && group.auto_weight_max_g != null ? ` · Auto: ${group.auto_weight_min_g}–${group.auto_weight_max_g}g` : ''}</div>
+                                    <div className="text-xs text-slate-500">{assignedGeckos.length} gecko(s){group.auto_weight_min_g != null && group.auto_weight_max_g != null ? ` · Auto: ${group.auto_weight_min_g} to ${group.auto_weight_max_g} g` : ''}</div>
                                     {fedToday ? (
                                         <div className="space-y-1">
                                             <Button

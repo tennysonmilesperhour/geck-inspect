@@ -51,7 +51,7 @@ export default function EmailCaptureCard({ source = 'homepage' }) {
               Free guides
             </div>
             <h2 className="text-2xl md:text-3xl font-bold text-white mb-3">
-              Get the Genetics Guide and Care Guide.
+              Get the Genetics Guide and Care Guide.{' '}
               <br className="hidden md:block" />
               <span className="text-emerald-300">Free PDFs, sent to your inbox.</span>
             </h2>

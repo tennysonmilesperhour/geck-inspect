@@ -9,6 +9,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import SmartImage from '@/components/shared/SmartImage';
 import SignInRequired, { AccountOnly } from '@/components/shared/SignInRequired';
+import PageHeader from '@/components/shared/PageHeader';
 
 function LikedGeckosScreen() {
     const [likedGeckos, setLikedGeckos] = useState([]);
@@ -71,8 +72,10 @@ function LikedGeckosScreen() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+            <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+                <div className="max-w-7xl mx-auto flex justify-center py-20">
+                    <Loader2 className="w-8 h-8 text-emerald-500 animate-spin" />
+                </div>
             </div>
         );
     }
@@ -86,16 +89,14 @@ function LikedGeckosScreen() {
     return (
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
             <div className="max-w-7xl mx-auto">
-                <header className="text-center mb-8">
-                    <h1 className="text-2xl md:text-4xl font-bold text-slate-100 flex items-center justify-center gap-3">
-                        <Heart className="w-10 h-10 text-pink-500 fill-pink-500" />
-                        Liked Geckos
-                    </h1>
-                    <p className="text-lg text-slate-400 mt-2">Your saved marketplace favorites</p>
-                </header>
+                <PageHeader
+                    icon={Heart}
+                    title="Liked Geckos"
+                    description="Your saved marketplace favorites"
+                />
 
                 {likedGeckos.length === 0 ? (
-                    <div className="text-center py-20 bg-slate-900 rounded-lg">
+                    <div className="text-center py-20 px-4 bg-slate-900 rounded-lg">
                         <Heart className="w-16 h-16 mx-auto text-slate-600 mb-4" />
                         <h3 className="text-xl font-semibold text-slate-300">No liked geckos yet</h3>
                         <p className="text-slate-400 mt-2">Browse the marketplace and tap the heart to save geckos you love!</p>
@@ -106,7 +107,7 @@ function LikedGeckosScreen() {
                         </Link>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
                         {likedGeckos.map(gecko => {
                             const owner = owners[gecko.created_by];
                             return (

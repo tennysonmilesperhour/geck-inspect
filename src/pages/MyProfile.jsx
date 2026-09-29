@@ -388,8 +388,10 @@ function MyProfileScreen() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+            <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+                <div className="max-w-5xl mx-auto py-20 flex justify-center">
+                    <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+                </div>
             </div>
         );
     }
@@ -430,7 +432,7 @@ function MyProfileScreen() {
                 </div>
             </div>
 
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="max-w-5xl mx-auto px-4 md:px-8 pb-4 md:pb-8">
                 {/* Profile Header */}
                 <div className="-mt-12 sm:-mt-16 sm:flex sm:items-end sm:space-x-5 relative z-10">
                     {/* Profile Image */}
@@ -493,8 +495,9 @@ function MyProfileScreen() {
                     </div>
                 </div>
 
-                {/* Mobile Header */}
-                <div className="block sm:hidden mt-6 min-w-0 flex-1">
+                {/* Name for the sm range only: the header row hides its copy
+                    there, and shows it on phones and from md up. */}
+                <div className="hidden sm:block md:hidden mt-6 min-w-0 flex-1">
                     <h1 className="text-2xl font-bold text-slate-100 truncate">{getDisplayName(user)}</h1>
                     {(user.location || editData.location) && !isEditing && (
                         <p className="text-sm text-slate-400 flex items-center gap-2 mt-1">
@@ -508,7 +511,7 @@ function MyProfileScreen() {
                 </div>
 
                 {/* Tabs */}
-                <div className="mt-8">
+                <div className="mt-6 md:mt-8">
                     <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
                         <TabsList className="flex w-full bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1">
                             <TabsTrigger value="overview" className="flex-1 data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-2 rounded-sm transition-colors">Overview</TabsTrigger>
@@ -739,15 +742,15 @@ function MyProfileScreen() {
                             <Tabs defaultValue="collection" className="w-full">
                                 <TabsList className="mb-6">
                                     <TabsTrigger value="for-sale">
-                                        <ShoppingCart className="w-4 h-4 mr-2" />
+                                        <ShoppingCart className="w-4 h-4" />
                                         For Sale ({forSaleGeckos.length})
                                     </TabsTrigger>
                                     <TabsTrigger value="breeders">
-                                        <GitBranch className="w-4 h-4 mr-2" />
+                                        <GitBranch className="w-4 h-4" />
                                         Breeders ({breedingGeckos.length})
                                     </TabsTrigger>
                                     <TabsTrigger value="collection">
-                                        <Heart className="w-4 h-4 mr-2" />
+                                        <Heart className="w-4 h-4" />
                                         Collection ({collectionGeckos.length})
                                     </TabsTrigger>
                                 </TabsList>

@@ -26,6 +26,7 @@ import {
   Scale,
 } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
+import PageHeader from '@/components/shared/PageHeader';
 
 import AdminOverview from '@/components/admin/AdminOverview';
 import AnalyticsDashboard from '@/components/admin/AnalyticsDashboard';
@@ -211,8 +212,10 @@ export default function AdminPanel() {
   // Placed after all hooks to satisfy React's rules-of-hooks.
   if (isLoadingAuth) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="w-8 h-8 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+      <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+        <div className="max-w-[1600px] mx-auto py-20 flex justify-center">
+          <div className="w-8 h-8 border-4 border-emerald-500/30 border-t-emerald-500 rounded-full animate-spin" />
+        </div>
       </div>
     );
   }
@@ -283,28 +286,27 @@ export default function AdminPanel() {
     }
   };
 
-  // Fixed-viewport layout. The document itself doesn't scroll; both the
-  // sidebar and the main pane scroll internally. Switching sections no
-  // longer changes the page scroll position because the page itself is
-  // locked at viewport height, only the inner pane's scrollbar moves.
+  // Fixed-viewport layout from lg up. The document itself doesn't scroll;
+  // both the sidebar and the main pane scroll internally. Switching
+  // sections no longer changes the page scroll position because the page
+  // itself is locked at viewport height, only the inner pane's scrollbar
+  // moves. Below lg the panes stack, so the page scrolls normally
+  // (locking it there gave the whole height to the nav and hid the
+  // section content on phones).
   return (
-    <div className="h-full bg-slate-950 text-slate-100 flex flex-col overflow-hidden">
-      <div className="max-w-[1600px] w-full mx-auto flex flex-1 flex-col lg:flex-row gap-6 p-4 md:p-6 overflow-hidden">
-        {/* Sidebar, internal scroll for projects with long admin nav. */}
-        <aside
-          ref={sidebarRef}
-          className="lg:w-64 shrink-0 lg:overflow-y-auto custom-scrollbar pr-1"
-        >
-          <div className="space-y-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
-                <Shield className="w-5 h-5 text-emerald-400" />
-              </div>
-              <div>
-                <h1 className="text-xl font-bold text-white">Admin Panel</h1>
-                <p className="text-[10px] text-slate-500 mt-0.5">Geck Inspect control center</p>
-              </div>
-            </div>
+    <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8 lg:h-full lg:flex lg:flex-col lg:overflow-hidden">
+      <div className="max-w-[1600px] w-full mx-auto lg:flex lg:flex-1 lg:flex-col lg:min-h-0">
+        <PageHeader
+          icon={Shield}
+          title="Admin Panel"
+          description="Geck Inspect control center"
+        />
+        <div className="flex flex-col lg:flex-row gap-6 lg:flex-1 lg:min-h-0 lg:overflow-hidden">
+          {/* Sidebar, internal scroll for projects with long admin nav. */}
+          <aside
+            ref={sidebarRef}
+            className="lg:w-64 shrink-0 lg:overflow-y-auto custom-scrollbar lg:pr-1"
+          >
             <nav className="space-y-5">
               {NAV_GROUPS.map((group, idx) => (
                 <div key={idx}>
@@ -343,28 +345,28 @@ export default function AdminPanel() {
                 </div>
               ))}
             </nav>
-          </div>
-        </aside>
+          </aside>
 
-        {/* Main pane, scrolls internally so the document never moves
-            when section content height changes. */}
-        <main
-          ref={mainRef}
-          className="flex-1 min-w-0 overflow-y-auto custom-scrollbar pr-1"
-        >
-          <header className="mb-6">
-            <h2 className="text-3xl font-bold text-white">
-              {SECTION_TITLES[section] || 'Admin'}
-            </h2>
-            <div className="h-px bg-slate-800 mt-4" />
-          </header>
-          {/* min-h-full keeps the inner content at least as tall as the
-              pane so switching from a long section to a short one
-              doesn't bounce the inner scrollbar back to top. */}
-          <div className="min-h-full pb-12">
-            {renderSection()}
-          </div>
-        </main>
+          {/* Main pane. From lg up it scrolls internally so the document
+              never moves when section content height changes. */}
+          <main
+            ref={mainRef}
+            className="flex-1 min-w-0 lg:overflow-y-auto custom-scrollbar lg:pr-1"
+          >
+            <header className="mb-6">
+              <h2 className="text-xl md:text-2xl font-bold text-slate-100">
+                {SECTION_TITLES[section] || 'Admin'}
+              </h2>
+              <div className="h-px bg-slate-800 mt-4" />
+            </header>
+            {/* min-h-full keeps the inner content at least as tall as the
+                pane so switching from a long section to a short one
+                doesn't bounce the inner scrollbar back to top. */}
+            <div className="min-h-full pb-12">
+              {renderSection()}
+            </div>
+          </main>
+        </div>
       </div>
     </div>
   );

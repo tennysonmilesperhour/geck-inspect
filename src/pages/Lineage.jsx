@@ -1116,9 +1116,12 @@ export default function Lineage() {
                             )}
                         </p>
                     </div>
-                    <div className="flex items-center gap-2 w-full md:w-auto">
+                    {/* On phones the search gets its own full-width row and the
+                        generation picker and tools wrap below it, instead of
+                        squeezing the icon buttons to a sliver. */}
+                    <div className="flex flex-wrap md:flex-nowrap items-center gap-2 w-full md:w-auto">
                         {/* Autocomplete gecko search */}
-                        <div className="relative flex-grow md:flex-grow-0" ref={searchRef}>
+                        <div className="relative basis-full md:basis-auto flex-grow md:flex-grow-0" ref={searchRef}>
                             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-emerald-400 z-10" />
                             <Input
                                 type="text"
@@ -1175,7 +1178,7 @@ export default function Lineage() {
                                     variant="outline"
                                     onClick={handleCopyLink}
                                     disabled={!selectedGeckoId}
-                                    className="h-10 w-10 bg-slate-800 border-slate-600 hover:bg-slate-700 disabled:opacity-40"
+                                    className="h-10 w-10 shrink-0 bg-slate-800 border-slate-600 hover:bg-slate-700 disabled:opacity-40"
                                     aria-label="Copy shareable link"
                                 >
                                     {copiedLink ? <Check className="w-4 h-4 text-emerald-400" /> : <LinkIcon className="w-4 h-4" />}
@@ -1190,7 +1193,7 @@ export default function Lineage() {
                                     variant="outline"
                                     onClick={handleExportPng}
                                     disabled={!selectedGeckoId || isExporting}
-                                    className="h-10 w-10 bg-slate-800 border-slate-600 hover:bg-slate-700 disabled:opacity-40"
+                                    className="h-10 w-10 shrink-0 bg-slate-800 border-slate-600 hover:bg-slate-700 disabled:opacity-40"
                                     aria-label="Download lineage as PNG"
                                 >
                                     {isExporting ? <Loader2 className="w-4 h-4 animate-spin" /> : <Download className="w-4 h-4" />}

@@ -356,17 +356,17 @@ export default function QualityScale() {
         </div>
 
         {/* Hero */}
-        <div className="bg-slate-900 border border-slate-700 rounded-xl p-8 space-y-4 mb-8">
-          <div className="flex items-center gap-3">
-            <Award className="w-8 h-8 text-amber-400 flex-shrink-0" />
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-slate-100">
+        <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 md:p-8 space-y-4 mb-8">
+          <div>
+            <div className="flex items-start gap-3">
+              <Award className="w-7 h-7 md:w-8 md:h-8 mt-0.5 text-amber-400 flex-shrink-0" />
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-100">
                 Crested Gecko Quality Scale
               </h1>
-              <p className="text-slate-500 text-sm">
-                The Geck Inspect Standard. A free 10-point rubric for figuring out where your gecko falls on the quality scale.
-              </p>
             </div>
+            <p className="text-slate-400 text-sm mt-2">
+              The Geck Inspect Standard. A free 10-point rubric for figuring out where your gecko falls on the quality scale.
+            </p>
           </div>
 
           <p className="text-slate-300 text-sm leading-relaxed">
@@ -379,7 +379,7 @@ export default function QualityScale() {
         </div>
 
         {/* Eligibility floor */}
-        <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 mb-8">
+        <div className="bg-slate-900 border border-slate-700 rounded-xl p-4 md:p-6 mb-8">
           <div className="flex items-center gap-2 mb-3">
             <Scale className="w-5 h-5 text-emerald-400" />
             <h2 className="text-lg font-semibold text-slate-100">Which crested geckos are eligible to be scored?</h2>
@@ -411,7 +411,7 @@ export default function QualityScale() {
         </div>
 
         {/* The rubric */}
-        <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 mb-8">
+        <div className="bg-slate-900 border border-slate-700 rounded-xl p-4 md:p-6 mb-8">
           <div className="flex items-center gap-2 mb-2">
             <ScrollText className="w-5 h-5 text-sky-400" />
             <h2 className="text-lg font-semibold text-slate-100">How does the 10-point rubric work?</h2>
@@ -435,7 +435,7 @@ export default function QualityScale() {
         </div>
 
         {/* Score-to-grade */}
-        <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 mb-8">
+        <div className="bg-slate-900 border border-slate-700 rounded-xl p-4 md:p-6 mb-8">
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="w-5 h-5 text-amber-400" />
             <h2 className="text-lg font-semibold text-slate-100">What grade tier does my score correspond to?</h2>
@@ -466,7 +466,7 @@ export default function QualityScale() {
         <ScorecardForm criteria={RUBRIC} />
 
         {/* Per-category */}
-        <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 mb-8">
+        <div className="bg-slate-900 border border-slate-700 rounded-xl p-4 md:p-6 mb-8">
           <div className="flex items-center gap-2 mb-3">
             <Eye className="w-5 h-5 text-emerald-400" />
             <h2 className="text-lg font-semibold text-slate-100">What changes per morph category?</h2>
@@ -516,7 +516,7 @@ export default function QualityScale() {
         </div>
 
         {/* How to use it */}
-        <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 mb-8">
+        <div className="bg-slate-900 border border-slate-700 rounded-xl p-4 md:p-6 mb-8">
           <div className="flex items-center gap-2 mb-3">
             <CheckCircle2 className="w-5 h-5 text-sky-400" />
             <h2 className="text-lg font-semibold text-slate-100">How do I score my crested gecko, step by step?</h2>
@@ -539,7 +539,7 @@ export default function QualityScale() {
         </div>
 
         {/* Frequently asked questions (visible block matched to FAQPage JSON-LD) */}
-        <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 mb-8">
+        <div className="bg-slate-900 border border-slate-700 rounded-xl p-4 md:p-6 mb-8">
           <h2 className="text-lg font-semibold text-slate-100 mb-4">Frequently asked questions</h2>
           <div className="space-y-5">
             {FAQ_ITEMS.map((item) => (
@@ -552,7 +552,7 @@ export default function QualityScale() {
         </div>
 
         {/* Credit and sources */}
-        <div className="bg-slate-900 border border-slate-700 rounded-xl p-6">
+        <div className="bg-slate-900 border border-slate-700 rounded-xl p-4 md:p-6">
           <h2 className="text-lg font-semibold text-slate-100 mb-2">What is this standard built on?</h2>
           <p className="text-slate-400 text-sm leading-relaxed">
             The Geck Inspect Standard is our own rubric. It is informed by, and gives credit to, the public work the <strong className="text-slate-200">Gold Standard Gecko Club</strong> has done in setting judging criteria for crested geckos. GSGC was founded by Danny Utrera and Manny Durand of Tiki's Geckos and is the closest thing the hobby has to a recognized standards body. Their rules, eligibility thresholds, and category list directly informed this page. We are not reusing their score sheets or assets without permission.

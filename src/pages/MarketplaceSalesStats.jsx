@@ -12,6 +12,7 @@ import {
 import { toast } from '@/components/ui/use-toast';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
+import PageHeader from '@/components/shared/PageHeader';
 import usePageSettings from '@/hooks/usePageSettings';
 import { Switch } from '@/components/ui/switch';
 import { Button } from '@/components/ui/button';
@@ -858,7 +859,7 @@ const PRICING_LINKS = [
 
 function PricingTab() {
   return (
-    <div className="grid gap-3 sm:grid-cols-2">
+    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
       {PRICING_LINKS.map(({ page, title, body, Icon }) => (
         <Link key={page} to={createPageUrl(page)}
           className="group rounded-lg border border-slate-800 bg-slate-900/60 p-4 hover:border-emerald-700/60 hover:bg-slate-900 transition-colors">
@@ -929,7 +930,7 @@ function ProfitTab({ seasons, pairings, currency, hasPlans }) {
               : 'Add a pairing in Breeding to see its profit here.'}
           </p>
         ) : (
-          <div className="grid gap-2 sm:grid-cols-2">
+          <div className="grid grid-cols-1 gap-2 sm:grid-cols-2">
             {pairings.map((row) => (
               <div key={row.plan.id} className="rounded-lg border border-slate-800 bg-slate-900/60 p-3 space-y-2">
                 <div className="flex items-start justify-between gap-2">
@@ -1232,36 +1233,26 @@ export default function MarketplaceSalesStats() {
     return Object.entries(groups).sort(([a], [b]) => b.localeCompare(a));
   }, [entries]);
 
-  const tabTriggerClass = "w-full min-w-0 whitespace-normal text-center leading-tight py-1.5 data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-2 rounded-sm transition-colors";
+  // The house tab bar styles the triggers; this only lets a long label
+  // such as "Sales (2 reserved)" wrap inside its tab on a phone.
+  const tabTriggerClass = "min-w-0 whitespace-normal text-center leading-tight";
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-950 p-6 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-950 p-4 md:p-8 flex items-center justify-center">
         <div className="w-8 h-8 border-4 border-slate-600 border-t-emerald-500 rounded-full animate-spin"></div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-slate-950">
-      {/* Hero, matches GeneticsGuide visual pattern */}
-      <div className="relative overflow-hidden border-b border-slate-800 bg-gradient-to-br from-slate-950 via-emerald-950/30 to-teal-950/20">
-        <div className="absolute inset-0 gecko-scale-pattern opacity-[0.04] pointer-events-none" />
-        <div className="relative max-w-5xl mx-auto px-4 md:px-8 py-8 md:py-10">
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
-                <TrendingUp className="w-6 h-6 text-emerald-400" />
-              </div>
-              <div>
-                <h1 className="text-3xl md:text-4xl font-bold bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent tracking-tight">
-                  Business Tools
-                </h1>
-                <p className="text-sm text-slate-400 mt-1">
-                  Revenue tracking, cost management, and market intelligence for your breeding operation.
-                </p>
-              </div>
-            </div>
+    <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+      <div className="max-w-5xl mx-auto space-y-6">
+        <PageHeader
+          icon={TrendingUp}
+          title="Business Tools"
+          description="Revenue tracking, cost management, and market intelligence for your breeding operation."
+          settings={
             <PageSettingsPanel title="Sales Stats Settings">
               <div>
                 <Label className="text-slate-300 text-sm mb-1 block">Default Tab</Label>
@@ -1296,11 +1287,8 @@ export default function MarketplaceSalesStats() {
                 </div>
               </div>
             </PageSettingsPanel>
-          </div>
-        </div>
-      </div>
-
-      <div className="max-w-5xl mx-auto px-4 md:px-8 py-6 space-y-6">
+          }
+        />
 
         <div className="grid grid-cols-2 lg:grid-cols-5 gap-3">
           {[
@@ -1309,8 +1297,10 @@ export default function MarketplaceSalesStats() {
             { label: 'YTD Revenue', value: money(totals.ytdRevenue, statsPrefs.currency), sub: 'Year to date', color: 'text-blue-400', Icon: TrendingUp },
             { label: 'Total Costs', value: money(totals.costs, statsPrefs.currency), sub: `${costs.length} entries`, color: 'text-orange-400', Icon: DollarSign },
             { label: 'Net Profit', value: money(totals.profit, statsPrefs.currency), sub: 'All time', color: totals.profit >= 0 ? 'text-emerald-400' : 'text-red-400', Icon: TrendingUp },
-          ].map(({ label, value, sub, color, Icon }) => (
-            <Card key={label} className="bg-emerald-950/40 border-emerald-900/50">
+          ].map(({ label, value, sub, color, Icon }, i, all) => (
+            // Five tiles in a two-column phone grid: the last one spans the
+            // row instead of sitting alone next to an empty cell.
+            <Card key={label} className={`bg-emerald-950/40 border-emerald-900/50 ${i === all.length - 1 ? 'col-span-2 lg:col-span-1' : ''}`}>
               <CardHeader className="pb-2 pt-4 px-4">
                 <CardTitle className="text-xs text-slate-400 flex items-center gap-1.5">
                   <Icon className="w-3.5 h-3.5" />{label}
@@ -1326,7 +1316,9 @@ export default function MarketplaceSalesStats() {
 
         <div className="bg-emerald-950/30 border border-emerald-900/40 rounded-xl p-4 md:p-6">
           <Tabs defaultValue={businessTabFor(searchParams.get('tab') || statsPrefs.defaultTab)}>
-            <TabsList className="grid grid-cols-2 sm:grid-cols-4 h-auto w-full max-w-xl mx-auto bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1 mb-6">
+            {/* Four tabs: two rows on phones (the reserved count makes Sales
+                long), one full-width house bar from sm up. */}
+            <TabsList className="grid grid-cols-2 sm:flex mb-6">
               <TabsTrigger value="money" className={tabTriggerClass}>
                 <PieChart className="w-3.5 h-3.5 mr-1" />
                 Money
@@ -1346,9 +1338,9 @@ export default function MarketplaceSalesStats() {
             </TabsList>
 
             {/* Money: profit per season and pairing, then costs */}
-            <TabsContent value="money" className="space-y-8">
+            <TabsContent value="money" className="space-y-6">
               <ProfitTab seasons={seasons} pairings={pairings} currency={statsPrefs.currency} hasPlans={plans.length > 0} />
-              <section className="space-y-5">
+              <section className="space-y-4">
                 <h3 className="text-base font-semibold text-slate-100">Costs</h3>
                 <div className="bg-slate-800/50 border border-slate-700/50 rounded-xl p-4 space-y-3">
                   <h3 className="text-sm font-semibold text-slate-200">Add New Cost</h3>
@@ -1428,7 +1420,7 @@ export default function MarketplaceSalesStats() {
             </TabsContent>
 
             {/* Sales: every sale, then reserves and payment plans */}
-            <TabsContent value="sales" className="space-y-8">
+            <TabsContent value="sales" className="space-y-6">
               <section className="space-y-4">
                 <Button onClick={() => setAddSaleModalOpen(true)} className="bg-emerald-600 hover:bg-emerald-500 text-white h-9">
                   <Plus className="w-4 h-4 mr-2" />Add Sale
@@ -1634,7 +1626,7 @@ export default function MarketplaceSalesStats() {
             </TabsContent>
 
             {/* Pricing: what things are worth and where to list them */}
-            <TabsContent value="pricing" className="space-y-8">
+            <TabsContent value="pricing" className="space-y-6">
               <PricingTab />
               <section className="space-y-4">
                 <h3 className="text-base font-semibold text-slate-100 flex items-center gap-1.5">

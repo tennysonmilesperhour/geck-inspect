@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Layers, Sparkles, RotateCcw, HardHat, Eye, Compass } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Seo from '@/components/seo/Seo';
+import PageHeader from '@/components/shared/PageHeader';
 import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
 
 import { composePhenotype } from '../components/morph-visualizer/engine/compose';
@@ -174,7 +175,7 @@ export default function MorphVisualizer() {
   }, []);
 
   return (
-    <div className="p-4 md:p-6 bg-slate-950 min-h-screen text-white">
+    <div className="min-h-screen bg-slate-950 p-4 md:p-8 text-white">
       <Seo
         title="Crested Gecko Morph Visualizer"
         description="Free interactive crested gecko trait simulator. Pick a base color, set morph genotype zygosity, dial pattern intensity, and watch the resulting phenotype render in real time with a rarity and value estimate."
@@ -190,16 +191,11 @@ export default function MorphVisualizer() {
         jsonLd={VISUALIZER_JSON_LD}
       />
       <div className="max-w-[1700px] mx-auto">
-        {/* Header */}
-        <div className="text-center mb-6">
-          <h1 className="text-3xl md:text-5xl font-bold text-slate-100 mb-2 flex items-center justify-center gap-3">
-            <Layers className="w-9 h-9 text-emerald-400" />
-            Crested Gecko Morph Visualizer
-          </h1>
-          <p className="text-sm md:text-base text-slate-400">
-            Explore traits, combinations, and genetics, see what every morph actually looks like and why.
-          </p>
-        </div>
+        <PageHeader
+          icon={Layers}
+          title="Crested Gecko Morph Visualizer"
+          description="Explore traits, combinations, and genetics, see what every morph actually looks like and why."
+        />
 
         {/* Main grid: left primary trait builders, center canvas + reasoning,
             right modifiers + rarity. The preset gallery moves to a full-width

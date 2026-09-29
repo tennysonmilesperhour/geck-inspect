@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { FlaskConical, Trophy, RotateCcw, ArrowRight, AlertTriangle, Egg } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import Seo from '@/components/seo/Seo';
+import PageHeader from '@/components/shared/PageHeader';
 import { breadcrumbSchema, ORG_ID } from '@/lib/organization-schema';
 import {
   PUZZLES,
@@ -162,7 +163,7 @@ export default function ClutchLab() {
   );
 
   return (
-    <div className="p-4 md:p-8 bg-slate-950 min-h-screen">
+    <div className="min-h-screen bg-slate-950 p-4 md:p-8">
       <Seo
         title="Clutch Lab: Genetics Puzzles"
         description="Learn crested gecko genetics by playing: six breeding puzzles from your first Lilly White to a two-generation Phantom Frappuccino project, scored by how few crosses you need. Free, no signup."
@@ -178,24 +179,20 @@ export default function ClutchLab() {
         jsonLd={LEARN_JSON_LD}
       />
       <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <div className="flex items-center gap-2 text-xs text-slate-500 mb-3">
-            <Link to="/" className="hover:text-slate-300">Home</Link>
-            <span>/</span>
-            <Link to="/calculator" className="hover:text-slate-300">Genetic Calculator</Link>
-            <span>/</span>
-            <span className="text-slate-400">Clutch Lab</span>
-          </div>
-          <h1 className="text-2xl md:text-4xl font-bold text-slate-100 flex items-center gap-3">
-            <FlaskConical className="w-8 h-8 md:w-10 md:h-10 text-purple-400" />
-            Clutch Lab
-          </h1>
-          <p className="text-slate-400 mt-2 text-sm md:text-base">
-            Learn crestie genetics by breeding for a goal. Pick two animals, see every possible
-            baby with its odds, keep the right one, repeat. Fewer crosses, better score. The same
-            math as the real calculator, none of the waiting.
-          </p>
-        </div>
+        <PageHeader
+          icon={FlaskConical}
+          title="Clutch Lab"
+          description="Learn crestie genetics by breeding for a goal. Pick two animals, see every possible baby with its odds, keep the right one, repeat. Fewer crosses, better score. The same math as the real calculator, none of the waiting."
+          eyebrow={
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+              <Link to="/" className="hover:text-slate-300">Home</Link>
+              <span>/</span>
+              <Link to="/calculator" className="hover:text-slate-300">Genetic Calculator</Link>
+              <span>/</span>
+              <span className="text-slate-400">Clutch Lab</span>
+            </div>
+          }
+        />
 
         {!puzzle ? (
           <div className="space-y-3">
@@ -253,7 +250,7 @@ export default function ClutchLab() {
                   {crosses <= puzzle.par ? ' (par or better!)' : ` (par is ${puzzle.par}, try again for the clean route)`}
                 </p>
                 <p className="text-sm text-emerald-100/90">{puzzle.lesson}</p>
-                <div className="flex gap-2">
+                <div className="flex flex-wrap gap-2">
                   <Button size="sm" variant="outline" className="border-slate-600 text-slate-200" onClick={() => startPuzzle(puzzle.id)}>
                     <RotateCcw className="w-3.5 h-3.5 mr-1.5" /> Replay
                   </Button>
@@ -286,7 +283,7 @@ export default function ClutchLab() {
                   </div>
                 </div>
 
-                <div className="flex items-center gap-3">
+                <div className="flex flex-wrap items-center gap-2">
                   <Button
                     disabled={selectedIds.length !== 2}
                     onClick={runCross}
@@ -356,7 +353,7 @@ export default function ClutchLab() {
           </div>
         )}
 
-        <p className="text-xs text-slate-500 mt-8">
+        <p className="text-xs text-slate-500 mt-6">
           Odds shown are real Punnett probabilities from the calculator's engine. In the Lab you
           choose which baby to keep; in a real season, the eggs choose. The{' '}
           <Link to="/calculator" className="underline text-slate-500">calculator</Link> and its

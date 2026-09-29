@@ -11,6 +11,7 @@ import {
 import Seo from '@/components/seo/Seo';
 import { breederCanonical, breederDisplayName, breederSlug } from '@/lib/breederUtils';
 import BuyerInquiryModal from '@/components/breeder/BuyerInquiryModal';
+import { useInAppShell } from '@/lib/appShell';
 import TrustPanel from '@/components/marketplace/TrustPanel';
 import {
   DEFAULT_STORE_SETTINGS, readStoreSettings, themeFor,
@@ -67,6 +68,7 @@ function StarRow({ rating }) {
 export default function Breeder() {
   const location = useLocation();
   const params = useParams();
+  const inAppShell = useInAppShell();
   // Support both the clean path form `/Breeder/<slug>` (preferred, what
   // the sitemap and canonical now point at) and the legacy query-string
   // form `/Breeder?slug=<slug>` (kept for inbound links that still exist).
@@ -256,11 +258,11 @@ export default function Breeder() {
           <p className="text-slate-400">
             This page needs a slug, e.g. <code>/Breeder/altitude-exotics</code>.
           </p>
-          <Link to="/">
-            <Button variant="outline" className="bg-white text-slate-900 hover:bg-slate-100 hover:text-slate-900 border-white/40 font-semibold">
-              <ArrowLeft className="w-4 h-4 mr-2 text-slate-800" /> Back to Geck Inspect
-            </Button>
-          </Link>
+          <Button asChild variant="outline">
+            <Link to="/">
+              <ArrowLeft className="w-4 h-4" /> Back to Geck Inspect
+            </Link>
+          </Button>
         </div>
       </div>
     );
@@ -370,18 +372,21 @@ export default function Breeder() {
       />
 
       <div className="min-h-screen bg-slate-950 text-slate-100">
-        {/* Top nav, mirrors the landing page for a coherent public feel */}
-        <header className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
-            <img src={LOGO_URL} alt="Geck Inspect" className="h-10 w-10 rounded-xl" />
-            <span className="text-xl font-bold tracking-tight">Geck Inspect</span>
-          </Link>
-          <Link to={createPageUrl('AuthPortal')}>
-            <Button className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold">
-              Sign In
-            </Button>
-          </Link>
-        </header>
+        {/* Top nav, mirrors the landing page for a coherent public feel.
+            Inside the app the shell already has a header. */}
+        {!inAppShell && (
+          <header className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
+            <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
+              <img src={LOGO_URL} alt="Geck Inspect" className="h-10 w-10 rounded-xl" />
+              <span className="text-xl font-bold tracking-tight">Geck Inspect</span>
+            </Link>
+            <Link to={createPageUrl('AuthPortal')}>
+              <Button className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold">
+                Sign In
+              </Button>
+            </Link>
+          </header>
+        )}
 
         {mode === 'loading' && (
           <div className="max-w-5xl mx-auto px-6 pt-10 pb-24">
@@ -669,26 +674,28 @@ export default function Breeder() {
         )}
 
         {/* Footer */}
-        <footer className="border-t border-slate-800/50">
-          <div className="max-w-6xl mx-auto px-6 py-8 space-y-4">
-            <BuiltOnGeckInspect className="text-center" />
-            <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
-              <div className="flex items-center gap-3">
-                <img src={LOGO_URL} alt="Geck Inspect" className="h-6 w-6 rounded" />
-                <span>© {new Date().getFullYear()} Geck Inspect · geckOS</span>
-              </div>
-              <div className="flex items-center gap-5">
-                <Link to="/" className="hover:text-slate-300">Home</Link>
-                <Link to={createPageUrl('MorphGuide')} className="hover:text-slate-300">
-                  Morph Guide
-                </Link>
-                <Link to={createPageUrl('AuthPortal')} className="hover:text-slate-300">
-                  Sign in
-                </Link>
+        {!inAppShell && (
+          <footer className="border-t border-slate-800/50">
+            <div className="max-w-6xl mx-auto px-6 py-8 space-y-4">
+              <BuiltOnGeckInspect className="text-center" />
+              <div className="flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
+                <div className="flex items-center gap-3">
+                  <img src={LOGO_URL} alt="Geck Inspect" className="h-6 w-6 rounded" />
+                  <span>© {new Date().getFullYear()} Geck Inspect · geckOS</span>
+                </div>
+                <div className="flex items-center gap-5">
+                  <Link to="/" className="hover:text-slate-300">Home</Link>
+                  <Link to={createPageUrl('MorphGuide')} className="hover:text-slate-300">
+                    Morph Guide
+                  </Link>
+                  <Link to={createPageUrl('AuthPortal')} className="hover:text-slate-300">
+                    Sign in
+                  </Link>
+                </div>
               </div>
             </div>
-          </div>
-        </footer>
+          </footer>
+        )}
       </div>
     </>
   );

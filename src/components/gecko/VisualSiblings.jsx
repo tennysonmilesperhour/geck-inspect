@@ -60,11 +60,11 @@ export default function VisualSiblings({ gecko, user }) {
 
   return (
     <Card className="bg-slate-900 border-slate-700">
-      <CardContent className="p-5 space-y-3">
+      <CardContent className="p-4 space-y-3">
         <div className="flex items-center justify-between gap-2">
           <div className="flex items-center gap-2">
             <Sparkles className="w-4 h-4 text-emerald-400" />
-            <h3 className="text-sm uppercase tracking-wide text-slate-300">
+            <h3 className="text-base font-semibold text-slate-100">
               Lookalikes
             </h3>
           </div>

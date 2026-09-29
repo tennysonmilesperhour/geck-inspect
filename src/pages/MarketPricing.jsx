@@ -21,6 +21,7 @@ import { useAuth } from '@/lib/AuthContext';
 import { loadTraitValueIndex } from '@/lib/traitValueTable';
 import { createPageUrl } from '@/utils';
 import Seo from '@/components/seo/Seo';
+import PageHeader from '@/components/shared/PageHeader';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -140,31 +141,26 @@ export default function MarketPricing() {
         noIndex
       />
       <div className="max-w-5xl mx-auto space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
-          <div>
-            <h1 className="text-3xl font-bold text-slate-100 flex items-center gap-2">
-              <DollarSign className="w-7 h-7 text-emerald-400" /> Market Pricing
-            </h1>
-            <p className="text-sm text-slate-400 mt-1 max-w-2xl">
-              What crested geckos are listed for on MorphMarket, by trait. These are asking prices:
-              animals often sell for less, and pattern quality moves the price more than any single trait.
-            </p>
-          </div>
+        <PageHeader
+          icon={DollarSign}
+          title="Market Pricing"
+          description="What crested geckos are listed for on MorphMarket, by trait. These are asking prices: animals often sell for less, and pattern quality moves the price more than any single trait."
+        >
           {signedIn && (
-            <Button onClick={() => setSaleOpen(true)} className="bg-emerald-600 hover:bg-emerald-700 self-start sm:self-auto">
+            <Button onClick={() => setSaleOpen(true)}>
               <Plus className="w-4 h-4 mr-1.5" /> Log a sale
             </Button>
           )}
-        </div>
+        </PageHeader>
 
         {!signedIn ? (
           <Card className="bg-slate-900 border-slate-700">
-            <CardContent className="p-6 space-y-3">
-              <p className="text-slate-200 font-medium">Sign in to see asking-price ranges by trait, age and sex.</p>
-              <p className="text-sm text-slate-400">
+            <CardContent className="p-4 md:p-6">
+              <p className="text-base font-semibold text-slate-100">Sign in to see asking-price ranges by trait, age and sex.</p>
+              <p className="text-sm text-slate-400 mt-3">
                 The ranges come from thousands of crested gecko listings and are free with any account.
               </p>
-              <Button asChild className="bg-emerald-600 hover:bg-emerald-700">
+              <Button asChild className="mt-4">
                 <Link to="/AuthPortal?mode=signup">Start free</Link>
               </Button>
             </CardContent>
@@ -172,7 +168,7 @@ export default function MarketPricing() {
         ) : (
           <Card className="bg-slate-900 border-slate-700">
             <CardHeader className="pb-3">
-              <CardTitle className="text-slate-100 text-lg">Asking prices by trait</CardTitle>
+              <CardTitle className="text-slate-100 text-base">Asking prices by trait</CardTitle>
               <div className="flex flex-wrap gap-2 pt-2">
                 <div className="relative">
                   <Search className="w-4 h-4 text-slate-500 absolute left-2.5 top-2.5" />
@@ -243,7 +239,7 @@ export default function MarketPricing() {
 
         <Card className="bg-slate-900 border-slate-700">
           <CardHeader className="pb-2">
-            <CardTitle className="text-slate-100 text-lg">Sales logged by Geck Inspect breeders</CardTitle>
+            <CardTitle className="text-slate-100 text-base">Sales logged by Geck Inspect breeders</CardTitle>
             <p className="text-sm text-slate-400">What animals actually sold for, shared without names.</p>
           </CardHeader>
           <CardContent>

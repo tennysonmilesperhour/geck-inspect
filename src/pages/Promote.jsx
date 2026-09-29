@@ -11,6 +11,8 @@ import { useAuth } from '@/lib/AuthContext';
 import { tierOf, getTierLimits } from '@/lib/tierLimits';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
 import EmptyState from '@/components/shared/EmptyState';
+import PageHeader from '@/components/shared/PageHeader';
+import SignInRequired from '@/components/shared/SignInRequired';
 import PostUsageMeter from '@/components/promote/PostUsageMeter';
 import PromoteComposer from '@/components/promote/PromoteComposer';
 import PromoteImageGallery from '@/components/promote/PromoteImageGallery';
@@ -160,36 +162,28 @@ export default function PromotePage() {
 
   if (!user?.email) {
     return (
-      <div className="p-8 max-w-md mx-auto text-center">
-        <h1 className="text-2xl font-bold text-emerald-100 mb-2">Promote</h1>
-        <p className="text-emerald-200/80 mb-4">
-          Sign in to use the social media manager.
-        </p>
-      </div>
+      <SignInRequired
+        title="Promote"
+        description="Sign in to use the social media manager."
+        icon={Sparkles}
+      />
     );
   }
 
   return (
-    <div className="p-4 md:p-6 max-w-6xl mx-auto">
+    <div className="min-h-screen bg-slate-950 p-4 md:p-8">
       <Seo
         title="Promote your geckos"
         description="Generate platform-tailored social media posts about your crested geckos using AI trained on crestie-specific best practices."
       />
-
-      <div className="flex items-start justify-between mb-4 flex-wrap gap-3">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-emerald-100 flex items-center gap-2">
-            <Sparkles className="w-6 h-6 text-emerald-400" />
-            Promote
-          </h1>
-          <p className="text-sm text-emerald-200/70 mt-1">
-            Pick a gecko and we'll draft a post about it. Tailored to platform best practices.
-          </p>
-        </div>
-        <div className="flex items-center gap-2">
+      <div className="max-w-6xl mx-auto">
+        <PageHeader
+          icon={Sparkles}
+          title="Promote"
+          description="Pick a gecko and we'll draft a post about it. Tailored to platform best practices."
+        >
           <Button
             variant="outline"
-            size="sm"
             onClick={() => setGalleryOpen(true)}
           >
             <ImageIcon className="w-4 h-4 mr-1.5" />
@@ -197,255 +191,252 @@ export default function PromotePage() {
           </Button>
           <Button
             variant="outline"
-            size="sm"
             onClick={() => setConnectionsOpen(true)}
           >
             <SettingsIcon className="w-4 h-4 mr-1.5" />
             Connections
           </Button>
+        </PageHeader>
+
+        {/* Usage meter */}
+        <div className="mb-6">
+          <PostUsageMeter usage={usage} tier={tier} credits={credits} />
         </div>
-      </div>
 
-      {/* Usage meter */}
-      <div className="mb-5">
-        <PostUsageMeter usage={usage} tier={tier} credits={credits} />
-      </div>
-
-      {/* Scheduled queue, posts the pg_cron worker will publish at
-          their `scheduled_at` time. Up to `scheduledPostsMax` per tier
-          enforced in the composer. The cancel button just flips the
-          row back to draft so the worker skips it. */}
-      {scheduledPosts.length > 0 && (
-        <div className="mb-5 rounded-lg border border-emerald-700/40 bg-emerald-900/20 p-3">
-          <div className="flex items-center justify-between mb-2">
-            <div className="text-xs uppercase tracking-wider text-emerald-300 flex items-center gap-1.5">
-              <Calendar className="w-3.5 h-3.5" />
-              Scheduled ({scheduledPosts.length})
+        {/* Scheduled queue, posts the pg_cron worker will publish at
+            their `scheduled_at` time. Up to `scheduledPostsMax` per tier
+            enforced in the composer. The cancel button just flips the
+            row back to draft so the worker skips it. */}
+        {scheduledPosts.length > 0 && (
+          <div className="mb-6 rounded-lg border border-emerald-700/40 bg-emerald-900/20 p-3">
+            <div className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 mb-2">
+              <div className="text-xs uppercase tracking-wider text-emerald-300 flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5" />
+                Scheduled ({scheduledPosts.length})
+              </div>
+              <span className="text-[10px] text-emerald-300/60">
+                Auto-publishes within ~1 min of the scheduled time
+              </span>
             </div>
-            <span className="text-[10px] text-emerald-300/60">
-              Auto-publishes within ~1 min of the scheduled time
-            </span>
+            <div className="space-y-1.5">
+              {scheduledPosts.map((p) => {
+                const when = p.scheduled_at ? new Date(p.scheduled_at) : null;
+                const gname = geckos.find((g) => g.id === p.gecko_id)?.name || p.gecko_id;
+                return (
+                  <div
+                    key={p.id}
+                    className="flex items-center justify-between text-xs rounded bg-emerald-950/40 px-2 py-1.5"
+                  >
+                    <div className="flex-1 min-w-0 truncate">
+                      <span className="text-emerald-100 font-medium">{p.template}</span>
+                      <span className="text-emerald-300/70 mx-2">·</span>
+                      <span className="text-emerald-200/80">{gname}</span>
+                      <span className="text-emerald-300/70 mx-2">·</span>
+                      <span className="text-emerald-300/80">{when ? when.toLocaleString() : 'no time set'}</span>
+                    </div>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        if (!confirm('Cancel this scheduled post? It returns to drafts.')) return;
+                        try {
+                          await supabase
+                            .from('social_posts')
+                            .update({ status: 'draft', scheduled_at: null })
+                            .eq('id', p.id);
+                          setScheduledPosts((prev) => prev.filter((r) => r.id !== p.id));
+                        } catch (e) {
+                          console.warn('cancel scheduled failed', e);
+                        }
+                      }}
+                      className="text-emerald-300/70 hover:text-red-300 ml-2"
+                      title="Cancel"
+                    >
+                      <XIcon className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                );
+              })}
+            </div>
           </div>
-          <div className="space-y-1.5">
-            {scheduledPosts.map((p) => {
-              const when = p.scheduled_at ? new Date(p.scheduled_at) : null;
-              const gname = geckos.find((g) => g.id === p.gecko_id)?.name || p.gecko_id;
-              return (
+        )}
+
+        {/* Recent posts strip */}
+        {recentPosts.length > 0 && (
+          <div className="mb-6">
+            <div className="text-xs uppercase tracking-wider text-emerald-300 mb-2">Recent</div>
+            <div className="flex gap-2 overflow-x-auto pb-2">
+              {recentPosts.map((p) => (
                 <div
                   key={p.id}
-                  className="flex items-center justify-between text-xs rounded bg-emerald-950/40 px-2 py-1.5"
+                  className="flex-shrink-0 rounded-md border border-emerald-800/40 bg-emerald-950/30 px-3 py-2 text-xs"
                 >
-                  <div className="flex-1 min-w-0 truncate">
-                    <span className="text-emerald-100 font-medium">{p.template}</span>
-                    <span className="text-emerald-300/70 mx-2">·</span>
-                    <span className="text-emerald-200/80">{gname}</span>
-                    <span className="text-emerald-300/70 mx-2">·</span>
-                    <span className="text-emerald-300/80">{when ? when.toLocaleString() : 'no time set'}</span>
+                  <div className="font-medium text-emerald-100">{p.template}</div>
+                  <div className="text-emerald-200/60">
+                    {p.status === 'published' ? (
+                      <><Send className="inline w-3 h-3 mr-1" />Published</>
+                    ) : (
+                      <>Draft</>
+                    )}
+                    {' '}{p.published_at ? formatDistanceToNow(new Date(p.published_at), { addSuffix: true }) : ''}
                   </div>
-                  <button
-                    type="button"
-                    onClick={async () => {
-                      if (!confirm('Cancel this scheduled post? It returns to drafts.')) return;
-                      try {
-                        await supabase
-                          .from('social_posts')
-                          .update({ status: 'draft', scheduled_at: null })
-                          .eq('id', p.id);
-                        setScheduledPosts((prev) => prev.filter((r) => r.id !== p.id));
-                      } catch (e) {
-                        console.warn('cancel scheduled failed', e);
-                      }
-                    }}
-                    className="text-emerald-300/70 hover:text-red-300 ml-2"
-                    title="Cancel"
-                  >
-                    <XIcon className="w-3.5 h-3.5" />
-                  </button>
                 </div>
-              );
-            })}
+              ))}
+            </div>
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Recent posts strip */}
-      {recentPosts.length > 0 && (
-        <div className="mb-6">
-          <div className="text-xs uppercase tracking-wider text-emerald-300 mb-2">Recent</div>
-          <div className="flex gap-2 overflow-x-auto pb-2">
-            {recentPosts.map((p) => (
-              <div
-                key={p.id}
-                className="flex-shrink-0 rounded-md border border-emerald-800/40 bg-emerald-950/30 px-3 py-2 text-xs"
+        {/* Active / Archive segmented control. The Archive tab is hidden
+            when there's nothing in it to keep the UI quiet for users
+            who don't sell or archive anything. */}
+        <div className="flex items-center gap-1 mb-6 rounded-lg border border-emerald-800/40 bg-emerald-950/30 p-1 w-fit">
+          <button
+            type="button"
+            onClick={() => setView('active')}
+            className={`text-xs font-semibold px-3 py-1.5 rounded transition-colors ${
+              view === 'active'
+                ? 'bg-emerald-700/60 text-emerald-50'
+                : 'text-emerald-200/80 hover:text-emerald-100'
+            }`}
+          >
+            Active{' '}
+            <span className="text-emerald-300/60 font-normal">
+              {geckos.length - archivedCount}
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setView('archive')}
+            disabled={archivedCount === 0}
+            className={`text-xs font-semibold px-3 py-1.5 rounded transition-colors flex items-center gap-1 ${
+              view === 'archive'
+                ? 'bg-emerald-700/60 text-emerald-50'
+                : archivedCount === 0
+                  ? 'text-emerald-200/30 cursor-not-allowed'
+                  : 'text-emerald-200/80 hover:text-emerald-100'
+            }`}
+          >
+            <Archive className="w-3 h-3" />
+            Archive{' '}
+            <span className="text-emerald-300/60 font-normal">{archivedCount}</span>
+          </button>
+        </div>
+
+        {/* Filter row */}
+        <div className="flex items-center gap-2 mb-4 flex-wrap">
+          <div className="relative flex-1 min-w-[200px]">
+            <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400/60" />
+            <Input
+              placeholder={view === 'archive' ? 'Search archived...' : 'Search geckos...'}
+              value={search}
+              onChange={(e) => setSearch(e.target.value)}
+              className="pl-9"
+            />
+          </div>
+          <Select value={sortBy} onValueChange={setSortBy}>
+            <SelectTrigger className="w-full sm:w-[200px]">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="recent_changes">Recently changed</SelectItem>
+              <SelectItem value="name">Name (A-Z)</SelectItem>
+              <SelectItem value="morph">Morph</SelectItem>
+            </SelectContent>
+          </Select>
+        </div>
+
+        {/* Sort explainer (only on Recently changed) */}
+        {sortBy === 'recent_changes' && (
+          <div className="text-xs text-emerald-200/60 mb-3 px-1">
+            <Clock className="inline w-3 h-3 mr-1" />
+            Surfacing geckos with new photos, weights, or pairings first. Audiences follow along
+            when they can see the journey, this is a tried and true social media strategy.
+          </div>
+        )}
+
+        {/* Gecko grid */}
+        {loading ? (
+          <LoadingSpinner />
+        ) : filteredGeckos.length === 0 ? (
+          view === 'archive' ? (
+            <EmptyState
+              title="No archived geckos"
+              message="Geckos move here once they're sold or you've archived them."
+              action={{ label: 'Back to active', onClick: () => setView('active') }}
+            />
+          ) : (
+            <EmptyState
+              title="No geckos to promote yet"
+              message="Add geckos to your collection first, then come back here to share them."
+              action={{ label: 'Go to My Geckos', onClick: () => navigate('/MyGeckos') }}
+            />
+          )
+        ) : (
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
+            {filteredGeckos.map((g) => (
+              <Card
+                key={g.id}
+                className="cursor-pointer hover:border-emerald-500/50 transition-colors"
+                onClick={() => handleSelectGecko(g)}
               >
-                <div className="font-medium text-emerald-100">{p.template}</div>
-                <div className="text-emerald-200/60">
-                  {p.status === 'published' ? (
-                    <><Send className="inline w-3 h-3 mr-1" />Published</>
-                  ) : (
-                    <>Draft</>
+                <CardContent className="p-3">
+                  <div className="aspect-square w-full bg-emerald-950/40 rounded-md mb-2 overflow-hidden flex items-center justify-center">
+                    {g.image_urls?.[0] ? (
+                      <img
+                        src={g.image_urls[0]}
+                        alt={g.name || g.id}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                      />
+                    ) : (
+                      <span className="text-emerald-700 text-xs">no photo</span>
+                    )}
+                  </div>
+                  <div className="font-semibold text-emerald-100 text-sm truncate">
+                    {g.name || g.id}
+                  </div>
+                  <div className="text-xs text-emerald-300/70 truncate">
+                    {g.morph_description || g.morph || 'unspecified morph'}
+                  </div>
+                  {g.last_meaningful_change_at && (
+                    <div className="text-[10px] text-emerald-200/50 mt-1">
+                      Updated {formatDistanceToNow(new Date(g.last_meaningful_change_at), { addSuffix: true })}
+                    </div>
                   )}
-                  {' '}{p.published_at ? formatDistanceToNow(new Date(p.published_at), { addSuffix: true }) : ''}
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             ))}
           </div>
-        </div>
-      )}
+        )}
 
-      {/* Active / Archive segmented control. The Archive tab is hidden
-          when there's nothing in it to keep the UI quiet for users
-          who don't sell or archive anything. */}
-      <div className="flex items-center gap-1 mb-3 rounded-lg border border-emerald-800/40 bg-emerald-950/30 p-1 w-fit">
-        <button
-          type="button"
-          onClick={() => setView('active')}
-          className={`text-xs font-semibold px-3 py-1.5 rounded transition-colors ${
-            view === 'active'
-              ? 'bg-emerald-700/60 text-emerald-50'
-              : 'text-emerald-200/80 hover:text-emerald-100'
-          }`}
-        >
-          Active{' '}
-          <span className="text-emerald-300/60 font-normal">
-            {geckos.length - archivedCount}
-          </span>
-        </button>
-        <button
-          type="button"
-          onClick={() => setView('archive')}
-          disabled={archivedCount === 0}
-          className={`text-xs font-semibold px-3 py-1.5 rounded transition-colors flex items-center gap-1 ${
-            view === 'archive'
-              ? 'bg-emerald-700/60 text-emerald-50'
-              : archivedCount === 0
-                ? 'text-emerald-200/30 cursor-not-allowed'
-                : 'text-emerald-200/80 hover:text-emerald-100'
-          }`}
-        >
-          <Archive className="w-3 h-3" />
-          Archive{' '}
-          <span className="text-emerald-300/60 font-normal">{archivedCount}</span>
-        </button>
+        <PromoteComposer
+          open={composerOpen}
+          onOpenChange={setComposerOpen}
+          gecko={selectedGecko}
+          user={user}
+          onPublished={handlePublished}
+          onPaymentRequired={handlePaymentRequired}
+        />
+
+        <TrialOfferModal
+          open={trialOpen}
+          onOpenChange={setTrialOpen}
+          tier={tier}
+          trialAlreadyUsed={user?.keeper_trial_used}
+        />
+
+        <ConnectionsModal
+          open={connectionsOpen}
+          onOpenChange={setConnectionsOpen}
+          user={user}
+        />
+
+        <PromoteImageGallery
+          open={galleryOpen}
+          onOpenChange={setGalleryOpen}
+          user={user}
+          mode="manage"
+        />
       </div>
-
-      {/* Filter row */}
-      <div className="flex items-center gap-2 mb-4 flex-wrap">
-        <div className="relative flex-1 min-w-[200px]">
-          <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-emerald-400/60" />
-          <Input
-            placeholder={view === 'archive' ? 'Search archived...' : 'Search geckos...'}
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <Select value={sortBy} onValueChange={setSortBy}>
-          <SelectTrigger className="w-[200px]">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="recent_changes">Recently changed</SelectItem>
-            <SelectItem value="name">Name (A-Z)</SelectItem>
-            <SelectItem value="morph">Morph</SelectItem>
-          </SelectContent>
-        </Select>
-      </div>
-
-      {/* Sort explainer (only on Recently changed) */}
-      {sortBy === 'recent_changes' && (
-        <div className="text-xs text-emerald-200/60 mb-3 px-1">
-          <Clock className="inline w-3 h-3 mr-1" />
-          Surfacing geckos with new photos, weights, or pairings first. Audiences follow along
-          when they can see the journey, this is a tried and true social media strategy.
-        </div>
-      )}
-
-      {/* Gecko grid */}
-      {loading ? (
-        <LoadingSpinner />
-      ) : filteredGeckos.length === 0 ? (
-        view === 'archive' ? (
-          <EmptyState
-            title="No archived geckos"
-            description="Geckos move here once they're sold or you've archived them."
-            actionLabel="Back to active"
-            onAction={() => setView('active')}
-          />
-        ) : (
-          <EmptyState
-            title="No geckos to promote yet"
-            description="Add geckos to your collection first, then come back here to share them."
-            actionLabel="Go to My Geckos"
-            onAction={() => navigate('/MyGeckos')}
-          />
-        )
-      ) : (
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3">
-          {filteredGeckos.map((g) => (
-            <Card
-              key={g.id}
-              className="cursor-pointer hover:border-emerald-500/50 transition-colors"
-              onClick={() => handleSelectGecko(g)}
-            >
-              <CardContent className="p-3">
-                <div className="aspect-square w-full bg-emerald-950/40 rounded-md mb-2 overflow-hidden flex items-center justify-center">
-                  {g.image_urls?.[0] ? (
-                    <img
-                      src={g.image_urls[0]}
-                      alt={g.name || g.id}
-                      className="w-full h-full object-cover"
-                      loading="lazy"
-                    />
-                  ) : (
-                    <span className="text-emerald-700 text-xs">no photo</span>
-                  )}
-                </div>
-                <div className="font-semibold text-emerald-100 text-sm truncate">
-                  {g.name || g.id}
-                </div>
-                <div className="text-xs text-emerald-300/70 truncate">
-                  {g.morph_description || g.morph || 'unspecified morph'}
-                </div>
-                {g.last_meaningful_change_at && (
-                  <div className="text-[10px] text-emerald-200/50 mt-1">
-                    Updated {formatDistanceToNow(new Date(g.last_meaningful_change_at), { addSuffix: true })}
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          ))}
-        </div>
-      )}
-
-      <PromoteComposer
-        open={composerOpen}
-        onOpenChange={setComposerOpen}
-        gecko={selectedGecko}
-        user={user}
-        onPublished={handlePublished}
-        onPaymentRequired={handlePaymentRequired}
-      />
-
-      <TrialOfferModal
-        open={trialOpen}
-        onOpenChange={setTrialOpen}
-        tier={tier}
-        trialAlreadyUsed={user?.keeper_trial_used}
-      />
-
-      <ConnectionsModal
-        open={connectionsOpen}
-        onOpenChange={setConnectionsOpen}
-        user={user}
-      />
-
-      <PromoteImageGallery
-        open={galleryOpen}
-        onOpenChange={setGalleryOpen}
-        user={user}
-        mode="manage"
-      />
     </div>
   );
 }

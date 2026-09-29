@@ -9,37 +9,19 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
-
-/* ─── Design tokens ─────────────────────────────────────────────── */
-const C = {
-  forest:    '#e2e8f0',
-  moss:      '#94a3b8',
-  sage:      '#10b981',
-  paleSage:  'rgba(16,185,129,0.1)',
-  warmWhite: '#020617',
-  gold:      '#f59e0b',
-  goldLight: 'rgba(245,158,11,0.15)',
-  red:       '#ef4444',
-  slate:     '#cbd5e1',
-  muted:     '#64748b',
-  cardBg:    '#0f172a',
-  border:    'rgba(51,65,85,0.5)',
-};
+import PageHeader from '@/components/shared/PageHeader';
 
 /* ─── Helpers ───────────────────────────────────────────────────── */
 
 function daysSinceColor(days) {
-  if (days <= 3) return C.sage;
-  if (days <= 7) return C.gold;
-  return C.red;
+  if (days <= 3) return 'text-emerald-400';
+  if (days <= 7) return 'text-amber-400';
+  return 'text-red-400';
 }
 
 function SectionHeading({ children }) {
   return (
-    <h2
-      className="text-xl mb-4"
-      style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}
-    >
+    <h2 className="text-xl font-semibold text-slate-100 mb-4">
       {children}
     </h2>
   );
@@ -71,54 +53,44 @@ function GroupCard({ group, geckos, feedingRecords, onFeed, onWeigh }) {
     }
   }
 
-  const colorIndicator = group.color || C.sage;
-
   return (
-    <div
-      className="rounded-xl p-5"
-      style={{ border: '1px solid rgba(51,65,85,0.15)', backgroundColor: '#fff' }}
-    >
+    <div className="rounded-xl p-4 md:p-6 bg-slate-900 border border-slate-700">
       <div className="flex items-start gap-3 mb-4">
+        {/* Group colors come from data; the fallback matches the theme. */}
         <div
-          className="w-3 h-3 rounded-full mt-1.5 flex-shrink-0"
-          style={{ backgroundColor: colorIndicator }}
+          className={`w-3 h-3 rounded-full mt-1.5 flex-shrink-0 ${group.color ? '' : 'bg-emerald-500'}`}
+          style={group.color ? { backgroundColor: group.color } : undefined}
         />
         <div className="flex-1 min-w-0">
-          <h3
-            className="text-base font-semibold truncate"
-            style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}
-          >
+          <h3 className="text-base font-semibold truncate text-slate-100">
             {group.name || group.label || 'Unnamed Group'}
           </h3>
           {group.diet_type && (
-            <p className="text-xs" style={{ color: C.muted }}>{group.diet_type}</p>
+            <p className="text-xs text-slate-500">{group.diet_type}</p>
           )}
         </div>
       </div>
 
       {/* Stats */}
       <div className="grid grid-cols-2 gap-2 mb-4">
-        <div className="flex items-center gap-2 px-3 py-2 rounded-lg" style={{ backgroundColor: C.paleSage }}>
-          <Users size={14} style={{ color: C.sage }} />
-          <span className="text-sm" style={{ color: C.slate }}>
+        <div className="flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-500/10">
+          <Users size={14} className="text-emerald-400" />
+          <span className="text-sm text-slate-200">
             <strong>{groupGeckos.length}</strong> animals
           </span>
         </div>
         <div
-          className="flex items-center gap-2 px-3 py-2 rounded-lg"
-          style={{
-            backgroundColor: dueCount > 0 ? C.goldLight : C.paleSage,
-          }}
+          className={`flex items-center gap-2 px-3 py-2 rounded-lg ${dueCount > 0 ? 'bg-amber-500/15' : 'bg-emerald-500/10'}`}
         >
-          <Clock size={14} style={{ color: dueCount > 0 ? C.gold : C.sage }} />
-          <span className="text-sm" style={{ color: dueCount > 0 ? '#92650A' : C.slate }}>
+          <Clock size={14} className={dueCount > 0 ? 'text-amber-400' : 'text-emerald-400'} />
+          <span className={`text-sm ${dueCount > 0 ? 'text-amber-300' : 'text-slate-200'}`}>
             <strong>{dueCount}</strong> due today
           </span>
         </div>
       </div>
 
       {group.notes && (
-        <p className="text-xs mb-4" style={{ color: C.muted }}>{group.notes}</p>
+        <p className="text-xs mb-4 text-slate-500">{group.notes}</p>
       )}
 
       {/* Actions */}
@@ -127,7 +99,6 @@ function GroupCard({ group, geckos, feedingRecords, onFeed, onWeigh }) {
           size="sm"
           onClick={() => onFeed(group, groupGeckos)}
           className="flex-1 text-xs"
-          style={{ backgroundColor: C.sage, color: '#fff' }}
           disabled={groupGeckos.length === 0}
         >
           <Utensils size={14} className="mr-1.5" />
@@ -138,7 +109,6 @@ function GroupCard({ group, geckos, feedingRecords, onFeed, onWeigh }) {
           variant="outline"
           onClick={() => onWeigh(group, groupGeckos)}
           className="flex-1 text-xs"
-          style={{ borderColor: 'rgba(51,65,85,0.3)', color: C.slate }}
           disabled={groupGeckos.length === 0}
         >
           <Scale size={14} className="mr-1.5" />
@@ -223,44 +193,31 @@ function BatchFeedView({ group, groupGeckos, feedingRecords, onBack, onSaved }) 
   if (showSummary) {
     return (
       <div className="max-w-2xl mx-auto">
-        <div
-          className="rounded-xl p-8 text-center"
-          style={{ border: '1px solid rgba(51,65,85,0.15)', backgroundColor: '#fff' }}
-        >
-          <div
-            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-            style={{ backgroundColor: C.paleSage }}
-          >
-            <CheckCircle2 size={32} style={{ color: C.sage }} />
+        <div className="rounded-xl p-6 md:p-8 text-center bg-slate-900 border border-slate-700">
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-emerald-500/10">
+            <CheckCircle2 size={32} className="text-emerald-400" />
           </div>
-          <h3
-            className="text-xl mb-2"
-            style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}
-          >
+          <h3 className="text-xl font-semibold mb-2 text-slate-100">
             Batch Feeding Complete
           </h3>
-          <p className="text-sm mb-6" style={{ color: C.muted }}>
+          <p className="text-sm mb-6 text-slate-500">
             {group.name || group.label}, {format(new Date(), 'MMMM d, yyyy')}
           </p>
           <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto mb-6">
-            <div className="rounded-xl p-4" style={{ backgroundColor: C.paleSage }}>
-              <p className="text-2xl font-bold" style={{ color: C.sage }}>{summary.fed}</p>
-              <p className="text-xs" style={{ color: C.muted }}>Fed</p>
+            <div className="rounded-xl p-4 bg-emerald-500/10">
+              <p className="text-2xl font-bold text-emerald-400">{summary.fed}</p>
+              <p className="text-xs text-slate-500">Fed</p>
             </div>
             <div
-              className="rounded-xl p-4"
-              style={{ backgroundColor: summary.refused > 0 ? C.goldLight : C.paleSage }}
+              className={`rounded-xl p-4 ${summary.refused > 0 ? 'bg-amber-500/15' : 'bg-emerald-500/10'}`}
             >
-              <p className="text-2xl font-bold" style={{ color: summary.refused > 0 ? C.gold : C.sage }}>
+              <p className={`text-2xl font-bold ${summary.refused > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
                 {summary.refused}
               </p>
-              <p className="text-xs" style={{ color: C.muted }}>Refused</p>
+              <p className="text-xs text-slate-500">Refused</p>
             </div>
           </div>
-          <Button
-            onClick={onBack}
-            style={{ backgroundColor: C.sage, color: '#fff' }}
-          >
+          <Button onClick={onBack}>
             Back to Groups
           </Button>
         </div>
@@ -272,18 +229,17 @@ function BatchFeedView({ group, groupGeckos, feedingRecords, onBack, onSaved }) 
     <div className="max-w-2xl mx-auto">
       <button
         onClick={onBack}
-        className="flex items-center gap-1.5 text-sm mb-4 hover:underline"
-        style={{ color: C.sage }}
+        className="flex items-center gap-1.5 text-sm mb-4 hover:underline text-emerald-400"
       >
         <ChevronLeft size={16} /> Back to Groups
       </button>
 
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
         <div>
           <SectionHeading>
             Feed: {group.name || group.label}
           </SectionHeading>
-          <p className="text-sm -mt-2" style={{ color: C.muted }}>
+          <p className="text-sm -mt-2 text-slate-500">
             {rows.length} animals, sorted by most overdue
           </p>
         </div>
@@ -292,41 +248,31 @@ function BatchFeedView({ group, groupGeckos, feedingRecords, onBack, onSaved }) 
           variant="outline"
           onClick={markAllFed}
           className="text-xs"
-          style={{ borderColor: 'rgba(51,65,85,0.3)', color: C.sage }}
         >
           <Check size={14} className="mr-1" /> Mark All Fed
         </Button>
       </div>
 
-      <div
-        className="rounded-xl overflow-hidden"
-        style={{ border: '1px solid rgba(51,65,85,0.15)', backgroundColor: '#fff' }}
-      >
-        {rows.map((row, idx) => (
+      <div className="rounded-xl overflow-hidden bg-slate-900 border border-slate-700 divide-y divide-slate-800">
+        {rows.map((row) => (
           <div
             key={row.gecko.id}
             className="flex items-center gap-3 px-4 py-3"
-            style={{
-              borderBottom: idx < rows.length - 1 ? '1px solid rgba(51,65,85,0.08)' : 'none',
-            }}
           >
             {/* Gecko name */}
             <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium truncate" style={{ color: C.slate }}>
+              <p className="text-sm font-medium truncate text-slate-200">
                 {row.gecko.name || row.gecko.id}
               </p>
               {row.gecko.morphs_traits && (
-                <p className="text-xs truncate" style={{ color: C.muted }}>{row.gecko.morphs_traits}</p>
+                <p className="text-xs truncate text-slate-500">{row.gecko.morphs_traits}</p>
               )}
             </div>
 
             {/* Days since last fed */}
             <div className="flex items-center gap-1.5 flex-shrink-0">
-              <Clock size={12} style={{ color: daysSinceColor(row.daysSince) }} />
-              <span
-                className="text-xs font-medium"
-                style={{ color: daysSinceColor(row.daysSince) }}
-              >
+              <Clock size={12} className={daysSinceColor(row.daysSince)} />
+              <span className={`text-xs font-medium ${daysSinceColor(row.daysSince)}`}>
                 {row.daysSince >= 999 ? 'Never' : `${row.daysSince}d ago`}
               </span>
             </div>
@@ -334,11 +280,11 @@ function BatchFeedView({ group, groupGeckos, feedingRecords, onBack, onSaved }) 
             {/* Fed / Refused toggle */}
             <button
               onClick={() => toggleStatus(row.gecko.id)}
-              className="flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex-shrink-0"
-              style={{
-                backgroundColor: statuses[row.gecko.id] === 'fed' ? C.paleSage : C.goldLight,
-                color: statuses[row.gecko.id] === 'fed' ? C.sage : '#92650A',
-              }}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-full text-xs font-medium transition-colors flex-shrink-0 ${
+                statuses[row.gecko.id] === 'fed'
+                  ? 'bg-emerald-500/10 text-emerald-400'
+                  : 'bg-amber-500/15 text-amber-300'
+              }`}
             >
               {statuses[row.gecko.id] === 'fed' ? (
                 <><Check size={12} /> Fed</>
@@ -354,7 +300,6 @@ function BatchFeedView({ group, groupGeckos, feedingRecords, onBack, onSaved }) 
         <Button
           onClick={handleSave}
           disabled={saving}
-          style={{ backgroundColor: C.sage, color: '#fff' }}
         >
           {saving ? <Loader2 size={16} className="mr-2 animate-spin" /> : <Utensils size={16} className="mr-2" />}
           Save Feeding Records
@@ -436,44 +381,31 @@ function BatchWeighView({ group, groupGeckos, weightRecords, onBack, onSaved }) 
   if (showSummary) {
     return (
       <div className="max-w-2xl mx-auto">
-        <div
-          className="rounded-xl p-8 text-center"
-          style={{ border: '1px solid rgba(51,65,85,0.15)', backgroundColor: '#fff' }}
-        >
-          <div
-            className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
-            style={{ backgroundColor: C.paleSage }}
-          >
-            <Scale size={32} style={{ color: C.sage }} />
+        <div className="rounded-xl p-6 md:p-8 text-center bg-slate-900 border border-slate-700">
+          <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-emerald-500/10">
+            <Scale size={32} className="text-emerald-400" />
           </div>
-          <h3
-            className="text-xl mb-2"
-            style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}
-          >
+          <h3 className="text-xl font-semibold mb-2 text-slate-100">
             Batch Weigh Complete
           </h3>
-          <p className="text-sm mb-6" style={{ color: C.muted }}>
+          <p className="text-sm mb-6 text-slate-500">
             {group.name || group.label}, {format(new Date(), 'MMMM d, yyyy')}
           </p>
           <div className="grid grid-cols-2 gap-4 max-w-xs mx-auto mb-6">
-            <div className="rounded-xl p-4" style={{ backgroundColor: C.paleSage }}>
-              <p className="text-2xl font-bold" style={{ color: C.sage }}>{summaryData.recorded}</p>
-              <p className="text-xs" style={{ color: C.muted }}>Recorded</p>
+            <div className="rounded-xl p-4 bg-emerald-500/10">
+              <p className="text-2xl font-bold text-emerald-400">{summaryData.recorded}</p>
+              <p className="text-xs text-slate-500">Recorded</p>
             </div>
             <div
-              className="rounded-xl p-4"
-              style={{ backgroundColor: summaryData.flagged > 0 ? C.goldLight : C.paleSage }}
+              className={`rounded-xl p-4 ${summaryData.flagged > 0 ? 'bg-amber-500/15' : 'bg-emerald-500/10'}`}
             >
-              <p className="text-2xl font-bold" style={{ color: summaryData.flagged > 0 ? C.gold : C.sage }}>
+              <p className={`text-2xl font-bold ${summaryData.flagged > 0 ? 'text-amber-400' : 'text-emerald-400'}`}>
                 {summaryData.flagged}
               </p>
-              <p className="text-xs" style={{ color: C.muted }}>Flagged (&gt;10% drop)</p>
+              <p className="text-xs text-slate-500">Flagged (&gt;10% drop)</p>
             </div>
           </div>
-          <Button
-            onClick={onBack}
-            style={{ backgroundColor: C.sage, color: '#fff' }}
-          >
+          <Button onClick={onBack}>
             Back to Groups
           </Button>
         </div>
@@ -485,8 +417,7 @@ function BatchWeighView({ group, groupGeckos, weightRecords, onBack, onSaved }) 
     <div className="max-w-2xl mx-auto">
       <button
         onClick={onBack}
-        className="flex items-center gap-1.5 text-sm mb-4 hover:underline"
-        style={{ color: C.sage }}
+        className="flex items-center gap-1.5 text-sm mb-4 hover:underline text-emerald-400"
       >
         <ChevronLeft size={16} /> Back to Groups
       </button>
@@ -494,25 +425,19 @@ function BatchWeighView({ group, groupGeckos, weightRecords, onBack, onSaved }) 
       <SectionHeading>
         Weigh: {group.name || group.label}
       </SectionHeading>
-      <p className="text-sm -mt-2 mb-4" style={{ color: C.muted }}>
+      <p className="text-sm -mt-2 mb-4 text-slate-500">
         {rows.length} animals, enter new weights in grams
       </p>
 
-      <div
-        className="rounded-xl overflow-hidden"
-        style={{ border: '1px solid rgba(51,65,85,0.15)', backgroundColor: '#fff' }}
-      >
+      <div className="rounded-xl overflow-hidden bg-slate-900 border border-slate-700 divide-y divide-slate-800">
         {/* Header */}
-        <div
-          className="grid grid-cols-3 gap-2 px-4 py-2.5 text-xs font-medium uppercase tracking-wider"
-          style={{ backgroundColor: C.paleSage, color: C.muted }}
-        >
+        <div className="grid grid-cols-3 gap-2 px-4 py-2.5 text-xs font-medium uppercase tracking-wider bg-emerald-500/10 text-slate-500">
           <span>Animal</span>
           <span className="text-right">Last Weight (g)</span>
           <span className="text-right">New Weight (g)</span>
         </div>
 
-        {rows.map((row, idx) => {
+        {rows.map((row) => {
           const newVal = weights[row.gecko.id];
           const newWeight = newVal ? parseFloat(newVal) : null;
           const hasSignificantDrop = row.lastWeight && newWeight && newWeight < row.lastWeight * 0.9;
@@ -520,19 +445,15 @@ function BatchWeighView({ group, groupGeckos, weightRecords, onBack, onSaved }) 
           return (
             <div
               key={row.gecko.id}
-              className="grid grid-cols-3 gap-2 px-4 py-3 items-center"
-              style={{
-                borderBottom: idx < rows.length - 1 ? '1px solid rgba(51,65,85,0.08)' : 'none',
-                backgroundColor: hasSignificantDrop ? 'rgba(253,243,224,0.4)' : 'transparent',
-              }}
+              className={`grid grid-cols-3 gap-2 px-4 py-3 items-center ${hasSignificantDrop ? 'bg-amber-500/10' : ''}`}
             >
               <div className="min-w-0">
-                <p className="text-sm font-medium truncate" style={{ color: C.slate }}>
+                <p className="text-sm font-medium truncate text-slate-200">
                   {row.gecko.name || row.gecko.id}
                 </p>
               </div>
               <div className="text-right">
-                <span className="text-sm" style={{ color: C.muted }}>
+                <span className="text-sm text-slate-500">
                   {row.lastWeight != null ? `${row.lastWeight}g` : '-'}
                 </span>
               </div>
@@ -544,11 +465,10 @@ function BatchWeighView({ group, groupGeckos, weightRecords, onBack, onSaved }) 
                   value={weights[row.gecko.id]}
                   onChange={e => setWeight(row.gecko.id, e.target.value)}
                   placeholder="0.0"
-                  className="w-24 text-right text-sm"
-                  style={hasSignificantDrop ? { borderColor: C.gold } : {}}
+                  className={`w-20 sm:w-24 text-right text-sm ${hasSignificantDrop ? 'border-amber-400' : ''}`}
                 />
                 {hasSignificantDrop && (
-                  <AlertTriangle size={14} style={{ color: C.gold }} className="flex-shrink-0" />
+                  <AlertTriangle size={14} className="flex-shrink-0 text-amber-400" />
                 )}
               </div>
             </div>
@@ -560,7 +480,6 @@ function BatchWeighView({ group, groupGeckos, weightRecords, onBack, onSaved }) 
         <Button
           onClick={handleSave}
           disabled={saving}
-          style={{ backgroundColor: C.sage, color: '#fff' }}
         >
           {saving ? <Loader2 size={16} className="mr-2 animate-spin" /> : <Scale size={16} className="mr-2" />}
           Save Weights
@@ -575,16 +494,13 @@ function BatchWeighView({ group, groupGeckos, weightRecords, onBack, onSaved }) 
 function EmptyGroups() {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div
-        className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
-        style={{ backgroundColor: C.paleSage }}
-      >
-        <Users size={28} style={{ color: C.sage }} />
+      <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-emerald-500/10">
+        <Users size={28} className="text-emerald-400" />
       </div>
-      <h3 className="text-lg font-medium mb-1" style={{ color: C.forest, fontFamily: "'DM Serif Display', serif" }}>
+      <h3 className="text-lg font-semibold mb-1 text-slate-100">
         No feeding groups yet
       </h3>
-      <p className="text-sm max-w-sm" style={{ color: C.muted }}>
+      <p className="text-sm max-w-sm text-slate-500">
         Create feeding groups to organize batch feeding and weighing sessions for your geckos.
       </p>
     </div>
@@ -663,64 +579,44 @@ export default function BatchHusbandry() {
 
   if (isLoading) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: C.warmWhite, fontFamily: "'DM Sans', sans-serif" }}
-      >
-        <Loader2 size={32} className="animate-spin" style={{ color: C.sage }} />
+      <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+        <div className="max-w-4xl mx-auto flex justify-center py-20">
+          <Loader2 size={32} className="animate-spin text-emerald-400" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div
-      className="min-h-screen pb-12"
-      style={{ backgroundColor: C.warmWhite, fontFamily: "'DM Sans', sans-serif" }}
-    >
-      <div className="max-w-4xl mx-auto px-4 pt-8 pb-6">
+    <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+      <div className="max-w-4xl mx-auto">
         {view === 'groups' && (
           <>
-            {/* Header */}
-            <div className="mb-6">
-              <h1
-                className="text-2xl mb-1"
-                style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}
-              >
-                Batch Husbandry
-              </h1>
-              <p className="text-sm" style={{ color: C.muted }}>
-                Feed and weigh gecko groups in bulk. Keeps everyone on schedule.
-              </p>
-            </div>
+            <PageHeader
+              icon={Utensils}
+              title="Batch Husbandry"
+              description="Feed and weigh gecko groups in bulk. Keeps everyone on schedule."
+            />
 
             {/* Summary bar */}
             {groups.length > 0 && (
               <div className="grid grid-cols-3 gap-3 mb-6">
-                <div
-                  className="rounded-xl p-4 text-center"
-                  style={{ border: '1px solid rgba(51,65,85,0.15)', backgroundColor: '#fff' }}
-                >
-                  <p className="text-2xl font-bold" style={{ color: C.forest }}>{groups.length}</p>
-                  <p className="text-xs" style={{ color: C.muted }}>Groups</p>
+                <div className="rounded-xl p-4 text-center bg-slate-900 border border-slate-700">
+                  <p className="text-2xl font-bold text-slate-100">{groups.length}</p>
+                  <p className="text-xs text-slate-500">Groups</p>
                 </div>
-                <div
-                  className="rounded-xl p-4 text-center"
-                  style={{ border: '1px solid rgba(51,65,85,0.15)', backgroundColor: '#fff' }}
-                >
-                  <p className="text-2xl font-bold" style={{ color: C.sage }}>{geckos.length}</p>
-                  <p className="text-xs" style={{ color: C.muted }}>Total Animals</p>
+                <div className="rounded-xl p-4 text-center bg-slate-900 border border-slate-700">
+                  <p className="text-2xl font-bold text-emerald-400">{geckos.length}</p>
+                  <p className="text-xs text-slate-500">Total Animals</p>
                 </div>
-                <div
-                  className="rounded-xl p-4 text-center"
-                  style={{ border: '1px solid rgba(51,65,85,0.15)', backgroundColor: '#fff' }}
-                >
-                  <p className="text-2xl font-bold" style={{ color: C.gold }}>
+                <div className="rounded-xl p-4 text-center bg-slate-900 border border-slate-700">
+                  <p className="text-2xl font-bold text-amber-400">
                     {feedingRecords.filter(r => {
                       const d = r.date || r.created_date;
                       return d && d.startsWith(todayLocalISO());
                     }).length}
                   </p>
-                  <p className="text-xs" style={{ color: C.muted }}>Fed Today</p>
+                  <p className="text-xs text-slate-500">Fed Today</p>
                 </div>
               </div>
             )}
@@ -729,7 +625,7 @@ export default function BatchHusbandry() {
             {groups.length === 0 ? (
               <EmptyGroups />
             ) : (
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 {groups.map(group => (
                   <GroupCard
                     key={group.id}

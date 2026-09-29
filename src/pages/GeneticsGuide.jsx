@@ -165,22 +165,19 @@ export default function GeneticsGuide() {
         {/* Hero with DNA helix */}
         <div className="relative overflow-hidden border-b border-slate-800 bg-gradient-to-br from-slate-950 via-emerald-950/30 to-purple-950/20">
           <div className="absolute inset-0 gecko-scale-pattern opacity-[0.04] pointer-events-none" />
-          <div className="relative max-w-6xl mx-auto px-4 md:px-8 py-10 md:py-14">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-11 h-11 rounded-xl bg-emerald-500/15 border border-emerald-500/30 flex items-center justify-center">
-                <Dna className="w-6 h-6 text-emerald-400" />
-              </div>
-              <div>
-                <h1 className="text-3xl md:text-5xl font-bold bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent tracking-tight">
-                  Crested Gecko Genetics Guide
-                </h1>
-                <p className="text-sm md:text-base text-slate-400 mt-1">
-                  An interactive educational reference for understanding crested gecko
-                  genetics, morphs, and selective breeding.
-                </p>
-                <p className="text-xs text-slate-500 mt-2">{bylineText('/GeneticsGuide')}</p>
-              </div>
+          <div className="relative max-w-6xl mx-auto px-4 md:px-6 py-12 md:py-16">
+            <div className="inline-flex items-center gap-2 rounded-full border border-emerald-500/30 bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-300 mb-5">
+              <Dna className="w-3.5 h-3.5" />
+              Genetics Reference
             </div>
+            <h1 className="text-4xl md:text-6xl font-bold tracking-tight leading-[1.05] mb-4 bg-gradient-to-b from-white to-emerald-200 bg-clip-text text-transparent">
+              Crested Gecko Genetics Guide
+            </h1>
+            <p className="text-lg md:text-xl text-slate-300 max-w-3xl leading-relaxed">
+              An interactive educational reference for understanding crested gecko
+              genetics, morphs, and selective breeding.
+            </p>
+            <p className="text-xs text-slate-500 mt-4">{bylineText('/GeneticsGuide')}</p>
             <div className="mt-6">
               <DnaHelix />
             </div>
@@ -197,7 +194,7 @@ export default function GeneticsGuide() {
           </div>
         </div>
 
-        <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
+        <div className="max-w-6xl mx-auto px-4 md:px-6 py-8 md:py-10">
           <Tabs defaultValue="guide">
             <TabsList className="bg-slate-900 border border-slate-800 mb-6">
               <TabsTrigger
@@ -350,7 +347,7 @@ export default function GeneticsGuide() {
                 {glossarySearch.trim() ? (
                   // Flat search results
                   <div className="rounded-lg overflow-hidden border border-slate-800">
-                    <div className="grid grid-cols-[200px_1fr] bg-emerald-900/40 px-4 py-2">
+                    <div className="hidden sm:grid grid-cols-[200px_1fr] bg-emerald-900/40 px-4 py-2">
                       <span className="text-emerald-300 text-xs font-bold uppercase tracking-wider">
                         Term
                       </span>
@@ -361,7 +358,7 @@ export default function GeneticsGuide() {
                     {filteredGlossary.map((row, i) => (
                       <div
                         key={row.term}
-                        className={`grid grid-cols-[200px_1fr] px-4 py-3 gap-4 border-t border-slate-800 ${i % 2 === 0 ? 'bg-slate-900' : 'bg-slate-900/40'}`}
+                        className={`grid grid-cols-1 sm:grid-cols-[200px_1fr] px-4 py-3 gap-1 sm:gap-4 border-t border-slate-800 ${i % 2 === 0 ? 'bg-slate-900' : 'bg-slate-900/40'}`}
                       >
                         <div>
                           <div className="text-emerald-300 font-semibold text-sm">
@@ -401,7 +398,7 @@ export default function GeneticsGuide() {
                         {group.entries.map((row, i) => (
                           <div
                             key={row.term}
-                            className={`grid grid-cols-[200px_1fr] px-4 py-3 gap-4 border-t border-slate-800 ${i % 2 === 0 ? 'bg-slate-900/60' : 'bg-slate-900/30'}`}
+                            className={`grid grid-cols-1 sm:grid-cols-[200px_1fr] px-4 py-3 gap-1 sm:gap-4 border-t border-slate-800 ${i % 2 === 0 ? 'bg-slate-900/60' : 'bg-slate-900/30'}`}
                           >
                             <span className="text-emerald-300 font-semibold text-sm">
                               {row.term}

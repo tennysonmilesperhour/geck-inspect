@@ -47,6 +47,7 @@ import {
   COMMUNITY_LEVELS,
 } from '@/lib/layoutConstants';
 import { startVisiblePolling } from '@/lib/pagePolling';
+import { AppShellContext } from '@/lib/appShell';
 import {
   FALLBACK_NAV_ITEMS,
   NAV_ICON_MAP,
@@ -1366,7 +1367,9 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
 
           <div className="app-main-scroll flex-1 overflow-auto overflow-x-hidden overscroll-none bg-slate-950 pb-[calc(4rem+env(safe-area-inset-bottom))] md:pb-0">
             <PushEnableBanner user={user} />
-            {children}
+            <AppShellContext.Provider value={true}>
+              {children}
+            </AppShellContext.Provider>
           </div>
 
 

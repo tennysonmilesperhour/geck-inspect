@@ -9,7 +9,10 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Brain, Database, TrendingUp, CheckCircle, Loader2, BarChart3,
   Target, Scale, Upload as UploadIcon, RefreshCw, Sparkles, ShieldCheck,
+  GraduationCap,
 } from 'lucide-react';
+import PageHeader from '@/components/shared/PageHeader';
+import SignInRequired from '@/components/shared/SignInRequired';
 
 import ExpertContributionForm from '../components/morph-id/ExpertContributionForm';
 import AIFeedbackQueue from '../components/morph-id/AIFeedbackQueue';
@@ -104,62 +107,49 @@ export default function TrainingPage() {
 
   if (!user && !isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-slate-950 text-white p-8">
-        <Brain className="w-16 h-16 mb-4 text-emerald-500" />
-        <h2 className="text-2xl font-bold mb-2">AI Training Center</h2>
-        <p className="text-slate-400 mb-6 max-w-md text-center">
-          Sign in to contribute expert-graded training data and help review the
-          community queue. Your labels directly train the crested-gecko morph
-          model.
-        </p>
-        <Button onClick={() => User.login()} className="bg-emerald-600 hover:bg-emerald-700">
-          Sign up / Login
-        </Button>
-      </div>
+      <SignInRequired
+        title="AI Training Center"
+        description="Sign in to contribute expert-graded training data and help review the community queue. Your labels directly train the crested-gecko morph model."
+        icon={Brain}
+      />
     );
   }
 
   if (isLoading) {
     return (
-      <div className="flex flex-col items-center justify-center h-screen bg-slate-950 text-white p-8">
-        <Loader2 className="w-16 h-16 mb-4 text-emerald-500 animate-spin" />
-        <h2 className="text-2xl font-bold">Loading Morph ID Evidence Lab...</h2>
-        <p className="text-slate-400">Fetching the latest dataset.</p>
+      <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+        <div className="max-w-7xl mx-auto py-20 flex flex-col items-center text-center">
+          <Loader2 className="w-16 h-16 mb-4 text-emerald-500 animate-spin" />
+          <h2 className="text-2xl font-bold text-slate-100">Loading Morph ID Evidence Lab...</h2>
+          <p className="text-slate-400">Fetching the latest dataset.</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-4 md:p-8 bg-slate-950 min-h-screen">
-      <div className="max-w-7xl mx-auto space-y-6">
-        <div className="flex items-center justify-between gap-3 flex-wrap">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 bg-gradient-to-br from-emerald-600 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-              <Brain className="w-6 h-6 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl md:text-4xl font-bold text-slate-100">Morph ID Evidence Lab</h1>
-              <p className="text-slate-400">
-                Build an auditable crested gecko reference set for review and benchmarking.
-                Taxonomy v{TAXONOMY_VERSION}.
-              </p>
-            </div>
-          </div>
+    <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto">
+        <PageHeader
+          icon={GraduationCap}
+          title="Morph ID Evidence Lab"
+          description={`Build an auditable crested gecko reference set for review and benchmarking. Taxonomy v${TAXONOMY_VERSION}.`}
+        >
           <Button variant="outline" onClick={reload}>
             <RefreshCw className="w-4 h-4 mr-2" /> Refresh
           </Button>
-        </div>
+        </PageHeader>
 
         <Tabs defaultValue="contribute" className="w-full">
-          <TabsList className="mb-4">
+          <TabsList className="mb-6">
             <TabsTrigger value="contribute">
-              <UploadIcon className="w-4 h-4 mr-2" /> Contribute
+              <UploadIcon className="w-4 h-4" /> Contribute
             </TabsTrigger>
             <TabsTrigger value="review">
-              <Scale className="w-4 h-4 mr-2" /> Review queue
+              <Scale className="w-4 h-4" /> Review queue
             </TabsTrigger>
             <TabsTrigger value="stats">
-              <BarChart3 className="w-4 h-4 mr-2" /> Dataset stats
+              <BarChart3 className="w-4 h-4" /> Dataset stats
             </TabsTrigger>
           </TabsList>
 
@@ -194,8 +184,8 @@ export default function TrainingPage() {
 
             <Card className="bg-slate-900 border-slate-700">
               <CardHeader>
-                <CardTitle className="text-slate-100 flex items-center gap-2">
-                  <BarChart3 className="w-5 h-5" />
+                <CardTitle className="text-base font-semibold text-slate-100 flex items-center gap-2">
+                  <BarChart3 className="w-4 h-4 text-emerald-400" />
                   Dataset health
                 </CardTitle>
               </CardHeader>
@@ -231,7 +221,7 @@ export default function TrainingPage() {
 
             <Card className="bg-slate-900 border-slate-700">
               <CardHeader>
-                <CardTitle className="text-slate-100">Top labeled morphs</CardTitle>
+                <CardTitle className="text-base font-semibold text-slate-100">Top labeled morphs</CardTitle>
               </CardHeader>
               <CardContent>
                 {stats.topMorphs.length === 0 ? (
@@ -261,7 +251,7 @@ export default function TrainingPage() {
 
             <Card className="bg-slate-900 border-slate-700">
               <CardHeader>
-                <CardTitle className="text-slate-100">Gap analysis</CardTitle>
+                <CardTitle className="text-base font-semibold text-slate-100">Gap analysis</CardTitle>
               </CardHeader>
               <CardContent>
                 <p className="text-slate-400 text-sm mb-3">
@@ -304,7 +294,7 @@ export default function TrainingPage() {
 function StatsTile({ label, value, icon: Icon, gradient }) {
   return (
     <Card className="bg-slate-900 border-slate-700">
-      <CardContent className="p-6">
+      <CardContent className="p-4 md:p-6">
         <div className="flex items-center justify-between">
           <div>
             <p className="text-sm font-medium text-slate-400">{label}</p>
@@ -321,7 +311,7 @@ function StatsTile({ label, value, icon: Icon, gradient }) {
 
 function StatsGrid({ stats }) {
   return (
-    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
       <StatsTile
         label="Total images"
         value={stats.totalImages.toLocaleString()}

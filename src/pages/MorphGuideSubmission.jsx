@@ -5,20 +5,23 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Upload, X, CheckCircle, AlertCircle, ArrowLeft, Send } from 'lucide-react';
+import { Upload, X, CheckCircle, AlertCircle, ArrowLeft, Send, BookOpen } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import SignInRequired from '@/components/shared/SignInRequired';
+import PageHeader from '@/components/shared/PageHeader';
 
 const ImagePreview = ({ file, onRemove }) => (
   <div className="relative group w-full h-32">
     <img
       src={URL.createObjectURL(file)}
       alt={file.name}
-      className="w-full h-full object-cover rounded-lg border border-sage-200"
+      className="w-full h-full object-cover rounded-lg border border-slate-700"
     />
     <button
+      type="button"
       onClick={onRemove}
+      aria-label="Remove photo"
       className="absolute -top-2 -right-2 w-6 h-6 bg-red-500 text-white rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
     >
       <X className="w-4 h-4" />
@@ -108,25 +111,26 @@ export default function MorphGuideSubmissionPage() {
   return (
     <div className="min-h-screen bg-slate-950 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="flex items-center gap-4 mb-8">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={() => navigate(createPageUrl("Dashboard"))}
-          >
-            <ArrowLeft className="w-4 h-4" />
-          </Button>
-          <div>
-            <h1 className="text-3xl font-bold text-sage-900">Submit Morph Guide Photos</h1>
-            <p className="text-sage-600">Contribute high-quality images to our official morph guide.</p>
-          </div>
-        </div>
+        <PageHeader
+          icon={BookOpen}
+          eyebrow={
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => navigate(createPageUrl("Dashboard"))}
+            >
+              <ArrowLeft className="w-4 h-4" />
+            </Button>
+          }
+          title="Submit Morph Guide Photos"
+          description="Contribute high-quality images to our official morph guide."
+        />
 
         {success && (
-          <Alert variant="default" className="mb-6 bg-green-50 border-green-200">
-            <CheckCircle className="h-4 w-4 text-green-600" />
-            <AlertTitle className="text-green-800">Submission Successful!</AlertTitle>
-            <AlertDescription className="text-green-700">
+          <Alert variant="default" className="mb-6 bg-emerald-950/40 border-emerald-800">
+            <CheckCircle className="h-4 w-4 text-emerald-400" />
+            <AlertTitle className="text-emerald-100">Submission Successful!</AlertTitle>
+            <AlertDescription className="text-emerald-200/80">
               Thank you for your contribution! Your photos have been submitted for review.
             </AlertDescription>
           </Alert>
@@ -147,7 +151,7 @@ export default function MorphGuideSubmissionPage() {
             </CardHeader>
             <CardContent className="space-y-6">
               <div>
-                <label className="block text-sm font-medium text-sage-800 mb-1">1. Select Morph</label>
+                <label className="block text-sm font-medium text-slate-300 mb-1">1. Select Morph</label>
                 <Select value={selectedMorphId} onValueChange={setSelectedMorphId} required>
                   <SelectTrigger>
                     <SelectValue placeholder="Choose the morph for your photos..." />
@@ -161,20 +165,20 @@ export default function MorphGuideSubmissionPage() {
               </div>
 
               <div>
-                <label className="block text-sm font-medium text-sage-800 mb-2">2. Upload Photos</label>
-                <div className="p-6 border-2 border-dashed border-sage-300 rounded-lg text-center bg-sage-50">
-                  <Upload className="mx-auto h-12 w-12 text-sage-400" />
-                  <label htmlFor="file-upload" className="relative cursor-pointer rounded-md font-semibold text-sage-600 hover:text-sage-500 mt-2 block">
+                <label className="block text-sm font-medium text-slate-300 mb-2">2. Upload Photos</label>
+                <div className="p-6 border-2 border-dashed border-slate-600 rounded-lg text-center bg-slate-800/50">
+                  <Upload className="mx-auto h-12 w-12 text-slate-500" />
+                  <label htmlFor="file-upload" className="relative cursor-pointer rounded-md font-semibold text-emerald-400 hover:text-emerald-300 mt-2 block">
                     <span>Click to upload files</span>
                     <input id="file-upload" name="file-upload" type="file" className="sr-only" multiple onChange={handleFileChange} accept="image/*" />
                   </label>
-                  <p className="text-xs text-sage-500 mt-1">High-resolution JPG, PNG, or WEBP accepted.</p>
+                  <p className="text-xs text-slate-500 mt-1">High-resolution JPG, PNG, or WEBP accepted.</p>
                 </div>
               </div>
 
               {files.length > 0 && (
                 <div>
-                  <h3 className="text-lg font-medium text-sage-800 mb-2">Selected Images ({files.length})</h3>
+                  <h3 className="text-lg font-medium text-slate-200 mb-2">Selected Images ({files.length})</h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
                     {files.map((file, index) => (
                       <ImagePreview key={index} file={file} onRemove={() => removeFile(index)} />
@@ -186,7 +190,7 @@ export default function MorphGuideSubmissionPage() {
               <Alert>
                 <AlertTitle>Photo Guidelines</AlertTitle>
                 <AlertDescription>
-                  <ul className="list-disc list-inside text-sm text-sage-600 space-y-1 mt-2">
+                  <ul className="list-disc list-inside text-sm text-slate-400 space-y-1 mt-2">
                     <li>Ensure photos are clear, well-lit, and in focus.</li>
                     <li>The gecko should be the main subject of the image.</li>
                     <li>Avoid cluttered backgrounds.</li>
@@ -195,11 +199,11 @@ export default function MorphGuideSubmissionPage() {
                 </AlertDescription>
               </Alert>
 
-              <div className="pt-6 border-t border-sage-200">
+              <div className="pt-6 border-t border-slate-700">
                 <Button
                   type="submit"
                   disabled={isSubmitting || files.length === 0 || !selectedMorphId}
-                  className="w-full bg-gradient-to-r from-sage-600 to-earth-600"
+                  className="w-full"
                   size="lg"
                 >
                   {isSubmitting ? (

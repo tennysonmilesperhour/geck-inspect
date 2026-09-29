@@ -58,6 +58,9 @@ import { createPageUrl } from '@/utils';
 import Seo from '@/components/seo/Seo';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import PageHeader from '@/components/shared/PageHeader';
+import SignInRequired from '@/components/shared/SignInRequired';
 
 // Heuristics v1: quality tier multipliers applied to the morph comp
 // average. Documented in the file header; keep these in sync with it.
@@ -195,7 +198,7 @@ function BasisChip({ valuation }) {
 function StatCard({ icon: Icon, label, value, sub }) {
   return (
     <Card className="bg-slate-900 border-slate-700">
-      <CardContent className="p-5">
+      <CardContent className="p-4 md:p-6">
         <div className="flex items-center gap-2 mb-2">
           <Icon className="w-4 h-4 text-emerald-400" />
           <span className="text-xs uppercase tracking-wider text-slate-500">{label}</span>
@@ -319,6 +322,19 @@ export default function Portfolio() {
     />
   );
 
+  const header = (
+    <PageHeader
+      icon={Wallet}
+      title="Collection Portfolio"
+      description={
+        <>
+          <Info className="inline-block w-3.5 h-3.5 mr-1.5 align-[-0.125em]" aria-hidden="true" />
+          Values are estimates from Geck Data market listings and your own listed prices, not formal appraisals.
+        </>
+      }
+    />
+  );
+
   if (loading || isLoadingAuth) {
     return (
       <div className="min-h-screen bg-slate-950 p-4 md:p-8">
@@ -334,34 +350,36 @@ export default function Portfolio() {
 
   if (!user?.email) {
     return (
-      <div className="min-h-screen bg-slate-950 p-6">
+      <>
         {seo}
-        <div className="max-w-2xl mx-auto pt-20 text-center">
-          <Wallet className="w-10 h-10 text-emerald-400 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-slate-100 mb-2">Collection Portfolio</h1>
-          <p className="text-slate-400">Sign in to see what your collection is worth and how it trends over time.</p>
-        </div>
-      </div>
+        <SignInRequired
+          icon={Wallet}
+          title="Collection Portfolio"
+          description="Sign in to see what your collection is worth and how it trends over time."
+        />
+      </>
     );
   }
 
   if (geckos.length === 0) {
     return (
-      <div className="min-h-screen bg-slate-950 p-6">
+      <div className="min-h-screen bg-slate-950 p-4 md:p-8">
         {seo}
-        <div className="max-w-2xl mx-auto pt-20 text-center">
-          <PiggyBank className="w-10 h-10 text-emerald-400 mx-auto mb-4" />
-          <h1 className="text-2xl font-bold text-slate-100 mb-2">No animals to value yet</h1>
-          <p className="text-slate-400 mb-6">
-            Add geckos to your collection and the portfolio will estimate what each one is worth.
-            Premium morphs like Lilly White and Axanthic tend to drive most of a collection&apos;s value.
-          </p>
-          <Link
-            to={createPageUrl('MyGeckos')}
-            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white bg-emerald-600 hover:bg-emerald-500"
-          >
-            <PlusCircle className="w-4 h-4" /> Add your first gecko
-          </Link>
+        <div className="max-w-6xl mx-auto">
+          {header}
+          <div className="rounded-xl border border-slate-700 bg-slate-900 px-4 py-16 text-center">
+            <PiggyBank className="w-10 h-10 text-emerald-400 mx-auto mb-4" />
+            <h2 className="text-xl font-semibold text-slate-100">No animals to value yet</h2>
+            <p className="text-slate-400 mt-2 max-w-2xl mx-auto">
+              Add geckos to your collection and the portfolio will estimate what each one is worth.
+              Premium morphs like Lilly White and Axanthic tend to drive most of a collection&apos;s value.
+            </p>
+            <Button asChild className="mt-4">
+              <Link to={createPageUrl('MyGeckos')}>
+                <PlusCircle className="w-4 h-4" /> Add your first gecko
+              </Link>
+            </Button>
+          </div>
         </div>
       </div>
     );
@@ -372,18 +390,10 @@ export default function Portfolio() {
     : null;
 
   return (
-    <div className="min-h-screen bg-slate-950 p-6">
+    <div className="min-h-screen bg-slate-950 p-4 md:p-8">
       {seo}
       <div className="max-w-6xl mx-auto space-y-6">
-        <div>
-          <h1 className="text-3xl font-bold text-slate-100 flex items-center gap-3">
-            <Wallet className="w-7 h-7 text-emerald-400" /> Collection Portfolio
-          </h1>
-          <p className="text-sm text-slate-500 mt-2 flex items-center gap-1.5">
-            <Info className="w-3.5 h-3.5 shrink-0" />
-            Values are estimates from Geck Data market listings and your own listed prices, not formal appraisals.
-          </p>
-        </div>
+        {header}
 
         {/* Hero stats */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -516,9 +526,9 @@ export default function Portfolio() {
                       <td className="py-2.5 px-3">
                         <Link to={createPageUrl(`GeckoDetail?id=${gecko.id}`)} className="flex items-center gap-3 group">
                           {photo ? (
-                            <img src={photo} alt={gecko.name || 'Gecko'} className="w-10 h-10 rounded-lg object-cover bg-slate-800" />
+                            <img src={photo} alt={gecko.name || 'Gecko'} className="w-10 h-10 shrink-0 rounded-lg object-cover bg-slate-800" />
                           ) : (
-                            <div className="w-10 h-10 rounded-lg bg-slate-800 flex items-center justify-center text-slate-600 text-xs font-bold">
+                            <div className="w-10 h-10 shrink-0 rounded-lg bg-slate-800 flex items-center justify-center text-slate-600 text-xs font-bold">
                               {(gecko.name || '?').charAt(0).toUpperCase()}
                             </div>
                           )}

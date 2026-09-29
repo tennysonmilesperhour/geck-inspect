@@ -158,7 +158,7 @@ export default function ScorecardForm({ criteria = [] }) {
   };
 
   return (
-    <div ref={sectionRef} id="scorecard" className="bg-slate-900 border border-slate-700 rounded-xl p-6 mb-8 scroll-mt-6">
+    <div ref={sectionRef} id="scorecard" className="bg-slate-900 border border-slate-700 rounded-xl p-4 md:p-6 mb-8 scroll-mt-6">
       <div className="flex items-center gap-2 mb-2">
         <ClipboardCheck className="w-5 h-5 text-emerald-400" />
         <h2 className="text-lg font-semibold text-slate-100">Score your gecko now</h2>

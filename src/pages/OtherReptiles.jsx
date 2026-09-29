@@ -2,9 +2,10 @@ import React, { useState, useEffect, useCallback, Suspense } from 'react';
 import Seo from '@/components/seo/Seo';
 import { OtherReptile } from '@/entities/all';
 import { api } from '@/api/appClient';
-import { PlusCircle, Search, Users, Archive, ArchiveRestore, Lock } from 'lucide-react';
+import { PlusCircle, Search, Users, UsersRound, Archive, ArchiveRestore, Lock } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
+import PageHeader from '@/components/shared/PageHeader';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import ReptileCard from '../components/other-reptiles/ReptileCard';
@@ -187,14 +188,11 @@ export default function OtherReptilesPage() {
                 noIndex
             />
             <div className="max-w-7xl mx-auto">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                    <div>
-                        <h1 className="text-2xl md:text-4xl font-bold text-slate-100">
-                            {showArchived ? 'Archived Reptiles' : 'Other Reptiles'}
-                        </h1>
-                        <p className="text-slate-400 mt-1">Track your non-gecko reptile collection with feeding reminders.</p>
-                    </div>
-                    <div className="flex gap-2">
+                <PageHeader
+                    icon={UsersRound}
+                    title={showArchived ? 'Archived Reptiles' : 'Other Reptiles'}
+                    description="Track your non-gecko reptile collection with feeding reminders."
+                    settings={
                         <PageSettingsPanel title="Reptile Settings">
                             <div>
                                 <Label className="text-slate-300 text-sm mb-1 block">Sort By</Label>
@@ -229,44 +227,44 @@ export default function OtherReptilesPage() {
                                 </div>
                             </div>
                         </PageSettingsPanel>
-                        <Button
-                            variant="outline"
-                            onClick={() => setShowArchived(!showArchived)}
-                            className="border-slate-600 hover:bg-slate-800"
-                        >
-                            {showArchived ? (
-                                <>
-                                    <ArchiveRestore className="w-5 h-5 mr-2" />
-                                    Active
-                                </>
-                            ) : (
-                                <>
-                                    <Archive className="w-5 h-5 mr-2" />
-                                    Archive
-                                </>
-                            )}
-                        </Button>
-                        {!showArchived && (
-                            <Button
-                                onClick={() => {
-                                    // Enforce per-tier limit. Active (non-archived)
-                                    // reptiles count toward the cap.
-                                    const activeCount = reptiles.filter(r => !r.archived).length;
-                                    const check = checkPlanLimit(user, 'other_reptiles', activeCount);
-                                    if (!check.allowed) {
-                                        setShowLimitModal(true);
-                                        return;
-                                    }
-                                    setSelectedReptile(null);
-                                    setIsFormOpen(true);
-                                }}
-                            >
-                                <PlusCircle className="w-5 h-5 mr-2" />
-                                Add Reptile
-                            </Button>
+                    }
+                >
+                    <Button
+                        variant="outline"
+                        onClick={() => setShowArchived(!showArchived)}
+                    >
+                        {showArchived ? (
+                            <>
+                                <ArchiveRestore className="w-5 h-5 mr-2" />
+                                Active
+                            </>
+                        ) : (
+                            <>
+                                <Archive className="w-5 h-5 mr-2" />
+                                Archive
+                            </>
                         )}
-                    </div>
-                </div>
+                    </Button>
+                    {!showArchived && (
+                        <Button
+                            onClick={() => {
+                                // Enforce per-tier limit. Active (non-archived)
+                                // reptiles count toward the cap.
+                                const activeCount = reptiles.filter(r => !r.archived).length;
+                                const check = checkPlanLimit(user, 'other_reptiles', activeCount);
+                                if (!check.allowed) {
+                                    setShowLimitModal(true);
+                                    return;
+                                }
+                                setSelectedReptile(null);
+                                setIsFormOpen(true);
+                            }}
+                        >
+                            <PlusCircle className="w-5 h-5 mr-2" />
+                            Add Reptile
+                        </Button>
+                    )}
+                </PageHeader>
 
                 {(() => {
                     const activeCount = reptiles.filter(r => !r.archived).length;

@@ -158,9 +158,9 @@ export default function HealthScreenCard({ gecko, user }) {
 
   return (
     <Card className="bg-slate-800/50 border-slate-700">
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-3 pt-4 px-4">
         <div className="flex items-center justify-between gap-2">
-          <CardTitle className="text-white flex items-center gap-2 text-base">
+          <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-100">
             <HeartPulse className="w-4 h-4 text-emerald-400" />
             AI Health Check
             <span className="text-[10px] font-medium uppercase tracking-wide text-emerald-300 bg-emerald-500/10 border border-emerald-500/30 rounded px-1.5 py-0.5">
@@ -175,7 +175,7 @@ export default function HealthScreenCard({ gecko, user }) {
           Reviews the latest photo for body condition, shed, and visible concerns.
         </p>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="px-4 pb-4 space-y-3">
         {guest ? (
           <div className="rounded-lg border border-emerald-500/30 bg-emerald-500/10 p-3 flex items-start gap-3">
             <LogIn className="w-4 h-4 text-emerald-400 mt-0.5 shrink-0" />

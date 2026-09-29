@@ -55,10 +55,10 @@ export default function BreedingSimulator({ sire, dam }) {
   return (
     <Card className="bg-slate-900 border-slate-700">
       <CardHeader className="pb-3">
-        <CardTitle className="text-lg flex items-center gap-2 text-slate-100">
+        <CardTitle className="text-lg flex flex-wrap items-center gap-2 text-slate-100">
           <FlaskConical className="w-5 h-5 text-purple-400" />
           Season Simulator
-          <Badge variant="outline" className="ml-auto text-xs text-slate-400 border-slate-600">
+          <Badge variant="outline" className="sm:ml-auto text-xs text-slate-400 border-slate-600">
             1,000 simulated seasons
           </Badge>
         </CardTitle>

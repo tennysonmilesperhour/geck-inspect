@@ -179,6 +179,31 @@ Ordered by how much a first-time visitor notices them.
    bottom bar over the section nav; intentional for a hands-busy mode,
    but its exit affordance should be reviewed on a device.
 
+### Follow-up pass, 2026-09-29
+
+A spacing and formatting pass over every page (app pages at 390 and
+1440 px in guest mode, public pages logged out) closed most of the
+backlog above:
+
+- Item 1: the P-series pages (Batch Husbandry, Breeding Loans, Breeding
+  ROI, Printable Worksheets, Claim Animal, Passport QR) now use Tailwind
+  tokens and the app font. The inline `C` palettes and DM Sans / DM
+  Serif are gone. Geck Answers was folded into the Forum.
+- Item 6: every app page has one title through the shared `PageHeader`
+  (`src/components/shared/PageHeader.jsx`), including Admin Panel.
+  Pedigree keeps its tree toolbar.
+- Item 7: Breeding ROI outcome rows, the Genetics Guide glossary and
+  Promote's selects stack on phones. The payment rows in the Business
+  Tools sale dialogs keep three columns (amount, date, remove), which
+  fit at 390 px.
+- Item 8: Quality Scale, morph pages and breeder pages drop their public
+  logo bar and footer inside the app shell (`useInAppShell`).
+
+Still open: item 2 (section membership), item 3 (one card surface
+token), item 4 (secondary emerald ramps inside cards) and item 5 (touch
+targets). The page conventions are in `docs/ENGINEERING.md` under
+"Page layout conventions".
+
 ## 5. How to re-run the phone pass
 
 ```

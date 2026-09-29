@@ -29,6 +29,7 @@ import {
 } from '@/components/ui/select';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
+import PageHeader from '../components/shared/PageHeader';
 import {
   Target,
   DollarSign,
@@ -325,7 +326,7 @@ export default function PairingPlannerPage() {
   const hasEnoughStock = males.length >= 1 && females.length >= 1;
 
   return (
-    <div className="p-4 md:p-8 bg-slate-950 min-h-screen">
+    <div className="min-h-screen bg-slate-950 p-4 md:p-8">
       <Seo
         title="Pairing Planner for Crested Geckos"
         description="Pick a goal and let the Pairing Planner rank every sire and dam in your crested gecko collection by predicted morph, value, or safety."
@@ -334,16 +335,11 @@ export default function PairingPlannerPage() {
         keywords={['crested gecko pairing', 'breeding planner', 'inverse genetics', 'morph calculator']}
       />
       <div className="max-w-7xl mx-auto">
-        <div className="mb-8">
-          <h1 className="text-2xl md:text-4xl font-bold text-slate-100 flex items-center gap-3">
-            <Sparkles className="w-8 h-8 md:w-10 md:h-10 text-emerald-500" />
-            Pairing Planner
-          </h1>
-          <p className="text-slate-400 mt-2 text-sm md:text-base">
-            Tell us what you are breeding toward. We rank every possible pairing in your
-            collection so you can plan the next clutch with confidence.
-          </p>
-        </div>
+        <PageHeader
+          icon={Sparkles}
+          title="Pairing Planner"
+          description="Tell us what you are breeding toward. We rank every possible pairing in your collection so you can plan the next clutch with confidence."
+        />
 
         {isLoading ? (
           <div className="text-center py-20">
@@ -487,7 +483,7 @@ export default function PairingPlannerPage() {
                     : 'No pairings to show. Adjust your goal or selection.'}
               </div>
             ) : (
-              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {visibleRows.map((row, i) => (
                   <PairingCard key={`${row.sire.id}-${row.dam.id}`} row={row} rank={i + 1} goal={goal} usingStaticWeights={usingStaticWeights} readiness={damReadiness(row.dam)} />
                 ))}
@@ -597,7 +593,7 @@ function PairingCard({ row, rank, goal, usingStaticWeights, readiness }) {
         ))}
       </div>
 
-      <div className="flex items-center justify-between pt-3 border-t border-slate-800">
+      <div className="flex flex-wrap items-center justify-between gap-2 pt-3 border-t border-slate-800">
         {scoreLabel ? (
           <span className="text-sm font-semibold text-emerald-300">{scoreLabel}</span>
         ) : (

@@ -78,12 +78,12 @@ export default function HiddenHetPanel({ gecko }) {
 
   return (
     <Card className="gecko-card">
-      <CardHeader className="pb-3">
-        <CardTitle className="text-gecko-text flex items-center gap-2">
-          <Dna className="w-5 h-5 text-gecko-accent" /> Possible hidden genetics
+      <CardHeader className="pb-2 pt-4 px-4">
+        <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-100">
+          <Dna className="w-4 h-4 text-emerald-400" /> Possible hidden genetics
         </CardTitle>
       </CardHeader>
-      <CardContent>
+      <CardContent className="px-4 pb-4">
         {entries.length === 0 ? (
           <p className="text-sm text-slate-400">
             Nothing in the recorded lineage suggests a hidden recessive

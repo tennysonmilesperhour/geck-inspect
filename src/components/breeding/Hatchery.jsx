@@ -417,7 +417,7 @@ export default function Hatchery() {
 
                     <Collapsible open={isTemperatureGuideOpen} onOpenChange={setIsTemperatureGuideOpen}>
                         <CollapsibleTrigger asChild>
-                            <Button variant="ghost" className="w-full justify-between px-0 text-slate-300 hover:text-white hover:bg-transparent">
+                            <Button variant="ghost" className="w-full h-auto min-h-9 justify-between px-0 py-2 whitespace-normal text-left text-slate-300 hover:text-white hover:bg-transparent">
                                 Why breeders choose different temperature ranges
                                 <ChevronDown className={`w-4 h-4 transition-transform ${isTemperatureGuideOpen ? 'rotate-180' : ''}`} />
                             </Button>

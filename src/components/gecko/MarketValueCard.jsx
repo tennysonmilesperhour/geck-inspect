@@ -74,8 +74,8 @@ export default function MarketValueCard({ gecko }) {
 
   const header = (
     <CardHeader className="pb-2 pt-4 px-4">
-      <CardTitle className="text-sm flex items-center gap-2 text-slate-300">
-        <Wallet className="w-4 h-4" /> Estimated Value
+      <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-100">
+        <Wallet className="w-4 h-4 text-emerald-400" /> Estimated Value
         <Badge variant="outline" className="ml-auto text-[10px] font-medium bg-teal-900/40 border-teal-700 text-teal-200">
           Geck Data
         </Badge>

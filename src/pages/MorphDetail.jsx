@@ -29,6 +29,7 @@ import {
 import { authorSchema, bylineText, editorialFor } from '@/lib/editorial';
 import { morphFaq, morphFaqSchema } from '@/lib/morphFaq';
 import { getMorphReferenceImages } from '@/lib/geckDataClient';
+import { useInAppShell } from '@/lib/appShell';
 
 const LOGO_URL = APP_LOGO_URL;
 
@@ -63,6 +64,7 @@ function sanitizeImage(url) {
 
 export default function MorphDetail() {
   const { slug } = useParams();
+  const inAppShell = useInAppShell();
   const [record, setRecord] = useState(null);
   const [communityImages, setCommunityImages] = useState([]);
   const [referenceImages, setReferenceImages] = useState([]);
@@ -294,18 +296,20 @@ export default function MorphDetail() {
       />
 
       <div className="min-h-screen bg-slate-950 text-slate-100">
-        {/* Top nav */}
-        <header className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
-          <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
-            <img src={LOGO_URL} alt="Geck Inspect" className="h-10 w-10 rounded-xl" />
-            <span className="text-xl font-bold tracking-tight">Geck Inspect</span>
-          </Link>
-          <Link to={createPageUrl('AuthPortal')}>
-            <Button className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold">
-              Sign In
-            </Button>
-          </Link>
-        </header>
+        {/* Top nav. Inside the app the shell already has a header. */}
+        {!inAppShell && (
+          <header className="max-w-6xl mx-auto px-6 py-6 flex items-center justify-between">
+            <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
+              <img src={LOGO_URL} alt="Geck Inspect" className="h-10 w-10 rounded-xl" />
+              <span className="text-xl font-bold tracking-tight">Geck Inspect</span>
+            </Link>
+            <Link to={createPageUrl('AuthPortal')}>
+              <Button className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold">
+                Sign In
+              </Button>
+            </Link>
+          </header>
+        )}
 
         {/* Hero */}
         <article className="max-w-4xl mx-auto px-6 pt-8 pb-16">
@@ -710,24 +714,26 @@ export default function MorphDetail() {
         </article>
 
         {/* Footer */}
-        <footer className="border-t border-slate-800/50">
-          <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
-            <div className="flex items-center gap-3">
-              <img src={LOGO_URL} alt="Geck Inspect" className="h-6 w-6 rounded" />
-              <span>© {new Date().getFullYear()} Geck Inspect · geckOS</span>
+        {!inAppShell && (
+          <footer className="border-t border-slate-800/50">
+            <div className="max-w-6xl mx-auto px-6 py-8 flex flex-col md:flex-row items-center justify-between gap-4 text-sm text-slate-500">
+              <div className="flex items-center gap-3">
+                <img src={LOGO_URL} alt="Geck Inspect" className="h-6 w-6 rounded" />
+                <span>© {new Date().getFullYear()} Geck Inspect · geckOS</span>
+              </div>
+              <div className="flex items-center gap-5">
+                <Link to="/" className="hover:text-slate-300">Home</Link>
+                <Link to="/MorphGuide" className="hover:text-slate-300">Morph Guide</Link>
+                <Link to={createPageUrl('CareGuide')} className="hover:text-slate-300">
+                  Care Guide
+                </Link>
+                <Link to={createPageUrl('AuthPortal')} className="hover:text-slate-300">
+                  Sign in
+                </Link>
+              </div>
             </div>
-            <div className="flex items-center gap-5">
-              <Link to="/" className="hover:text-slate-300">Home</Link>
-              <Link to="/MorphGuide" className="hover:text-slate-300">Morph Guide</Link>
-              <Link to={createPageUrl('CareGuide')} className="hover:text-slate-300">
-                Care Guide
-              </Link>
-              <Link to={createPageUrl('AuthPortal')} className="hover:text-slate-300">
-                Sign in
-              </Link>
-            </div>
-          </div>
-        </footer>
+          </footer>
+        )}
       </div>
     </>
   );

@@ -15,6 +15,7 @@ import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { PlusCircle, Loader2, CalendarDays, Trash2, Plus, ChevronDown, ChevronUp, Calendar, RepeatIcon, Utensils, StickyNote } from 'lucide-react';
 import EmptyState from '../components/shared/EmptyState';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
+import PageHeader from '@/components/shared/PageHeader';
 import usePageSettings from '@/hooks/usePageSettings';
 import { Switch } from '@/components/ui/switch';
 import { format, differenceInCalendarDays } from 'date-fns';
@@ -287,17 +288,13 @@ export default function ProjectManager() {
     };
     
     return (
-        <div className="p-4 md:p-8 bg-slate-950 min-h-screen">
+        <div className="min-h-screen bg-slate-950 p-4 md:p-8">
             <div className="max-w-7xl mx-auto">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                    <div>
-                        <h1 className="text-2xl md:text-4xl font-bold text-slate-100 flex items-center gap-3">
-                            <CalendarDays className="w-8 h-8 md:w-10 md:h-10 text-emerald-500" />
-                            Season Planner
-                        </h1>
-                        <p className="text-slate-400 mt-2 text-sm md:text-base">Plan breeding seasons, prep for expos, and track gecko care tasks</p>
-                    </div>
-                    <div className="flex gap-2 w-full md:w-auto">
+                <PageHeader
+                    icon={CalendarDays}
+                    title="Season Planner"
+                    description="Plan breeding seasons, prep for expos, and track gecko care tasks"
+                    settings={
                         <PageSettingsPanel title="Planner Settings">
                             <div>
                                 <Label className="text-slate-300 text-sm mb-1 block">Default Tab</Label>
@@ -323,12 +320,13 @@ export default function ProjectManager() {
                                 <Switch checked={plannerPrefs.compactView} onCheckedChange={v => setPlannerPrefs({ compactView: v })} />
                             </div>
                         </PageSettingsPanel>
-                        <Button onClick={handleNewPlan} className="bg-emerald-600 hover:bg-emerald-700 flex-1 md:flex-none">
-                            <PlusCircle className="w-5 h-5 mr-2" />
-                            {activeTab === 'future' ? 'New Breeding Plan' : 'New Plan'}
-                        </Button>
-                    </div>
-                </div>
+                    }
+                >
+                    <Button onClick={handleNewPlan} className="flex-1 md:flex-none">
+                        <PlusCircle className="w-5 h-5 mr-2" />
+                        {activeTab === 'future' ? 'New Breeding Plan' : 'New Plan'}
+                    </Button>
+                </PageHeader>
                 
                 {isLoading && projects.length === 0 && feedingGroups.length === 0 ? (
                     <div className="text-center py-20"><Loader2 className="w-12 h-12 text-emerald-500 animate-spin mx-auto" /></div>
@@ -347,7 +345,7 @@ export default function ProjectManager() {
                                     value={value}
                                     className="flex-1 flex items-center justify-center gap-1.5 data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-2 rounded-sm transition-colors"
                                 >
-                                    <Icon className="w-4 h-4" />
+                                    <Icon className="hidden sm:block w-4 h-4" />
                                     <span className="hidden sm:inline">{label}</span>
                                     {shortLabel && <span className="sm:hidden">{shortLabel}</span>}
                                     {!shortLabel && <span className="sm:hidden">{label}</span>}
@@ -417,7 +415,7 @@ export default function ProjectManager() {
                                                                 </div>
                                                             ))}
                                                         </div>
-                                                        <div className="flex gap-2">
+                                                        <div className="flex flex-wrap gap-2">
                                                             <Button size="sm" onClick={() => { setSelectedProjectId(project.id); setIsTaskModalOpen(true); }} className="">
                                                                 <Plus className="w-4 h-4 mr-2" /> Add Task
                                                             </Button>

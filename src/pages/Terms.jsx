@@ -61,7 +61,7 @@ export default function Terms() {
           <span className="text-slate-400">Terms of Service</span>
         </div>
 
-        <div className="bg-slate-900 border border-slate-700 rounded-xl p-8 space-y-8">
+        <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 md:p-8 space-y-8">
           <div className="flex items-center gap-3">
             <ScrollText className="w-8 h-8 text-emerald-400 flex-shrink-0" />
             <div>

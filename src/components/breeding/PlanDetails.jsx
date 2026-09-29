@@ -291,7 +291,7 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
                 eggs={planEggs}
             />
             <div className="flex flex-col sm:flex-row justify-between items-center mb-4 gap-3">
-                <div className="flex flex-wrap gap-2 w-full sm:w-auto items-center justify-end ml-auto">
+                <div className="flex flex-wrap gap-2 w-full sm:w-auto items-center justify-start sm:justify-end ml-auto">
                    <Button variant="outline" size="sm" className="border-slate-600 hover:bg-slate-800 h-9" onClick={onOpenCopulationModal}>
                        Record Lock
                    </Button>
@@ -337,7 +337,7 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
                                             </div>
                                         </div>
                                     ) : (
-                                        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+                                        <div className="flex items-start sm:items-center justify-between gap-2">
                                             <div>
                                                 <p className="text-slate-200 text-sm font-medium">Laid: {format(parseLocalDate(egg.lay_date), 'MMM dd, yyyy')}</p>
                                                 <p className="text-xs text-slate-400">Expected Hatch: {format(parseLocalDate(egg.hatch_date_expected), 'MMM dd, yyyy')}</p>

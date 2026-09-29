@@ -8,22 +8,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { QRCodeSVG } from 'qrcode.react';
-
-/* ─── Design tokens ─────────────────────────────────────────────── */
-const C = {
-  forest:    '#e2e8f0',
-  moss:      '#94a3b8',
-  sage:      '#10b981',
-  paleSage:  'rgba(16,185,129,0.1)',
-  warmWhite: '#020617',
-  gold:      '#f59e0b',
-  goldLight: 'rgba(245,158,11,0.15)',
-  red:       '#ef4444',
-  slate:     '#cbd5e1',
-  muted:     '#64748b',
-  cardBg:    '#0f172a',
-  border:    'rgba(51,65,85,0.5)',
-};
+import PageHeader from '@/components/shared/PageHeader';
 
 /* ─── Print CSS (injected once) ─────────────────────────────────── */
 
@@ -59,13 +44,13 @@ function FeedingLogTemplate({ gecko }) {
   const weeks = 4;
 
   return (
-    <div style={{ fontFamily: "'DM Sans', sans-serif", color: '#000', backgroundColor: '#fff', padding: 32 }}>
+    <div style={{ color: '#000', backgroundColor: '#fff', padding: 32 }}>
       <div style={{ borderBottom: '2px solid #000', paddingBottom: 12, marginBottom: 20 }}>
-        <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, margin: 0 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>
           Feeding Log
         </h1>
         <p style={{ fontSize: 14, margin: '4px 0 0', color: '#555' }}>
-          {gecko.name || 'Unnamed Gecko'} {gecko.morphs_traits ? `,  ${gecko.morphs_traits}` : ''}
+          {gecko.name || 'Unnamed Gecko'}{gecko.morphs_traits ? `, ${gecko.morphs_traits}` : ''}
         </p>
         <p style={{ fontSize: 12, color: '#888', margin: '2px 0 0' }}>
           Generated {format(new Date(), 'MMMM d, yyyy')}
@@ -153,11 +138,11 @@ function VetHealthCardTemplate({ gecko, weights, sheds, feedingRecords }) {
     : 'Unknown';
 
   return (
-    <div style={{ fontFamily: "'DM Sans', sans-serif", color: '#000', backgroundColor: '#fff', padding: 32, maxWidth: 700 }}>
+    <div style={{ color: '#000', backgroundColor: '#fff', padding: 32, maxWidth: 700 }}>
       {/* Header */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', borderBottom: '2px solid #000', paddingBottom: 12, marginBottom: 20 }}>
         <div>
-          <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 24, margin: 0 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 700, margin: 0 }}>
             Veterinary Health Card
           </h1>
           <p style={{ fontSize: 11, color: '#888', margin: '4px 0 0' }}>
@@ -196,13 +181,13 @@ function VetHealthCardTemplate({ gecko, weights, sheds, feedingRecords }) {
         </div>
         <div>
           <p style={{ fontSize: 11, color: '#888', margin: '0 0 2px' }}>ID</p>
-          <p style={{ fontSize: 12, fontWeight: 600, margin: 0, fontFamily: 'monospace' }}>{gecko.id}</p>
+          <p className="font-mono" style={{ fontSize: 12, fontWeight: 600, margin: 0 }}>{gecko.id}</p>
         </div>
       </div>
 
       {/* Weight history table */}
       <div style={{ marginBottom: 20 }}>
-        <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 16, margin: '0 0 8px', borderBottom: '1px solid #ddd', paddingBottom: 4 }}>
+        <h2 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 8px', borderBottom: '1px solid #ddd', paddingBottom: 4 }}>
           Weight History (Last 10)
         </h2>
         {last10Weights.length > 0 ? (
@@ -243,7 +228,7 @@ function VetHealthCardTemplate({ gecko, weights, sheds, feedingRecords }) {
       {/* Shed summary + Feeding rate */}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20, marginBottom: 20 }}>
         <div>
-          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 16, margin: '0 0 8px', borderBottom: '1px solid #ddd', paddingBottom: 4 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 8px', borderBottom: '1px solid #ddd', paddingBottom: 4 }}>
             Recent Sheds
           </h2>
           {recentSheds.length > 0 ? (
@@ -261,7 +246,7 @@ function VetHealthCardTemplate({ gecko, weights, sheds, feedingRecords }) {
         </div>
 
         <div>
-          <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 16, margin: '0 0 8px', borderBottom: '1px solid #ddd', paddingBottom: 4 }}>
+          <h2 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 8px', borderBottom: '1px solid #ddd', paddingBottom: 4 }}>
             Feeding Rate
           </h2>
           <p style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>{feedRate}%</p>
@@ -273,7 +258,7 @@ function VetHealthCardTemplate({ gecko, weights, sheds, feedingRecords }) {
 
       {/* Vet notes */}
       <div style={{ borderTop: '1px solid #ddd', paddingTop: 12, marginTop: 12 }}>
-        <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 16, margin: '0 0 8px' }}>
+        <h2 style={{ fontSize: 16, fontWeight: 600, margin: '0 0 8px' }}>
           Veterinary Notes
         </h2>
         <div style={{ border: '1px solid #ccc', borderRadius: 4, padding: 12, minHeight: 80, fontSize: 12, color: '#999' }}>
@@ -292,7 +277,6 @@ function ExpoPriceTagTemplate({ gecko }) {
 
   return (
     <div style={{
-      fontFamily: "'DM Sans', sans-serif",
       color: '#000',
       backgroundColor: '#fff',
       padding: 20,
@@ -312,7 +296,7 @@ function ExpoPriceTagTemplate({ gecko }) {
       )}
 
       {/* Name & morph */}
-      <h2 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 20, margin: '0 0 4px' }}>
+      <h2 style={{ fontSize: 20, fontWeight: 700, margin: '0 0 4px' }}>
         {gecko.name || 'Crested Gecko'}
       </h2>
       <p style={{ fontSize: 13, color: '#555', margin: '0 0 8px' }}>
@@ -346,7 +330,7 @@ function ExpoPriceTagTemplate({ gecko }) {
       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
         <div style={{ fontSize: 10, color: '#888' }}>
           <p style={{ margin: '0 0 2px' }}>Scan for full passport</p>
-          <p style={{ margin: 0, fontFamily: 'monospace', fontSize: 9 }}>Geck Inspect</p>
+          <p className="font-mono" style={{ margin: 0, fontSize: 9 }}>Geck Inspect</p>
         </div>
         <QRCodeSVG value={passportUrl} size={64} level="M" />
       </div>
@@ -362,7 +346,6 @@ function LineageCardTemplate({ gecko }) {
 
   return (
     <div style={{
-      fontFamily: "'DM Sans', sans-serif",
       color: '#000',
       backgroundColor: '#fff',
       padding: 32,
@@ -375,7 +358,7 @@ function LineageCardTemplate({ gecko }) {
         <p style={{ fontSize: 10, letterSpacing: 3, textTransform: 'uppercase', color: '#888', margin: '0 0 4px' }}>
           Certificate of Lineage
         </p>
-        <h1 style={{ fontFamily: "'DM Serif Display', serif", fontSize: 28, margin: 0 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 700, margin: 0 }}>
           {gecko.name || 'Crested Gecko'}
         </h1>
         <p style={{ fontSize: 14, color: '#555', margin: '4px 0 0' }}>
@@ -471,21 +454,20 @@ function TemplateButton({ icon: Icon, label, description, active, onClick }) {
   return (
     <button
       onClick={onClick}
-      className="flex items-start gap-3 p-4 rounded-xl text-left transition-all"
-      style={{
-        border: `2px solid ${active ? C.sage : 'rgba(78,124,78,0.15)'}`,
-        backgroundColor: active ? C.paleSage : '#fff',
-      }}
+      className={`flex items-start gap-3 p-4 rounded-xl text-left transition-all border-2 ${
+        active ? 'border-emerald-500 bg-emerald-500/10' : 'border-slate-700 bg-slate-900'
+      }`}
     >
       <div
-        className="w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0"
-        style={{ backgroundColor: active ? C.sage : C.paleSage }}
+        className={`w-10 h-10 rounded-lg flex items-center justify-center flex-shrink-0 ${
+          active ? 'bg-emerald-600' : 'bg-emerald-500/10'
+        }`}
       >
-        <Icon size={20} style={{ color: active ? '#fff' : C.sage }} />
+        <Icon size={20} className={active ? 'text-white' : 'text-emerald-400'} />
       </div>
       <div>
-        <p className="text-sm font-semibold" style={{ color: C.forest }}>{label}</p>
-        <p className="text-xs mt-0.5" style={{ color: C.muted }}>{description}</p>
+        <p className="text-sm font-semibold text-slate-100">{label}</p>
+        <p className="text-xs mt-0.5 text-slate-500">{description}</p>
       </div>
     </button>
   );
@@ -575,47 +557,37 @@ export default function PrintableWorksheets() {
 
   if (isLoading) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: C.warmWhite, fontFamily: "'DM Sans', sans-serif" }}
-      >
-        <Loader2 size={32} className="animate-spin" style={{ color: C.sage }} />
+      <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+        <div className="max-w-4xl mx-auto flex justify-center py-20">
+          <Loader2 size={32} className="animate-spin text-emerald-400" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div
-      className="min-h-screen pb-12"
-      style={{ backgroundColor: C.warmWhite, fontFamily: "'DM Sans', sans-serif" }}
-    >
+    <div className="min-h-screen bg-slate-950 p-4 md:p-8">
       {/* Controls (hidden on print) */}
-      <div className="no-print max-w-4xl mx-auto px-4 pt-8 pb-6">
-        <div className="mb-6">
-          <h1
-            className="text-2xl mb-1"
-            style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}
-          >
-            Printable Worksheets
-          </h1>
-          <p className="text-sm" style={{ color: C.muted }}>
-            Generate print-ready documents for your geckos, feeding logs, vet cards, expo tags, and lineage certificates.
-          </p>
-        </div>
+      <div className="no-print max-w-4xl mx-auto">
+        <PageHeader
+          icon={Printer}
+          title="Printable Worksheets"
+          description="Generate print-ready documents for your geckos, feeding logs, vet cards, expo tags, and lineage certificates."
+        />
 
         {/* Gecko selector */}
         <div className="mb-6">
-          <label className="text-sm font-medium mb-2 block" style={{ color: C.slate }}>
+          <label className="text-sm font-medium mb-2 block text-slate-200">
             Select Gecko
           </label>
           <Select value={selectedGeckoId} onValueChange={v => { setSelectedGeckoId(v); setSelectedTemplate(''); }}>
-            <SelectTrigger className="max-w-md" style={{ backgroundColor: '#fff' }}>
+            <SelectTrigger className="max-w-md">
               <SelectValue placeholder="Choose a gecko..." />
             </SelectTrigger>
             <SelectContent>
               {geckos.map(g => (
                 <SelectItem key={g.id} value={g.id}>
-                  {g.name || g.id} {g.morph ? `(${g.morph})` : ''} {g.sex ? `,  ${g.sex}` : ''}
+                  {g.name || g.id}{g.morph ? ` (${g.morph})` : ''}{g.sex ? `, ${g.sex}` : ''}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -625,7 +597,7 @@ export default function PrintableWorksheets() {
         {/* Template buttons */}
         {selectedGeckoId && (
           <div className="mb-6">
-            <label className="text-sm font-medium mb-3 block" style={{ color: C.slate }}>
+            <label className="text-sm font-medium mb-3 block text-slate-200">
               Choose Template
             </label>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -663,11 +635,10 @@ export default function PrintableWorksheets() {
 
         {/* Print button */}
         {selectedGeckoId && selectedTemplate && (
-          <div className="flex items-center gap-3 mb-6">
+          <div className="flex flex-wrap items-center gap-3 mb-6">
             <Button
               onClick={handlePrint}
               disabled={loadingTemplate}
-              style={{ backgroundColor: C.sage, color: '#fff' }}
             >
               {loadingTemplate ? (
                 <Loader2 size={16} className="mr-2 animate-spin" />
@@ -676,7 +647,7 @@ export default function PrintableWorksheets() {
               )}
               Print Document
             </Button>
-            <span className="text-xs" style={{ color: C.muted }}>
+            <span className="text-xs text-slate-500">
               Opens your browser print dialog
             </span>
           </div>
@@ -685,20 +656,15 @@ export default function PrintableWorksheets() {
 
       {/* Printable area */}
       {selectedGecko && selectedTemplate && !loadingTemplate && (
-        <div id="printable-area" className="max-w-4xl mx-auto px-4">
-          <div
-            className="no-print mb-3 pb-3"
-            style={{ borderBottom: '1px solid rgba(78,124,78,0.15)' }}
-          >
-            <p className="text-xs font-medium" style={{ color: C.sage }}>
-              PREVIEW, This is how your document will look when printed
+        <div id="printable-area" className="max-w-4xl mx-auto">
+          <div className="no-print mb-3 pb-3 border-b border-slate-800">
+            <p className="text-xs font-medium text-emerald-400">
+              PREVIEW: this is how your document will look when printed
             </p>
           </div>
 
-          <div
-            className="rounded-xl overflow-hidden"
-            style={{ border: '1px solid rgba(78,124,78,0.15)', backgroundColor: '#fff' }}
-          >
+          {/* The preview is white on purpose: it shows the printed page. */}
+          <div className="rounded-xl overflow-hidden border border-slate-700 bg-white print:rounded-none print:border-0">
             {selectedTemplate === 'feeding-log' && (
               <FeedingLogTemplate gecko={selectedGecko} />
             )}
@@ -711,12 +677,12 @@ export default function PrintableWorksheets() {
               />
             )}
             {selectedTemplate === 'expo-tag' && (
-              <div style={{ padding: 24, display: 'flex', justifyContent: 'center' }}>
+              <div className="p-4 sm:p-6 flex justify-center">
                 <ExpoPriceTagTemplate gecko={selectedGecko} />
               </div>
             )}
             {selectedTemplate === 'lineage' && (
-              <div style={{ padding: 24, display: 'flex', justifyContent: 'center' }}>
+              <div className="p-4 sm:p-6 flex justify-center">
                 <LineageCardTemplate gecko={selectedGecko} />
               </div>
             )}

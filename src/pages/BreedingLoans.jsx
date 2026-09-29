@@ -16,22 +16,7 @@ import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter,
 } from '@/components/ui/dialog';
 import { useToast } from '@/components/ui/use-toast';
-
-/* ─── Design tokens ─────────────────────────────────────────────── */
-const C = {
-  forest:    '#e2e8f0',
-  moss:      '#94a3b8',
-  sage:      '#10b981',
-  paleSage:  'rgba(16,185,129,0.1)',
-  warmWhite: '#020617',
-  gold:      '#f59e0b',
-  goldLight: 'rgba(245,158,11,0.15)',
-  red:       '#ef4444',
-  slate:     '#cbd5e1',
-  muted:     '#64748b',
-  cardBg:    '#0f172a',
-  border:    'rgba(51,65,85,0.5)',
-};
+import PageHeader from '@/components/shared/PageHeader';
 
 /* ─── Helpers ───────────────────────────────────────────────────── */
 
@@ -45,18 +30,15 @@ function computeStatus(loan) {
 
 function StatusBadge({ status }) {
   const styles = {
-    proposed:  { bg: C.paleSage, text: C.sage,  label: 'Proposed' },
-    active:    { bg: '#E0F0E0', text: C.sage,   label: 'Active' },
-    overdue:   { bg: C.goldLight, text: '#92650A', label: 'Overdue' },
-    returned:  { bg: '#E8E8E8', text: '#6B6B6B', label: 'Returned' },
-    cancelled: { bg: '#F0E0E0', text: C.red,     label: 'Cancelled' },
+    proposed:  { className: 'bg-emerald-500/10 text-emerald-400', label: 'Proposed' },
+    active:    { className: 'bg-emerald-500/15 text-emerald-300', label: 'Active' },
+    overdue:   { className: 'bg-amber-500/15 text-amber-300',     label: 'Overdue' },
+    returned:  { className: 'bg-slate-700/60 text-slate-300',     label: 'Returned' },
+    cancelled: { className: 'bg-red-500/15 text-red-300',         label: 'Cancelled' },
   };
   const s = styles[status] || styles.proposed;
   return (
-    <span
-      className="inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium"
-      style={{ backgroundColor: s.bg, color: s.text }}
-    >
+    <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${s.className}`}>
       {s.label}
     </span>
   );
@@ -97,44 +79,41 @@ function LoanCard({ loan, geckoMap, isOutgoing, onRefresh }) {
 
   return (
     <div
-      className="rounded-xl p-5"
-      style={{
-        border: `1px solid ${displayStatus === 'overdue' ? 'rgba(196,134,10,0.35)' : 'rgba(51,65,85,0.5)'}`,
-        backgroundColor: displayStatus === 'overdue' ? 'rgba(253,243,224,0.3)' : '#fff',
-      }}
+      className={`rounded-xl p-4 md:p-6 border ${
+        displayStatus === 'overdue'
+          ? 'bg-amber-500/10 border-amber-500/40'
+          : 'bg-slate-900 border-slate-700'
+      }`}
     >
       <div className="flex items-start justify-between gap-3 mb-3">
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-2 mb-1">
-            <h3
-              className="text-base font-semibold truncate"
-              style={{ color: C.forest, fontFamily: "'DM Serif Display', serif" }}
-            >
+            <h3 className="text-base font-semibold truncate text-slate-100">
               {gecko?.name || loan.animal_id || 'Unknown Gecko'}
             </h3>
             <StatusBadge status={displayStatus} />
           </div>
           {gecko?.morphs_traits && (
-            <p className="text-xs mb-1" style={{ color: C.muted }}>{gecko.morphs_traits}</p>
+            <p className="text-xs mb-1 text-slate-500">{gecko.morphs_traits}</p>
           )}
         </div>
         {displayStatus === 'overdue' && (
-          <AlertTriangle size={18} style={{ color: C.gold }} className="flex-shrink-0 mt-1" />
+          <AlertTriangle size={18} className="flex-shrink-0 mt-1 text-amber-400" />
         )}
       </div>
 
       {/* Counterparty */}
       <div className="flex items-center gap-2 mb-2">
-        <UserIcon size={14} style={{ color: C.muted }} />
-        <span className="text-sm" style={{ color: C.slate }}>
+        <UserIcon size={14} className="text-slate-500" />
+        <span className="text-sm text-slate-200">
           {isOutgoing ? 'Borrower' : 'Lender'}: <strong>{counterparty}</strong>
         </span>
       </div>
 
       {/* Dates */}
       <div className="flex items-center gap-2 mb-2">
-        <Calendar size={14} style={{ color: C.muted }} />
-        <span className="text-sm" style={{ color: C.slate }}>
+        <Calendar size={14} className="text-slate-500" />
+        <span className="text-sm text-slate-200">
           {loan.loan_start ? format(parseISO(loan.loan_start), 'MMM d, yyyy') : 'Not started'}
           {', '}
           {loan.actual_return
@@ -148,12 +127,12 @@ function LoanCard({ loan, geckoMap, isOutgoing, onRefresh }) {
       {/* Stud fee */}
       {loan.stud_fee != null && loan.stud_fee > 0 && (
         <div className="flex items-center gap-2 mb-2">
-          <DollarSign size={14} style={{ color: C.muted }} />
-          <span className="text-sm" style={{ color: C.slate }}>
+          <DollarSign size={14} className="text-slate-500" />
+          <span className="text-sm text-slate-200">
             Stud fee: ${Number(loan.stud_fee).toFixed(2)}
             {loan.stud_fee_paid
-              ? <span className="ml-2 text-xs font-medium" style={{ color: C.sage }}>(Paid)</span>
-              : <span className="ml-2 text-xs font-medium" style={{ color: C.gold }}>(Unpaid)</span>
+              ? <span className="ml-2 text-xs font-medium text-emerald-400">(Paid)</span>
+              : <span className="ml-2 text-xs font-medium text-amber-400">(Unpaid)</span>
             }
           </span>
         </div>
@@ -162,8 +141,8 @@ function LoanCard({ loan, geckoMap, isOutgoing, onRefresh }) {
       {/* Offspring agreement */}
       {loan.offspring_agreement && (
         <div className="flex items-start gap-2 mb-2">
-          <FileText size={14} style={{ color: C.muted }} className="mt-0.5 flex-shrink-0" />
-          <span className="text-sm" style={{ color: C.slate }}>
+          <FileText size={14} className="mt-0.5 flex-shrink-0 text-slate-500" />
+          <span className="text-sm text-slate-200">
             {loan.offspring_agreement}
           </span>
         </div>
@@ -171,26 +150,25 @@ function LoanCard({ loan, geckoMap, isOutgoing, onRefresh }) {
 
       {/* Condition notes */}
       {loan.condition_on_loan && (
-        <p className="text-xs mt-2 px-3 py-2 rounded-lg" style={{ backgroundColor: C.paleSage, color: C.slate }}>
+        <p className="text-xs mt-2 px-3 py-2 rounded-lg bg-emerald-500/10 text-slate-200">
           Condition on loan: {loan.condition_on_loan}
         </p>
       )}
 
       {/* Notes */}
       {loan.notes && (
-        <p className="text-xs mt-2" style={{ color: C.muted }}>
+        <p className="text-xs mt-2 text-slate-500">
           {loan.notes}
         </p>
       )}
 
       {/* Actions */}
       {(displayStatus === 'active' || displayStatus === 'overdue') && isOutgoing && (
-        <div className="flex items-center gap-2 mt-4 pt-3" style={{ borderTop: '1px solid rgba(51,65,85,0.3)' }}>
+        <div className="flex flex-wrap items-center gap-2 mt-4 pt-3 border-t border-slate-800">
           <Button
             size="sm"
             onClick={handleMarkReturned}
             className="text-xs"
-            style={{ backgroundColor: C.sage, color: '#fff' }}
           >
             <CheckCircle2 size={14} className="mr-1" />
             Mark Returned
@@ -200,7 +178,6 @@ function LoanCard({ loan, geckoMap, isOutgoing, onRefresh }) {
             variant="outline"
             onClick={handleCancel}
             className="text-xs"
-            style={{ borderColor: 'rgba(51,65,85,0.5)', color: C.muted }}
           >
             Cancel Loan
           </Button>
@@ -272,9 +249,9 @@ function NewLoanModal({ open, onClose, geckos, onCreated }) {
 
   return (
     <Dialog open={open} onOpenChange={onClose}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto" style={{ fontFamily: "'DM Sans', sans-serif" }}>
+      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>
+          <DialogTitle className="text-slate-100">
             New Breeding Loan
           </DialogTitle>
         </DialogHeader>
@@ -282,7 +259,7 @@ function NewLoanModal({ open, onClose, geckos, onCreated }) {
         <div className="space-y-4 mt-2">
           {/* Gecko */}
           <div>
-            <Label style={{ color: C.slate }}>Gecko</Label>
+            <Label className="text-slate-200">Gecko</Label>
             <Select value={form.animal_id} onValueChange={v => set('animal_id', v)}>
               <SelectTrigger className="mt-1">
                 <SelectValue placeholder="Select a gecko..." />
@@ -298,9 +275,9 @@ function NewLoanModal({ open, onClose, geckos, onCreated }) {
           </div>
 
           {/* Borrower info */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <Label style={{ color: C.slate }}>Borrower Email *</Label>
+              <Label className="text-slate-200">Borrower Email *</Label>
               <Input
                 type="email"
                 value={form.borrower_email}
@@ -310,7 +287,7 @@ function NewLoanModal({ open, onClose, geckos, onCreated }) {
               />
             </div>
             <div>
-              <Label style={{ color: C.slate }}>Borrower Name</Label>
+              <Label className="text-slate-200">Borrower Name</Label>
               <Input
                 value={form.borrower_name}
                 onChange={e => set('borrower_name', e.target.value)}
@@ -322,7 +299,7 @@ function NewLoanModal({ open, onClose, geckos, onCreated }) {
 
           {/* Purpose */}
           <div>
-            <Label style={{ color: C.slate }}>Purpose</Label>
+            <Label className="text-slate-200">Purpose</Label>
             <Input
               value={form.purpose}
               onChange={e => set('purpose', e.target.value)}
@@ -332,9 +309,9 @@ function NewLoanModal({ open, onClose, geckos, onCreated }) {
           </div>
 
           {/* Dates */}
-          <div className="grid grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <Label style={{ color: C.slate }}>Loan Start</Label>
+              <Label className="text-slate-200">Loan Start</Label>
               <Input
                 type="date"
                 value={form.loan_start}
@@ -343,7 +320,7 @@ function NewLoanModal({ open, onClose, geckos, onCreated }) {
               />
             </div>
             <div>
-              <Label style={{ color: C.slate }}>Expected Return</Label>
+              <Label className="text-slate-200">Expected Return</Label>
               <Input
                 type="date"
                 value={form.expected_return}
@@ -355,7 +332,7 @@ function NewLoanModal({ open, onClose, geckos, onCreated }) {
 
           {/* Stud fee */}
           <div>
-            <Label style={{ color: C.slate }}>Stud Fee (optional)</Label>
+            <Label className="text-slate-200">Stud Fee (optional)</Label>
             <Input
               type="number"
               step="0.01"
@@ -369,7 +346,7 @@ function NewLoanModal({ open, onClose, geckos, onCreated }) {
 
           {/* Offspring agreement */}
           <div>
-            <Label style={{ color: C.slate }}>Offspring Agreement</Label>
+            <Label className="text-slate-200">Offspring Agreement</Label>
             <Textarea
               value={form.offspring_agreement}
               onChange={e => set('offspring_agreement', e.target.value)}
@@ -381,7 +358,7 @@ function NewLoanModal({ open, onClose, geckos, onCreated }) {
 
           {/* Condition notes */}
           <div>
-            <Label style={{ color: C.slate }}>Condition Notes</Label>
+            <Label className="text-slate-200">Condition Notes</Label>
             <Textarea
               value={form.condition_on_loan}
               onChange={e => set('condition_on_loan', e.target.value)}
@@ -393,7 +370,7 @@ function NewLoanModal({ open, onClose, geckos, onCreated }) {
 
           {/* Notes */}
           <div>
-            <Label style={{ color: C.slate }}>Additional Notes</Label>
+            <Label className="text-slate-200">Additional Notes</Label>
             <Textarea
               value={form.notes}
               onChange={e => set('notes', e.target.value)}
@@ -405,11 +382,10 @@ function NewLoanModal({ open, onClose, geckos, onCreated }) {
         </div>
 
         <DialogFooter className="mt-4">
-          <Button variant="outline" onClick={onClose} style={{ color: C.muted }}>Cancel</Button>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
           <Button
             onClick={handleSubmit}
             disabled={saving}
-            style={{ backgroundColor: C.sage, color: '#fff' }}
           >
             {saving ? <Loader2 size={16} className="mr-2 animate-spin" /> : <Send size={16} className="mr-2" />}
             Create Loan
@@ -425,16 +401,13 @@ function NewLoanModal({ open, onClose, geckos, onCreated }) {
 function EmptyLoans({ type }) {
   return (
     <div className="flex flex-col items-center justify-center py-16 text-center">
-      <div
-        className="w-16 h-16 rounded-full flex items-center justify-center mb-4"
-        style={{ backgroundColor: C.paleSage }}
-      >
-        <ArrowLeftRight size={28} style={{ color: C.sage }} />
+      <div className="w-16 h-16 rounded-full flex items-center justify-center mb-4 bg-emerald-500/10">
+        <ArrowLeftRight size={28} className="text-emerald-400" />
       </div>
-      <h3 className="text-lg font-medium mb-1" style={{ color: C.forest, fontFamily: "'DM Serif Display', serif" }}>
+      <h3 className="text-lg font-semibold mb-1 text-slate-100">
         No {type === 'out' ? 'outgoing' : 'incoming'} loans
       </h3>
-      <p className="text-sm max-w-sm" style={{ color: C.muted }}>
+      <p className="text-sm max-w-sm text-slate-500">
         {type === 'out'
           ? 'When you loan geckos for breeding, they will appear here.'
           : 'When someone loans you a gecko, it will appear here.'}
@@ -508,82 +481,56 @@ export default function BreedingLoans() {
 
   if (isLoading) {
     return (
-      <div
-        className="min-h-screen flex items-center justify-center"
-        style={{ backgroundColor: C.warmWhite, fontFamily: "'DM Sans', sans-serif" }}
-      >
-        <Loader2 size={32} className="animate-spin" style={{ color: C.sage }} />
+      <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+        <div className="max-w-4xl mx-auto flex justify-center py-20">
+          <Loader2 size={32} className="animate-spin text-emerald-400" />
+        </div>
       </div>
     );
   }
 
   return (
-    <div
-      className="min-h-screen pb-12"
-      style={{ backgroundColor: C.warmWhite, fontFamily: "'DM Sans', sans-serif" }}
-    >
-      {/* Header */}
-      <div className="max-w-4xl mx-auto px-4 pt-8 pb-6">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-          <div>
-            <h1
-              className="text-2xl mb-1"
-              style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}
-            >
-              Breeding Loans
-            </h1>
-            <p className="text-sm" style={{ color: C.muted }}>
-              Track geckos loaned out for breeding and borrowed from others.
-            </p>
-          </div>
-          <Button
-            onClick={() => setShowNewLoan(true)}
-            style={{ backgroundColor: C.sage, color: '#fff' }}
-          >
+    <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+      <div className="max-w-4xl mx-auto">
+        <PageHeader
+          icon={Handshake}
+          title="Breeding Loans"
+          description="Track geckos loaned out for breeding and borrowed from others."
+        >
+          <Button onClick={() => setShowNewLoan(true)}>
             <Plus size={16} className="mr-2" />
             New Loan
           </Button>
-        </div>
+        </PageHeader>
 
         {/* Summary stats */}
         <div className="grid grid-cols-3 gap-3 mb-6">
-          <div
-            className="rounded-xl p-4 text-center"
-            style={{ border: '1px solid rgba(51,65,85,0.5)', backgroundColor: '#0f172a' }}
-          >
-            <p className="text-2xl font-bold" style={{ color: C.forest }}>{loans.length}</p>
-            <p className="text-xs" style={{ color: C.muted }}>Total Loans</p>
+          <div className="rounded-xl p-4 text-center bg-slate-900 border border-slate-700">
+            <p className="text-2xl font-bold text-slate-100">{loans.length}</p>
+            <p className="text-xs text-slate-500">Total Loans</p>
+          </div>
+          <div className="rounded-xl p-4 text-center bg-slate-900 border border-slate-700">
+            <p className="text-2xl font-bold text-emerald-400">{activeCount}</p>
+            <p className="text-xs text-slate-500">Active</p>
           </div>
           <div
-            className="rounded-xl p-4 text-center"
-            style={{ border: '1px solid rgba(51,65,85,0.5)', backgroundColor: '#0f172a' }}
+            className={`rounded-xl p-4 text-center bg-slate-900 border ${
+              overdueCount > 0 ? 'border-amber-500/40' : 'border-slate-700'
+            }`}
           >
-            <p className="text-2xl font-bold" style={{ color: C.sage }}>{activeCount}</p>
-            <p className="text-xs" style={{ color: C.muted }}>Active</p>
-          </div>
-          <div
-            className="rounded-xl p-4 text-center"
-            style={{
-              border: overdueCount > 0 ? '1px solid rgba(196,134,10,0.35)' : '1px solid rgba(51,65,85,0.5)',
-              backgroundColor: overdueCount > 0 ? 'rgba(253,243,224,0.3)' : '#fff',
-            }}
-          >
-            <p className="text-2xl font-bold" style={{ color: overdueCount > 0 ? C.gold : C.forest }}>
+            <p className={`text-2xl font-bold ${overdueCount > 0 ? 'text-amber-400' : 'text-slate-100'}`}>
               {overdueCount}
             </p>
-            <p className="text-xs" style={{ color: C.muted }}>Overdue</p>
+            <p className="text-xs text-slate-500">Overdue</p>
           </div>
         </div>
 
         {/* Tabs */}
         <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-          <TabsList className="max-w-xs mx-auto mb-6">
+          <TabsList className="mb-6">
             <TabsTrigger
               value="out"
               className="text-sm data-[state=active]:shadow-sm transition-colors"
-              style={{
-                fontFamily: "'DM Sans', sans-serif",
-              }}
             >
               <Handshake size={14} className="mr-1.5" />
               Loaned Out ({loanedOut.length})
@@ -591,9 +538,6 @@ export default function BreedingLoans() {
             <TabsTrigger
               value="in"
               className="text-sm data-[state=active]:shadow-sm transition-colors"
-              style={{
-                fontFamily: "'DM Sans', sans-serif",
-              }}
             >
               <ArrowLeftRight size={14} className="mr-1.5" />
               Borrowed ({borrowed.length})
@@ -604,7 +548,7 @@ export default function BreedingLoans() {
             {loanedOut.length === 0 ? (
               <EmptyLoans type="out" />
             ) : (
-              <div className="grid gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 {loanedOut.map(loan => (
                   <LoanCard
                     key={loan.id}
@@ -622,7 +566,7 @@ export default function BreedingLoans() {
             {borrowed.length === 0 ? (
               <EmptyLoans type="in" />
             ) : (
-              <div className="grid gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 {borrowed.map(loan => (
                   <LoanCard
                     key={loan.id}

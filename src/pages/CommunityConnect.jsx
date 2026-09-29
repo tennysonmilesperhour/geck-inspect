@@ -20,6 +20,7 @@ import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { formatDistanceToNow } from 'date-fns';
 import Seo from '@/components/seo/Seo';
+import PageHeader from '@/components/shared/PageHeader';
 import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
 
 // CollectionPage schema declares /CommunityConnect as a curated directory
@@ -248,14 +249,14 @@ function ForumTab() {
 
     return (
         <div className="space-y-6">
-            <div className="flex justify-end">
-                {currentUser && (
+            {currentUser && (
+                <div className="flex justify-end">
                     <Button onClick={() => setShowCreatePost(!showCreatePost)}>
                         <PlusCircle className="w-4 h-4 mr-2" />
                         {showCreatePost ? 'Cancel' : 'Create New Post'}
                     </Button>
-                )}
-            </div>
+                </div>
+            )}
 
             {showCreatePost && (
                 <Card className="bg-slate-900 border-slate-700">
@@ -706,18 +707,19 @@ export default function CommunityConnectPage() {
                 jsonLd={COMMUNITY_JSON_LD}
             />
             <div className="max-w-6xl mx-auto">
-                <div className="text-center mb-8">
-                    <h1 className="text-2xl md:text-4xl font-bold text-slate-100 mb-2">Community Connect</h1>
-                    <p className="text-slate-400">Find breeders, connect with enthusiasts, and join the discussion.</p>
-                </div>
+                <PageHeader
+                    icon={Users}
+                    title="Community Connect"
+                    description="Find breeders, connect with enthusiasts, and join the discussion."
+                />
 
                 <Tabs defaultValue="breeders" className="w-full">
-                    <TabsList className="flex w-full bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1 mb-6">
-                        <TabsTrigger value="breeders" className="flex-1 data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-2 rounded-sm transition-colors">
+                    <TabsList className="mb-6">
+                        <TabsTrigger value="breeders">
                             <Users className="w-4 h-4 mr-2" />
                             Find Breeders
                         </TabsTrigger>
-                        <TabsTrigger value="forum" className="flex-1 data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-2 rounded-sm transition-colors">
+                        <TabsTrigger value="forum">
                             <MessageSquare className="w-4 h-4 mr-2" />
                             Forum
                         </TabsTrigger>
@@ -726,7 +728,7 @@ export default function CommunityConnectPage() {
                     <TabsContent value="breeders">
                         {/* Following Feed Section */}
                         {currentUser && following.length > 0 && (
-                            <div className="mb-8">
+                            <div className="mb-6">
                                 <FollowingFeed 
                                     currentUser={currentUser} 
                                     following={following} 
@@ -763,7 +765,7 @@ export default function CommunityConnectPage() {
                             </div>
                         ) : filteredBreeders.length > 0 ? (
                             <>
-                                <div className="grid md:grid-cols-2 gap-4">
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                     {filteredBreeders.map(breeder => (
                                         <BreederCard
                                             key={breeder.id}

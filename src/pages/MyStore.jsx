@@ -28,6 +28,7 @@ import {
     STORE_THEMES, DEFAULT_STORE_SETTINGS, readStoreSettings, applyStoreSettings,
 } from '@/components/storefront/StorefrontSections';
 import { DEFAULT_GECKO_IMAGE } from '@/lib/constants';
+import PageHeader from '@/components/shared/PageHeader';
 
 const MIN_BANNER_WIDTH = 1280;
 const MIN_BANNER_HEIGHT = 320;
@@ -407,12 +408,17 @@ export default function MyStore() {
 
     if (!hasPerk) {
         return (
-            <div className="min-h-screen bg-gradient-to-br from-slate-950 via-emerald-950/30 to-slate-900 text-slate-100">
-                <div className="max-w-2xl mx-auto p-6 pt-16">
+            <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8">
+                <div className="max-w-2xl mx-auto">
+                    <PageHeader
+                        icon={Store}
+                        title="My Store"
+                        description="A customer-facing storefront for your breeding operation. Pick the geckos and pairs you want to show off, write your bio and policies, and share one link anywhere you sell."
+                    />
                     <Card className="bg-slate-900/60 border-emerald-700/40">
                         <CardHeader>
-                            <CardTitle className="text-emerald-200 flex items-center gap-2">
-                                <Crown className="w-5 h-5" /> Store pages are a Breeder perk
+                            <CardTitle className="text-base font-semibold text-slate-100 flex items-center gap-2">
+                                <Crown className="w-4 h-4 text-emerald-400" /> Store pages are a Breeder perk
                             </CardTitle>
                             <CardDescription className="text-slate-300">
                                 Breeder and Enterprise members can publish a dedicated store page on Geck Inspect,
@@ -421,7 +427,7 @@ export default function MyStore() {
                             </CardDescription>
                         </CardHeader>
                         <CardContent>
-                            <Button asChild className="bg-emerald-600 hover:bg-emerald-500">
+                            <Button asChild>
                                 <Link to={createPageUrl('Membership')}>See plans</Link>
                             </Button>
                         </CardContent>
@@ -432,12 +438,14 @@ export default function MyStore() {
     }
 
     return (
-        <div className="min-h-screen bg-gradient-to-br from-slate-950 via-emerald-950/20 to-slate-900 text-slate-100">
+        <div className="min-h-screen bg-slate-950 text-slate-100 p-4 md:p-8">
             <Helmet><title>My Store - Geck Inspect</title></Helmet>
-            <div className="max-w-4xl mx-auto p-4 md:p-8 space-y-6">
-                {/* Hero */}
-                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-                    <div className="space-y-2">
+            <div className="max-w-4xl mx-auto space-y-6">
+                <PageHeader
+                    icon={Store}
+                    title="My Store"
+                    description="A customer-facing storefront for your breeding operation. Pick the geckos and pairs you want to show off, write your bio and policies, and share one link anywhere you sell."
+                    eyebrow={
                         <Button
                             variant="ghost"
                             onClick={() => navigate(createPageUrl('Dashboard'))}
@@ -445,27 +453,17 @@ export default function MyStore() {
                         >
                             <ArrowLeft className="w-4 h-4 mr-1" /> Back to dashboard
                         </Button>
-                        <h1 className="text-3xl md:text-4xl font-bold text-white flex items-center gap-3">
-                            <Store className="w-8 h-8 text-emerald-400" /> My Store
-                        </h1>
-                        <p className="text-slate-300 max-w-xl">
-                            A customer-facing storefront for your breeding operation. Pick the geckos and pairs
-                            you want to show off, write your bio and policies, and share one link anywhere you sell.
-                        </p>
-                    </div>
+                    }
+                >
                     {page?.slug && (
-                        <Button
-                            asChild
-                            variant="outline"
-                            className="border-emerald-700 bg-emerald-950/40 text-emerald-200 hover:bg-emerald-900/40"
-                        >
+                        <Button asChild variant="outline">
                             <a href={`/store/${page.slug}`} target="_blank" rel="noopener noreferrer">
                                 <ExternalLink className="w-4 h-4 mr-2" />
                                 View live store
                             </a>
                         </Button>
                     )}
-                </div>
+                </PageHeader>
 
                 {loading ? (
                     <div className="flex items-center gap-2 text-slate-400 py-12 justify-center">
@@ -476,7 +474,7 @@ export default function MyStore() {
                         {/* Identity */}
                         <Card className="bg-slate-900/60 border-slate-800">
                             <CardHeader>
-                                <CardTitle className="text-slate-100 text-lg">Identity</CardTitle>
+                                <CardTitle className="text-base font-semibold text-slate-100">Identity</CardTitle>
                                 <CardDescription className="text-slate-400">
                                     Your store URL and headline. We pre-fill the URL with your breeder name. The first
                                     change is free; after that, edits are limited to once every {SLUG_COOLDOWN_DAYS} days
@@ -538,7 +536,7 @@ export default function MyStore() {
                         {/* About + header image */}
                         <Card className="bg-slate-900/60 border-slate-800">
                             <CardHeader>
-                                <CardTitle className="text-slate-100 text-lg">About</CardTitle>
+                                <CardTitle className="text-base font-semibold text-slate-100">About</CardTitle>
                                 <CardDescription className="text-slate-400">
                                     Your bio and a hero image at the top of the page.
                                 </CardDescription>
@@ -588,8 +586,8 @@ export default function MyStore() {
                         {/* Public breeder profile */}
                         <Card className="bg-slate-900/60 border-slate-800">
                             <CardHeader>
-                                <CardTitle className="text-slate-100 text-lg flex items-center gap-2">
-                                    <User className="w-5 h-5 text-emerald-400" /> Public breeder profile
+                                <CardTitle className="text-base font-semibold text-slate-100 flex items-center gap-2">
+                                    <User className="w-4 h-4 text-emerald-400" /> Public breeder profile
                                 </CardTitle>
                                 <CardDescription className="text-slate-400">
                                     This is your verified breeder page at
@@ -662,8 +660,8 @@ export default function MyStore() {
                         {/* Mini-site appearance */}
                         <Card className="bg-slate-900/60 border-slate-800">
                             <CardHeader>
-                                <CardTitle className="text-slate-100 text-lg flex items-center gap-2">
-                                    <Palette className="w-5 h-5 text-emerald-400" /> Mini-site appearance
+                                <CardTitle className="text-base font-semibold text-slate-100 flex items-center gap-2">
+                                    <Palette className="w-4 h-4 text-emerald-400" /> Mini-site appearance
                                 </CardTitle>
                                 <CardDescription className="text-slate-400">
                                     Controls how your public breeder page looks and what it shows. These apply the
@@ -741,7 +739,7 @@ export default function MyStore() {
                         {/* Featured geckos */}
                         <Card className="bg-slate-900/60 border-slate-800">
                             <CardHeader>
-                                <CardTitle className="text-slate-100 text-lg flex items-center gap-2">
+                                <CardTitle className="text-base font-semibold text-slate-100 flex items-center gap-2">
                                     Featured geckos
                                     <span className="text-xs font-normal text-slate-500">
                                         ({form.featured_gecko_ids.length} selected)
@@ -799,8 +797,8 @@ export default function MyStore() {
                         {/* Featured breeding pairs */}
                         <Card className="bg-slate-900/60 border-slate-800">
                             <CardHeader>
-                                <CardTitle className="text-slate-100 text-lg flex items-center gap-2">
-                                    <GitBranch className="w-5 h-5 text-pink-400" /> Featured breeding pairs
+                                <CardTitle className="text-base font-semibold text-slate-100 flex items-center gap-2">
+                                    <GitBranch className="w-4 h-4 text-emerald-400" /> Featured breeding pairs
                                     <span className="text-xs font-normal text-slate-500">
                                         ({form.featured_breeding_plan_ids.length} selected)
                                     </span>
@@ -854,9 +852,9 @@ export default function MyStore() {
                         {/* Policies */}
                         <Card className="bg-slate-900/60 border-slate-800">
                             <CardHeader>
-                                <div className="flex items-start justify-between gap-3">
+                                <div className="flex flex-col sm:flex-row items-start justify-between gap-3">
                                     <div>
-                                        <CardTitle className="text-slate-100 text-lg">Policies</CardTitle>
+                                        <CardTitle className="text-base font-semibold text-slate-100">Policies</CardTitle>
                                         <CardDescription className="text-slate-400">
                                             Shipping, health guarantee, holds, returns, and anything else a buyer should know
                                             before they reach out.
@@ -891,7 +889,7 @@ export default function MyStore() {
                         {/* Contact + external links */}
                         <Card className="bg-slate-900/60 border-slate-800">
                             <CardHeader>
-                                <CardTitle className="text-slate-100 text-lg">Contact and links</CardTitle>
+                                <CardTitle className="text-base font-semibold text-slate-100">Contact and links</CardTitle>
                                 <CardDescription className="text-slate-400">
                                     A primary get-in-touch button plus any external platforms you sell on or post to.
                                 </CardDescription>
@@ -968,7 +966,7 @@ export default function MyStore() {
 
                         {/* Publish + save */}
                         <Card className="bg-slate-900/60 border-emerald-700/40">
-                            <CardContent className="p-5 flex flex-col md:flex-row md:items-center gap-4 justify-between">
+                            <CardContent className="p-4 md:p-6 flex flex-col md:flex-row md:items-center gap-4 justify-between">
                                 <div className="flex items-center gap-4">
                                     <Switch
                                         checked={form.is_published}
@@ -983,7 +981,6 @@ export default function MyStore() {
                                     onClick={save}
                                     disabled={saving}
                                     size="lg"
-                                    className="bg-emerald-600 hover:bg-emerald-500"
                                 >
                                     {saving ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Save className="w-4 h-4 mr-2" />}
                                     Save store

@@ -68,8 +68,8 @@ export function ReadinessCard({ gecko, readiness }) {
   return (
     <Card className="bg-slate-900 border-slate-700">
       <CardHeader className="pb-2 pt-4 px-4">
-        <CardTitle className="text-sm flex items-center gap-2 text-slate-300">
-          <HeartHandshake className="w-4 h-4" /> Breeding readiness
+        <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-100">
+          <HeartHandshake className="w-4 h-4 text-emerald-400" /> Breeding readiness
         </CardTitle>
       </CardHeader>
       <CardContent className="px-4 pb-4">

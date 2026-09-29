@@ -35,7 +35,7 @@ export default function GalleryFilters({ filters, onFilterChange }) {
     const formatLabel = (str) => LABELS[str] || str.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
     return (
-        <div className="bg-slate-800 border border-slate-700 p-4 rounded-lg shadow-lg mb-8">
+        <div className="bg-slate-800 border border-slate-700 p-4 rounded-lg shadow-lg">
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 items-end">
                 <div className="space-y-2">
                     <label className="text-sm font-medium text-slate-300 flex items-center"><ListFilter className="w-4 h-4 mr-2"/>Primary Morph</label>

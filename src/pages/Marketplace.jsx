@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import Seo from '@/components/seo/Seo';
 import { ORG_ID, SITE_URL } from '@/lib/organization-schema';
@@ -42,6 +43,10 @@ const MARKETPLACE_JSON_LD = [
 ];
 
 export default function Marketplace() {
+  // Tracked here only so the tab strip can match the width of the page
+  // below it (Buy is max-w-7xl, the Seller Console max-w-6xl).
+  const [tab, setTab] = useState('buy');
+
   return (
     <div className="min-h-screen bg-slate-950">
       <Seo
@@ -58,31 +63,27 @@ export default function Marketplace() {
         ]}
         jsonLd={MARKETPLACE_JSON_LD}
       />
-      <Tabs defaultValue="buy" className="w-full">
-        <div className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-sm border-b border-slate-800">
-          <div className="flex justify-center px-4 py-3">
-            <TabsList className="flex w-full max-w-xs bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1">
-              <TabsTrigger
-                value="buy"
-                className="flex-1 data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-2 rounded-sm transition-colors"
-              >
-                Buy Geckos
-              </TabsTrigger>
-              <TabsTrigger
-                value="sell"
-                className="flex-1 data-[state=active]:bg-emerald-900/70 data-[state=active]:text-emerald-200 data-[state=active]:border data-[state=active]:border-emerald-700/60 data-[state=active]:shadow-none text-slate-400 hover:text-slate-200 hover:bg-slate-800 text-xs md:text-sm px-2 rounded-sm transition-colors"
-              >
-                Sell Geckos
-              </TabsTrigger>
+      <Tabs value={tab} onValueChange={setTab} className="w-full">
+        {/* Same side gutter (px-4 md:px-8) and max width as the embedded
+            page, so the tab bar lines up with the page content below. */}
+        <div className="sticky top-0 z-40 bg-slate-950/95 backdrop-blur-sm border-b border-slate-800 px-4 md:px-8 py-3">
+          <div className={`${tab === 'sell' ? 'max-w-6xl' : 'max-w-7xl'} mx-auto`}>
+            <TabsList>
+              <TabsTrigger value="buy">Buy Geckos</TabsTrigger>
+              <TabsTrigger value="sell">Sell Geckos</TabsTrigger>
             </TabsList>
           </div>
         </div>
 
-        <TabsContent value="buy" className="m-0">
+        {/* The embedded pages are also standalone routes, so their own
+            wrapper is min-h-screen. Under this strip that added a full
+            extra viewport of empty scroll; this wrapper already fills the
+            screen, so the embedded page's minimum height is dropped. */}
+        <TabsContent value="buy" className="m-0 [&>.min-h-screen]:min-h-0">
           <MarketplaceBuyPage />
         </TabsContent>
 
-        <TabsContent value="sell" className="m-0">
+        <TabsContent value="sell" className="m-0 [&>.min-h-screen]:min-h-0">
           <MarketplaceSellPage />
         </TabsContent>
       </Tabs>

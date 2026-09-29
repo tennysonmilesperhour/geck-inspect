@@ -7,12 +7,13 @@ import { Label } from '@/components/ui/label';
 import {
   Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
 } from '@/components/ui/select';
-import { Loader2, Sparkles, ArrowRight, Camera, Lock, PlusCircle, ShieldCheck } from 'lucide-react';
+import { Loader2, Sparkles, ArrowRight, Camera, Lock, PlusCircle, ShieldCheck, Search } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { useNavigate } from 'react-router-dom';
 import { recognizeGeckoMorph } from '../functions/recognizeGeckoMorph';
 import { useAuth } from '@/lib/AuthContext';
 import Seo from '@/components/seo/Seo';
+import PageHeader from '@/components/shared/PageHeader';
 import { getTierLimits, TIER_LIMITS } from '@/lib/tierLimits';
 import { TIER_PRICING } from '@/lib/stripe-config';
 import { buildGeckoDraftFromAnalysis } from '@/lib/morphIdDraft';
@@ -183,29 +184,32 @@ export default function Recognition() {
   };
 
   return (
-    <div className="p-4 md:p-8 bg-slate-950 min-h-screen">
+    <div className="min-h-screen bg-slate-950 p-4 md:p-8">
       <Seo
         title="Crested Gecko Morph ID"
         description="Upload photos of your crested gecko and get a ranked, evidence-first morph shortlist: the visible traits behind it, what the photos cannot confirm, and which photo would help next."
         path="/Recognition"
         keywords={['crested gecko morph identifier', 'crested gecko morph ID', 'identify crested gecko morph']}
       />
-      <div className="max-w-5xl mx-auto space-y-8">
-        <div className="pt-2">
-          <div className="flex items-center gap-2 text-emerald-300 text-sm font-medium">
-            <ShieldCheck className="w-4 h-4" /> Evidence-first visual identification
-          </div>
-          <h1 className="text-3xl md:text-4xl font-bold text-slate-100 mt-3">Crested Gecko Morph ID</h1>
-          <p className="text-slate-400 max-w-2xl mt-3">
-            Add clear photos of one crested gecko. You will get a ranked visual shortlist,
-            the traits behind it, and an honest prompt for better evidence when the photos are not enough.
-          </p>
-          <div className="flex flex-wrap gap-x-5 gap-y-2 mt-5 text-xs text-slate-400">
+      <div className="max-w-5xl mx-auto space-y-6">
+        <PageHeader
+          icon={Search}
+          eyebrow={
+            <div className="flex items-center gap-2 text-emerald-300 text-sm font-medium">
+              <ShieldCheck className="w-4 h-4" /> Evidence-first visual identification
+            </div>
+          }
+          title="Crested Gecko Morph ID"
+          description="Add clear photos of one crested gecko. You will get a ranked visual shortlist, the traits behind it, and an honest prompt for better evidence when the photos are not enough."
+        />
+
+        <div className="space-y-3">
+          <div className="flex flex-wrap gap-x-5 gap-y-2 text-xs text-slate-400">
             <span><strong className="text-slate-200">1.</strong> Add photos</span>
             <span><strong className="text-slate-200">2.</strong> Compare evidence</span>
             <span><strong className="text-slate-200">3.</strong> Confirm or request review</span>
           </div>
-          <p className="text-xs text-amber-200/80 mt-4">
+          <p className="text-xs text-amber-200/80">
             Crested geckos only. Other species will be rejected as insufficient evidence.
           </p>
         </div>
@@ -217,18 +221,18 @@ export default function Recognition() {
 
         {morphIdLocked && (
           <Card className="bg-amber-950/40 border-amber-800">
-            <CardContent className="p-6 flex flex-col items-center text-center gap-3">
+            <CardContent className="p-4 md:p-6 flex flex-col items-center text-center gap-3">
               <Lock className="w-6 h-6 text-amber-300" />
               <p className="font-semibold text-amber-100">You have used your free Morph ID</p>
               <p className="text-sm text-amber-200/80 max-w-md">
                 Keeper is {TIER_PRICING.keeper.monthly.price} a month and includes {TIER_LIMITS.keeper.monthlyMorphIDCredits} identifications
                 a month. Free accounts can keep using the Morph Guide, the genetics calculator, and collection tracking.
               </p>
-              <div className="flex flex-wrap gap-3 justify-center">
-                <Button className="bg-emerald-600 hover:bg-emerald-500 text-white" onClick={() => navigate('/Membership')}>
+              <div className="flex flex-wrap gap-2 justify-center mt-1">
+                <Button onClick={() => navigate('/Membership')}>
                   See plans
                 </Button>
-                <Button variant="outline" className="border-slate-600 text-slate-200" onClick={() => navigate('/MorphGuide')}>
+                <Button variant="outline" onClick={() => navigate('/MorphGuide')}>
                   Open the Morph Guide
                 </Button>
               </div>
@@ -238,7 +242,7 @@ export default function Recognition() {
 
         {!morphIdLocked && (
         <Card className="bg-slate-900 border-slate-700">
-          <CardContent className="p-6 space-y-5">
+          <CardContent className="p-4 md:p-6 space-y-5">
             {isLoadingAuth ? (
               <div className="py-10 text-center text-slate-400">
                 <Loader2 className="w-5 h-5 animate-spin inline mr-2" /> Checking your account...
@@ -273,11 +277,11 @@ export default function Recognition() {
                   Create a free account to try Morph ID once on your own crested gecko. An account keeps your photos
                   and result together, and lets you save the gecko to your collection afterwards.
                 </p>
-                <div className="flex flex-wrap gap-3 justify-center mt-4">
-                  <Button onClick={() => navigate('/AuthPortal?mode=signup')} className="bg-emerald-600 hover:bg-emerald-700">
+                <div className="flex flex-wrap gap-2 justify-center mt-4">
+                  <Button onClick={() => navigate('/AuthPortal?mode=signup')}>
                     Create free account
                   </Button>
-                  <Button variant="outline" onClick={() => navigate('/AuthPortal')} className="border-slate-600 text-slate-200">
+                  <Button variant="outline" onClick={() => navigate('/AuthPortal')}>
                     Sign in
                   </Button>
                 </div>
@@ -327,7 +331,7 @@ export default function Recognition() {
                   <p className="text-xs text-slate-500 max-w-xl">
                     These details now travel with the photos and help distinguish age and fire-state effects from morph traits.
                   </p>
-                  <div className="flex flex-wrap gap-3">
+                  <div className="flex flex-wrap gap-2">
                     <Button
                       size="lg"
                       onClick={analyze}
@@ -463,7 +467,7 @@ export default function Recognition() {
 
         {savedOnce && (
           <Card className="bg-emerald-950/30 border-emerald-800">
-            <CardContent className="p-4 text-emerald-200 flex items-center justify-between">
+            <CardContent className="p-4 text-emerald-200 flex flex-wrap items-center justify-between gap-3">
               <span>Thanks. Your feedback is pending independent expert review.</span>
               {/* Only reviewers can use the queue; everyone else just gets the thanks. */}
               {isAdmin && (

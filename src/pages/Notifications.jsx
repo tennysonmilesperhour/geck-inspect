@@ -5,6 +5,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
+import PageHeader from '@/components/shared/PageHeader';
 import usePageSettings from '@/hooks/usePageSettings';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -229,23 +230,13 @@ export default function NotificationsPage() {
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
             <Seo title="Notifications" description="Stay updated with your gecko community activity." path="/Notifications" noIndex />
             <div className="max-w-4xl mx-auto space-y-6">
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-4">
-                    <div className="flex items-center gap-3 min-w-0">
-                        <div className="w-12 h-12 bg-gradient-to-br from-emerald-600 to-teal-600 rounded-xl flex items-center justify-center shadow-lg shrink-0">
-                            <Bell className="w-6 h-6 text-white" />
-                        </div>
-                        <div className="min-w-0">
-                            <h1 className="text-3xl md:text-4xl font-bold text-slate-100">
-                                Notifications
-                            </h1>
-                            <p className="text-sm text-slate-400">
-                                {unreadCount > 0
-                                    ? `${unreadCount} unread, click "Mark read" to dismiss without opening.`
-                                    : "You're all caught up."}
-                            </p>
-                        </div>
-                    </div>
-                    <div className="flex gap-2 shrink-0 flex-wrap">
+                <PageHeader
+                    icon={Bell}
+                    title="Notifications"
+                    description={unreadCount > 0
+                        ? `${unreadCount} unread, click "Mark read" to dismiss without opening.`
+                        : "You're all caught up."}
+                    settings={
                         <PageSettingsPanel title="Notification Settings">
                             <div className="flex items-center justify-between">
                                 <Label className="text-slate-300 text-sm">Auto-mark as Read</Label>
@@ -261,17 +252,17 @@ export default function NotificationsPage() {
                                 <Switch checked={notifPrefs.showUnreadOnly} onCheckedChange={v => setNotifPrefs({ showUnreadOnly: v })} />
                             </div>
                         </PageSettingsPanel>
-                        <Button
-                            onClick={markAllAsRead}
-                            disabled={unreadCount === 0}
-                            variant="outline"
-                            className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <Check className="w-4 h-4 mr-1.5" />
-                            Mark all read
-                        </Button>
-                    </div>
-                </div>
+                    }
+                >
+                    <Button
+                        onClick={markAllAsRead}
+                        disabled={unreadCount === 0}
+                        variant="outline"
+                    >
+                        <Check className="w-4 h-4 mr-1.5" />
+                        Mark all read
+                    </Button>
+                </PageHeader>
 
                 <Card className="bg-slate-900 border-slate-800">
                     <CardContent className="p-4 md:p-6">

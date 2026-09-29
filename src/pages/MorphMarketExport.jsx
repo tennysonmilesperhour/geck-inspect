@@ -35,8 +35,10 @@ import {
   Wrench,
   Layers,
   CheckCircle2,
+  Upload,
 } from 'lucide-react';
 import { createPageUrl } from '@/utils';
+import PageHeader from '@/components/shared/PageHeader';
 import {
   buildMorphMarketCSV,
   buildMorphMarketRow,
@@ -107,7 +109,7 @@ function FilterPanel({ filters, setFilters, onReset }) {
   return (
     <Card className="border-slate-800 bg-slate-900/60">
       <CardHeader className="pb-3">
-        <CardTitle className="text-sm text-slate-200 flex items-center gap-2">
+        <CardTitle className="text-base font-semibold text-slate-100 flex items-center gap-2">
           <Filter className="w-4 h-4 text-emerald-400" />
           Filter geckos
         </CardTitle>
@@ -939,210 +941,329 @@ export default function MorphMarketExport() {
 
   if (isLoading) {
     return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <Loader2 className="w-6 h-6 text-emerald-400 animate-spin" />
+      <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+        <div className="max-w-7xl mx-auto flex justify-center py-20">
+          <Loader2 className="w-6 h-6 text-emerald-400 animate-spin" />
+        </div>
       </div>
     );
   }
 
   if (!hasAccess) {
     return (
-      <div className="max-w-2xl mx-auto p-6">
-        <Card className="border-slate-800 bg-slate-900/60">
-          <CardContent className="p-8 text-center space-y-4">
-            <Crown className="w-10 h-10 text-emerald-400 mx-auto" />
-            <h1 className="text-xl font-bold text-white">MorphMarket Bulk Export</h1>
-            <p className="text-sm text-slate-400">
-              Build a curated MorphMarket CSV from your collection. Available on the Breeder tier.
-            </p>
-            <Link to={createPageUrl('Membership')}>
-              <Button className="bg-emerald-600 hover:bg-emerald-500 text-white">Upgrade</Button>
-            </Link>
-          </CardContent>
-        </Card>
+      <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+        <div className="max-w-2xl mx-auto">
+          <PageHeader
+            icon={Upload}
+            title="MorphMarket Bulk Export"
+            description="Build a curated MorphMarket CSV from your collection."
+          />
+          <Card className="border-slate-700 bg-slate-900">
+            <CardContent className="p-6 md:p-8 text-center">
+              <Crown className="w-10 h-10 text-emerald-400 mx-auto mb-4" />
+              <p className="text-sm md:text-base text-slate-300">
+                Available on the Breeder tier.
+              </p>
+              <Button asChild className="mt-4">
+                <Link to={createPageUrl('Membership')}>Upgrade</Link>
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-7xl mx-auto p-4 md:p-6 space-y-6 pb-28">
-      <div className="flex items-start justify-between gap-4 flex-wrap">
-        <div>
-          <h1 className="text-2xl md:text-3xl font-bold text-white">MorphMarket Bulk Export</h1>
-          <p className="text-sm text-slate-400 mt-1 max-w-3xl">
-            Filter your collection, batch the geckos you want to list, and download a CSV that drops straight into{' '}
-            <a
-              href="https://www.morphmarket.com/me/ads/import/"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="text-emerald-400 underline underline-offset-2"
-            >
-              MorphMarket Bulk Import
-              <ExternalLink className="w-3 h-3 inline ml-0.5" />
-            </a>
-            . Selecting a gecko and adding it to the batch removes it from the pool, so you can keep filtering for the next group.
-          </p>
-        </div>
-        <Link to={createPageUrl('MarketplaceSell')}>
-          <Button
-            variant="outline"
-            size="sm"
-            className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200"
-          >
-            Back to Seller Console
-          </Button>
-        </Link>
-      </div>
+    <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+      <div className="max-w-7xl mx-auto space-y-6 pb-28">
+        <PageHeader
+          icon={Upload}
+          title="MorphMarket Bulk Export"
+          description={
+            <>
+              Filter your collection, batch the geckos you want to list, and download a CSV that drops straight into{' '}
+              <a
+                href="https://www.morphmarket.com/me/ads/import/"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-emerald-400 underline underline-offset-2"
+              >
+                MorphMarket Bulk Import
+                <ExternalLink className="w-3 h-3 inline ml-0.5" />
+              </a>
+              . Selecting a gecko and adding it to the batch removes it from the pool, so you can keep filtering for the next group.
+            </>
+          }
+        >
+          <Link to={createPageUrl('MarketplaceSell')}>
+            <Button variant="outline">
+              Back to Seller Console
+            </Button>
+          </Link>
+        </PageHeader>
 
-      <div className="grid grid-cols-1 lg:grid-cols-[20rem_minmax(0,1fr)] gap-6">
-        <div className="space-y-4 min-w-0">
-          <FilterPanel
-            filters={filters}
-            setFilters={setFilters}
-            onReset={() => setFilters(DEFAULT_FILTERS)}
-          />
+        <div className="grid grid-cols-1 lg:grid-cols-[20rem_minmax(0,1fr)] gap-6">
+          <div className="space-y-4 min-w-0">
+            <FilterPanel
+              filters={filters}
+              setFilters={setFilters}
+              onReset={() => setFilters(DEFAULT_FILTERS)}
+            />
 
-          <Card className="border-slate-800 bg-slate-900/60">
-            <CardContent className="p-4 space-y-2 text-xs text-slate-400">
-              <p className="text-slate-300 font-semibold text-sm">Tips</p>
-              <p>Click a tile to select it. Click again to deselect. Use "Select all" to grab everything matching the current filter.</p>
-              <p>Geckos missing required MorphMarket fields show an amber badge. Open the gecko to fill them in before exporting.</p>
-              <p>The CSV download is the same file MorphMarket's Bulk Import 2.0 expects. Upload it on their import page as-is.</p>
-            </CardContent>
-          </Card>
-        </div>
+            <Card className="border-slate-800 bg-slate-900/60">
+              <CardContent className="p-4 md:p-6 space-y-2 text-xs text-slate-400">
+                <p className="text-base font-semibold text-slate-100">Tips</p>
+                <p>Click a tile to select it. Click again to deselect. Use "Select all" to grab everything matching the current filter.</p>
+                <p>Geckos missing required MorphMarket fields show an amber badge. Open the gecko to fill them in before exporting.</p>
+                <p>The CSV download is the same file MorphMarket's Bulk Import 2.0 expects. Upload it on their import page as-is.</p>
+              </CardContent>
+            </Card>
+          </div>
 
-        <div className="space-y-6 min-w-0">
-          {/* Pool */}
-          <section className="space-y-3 min-w-0">
-            <div className="flex items-end justify-between gap-3 flex-wrap">
-              <div>
-                <h2 className="text-lg font-bold text-slate-100">
-                  Pool <span className="text-slate-500 font-normal">({filtered.length} of {pool.length})</span>
-                </h2>
-                <p className="text-xs text-slate-500">
-                  {selected.size} selected{selected.size > 0 ? ' across all filters' : ''}
-                </p>
-              </div>
-              <div className="flex items-center gap-2 flex-wrap">
-                <div className="inline-flex rounded-md border border-slate-700 bg-slate-800 overflow-hidden">
-                  <button
-                    type="button"
-                    onClick={() => setViewMode('grid')}
-                    className={`px-2 h-9 text-xs inline-flex items-center gap-1 ${
-                      viewMode === 'grid' ? 'bg-slate-700 text-slate-100' : 'text-slate-400 hover:text-slate-200'
-                    }`}
-                    title="Tile view"
-                  >
-                    <LayoutGrid className="w-3.5 h-3.5" />
-                    Tiles
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setViewMode('list')}
-                    className={`px-2 h-9 text-xs inline-flex items-center gap-1 border-l border-slate-700 ${
-                      viewMode === 'list' ? 'bg-slate-700 text-slate-100' : 'text-slate-400 hover:text-slate-200'
-                    }`}
-                    title="List view"
-                  >
-                    <List className="w-3.5 h-3.5" />
-                    List
-                  </button>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={toggleSelectAllVisible}
-                  disabled={filtered.length === 0}
-                  className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-9"
-                >
-                  {allVisibleSelected ? 'Deselect all visible' : 'Select all visible'}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setIsBulkEditOpen(true)}
-                  disabled={selected.size === 0}
-                  className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-9"
-                  title="Apply a single edit (price, status, sex, traits) to every selected gecko"
-                >
-                  <Layers className="w-3.5 h-3.5 mr-1" />
-                  Bulk edit{selected.size > 0 ? ` ${selected.size}` : ''}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={addAllReadyToBatch}
-                  disabled={filtered.length === 0}
-                  className="border-emerald-700/60 bg-emerald-950/30 hover:bg-emerald-900/40 text-emerald-200 text-xs h-9"
-                  title="Add every gecko in the current filter that already has all required MorphMarket fields"
-                >
-                  <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
-                  Add all ready in filter
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={addSelectedToBatch}
-                  disabled={selected.size === 0}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs h-9"
-                >
-                  <Plus className="w-3.5 h-3.5 mr-1" />
-                  Add {selected.size > 0 ? `${selected.size} ` : ''}to batch
-                  <ArrowRight className="w-3.5 h-3.5 ml-1" />
-                </Button>
-              </div>
-            </div>
-
-            {filtered.length === 0 ? (
-              <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/40 p-8 text-center">
-                <p className="text-slate-300 font-semibold">No geckos match these filters</p>
-                <p className="text-sm text-slate-500 mt-1">
-                  {pool.length === 0
-                    ? 'Every gecko in your collection is already in the batch.'
-                    : 'Try widening the weight range, hatch dates, or status.'}
-                </p>
-              </div>
-            ) : viewMode === 'list' ? (
-              <div className="space-y-1.5">
-                {filtered.map((g) => (
-                  <GeckoRow
-                    key={g.id}
-                    gecko={g}
-                    selected={selected.has(g.id)}
-                    onToggle={toggleSelected}
-                    onQuickFix={openQuickFix}
-                    onAddOne={addOneToBatch}
-                  />
-                ))}
-              </div>
-            ) : (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
-                {filtered.map((g) => (
-                  <GeckoTile
-                    key={g.id}
-                    gecko={g}
-                    selected={selected.has(g.id)}
-                    onToggle={toggleSelected}
-                    onQuickFix={openQuickFix}
-                    onAddOne={addOneToBatch}
-                  />
-                ))}
-              </div>
-            )}
-          </section>
-
-          {/* Batch */}
-          <section className="space-y-3 min-w-0">
-            <div className="flex items-end justify-between gap-3 flex-wrap">
-              <div>
-                <h2 className="text-lg font-bold text-slate-100">
-                  Batch <span className="text-slate-500 font-normal">({batchGeckos.length})</span>
-                </h2>
-                {batchMissingCount > 0 && (
-                  <p className="text-xs text-amber-300 flex items-center gap-1.5 mt-0.5">
-                    <AlertTriangle className="w-3.5 h-3.5" />
-                    {batchMissingCount} gecko{batchMissingCount === 1 ? '' : 's'} missing required MorphMarket fields. They'll still export, but the upload may reject them.
+          <div className="space-y-6 min-w-0">
+            {/* Pool */}
+            <section className="space-y-3 min-w-0">
+              <div className="flex items-end justify-between gap-3 flex-wrap">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-100">
+                    Pool <span className="text-slate-500 font-normal">({filtered.length} of {pool.length})</span>
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    {selected.size} selected{selected.size > 0 ? ' across all filters' : ''}
                   </p>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <div className="inline-flex rounded-md border border-slate-700 bg-slate-800 overflow-hidden">
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('grid')}
+                      className={`px-2 h-9 text-xs inline-flex items-center gap-1 ${
+                        viewMode === 'grid' ? 'bg-slate-700 text-slate-100' : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                      title="Tile view"
+                    >
+                      <LayoutGrid className="w-3.5 h-3.5" />
+                      Tiles
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setViewMode('list')}
+                      className={`px-2 h-9 text-xs inline-flex items-center gap-1 border-l border-slate-700 ${
+                        viewMode === 'list' ? 'bg-slate-700 text-slate-100' : 'text-slate-400 hover:text-slate-200'
+                      }`}
+                      title="List view"
+                    >
+                      <List className="w-3.5 h-3.5" />
+                      List
+                    </button>
+                  </div>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={toggleSelectAllVisible}
+                    disabled={filtered.length === 0}
+                    className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-9"
+                  >
+                    {allVisibleSelected ? 'Deselect all visible' : 'Select all visible'}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setIsBulkEditOpen(true)}
+                    disabled={selected.size === 0}
+                    className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-9"
+                    title="Apply a single edit (price, status, sex, traits) to every selected gecko"
+                  >
+                    <Layers className="w-3.5 h-3.5 mr-1" />
+                    Bulk edit{selected.size > 0 ? ` ${selected.size}` : ''}
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={addAllReadyToBatch}
+                    disabled={filtered.length === 0}
+                    className="border-emerald-700/60 bg-emerald-950/30 hover:bg-emerald-900/40 text-emerald-200 text-xs h-9"
+                    title="Add every gecko in the current filter that already has all required MorphMarket fields"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5 mr-1" />
+                    Add all ready in filter
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={addSelectedToBatch}
+                    disabled={selected.size === 0}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs h-9"
+                  >
+                    <Plus className="w-3.5 h-3.5 mr-1" />
+                    Add {selected.size > 0 ? `${selected.size} ` : ''}to batch
+                    <ArrowRight className="w-3.5 h-3.5 ml-1" />
+                  </Button>
+                </div>
+              </div>
+
+              {filtered.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-slate-800 bg-slate-900/40 p-8 text-center">
+                  <p className="text-slate-300 font-semibold">No geckos match these filters</p>
+                  <p className="text-sm text-slate-500 mt-1">
+                    {pool.length === 0
+                      ? 'Every gecko in your collection is already in the batch.'
+                      : 'Try widening the weight range, hatch dates, or status.'}
+                  </p>
+                </div>
+              ) : viewMode === 'list' ? (
+                <div className="space-y-1.5">
+                  {filtered.map((g) => (
+                    <GeckoRow
+                      key={g.id}
+                      gecko={g}
+                      selected={selected.has(g.id)}
+                      onToggle={toggleSelected}
+                      onQuickFix={openQuickFix}
+                      onAddOne={addOneToBatch}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5 gap-3">
+                  {filtered.map((g) => (
+                    <GeckoTile
+                      key={g.id}
+                      gecko={g}
+                      selected={selected.has(g.id)}
+                      onToggle={toggleSelected}
+                      onQuickFix={openQuickFix}
+                      onAddOne={addOneToBatch}
+                    />
+                  ))}
+                </div>
+              )}
+            </section>
+
+            {/* Batch */}
+            <section className="space-y-3 min-w-0">
+              <div className="flex items-end justify-between gap-3 flex-wrap">
+                <div>
+                  <h2 className="text-lg font-bold text-slate-100">
+                    Batch <span className="text-slate-500 font-normal">({batchGeckos.length})</span>
+                  </h2>
+                  {batchMissingCount > 0 && (
+                    <p className="text-xs text-amber-300 flex items-center gap-1.5 mt-0.5">
+                      <AlertTriangle className="w-3.5 h-3.5" />
+                      {batchMissingCount} gecko{batchMissingCount === 1 ? '' : 's'} missing required MorphMarket fields. They'll still export, but the upload may reject them.
+                    </p>
+                  )}
+                </div>
+                <div className="flex items-center gap-2 flex-wrap">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopy}
+                    disabled={batchGeckos.length === 0}
+                    className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-9"
+                  >
+                    {copied ? <Check className="w-3.5 h-3.5 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
+                    {copied ? 'Copied' : 'Copy CSV'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleDownload}
+                    disabled={batchGeckos.length === 0}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs h-9"
+                  >
+                    <Download className="w-3.5 h-3.5 mr-1" />
+                    Download CSV ({batchGeckos.length})
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={clearBatch}
+                    disabled={batchGeckos.length === 0}
+                    className="border-rose-900/40 bg-rose-950/30 hover:bg-rose-950/50 text-rose-300 text-xs h-9"
+                  >
+                    Clear batch
+                  </Button>
+                </div>
+              </div>
+
+              <BatchTable
+                geckos={batchGeckos}
+                onRemove={removeFromBatch}
+                onQuickFix={openQuickFix}
+                onCellSave={handleCellSave}
+              />
+
+              {batchGeckos.length > 0 && (
+                <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={handleCopy}
+                    className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-9"
+                  >
+                    {copied ? <Check className="w-3.5 h-3.5 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
+                    {copied ? 'Copied' : 'Copy CSV'}
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleDownload}
+                    className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs h-9"
+                  >
+                    <Download className="w-3.5 h-3.5 mr-1" />
+                    Download CSV ({batchGeckos.length})
+                  </Button>
+                </div>
+              )}
+
+              {batchGeckos.length > 0 && (
+                <details className="rounded-xl border border-slate-800 bg-slate-950/40">
+                  <summary className="cursor-pointer px-3 py-2 text-xs text-slate-400 hover:text-slate-200">
+                    Show summary by maturity
+                  </summary>
+                  <div className="p-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
+                    {['Baby', 'Juvenile', 'Sub-Adult', 'Adult'].map((label) => {
+                      const count = batchGeckos.filter((g) => maturityLabel(ageMonths(g.hatch_date)) === label).length;
+                      return (
+                        <div key={label} className="rounded-lg border border-slate-800 bg-slate-900/60 p-2 text-center">
+                          <p className="text-slate-500 uppercase tracking-wider text-[10px]">{label}</p>
+                          <p className="text-slate-100 text-lg font-bold">{count}</p>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </details>
+              )}
+            </section>
+          </div>
+        </div>
+
+        <QuickFixModal
+          gecko={quickFixGecko}
+          open={!!quickFixGecko}
+          onClose={() => setQuickFixGecko(null)}
+          onSaved={handleQuickFixSaved}
+          missing={quickFixGecko ? missingFields(quickFixGecko) : []}
+          allGeckos={allGeckos}
+        />
+
+        <BulkEditModal
+          geckos={selectedGeckos}
+          open={isBulkEditOpen}
+          onClose={() => setIsBulkEditOpen(false)}
+          onSaved={handleBulkSaved}
+        />
+
+        {batchGeckos.length > 0 && (
+          <div className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-0 left-0 right-0 z-40 border-t border-slate-800 bg-slate-950/95 backdrop-blur-sm">
+            <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
+              <div className="text-sm text-slate-200">
+                <span className="font-semibold">{batchGeckos.length}</span>
+                <span className="text-slate-400"> listing{batchGeckos.length === 1 ? '' : 's'} staged for MorphMarket</span>
+                {batchMissingCount > 0 && (
+                  <span className="ml-3 text-amber-300 inline-flex items-center gap-1 text-xs">
+                    <AlertTriangle className="w-3.5 h-3.5" />
+                    {batchMissingCount} missing required fields
+                  </span>
                 )}
               </div>
               <div className="flex items-center gap-2 flex-wrap">
@@ -1150,46 +1271,6 @@ export default function MorphMarketExport() {
                   variant="outline"
                   size="sm"
                   onClick={handleCopy}
-                  disabled={batchGeckos.length === 0}
-                  className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-9"
-                >
-                  {copied ? <Check className="w-3.5 h-3.5 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
-                  {copied ? 'Copied' : 'Copy CSV'}
-                </Button>
-                <Button
-                  size="sm"
-                  onClick={handleDownload}
-                  disabled={batchGeckos.length === 0}
-                  className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs h-9"
-                >
-                  <Download className="w-3.5 h-3.5 mr-1" />
-                  Download CSV ({batchGeckos.length})
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={clearBatch}
-                  disabled={batchGeckos.length === 0}
-                  className="border-rose-900/40 bg-rose-950/30 hover:bg-rose-950/50 text-rose-300 text-xs h-9"
-                >
-                  Clear batch
-                </Button>
-              </div>
-            </div>
-
-            <BatchTable
-              geckos={batchGeckos}
-              onRemove={removeFromBatch}
-              onQuickFix={openQuickFix}
-              onCellSave={handleCellSave}
-            />
-
-            {batchGeckos.length > 0 && (
-              <div className="flex flex-wrap items-center justify-end gap-2 pt-2">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleCopy}
                   className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-9"
                 >
                   {copied ? <Check className="w-3.5 h-3.5 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
@@ -1204,81 +1285,10 @@ export default function MorphMarketExport() {
                   Download CSV ({batchGeckos.length})
                 </Button>
               </div>
-            )}
-
-            {batchGeckos.length > 0 && (
-              <details className="rounded-xl border border-slate-800 bg-slate-950/40">
-                <summary className="cursor-pointer px-3 py-2 text-xs text-slate-400 hover:text-slate-200">
-                  Show summary by maturity
-                </summary>
-                <div className="p-3 grid grid-cols-2 md:grid-cols-4 gap-2 text-xs">
-                  {['Baby', 'Juvenile', 'Sub-Adult', 'Adult'].map((label) => {
-                    const count = batchGeckos.filter((g) => maturityLabel(ageMonths(g.hatch_date)) === label).length;
-                    return (
-                      <div key={label} className="rounded-lg border border-slate-800 bg-slate-900/60 p-2 text-center">
-                        <p className="text-slate-500 uppercase tracking-wider text-[10px]">{label}</p>
-                        <p className="text-slate-100 text-lg font-bold">{count}</p>
-                      </div>
-                    );
-                  })}
-                </div>
-              </details>
-            )}
-          </section>
-        </div>
-      </div>
-
-      <QuickFixModal
-        gecko={quickFixGecko}
-        open={!!quickFixGecko}
-        onClose={() => setQuickFixGecko(null)}
-        onSaved={handleQuickFixSaved}
-        missing={quickFixGecko ? missingFields(quickFixGecko) : []}
-        allGeckos={allGeckos}
-      />
-
-      <BulkEditModal
-        geckos={selectedGeckos}
-        open={isBulkEditOpen}
-        onClose={() => setIsBulkEditOpen(false)}
-        onSaved={handleBulkSaved}
-      />
-
-      {batchGeckos.length > 0 && (
-        <div className="fixed bottom-[calc(4.75rem+env(safe-area-inset-bottom))] md:bottom-0 left-0 right-0 z-40 border-t border-slate-800 bg-slate-950/95 backdrop-blur-sm">
-          <div className="max-w-7xl mx-auto px-4 md:px-6 py-3 flex flex-wrap items-center justify-between gap-3">
-            <div className="text-sm text-slate-200">
-              <span className="font-semibold">{batchGeckos.length}</span>
-              <span className="text-slate-400"> listing{batchGeckos.length === 1 ? '' : 's'} staged for MorphMarket</span>
-              {batchMissingCount > 0 && (
-                <span className="ml-3 text-amber-300 inline-flex items-center gap-1 text-xs">
-                  <AlertTriangle className="w-3.5 h-3.5" />
-                  {batchMissingCount} missing required fields
-                </span>
-              )}
-            </div>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleCopy}
-                className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200 text-xs h-9"
-              >
-                {copied ? <Check className="w-3.5 h-3.5 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
-                {copied ? 'Copied' : 'Copy CSV'}
-              </Button>
-              <Button
-                size="sm"
-                onClick={handleDownload}
-                className="bg-emerald-600 hover:bg-emerald-500 text-white text-xs h-9"
-              >
-                <Download className="w-3.5 h-3.5 mr-1" />
-                Download CSV ({batchGeckos.length})
-              </Button>
             </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 }

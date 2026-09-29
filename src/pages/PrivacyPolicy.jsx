@@ -1,7 +1,7 @@
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Shield } from 'lucide-react';
-import { createPageUrl } from '@/utils';
+import { Shield } from 'lucide-react';
 import Seo from '@/components/seo/Seo';
+import PublicPageShell from '@/components/public/PublicPageShell';
 import { breadcrumbSchema } from '@/lib/organization-schema';
 import { SUPPORT_EMAIL, SUPPORT_EMAIL_URL } from '@/lib/supportContact';
 
@@ -32,7 +32,7 @@ export default function PrivacyPolicy() {
       ]),
     ];
     return (
-        <div className="min-h-screen bg-slate-950 py-10 px-4">
+        <PublicPageShell>
             <Seo
               title="Privacy Policy"
               description="How Geck Inspect collects, uses, and protects your personal information when you use the crested gecko tracking and breeding platform."
@@ -41,12 +41,14 @@ export default function PrivacyPolicy() {
               modifiedTime={LAST_UPDATED}
               jsonLd={jsonLd}
             />
-            <div className="max-w-3xl mx-auto">
-                <Link to={createPageUrl('Dashboard')} className="inline-flex items-center gap-2 text-slate-400 hover:text-slate-200 text-sm mb-8 transition-colors">
-                    <ArrowLeft className="w-4 h-4" /> Back to App
-                </Link>
+            <section className="max-w-3xl mx-auto px-6 pt-4 pb-16">
+                <div className="flex items-center gap-2 text-xs text-slate-500 mb-4">
+                    <Link to="/" className="hover:text-slate-300">Home</Link>
+                    <span>/</span>
+                    <span className="text-slate-400">Privacy Policy</span>
+                </div>
 
-                <div className="bg-slate-900 border border-slate-700 rounded-xl p-8 space-y-8">
+                <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 md:p-8 space-y-8">
                     <div className="flex items-center gap-3">
                         <Shield className="w-8 h-8 text-emerald-400 flex-shrink-0" />
                         <div>
@@ -147,7 +149,7 @@ export default function PrivacyPolicy() {
                         </div>
                     </Section>
                 </div>
-            </div>
-        </div>
+            </section>
+        </PublicPageShell>
     );
 }

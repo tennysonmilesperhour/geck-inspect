@@ -34,7 +34,7 @@ export default function PageSettingsPanel({ title = 'Page Settings', children, c
                 variant="outline"
                 size="icon"
                 onClick={() => setOpen(o => !o)}
-                className="border-slate-600 hover:bg-slate-800 text-slate-300 h-8 w-8"
+                className="border-slate-600 hover:bg-slate-800 text-slate-300 h-9 w-9"
                 title={title}
             >
                 <Settings className="w-4 h-4" />

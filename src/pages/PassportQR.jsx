@@ -4,12 +4,12 @@ import { supabase } from '@/lib/supabaseClient';
 import { passportUrl } from '@/lib/passportUtils';
 import { QRCodeSVG } from 'qrcode.react';
 import { Download, Copy, Check, Printer, ArrowLeft } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
-const C = {
-  forest: '#e2e8f0', moss: '#94a3b8', sage: '#10b981',
-  paleSage: 'rgba(16,185,129,0.1)', warmWhite: '#020617', muted: '#64748b', slate: '#cbd5e1',
-  cardBg: '#0f172a', border: 'rgba(51,65,85,0.5)',
-};
+// The downloaded label is drawn on white, so its text needs dark ink
+// (the page's own light-on-dark text colors would vanish on paper).
+const LABEL_INK = '#0f172a';
+const LABEL_MUTED = '#475569';
 
 export default function PassportQR() {
   const { passportCode } = useParams();
@@ -57,16 +57,16 @@ export default function PassportQR() {
       ctx.drawImage(img, 100, 60, 600, 600);
 
       // Add text
-      ctx.fillStyle = C.forest;
-      ctx.font = '600 24px "DM Sans", sans-serif';
+      ctx.fillStyle = LABEL_INK;
+      ctx.font = '600 24px Inter, sans-serif';
       ctx.textAlign = 'center';
       ctx.fillText(gecko?.name || 'Animal Passport', 400, 710);
 
-      ctx.fillStyle = C.muted;
+      ctx.fillStyle = LABEL_MUTED;
       ctx.font = '16px monospace';
       ctx.fillText(passportCode, 400, 740);
 
-      ctx.font = '12px "DM Sans", sans-serif';
+      ctx.font = '12px Inter, sans-serif';
       ctx.fillText('Scan to view full history · Geck Inspect', 400, 775);
 
       // Download
@@ -80,86 +80,70 @@ export default function PassportQR() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: C.warmWhite }}>
-        <div className="w-64 h-64 animate-pulse rounded-xl" style={{ backgroundColor: C.paleSage }} />
+      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+        <div className="w-64 h-64 animate-pulse rounded-xl bg-emerald-500/10" />
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen" style={{ backgroundColor: C.warmWhite, fontFamily: "'DM Sans', sans-serif" }}>
+    <div className="min-h-screen bg-slate-950 print:bg-white">
       <div className="max-w-md mx-auto px-4 py-8">
         {/* Back link */}
         <Link
           to={`/passport/${passportCode}`}
-          className="inline-flex items-center gap-1 text-sm mb-6 transition hover:opacity-70"
-          style={{ color: C.sage }}
+          className="inline-flex items-center gap-1 text-sm mb-6 text-emerald-400 hover:text-emerald-300 transition-colors print:hidden"
         >
           <ArrowLeft size={16} /> Back to passport
         </Link>
 
         {/* Print-optimized QR card */}
         <div
-          className="rounded-xl border p-8 text-center print:border-none print:shadow-none print:rounded-none"
-          style={{ borderColor: C.border, backgroundColor: C.cardBg }}
+          className="rounded-xl border border-slate-700 bg-slate-900 p-6 md:p-8 text-center print:border-none print:shadow-none print:rounded-none print:bg-white"
           ref={qrRef}
         >
           <QRCodeSVG value={url} size={280} level="M" className="mx-auto mb-6" />
 
-          <h1
-            className="text-2xl"
-            style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}
-          >
+          <h1 className="text-2xl font-bold text-slate-100 print:text-black">
             {gecko?.name || 'Animal Passport'}
           </h1>
 
-          <p
-            className="font-mono text-sm mt-2"
-            style={{ color: C.muted }}
-          >
+          <p className="font-mono text-sm mt-2 text-slate-400 print:text-black">
             {passportCode}
           </p>
 
           <div className="mt-4 flex items-center justify-center gap-2">
-            <div className="w-6 h-6 rounded-full flex items-center justify-center" style={{ backgroundColor: C.sage }}>
+            <div className="w-6 h-6 rounded-full bg-emerald-600 flex items-center justify-center">
               <span className="text-white text-xs font-bold">GI</span>
             </div>
-            <span className="text-xs font-medium" style={{ color: C.forest }}>
+            <span className="text-xs font-medium text-slate-200 print:text-black">
               Scan to view full history
             </span>
           </div>
 
-          <p className="text-xs mt-2" style={{ color: C.muted }}>{url}</p>
+          <p className="text-xs mt-2 text-slate-500 break-all print:text-black">{url}</p>
         </div>
 
         {/* Action buttons (hidden during print) */}
-        <div className="flex gap-3 mt-6 print:hidden">
-          <button
-            onClick={downloadPNG}
-            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium text-white transition hover:opacity-90"
-            style={{ backgroundColor: C.sage }}
-          >
+        <div className="flex gap-2 mt-6 print:hidden">
+          <Button onClick={downloadPNG} className="flex-1 h-11">
             <Download size={16} /> Download PNG
-          </button>
-          <button
-            onClick={copyLink}
-            className="flex-1 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition hover:opacity-90 border"
-            style={{ borderColor: C.sage, color: C.sage }}
-          >
+          </Button>
+          <Button variant="outline" onClick={copyLink} className="flex-1 h-11">
             {copied ? <Check size={16} /> : <Copy size={16} />}
             {copied ? 'Copied!' : 'Copy Link'}
-          </button>
+          </Button>
         </div>
 
-        <button
+        <Button
+          variant="outline"
           onClick={() => window.print()}
-          className="w-full mt-3 inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition hover:opacity-90 border print:hidden"
-          style={{ borderColor: C.paleSage, color: C.muted }}
+          className="w-full h-11 mt-2 print:hidden"
         >
           <Printer size={16} /> Print QR Sticker
-        </button>
+        </Button>
 
-        <p className="text-xs text-center mt-4 print:hidden" style={{ color: C.muted }}>
+        <p className="text-xs text-center text-slate-500 mt-4 print:hidden">
           Print and stick on your enclosure or tub for instant access to this gecko's records.
         </p>
       </div>

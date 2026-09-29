@@ -157,17 +157,17 @@ export default function CrestedGeckoPrice() {
         </div>
 
         {/* Hero */}
-        <div className="bg-slate-900 border border-slate-700 rounded-xl p-8 space-y-4 mb-8">
-          <div className="flex items-center gap-3">
-            <DollarSign className="w-8 h-8 text-emerald-400 flex-shrink-0" />
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-slate-100">
+        <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 md:p-8 space-y-4 mb-8">
+          <div>
+            <div className="flex items-start gap-3">
+              <DollarSign className="w-7 h-7 md:w-8 md:h-8 mt-0.5 text-emerald-400 flex-shrink-0" />
+              <h1 className="text-2xl md:text-3xl font-bold tracking-tight text-slate-100">
                 How much is my crested gecko worth?
               </h1>
-              <p className="text-slate-500 text-sm">
-                A crested gecko (Correlophus ciliatus) price guide by morph and quality.
-              </p>
             </div>
+            <p className="text-slate-400 text-sm mt-2">
+              A crested gecko (Correlophus ciliatus) price guide by morph and quality.
+            </p>
           </div>
 
           <p className="text-slate-300 text-sm leading-relaxed">
@@ -193,7 +193,7 @@ export default function CrestedGeckoPrice() {
         </div>
 
         {/* Price bands */}
-        <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 mb-8">
+        <div className="bg-slate-900 border border-slate-700 rounded-xl p-4 md:p-6 mb-8">
           <div className="flex items-center gap-2 mb-2">
             <TrendingUp className="w-5 h-5 text-sky-400" />
             <h2 className="text-lg font-semibold text-slate-100">Crested gecko price by morph tier</h2>
@@ -218,7 +218,7 @@ export default function CrestedGeckoPrice() {
         {/* What sets the price */}
         <div className="grid sm:grid-cols-2 gap-4 mb-8">
           {DRIVERS.map((d) => (
-            <div key={d.title} className="bg-slate-900 border border-slate-700 rounded-xl p-6">
+            <div key={d.title} className="bg-slate-900 border border-slate-700 rounded-xl p-4 md:p-6">
               <d.icon className="w-6 h-6 text-emerald-400 mb-3" />
               <h2 className="text-base font-semibold text-slate-100 mb-1.5">{d.title}</h2>
               <p className="text-slate-400 text-sm leading-relaxed">{d.body}</p>
@@ -227,7 +227,7 @@ export default function CrestedGeckoPrice() {
         </div>
 
         {/* How to price yours */}
-        <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 mb-8">
+        <div className="bg-slate-900 border border-slate-700 rounded-xl p-4 md:p-6 mb-8">
           <h2 className="text-lg font-semibold text-slate-100 mb-3">How to price your own crested gecko</h2>
           <ol className="space-y-3 text-sm">
             <li className="flex gap-3">
@@ -250,7 +250,7 @@ export default function CrestedGeckoPrice() {
         </div>
 
         {/* FAQ */}
-        <div className="bg-slate-900 border border-slate-700 rounded-xl p-6 mb-8">
+        <div className="bg-slate-900 border border-slate-700 rounded-xl p-4 md:p-6 mb-8">
           <h2 className="text-lg font-semibold text-slate-100 mb-4">Crested gecko value questions</h2>
           <div className="space-y-5">
             {FAQ.map((item) => (

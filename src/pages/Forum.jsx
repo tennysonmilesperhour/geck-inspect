@@ -5,6 +5,7 @@ import { ForumCategory, ForumPost, User } from '@/entities/all';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
+import PageHeader from '@/components/shared/PageHeader';
 import usePageSettings from '@/hooks/usePageSettings';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -170,17 +171,11 @@ export default function ForumPage() {
                 keywords={['gecko forum', 'crested gecko community', 'reptile discussion', 'breeder forum']}
             />
             <div className="max-w-6xl mx-auto space-y-6">
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-                    <div>
-                        <h1 className="text-2xl md:text-4xl font-bold text-slate-100 mb-1">
-                            Community Forum
-                        </h1>
-                        <p className="text-sm md:text-lg text-slate-400">
-                            Connect, share, and learn with fellow gecko enthusiasts.
-                        </p>
-                    </div>
-                    <div className="flex gap-2 shrink-0">
+                <PageHeader
+                    icon={MessageSquare}
+                    title="Community Forum"
+                    description="Connect, share, and learn with fellow gecko enthusiasts."
+                    settings={
                         <PageSettingsPanel title="Forum Settings">
                             <div>
                                 <Label className="text-slate-300 text-sm mb-1 block">Sort Posts</Label>
@@ -204,11 +199,10 @@ export default function ForumPage() {
                                 <Switch checked={forumPrefs.collapseCategories} onCheckedChange={v => setForumPrefs({ collapseCategories: v })} />
                             </div>
                         </PageSettingsPanel>
+                    }
+                >
                     {currentUser && (
-                        <Button
-                            onClick={() => setShowCreatePost((v) => !v)}
-                            className="bg-emerald-600 hover:bg-emerald-500 text-white shrink-0"
-                        >
+                        <Button onClick={() => setShowCreatePost((v) => !v)}>
                             {showCreatePost ? (
                                 <>
                                     <X className="w-4 h-4 mr-2" />
@@ -222,8 +216,7 @@ export default function ForumPage() {
                             )}
                         </Button>
                     )}
-                    </div>
-                </div>
+                </PageHeader>
 
                 {/* Search */}
                 <div className="relative">

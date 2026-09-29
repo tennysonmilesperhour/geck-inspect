@@ -54,14 +54,19 @@ export default function MorphMarketSync({ geckos, user, onImportComplete }) {
   if (!hasAccess) {
     return (
       <Card className="border-slate-800 bg-slate-900/60">
-        <CardContent className="p-6 text-center space-y-3">
-          <Crown className="w-8 h-8 text-emerald-400 mx-auto" />
-          <p className="text-sm text-slate-300 font-semibold">MorphMarket Sync</p>
-          <p className="text-xs text-slate-500">
-            Export and import listings to MorphMarket CSV format. Available on the Breeder tier.
-          </p>
-          <Link to={createPageUrl('Membership')}>
-            <Button size="sm" className="bg-emerald-600 hover:bg-emerald-500 text-white">
+        <CardContent className="p-4 md:p-6 text-center">
+          <div className="space-y-3">
+            <Crown className="w-8 h-8 text-emerald-400 mx-auto" />
+            <p className="text-sm text-slate-300 font-semibold">MorphMarket Sync</p>
+            <p className="text-xs text-slate-500">
+              Export and import listings to MorphMarket CSV format. Available on the Breeder tier.
+            </p>
+          </div>
+          {/* inline-block so the top margin applies (a bare link is
+              inline and ignores it, which left the button touching the
+              paragraph above). */}
+          <Link to={createPageUrl('Membership')} className="inline-block mt-4">
+            <Button size="sm">
               Upgrade
             </Button>
           </Link>

@@ -2,11 +2,11 @@ import { useState, useEffect } from 'react';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
 import { User, UserFollow } from '@/entities/all';
 import { notifyNewFollower } from '@/components/notifications/NotificationService';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2, Users, MapPin, Globe, UserPlus, UserMinus, ShoppingCart, GitBranch, Heart, Instagram, Facebook, Youtube, FileText, Store } from 'lucide-react';
+import { Loader2, Users, MapPin, Globe, UserPlus, UserMinus, UserX, ShoppingCart, GitBranch, Heart, Instagram, Facebook, Youtube, FileText, Store } from 'lucide-react';
 import { supabase } from '@/lib/supabaseClient';
 import { useToast } from '@/components/ui/use-toast';
 import { createPageUrl } from '@/utils';
@@ -229,11 +229,27 @@ export default function PublicProfile() {
     };
 
     if (isLoading) {
-        return <div className="flex justify-center items-center h-screen bg-slate-950"><Loader2 className="w-16 h-16 text-emerald-500 animate-spin" /></div>;
+        return (
+            <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+                <div className="max-w-5xl mx-auto py-20 flex justify-center">
+                    <Loader2 className="w-16 h-16 text-emerald-500 animate-spin" />
+                </div>
+            </div>
+        );
     }
 
     if (error) {
-        return <div className="text-center p-8 bg-slate-950 min-h-screen text-red-400">{error}</div>;
+        return (
+            <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+                <div className="max-w-5xl mx-auto py-16 md:py-20 flex flex-col items-center text-center">
+                    <UserX className="w-12 h-12 text-slate-500 mb-4" aria-hidden="true" />
+                    <h1 className="text-xl font-semibold text-slate-100">{error}</h1>
+                    <Button asChild className="mt-4">
+                        <Link to={createPageUrl('CommunityConnect')}>Find breeders</Link>
+                    </Button>
+                </div>
+            </div>
+        );
     }
 
     if (!profileUser) {
@@ -273,7 +289,7 @@ export default function PublicProfile() {
                 )}
             </div>
             
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 pb-12">
+            <div className="max-w-5xl mx-auto px-4 md:px-8">
                 <div className="-mt-12 sm:-mt-16 sm:flex sm:items-end sm:space-x-5 relative z-10">
                     <div className="flex">
                         <img 
@@ -295,7 +311,7 @@ export default function PublicProfile() {
                         {currentUser && currentUser.email !== profileUser.email && (
                             <Button
                                 onClick={handleFollowToggle}
-                                className={isFollowing ? 'bg-slate-700 hover:bg-slate-600' : 'bg-emerald-600 hover:bg-emerald-700'}
+                                className={`mt-4 sm:mt-0 ${isFollowing ? 'bg-slate-700 hover:bg-slate-600' : 'bg-emerald-600 hover:bg-emerald-700'}`}
                             >
                                 {isFollowing ? (
                                     <><UserMinus className="w-4 h-4 mr-2" /> Unfollow</>
@@ -306,7 +322,9 @@ export default function PublicProfile() {
                         )}
                     </div>
                 </div>
-                 <div className="block sm:hidden mt-6 min-w-0 flex-1">
+                {/* Name for the sm range only: the row above hides its copy
+                    there, and shows it on phones and from md up. */}
+                <div className="hidden sm:block md:hidden mt-6 min-w-0 flex-1">
                     <h1 className="text-2xl font-bold text-slate-100 truncate">{profileUser.full_name}</h1>
                     {profileUser.location && (
                         <p className="text-sm text-slate-400 flex items-center gap-2 mt-1">
@@ -317,7 +335,7 @@ export default function PublicProfile() {
                 </div>
             </div>
 
-            <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 mt-8 grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="max-w-5xl mx-auto px-4 md:px-8 mt-6 md:mt-8 pb-4 md:pb-8 grid grid-cols-1 md:grid-cols-3 gap-6">
                 <div className="md:col-span-1 space-y-6">
                     <Card className="bg-slate-900 border-slate-700">
                         <CardHeader><CardTitle className="text-slate-200">About</CardTitle></CardHeader>
@@ -395,24 +413,24 @@ export default function PublicProfile() {
                     <Tabs defaultValue="for-sale" className="w-full">
                         <TabsList className="mb-6">
                             <TabsTrigger value="for-sale">
-                                <ShoppingCart className="w-4 h-4 mr-2" />
+                                <ShoppingCart className="w-4 h-4" />
                                 For Sale ({forSaleGeckos.length})
                             </TabsTrigger>
                             {showBreeders && (
                                 <TabsTrigger value="breeders">
-                                    <GitBranch className="w-4 h-4 mr-2" />
+                                    <GitBranch className="w-4 h-4" />
                                     Breeders ({breedingGeckos.length})
                                 </TabsTrigger>
                             )}
                             <TabsTrigger value="collection">
-                                <Heart className="w-4 h-4 mr-2" />
+                                <Heart className="w-4 h-4" />
                                 Collection ({collectionGeckos.length})
                             </TabsTrigger>
                         </TabsList>
 
                         <TabsContent value="for-sale">
                             {forSaleGeckos.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {forSaleGeckos.slice(0, 24).map(gecko => (
                                         <GeckoCard key={gecko.id} gecko={gecko} weightRecords={weightRecords} isOwner={false} onView={(g) => navigate(createPageUrl(`GeckoDetail?id=${g.id}`))} onEdit={() => {}} />
                                     ))}
@@ -428,14 +446,14 @@ export default function PublicProfile() {
                         {showBreeders && (
                         <TabsContent value="breeders">
                             {breedingGeckos.length > 0 ? (
-                                <div className="space-y-8">
+                                <div className="space-y-6">
                                     {/* Males Section */}
                                     {breedingGeckos.filter(g => g.sex === 'Male').length > 0 && (
                                         <div>
                                             <h3 className="text-lg font-semibold text-blue-400 mb-4 flex items-center gap-2">
                                                 <span className="text-2xl">♂</span> Males ({breedingGeckos.filter(g => g.sex === 'Male').length})
                                             </h3>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                                 {breedingGeckos.filter(g => g.sex === 'Male').slice(0, 24).map(gecko => (
                                                     <GeckoCard key={gecko.id} gecko={gecko} weightRecords={weightRecords} isOwner={false} onView={(g) => navigate(createPageUrl(`GeckoDetail?id=${g.id}`))} onEdit={() => {}} />
                                                 ))}
@@ -449,7 +467,7 @@ export default function PublicProfile() {
                                             <h3 className="text-lg font-semibold text-pink-400 mb-4 flex items-center gap-2">
                                                 <span className="text-2xl">♀</span> Females ({breedingGeckos.filter(g => g.sex === 'Female').length})
                                             </h3>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                                 {breedingGeckos.filter(g => g.sex === 'Female').slice(0, 24).map(gecko => (
                                                     <GeckoCard key={gecko.id} gecko={gecko} weightRecords={weightRecords} isOwner={false} onView={(g) => navigate(createPageUrl(`GeckoDetail?id=${g.id}`))} onEdit={() => {}} />
                                                 ))}
@@ -463,7 +481,7 @@ export default function PublicProfile() {
                                             <h3 className="text-lg font-semibold text-slate-400 mb-4 flex items-center gap-2">
                                                 <span className="text-2xl">?</span> Unsexed ({breedingGeckos.filter(g => g.sex === 'Unsexed').length})
                                             </h3>
-                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                                 {breedingGeckos.filter(g => g.sex === 'Unsexed').slice(0, 24).map(gecko => (
                                                     <GeckoCard key={gecko.id} gecko={gecko} weightRecords={weightRecords} isOwner={false} onView={(g) => navigate(createPageUrl(`GeckoDetail?id=${g.id}`))} onEdit={() => {}} />
                                                 ))}
@@ -482,7 +500,7 @@ export default function PublicProfile() {
 
                         <TabsContent value="collection">
                             {collectionGeckos.length > 0 ? (
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                                     {collectionGeckos.slice(0, 24).map(gecko => (
                                         <GeckoCard key={gecko.id} gecko={gecko} weightRecords={weightRecords} isOwner={false} onView={(g) => navigate(createPageUrl(`GeckoDetail?id=${g.id}`))} onEdit={() => {}} />
                                     ))}

@@ -116,6 +116,21 @@ parallel implementation. Remove dead code when its replacement is verified.
 Avoid broad formatting churn. When a contract changes, update the producer,
 consumer, tests and this guide or the focused runbook in the same change.
 
+## Page layout conventions
+
+App pages share one frame so they read as one product. The outer wrapper is
+`min-h-screen bg-slate-950 p-4 md:p-8` with a `max-w-* mx-auto` column inside
+(7xl for grids, 4xl or 5xl for forms and reading). The title block is
+`PageHeader` (`src/components/shared/PageHeader.jsx`): icon, title,
+one-line description, the page's `PageSettingsPanel` in `settings`, and
+action buttons as children with the primary action last. It keeps the gear
+on the title row on phones and wraps the actions below it. Account-only
+pages use `SignInRequired`; empty lists use `EmptyState`. Public pages that
+wrap themselves in `PublicPageShell`, or draw their own logo bar, drop that
+chrome inside the app shell (`useInAppShell` from `src/lib/appShell.js`).
+Check new layouts at 390 px wide: button rows wrap, grids declare a phone
+column count, and nothing scrolls sideways.
+
 ## Verification and delivery
 
 ```bash

@@ -258,9 +258,9 @@ export default function GrowthReel({ gecko, weights = [], user }) {
 
   return (
     <Card className="bg-slate-800/50 border-slate-700">
-      <CardHeader className="pb-3">
+      <CardHeader className="pb-3 pt-4 px-4">
         <div className="flex items-center justify-between gap-2">
-          <CardTitle className="text-white flex items-center gap-2 text-base">
+          <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-100">
             <Film className="w-4 h-4 text-emerald-400" />
             Growth Reel
           </CardTitle>
@@ -285,7 +285,7 @@ export default function GrowthReel({ gecko, weights = [], user }) {
           estimated from the photo order.
         </p>
       </CardHeader>
-      <CardContent className="space-y-3">
+      <CardContent className="px-4 pb-4 space-y-3">
         <div className="relative w-full overflow-hidden rounded-lg bg-slate-900 aspect-[4/5]">
           {frames.map((frame, i) => (
             <img

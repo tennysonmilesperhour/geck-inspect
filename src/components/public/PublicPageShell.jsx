@@ -2,10 +2,12 @@ import { Link } from 'react-router-dom';
 import { APP_LOGO_URL } from '@/lib/constants';
 import { Button } from '@/components/ui/button';
 import { createPageUrl } from '@/utils';
+import { useInAppShell } from '@/lib/appShell';
 
 /**
  * Shared chrome for unauthenticated content pages (About, Contact, Terms,
- * and any future programmatic-SEO landing pages). Provides:
+ * and any future programmatic-SEO landing pages). Inside the app shell it
+ * renders the page alone. Otherwise it provides:
  *   - top nav with logo + Sign In CTA
  *   - a consistent footer with the site's indexable pages linked
  *     (internal linking density matters for topical authority)
@@ -15,6 +17,14 @@ import { createPageUrl } from '@/utils';
  * layer their own hero on top of the slate background.
  */
 export default function PublicPageShell({ children }) {
+  // Opened from inside the app (Quality Scale is in the Discover menu),
+  // the app already draws its own header and navigation, so skip the
+  // public logo bar and footer instead of stacking a second header.
+  const inAppShell = useInAppShell();
+  if (inAppShell) {
+    return <div className="min-h-screen bg-slate-950 text-slate-100 md:pt-4">{children}</div>;
+  }
+
   return (
     <div className="min-h-screen bg-slate-950 text-slate-100 flex flex-col">
       <header className="max-w-6xl w-full mx-auto px-6 py-6 flex items-center justify-between">

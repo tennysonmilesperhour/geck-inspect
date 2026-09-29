@@ -165,6 +165,17 @@ const ALSO_INCLUDED = [
   'CSV and PDF export',
 ];
 
+// [row, spreadsheet, generic reptile app, Geck Inspect]
+const COMPARISON_ROWS = [
+  ['What a gecko is worth', 'Guess from a few listings', 'Not covered', 'Estimate from real listings, by trait, age and sex'],
+  ['What a pairing is worth', 'Your own formulas', 'Not covered', 'Offspring odds times hatchling prices, per egg'],
+  ['Profit per season and pairing', 'Formulas you maintain', 'Not the focus', 'Sales and costs tied to each pairing'],
+  ['Multi-trait genetics calculator', 'Manual Punnett squares', 'Single trait at a time', 'Multi-trait + Monte Carlo simulator'],
+  ['Pedigree transfers to buyers', 'PDF if you remember', 'Not supported', 'One-click verifiable digital passport'],
+  ['Marketplace export', 'Re-type each listing', 'Internal only', 'CSV for MorphMarket bulk import'],
+  ['Built for the species', 'Built for nothing', 'Built for everything', 'Built for crested geckos and only crested geckos'],
+];
+
 function VisualFrame({ label, children, caption }) {
   return (
     <div className="gecko-card backdrop-blur p-5 md:p-6 w-full max-w-md mx-auto">
@@ -656,7 +667,31 @@ export default function Home() {
               crested gecko traits and what they sell for.
             </p>
           </div>
-          <div className="overflow-x-auto">
+          {/* Phones: one card per row with Geck Inspect first. The table
+              needs ~700px, so on a phone its Geck Inspect column sat off
+              screen behind a horizontal scroll. */}
+          <div className="md:hidden space-y-3">
+            {COMPARISON_ROWS.map(([row, sheet, generic, gi], i) => (
+              <div key={i} className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
+                <div className="font-semibold text-white mb-3">{row}</div>
+                <div className="flex items-start gap-2 rounded-lg border border-emerald-500/20 bg-emerald-500/5 px-3 py-2 text-sm text-slate-200">
+                  <Check className="w-4 h-4 mt-0.5 shrink-0 text-emerald-400" />
+                  <span><span className="font-semibold text-emerald-300">Geck Inspect: </span><span dangerouslySetInnerHTML={{ __html: gi }} /></span>
+                </div>
+                <div className="mt-2 space-y-1.5 px-3 text-xs text-slate-400">
+                  <div className="flex items-start gap-2">
+                    <X className="w-3.5 h-3.5 mt-0.5 shrink-0 text-slate-600" />
+                    <span><span className="text-slate-300">Spreadsheet: </span>{sheet}</span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <X className="w-3.5 h-3.5 mt-0.5 shrink-0 text-slate-600" />
+                    <span><span className="text-slate-300">Generic reptile app: </span>{generic}</span>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="hidden md:block overflow-x-auto">
             <table className="w-full text-sm border-separate border-spacing-0">
               <thead>
                 <tr className="text-left">
@@ -667,15 +702,7 @@ export default function Home() {
                 </tr>
               </thead>
               <tbody className="text-slate-300">
-                {[
-                  ['What a gecko is worth', 'Guess from a few listings', 'Not covered', 'Estimate from real listings, by trait, age and sex'],
-                  ['What a pairing is worth', 'Your own formulas', 'Not covered', 'Offspring odds times hatchling prices, per egg'],
-                  ['Profit per season and pairing', 'Formulas you maintain', 'Not the focus', 'Sales and costs tied to each pairing'],
-                  ['Multi-trait genetics calculator', 'Manual Punnett squares', 'Single trait at a time', 'Multi-trait + Monte Carlo simulator'],
-                  ['Pedigree transfers to buyers', 'PDF if you remember', 'Not supported', 'One-click verifiable digital passport'],
-                  ['Marketplace export', 'Re-type each listing', 'Internal only', 'CSV for MorphMarket bulk import'],
-                  ['Built for the species', 'Built for nothing', 'Built for everything', 'Built for crested geckos and only crested geckos'],
-                ].map(([row, sheet, generic, gi], i) => (
+                {COMPARISON_ROWS.map(([row, sheet, generic, gi], i) => (
                   <tr key={i} className="border-b border-slate-800/60">
                     <td className="p-4 font-semibold text-white">{row}</td>
                     <td className="p-4 text-slate-400">

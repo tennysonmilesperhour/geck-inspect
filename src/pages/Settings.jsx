@@ -28,6 +28,7 @@ import { useTheme } from '@/lib/ThemeContext';
 import { useAuth } from '@/lib/AuthContext';
 import { FALLBACK_NAV_ITEMS, NAV_ICON_MAP, FAVORITES_MAX, flattenNavItems, KEEPER_MODE_STORAGE_KEY } from '@/lib/navItems';
 import SignInRequired from '@/components/shared/SignInRequired';
+import PageHeader from '@/components/shared/PageHeader';
 
 const STORE_POLICY_EXAMPLE = [
     "• Shipping: Live arrival guaranteed. Ships FedEx Priority Overnight, Mon-Wed only. Shipping cost is the buyer's responsibility.",
@@ -534,8 +535,10 @@ export default function SettingsPage() {
 
     if (isLoading) {
         return (
-            <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-                <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+            <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+                <div className="max-w-6xl mx-auto py-20 flex justify-center">
+                    <Loader2 className="w-8 h-8 animate-spin text-emerald-500" />
+                </div>
             </div>
         );
     }
@@ -572,35 +575,26 @@ export default function SettingsPage() {
     ];
 
     return (
-        <div className="bg-slate-950 min-h-screen text-slate-100">
-            <div className="max-w-6xl mx-auto px-4 md:px-8 py-8">
-                <div className="mb-8">
-                    <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-2">
-                        <div className="flex items-center gap-3">
-                            <div className="w-12 h-12 bg-emerald-600/20 rounded-xl flex items-center justify-center border border-emerald-500/30">
-                                <Settings className="w-6 h-6 text-emerald-400" />
-                            </div>
-                            <div>
-                                <h1 className="text-3xl md:text-4xl font-bold text-slate-100">Account Settings</h1>
-                                <p className="text-sm text-slate-400">
-                                    Manage your profile, privacy, notifications, and account preferences.
-                                </p>
-                            </div>
-                        </div>
-                        <Button
-                            variant="outline"
-                            onClick={handleLogout}
-                            disabled={isLoggingOut}
-                            className="w-full sm:w-auto shrink-0 justify-center border-slate-700 bg-slate-900/60 text-slate-200 hover:bg-slate-800 hover:text-white"
-                        >
-                            {isLoggingOut ? (
-                                <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Signing out</>
-                            ) : (
-                                <><LogOut className="w-4 h-4 mr-2" />Log out</>
-                            )}
-                        </Button>
-                    </div>
-                </div>
+        <div className="min-h-screen bg-slate-950 p-4 md:p-8 text-slate-100">
+            <div className="max-w-6xl mx-auto">
+                <PageHeader
+                    icon={Settings}
+                    title="Account Settings"
+                    description="Manage your profile, privacy, notifications, and account preferences."
+                >
+                    <Button
+                        variant="outline"
+                        onClick={handleLogout}
+                        disabled={isLoggingOut}
+                        className="w-full sm:w-auto"
+                    >
+                        {isLoggingOut ? (
+                            <><Loader2 className="w-4 h-4 mr-2 animate-spin" />Signing out</>
+                        ) : (
+                            <><LogOut className="w-4 h-4 mr-2" />Log out</>
+                        )}
+                    </Button>
+                </PageHeader>
 
                 {hasUnsavedChanges && (
                     <div className="sticky top-2 z-20 mb-6 rounded-xl border border-amber-500/40 bg-amber-500/10 backdrop-blur-sm px-4 py-3 flex items-center justify-between gap-3 shadow-lg">
@@ -620,11 +614,13 @@ export default function SettingsPage() {
                     </div>
                 )}
 
-                <div className="flex flex-col lg:flex-row gap-8">
-                    {/* Sticky section navigator, industry-standard pattern */}
+                <div className="flex flex-col lg:flex-row gap-6">
+                    {/* Sticky section navigator, industry-standard pattern.
+                        On phones the links wrap into rows instead of a
+                        20-line column above the first card. */}
                     <aside className="lg:w-56 shrink-0">
-                        <nav className="lg:sticky lg:top-20 space-y-1">
-                            <p className="text-[10px] uppercase tracking-wider text-slate-500 font-semibold px-2 mb-2">
+                        <nav className="flex flex-wrap gap-1 lg:block lg:space-y-1 lg:sticky lg:top-20">
+                            <p className="w-full text-[10px] uppercase tracking-wider text-slate-500 font-semibold px-2 mb-2">
                                 Jump to
                             </p>
                             {sectionNav.map((s) => (
@@ -639,7 +635,7 @@ export default function SettingsPage() {
                         </nav>
                     </aside>
 
-                    <div className="flex-1 min-w-0 space-y-8">
+                    <div className="flex-1 min-w-0 space-y-6">
                 <section id="storage-usage">
                     <StorageUsageCard user={user} />
                 </section>

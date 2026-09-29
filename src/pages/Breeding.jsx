@@ -19,6 +19,7 @@ import { PlusCircle, GitBranch, Heart, ChevronDown, ChevronUp, Calendar as Calen
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
+import PageHeader from '@/components/shared/PageHeader';
 import usePageSettings from '@/hooks/usePageSettings';
 import Hatchery from '../components/breeding/Hatchery';
 import {
@@ -465,15 +466,11 @@ export default function BreedingPage() {
                 keywords={['gecko breeding', 'breeding planner', 'genetics calculator', 'hatchery']}
             />
             <div className="max-w-7xl mx-auto">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                    <div>
-                        <h1 className="text-2xl md:text-4xl font-bold text-slate-100 flex items-center gap-3">
-                            <GitBranch className="w-8 h-8 md:w-10 md:h-10 text-emerald-500" />
-                            Breeding Management
-                        </h1>
-                        <p className="text-slate-400 mt-2 text-sm md:text-base">Plan and track your gecko breeding projects</p>
-                    </div>
-                    <div className="flex gap-2 w-full md:w-auto">
+                <PageHeader
+                    icon={GitBranch}
+                    title="Breeding Management"
+                    description="Plan and track your gecko breeding projects"
+                    settings={
                         <PageSettingsPanel title="Breeding Settings">
                             <div>
                                 <Label className="text-slate-300 text-sm mb-1 block">Default Tab</Label>
@@ -506,12 +503,13 @@ export default function BreedingPage() {
                                 <Switch checked={breedingPrefs.autoExpandCards} onCheckedChange={v => { setBreedingPrefs({ autoExpandCards: v }); setExpandAllActive(v); }} />
                             </div>
                         </PageSettingsPanel>
-                        <Button onClick={() => setIsModalOpen(true)} className="flex-1 md:flex-none">
-                            <PlusCircle className="w-5 h-5 mr-2" />
-                            New Breeding Plan
-                        </Button>
-                    </div>
-                </div>
+                    }
+                >
+                    <Button onClick={() => setIsModalOpen(true)} className="flex-1 md:flex-none">
+                        <PlusCircle className="w-5 h-5 mr-2" />
+                        New Breeding Plan
+                    </Button>
+                </PageHeader>
 
                 {isLoading ? (
                     <div className="text-center py-20">
@@ -547,7 +545,9 @@ export default function BreedingPage() {
                         </TabsList>
 
                         <TabsContent value="active" className="mt-6">
-                            {/* Search and Sort Controls */}
+                            {/* Search, sort, and expand controls. Expand All sits
+                                next to the sort picker instead of alone on its
+                                own row above the cards. */}
                             <div className="flex flex-col sm:flex-row gap-3 mb-6">
                                 <div className="relative flex-1">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -559,16 +559,31 @@ export default function BreedingPage() {
                                         className="pl-10 bg-slate-900 border-slate-700"
                                     />
                                 </div>
-                                <Select value={sortBy} onValueChange={v => { setSortBy(v); setBreedingPrefs({ defaultSort: v }); }}>
-                                    <SelectTrigger className="w-full sm:w-64 bg-slate-900 border-slate-700">
-                                        <SelectValue placeholder="Sort by...">{SORT_LABELS[sortBy]}</SelectValue>
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
-                                        {Object.entries(SORT_LABELS).map(([value, label]) => (
-                                            <SelectItem key={value} value={value}>{label}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <div className="flex gap-3">
+                                    <Select value={sortBy} onValueChange={v => { setSortBy(v); setBreedingPrefs({ defaultSort: v }); }}>
+                                        <SelectTrigger className="flex-1 sm:flex-none sm:w-64 bg-slate-900 border-slate-700">
+                                            <SelectValue placeholder="Sort by...">{SORT_LABELS[sortBy]}</SelectValue>
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
+                                            {Object.entries(SORT_LABELS).map(([value, label]) => (
+                                                <SelectItem key={value} value={value}>{label}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    {activePlans.length > 0 && (
+                                        <Button
+                                            variant="outline"
+                                            onClick={handleExpandAllActive}
+                                            className="shrink-0 border-slate-600 hover:bg-slate-800"
+                                        >
+                                            {expandAllActive ? (
+                                                <><ChevronUp className="w-4 h-4 mr-2" /> Collapse All</>
+                                            ) : (
+                                                <><ChevronDown className="w-4 h-4 mr-2" /> Expand All</>
+                                            )}
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
 
                             {activePlans.length === 0 ? (
@@ -580,20 +595,6 @@ export default function BreedingPage() {
                                 />
                             ) : (
                                 <>
-                                    <div className="flex justify-end mb-4">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={handleExpandAllActive}
-                                            className="border-slate-600 hover:bg-slate-800"
-                                        >
-                                            {expandAllActive ? (
-                                                <><ChevronUp className="w-4 h-4 mr-2" /> Collapse All</>
-                                            ) : (
-                                                <><ChevronDown className="w-4 h-4 mr-2" /> Expand All</>
-                                            )}
-                                        </Button>
-                                    </div>
                                     {sortBy === 'species' ? (
                                         (() => {
                                             const bySpecies = activePlans.reduce((acc, plan) => {
@@ -604,14 +605,14 @@ export default function BreedingPage() {
                                                 return acc;
                                             }, {});
                                             return (
-                                                <div className="space-y-8">
+                                                <div className="space-y-6">
                                                     {Object.entries(bySpecies).sort(([a],[b]) => a.localeCompare(b)).map(([species, plans]) => (
                                                         <div key={species}>
                                                             <h2 className="text-xl font-bold text-teal-400 mb-3 flex items-center gap-2">
                                                                 <span className="w-2 h-2 rounded-full bg-teal-400 inline-block"></span>
                                                                 {species} <span className="text-slate-500 text-base font-normal">({plans.length})</span>
                                                             </h2>
-                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                                                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                                                 {plans.map(plan => (
                                                                                     <BreedingPlanCard key={plan.id} plan={plan} geckos={allGeckos} planEggs={allEggs.filter(e => e.breeding_plan_id === plan.id)} onPlanUpdate={loadData} onPlanDelete={handleDeletePlan} onPlanArchive={handleArchivePlan} isExpanded={isPlanExpanded(plan.id)} onToggleExpanded={handleToggleExpanded} showArchiveButton={true} />
                                                                                 ))}
@@ -626,8 +627,8 @@ export default function BreedingPage() {
                                         const activeLaying = activePlans.filter(p => p.laying_active !== false);
                                         const dormant = activePlans.filter(p => p.laying_active === false);
                                         return (
-                                            <div className="space-y-8">
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                                            <div className="space-y-6">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                                      {activeLaying.map(plan => (
                                                         <BreedingPlanCard
                                                             key={plan.id}
@@ -649,7 +650,7 @@ export default function BreedingPage() {
                                                             <Moon className="w-5 h-5 text-slate-500" />
                                                             Dormant Pairs ({dormant.length})
                                                         </h2>
-                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                                                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                                              {dormant.map(plan => (
                                                                 <BreedingPlanCard
                                                                     key={plan.id}
@@ -684,7 +685,9 @@ export default function BreedingPage() {
                         </TabsContent>
 
                         <TabsContent value="archive" className="mt-6">
-                            {/* Search and Sort Controls */}
+                            {/* Search, sort, and expand controls. Expand All sits
+                                next to the sort picker instead of alone on its
+                                own row above the cards. */}
                             <div className="flex flex-col sm:flex-row gap-3 mb-6">
                                 <div className="relative flex-1">
                                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
@@ -696,16 +699,31 @@ export default function BreedingPage() {
                                         className="pl-10 bg-slate-900 border-slate-700"
                                     />
                                 </div>
-                                <Select value={sortBy} onValueChange={v => { setSortBy(v); setBreedingPrefs({ defaultSort: v }); }}>
-                                    <SelectTrigger className="w-full sm:w-64 bg-slate-900 border-slate-700">
-                                        <SelectValue placeholder="Sort by...">{SORT_LABELS[sortBy]}</SelectValue>
-                                    </SelectTrigger>
-                                    <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
-                                        {Object.entries(SORT_LABELS).map(([value, label]) => (
-                                            <SelectItem key={value} value={value}>{label}</SelectItem>
-                                        ))}
-                                    </SelectContent>
-                                </Select>
+                                <div className="flex gap-3">
+                                    <Select value={sortBy} onValueChange={v => { setSortBy(v); setBreedingPrefs({ defaultSort: v }); }}>
+                                        <SelectTrigger className="flex-1 sm:flex-none sm:w-64 bg-slate-900 border-slate-700">
+                                            <SelectValue placeholder="Sort by...">{SORT_LABELS[sortBy]}</SelectValue>
+                                        </SelectTrigger>
+                                        <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
+                                            {Object.entries(SORT_LABELS).map(([value, label]) => (
+                                                <SelectItem key={value} value={value}>{label}</SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    {archivedPlans.length > 0 && (
+                                        <Button
+                                            variant="outline"
+                                            onClick={handleExpandAllArchive}
+                                            className="shrink-0 border-slate-600 hover:bg-slate-800"
+                                        >
+                                            {expandAllArchive ? (
+                                                <><ChevronUp className="w-4 h-4 mr-2" /> Collapse All</>
+                                            ) : (
+                                                <><ChevronDown className="w-4 h-4 mr-2" /> Expand All</>
+                                            )}
+                                        </Button>
+                                    )}
+                                </div>
                             </div>
 
                             {archivedPlans.length === 0 ? (
@@ -716,28 +734,14 @@ export default function BreedingPage() {
                                 />
                             ) : (
                                 <>
-                                    <div className="flex justify-end mb-4">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            onClick={handleExpandAllArchive}
-                                            className="border-slate-600 hover:bg-slate-800"
-                                        >
-                                            {expandAllArchive ? (
-                                                <><ChevronUp className="w-4 h-4 mr-2" /> Collapse All</>
-                                            ) : (
-                                                <><ChevronDown className="w-4 h-4 mr-2" /> Expand All</>
-                                            )}
-                                        </Button>
-                                    </div>
-                                    <div className="space-y-8">
+                                    <div className="space-y-6">
                                         {sortedSeasons.map(season => (
                                             <div key={season}>
                                                 <h2 className="text-xl md:text-2xl font-bold text-emerald-400 mb-4 flex items-center gap-2">
                                                     <CalendarIcon className="w-5 h-5 md:w-6 md:h-6" />
                                                     {season}
                                                 </h2>
-                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
+                                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                                                         {archivedBySeason[season].map(plan => (
                                                         <BreedingPlanCard
                                                             key={plan.id}

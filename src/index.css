@@ -58,6 +58,13 @@ html, body {
   :where([data-card-part="footer"]) { padding: 0 1rem 1rem; }
 }
 
+/* A <Link> wrapping a <Button> renders an inline <a>, and inline boxes
+   ignore vertical margins, so `space-y-*` on the parent never reached
+   the button: every "text, then a button" block rendered with the button
+   touching the text above it. inline-block lets the margin apply. Zero
+   specificity, so a `block` or `flex` class on the link still wins. */
+:where(a:has(> button)) { display: inline-block; }
+
 /* Inside the app shell "a screen" means the scroll area between the
    top bar and the bottom nav, not the full 100vh. Pages set
    min-h-screen for their background fill; resolving it against the

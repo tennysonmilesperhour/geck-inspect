@@ -255,7 +255,7 @@ export default function ForumPostPage() {
 
     if (isLoading) {
         return (
-            <div className="p-8 text-center text-slate-400 bg-slate-950 min-h-screen flex items-center justify-center">
+            <div className="min-h-screen bg-slate-950 p-4 md:p-8 flex items-center justify-center text-center text-slate-400">
                 <div className="flex items-center gap-2">
                     <Loader2 className="w-5 h-5 animate-spin" />
                     Loading post...
@@ -266,14 +266,14 @@ export default function ForumPostPage() {
 
     if (!post) {
         return (
-            <div className="p-8 bg-slate-950 min-h-screen">
+            <div className="min-h-screen bg-slate-950 p-4 md:p-8">
                 <div className="max-w-xl mx-auto text-center space-y-4">
                     <h2 className="text-2xl font-bold text-slate-100">Post not found</h2>
                     <p className="text-slate-400">
                         This post was deleted or the link is no longer valid.
                     </p>
-                    <Link to={createPageUrl('Forum')}>
-                        <Button className="bg-emerald-600 hover:bg-emerald-500 text-white">
+                    <Link to={createPageUrl('Forum')} className="inline-block">
+                        <Button>
                             <ArrowLeft className="w-4 h-4 mr-2" />
                             Back to Forum
                         </Button>
@@ -285,7 +285,17 @@ export default function ForumPostPage() {
 
     const isPostLiked = likesData[post.id]?.userLiked || false;
     const postLikeCount = likesData[post.id]?.count ?? 0;
-    if (post && blockedAuthors.has(post.created_by)) return <div className="p-6 space-y-3"><h1 className="text-xl font-semibold">Post hidden</h1><p>You blocked this author. Manage blocked accounts in Settings.</p><Link className="underline" to="/Forum">Return to the forum</Link></div>;
+    if (post && blockedAuthors.has(post.created_by)) {
+        return (
+            <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+                <div className="max-w-xl mx-auto text-center space-y-4">
+                    <h1 className="text-2xl font-bold text-slate-100">Post hidden</h1>
+                    <p className="text-slate-400">You blocked this author. Manage blocked accounts in Settings.</p>
+                    <Link className="inline-block underline text-emerald-400 hover:text-emerald-300" to="/Forum">Return to the forum</Link>
+                </div>
+            </div>
+        );
+    }
 
     const isPostOwner = currentUser?.email && post?.created_by === currentUser.email;
     const isAdmin = currentUser?.role === 'admin';
@@ -389,7 +399,10 @@ export default function ForumPostPage() {
                 </div>
 
                 <Card className="bg-slate-900 border-slate-800">
-                    <CardHeader>
+                    {/* items-start keeps the signed-in "Report or block" ghost
+                        button at its own width instead of stretching across
+                        the card between the title and the byline. */}
+                    <CardHeader className="items-start">
                         <CardTitle className="text-2xl md:text-3xl text-slate-100">
                             {post.title}
                         </CardTitle>
@@ -498,7 +511,7 @@ export default function ForumPostPage() {
                                 Tip: Cmd/Ctrl + Enter to post
                             </p>
                         </CardContent>
-                        <CardFooter className="flex justify-end gap-2">
+                        <CardFooter className="flex flex-wrap justify-end gap-2">
                             <Button
                                 variant="outline"
                                 onClick={handleCancelDraft}

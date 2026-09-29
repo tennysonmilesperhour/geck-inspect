@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import PageHeader from '@/components/shared/PageHeader';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { format, subMonths } from 'date-fns';
 import {
@@ -17,7 +18,8 @@ import {
   Calendar,
   ExternalLink,
   Edit,
-  MessageCircle
+  MessageCircle,
+  ListChecks
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
@@ -145,19 +147,19 @@ export default function MyListingsPage() {
                             className="w-full h-32 object-cover rounded-t-lg"
                         />
                     ) : (
-                        <div className="w-full h-32 bg-gradient-to-br from-sage-100 to-earth-100 flex items-center justify-center">
-                            <ShoppingCart className="w-8 h-8 text-sage-400" />
+                        <div className="w-full h-32 rounded-t-lg bg-slate-800 flex items-center justify-center">
+                            <ShoppingCart className="w-8 h-8 text-slate-500" />
                         </div>
                     )}
                     <div className="absolute top-2 right-2 flex gap-2">
-                        <Badge className={`text-xs ${
-                            gecko.status === 'For Sale' ? 'bg-green-100 text-green-800' :
-                            'bg-gray-100 text-gray-800'
+                        <Badge className={`text-xs border ${
+                            gecko.status === 'For Sale' ? 'bg-emerald-950/80 text-emerald-300 border-emerald-500/40' :
+                            'bg-slate-900/80 text-slate-300 border-slate-600'
                         }`}>
                             {gecko.status}
                         </Badge>
                         {gecko.asking_price && (
-                            <Badge className="bg-blue-100 text-blue-800 text-xs">
+                            <Badge className="bg-slate-900/80 text-slate-100 border border-slate-600 text-xs">
                                 ${gecko.asking_price}
                             </Badge>
                         )}
@@ -167,17 +169,17 @@ export default function MyListingsPage() {
                 <CardContent className="p-4">
                     <div className="space-y-3">
                         <div>
-                            <h3 className="font-bold text-sage-900">{gecko.name}</h3>
+                            <h3 className="font-semibold text-slate-100">{gecko.name}</h3>
                             {gecko.morphs_traits && (
-                                <p className="text-sm text-sage-600">{gecko.morphs_traits}</p>
+                                <p className="text-sm text-slate-400">{gecko.morphs_traits}</p>
                             )}
                         </div>
 
-                        <div className="flex items-center justify-between text-sm text-sage-600">
-                            <span className={`px-2 py-1 rounded text-xs ${
-                                gecko.sex === 'Male' ? 'bg-blue-100 text-blue-700' : 
-                                gecko.sex === 'Female' ? 'bg-pink-100 text-pink-700' : 
-                                'bg-gray-100 text-gray-700'
+                        <div className="flex items-center justify-between text-sm text-slate-400">
+                            <span className={`px-2 py-0.5 rounded text-xs border ${
+                                gecko.sex === 'Male' ? 'bg-blue-500/15 text-blue-300 border-blue-500/30' :
+                                gecko.sex === 'Female' ? 'bg-pink-500/15 text-pink-300 border-pink-500/30' :
+                                'bg-slate-800 text-slate-300 border-slate-600'
                             }`}>
                                 {gecko.sex}
                             </span>
@@ -239,56 +241,58 @@ export default function MyListingsPage() {
     return (
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
             <div className="max-w-7xl mx-auto">
-                <div className="mb-8">
-                    <h1 className="text-3xl font-bold text-sage-900 mb-2">My Listings</h1>
-                    <p className="text-sage-600">Track your gecko sales and marketplace performance</p>
-                </div>
+                <PageHeader
+                    icon={ListChecks}
+                    title="My Listings"
+                    description="Track your gecko sales and marketplace performance"
+                />
 
                 {/* Analytics Overview */}
-                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4 mb-8">
+                <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 mb-6">
                     <Card className="bg-slate-900 border-slate-700">
                         <CardContent className="p-4 text-center">
-                            <ShoppingCart className="w-6 h-6 text-blue-600 mx-auto mb-2" />
-                            <div className="text-2xl font-bold text-sage-900">{analytics.totalListings}</div>
-                            <div className="text-xs text-sage-600">Total Listings</div>
+                            <ShoppingCart className="w-6 h-6 text-blue-400 mx-auto mb-2" />
+                            <div className="text-2xl font-bold text-slate-100">{analytics.totalListings}</div>
+                            <div className="text-xs text-slate-400">Total Listings</div>
                         </CardContent>
                     </Card>
 
                     <Card className="bg-slate-900 border-slate-700">
                         <CardContent className="p-4 text-center">
-                            <DollarSign className="w-6 h-6 text-green-600 mx-auto mb-2" />
-                            <div className="text-2xl font-bold text-sage-900">${analytics.totalValue}</div>
-                            <div className="text-xs text-sage-600">Total Value</div>
+                            <DollarSign className="w-6 h-6 text-emerald-400 mx-auto mb-2" />
+                            <div className="text-2xl font-bold text-slate-100">${analytics.totalValue}</div>
+                            <div className="text-xs text-slate-400">Total Value</div>
                         </CardContent>
                     </Card>
 
                     <Card className="bg-slate-900 border-slate-700">
                         <CardContent className="p-4 text-center">
-                            <TrendingUp className="w-6 h-6 text-green-600 mx-auto mb-2" />
-                            <div className="text-2xl font-bold text-sage-900">{analytics.sold}</div>
-                            <div className="text-xs text-sage-600">Sold</div>
+                            <TrendingUp className="w-6 h-6 text-emerald-400 mx-auto mb-2" />
+                            <div className="text-2xl font-bold text-slate-100">{analytics.sold}</div>
+                            <div className="text-xs text-slate-400">Sold</div>
                         </CardContent>
                     </Card>
 
                     <Card className="bg-slate-900 border-slate-700">
                         <CardContent className="p-4 text-center">
-                            <Calendar className="w-6 h-6 text-blue-600 mx-auto mb-2" />
-                            <div className="text-2xl font-bold text-sage-900">{analytics.active}</div>
-                            <div className="text-xs text-sage-600">Active</div>
+                            <Calendar className="w-6 h-6 text-blue-400 mx-auto mb-2" />
+                            <div className="text-2xl font-bold text-slate-100">{analytics.active}</div>
+                            <div className="text-xs text-slate-400">Active</div>
                         </CardContent>
                     </Card>
 
-                    <Card className="bg-slate-900 border-slate-700">
+                    {/* Fifth tile spans the phone row so it doesn't sit alone. */}
+                    <Card className="bg-slate-900 border-slate-700 col-span-2 md:col-span-1">
                         <CardContent className="p-4 text-center">
-                            <MessageCircle className="w-6 h-6 text-orange-600 mx-auto mb-2" />
-                            <div className="text-2xl font-bold text-sage-900">{analytics.inquiries}</div>
-                            <div className="text-xs text-sage-600">Inquiries</div>
+                            <MessageCircle className="w-6 h-6 text-orange-400 mx-auto mb-2" />
+                            <div className="text-2xl font-bold text-slate-100">{analytics.inquiries}</div>
+                            <div className="text-xs text-slate-400">Inquiries</div>
                         </CardContent>
                     </Card>
                 </div>
 
-                <Tabs defaultValue="active" className="space-y-8">
-                    <TabsList className="mb-4">
+                <Tabs defaultValue="active">
+                    <TabsList className="mb-6">
                         <TabsTrigger value="active"><span className="hidden sm:inline">Active Listings</span><span className="sm:hidden">Active</span> ({activeListings.length})</TabsTrigger>
                         <TabsTrigger value="sold">Sold ({soldGeckos.length})</TabsTrigger>
                         <TabsTrigger value="analytics">Analytics</TabsTrigger>
@@ -299,9 +303,9 @@ export default function MyListingsPage() {
                         {activeListings.length === 0 ? (
                             <Card className="bg-slate-900 border-slate-700">
                                 <CardContent className="p-8 text-center">
-                                    <ShoppingCart className="w-12 h-12 text-sage-400 mx-auto mb-4" />
-                                    <h3 className="text-lg font-semibold text-sage-900 mb-2">No active listings</h3>
-                                    <p className="text-sage-600 mb-4">Start selling by creating your first listing</p>
+                                    <ShoppingCart className="w-12 h-12 text-slate-500 mx-auto mb-4" />
+                                    <h3 className="text-lg font-semibold text-slate-100 mb-2">No active listings</h3>
+                                    <p className="text-slate-400 mb-4">Start selling by creating your first listing</p>
                                     <Link to={createPageUrl('MarketplaceSell')}>
                                         <Button>
                                             Create Listing
@@ -310,7 +314,7 @@ export default function MyListingsPage() {
                                 </CardContent>
                             </Card>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                 {activeListings.map(gecko => (
                                     <GeckoListingCard key={gecko.id} gecko={gecko} />
                                 ))}
@@ -323,13 +327,13 @@ export default function MyListingsPage() {
                         {soldGeckos.length === 0 ? (
                             <Card className="bg-slate-900 border-slate-700">
                                 <CardContent className="p-8 text-center">
-                                    <TrendingUp className="w-12 h-12 text-sage-400 mx-auto mb-4" />
-                                    <h3 className="text-lg font-semibold text-sage-900 mb-2">No sales yet</h3>
-                                    <p className="text-sage-600">Your sold geckos will appear here</p>
+                                    <TrendingUp className="w-12 h-12 text-slate-500 mx-auto mb-4" />
+                                    <h3 className="text-lg font-semibold text-slate-100 mb-2">No sales yet</h3>
+                                    <p className="text-slate-400">Your sold geckos will appear here</p>
                                 </CardContent>
                             </Card>
                         ) : (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
                                 {soldGeckos.map(gecko => (
                                     <GeckoListingCard key={gecko.id} gecko={gecko} />
                                 ))}
@@ -339,7 +343,7 @@ export default function MyListingsPage() {
 
                     {/* Analytics */}
                     <TabsContent value="analytics">
-                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                             <Card className="bg-slate-900 border-slate-700">
                                 <CardHeader>
                                     <CardTitle>Sales Over Time (Last 6 Months)</CardTitle>

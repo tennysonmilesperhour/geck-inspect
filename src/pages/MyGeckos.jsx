@@ -5,7 +5,7 @@ import { Gecko, WeightRecord, FeedingGroup, CollectionMember } from '@/entities/
 import { getVisibleGeckos, canWriteGecko } from '@/lib/geckoAccess';
 import { bredInHouseIds, saleCategoryFor } from '@/lib/businessLedger';
 import { api } from '@/api/appClient';
-import { PlusCircle, Search, Users, Grid3x3, List, ArrowUpDown, Archive, ArchiveRestore, Download, FileText, FileSpreadsheet, Scale } from 'lucide-react';
+import { PlusCircle, Search, Users, Grid3x3, List, ArrowUpDown, Archive, ArchiveRestore, Download, FileText, FileSpreadsheet, Scale, LayoutGrid } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import CardGridSkeleton from '../components/shared/CardGridSkeleton';
 import EmptyState from '../components/shared/EmptyState';
@@ -19,6 +19,7 @@ import {
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import PageSettingsPanel from '../components/ui/PageSettingsPanel';
+import PageHeader from '../components/shared/PageHeader';
 import usePageSettings from '@/hooks/usePageSettings';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
@@ -459,14 +460,11 @@ export default function MyGeckosPage() {
                 keywords={['gecko collection', 'crested gecko tracker', 'morph tracker']}
             />
             <div className="max-w-7xl mx-auto">
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
-                    <div>
-                        <h1 className="text-2xl md:text-4xl font-bold text-slate-100">
-                            {showArchived ? 'Archived Geckos' : 'My Gecko Collection'}
-                        </h1>
-                        <p className="text-slate-400 mt-1">Manage your geckos, track their lineage, and plan breedings.</p>
-                    </div>
-                    <div className="flex flex-wrap gap-2 items-center">
+                <PageHeader
+                    icon={LayoutGrid}
+                    title={showArchived ? 'Archived Geckos' : 'My Gecko Collection'}
+                    description="Manage your geckos, track their lineage, and plan breedings."
+                    settings={
                         <PageSettingsPanel title="Collection Settings">
                             <div className="flex items-center justify-between">
                                 <Label className="text-slate-300 text-sm">Default View</Label>
@@ -494,151 +492,141 @@ export default function MyGeckosPage() {
                                         <SelectItem value="status">Status</SelectItem>
                                         <SelectItem value="weight_heaviest">Weight (Heaviest)</SelectItem>
                                         <SelectItem value="weight_lightest">Weight (Lightest)</SelectItem>
-                                            <SelectItem value="species">Species (A-Z)</SelectItem>
-                                            <SelectItem value="clutch">Group by Clutch</SelectItem>
-                                            {showArchived && <SelectItem value="archive_reason">Archive Reason</SelectItem>}
-                                        </SelectContent>
-                                        </Select>
-                                        </div>
-                                        <div className="border-t border-slate-700 pt-3 mt-1">
-                                            <Label className="text-slate-300 text-sm font-medium block mb-1">Gecko ID Format</Label>
-                                            <p className="text-[11px] text-slate-500 leading-snug mb-2">
-                                                The full customizer, inheritance modes, presets, and live preview, lives in Settings.
-                                            </p>
-                                            <a
-                                                href="/Settings#id-logic"
-                                                className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-300 hover:text-emerald-200"
-                                            >
-                                                Customize ID logic →
-                                            </a>
-                                        </div>
-                                        </PageSettingsPanel>
-                        {/* All header buttons use explicit emerald styling with
-                             arbitrary rgba() values so they render consistently
-                             whether or not Layout.jsx's global
-                             `button:not([data-state])` emerald override applies.
-                             The Export button is wrapped in DropdownMenuTrigger,
-                             which gives it data-state, so without explicit
-                             classes it escaped the global rule and rendered
-                             with a grey border, misaligned against its siblings. */}
-                        <Button
-                            variant="outline"
-                            onClick={() => { setShowArchived(!showArchived); loadGeckos(); }}
-                            className="border-emerald-700/60 bg-[rgba(6,95,70,0.35)] text-slate-100 hover:bg-[rgba(4,120,87,0.5)] hover:border-emerald-500/70"
-                        >
-                            {showArchived ? (
-                                <>
-                                    <ArchiveRestore className="w-5 h-5 mr-2" />
-                                    Active
-                                </>
-                            ) : (
-                                <>
-                                    <Archive className="w-5 h-5 mr-2" />
-                                    Archive
-                                </>
-                            )}
-                        </Button>
-                        {!showArchived && (
-                            <>
-                                <Button variant="outline" className="border-emerald-700/60 bg-[rgba(6,95,70,0.35)] text-slate-100 hover:bg-[rgba(4,120,87,0.5)] hover:border-emerald-500/70" onClick={() => setIsImportModalOpen(true)}>
-                                    Import from CSV
-                                </Button>
-                                <DropdownMenu>
-                                    <DropdownMenuTrigger asChild>
-                                        <Button
-                                            variant="outline"
-                                            className="border-emerald-700/60 bg-[rgba(6,95,70,0.35)] text-slate-100 hover:bg-[rgba(4,120,87,0.5)] hover:border-emerald-500/70"
-                                            disabled={!filteredAndSortedGeckos || filteredAndSortedGeckos.length === 0}
-                                        >
-                                            <Download className="w-4 h-4 mr-2" />
-                                            Export
-                                        </Button>
-                                    </DropdownMenuTrigger>
-                                    <DropdownMenuContent
-                                        align="end"
-                                        className="bg-slate-900 border-slate-700 text-slate-100"
-                                    >
-                                        <DropdownMenuItem
-                                            className="focus:bg-slate-800 focus:text-white cursor-pointer"
-                                            onClick={() => {
-                                                try {
-                                                    const name = exportGeckosCSV(filteredAndSortedGeckos, { collection: geckos });
-                                                    captureEvent('roster_exported', {
-                                                        format: 'csv',
-                                                        count: filteredAndSortedGeckos.length,
-                                                    });
-                                                    toast({
-                                                        title: 'CSV exported',
-                                                        description: `Saved ${filteredAndSortedGeckos.length} geckos to ${name}`,
-                                                    });
-                                                } catch (err) {
-                                                    toast({
-                                                        title: 'Export failed',
-                                                        description: err.message,
-                                                        variant: 'destructive',
-                                                    });
-                                                }
-                                            }}
-                                        >
-                                            <FileSpreadsheet className="w-4 h-4 mr-2 text-emerald-400" />
-                                            Download as CSV
-                                            <span className="ml-auto text-xs text-slate-500">.csv</span>
-                                        </DropdownMenuItem>
-                                        <DropdownMenuItem
-                                            className="focus:bg-slate-800 focus:text-white cursor-pointer"
-                                            onClick={async () => {
-                                                try {
-                                                    const name = await exportGeckosPDF(filteredAndSortedGeckos, {
-                                                        collection: geckos,
-                                                        title: `${user?.full_name || user?.email || 'My'} Gecko Roster`,
-                                                        userName: user?.full_name || user?.email,
-                                                    });
-                                                    captureEvent('roster_exported', {
-                                                        format: 'pdf',
-                                                        count: filteredAndSortedGeckos.length,
-                                                    });
-                                                    toast({
-                                                        title: 'PDF exported',
-                                                        description: `Saved ${filteredAndSortedGeckos.length} geckos to ${name}`,
-                                                    });
-                                                } catch (err) {
-                                                    toast({
-                                                        title: 'Export failed',
-                                                        description: err.message,
-                                                        variant: 'destructive',
-                                                    });
-                                                }
-                                            }}
-                                        >
-                                            <FileText className="w-4 h-4 mr-2 text-emerald-400" />
-                                            Download as PDF
-                                            <span className="ml-auto text-xs text-slate-500">.pdf</span>
-                                        </DropdownMenuItem>
-                                    </DropdownMenuContent>
-                                </DropdownMenu>
-                                <Button
-                                    variant="outline"
-                                    className="border-slate-600 bg-slate-800 text-slate-200 hover:bg-slate-700"
-                                    onClick={() => setIsWeighInOpen(true)}
-                                    title="Record weights for all geckos in one pass"
-                                    disabled={geckos.filter(g => !g.archived).length === 0}
+                                        <SelectItem value="species">Species (A-Z)</SelectItem>
+                                        <SelectItem value="clutch">Group by Clutch</SelectItem>
+                                        {showArchived && <SelectItem value="archive_reason">Archive Reason</SelectItem>}
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div className="border-t border-slate-700 pt-3 mt-1">
+                                <Label className="text-slate-300 text-sm font-medium block mb-1">Gecko ID Format</Label>
+                                <p className="text-[11px] text-slate-500 leading-snug mb-2">
+                                    The full customizer, inheritance modes, presets, and live preview, lives in Settings.
+                                </p>
+                                <a
+                                    href="/Settings#id-logic"
+                                    className="inline-flex items-center gap-1.5 text-xs font-medium text-emerald-300 hover:text-emerald-200"
                                 >
-                                    <Scale className="w-4 h-4 mr-2 text-emerald-400" />
-                                    Weigh-in
-                                </Button>
-                                {/* Primary action leads on phones: full width, above
-                                    the secondary tools, instead of wrapping to last. */}
-                                <Button className="bg-emerald-600 hover:bg-emerald-700 order-first w-full sm:w-auto md:order-none" onClick={() => {
-                                    if (user?.is_guest) { window.location.href = '/AuthPortal?mode=signup'; return; }
-                                    openAddFlow();
-                                }}>
-                                    <PlusCircle className="w-5 h-5 mr-2" />
-                                    Add Gecko
-                                </Button>
+                                    Customize ID logic →
+                                </a>
+                            </div>
+                        </PageSettingsPanel>
+                    }
+                >
+                    <Button
+                        variant="outline"
+                        onClick={() => { setShowArchived(!showArchived); loadGeckos(); }}
+                    >
+                        {showArchived ? (
+                            <>
+                                <ArchiveRestore className="w-5 h-5 mr-2" />
+                                Active
+                            </>
+                        ) : (
+                            <>
+                                <Archive className="w-5 h-5 mr-2" />
+                                Archive
                             </>
                         )}
-                    </div>
-                </div>
+                    </Button>
+                    {!showArchived && (
+                        <>
+                            <Button variant="outline" onClick={() => setIsImportModalOpen(true)}>
+                                Import from CSV
+                            </Button>
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button
+                                        variant="outline"
+                                        disabled={!filteredAndSortedGeckos || filteredAndSortedGeckos.length === 0}
+                                    >
+                                        <Download className="w-4 h-4 mr-2" />
+                                        Export
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent
+                                    align="end"
+                                    className="bg-slate-900 border-slate-700 text-slate-100"
+                                >
+                                    <DropdownMenuItem
+                                        className="focus:bg-slate-800 focus:text-white cursor-pointer"
+                                        onClick={() => {
+                                            try {
+                                                const name = exportGeckosCSV(filteredAndSortedGeckos, { collection: geckos });
+                                                captureEvent('roster_exported', {
+                                                    format: 'csv',
+                                                    count: filteredAndSortedGeckos.length,
+                                                });
+                                                toast({
+                                                    title: 'CSV exported',
+                                                    description: `Saved ${filteredAndSortedGeckos.length} geckos to ${name}`,
+                                                });
+                                            } catch (err) {
+                                                toast({
+                                                    title: 'Export failed',
+                                                    description: err.message,
+                                                    variant: 'destructive',
+                                                });
+                                            }
+                                        }}
+                                    >
+                                        <FileSpreadsheet className="w-4 h-4 mr-2 text-emerald-400" />
+                                        Download as CSV
+                                        <span className="ml-auto text-xs text-slate-500">.csv</span>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem
+                                        className="focus:bg-slate-800 focus:text-white cursor-pointer"
+                                        onClick={async () => {
+                                            try {
+                                                const name = await exportGeckosPDF(filteredAndSortedGeckos, {
+                                                    collection: geckos,
+                                                    title: `${user?.full_name || user?.email || 'My'} Gecko Roster`,
+                                                    userName: user?.full_name || user?.email,
+                                                });
+                                                captureEvent('roster_exported', {
+                                                    format: 'pdf',
+                                                    count: filteredAndSortedGeckos.length,
+                                                });
+                                                toast({
+                                                    title: 'PDF exported',
+                                                    description: `Saved ${filteredAndSortedGeckos.length} geckos to ${name}`,
+                                                });
+                                            } catch (err) {
+                                                toast({
+                                                    title: 'Export failed',
+                                                    description: err.message,
+                                                    variant: 'destructive',
+                                                });
+                                            }
+                                        }}
+                                    >
+                                        <FileText className="w-4 h-4 mr-2 text-emerald-400" />
+                                        Download as PDF
+                                        <span className="ml-auto text-xs text-slate-500">.pdf</span>
+                                    </DropdownMenuItem>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
+                            <Button
+                                variant="outline"
+                                onClick={() => setIsWeighInOpen(true)}
+                                title="Record weights for all geckos in one pass"
+                                disabled={geckos.filter(g => !g.archived).length === 0}
+                            >
+                                <Scale className="w-4 h-4 mr-2 text-emerald-400" />
+                                Weigh-in
+                            </Button>
+                            {/* Primary action leads on phones: full width, above
+                                the secondary tools, instead of wrapping to last. */}
+                            <Button className="order-first w-full sm:w-auto md:order-none" onClick={() => {
+                                if (user?.is_guest) { window.location.href = '/AuthPortal?mode=signup'; return; }
+                                openAddFlow();
+                            }}>
+                                <PlusCircle className="w-5 h-5 mr-2" />
+                                Add Gecko
+                            </Button>
+                        </>
+                    )}
+                </PageHeader>
 
                 {/* Collection / Transfers tabs */}
                 <div className="flex items-center gap-1 mb-6 border-b border-slate-800">

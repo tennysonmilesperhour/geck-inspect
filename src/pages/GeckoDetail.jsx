@@ -110,7 +110,11 @@ export default function GeckoDetail() {
         return <div className="flex justify-center items-center h-screen bg-slate-950"><Loader2 className="w-16 h-16 animate-spin text-emerald-500" /></div>;
     }
     if (!gecko) {
-        return <div className="text-center text-slate-400 p-8">Gecko not found.</div>;
+        return (
+            <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+                <div className="max-w-5xl mx-auto text-center text-slate-400">Gecko not found.</div>
+            </div>
+        );
     }
 
     const isOwner = currentUser && gecko.created_by === currentUser.email;
@@ -130,9 +134,9 @@ export default function GeckoDetail() {
         hatchDate: gecko.hatch_date,
     });
     const confidenceStyles = {
-        high: 'bg-emerald-700',
-        medium: 'bg-amber-700',
-        low: 'bg-slate-700',
+        high: 'bg-emerald-900/60 text-emerald-200 border-emerald-700/60',
+        medium: 'bg-amber-900/60 text-amber-200 border-amber-700/60',
+        low: 'bg-slate-800 text-slate-300 border-slate-600',
     };
 
     const statusColors = {
@@ -142,36 +146,39 @@ export default function GeckoDetail() {
     };
 
     return (
-        <div className="bg-slate-950 min-h-screen text-slate-200">
-            <div className="max-w-5xl mx-auto p-4 md:p-8">
-                {/* Header */}
-                <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-                    <Button variant="outline" onClick={() => navigate(-1)} className="border-slate-600 hover:bg-slate-800">
+        <div className="min-h-screen bg-slate-950 text-slate-200 p-4 md:p-8">
+            <div className="max-w-5xl mx-auto">
+                {/* Header: Back plus the owner actions in one wrapping row, so
+                    the actions flow onto a second line on phones instead of
+                    running off the right edge. From sm up the actions sit on
+                    the right. */}
+                <div className="flex flex-wrap items-center gap-2 mb-6">
+                    <Button variant="outline" onClick={() => navigate(-1)}>
                         <ArrowLeft className="w-4 h-4 mr-2" /> Back
                     </Button>
                     {isOwner && (
-                        <div className="flex gap-2">
+                        <>
                             {/* Genetics calculator, preselects this gecko as the
                                 matching parent slot (unsexed default to sire). */}
                             <Button
                                 variant="outline"
-                                className="border-slate-600 hover:bg-slate-800"
+                                className="sm:ml-auto"
                                 onClick={() => navigate(`/calculator?${gecko.sex === 'Female' ? 'damGecko' : 'sireGecko'}=${gecko.id}`)}
                             >
                                 Pair in calculator
                             </Button>
                             {/* P11 Quality Scale worksheet, preselects this gecko */}
-                            <Button variant="outline" className="border-slate-600 hover:bg-slate-800" onClick={() => navigate(`/QualityScale?geckoId=${gecko.id}`)}>
+                            <Button variant="outline" onClick={() => navigate(`/QualityScale?geckoId=${gecko.id}`)}>
                                 Score structure
                             </Button>
                             <Button onClick={() => navigate(createPageUrl('MyGeckos'))}>
                                 Edit in My Geckos
                             </Button>
-                        </div>
+                        </>
                     )}
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
                     {/* Left: Image + basic info */}
                     <div className="space-y-4">
                         <Card className="bg-slate-900 border-slate-700 overflow-hidden">
@@ -186,7 +193,7 @@ export default function GeckoDetail() {
                                 <h1 className="text-2xl font-bold text-slate-100">{gecko.name}</h1>
                                 {gecko.gecko_id_code && <p className="text-slate-400 text-sm">{gecko.gecko_id_code}</p>}
                                 <div className="mt-3 flex flex-wrap justify-center gap-2">
-                                    <Badge className={statusColors[gecko.status] || 'bg-slate-700'}>{gecko.status}</Badge>
+                                    <Badge className={`${statusColors[gecko.status] || 'bg-slate-700'} text-white`}>{gecko.status}</Badge>
                                     <Badge variant="secondary">{gecko.sex}</Badge>
                                     {latestWeight != null && <Badge variant="outline" className="border-slate-600">{latestWeight}g</Badge>}
                                 </div>
@@ -275,8 +282,8 @@ export default function GeckoDetail() {
                         {owner && (
                             <Card className="bg-slate-900 border-slate-700">
                                 <CardContent className="p-4">
-                                    <h3 className="text-slate-300 font-semibold text-sm mb-3 flex items-center gap-2">
-                                        <UserIcon className="w-4 h-4" /> Breeder
+                                    <h3 className="text-base font-semibold text-slate-100 mb-3 flex items-center gap-2">
+                                        <UserIcon className="w-4 h-4 text-emerald-400" /> Breeder
                                     </h3>
                                     <Link to={createPageUrl(`PublicProfile?userId=${owner.id}`)} className="flex items-center gap-3 hover:opacity-80 transition-opacity mb-3">
                                         <img
@@ -318,8 +325,8 @@ export default function GeckoDetail() {
                         {(gecko.morphs_traits || gecko.morph_tags?.length > 0) && (
                             <Card className="bg-slate-900 border-slate-700">
                                 <CardHeader className="pb-2 pt-4 px-4">
-                                    <CardTitle className="text-sm flex items-center gap-2 text-slate-300">
-                                        <Tag className="w-4 h-4" /> Morphs & Traits
+                                    <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-100">
+                                        <Tag className="w-4 h-4 text-emerald-400" /> Morphs & Traits
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="px-4 pb-4 space-y-2">
@@ -349,8 +356,8 @@ export default function GeckoDetail() {
                         {gecko.notes && (
                             <Card className="bg-slate-900 border-slate-700">
                                 <CardHeader className="pb-2 pt-4 px-4">
-                                    <CardTitle className="text-sm flex items-center gap-2 text-slate-300">
-                                        <StickyNote className="w-4 h-4" /> Notes
+                                    <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-100">
+                                        <StickyNote className="w-4 h-4 text-emerald-400" /> Notes
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="px-4 pb-4">
@@ -363,8 +370,8 @@ export default function GeckoDetail() {
                         {weightRecords.length > 0 && (
                             <Card className="bg-slate-900 border-slate-700">
                                 <CardHeader className="pb-2 pt-4 px-4">
-                                    <CardTitle className="text-sm flex items-center gap-2 text-slate-300">
-                                        <LineChartIcon className="w-4 h-4" /> Weight History
+                                    <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-100">
+                                        <LineChartIcon className="w-4 h-4 text-emerald-400" /> Weight History
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="px-4 pb-4">
@@ -377,16 +384,16 @@ export default function GeckoDetail() {
                         {shedPrediction && (
                             <Card className="bg-slate-900 border-slate-700">
                                 <CardHeader className="pb-2 pt-4 px-4">
-                                    <CardTitle className="text-sm flex items-center gap-2 text-slate-300">
-                                        <Droplets className="w-4 h-4" /> Next Shed Window
+                                    <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-100">
+                                        <Droplets className="w-4 h-4 text-emerald-400" /> Next Shed Window
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="px-4 pb-4">
-                                    <div className="flex items-center gap-3">
+                                    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
                                         <span className="text-lg font-semibold text-slate-100">
                                             {formatShedWindow(shedPrediction)}
                                         </span>
-                                        <Badge className={`${confidenceStyles[shedPrediction.confidence]} capitalize`}>
+                                        <Badge variant="outline" className={`${confidenceStyles[shedPrediction.confidence]} capitalize`}>
                                             {shedPrediction.confidence} confidence
                                         </Badge>
                                     </div>
@@ -410,8 +417,8 @@ export default function GeckoDetail() {
                         {/* Parentage */}
                         <Card className="bg-slate-900 border-slate-700">
                             <CardHeader className="pb-2 pt-4 px-4">
-                                <CardTitle className="text-sm flex items-center gap-2 text-slate-300">
-                                    <GitBranch className="w-4 h-4" /> Lineage
+                                <CardTitle className="text-base font-semibold flex items-center gap-2 text-slate-100">
+                                    <GitBranch className="w-4 h-4 text-emerald-400" /> Lineage
                                 </CardTitle>
                             </CardHeader>
                             <CardContent className="px-4 pb-4 space-y-3">
@@ -448,9 +455,9 @@ export default function GeckoDetail() {
                         {gecko.asking_price && (
                             <Card className="bg-slate-900 border-slate-700">
                                 <CardContent className="p-4 flex items-center justify-between">
-                                    <div className="flex items-center gap-2 text-slate-300">
-                                        <DollarSign className="w-5 h-5 text-yellow-400" />
-                                        <span className="font-semibold">Asking Price</span>
+                                    <div className="flex items-center gap-2 text-base font-semibold text-slate-100">
+                                        <DollarSign className="w-4 h-4 text-emerald-400" />
+                                        <span>Asking Price</span>
                                     </div>
                                     <span className="text-2xl font-bold text-yellow-400">${gecko.asking_price}</span>
                                 </CardContent>
@@ -462,7 +469,7 @@ export default function GeckoDetail() {
                 {/* Personalized supplies recommendation. Quietly hides itself
                     when the store is disabled or has no matching products,
                     so this never adds empty-card noise to the page. */}
-                <div className="mt-8">
+                <div className="mt-6">
                     <RecommendedKitForGecko gecko={gecko} />
                 </div>
             </div>

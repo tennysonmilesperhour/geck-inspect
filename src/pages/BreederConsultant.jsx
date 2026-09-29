@@ -274,9 +274,9 @@ export default function BreederConsultantPage() {
                 <CardHeader className="flex flex-row flex-wrap items-center justify-between gap-3 border-b border-slate-700">
                     <CardTitle className="text-slate-100 flex items-center gap-2"><Sparkles className="text-emerald-400"/> AI Breeder Consultant</CardTitle>
                 </CardHeader>
-                <CardContent className="flex-1 overflow-y-auto p-6 space-y-6">
+                <CardContent className="flex-1 overflow-y-auto p-4 md:p-6 space-y-4 md:space-y-6">
                     {messages.map((msg) => (
-                        <div key={msg.id} className={`flex items-start gap-4 ${msg.role === 'user' ? 'justify-end' : ''}`}>
+                        <div key={msg.id} className={`flex items-start gap-3 md:gap-4 ${msg.role === 'user' ? 'justify-end' : ''}`}>
                             {msg.role !== 'user' && (
                                 <div className="w-8 h-8 rounded-full bg-emerald-900 flex items-center justify-center flex-shrink-0">
                                     <Bot className="w-5 h-5 text-emerald-400" />
@@ -295,7 +295,7 @@ export default function BreederConsultantPage() {
                         </div>
                     ))}
                     {isLoading && (
-                         <div className="flex items-start gap-4">
+                         <div className="flex items-start gap-3 md:gap-4">
                             <div className="w-8 h-8 rounded-full bg-emerald-900 flex items-center justify-center flex-shrink-0">
                                 <Bot className="w-5 h-5 text-emerald-400" />
                             </div>

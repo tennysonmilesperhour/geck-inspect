@@ -20,6 +20,7 @@ import { specWithInferredHets } from '@/lib/genetics/collectionSpec';
 import { loadTraitOverrides } from '@/lib/genetics/traitOverrides';
 import { Gecko } from '@/entities/all';
 import Seo from '@/components/seo/Seo';
+import PageHeader from '@/components/shared/PageHeader';
 import { createPageUrl } from '@/utils';
 import { breadcrumbSchema, ORG_ID } from '@/lib/organization-schema';
 
@@ -289,7 +290,7 @@ export default function GeneticCalculatorTool({
       : (sire && dam);
 
     return (
-        <div className="p-4 md:p-8 bg-slate-950 min-h-screen">
+        <div className="min-h-screen bg-slate-950 p-4 md:p-8">
             <Seo
               title={pageTitle || 'Crested Gecko Morph & Breeding Calculator (Genetics)'}
               description={pageDescription || 'Free crested gecko morph calculator and breeding calculator. Predict offspring morphs with Punnett-square genetics for Lilly White (lethal super), the Cappuccino complex (Cappuccino, Sable, Highway, Luwak), Axanthic, Phantom, Empty Back, Soft Scale, Whiteout, and Hypo, with possible-het inputs and per-clutch odds. No signup required.'}
@@ -310,30 +311,28 @@ export default function GeneticCalculatorTool({
               jsonLd={pageJsonLd || CALCULATOR_JSON_LD}
             />
             <div className="max-w-4xl mx-auto">
-                <div className="mb-6">
-                    <div className="flex items-center gap-2 text-xs text-slate-500 mb-3">
-                        <Link to="/" className="hover:text-slate-300">Home</Link>
-                        <span>/</span>
-                        {pageBreadcrumb ? (
-                          <>
-                            <Link to="/calculator" className="hover:text-slate-300">Genetic Calculator</Link>
+                <PageHeader
+                    icon={Dna}
+                    title={pageTitle || 'Crested Gecko Genetics Calculator'}
+                    description={pageDescription
+                      ? pageDescription
+                      : 'A free crested gecko morph calculator and breeding calculator in one. Projections for every proven gene, including the Cappuccino complex (Cappuccino, Sable, Highway, Luwak), 66% and 50% possible hets, and real 2-egg clutch odds. Pick genes below, no account required, or sign in to pull parents straight from your collection.'}
+                    eyebrow={
+                        <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                            <Link to="/" className="hover:text-slate-300">Home</Link>
                             <span>/</span>
-                            <span className="text-slate-400">{pageBreadcrumb}</span>
-                          </>
-                        ) : (
-                          <span className="text-slate-400">Genetic Calculator</span>
-                        )}
-                    </div>
-                    <h1 className="text-2xl md:text-4xl font-bold text-slate-100 flex items-center gap-3">
-                        <Dna className="w-8 h-8 md:w-10 md:h-10 text-purple-400" />
-                        {pageTitle || 'Crested Gecko Genetics Calculator'}
-                    </h1>
-                    <p className="text-slate-400 mt-2 text-sm md:text-base">
-                        {pageDescription
-                          ? pageDescription
-                          : 'A free crested gecko morph calculator and breeding calculator in one. Projections for every proven gene, including the Cappuccino complex (Cappuccino, Sable, Highway, Luwak), 66% and 50% possible hets, and real 2-egg clutch odds. Pick genes below, no account required, or sign in to pull parents straight from your collection.'}
-                    </p>
-                </div>
+                            {pageBreadcrumb ? (
+                              <>
+                                <Link to="/calculator" className="hover:text-slate-300">Genetic Calculator</Link>
+                                <span>/</span>
+                                <span className="text-slate-400">{pageBreadcrumb}</span>
+                              </>
+                            ) : (
+                              <span className="text-slate-400">Genetic Calculator</span>
+                            )}
+                        </div>
+                    }
+                />
 
                 {introSlot}
 
@@ -347,7 +346,7 @@ export default function GeneticCalculatorTool({
                             only the manual mode anyway, so the toggle would be
                             misleading). */}
                         {isAuthed && (
-                          <div className="flex items-center gap-2 mb-4">
+                          <div className="flex flex-wrap items-center gap-2 mb-4">
                             <span className="text-xs text-slate-500 mr-1">Pick parents:</span>
                             <button
                               type="button"
@@ -547,13 +546,15 @@ export default function GeneticCalculatorTool({
                           </div>
                         )}
 
-                        {/* Calculator results, same engine for both modes */}
-                        <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
-                          <GeneticCalculator sire={hasParents ? sire : null} dam={hasParents ? dam : null} />
-                        </div>
+                        <div className="space-y-6">
+                          {/* Calculator results, same engine for both modes */}
+                          <div className="bg-slate-900 border border-slate-700 rounded-xl p-5">
+                            <GeneticCalculator sire={hasParents ? sire : null} dam={hasParents ? dam : null} />
+                          </div>
 
-                        {/* Monte Carlo simulator */}
-                        {hasParents && <BreedingSimulator sire={sire} dam={dam} />}
+                          {/* Monte Carlo simulator */}
+                          {hasParents && <BreedingSimulator sire={sire} dam={dam} />}
+                        </div>
                     </>
                 )}
 
@@ -563,7 +564,7 @@ export default function GeneticCalculatorTool({
                     this calculator accurate for crested geckos specifically,
                     without naming competitors. */}
                 {!pageBreadcrumb && (
-                  <div className="mt-10 grid gap-4 md:grid-cols-3">
+                  <div className="mt-6 grid grid-cols-1 gap-4 md:grid-cols-3">
                     <div className="bg-slate-900 border border-slate-800 rounded-xl p-5">
                       <div className="flex items-center gap-2 mb-2">
                         <Dna className="w-4 h-4 text-purple-400" />

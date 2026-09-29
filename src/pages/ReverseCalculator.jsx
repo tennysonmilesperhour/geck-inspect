@@ -12,6 +12,7 @@ import {
   SelectValue,
 } from '@/components/ui/select';
 import Seo from '@/components/seo/Seo';
+import PageHeader from '@/components/shared/PageHeader';
 import { breadcrumbSchema, ORG_ID } from '@/lib/organization-schema';
 import {
   REVERSE_TARGETS,
@@ -188,7 +189,7 @@ export default function ReverseCalculator() {
   }));
 
   return (
-    <div className="p-4 md:p-8 bg-slate-950 min-h-screen">
+    <div className="min-h-screen bg-slate-950 p-4 md:p-8">
       <Seo
         title="Reverse Genetics Calculator: Crested Gecko"
         description="Pick the crested gecko you want (Lilly White, visual Axanthic, Luwak, Frappuccino, Phantom Lilly and more) and see every pairing that produces it, ranked by per-egg odds with lethal and health warnings. Free, no signup."
@@ -205,24 +206,20 @@ export default function ReverseCalculator() {
         jsonLd={REVERSE_JSON_LD}
       />
       <div className="max-w-4xl mx-auto">
-        <div className="mb-6">
-          <div className="flex items-center gap-2 text-xs text-slate-500 mb-3">
-            <Link to="/" className="hover:text-slate-300">Home</Link>
-            <span>/</span>
-            <Link to="/calculator" className="hover:text-slate-300">Genetic Calculator</Link>
-            <span>/</span>
-            <span className="text-slate-400">Reverse Calculator</span>
-          </div>
-          <h1 className="text-2xl md:text-4xl font-bold text-slate-100 flex items-center gap-3">
-            <Target className="w-8 h-8 md:w-10 md:h-10 text-purple-400" />
-            Reverse Genetics Calculator
-          </h1>
-          <p className="text-slate-400 mt-2 text-sm md:text-base">
-            Start from the gecko you want. Pick a target and see every pairing that can produce it,
-            ranked by per-egg odds, with the lethal-egg and health costs of each route shown
-            honestly. Then open any route in the calculator to fine-tune it.
-          </p>
-        </div>
+        <PageHeader
+          icon={Target}
+          title="Reverse Genetics Calculator"
+          description="Start from the gecko you want. Pick a target and see every pairing that can produce it, ranked by per-egg odds, with the lethal-egg and health costs of each route shown honestly. Then open any route in the calculator to fine-tune it."
+          eyebrow={
+            <div className="flex flex-wrap items-center gap-2 text-xs text-slate-500">
+              <Link to="/" className="hover:text-slate-300">Home</Link>
+              <span>/</span>
+              <Link to="/calculator" className="hover:text-slate-300">Genetic Calculator</Link>
+              <span>/</span>
+              <span className="text-slate-400">Reverse Calculator</span>
+            </div>
+          }
+        />
 
         {/* Target picker */}
         <div className="bg-slate-900 border border-slate-700 rounded-xl p-5 mb-6">

@@ -26,6 +26,7 @@ import {
 import { format, addDays, getDayOfYear, getDaysInYear, differenceInCalendarDays } from 'date-fns';
 import { parseLocalDate } from '@/lib/dateUtils';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import PageHeader from '@/components/shared/PageHeader';
 
 const LoginPortal = React.lazy(() => import('../components/auth/LoginPortal'));
 
@@ -189,7 +190,7 @@ function CountStrip({ laid, hatched, incubating }) {
         { value: incubating, label: 'incubating', tone: 'text-amber-300' },
     ];
     return (
-        <div className="flex items-baseline gap-3 mt-1" style={{ fontVariantNumeric: 'tabular-nums' }}>
+        <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1 mt-1" style={{ fontVariantNumeric: 'tabular-nums' }}>
             {items.map((it) => (
                 <div key={it.label} className="leading-none">
                     <span className={`text-sm font-semibold ${it.tone}`}>{it.value}</span>
@@ -205,8 +206,8 @@ function CountStrip({ laid, hatched, incubating }) {
 
 function PairRowSkeleton() {
     return (
-        <div className="flex items-center gap-4 py-3 border-b border-slate-800">
-            <div className="w-44 sm:w-56 flex items-center gap-3 flex-shrink-0">
+        <div className="flex flex-col md:flex-row md:items-center gap-2 md:gap-4 py-3 border-b border-slate-800">
+            <div className="md:w-56 flex items-center gap-3 flex-shrink-0">
                 <Skeleton className="w-9 h-9 rounded-full bg-slate-800" />
                 <Skeleton className="w-9 h-9 rounded-full bg-slate-800 -ml-5" />
                 <div className="space-y-1.5 flex-1">
@@ -214,7 +215,7 @@ function PairRowSkeleton() {
                     <Skeleton className="h-3 w-20 bg-slate-800" />
                 </div>
             </div>
-            <Skeleton className="h-14 flex-1 bg-slate-800" />
+            <Skeleton className="h-14 w-full md:w-auto md:flex-1 bg-slate-800" />
         </div>
     );
 }
@@ -232,11 +233,13 @@ function PairRow({ plan, sire, dam, seasonEggs, year, today }) {
     const height = ROW_PADDING * 2 + LOCK_RAIL_HEIGHT + lanes * CLUTCH_LANE_HEIGHT;
 
     return (
-        <div className="flex items-stretch gap-4 py-3 border-b border-slate-800 last:border-b-0">
-            {/* Pair identity, links back to the Breeding page */}
+        <div className="flex flex-col md:flex-row md:items-stretch gap-2 md:gap-4 py-3 border-b border-slate-800 last:border-b-0">
+            {/* Pair identity, links back to the Breeding page. On phones it
+                sits above its timeline and stays pinned to the left edge
+                while the timeline scrolls sideways. */}
             <Link
                 to={createPageUrl('Breeding')}
-                className="w-44 sm:w-56 flex-shrink-0 flex items-start gap-3 group pt-1"
+                className="sticky left-0 self-start max-w-[calc(100vw-4.5rem)] md:static md:self-auto md:w-56 flex-shrink-0 flex items-start gap-3 group pt-1"
                 title="Open Breeding Management"
             >
                 <div className="flex flex-shrink-0">
@@ -262,7 +265,7 @@ function PairRow({ plan, sire, dam, seasonEggs, year, today }) {
             </Link>
 
             {/* Year timeline: month bands, lock rail, one labelled bar per clutch */}
-            <div className="flex-1 relative rounded-md overflow-hidden bg-slate-900/60" style={{ height }}>
+            <div className="md:flex-1 relative rounded-md overflow-hidden bg-slate-900/60" style={{ height }}>
                 {MONTH_LABELS.map((label, mi) => (
                     <div
                         key={label}
@@ -450,7 +453,7 @@ export default function BreedingSeasonPage() {
     }
 
     return (
-        <div className="p-4 md:p-8 bg-slate-950 min-h-screen">
+        <div className="min-h-screen bg-slate-950 p-4 md:p-8">
             <Seo
                 title="Breeding Season"
                 description="See your whole crested gecko breeding season on one timeline: locks, clutches, incubation, and hatches for every pair."
@@ -459,33 +462,25 @@ export default function BreedingSeasonPage() {
                 keywords={['breeding season', 'gecko breeding timeline', 'hatch tracker']}
             />
             <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
-                    <div>
-                        <h1 className="text-2xl md:text-4xl font-bold text-slate-100 flex items-center gap-3">
-                            <CalendarRange className="w-8 h-8 md:w-10 md:h-10 text-emerald-500" />
-                            Breeding Season
-                        </h1>
-                        <p className="text-slate-400 mt-2 text-sm md:text-base">
-                            Your whole season on one timeline: every lock, clutch, and hatch.
-                        </p>
-                    </div>
-                    <div className="flex items-center gap-3 w-full md:w-auto">
-                        <Select
-                            value={String(selectedYear)}
-                            onValueChange={(v) => setSelectedYear(parseInt(v, 10))}
-                        >
-                            <SelectTrigger className="w-full md:w-44 bg-slate-900 border-slate-700 text-slate-200">
-                                <SelectValue>{selectedYear} season</SelectValue>
-                            </SelectTrigger>
-                            <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
-                                {availableYears.map(year => (
-                                    <SelectItem key={year} value={String(year)}>{year} season</SelectItem>
-                                ))}
-                            </SelectContent>
-                        </Select>
-                    </div>
-                </div>
+                <PageHeader
+                    icon={CalendarRange}
+                    title="Breeding Season"
+                    description="Your whole season on one timeline: every lock, clutch, and hatch."
+                >
+                    <Select
+                        value={String(selectedYear)}
+                        onValueChange={(v) => setSelectedYear(parseInt(v, 10))}
+                    >
+                        <SelectTrigger className="w-full md:w-44 bg-slate-900 border-slate-700 text-slate-200">
+                            <SelectValue>{selectedYear} season</SelectValue>
+                        </SelectTrigger>
+                        <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
+                            {availableYears.map(year => (
+                                <SelectItem key={year} value={String(year)}>{year} season</SelectItem>
+                            ))}
+                        </SelectContent>
+                    </Select>
+                </PageHeader>
 
                 {isLoading ? (
                     <Card className="bg-slate-900 border-slate-700">
@@ -502,17 +497,17 @@ export default function BreedingSeasonPage() {
                         <CardContent className="p-8 md:p-12 text-center">
                             <Heart className="w-12 h-12 text-emerald-500 mx-auto mb-4" />
                             <h2 className="text-xl font-bold text-slate-100 mb-2">Your season starts with a pairing</h2>
-                            <p className="text-slate-400 max-w-md mx-auto mb-6">
+                            <p className="text-slate-400 max-w-md mx-auto">
                                 Once you set up your first pair (maybe that Phantom x Lilly White
                                 project you've been planning), every lock, clutch, and hatch will
                                 show up here on one timeline.
                             </p>
-                            <Link to={createPageUrl('Breeding')}>
-                                <Button>
+                            <Button asChild className="mt-4">
+                                <Link to={createPageUrl('Breeding')}>
                                     Create your first pairing
                                     <ArrowRight className="w-4 h-4 ml-2" />
-                                </Button>
-                            </Link>
+                                </Link>
+                            </Button>
                         </CardContent>
                     </Card>
                 ) : (
@@ -534,7 +529,7 @@ export default function BreedingSeasonPage() {
                                         <Sparkles className="w-3 h-3 mr-1" /> {seasonTotals.hatched} hatched
                                     </Badge>
                                 </div>
-                                <div className="flex items-center gap-4 flex-wrap">
+                                <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
                                     <LegendItem swatch={<span className="w-0.5 h-3 rounded-full bg-sky-400 inline-block" />} label="Lock" />
                                     <LegendItem swatch={<span className="w-5 h-2.5 rounded-sm bg-amber-500/30 border border-amber-400/70 inline-block" />} label="Incubating" />
                                     <LegendItem swatch={<span className="w-5 h-2.5 rounded-sm bg-emerald-500/30 border border-emerald-400/70 inline-block" />} label="Hatched" />
@@ -555,10 +550,10 @@ export default function BreedingSeasonPage() {
                                 </div>
                             ) : (
                                 <div className="overflow-x-auto">
-                                    <div className="min-w-[760px]">
+                                    <div className="min-w-[640px] md:min-w-[760px]">
                                         {/* Month header, aligned with the pair rows below */}
                                         <div className="flex items-center gap-4 pb-1 border-b border-slate-700">
-                                            <div className="w-44 sm:w-56 flex-shrink-0" />
+                                            <div className="hidden md:block w-56 flex-shrink-0" />
                                             <div className="flex-1 grid grid-cols-12">
                                                 {MONTH_LABELS.map(label => (
                                                     <div key={label} className="text-[10px] uppercase tracking-wide text-slate-500 text-center">

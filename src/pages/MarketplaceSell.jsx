@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import MorphMarketSync from '@/components/marketplace/MorphMarketSync';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
+import PageHeader from '@/components/shared/PageHeader';
 import usePageSettings from '@/hooks/usePageSettings';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
@@ -38,6 +39,7 @@ import {
   CheckSquare,
   Square,
   ListPlus,
+  Tag,
   X,
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
@@ -615,7 +617,7 @@ export default function MarketplaceSellPage() {
 
   if (isLoading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
+      <div className="min-h-screen bg-slate-950 p-4 md:p-8 flex items-center justify-center">
         <Loader2 className="w-6 h-6 animate-spin text-slate-400" />
       </div>
     );
@@ -623,17 +625,12 @@ export default function MarketplaceSellPage() {
 
   return (
     <div className="min-h-screen bg-slate-950 p-4 md:p-8">
-      <div className="max-w-6xl mx-auto space-y-8">
-        {/* Header */}
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
-          <div>
-            <h1 className="text-3xl md:text-4xl font-bold text-slate-100">Seller Console</h1>
-            <p className="text-sm text-slate-400 mt-1">
-              Manage your marketplace listings. Toggle visibility with one click, update pricing,
-              and track your active listings at a glance.
-            </p>
-          </div>
-          <div className="flex gap-2">
+      <div className="max-w-6xl mx-auto space-y-6">
+        <PageHeader
+          icon={Tag}
+          title="Seller Console"
+          description="Manage your marketplace listings. Toggle visibility with one click, update pricing, and track your active listings at a glance."
+          settings={
             <PageSettingsPanel title="Seller Settings">
               <div className="flex items-center justify-between">
                 <Label className="text-slate-300 text-sm">Default Visibility</Label>
@@ -658,17 +655,15 @@ export default function MarketplaceSellPage() {
                 <Switch checked={sellerPrefs.showPriceOnCards} onCheckedChange={v => setSellerPrefs({ showPriceOnCards: v })} />
               </div>
             </PageSettingsPanel>
-            <Link to={createPageUrl('MyGeckos')}>
-              <Button
-                variant="outline"
-                className="border-slate-700 bg-slate-800 hover:bg-slate-700 text-slate-200"
-              >
-                <Plus className="w-4 h-4 mr-2" />
-                Manage collection
-              </Button>
-            </Link>
-          </div>
-        </div>
+          }
+        >
+          <Link to={createPageUrl('MyGeckos')}>
+            <Button variant="outline">
+              <Plus className="w-4 h-4 mr-2" />
+              Manage collection
+            </Button>
+          </Link>
+        </PageHeader>
 
         {/* Stats strip */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
@@ -809,8 +804,8 @@ export default function MarketplaceSellPage() {
               <Plus className="w-10 h-10 text-slate-600 mx-auto mb-3" />
               <p className="text-slate-300 font-semibold">No other geckos in your collection</p>
               <p className="text-sm text-slate-500 mt-1">Add some geckos to your collection first.</p>
-              <Link to={createPageUrl('MyGeckos')} className="inline-block mt-3">
-                <Button className="bg-emerald-600 hover:bg-emerald-500 text-white">
+              <Link to={createPageUrl('MyGeckos')} className="inline-block mt-4">
+                <Button>
                   <Plus className="w-4 h-4 mr-2" /> Add a gecko
                 </Button>
               </Link>

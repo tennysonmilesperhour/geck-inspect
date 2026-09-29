@@ -6,9 +6,10 @@ import { supabase } from '@/lib/supabaseClient';
 import GalleryFilters from '../components/gallery/GalleryFilters';
 import ImageCard from '../components/gallery/ImageCard';
 import ImageDetailModal from '../components/gallery/ImageDetailModal';
-import { ImageOff, Loader2 } from 'lucide-react';
+import { ImageOff, Images, Loader2 } from 'lucide-react';
 import CardGridSkeleton from '../components/shared/CardGridSkeleton';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
+import PageHeader from '@/components/shared/PageHeader';
 import usePageSettings from '@/hooks/usePageSettings';
 import EmptyState from '../components/shared/EmptyState';
 import { Button } from '@/components/ui/button';
@@ -134,7 +135,7 @@ export default function Gallery() {
     const usersMap = new Map(users.map(u => [u.email, u]));
 
     return (
-        <div className="p-4 md:p-8 bg-slate-950 min-h-screen">
+        <div className="min-h-screen bg-slate-950 p-4 md:p-8">
             <Seo
                 title="Image Gallery"
                 description="Browse stunning crested gecko photos from breeders worldwide. Filter by morph, color, and trait to find your favorite cresties."
@@ -142,42 +143,43 @@ export default function Gallery() {
                 keywords={['gecko photos', 'crested gecko gallery', 'morph photos', 'reptile images']}
             />
             <div className="max-w-7xl mx-auto">
-                <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4 mb-6">
-                    <div>
-                        <h1 className="text-2xl md:text-4xl font-bold text-slate-100 mb-2">Image Gallery</h1>
-                        <p className="text-slate-400">Explore user-submitted gecko images. Use the filters to find specific morphs and traits.</p>
-                    </div>
-                    <PageSettingsPanel title="Gallery Settings">
-                        <div>
-                            <Label className="text-slate-300 text-sm mb-1 block">Grid Columns</Label>
-                            <div className="flex gap-1">
-                                {['3', '4', '6'].map(cols => (
-                                    <button
-                                        key={cols}
-                                        onClick={() => setGalleryPrefs({ gridColumns: cols })}
-                                        className={`px-3 py-1 text-xs rounded ${galleryPrefs.gridColumns === cols ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
-                                    >
-                                        {cols}
-                                    </button>
-                                ))}
+                <PageHeader
+                    icon={Images}
+                    title="Image Gallery"
+                    description="Explore user-submitted gecko images. Use the filters to find specific morphs and traits."
+                    settings={
+                        <PageSettingsPanel title="Gallery Settings">
+                            <div>
+                                <Label className="text-slate-300 text-sm mb-1 block">Grid Columns</Label>
+                                <div className="flex gap-1">
+                                    {['3', '4', '6'].map(cols => (
+                                        <button
+                                            key={cols}
+                                            onClick={() => setGalleryPrefs({ gridColumns: cols })}
+                                            className={`px-3 py-1 text-xs rounded ${galleryPrefs.gridColumns === cols ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+                                        >
+                                            {cols}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                        <div>
-                            <Label className="text-slate-300 text-sm mb-1 block">Default Sort</Label>
-                            <Select value={galleryPrefs.defaultSort} onValueChange={v => { setGalleryPrefs({ defaultSort: v }); setFilters(f => ({ ...f, sort: v })); }}>
-                                <SelectTrigger className="w-full h-8 text-xs">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="-created_date">Newest First</SelectItem>
-                                    <SelectItem value="-likes">Most Liked</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </PageSettingsPanel>
-                </div>
+                            <div>
+                                <Label className="text-slate-300 text-sm mb-1 block">Default Sort</Label>
+                                <Select value={galleryPrefs.defaultSort} onValueChange={v => { setGalleryPrefs({ defaultSort: v }); setFilters(f => ({ ...f, sort: v })); }}>
+                                    <SelectTrigger className="w-full h-8 text-xs">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="-created_date">Newest First</SelectItem>
+                                        <SelectItem value="-likes">Most Liked</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </PageSettingsPanel>
+                    }
+                />
 
-                <div className="mb-8">
+                <div className="mb-6">
                     <GalleryFilters filters={filters} onFilterChange={setFilters} />
                 </div>
 

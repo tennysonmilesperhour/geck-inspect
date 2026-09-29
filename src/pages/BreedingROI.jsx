@@ -6,10 +6,16 @@ import { createPageUrl } from '@/utils';
 import { format } from 'date-fns';
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from 'recharts';
 import { Plus, ChevronLeft, AlertTriangle, TrendingUp, DollarSign, Percent, Target, Egg } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import PageHeader from '@/components/shared/PageHeader';
 
-const C = { forest: '#e2e8f0', sage: '#10b981', paleSage: 'rgba(16,185,129,0.1)', warmWhite: '#020617', gold: '#f59e0b', goldLight: 'rgba(245,158,11,0.15)', red: '#ef4444', slate: '#cbd5e1', muted: '#64748b', cardBg: '#0f172a', border: 'rgba(51,65,85,0.5)' };
 const fmt = (v) => '$' + Number(v || 0).toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-const COST_COLORS = ['#4E7C4E', '#2D4A2D', '#C4860A', '#6B7B6B', '#1A2E1A', '#8BA88B'];
+// Readable on the dark card (the old forest greens nearly vanished).
+const COST_COLORS = ['#10b981', '#38bdf8', '#f59e0b', '#a78bfa', '#f472b6', '#94a3b8'];
+const TOOLTIP_STYLE = { backgroundColor: '#0f172a', border: '1px solid #334155', borderRadius: 8, fontSize: 12, color: '#e2e8f0' };
+// Raw inputs follow the OS color scheme unless they are given colors.
+const INPUT_CLS = 'border border-slate-700 bg-slate-900 text-slate-200 placeholder:text-slate-500';
+const CARD_CLS = 'rounded-xl border border-slate-700 bg-slate-900 p-4 md:p-6';
 
 export default function BreedingROI() {
   const auth = useAuth?.() || {};
@@ -80,72 +86,75 @@ export default function BreedingROI() {
   // ─── WIZARD ───
   if (view === 'wizard') {
     return (
-      <div className="min-h-screen p-4 md:p-6" style={{ backgroundColor: C.warmWhite, fontFamily: "'DM Sans', sans-serif" }}>
+      <div className="min-h-screen bg-slate-950 p-4 md:p-8">
         <div className="max-w-2xl mx-auto">
-          <button onClick={() => setView('list')} className="flex items-center gap-1 text-sm mb-4" style={{ color: C.sage }}><ChevronLeft size={16} /> Back</button>
-          <h1 className="text-3xl mb-2" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>New Breeding Project</h1>
+          <PageHeader
+            icon={TrendingUp}
+            title="New Breeding Project"
+            eyebrow={<button onClick={() => setView('list')} className="flex items-center gap-1 text-sm text-emerald-400"><ChevronLeft size={16} /> Back</button>}
+          />
 
           {/* Progress */}
           <div className="flex gap-1 mb-6">
-            {[1,2,3,4].map(s => <div key={s} className="flex-1 h-1.5 rounded-full" style={{ backgroundColor: wizard.step >= s ? C.sage : C.paleSage }} />)}
+            {[1,2,3,4].map(s => <div key={s} className={`flex-1 h-1.5 rounded-full ${wizard.step >= s ? 'bg-emerald-600' : 'bg-emerald-500/10'}`} />)}
           </div>
 
           {wizard.step === 1 && (
             <div className="space-y-4">
-              <h2 className="text-lg font-medium" style={{ color: C.forest }}>Pairing Details</h2>
+              <h2 className="text-lg font-semibold text-slate-100">Pairing Details</h2>
               <input value={wizard.name} onChange={e => setWizard(p => ({ ...p, name: e.target.value }))} placeholder="Project name"
-                className="w-full rounded-xl border px-4 py-3 text-sm" style={{ borderColor: C.border, color: C.slate }} />
+                className={`w-full rounded-xl px-4 py-3 text-sm ${INPUT_CLS}`} />
               <div className="grid grid-cols-2 gap-3">
-                <input value={wizard.sire_name} onChange={e => setWizard(p => ({ ...p, sire_name: e.target.value }))} placeholder="Sire name" className="rounded-lg border px-3 py-2 text-sm" style={{ borderColor: C.border, color: C.slate }} />
-                <input value={wizard.sire_morph} onChange={e => setWizard(p => ({ ...p, sire_morph: e.target.value }))} placeholder="Sire morph" className="rounded-lg border px-3 py-2 text-sm" style={{ borderColor: C.border, color: C.slate }} />
-                <input value={wizard.dam_name} onChange={e => setWizard(p => ({ ...p, dam_name: e.target.value }))} placeholder="Dam name" className="rounded-lg border px-3 py-2 text-sm" style={{ borderColor: C.border, color: C.slate }} />
-                <input value={wizard.dam_morph} onChange={e => setWizard(p => ({ ...p, dam_morph: e.target.value }))} placeholder="Dam morph" className="rounded-lg border px-3 py-2 text-sm" style={{ borderColor: C.border, color: C.slate }} />
+                <input value={wizard.sire_name} onChange={e => setWizard(p => ({ ...p, sire_name: e.target.value }))} placeholder="Sire name" className={`rounded-lg px-3 py-2 text-sm ${INPUT_CLS}`} />
+                <input value={wizard.sire_morph} onChange={e => setWizard(p => ({ ...p, sire_morph: e.target.value }))} placeholder="Sire morph" className={`rounded-lg px-3 py-2 text-sm ${INPUT_CLS}`} />
+                <input value={wizard.dam_name} onChange={e => setWizard(p => ({ ...p, dam_name: e.target.value }))} placeholder="Dam name" className={`rounded-lg px-3 py-2 text-sm ${INPUT_CLS}`} />
+                <input value={wizard.dam_morph} onChange={e => setWizard(p => ({ ...p, dam_morph: e.target.value }))} placeholder="Dam morph" className={`rounded-lg px-3 py-2 text-sm ${INPUT_CLS}`} />
               </div>
               <div className="grid grid-cols-2 gap-3">
-                <div><label className="text-xs block mb-1" style={{ color: C.muted }}>Target clutches</label><input type="number" value={wizard.target_clutch_count} onChange={e => setWizard(p => ({ ...p, target_clutch_count: Number(e.target.value) }))} className="w-full rounded-lg border px-3 py-2 text-sm" style={{ borderColor: C.border, color: C.slate }} /></div>
+                <div><label className="text-xs block mb-1 text-slate-500">Target clutches</label><input type="number" value={wizard.target_clutch_count} onChange={e => setWizard(p => ({ ...p, target_clutch_count: Number(e.target.value) }))} className={`w-full rounded-lg px-3 py-2 text-sm ${INPUT_CLS}`} /></div>
               </div>
-              <button onClick={() => setWizard(p => ({ ...p, step: 2 }))} className="px-6 py-2.5 rounded-lg text-sm font-medium text-white" style={{ backgroundColor: C.sage }}>Next: Genetic Outcomes</button>
+              <Button onClick={() => setWizard(p => ({ ...p, step: 2 }))}>Next: Genetic Outcomes</Button>
             </div>
           )}
 
           {wizard.step === 2 && (
             <div className="space-y-4">
-              <h2 className="text-lg font-medium" style={{ color: C.forest }}>Expected Genetic Outcomes</h2>
-              <div className="h-2 rounded-full mb-2" style={{ backgroundColor: probSum === 100 ? C.sage : probSum > 100 ? C.red : C.gold }}>
-                <div className="h-full rounded-full transition-all" style={{ width: `${Math.min(probSum, 100)}%`, backgroundColor: probSum === 100 ? C.sage : probSum > 100 ? C.red : C.gold }} />
+              <h2 className="text-lg font-semibold text-slate-100">Expected Genetic Outcomes</h2>
+              <div className={`h-2 rounded-full mb-2 ${probSum === 100 ? 'bg-emerald-500/15' : probSum > 100 ? 'bg-red-500/15' : 'bg-amber-500/15'}`}>
+                <div className={`h-full rounded-full transition-all ${probSum === 100 ? 'bg-emerald-600' : probSum > 100 ? 'bg-red-500' : 'bg-amber-500'}`} style={{ width: `${Math.min(probSum, 100)}%` }} />
               </div>
-              <p className="text-xs" style={{ color: probSum === 100 ? C.sage : C.red }}>{probSum}% / 100%</p>
+              <p className={`text-xs ${probSum === 100 ? 'text-emerald-400' : 'text-red-400'}`}>{probSum}% / 100%</p>
               {wizard.outcomes.map((o, i) => (
-                <div key={i} className="grid grid-cols-5 gap-2 items-end">
-                  <div className="col-span-2"><label className="text-xs block mb-1" style={{ color: C.muted }}>Morph</label><input value={o.morph_combination} onChange={e => { const n = [...wizard.outcomes]; n[i].morph_combination = e.target.value; setWizard(p => ({ ...p, outcomes: n })); }} className="w-full rounded-lg border px-2 py-1.5 text-sm" style={{ borderColor: C.border, color: C.slate }} /></div>
-                  <div><label className="text-xs block mb-1" style={{ color: C.muted }}>Prob %</label><input type="number" value={o.probability} onChange={e => { const n = [...wizard.outcomes]; n[i].probability = Number(e.target.value); setWizard(p => ({ ...p, outcomes: n })); }} className="w-full rounded-lg border px-2 py-1.5 text-sm" style={{ borderColor: C.border, color: C.slate }} /></div>
-                  <div><label className="text-xs block mb-1" style={{ color: C.muted }}>Mid $</label><input type="number" value={o.price_mid} onChange={e => { const n = [...wizard.outcomes]; n[i].price_mid = Number(e.target.value); setWizard(p => ({ ...p, outcomes: n })); }} className="w-full rounded-lg border px-2 py-1.5 text-sm" style={{ borderColor: C.border, color: C.slate }} /></div>
-                  <button onClick={() => setWizard(p => ({ ...p, outcomes: p.outcomes.filter((_, j) => j !== i) }))} className="text-xs py-1.5 rounded" style={{ color: C.red }}>Remove</button>
+                <div key={i} className="grid grid-cols-2 sm:grid-cols-5 gap-2 items-end">
+                  <div className="col-span-2"><label className="text-xs block mb-1 text-slate-500">Morph</label><input value={o.morph_combination} onChange={e => { const n = [...wizard.outcomes]; n[i].morph_combination = e.target.value; setWizard(p => ({ ...p, outcomes: n })); }} className={`w-full rounded-lg px-2 py-1.5 text-sm ${INPUT_CLS}`} /></div>
+                  <div><label className="text-xs block mb-1 text-slate-500">Prob %</label><input type="number" value={o.probability} onChange={e => { const n = [...wizard.outcomes]; n[i].probability = Number(e.target.value); setWizard(p => ({ ...p, outcomes: n })); }} className={`w-full rounded-lg px-2 py-1.5 text-sm ${INPUT_CLS}`} /></div>
+                  <div><label className="text-xs block mb-1 text-slate-500">Mid $</label><input type="number" value={o.price_mid} onChange={e => { const n = [...wizard.outcomes]; n[i].price_mid = Number(e.target.value); setWizard(p => ({ ...p, outcomes: n })); }} className={`w-full rounded-lg px-2 py-1.5 text-sm ${INPUT_CLS}`} /></div>
+                  <button onClick={() => setWizard(p => ({ ...p, outcomes: p.outcomes.filter((_, j) => j !== i) }))} className="col-span-2 sm:col-span-1 justify-self-start sm:justify-self-auto text-xs py-1.5 rounded text-red-400">Remove</button>
                 </div>
               ))}
-              <button onClick={() => setWizard(p => ({ ...p, outcomes: [...p.outcomes, { morph_combination: '', probability: 0, price_low: 0, price_mid: 0, price_high: 0 }] }))} className="text-sm" style={{ color: C.sage }}>+ Add outcome</button>
-              <div className="flex gap-3">
-                <button onClick={() => setWizard(p => ({ ...p, step: 1 }))} className="px-4 py-2 rounded-lg text-sm border" style={{ borderColor: C.sage, color: C.sage }}>Back</button>
-                <button onClick={() => setWizard(p => ({ ...p, step: 3 }))} className="px-6 py-2.5 rounded-lg text-sm font-medium text-white" style={{ backgroundColor: C.sage }}>Next: Costs</button>
+              <button onClick={() => setWizard(p => ({ ...p, outcomes: [...p.outcomes, { morph_combination: '', probability: 0, price_low: 0, price_mid: 0, price_high: 0 }] }))} className="text-sm text-emerald-400">+ Add outcome</button>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" onClick={() => setWizard(p => ({ ...p, step: 1 }))}>Back</Button>
+                <Button onClick={() => setWizard(p => ({ ...p, step: 3 }))}>Next: Costs</Button>
               </div>
             </div>
           )}
 
           {wizard.step === 3 && (
             <div className="space-y-4">
-              <h2 className="text-lg font-medium" style={{ color: C.forest }}>Project Costs</h2>
+              <h2 className="text-lg font-semibold text-slate-100">Project Costs</h2>
               {[
                 { key: 'sire', label: 'Sire acquisition' }, { key: 'dam', label: 'Dam acquisition' },
                 { key: 'feeding', label: 'Feeding / month' }, { key: 'housing', label: 'Housing / month' },
                 { key: 'incubation', label: 'Incubation / clutch' }, { key: 'other', label: 'Other costs' }, { key: 'months', label: 'Duration (months)' },
               ].map(f => (
-                <div key={f.key}><label className="text-xs block mb-1" style={{ color: C.muted }}>{f.label}</label>
+                <div key={f.key}><label className="text-xs block mb-1 text-slate-500">{f.label}</label>
                 <input type="number" value={wizard.costs[f.key]} onChange={e => setWizard(p => ({ ...p, costs: { ...p.costs, [f.key]: Number(e.target.value) } }))}
-                  className="w-full rounded-lg border px-3 py-2 text-sm" style={{ borderColor: C.border, color: C.slate }} /></div>
+                  className={`w-full rounded-lg px-3 py-2 text-sm ${INPUT_CLS}`} /></div>
               ))}
-              <div className="flex gap-3">
-                <button onClick={() => setWizard(p => ({ ...p, step: 2 }))} className="px-4 py-2 rounded-lg text-sm border" style={{ borderColor: C.sage, color: C.sage }}>Back</button>
-                <button onClick={() => setWizard(p => ({ ...p, step: 4 }))} className="px-6 py-2.5 rounded-lg text-sm font-medium text-white" style={{ backgroundColor: C.sage }}>Preview P&L</button>
+              <div className="flex flex-wrap gap-2">
+                <Button variant="outline" onClick={() => setWizard(p => ({ ...p, step: 2 }))}>Back</Button>
+                <Button onClick={() => setWizard(p => ({ ...p, step: 4 }))}>Preview P&L</Button>
               </div>
             </div>
           )}
@@ -158,16 +167,16 @@ export default function BreedingROI() {
             const profit = projRevenue - totalCosts;
             return (
               <div className="space-y-4">
-                <h2 className="text-lg font-medium" style={{ color: C.forest }}>Projected P&L</h2>
-                <div className="grid grid-cols-3 gap-3">
-                  <div className="rounded-xl p-4 text-center" style={{ backgroundColor: C.paleSage }}><p className="text-xs uppercase" style={{ color: C.muted }}>Revenue</p><p className="text-xl font-semibold" style={{ color: C.forest }}>{fmt(projRevenue)}</p></div>
-                  <div className="rounded-xl p-4 text-center" style={{ backgroundColor: C.paleSage }}><p className="text-xs uppercase" style={{ color: C.muted }}>Costs</p><p className="text-xl font-semibold" style={{ color: C.slate }}>{fmt(totalCosts)}</p></div>
-                  <div className="rounded-xl p-4 text-center" style={{ backgroundColor: profit >= 0 ? C.paleSage : '#FCEBEB' }}><p className="text-xs uppercase" style={{ color: C.muted }}>Profit</p><p className="text-xl font-semibold" style={{ color: profit >= 0 ? C.sage : C.red }}>{fmt(profit)}</p></div>
+                <h2 className="text-lg font-semibold text-slate-100">Projected P&L</h2>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                  <div className="rounded-xl p-4 text-center bg-emerald-500/10"><p className="text-xs uppercase text-slate-500">Revenue</p><p className="text-xl font-semibold text-slate-100">{fmt(projRevenue)}</p></div>
+                  <div className="rounded-xl p-4 text-center bg-emerald-500/10"><p className="text-xs uppercase text-slate-500">Costs</p><p className="text-xl font-semibold text-slate-200">{fmt(totalCosts)}</p></div>
+                  <div className={`rounded-xl p-4 text-center ${profit >= 0 ? 'bg-emerald-500/10' : 'bg-red-500/15'}`}><p className="text-xs uppercase text-slate-500">Profit</p><p className={`text-xl font-semibold ${profit >= 0 ? 'text-emerald-400' : 'text-red-400'}`}>{fmt(profit)}</p></div>
                 </div>
-                {profit < 0 && <div className="rounded-lg p-3 flex items-center gap-2" style={{ backgroundColor: 'rgba(239,68,68,0.15)' }}><AlertTriangle size={16} style={{ color: C.red }} /><span className="text-sm" style={{ color: C.red }}>This project is projected to lose money at current prices.</span></div>}
-                <div className="flex gap-3">
-                  <button onClick={() => setWizard(p => ({ ...p, step: 3 }))} className="px-4 py-2 rounded-lg text-sm border" style={{ borderColor: C.sage, color: C.sage }}>Back</button>
-                  <button onClick={createProject} disabled={probSum !== 100} className="px-6 py-2.5 rounded-lg text-sm font-medium text-white disabled:opacity-50" style={{ backgroundColor: C.sage }}>Create Project</button>
+                {profit < 0 && <div className="rounded-lg p-3 flex items-center gap-2 bg-red-500/15"><AlertTriangle size={16} className="text-red-400" /><span className="text-sm text-red-400">This project is projected to lose money at current prices.</span></div>}
+                <div className="flex flex-wrap gap-2">
+                  <Button variant="outline" onClick={() => setWizard(p => ({ ...p, step: 3 }))}>Back</Button>
+                  <Button onClick={createProject} disabled={probSum !== 100}>Create Project</Button>
                 </div>
               </div>
             );
@@ -191,83 +200,88 @@ export default function BreedingROI() {
     const breakEven = m.projRevenue > 0 && outcomes.length > 0 ? Math.ceil(m.totalCosts / (m.projRevenue / outcomes.reduce((s, o) => s + Number(o.expected_egg_count || 0), 0))) : null;
 
     return (
-      <div className="min-h-screen p-6" style={{ backgroundColor: C.warmWhite, fontFamily: "'DM Sans', sans-serif" }}>
+      <div className="min-h-screen bg-slate-950 p-4 md:p-8">
         <div className="max-w-6xl mx-auto">
-          <button onClick={() => { setView('list'); setSelected(null); }} className="flex items-center gap-1 text-sm mb-4" style={{ color: C.sage }}><ChevronLeft size={16} /> Back</button>
-          <h1 className="text-3xl mb-1" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>{selected.name}</h1>
-          <p className="text-sm mb-6" style={{ color: C.muted }}>{selected.sire_name} x {selected.dam_name}</p>
+          <PageHeader
+            icon={TrendingUp}
+            title={selected.name}
+            description={<>{selected.sire_name} x {selected.dam_name}</>}
+            eyebrow={<button onClick={() => { setView('list'); setSelected(null); }} className="flex items-center gap-1 text-sm text-emerald-400"><ChevronLeft size={16} /> Back</button>}
+          />
 
-          {m.profit < 0 && <div className="rounded-lg p-3 flex items-center gap-2 mb-4" style={{ backgroundColor: 'rgba(239,68,68,0.15)' }}><AlertTriangle size={16} style={{ color: C.red }} /><span className="text-sm" style={{ color: C.red }}>Projected to lose money at current market prices.</span></div>}
+          {m.profit < 0 && <div className="rounded-lg p-3 flex items-center gap-2 mb-4 bg-red-500/15"><AlertTriangle size={16} className="text-red-400" /><span className="text-sm text-red-400">Projected to lose money at current market prices.</span></div>}
 
           {/* Stat cards */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
             {[
-              { label: 'Projected Revenue', value: fmt(m.projRevenue), icon: DollarSign, color: C.forest },
-              { label: 'Projected Costs', value: fmt(m.totalCosts), icon: Target, color: C.slate },
-              { label: 'Projected Profit', value: fmt(m.profit), icon: TrendingUp, color: m.profit >= 0 ? C.sage : C.red },
-              { label: 'ROI', value: `${m.roi.toFixed(1)}%`, icon: Percent, color: m.roi >= 0 ? C.sage : C.red },
+              { label: 'Projected Revenue', value: fmt(m.projRevenue), icon: DollarSign, color: 'text-slate-100' },
+              { label: 'Projected Costs', value: fmt(m.totalCosts), icon: Target, color: 'text-slate-200' },
+              { label: 'Projected Profit', value: fmt(m.profit), icon: TrendingUp, color: m.profit >= 0 ? 'text-emerald-400' : 'text-red-400' },
+              { label: 'ROI', value: `${m.roi.toFixed(1)}%`, icon: Percent, color: m.roi >= 0 ? 'text-emerald-400' : 'text-red-400' },
             ].map((s, i) => (
-              <div key={i} className="rounded-xl border p-5" style={{ borderColor: C.border, backgroundColor: C.cardBg }}>
-                <div className="flex items-center gap-2 mb-1"><s.icon size={14} style={{ color: C.sage }} /><span className="text-xs uppercase tracking-wider" style={{ color: C.muted }}>{s.label}</span></div>
-                <p className="text-2xl font-semibold" style={{ color: s.color }}>{s.value}</p>
+              <div key={i} className={CARD_CLS}>
+                <div className="flex items-center gap-2 mb-1"><s.icon size={14} className="text-emerald-400" /><span className="text-xs uppercase tracking-wider text-slate-500">{s.label}</span></div>
+                <p className={`text-2xl font-semibold ${s.color}`}>{s.value}</p>
               </div>
             ))}
           </div>
 
-          <div className="grid lg:grid-cols-5 gap-6 mb-6">
+          <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 mb-6">
             {/* Outcomes table */}
-            <div className="lg:col-span-3 rounded-xl border p-5" style={{ borderColor: C.border, backgroundColor: C.cardBg }}>
-              <h2 className="text-lg mb-3" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>Morph Outcomes</h2>
-              <table className="w-full text-sm">
-                <thead><tr style={{ borderBottom: `1px solid ${C.paleSage}` }}>
-                  {['Morph', 'Prob', 'Expected', 'Mid Price', 'Revenue'].map(h => <th key={h} className="text-left py-2 text-xs uppercase" style={{ color: C.muted }}>{h}</th>)}
-                </tr></thead>
-                <tbody>
-                  {outcomes.map((o, i) => (
-                    <tr key={o.id} style={{ backgroundColor: i % 2 ? C.paleSage + '44' : 'transparent' }}>
-                      <td className="py-2" style={{ color: C.forest }}>{o.morph_combination}</td>
-                      <td style={{ color: C.slate }}>{(Number(o.probability) * 100).toFixed(0)}%</td>
-                      <td style={{ color: C.slate }}>{Number(o.expected_egg_count || 0).toFixed(1)}</td>
-                      <td style={{ color: C.slate }}>{fmt(o.price_mid)}</td>
-                      <td className="font-medium" style={{ color: C.forest }}>{fmt(Number(o.expected_egg_count || 0) * Number(o.price_mid || 0))}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+            <div className={`lg:col-span-3 min-w-0 ${CARD_CLS}`}>
+              <h2 className="text-base font-semibold text-slate-100 mb-3">Morph Outcomes</h2>
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead><tr className="border-b border-emerald-500/10">
+                    {['Morph', 'Prob', 'Expected', 'Mid Price', 'Revenue'].map(h => <th key={h} className="text-left py-2 pr-3 text-xs uppercase text-slate-500">{h}</th>)}
+                  </tr></thead>
+                  <tbody>
+                    {outcomes.map((o, i) => (
+                      <tr key={o.id} className={i % 2 ? 'bg-emerald-500/5' : ''}>
+                        <td className="py-2 pr-3 text-slate-100">{o.morph_combination}</td>
+                        <td className="pr-3 text-slate-200">{(Number(o.probability) * 100).toFixed(0)}%</td>
+                        <td className="pr-3 text-slate-200">{Number(o.expected_egg_count || 0).toFixed(1)}</td>
+                        <td className="pr-3 text-slate-200">{fmt(o.price_mid)}</td>
+                        <td className="pr-3 font-medium text-slate-100">{fmt(Number(o.expected_egg_count || 0) * Number(o.price_mid || 0))}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {/* Cost donut */}
-            <div className="lg:col-span-2 rounded-xl border p-5" style={{ borderColor: C.border, backgroundColor: C.cardBg }}>
-              <h2 className="text-lg mb-3" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>Cost Breakdown</h2>
+            <div className={`lg:col-span-2 min-w-0 ${CARD_CLS}`}>
+              <h2 className="text-base font-semibold text-slate-100 mb-3">Cost Breakdown</h2>
               <ResponsiveContainer width="100%" height={180}>
                 <PieChart><Pie data={costData} innerRadius={50} outerRadius={75} dataKey="value" paddingAngle={2}>
                   {costData.map((_, i) => <Cell key={i} fill={COST_COLORS[i % COST_COLORS.length]} />)}
-                </Pie><Tooltip formatter={v => fmt(v)} /></PieChart>
+                </Pie><Tooltip formatter={v => fmt(v)} contentStyle={TOOLTIP_STYLE} itemStyle={{ color: '#e2e8f0' }} /></PieChart>
               </ResponsiveContainer>
               <div className="space-y-1 mt-2">{costData.map((d, i) => (
-                <div key={d.name} className="flex justify-between text-xs"><span style={{ color: C.slate }}><span className="inline-block w-2 h-2 rounded-full mr-1" style={{ backgroundColor: COST_COLORS[i] }} />{d.name}</span><span style={{ color: C.muted }}>{fmt(d.value)}</span></div>
+                <div key={d.name} className="flex justify-between text-xs"><span className="text-slate-200"><span className="inline-block w-2 h-2 rounded-full mr-1" style={{ backgroundColor: COST_COLORS[i] }} />{d.name}</span><span className="text-slate-500">{fmt(d.value)}</span></div>
               ))}</div>
-              {breakEven && <div className="mt-3 p-2 rounded-lg text-xs text-center" style={{ backgroundColor: C.goldLight, color: '#633806' }}>Break even: sell {breakEven} hatchlings at median price</div>}
+              {breakEven && <div className="mt-3 p-2 rounded-lg text-xs text-center bg-amber-500/15 text-amber-300">Break even: sell {breakEven} hatchlings at median price</div>}
             </div>
           </div>
 
           {/* Clutch log */}
-          <div className="rounded-xl border p-5" style={{ borderColor: C.border, backgroundColor: C.cardBg }}>
-            <h2 className="text-lg mb-3" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>Clutch Log</h2>
+          <div className={CARD_CLS}>
+            <h2 className="text-base font-semibold text-slate-100 mb-3">Clutch Log</h2>
             {clutches.length > 0 ? (
               <div className="space-y-2">
                 {clutches.map(c => (
-                  <div key={c.id} className="flex items-center gap-4 rounded-lg p-3" style={{ backgroundColor: C.warmWhite }}>
-                    <Egg size={16} style={{ color: C.sage }} />
-                    <span className="text-sm font-medium" style={{ color: C.forest }}>Clutch #{c.clutch_number}</span>
-                    <span className="text-xs" style={{ color: C.muted }}>{c.laid_date ? format(new Date(c.laid_date), 'MMM d, yyyy') : ''}</span>
-                    <span className="text-xs" style={{ color: C.slate }}>{c.egg_count} eggs</span>
-                    <span className="text-xs rounded-full px-2 py-0.5" style={{ backgroundColor: c.status === 'hatched' ? C.paleSage : C.goldLight, color: c.status === 'hatched' ? C.sage : '#633806' }}>{c.status}</span>
+                  <div key={c.id} className="flex flex-wrap items-center gap-x-4 gap-y-1 rounded-lg p-3 bg-slate-950">
+                    <Egg size={16} className="text-emerald-400" />
+                    <span className="text-sm font-medium text-slate-100">Clutch #{c.clutch_number}</span>
+                    <span className="text-xs text-slate-500">{c.laid_date ? format(new Date(c.laid_date), 'MMM d, yyyy') : ''}</span>
+                    <span className="text-xs text-slate-200">{c.egg_count} eggs</span>
+                    <span className={`text-xs rounded-full px-2 py-0.5 ${c.status === 'hatched' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/15 text-amber-300'}`}>{c.status}</span>
                   </div>
                 ))}
               </div>
             ) : (
-              <p className="text-sm text-center py-6" style={{ color: C.muted }}>No clutches logged yet</p>
+              <p className="text-sm text-center py-6 text-slate-500">No clutches logged yet</p>
             )}
           </div>
         </div>
@@ -277,37 +291,38 @@ export default function BreedingROI() {
 
   // ─── PROJECT LIST ───
   return (
-    <div className="min-h-screen p-6" style={{ backgroundColor: C.warmWhite, fontFamily: "'DM Sans', sans-serif" }}>
+    <div className="min-h-screen bg-slate-950 p-4 md:p-8">
       <div className="max-w-4xl mx-auto">
-        <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
-          <h1 className="text-3xl" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>Breeding ROI</h1>
-          <button onClick={() => setView('wizard')} className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white" style={{ backgroundColor: C.sage }}><Plus size={16} /> New Project</button>
-        </div>
+        <PageHeader icon={TrendingUp} title="Breeding ROI">
+          <Button onClick={() => setView('wizard')}><Plus size={16} /> New Project</Button>
+        </PageHeader>
         {/* Retired from the menus 28 Sep 2026; kept for old links. */}
-        <div className="rounded-xl border p-4 mb-6 text-sm" style={{ borderColor: C.border, backgroundColor: C.paleSage, color: C.forest }}>
+        <div className="rounded-xl border border-slate-700 bg-emerald-500/10 p-4 mb-6 text-sm text-slate-100">
           This page has been replaced. Each plan in <Link to={createPageUrl('Breeding')} className="underline font-medium">Breeding</Link> now
           shows its pairing value from your geckos&apos; real odds and hatchling prices, and{' '}
           <Link to={createPageUrl('MarketplaceSalesStats')} className="underline font-medium">Business Tools</Link> shows
           profit per pairing from your actual sales and costs.
         </div>
-        {loading ? <div className="space-y-3">{[1,2].map(i => <div key={i} className="animate-pulse rounded-xl h-20" style={{ backgroundColor: C.paleSage }} />)}</div> : (
-          <div className="rounded-xl border overflow-hidden" style={{ borderColor: C.border, backgroundColor: C.cardBg }}>
-            <table className="w-full text-sm">
-              <thead><tr style={{ backgroundColor: C.paleSage }}>
-                {['Project', 'Pairing', 'Status', 'Clutches'].map(h => <th key={h} className="text-left py-3 px-4 text-xs uppercase tracking-wider" style={{ color: C.muted }}>{h}</th>)}
-              </tr></thead>
-              <tbody>
-                {projects.map((p, i) => (
-                  <tr key={p.id} onClick={() => openProject(p)} className="cursor-pointer hover:bg-opacity-50 transition" style={{ backgroundColor: i % 2 ? C.paleSage + '44' : 'transparent' }}>
-                    <td className="py-3 px-4 font-medium" style={{ color: C.forest }}>{p.name}</td>
-                    <td className="py-3 px-4" style={{ color: C.slate }}>{p.sire_name} x {p.dam_name}</td>
-                    <td className="py-3 px-4"><span className="text-xs rounded-full px-2 py-0.5" style={{ backgroundColor: p.status === 'active' ? C.paleSage : C.goldLight, color: p.status === 'active' ? C.sage : '#633806' }}>{p.status}</span></td>
-                    <td className="py-3 px-4" style={{ color: C.muted }}>{p.target_clutch_count || 0} planned</td>
-                  </tr>
-                ))}
-                {projects.length === 0 && <tr><td colSpan={4} className="text-center py-12 text-sm" style={{ color: C.muted }}>No breeding projects yet</td></tr>}
-              </tbody>
-            </table>
+        {loading ? <div className="space-y-3">{[1,2].map(i => <div key={i} className="animate-pulse rounded-xl h-20 bg-emerald-500/10" />)}</div> : (
+          <div className="rounded-xl border border-slate-700 bg-slate-900 overflow-hidden">
+            <div className="overflow-x-auto">
+              <table className="w-full text-sm">
+                <thead><tr className="bg-emerald-500/10">
+                  {['Project', 'Pairing', 'Status', 'Clutches'].map(h => <th key={h} className="text-left py-3 px-4 text-xs uppercase tracking-wider text-slate-500">{h}</th>)}
+                </tr></thead>
+                <tbody>
+                  {projects.map((p, i) => (
+                    <tr key={p.id} onClick={() => openProject(p)} className={`cursor-pointer hover:bg-slate-800/50 transition ${i % 2 ? 'bg-emerald-500/5' : ''}`}>
+                      <td className="py-3 px-4 font-medium text-slate-100">{p.name}</td>
+                      <td className="py-3 px-4 text-slate-200">{p.sire_name} x {p.dam_name}</td>
+                      <td className="py-3 px-4"><span className={`text-xs rounded-full px-2 py-0.5 ${p.status === 'active' ? 'bg-emerald-500/10 text-emerald-400' : 'bg-amber-500/15 text-amber-300'}`}>{p.status}</span></td>
+                      <td className="py-3 px-4 text-slate-500">{p.target_clutch_count || 0} planned</td>
+                    </tr>
+                  ))}
+                  {projects.length === 0 && <tr><td colSpan={4} className="text-center py-12 text-sm text-slate-500">No breeding projects yet</td></tr>}
+                </tbody>
+              </table>
+            </div>
           </div>
         )}
       </div>

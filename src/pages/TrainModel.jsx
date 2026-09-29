@@ -20,6 +20,7 @@ import {
 } from 'lucide-react';
 import { recognizeGeckoMorph } from '../functions/recognizeGeckoMorph';
 import { getGeckDataTrainingStats } from '@/lib/geckDataClient';
+import PageHeader from '@/components/shared/PageHeader';
 
 export default function TrainModelPage() {
     const [user, setUser] = useState(null);
@@ -160,18 +161,26 @@ Please be specific about crested gecko morphs and use standard morph terminology
     };
 
     if (isLoading) {
-        return <div className="flex justify-center items-center h-screen"><Loader2 className="w-8 h-8 animate-spin" /></div>;
+        return (
+            <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+                <div className="max-w-7xl mx-auto py-20 flex justify-center">
+                    <Loader2 className="w-8 h-8 animate-spin" />
+                </div>
+            </div>
+        );
     }
 
     if (!user || user.role !== 'admin') {
         return (
-            <div className="min-h-screen bg-slate-950 p-4 md:p-8">
-                <div className="max-w-4xl mx-auto text-center">
+            <div className="min-h-screen bg-slate-950 flex items-center justify-center p-4 md:p-8">
+                <div className="w-full max-w-md text-center">
                     <Card className="bg-slate-900 border-slate-700">
-                        <CardContent className="p-12">
-                            <Brain className="w-16 h-16 text-sage-500 mx-auto mb-4" />
-                            <h1 className="text-3xl font-bold text-sage-900 mb-4">AI Training Center</h1>
-                            <p className="text-sage-600">Administrator access required to view AI model training tools.</p>
+                        <CardContent className="px-5 py-8 md:px-8 md:py-10">
+                            <div className="w-14 h-14 mx-auto rounded-full bg-emerald-500/15 flex items-center justify-center mb-4">
+                                <Brain className="w-7 h-7 text-emerald-400" />
+                            </div>
+                            <h1 className="text-xl md:text-2xl font-bold text-slate-100">AI Training Center</h1>
+                            <p className="text-sm md:text-base text-slate-400 mt-2">Administrator access required to view AI model training tools.</p>
                         </CardContent>
                     </Card>
                 </div>
@@ -179,63 +188,64 @@ Please be specific about crested gecko morphs and use standard morph terminology
         );
     }
 
-    const completionPercentage = trainingStats.totalImages > 0 
-        ? Math.round((trainingStats.labeledImages / trainingStats.totalImages) * 100) 
+    const completionPercentage = trainingStats.totalImages > 0
+        ? Math.round((trainingStats.labeledImages / trainingStats.totalImages) * 100)
         : 0;
 
     return (
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
-            <div className="max-w-7xl mx-auto space-y-8">
-                <div className="text-center">
-                    <h1 className="text-2xl md:text-4xl font-bold text-sage-900 mb-2">AI Training Center</h1>
-                    <p className="text-sage-600">Monitor and test gecko morph recognition models</p>
-                </div>
+            <div className="max-w-7xl mx-auto space-y-6">
+                <PageHeader
+                    icon={Brain}
+                    title="AI Training Center"
+                    description="Monitor and test gecko morph recognition models"
+                />
 
                 {/* Training Statistics */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <Card className="bg-slate-900 border-slate-700">
-                        <CardContent className="p-6">
+                        <CardContent className="p-4 md:p-6">
                             <div className="flex items-center gap-3">
                                 <Database className="w-8 h-8 text-blue-500" />
                                 <div>
-                                    <p className="text-sm text-sage-600">Total Images</p>
-                                    <p className="text-2xl font-bold text-sage-900">{trainingStats.totalImages.toLocaleString()}</p>
+                                    <p className="text-sm text-slate-400">Total Images</p>
+                                    <p className="text-2xl font-bold text-slate-100">{trainingStats.totalImages.toLocaleString()}</p>
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
                     <Card className="bg-slate-900 border-slate-700">
-                        <CardContent className="p-6">
+                        <CardContent className="p-4 md:p-6">
                             <div className="flex items-center gap-3">
                                 <CheckCircle className="w-8 h-8 text-green-500" />
                                 <div>
-                                    <p className="text-sm text-sage-600">Labeled Images</p>
-                                    <p className="text-2xl font-bold text-sage-900">{trainingStats.labeledImages.toLocaleString()}</p>
+                                    <p className="text-sm text-slate-400">Labeled Images</p>
+                                    <p className="text-2xl font-bold text-slate-100">{trainingStats.labeledImages.toLocaleString()}</p>
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
                     <Card className="bg-slate-900 border-slate-700">
-                        <CardContent className="p-6">
+                        <CardContent className="p-4 md:p-6">
                             <div className="flex items-center gap-3">
                                 <Target className="w-8 h-8 text-purple-500" />
                                 <div>
-                                    <p className="text-sm text-sage-600">Morph Categories</p>
-                                    <p className="text-2xl font-bold text-sage-900">{trainingStats.morphCategories}</p>
+                                    <p className="text-sm text-slate-400">Morph Categories</p>
+                                    <p className="text-2xl font-bold text-slate-100">{trainingStats.morphCategories}</p>
                                 </div>
                             </div>
                         </CardContent>
                     </Card>
 
                     <Card className="bg-slate-900 border-slate-700">
-                        <CardContent className="p-6">
+                        <CardContent className="p-4 md:p-6">
                             <div className="flex items-center gap-3">
                                 <TrendingUp className="w-8 h-8 text-emerald-500" />
                                 <div>
-                                    <p className="text-sm text-sage-600">This Week</p>
-                                    <p className="text-2xl font-bold text-sage-900">{trainingStats.recentSubmissions}</p>
+                                    <p className="text-sm text-slate-400">This Week</p>
+                                    <p className="text-2xl font-bold text-slate-100">{trainingStats.recentSubmissions}</p>
                                 </div>
                             </div>
                         </CardContent>
@@ -251,36 +261,36 @@ Please be specific about crested gecko morphs and use standard morph terminology
                         </CardTitle>
                     </CardHeader>
                     <CardContent>
-                        <p className="text-sm text-sage-600 mb-4">Collected listings and reference material from Eye in the Sky and external importers. Counts include other species and unreviewed data; they are not the verified Morph ID training set.</p>
+                        <p className="text-sm text-slate-400 mb-4">Collected listings and reference material from Eye in the Sky and external importers. Counts include other species and unreviewed data; they are not the verified Morph ID training set.</p>
                         {geckDataError && !geckDataStats ? (
-                            <p className="text-sm text-red-600">
+                            <p className="text-sm text-red-400">
                                 Unable to read geck-data: {geckDataError}
                             </p>
                         ) : !geckDataStats ? (
-                            <p className="text-sm text-sage-600">Loading inventory...</p>
+                            <p className="text-sm text-slate-400">Loading inventory...</p>
                         ) : (
                             <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                                 <div>
-                                    <p className="text-xs text-sage-600">Listing images</p>
-                                    <p className="text-xl font-bold text-sage-900">
+                                    <p className="text-xs text-slate-400">Listing images</p>
+                                    <p className="text-xl font-bold text-slate-100">
                                         {geckDataStats.listing_images.toLocaleString()}
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-sage-600">External refs (iNat / wiki)</p>
-                                    <p className="text-xl font-bold text-sage-900">
+                                    <p className="text-xs text-slate-400">External refs (iNat / wiki)</p>
+                                    <p className="text-xl font-bold text-slate-100">
                                         {geckDataStats.external_reference_images.toLocaleString()}
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-sage-600">Morph taxonomy</p>
-                                    <p className="text-xl font-bold text-sage-900">
+                                    <p className="text-xs text-slate-400">Morph taxonomy</p>
+                                    <p className="text-xl font-bold text-slate-100">
                                         {geckDataStats.morph_taxonomy.toLocaleString()}
                                     </p>
                                 </div>
                                 <div>
-                                    <p className="text-xs text-sage-600">Market listings</p>
-                                    <p className="text-xl font-bold text-sage-900">
+                                    <p className="text-xs text-slate-400">Market listings</p>
+                                    <p className="text-xl font-bold text-slate-100">
                                         {geckDataStats.market_listings.toLocaleString()}
                                     </p>
                                 </div>
@@ -325,7 +335,7 @@ Please be specific about crested gecko morphs and use standard morph terminology
 
                 {/* Model Testing */}
                 <Tabs defaultValue="current" className="w-full">
-                    <TabsList className="mb-4">
+                    <TabsList className="mb-6">
                         <TabsTrigger value="current">Current Model</TabsTrigger>
                         <TabsTrigger value="llm">LLM Recognition</TabsTrigger>
                     </TabsList>
@@ -340,19 +350,19 @@ Please be specific about crested gecko morphs and use standard morph terminology
                             </CardHeader>
                             <CardContent className="space-y-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-sage-700 mb-2">
+                                    <label className="block text-sm font-medium text-slate-300 mb-2">
                                         Upload Test Image
                                     </label>
                                     <input
                                         type="file"
                                         accept="image/*"
                                         onChange={handleTestImage}
-                                        className="block w-full text-sm text-sage-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-sage-50 file:text-sage-700 hover:file:bg-sage-100"
+                                        className="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-slate-800 file:text-slate-200 hover:file:bg-slate-700"
                                     />
                                 </div>
 
                                 {testImage && (
-                                    <div className="flex gap-4">
+                                    <div className="flex flex-col sm:flex-row gap-4">
                                         <div className="flex-1">
                                             <img 
                                                 src={URL.createObjectURL(testImage)} 
@@ -371,10 +381,10 @@ Please be specific about crested gecko morphs and use standard morph terminology
                                             </Button>
                                             
                                             {testResult && (
-                                                <div className="bg-sage-50 rounded-lg p-4 text-sm">
+                                                <div className="bg-slate-800 rounded-lg p-4 text-sm">
                                                     <h4 className="font-semibold mb-2">Analysis Results:</h4>
                                                     {testResult.error ? (
-                                                        <p className="text-red-600">{testResult.error}</p>
+                                                        <p className="text-red-400">{testResult.error}</p>
                                                     ) : (
                                                         <div className="space-y-2">
                                                             <p><strong>Primary Morph:</strong> {testResult.primary_morph || 'Unknown'}</p>
@@ -402,14 +412,14 @@ Please be specific about crested gecko morphs and use standard morph terminology
                             </CardHeader>
                             <CardContent className="space-y-6">
                                 <div>
-                                    <label className="block text-sm font-medium text-sage-700 mb-2">
+                                    <label className="block text-sm font-medium text-slate-300 mb-2">
                                         Upload Test Image
                                     </label>
                                     <input
                                         type="file"
                                         accept="image/*"
                                         onChange={handleTestImage}
-                                        className="block w-full text-sm text-sage-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-sage-50 file:text-sage-700 hover:file:bg-sage-100"
+                                        className="block w-full text-sm text-slate-400 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-slate-800 file:text-slate-200 hover:file:bg-slate-700"
                                     />
                                 </div>
 
@@ -431,9 +441,9 @@ Please be specific about crested gecko morphs and use standard morph terminology
                                         </Button>
                                         
                                         {llmAnalysis && (
-                                            <div className="bg-sage-50 rounded-lg p-4">
+                                            <div className="bg-slate-800 rounded-lg p-4">
                                                 <h4 className="font-semibold mb-2">LLM Analysis:</h4>
-                                                <div className="whitespace-pre-wrap text-sm text-sage-700">
+                                                <div className="whitespace-pre-wrap text-sm text-slate-300">
                                                     {llmAnalysis}
                                                 </div>
                                             </div>

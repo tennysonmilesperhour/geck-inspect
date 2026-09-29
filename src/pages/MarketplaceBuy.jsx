@@ -7,6 +7,7 @@ import { api } from '@/api/appClient';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
+import PageHeader from '@/components/shared/PageHeader';
 import usePageSettings from '@/hooks/usePageSettings';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent } from '@/components/ui/card';
@@ -17,7 +18,7 @@ import {
     SelectTrigger,
     SelectValue,
 } from '@/components/ui/select';
-import { Search, DollarSign, MapPin, Heart, ShoppingBag, GitBranch, ArrowUpDown, LayoutGrid, Grid3x3, Filter } from 'lucide-react';
+import { Search, DollarSign, MapPin, Heart, ShoppingBag, ShoppingCart, GitBranch, ArrowUpDown, LayoutGrid, Grid3x3, Filter } from 'lucide-react';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import QualityBadge from '@/components/shared/QualityBadge';
 import EmptyState from '../components/shared/EmptyState';
@@ -430,7 +431,7 @@ export default function MarketplaceBuyPage() {
     }, [geckos, owners, searchTerm, sexFilter, sortBy, activeFilters]);
 
     return (
-        <div className="p-4 md:p-8 bg-slate-950 min-h-screen">
+        <div className="min-h-screen bg-slate-950 p-4 md:p-8">
             <Seo
                 title="Marketplace, Buy Geckos"
                 description="Browse crested geckos for sale from trusted breeders. Filter by morph, sex, and price to find your next gecko."
@@ -439,62 +440,64 @@ export default function MarketplaceBuyPage() {
                 jsonLd={buildMarketplaceListJsonLd(filteredGeckos, owners)}
             />
             <div className="max-w-7xl mx-auto">
-                <header className="mb-6 flex flex-col md:flex-row md:items-start md:justify-between gap-4">
-                    <div>
-                        <h1 className="text-3xl md:text-4xl font-bold text-slate-100">
-                            Gecko Marketplace
-                        </h1>
-                        <p className="text-sm md:text-base text-slate-400 mt-1">
-                            Find your next crested gecko from breeders around the world.
-                        </p>
-                    </div>
-                    <PageSettingsPanel title="Marketplace Settings">
-                        <div>
-                            <Label className="text-slate-300 text-sm mb-1 block">Card Size</Label>
-                            <div className="flex gap-1">
-                                {[['regular', 'Compact'], ['large', 'Spacious']].map(([val, lbl]) => (
-                                    <button
-                                        key={val}
-                                        onClick={() => setBuyPrefs({ cardSize: val })}
-                                        className={`px-3 py-1 text-xs rounded ${buyPrefs.cardSize === val ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
-                                    >
-                                        {lbl}
-                                    </button>
-                                ))}
+                <PageHeader
+                    icon={ShoppingCart}
+                    title="Gecko Marketplace"
+                    description="Find your next crested gecko from breeders around the world."
+                    settings={
+                        <PageSettingsPanel title="Marketplace Settings">
+                            <div>
+                                <Label className="text-slate-300 text-sm mb-1 block">Card Size</Label>
+                                <div className="flex gap-1">
+                                    {[['regular', 'Compact'], ['large', 'Spacious']].map(([val, lbl]) => (
+                                        <button
+                                            key={val}
+                                            onClick={() => setBuyPrefs({ cardSize: val })}
+                                            className={`px-3 py-1 text-xs rounded ${buyPrefs.cardSize === val ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
+                                        >
+                                            {lbl}
+                                        </button>
+                                    ))}
+                                </div>
                             </div>
-                        </div>
-                        <div>
-                            <Label className="text-slate-300 text-sm mb-1 block">Default Sort</Label>
-                            <Select value={buyPrefs.defaultSort} onValueChange={v => { setBuyPrefs({ defaultSort: v }); setSortBy(v); }}>
-                                <SelectTrigger className="w-full h-8 text-xs">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="newest">Newest First</SelectItem>
-                                    <SelectItem value="price_low">Price (Low-High)</SelectItem>
-                                    <SelectItem value="price_high">Price (High-Low)</SelectItem>
-                                    <SelectItem value="name">Name (A-Z)</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div>
-                            <Label className="text-slate-300 text-sm mb-1 block">Default Sex Filter</Label>
-                            <Select value={buyPrefs.defaultSexFilter} onValueChange={v => { setBuyPrefs({ defaultSexFilter: v }); setSexFilter(v); }}>
-                                <SelectTrigger className="w-full h-8 text-xs">
-                                    <SelectValue />
-                                </SelectTrigger>
-                                <SelectContent>
-                                    <SelectItem value="all">All</SelectItem>
-                                    <SelectItem value="Male">Male</SelectItem>
-                                    <SelectItem value="Female">Female</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                    </PageSettingsPanel>
-                </header>
+                            <div>
+                                <Label className="text-slate-300 text-sm mb-1 block">Default Sort</Label>
+                                <Select value={buyPrefs.defaultSort} onValueChange={v => { setBuyPrefs({ defaultSort: v }); setSortBy(v); }}>
+                                    <SelectTrigger className="w-full h-8 text-xs">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="newest">Newest First</SelectItem>
+                                        <SelectItem value="price_low">Price (Low-High)</SelectItem>
+                                        <SelectItem value="price_high">Price (High-Low)</SelectItem>
+                                        <SelectItem value="name">Name (A-Z)</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                            <div>
+                                <Label className="text-slate-300 text-sm mb-1 block">Default Sex Filter</Label>
+                                <Select value={buyPrefs.defaultSexFilter} onValueChange={v => { setBuyPrefs({ defaultSexFilter: v }); setSexFilter(v); }}>
+                                    <SelectTrigger className="w-full h-8 text-xs">
+                                        <SelectValue />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                        <SelectItem value="all">All</SelectItem>
+                                        <SelectItem value="Male">Male</SelectItem>
+                                        <SelectItem value="Female">Female</SelectItem>
+                                    </SelectContent>
+                                </Select>
+                            </div>
+                        </PageSettingsPanel>
+                    }
+                />
 
-                {/* Filter toolbar */}
-                <div className="mb-6 flex flex-col md:flex-row gap-2 md:gap-3 p-2 rounded-xl border border-slate-800 bg-slate-900/60">
+                {/* Filter toolbar. Below lg the search gets its own row and
+                    the sex filter, sort and card size toggle share one
+                    wrapping row under it (on phones: sex and size on the
+                    first line, the sort full width below) instead of each
+                    control taking a mostly empty full-width row, or the
+                    search being squeezed to a sliver on tablets. */}
+                <div className="mb-4 flex flex-col lg:flex-row gap-2 lg:gap-3 p-2 rounded-xl border border-slate-800 bg-slate-900/60">
                     <div className="relative flex-1 min-w-0">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                         <Input
@@ -504,71 +507,73 @@ export default function MarketplaceBuyPage() {
                             className="pl-10 h-9 bg-slate-950 border-slate-700 text-slate-100"
                         />
                     </div>
-                    <div className="flex items-center gap-1 bg-slate-950 border border-slate-700 rounded-md p-0.5">
-                        {[
-                            { value: 'all', label: 'All' },
-                            { value: 'Male', label: '♂' },
-                            { value: 'Female', label: '♀' },
-                        ].map((opt) => (
+                    <div className="flex flex-wrap items-center gap-2 lg:gap-3">
+                        <div className="flex items-center gap-1 bg-slate-950 border border-slate-700 rounded-md p-0.5">
+                            {[
+                                { value: 'all', label: 'All' },
+                                { value: 'Male', label: '♂' },
+                                { value: 'Female', label: '♀' },
+                            ].map((opt) => (
+                                <button
+                                    key={opt.value}
+                                    type="button"
+                                    onClick={() => setSexFilter(opt.value)}
+                                    className={`px-3 h-8 rounded text-sm font-medium transition-colors ${
+                                        sexFilter === opt.value
+                                            ? 'bg-emerald-600 text-white'
+                                            : 'text-slate-400 hover:text-slate-200'
+                                    }`}
+                                >
+                                    {opt.label}
+                                </button>
+                            ))}
+                        </div>
+                        <Select value={sortBy} onValueChange={setSortBy}>
+                            <SelectTrigger className="order-last w-full sm:order-none sm:w-44 h-9 bg-slate-950 border-slate-700 text-slate-100 text-sm">
+                                <div className="flex items-center gap-1.5 min-w-0">
+                                    <ArrowUpDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                                    <SelectValue placeholder="Sort" />
+                                </div>
+                            </SelectTrigger>
+                            <SelectContent className="bg-slate-900 border-slate-700 text-slate-100">
+                                <SelectItem value="newest">Newest first</SelectItem>
+                                <SelectItem value="price_low">Price: low → high</SelectItem>
+                                <SelectItem value="price_high">Price: high → low</SelectItem>
+                                <SelectItem value="name">Name (A-Z)</SelectItem>
+                            </SelectContent>
+                        </Select>
+                        {/* Card size toggle, 'regular' packs the grid like
+                            MyGeckos, 'large' shows a roomier 4-up layout. */}
+                        <div className="ml-auto sm:ml-0 flex items-center gap-1 bg-slate-950 border border-slate-700 rounded-md p-0.5">
                             <button
-                                key={opt.value}
                                 type="button"
-                                onClick={() => setSexFilter(opt.value)}
-                                className={`px-3 h-8 rounded text-sm font-medium transition-colors ${
-                                    sexFilter === opt.value
+                                onClick={() => setCardSize('regular')}
+                                className={`flex items-center gap-1 px-2.5 h-8 rounded text-xs font-medium transition-colors ${
+                                    cardSize === 'regular'
                                         ? 'bg-emerald-600 text-white'
                                         : 'text-slate-400 hover:text-slate-200'
                                 }`}
+                                aria-pressed={cardSize === 'regular'}
+                                title="Regular card size"
                             >
-                                {opt.label}
+                                <Grid3x3 className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">Regular</span>
                             </button>
-                        ))}
-                    </div>
-                    <Select value={sortBy} onValueChange={setSortBy}>
-                        <SelectTrigger className="w-44 h-9 bg-slate-950 border-slate-700 text-slate-100 text-sm">
-                            <div className="flex items-center gap-1.5 min-w-0">
-                                <ArrowUpDown className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                                <SelectValue placeholder="Sort" />
-                            </div>
-                        </SelectTrigger>
-                        <SelectContent className="bg-slate-900 border-slate-700 text-slate-100">
-                            <SelectItem value="newest">Newest first</SelectItem>
-                            <SelectItem value="price_low">Price: low → high</SelectItem>
-                            <SelectItem value="price_high">Price: high → low</SelectItem>
-                            <SelectItem value="name">Name (A-Z)</SelectItem>
-                        </SelectContent>
-                    </Select>
-                    {/* Card size toggle, 'regular' packs the grid like
-                        MyGeckos, 'large' shows a roomier 4-up layout. */}
-                    <div className="flex items-center gap-1 bg-slate-950 border border-slate-700 rounded-md p-0.5">
-                        <button
-                            type="button"
-                            onClick={() => setCardSize('regular')}
-                            className={`flex items-center gap-1 px-2.5 h-8 rounded text-xs font-medium transition-colors ${
-                                cardSize === 'regular'
-                                    ? 'bg-emerald-600 text-white'
-                                    : 'text-slate-400 hover:text-slate-200'
-                            }`}
-                            aria-pressed={cardSize === 'regular'}
-                            title="Regular card size"
-                        >
-                            <Grid3x3 className="w-3.5 h-3.5" />
-                            <span className="hidden sm:inline">Regular</span>
-                        </button>
-                        <button
-                            type="button"
-                            onClick={() => setCardSize('large')}
-                            className={`flex items-center gap-1 px-2.5 h-8 rounded text-xs font-medium transition-colors ${
-                                cardSize === 'large'
-                                    ? 'bg-emerald-600 text-white'
-                                    : 'text-slate-400 hover:text-slate-200'
-                            }`}
-                            aria-pressed={cardSize === 'large'}
-                            title="Large card size"
-                        >
-                            <LayoutGrid className="w-3.5 h-3.5" />
-                            <span className="hidden sm:inline">Large</span>
-                        </button>
+                            <button
+                                type="button"
+                                onClick={() => setCardSize('large')}
+                                className={`flex items-center gap-1 px-2.5 h-8 rounded text-xs font-medium transition-colors ${
+                                    cardSize === 'large'
+                                        ? 'bg-emerald-600 text-white'
+                                        : 'text-slate-400 hover:text-slate-200'
+                                }`}
+                                aria-pressed={cardSize === 'large'}
+                                title="Large card size"
+                            >
+                                <LayoutGrid className="w-3.5 h-3.5" />
+                                <span className="hidden sm:inline">Large</span>
+                            </button>
+                        </div>
                     </div>
                 </div>
 
@@ -635,7 +640,7 @@ export default function MarketplaceBuyPage() {
                             ))}
                         </div>
                         {hasMoreGeckos && (
-                            <div className="flex justify-center mt-10">
+                            <div className="flex justify-center mt-8">
                                 <Button
                                     variant="outline"
                                     className="border-slate-600 hover:bg-slate-800 text-slate-300 px-8"

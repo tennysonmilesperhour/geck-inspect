@@ -413,18 +413,18 @@ export default function Pedigree() {
   // --- Missing geckoId param ---
   if (!geckoId) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-8">
-        <div className="text-center max-w-md space-y-4">
-          <GitBranch className="w-12 h-12 text-slate-600 mx-auto" />
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4 md:p-8">
+        <div className="text-center max-w-md">
+          <GitBranch className="w-12 h-12 text-slate-600 mx-auto mb-4" />
           <h1 className="text-2xl font-bold">No gecko selected</h1>
-          <p className="text-slate-400">
+          <p className="text-slate-400 mt-2">
             Add a <code>?geckoId=</code> query parameter to view a gecko&rsquo;s pedigree.
           </p>
-          <Link to={createPageUrl('MyGeckos')}>
-            <Button className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold">
+          <Button asChild className="mt-4">
+            <Link to={createPageUrl('MyGeckos')}>
               Browse your geckos
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </div>
     );
@@ -442,18 +442,18 @@ export default function Pedigree() {
   // --- Error / not found ---
   if (errorMsg || !rootGecko) {
     return (
-      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-8">
-        <div className="text-center max-w-md space-y-4">
-          <GitBranch className="w-12 h-12 text-slate-600 mx-auto" />
+      <div className="min-h-screen bg-slate-950 text-slate-100 flex items-center justify-center p-4 md:p-8">
+        <div className="text-center max-w-md">
+          <GitBranch className="w-12 h-12 text-slate-600 mx-auto mb-4" />
           <h1 className="text-2xl font-bold">Pedigree not available</h1>
-          <p className="text-slate-400">
+          <p className="text-slate-400 mt-2">
             {errorMsg || "We couldn't load this gecko's lineage."}
           </p>
-          <Link to={createPageUrl('MyGeckos')}>
-            <Button className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold">
+          <Button asChild className="mt-4">
+            <Link to={createPageUrl('MyGeckos')}>
               <ArrowLeft className="w-4 h-4 mr-2" /> Back to My Geckos
-            </Button>
-          </Link>
+            </Link>
+          </Button>
         </div>
       </div>
     );
@@ -544,7 +544,7 @@ export default function Pedigree() {
           </div>
 
           {/* Generation labels */}
-          <div className="max-w-7xl mx-auto px-6 pb-3 flex items-center gap-2 text-[11px] uppercase tracking-widest text-slate-500">
+          <div className="max-w-7xl mx-auto px-4 md:px-6 pb-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-[11px] uppercase tracking-widest text-slate-500">
             <span className="text-emerald-300">Self</span>
             <span>·</span>
             <span>Parents</span>
@@ -628,7 +628,7 @@ export default function Pedigree() {
         </div>
 
         {/* Footer help text */}
-        <footer className="border-t border-slate-800/50 bg-slate-950 px-6 py-4 text-xs text-slate-500 text-center">
+        <footer className="border-t border-slate-800/50 bg-slate-950 px-4 md:px-6 py-4 text-xs text-slate-500 text-center">
           Click any gecko to re-center the pedigree on it. Free-text breeder
           references (Altitude Exotics, etc.) link to their breeder page.
           Hit the SVG button to download for print.

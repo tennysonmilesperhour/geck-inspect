@@ -5,6 +5,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { HeartHandshake, Plus, Egg as EggIcon, Sparkles, Pencil, Trash2, Calendar } from 'lucide-react';
 import PageSettingsPanel from '@/components/ui/PageSettingsPanel';
+import PageHeader from '@/components/shared/PageHeader';
 import usePageSettings from '@/hooks/usePageSettings';
 import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
@@ -210,18 +211,11 @@ export default function BreedingPairsPage() {
     return (
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
             <div className="max-w-7xl mx-auto">
-                {/* Header */}
-                <div className="flex flex-col md:flex-row md:items-center md:justify-between mb-8 gap-4">
-                    <div className="text-center md:text-left">
-                         <div className="flex items-center justify-center md:justify-start gap-3 mb-2">
-                            <div className="w-12 h-12 bg-gradient-to-br from-pink-600 to-rose-600 rounded-xl flex items-center justify-center shadow-lg">
-                                <HeartHandshake className="w-6 h-6 text-white" />
-                            </div>
-                            <h1 className="text-2xl md:text-4xl font-bold text-slate-100">Breeding Pairs</h1>
-                        </div>
-                        <p className="text-lg text-slate-400">Manage your gecko breeding programs and track offspring.</p>
-                    </div>
-                    <div className="flex gap-2">
+                <PageHeader
+                    icon={HeartHandshake}
+                    title="Breeding Pairs"
+                    description="Manage your gecko breeding programs and track offspring."
+                    settings={
                         <PageSettingsPanel title="Breeding Pairs Settings">
                             <div>
                                 <Label className="text-slate-300 text-sm mb-1 block">Sort By</Label>
@@ -248,9 +242,10 @@ export default function BreedingPairsPage() {
                                 <Switch checked={pairsPrefs.compactCards} onCheckedChange={v => setPairsPrefs({ compactCards: v })} />
                             </div>
                         </PageSettingsPanel>
-                        <PlanPairingForm males={males} females={females} onPlanCreated={loadData} />
-                    </div>
-                </div>
+                    }
+                >
+                    <PlanPairingForm males={males} females={females} onPlanCreated={loadData} />
+                </PageHeader>
 
                 {/* Content */}
                 {isLoading ? (
@@ -264,7 +259,7 @@ export default function BreedingPairsPage() {
                         </CardContent>
                     </Card>
                 ) : (
-                    <div className={`grid grid-cols-1 ${pairsPrefs.compactCards ? 'lg:grid-cols-3 gap-4' : 'lg:grid-cols-2 gap-8'}`}>
+                    <div className={`grid grid-cols-1 gap-4 ${pairsPrefs.compactCards ? 'lg:grid-cols-3' : 'lg:grid-cols-2'}`}>
                         {sortedPlans.map(plan => {
                             const sire = allGeckos.find(g => g.id === plan.sire_id);
                             const dam = allGeckos.find(g => g.id === plan.dam_id);
@@ -328,7 +323,7 @@ function PlanPairingForm({ males, females, onPlanCreated }) {
     return (
         <Dialog open={isOpen} onOpenChange={setIsOpen}>
             <DialogTrigger asChild>
-                <Button size="lg" className="bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 shadow-lg">
+                <Button>
                     <Plus className="w-5 h-5 mr-2" />
                     Plan New Pairing
                 </Button>
@@ -508,7 +503,7 @@ function BreedingPlanCard({ plan, sire, dam, eggs, onDataRefresh, onHatch, onEdi
     return (
         <Card className="bg-slate-900 border-slate-700 shadow-lg flex flex-col">
             <CardHeader>
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                     <CardTitle className="text-xl text-slate-100">{sire?.name || 'Sire'} x {dam?.name || 'Dam'}</CardTitle>
                     <div className="flex items-center gap-2">
                         <Badge variant={plan.status === 'Active' ? 'default' : 'secondary'}>{plan.status}</Badge>

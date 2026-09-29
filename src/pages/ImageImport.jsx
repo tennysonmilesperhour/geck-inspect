@@ -9,8 +9,9 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
-import { Camera, Loader2, Check, X, Lock, ArrowRight, ImagePlus } from 'lucide-react';
+import { Camera, Loader2, Check, X, Lock, ArrowRight, ImagePlus, Sparkles } from 'lucide-react';
 import LoadingSpinner from '@/components/shared/LoadingSpinner';
+import PageHeader from '@/components/shared/PageHeader';
 import { todayLocalISO } from '@/lib/dateUtils';
 
 const LoginPortal = React.lazy(() => import('@/components/auth/LoginPortal'));
@@ -86,24 +87,39 @@ export default function ImageImport() {
         })();
     }, []);
 
-    if (!authChecked) return <div className="min-h-screen bg-slate-950 flex items-center justify-center"><LoadingSpinner /></div>;
+    if (!authChecked) {
+        return (
+            <div className="min-h-screen bg-slate-950 p-4 md:p-8">
+                <div className="max-w-5xl mx-auto flex justify-center py-20">
+                    <LoadingSpinner />
+                </div>
+            </div>
+        );
+    }
+    // The inline sign-in form keeps the visitor on this page after they
+    // sign in (the /AuthPortal route would send them to the dashboard).
     if (authChecked && !user) return <Suspense fallback={<LoadingSpinner />}><LoginPortal requiredFeature="AI Image Import" /></Suspense>;
 
     if (!hasAccess) {
         return (
             <div className="min-h-screen bg-slate-950 p-4 md:p-8">
-                <div className="max-w-2xl mx-auto text-center py-20">
-                    <div className="w-20 h-20 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center mx-auto mb-6">
-                        <Lock className="w-10 h-10 text-white" />
-                    </div>
-                    <h1 className="text-3xl font-bold text-slate-100 mb-3">AI Image Import</h1>
-                    <p className="text-slate-400 mb-6">
-                        Snap photos of notecards, screenshots, or records and let AI extract your gecko data automatically.
-                        This feature is included with the Breeder and Enterprise plans.
-                    </p>
-                    <Button asChild className="bg-gradient-to-r from-emerald-600 to-teal-600">
-                        <a href="/Membership">View Plans <ArrowRight className="w-4 h-4 ml-2" /></a>
-                    </Button>
+                <div className="max-w-2xl mx-auto">
+                    <PageHeader
+                        icon={Sparkles}
+                        title="AI Image Import"
+                        description="Snap photos of notecards, screenshots, or records and let AI extract your gecko data automatically."
+                    />
+                    <Card className="bg-slate-900 border-slate-700">
+                        <CardContent className="p-6 md:p-8 text-center">
+                            <Lock className="w-10 h-10 text-amber-400 mx-auto mb-4" />
+                            <p className="text-sm md:text-base text-slate-300">
+                                This feature is included with the Breeder and Enterprise plans.
+                            </p>
+                            <Button asChild className="mt-4">
+                                <a href="/Membership">View Plans <ArrowRight className="w-4 h-4 ml-2" /></a>
+                            </Button>
+                        </CardContent>
+                    </Card>
                 </div>
             </div>
         );
@@ -261,23 +277,21 @@ export default function ImageImport() {
     return (
         <div className="min-h-screen bg-slate-950 p-4 md:p-8">
             <div className="max-w-5xl mx-auto">
-                <div className="mb-8">
-                    <div className="flex items-center gap-3 mb-2">
-                        <div className="w-12 h-12 bg-gradient-to-br from-violet-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                            <Camera className="w-6 h-6 text-white" />
-                        </div>
-                        <h1 className="text-3xl md:text-4xl font-bold text-slate-100">AI Image Import</h1>
-                    </div>
-                    <p className="text-slate-400">
-                        Upload photos of notecards, screenshots, or records and AI extracts the data for you.
-                        {user?.role === 'admin'
-                            ? ' Admin accounts have no monthly scan limit.'
-                            : ` Your plan includes ${IMPORT_SCANS_PER_MONTH[resolveTier(user)] ?? 0} scans per month. Each scan reads up to 10 photos.`}
-                    </p>
-                </div>
+                <PageHeader
+                    icon={Sparkles}
+                    title="AI Image Import"
+                    description={
+                        <>
+                            Upload photos of notecards, screenshots, or records and AI extracts the data for you.
+                            {user?.role === 'admin'
+                                ? ' Admin accounts have no monthly scan limit.'
+                                : ` Your plan includes ${IMPORT_SCANS_PER_MONTH[resolveTier(user)] ?? 0} scans per month. Each scan reads up to 10 photos.`}
+                        </>
+                    }
+                />
 
                 {/* Step indicator */}
-                <div className="flex items-center gap-2 mb-8">
+                <div className="flex items-center gap-2 mb-6">
                     {['upload', 'processing', 'review', 'done'].map((s, i) => (
                         <React.Fragment key={s}>
                             {i > 0 && <div className={`flex-1 h-0.5 ${['processing','review','importing','done'].indexOf(step) >= i ? 'bg-emerald-500' : 'bg-slate-700'}`} />}
@@ -298,7 +312,7 @@ export default function ImageImport() {
                 {step === 'upload' && (
                     <div className="space-y-6">
                         <Card className="bg-slate-900 border-slate-700">
-                            <CardContent className="p-6 space-y-4">
+                            <CardContent className="p-4 md:p-6 space-y-4">
                                 <div>
                                     <Label className="text-slate-300">Import Mode</Label>
                                     <Select value={mode} onValueChange={setMode}>
@@ -366,7 +380,7 @@ export default function ImageImport() {
                         <Button
                             onClick={handleProcess}
                             disabled={images.length === 0 || uploading}
-                            className="w-full sm:w-auto bg-gradient-to-r from-violet-600 to-purple-600 hover:from-violet-700 hover:to-purple-700"
+                            className="w-full sm:w-auto"
                             size="lg"
                         >
                             <Camera className="w-5 h-5 mr-2" />
@@ -378,7 +392,7 @@ export default function ImageImport() {
                 {/* STEP 2: Processing */}
                 {step === 'processing' && (
                     <Card className="bg-slate-900 border-slate-700">
-                        <CardContent className="p-12 text-center">
+                        <CardContent className="p-8 md:p-12 text-center">
                             <Loader2 className="w-16 h-16 animate-spin text-violet-400 mx-auto mb-4" />
                             <h2 className="text-xl font-bold text-slate-100 mb-2">Analyzing Images...</h2>
                             <p className="text-slate-400">AI is reading your {images.length} image{images.length !== 1 ? 's' : ''} and extracting {mode} data.</p>
@@ -389,16 +403,15 @@ export default function ImageImport() {
                 {/* STEP 3: Review */}
                 {step === 'review' && (
                     <div className="space-y-4">
-                        <div className="flex items-center justify-between">
+                        <div className="flex flex-wrap items-center justify-between gap-3">
                             <h2 className="text-xl font-bold text-slate-100">
                                 Review Extracted Data ({extractedRecords.filter(r => r._selected).length} of {extractedRecords.length} selected)
                             </h2>
-                            <div className="flex gap-2">
-                                <Button variant="outline" onClick={() => setStep('upload')} className="border-slate-600">Back</Button>
+                            <div className="flex flex-wrap gap-2">
+                                <Button variant="outline" onClick={() => setStep('upload')}>Back</Button>
                                 <Button
                                     onClick={handleImport}
                                     disabled={extractedRecords.filter(r => r._selected).length === 0}
-                                    className="bg-gradient-to-r from-emerald-600 to-teal-600"
                                 >
                                     Import {extractedRecords.filter(r => r._selected).length} Records
                                 </Button>
@@ -483,7 +496,7 @@ export default function ImageImport() {
                             <Card className="bg-slate-900 border-slate-700">
                                 <CardContent className="p-8 text-center">
                                     <p className="text-slate-400">No records were extracted. Try uploading clearer images or a different mode.</p>
-                                    <Button variant="outline" onClick={() => setStep('upload')} className="mt-4 border-slate-600">Try Again</Button>
+                                    <Button variant="outline" onClick={() => setStep('upload')} className="mt-4">Try Again</Button>
                                 </CardContent>
                             </Card>
                         )}
@@ -493,7 +506,7 @@ export default function ImageImport() {
                 {/* STEP 3b: Importing */}
                 {step === 'importing' && (
                     <Card className="bg-slate-900 border-slate-700">
-                        <CardContent className="p-12 text-center">
+                        <CardContent className="p-8 md:p-12 text-center">
                             <Loader2 className="w-16 h-16 animate-spin text-emerald-400 mx-auto mb-4" />
                             <h2 className="text-xl font-bold text-slate-100 mb-2">Importing Records...</h2>
                             <p className="text-slate-400">Creating your {mode} records now.</p>
@@ -516,9 +529,9 @@ export default function ImageImport() {
                                     {importResults.errors.map((e, i) => <p key={i} className="text-red-400">{e}</p>)}
                                 </div>
                             )}
-                            <div className="flex gap-3 justify-center pt-4">
-                                <Button variant="outline" onClick={resetAll} className="border-slate-600">Import More</Button>
-                                <Button asChild className="bg-gradient-to-r from-emerald-600 to-teal-600">
+                            <div className="flex flex-wrap gap-2 justify-center pt-4">
+                                <Button variant="outline" onClick={resetAll}>Import More</Button>
+                                <Button asChild>
                                     <a href={mode === 'geckos' ? '/MyGeckos' : mode === 'breeding' ? '/Breeding' : '/Breeding'}>
                                         View {mode === 'geckos' ? 'Collection' : 'Breeding'}
                                     </a>
