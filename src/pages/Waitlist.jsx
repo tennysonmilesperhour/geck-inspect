@@ -13,8 +13,13 @@ import { Loader2, Check, Sparkles } from 'lucide-react';
 // Route: /waitlist/:slug, no auth required. The breeder shares this
 // URL on social media; followers land here, see what the post is
 // about, and drop name/email to be notified when the gecko/clutch is
-// ready. Submissions land in gecko_waitlist_signups via an
-// RLS-allowed anon insert.
+// ready. A waitlist for a pairing also shows the likely babies and their
+// odds (saved when the breeder created it), lets the buyer say which one
+// they hope for, and says what deposit the breeder asks for and how to pay
+// it. Buyers pay the breeder directly. Signups go through the
+// join_waitlist() database function, which checks the list is open,
+// stops duplicate emails, tells the breeder and returns the buyer's place
+// in line.
 export default function Waitlist() {
   const { slug } = useParams();
   const [loading, setLoading] = useState(true);
@@ -26,6 +31,8 @@ export default function Waitlist() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [notes, setNotes] = useState('');
+  const [wanted, setWanted] = useState('');
+  const [joined, setJoined] = useState(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -33,7 +40,7 @@ export default function Waitlist() {
       try {
         const { data: w, error: wErr } = await supabase
           .from('gecko_waitlists')
-          .select('id, slug, title, description, is_open, closes_at, max_signups, gecko_id, breeder_user_id')
+          .select('id, slug, title, description, is_open, closes_at, max_signups, gecko_id, breeder_user_id, breeding_plan_id, outcomes, deposit_amount, deposit_instructions, currency')
           .eq('slug', slug)
           .maybeSingle();
         if (cancelled) return;
@@ -63,6 +70,10 @@ export default function Waitlist() {
     return () => { cancelled = true; };
   }, [slug]);
 
+  const outcomes = Array.isArray(waitlist?.outcomes) ? waitlist.outcomes.filter((o) => o?.label) : [];
+  const symbol = !waitlist?.currency || waitlist.currency === 'USD' ? '$' : waitlist.currency;
+  const deposit = waitlist?.deposit_amount != null && Number(waitlist.deposit_amount) > 0 ? Number(waitlist.deposit_amount) : null;
+
   const isClosed =
     !waitlist?.is_open ||
     (waitlist?.closes_at && new Date(waitlist.closes_at) < new Date());
@@ -73,15 +84,15 @@ export default function Waitlist() {
     setSubmitting(true);
     setError(null);
     try {
-      const { error: insErr } = await supabase
-        .from('gecko_waitlist_signups')
-        .insert({
-          waitlist_id: waitlist.id,
-          name: name.trim(),
-          email: email.trim(),
-          notes: notes.trim() || null,
-        });
-      if (insErr) throw insErr;
+      const { data, error: rpcErr } = await supabase.rpc('join_waitlist', {
+        p_slug: slug,
+        p_name: name.trim(),
+        p_email: email.trim(),
+        p_wanted: wanted || null,
+        p_notes: notes.trim() || null,
+      });
+      if (rpcErr) throw rpcErr;
+      setJoined(data || null);
       setSubmitted(true);
     } catch (err) {
       setError(err?.message || 'Signup failed.');
@@ -156,6 +167,35 @@ export default function Waitlist() {
           </div>
         )}
 
+        {outcomes.length > 0 && (
+          <div className="rounded-lg border border-emerald-800/40 bg-emerald-950/40 p-4 mb-4" data-waitlist-outcomes>
+            <div className="text-[10px] uppercase tracking-wider text-emerald-200/70 mb-2">Likely babies from this pairing</div>
+            <ul className="space-y-1 text-sm">
+              {outcomes.map((o) => (
+                <li key={o.label} className="flex justify-between gap-3">
+                  <span className="text-emerald-50 min-w-0 break-words">{o.label}</span>
+                  <span className="text-emerald-300 tabular-nums shrink-0">{Math.round(Number(o.probability) * 1000) / 10}%</span>
+                </li>
+              ))}
+            </ul>
+            <p className="text-[11px] text-emerald-200/60 mt-2">
+              Odds for each egg, from the parents' known genetics. Every egg is its own roll, so a clutch can land anywhere.
+            </p>
+          </div>
+        )}
+
+        {deposit && (
+          <div className="rounded-lg border border-emerald-800/40 bg-emerald-950/40 p-4 mb-4 text-sm" data-waitlist-deposit>
+            <div className="font-semibold text-emerald-50">Deposit: {symbol}{deposit.toFixed(2).replace(/\.00$/, '')} to hold your place</div>
+            <p className="text-emerald-100/90 mt-1 whitespace-pre-wrap">
+              {waitlist.deposit_instructions || 'The breeder will contact you with how to pay.'}
+            </p>
+            <p className="text-[11px] text-emerald-200/60 mt-2">
+              You pay the breeder directly. Geck Inspect does not take or hold payments.
+            </p>
+          </div>
+        )}
+
         {isClosed ? (
           <div className="rounded-lg border border-amber-700/40 bg-amber-950/30 p-4 text-amber-200 text-sm">
             This waitlist is closed for new signups. If you'd previously
@@ -165,9 +205,15 @@ export default function Waitlist() {
           <div className="rounded-lg border border-emerald-600/50 bg-emerald-800/40 p-4 flex items-start gap-3">
             <Check className="w-5 h-5 text-emerald-200 flex-shrink-0 mt-0.5" />
             <div>
-              <div className="font-semibold">You're on the list</div>
+              <div className="font-semibold">
+                {joined?.position
+                  ? `${joined.already ? 'You were already on the list' : "You're on the list"}: number ${joined.position} in line`
+                  : "You're on the list"}
+              </div>
               <div className="text-sm text-emerald-200/80 mt-1">
-                The breeder will reach out when this gecko (or a similar one from the project) is ready.
+                {deposit
+                  ? 'The breeder will be in touch about the deposit, and again when a baby is ready for you.'
+                  : 'The breeder will reach out when this gecko (or a similar one from the project) is ready.'}
               </div>
             </div>
           </div>
@@ -195,6 +241,20 @@ export default function Waitlist() {
                 placeholder="you@example.com"
               />
             </div>
+            {outcomes.length > 0 && (
+              <div>
+                <Label htmlFor="wl-wanted" className="text-xs">What are you hoping for?</Label>
+                <select
+                  id="wl-wanted"
+                  value={wanted}
+                  onChange={(e) => setWanted(e.target.value)}
+                  className="w-full h-10 rounded-md border border-emerald-800/60 bg-emerald-950/60 px-3 text-sm text-emerald-50"
+                >
+                  <option value="">Any baby from this pairing</option>
+                  {outcomes.map((o) => <option key={o.label} value={o.label}>{o.label}</option>)}
+                </select>
+              </div>
+            )}
             <div>
               <Label htmlFor="wl-notes" className="text-xs">Anything the breeder should know? (optional)</Label>
               <Textarea
@@ -202,7 +262,7 @@ export default function Waitlist() {
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 rows={3}
-                placeholder="Looking for a specific morph combo, prefer male, etc."
+                placeholder="Prefer a female, can pick up at the next expo, and so on."
               />
             </div>
             {error && (

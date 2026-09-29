@@ -510,7 +510,7 @@ export default function PromoteComposer({
     setEditedContent((prev) => `${prev.trim()}\n\nJoin the waitlist: ${url}`.trim());
     toast({
       title: 'Waitlist link created',
-      description: 'Added to the caption. Share the post; signups appear in your inbox.',
+      description: 'Added to the caption. Signups show in Business Tools under Waitlists, and you get a notification for each.',
     });
   };
 

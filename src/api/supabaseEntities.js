@@ -84,7 +84,7 @@ export const TIMESTAMP_COLUMNS = {
   BlogLog: { created: 'created_date', updated: null },
   Collection: { created: null, updated: 'updated_at' },
   CollectionMember: { created: null, updated: null },
-  GeckoWaitlistSignup: { created: 'created_date', updated: null },
+  GeckoWaitlistSignup: { created: null, updated: 'updated_date' },
   GiveawayEntry: { created: 'created_date', updated: null },
   QuestionVote: { created: 'created_date', updated: null },
   SocialGenerationLog: { created: 'created_date', updated: null },

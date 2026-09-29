@@ -1,5 +1,5 @@
 import { Suspense, useState, useEffect, useMemo } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { api } from '@/api/appClient';
 import { Gecko, MarketplaceCost, PendingSale, BreedingPlan, Egg } from '@/entities/all';
@@ -22,11 +22,12 @@ import { Badge } from '@/components/ui/badge';
 import {
   DollarSign, TrendingUp, AlertCircle, Trash2, Plus, Save, Loader2,
   ChevronDown, ChevronUp, Tag, Calendar, Edit2, X, Check, Globe,
-  Clock, Weight, Thermometer, Package, CheckCircle2, ArrowRightLeft, PieChart,
+  Clock, Weight, Thermometer, Package, CheckCircle2, ArrowRightLeft, PieChart, ListOrdered,
 } from 'lucide-react';
 import { format, getQuarter, getYear } from 'date-fns';
 import { todayLocalISO } from '@/lib/dateUtils';
 import GeckoSelectionModal from '../components/marketplace/GeckoSelectionModal';
+import WaitlistsTab from '@/components/business/WaitlistsTab';
 import { lazy } from '@/lib/lazyWithRetry';
 // Market analytics sits on the Pricing tab, so its code (and its charts)
 // download only when that tab is opened.
@@ -834,12 +835,13 @@ function PendingSalesTab({ user, pendingSales, setPendingSales, onCompleteSale, 
 
 // ---------------------------------------------------------------------------
 // Business Tools tabs. Older saved preferences name the five tabs this page
-// had before 28 Sep 2026; map them onto Money, Sales and Pricing.
+// had before 28 Sep 2026; map them onto Money, Sales and Pricing. Waitlists
+// joined on 29 Sep 2026.
 // ---------------------------------------------------------------------------
 
 const LEGACY_TABS = { revenue: 'sales', pending: 'sales', costs: 'money', profit: 'money', analytics: 'pricing' };
 function businessTabFor(pref) {
-  if (['money', 'sales', 'pricing'].includes(pref)) return pref;
+  if (['money', 'sales', 'pricing', 'waitlists'].includes(pref)) return pref;
   return LEGACY_TABS[pref] || 'money';
 }
 
@@ -962,6 +964,8 @@ export default function MarketplaceSalesStats() {
     currency: '$',
   });
   const navigate = useNavigate();
+  // ?tab=waitlists (the link in a waitlist signup notification) opens a tab.
+  const [searchParams] = useSearchParams();
   const [user, setUser] = useState(null);
   const [userGeckos, setUserGeckos] = useState([]);
   const [manualSales, setManualSales] = useState([]);
@@ -1262,7 +1266,7 @@ export default function MarketplaceSalesStats() {
               <div>
                 <Label className="text-slate-300 text-sm mb-1 block">Default Tab</Label>
                 <div className="flex gap-1">
-                  {[['money', 'Money'], ['sales', 'Sales'], ['pricing', 'Pricing']].map(([val, lbl]) => (
+                  {[['money', 'Money'], ['sales', 'Sales'], ['pricing', 'Pricing'], ['waitlists', 'Waitlists']].map(([val, lbl]) => (
                     <button
                       key={val}
                       onClick={() => setStatsPrefs({ defaultTab: val })}
@@ -1321,8 +1325,8 @@ export default function MarketplaceSalesStats() {
         </div>
 
         <div className="bg-emerald-950/30 border border-emerald-900/40 rounded-xl p-4 md:p-6">
-          <Tabs defaultValue={businessTabFor(statsPrefs.defaultTab)}>
-            <TabsList className="grid grid-cols-3 h-auto w-full max-w-md mx-auto bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1 mb-6">
+          <Tabs defaultValue={businessTabFor(searchParams.get('tab') || statsPrefs.defaultTab)}>
+            <TabsList className="grid grid-cols-2 sm:grid-cols-4 h-auto w-full max-w-xl mx-auto bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1 mb-6">
               <TabsTrigger value="money" className={tabTriggerClass}>
                 <PieChart className="w-3.5 h-3.5 mr-1" />
                 Money
@@ -1334,6 +1338,10 @@ export default function MarketplaceSalesStats() {
               <TabsTrigger value="pricing" className={tabTriggerClass}>
                 <Tag className="w-3.5 h-3.5 mr-1" />
                 Pricing
+              </TabsTrigger>
+              <TabsTrigger value="waitlists" className={tabTriggerClass}>
+                <ListOrdered className="w-3.5 h-3.5 mr-1" />
+                Waitlists
               </TabsTrigger>
             </TabsList>
 
@@ -1612,6 +1620,17 @@ export default function MarketplaceSalesStats() {
                   }}
                 />
               </section>
+            </TabsContent>
+
+            {/* Waitlists: pairing waitlists, deposits, matching buyers */}
+            <TabsContent value="waitlists">
+              <WaitlistsTab
+                user={user}
+                plans={plans}
+                geckos={userGeckos}
+                currency={statsPrefs.currency}
+                onReserveCreated={(created) => { if (created) setPendingSales(prev => [created, ...prev]); }}
+              />
             </TabsContent>
 
             {/* Pricing: what things are worth and where to list them */}

@@ -23,7 +23,7 @@ import {
     Egg,
     Utensils,
     Scale,
-    Newspaper,
+    Newspaper, ListOrdered,
 } from 'lucide-react';
 import EmptyState from '../components/shared/EmptyState';
 import { Link } from 'react-router-dom';
@@ -71,6 +71,7 @@ const notificationIcons = {
     feeding_due: <Utensils className="w-5 h-5 text-emerald-400" />,
     weighin_reminder: <Scale className="w-5 h-5 text-sky-400" />,
     weekly_digest: <Newspaper className="w-5 h-5 text-slate-300" />,
+    waitlist_signup: <ListOrdered className="w-5 h-5 text-emerald-300" />,
 };
 
 const typeLabels = {
@@ -93,6 +94,7 @@ const typeLabels = {
     feeding_due: 'Feeding',
     weighin_reminder: 'Weigh-in',
     weekly_digest: 'Weekly Digest',
+    waitlist_signup: 'Waitlist',
 };
 
 export default function NotificationsPage() {
