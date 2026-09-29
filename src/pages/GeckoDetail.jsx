@@ -50,6 +50,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import WeightChart from '@/components/shared/WeightChart';
+import FireStatePair from '@/components/shared/FireStatePair';
+import { hasFireStatePhotos } from '@/lib/fireStatePhotos';
 import MessageUserButton from '../components/ui/MessageUserButton';
 import RecommendedKitForGecko from '../components/store/RecommendedKitForGecko';
 
@@ -224,6 +226,17 @@ export default function GeckoDetail() {
                                             />
                                         ))}
                                     </div>
+                                </CardContent>
+                            </Card>
+                        )}
+
+                        {hasFireStatePhotos(gecko) && (
+                            <Card className="bg-slate-900 border-slate-700">
+                                <CardContent className="p-3">
+                                    <FireStatePair
+                                        gecko={gecko}
+                                        onOpen={(url) => setLightboxIndex(Math.max(0, gecko.image_urls.indexOf(url)))}
+                                    />
                                 </CardContent>
                             </Card>
                         )}

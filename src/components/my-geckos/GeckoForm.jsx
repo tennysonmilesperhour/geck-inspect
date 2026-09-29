@@ -8,6 +8,7 @@ import { notifyFollowersNewGecko, checkAndNotifyLevelUp } from '@/components/not
 import { useToast } from '@/components/ui/use-toast';
 import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
 import { canonicalizeMorphTags } from '@/lib/genetics';
+import { FIRE_SLOTS, assignFireState, fireStatePhotos, photoFireState } from '@/lib/fireStatePhotos';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -371,6 +372,35 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
             [url]: { ...(prev[url] || { x: 50, y: 50 }), life_stage: stage || undefined },
         }));
     };
+
+    // Fired-up and fired-down slots: one photo each, tagged in
+    // image_crop_data (see src/lib/fireStatePhotos.js).
+    const setFireState = (url, state) => {
+        setCropData(prev => assignFireState(prev, url, state));
+    };
+
+    const handleSlotUpload = async (e, state) => {
+        const file = e.target.files?.[0];
+        if (e.target) e.target.value = '';
+        if (!file) return;
+        setIsUploadingImage(true);
+        try {
+            const { file_url } = await UploadFile({ file });
+            setFormData(prev => ({ ...prev, image_urls: [...prev.image_urls, file_url] }));
+            setCropData(prev => assignFireState(prev, file_url, state));
+        } catch (err) {
+            console.error('Image upload failed', err);
+            toast({
+                title: 'Upload failed',
+                description: 'The photo could not be uploaded. Try a smaller file or a different format.',
+                variant: 'destructive',
+            });
+        } finally {
+            setIsUploadingImage(false);
+        }
+    };
+
+    const fireSlotPhotos = fireStatePhotos({ image_urls: formData.image_urls, image_crop_data: cropData });
 
     const handleImageDragEnd = (result) => {
         if (!result.destination) return;
@@ -924,8 +954,68 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                         <Label>Images</Label>
                         <p className="text-xs text-slate-500 mt-0.5 mb-2">
                             Drag photos to reorder. The first photo is the primary display image on cards.
-                            Click any photo to crop or rotate. Tag a life stage to include it in the Growth Slideshow.
+                            Click any photo to crop or rotate. Tag a life stage to include it in the Growth Slideshow,
+                            and add a fired-up and a fired-down photo so buyers see both.
                         </p>
+
+                        {/* Fired-up and fired-down slots. Buyers ask to see
+                            both; the listing and passport show them side by
+                            side. Upload straight into a slot, or tag any
+                            photo below. */}
+                        <div className="grid grid-cols-2 gap-2 mb-3" data-fire-slots>
+                            {FIRE_SLOTS.map((slot) => {
+                                const slotUrl = fireSlotPhotos[slot.id];
+                                const slotMeta = slotUrl ? cropData[slotUrl] || {} : {};
+                                return (
+                                    <div key={slot.id} className="rounded border border-slate-700 bg-slate-800/40 overflow-hidden">
+                                        {slotUrl ? (
+                                            <div className="relative h-24 sm:h-28">
+                                                <img
+                                                    src={slotUrl}
+                                                    alt={`${formData.name || 'Gecko'} ${slot.label.toLowerCase()}`}
+                                                    className="w-full h-full object-cover"
+                                                    style={{
+                                                        objectPosition: `${slotMeta.x ?? 50}% ${slotMeta.y ?? 50}%`,
+                                                        transform: slotMeta.rotation ? `rotate(${slotMeta.rotation}deg)` : undefined,
+                                                    }}
+                                                />
+                                                {!isArchived && (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => setFireState(slotUrl, '')}
+                                                        className="absolute top-1 right-1 h-7 w-7 rounded bg-slate-900/70 backdrop-blur-sm flex items-center justify-center text-slate-300 hover:text-red-300"
+                                                        title={`Take this photo out of the ${slot.label.toLowerCase()} slot`}
+                                                        aria-label={`Clear ${slot.label.toLowerCase()} slot`}
+                                                    >
+                                                        <X className="w-4 h-4" />
+                                                    </button>
+                                                )}
+                                            </div>
+                                        ) : (
+                                            <label
+                                                className={`h-24 sm:h-28 flex flex-col items-center justify-center gap-1 text-center px-2 text-slate-400 ${
+                                                    isArchived || isUploadingImage ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer hover:text-emerald-300 hover:bg-slate-800'
+                                                }`}
+                                            >
+                                                <Upload className="w-4 h-4" />
+                                                <span className="text-xs">Add {slot.label.toLowerCase()} photo</span>
+                                                <input
+                                                    type="file"
+                                                    accept="image/*"
+                                                    className="hidden"
+                                                    onChange={(e) => handleSlotUpload(e, slot.id)}
+                                                    disabled={isArchived || isUploadingImage}
+                                                />
+                                            </label>
+                                        )}
+                                        <div className="px-2 py-1.5 border-t border-slate-700">
+                                            <p className="text-xs font-semibold text-slate-200">{slot.label}</p>
+                                            <p className="text-[11px] leading-snug text-slate-500">{slot.hint}</p>
+                                        </div>
+                                    </div>
+                                );
+                            })}
+                        </div>
                         <DragDropContext onDragEnd={handleImageDragEnd}>
                             <Droppable droppableId="gecko-images" direction="horizontal">
                                 {(droppable) => (
@@ -996,7 +1086,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                                             {/* Primary badge / make-primary action */}
                                                             {isPrimary ? (
                                                                 <div
-                                                                    className="absolute bottom-[3.25rem] left-1 px-1.5 py-0.5 rounded bg-emerald-700/90 text-emerald-50 text-[10px] font-semibold flex items-center gap-1"
+                                                                    className="absolute bottom-[5.25rem] left-1 px-1.5 py-0.5 rounded bg-emerald-700/90 text-emerald-50 text-[10px] font-semibold flex items-center gap-1"
                                                                     title="Primary display photo (shown on cards)"
                                                                 >
                                                                     <Star className="w-3 h-3 fill-current" /> Primary
@@ -1005,15 +1095,15 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                                                 <button
                                                                     type="button"
                                                                     onClick={() => makePrimary(url)}
-                                                                    className="absolute bottom-[3.25rem] left-1 px-1.5 py-0.5 rounded bg-slate-900/70 backdrop-blur-sm text-slate-300 hover:text-emerald-300 text-[10px] font-medium flex items-center gap-1"
+                                                                    className="absolute bottom-[5.25rem] left-1 px-1.5 py-0.5 rounded bg-slate-900/70 backdrop-blur-sm text-slate-300 hover:text-emerald-300 text-[10px] font-medium flex items-center gap-1"
                                                                     title="Make this the primary display photo"
                                                                 >
                                                                     <Star className="w-3 h-3" /> Set primary
                                                                 </button>
                                                             ) : null}
 
-                                                            {/* Bottom: life-stage select */}
-                                                            <div className="px-1.5 py-1.5">
+                                                            {/* Bottom: life-stage and fire-state tags */}
+                                                            <div className="px-1.5 py-1.5 space-y-1">
                                                                 <select
                                                                     value={lifeStage}
                                                                     onChange={(e) => setLifeStage(url, e.target.value)}
@@ -1024,6 +1114,18 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                                                     <option value="">No life-stage tag</option>
                                                                     {LIFE_STAGES.map(s => (
                                                                         <option key={s.value} value={s.value}>{s.label}</option>
+                                                                    ))}
+                                                                </select>
+                                                                <select
+                                                                    value={photoFireState(cropData, url)}
+                                                                    onChange={(e) => setFireState(url, e.target.value)}
+                                                                    disabled={isArchived}
+                                                                    className="w-full text-[11px] bg-slate-800 border border-slate-600 text-slate-200 rounded px-1.5 py-1 disabled:opacity-50"
+                                                                    aria-label="Fired up or fired down"
+                                                                >
+                                                                    <option value="">No fire-state tag</option>
+                                                                    {FIRE_SLOTS.map(slot => (
+                                                                        <option key={slot.id} value={slot.id}>{slot.label}</option>
                                                                     ))}
                                                                 </select>
                                                             </div>

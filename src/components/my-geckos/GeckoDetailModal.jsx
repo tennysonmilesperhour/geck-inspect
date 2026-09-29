@@ -16,6 +16,7 @@ import BreedingHistory from './BreedingHistory';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import WeightChart from '@/components/shared/WeightChart';
+import FireStatePair from '@/components/shared/FireStatePair';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -465,6 +466,7 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                     />
                   </div>
                 )}
+                <FireStatePair gecko={gecko} className="mt-4" />
               </div>
               
               {/* Right: Basic info, morphs, notes, toggles */}

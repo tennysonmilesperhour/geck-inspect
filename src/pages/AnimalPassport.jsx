@@ -17,6 +17,8 @@ import { Button } from '@/components/ui/button';
 import ShareMenu from '@/components/shared/ShareMenu';
 import QualityBadge from '@/components/shared/QualityBadge';
 import WeightChart from '@/components/shared/WeightChart';
+import FireStatePair from '@/components/shared/FireStatePair';
+import { hasFireStatePhotos } from '@/lib/fireStatePhotos';
 import OwnershipChain from '@/components/passport/OwnershipChain';
 import { exportProvenanceCertificate } from '@/lib/certificateExport';
 
@@ -572,6 +574,12 @@ export default function AnimalPassport() {
                 </div>
               )}
               {gecko.genetics_notes && <p className="text-sm mt-3 text-slate-400">{gecko.genetics_notes}</p>}
+            </div>
+          )}
+
+          {hasFireStatePhotos(gecko) && (
+            <div className={card}>
+              <FireStatePair gecko={gecko} headingClassName="text-lg font-semibold text-slate-100" />
             </div>
           )}
 
