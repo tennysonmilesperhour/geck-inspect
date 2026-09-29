@@ -65,7 +65,7 @@ function FeedingLogTemplate({ gecko }) {
           Feeding Log
         </h1>
         <p style={{ fontSize: 14, margin: '4px 0 0', color: '#555' }}>
-          {gecko.name || 'Unnamed Gecko'} {gecko.morph ? `,  ${gecko.morph}` : ''}
+          {gecko.name || 'Unnamed Gecko'} {gecko.morphs_traits ? `,  ${gecko.morphs_traits}` : ''}
         </p>
         <p style={{ fontSize: 12, color: '#888', margin: '2px 0 0' }}>
           Generated {format(new Date(), 'MMMM d, yyyy')}
@@ -148,8 +148,8 @@ function VetHealthCardTemplate({ gecko, weights, sheds, feedingRecords }) {
     .sort((a, b) => new Date(b.date || b.created_date) - new Date(a.date || a.created_date))
     .slice(0, 5);
 
-  const age = gecko.date_of_birth
-    ? `${Math.floor((new Date() - new Date(gecko.date_of_birth)) / (365.25 * 24 * 60 * 60 * 1000))}y ${Math.floor(((new Date() - new Date(gecko.date_of_birth)) % (365.25 * 24 * 60 * 60 * 1000)) / (30.44 * 24 * 60 * 60 * 1000))}m`
+  const age = gecko.hatch_date
+    ? `${Math.floor((new Date() - new Date(gecko.hatch_date)) / (365.25 * 24 * 60 * 60 * 1000))}y ${Math.floor(((new Date() - new Date(gecko.hatch_date)) % (365.25 * 24 * 60 * 60 * 1000)) / (30.44 * 24 * 60 * 60 * 1000))}m`
     : 'Unknown';
 
   return (
@@ -178,12 +178,12 @@ function VetHealthCardTemplate({ gecko, weights, sheds, feedingRecords }) {
         </div>
         <div>
           <p style={{ fontSize: 11, color: '#888', margin: '0 0 2px' }}>Morph</p>
-          <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>{gecko.morph || '-'}</p>
+          <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>{gecko.morphs_traits || '-'}</p>
         </div>
         <div>
           <p style={{ fontSize: 11, color: '#888', margin: '0 0 2px' }}>Date of Birth</p>
           <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>
-            {gecko.date_of_birth ? format(parseISO(gecko.date_of_birth), 'MMM d, yyyy') : '-'}
+            {gecko.hatch_date ? format(parseISO(gecko.hatch_date), 'MMM d, yyyy') : '-'}
           </p>
         </div>
         <div>
@@ -316,18 +316,18 @@ function ExpoPriceTagTemplate({ gecko }) {
         {gecko.name || 'Crested Gecko'}
       </h2>
       <p style={{ fontSize: 13, color: '#555', margin: '0 0 8px' }}>
-        {gecko.morph || 'Crested Gecko'}
+        {gecko.morphs_traits || 'Crested Gecko'}
       </p>
 
       {/* Details row */}
       <div style={{ display: 'flex', gap: 12, fontSize: 11, color: '#888', marginBottom: 12 }}>
         {gecko.sex && <span>{gecko.sex}</span>}
-        {gecko.date_of_birth && <span>Born {format(parseISO(gecko.date_of_birth), 'MMM yyyy')}</span>}
-        {gecko.weight && <span>{gecko.weight}g</span>}
+        {gecko.hatch_date && <span>Born {format(parseISO(gecko.hatch_date), 'MMM yyyy')}</span>}
+        {gecko.weight_grams && <span>{gecko.weight_grams}g</span>}
       </div>
 
       {/* Price */}
-      {gecko.price != null && (
+      {gecko.asking_price != null && (
         <div style={{
           backgroundColor: '#000',
           color: '#fff',
@@ -338,7 +338,7 @@ function ExpoPriceTagTemplate({ gecko }) {
           fontWeight: 700,
           marginBottom: 12,
         }}>
-          ${Number(gecko.price).toFixed(0)}
+          ${Number(gecko.asking_price).toFixed(0)}
         </div>
       )}
 
@@ -379,7 +379,7 @@ function LineageCardTemplate({ gecko }) {
           {gecko.name || 'Crested Gecko'}
         </h1>
         <p style={{ fontSize: 14, color: '#555', margin: '4px 0 0' }}>
-          {gecko.morph || 'Correlophus ciliatus'}
+          {gecko.morphs_traits || 'Correlophus ciliatus'}
         </p>
       </div>
 
@@ -411,7 +411,7 @@ function LineageCardTemplate({ gecko }) {
         <div style={{ textAlign: 'center', padding: 8, border: '1px solid #ddd', borderRadius: 4 }}>
           <p style={{ fontSize: 10, color: '#888', margin: '0 0 2px', textTransform: 'uppercase', letterSpacing: 1 }}>Date of Birth</p>
           <p style={{ fontSize: 14, fontWeight: 600, margin: 0 }}>
-            {gecko.date_of_birth ? format(parseISO(gecko.date_of_birth), 'MMM d, yyyy') : '-'}
+            {gecko.hatch_date ? format(parseISO(gecko.hatch_date), 'MMM d, yyyy') : '-'}
           </p>
         </div>
       </div>
@@ -545,12 +545,16 @@ export default function PrintableWorksheets() {
       setLoadingTemplate(true);
       try {
         const [wts, fds, shs] = await Promise.all([
-          WeightRecord.filter({ animal_id: selectedGeckoId }, '-date'),
+          // Weigh-ins live in weight_records as gecko_id / record_date /
+          // weight_grams. This asked for animal_id and date, the query
+          // failed, and the vet card printed with no weights, feedings or
+          // sheds (fixed 29 Sep 2026).
+          WeightRecord.filter({ gecko_id: selectedGeckoId }, '-record_date'),
           FeedingRecord.filter({ animal_id: selectedGeckoId }, '-date'),
           ShedRecord.filter({ animal_id: selectedGeckoId }, '-date'),
         ]);
         if (!cancelled) {
-          setWeights(wts);
+          setWeights(wts.map((w) => ({ ...w, date: w.record_date, weight: w.weight_grams })));
           setFeedings(fds);
           setSheds(shs);
         }

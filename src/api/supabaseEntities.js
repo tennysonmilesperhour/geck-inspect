@@ -53,7 +53,87 @@ export const ENTITIES_WITHOUT_CREATED_BY = new Set([
   'GeckoWaitlistSignup',
   'PromoteImage',
   'BreederStorePage',
+  'Collection',
+  'CollectionMember',
+  'Testimonial',
+  'AppSettings',
+  'GiveawayEntry',
+  'StoreVendor',
+  'StoreCategory',
+  'StoreProduct',
+  'StoreCart',
+  'StoreCartItem',
+  'StoreOrder',
+  'StoreOrderItem',
+  'StoreFulfillment',
+  'StoreAffiliateClick',
+  'StoreSignupGrant',
+  'StorePromoCode',
 ]);
+
+// The same problem for the timestamp columns: create() fills in
+// created_date and updated_date, and update() fills in updated_date. These
+// tables name them differently or leave one out, and the extra column made
+// every insert fail. Until 29 Sep 2026 that meant creating a collection,
+// inviting a collaborator, adding a testimonial and entering a giveaway had
+// never once worked. Checked against production on 29 Sep 2026; a table not
+// listed here has both created_date and updated_date.
+// null = the table has no such column (the database default fills it).
+export const TIMESTAMP_COLUMNS = {
+  AppSettings: { created: null, updated: 'updated_at' },
+  BlogLog: { created: 'created_date', updated: null },
+  Collection: { created: null, updated: 'updated_at' },
+  CollectionMember: { created: null, updated: null },
+  GeckoWaitlistSignup: { created: 'created_date', updated: null },
+  GiveawayEntry: { created: 'created_date', updated: null },
+  QuestionVote: { created: 'created_date', updated: null },
+  SocialGenerationLog: { created: 'created_date', updated: null },
+  SocialPostPhotoUsage: { created: null, updated: null },
+  SocialReferralBonus: { created: 'created_date', updated: null },
+  StoreAffiliateClick: { created: 'created_date', updated: null },
+  StoreOrderItem: { created: 'created_date', updated: null },
+  StorePromoCode: { created: 'created_date', updated: null },
+  StoreSignupGrant: { created: 'created_date', updated: null },
+  Testimonial: { created: null, updated: 'updated_at' },
+  UserEvent: { created: 'created_date', updated: null },
+};
+
+export function timestampColumns(entityName) {
+  return TIMESTAMP_COLUMNS[entityName] || { created: 'created_date', updated: 'updated_date' };
+}
+
+// An empty date input gives '', and Postgres rejects '' for a date or
+// timestamp, so the whole save failed: Project Manager could not create a
+// project or task without a due date. Every column named date, *_date,
+// *_date_* (hatch_date_actual), *_at, *_since or *_until is a date or
+// timestamp (checked 29 Sep 2026), so a blank one is sent as null.
+const DATE_COLUMN = /(^date$|_date$|_date_|_at$|_since$|_until$)/;
+
+export function blankDatesToNull(record) {
+  const row = { ...record };
+  for (const [key, value] of Object.entries(row)) {
+    if (value === '' && DATE_COLUMN.test(key)) row[key] = null;
+  }
+  return row;
+}
+
+/** The row create() sends: the caller's fields plus the audit columns the table has. */
+export function buildInsertRecord(entityName, record, email, now) {
+  const { created, updated } = timestampColumns(entityName);
+  const row = blankDatesToNull(record);
+  if (created) row[created] = record[created] || now;
+  if (updated) row[updated] = now;
+  if (!ENTITIES_WITHOUT_CREATED_BY.has(entityName)) row.created_by = email;
+  return row;
+}
+
+/** The patch update() sends: defined fields plus the table's updated column. */
+export function buildUpdateRecord(entityName, record, now) {
+  const { updated } = timestampColumns(entityName);
+  const row = blankDatesToNull(Object.fromEntries(Object.entries(record).filter(([, v]) => v !== undefined)));
+  if (updated) row[updated] = now;
+  return row;
+}
 
 export const TABLE_MAP = {
   AppSettings: 'app_settings',
@@ -325,16 +405,7 @@ function createEntityClient(entityName) {
       blockIfGuest('save changes');
       const { data: { user } } = await supabase.auth.getUser();
       const email = user?.email || null;
-      const now = new Date().toISOString();
-
-      const insertRecord = {
-        ...record,
-        created_date: record.created_date || now,
-        updated_date: now,
-      };
-      if (!ENTITIES_WITHOUT_CREATED_BY.has(entityName)) {
-        insertRecord.created_by = email;
-      }
+      const insertRecord = buildInsertRecord(entityName, record, email, new Date().toISOString());
 
       const { data, error } = await withAuthRetry(() =>
         supabase
@@ -349,15 +420,11 @@ function createEntityClient(entityName) {
 
     async update(id, record) {
       blockIfGuest('save changes');
-      const now = new Date().toISOString();
-      // Remove undefined keys
-      const cleaned = Object.fromEntries(
-        Object.entries(record).filter(([, v]) => v !== undefined)
-      );
+      const patch = buildUpdateRecord(entityName, record, new Date().toISOString());
       const { data, error } = await withAuthRetry(() =>
         supabase
           .from(tableName)
-          .update({ ...cleaned, updated_date: now })
+          .update(patch)
           .eq('id', id)
           .select()
           .single()

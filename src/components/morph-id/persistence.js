@@ -1,14 +1,14 @@
 import { GeckoImage } from '@/entities/all';
 import { TAXONOMY_VERSION } from './morphTaxonomy';
 
-// `training_meta` and `image_urls` are columns the dataset is migrating
-// toward. Until every deployed copy of the schema has them, we fall back
-// to folding `training_meta` into the notes field and dropping
-// `image_urls` onto `training_meta`, nothing is ever dropped.
+// gecko_images has training_meta but no image_urls column (checked 29 Sep
+// 2026), so image_urls always rides inside training_meta. Sending it as a
+// column first made every Morph ID save fail once with a 400 before the
+// retry. If training_meta is ever missing, everything folds into notes;
+// nothing is dropped.
 export async function saveGeckoImageWithMeta(record) {
   const attempts = [
-    (r) => r,
-    // No image_urls column: move it into training_meta.
+    // Move image_urls into training_meta.
     (r) => {
       const { image_urls, ...rest } = r;
       return image_urls

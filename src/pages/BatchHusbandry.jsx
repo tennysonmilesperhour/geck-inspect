@@ -315,8 +315,8 @@ function BatchFeedView({ group, groupGeckos, feedingRecords, onBack, onSaved }) 
               <p className="text-sm font-medium truncate" style={{ color: C.slate }}>
                 {row.gecko.name || row.gecko.id}
               </p>
-              {row.gecko.morph && (
-                <p className="text-xs truncate" style={{ color: C.muted }}>{row.gecko.morph}</p>
+              {row.gecko.morphs_traits && (
+                <p className="text-xs truncate" style={{ color: C.muted }}>{row.gecko.morphs_traits}</p>
               )}
             </div>
 

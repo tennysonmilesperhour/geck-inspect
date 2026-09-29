@@ -601,7 +601,7 @@ function PendingSalesTab({ user, pendingSales, setPendingSales, onCompleteSale, 
       gecko_name: gecko.name,
       gecko_id: gecko.id,
       reserve_price: gecko.asking_price || '',
-      current_weight_grams: gecko.weight || '',
+      current_weight_grams: gecko.weight_grams || '',
     }));
     setGeckoPickerOpen(false);
   };

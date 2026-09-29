@@ -114,8 +114,8 @@ function LoanCard({ loan, geckoMap, isOutgoing, onRefresh }) {
             </h3>
             <StatusBadge status={displayStatus} />
           </div>
-          {gecko?.morph && (
-            <p className="text-xs mb-1" style={{ color: C.muted }}>{gecko.morph}</p>
+          {gecko?.morphs_traits && (
+            <p className="text-xs mb-1" style={{ color: C.muted }}>{gecko.morphs_traits}</p>
           )}
         </div>
         {displayStatus === 'overdue' && (

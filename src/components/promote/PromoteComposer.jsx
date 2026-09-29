@@ -261,14 +261,16 @@ export default function PromoteComposer({
           gecko: {
             id: gecko.id,
             name: gecko.name || null,
-            morph: gecko.morph || gecko.morph_description || null,
+            morph: gecko.morphs_traits || null,
             sex: gecko.sex || null,
             hatch_date: gecko.hatch_date || null,
-            weight_g: gecko.weight_g ?? null,
-            sale_status: gecko.sale_status || null,
+            weight_g: gecko.weight_grams ?? null,
+            sale_status: gecko.status || null,
             notes: gecko.notes || null,
-            sire: gecko.sire ? { name: gecko.sire.name, morph: gecko.sire.morph } : null,
-            dam: gecko.dam ? { name: gecko.dam.name, morph: gecko.dam.morph } : null,
+            // Gecko rows carry parent names, not parent objects, so these
+            // were always null before 29 Sep 2026.
+            sire: gecko.sire_name ? { name: gecko.sire_name, morph: null } : null,
+            dam: gecko.dam_name ? { name: gecko.dam_name, morph: null } : null,
             recent_changes: [],
           },
           platforms: [primaryPlatform, ...platforms.filter((p) => p !== primaryPlatform)],
@@ -341,7 +343,7 @@ export default function PromoteComposer({
           gecko: {
             id: gecko.id,
             name: gecko.name || null,
-            morph: gecko.morph || gecko.morph_description || null,
+            morph: gecko.morphs_traits || null,
             sex: gecko.sex || null,
           },
           previous_variants: [{ content: editedContent }],
@@ -481,7 +483,7 @@ export default function PromoteComposer({
     const makeSlug = () => Math.random().toString(36).slice(2, 10);
     const title = gecko.name
       ? `Waitlist: ${gecko.name}`
-      : `Waitlist: ${gecko.morph_description || gecko.morph || 'crested gecko'}`;
+      : `Waitlist: ${gecko.morphs_traits || 'crested gecko'}`;
     let row = null;
     let lastErr = null;
     for (let attempt = 0; attempt < 3; attempt++) {

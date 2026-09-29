@@ -49,7 +49,7 @@ export default function Waitlist() {
         if (w.gecko_id) {
           const { data: g } = await supabase
             .from('geckos')
-            .select('id, name, morph, morph_description, image_urls, sex, hatch_date')
+            .select('id, name, morphs_traits, image_urls, sex, hatch_date')
             .eq('id', w.gecko_id)
             .maybeSingle();
           if (!cancelled) setGecko(g || null);
@@ -139,9 +139,9 @@ export default function Waitlist() {
               About this gecko
             </div>
             <div className="text-lg font-semibold">{gecko.name || gecko.id}</div>
-            {(gecko.morph_description || gecko.morph) && (
+            {gecko.morphs_traits && (
               <div className="text-sm text-emerald-200/80">
-                {gecko.morph_description || gecko.morph}
+                {gecko.morphs_traits}
               </div>
             )}
             {gecko.sex && (

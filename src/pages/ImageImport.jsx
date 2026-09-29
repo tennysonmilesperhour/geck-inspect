@@ -182,7 +182,9 @@ export default function ImageImport() {
                         gecko_id_code: record.gecko_id_code || '',
                         sex: record.sex || 'Unsexed',
                         species: record.species || 'Crested Gecko',
-                        hatch_date: record.hatch_date || '',
+                        // Blank dates must go as null: the database rejects '' for a
+                        // date, which failed every imported gecko without a hatch date.
+                        hatch_date: record.hatch_date || null,
                         morphs_traits: record.morphs_traits || '',
                         weight_grams: record.weight_grams || undefined,
                         status: record.status || 'Pet',
@@ -201,9 +203,12 @@ export default function ImageImport() {
                         (record.dam_id_code && g.gecko_id_code === record.dam_id_code) ||
                         (record.dam_name && g.name?.toLowerCase() === record.dam_name.toLowerCase())
                     );
+                    if (!sire || !dam) {
+                        throw new Error(`no gecko in your collection matches the ${!sire ? 'sire' : 'dam'}. Add it first, then import this pairing.`);
+                    }
                     await BreedingPlan.create({
-                        sire_id: sire?.id || '',
-                        dam_id: dam?.id || '',
+                        sire_id: sire.id,
+                        dam_id: dam.id,
                         pairing_date: record.pairing_date || todayLocalISO(),
                         breeding_id: record.breeding_id || '',
                         breeding_season: record.breeding_season || '',
@@ -220,15 +225,18 @@ export default function ImageImport() {
                         );
                     });
 
+                    if (!plan) {
+                        throw new Error('no breeding pair matches this sire and dam. Create the pairing first, then import its eggs.');
+                    }
                     const eggCount = record.egg_count || 1;
                     for (let i = 0; i < eggCount; i++) {
                         await Egg.create({
-                            breeding_plan_id: plan?.id || '',
+                            breeding_plan_id: plan.id,
                             lay_date: record.lay_date || todayLocalISO(),
-                            hatch_date_expected: record.hatch_date_expected || '',
-                            hatch_date_actual: record.hatch_date_actual || '',
+                            hatch_date_expected: record.hatch_date_expected || null,
+                            hatch_date_actual: record.hatch_date_actual || null,
                             status: record.status || 'Incubating',
-                            grade: record.grade || '',
+                            grade: record.grade || null,
                         });
                     }
                 }

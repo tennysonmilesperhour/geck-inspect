@@ -188,12 +188,12 @@ export function normalizeHashtag(tag) {
 // instead of creating a duplicate.
 export function buildMorphMarketCsvRow({ gecko, captionBody, hashtags }) {
   const animalId = `geckinspect:${gecko.id}`;
-  const title = (gecko.name || gecko.morph_description || gecko.morph || 'Crested Gecko').slice(0, 60);
+  const title = (gecko.name || gecko.morphs_traits || 'Crested Gecko').slice(0, 60);
   const tagBlock = (hashtags || []).map((h) => (h.startsWith('#') ? h : `#${h}`)).join(' ');
   const description = [captionBody?.trim(), tagBlock].filter(Boolean).join('\n\n');
   const sex = gecko.sex || '';
   const birthDate = gecko.hatch_date || '';
-  const traits = gecko.morph_description || gecko.morph || '';
+  const traits = gecko.morphs_traits || '';
   const status = (() => {
     const s = (gecko.status || '').toLowerCase();
     if (s === 'for sale' || s === 'available') return 'For Sale';
