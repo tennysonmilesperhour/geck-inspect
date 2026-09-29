@@ -1,4 +1,7 @@
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
+// Retry-wrapped drop-in for React.lazy: recovers from transient chunk
+// fetch failures and stale-deploy hash mismatches. See lazyWithRetry.js.
+import { lazy } from '@/lib/lazyWithRetry';
 import { Routes, Route } from 'react-router-dom';
 import StoreLayout from '@/components/store/StoreLayout';
 
