@@ -133,9 +133,11 @@ const GREEN = [86, 107, 95];
 
 /**
  * Draw the packet. photo and qr are optional PNG/JPEG data URLs.
- * Returns the jsPDF document.
+ * firePhotos is an optional list of { label, dataUrl } for the gecko's
+ * fired-up and fired-down photos (src/lib/fireStatePhotos.js); entries
+ * without a dataUrl are skipped. Returns the jsPDF document.
  */
-export function renderBuyerPacketPDF(packet, { photo = null, qr = null } = {}) {
+export function renderBuyerPacketPDF(packet, { photo = null, qr = null, firePhotos = [] } = {}) {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'letter' });
   const pageW = doc.internal.pageSize.getWidth();
   const pageH = doc.internal.pageSize.getHeight();
@@ -205,6 +207,26 @@ export function renderBuyerPacketPDF(packet, { photo = null, qr = null } = {}) {
   }
   for (const [label, value] of packet.facts) y += labelValue(label, value, factsX, factsW);
   y = Math.max(y, photo ? top + photoSize + 4 : y) + 2;
+
+  // Fired up and fired down, side by side
+  const fired = (firePhotos || []).filter((f) => f?.dataUrl);
+  if (fired.length) {
+    const size = 50;
+    section('Fired up and fired down', size + 8);
+    fired.forEach((f, i) => {
+      const x = margin + i * (size + 8);
+      try {
+        doc.addImage(f.dataUrl, f.dataUrl.startsWith('data:image/png') ? 'PNG' : 'JPEG', x, y, size, size);
+      } catch {
+        // Skip a photo jsPDF cannot read.
+      }
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(60, 60, 60);
+      doc.text(safeText(f.label), x, y + size + 4.5);
+    });
+    y += size + 10;
+  }
 
   // Lineage
   const { sire, dam, grandparents } = packet.lineage;

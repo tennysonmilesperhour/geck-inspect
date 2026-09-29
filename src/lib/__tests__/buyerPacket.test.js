@@ -80,6 +80,17 @@ describe('buildBuyerPacket', () => {
     expect(doc.getNumberOfPages()).toBeGreaterThanOrEqual(1);
     expect(doc.output('arraybuffer').byteLength).toBeGreaterThan(1000);
   });
+
+  it('adds the fired-up and fired-down photos when given', () => {
+    // A 1 x 1 PNG stands in for each photo.
+    const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg==';
+    const plain = renderBuyerPacketPDF(packet).output('arraybuffer').byteLength;
+    const doc = renderBuyerPacketPDF(packet, {
+      firePhotos: [{ label: 'Fired up', dataUrl: png }, { label: 'Fired down', dataUrl: png }, { label: 'Missing', dataUrl: null }],
+    });
+    expect(doc.output('arraybuffer').byteLength).toBeGreaterThan(plain);
+    expect(doc.output()).toContain('FIRED UP AND FIRED DOWN');
+  });
 });
 
 describe('text helpers', () => {

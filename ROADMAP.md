@@ -41,6 +41,8 @@ The full audit, usage data, competitor research and phased plan are in `docs/pla
 
 **Third functional pass shipped 29 Sep:** 17 bugs fixed, including collections and collaborator invites (never worked), reserves on 70% of geckos, egg grades and the egg edit dialog, Project Manager without a due date, and the free Morph ID count. See section 2D of the audit for what still needs a real signed-in browser session.
 
+**Phases 2 and 3 shipped 29 Sep:** growth band on the weight chart, passport quick log and restyle, Geck Answers folded into the Forum, fired-up and fired-down photo slots, collaborator activity log (with a security fix to collection memberships), and waitlists with deposits. Section 2E of the audit has what each does and what to try. The audit's phased plan is complete.
+
 **Parked 29 Sep: Morph ID accuracy.** Function version 61 is live and staying. Last eval (run 20, all 220 test geckos): a breeder-tagged pattern is in the top three 75.9% of the time, the first answer matches 43.6%, and it gives an answer 95% of the time. No simple rule is left to add. Full results are in section 2A of `docs/planning/vip-audit-2026-09-27.md`. When we come back:
 - [ ] Once about 20 real two-photo (top and side) identifications have been reviewed (Admin Panel > Morph ID review), compare them with the one-photo eval. The eval set has one photo per gecko, so it cannot show whether the side view helps.
 - [ ] Work on the biggest misses: Extreme Harlequin called Harlequin (14), Tricolor called Extreme Harlequin (14), Pinstripe called Harlequin (11). Plain Harlequin is still the first answer 84 times against 39 geckos labeled Harlequin.

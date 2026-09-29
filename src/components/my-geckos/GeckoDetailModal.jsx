@@ -17,6 +17,7 @@ import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
 import WeightChart from '@/components/shared/WeightChart';
 import FireStatePair from '@/components/shared/FireStatePair';
+import { FIRE_SLOTS, fireStatePhotos } from '@/lib/fireStatePhotos';
 import CollectionActivity from '@/components/settings/CollectionActivity';
 import { isGuestMode } from '@/lib/guestMode';
 import { Input } from '@/components/ui/input';
@@ -298,13 +299,20 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
               try { feedingGroup = (await FeedingGroup.filter({ id: gecko.feeding_group_id }))?.[0] || null; } catch { feedingGroup = null; }
           }
           const passportUrl = gecko.passport_code ? `${window.location.origin}/passport/${gecko.passport_code}` : null;
-          const [photo, qr] = await Promise.all([photoDataUrl(gecko.image_urls?.[0]), qrDataUrl(passportUrl)]);
+          const fireSlots = fireStatePhotos(gecko);
+          const [photo, qr, firedUp, firedDown] = await Promise.all([
+              photoDataUrl(gecko.image_urls?.[0]),
+              qrDataUrl(passportUrl),
+              photoDataUrl(fireSlots.fired_up),
+              photoDataUrl(fireSlots.fired_down),
+          ]);
+          const firePhotos = FIRE_SLOTS.map((slot, i) => ({ label: slot.label, dataUrl: [firedUp, firedDown][i] }));
           const packet = buildBuyerPacket({
               gecko, sire: sireG, dam: damG, grandparents,
               weights: weightRecords, feedings, feedingGroup,
               seller: currentUser, passportUrl,
           });
-          downloadPdf(renderBuyerPacketPDF(packet, { photo, qr }), packetFilename(gecko));
+          downloadPdf(renderBuyerPacketPDF(packet, { photo, qr, firePhotos }), packetFilename(gecko));
           toast({
               title: 'Buyer packet downloaded',
               description: passportUrl
