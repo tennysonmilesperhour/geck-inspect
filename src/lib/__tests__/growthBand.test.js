@@ -15,7 +15,7 @@ const fact = (categoryId, label) =>
 
 describe('growth band follows the care guide', () => {
   it('uses the Life Stages pace and the adult weight range', () => {
-    // "Hatchling 0–3 g · 0–3 months", "Juvenile 3–15 g · 3–12 months", ...
+    // Each Life Stages fact reads like "Juvenile, 3 to 15 g, 3 to 12 months".
     const stage = (label) => fact('life-stages', label).match(/(\d+)\D+(\d+)\s*g\D+(\d+)\D+(\d+)\s*months/);
     const hatchling = stage('Hatchling');
     const juvenile = stage('Juvenile');

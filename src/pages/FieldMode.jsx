@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { AnimatePresence, motion } from 'framer-motion';
 import Seo from '@/components/seo/Seo';
 import LoadingSpinner from '../components/shared/LoadingSpinner';
@@ -394,6 +394,30 @@ export default function FieldModePage() {
       setIsSaving(false);
     }
   };
+
+  // Deep link from the owner's quick log on the passport (the QR on the tub
+  // label): /FieldMode?gecko=<id>&log=fed|shed|weight opens that gecko.
+  // Fed and shed are logged on arrival (with the usual undo); weight opens
+  // the weight entry. The link is cleared right away so a refresh cannot
+  // log twice.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const deepLinkDone = useRef(false);
+  useEffect(() => {
+    if (deepLinkDone.current || isLoading) return;
+    deepLinkDone.current = true;
+    const wanted = searchParams.get('gecko');
+    const log = searchParams.get('log');
+    if (wanted) setSearchParams({}, { replace: true });
+    const match = wanted ? geckos.find((g) => g.id === wanted) : null;
+    if (!match) return;
+    setSelectedGecko(match);
+    setRecentIds(pushRecentId(match.id));
+    if (log === 'weight') setActivePanel('weight');
+    else if (log === 'fed') logFed(match);
+    else if (log === 'shed') logShed(match);
+    // logFed and logShed are stable in behavior; this runs once per visit.
+  }, [isLoading, geckos, searchParams]);
+
 
   const logNote = async (gecko, text) => {
     const trimmed = (text || '').trim();
