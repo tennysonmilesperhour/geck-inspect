@@ -49,9 +49,7 @@ function ParentName({ linkedGecko, fallbackName }) {
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import {
-    LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer
-} from 'recharts';
+import WeightChart from '@/components/shared/WeightChart';
 import MessageUserButton from '../components/ui/MessageUserButton';
 import RecommendedKitForGecko from '../components/store/RecommendedKitForGecko';
 
@@ -120,12 +118,6 @@ export default function GeckoDetail() {
         ? [...weightRecords].sort((a, b) => new Date(b.record_date) - new Date(a.record_date))[0].weight_grams
         : (gecko.weight_grams ?? null);
 
-    const chartData = [...weightRecords]
-        .sort((a, b) => new Date(a.record_date) - new Date(b.record_date))
-        .map(r => ({
-            date: format(new Date(r.record_date), 'MMM d'),
-            weight: r.weight_grams,
-        }));
 
     // Shed Forecast v1: heuristic prediction from this gecko's own shed
     // rhythm, falling back to age-based defaults. Renders nothing when
@@ -355,7 +347,7 @@ export default function GeckoDetail() {
                         )}
 
                         {/* Weight Chart */}
-                        {chartData.length > 0 && (
+                        {weightRecords.length > 0 && (
                             <Card className="bg-slate-900 border-slate-700">
                                 <CardHeader className="pb-2 pt-4 px-4">
                                     <CardTitle className="text-sm flex items-center gap-2 text-slate-300">
@@ -363,20 +355,7 @@ export default function GeckoDetail() {
                                     </CardTitle>
                                 </CardHeader>
                                 <CardContent className="px-4 pb-4">
-                                    <ResponsiveContainer width="100%" height={180}>
-                                        <LineChart data={chartData}>
-                                            <CartesianGrid strokeDasharray="3 3" stroke="rgba(134,239,172,0.15)" />
-                                            <XAxis dataKey="date" stroke="#a7f3d0" tick={{ fontSize: 11 }} />
-                                            <YAxis stroke="#a7f3d0" unit="g" tick={{ fontSize: 11 }} domain={['dataMin - 2', 'dataMax + 2']} />
-                                            <Tooltip
-                                                contentStyle={{ backgroundColor: '#022c22', border: '1px solid rgba(134,239,172,0.2)' }}
-                                                labelStyle={{ color: '#d1fae5' }}
-                                                itemStyle={{ color: '#86efac' }}
-                                                formatter={v => [`${v}g`, 'Weight']}
-                                            />
-                                            <Line type="monotone" dataKey="weight" stroke="#86efac" strokeWidth={2} dot={{ r: 3 }} />
-                                        </LineChart>
-                                    </ResponsiveContainer>
+                                    <WeightChart records={weightRecords} gecko={gecko} height={180} />
                                 </CardContent>
                             </Card>
                         )}

@@ -15,7 +15,7 @@ import EventTracker from './EventTracker';
 import BreedingHistory from './BreedingHistory';
 import { Switch } from '@/components/ui/switch';
 import { Label } from '@/components/ui/label';
-import { LineChart as RechartsLineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import WeightChart from '@/components/shared/WeightChart';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import {
@@ -322,11 +322,6 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
 
   const readiness = readinessFor(gecko, weightRecords);
 
-  const chartData = [...weightRecords].reverse().map(r => ({
-    date: format(parseLocalDate(r.record_date), 'MMM d'),
-    weight: r.weight_grams,
-    fullDate: format(parseLocalDate(r.record_date), 'PPP')
-  }));
 
   if (!gecko) return null;
 
@@ -673,24 +668,9 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                   <div className="flex items-center justify-center h-48">
                     <LoadingSpinner size="md" />
                   </div>
-                ) : chartData.length > 0 ? (
+                ) : weightRecords.length > 0 ? (
                   <div className="space-y-4">
-                    <ResponsiveContainer width="100%" height={200}>
-                      <RechartsLineChart data={chartData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="rgba(134, 239, 172, 0.2)" />
-                        <XAxis dataKey="date" stroke="#a7f3d0" />
-                        <YAxis stroke="#a7f3d0" domain={['dataMin - 2', 'dataMax + 2']} unit="g"/>
-                        <Tooltip 
-                          contentStyle={{ backgroundColor: '#022c22', border: '1px solid rgba(134, 239, 172, 0.2)'}} 
-                          labelStyle={{ color: '#d1fae5' }}
-                          itemStyle={{ color: '#86efac' }}
-                          formatter={(value) => [`${value}g`, 'Weight']}
-                          labelFormatter={(label, payload) => payload[0]?.payload.fullDate || label}
-                        />
-                        <Legend wrapperStyle={{ color: '#d1fae5' }} />
-                        <Line type="monotone" dataKey="weight" stroke="#86efac" strokeWidth={2} dot={{r: 4}} activeDot={{ r: 8 }} />
-                      </RechartsLineChart>
-                    </ResponsiveContainer>
+                    <WeightChart records={weightRecords} gecko={gecko} height={200} />
                     
                     <div className="max-h-32 overflow-y-auto space-y-2">
                       {weightRecords.map(record => (

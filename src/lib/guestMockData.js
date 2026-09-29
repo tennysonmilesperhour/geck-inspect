@@ -1,3 +1,5 @@
+import { growthBandAt } from '@/lib/growthBand';
+
 /**
  * Mock data for guest-mode demos.
  *
@@ -76,6 +78,13 @@ const nowMs = Date.now();
 const daysAgo = (n) => new Date(nowMs - n * 86400000).toISOString();
 const monthsAgo = (n) => daysAgo(n * 30);
 
+// Hatch dates were written as fixed dates around June 2025, so the sample
+// geckos aged every day while their sample weights stayed put (a 7-month
+// juvenile at 9 g became a 2-year-old at 9 g). Each date is now read as an
+// age relative to that reference, so the demo stays the same age.
+const DEMO_WRITTEN_MS = Date.UTC(2025, 5, 1);
+const hatched = (isoDate) => new Date(nowMs - (DEMO_WRITTEN_MS - Date.parse(isoDate))).toISOString().slice(0, 10);
+
 // ---------------------------------------------------------------------------
 // Geckos
 //
@@ -98,7 +107,7 @@ const GECKOS = [
     name: 'Diamond',
     sex: 'Male',
     status: 'Proven',
-    hatch_date: '2018-06-11',
+    hatch_date: hatched('2018-06-11'),
     weight_grams: 54,
     primary_morph: 'Harlequin',
     morphs_traits: 'Harlequin, High-Contrast',
@@ -119,7 +128,7 @@ const GECKOS = [
     name: 'Ruby',
     sex: 'Female',
     status: 'Proven',
-    hatch_date: '2018-04-02',
+    hatch_date: hatched('2018-04-02'),
     weight_grams: 50,
     primary_morph: 'Cream',
     morphs_traits: 'Cream, Partial Pin',
@@ -140,7 +149,7 @@ const GECKOS = [
     name: 'Thor',
     sex: 'Male',
     status: 'Proven',
-    hatch_date: '2017-08-25',
+    hatch_date: hatched('2017-08-25'),
     weight_grams: 58,
     primary_morph: 'Pinstripe',
     morphs_traits: 'Pinstripe, Full',
@@ -161,7 +170,7 @@ const GECKOS = [
     name: 'Sunny',
     sex: 'Female',
     status: 'Proven',
-    hatch_date: '2017-11-03',
+    hatch_date: hatched('2017-11-03'),
     weight_grams: 49,
     primary_morph: 'Yellow',
     morphs_traits: 'Yellow, Partial Pin',
@@ -184,7 +193,7 @@ const GECKOS = [
     name: 'Harley',
     sex: 'Female',
     status: 'Proven',
-    hatch_date: '2022-08-14',
+    hatch_date: hatched('2022-08-14'),
     weight_grams: 52,
     primary_morph: 'Harlequin',
     morphs_traits: 'Harlequin, Cream, High-Contrast',
@@ -209,7 +218,7 @@ const GECKOS = [
     name: 'Spud',
     sex: 'Male',
     status: 'Proven',
-    hatch_date: '2021-05-02',
+    hatch_date: hatched('2021-05-02'),
     weight_grams: 48,
     primary_morph: 'Pinstripe',
     morphs_traits: 'Pinstripe, Yellow, Partial',
@@ -232,7 +241,7 @@ const GECKOS = [
     name: 'Moss',
     sex: 'Female',
     status: 'Ready to Breed',
-    hatch_date: '2023-02-19',
+    hatch_date: hatched('2023-02-19'),
     weight_grams: 41,
     primary_morph: 'Dalmatian',
     morphs_traits: 'Dalmatian, Red Base, Black Spots',
@@ -252,7 +261,7 @@ const GECKOS = [
     name: 'Nimbus',
     sex: 'Male',
     status: 'Holdback',
-    hatch_date: '2024-06-30',
+    hatch_date: hatched('2024-06-30'),
     weight_grams: 22,
     primary_morph: 'Lilly White',
     morphs_traits: 'Lilly White, Harlequin',
@@ -277,7 +286,7 @@ const GECKOS = [
     name: 'Pebble',
     sex: 'Female',
     status: 'Holdback',
-    hatch_date: '2024-07-02',
+    hatch_date: hatched('2024-07-02'),
     weight_grams: 21,
     primary_morph: 'Harlequin',
     morphs_traits: 'Harlequin Pinstripe, Cream Base',
@@ -301,7 +310,7 @@ const GECKOS = [
     name: 'Jasper',
     sex: 'Male',
     status: 'For Sale',
-    hatch_date: '2024-09-14',
+    hatch_date: hatched('2024-09-14'),
     weight_grams: 16,
     primary_morph: 'Pinstripe',
     morphs_traits: 'Pinstripe, Cream Dorsal',
@@ -326,7 +335,7 @@ const GECKOS = [
     name: 'Fern',
     sex: 'Unsexed',
     status: 'Future Breeder',
-    hatch_date: '2024-10-03',
+    hatch_date: hatched('2024-10-03'),
     weight_grams: 12,
     primary_morph: 'Harlequin',
     morphs_traits: 'Harlequin, Yellow Base',
@@ -350,7 +359,7 @@ const GECKOS = [
     name: 'Cappy',
     sex: 'Male',
     status: 'Future Breeder',
-    hatch_date: '2023-09-12',
+    hatch_date: hatched('2023-09-12'),
     weight_grams: 34,
     primary_morph: 'Cappuccino',
     morphs_traits: 'Cappuccino, Dark Base',
@@ -368,7 +377,7 @@ const GECKOS = [
     name: 'Ember',
     sex: 'Female',
     status: 'For Sale',
-    hatch_date: '2023-04-03',
+    hatch_date: hatched('2023-04-03'),
     weight_grams: 44,
     primary_morph: 'Flame',
     morphs_traits: 'Flame, Red, Full Stripe',
@@ -387,7 +396,7 @@ const GECKOS = [
     name: 'Pixel',
     sex: 'Unsexed',
     status: 'Pet',
-    hatch_date: '2024-11-07',
+    hatch_date: hatched('2024-11-07'),
     weight_grams: 9,
     primary_morph: 'Brindle',
     morphs_traits: 'Brindle, Chocolate',
@@ -405,7 +414,7 @@ const GECKOS = [
     name: 'Onyx',
     sex: 'Male',
     status: 'Proven',
-    hatch_date: '2020-10-21',
+    hatch_date: hatched('2020-10-21'),
     weight_grams: 56,
     primary_morph: 'Axanthic',
     morphs_traits: 'Axanthic, Reverse Pin',
@@ -423,7 +432,7 @@ const GECKOS = [
     name: 'Tiger',
     sex: 'Female',
     status: 'Proven',
-    hatch_date: '2022-03-18',
+    hatch_date: hatched('2022-03-18'),
     weight_grams: 47,
     primary_morph: 'Tiger',
     morphs_traits: 'Tiger, Orange Base',
@@ -441,7 +450,7 @@ const GECKOS = [
     name: 'Aria',
     sex: 'Female',
     status: 'Ready to Breed',
-    hatch_date: '2022-12-01',
+    hatch_date: hatched('2022-12-01'),
     weight_grams: 43,
     primary_morph: 'Harlequin',
     morphs_traits: 'Harlequin, Tricolor',
@@ -459,7 +468,7 @@ const GECKOS = [
     name: 'Bramble',
     sex: 'Male',
     status: 'Future Breeder',
-    hatch_date: '2024-02-22',
+    hatch_date: hatched('2024-02-22'),
     weight_grams: 28,
     primary_morph: 'Pinstripe',
     morphs_traits: 'Pinstripe, Dalmatian',
@@ -477,7 +486,7 @@ const GECKOS = [
     name: 'Willow',
     sex: 'Female',
     status: 'Proven',
-    hatch_date: '2021-09-09',
+    hatch_date: hatched('2021-09-09'),
     weight_grams: 50,
     primary_morph: 'Cream',
     morphs_traits: 'Cream, Partial Pin',
@@ -513,21 +522,35 @@ const GECKO_IMAGES = GECKOS.flatMap((g, i) =>
 // ---------------------------------------------------------------------------
 // Weight records, simple growth curve per gecko
 // ---------------------------------------------------------------------------
+// Weigh-ins every 45 days that follow the care guide's growth pace up to the
+// gecko's current weight, so the chart's typical-range band tells a sensible
+// story: juveniles climb, adults hold steady. It used to grow every gecko,
+// adults included, from a sixth of its weight to its full weight.
+const bandMid = (months) => {
+  const band = growthBandAt(Math.max(0, months));
+  return band ? (band.low + band.high) / 2 : null;
+};
 const WEIGHT_RECORDS = GECKOS.flatMap((g, gi) => {
   const target = g.weight_grams;
   const points = 6;
+  const hatchMs = g.hatch_date ? Date.parse(g.hatch_date) : null;
+  const ageAt = (ms) => (hatchMs == null ? null : (ms - hatchMs) / (86400000 * 30.4375));
+  const nowMid = bandMid(ageAt(nowMs) ?? 36);
+  const scale = nowMid ? Math.min(1.3, Math.max(0.7, target / nowMid)) : 1;
   return Array.from({ length: points }, (_, i) => {
-    const progress = (i + 1) / points;
-    const jitter = ((gi + i) % 3) - 1;
+    const ms = nowMs - (points - i) * 45 * 86400000;
+    const age = ageAt(ms);
+    const jitter = (((gi + i) % 3) - 1) * 0.5;
+    const grams = age == null || age < 0 ? target : Math.min(target, bandMid(age) * scale);
     return {
       id: `mock-wr-${g.id}-${i}`,
       gecko_id: g.id,
-      weight_grams: Math.max(3, Math.round(target * progress + jitter)),
-      record_date: daysAgo((points - i) * 45),
+      weight_grams: Math.max(2, Math.round((grams + jitter) * 10) / 10),
+      record_date: daysAgo((points - i) * 45).slice(0, 10),
       created_by: GUEST_EMAIL,
       created_date: daysAgo((points - i) * 45),
     };
-  });
+  }).filter((r) => hatchMs == null || Date.parse(r.record_date) >= hatchMs);
 });
 
 // ---------------------------------------------------------------------------
