@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback, useRef } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { GeckoImage } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
@@ -71,9 +71,6 @@ function initialEdits(row) {
   };
 }
 
-// Minimum evidence-note length before a decision is saved.
-const MIN_NOTE = 10;
-
 export default function AIFeedbackQueue() {
   const { toast } = useToast();
   const [queue, setQueue] = useState([]);
@@ -88,10 +85,6 @@ export default function AIFeedbackQueue() {
   const [sortMode, setSortMode] = useState('newest');
   const [totalCount, setTotalCount] = useState(null);
   const [reviewNotes, setReviewNotes] = useState('');
-  // The buttons stay clickable; a click without a note points here instead
-  // of leaving the reviewer with greyed-out buttons and no reason why.
-  const [noteMissing, setNoteMissing] = useState(false);
-  const noteRef = useRef(null);
   const [fetchOffset, setFetchOffset] = useState(0);
   const [reviewedIds, setReviewedIds] = useState(() => new Set());
 
@@ -181,7 +174,6 @@ export default function AIFeedbackQueue() {
     if (!current) { setEdits(null); return; }
     setEdits(initialEdits(current));
     setReviewNotes('');
-    setNoteMissing(false);
   }, [current]);
 
   const step = (delta) => {
@@ -199,16 +191,6 @@ export default function AIFeedbackQueue() {
   // Standard expert review. The database owns the current approval threshold.
   const persist = async (action) => {
     if (!current || !edits) return;
-    if (reviewNotes.trim().length < MIN_NOTE) {
-      setNoteMissing(true);
-      noteRef.current?.focus();
-      toast({
-        title: 'Add a short evidence note',
-        description: 'Name the visible feature that supports your call or makes the photo unsuitable.',
-        variant: 'destructive',
-      });
-      return;
-    }
     setIsSaving(true);
     try {
       const { data, error } = await supabase.rpc('review_gecko_image', {
@@ -217,7 +199,8 @@ export default function AIFeedbackQueue() {
         p_primary_morph:     edits.primary_morph || current.primary_morph,
         p_secondary_traits:  edits.secondary_traits || current.secondary_traits || [],
         p_edits:             { taxonomy_version: TAXONOMY_VERSION, edits },
-        p_notes:             reviewNotes.trim(),
+        // The evidence note is optional (Tennyson, 29 Sep 2026).
+        p_notes:             reviewNotes.trim() || null,
         p_genetic_traits:    edits.genetics || [],
         p_base_color:        edits.base_color || null,
         p_pattern_intensity: edits.pattern_intensity || null,
@@ -467,23 +450,15 @@ export default function AIFeedbackQueue() {
                   </div>
                   <div>
                     <Label className="text-slate-300 text-xs uppercase tracking-wide">
-                      Evidence note (required to approve or reject)
+                      Evidence note <span className="normal-case text-slate-500">(optional)</span>
                     </Label>
                     <Textarea
-                      ref={noteRef}
                       value={reviewNotes}
-                      onChange={(event) => {
-                        setReviewNotes(event.target.value);
-                        if (event.target.value.trim().length >= MIN_NOTE) setNoteMissing(false);
-                      }}
-                      placeholder="Name the visible feature that supports this label, the closest alternative you ruled out, or why the photo is unusable."
-                      className={`bg-slate-800 text-slate-100 mt-2 ${noteMissing ? 'border-rose-500' : 'border-slate-600'}`}
+                      onChange={(event) => setReviewNotes(event.target.value)}
+                      placeholder="Optional: the visible feature that supports this label, the closest alternative you ruled out, or why the photo is unusable."
+                      className="bg-slate-800 border-slate-600 text-slate-100 mt-2"
                     />
-                    <p className={`text-xs mt-1 ${noteMissing ? 'text-rose-300' : 'text-slate-500'}`}>
-                      {reviewNotes.trim().length < MIN_NOTE
-                        ? `Write at least ${MIN_NOTE} characters (${reviewNotes.trim().length} so far), for example "clean full pins, no dalmatian spots". It records why the call was made.`
-                        : 'Saved with your decision so later reviewers can see why it was made.'}
-                    </p>
+                    <p className="text-xs text-slate-500 mt-1">Saved with your decision if you add one.</p>
                   </div>
                 </>
               )}
