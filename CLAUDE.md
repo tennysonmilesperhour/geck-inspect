@@ -129,4 +129,5 @@ docs/MIGRATIONS.md - how the database schema is managed and why the deploy scrip
 docs/planning/ - older audit and planning documents, kept for history
 docs/planning/launch-review-2026-09-04.md - the pre-launch review (62 findings with status) and its open items. Start here to continue that work.
 docs/planning/vip-audit-2026-09-27.md - post-launch audit: usage data, competitor research, and the phased plan (activation first). Start here for product work.
+docs/planning/feature-completeness-audit-2026-09-29.md: the audit of every feature, how finished each one is, the decisions waiting on Tennyson, and the step-by-step plan to finish the app (least finished first). Start here for completion work.
 IDENTITY.md and ARCHITECTURE.md do not exist yet. If you need brand voice or technical structure, read docs/CONTEXT.md and this file; do not invent those documents' contents.

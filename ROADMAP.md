@@ -16,6 +16,7 @@ The VIP audit's phased plan is complete (sections 2E and 2F of the audit). With 
 - [ ] **C. Real-phone pass.** Add Gecko and Morph ID on an actual iPhone (F55), the guided demo, joining a waitlist with terms, and claiming a transfer as a brand-new account. Every check so far used a simulated phone. (Tennyson)
 - [ ] **D. Decisions waiting on Tennyson.** Breeder price: DECISIONS.md decision 27 proposes $5.99 to $9.99 once shipping works or leaves the feature list; waitlists now add real value to the plan. CSP: move F43 from report-only to enforced (was due around 4 Oct). Top up Replicate to at least $5 (the Morph ID photo work below needs it) and retire the old GECK_DATA_SUPABASE_URL and SERVICE_KEY secrets.
 - [ ] **E. Morph ID accuracy (parked).** The four items under VIP AUDIT FOLLOW-UPS. The first waits on about 20 reviewed real two-photo identifications.
+- [ ] **F. Finish every feature.** The 29 September feature audit (docs/planning/feature-completeness-audit-2026-09-29.md) fixed about 60 bugs and ranks everything left, least finished first: Phase 0 (security, billing and data safety, about three days), then 34 steps. Its section 5 lists 21 decisions for Tennyson, each with a recommendation.
 
 ---
 
@@ -157,7 +158,7 @@ These were written in May with May deadlines. Each carries a status line from th
 ## FROM THE MAY 2026 PLAN: NEXT 90 DAYS
 
 ### [x] 7. Ship native iOS or polished PWA
-**Status (29 Sep):** The PWA path is done: geckinspect.com installs to the home screen (public/manifest.json, InstallAppButton), works offline for collection records (decision 29) and sends web push for reminders and messages (src/lib/webPush.js). The native app is item 16 (docs/native-shell-plan.md; a Capacitor Android project exists, no store release yet).
+**Status (29 Sep):** The PWA path is done: geckinspect.com installs to the home screen (public/manifest.json, InstallAppButton), works offline for the app shell (29 Sep audit: collection data still needs a connection; step 2 of the completion plan) and sends web push for reminders and messages (src/lib/webPush.js). The native app is item 16 (docs/native-shell-plan.md; a Capacitor Android project exists, no store release yet).
 **Why:** Single biggest functional gap. Every serious competitor has mobile. Geck Inspect is the only major platform that does not.
 
 **Two paths:**
@@ -202,7 +203,7 @@ These were written in May with May deadlines. Each carries a status line from th
 **Definition of done:** One option is shipped in beta and announced publicly.
 
 ### [ ] 9. Open the keeper market product
-**Status (29 Sep):** Built: the Keeper plan ($2.99), server-side feeding reminders, weight charts with the healthy range for the gecko's age, vet records, shareable passports, one free Morph ID, the care guide and the forum. Open against its definition of done (100 active users); NOW item A measures whether new keepers stay.
+**Status (29 Sep):** Built: the Keeper plan ($2.99), server-side feeding reminders, weight charts with the healthy range for the gecko's age, shareable passports, one free Morph ID, the care guide and the forum. Vet records are stored and shown on passports, but nothing in the app can create one yet (29 Sep audit, step 1 of the completion plan). Open against its definition of done (100 active users); NOW item A measures whether new keepers stay.
 **Why:** Doubles TAM. Generates AI training data. Top of funnel for breeder upgrades.
 
 **What to build:**
