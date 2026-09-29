@@ -52,7 +52,7 @@ export function PublicFooter() {
             <span className="font-bold text-slate-100">Geck Inspect</span>
           </Link>
           <p className="text-slate-500 mt-3 leading-relaxed max-w-md">
-            The professional platform for crested gecko (<em>Correlophus ciliatus</em>) breeders and keepers. Collection management, breeding planning, AI morph ID, lineage, and community, in one place.
+            The crested gecko (<em>Correlophus ciliatus</em>) app for the business side of breeding: what each gecko is worth, what a pairing&rsquo;s eggs should bring, what each season made, and pedigrees buyers can verify.
           </p>
         </div>
         <div>

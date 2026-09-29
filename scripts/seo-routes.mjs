@@ -204,9 +204,9 @@ export const STATIC_ROUTES = [
     changefreq: 'weekly',
     lastmod: dateOf('src/pages/Home.jsx'),
     meta: {
-      title: 'Geck Inspect: Crested Gecko Collection, Breeding & Community',
+      title: 'Geck Inspect: Crested Gecko Breeding App for Pricing, Pairings and Sales',
       description:
-        'The professional platform for crested gecko breeders and keepers. Track collections, plan breedings, identify morphs with AI, and connect with the community.',
+        'The crested gecko app for the business side of breeding. Value estimates from real listings, expected value per egg for every pairing, profit by season, and verifiable pedigrees. Free to start.',
     },
   },
   {

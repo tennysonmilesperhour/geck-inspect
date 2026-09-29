@@ -25,7 +25,7 @@ import { SUPPORT_EMAIL } from './supportContact.js';
 export const SITE_URL = 'https://geckinspect.com';
 export const SITE_NAME = 'Geck Inspect';
 export const SITE_DESCRIPTION =
-  'The professional platform for crested gecko breeders and keepers. Track collections, plan breedings, identify morphs with AI, and connect with the community.';
+  'The crested gecko app for the business side of breeding, built for new and small breeders. Value estimates from real listings, pairing value, profit tracking, verifiable pedigrees, and collection records.';
 
 export const LOGO_URL =
   'https://geckinspect.com/logo.png';
