@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { Suspense, useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import { api } from '@/api/appClient';
@@ -27,7 +27,10 @@ import {
 import { format, getQuarter, getYear } from 'date-fns';
 import { todayLocalISO } from '@/lib/dateUtils';
 import GeckoSelectionModal from '../components/marketplace/GeckoSelectionModal';
-import MarketAnalytics from '@/components/market-analytics/MarketAnalytics';
+import { lazy } from '@/lib/lazyWithRetry';
+// Market analytics sits on the Pricing tab, so its code (and its charts)
+// download only when that tab is opened.
+const MarketAnalytics = lazy(() => import('@/components/market-analytics/v2/MarketAnalyticsLive'));
 
 const QUARTER_LABELS = { 1: 'Q1 (Jan-Mar)', 2: 'Q2 (Apr-Jun)', 3: 'Q3 (Jul-Sep)', 4: 'Q4 (Oct-Dec)' };
 
@@ -822,12 +825,11 @@ function PendingSalesTab({ user, pendingSales, setPendingSales, onCompleteSale, 
 }
 
 // ---------------------------------------------------------------------------
-// Market Analytics lives in its own module at
-//   src/components/market-analytics/MarketAnalytics.jsx
-//   src/lib/marketAnalytics/*
-// so the data layer is cleanly separated from the visualization layer
-// and the analytics can later power API/alerts/AI recommendations
-// without changes to the Business Tools page.
+// Market Analytics lives in its own module:
+//   src/components/market-analytics/v2/  (the section on the Pricing tab)
+//   src/lib/marketAnalytics/v2/          (loaders and pure calculations)
+// fed by public.market_analytics_v2(). The same components render the
+// design demo in demo/market-analytics (pnpm build:analytics-demo).
 // ---------------------------------------------------------------------------
 
 // ---------------------------------------------------------------------------
@@ -1619,7 +1621,9 @@ export default function MarketplaceSalesStats() {
                 <h3 className="text-base font-semibold text-slate-100 flex items-center gap-1.5">
                   <Globe className="w-4 h-4 text-emerald-400" /> Market analytics
                 </h3>
-              <MarketAnalytics user={user} />
+                <Suspense fallback={<div className="h-64 rounded-xl bg-slate-900/60 border border-slate-800 animate-pulse" />}>
+                  <MarketAnalytics user={user} />
+                </Suspense>
               </section>
             </TabsContent>
           </Tabs>

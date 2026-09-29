@@ -44,7 +44,7 @@ const SUB_NAV = [
 
 const DEFAULT_FILTERS = { age: 'all', query: '' };
 
-export default function MarketAnalyticsV2({ aggregates, pipeline = [], pipelineIsExample = false, now = new Date() }) {
+export default function MarketAnalyticsV2({ aggregates, pipeline = [], pipelineIsExample = false, pipelineStatus = 'ready', now = new Date() }) {
   const [filters, setFilters] = useState(DEFAULT_FILTERS);
   const [pins, setPins] = useState(['market-index', 'top-movers']);
   const [section, setSection] = useState('overview');
@@ -78,7 +78,7 @@ export default function MarketAnalyticsV2({ aggregates, pipeline = [], pipelineI
         {section === 'traits'   && <TraitsSection {...shared} selected={selectedTrait} onSelect={setSelectedTrait} />}
         {section === 'pricemap' && <PriceMapSection {...shared} />}
         {section === 'growout'  && <GrowOutSection {...shared} />}
-        {section === 'supply'   && <SupplySection {...shared} pipeline={pipeline} pipelineIsExample={pipelineIsExample} />}
+        {section === 'supply'   && <SupplySection {...shared} pipeline={pipeline} pipelineIsExample={pipelineIsExample} pipelineStatus={pipelineStatus} />}
         {section === 'sellers'  && <SellersSection {...shared} />}
       </div>
     </div>
@@ -98,8 +98,11 @@ function FreshnessBanner({ coverage, now }) {
         <span className={`font-semibold ${stale ? 'text-amber-300' : 'text-emerald-300'}`}>
           {stale ? `Last collected ${fmt(coverage.last_seen)}, ${days} days ago.` : `Updated ${fmt(coverage.last_seen)}.`}
         </span>{' '}
-        Prices are asking prices from US MorphMarket listings. Sales were observed from {fmt(coverage.sold_window.from)} to {fmt(coverage.sold_window.to)} only,
-        so sell-through and days-to-sell describe that window. {coverage.excluded_outliers} placeholder asks over $20,000 are left out.
+        Prices are asking prices from US MorphMarket listings.{' '}
+        {coverage.sold_window
+          ? `Sales were observed from ${fmt(coverage.sold_window.from)} to ${fmt(coverage.sold_window.to)} only, so sell-through and days-to-sell describe that window.`
+          : 'No sales have been observed yet, so sell-through and days-to-sell are blank.'}
+        {coverage.excluded_outliers > 0 && ` ${coverage.excluded_outliers} placeholder asks under $20 or over $20,000 are left out.`}
       </p>
     </div>
   );

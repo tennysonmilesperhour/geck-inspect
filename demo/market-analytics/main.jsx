@@ -8,16 +8,20 @@
 
 import { useState } from 'react';
 import ReactDOM from 'react-dom/client';
-import { BarChart3, Globe, Clock, Sparkles, FlaskConical } from 'lucide-react';
+import { BarChart3, Globe, PieChart, DollarSign, Tag, Sparkles, FlaskConical } from 'lucide-react';
 import '@/index.css';
 import MarketAnalyticsV2 from '@/components/market-analytics/v2/MarketAnalyticsV2';
 import MarketAnalytics from '@/components/market-analytics/MarketAnalytics';
 import { DEMO_AGGREGATES, DEMO_PIPELINE } from '@/lib/marketAnalytics/v2/demoAggregates';
 
 const MODES = [
-  { code: 'v2', label: 'Proposed', sub: 'real market data', icon: Sparkles },
-  { code: 'v1', label: 'Current preview', sub: 'sample fixtures', icon: FlaskConical },
+  { code: 'v2', label: 'New', sub: 'real market data', icon: Sparkles },
+  { code: 'v1', label: 'Old preview', sub: 'sample fixtures', icon: FlaskConical },
 ];
+
+const fmt = (iso) => new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric', timeZone: 'UTC' });
+const K = DEMO_AGGREGATES.kpis;
+const C = DEMO_AGGREGATES.coverage;
 
 const CHANGES = [
   ['Market Index', 'Asking Price Index, weekly, gaps shown'],
@@ -76,14 +80,14 @@ function Demo() {
           </div>
           <p className="text-[11px] text-slate-400 leading-relaxed md:flex-1">
             {mode === 'v2'
-              ? 'Same look as the current preview. Every card is rebuilt around data Geck Inspect actually has: 9,895 US listings from May 9 to Aug 29, 2026 and 2,830 observed sales.'
-              : 'This is the tab as it ships today, running on its sample fixtures. With real data, the Regional, Arbitrage, Supply and Calendar views come up empty.'}
+              ? `The section as it ships, drawn by the same components from a saved copy of the live data: ${K.listings.toLocaleString()} US listings from ${fmt(C.first_seen)} to ${fmt(C.last_seen)} and ${K.sold.toLocaleString()} observed sales. Your pipeline shows example clutches.`
+              : 'The old preview, running on its sample fixtures. With real data, its Regional, Arbitrage, Supply and Calendar views came up empty.'}
           </p>
         </div>
 
         {mode === 'v2' && (
           <details className="rounded-xl border border-slate-800 bg-slate-900/40 px-3 py-2 group">
-            <summary className="text-xs text-slate-300 cursor-pointer select-none">What changed from the current preview</summary>
+            <summary className="text-xs text-slate-300 cursor-pointer select-none">What changed from the old preview</summary>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-1 mt-2 pb-1">
               {CHANGES.map(([from, to]) => (
                 <div key={from} className="text-[11px] flex gap-2 min-w-0">
@@ -97,16 +101,14 @@ function Demo() {
         )}
 
         <div className="bg-emerald-950/30 border border-emerald-900/40 rounded-xl p-4 md:p-6">
-          <div className="grid grid-cols-2 md:grid-cols-4 w-full max-w-xl mx-auto bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1 mb-6 text-sm">
-            {['Revenue', 'Pending', 'Costs'].map((t) => (
-              <span key={t} className="flex items-center justify-center rounded-sm px-3 py-1.5 text-slate-500">
-                {t === 'Pending' && <Clock className="w-3.5 h-3.5 mr-1" />}{t}
-              </span>
-            ))}
-            <span className="flex items-center justify-center rounded-sm px-3 py-1.5 bg-emerald-600 text-white font-medium">
-              <Globe className="w-3.5 h-3.5 mr-1" />Market Analytics
-            </span>
+          <div className="grid grid-cols-3 w-full max-w-md mx-auto bg-slate-950 border border-slate-700 rounded-md p-1.5 gap-1 mb-6 text-sm">
+            <span className="flex items-center justify-center rounded-sm px-3 py-1.5 text-slate-500"><PieChart className="w-3.5 h-3.5 mr-1" />Money</span>
+            <span className="flex items-center justify-center rounded-sm px-3 py-1.5 text-slate-500"><DollarSign className="w-3.5 h-3.5 mr-1" />Sales</span>
+            <span className="flex items-center justify-center rounded-sm px-3 py-1.5 bg-emerald-600 text-white font-medium"><Tag className="w-3.5 h-3.5 mr-1" />Pricing</span>
           </div>
+          <h3 className="text-base font-semibold text-slate-100 flex items-center gap-1.5 mb-4">
+            <Globe className="w-4 h-4 text-emerald-400" /> Market analytics
+          </h3>
 
           {mode === 'v2'
             ? <MarketAnalyticsV2 aggregates={DEMO_AGGREGATES} pipeline={DEMO_PIPELINE} pipelineIsExample />

@@ -17,7 +17,7 @@ import {
   SectionHeader, TrendDelta, ConfidenceChip, MethodologyPopover,
 } from '../shared';
 import {
-  askingPriceIndex, topMovers, marketTemperature, weekLabel, WEEK_AXIS, MIN_MOVER_N,
+  askingPriceIndex, topMovers, marketTemperature, weekLabel, weekAxis, periodLabels, soldWindowWeeks, MIN_MOVER_N,
 } from '@/lib/marketAnalytics/v2/model';
 
 export const OVERVIEW_CARDS = ['market-index', 'top-movers', 'coverage', 'temperature'];
@@ -45,14 +45,15 @@ export default function OverviewSection({ agg, pins, onTogglePin, onOpenTrait, o
   const index = useMemo(() => askingPriceIndex(agg), [agg]);
   const movers = useMemo(() => topMovers(agg), [agg]);
   const temps = useMemo(() => marketTemperature(agg), [agg]);
+  const periods = useMemo(() => periodLabels(agg), [agg]);
   const pinProps = { pins, onTogglePin };
 
   const card = (id) => {
     switch (id) {
       case 'market-index': return <IndexCard key={id} index={index} pinProps={pinProps} />;
-      case 'top-movers':   return <MoversCard key={id} movers={movers} onOpenTrait={onOpenTrait} pinProps={pinProps} />;
-      case 'coverage':     return <CoverageCard key={id} coverage={agg.coverage} pinProps={pinProps} />;
-      case 'temperature':  return <TemperatureCard key={id} temps={temps} onOpenTrait={onOpenTrait} pinProps={pinProps} />;
+      case 'top-movers':   return <MoversCard key={id} movers={movers} periods={periods} onOpenTrait={onOpenTrait} pinProps={pinProps} />;
+      case 'coverage':     return <CoverageCard key={id} agg={agg} pinProps={pinProps} />;
+      case 'temperature':  return <TemperatureCard key={id} temps={temps} periods={periods} onOpenTrait={onOpenTrait} pinProps={pinProps} />;
       default: return null;
     }
   };
@@ -63,7 +64,7 @@ export default function OverviewSection({ agg, pins, onTogglePin, onOpenTrait, o
 
   return (
     <div className="space-y-5">
-      <KpiStrip kpis={agg.kpis} />
+      <KpiStrip kpis={agg.kpis} soldWeeks={soldWindowWeeks(agg)} />
       {card('market-index')}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         <div className="lg:col-span-2 min-w-0">{card('top-movers')}</div>
@@ -75,12 +76,12 @@ export default function OverviewSection({ agg, pins, onTogglePin, onOpenTrait, o
 }
 
 // =================== KPI strip =======================================
-function KpiStrip({ kpis }) {
+function KpiStrip({ kpis, soldWeeks }) {
   const tiles = [
     { label: 'Median ask', value: `$${kpis.median_ask}`, sub: `${kpis.listings.toLocaleString()} listings`, Icon: Tag, color: 'text-emerald-300' },
     { label: 'Sales observed', value: kpis.sold.toLocaleString(), sub: `$${(kpis.sold_value / 1_000_000).toFixed(2)}M at last ask`, Icon: Receipt, color: 'text-sky-300' },
-    { label: 'Sell-through', value: `${Math.round(kpis.sell_through * 100)}%`, sub: 'in the 4-week sales window', Icon: Percent, color: 'text-amber-300' },
-    { label: 'Days to sell', value: `${kpis.avg_days_to_sell}`, sub: 'average, sold listings', Icon: Timer, color: 'text-violet-300' },
+    { label: 'Sell-through', value: kpis.sell_through != null ? `${Math.round(kpis.sell_through * 100)}%` : '-', sub: soldWeeks ? `in the ${soldWeeks}-week sales window` : 'no sales observed yet', Icon: Percent, color: 'text-amber-300' },
+    { label: 'Days to sell', value: kpis.avg_days_to_sell != null ? `${kpis.avg_days_to_sell}` : '-', sub: 'average, sold listings', Icon: Timer, color: 'text-violet-300' },
     { label: 'Sellers', value: kpis.sellers.toLocaleString(), sub: 'with a named storefront', Icon: Store, color: 'text-slate-200', span: 'col-span-2 sm:col-span-1' },
   ];
   return (
@@ -100,23 +101,27 @@ function KpiStrip({ kpis }) {
 
 // =================== Asking Price Index ==============================
 function IndexCard({ index, pinProps }) {
-  const gapStart = weekLabel('06-15');
-  const gapEnd = weekLabel('08-10');
+  const anchor = weekLabel(index.anchor_week);
+  // Y range follows the data in steps of 100, always showing the 1,000 line.
+  const vals = index.series.map((p) => p.index).filter((v) => v != null);
+  const lo = Math.floor((Math.min(...vals, 1000) - 20) / 100) * 100;
+  const hi = Math.ceil((Math.max(...vals, 1000) + 20) / 100) * 100;
+  const ticks = Array.from({ length: (hi - lo) / 100 + 1 }, (_, i) => lo + i * 100);
   const latest = index.series.find((s) => s.week === index.latest_week);
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
       <SectionHeader
         icon={Activity}
         title="Geck Inspect Asking Price Index"
-        subtitle="Weekly median ask of newly listed crested geckos. 1,000 = the week of May 11."
+        subtitle={`Weekly median ask of newly listed crested geckos. 1,000 = the week of ${anchor}.`}
         right={
           <div className="flex items-center gap-2">
             <span className="inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] leading-none bg-amber-500/15 text-amber-200 border-amber-500/40">Asking prices</span>
             <ConfidenceChip confidence={index.confidence} sampleSize={index.sample_size} sources={['external.morphmarket']} />
             <MethodologyPopover title="How this index is built">
-              <p>Each week we take the median asking price of listings first seen that week and divide it by the May 11 median ($300). A reading of 850 means new listings are asking 15% less than in mid-May.</p>
-              <p>The week of May 11 is the first full scrape, so it includes every listing that was already live. Later weeks are only new listings, which skew toward hatchlings in late summer.</p>
-              <p>The shaded stretch is when the collector was offline. We leave it blank instead of drawing a line through it.</p>
+              <p>Each week we take the median asking price of listings first seen that week and divide it by the {anchor} median (${index.anchor_median}). A reading of 900 means new listings are asking 10% less than that week.</p>
+              <p>The first full week of tracking includes every listing that was already live. Later weeks are only new listings, so a season heavy on hatchlings pulls the median down.</p>
+              <p>Shaded stretches are weeks the collector was offline. We leave them blank instead of drawing a line through them.</p>
             </MethodologyPopover>
             <PinToggle id="market-index" {...pinProps} />
           </div>
@@ -127,7 +132,7 @@ function IndexCard({ index, pinProps }) {
           <div className="text-3xl font-bold text-emerald-300 tabular-nums">{index.value.toLocaleString()}</div>
           <div className="flex items-center gap-2 mt-0.5">
             <TrendDelta value={index.change_pct} />
-            <span className="text-[10px] text-slate-500">since May 11</span>
+            <span className="text-[10px] text-slate-500">since {anchor}</span>
           </div>
         </div>
         {latest && (
@@ -147,13 +152,16 @@ function IndexCard({ index, pinProps }) {
               </linearGradient>
             </defs>
             <CartesianGrid strokeDasharray="3 3" stroke="#1e293b" vertical={false} />
-            <ReferenceArea
-              x1={gapStart} x2={gapEnd}
-              fill="#64748b" fillOpacity={0.08} stroke="#64748b" strokeOpacity={0.25} strokeDasharray="3 3"
-              label={{ value: 'Collector offline', fill: '#64748b', fontSize: 10, position: 'center' }}
-            />
+            {index.gaps.map((g) => (
+              <ReferenceArea
+                key={g.from}
+                x1={g.from} x2={g.to}
+                fill="#64748b" fillOpacity={0.08} stroke="#64748b" strokeOpacity={0.25} strokeDasharray="3 3"
+                label={g.from !== g.to ? { value: 'Collector offline', fill: '#64748b', fontSize: 10, position: 'center' } : undefined}
+              />
+            ))}
             <XAxis dataKey="label" tick={{ fill: '#64748b', fontSize: 10 }} interval={2} tickLine={false} axisLine={{ stroke: '#1e293b' }} />
-            <YAxis tick={{ fill: '#64748b', fontSize: 10 }} width={36} domain={[700, 1050]} ticks={[700, 800, 900, 1000]} tickLine={false} axisLine={false} />
+            <YAxis tick={{ fill: '#64748b', fontSize: 10 }} width={36} domain={[lo, hi]} ticks={ticks} tickLine={false} axisLine={false} />
             <RechartsTooltip
               contentStyle={{ background: '#0f172a', border: '1px solid #1e293b', borderRadius: 8, fontSize: 11 }}
               labelStyle={{ color: '#e2e8f0' }}
@@ -170,21 +178,21 @@ function IndexCard({ index, pinProps }) {
 }
 
 // =================== Top movers ======================================
-function MoversCard({ movers, onOpenTrait, pinProps }) {
+function MoversCard({ movers, periods, onOpenTrait, pinProps }) {
   const all = [...movers.up, ...movers.down];
-  const prices = all.flatMap((r) => [r.spring[1], r.late[1]]);
+  const prices = all.flatMap((r) => [r.earlier[1], r.recent[1]]);
   const scale = { min: Math.min(...prices), max: Math.max(...prices) };
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 h-full">
       <SectionHeader
         icon={TrendingUp}
         title="Top Movers"
-        subtitle="Median ask of new listings by trait. Hollow dot = spring, filled = late August."
+        subtitle={`Median ask of new listings by trait. Hollow dot = ${periods.earlierShort}, filled = ${periods.recentShort}.`}
         right={
           <div className="flex items-center gap-2">
             <MethodologyPopover title="How movers are picked">
-              <p>For each trait we compare the median ask of listings first seen May 9 to June 30 with listings first seen August 17 to 29. A trait needs at least {MIN_MOVER_N} listings in both periods to appear.</p>
-              <p>These are different animals in each period. If late-summer listings are mostly hatchlings, the median drops even when the market has not. The Price Map tab shows prices split by age.</p>
+              <p>For each trait we compare the median ask of listings first seen {periods.earlier} with listings first seen {periods.recent} (the last four weeks of data). A trait needs at least {MIN_MOVER_N} listings in both periods to appear.</p>
+              <p>These are different animals in each period. If recent listings are mostly hatchlings, the median drops even when the market has not. The Price Map tab shows prices split by age.</p>
             </MethodologyPopover>
             <PinToggle id="top-movers" {...pinProps} />
           </div>
@@ -217,10 +225,10 @@ function MoverColumn({ title, rows, direction, scale, onOpenTrait }) {
               <div className="flex-1 min-w-0">
                 <div className="text-sm font-medium text-slate-100 truncate">{r.name}</div>
                 <div className="text-[10px] text-slate-500 mt-0.5 tabular-nums">
-                  ${r.spring[1]} to ${r.late[1]} · n={r.late[0]}
+                  ${r.earlier[1]} to ${r.recent[1]} · n={r.recent[0]}
                 </div>
               </div>
-              <Dumbbell from={r.spring[1]} to={r.late[1]} scale={scale} up={direction === 'up'} />
+              <Dumbbell from={r.earlier[1]} to={r.recent[1]} scale={scale} up={direction === 'up'} />
               <div className="w-14 text-right text-xs"><TrendDelta value={r.change_pct} digits={0} /></div>
             </button>
           ))}
@@ -229,7 +237,7 @@ function MoverColumn({ title, rows, direction, scale, onOpenTrait }) {
   );
 }
 
-// Spring ask (hollow dot) to August ask (filled dot) on one price scale
+// Earlier ask (hollow dot) to recent ask (filled dot) on one price scale
 // shared by every row in the card, so bar lengths compare across traits.
 function Dumbbell({ from, to, scale, up, width = 72, height = 22 }) {
   const pad = 4;
@@ -248,11 +256,14 @@ function Dumbbell({ from, to, scale, up, width = 72, height = 22 }) {
 }
 
 // =================== Data coverage ===================================
-function CoverageCard({ coverage, pinProps }) {
-  const byWeek = Object.fromEntries(coverage.weeks.map((w) => [w.week, w]));
-  const soldWeeks = new Set(['05-11', '05-18', '05-25', '06-01']);
-  const CAP = 900;
-  const weeks = ['05-04', ...WEEK_AXIS];
+function CoverageCard({ agg, pinProps }) {
+  const byWeek = Object.fromEntries(agg.coverage.weeks.map((w) => [w.week, w]));
+  const weeks = weekAxis(agg).full;
+  // The first full scrape dwarfs every later week, so bars are capped at
+  // the second-largest week and the tall one gets its count printed on top.
+  const sizes = agg.coverage.weeks.map((w) => w.listings).sort((a, b) => b - a);
+  const CAP = Math.max(sizes[1] || sizes[0] || 1, 1);
+  const months = [...new Set(weeks.map((w) => new Date(`${w}T00:00:00Z`).toLocaleDateString('en-US', { month: 'short', timeZone: 'UTC' })))];
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4 h-full">
       <SectionHeader
@@ -261,16 +272,16 @@ function CoverageCard({ coverage, pinProps }) {
         subtitle="New listings collected each week"
         right={<PinToggle id="coverage" {...pinProps} />}
       />
-      <div className="flex items-end gap-[3px] h-28 pt-4 relative" role="img" aria-label="Weekly listings collected, May to August">
+      <div className="flex items-end gap-[3px] h-28 pt-4 relative" role="img" aria-label="New listings collected each week">
         {weeks.map((key) => {
-          const w = byWeek[key];
+          const w = byWeek[key]?.listings > 0 ? byWeek[key] : null;
           const capped = w && w.listings > CAP;
           const h = w ? Math.max(4, (Math.min(w.listings, CAP) / CAP) * 100) : 100;
           const cls = !w
             ? 'bg-[repeating-linear-gradient(135deg,rgba(100,116,139,0.18)_0_3px,transparent_3px_6px)] border border-dashed border-slate-700/70'
-            : soldWeeks.has(key) ? 'bg-emerald-500/70' : 'bg-slate-400/50';
+            : w.sold > 0 ? 'bg-emerald-500/70' : 'bg-slate-400/50';
           return (
-            <div key={key} className="flex-1 h-full flex flex-col justify-end relative group" title={w ? `${weekLabel(key)}: ${w.listings.toLocaleString()} listings${w.note ? `. ${w.note}` : ''}` : `${weekLabel(key)}: not collected`}>
+            <div key={key} className="flex-1 h-full flex flex-col justify-end relative group" title={w ? `Week of ${weekLabel(key)}: ${w.listings.toLocaleString()} new listings, ${w.sold} sales observed` : `Week of ${weekLabel(key)}: not collected`}>
               {capped && (
                 <span className="absolute -top-4 left-1/2 -translate-x-1/2 text-[9px] text-emerald-300 tabular-nums whitespace-nowrap">{(w.listings / 1000).toFixed(1)}k</span>
               )}
@@ -280,7 +291,7 @@ function CoverageCard({ coverage, pinProps }) {
         })}
       </div>
       <div className="flex justify-between text-[10px] text-slate-500 mt-1.5">
-        <span>May</span><span>Jun</span><span>Jul</span><span>Aug</span>
+        {months.map((m) => <span key={m}>{m}</span>)}
       </div>
       <div className="mt-3 pt-3 border-t border-slate-800 space-y-1.5 text-[10px] text-slate-400">
         <LegendRow swatch="bg-emerald-500/70" label="Listings and sales tracked" />
@@ -301,7 +312,7 @@ function LegendRow({ swatch, label }) {
 }
 
 // =================== Market temperature ==============================
-function TemperatureCard({ temps, onOpenTrait, pinProps }) {
+function TemperatureCard({ temps, periods, onOpenTrait, pinProps }) {
   return (
     <div className="rounded-xl border border-slate-800 bg-slate-900/60 p-4">
       <SectionHeader
@@ -313,7 +324,7 @@ function TemperatureCard({ temps, onOpenTrait, pinProps }) {
             <MethodologyPopover title="How the temperature is scored">
               <p>Four signals, each scaled from -1 to +1, then weighted:</p>
               <ul className="list-disc pl-5 space-y-0.5 text-slate-300">
-                <li>Asking-price change, spring to late summer (45%)</li>
+                <li>Asking-price change, {periods.earlierShort} to {periods.recentShort} (45%)</li>
                 <li>Sell-through compared with the whole market (25%)</li>
                 <li>Change in the trait&apos;s share of new listings (20%)</li>
                 <li>Days to sell compared with the whole market (10%)</li>

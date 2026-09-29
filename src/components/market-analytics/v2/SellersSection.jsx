@@ -56,7 +56,7 @@ export default function SellersSection({ agg, anonymize = true }) {
             title="Top sellers by sales value"
             subtitle="Observed sales, valued at the last asking price"
             right={anonymize && (
-              <span className="inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] leading-none bg-slate-500/15 text-slate-300 border-slate-500/40">Names hidden in demo</span>
+              <span className="inline-flex items-center rounded border px-1.5 py-0.5 text-[10px] leading-none bg-slate-500/15 text-slate-300 border-slate-500/40">Names hidden</span>
             )}
           />
           <div className="overflow-x-auto -mx-4 px-4">
