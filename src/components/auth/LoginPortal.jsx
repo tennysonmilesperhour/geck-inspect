@@ -70,6 +70,16 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
     if (new URLSearchParams(window.location.search).get('authError') === 'callback') {
       toast({ title: 'Sign-in link could not be completed', description: 'Request a fresh link and open it on the device where you started sign-in.', variant: 'destructive' });
     }
+    // An expired or already-used confirmation or reset link comes back with
+    // error_description in the URL hash; it used to land on a plain sign-in
+    // form with no word about what went wrong.
+    const hashParams = new URLSearchParams(window.location.hash.slice(1));
+    const linkError = hashParams.get('error_description') || new URLSearchParams(window.location.search).get('error_description');
+    if (linkError) {
+      toast({ title: 'That email link has expired or was already used', description: 'Request a fresh one below.', variant: 'destructive' });
+      if (initialMode === 'reset') setIsForgot(true);
+      window.history.replaceState(null, '', window.location.pathname + window.location.search);
+    }
   }, [initialMode]);
 
   const handleGoogleSignIn = async () => {
@@ -125,6 +135,7 @@ export default function LoginPortal({ requiredFeature: _requiredFeature = null }
           sessionStorage.setItem('geck_inspect_ephemeral_session', '1');
         } else {
           sessionStorage.removeItem('geck_inspect_ephemeral_session');
+          localStorage.removeItem('geck_inspect_unload_ts');
         }
         // On success, onAuthStateChange in AuthContext re-renders the app.
       }

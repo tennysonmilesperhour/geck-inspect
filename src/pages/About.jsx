@@ -73,9 +73,9 @@ export default function About() {
 
         <div className="mt-10 grid grid-cols-2 md:grid-cols-4 gap-6 border-y border-slate-800/50 py-6">
           <Stat value="30+" label="Morphs documented" />
-          <Stat value="50+" label="Care topics" />
+          <Stat value="30+" label="Care topics" />
           <Stat value="15+" label="Years of captive history covered" />
-          <Stat value="Free" label="Every feature" />
+          <Stat value="Free" label="To start" />
         </div>
 
         <div className="mt-12 space-y-10">
@@ -136,7 +136,7 @@ export default function About() {
         <section className="mt-16 rounded-2xl border border-emerald-500/30 bg-gradient-to-br from-emerald-950/40 via-slate-900/60 to-slate-900/40 p-6 md:p-8">
           <h2 className="text-xl md:text-2xl font-bold text-white mb-2">Track your collection for free</h2>
           <p className="text-slate-300 mb-5 leading-relaxed">
-            Every feature is free. Create an account to start logging weights, planning breedings, and visualizing lineage.
+            It is free to start. Create an account to log weights, plan breedings and see lineage.
           </p>
           <Link to={createPageUrl('AuthPortal')}>
             <Button size="lg" className="bg-emerald-700 hover:bg-emerald-800 text-white font-semibold shadow-lg shadow-emerald-500/30">

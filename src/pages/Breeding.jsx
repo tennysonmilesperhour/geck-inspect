@@ -213,10 +213,14 @@ export default function BreedingPage() {
             loadData();
         } catch (error) {
             console.error("Failed to create breeding plan:", error);
+            toast({ title: "Plan not created", description: error.message || "Please try again.", variant: "destructive" });
         }
     };
 
     const handleDeletePlan = async (planId) => {
+        // The Delete Plan button sits right above Save Changes on phones, and
+        // this removes every egg too, so ask first.
+        if (!window.confirm('Delete this breeding plan and all of its eggs? This cannot be undone.')) return;
         try {
             const eggsToDelete = await Egg.filter({ breeding_plan_id: planId });
             for (const egg of eggsToDelete) {
@@ -226,6 +230,7 @@ export default function BreedingPage() {
             loadData();
         } catch (error) {
             console.error("Failed to delete breeding plan:", error);
+            toast({ title: "Plan not deleted", description: error.message || "Please try again.", variant: "destructive" });
         }
     };
 
@@ -242,6 +247,7 @@ export default function BreedingPage() {
             loadData();
         } catch (error) {
             console.error("Failed to archive breeding plan:", error);
+            toast({ title: "Plan not updated", description: error.message || "Please try again.", variant: "destructive" });
         }
     };
 

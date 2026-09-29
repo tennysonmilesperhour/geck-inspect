@@ -41,7 +41,10 @@ export default function ProjectManager() {
     // ?tab=feeding (Batch Husbandry's "Create a feeding group") opens a tab.
     const [activeTab, setActiveTab] = useState(() => {
         const wanted = new URLSearchParams(window.location.search).get('tab');
-        return ['projects', 'future', 'calendar', 'feeding', 'notes'].includes(wanted) ? wanted : plannerPrefs.defaultTab;
+        if (['projects', 'future', 'calendar', 'feeding', 'notes'].includes(wanted)) return wanted;
+        // The setting used to store 'plans', which is not a tab value, so the
+        // planner opened blank for anyone who picked Plans as the default.
+        return plannerPrefs.defaultTab === 'plans' ? 'projects' : plannerPrefs.defaultTab;
     });
     const [currentUserEmail, setCurrentUserEmail] = useState(null);
 
@@ -243,7 +246,9 @@ export default function ProjectManager() {
                     updateData.last_completed_date = new Date().toISOString();
                     const nextDate = new Date();
                     nextDate.setDate(nextDate.getDate() + task.recurring_interval_days);
-                    updateData.next_due_date = nextDate.toISOString();
+                    // A calendar day, not a timestamp: the evening's UTC time was
+                    // already tomorrow in the Americas.
+                    updateData.next_due_date = format(nextDate, 'yyyy-MM-dd');
                     updateData.is_completed = false;
                 }
             } else { updateData.completed_date = null; }
@@ -302,12 +307,12 @@ export default function ProjectManager() {
                         <PageSettingsPanel title="Planner Settings">
                             <div>
                                 <Label className="text-slate-300 text-sm mb-1 block">Default Tab</Label>
-                                <Select value={plannerPrefs.defaultTab} onValueChange={v => { setPlannerPrefs({ defaultTab: v }); setActiveTab(v); }}>
+                                <Select value={plannerPrefs.defaultTab === 'plans' ? 'projects' : plannerPrefs.defaultTab} onValueChange={v => { setPlannerPrefs({ defaultTab: v }); setActiveTab(v); }}>
                                     <SelectTrigger className="w-full h-8 text-xs">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
-                                        <SelectItem value="plans">Plans</SelectItem>
+                                        <SelectItem value="projects">Plans</SelectItem>
                                         <SelectItem value="future">Future Breeding</SelectItem>
                                         <SelectItem value="calendar">Calendar</SelectItem>
                                         <SelectItem value="feeding">Feeding Groups</SelectItem>
@@ -409,7 +414,7 @@ export default function ProjectManager() {
                                                                         {task.description && <p className="text-xs text-slate-400">{task.description}</p>}
                                                                         {task.due_date && (
                                                                             <p className="text-xs text-slate-500 flex items-center gap-1 mt-1">
-                                                                                <Calendar className="w-3 h-3" /> Due: {format(new Date(task.due_date), 'MMM d, yyyy')}
+                                                                                <Calendar className="w-3 h-3" /> Due: {format(parseLocalDate(String(task.due_date).slice(0, 10)), 'MMM d, yyyy')}
                                                                             </p>
                                                                         )}
                                                                     </div>

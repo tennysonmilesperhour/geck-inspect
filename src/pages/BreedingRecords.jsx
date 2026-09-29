@@ -45,7 +45,7 @@ const STEPS = [
   {
     n: 2,
     title: 'Log each clutch',
-    body: 'Add lay date, egg count, and incubation details as the season goes. Photos and notes attach to the clutch record.',
+    body: 'Add each egg with its lay date and grade as the season goes. Expected hatch dates follow the incubation temperature you set.',
   },
   {
     n: 3,
@@ -73,7 +73,7 @@ const FAQ = [
   {
     question: 'Can I track egg-lay and hatch dates?',
     answer:
-      'Yes. Each clutch record holds the lay date, egg count, incubation temperature and medium, and expected and actual hatch dates. Incubation timing helps you anticipate hatch windows so nothing is missed during a busy season.',
+      'Yes. Each egg record holds the lay date, grade, status, and expected and actual hatch dates. Set your incubation temperature once and expected hatch dates follow it, so nothing is missed during a busy season.',
   },
   {
     question: 'Do breeding records connect to the pedigree?',

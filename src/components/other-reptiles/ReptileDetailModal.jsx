@@ -126,15 +126,21 @@ export default function ReptileDetailModal({ reptile, onClose, onUpdate, onEdit,
             token,
             sale_price: price ? Number(price) : null,
             message: msg || null,
-            created_by: reptile.created_by,
+            // The insert rule needs created_by to be the signed-in user.
+            created_by: authData.user.email,
             expires_at: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(),
         });
         if (error) {
             toast({ title: 'Transfer failed', description: error.message, variant: 'destructive' });
         } else {
             const claimUrl = `${window.location.origin}/claim/${token}`;
-            navigator.clipboard.writeText(claimUrl);
-            toast({ title: 'Transfer initiated!', description: `Claim link copied to clipboard. Share it with ${email}. Expires in 72 hours.` });
+            // iOS can refuse a clipboard write this long after the tap, so
+            // the toast carries the link either way.
+            const copied = await navigator.clipboard?.writeText(claimUrl).then(() => true, () => false);
+            toast({
+                title: 'Transfer started',
+                description: `${copied ? 'Claim link copied. ' : ''}Send ${email} this link: ${claimUrl} (expires in 72 hours).`,
+            });
         }
     };
 

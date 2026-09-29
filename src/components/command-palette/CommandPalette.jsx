@@ -99,7 +99,8 @@ export default function CommandPalette() {
               >
                 <CommandPrimitive.Item
                   value="add gecko new gecko create"
-                  onSelect={() => goTo('MyGeckos')}
+                  // ?add=1 opens the add form; plain /MyGeckos only showed the list.
+                  onSelect={() => { setOpen(false); navigate('/MyGeckos?add=1'); }}
                   className={ITEM_CLASS}
                 >
                   <Plus className="h-4 w-4 text-emerald-400" />

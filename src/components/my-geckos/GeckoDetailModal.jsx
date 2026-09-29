@@ -1000,9 +1000,16 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                     variant="outline"
                     onClick={async () => {
                       const code = generatePassportCode();
-                      await Gecko.update(gecko.id, { passport_code: code, is_public: true });
-                      toast({ title: 'Passport created', description: `Code: ${code}` });
-                      if (onUpdate) onUpdate();
+                      try {
+                        await Gecko.update(gecko.id, { passport_code: code, is_public: true });
+                        // A passport link only works for a public gecko, so this
+                        // turns the Public Display switch on; say so.
+                        setIsPublic(true);
+                        toast({ title: 'Passport created', description: `Code: ${code}. The gecko is now public so its link works.` });
+                        if (onUpdate) onUpdate();
+                      } catch (err) {
+                        toast({ title: 'Passport not created', description: err.message || 'Please try again.', variant: 'destructive' });
+                      }
                     }}
                     className="w-full border-emerald-700 text-emerald-300 hover:bg-emerald-900/20"
                   >
@@ -1030,15 +1037,22 @@ export default function GeckoDetailModal({ gecko, onClose, onUpdate, onEdit, onA
                       token,
                       sale_price: price ? Number(price) : null,
                       message: msg || null,
-                      created_by: gecko.created_by,
+                      // The insert rule needs created_by to be the signed-in
+                      // user; the gecko's creator may be a collaborator.
+                      created_by: authData.user.email,
                       expires_at: new Date(Date.now() + 72 * 60 * 60 * 1000).toISOString(),
                     });
                     if (error) {
                       toast({ title: 'Transfer failed', description: error.message, variant: 'destructive' });
                     } else {
                       const claimUrl = `${window.location.origin}/claim/${token}`;
-                      navigator.clipboard.writeText(claimUrl);
-                      toast({ title: 'Transfer initiated!', description: `Claim link copied to clipboard. Share it with ${email}. Expires in 72 hours.` });
+                      // iOS can refuse a clipboard write this long after the
+                      // tap, so the toast carries the link either way.
+                      const copied = await navigator.clipboard?.writeText(claimUrl).then(() => true, () => false);
+                      toast({
+                        title: 'Transfer started',
+                        description: `${copied ? 'Claim link copied. ' : ''}Send ${email} this link: ${claimUrl} (expires in 72 hours).`,
+                      });
                     }
                   }}
                   className="w-full border-amber-600 text-amber-400 hover:bg-amber-900/20"

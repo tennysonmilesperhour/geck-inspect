@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Egg, BreedingPlan, User } from '@/entities/all';
+import { useToast } from '@/components/ui/use-toast';
 import { Button } from '@/components/ui/button';
 import { Card, CardFooter, CardHeader } from '@/components/ui/card';
 import {
@@ -510,11 +511,16 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
                                 className="bg-slate-800 border-slate-600"
                             />
                         </div>
+                        {/* Clearing the date field used to crash the page (format of
+                            an invalid date), and new Date('YYYY-MM-DD') read it as UTC,
+                            a day early in the Americas. */}
+                        {copulationDate && (
                         <div className="bg-blue-900/20 border border-blue-700 rounded-lg p-3 text-sm text-blue-300">
                             <p className="font-semibold mb-1">📅 Estimated Timeline</p>
-                            <p>Lay Date: ~{format(addDays(new Date(copulationDate), 30), 'MMM dd, yyyy')}</p>
-                            <p>Hatch Date: ~{format(addDays(new Date(copulationDate), 90), 'MMM dd, yyyy')}</p>
+                            <p>Lay Date: ~{format(addDays(parseLocalDate(copulationDate), 30), 'MMM dd, yyyy')}</p>
+                            <p>Hatch Date: ~{format(addDays(parseLocalDate(copulationDate), 90), 'MMM dd, yyyy')}</p>
                         </div>
+                        )}
                     </div>
                     <DialogFooter>
                         <Button variant="outline" onClick={() => setIsCopulationModalOpen(false)} className="border-slate-600">
@@ -599,12 +605,29 @@ export default function BreedingPlanCard({ plan, geckos, planEggs, onPlanUpdate,
 
 function PlanEditDialog({ plan, isOpen, onOpenChange, onPlanUpdate, onPlanDelete }) {
     const [editedPlan, setEditedPlan] = useState(plan);
+    const [isSaving, setIsSaving] = useState(false);
+    const { toast } = useToast();
 
     useEffect(() => { setEditedPlan(plan); }, [plan]);
 
+    // onPlanUpdate only refetches, so the edits have to be written here.
+    // Before, Save Changes closed the dialog and nothing was stored.
     const handleSave = async () => {
-        await onPlanUpdate(editedPlan);
-        onOpenChange(false);
+        setIsSaving(true);
+        try {
+            await BreedingPlan.update(plan.id, {
+                breeding_id: editedPlan.breeding_id || null,
+                pairing_date: editedPlan.pairing_date || null,
+                status: editedPlan.status,
+                expected_lay_interval: editedPlan.expected_lay_interval ?? 31,
+            });
+            await onPlanUpdate();
+            onOpenChange(false);
+        } catch (err) {
+            toast({ title: 'Plan not saved', description: err.message || 'Please try again.', variant: 'destructive' });
+        } finally {
+            setIsSaving(false);
+        }
     };
 
     return (
@@ -672,7 +695,7 @@ function PlanEditDialog({ plan, isOpen, onOpenChange, onPlanUpdate, onPlanDelete
                         <Trash2 size={14} className="mr-2" />
                         Delete Plan
                     </Button>
-                    <Button onClick={handleSave} className="w-full sm:w-auto">Save Changes</Button>
+                    <Button onClick={handleSave} disabled={isSaving} className="w-full sm:w-auto">{isSaving ? 'Saving...' : 'Save Changes'}</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>

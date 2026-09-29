@@ -211,7 +211,7 @@ async function listDueEggs(ctx) {
 async function listDueFeeding(ctx) {
   const groups = await FeedingGroup.list().catch(() => []);
   if (!groups || groups.length === 0) {
-    return 'You have no feeding groups set up yet. Create one on the Husbandry page and I can keep an eye on the schedule for you.';
+    return 'You have no feeding groups set up yet. Create one in Project Manager, on the Feeding tab, and I can keep an eye on the schedule for you.';
   }
   const today = todayLocalISO();
   const groupTitle = (g) => `Group ${g.label}${g.name ? ` (${g.name})` : ''}`;

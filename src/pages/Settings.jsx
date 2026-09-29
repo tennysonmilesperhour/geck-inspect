@@ -928,14 +928,11 @@ export default function SettingsPage() {
                         {renderSwitch('email-enabled', 'Enable Email Notifications', 'Master toggle for all email notifications', formData.email_notifications_enabled, (checked) => handleChange('email_notifications_enabled', checked))}
                         {formData.email_notifications_enabled && (
                             <div className="space-y-3">
-                                <p className="text-sm text-slate-400 mb-2">Choose which events trigger email alerts:</p>
-                                {renderSwitch('email-new-follower', 'Email on New Follower', 'Get an email when someone starts following you', formData.email_on_new_follower, (checked) => handleChange('email_on_new_follower', checked))}
-                                {renderSwitch('email-new-message', 'Email on New Message', 'Get an email when you receive a direct message', formData.email_on_new_message, (checked) => handleChange('email_on_new_message', checked))}
-                                {renderSwitch('email-following-activity', 'Email on Following Activity', 'Get an email when breeders you follow list new geckos or breeding plans', formData.email_on_following_activity, (checked) => handleChange('email_on_following_activity', checked))}
-                                <div className="border-t border-slate-700 pt-4 mt-4">
-                                    <p className="text-sm text-slate-400 mb-2">In-app notification preferences:</p>
-                                    {notificationTypes.map(notifType => renderNotificationSwitch(notifType, formData.email_notification_types.includes(notifType.key), () => toggleArrayItem('email_notification_types', notifType.key)))}
-                                </div>
+                                {/* The list below is what the email sender reads. Three
+                                    separate "Email on..." switches used to sit above it,
+                                    saved to columns nothing reads. */}
+                                <p className="text-sm text-slate-400 mb-2">Email me about:</p>
+                                {notificationTypes.map(notifType => renderNotificationSwitch(notifType, formData.email_notification_types.includes(notifType.key), () => toggleArrayItem('email_notification_types', notifType.key)))}
                             </div>
                         )}
                     </CardContent>

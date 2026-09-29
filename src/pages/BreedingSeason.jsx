@@ -66,7 +66,7 @@ const CLUTCH_STYLES = {
     mixed: 'bg-slate-600/40 border-slate-400/60 text-slate-100',
 };
 
-const FAILED_STATUSES = new Set(['Infertile', 'Slug', 'Failed']);
+const FAILED_STATUSES = new Set(['Infertile', 'Slug', 'Failed', 'Stillbirth']);
 
 // Position of a date across the selected year, 0 = 1 January, 1 = 31 December.
 // Dates outside the year clamp to the edge so a clutch laid in December and
@@ -416,6 +416,9 @@ export default function BreedingSeasonPage() {
             if (!hasActivity && !isCurrentSeasonActivePair) continue;
 
             const seasonEggs = planEggs.filter(e => {
+                // An egg archived while still Incubating was deleted; it no
+                // longer belongs on the timeline or in the "due" totals.
+                if (e.archived && e.status === 'Incubating') return false;
                 const d = parseLocalDate(e.lay_date);
                 return d && d.getFullYear() === selectedYear;
             });

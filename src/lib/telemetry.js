@@ -114,7 +114,8 @@ export async function reportError(error, info = {}) {
       level: info.level || 'error',
       message: message.slice(0, 1000),
       stack: stack ? stack.slice(0, 4000) : null,
-      url: typeof window !== 'undefined' ? window.location.href : null,
+      // Path only: query strings and hashes can hold emails and link tokens.
+      url: typeof window !== 'undefined' ? window.location.origin + window.location.pathname : null,
       user_email: email,
       user_agent: typeof navigator !== 'undefined' ? navigator.userAgent : null,
       context: {

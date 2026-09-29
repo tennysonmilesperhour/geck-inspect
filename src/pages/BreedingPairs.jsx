@@ -117,7 +117,7 @@ export default function BreedingPairsPage() {
                 dam_id: dam.id,
                 status: 'Pet',
                 morphs_traits: '',
-                notes: `Hatched from egg laid on ${format(new Date(egg.lay_date), 'PPP')}. From breeding pair: ${sire.name} x ${dam.name}.`,
+                notes: `Hatched from egg laid on ${format(parseLocalDate(egg.lay_date), 'PPP')}. From breeding pair: ${sire.name} x ${dam.name}.`,
                 image_urls: []
             });
 
@@ -674,10 +674,10 @@ function EggCard({ egg, onHatch }) {
                 <EggIcon className="w-5 h-5 text-amber-400" />
                 <div>
                     <p className="text-sm font-medium text-slate-200">
-                        Laid: {format(new Date(egg.lay_date), 'MMM d, yyyy')}
+                        Laid: {egg.lay_date ? format(parseLocalDate(egg.lay_date), 'MMM d, yyyy') : 'Not set'}
                     </p>
                     <p className="text-xs text-slate-400">
-                        Expected Hatch: {format(parseLocalDate(egg.hatch_date_expected), 'MMM d, yyyy')}
+                        Expected Hatch: {egg.hatch_date_expected ? format(parseLocalDate(egg.hatch_date_expected), 'MMM d, yyyy') : 'Not set'}
                     </p>
                 </div>
             </div>
@@ -712,8 +712,10 @@ function EnhancedDatePicker({ date, onDateChange }) {
         const value = e.target.value;
         setInputValue(value);
 
-        const newDate = new Date(value);
-        if (!isNaN(newDate.getTime()) && value.length === 10) {
+        // parseLocalDate: new Date('YYYY-MM-DD') is UTC midnight, which saved
+        // the day before in the Americas and made the picker jump back a day.
+        const newDate = value.length === 10 ? parseLocalDate(value) : null;
+        if (newDate && !isNaN(newDate.getTime())) {
             onDateChange(newDate);
         } else if (value === '') {
             onDateChange(null);

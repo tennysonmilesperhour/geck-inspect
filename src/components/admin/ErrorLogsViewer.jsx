@@ -53,6 +53,10 @@ const LEVEL_META = {
     warning: { color: 'border-amber-500/40 text-amber-300 bg-amber-500/10', icon: AlertTriangle },
     info: { color: 'border-blue-500/40 text-blue-300 bg-blue-500/10', icon: Info },
 };
+// csp-report writes 'warn'; treat it as a warning everywhere below instead
+// of styling CSP reports as errors and leaving them out of the counts.
+LEVEL_META.warn = LEVEL_META.warning;
+const normalLevel = (level) => (level === 'warn' ? 'warning' : level);
 
 function LevelBadge({ level }) {
     const meta = LEVEL_META[level] || LEVEL_META.error;
@@ -102,7 +106,7 @@ export default function ErrorLogsViewer() {
             return t >= cutoff;
         });
         if (!showResolved) list = list.filter((l) => !l.resolved);
-        if (level !== 'all') list = list.filter((l) => l.level === level);
+        if (level !== 'all') list = list.filter((l) => normalLevel(l.level) === level);
         if (search) {
             const q = search.toLowerCase();
             list = list.filter(
@@ -124,7 +128,7 @@ export default function ErrorLogsViewer() {
             total: inWindow.length,
             unresolved: inWindow.filter((l) => !l.resolved).length,
             errors: inWindow.filter((l) => l.level === 'error').length,
-            warnings: inWindow.filter((l) => l.level === 'warning').length,
+            warnings: inWindow.filter((l) => normalLevel(l.level) === 'warning').length,
             uniqueUsers: new Set(inWindow.map((l) => l.user_email).filter(Boolean)).size,
         };
     }, [logs, period]);

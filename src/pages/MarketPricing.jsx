@@ -65,6 +65,7 @@ export default function MarketPricing() {
   const [saleOpen, setSaleOpen] = useState(false);
   const [sale, setSale] = useState(EMPTY_SALE);
   const [saving, setSaving] = useState(false);
+  const [saleError, setSaleError] = useState('');
 
   useEffect(() => {
     if (!signedIn) return undefined;
@@ -113,6 +114,7 @@ export default function MarketPricing() {
   const submitSale = async () => {
     if (!sale.base_morph.trim() || !(Number(sale.sale_price) > 0) || saving) return;
     setSaving(true);
+    setSaleError('');
     const { error } = await supabase.from('morph_price_entries').insert({
       ...sale,
       base_morph: sale.base_morph.trim(),
@@ -125,11 +127,14 @@ export default function MarketPricing() {
       created_by: user?.email,
     });
     setSaving(false);
-    if (!error) {
-      setSaleOpen(false);
-      setSale(EMPTY_SALE);
-      loadSales();
+    if (error) {
+      // Say so instead of leaving the dialog open with no sign of why.
+      setSaleError('That sale did not save. Check the fields and try again.');
+      return;
     }
+    setSaleOpen(false);
+    setSale(EMPTY_SALE);
+    loadSales();
   };
 
   return (
@@ -263,7 +268,7 @@ export default function MarketPricing() {
         </Card>
       </div>
 
-      <Dialog open={saleOpen} onOpenChange={setSaleOpen}>
+      <Dialog open={saleOpen} onOpenChange={(open) => { setSaleOpen(open); setSaleError(''); }}>
         <DialogContent className="bg-slate-900 border-slate-700 text-slate-200">
           <DialogHeader><DialogTitle className="text-slate-100">Log a sale</DialogTitle></DialogHeader>
           <div className="space-y-3">
@@ -313,6 +318,7 @@ export default function MarketPricing() {
               />
             </div>
             <p className="text-xs text-slate-500">Shown without your name. Only the morph, grade, sex, age, price and date are shared.</p>
+            {saleError && <p role="alert" className="text-sm text-rose-300">{saleError}</p>}
             <Button onClick={submitSale} disabled={saving} className="w-full bg-emerald-600 hover:bg-emerald-700">
               {saving ? 'Saving...' : 'Save sale'}
             </Button>

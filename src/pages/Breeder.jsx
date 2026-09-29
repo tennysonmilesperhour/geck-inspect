@@ -350,7 +350,7 @@ export default function Breeder() {
   const seoDescription = isCurated
     ? (profile.bio
         ? profile.bio.slice(0, 200)
-        : `Browse crested geckos for sale from ${displayName}${profile.location ? ` in ${profile.location}` : ''}. Verified pedigrees, photo timelines, and direct contact on Geck Inspect.`)
+        : `Browse crested geckos for sale from ${displayName}${profile.location ? ` in ${profile.location}` : ''}. Tracked pedigrees, photo timelines, and direct contact on Geck Inspect.`)
     : `${displayName} is a crested gecko breeder referenced across the Geck Inspect community. Explore geckos whose lineage traces back to ${displayName}.`;
 
   return (

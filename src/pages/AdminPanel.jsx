@@ -15,8 +15,6 @@ import {
   Activity,
   ChevronRight,
   LifeBuoy,
-  Truck,
-  Globe,
   Shield,
   AlertOctagon,
   BookOpen,
@@ -111,8 +109,6 @@ const NAV_GROUPS = [
     label: 'Marketplace',
     items: [
       { id: 'store', label: 'Store', icon: Package },
-      { id: 'shipping', label: 'Shipping config', icon: Truck },
-      { id: 'market_data', label: 'Market data', icon: Globe },
     ],
   },
   {
@@ -142,27 +138,10 @@ const SECTION_TITLES = {
   product_analytics: 'Product analytics',
   analytics: 'Marketplace analytics',
   store: 'Store',
-  shipping: 'Shipping configuration',
-  market_data: 'Market data management',
   scraped_data: 'Scraped data review',
   errors: 'Error logs',
   system: 'System health',
 };
-
-function AdminPlaceholder({ title, description, icon: Icon }) {
-  return (
-    <div className="rounded-xl border border-slate-700 bg-slate-900 p-8 text-center space-y-4">
-      <div className="mx-auto w-14 h-14 rounded-2xl bg-emerald-500/10 border border-emerald-500/20 flex items-center justify-center">
-        <Icon className="w-7 h-7 text-emerald-400" />
-      </div>
-      <h3 className="text-xl font-bold text-white">{title}</h3>
-      <p className="text-sm text-slate-400 max-w-lg mx-auto leading-relaxed">{description}</p>
-      <div className="inline-flex items-center gap-2 rounded-full bg-amber-500/10 border border-amber-500/30 px-3 py-1 text-xs font-semibold text-amber-300">
-        Coming soon
-      </div>
-    </div>
-  );
-}
 
 export default function AdminPanel() {
   const { user, isLoadingAuth } = useAuth();
@@ -271,10 +250,6 @@ export default function AdminPanel() {
         return <AnalyticsDashboard />;
       case 'store':
         return <StoreAdmin />;
-      case 'shipping':
-        return <AdminPlaceholder title="Shipping Configuration" description="Manage the Zero's Geckos shipping integration. Configure API credentials, default carrier settings, and monitor shipment status. This section will be fully functional once the partnership is finalized." icon={Truck} />;
-      case 'market_data':
-        return <AdminPlaceholder title="Market Data Management" description="Manage data sources for the Market Analytics tab in Business Tools. Configure regional feeds, set data refresh intervals, and review pricing data quality. This section will be activated when real market data pipelines are connected." icon={Globe} />;
       case 'scraped_data':
         return <ScrapedDataReview />;
       case 'errors':

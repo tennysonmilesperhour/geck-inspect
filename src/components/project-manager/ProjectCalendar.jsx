@@ -2,6 +2,12 @@ import { useState, useMemo } from 'react';
 import { format, startOfMonth, endOfMonth, eachDayOfInterval, isSameDay, addMonths, subMonths, addDays } from 'date-fns';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { parseLocalDate } from '@/lib/dateUtils';
+
+// Due dates are calendar days (a date, or a timestamp at UTC midnight).
+// Formatting them through new Date() moved them to the day before for
+// anyone west of UTC, so key them by their own YYYY-MM-DD.
+const dayKey = (value) => String(value).slice(0, 10);
 
 const EVENT_COLORS = {
     task: 'bg-blue-500',
@@ -30,11 +36,11 @@ export default function ProjectCalendar({ tasks, projects, feedingGroups, otherR
         // Tasks with due dates
         tasks.forEach(task => {
             if (task.due_date) {
-                const d = format(new Date(task.due_date), 'yyyy-MM-dd');
+                const d = dayKey(task.due_date);
                 addEvent(d, { type: 'task', label: task.title, color: EVENT_COLORS.task });
             }
             if (task.next_due_date) {
-                const d = format(new Date(task.next_due_date), 'yyyy-MM-dd');
+                const d = dayKey(task.next_due_date);
                 addEvent(d, { type: 'task', label: `🔁 ${task.title}`, color: EVENT_COLORS.task });
             }
         });
@@ -42,7 +48,7 @@ export default function ProjectCalendar({ tasks, projects, feedingGroups, otherR
         // Projects with due dates
         projects.forEach(project => {
             if (project.due_date) {
-                const d = format(new Date(project.due_date), 'yyyy-MM-dd');
+                const d = dayKey(project.due_date);
                 addEvent(d, { type: 'project', label: project.name, color: EVENT_COLORS.project });
             }
         });
@@ -50,7 +56,7 @@ export default function ProjectCalendar({ tasks, projects, feedingGroups, otherR
         // Other reptile feeding schedules
         otherReptiles.forEach(reptile => {
             if (!reptile.last_fed_date || !reptile.feeding_interval_days || !reptile.feeding_reminder_enabled) return;
-            let nextFeed = addDays(new Date(reptile.last_fed_date), reptile.feeding_interval_days);
+            let nextFeed = addDays(parseLocalDate(reptile.last_fed_date), reptile.feeding_interval_days);
             const monthEnd = endOfMonth(currentMonth);
             const monthStart = startOfMonth(currentMonth);
             while (nextFeed <= monthEnd) {
@@ -70,7 +76,7 @@ export default function ProjectCalendar({ tasks, projects, feedingGroups, otherR
         // Feeding group schedules - show next feeding days
         feedingGroups.forEach(group => {
             if (!group.last_fed_date || !group.interval_days) return;
-            let nextFeed = addDays(new Date(group.last_fed_date), group.interval_days);
+            let nextFeed = addDays(parseLocalDate(group.last_fed_date), group.interval_days);
             const monthEnd = endOfMonth(currentMonth);
             const monthStart = startOfMonth(currentMonth);
             // Show all feeding days in this month

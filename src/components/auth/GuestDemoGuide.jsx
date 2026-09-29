@@ -1,8 +1,10 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { ArrowRight, Compass, UserPlus, X } from 'lucide-react';
 import { useAuth } from '@/lib/AuthContext';
 import { captureEvent } from '@/lib/posthog';
+import { useToast } from '@/components/ui/use-toast';
+import { GUEST_WRITE_BLOCKED_EVENT } from '@/lib/guestMode';
 import {
   TOUR_SIGNUP_URL,
   TOUR_STEPS,
@@ -26,6 +28,23 @@ export default function GuestDemoGuide() {
   const location = useLocation();
   const navigate = useNavigate();
   const [tour, setTour] = useState(getTourState);
+  const { toast } = useToast();
+
+  // The "view-only" toast lives here rather than in GuestMockDisclaimer,
+  // which only mounts after the tour is closed, so a guest who tapped
+  // Save during the tour used to get no reply at all.
+  useEffect(() => {
+    if (!isGuest) return undefined;
+    const onBlocked = (event) => {
+      const action = event?.detail?.action || 'save changes';
+      toast({
+        title: 'Guest mode is view-only',
+        description: `Create a free account to ${action}. Nothing gets saved while you're browsing as a guest.`,
+      });
+    };
+    window.addEventListener(GUEST_WRITE_BLOCKED_EVENT, onBlocked);
+    return () => window.removeEventListener(GUEST_WRITE_BLOCKED_EVENT, onBlocked);
+  }, [isGuest, toast]);
 
   if (!isGuest) return null;
   if (tour.status === 'closed') return <GuestMockDisclaimer />;

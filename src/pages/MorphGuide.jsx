@@ -377,11 +377,14 @@ export default function MorphGuidePage() {
     let cancelled = false;
     (async () => {
       try {
+        // Reviewed member photos only; see MorphDetail for why.
         const { data } = await supabase
           .from('gecko_images')
           .select('image_url, primary_morph')
           .not('primary_morph', 'is', null)
           .not('image_url', 'is', null)
+          .eq('verified', true)
+          .not('created_by', 'is', null)
           .limit(500);
         if (!cancelled) setCommunityImages(data || []);
       } catch (err) {

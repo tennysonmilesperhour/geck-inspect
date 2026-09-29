@@ -224,8 +224,12 @@ const AuthenticatedApp = () => {
         for (const [name, rows] of byName.entries()) {
           if (rows.every(r => r.is_enabled === false)) disabled.add(name);
         }
-        // Never disable essential navigation targets
-        ['Membership', 'Settings', 'AuthPortal', 'Notifications', 'Messages'].forEach(
+        // Never disable essential navigation targets, or pages that live
+        // screens link to: hiding FieldMode, Gallery or Training in the
+        // admin Pages tool is meant to take them out of the sidebar, but
+        // the passport quick log opens Field Mode, the Dashboard opens the
+        // Gallery, and admins send expert reviewers to Training.
+        ['Membership', 'Settings', 'AuthPortal', 'Notifications', 'Messages', 'FieldMode', 'Gallery', 'Training'].forEach(
           p => disabled.delete(p)
         );
         setDisabledPages(disabled);
@@ -317,7 +321,9 @@ const AuthenticatedApp = () => {
           <Route path="/store/:slug" caseSensitive element={<StorePage />} />
           <Route path="/QualityScale" element={<QualityScale />} />
           <Route path="/Membership" element={<PublicPageShell><MembershipPublic /></PublicPageShell>} />
-          <Route path="/Recognition" element={<RecognitionPublic />} />
+          {/* Signed-out Morph ID had no header or footer, so there was no way
+              back to the site. Same shell as Membership. */}
+          <Route path="/Recognition" element={<PublicPageShell><RecognitionPublic /></PublicPageShell>} />
           <Route path="/pedigree-tracker" element={<PedigreeTracker />} />
           <Route path="/breeding-records" element={<BreedingRecords />} />
           <Route path="/crested-gecko-price" element={<CrestedGeckoPrice />} />
@@ -384,6 +390,24 @@ const AuthenticatedApp = () => {
         })}
         <Route path="/MorphGuide/lines/:slug" element={<ProjectLineDetail />} />
         <Route path="/MorphGuide/:slug" element={<MorphDetail />} />
+        {/* Public guide and marketing pages with a path the page registry
+            can't express. Without these, signed-in and demo visitors got
+            "Page not found" from every Care Guide topic, the Morph Guide
+            hubs, breeder pages and About. Public pages drop their own
+            chrome inside the app shell (useInAppShell). */}
+        <Route path="/MorphGuide/category/:categoryId" element={<MorphCategoryHub />} />
+        <Route path="/MorphGuide/inheritance/:inheritanceId" element={<MorphInheritanceHub />} />
+        <Route path="/CareGuide/series" element={<CareGuideSeries />} />
+        <Route path="/CareGuide/series/:guideId" element={<CareGuideSeries />} />
+        <Route path="/CareGuide/:topic" element={<CareGuideTopic />} />
+        <Route path="/Breeder/:slug" element={<Breeder />} />
+        <Route path="/About" element={<About />} />
+        <Route path="/MarketplaceVerification" element={<MarketplaceVerification />} />
+        <Route path="/pedigree-tracker" element={<PedigreeTracker />} />
+        <Route path="/breeding-records" element={<BreedingRecords />} />
+        <Route path="/crested-gecko-price" element={<CrestedGeckoPrice />} />
+        <Route path="/Subscription" element={<Navigate to="/Membership" replace />} />
+        <Route path="/GeckAnswers" element={<Navigate to="/Forum" replace />} />
         <Route path="/passport/:passportCode/qr" element={<PassportQR />} />
         {/* /calculator alias inside the authenticated layout so signed-in
             users hitting the cleaner URL keep their app chrome. */}

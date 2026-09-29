@@ -148,7 +148,10 @@ export default function BreederConsultantPage() {
 
         try {
             const systemPrompt = `${BASE_SYSTEM_PROMPT}\n\n${buildActionProtocolPrompt(geckos)}`;
-            const conversationHistory = priorMessages.map(historyLine).join('\n\n');
+            // Only the recent turns: the whole conversation went out every
+            // time, and past the function's 40,000-character cap every
+            // message failed until the page was reloaded.
+            const conversationHistory = priorMessages.slice(-12).map(historyLine).join('\n\n');
             const fullPrompt = `${systemPrompt}\n\nHere is the conversation so far:\n${conversationHistory}\n\n**User**: ${text}\n\n**GeckoGenius AI**:`;
 
             const { text: response, credits } = await InvokeLLMDetailed({ prompt: fullPrompt });
@@ -162,7 +165,9 @@ export default function BreederConsultantPage() {
             }
         } catch (error) {
             if (error?.code === 'credits_exhausted') {
-                setGate({ type: 'exhausted', included: error.included ?? null });
+                // The server's refusal carries no allowance, so fall back to
+                // the plan's (it read "includes 0 messages" before).
+                setGate({ type: 'exhausted', included: error.included ?? getTierLimits(user).monthlyAssistantMessages ?? null });
                 return;
             }
             console.error("Error calling LLM:", error);
@@ -313,7 +318,7 @@ export default function BreederConsultantPage() {
                             <div className="text-sm">
                                 <p className="text-amber-200 font-medium">You have used all of this month&apos;s assistant messages.</p>
                                 <p className="text-slate-300 text-xs mt-1">
-                                    Your current plan includes {gate.included ?? 0} assistant message{gate.included === 1 ? '' : 's'} per month.
+                                    {gate.included != null && <>Your current plan includes {gate.included} assistant message{gate.included === 1 ? '' : 's'} per month. </>}
                                     Upgrade for a bigger monthly allotment.
                                 </p>
                                 <Link to={createPageUrl('Membership')} className="inline-block mt-2">

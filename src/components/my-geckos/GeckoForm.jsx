@@ -307,6 +307,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
         const newCropData = { ...cropData };
         let uploadedCount = 0;
         let failedCount = 0;
+        let lastUploadError = null;
 
         for (const file of files) {
             try {
@@ -317,6 +318,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
             } catch (err) {
                 console.error('Image upload failed', err);
                 failedCount++;
+                lastUploadError = err;
             }
         }
 
@@ -327,10 +329,13 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
         if (failedCount > 0) {
             toast({
                 title: uploadedCount > 0 ? 'Some uploads failed' : 'Upload failed',
+                // Show the real reason (the storage quota message, for one)
+                // instead of always blaming the file size.
                 description:
-                    failedCount === 1
+                    lastUploadError?.message ||
+                    (failedCount === 1
                         ? 'One image could not be uploaded. Try a smaller file or different format.'
-                        : `${failedCount} images could not be uploaded.`,
+                        : `${failedCount} images could not be uploaded.`),
                 variant: 'destructive',
             });
         }
@@ -392,7 +397,7 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
             console.error('Image upload failed', err);
             toast({
                 title: 'Upload failed',
-                description: 'The photo could not be uploaded. Try a smaller file or a different format.',
+                description: err?.message || 'The photo could not be uploaded. Try a smaller file or a different format.',
                 variant: 'destructive',
             });
         } finally {
@@ -568,9 +573,16 @@ export default function GeckoForm({ gecko, userGeckos, currentUser, onSubmit, on
                                     ].map(opt => (
                                         <button
                                             key={opt.value}
+                                            type="button"
                                             onClick={async () => {
-                                                await Gecko.update(gecko.id, { archive_reason: opt.value });
-                                                if (onSubmit) onSubmit(gecko);
+                                                // type="button": inside the form, a plain button
+                                                // also submitted it, running a second full save.
+                                                try {
+                                                    await Gecko.update(gecko.id, { archive_reason: opt.value });
+                                                    if (onSubmit) onSubmit(gecko);
+                                                } catch (err) {
+                                                    toast({ title: 'Archive reason not saved', description: err.message || 'Please try again.', variant: 'destructive' });
+                                                }
                                             }}
                                             className={`touch:min-h-11 text-xs px-3 py-1.5 rounded border transition-colors ${
                                                 gecko.archive_reason === opt.value

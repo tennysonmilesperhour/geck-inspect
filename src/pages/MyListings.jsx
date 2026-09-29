@@ -10,6 +10,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import PageHeader from '@/components/shared/PageHeader';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell, Legend } from 'recharts';
 import { format, subMonths } from 'date-fns';
+import { isSoldGecko, saleAmount, saleDate as ledgerSaleDate } from '@/lib/businessLedger';
+import { parseLocalDate } from '@/lib/dateUtils';
 import {
   DollarSign,
   Eye,
@@ -50,13 +52,17 @@ export default function MyListingsPage() {
                 setUser(currentUser);
 
                 const userGeckos = await Gecko.filter({ created_by: currentUser.email }, '-created_date');
-                const marketplaceGeckos = userGeckos.filter(g => !g.archived && (g.status === 'For Sale' || g.status === 'Sold'));
+                // Sold geckos are archived (Mark sold and Archive as sold both do
+                // that), so filtering out archived rows emptied the Sold tab,
+                // the sold count and the chart. Business Tools' ledger rules
+                // decide what counts as sold.
+                const marketplaceGeckos = userGeckos.filter(g => isSoldGecko(g) || (!g.archived && g.status === 'For Sale'));
                 setGeckos(marketplaceGeckos);
 
                 // Calculate analytics with real data
                 const totalValue = marketplaceGeckos.reduce((sum, g) => sum + (g.asking_price || 0), 0);
-                const soldGeckosFromFetch = marketplaceGeckos.filter(g => g.status === 'Sold'); // Renamed to avoid conflict with outer scope
-                const active = marketplaceGeckos.filter(g => g.status === 'For Sale').length;
+                const soldGeckosFromFetch = marketplaceGeckos.filter(isSoldGecko);
+                const active = marketplaceGeckos.filter(g => !isSoldGecko(g)).length;
 
                 // Real inquiry count from breeder_inquiries (written by the
                 // send-breeder-inquiry edge function; RLS lets a breeder
@@ -85,20 +91,22 @@ export default function MyListingsPage() {
                 const monthlySales = {};
                 for (let i = 5; i >= 0; i--) {
                     const date = subMonths(new Date(), i);
-                    const monthKey = format(date, 'MMM');
+                    // Month and year, so a sale from last year's September
+                    // doesn't count toward this one.
+                    const monthKey = format(date, 'MMM yy');
                     monthlySales[monthKey] = { sales: 0, revenue: 0 };
                 }
 
                 soldGeckosFromFetch.forEach(gecko => {
-                    if (gecko.updated_date) {
-                        const saleDate = new Date(gecko.updated_date);
-                        if (!isNaN(saleDate.getTime())) { // Ensure date is valid
-                            const monthKey = format(saleDate, 'MMM');
-                            if (monthlySales[monthKey]) {
-                                monthlySales[monthKey].sales += 1;
-                                monthlySales[monthKey].revenue += gecko.asking_price || 0;
-                            }
-                        }
+                    const when = ledgerSaleDate(gecko);
+                    if (!when) return;
+                    const saleDate = parseLocalDate(when);
+                    if (!saleDate || isNaN(saleDate.getTime())) return;
+                    const monthKey = format(saleDate, 'MMM yy');
+                    if (monthlySales[monthKey]) {
+                        monthlySales[monthKey].sales += 1;
+                        // The sold price when recorded, not the asking price.
+                        monthlySales[monthKey].revenue += saleAmount(gecko).amount;
                     }
                 });
 
@@ -117,8 +125,8 @@ export default function MyListingsPage() {
         loadData();
     }, []);
 
-    const activeListings = geckos.filter(g => g.status === 'For Sale');
-    const soldGeckos = geckos.filter(g => g.status === 'Sold');
+    const activeListings = geckos.filter(g => !isSoldGecko(g));
+    const soldGeckos = geckos.filter(isSoldGecko);
     
     // Calculate morph distribution from real geckos data
     const morphDistribution = geckos.reduce((acc, gecko) => {

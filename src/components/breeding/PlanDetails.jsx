@@ -1,14 +1,7 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Gecko, Egg } from '@/entities/all';
 import { Button } from '@/components/ui/button';
 import { CardContent } from '@/components/ui/card';
-import {
-  Dialog,
-  DialogContent,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from '@/components/ui/dialog';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,13 +18,6 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '@/components/ui/select';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Edit, Trash2, Egg as EggIcon, Calendar as CalendarIcon } from 'lucide-react';
@@ -44,15 +30,10 @@ import PairingValuePanel from './PairingValuePanel';
  * Expanded-state view of a single breeding plan, shows all eggs with
  * editable lay/hatch dates, status dropdowns, and the Edit Plan modal.
  */
-export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, onOpenCopulationModal, onOpenEggCheckModal, planEggs, isEditModalOpen, setIsEditModalOpen }) {
+export default function PlanDetails({ plan, geckos, onPlanUpdate, onOpenCopulationModal, onOpenEggCheckModal, planEggs, setIsEditModalOpen }) {
     const eggs = planEggs.filter(egg => !egg.archived).sort((a, b) => new Date(b.lay_date) - new Date(a.lay_date));
-    const [editedPlan, setEditedPlan] = useState(plan);
     const [editingHatchDate, setEditingHatchDate] = useState(null); // eggId to edit
     const [editedEggs, setEditedEggs] = useState({});
-
-    useEffect(() => {
-        setEditedPlan(plan);
-    }, [plan]);
 
     const [eggToDelete, setEggToDelete] = useState(null);
 
@@ -198,11 +179,6 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
     };
 
 
-    const handleUpdatePlan = async () => {
-        await onPlanUpdate(editedPlan);
-        setIsEditModalOpen(false);
-    };
-
     const handleSaveEggEdit = async (eggId, eggData) => {
         await Egg.update(eggId, { lay_date: eggData.lay_date, hatch_date_expected: eggData.hatch_date_expected });
         setEditedEggs(prev => ({ ...prev, [eggId]: {} }));
@@ -340,7 +316,7 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
                                         <div className="flex items-start sm:items-center justify-between gap-2">
                                             <div>
                                                 <p className="text-slate-200 text-sm font-medium">Laid: {format(parseLocalDate(egg.lay_date), 'MMM dd, yyyy')}</p>
-                                                <p className="text-xs text-slate-400">Expected Hatch: {format(parseLocalDate(egg.hatch_date_expected), 'MMM dd, yyyy')}</p>
+                                                <p className="text-xs text-slate-400">Expected Hatch: {egg.hatch_date_expected ? format(parseLocalDate(egg.hatch_date_expected), 'MMM dd, yyyy') : 'Not set'}</p>
                                                 {egg.gecko_id && (
                                                     <p className="text-xs text-green-400 mt-1">✓ Gecko created in collection</p>
                                                 )}
@@ -414,69 +390,8 @@ export default function PlanDetails({ plan, geckos, onPlanUpdate, onPlanDelete, 
             )
             }
 
-            {/* Edit Plan Modal */}
-            <Dialog open={isEditModalOpen} onOpenChange={setIsEditModalOpen}>
-                <DialogContent className="bg-slate-900 border-slate-700 text-white max-w-lg">
-                    <DialogHeader>
-                        <DialogTitle>Edit Breeding Plan</DialogTitle>
-                    </DialogHeader>
-                     <div className="grid gap-4 py-4">
-                        <div className="space-y-2">
-                            <Label htmlFor="breeding_id">Breeding ID</Label>
-                            <Input
-                                id="breeding_id"
-                                placeholder="e.g., BP001, Flame-01, etc."
-                                value={editedPlan.breeding_id || ''}
-                                onChange={e => setEditedPlan({...editedPlan, breeding_id: e.target.value})}
-                                className="bg-slate-800 border-slate-600"
-                            />
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="pairing_date">Pairing Date</Label>
-                            <Input id="pairing_date" type="date" value={editedPlan.pairing_date ? format(parseLocalDate(editedPlan.pairing_date), 'yyyy-MM-dd') : ''} onChange={e => setEditedPlan({...editedPlan, pairing_date: e.target.value})} className="bg-slate-800 border-slate-600"/>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="status">Status</Label>
-                             <Select value={editedPlan.status} onValueChange={v => setEditedPlan({...editedPlan, status: v})}>
-                                <SelectTrigger className="bg-slate-800 border-slate-600"><SelectValue /></SelectTrigger>
-                                <SelectContent className="bg-slate-800 border-slate-600 text-slate-200">
-                                    <SelectItem value="Planned">Planned</SelectItem>
-                                    <SelectItem value="Active">Active</SelectItem>
-                                    <SelectItem value="Successful">Successful</SelectItem>
-                                    <SelectItem value="Failed">Failed</SelectItem>
-                                </SelectContent>
-                            </Select>
-                        </div>
-                        <div className="space-y-2">
-                            <Label htmlFor="expected_lay_interval">Expected Lay Interval (days)</Label>
-                            <p className="text-xs text-slate-400">Card glows when this many days have passed since the last egg lay.</p>
-                            <Input
-                                id="expected_lay_interval"
-                                type="number"
-                                min="1"
-                                max="90"
-                                value={editedPlan.expected_lay_interval ?? 31}
-                                onChange={e => setEditedPlan({...editedPlan, expected_lay_interval: parseInt(e.target.value) || 31})}
-                                className="bg-slate-800 border-slate-600"
-                            />
-                        </div>
-                    </div>
-                    <DialogFooter className="flex-col sm:flex-row gap-2">
-                        <Button
-                            variant="destructive"
-                            onClick={() => {
-                                onPlanDelete(plan.id);
-                                setIsEditModalOpen(false);
-                            }}
-                            className="w-full sm:w-auto"
-                        >
-                            <Trash2 size={14} className="mr-2" />
-                            Delete Plan
-                        </Button>
-                        <Button onClick={handleUpdatePlan} className="w-full sm:w-auto">Save Changes</Button>
-                    </DialogFooter>
-                </DialogContent>
-            </Dialog>
+            {/* The Edit Plan button opens the card's dialog (PlanEditDialog in
+                BreedingPlanCard). A second copy here stacked on top of it. */}
         </CardContent>
     );
 }

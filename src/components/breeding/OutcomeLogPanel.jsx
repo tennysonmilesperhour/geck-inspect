@@ -11,6 +11,7 @@ import {
 import { PairingOutcomeLog } from '@/entities/all';
 import { downloadSeasonCard } from '@/lib/genetics/clutchCard';
 import { EGGS_PER_CLUTCH } from '@/lib/genetics/clutchMath';
+import { todayLocalISO } from '@/lib/dateUtils';
 
 /**
  * Predicted vs actual: the outcomes flywheel (plan item 3.1, with the
@@ -81,7 +82,8 @@ export default function OutcomeLogPanel({ sire, dam, outcomes }) {
         predicted: outcomes.map((o) => ({ label: o.label, probability: o.probability })),
         observed,
         eggs: observed.length,
-        hatched_on: new Date().toISOString().slice(0, 10),
+        // Local calendar day; the UTC date is already tomorrow on a US evening.
+        hatched_on: todayLocalISO(),
       });
       setLogs((prev) => [created, ...(prev || [])]);
       setEgg1('');

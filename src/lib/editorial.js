@@ -80,14 +80,14 @@ const DEFAULT_MODIFIED = new Date().toISOString().slice(0, 10);
 // Paths are stored without a trailing slash to match the canonical
 // form used throughout the app.
 const PER_PATH = {
-  '/': { published: '2025-06-01', modified: '2026-04-17' },
-  '/About': { published: '2026-04-17', modified: '2026-04-17' },
-  '/Contact': { published: '2026-04-17', modified: '2026-04-17' },
+  '/': { published: '2025-06-01', modified: '2026-09-29' },
+  '/About': { published: '2026-04-17', modified: '2026-09-29' },
+  '/Contact': { published: '2026-04-17', modified: '2026-09-29' },
   '/Terms': { published: '2026-04-17', modified: '2026-04-17' },
   '/MarketplaceVerification': { published: '2026-04-17', modified: '2026-04-17' },
   '/PrivacyPolicy': { published: '2025-06-01', modified: '2026-04-05' },
   '/CareGuide': { published: '2025-06-15', modified: '2026-04-17' },
-  '/MorphGuide': { published: '2025-07-01', modified: '2026-04-17' },
+  '/MorphGuide': { published: '2025-07-01', modified: '2026-09-28' },
   '/GeneticsGuide': { published: '2025-07-15', modified: '2026-04-17' },
   '/calculator': { published: '2025-08-01', modified: '2026-04-17' },
   // Blog index, bumped whenever a new post ships. Per-post pages

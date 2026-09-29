@@ -1,10 +1,8 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/lib/AuthContext';
 import { createPageUrl } from '@/utils';
 import { ChevronUp, Info, LogIn, UserPlus, X } from 'lucide-react';
-import { useToast } from '@/components/ui/use-toast';
-import { GUEST_WRITE_BLOCKED_EVENT } from '@/lib/guestMode';
 
 /**
  * Bottom-right floating disclaimer shown throughout guest mode.
@@ -19,8 +17,8 @@ import { GUEST_WRITE_BLOCKED_EVENT } from '@/lib/guestMode';
  *
  * Dismissal is per-tab (sessionStorage), when guest mode ends the
  * flag can go stale but that's fine since we stop rendering anyway.
- * We also pipe guest write-block events into a toast here, keeping
- * all guest-mode UX in one component.
+ * The guest write-block toast lives in GuestDemoGuide, which is mounted
+ * for the whole guest session (this notice is not, during the tour).
  */
 const DISMISS_KEY = 'geck_inspect_guest_disclaimer_dismissed';
 // Opens AuthPortal on the Create Account tab rather than Sign In.
@@ -28,7 +26,6 @@ const SIGNUP_URL = '/AuthPortal?mode=signup';
 
 export default function GuestMockDisclaimer() {
   const { isGuest } = useAuth();
-  const { toast } = useToast();
   const [expanded, setExpanded] = useState(false);
   const [dismissed, setDismissed] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -38,19 +35,6 @@ export default function GuestMockDisclaimer() {
       return false;
     }
   });
-
-  useEffect(() => {
-    if (!isGuest) return;
-    const onBlocked = (event) => {
-      const action = event?.detail?.action || 'save changes';
-      toast({
-        title: 'Guest mode is view-only',
-        description: `Create a free account to ${action}. Nothing gets saved while you're browsing as a guest.`,
-      });
-    };
-    window.addEventListener(GUEST_WRITE_BLOCKED_EVENT, onBlocked);
-    return () => window.removeEventListener(GUEST_WRITE_BLOCKED_EVENT, onBlocked);
-  }, [isGuest, toast]);
 
   if (!isGuest || dismissed) return null;
 

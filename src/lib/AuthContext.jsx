@@ -95,7 +95,10 @@ export const AuthProvider = ({ children }) => {
       Date.now() - Number(unloadTs) > 10000
     ) {
       localStorage.removeItem('geck_inspect_unload_ts');
-      supabase.auth.signOut();
+      // scope 'local': end this browser's session only. The default
+      // (global) also signed the member out on their phone and every other
+      // device whenever they closed a "don't stay signed in" tab.
+      supabase.auth.signOut({ scope: 'local' });
     }
 
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
@@ -124,6 +127,10 @@ export const AuthProvider = ({ children }) => {
     // one's geckos while the fresh fetch is in flight.
     queryClientInstance.clear();
     dataCache.clearAll();
+    // Forget the "don't stay signed in" markers too, or a later normal
+    // sign-in on this browser was signed out on the next visit.
+    sessionStorage.removeItem('geck_inspect_ephemeral_session');
+    localStorage.removeItem('geck_inspect_unload_ts');
     await supabase.auth.signOut();
     setGuestMode(false);
     setIsGuest(false);

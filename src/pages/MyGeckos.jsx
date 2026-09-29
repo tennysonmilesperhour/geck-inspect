@@ -237,7 +237,9 @@ export default function MyGeckosPage() {
 
             toast({
                 title: "Gecko Deleted",
-                description: "The gecko has been permanently removed. Revenue data was preserved in business tools.",
+                // Revenue is computed from gecko rows, so a deleted sold gecko's
+                // sale leaves Business Tools too; the old text promised otherwise.
+                description: "The gecko and its weigh-ins have been permanently removed.",
             });
         } catch (error) {
             console.error("Failed to delete gecko:", error);
@@ -879,6 +881,8 @@ export default function MyGeckosPage() {
                                                         feedingGroups={feedingGroups}
                                                         onView={handleOpenDetailModal}
                                                         onEdit={handleEdit}
+                                                        isOwner={!user?.email || gecko.created_by?.toLowerCase() === user.email.toLowerCase()}
+                                                        canEdit={canWriteGecko(gecko, user, memberships)}
                                                     />
 
                                                 </motion.div>
@@ -967,6 +971,9 @@ export default function MyGeckosPage() {
                                                                 )}
                                                             </div>
                                                         </div>
+                                                        {/* View-only collaborators get no Edit: the save
+                                                            would be refused. */}
+                                                        {canWriteGecko(gecko, user, memberships) && (
                                                         <div className="flex gap-2 flex-shrink-0">
                                                             <Button
                                                                 size="sm"
@@ -981,6 +988,7 @@ export default function MyGeckosPage() {
                                                                 <span className="sm:hidden">✏️</span>
                                                             </Button>
                                                         </div>
+                                                        )}
                                                     </div>
                                                 </motion.div>
                                             ))}

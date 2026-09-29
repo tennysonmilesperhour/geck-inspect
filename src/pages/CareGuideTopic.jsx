@@ -143,7 +143,7 @@ export default function CareGuideTopic() {
         '@id': 'https://geckinspect.com/CareGuide#article',
       },
       author: authorSchema(),
-      reviewedBy: authorSchema(),
+      reviewedBy: { '@id': authorSchema()['@id'] },
       datePublished: editorial.published,
       dateModified: editorial.modified,
       speakable: {

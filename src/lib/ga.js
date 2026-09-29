@@ -41,6 +41,10 @@ export function trackEvent(name, params = {}) {
   }
 }
 
+// Links like /PublicProfile?email= and /Messages?recipient= carry a
+// member's email address, which must never be sent to Google Analytics.
+const redactEmails = (s) => (s ? String(s).replace(/([?&](?:email|recipient)=)[^&#]*/gi, '$1redacted') : s);
+
 /**
  * Explicit page_view emission. Prefer the GA4PageTracker component
  * over calling this directly.
@@ -49,8 +53,8 @@ export function trackPageView(pathWithQuery, title) {
   if (!gaReady()) return;
   try {
     window.gtag('event', 'page_view', {
-      page_path: pathWithQuery,
-      page_location: typeof window !== 'undefined' ? window.location.href : undefined,
+      page_path: redactEmails(pathWithQuery),
+      page_location: typeof window !== 'undefined' ? redactEmails(window.location.href) : undefined,
       page_title: title || (typeof document !== 'undefined' ? document.title : undefined),
     });
   } catch {

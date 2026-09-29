@@ -69,7 +69,7 @@ async function generateAutoTasks() {
         title: `Replace placeholder URL with tagged affiliate link: ${p.name}`,
         description_md:
           `Affiliate product **${p.name}** still has a placeholder vendor_product_url. Replace it with a tagged URL once the partner program is approved, then clear \`vendor_extra.needs_partner_tag\`.`,
-        link_url: `/AdminPanel`,
+        link_url: '/AdminPanel?section=store',
         link_label: 'Open store admin',
         priority: 30,
       });
@@ -118,7 +118,7 @@ async function generateAutoTasks() {
         source_key: key,
         title: `Activate ${p.name}`,
         description_md: `Product **${p.name}** is in draft but has all the prerequisites set. Flip status to \`active\` to publish.`,
-        link_url: `/AdminPanel`,
+        link_url: '/AdminPanel?section=store',
         link_label: 'Open store admin',
         priority: 25,
       });
@@ -141,7 +141,7 @@ async function generateAutoTasks() {
       title: 'Flip store_enabled to true',
       description_md:
         'Master kill-switch is currently off. The Supplies tab is hidden until this flips. Confirm everything else (active products, partner tags, Stripe secrets) is in place before enabling.',
-      link_url: '/AdminPanel',
+      link_url: '/AdminPanel?section=store',
       link_label: 'Open store admin',
       priority: 90,
     });
@@ -163,7 +163,7 @@ async function generateAutoTasks() {
       title: 'Pin at least one PostHog dashboard',
       description_md:
         'Product analytics tab is empty. Build a few starter dashboards in PostHog (DAU, signup funnel, retention) and paste their share-embed URLs into Admin > Product analytics.',
-      link_url: '/AdminPanel',
+      link_url: '/AdminPanel?section=product_analytics',
       link_label: 'Open Product analytics',
       priority: 80,
     });

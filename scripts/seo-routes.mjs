@@ -204,7 +204,7 @@ export const STATIC_ROUTES = [
     changefreq: 'weekly',
     lastmod: dateOf('src/pages/Home.jsx'),
     meta: {
-      title: 'Geck Inspect: Crested Gecko Breeding App for Pricing, Pairings and Sales',
+      title: 'Crested Gecko Breeding App: Pricing, Pairings and Sales',
       description:
         'The crested gecko app for the business side of breeding. Value estimates from real listings, expected value per egg for every pairing, profit by season, and verifiable pedigrees. Free to start.',
     },

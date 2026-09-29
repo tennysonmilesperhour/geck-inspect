@@ -77,11 +77,11 @@ export const PROJECT_LINES = [
       'Deep, smoky charcoal-to-near-black overall tone when fired up',
       'Pattern (when present) is reduced in contrast compared to a normal animal of the same morph combo',
       'Co-expresses cleanly with most pattern morphs (harlequin, pinstripe, dalmatian)',
-      'In hets and visuals, fire-down state is still notably darker than non-Sable siblings',
+      'In Sables and Super Sables, fire-down state is still notably darker than non-Sable siblings',
     ],
     identificationTips: [
       'Compare fired-up photos to known Sable references; the saturation of the dark tone is the giveaway',
-      'Ask whether the animal is a het Sable or a visual Sable; a het looks like a normal animal',
+      'Sable is incomplete dominant: one copy makes a visual Sable and two make a Super Sable, so there is no hidden het. Ask which one the animal is',
       'Check whether the line has been outcrossed; multi-gen Rialto descendants are tighter in expression than recent outcrosses',
     ],
     verificationAdvice: [

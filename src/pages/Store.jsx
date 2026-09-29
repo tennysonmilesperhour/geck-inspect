@@ -1,5 +1,9 @@
-import { lazy, Suspense } from 'react';
+import { Suspense } from 'react';
 import { Routes, Route } from 'react-router-dom';
+// The app's retrying loader, like every other route: after a deploy an old
+// tab asks for chunk names that no longer exist, and React's plain lazy()
+// sent that straight to the error screen.
+import { lazy } from '@/lib/lazyWithRetry';
 import StoreLayout from '@/components/store/StoreLayout';
 
 const StoreLanding = lazy(() => import('@/components/store/StoreLanding'));

@@ -61,7 +61,7 @@ function EvidenceStrip({ matches, isLoading, error, isAdmin, source = 'legacy' }
         {matches && matches.length > 0 && (
           <p className="text-xs text-slate-500">
             {fromRecognition
-              ? 'These query-specific examples influenced the assessment. Listing labels are weighted as weak evidence, de-duplicated by source, and never treated as proof.'
+              ? 'These are the closest reference photos, each tagged by the breeder who listed that animal. Breeder tags are good evidence for those animals, but your own photos decide.'
               : 'These examples are ranked by general visual similarity. Their labels are comparison evidence, not proof.'}
           </p>
         )}

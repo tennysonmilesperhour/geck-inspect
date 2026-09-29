@@ -36,6 +36,13 @@ const FRIENDLY_ERROR = {
     body: 'Your credits reset on the 1st. Upgrade your plan to identify more geckos now.',
     cta: { label: 'See plans', href: '/Membership' },
   },
+  // The per-network daily cap runs before a credit is used, so nothing was
+  // charged. Without its own copy this fell through to "try a different
+  // photo", which only invited more retries.
+  morph_id_ip_daily_exhausted: {
+    title: 'Daily Morph ID limit reached on this network',
+    body: 'Please try again tomorrow. No credit was used.',
+  },
   upstream_rate_limited: {
     title: 'Our AI is busy right now',
     body: 'Lots of geckos under the lens. Please try again in a minute.',
@@ -174,6 +181,9 @@ export default function Recognition() {
       } else {
         setAnalysis(data);
         setMeta(respMeta || null);
+        // Refresh the free-try count so "Start over" shows the locked state
+        // instead of an uploader that ends in a refusal after the upload.
+        if (isFreeTier) freeUsageQuery.refetch();
       }
     } catch (err) {
       console.error('Analysis error:', err);

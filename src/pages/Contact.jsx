@@ -115,7 +115,7 @@ export default function Contact() {
             </div>
             <div>
               <h3 className="font-semibold text-slate-100 mb-1">Do you support species other than crested geckos?</h3>
-              <p className="text-sm text-slate-400">Geck Inspect is built specifically for <em>Correlophus ciliatus</em>. Adjacent species support is an active area of development; join the platform and request the species you'd like to see.</p>
+              <p className="text-sm text-slate-400">Geck Inspect is built for crested geckos (<em>Correlophus ciliatus</em>). If you keep a few other reptiles, you can log basic records for them alongside your crested geckos.</p>
             </div>
             <div>
               <h3 className="font-semibold text-slate-100 mb-1">I want to contribute morph photos to the training set.</h3>

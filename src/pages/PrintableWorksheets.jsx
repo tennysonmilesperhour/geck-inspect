@@ -273,7 +273,10 @@ function VetHealthCardTemplate({ gecko, weights, sheds, feedingRecords }) {
 /* ─── Template: Expo Price Tag ──────────────────────────────────── */
 
 function ExpoPriceTagTemplate({ gecko }) {
-  const passportUrl = `${window.location.origin}/AnimalPassport/${gecko.id}`;
+  // Public passports live at /passport/<code>. The old /AnimalPassport/<id>
+  // route never existed, so every printed code opened a dead page. No code
+  // is printed for a gecko without a passport.
+  const passportUrl = gecko.passport_code ? `${window.location.origin}/passport/${gecko.passport_code}` : null;
   const photoUrl = gecko.image_urls?.[0] || null;
 
   return (
@@ -333,7 +336,7 @@ function ExpoPriceTagTemplate({ gecko }) {
           <p style={{ margin: '0 0 2px' }}>Scan for full passport</p>
           <p className="font-mono" style={{ margin: 0, fontSize: 9 }}>Geck Inspect</p>
         </div>
-        <QRCodeSVG value={passportUrl} size={64} level="M" />
+        {passportUrl && <QRCodeSVG value={passportUrl} size={64} level="M" />}
       </div>
     </div>
   );
@@ -342,7 +345,10 @@ function ExpoPriceTagTemplate({ gecko }) {
 /* ─── Template: Lineage Card ────────────────────────────────────── */
 
 function LineageCardTemplate({ gecko }) {
-  const passportUrl = `${window.location.origin}/AnimalPassport/${gecko.id}`;
+  // Public passports live at /passport/<code>. The old /AnimalPassport/<id>
+  // route never existed, so every printed code opened a dead page. No code
+  // is printed for a gecko without a passport.
+  const passportUrl = gecko.passport_code ? `${window.location.origin}/passport/${gecko.passport_code}` : null;
   const photoUrl = gecko.image_urls?.[0] || null;
 
   return (
@@ -434,15 +440,20 @@ function LineageCardTemplate({ gecko }) {
             Breeder
           </p>
           <p style={{ fontSize: 14, fontWeight: 600, margin: '0 0 2px' }}>
-            {gecko.breeder || gecko.created_by || '-'}
+            {/* breeder_name, never created_by: that is the owner's email. */}
+            {gecko.breeder_name || '-'}
           </p>
           <p style={{ fontSize: 10, color: '#888', margin: 0 }}>
             Issued {format(new Date(), 'MMMM d, yyyy')}
           </p>
         </div>
         <div style={{ textAlign: 'center' }}>
-          <QRCodeSVG value={passportUrl} size={72} level="M" />
-          <p style={{ fontSize: 8, color: '#aaa', margin: '4px 0 0' }}>Verify on Geck Inspect</p>
+          {passportUrl && (
+            <>
+              <QRCodeSVG value={passportUrl} size={72} level="M" />
+              <p style={{ fontSize: 8, color: '#aaa', margin: '4px 0 0' }}>Verify on Geck Inspect</p>
+            </>
+          )}
         </div>
       </div>
     </div>

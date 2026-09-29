@@ -9,6 +9,7 @@
  *   - create_only: skip rows whose gecko_id_code already exists
  */
 import { Gecko, BreedingPlan, Egg } from '@/entities/all';
+import { supabase } from '@/lib/supabaseClient';
 import { GECKO_STATUS_OPTIONS, GECKO_SEX_OPTIONS } from '@/lib/constants';
 
 const VALID_SEX = GECKO_SEX_OPTIONS;
@@ -148,10 +149,14 @@ export async function importGeckosFromCSV({
     return { success: false, data: { success: false, results } };
   }
 
-  // Fetch all existing geckos for matching
+  // Fetch the importer's own geckos for matching. An unfiltered read also
+  // returns every other breeder's public geckos, so a row whose ID code
+  // matched a stranger's animal was skipped or failed, and sire and dam
+  // codes could link to someone else's gecko.
   let existingGeckos = [];
   try {
-    existingGeckos = await Gecko.filter({});
+    const { data: { user } } = await supabase.auth.getUser();
+    existingGeckos = user?.email ? await Gecko.filter({ created_by: user.email }) : [];
   } catch (err) {
     results.errors.push('Failed to load existing geckos: ' + err.message);
     return { success: false, data: { success: false, results } };

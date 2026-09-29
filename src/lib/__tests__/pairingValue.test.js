@@ -61,7 +61,15 @@ describe('viableEggCount', () => {
   it('counts incubating and hatched eggs only', () => {
     expect(viableEggCount([
       { status: 'Incubating' }, { status: 'Hatched' }, { status: 'Slug' },
-      { status: 'Infertile' }, { status: 'Hatched', archived: true },
+      { status: 'Infertile' },
+    ])).toBe(2);
+  });
+
+  it('keeps hatched eggs after hatching archives them, and drops deleted incubating eggs', () => {
+    expect(viableEggCount([
+      { status: 'Hatched', archived: true },
+      { status: 'Incubating', archived: true },
+      { status: 'Incubating' },
     ])).toBe(2);
   });
 });

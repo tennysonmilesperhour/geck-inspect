@@ -96,7 +96,9 @@ export default function ForumPage() {
                 title: newPost.title.trim(),
                 content: newPost.content.trim(),
                 category_id: newPost.category_id,
-                author_name: currentUser.full_name || currentUser.breeder_name || currentUser.email,
+                // Never the email: sign-up doesn't ask for a name, so this used
+                // to publish members' email addresses as the author.
+                author_name: currentUser.full_name || currentUser.business_name || currentUser.breeder_name || 'Geck Inspect member',
             });
             setPosts((prev) => [createdPost, ...prev]);
             setShowCreatePost(false);

@@ -218,12 +218,13 @@ function MyProfileScreen() {
             years_experience: currentUser.years_experience || 0,
             // Add settings data
             email_notifications_enabled: currentUser.email_notifications_enabled ?? true,
-            email_notification_types: currentUser.email_notification_types || [],
+            // Same default as Settings and the column: an empty list here was
+            // saved back and turned off every email type.
+            email_notification_types: currentUser.email_notification_types || ['level_up', 'expert_status', 'new_message', 'new_follower', 'following_activity', 'gecko_of_day', 'forum_replies', 'breeding_updates', 'announcements'],
             calendar_alerts_enabled: currentUser.calendar_alerts_enabled ?? true,
             is_public_profile: currentUser.is_public_profile ?? true,
             show_username_on_images: currentUser.show_username_on_images ?? true,
             allow_profile_clicks: currentUser.allow_profile_clicks ?? true,
-            public_title_preference: currentUser.public_title_preference || 'collection',
             sidebar_badge_preference: currentUser.sidebar_badge_preference || 'collection'
         });
     };

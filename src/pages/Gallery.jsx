@@ -29,7 +29,9 @@ export default function Gallery() {
         primary_morph: 'all',
         secondary_traits: [],
         base_color: 'all',
-        sort: galleryPrefs.defaultSort,
+        // gecko_images has no likes column, so a saved "Most Liked" default
+        // made every load fail and the gallery stayed empty on each visit.
+        sort: galleryPrefs.defaultSort === '-likes' ? '-created_date' : galleryPrefs.defaultSort,
     });
     const [selectedImageData, setSelectedImageData] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -165,13 +167,12 @@ export default function Gallery() {
                             </div>
                             <div>
                                 <Label className="text-slate-300 text-sm mb-1 block">Default Sort</Label>
-                                <Select value={galleryPrefs.defaultSort} onValueChange={v => { setGalleryPrefs({ defaultSort: v }); setFilters(f => ({ ...f, sort: v })); }}>
+                                <Select value={galleryPrefs.defaultSort === '-likes' ? '-created_date' : galleryPrefs.defaultSort} onValueChange={v => { setGalleryPrefs({ defaultSort: v }); setFilters(f => ({ ...f, sort: v })); }}>
                                     <SelectTrigger className="w-full h-8 text-xs">
                                         <SelectValue />
                                     </SelectTrigger>
                                     <SelectContent>
                                         <SelectItem value="-created_date">Newest First</SelectItem>
-                                        <SelectItem value="-likes">Most Liked</SelectItem>
                                     </SelectContent>
                                 </Select>
                             </div>

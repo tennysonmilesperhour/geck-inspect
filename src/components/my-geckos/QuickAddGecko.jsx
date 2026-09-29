@@ -158,7 +158,7 @@ export default function QuickAddGecko({ open, user, onClose, onSaved, onMoreDeta
               <DialogTitle className="text-xl text-slate-100">{saved.gecko.name} is in your collection</DialogTitle>
               <DialogDescription className="text-slate-400">
                 {saved.remind
-                  ? `We will remind you on feeding days, every ${DEFAULT_FEEDING_INTERVAL_DAYS} days. You can change this in Settings.`
+                  ? `We will remind you on feeding days, every ${DEFAULT_FEEDING_INTERVAL_DAYS} days. Change the schedule in Project Manager, on the Feeding tab.`
                   : 'Weights, sheds, photos and lineage now have a home.'}
               </DialogDescription>
             </div>

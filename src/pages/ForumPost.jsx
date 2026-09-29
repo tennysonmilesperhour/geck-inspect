@@ -160,7 +160,8 @@ export default function ForumPostPage() {
             const commentData = {
                 post_id: postId,
                 content: newComment.trim(),
-                author_name: currentUser.full_name || currentUser.breeder_name || currentUser.email,
+                // Never the email (sign-up doesn't ask for a name).
+                author_name: currentUser.full_name || currentUser.business_name || currentUser.breeder_name || 'Geck Inspect member',
                 parent_comment_id: replyingTo?.id || null,
             };
             const createdComment = await ForumComment.create(commentData);

@@ -68,7 +68,7 @@ const CARE_GUIDE_JSON_LD = {
         sameAs: 'https://en.wikipedia.org/wiki/Crested_gecko',
       },
       author: authorSchema(),
-      reviewedBy: authorSchema(),
+      reviewedBy: { '@id': authorSchema()['@id'] },
       datePublished: CARE_GUIDE_EDITORIAL.published,
       dateModified: CARE_GUIDE_EDITORIAL.modified,
       // speakable: picks out the intro paragraphs of the guide as

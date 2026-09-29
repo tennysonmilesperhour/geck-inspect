@@ -122,7 +122,10 @@ export function sortGeckos(geckos, sortBy, weightRecords) {
 export function useGeckoFilters(geckos, weightRecords, { filters, sortBy, searchTerm, showArchived }) {
   return useMemo(() => {
     const base = geckos
-      .filter(g => showArchived ? g.archived : (!g.archived && g.status !== 'Sold'))
+      // A gecko marked Sold without being archived (the form's Sold option,
+      // CSV import, MorphMarket sync) used to match neither view and vanish.
+      // Sold counts as archived here.
+      .filter(g => showArchived ? (g.archived || g.status === 'Sold') : (!g.archived && g.status !== 'Sold'))
       .filter(g => {
         if (!searchTerm) return true;
         const term = searchTerm.toLowerCase();

@@ -1,6 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Egg, Notification } from '@/entities/all';
-import { differenceInDays } from 'date-fns';
+import { differenceInDays, differenceInCalendarDays } from 'date-fns';
 import { parseLocalDate } from '@/lib/dateUtils';
 import { startVisiblePolling } from '@/lib/pagePolling';
 import { getEstimatedHatchDates, getIncubationProfile } from '@/lib/incubationProfiles';
@@ -86,6 +86,14 @@ export default function HatchAlertSystem({ user, enabled }) {
           if (!egg.lay_date) continue;
           const daysIncubating = differenceInDays(today, parseLocalDate(egg.lay_date));
           if (daysIncubating < threshold) continue;
+          // Same stop window as the nightly server job (enqueue_hatch_alerts):
+          // past 30 days after the expected hatch, or 150 days after laying
+          // when there is no expected date, the server sends one last status
+          // check and stops. Without this the app kept alerting every week.
+          const pastWindow = egg.hatch_date_expected
+            ? differenceInCalendarDays(today, parseLocalDate(egg.hatch_date_expected)) > 30
+            : differenceInCalendarDays(today, parseLocalDate(egg.lay_date)) > 150;
+          if (pastWindow) continue;
           if (alertedEggIds.has(egg.id)) continue;
           if (!shouldNotify(egg.id)) continue;
 

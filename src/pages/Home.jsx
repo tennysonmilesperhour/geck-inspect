@@ -278,7 +278,7 @@ const LANDING_FAQS = [
   // FAQPage schema is derived from this same array.
   {
     q: 'Is Geck Inspect free?',
-    a: 'Yes. Creating an account and using Geck Inspect is free, including the genetics calculator, morph guide, care guide, community forum, and core collection tracking. Paid tiers (Keeper and Breeder) unlock larger collections, advanced breeding tools, MorphMarket CSV export, and white-label pedigree certificates, but you never need to pay to use the app.',
+    a: 'Yes. Creating an account and using Geck Inspect is free, including the genetics calculator, morph guide, care guide, community forum, and core collection tracking. Paid tiers (Keeper and Breeder) unlock larger collections, more active breeding pairs, more Morph IDs, MorphMarket CSV export and waitlists, but you never need to pay to use the app.',
   },
   {
     q: 'Can Geck Inspect track my breeding costs and profit?',
@@ -286,11 +286,11 @@ const LANDING_FAQS = [
   },
   {
     q: 'Is my collection data private, and can I export it?',
-    a: 'Yes. Your collection is private by default. Only geckos you explicitly publish to the gallery, forum, or marketplace are visible to other users. Data is stored on Supabase with row-level security so other users cannot read your records. You own your data and can export your full roster, weight history, breeding log, and photos as CSV or PDF at any time.',
+    a: 'Yes. Your collection is private by default. Only geckos you explicitly publish to the gallery, forum, or marketplace are visible to other users. Data is stored on Supabase with row-level security so other users cannot read your records. You own your data and can export your roster as CSV and your collection and care records as JSON, with photos as links, at any time.',
   },
   {
     q: 'How is Geck Inspect better than a spreadsheet?',
-    a: 'A spreadsheet stores text. Geck Inspect stores structured records that connect to each other. Every weight, photo, pairing, clutch, and lineage edge is queryable. You can ask "how many harlequin pinstripe females over 35 grams have I bred this season?" and get an answer. When you sell a gecko, the entire history (parents, weights, photos, medical notes) transfers as a verified digital passport with one click, something a spreadsheet cannot do for any buyer.',
+    a: 'A spreadsheet stores text. Geck Inspect stores structured records that connect to each other. Every weight, photo, pairing, clutch, and lineage link is connected, which is what powers the growth charts, pedigrees and breeding odds. When you sell a gecko, the entire history (parents, weights, photos, medical notes) transfers as a verified digital passport with one click, something a spreadsheet cannot do for any buyer.',
   },
   {
     q: 'What is Geck Inspect?',

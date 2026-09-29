@@ -11,6 +11,8 @@
  * Use this module instead of importing 'crested-gecko-app' directly in
  * new code, so display sanitation and tag canonicalization stay applied.
  */
+// Must run before the engine import below (imports run in order).
+import './zodJitless.js';
 import {
   TRAITS,
   getTrait,
@@ -48,8 +50,8 @@ export {
 export function displayText(text) {
   if (typeof text !== 'string') return text;
   return text
-    .replace(/\s*—\s*/g, ', ')
-    .replace(/\s*–\s*/g, ', ');
+    .replace(/\s*\u2014\s*/g, ', ')
+    .replace(/\s*\u2013\s*/g, ', ');
 }
 
 // ---------- outcome labels ---------------------------------------------

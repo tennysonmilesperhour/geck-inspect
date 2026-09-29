@@ -143,10 +143,15 @@ export default function MorphDetail() {
         try {
           const normalized = (best?.morph_name || displayName).toLowerCase();
           const firstWord = normalized.split(/\s+/)[0];
+          // Reviewed photos from members only. gecko_images also holds about
+          // 3,800 scraped marketplace listing photos (created_by is null),
+          // which the caption below would otherwise call keeper uploads.
           const { data: imgs } = await supabase
             .from('gecko_images')
             .select('id, image_url, primary_morph')
             .ilike('primary_morph', `%${firstWord}%`)
+            .eq('verified', true)
+            .not('created_by', 'is', null)
             .limit(8);
           if (!cancelled) setCommunityImages(imgs || []);
         } catch {
@@ -267,7 +272,7 @@ export default function MorphDetail() {
           },
           mentions: [{ '@id': `https://geckinspect.com/MorphGuide/${slug}#term` }],
           author: authorSchema(),
-          reviewedBy: authorSchema(),
+          reviewedBy: { '@id': authorSchema()['@id'] },
           datePublished: editorial.published,
           dateModified: editorial.modified,
           publisher: {

@@ -30,6 +30,7 @@ import {
 import LoadingSpinner from '../components/shared/LoadingSpinner';
 import EmptyState from '../components/shared/EmptyState';
 import PageHeader from '../components/shared/PageHeader';
+import { Link } from 'react-router-dom';
 import {
   Target,
   DollarSign,
@@ -607,9 +608,10 @@ function PairingCard({ row, rank, goal, usingStaticWeights, readiness }) {
           variant="outline"
           className="border-slate-600 hover:bg-slate-800"
         >
-          <a href={createPageUrl('Breeding')}>
+          {/* Link, not <a>: a plain href reloaded the whole app. */}
+          <Link to={createPageUrl('Breeding')}>
             Plan this pairing <ArrowRight className="w-3.5 h-3.5 ml-1" />
-          </a>
+          </Link>
         </Button>
       </div>
     </div>

@@ -123,7 +123,6 @@ const tiers = [
       '15 AI Morph IDs per month',
       'Market intelligence dashboard',
       'Pricing trends and morph demand analytics',
-      'Breeding ROI projections',
       'Competitive landscape analysis',
       'Dedicated account support',
     ],
@@ -220,7 +219,7 @@ const MEMBERSHIP_JSON_LD = [
         name: 'How much does Geck Inspect cost?',
         acceptedAnswer: {
           '@type': 'Answer',
-          text: `Geck Inspect has a Free tier (10 geckos), a Keeper tier ($2.99/month or $30/year), a Breeder tier ($5.99/month or $60/year), and an Enterprise tier ($99.99/month or $1,000/year). Subscribing bills you straight away, and every recurring plan also offers an optional ${TRIAL_DAYS}-day free trial. Annual billing saves about 17% vs monthly.`,
+          text: `Geck Inspect has a Free tier (10 geckos), a Keeper tier ($2.99/month or $30/year), a Breeder tier ($5.99/month or $60/year), and an Enterprise tier that is coming soon. Subscribing bills you straight away, and every recurring plan also offers an optional ${TRIAL_DAYS}-day free trial. Annual billing saves about 17% vs monthly.`,
         },
       },
       {

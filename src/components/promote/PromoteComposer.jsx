@@ -23,6 +23,9 @@ import { supabase } from '@/lib/supabaseClient';
 import { SocialPost, SocialPostVariant, UserBrandVoice, GeckoWaitlist } from '@/entities/all';
 import { toast } from '@/components/ui/use-toast';
 
+// See the schedule input below.
+const SCHEDULING_ENABLED = false;
+
 const DEFAULT_VOICE = 'pro_breeder';
 const DEFAULT_TEMPLATE = 'meet';
 const DEFAULT_PLATFORMS = ['bluesky'];
@@ -1260,6 +1263,11 @@ export default function PromoteComposer({
                       Clear
                     </button>
                   )}
+                  {/* Scheduling is hidden: the job that publishes scheduled posts
+                      (promote_drain_scheduled) has been off since 9 Sep and
+                      would post only one platform, so a scheduled post never
+                      went out. Flip SCHEDULING_ENABLED once the job works. */}
+                  {SCHEDULING_ENABLED && (
                   <div className="flex items-center gap-1.5 ml-auto">
                     <Calendar className="w-3.5 h-3.5 text-emerald-300/70" />
                     <Input
@@ -1279,6 +1287,7 @@ export default function PromoteComposer({
                       </button>
                     )}
                   </div>
+                  )}
                 </div>
                 {pickedImages.length > 0 && (
                   <div className="flex gap-1.5 overflow-x-auto pb-1">

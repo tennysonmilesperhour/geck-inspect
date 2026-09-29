@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { User, FeedingGroup, FeedingRecord, WeightRecord, Gecko } from '@/entities/all';
-import { format, differenceInDays } from 'date-fns';
-import { todayLocalISO } from '@/lib/dateUtils';
+import { format, differenceInCalendarDays } from 'date-fns';
+import { todayLocalISO, parseLocalDate } from '@/lib/dateUtils';
 import {
   Utensils, Scale, ChevronLeft, CheckCircle2, AlertTriangle, Loader2,
   Clock, Users, X, Check,
@@ -47,8 +47,10 @@ function GroupCard({ group, geckos, feedingRecords, onFeed, onWeigh }) {
       .filter(r => r.animal_id === gecko.id)
       .sort((a, b) => new Date(b.date || b.created_date) - new Date(a.date || a.created_date))[0];
 
-    const lastDate = lastFeed ? new Date(lastFeed.date || lastFeed.created_date) : null;
-    const daysSince = lastDate ? differenceInDays(now, lastDate) : 999;
+    // parseLocalDate: new Date('YYYY-MM-DD') is UTC midnight, so after 5 pm
+    // in California a gecko fed today read as fed yesterday.
+    const lastDate = lastFeed ? parseLocalDate(lastFeed.date || lastFeed.created_date) : null;
+    const daysSince = lastDate ? differenceInCalendarDays(now, lastDate) : 999;
     if (daysSince >= (group.interval_days || 3)) {
       dueCount++;
     }
@@ -135,8 +137,10 @@ function BatchFeedView({ group, groupGeckos, feedingRecords, onBack, onSaved }) 
     const lastFeed = feedingRecords
       .filter(r => r.animal_id === gecko.id)
       .sort((a, b) => new Date(b.date || b.created_date) - new Date(a.date || a.created_date))[0];
-    const lastDate = lastFeed ? new Date(lastFeed.date || lastFeed.created_date) : null;
-    const daysSince = lastDate ? differenceInDays(now, lastDate) : 999;
+    // parseLocalDate: new Date('YYYY-MM-DD') is UTC midnight, so after 5 pm
+    // in California a gecko fed today read as fed yesterday.
+    const lastDate = lastFeed ? parseLocalDate(lastFeed.date || lastFeed.created_date) : null;
+    const daysSince = lastDate ? differenceInCalendarDays(now, lastDate) : 999;
     return { gecko, daysSince, lastDate };
   }).sort((a, b) => b.daysSince - a.daysSince);
 
@@ -178,6 +182,13 @@ function BatchFeedView({ group, groupGeckos, feedingRecords, onBack, onSaved }) 
           accepted,
           notes: accepted ? null : 'Refused during batch feeding',
         });
+      }
+
+      // The reminder job, the Dashboard and Project Manager read the group's
+      // last_fed_date. Without this, feeding a group here left it overdue and
+      // the "due" reminder never came again.
+      if (fedCount > 0) {
+        await FeedingGroup.update(group.id, { last_fed_date: today });
       }
 
       setSummary({ fed: fedCount, refused: refusedCount });
@@ -525,8 +536,10 @@ export default function BatchHusbandry() {
   const [activeGroup, setActiveGroup] = useState(null);
   const [activeGeckos, setActiveGeckos] = useState([]);
 
-  const loadData = useCallback(async () => {
-    setIsLoading(true);
+  const loadData = useCallback(async (background = false) => {
+    // A background reload (after a save) must not swap the page for the
+    // spinner: that unmounted the feed view and threw away its summary.
+    if (!background) setIsLoading(true);
     try {
       const currentUser = await User.me();
       if (!currentUser) {
@@ -578,7 +591,7 @@ export default function BatchHusbandry() {
 
   const handleSaved = () => {
     // Reload data in background
-    loadData();
+    loadData(true);
   };
 
   if (isLoading) {

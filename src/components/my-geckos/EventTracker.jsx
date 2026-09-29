@@ -17,6 +17,14 @@ import {
     DialogFooter,
 } from "@/components/ui/dialog";
 import { Plus, Loader2 } from 'lucide-react';
+import { format } from 'date-fns';
+import { useToast } from '@/components/ui/use-toast';
+
+// The datetime-local input wants the local wall-clock time. toISOString()
+// gave UTC, which the input then read as local, so every event logged at
+// the default time was stored shifted by the UTC offset (an 8:15 pm
+// feeding in California landed on 3:15 am the next day).
+const nowForInput = () => format(new Date(), "yyyy-MM-dd'T'HH:mm");
 
 const EVENT_TYPES = [
     { value: 'shed', label: '🦎 Shed', emoji: '🦎' },
@@ -32,16 +40,14 @@ export default function EventTracker({ entityId, entityType = 'gecko', onEventAd
     const [selectedType, setSelectedType] = useState(null);
     const [customName, setCustomName] = useState('');
     const [notes, setNotes] = useState('');
-    const [eventDate, setEventDate] = useState(new Date().toISOString().slice(0, 16));
+    const [eventDate, setEventDate] = useState(nowForInput);
     const [isSaving, setIsSaving] = useState(false);
+    const { toast } = useToast();
 
     const handleSelectType = (type) => {
         setSelectedType(type);
-        if (type !== 'custom') {
-            setIsOpen(true);
-        } else {
-            setIsOpen(true);
-        }
+        setEventDate(nowForInput());
+        setIsOpen(true);
     };
 
     const handleSave = async () => {
@@ -70,10 +76,11 @@ export default function EventTracker({ entityId, entityType = 'gecko', onEventAd
             setSelectedType(null);
             setCustomName('');
             setNotes('');
-            setEventDate(new Date().toISOString().slice(0, 16));
+            setEventDate(nowForInput());
             setIsOpen(false);
         } catch (error) {
             console.error('Failed to save event:', error);
+            toast({ title: 'Event not saved', description: error.message || 'Please try again.', variant: 'destructive' });
         }
         setIsSaving(false);
     };

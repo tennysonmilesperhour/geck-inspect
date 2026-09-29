@@ -26,6 +26,8 @@ import {
   UserEntity,
 } from '@/api/supabaseEntities';
 
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
 const MS_PER_MONTH = 1000 * 60 * 60 * 24 * 30.44;
 
 /**
@@ -61,7 +63,11 @@ export async function computeTrustSignals(identifier) {
   const [breederProfile] = await BreederProfile
     .filter({ created_by: email }, null, 1)
     .catch(() => []);
-  const reviewUserId = breederProfile?.user_id || profile.user_id || profile.id;
+  // reviewed_user_id is a uuid, but 87 of 135 profiles have an older
+  // non-uuid id, and querying with one failed with HTTP 400 on every
+  // trust panel. Only look reviews up by a real uuid.
+  const reviewCandidate = breederProfile?.user_id || profile.auth_user_id || profile.id;
+  const reviewUserId = UUID_RE.test(String(reviewCandidate || '')) ? reviewCandidate : null;
 
   const [geckos, weights, transfers, reviews] = await Promise.all([
     Gecko.filter({ created_by: email }).catch(() => []),

@@ -229,7 +229,8 @@ function ForumTab() {
         try {
             const createdPost = await ForumPost.create({
                 ...newPost,
-                author_name: currentUser.full_name,
+                // author_name is required; members without a name used to fail here.
+                author_name: currentUser.full_name || currentUser.business_name || currentUser.breeder_name || 'Geck Inspect member',
             });
             setPosts([createdPost, ...posts]);
             setShowCreatePost(false);

@@ -94,9 +94,12 @@ export function pairingEggValue(sire, dam, priceIndex) {
   return eggValue(prediction?.offspring_phenotypes || [], priceIndex);
 }
 
-const VIABLE = new Set(['Incubating', 'Hatched']);
-
-/** Eggs from this pairing that are still worth something: incubating or hatched. */
+/**
+ * Eggs from this pairing that are still worth something: incubating or
+ * hatched. Hatching archives an egg, so a hatched egg counts whether or not
+ * it is archived; an archived egg still marked Incubating was deleted.
+ * (Counting only unarchived eggs made the value drop as eggs hatched.)
+ */
 export function viableEggCount(eggs = []) {
-  return eggs.filter((e) => !e.archived && VIABLE.has(e.status)).length;
+  return eggs.filter((e) => e.status === 'Hatched' || (!e.archived && e.status === 'Incubating')).length;
 }

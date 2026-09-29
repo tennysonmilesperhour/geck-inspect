@@ -56,7 +56,7 @@ export default function EmailCaptureCard({ source = 'homepage' }) {
               <span className="text-emerald-300">Free PDFs, sent to your inbox.</span>
             </h2>
             <p className="text-slate-300 leading-relaxed mb-5">
-              Two written-by-a-breeder PDFs covering the full crested gecko hobby, husbandry from hatchling to senior, plus a complete genetics primer with punnett projections, polygenic traits, and a glossary of every term that matters. No spam. Unsubscribe any time.
+              Two written-by-a-breeder PDFs covering the full crested gecko hobby, husbandry from hatchling to senior, plus a complete genetics primer with punnett projections, polygenic traits, and a glossary of every term that matters. No spam.
             </p>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mb-6">
@@ -79,8 +79,13 @@ export default function EmailCaptureCard({ source = 'homepage' }) {
             {submitted ? (
               <div className="rounded border border-emerald-500/40 bg-emerald-500/10 px-4 py-3 inline-flex items-center gap-3 text-emerald-200">
                 <CheckCircle className="w-5 h-5" />
+                {/* The email can fail quietly (the function reports delivered: 0),
+                    so the PDFs are linked here too. */}
                 <div className="text-sm">
-                  Sent. Check your inbox for both download links, including spam, just in case.
+                  Sent. Check your inbox, including spam. Or download them now:{' '}
+                  <a href="/downloads/geck-inspect-care-guide.pdf" className="underline hover:text-white">Care Guide</a>
+                  {' and '}
+                  <a href="/downloads/geck-inspect-genetics-guide.pdf" className="underline hover:text-white">Genetics Guide</a>.
                 </div>
               </div>
             ) : (

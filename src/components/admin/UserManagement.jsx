@@ -231,17 +231,20 @@ export default function UserManagement() {
                     break;
                 case 'message':
                     if (messageContent.trim()) {
+                        // From the signed-in admin's own account, so the member's
+                        // reply lands in an inbox someone reads (replies to the
+                        // old admin@geckinspect.com sender went nowhere).
+                        const me = await User.me();
                         await DirectMessage.create({
-                            sender_email: 'admin@geckinspect.com',
+                            sender_email: me.email,
                             recipient_email: selectedUser.email,
                             content: messageContent.trim(),
-                            message_type: 'system'
                         });
                         await Notification.create({
                             user_email: selectedUser.email,
                             type: 'new_message',
                             content: 'You have received a message from the admin team.',
-                            link: '/Messages'
+                            link: `/Messages?recipient=${encodeURIComponent(me.email)}`
                         });
                         toast({ title: "Success", description: `Message sent to ${selectedUser.full_name}.` });
                     }
@@ -512,7 +515,9 @@ export default function UserManagement() {
             </Dialog>
 
             {/* Confirmation Dialog */}
-            <Dialog open={!!selectedUser && actionType !== 'message' && !showUserDetail} onOpenChange={() => { setSelectedUser(null); setActionType(''); }}>
+            {/* !!actionType: closing the user-details dialog left a user selected
+                with no action, which popped up an empty "Confirm Action". */}
+            <Dialog open={!!selectedUser && !!actionType && actionType !== 'message' && !showUserDetail} onOpenChange={() => { setSelectedUser(null); setActionType(''); }}>
                 <DialogContent className="bg-slate-900 border-slate-700 text-white">
                     <DialogHeader>
                         <DialogTitle>Confirm Action</DialogTitle>

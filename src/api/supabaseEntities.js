@@ -407,6 +407,23 @@ function createEntityClient(entityName) {
       const email = user?.email || null;
       const insertRecord = buildInsertRecord(entityName, record, email, new Date().toISOString());
 
+      // insert().select() needs the new row to pass the table's read rule,
+      // and Postgres rejects the whole insert when it doesn't. Some writes
+      // are for someone else: a notification for another member (new
+      // message, reply, follower), an admin broadcast from the system
+      // sender, a support message from a signed-out visitor. Those were all
+      // failing, so no member ever got a message or reply notification.
+      // They are inserted without the read-back and return what was sent.
+      const writerCannotRead =
+        (entityName === 'Notification' && insertRecord.user_email !== email) ||
+        (entityName === 'DirectMessage' && insertRecord.sender_email !== email && insertRecord.recipient_email !== email) ||
+        (entityName === 'SupportMessage' && !email);
+      if (writerCannotRead) {
+        const { error } = await withAuthRetry(() => supabase.from(tableName).insert(insertRecord));
+        if (error) throw error;
+        return insertRecord;
+      }
+
       const { data, error } = await withAuthRetry(() =>
         supabase
           .from(tableName)
