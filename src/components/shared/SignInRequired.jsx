@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { LockKeyhole, LogIn, UserPlus } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { createPageUrl } from '@/utils';
+import { useAuth } from '@/lib/AuthContext';
 
 /**
  * One sign-in gate for every page that needs an account.
@@ -33,7 +34,7 @@ export default function SignInRequired({
             </Link>
           </Button>
           <Button asChild variant="outline" className="w-full sm:w-auto">
-            <Link to={createPageUrl('AuthPortal')}>
+            <Link to={`${createPageUrl('AuthPortal')}?mode=signup`}>
               <UserPlus className="w-4 h-4" />
               Create account
             </Link>
@@ -42,4 +43,18 @@ export default function SignInRequired({
       </div>
     </div>
   );
+}
+
+/**
+ * Shows the sign-in card to demo (guest) visitors instead of rendering an
+ * account-only page. Without it, Messages, My Listings and Notifications
+ * ran their loaders with no account and showed an empty inbox, a
+ * dashboard of zeros, or "Loading notifications..." forever (29 Sep 2026).
+ * The page itself only mounts for real accounts, so its loaders never run
+ * for a guest.
+ */
+export function AccountOnly({ children, ...prompt }) {
+  const { isGuest } = useAuth() || {};
+  if (isGuest) return <SignInRequired {...prompt} />;
+  return children;
 }

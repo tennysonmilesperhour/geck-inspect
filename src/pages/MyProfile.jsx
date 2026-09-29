@@ -16,7 +16,7 @@ import { Label } from "@/components/ui/label";
 import { Progress } from "@/components/ui/progress";
 import GeckoCard from '../components/my-geckos/GeckoCard';
 import { createPageUrl, getDisplayName } from '@/utils';
-import SignInRequired from '@/components/shared/SignInRequired';
+import SignInRequired, { AccountOnly } from '@/components/shared/SignInRequired';
 
 const USER_LEVELS = [
   { geckos: 1, title: "New Collector", badge: "🥚" }, { geckos: 2, title: "Gecko Keeper", badge: "🦎" },
@@ -160,7 +160,7 @@ const AchievementProgress = ({ title, icon, currentCount, levels, levelKey }) =>
     );
 };
 
-export default function MyProfile() {
+function MyProfileScreen() {
     const navigate = useNavigate();
     const [user, setUser] = useState(null);
     const [isLoading, setIsLoading] = useState(true);
@@ -968,4 +968,12 @@ export default function MyProfile() {
             </div>
         </div>
     );
+}
+
+export default function MyProfile() {
+  return (
+    <AccountOnly title="Sign in to see your profile" description="Your profile, collection stats, and public page live on your account.">
+      <MyProfileScreen />
+    </AccountOnly>
+  );
 }

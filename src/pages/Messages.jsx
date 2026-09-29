@@ -34,6 +34,7 @@ import EmptyState from '../components/shared/EmptyState';
 import { initialsAvatarUrl } from '@/components/shared/InitialsAvatar';
 import { format, isSameDay, isToday, isYesterday, differenceInMinutes } from 'date-fns';
 import { isPageActive } from '@/lib/pagePolling';
+import { GUEST_USER, isGuestMode } from '@/lib/guestMode';
 
 const SYSTEM_EMAIL = 'system@geckinspect.com';
 
@@ -334,19 +335,25 @@ export default function MessagesPage() {
         const loadData = async (isInitial = false) => {
             if (isInitial) setIsLoading(true);
             try {
-                const user = currentUserRef || await User.me();
+                // Demo mode has no sign-in, so User.me() is null. Use the demo
+                // user and its sample inbox instead of failing on a null user
+                // and showing an empty page (fixed 29 Sep 2026).
+                const guest = isGuestMode();
+                const user = currentUserRef || (guest ? GUEST_USER : await User.me());
                 if (!currentUserRef) {
                     currentUserRef = user;
                     setCurrentUser(user);
                 }
 
                 // Server-side filter: only fetch messages involving this user.
-                const { data: userMessages, error: msgError } = await supabase
-                    .from('direct_messages')
-                    .select('*')
-                    .or(`sender_email.eq.${user.email},recipient_email.eq.${user.email}`)
-                    .order('created_date', { ascending: false })
-                    .limit(500);
+                const { data: userMessages, error: msgError } = guest
+                    ? { data: await DirectMessage.filter({ $or: [{ sender_email: user.email }, { recipient_email: user.email }] }), error: null }
+                    : await supabase
+                        .from('direct_messages')
+                        .select('*')
+                        .or(`sender_email.eq.${user.email},recipient_email.eq.${user.email}`)
+                        .order('created_date', { ascending: false })
+                        .limit(500);
 
                 if (msgError) throw msgError;
 
@@ -384,7 +391,7 @@ export default function MessagesPage() {
                 const otherEmails = conversationList
                     .map((c) => c.email)
                     .filter((e) => e && e !== SYSTEM_EMAIL);
-                if (otherEmails.length > 0) {
+                if (otherEmails.length > 0 && !guest) {
                     const { data: profiles } = await supabase
                         .rpc('read_profiles', { p_emails: otherEmails })
                         .select('email, full_name, profile_image_url')
@@ -514,6 +521,8 @@ export default function MessagesPage() {
     // Mark every unread message in the conversation as read and ping the
     // global unread-count bus so the header badge updates immediately.
     const markConversationRead = async (conversation, user) => {
+        // Opening a sample conversation must not raise the "view-only" toast.
+        if (isGuestMode()) return;
         const unreadMessages = conversation.messages.filter(m =>
             m.recipient_email === user.email && !m.is_read
         );

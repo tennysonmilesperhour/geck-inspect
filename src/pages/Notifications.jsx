@@ -20,12 +20,17 @@ import {
     ExternalLink,
     Trash2,
     ShoppingCart,
+    Egg,
+    Utensils,
+    Scale,
+    Newspaper,
 } from 'lucide-react';
 import EmptyState from '../components/shared/EmptyState';
 import { Link } from 'react-router-dom';
 import { format } from 'date-fns';
 import { useToast } from '@/components/ui/use-toast';
 import SignInRequired from '@/components/shared/SignInRequired';
+import { GUEST_USER, isGuestMode } from '@/lib/guestMode';
 
 /**
  * Notifications page, dark slate theme, matches the rest of the app.
@@ -60,6 +65,12 @@ const notificationIcons = {
     future_breeding_ready: <Star className="w-5 h-5 text-emerald-400" />,
     marketplace_inquiry: <ShoppingCart className="w-5 h-5 text-amber-400" />,
     gecko_of_the_day: <Star className="w-5 h-5 text-yellow-400" />,
+    // The four most common types in production had no icon or label and
+    // showed a generic bell with the raw type name (added 29 Sep 2026).
+    hatch_alert: <Egg className="w-5 h-5 text-amber-300" />,
+    feeding_due: <Utensils className="w-5 h-5 text-emerald-400" />,
+    weighin_reminder: <Scale className="w-5 h-5 text-sky-400" />,
+    weekly_digest: <Newspaper className="w-5 h-5 text-slate-300" />,
 };
 
 const typeLabels = {
@@ -78,6 +89,10 @@ const typeLabels = {
     future_breeding_ready: 'Breeding Ready',
     marketplace_inquiry: 'Inquiry',
     gecko_of_the_day: 'Gecko of the Day',
+    hatch_alert: 'Hatch Alert',
+    feeding_due: 'Feeding',
+    weighin_reminder: 'Weigh-in',
+    weekly_digest: 'Weekly Digest',
 };
 
 export default function NotificationsPage() {
@@ -94,8 +109,13 @@ export default function NotificationsPage() {
     useEffect(() => {
         (async () => {
             setIsLoading(true);
+            // Demo mode has no sign-in; use the demo user and its sample
+            // notifications. The early return below also used to skip
+            // setIsLoading(false), leaving "Loading notifications..." up
+            // forever (fixed 29 Sep 2026, now in finally).
+            const guest = isGuestMode();
             try {
-                const currentUser = await User.me();
+                const currentUser = guest ? GUEST_USER : await User.me();
                 setUser(currentUser);
                 if (!currentUser) {
                     setNotifications([]);
@@ -108,7 +128,7 @@ export default function NotificationsPage() {
                 setNotifications(userNotifications);
 
                 // Auto-mark-read on view
-                if (notifPrefs.autoMarkRead) {
+                if (notifPrefs.autoMarkRead && !guest) {
                     const unread = userNotifications.filter(n => !n.is_read);
                     if (unread.length > 0) {
                         Promise.all(unread.map(n => Notification.update(n.id, { is_read: true })))
@@ -122,8 +142,9 @@ export default function NotificationsPage() {
             } catch (error) {
                 console.error('Failed to load notifications:', error);
                 setUser(null);
+            } finally {
+                setIsLoading(false);
             }
-            setIsLoading(false);
         })();
     }, []);
 

@@ -8,9 +8,9 @@ import { Heart, Loader2, DollarSign, MapPin, Trash2 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { createPageUrl } from '@/utils';
 import SmartImage from '@/components/shared/SmartImage';
-import SignInRequired from '@/components/shared/SignInRequired';
+import SignInRequired, { AccountOnly } from '@/components/shared/SignInRequired';
 
-export default function LikedGeckosPage() {
+function LikedGeckosScreen() {
     const [likedGeckos, setLikedGeckos] = useState([]);
     const [likes, setLikes] = useState([]);
     const [owners, setOwners] = useState({});
@@ -176,4 +176,12 @@ export default function LikedGeckosPage() {
             </div>
         </div>
     );
+}
+
+export default function LikedGeckosPage() {
+  return (
+    <AccountOnly icon={Heart} title="Sign in to see your likes" description="Liked geckos are saved to your account so you can find them again.">
+      <LikedGeckosScreen />
+    </AccountOnly>
+  );
 }

@@ -2,6 +2,7 @@
 import { useState, useEffect } from 'react';
 import { Gecko, User } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
+import { GUEST_USER, isGuestMode } from '@/lib/guestMode';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -41,7 +42,9 @@ export default function MyListingsPage() {
         const loadData = async () => {
             setIsLoading(true);
             try {
-                const currentUser = await User.me();
+                // Demo mode has no sign-in; show the demo collection's
+                // sample listings instead of failing on a null user.
+                const currentUser = isGuestMode() ? GUEST_USER : await User.me();
                 setUser(currentUser);
 
                 const userGeckos = await Gecko.filter({ created_by: currentUser.email }, '-created_date');
@@ -58,7 +61,7 @@ export default function MyListingsPage() {
                 // read only their own rows). Listing views are not tracked
                 // anywhere yet, so no Views tile is shown at all.
                 let inquiries = 0;
-                try {
+                if (!isGuestMode()) try {
                     const { count } = await supabase
                         .from('breeder_inquiries')
                         .select('id', { count: 'exact', head: true })
