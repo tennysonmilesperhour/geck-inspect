@@ -439,7 +439,10 @@ export default function Home() {
             className="w-full h-full object-cover opacity-80"
             loading="eager"
             decoding="async"
-            fetchPriority="high"
+            // React 18 drops the camelCase fetchPriority prop (with a console
+            // warning), so the hint never reached the browser. The spread
+            // passes the real lowercase attribute; eslint only knows React 19.
+            {...{ fetchpriority: 'high' }}
           />
           <div className="absolute inset-0" style={{ background: 'rgba(0, 0, 0, 0.65)' }} />
           <div className="absolute inset-0 bg-gradient-to-b from-black/85 via-black/25 to-black/85" />

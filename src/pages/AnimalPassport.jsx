@@ -566,6 +566,32 @@ export default function AnimalPassport() {
     );
   }
 
+  // A failed lookup (dropped connection, timeout) used to fall through to
+  // the render below with no gecko and crash the page (found 29 Sep 2026).
+  if (error === 'error' || !gecko) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ backgroundColor: C.warmWhite }}>
+        <div className="text-center max-w-md mx-auto px-4">
+          <div className="text-6xl mb-4">🦎</div>
+          <h1 className="text-2xl mb-2" style={{ fontFamily: "'DM Serif Display', serif", color: C.forest }}>
+            Could not load this passport
+          </h1>
+          <p className="text-sm mb-6" style={{ color: C.muted }}>
+            Check your connection and try again.
+          </p>
+          <button
+            type="button"
+            onClick={() => window.location.reload()}
+            className="inline-flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium text-white transition hover:opacity-90"
+            style={{ backgroundColor: C.sage }}
+          >
+            Try again
+          </button>
+        </div>
+      </div>
+    );
+  }
+
   //, Parse morph data
   const images = gecko.image_urls || [];
   const morphTraits = gecko.morph_traits

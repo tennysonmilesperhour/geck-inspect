@@ -1,28 +1,24 @@
-import { useState, useEffect } from 'react';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Button } from "@/components/ui/button";
 import { ChevronDown, ListFilter, SlidersHorizontal, SortAsc } from "lucide-react";
-import { GeckoImage } from '@/entities/GeckoImage';
+import { BASE_COLORS, PRIMARY_MORPHS, SECONDARY_TRAITS } from '@/components/morph-id/morphTaxonomy';
+
+// The options come from the Morph ID taxonomy, the same ids gecko_images
+// stores. They used to come from GeckoImage.schema(), a call left over from
+// the old platform that no longer exists, so all three lists were empty
+// and the gallery could only show "All" (fixed 29 Sep 2026).
+const byLabel = (a, b) => a.label.localeCompare(b.label);
+const OPTIONS = {
+    morphs: [...PRIMARY_MORPHS].sort(byLabel).map((m) => m.id),
+    traits: [...SECONDARY_TRAITS].sort(byLabel).map((t) => t.id),
+    colors: [...BASE_COLORS].sort(byLabel).map((c) => c.id),
+};
+const LABELS = Object.fromEntries([...PRIMARY_MORPHS, ...SECONDARY_TRAITS, ...BASE_COLORS].map((o) => [o.id, o.label]));
 
 export default function GalleryFilters({ filters, onFilterChange }) {
-    const [options, setOptions] = useState({ morphs: [], traits: [], colors: [] });
-
-    useEffect(() => {
-        const fetchFilterOptions = async () => {
-            try {
-                const schema = await GeckoImage.schema();
-                const morphs = schema.properties.primary_morph?.enum.sort() || [];
-                const traits = schema.properties.secondary_traits?.items?.enum.sort() || [];
-                const colors = schema.properties.base_color?.enum.sort() || [];
-                setOptions({ morphs, traits, colors });
-            } catch (error) {
-                console.error("Failed to load filter options from schema:", error);
-            }
-        };
-        fetchFilterOptions();
-    }, []);
+    const options = OPTIONS;
 
     const handleFilterChange = (key, value) => {
         onFilterChange(prev => ({ ...prev, [key]: value }));
@@ -36,7 +32,7 @@ export default function GalleryFilters({ filters, onFilterChange }) {
         handleFilterChange('secondary_traits', newTraits);
     };
 
-    const formatLabel = (str) => str.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+    const formatLabel = (str) => LABELS[str] || str.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
     return (
         <div className="bg-slate-800 border border-slate-700 p-4 rounded-lg shadow-lg mb-8">

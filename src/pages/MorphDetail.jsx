@@ -75,9 +75,27 @@ export default function MorphDetail() {
   useEffect(() => {
     if (!slug) return;
     let cancelled = false;
+    // The built-in guide (src/data/morph-guide.js) covers every known morph,
+    // so show it at once and let the database add photos and related morphs.
+    // Before 29 Sep 2026 the page waited on the database first and, if that
+    // request failed, said "Morph not found" even for Harlequin.
+    const localMorph = getMorph(slug);
+    const localRecord = localMorph && {
+      morph_name: localMorph.name,
+      description: localMorph.description,
+      key_features: localMorph.keyFeatures,
+      rarity: localMorph.rarity,
+      example_image_url: null,
+      breeding_info: null,
+    };
     (async () => {
-      setIsLoading(true);
       setNotFound(false);
+      if (localRecord) {
+        setRecord(localRecord);
+        setIsLoading(false);
+      } else {
+        setIsLoading(true);
+      }
       try {
         // Broad fetch of every morph_guide record, then dedupe in JS.
         // Tiny table (<100 rows) so no indexing concerns.
@@ -94,28 +112,17 @@ export default function MorphDetail() {
           (r) => morphSlug(r.morph_name) === slug
         );
         const best = pickBestMorphRecord(matches);
-        const localMorph = getMorph(slug);
 
         // Fall back to local dataset if no DB record exists; our
         // local morph-guide.js is the authoritative reference and
         // covers every KNOWN_MORPH_SLUGS entry.
-        if (!best && !localMorph) {
+        if (!best && !localRecord) {
           setNotFound(true);
           setIsLoading(false);
           return;
         }
 
-        setRecord(
-          best ||
-            (localMorph && {
-              morph_name: localMorph.name,
-              description: localMorph.description,
-              key_features: localMorph.keyFeatures,
-              rarity: localMorph.rarity,
-              example_image_url: null,
-              breeding_info: null,
-            }),
-        );
+        setRecord(best || localRecord);
 
         // Related morphs: pull a small set of other morphs for cross-linking
         const others = {};
@@ -132,7 +139,7 @@ export default function MorphDetail() {
 
         // Community photos of this morph from the gallery; nice touch if we have them.
         try {
-          const normalized = best.morph_name.toLowerCase();
+          const normalized = (best?.morph_name || displayName).toLowerCase();
           const firstWord = normalized.split(/\s+/)[0];
           const { data: imgs } = await supabase
             .from('gecko_images')
@@ -157,7 +164,7 @@ export default function MorphDetail() {
           /* reference panel is optional */
         }
       } catch {
-        if (!cancelled) setNotFound(true);
+        if (!cancelled && !localRecord) setNotFound(true);
       } finally {
         if (!cancelled) setIsLoading(false);
       }
