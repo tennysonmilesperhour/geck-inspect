@@ -1,5 +1,5 @@
 {
-  "lastRun": "2026-09-28T18:32:02.206Z",
+  "lastRun": "2026-09-29T16:50:53.635Z",
   "signatures": {
     "5a866ee3a287": {
       "status": "skipped",
@@ -20,6 +20,16 @@
       "lastMessage": "Cannot read properties of null (reading 'useState')",
       "lastCount": 2,
       "updatedAt": "2026-09-07T16:22:28.633Z"
+    },
+    "014f69b54eeb": {
+      "status": "open_pr",
+      "reason": null,
+      "prUrl": "https://github.com/tennysonmilesperhour/geck-inspect/pull/89",
+      "branch": "error-triage/014f69b54eeb-2026-09-29",
+      "title": "Use lazyWithRetry in Store.jsx for resilient chunk loading",
+      "lastMessage": "Failed to fetch dynamically imported module: https://geckinspect.com/assets/CustomStickerStudio-Z-tvUI5H.js",
+      "lastCount": 1,
+      "updatedAt": "2026-09-29T16:50:53.635Z"
     }
   }
 }
