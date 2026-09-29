@@ -8,6 +8,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { QRCodeSVG } from 'qrcode.react';
+import { GUEST_USER, isGuestMode } from '@/lib/guestMode';
 import PageHeader from '@/components/shared/PageHeader';
 
 /* ─── Print CSS (injected once) ─────────────────────────────────── */
@@ -453,7 +454,9 @@ function LineageCardTemplate({ gecko }) {
 function TemplateButton({ icon: Icon, label, description, active, onClick }) {
   return (
     <button
+      type="button"
       onClick={onClick}
+      aria-pressed={active}
       className={`flex items-start gap-3 p-4 rounded-xl text-left transition-all border-2 ${
         active ? 'border-emerald-500 bg-emerald-500/10' : 'border-slate-700 bg-slate-900'
       }`}
@@ -495,7 +498,9 @@ export default function PrintableWorksheets() {
   const loadData = useCallback(async () => {
     setIsLoading(true);
     try {
-      const currentUser = await User.me();
+      // Demo mode has no signed-in user; use the demo keeper so the sample
+      // geckos can be printed.
+      const currentUser = isGuestMode() ? GUEST_USER : await User.me();
       if (!currentUser) {
         setIsLoading(false);
         return;
@@ -587,7 +592,7 @@ export default function PrintableWorksheets() {
             <SelectContent>
               {geckos.map(g => (
                 <SelectItem key={g.id} value={g.id}>
-                  {g.name || g.id}{g.morph ? ` (${g.morph})` : ''}{g.sex ? `, ${g.sex}` : ''}
+                  {[g.name || g.id, g.morphs_traits, g.sex].filter(Boolean).join(', ')}
                 </SelectItem>
               ))}
             </SelectContent>

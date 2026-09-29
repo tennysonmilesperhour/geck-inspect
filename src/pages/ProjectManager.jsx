@@ -38,7 +38,11 @@ export default function ProjectManager() {
     const [feedingGroups, setFeedingGroups] = useState([]);
     const [otherReptiles, setOtherReptiles] = useState([]);
     const [isLoading, setIsLoading] = useState(true);
-    const [activeTab, setActiveTab] = useState(plannerPrefs.defaultTab);
+    // ?tab=feeding (Batch Husbandry's "Create a feeding group") opens a tab.
+    const [activeTab, setActiveTab] = useState(() => {
+        const wanted = new URLSearchParams(window.location.search).get('tab');
+        return ['projects', 'future', 'calendar', 'feeding', 'notes'].includes(wanted) ? wanted : plannerPrefs.defaultTab;
+    });
     const [currentUserEmail, setCurrentUserEmail] = useState(null);
 
     useEffect(() => {

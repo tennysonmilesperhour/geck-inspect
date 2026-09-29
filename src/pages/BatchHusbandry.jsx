@@ -7,6 +7,7 @@ import {
   Clock, Users, X, Check,
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Link } from 'react-router-dom';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import PageHeader from '@/components/shared/PageHeader';
@@ -503,6 +504,9 @@ function EmptyGroups() {
       <p className="text-sm max-w-sm text-slate-500">
         Create feeding groups to organize batch feeding and weighing sessions for your geckos.
       </p>
+      <Button asChild className="mt-4 bg-emerald-600 hover:bg-emerald-700 text-white min-h-11">
+        <Link to="/ProjectManager?tab=feeding">Create a feeding group</Link>
+      </Button>
     </div>
   );
 }
