@@ -19,7 +19,7 @@ const FeedingAlertSystem = lazy(() => import("@/components/feeding/FeedingAlertS
 import HatchAlertSystem from "@/components/breeding/HatchAlertSystem";
 import NotificationPopover from "@/components/notifications/NotificationPopover";
 import PushEnableBanner from "@/components/notifications/PushEnableBanner";
-import GuestMockDisclaimer from "@/components/auth/GuestMockDisclaimer";
+import GuestDemoGuide from "@/components/auth/GuestDemoGuide";
 import FeedbackWidget from "@/components/feedback/FeedbackWidget";
 import MarketIntelligenceButton from "@/components/shared/MarketIntelligenceButton";
 import InstallAppButton from "@/components/shared/InstallAppButton";
@@ -1412,7 +1412,8 @@ function LayoutContent({ children, currentPageName: _currentPageName }) {
           (push/email) opt-out lives in Settings → Notifications. The bell
           notification is non-disruptive, so no separate master toggle. */}
       <HatchAlertSystem user={user} enabled={Boolean(user?.email)} />
-      <GuestMockDisclaimer />
+      {/* Guided demo card, or the guest notice once the tour is closed. */}
+      <GuestDemoGuide />
       {user && <FeedbackWidget />}
     </>
     );
