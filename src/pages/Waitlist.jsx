@@ -32,6 +32,7 @@ export default function Waitlist() {
   const [email, setEmail] = useState('');
   const [notes, setNotes] = useState('');
   const [wanted, setWanted] = useState('');
+  const [agreed, setAgreed] = useState(false);
   const [joined, setJoined] = useState(null);
 
   useEffect(() => {
@@ -40,7 +41,7 @@ export default function Waitlist() {
       try {
         const { data: w, error: wErr } = await supabase
           .from('gecko_waitlists')
-          .select('id, slug, title, description, is_open, closes_at, max_signups, gecko_id, breeder_user_id, breeding_plan_id, outcomes, deposit_amount, deposit_instructions, currency')
+          .select('id, slug, title, description, is_open, closes_at, max_signups, gecko_id, breeder_user_id, breeding_plan_id, outcomes, deposit_amount, deposit_instructions, deposit_terms, currency')
           .eq('slug', slug)
           .maybeSingle();
         if (cancelled) return;
@@ -73,6 +74,7 @@ export default function Waitlist() {
   const outcomes = Array.isArray(waitlist?.outcomes) ? waitlist.outcomes.filter((o) => o?.label) : [];
   const symbol = !waitlist?.currency || waitlist.currency === 'USD' ? '$' : waitlist.currency;
   const deposit = waitlist?.deposit_amount != null && Number(waitlist.deposit_amount) > 0 ? Number(waitlist.deposit_amount) : null;
+  const terms = waitlist?.deposit_terms?.trim() || null;
 
   const isClosed =
     !waitlist?.is_open ||
@@ -90,6 +92,7 @@ export default function Waitlist() {
         p_email: email.trim(),
         p_wanted: wanted || null,
         p_notes: notes.trim() || null,
+        p_accept_terms: agreed,
       });
       if (rpcErr) throw rpcErr;
       setJoined(data || null);
@@ -190,6 +193,12 @@ export default function Waitlist() {
             <p className="text-emerald-100/90 mt-1 whitespace-pre-wrap">
               {waitlist.deposit_instructions || 'The breeder will contact you with how to pay.'}
             </p>
+            {terms && (
+              <div className="mt-3" data-waitlist-terms>
+                <div className="text-[10px] uppercase tracking-wider text-emerald-200/70 mb-1">Deposit terms</div>
+                <p className="text-emerald-100/90 whitespace-pre-wrap">{terms}</p>
+              </div>
+            )}
             <p className="text-[11px] text-emerald-200/60 mt-2">
               You pay the breeder directly. Geck Inspect does not take or hold payments.
             </p>
@@ -265,12 +274,24 @@ export default function Waitlist() {
                 placeholder="Prefer a female, can pick up at the next expo, and so on."
               />
             </div>
+            {terms && (
+              <label className="flex items-start gap-2 text-sm text-emerald-100">
+                <input
+                  type="checkbox"
+                  checked={agreed}
+                  onChange={(e) => setAgreed(e.target.checked)}
+                  className="mt-1 h-4 w-4 shrink-0"
+                  required
+                />
+                <span>I have read the deposit terms above and agree to them.</span>
+              </label>
+            )}
             {error && (
               <div className="text-xs text-red-300">{error}</div>
             )}
             <Button
               type="submit"
-              disabled={submitting || !name.trim() || !email.trim()}
+              disabled={submitting || !name.trim() || !email.trim() || (terms && !agreed)}
               className="bg-emerald-600 hover:bg-emerald-500 w-full"
             >
               {submitting

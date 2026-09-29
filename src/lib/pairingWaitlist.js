@@ -8,7 +8,11 @@
  * they hope for, and the breeder tracks each one:
  *
  *   waiting > deposit paid > matched with a hatchling > completed
- *   (or withdrawn at any point)
+ *   (or withdrawn, or refunded, at any point)
+ *
+ * Each list can carry written deposit terms. Buyers must agree to them to
+ * join, and the database keeps the exact wording they agreed to.
+ * Creating a waitlist is part of the Breeder plan.
  *
  * Geck Inspect records deposits; it does not take payments. Matching can
  * start a reserve in Sales with the deposit as the first payment, so the
@@ -22,7 +26,23 @@ export const SIGNUP_STATUSES = [
   { id: 'matched', label: 'Matched' },
   { id: 'completed', label: 'Completed' },
   { id: 'withdrawn', label: 'Withdrawn' },
+  { id: 'refunded', label: 'Refunded' },
 ];
+
+// Statuses that take a buyer out of the line.
+export const OUT_OF_LINE = new Set(['withdrawn', 'refunded']);
+
+/**
+ * Starting terms for a new waitlist with a deposit. The breeder can edit
+ * them; most deposit disputes come from terms nobody wrote down.
+ */
+export const DEFAULT_DEPOSIT_TERMS = [
+  '1. Your deposit holds your place in line and counts toward the price of the gecko.',
+  '2. It is fully refundable until you accept a match with a specific hatchling.',
+  '3. If this pairing does not produce what you asked for by the end of the season, you choose: a refund, moving to next season, or putting the deposit toward another gecko.',
+  '4. Once you accept a match, the deposit is non-refundable, but you can ask to transfer it to another gecko.',
+  '5. If I cancel your spot for any reason, you get a full refund.',
+].join('\n');
 
 export const signupStatusLabel = (id) => SIGNUP_STATUSES.find((s) => s.id === id)?.label || 'Waiting';
 
@@ -72,12 +92,12 @@ export function orderedSignups(signups = []) {
   const sorted = [...signups].sort((a, b) =>
     String(a.created_date).localeCompare(String(b.created_date)) || String(a.id).localeCompare(String(b.id)));
   let place = 0;
-  return sorted.map((s) => (s.status === 'withdrawn' ? { ...s, place: null } : { ...s, place: ++place }));
+  return sorted.map((s) => (OUT_OF_LINE.has(s.status) ? { ...s, place: null } : { ...s, place: ++place }));
 }
 
 /** Headline numbers for one waitlist. */
 export function waitlistSummary(signups = []) {
-  const active = signups.filter((s) => s.status !== 'withdrawn');
+  const active = signups.filter((s) => !OUT_OF_LINE.has(s.status));
   const held = active.filter((s) => ['deposit_paid', 'matched'].includes(s.status));
   return {
     active: active.length,
@@ -85,6 +105,9 @@ export function waitlistSummary(signups = []) {
     depositTotal: held.reduce((sum, s) => sum + (Number(s.deposit_paid) || 0), 0),
     waitingForDeposit: active.filter((s) => s.status === 'waiting').length,
     matched: active.filter((s) => s.status === 'matched' || s.status === 'completed').length,
+    refundedTotal: signups
+      .filter((s) => s.status === 'refunded')
+      .reduce((sum, s) => sum + (Number(s.refund_amount) || 0), 0),
   };
 }
 

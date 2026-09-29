@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
-import { Check, ChevronDown, ChevronUp, Copy, ExternalLink, ListOrdered, Loader2, Plus, Trash2 } from 'lucide-react';
+import { ArrowRight, Check, ChevronDown, ChevronUp, Copy, Crown, ExternalLink, ListOrdered, Loader2, Pencil, Plus, Trash2 } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -8,7 +9,11 @@ import { Badge } from '@/components/ui/badge';
 import { toast } from '@/components/ui/use-toast';
 import { GeckoWaitlist, GeckoWaitlistSignup, PendingSale } from '@/entities/all';
 import { todayLocalISO } from '@/lib/dateUtils';
+import { canUseFeature } from '@/components/subscription/PlanLimitChecker';
+import { createPageUrl } from '@/utils';
 import {
+  DEFAULT_DEPOSIT_TERMS,
+  OUT_OF_LINE,
   defaultWaitlistTitle,
   makeWaitlistSlug,
   matchableHatchlings,
@@ -23,7 +28,8 @@ import {
 // Business Tools > Waitlists. Open a waitlist for a pairing, share the
 // link, and track each buyer from signup to deposit to a matched
 // hatchling. Deposits are recorded here; buyers pay the breeder directly.
-// See src/lib/pairingWaitlist.js.
+// Creating a waitlist is part of the Breeder plan (the database checks it
+// too). See src/lib/pairingWaitlist.js.
 
 const fieldClass = 'bg-slate-950/60 border-slate-700 text-slate-100';
 const money = (n, symbol) => `${symbol}${(Number(n) || 0).toFixed(2).replace(/\.00$/, '')}`;
@@ -36,6 +42,7 @@ const STATUS_CLASS = {
   matched: 'bg-sky-700 text-sky-50',
   completed: 'bg-emerald-900 text-emerald-200',
   withdrawn: 'bg-slate-800 text-slate-500',
+  refunded: 'bg-amber-900 text-amber-100',
 };
 
 export default function WaitlistsTab({ user, plans = [], geckos = [], currency = '$', onReserveCreated }) {
@@ -46,6 +53,7 @@ export default function WaitlistsTab({ user, plans = [], geckos = [], currency =
   const geckosById = useMemo(() => new Map(geckos.map((g) => [g.id, g])), [geckos]);
   const plansById = useMemo(() => new Map(plans.map((p) => [p.id, p])), [plans]);
   const breederId = user?.auth_user_id;
+  const canCreate = canUseFeature(user, 'waitlists');
 
   const load = async () => {
     if (!breederId) { setLoading(false); return; }
@@ -82,12 +90,30 @@ export default function WaitlistsTab({ user, plans = [], geckos = [], currency =
             hatchling. Buyers pay you directly; Geck Inspect keeps the record.
           </p>
         </div>
-        {!creating && (
+        {!creating && canCreate && (
           <Button onClick={() => setCreating(true)} className="bg-emerald-600 hover:bg-emerald-500 text-white h-9">
             <Plus className="w-4 h-4 mr-2" /> New waitlist
           </Button>
         )}
       </div>
+
+      {!canCreate && (
+        <div className="rounded-xl border border-emerald-500/30 bg-emerald-500/5 p-4 flex items-start gap-3 flex-wrap" data-waitlist-upgrade>
+          <Crown className="w-5 h-5 text-amber-300 shrink-0 mt-0.5" />
+          <div className="flex-1 min-w-[12rem]">
+            <p className="text-sm font-semibold text-emerald-100">Waitlists are part of the Breeder plan</p>
+            <p className="text-xs text-emerald-200/70 mt-1">
+              Open a waitlist for any pairing, show buyers the odds, collect deposits under written terms, and
+              turn a matched buyer into a reserve in one click.
+            </p>
+          </div>
+          <Button asChild variant="outline" size="sm" className="bg-emerald-950/40 text-emerald-100 hover:bg-emerald-900/60 border-emerald-500/40">
+            <Link to={createPageUrl('Membership')}>
+              See Breeder <ArrowRight className="w-3.5 h-3.5 ml-1.5" />
+            </Link>
+          </Button>
+        </div>
+      )}
 
       {creating && (
         <NewWaitlistForm
@@ -103,7 +129,7 @@ export default function WaitlistsTab({ user, plans = [], geckos = [], currency =
       {loading ? (
         <p className="text-sm text-slate-400 flex items-center gap-2"><Loader2 className="w-4 h-4 animate-spin" /> Loading waitlists</p>
       ) : waitlists.length === 0 ? (
-        !creating && (
+        !creating && canCreate && (
           <div className="rounded-xl border border-dashed border-slate-700 p-6 text-center text-sm text-slate-400">
             No waitlists yet. Start one for a pairing you have planned, like a Lilly White x Axanthic project,
             and share the link before the eggs are even laid.
@@ -143,6 +169,7 @@ function NewWaitlistForm({ plans, geckosById, currency, breederId, onCancel, onC
   const [description, setDescription] = useState('');
   const [deposit, setDeposit] = useState('');
   const [instructions, setInstructions] = useState('');
+  const [terms, setTerms] = useState(DEFAULT_DEPOSIT_TERMS);
   const [spots, setSpots] = useState('');
   const [saving, setSaving] = useState(false);
 
@@ -175,6 +202,7 @@ function NewWaitlistForm({ plans, geckosById, currency, breederId, onCancel, onC
           outcomes,
           deposit_amount: deposit === '' ? null : Number(deposit),
           deposit_instructions: instructions.trim() || null,
+          deposit_terms: deposit === '' ? null : terms.trim() || null,
           max_signups: spots === '' ? null : Math.max(1, parseInt(spots, 10) || 1),
           currency,
         });
@@ -250,11 +278,14 @@ function NewWaitlistForm({ plans, geckosById, currency, breederId, onCancel, onC
       </div>
       {deposit !== '' && (
         <div className="space-y-1.5">
-          <Label htmlFor="wl-instr" className="text-slate-200">How buyers pay the deposit, and your terms</Label>
+          <Label htmlFor="wl-instr" className="text-slate-200">How buyers pay the deposit</Label>
           <Textarea id="wl-instr" value={instructions} onChange={(e) => setInstructions(e.target.value)} rows={2} className={fieldClass}
-            placeholder="I will message you with a PayPal invoice. Deposits are refundable until you are matched with a hatchling." />
+            placeholder="I will message you with a PayPal invoice within a day of you joining." />
           <p className="text-xs text-slate-500">Shown on the waitlist page. Buyers pay you directly; Geck Inspect never handles the money.</p>
         </div>
+      )}
+      {deposit !== '' && (
+        <DepositTermsField value={terms} onChange={setTerms} />
       )}
 
       <div className="flex gap-2 justify-end">
@@ -274,6 +305,7 @@ function WaitlistCard({
   const [open, setOpen] = useState(signups.length > 0);
   const [copied, setCopied] = useState(false);
   const [busy, setBusy] = useState(false);
+  const [editing, setEditing] = useState(false);
   const summary = waitlistSummary(signups);
   const rows = orderedSignups(signups);
   const hatchlings = matchableHatchlings(plan, geckos);
@@ -345,6 +377,12 @@ function WaitlistCard({
               Holding {money(summary.depositTotal, currency)} in deposits from {summary.deposits} buyer{summary.deposits === 1 ? '' : 's'}
             </p>
           )}
+          {summary.refundedTotal > 0 && (
+            <p className="text-xs text-amber-300 mt-0.5">Refunded {money(summary.refundedTotal, currency)}</p>
+          )}
+          {waitlist.deposit_amount != null && !waitlist.deposit_terms && (
+            <p className="text-xs text-amber-300 mt-0.5">No deposit terms yet. Add them with Edit so buyers know the refund rules.</p>
+          )}
         </div>
         <div className="flex items-center gap-1 flex-wrap">
           <Button variant="ghost" size="sm" onClick={copy} className="text-slate-300 hover:text-emerald-300">
@@ -352,6 +390,9 @@ function WaitlistCard({
           </Button>
           <Button asChild variant="ghost" size="sm" className="text-slate-300 hover:text-emerald-300">
             <a href={`/waitlist/${waitlist.slug}`} target="_blank" rel="noreferrer"><ExternalLink className="w-4 h-4 mr-1" />View</a>
+          </Button>
+          <Button variant="ghost" size="sm" onClick={() => setEditing((v) => !v)} className="text-slate-300 hover:text-emerald-300" aria-expanded={editing}>
+            <Pencil className="w-4 h-4 mr-1" />Edit
           </Button>
           <Button variant="ghost" size="sm" onClick={toggleOpen} disabled={busy} className="text-slate-300 hover:text-emerald-300">
             {waitlist.is_open ? 'Close' : 'Reopen'}
@@ -364,6 +405,15 @@ function WaitlistCard({
           </Button>
         </div>
       </div>
+
+      {editing && (
+        <WaitlistSettingsForm
+          waitlist={waitlist}
+          currency={currency}
+          onCancel={() => setEditing(false)}
+          onSaved={(patch) => { onChangeList(patch); setEditing(false); }}
+        />
+      )}
 
       {open && (
         <div className="border-t border-slate-800 p-4 space-y-3">
@@ -396,14 +446,16 @@ function WaitlistCard({
 }
 
 function SignupRow({ signup, waitlist, currency, hatchlings, geckosById, user, onPatch, onReserveCreated }) {
-  const [mode, setMode] = useState(null); // 'deposit' | 'match'
+  const [mode, setMode] = useState(null); // 'deposit' | 'match' | 'refund'
   const [amount, setAmount] = useState(String(waitlist.deposit_amount ?? ''));
   const [paidOn, setPaidOn] = useState(todayLocalISO());
   const [geckoId, setGeckoId] = useState('');
   const [startReserve, setStartReserve] = useState(true);
   const [saving, setSaving] = useState(false);
   const matched = signup.matched_gecko_id ? geckosById.get(signup.matched_gecko_id) : null;
-  const withdrawn = signup.status === 'withdrawn';
+  const outOfLine = OUT_OF_LINE.has(signup.status);
+  const [refundAmount, setRefundAmount] = useState(String(signup.deposit_paid ?? ''));
+  const canRefund = Number(signup.deposit_paid) > 0 && signup.status !== 'refunded';
 
   const run = async (fn) => {
     setSaving(true);
@@ -420,6 +472,13 @@ function SignupRow({ signup, waitlist, currency, hatchlings, geckosById, user, o
     toast({ title: 'Deposit recorded', description: `${money(value, currency)} from ${signup.name}` });
   });
 
+  const refund = () => run(async () => {
+    const value = Number(refundAmount);
+    if (!Number.isFinite(value) || value < 0) throw new Error('Enter the amount you refunded.');
+    await onPatch({ status: 'refunded', refund_amount: value, refunded_on: paidOn || todayLocalISO() });
+    toast({ title: 'Refund recorded', description: `${money(value, currency)} to ${signup.name}` });
+  });
+
   const match = () => run(async () => {
     const gecko = geckosById.get(geckoId);
     if (!gecko) throw new Error('Pick a hatchling.');
@@ -434,7 +493,7 @@ function SignupRow({ signup, waitlist, currency, hatchlings, geckosById, user, o
   });
 
   return (
-    <li className={`rounded-lg border border-slate-800 bg-slate-950/40 p-3 ${withdrawn ? 'opacity-60' : ''}`} data-signup-row>
+    <li className={`rounded-lg border border-slate-800 bg-slate-950/40 p-3 ${outOfLine ? 'opacity-70' : ''}`} data-signup-row>
       <div className="flex items-start justify-between gap-3 flex-wrap">
         <div className="min-w-0">
           <p className="text-sm text-slate-100">
@@ -453,11 +512,26 @@ function SignupRow({ signup, waitlist, currency, hatchlings, geckosById, user, o
               {matched && `Matched with ${matched.name || matched.morphs_traits || 'a hatchling'}`}
             </p>
           )}
+          {signup.status === 'refunded' && (
+            <p className="text-xs text-amber-300 mt-0.5">
+              Refunded {money(signup.refund_amount, currency)}{signup.refunded_on ? ` on ${signup.refunded_on}` : ''}
+            </p>
+          )}
+          {signup.terms_accepted_at ? (
+            <details className="text-xs text-slate-400 mt-0.5">
+              <summary className="cursor-pointer hover:text-slate-200">
+                Agreed to your deposit terms on {new Date(signup.terms_accepted_at).toLocaleDateString()}
+              </summary>
+              <p className="mt-1 whitespace-pre-wrap text-slate-300 border-l border-slate-700 pl-2">{signup.terms_snapshot}</p>
+            </details>
+          ) : waitlist.deposit_terms ? (
+            <p className="text-xs text-slate-500 mt-0.5">Added by hand; has not agreed to the terms online</p>
+          ) : null}
         </div>
         <Badge className={STATUS_CLASS[signup.status] || STATUS_CLASS.waiting}>{signupStatusLabel(signup.status)}</Badge>
       </div>
 
-      {!withdrawn && signup.status !== 'completed' && (
+      {(canRefund || (!outOfLine && signup.status !== 'completed')) && (
         <div className="flex flex-wrap gap-1 mt-2">
           {signup.status === 'waiting' && (
             <Button size="sm" variant="outline" onClick={() => setMode(mode === 'deposit' ? null : 'deposit')} className="h-8 border-slate-700 bg-transparent text-slate-200">
@@ -474,18 +548,42 @@ function SignupRow({ signup, waitlist, currency, hatchlings, geckosById, user, o
               Mark completed
             </Button>
           )}
-          <Button
-            size="sm"
-            variant="ghost"
-            disabled={saving}
-            onClick={() => {
-              const note = signup.deposit_paid > 0 ? ` Their ${money(signup.deposit_paid, currency)} deposit stays recorded; refund it per your terms.` : '';
-              if (confirm(`Mark ${signup.name} as withdrawn?${note}`)) run(() => onPatch({ status: 'withdrawn' }));
-            }}
-            className="h-8 text-slate-400 hover:text-red-300"
-          >
-            Withdrawn
+          {canRefund && (
+            <Button size="sm" variant="outline" onClick={() => setMode(mode === 'refund' ? null : 'refund')} className="h-8 border-slate-700 bg-transparent text-slate-200">
+              Refunded
+            </Button>
+          )}
+          {!outOfLine && signup.status !== 'completed' && (
+            <Button
+              size="sm"
+              variant="ghost"
+              disabled={saving}
+              onClick={() => {
+                const note = signup.deposit_paid > 0 ? ` Their ${money(signup.deposit_paid, currency)} deposit stays recorded; use Refunded once you send it back.` : '';
+                if (confirm(`Mark ${signup.name} as withdrawn?${note}`)) run(() => onPatch({ status: 'withdrawn' }));
+              }}
+              className="h-8 text-slate-400 hover:text-red-300"
+            >
+              Withdrawn
+            </Button>
+          )}
+        </div>
+      )}
+
+      {mode === 'refund' && (
+        <div className="mt-3 grid grid-cols-2 sm:grid-cols-[1fr_1fr_auto] gap-2 items-end">
+          <div className="space-y-1">
+            <Label className="text-xs text-slate-400">Refunded ({currency})</Label>
+            <Input type="number" min="0" step="0.01" value={refundAmount} onChange={(e) => setRefundAmount(e.target.value)} className={`h-9 ${fieldClass}`} />
+          </div>
+          <div className="space-y-1">
+            <Label className="text-xs text-slate-400">Sent on</Label>
+            <Input type="date" value={paidOn} onChange={(e) => setPaidOn(e.target.value)} className={`h-9 ${fieldClass}`} />
+          </div>
+          <Button onClick={refund} disabled={saving} className="h-9 col-span-2 sm:col-span-1 bg-emerald-600 hover:bg-emerald-500 text-white">
+            {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save refund'}
           </Button>
+          <p className="col-span-2 sm:col-span-3 text-xs text-slate-500">Record the refund after you send it. This takes {signup.name} out of the line.</p>
         </div>
       )}
 
@@ -533,5 +631,79 @@ function SignupRow({ signup, waitlist, currency, hatchlings, geckosById, user, o
         </div>
       )}
     </li>
+  );
+}
+
+function DepositTermsField({ value, onChange, id = 'wl-terms' }) {
+  return (
+    <div className="space-y-1.5">
+      <Label htmlFor={id} className="text-slate-200">Deposit terms</Label>
+      <Textarea id={id} value={value} onChange={(e) => onChange(e.target.value)} rows={6} className={`${fieldClass} text-sm`} />
+      <p className="text-xs text-slate-500">
+        Buyers must agree to these to join, and each buyer's copy is saved with the date, so later edits only apply to
+        new signups. Start from these and change what does not fit how you sell.
+      </p>
+      {value.trim() !== DEFAULT_DEPOSIT_TERMS && (
+        <button type="button" onClick={() => onChange(DEFAULT_DEPOSIT_TERMS)} className="text-xs text-emerald-300 hover:underline">
+          Reset to the suggested terms
+        </button>
+      )}
+    </div>
+  );
+}
+
+function WaitlistSettingsForm({ waitlist, currency, onCancel, onSaved }) {
+  const [deposit, setDeposit] = useState(waitlist.deposit_amount != null ? String(waitlist.deposit_amount) : '');
+  const [instructions, setInstructions] = useState(waitlist.deposit_instructions || '');
+  const [terms, setTerms] = useState(waitlist.deposit_terms || DEFAULT_DEPOSIT_TERMS);
+  const [spots, setSpots] = useState(waitlist.max_signups ? String(waitlist.max_signups) : '');
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    const patch = {
+      deposit_amount: deposit === '' ? null : Number(deposit),
+      deposit_instructions: deposit === '' ? null : instructions.trim() || null,
+      deposit_terms: deposit === '' ? null : terms.trim() || null,
+      max_signups: spots === '' ? null : Math.max(1, parseInt(spots, 10) || 1),
+    };
+    setSaving(true);
+    try {
+      await GeckoWaitlist.update(waitlist.id, patch);
+      toast({ title: 'Waitlist updated', description: 'Buyers who already joined keep the terms they agreed to.' });
+      onSaved(patch);
+    } catch (e) {
+      toast({ title: 'Could not save', description: e.message, variant: 'destructive' });
+    }
+    setSaving(false);
+  };
+
+  return (
+    <div className="border-t border-slate-800 p-4 space-y-4" data-waitlist-settings>
+      <div className="grid sm:grid-cols-3 gap-4">
+        <div className="space-y-1.5">
+          <Label htmlFor={`dep-${waitlist.id}`} className="text-slate-200">Deposit ({currency})</Label>
+          <Input id={`dep-${waitlist.id}`} type="number" min="0" step="1" value={deposit} onChange={(e) => setDeposit(e.target.value)} className={fieldClass} placeholder="None" />
+        </div>
+        <div className="space-y-1.5">
+          <Label htmlFor={`spots-${waitlist.id}`} className="text-slate-200">Spots</Label>
+          <Input id={`spots-${waitlist.id}`} type="number" min="1" step="1" value={spots} onChange={(e) => setSpots(e.target.value)} className={fieldClass} placeholder="No limit" />
+        </div>
+      </div>
+      {deposit !== '' && (
+        <>
+          <div className="space-y-1.5">
+            <Label htmlFor={`instr-${waitlist.id}`} className="text-slate-200">How buyers pay the deposit</Label>
+            <Textarea id={`instr-${waitlist.id}`} value={instructions} onChange={(e) => setInstructions(e.target.value)} rows={2} className={fieldClass} />
+          </div>
+          <DepositTermsField id={`terms-${waitlist.id}`} value={terms} onChange={setTerms} />
+        </>
+      )}
+      <div className="flex gap-2 justify-end">
+        <Button variant="ghost" onClick={onCancel} className="text-slate-300">Cancel</Button>
+        <Button onClick={save} disabled={saving} className="bg-emerald-600 hover:bg-emerald-500 text-white">
+          {saving ? <Loader2 className="w-4 h-4 animate-spin" /> : 'Save changes'}
+        </Button>
+      </div>
+    </div>
   );
 }

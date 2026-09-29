@@ -12,6 +12,7 @@ import {
 } from 'lucide-react';
 import PromoteImageGallery from './PromoteImageGallery';
 import { getTierLimits } from '@/lib/tierLimits';
+import { canUseFeature } from '@/components/subscription/PlanLimitChecker';
 import {
   VOICE_PRESETS, POST_TEMPLATES, PLATFORMS, PLATFORM_CHAR_LIMITS,
   HASHTAG_LIBRARY, normalizeHashtag, buildMorphMarketCsvRow,
@@ -480,6 +481,13 @@ export default function PromoteComposer({
   // on collision before giving up (uniqueness is enforced by the DB).
   const handleCreateWaitlist = async () => {
     if (!gecko) return;
+    if (!canUseFeature(user, 'waitlists')) {
+      toast({
+        title: 'Waitlists are part of the Breeder plan',
+        description: 'Upgrade on the Membership page to share waitlist links and track deposits.',
+      });
+      return;
+    }
     const makeSlug = () => Math.random().toString(36).slice(2, 10);
     const title = gecko.name
       ? `Waitlist: ${gecko.name}`
@@ -1307,7 +1315,9 @@ export default function PromoteComposer({
                   variant="outline"
                   onClick={handleCreateWaitlist}
                   className="hidden sm:inline-flex"
-                  title="Create a public waitlist link for this gecko and append it to the caption"
+                  title={canUseFeature(user, 'waitlists')
+                    ? 'Create a public waitlist link for this gecko and append it to the caption'
+                    : 'Waitlists are part of the Breeder plan'}
                 >
                   + Waitlist
                 </Button>

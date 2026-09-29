@@ -47,7 +47,7 @@ const PLAN_LIMITS = {
             'advanced_breeding', 'calendar', 'weight_tracking', 'csv_export',
             'lineage_tree', 'breeding_analytics',
             'certificates', 'featured_breeder', 'shipping_integration',
-            'marketplace_sync', 'image_import',
+            'marketplace_sync', 'image_import', 'waitlists',
         ],
     },
     enterprise: {
@@ -59,7 +59,7 @@ const PLAN_LIMITS = {
             'advanced_breeding', 'calendar', 'weight_tracking', 'csv_export',
             'lineage_tree', 'breeding_analytics',
             'certificates', 'featured_breeder', 'shipping_integration', 'marketplace_sync',
-            'market_intelligence', 'breeding_roi', 'image_import',
+            'market_intelligence', 'breeding_roi', 'image_import', 'waitlists',
         ],
     },
 };
@@ -82,6 +82,7 @@ const FEATURE_NAMES = {
     breeding_roi: 'Breeding ROI Projections',
     shipping_integration: 'Shipping Integration',
     image_import: 'AI Image Import',
+    waitlists: 'Pairing Waitlists with Deposit Tracking',
 };
 
 // Tier resolution lives in src/lib/tierLimits.js (resolveTier) so that

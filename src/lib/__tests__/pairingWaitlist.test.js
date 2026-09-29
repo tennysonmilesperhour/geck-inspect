@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  DEFAULT_DEPOSIT_TERMS,
   defaultWaitlistTitle,
   matchableHatchlings,
   orderedSignups,
@@ -42,8 +43,9 @@ describe('waitlist bookkeeping', () => {
       { id: 'c', created_date: '2026-09-03', status: 'waiting' },
       { id: 'a', created_date: '2026-09-01', status: 'withdrawn' },
       { id: 'b', created_date: '2026-09-02', status: 'deposit_paid' },
+      { id: 'd', created_date: '2026-09-04', status: 'refunded' },
     ]);
-    expect(rows.map((r) => [r.id, r.place])).toEqual([['a', null], ['b', 1], ['c', 2]]);
+    expect(rows.map((r) => [r.id, r.place])).toEqual([['a', null], ['b', 1], ['c', 2], ['d', null]]);
   });
 
   it('adds up deposits held', () => {
@@ -53,8 +55,9 @@ describe('waitlist bookkeeping', () => {
       { status: 'matched', deposit_paid: 150 },
       { status: 'completed', deposit_paid: 100 },
       { status: 'withdrawn', deposit_paid: 100 },
+      { status: 'refunded', deposit_paid: 100, refund_amount: 100 },
     ]);
-    expect(summary).toEqual({ active: 4, deposits: 2, depositTotal: 250, waitingForDeposit: 1, matched: 2 });
+    expect(summary).toEqual({ active: 4, deposits: 2, depositTotal: 250, waitingForDeposit: 1, matched: 2, refundedTotal: 100 });
   });
 
   it('offers only unsold babies from this pairing', () => {
@@ -80,5 +83,14 @@ describe('waitlist bookkeeping', () => {
     });
     expect(reserve.notes).toContain('sam@example.com');
     expect(reserveFromSignup({ signup: { deposit_paid: 0 }, gecko: {}, today: '2026-09-29' }).payment_schedule).toEqual([]);
+  });
+});
+
+describe('default deposit terms', () => {
+  it('cover the refund cases and use no dashes', () => {
+    expect(DEFAULT_DEPOSIT_TERMS).toMatch(/refundable until you accept a match/);
+    expect(DEFAULT_DEPOSIT_TERMS).toMatch(/does not produce what you asked for/);
+    expect(DEFAULT_DEPOSIT_TERMS).toMatch(/full refund/);
+    expect(DEFAULT_DEPOSIT_TERMS).not.toMatch(/[\u2013\u2014]/);
   });
 });
