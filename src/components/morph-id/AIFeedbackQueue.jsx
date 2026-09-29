@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from 'react';
+import { useEffect, useState, useCallback, useRef } from 'react';
 import { formatDistanceToNowStrict } from 'date-fns';
 import { GeckoImage } from '@/entities/all';
 import { supabase } from '@/lib/supabaseClient';
@@ -71,6 +71,9 @@ function initialEdits(row) {
   };
 }
 
+// Minimum evidence-note length before a decision is saved.
+const MIN_NOTE = 10;
+
 export default function AIFeedbackQueue() {
   const { toast } = useToast();
   const [queue, setQueue] = useState([]);
@@ -85,6 +88,10 @@ export default function AIFeedbackQueue() {
   const [sortMode, setSortMode] = useState('newest');
   const [totalCount, setTotalCount] = useState(null);
   const [reviewNotes, setReviewNotes] = useState('');
+  // The buttons stay clickable; a click without a note points here instead
+  // of leaving the reviewer with greyed-out buttons and no reason why.
+  const [noteMissing, setNoteMissing] = useState(false);
+  const noteRef = useRef(null);
   const [fetchOffset, setFetchOffset] = useState(0);
   const [reviewedIds, setReviewedIds] = useState(() => new Set());
 
@@ -174,6 +181,7 @@ export default function AIFeedbackQueue() {
     if (!current) { setEdits(null); return; }
     setEdits(initialEdits(current));
     setReviewNotes('');
+    setNoteMissing(false);
   }, [current]);
 
   const step = (delta) => {
@@ -191,7 +199,9 @@ export default function AIFeedbackQueue() {
   // Standard expert review. The database owns the current approval threshold.
   const persist = async (action) => {
     if (!current || !edits) return;
-    if (reviewNotes.trim().length < 10) {
+    if (reviewNotes.trim().length < MIN_NOTE) {
+      setNoteMissing(true);
+      noteRef.current?.focus();
       toast({
         title: 'Add a short evidence note',
         description: 'Name the visible feature that supports your call or makes the photo unsuitable.',
@@ -456,14 +466,24 @@ export default function AIFeedbackQueue() {
                     </div>
                   </div>
                   <div>
-                    <Label className="text-slate-300 text-xs uppercase tracking-wide">Evidence note</Label>
+                    <Label className="text-slate-300 text-xs uppercase tracking-wide">
+                      Evidence note (required to approve or reject)
+                    </Label>
                     <Textarea
+                      ref={noteRef}
                       value={reviewNotes}
-                      onChange={(event) => setReviewNotes(event.target.value)}
+                      onChange={(event) => {
+                        setReviewNotes(event.target.value);
+                        if (event.target.value.trim().length >= MIN_NOTE) setNoteMissing(false);
+                      }}
                       placeholder="Name the visible feature that supports this label, the closest alternative you ruled out, or why the photo is unusable."
-                      className="bg-slate-800 border-slate-600 text-slate-100 mt-2"
+                      className={`bg-slate-800 text-slate-100 mt-2 ${noteMissing ? 'border-rose-500' : 'border-slate-600'}`}
                     />
-                    <p className="text-xs text-slate-500 mt-1">Required so later reviewers can audit why this decision was made.</p>
+                    <p className={`text-xs mt-1 ${noteMissing ? 'text-rose-300' : 'text-slate-500'}`}>
+                      {reviewNotes.trim().length < MIN_NOTE
+                        ? `Write at least ${MIN_NOTE} characters (${reviewNotes.trim().length} so far), for example "clean full pins, no dalmatian spots". It records why the call was made.`
+                        : 'Saved with your decision so later reviewers can see why it was made.'}
+                    </p>
                   </div>
                 </>
               )}
@@ -478,15 +498,15 @@ export default function AIFeedbackQueue() {
           <Button
             variant="outline"
             onClick={() => persist('reject')}
-            disabled={isSaving || reviewNotes.trim().length < 10}
+            disabled={isSaving}
             className="text-rose-300 border-rose-600/50 hover:bg-rose-950"
           >
             <XIcon className="w-4 h-4 mr-2" /> Reject
           </Button>
           <Button
             onClick={() => persist('approve')}
-            disabled={isSaving || !edits?.primary_morph || (!isExpertReviewer && !isAdmin) || reviewNotes.trim().length < 10}
-            title="Record an independent label. Two matching full label sets are required."
+            disabled={isSaving || !edits?.primary_morph || (!isExpertReviewer && !isAdmin)}
+            title={edits?.primary_morph ? 'Approve this label set. It becomes verified reference data.' : 'Pick a primary morph first.'}
             className="bg-emerald-600 hover:bg-emerald-700"
           >
             {isSaving
